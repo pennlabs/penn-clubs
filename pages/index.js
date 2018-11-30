@@ -9,7 +9,7 @@ const Splash = (props) => (
       <div className="row justify-content-md-center">
         <div className="col-md-8">
           <br /> <br />
-          <h1 style={{fontWeight: 800}}>Find your people.</h1>
+          <h1 style={{fontWeight: 800}}>Find your people. 🏛</h1>
           <input placeholder="Search interests, name etc." 
           style={{
             width: "80%", 
