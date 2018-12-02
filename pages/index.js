@@ -27,20 +27,34 @@ const Splash = (props) => (
             <a href="/"><span style={{marginRight: "0.5rem"}} class="badge badge-secondary">Open Applications</span></a>
             <a href="/"><span style={{marginRight: "0.5rem"}} class="badge badge-secondary">Recently Founded</span></a>
           </p>
+          <br />
+            <div class="card" style={{width: "80%"}}>
+              <div class="card-header">
+                Categories
+              </div>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item"><a href="/?tag=coffee">Coffee</a></li>
+                <li class="list-group-item"><a href="/?tag=finance">Finance</a></li>
+                <li class="list-group-item"><a href="/?tag=dance">Dance</a></li>
+              </ul>
+            </div>
           <br /> <br />
-          <h3 style={{fontWeight: 800, marginBottom: "1.5rem"}}>Upcoming Events </h3>
-          <div className="row">
-            <div className="col-md-6">
-              <div class="card" style={{marginRight: "0.2rem"}}>
-                <div class="card-body">
-                  <h5 class="card-title" >Coffee Bar</h5>
-                  <h6 class="card-subtitle mb-2 text-muted">Sunday, December 8th at 6:00 PM</h6>
-                  <p class="card-text">Enjoy free gourmet coffee brought to you by the best coffee brewers on campus. Bring your own mug.</p>
-                  <a href="/club" class="card-link">Penn Coffee Club</a>
+          </div>
+          <div className="col-md-4">
+            <br /> <br />
+            <h3 style={{fontWeight: 800, marginBottom: "1.5rem"}}>Upcoming Events </h3>
+            <div className="row">
+              <div className="col-md-12">
+                <div class="card" style={{marginRight: "0.2rem"}}>
+                  <div class="card-body">
+                    <h5 class="card-title" >Coffee Bar</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Sunday, December 8th at 6:00 PM</h6>
+                    <p class="card-text">Enjoy free gourmet coffee brought to you by the best coffee brewers on campus. Bring your own mug.</p>
+                    <a href="/club" class="card-link">Penn Coffee Club</a>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
         </div>
       </div>
     </div>
