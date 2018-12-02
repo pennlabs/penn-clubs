@@ -17,11 +17,49 @@ const Club = (props) => (
             <img class="img-fluid" src="https://static1.squarespace.com/static/5739ee887da24fc27bc8933f/573b383b40261d950407cbe9/580402ebb3db2b014695a3c7/1476657915249/2.jpg?format=2500w" />
             <img class="img-fluid" src="https://static1.squarespace.com/static/5739ee887da24fc27bc8933f/573b383b40261d950407cbe9/580402ebb3db2b014695a3c7/1476657915249/2.jpg?format=2500w" />
           </Carousel>
-          <br /> <br />
-          <h3 style={{fontWeight: 800, marginBottom: "1.5rem"}}>Upcoming Events:</h3>
+          <div className="row" style={{marginTop: "1.5rem"}}>
+            <div className="col-md-6" style={{marginBottom: "1rem"}}>
+              <div class="card">
+                <div class="card-header" style={{fontWeight: 600}}>
+                  Quick Facts
+                </div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item"><strong>15</strong> members</li>
+                  <li class="list-group-item"><strong>3</strong> years old</li>
+                  <li class="list-group-item"><i>Lots of gourmet coffee!</i></li>
+                </ul>
+              </div>
+            </div>
+            <div className="col-md-6">
+              <div class="card">
+                <div class="card-header" style={{fontWeight: 600}}>
+                  Members
+                </div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item">Nadia Park</li>
+                  <li class="list-group-item">Max Schechter </li>
+                </ul>
+              </div>
+            </div>
+            <div className="col-md-6">
+              <div class="card">
+                <div class="card-header" style={{fontWeight: 600}}>
+                  Contact
+                </div>
+                <div class="card-body">
+                  penncoffeeclub@gmail.com
+                  facebook.com/penncoffeeclub
+                  instagram.com/penncoffeeclub
+                </div>              
+              </div>
+            </div>
+          </div>
           <div className="row">
             <div className="col-md-6">
-              <div class="card" style={{marginRight: "0.5rem"}}>
+              <br />
+              <h3 style={{fontWeight: 600}}>Upcoming Events:</h3>
+              <a href="#" ><p> Previous Events</p></a>
+              <div class="card">
                 <div class="card-body">
                   <h5 class="card-title" >Coffee Bar</h5>
                   <h6 class="card-subtitle mb-2 text-muted">Sunday, December 8th at 6:00 PM</h6>
@@ -29,8 +67,10 @@ const Club = (props) => (
                   <a href="#" class="card-link">Penn Coffee Club</a>
                 </div>
               </div>
+              <br /> <br />
             </div>
-        </div>
+          </div>
+          <br /> <br />
         </div>
       </div>
     </div>
@@ -40,14 +80,15 @@ const Club = (props) => (
 
 Club.getInitialProps = async function(props) {
   const { query } = props;
+  
   const club = {
     name: "Penn Coffee Club",
-    description: "A club for coffee lovers."
+    description: "We are a club about coffee -- our events usually center around drinking, tasting, and brewing the caffeinated drink. But we have expanded the club's focus to be beyond a beverage. \n\n Coffee is used as a medium for social interaction. We use that crucial trait, building low-stress environments for positive social interaction. Penn is a hyper-motivated and high pressure environment, where too often students fail to invest time in self-care. At this 'work hard/play hard' school, not enough emphasis is placed on spontaneous conversation. We try to create, foster, and inhabit a space to fill that void."
   };
+
   // const clubRequest = await fetch('https://platform.pennlabs.org/clubs');
   // const clubResponse = await clubRequest.json();
   return { club };
-  return {};
 };
 
 export default Club;
