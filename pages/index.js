@@ -28,16 +28,25 @@ const Splash = (props) => (
             <a href="/"><span style={{marginRight: "0.5rem"}} class="badge badge-secondary">Recently Founded</span></a>
           </p>
           <br />
-            <div class="card" style={{width: "80%"}}>
-              <div class="card-header">
-                Categories
-              </div>
-              <ul class="list-group list-group-flush">
-                <li class="list-group-item"><a href="/?tag=coffee">Coffee</a></li>
-                <li class="list-group-item"><a href="/?tag=finance">Finance</a></li>
-                <li class="list-group-item"><a href="/?tag=dance">Dance</a></li>
-              </ul>
+          <div class="card" style={{width: "80%"}}>
+            <div class="card-header">
+              Categories
             </div>
+            <div class="card-body">
+              <div className="row">
+                <div className="col-md-6">
+                  <a href="/?tag=coffee"> Coffee </a> <br />
+                  <a href="/?tag=coffee"> Entrepreneurship </a>  <br />
+                  <a href="/?tag=dance"> Dance </a>  <br />
+                </div>
+                <div className="col-md-6">
+                  <a href="/?tag=coffee"> Cultural </a> <br />
+                  <a href="/?tag=coffee"> Finance </a>  <br />
+                  <a href="/?tag=dance"> Food </a>  <br />
+                  </div> 
+              </div>
+            </div>
+          </div>
           <br /> <br />
           </div>
           <div className="col-md-4">
