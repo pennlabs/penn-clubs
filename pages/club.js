@@ -6,54 +6,16 @@ import Footer from '../components/Footer';
 const Club = (props) => (
   <div>
     <Header />
-    <div className="container">
+    <div className="container" style={{marginTop: "3rem"}}>
       <div className="row justify-content-md-center">
         <div className="col-md-8">
-          <br /> <br />
           <h1 style={{fontWeight: 800, marginBottom: "1rem"}}>{props.club.name}</h1>
-          <p>{props.club.description}</p>
+          <p style={{marginBottom: "1rem"}}>{props.club.description}</p>
           <Carousel>
             <img class="img-fluid" src="https://static1.squarespace.com/static/5739ee887da24fc27bc8933f/573b383b40261d950407cbe9/580402ebb3db2b014695a3c7/1476657915249/2.jpg?format=2500w" />
             <img class="img-fluid" src="https://static1.squarespace.com/static/5739ee887da24fc27bc8933f/573b383b40261d950407cbe9/580402ebb3db2b014695a3c7/1476657915249/2.jpg?format=2500w" />
             <img class="img-fluid" src="https://static1.squarespace.com/static/5739ee887da24fc27bc8933f/573b383b40261d950407cbe9/580402ebb3db2b014695a3c7/1476657915249/2.jpg?format=2500w" />
           </Carousel>
-          <div className="row" style={{marginTop: "1.5rem"}}>
-            <div className="col-md-6" style={{marginBottom: "1rem"}}>
-              <div class="card">
-                <div class="card-header" style={{fontWeight: 600}}>
-                  Quick Facts
-                </div>
-                <ul class="list-group list-group-flush">
-                  <li class="list-group-item"><strong>15</strong> members</li>
-                  <li class="list-group-item"><strong>3</strong> years old</li>
-                  <li class="list-group-item"><i>Lots of gourmet coffee!</i></li>
-                </ul>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div class="card">
-                <div class="card-header" style={{fontWeight: 600}}>
-                  Members
-                </div>
-                <ul class="list-group list-group-flush">
-                  <li class="list-group-item">Nadia Park</li>
-                  <li class="list-group-item">Max Schechter </li>
-                </ul>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div class="card">
-                <div class="card-header" style={{fontWeight: 600}}>
-                  Contact
-                </div>
-                <div class="card-body">
-                  penncoffeeclub@gmail.com
-                  facebook.com/penncoffeeclub
-                  instagram.com/penncoffeeclub
-                </div>              
-              </div>
-            </div>
-          </div>
           <div className="row">
             <div className="col-md-6">
               <br />
@@ -71,6 +33,38 @@ const Club = (props) => (
             </div>
           </div>
           <br /> <br />
+        </div>
+        <div class="col-md-4">
+        <br /> <br />
+          <div class="card" style={{marginBottom: "1rem"}}>
+            <div class="card-header" style={{fontWeight: 600}}>
+              Quick Facts
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item"><strong>15</strong> members</li>
+              <li class="list-group-item"><strong>3</strong> years old</li>
+              <li class="list-group-item"><i>Lots of gourmet coffee!</i></li>
+            </ul>
+          </div>
+          <div class="card" style={{marginBottom: "1rem"}}>
+            <div class="card-header" style={{fontWeight: 600}}>
+              Members
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item">Nadia Park</li>
+              <li class="list-group-item">Max Schechter </li>
+            </ul>
+          </div>
+          <div class="card" style={{marginBottom: "1rem"}}>
+            <div class="card-header" style={{fontWeight: 600}}>
+              Contact
+            </div>
+            <div class="card-body">
+              penncoffeeclub@gmail.com
+              facebook.com/penncoffeeclub
+              instagram.com/penncoffeeclub
+            </div>              
+          </div>
         </div>
       </div>
     </div>
