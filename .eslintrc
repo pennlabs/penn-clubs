@@ -2,6 +2,7 @@
   "extends": ["airbnb"],
   "rules": {
     "semi": ["error", "never"],
-    "react/react-in-jsx-scope": "off"
+    "react/react-in-jsx-scope": "off",
+    "react/jsx-filename-extension": ["off"]
   }
 }
