@@ -1,0 +1,7 @@
+{
+  "extends": ["airbnb"],
+  "rules": {
+    "semi": ["error", "never"],
+    "react/react-in-jsx-scope": "off"
+  }
+}
