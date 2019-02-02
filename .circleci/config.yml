@@ -1,0 +1,71 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/pennclubs
+    docker:
+      - image: circleci/python:3.7.1
+        environment:
+          PIPENV_VENV_IN_PROJECT: true
+          DATABASE_URL: mysql://root:password@127.0.0.1:3306/circle_test
+      - image: circleci/mysql:latest
+        command: --default-authentication-plugin=mysql_native_password
+        environment:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: circle_test
+    steps:
+      - checkout
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
+      - restore_cache:
+          key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+      - run:
+          name: install dockerize
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.3.0
+      - run:
+          name: Install dependencies
+          command: |
+            sudo pip install pipenv
+            pipenv install
+      - run:
+          name: Wait for db
+          command: dockerize -wait tcp://localhost:3306 -timeout 1m
+      - save_cache:
+          key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.7/site-packages"
+      - run:
+          command: |
+            pipenv run python manage.py test --settings=pennclubs.settings.ci
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test_results
+          destination: trl
+  deploy:
+    working_directory: ~/pennclubs
+    docker:
+      - image: circleci/python:3.7.1
+    steps:
+      - checkout
+      - run:
+          command: |
+            echo -e "Host apps.pennlabs.org\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - run:
+          name: Deploy master to Dokku
+          command: |
+            git push dokku@apps.pennlabs.org:clubs-backend master
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
