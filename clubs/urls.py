@@ -1,7 +1,7 @@
 from django.urls import path
-from clubs import views
+from clubs.views import ClubViewSet
 
 urlpatterns = [
-    path('clubs/', views.club_list),
-    path('clubs/<int:pk>/', views.club_detail),
+    path("", ClubViewSet.as_view({'get': 'list'})),
+    path("<slug:pk>/", ClubViewSet.as_view({'get': 'retrieve'})),
 ]

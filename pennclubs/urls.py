@@ -4,6 +4,6 @@ from django.urls import path, include
 admin.site.site_header = "Clubs Backend Admin"
 
 urlpatterns = [
-    path('', include('clubs.urls')),
+    path('clubs/', include('clubs.urls')),
     path('admin/', admin.site.urls),
 ]

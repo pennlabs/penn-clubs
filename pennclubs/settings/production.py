@@ -22,7 +22,7 @@ DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Allow production host headers
-ALLOWED_HOSTS = ['clubs-backend.pennlabs.org', 'clubs-backend.apps.pennlabs.org']
+ALLOWED_HOSTS = ['clubs.pennlabs.org', 'clubs-backend.apps.pennlabs.org']
 
 SENTRY_URL = os.environ.get('SENTRY_URL', '')
 
