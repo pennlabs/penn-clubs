@@ -1,8 +1,8 @@
-import fetch from 'isomorphic-unfetch';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import fetch from 'isomorphic-unfetch'
+import Header from '../components/Header'
+import Footer from '../components/Footer'
 
-const Splash = (props) => (
+const Splash = () => (
   <div>
     <Header />
     <div className="container">
@@ -23,13 +23,13 @@ const Splash = (props) => (
           <br />
           <p style={{marginTop: "1rem", marginBottom: "0.3rem"}}>
             Filter by:
-            <a href="/"><span style={{marginLeft: "0.5rem", marginRight: "0.5rem"}} class="badge badge-secondary">General Membership</span></a>
-            <a href="/"><span style={{marginRight: "0.5rem"}} class="badge badge-secondary">Open Applications</span></a>
-            <a href="/"><span style={{marginRight: "0.5rem"}} class="badge badge-secondary">Recently Founded</span></a>
+            <a href="/"><span style={{ marginLeft: '0.5rem', marginRight: '0.5rem' }} className="badge badge-secondary">General Membership</span></a>
+            <a href="/"><span style={{ marginRight: '0.5rem' }} className="badge badge-secondary">Open Applications</span></a>
+            <a href="/"><span style={{ marginRight: '0.5rem' }} className="badge badge-secondary">Recently Founded</span></a>
           </p>
           <br />
-          <div class="card" style={{width: "80%"}}>
-            <div class="card-header">
+          <div className="card" style={{ width: '80%' }}>
+            <div className="card-header">
               Categories
             </div>
             <div class="card-body">
@@ -63,6 +63,7 @@ const Splash = (props) => (
                 </div>
               </div>
             </div>
+          </div>
         </div>
       </div>
     </div>

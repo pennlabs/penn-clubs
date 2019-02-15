@@ -1,16 +1,17 @@
-import fetch from 'isomorphic-unfetch';
-import Carousel from 'nuka-carousel';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+// import fetch from 'isomorphic-unfetch'
+import PropTypes from 'prop-types'
+import Carousel from 'nuka-carousel'
+import Header from '../components/Header'
+import Footer from '../components/Footer'
 
-const Club = (props) => (
+const Club = ({ club: { name, description } }) => (
   <div>
     <Header />
-    <div className="container" style={{marginTop: "3rem"}}>
+    <div className="container" style={{ marginTop: '3rem' }}>
       <div className="row justify-content-md-center">
         <div className="col-md-8">
-          <h1 style={{fontWeight: 800, marginBottom: "1rem"}}>{props.club.name}</h1>
-          <p style={{marginBottom: "1rem"}}>{props.club.description}</p>
+          <h1 style={{ fontWeight: 800, marginBottom: '1rem' }}>{name}</h1>
+          <p style={{ marginBottom: '1rem' }}>{description}</p>
           <Carousel>
             {props.club.imgs.map((img) =>
               <img class="img-fluid" src={img} />
@@ -71,7 +72,14 @@ Club.getInitialProps = async function(props) {
   }
   // const clubRequest = await fetch('https://platform.pennlabs.org/clubs');
   // const clubResponse = await clubRequest.json();
-  return { club };
-};
+  return { club }
+}
+
+Club.propTypes = {
+  club: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+  }).isRequired,
+}
 
 export default Club;
