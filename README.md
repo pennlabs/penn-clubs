@@ -9,3 +9,4 @@ Official React-based website for Penn Labs' club directory and events listings.
 
 ## Current Maintainers
 - [Arun Kirubarajan](https://github.com/kirubarajan)
+- [Eva Killenberg](https://github.com/evakill)

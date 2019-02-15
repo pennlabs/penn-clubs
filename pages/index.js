@@ -10,17 +10,17 @@ const Splash = (props) => (
         <div className="col-md-8">
           <br /> <br />
           <h1 style={{fontWeight: 800}}>Find your people. 🎉</h1>
-          <input placeholder="Search interests, name etc." 
+          <input placeholder="Search interests, name etc."
           style={{
-            width: "80%", 
-            padding: "1rem", 
-            fontSize: "1rem", 
-            fontWeight: "400", 
+            width: "80%",
+            padding: "1rem",
+            fontSize: "1rem",
+            fontWeight: "400",
             marginTop: "0.5rem",
-            borderRadius: "10px", 
-            border: "1px solid #cccccc"}} 
+            borderRadius: "10px",
+            border: "1px solid #cccccc"}}
           />
-          <br />  
+          <br />
           <p style={{marginTop: "1rem", marginBottom: "0.3rem"}}>
             Filter by:
             <a href="/"><span style={{marginLeft: "0.5rem", marginRight: "0.5rem"}} class="badge badge-secondary">General Membership</span></a>
@@ -33,21 +33,20 @@ const Splash = (props) => (
               Categories
             </div>
             <div class="card-body">
-              <div className="row">
-                <div className="col-md-6">
-                  <a href="/?tag=coffee"> Coffee </a> <br />
-                  <a href="/?tag=coffee"> Entrepreneurship </a>  <br />
-                  <a href="/?tag=dance"> Dance </a>  <br />
-                </div>
-                <div className="col-md-6">
-                  <a href="/?tag=coffee"> Cultural </a> <br />
-                  <a href="/?tag=coffee"> Finance </a>  <br />
-                  <a href="/?tag=dance"> Food </a>  <br />
-                  </div> 
-              </div>
+              {props.tags.map((tag) => <a style={{padding: 5}} href={tag.link}>{tag.name}</a>)}
             </div>
           </div>
           <br /> <br />
+              {props.clubs.map((club) => (
+                <a href="/club" style={{textDecoration: "none"}}>
+                  <div className="card" style={{width: "80%"}}>
+                    <div className="card-body">
+                      <h5 class="card-title">{club.name}</h5>
+                      <h6 class="card-subtitle mb-2 text-muted">{club.description}</h6>
+                    </div>
+                  </div>
+                </a>
+              ))}
           </div>
           <div className="col-md-4">
             <br /> <br />
@@ -76,7 +75,19 @@ Splash.getInitialProps = async function() {
   const clubResponse = await clubRequest.json();
   const eventsRequest = await fetch('https://platform.pennlabs.org/engagement/clubs/');
   const eventsResponse = await eventsRequest.json();
-  return { clubs: clubResponse.clubs, events: eventsResponse.events };
+  const tags = [{name: "Coffee", link: "coffee"}, {name:"Dance", link: "dance"}, {name: "Cultural", link: "cultural"}]
+  const clubs = [{
+        "name": "Penn Coffee Club",
+        "id": "penncoffeeclub",
+        "description": "A club for *coffee lovers*.",
+        "founded": "2015-01-30",
+        "fact": "Used to be sceney.",
+        "size": 10,
+        "email": "penncoffeeclub@gmail.com",
+        "facebook": "https://www.facebook.com/penncoffeeclub/",
+        "imgs": ["https://static1.squarespace.com/static/5739ee887da24fc27bc8933f/573b383b40261d950407cbe9/580402ebb3db2b014695a3c7/1476657915249/2.jpg?format=2500w", "https://static1.squarespace.com/static/5739ee887da24fc27bc8933f/573b383b40261d950407cbe9/580402ebb3db2b014695a3c7/1476657915249/2.jpg?format=2500w", "https://static1.squarespace.com/static/5739ee887da24fc27bc8933f/573b383b40261d950407cbe9/580402ebb3db2b014695a3c7/1476657915249/2.jpg?format=2500w"]
+    }]
+  return { clubs: clubs, events: eventsResponse.events, tags: tags };
 };
 
 export default Splash;
