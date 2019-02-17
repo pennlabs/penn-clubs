@@ -10,6 +10,7 @@ class Club(models.Model):
     size = models.IntegerField()
     email = models.EmailField(blank=True)
     facebook = models.URLField(blank=True)
+    tags = models.ManyToManyField("Tag")
 
     def __str__(self):
         return self.name
@@ -27,6 +28,14 @@ class Event(models.Model):
     url = models.URLField(null=True, blank=True)
     image_url = models.URLField(null=True, blank=True)
     description = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=255)
+    category = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
