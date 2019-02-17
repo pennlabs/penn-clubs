@@ -4,7 +4,7 @@ from clubs.models import Club, Event
 class ClubSerializer(serializers.ModelSerializer):
     class Meta:
         model = Club
-        fields = ('name', 'id', 'description', 'founded', 'fact', 'size', 'email', 'facebook')
+        fields = ('name', 'id', 'description', 'founded', 'fact', 'size', 'email', 'facebook', 'tags', 'subtitle')
 
 
 class EventSerializer(serializers.ModelSerializer):
