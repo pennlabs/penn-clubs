@@ -23,7 +23,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Allow production host headers
 ALLOWED_HOSTS = ['clubs.pennlabs.org', 'clubs-backend.apps.pennlabs.org']
-a
+
 SENTRY_URL = os.environ.get('SENTRY_URL', '')
 
 sentry_sdk.init(
