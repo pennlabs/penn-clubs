@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from clubs.models import Club
-
 from django.contrib import admin
-admin.site.register(Club)
+from clubs.models import Club, Tag
 
-# Register your models here.
+admin.site.register(Club)
+admin.site.register(Tag)
