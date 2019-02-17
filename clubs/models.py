@@ -3,6 +3,7 @@ from django.db import models
 class Club(models.Model):
     id = models.SlugField(max_length=255, primary_key=True)
     name = models.CharField(max_length=255)
+    subtitle = models.CharField(max_length=255)
     description = models.TextField()
     founded = models.DateField(null=True)
     fact = models.CharField(max_length=255)
