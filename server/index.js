@@ -13,7 +13,7 @@ const platformAuth = new ClientOAuth2({
   clientSecret: process.env.clientSecret,
   accessTokenUri: 'https://platform.pennlabs.org/accounts/token/',
   authorizationUri: 'https://platform.pennlabs.org/accounts/authorize/',
-  redirectUri: 'http://localhost:5000/auth',
+  redirectUri: 'https://pennclubs.com/auth',
   scopes: ['read', 'write'],
   state: "eva",
 })
