@@ -17,7 +17,7 @@
     "dev": "next",
     "build": "next build && node server/index.js",
     "start": "next start -p $PORT",
-    "heroku-postbuild": "next build"
+    "heroku-postbuild": "yarn build"
   },
   "license": "MIT",
   "devDependencies": {
