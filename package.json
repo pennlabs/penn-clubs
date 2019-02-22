@@ -15,7 +15,7 @@
   "scripts": {
     "lint": "eslint \"./{pages,components}/**/*.js\"",
     "dev": "next",
-    "build": "yarn lint && next build",
+    "build": "next build && node server/index.js",
     "start": "next start -p $PORT",
     "heroku-postbuild": "next build"
   },
