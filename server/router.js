@@ -1,5 +1,4 @@
-module.exports = function(app, platformAuth, handle) {
-
+module.exports = function getRoutes(app, platformAuth, handle) {
   app.get('/login', (req, res) => {
     console.log("HERE");
     const uri = platformAuth.code.getUri()
@@ -32,7 +31,6 @@ module.exports = function(app, platformAuth, handle) {
       })
   })
 
-  app.get('*', (req,res) => {
-    return handle(req,res) // for all the react stuff
-  })
+  //for all react stuff
+  app.get('*', (req, res) => handle(req, res))
 }
