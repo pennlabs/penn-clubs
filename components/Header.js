@@ -1,3 +1,5 @@
+
+
 const Header = () => (
   <div>
     <head>
@@ -21,6 +23,7 @@ const Header = () => (
               Built by
               <strong><a href="https://pennlabs.org"> Penn Labs</a></strong>
             </h4>
+            <a type="button" href="/login" >Login </a>
             <p className="text-muted">Penn Clubs is a collabrative effort by the UA and Penn Labs to make information about student engagement at Penn accessible to everybody.</p>
           </div>
           <div className="col-sm-4 offset-md-1 py-4">
@@ -45,8 +48,7 @@ const Header = () => (
           data-target="#navbarHeader"
           aria-controls="navbarHeader"
           aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
+          aria-label="Toggle navigation">
           <span className="navbar-toggler-icon" />
         </button>
       </div>
