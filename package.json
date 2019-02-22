@@ -15,9 +15,9 @@
   "scripts": {
     "lint": "eslint \"./{pages,components}/**/*.js\"",
     "dev": "next",
-    "build": "next build && node server/index.js",
-    "start": "next start -p $PORT",
-    "heroku-postbuild": "yarn build"
+    "build": "next build",
+    "start": "node server/index.js",
+    "heroku-postbuild": "next build"
   },
   "license": "MIT",
   "devDependencies": {
