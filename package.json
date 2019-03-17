@@ -2,6 +2,7 @@
   "dependencies": {
     "body-parser": "^1.18.3",
     "client-oauth2": "^4.2.3",
+    "create-react-class": "^15.6.3",
     "express": "^4.16.4",
     "isomorphic-unfetch": "^3.0.0",
     "next": "^7.0.2",
@@ -9,14 +10,15 @@
     "prop-types": "^15.6.2",
     "react": "^16.6.3",
     "react-dom": "^16.6.3",
+    "react-select": "^2.4.1",
     "react-showdown": "^1.6.0",
     "showdown": "^1.9.0"
   },
   "scripts": {
     "lint": "eslint \"./{pages,components}/**/*.js\"",
-    "dev": "next",
-    "build": "next build",
-    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "build": "next build && node server/index.js",
+    "start": "next start -p $PORT",
     "heroku-postbuild": "next build"
   },
   "license": "MIT",
