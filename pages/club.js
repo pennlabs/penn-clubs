@@ -33,12 +33,12 @@ const Club = (props) => {
               </div>
               <ul className="list-group list-group-flush">
                 <li className="list-group-item">
-                  <strong>{club.size}</strong>
-                  members
+                  <strong>{`${club.size  } `}</strong>
+                   members
                 </li>
                 <li className="list-group-item">
                   Founded on
-                  {club.founded}
+                  {' ' + club.founded}
                 </li>
                 <li className="list-group-item"><i>{club.fact}</i></li>
               </ul>

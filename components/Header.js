@@ -15,27 +15,27 @@ const Header = () => (
       <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossOrigin="anonymous" />
     </head>
 
-    <div className="collapse bg-dark" id="navbarHeader">
+    <div className="collapse bg-light" id="navbarHeader">
       <div className="container">
         <div className="row">
           <div className="col-sm-8 col-md-7 py-4">
-            <h4 className="text-white">
+            <h4 className="text-dark">
               Built by
               <strong><a href="https://pennlabs.org"> Penn Labs</a></strong>
             </h4>
-            <a type="button" href="/login" >Login </a>
+            <a type="button" href="/login">Login </a>
             <p className="text-muted">Penn Clubs is a collabrative effort by the UA and Penn Labs to make information about student engagement at Penn accessible to everybody.</p>
           </div>
           <div className="col-sm-4 offset-md-1 py-4">
-            <h4 className="text-white">Want your group/event here?</h4>
+            <h4 className="text-dark">Want your group/event here?</h4>
             <ul className="list-unstyled">
-              <li><a href="mailto:contact@pennlabs.org" className="text-white">Email Us!</a></li>
+              <li><a href="mailto:contact@pennlabs.org" className="text-dark">Email Us!</a></li>
             </ul>
           </div>
         </div>
       </div>
     </div>
-    <div className="navbar navbar-dark bg-dark shadow-sm">
+    <div className="navbar navbar-light bg-light shadow-sm">
       <div className="container d-flex justify-content-between">
         <a href="/" className="navbar-brand d-flex align-items-center">
           <strong> 🏛 &nbsp;Penn Clubs</strong>
@@ -48,7 +48,8 @@ const Header = () => (
           data-target="#navbarHeader"
           aria-controls="navbarHeader"
           aria-expanded="false"
-          aria-label="Toggle navigation">
+          aria-label="Toggle navigation"
+        >
           <span className="navbar-toggler-icon" />
         </button>
       </div>
