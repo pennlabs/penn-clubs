@@ -1,7 +1,8 @@
 from django.urls import path
-from clubs.views import ClubViewSet
+from clubs.views import ClubViewSet, TagViewSet
 
 urlpatterns = [
-    path("", ClubViewSet.as_view({'get': 'list'})),
-    path("<slug:pk>/", ClubViewSet.as_view({'get': 'retrieve'})),
+    path("clubs/", ClubViewSet.as_view({'get': 'list'})),
+    path("clubs/<slug:pk>/", ClubViewSet.as_view({'get': 'retrieve'})),
+    path("tags/", TagViewSet.as_view({'get': 'list'})),
 ]
