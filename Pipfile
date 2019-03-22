@@ -12,8 +12,8 @@ gunicorn = "*"
 mysqlclient = "*"
 sentry-sdk = "*"
 whitenoise = "*"
-Django = "*"
 unittest-xml-reporting = "*"
+django = "*"
 
 [requires]
 python_version = "3.7"
