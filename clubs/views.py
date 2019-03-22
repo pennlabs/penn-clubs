@@ -2,6 +2,7 @@ from rest_framework import viewsets
 from clubs.models import Club, Event
 from clubs.serializers import ClubSerializer
 
+
 class ClubViewSet(viewsets.ModelViewSet):
     """
     retrieve:
