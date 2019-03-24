@@ -4,6 +4,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+coveralls = "*"
+unittest-xml-reporting = "*"
 
 [packages]
 dj-database-url = "*"
@@ -12,8 +14,8 @@ gunicorn = "*"
 mysqlclient = "*"
 sentry-sdk = "*"
 whitenoise = "*"
-Django = "*"
 unittest-xml-reporting = "*"
+django = "*"
 
 [requires]
 python_version = "3.7"

@@ -4,3 +4,4 @@ venv/
 db.sqlite3
 .vscode/
 test-results/
+.coverage

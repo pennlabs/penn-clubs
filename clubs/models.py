@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Club(models.Model):
     id = models.SlugField(max_length=255, primary_key=True)
     name = models.CharField(max_length=255)
@@ -10,6 +11,9 @@ class Club(models.Model):
     size = models.IntegerField()
     email = models.EmailField(blank=True)
     facebook = models.URLField(blank=True)
+    application_required = models.BooleanField(default=True)
+    accepting_applications = models.BooleanField(default=False)
+    image_url = models.URLField(null=True, blank=True)
     tags = models.ManyToManyField("Tag")
 
     def __str__(self):
@@ -35,7 +39,6 @@ class Event(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(max_length=255)
-    category = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
