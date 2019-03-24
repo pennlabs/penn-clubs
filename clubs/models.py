@@ -2,13 +2,23 @@ from django.db import models
 
 
 class Club(models.Model):
+    SIZE_SMALL = 1
+    SIZE_MEDIUM = 2
+    SIZE_LARGE = 3
+    SIZE_VERY_LARGE = 4
+    SIZE_CHOICES = (
+        (SIZE_SMALL, '1-20'),
+        (SIZE_MEDIUM, '21-50'),
+        (SIZE_LARGE, '51-100'),
+        (SIZE_VERY_LARGE, '101+'),
+    )
     id = models.SlugField(max_length=255, primary_key=True)
     name = models.CharField(max_length=255)
     subtitle = models.CharField(max_length=255)
     description = models.TextField()
     founded = models.DateField(null=True)
     fact = models.CharField(max_length=255)
-    size = models.IntegerField()
+    size = models.IntegerField(choices=SIZE_CHOICES, default=SIZE_SMALL)
     email = models.EmailField(blank=True)
     facebook = models.URLField(blank=True)
     application_required = models.BooleanField(default=True)
