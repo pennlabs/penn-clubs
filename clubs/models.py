@@ -6,10 +6,11 @@ class Club(models.Model):
     subtitle = models.CharField(max_length=255)
     description = models.TextField()
     founded = models.DateField(null=True)
-    fact = models.CharField(max_length=255)
+    fact = models.CharField(max_length=255, blank=True, null=True)
     size = models.IntegerField()
-    email = models.EmailField(blank=True)
-    facebook = models.URLField(blank=True)
+    website = models.URLField(blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    facebook = models.URLField(blank=True, null=True)
     tags = models.ManyToManyField("Tag")
 
     def __str__(self):
