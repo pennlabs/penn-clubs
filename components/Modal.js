@@ -10,7 +10,6 @@ class Modal extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot){
-    console.log(this.props, prevProps)
     if (this.props !== prevProps) {
       var { modal, club } = this.props
       this.setState({ modal, club })

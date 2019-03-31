@@ -25,19 +25,13 @@ class ClubCard extends React.Component {
     return clubs[i];
   }
 
-  openModal(e) {
-    console.log("open meeee")
-    e.preventDefault()
-    this.props.openModal(this.props.club)
-  }
-
   render() {
     var props = this.props
     var { name, id, img, description, tags } = props.club
     var allTags = props.tags
     return (
         <div className="column is-half">
-          <div className="card" onClick={(e) => this.openModal(e)} style={{ padding: 10, borderRadius: 5, borderWidth: 1, boxShadow: "0px 2px 6px grey" }}>
+          <div className="card" onClick={(e) => this.props.openModal(this.props.club)} style={{ padding: 10, borderRadius: 5, borderWidth: 1, boxShadow: "0px 2px 6px grey" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: 10}}>
               <b className="is-size-4"> {props.club.name} </b>
               <a className="button" style={{ color: "#fff", backgroundColor: "#8089f8", borderWidth: 0 }}><b>Add</b></a>
