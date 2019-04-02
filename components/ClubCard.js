@@ -1,10 +1,17 @@
 import React from 'react'
+import posed from 'react-pose'
+
+const Pop = posed.div({
+  idle: { scale: 1 },
+  hovered: { scale: 1.02 },
+})
 
 class ClubCard extends React.Component {
   constructor(props){
     super(props);
     this.state = {
       modal: '',
+      hovering: false,
     }
   }
 
@@ -26,27 +33,38 @@ class ClubCard extends React.Component {
   }
 
   render() {
-    var props = this.props
-    var { name, id, img, description, tags } = props.club
-    var allTags = props.tags
+    var { club, tags, openModal, toggleFavorite, isFavorite } = this.props
+    var allTags = tags
+    var { name, id, description, subtitle, tags } = club
+    var img = club.img ? club.img : this.randomClub()
+    club.img = img
     return (
-        <div className="column is-half">
-          <div className="card" onClick={(e) => this.props.openModal(this.props.club)} style={{ padding: 10, borderRadius: 5, borderWidth: 1, boxShadow: "0px 2px 6px grey" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: 10}}>
-              <b className="is-size-4"> {props.club.name} </b>
-              <a className="button" style={{ color: "#fff", backgroundColor: "#8089f8", borderWidth: 0 }}><b>Add</b></a>
-            </div>
-            {tags.map(tag => <span className="tag is-rounded" style={{backgroundColor: "", margin: 5}}>{this.findTagById(tag, allTags)}</span>)}
-            <div className="columns" style={{ padding: 10 }}>
-              <div className="column">
-                <img style={{ height: 200 }} src={props.club.img ? props.club.img : this.randomClub()} />
+      <div className="column is-half">
+      <Pop
+        pose={this.state.hovering ? "hovered" : "idle"}
+        onMouseEnter={() => this.setState({ hovering: true })}
+        onMouseLeave={() => this.setState({ hovering: false })}>
+          <div className="card is-flex" style={{ padding: 10, borderRadius: 5, borderWidth: 1, boxShadow: "0px 2px 6px grey" }}>
+            <div onClick={(e) => openModal(club)} >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: 10}}>
+                <b className="is-size-4"> {name} </b>
               </div>
-              <div className="column">
-                <p style={{ }}>{props.club.subtitle}</p>
+              {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: "#8089f8", margin: 5}}>{this.findTagById(tag, allTags)}</span>)}
+              <div className="columns" style={{ padding: 10 }}>
+                <div className="column">
+                  <img style={{ height: 200 }} src={img} />
+                </div>
+                <div className="column">
+                  <p style={{ }}>{subtitle}</p>
+                </div>
               </div>
             </div>
+            <span className="icon" onClick={(e)=>toggleFavorite(club)} style={{float:"right", padding: "10px 10px 0px 0px"}}>
+              <i className={(isFavorite(club) ? "fas" : "far") + " fa-heart"} ></i>
+            </span>
           </div>
-        </div>
+        </Pop>
+      </div>
     )
   }
 }

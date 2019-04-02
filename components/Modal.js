@@ -5,14 +5,13 @@ class Modal extends React.Component {
     super(props)
     this.state = {
       modal: '',
-      club: {}
     }
   }
 
   componentDidUpdate(prevProps, prevState, snapshot){
     if (this.props !== prevProps) {
-      var { modal, club } = this.props
-      this.setState({ modal, club })
+      var { modal } = this.props
+      this.setState({ modal })
     }
   }
 
@@ -30,24 +29,30 @@ class Modal extends React.Component {
   }
 
   render() {
+
+    var { modal, club, isFavorite, toggleFavorite, closeModal } = this.props
     return(
-      <div className={"modal" + this.state.modal} style={{position: "fixed", top: 0, height: "100%", width: "100%"}}>
+      <div className={"modal" + modal} style={{position: "fixed", top: 0, height: "100%", width: "100%"}}>
         <div className="modal-background" style={{backgroundColor: "#d5d5d5", opacity: .5}}></div>
         <div className="card" style={{ margin: "6rem", padding: 10, borderRadius: 5, borderWidth: 1, boxShadow: "0px 2px 6px grey" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: 10}}>
-            <b className="is-size-1"> {this.state.club.name} </b>
-            <a className="button" style={{ color: "#fff", backgroundColor: "#8089f8", borderWidth: 0 }}><b>Add</b></a>
+          <span className="icon" onClick={(e)=>closeModal(club)} style={{float:"right"}}>
+            <i className="fas fa-times"></i>
+          </span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "20px 30px"}}>
+            <b className="is-size-1"> {club.name} </b>
+            <span className="icon" onClick={(e)=>toggleFavorite(club)} style={{float:"right", padding: "10px 10px 10px 0px"}}>
+              <i className={(isFavorite(club) ? "fas" : "far") + " fa-heart fa-2x"} ></i>
+            </span>
           </div>
           <div className="columns" style={{ padding: 10 }}>
             <div className="column">
-              <img style={{ height: 400 }} src={this.state.club.img ? this.state.club.img : this.randomClub()} />
+              <img style={{ height: 400 }} src={club.img ? club.img : this.randomClub()} />
             </div>
             <div className="column">
-              <p className="is-size-5">{this.state.club.description}</p>
+              <p className="is-size-5">{club.description}</p>
             </div>
           </div>
         </div>
-        <button className="modal-close is-large" aria-label="close" onClick={(e) => this.props.closeModal()}></button>
       </div>
     )
   }

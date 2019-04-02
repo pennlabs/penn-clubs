@@ -24,11 +24,15 @@ class Splash extends React.Component {
     const clubResponse = await clubRequest.json()
     const tagsRequest = await fetch('https://clubs.pennlabs.org/tags/?format=json')
     const tagsResponse = await tagsRequest.json()
-    return { clubs: clubResponse, tags: tagsResponse }
+    //TODO
+    // const favoritesRequest = await fetch('')
+    // const favoritesResponse = await favoritesRequest.json()
+    return { clubs: clubResponse, tags: tagsResponse, favorites: [] }
   }
 
   componentWillMount() {
-    this.setState({ clubs: this.props.clubs });
+    var { clubs, favorites } = this.props
+    this.setState({ clubs, favorites });
   }
 
   resetClubs(clubs) {
@@ -39,8 +43,23 @@ class Splash extends React.Component {
     this.setState({modal: 'is-active', club: club})
   }
 
-  closeModal() {
-    this.setState({modal: '', club: {}})
+  closeModal(club) {
+    this.setState({modal: '', club: club})
+  }
+
+  toggleFavorite(club) {
+    var newfavs = this.state.favorites
+    var i =newfavs.indexOf(club);
+    if (i == -1) {
+      newfavs.push(club)
+    } else {
+      newfavs.splice(i, 1)
+    }
+    this.setState({favorites: newfavs})
+  }
+
+  isFavorite(club) {
+    return this.state.favorites.indexOf(club) != -1;
   }
 
   render() {
@@ -49,10 +68,23 @@ class Splash extends React.Component {
     return(
       <div style={{ backgroundColor: "#f9f9f9" }}>
         <Header />
-        <ClubDisplay clubs={clubs} tags={tags} openModal={this.openModal.bind(this)}/>
+        <ClubDisplay
+          clubs={clubs}
+          tags={tags}
+          openModal={this.openModal.bind(this)}
+          toggleFavorite={this.toggleFavorite.bind(this)}
+          isFavorite={this.isFavorite.bind(this)}/>
         <Footer />
-        <SearchBar clubs={clubs} tags={tags} resetClubs={this.resetClubs.bind(this)}/>
-        <Modal modal={this.state.modal} club={this.state.club} closeModal={this.closeModal.bind(this)}/>
+        <SearchBar
+          clubs={clubs}
+          tags={tags}
+          resetClubs={this.resetClubs.bind(this)}/>
+        <Modal
+          modal={this.state.modal}
+          club={this.state.club}
+          closeModal={this.closeModal.bind(this)}
+          toggleFavorite={this.toggleFavorite.bind(this)}
+          isFavorite={this.isFavorite.bind(this)}/>
       </div>
     );
   }
