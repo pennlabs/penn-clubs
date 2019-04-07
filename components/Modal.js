@@ -29,7 +29,7 @@ class Modal extends React.Component {
     var { modal, club, closeModal } = this.props
     return(
       <div className={"modal" + modal} style={{position: "fixed", top: 0, height: "100%", width: "100%"}}>
-        <div className="modal-background" style={{backgroundColor: "#d5d5d5", opacity: .5}}></div>
+        <div className="modal-background" onClick={(e)=>closeModal(club)} style={{backgroundColor: "#d5d5d5", opacity: .5}}></div>
         <div className="card" style={{ margin: "6rem", padding: 10, borderRadius: 5, borderWidth: 1, boxShadow: "0px 2px 6px grey" }}>
           <span className="icon" onClick={(e)=>closeModal(club)} style={{float:"right", cursor: "pointer"}}>
             <i className="fas fa-times"></i>
