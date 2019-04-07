@@ -12,6 +12,7 @@ class ClubCard extends React.Component {
     this.state = {
       modal: '',
       hovering: false,
+      favorite: false,
     }
   }
 
@@ -33,7 +34,7 @@ class ClubCard extends React.Component {
   }
 
   render() {
-    var { club, tags, openModal, toggleFavorite, isFavorite } = this.props
+    var { club, favorite, tags, openModal, updateFavorites } = this.props
     var allTags = tags
     var { name, id, description, subtitle, tags } = club
     var img = club.img ? club.img : this.randomClub()
@@ -55,12 +56,12 @@ class ClubCard extends React.Component {
                   <img style={{ height: 200 }} src={img} />
                 </div>
                 <div className="column">
-                  <p style={{ }}>{subtitle}</p>
+                  <p>{subtitle}</p>
                 </div>
               </div>
             </div>
-            <span className="icon" onClick={(e)=>toggleFavorite(club)} style={{float:"right", padding: "10px 10px 0px 0px"}}>
-              <i className={(isFavorite(club) ? "fas" : "far") + " fa-heart"} ></i>
+            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{float:"right", padding: "10px 10px 0px 0px"}}>
+              <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
             </span>
           </div>
         </Pop>

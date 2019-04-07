@@ -15,33 +15,19 @@ class Splash extends React.Component {
     this.state = {
       modal: '',
       club: {},
+      clubs: [],
       favorites: []
     }
   }
 
-  static async getInitialProps() {
-    const clubRequest = await fetch('https://clubs.pennlabs.org/clubs/?format=json')
-    const clubResponse = await clubRequest.json()
-    const tagsRequest = await fetch('https://clubs.pennlabs.org/tags/?format=json')
-    const tagsResponse = await tagsRequest.json()
-    //TODO
-    // const favoritesRequest = await fetch('')
-    // const favoritesResponse = await favoritesRequest.json()
-    return { clubs: clubResponse, tags: tagsResponse }
+  componentWillMount() {
+    var { clubs } = this.props
+    this.setState({ clubs })
   }
 
   componentDidMount() {
-    var favorites = localStorage.getItem('favorites') || []
-    this.setState({ favorites });
-  }
-
-  componentWillMount() {
-    var { clubs } = this.props
-    this.setState({ clubs });
-  }
-
-  componentDidUpdate() {
-    localStorage.setItem('favorites', this.state.favorites);
+    var favorites = JSON.parse(localStorage.getItem('favorites')) || []
+    this.setState({ favorites })
   }
 
   resetClubs(clubs) {
@@ -49,42 +35,41 @@ class Splash extends React.Component {
   }
 
   openModal(club) {
+    club.favorite = this.state.favorites.includes(club.id)
     this.setState({modal: 'is-active', club: club})
   }
 
   closeModal(club) {
+    if (club.favorite != this.state.favorites.includes(club.id)) {
+      this.updateFavorites(club.id)
+    }
     this.setState({modal: '', club: club})
   }
 
-  toggleFavorite(club) {
+  updateFavorites(id) {
     var newFavs = this.state.favorites
-    var i = newFavs.indexOf(club);
+    var i = newFavs.indexOf(id)
     if (i == -1) {
-      newFavs.push(club)
+      newFavs.push(id)
     } else {
       newFavs.splice(i, 1)
     }
-    localStorage.setItem('favorites', newFavs)
+    localStorage.setItem('favorites', JSON.stringify(newFavs))
     this.setState({favorites: newFavs})
   }
 
-  isFavorite(club) {
-    return this.state.favorites.indexOf(club) != -1;
-  }
-
   render() {
-    var { clubs } = this.state
+    var { clubs, favorites } = this.state
     var { tags } = this.props
-    console.log(clubs, tags)
     return(
       <div style={{ backgroundColor: "#f9f9f9" }}>
         <Header />
         <ClubDisplay
           clubs={clubs}
           tags={tags}
+          favorites={favorites}
           openModal={this.openModal.bind(this)}
-          toggleFavorite={this.toggleFavorite.bind(this)}
-          isFavorite={this.isFavorite.bind(this)}/>
+          updateFavorites={this.updateFavorites.bind(this)}/>
         <Footer />
         <SearchBar
           clubs={clubs}
@@ -94,11 +79,18 @@ class Splash extends React.Component {
           modal={this.state.modal}
           club={this.state.club}
           closeModal={this.closeModal.bind(this)}
-          toggleFavorite={this.toggleFavorite.bind(this)}
-          isFavorite={this.isFavorite.bind(this)}/>
+          updateFavorites={this.updateFavorites.bind(this)}/>
       </div>
     );
   }
+}
+
+Splash.getInitialProps = async () => {
+  const clubRequest = await fetch('https://clubs.pennlabs.org/clubs/?format=json')
+  const clubResponse = await clubRequest.json()
+  const tagsRequest = await fetch('https://clubs.pennlabs.org/tags/?format=json')
+  const tagsResponse = await tagsRequest.json()
+  return { clubs: clubResponse, tags: tagsResponse }
 }
 
 Splash.propTypes = {

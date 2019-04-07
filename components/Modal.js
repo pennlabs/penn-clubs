@@ -4,15 +4,12 @@ class Modal extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      modal: '',
     }
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot){
-    if (this.props !== prevProps) {
-      var { modal } = this.props
-      this.setState({ modal })
-    }
+  toggleFavorite(club) {
+    club.favorite = !club.favorite
+    this.forceUpdate()
   }
 
   randomClub() {
@@ -29,9 +26,7 @@ class Modal extends React.Component {
   }
 
   render() {
-
-    var { modal, club, isFavorite, toggleFavorite, closeModal } = this.props
-    console.log(club)
+    var { modal, club, closeModal } = this.props
     return(
       <div className={"modal" + modal} style={{position: "fixed", top: 0, height: "100%", width: "100%"}}>
         <div className="modal-background" style={{backgroundColor: "#d5d5d5", opacity: .5}}></div>
@@ -41,8 +36,8 @@ class Modal extends React.Component {
           </span>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "20px 30px"}}>
             <b className="is-size-1"> {club.name} </b>
-            <span className="icon" onClick={(e)=>toggleFavorite(club)} style={{float:"right", padding: "10px 10px 10px 0px"}}>
-              <i className={(isFavorite(club) ? "fas" : "far") + " fa-heart fa-2x"} ></i>
+            <span className="icon" onClick={(e)=>this.toggleFavorite(club)} style={{float:"right", padding: "10px 10px 0px 0px"}}>
+              <i className={(club.favorite ? "fas" : "far") + " fa-heart"} ></i>
             </span>
           </div>
           <div className="columns" style={{ padding: 10 }}>

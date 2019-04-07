@@ -11,25 +11,25 @@ const Header = () => (
       <script src="https://unpkg.com/ionicons@4.5.5/dist/ionicons.js" />
     </head>
 
-    <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation" style={{height: 50, borderBottom: "1px solid #e3e3e3"}}>
-      <div class="navbar-brand">
-        <a class="navbar-item" href="/">
+    <nav className="navbar is-fixed-top" role="navigation" aria-label="main navigation" style={{height: 50, borderBottom: "1px solid #e3e3e3"}}>
+      <div className="navbar-brand">
+        <a className="navbar-item" href="/">
           <img src="/static/img/pc.png" height="28" style={{paddingLeft: 15}}/>
         </a>
 
-        <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+        <a role="button" className="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
           <span aria-hidden="true"></span>
           <span aria-hidden="true"></span>
           <span aria-hidden="true"></span>
         </a>
       </div>
 
-      <div class="navbar-menu">
-        <div class="navbar-end" style={{padding: "0px 30px"}}>
-          <a href="/faq" class="" style={{padding: 15, textDecoration: "underline", color: "grey"}}>
+      <div className="navbar-menu">
+        <div className="navbar-end" style={{padding: "0px 30px"}}>
+          <a href="/faq" className="" style={{padding: 15, textDecoration: "underline", color: "grey"}}>
             FAQ
           </a>
-          <a href="/favorites" class="" style={{padding: 15, color: "grey"}}>
+          <a href="/favorites" className="" style={{padding: 15, color: "grey"}}>
             <span className="icon">
               <i className="fas fa-heart"></i>
             </span>

@@ -11,17 +11,17 @@ class ClubDisplay extends React.Component {
   }
 
   render() {
-    var props = this.props
+    var { clubs, tags, openModal, favorites, updateFavorites } = this.props
     return (
       <div>
-        <div class="columns is-multiline" style={{ padding: "2rem", marginTop: 150 }}>
-          {props.clubs.map((club) => (
+        <div className="columns is-multiline" style={{ padding: "2rem", marginTop: 150 }}>
+          {clubs.map((club) => (
             <ClubCard
               club={club}
-              tags={props.tags}
-              openModal={props.openModal}
-              toggleFavorite={props.toggleFavorite}
-              isFavorite={props.isFavorite}/>
+              tags={tags}
+              openModal={openModal}
+              favorite={favorites.includes(club.id)}
+              updateFavorites={updateFavorites}/>
           ))}
         </div>
       </div>);
