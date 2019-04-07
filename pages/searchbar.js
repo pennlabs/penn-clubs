@@ -82,10 +82,10 @@ class SearchBar extends React.Component {
       name
     } = this.state
     const sizeOptions = [
-      { value: 1, label: 'less than 20 members' },
-      { value: 2, label: '21 to 50 members' },
-      { value: 3, label: '51 to 100 members' },
-      { value: 4, label: 'more than 100 members'}]
+      { value: 1, label: '< 20' },
+      { value: 2, label: '20 - 50' },
+      { value: 3, label: '50 - 100' },
+      { value: 4, label: '> 100'}]
     const typeOptions = this.mapTagProp(tags)
     const nameOptions = this.mapNameProp(clubs)
     return (

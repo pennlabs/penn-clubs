@@ -46,7 +46,7 @@ class ClubCard extends React.Component {
         onMouseEnter={() => this.setState({ hovering: true })}
         onMouseLeave={() => this.setState({ hovering: false })}>
           <div className="card is-flex" style={{ padding: 10, borderRadius: 5, borderWidth: 1, boxShadow: "0px 2px 6px grey" }}>
-            <div onClick={(e) => openModal(club)} >
+            <div onClick={(e) => openModal(club)} style={{cursor: "pointer"}}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: 10}}>
                 <b className="is-size-4"> {name} </b>
               </div>
@@ -60,7 +60,7 @@ class ClubCard extends React.Component {
                 </div>
               </div>
             </div>
-            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{float:"right", padding: "10px 10px 0px 0px"}}>
+            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{float:"right", padding: "10px 10px 0px 0px", cursor: "pointer"}}>
               <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
             </span>
           </div>
