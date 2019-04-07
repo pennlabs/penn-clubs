@@ -13,7 +13,7 @@ class Splash extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      modal: '',
+      modal: false,
       club: {},
       clubs: [],
       favorites: []
@@ -36,14 +36,14 @@ class Splash extends React.Component {
 
   openModal(club) {
     club.favorite = this.state.favorites.includes(club.id)
-    this.setState({modal: 'is-active', club: club})
+    this.setState({modal: true, club: club})
   }
 
   closeModal(club) {
     if (club.favorite != this.state.favorites.includes(club.id)) {
       this.updateFavorites(club.id)
     }
-    this.setState({modal: '', club: club})
+    this.setState({modal: false, club: club})
   }
 
   updateFavorites(id) {
@@ -59,7 +59,7 @@ class Splash extends React.Component {
   }
 
   render() {
-    var { clubs, favorites } = this.state
+    var { clubs, favorites, modal, club } = this.state
     var { tags } = this.props
     return(
       <div style={{ backgroundColor: "#f9f9f9" }}>
@@ -69,15 +69,16 @@ class Splash extends React.Component {
           tags={tags}
           favorites={favorites}
           openModal={this.openModal.bind(this)}
-          updateFavorites={this.updateFavorites.bind(this)}/>
+          updateFavorites={this.updateFavorites.bind(this)}
+          scrollable={!modal}/>
         <Footer />
         <SearchBar
           clubs={clubs}
           tags={tags}
           resetClubs={this.resetClubs.bind(this)}/>
         <Modal
-          modal={this.state.modal}
-          club={this.state.club}
+          modal={modal}
+          club={club}
           closeModal={this.closeModal.bind(this)}
           updateFavorites={this.updateFavorites.bind(this)}/>
       </div>

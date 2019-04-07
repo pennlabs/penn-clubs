@@ -11,9 +11,9 @@ class ClubDisplay extends React.Component {
   }
 
   render() {
-    var { clubs, tags, openModal, favorites, updateFavorites } = this.props
+    var { clubs, tags, openModal, favorites, updateFavorites, scrollable } = this.props
     return (
-      <div>
+      <div style={scrollable ? {} : {position: 'fixed'}}>
         <div className="columns is-multiline" style={{ padding: "2rem", marginTop: 150 }}>
           {clubs.map((club) => (
             <ClubCard
