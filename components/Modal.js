@@ -31,6 +31,7 @@ class Modal extends React.Component {
   render() {
 
     var { modal, club, isFavorite, toggleFavorite, closeModal } = this.props
+    console.log(club)
     return(
       <div className={"modal" + modal} style={{position: "fixed", top: 0, height: "100%", width: "100%"}}>
         <div className="modal-background" style={{backgroundColor: "#d5d5d5", opacity: .5}}></div>

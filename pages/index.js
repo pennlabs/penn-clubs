@@ -3,19 +3,19 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
-import Dropdown from '../components/Dropdown'
 import SearchBar from './searchbar.js'
 import ClubDisplay from './clubdisplay.js'
 import ClubCard from '../components/ClubCard.js'
 import Modal from '../components/Modal.js'
-import { StickyContainer, Sticky } from 'react-sticky';
+
 
 class Splash extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
       modal: '',
-      club: {}
+      club: {},
+      favorites: []
     }
   }
 
@@ -27,12 +27,21 @@ class Splash extends React.Component {
     //TODO
     // const favoritesRequest = await fetch('')
     // const favoritesResponse = await favoritesRequest.json()
-    return { clubs: clubResponse, tags: tagsResponse, favorites: [] }
+    return { clubs: clubResponse, tags: tagsResponse }
+  }
+
+  componentDidMount() {
+    var favorites = localStorage.getItem('favorites') || []
+    this.setState({ favorites });
   }
 
   componentWillMount() {
-    var { clubs, favorites } = this.props
-    this.setState({ clubs, favorites });
+    var { clubs } = this.props
+    this.setState({ clubs });
+  }
+
+  componentDidUpdate() {
+    localStorage.setItem('favorites', this.state.favorites);
   }
 
   resetClubs(clubs) {
@@ -48,14 +57,15 @@ class Splash extends React.Component {
   }
 
   toggleFavorite(club) {
-    var newfavs = this.state.favorites
-    var i =newfavs.indexOf(club);
+    var newFavs = this.state.favorites
+    var i = newFavs.indexOf(club);
     if (i == -1) {
-      newfavs.push(club)
+      newFavs.push(club)
     } else {
-      newfavs.splice(i, 1)
+      newFavs.splice(i, 1)
     }
-    this.setState({favorites: newfavs})
+    localStorage.setItem('favorites', newFavs)
+    this.setState({favorites: newFavs})
   }
 
   isFavorite(club) {
@@ -65,6 +75,7 @@ class Splash extends React.Component {
   render() {
     var { clubs } = this.state
     var { tags } = this.props
+    console.log(clubs, tags)
     return(
       <div style={{ backgroundColor: "#f9f9f9" }}>
         <Header />
@@ -111,4 +122,4 @@ Splash.propTypes = {
   }).isRequired,
 }
 
-export default Splash
+export default Splash;

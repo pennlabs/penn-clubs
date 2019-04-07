@@ -14,7 +14,7 @@ class ClubDisplay extends React.Component {
     var props = this.props
     return (
       <div>
-        <div class="columns is-multiline" style={{ padding: "2rem", marginTop: 100 }}>
+        <div class="columns is-multiline" style={{ padding: "2rem", marginTop: 150 }}>
           {props.clubs.map((club) => (
             <ClubCard
               club={club}
