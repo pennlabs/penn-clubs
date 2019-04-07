@@ -70,17 +70,17 @@ class Splash extends React.Component {
           favorites={favorites}
           openModal={this.openModal.bind(this)}
           updateFavorites={this.updateFavorites.bind(this)}
-          scrollable={!modal}/>
+          scrollable={!modal} />
         <Footer />
         <SearchBar
           clubs={clubs}
           tags={tags}
-          resetClubs={this.resetClubs.bind(this)}/>
+          resetClubs={this.resetClubs.bind(this)} />
         <Modal
           modal={modal}
           club={club}
           closeModal={this.closeModal.bind(this)}
-          updateFavorites={this.updateFavorites.bind(this)}/>
+          updateFavorites={this.updateFavorites.bind(this)} />
       </div>
     );
   }

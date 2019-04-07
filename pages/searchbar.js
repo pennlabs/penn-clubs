@@ -82,22 +82,23 @@ class SearchBar extends React.Component {
       name
     } = this.state
     const sizeOptions = [
-      { value: 1, label: '< 20' },
-      { value: 2, label: '20 - 50' },
-      { value: 3, label: '50 - 100' },
-      { value: 4, label: '> 100'}]
+      { value: 1, label: 'less than 20 members' },
+      { value: 2, label: '20 to 50 members' },
+      { value: 3, label: '50 to 100 members' },
+      { value: 4, label: 'more than 100'}]
     const typeOptions = this.mapTagProp(tags)
     const nameOptions = this.mapNameProp(clubs)
     return (
-      <div className="hero"
-      style={{
-        position: "fixed",
-        top: 50,
-        height: 100,
-        width: "100%",
-        backgroundColor: "white",
-        boxShadow: "0px 2px 4px #d5d5d5",
-        padding: "30px 30px 0px 30px"}}>
+      <div
+        className="hero is-flex"
+        style={{
+          position: "fixed",
+          top: 50,
+          minHeight: 100,
+          width: "100%",
+          backgroundColor: "white",
+          boxShadow: "0px 2px 4px #e5e5e5",
+          padding: 30}}>
         <div className="columns" style={{ display: "flex", alignItems: "center"}}>
           <div className="column is-4">
             <Select

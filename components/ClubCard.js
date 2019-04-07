@@ -45,7 +45,7 @@ class ClubCard extends React.Component {
         pose={this.state.hovering ? "hovered" : "idle"}
         onMouseEnter={() => this.setState({ hovering: true })}
         onMouseLeave={() => this.setState({ hovering: false })}>
-          <div className="card is-flex" style={{ padding: 10, borderRadius: 5, borderWidth: 1, boxShadow: "0px 2px 6px grey" }}>
+          <div className="card is-flex" style={{ padding: 10, borderRadius: 5, borderWidth: 1, boxShadow: "0px 2px 4px #e5e5e5" }}>
             <div onClick={(e) => openModal(club)} style={{cursor: "pointer"}}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: 10}}>
                 <b className="is-size-4"> {name} </b>
