@@ -1,118 +1,62 @@
-import fetch from 'isomorphic-unfetch'
 import React from 'react'
-import PropTypes from 'prop-types'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
-import SearchBar from './searchbar.js'
-import ClubDisplay from './clubdisplay.js'
-import ClubCard from '../components/ClubCard.js'
-import Modal from '../components/Modal.js'
+import SearchBar from '../components/SearchBar'
+import ClubDisplay from '../components/ClubDisplay'
+import ClubModal from '../components/ClubModal'
+import renderPage from '../renderPage.js'
 
 
 class Splash extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      displayClubs: props.clubs,
       modal: false,
-      club: {},
-      clubs: [],
-      favorites: []
+      modalClub: {}
     }
   }
 
-  componentWillMount() {
-    var { clubs } = this.props
-    this.setState({ clubs })
-  }
-
-  componentDidMount() {
-    var favorites = JSON.parse(localStorage.getItem('favorites')) || []
-    this.setState({ favorites })
-  }
-
-  resetClubs(clubs) {
-    this.setState({ clubs })
+  resetDisplay(displayClubs) {
+    this.setState({ displayClubs })
+    this.forceUpdate()
   }
 
   openModal(club) {
-    club.favorite = this.state.favorites.includes(club.id)
-    this.setState({modal: true, club: club})
+    club.favorite = this.props.favorites.includes(club.id)
+    this.setState({modal: true, modalClub: club})
   }
 
   closeModal(club) {
-    if (club.favorite != this.state.favorites.includes(club.id)) {
-      this.updateFavorites(club.id)
-    }
-    this.setState({modal: false, club: club})
-  }
-
-  updateFavorites(id) {
-    var newFavs = this.state.favorites
-    var i = newFavs.indexOf(id)
-    if (i == -1) {
-      newFavs.push(id)
-    } else {
-      newFavs.splice(i, 1)
-    }
-    localStorage.setItem('favorites', JSON.stringify(newFavs))
-    this.setState({favorites: newFavs})
+    this.setState({modal: false, modalClub: {}})
   }
 
   render() {
-    var { clubs, favorites, modal, club } = this.state
-    var { tags } = this.props
+    var { displayClubs, modal, modalClub } = this.state
+    var { clubs, tags, favorites, updateFavorites, isFavorite } = this.props
     return(
-      <div style={{ backgroundColor: "#f9f9f9" }}>
+      <div style={ modal ? {position: "fixed", overflow: "hidden"} : {}}>
         <Header />
         <ClubDisplay
-          clubs={clubs}
+          displayClubs={displayClubs}
           tags={tags}
           favorites={favorites}
           openModal={this.openModal.bind(this)}
-          updateFavorites={this.updateFavorites.bind(this)}
-          scrollable={!modal} />
-        <Footer />
+          updateFavorites={updateFavorites}/>
         <SearchBar
           clubs={clubs}
           tags={tags}
-          resetClubs={this.resetClubs.bind(this)} />
-        <Modal
+          resetDisplay={this.resetDisplay.bind(this)} />
+        <Footer />
+        <ClubModal
           modal={modal}
-          club={club}
+          club={modalClub}
           closeModal={this.closeModal.bind(this)}
-          updateFavorites={this.updateFavorites.bind(this)} />
+          updateFavorites={updateFavorites}
+          isFavorite={isFavorite} />
       </div>
     );
   }
 }
 
-Splash.getInitialProps = async () => {
-  const clubRequest = await fetch('https://clubs.pennlabs.org/clubs/?format=json')
-  const clubResponse = await clubRequest.json()
-  const tagsRequest = await fetch('https://clubs.pennlabs.org/tags/?format=json')
-  const tagsResponse = await tagsRequest.json()
-  return { clubs: clubResponse, tags: tagsResponse }
-}
-
-Splash.propTypes = {
-  clubs: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    founded: PropTypes.string.isRequired,
-    facts: PropTypes.string.isRequired,
-    size: PropTypes.string.isRequired,
-    email: PropTypes.string.isRequired,
-    facebook: PropTypes.string.isRequired,
-    tags: PropTypes.array.isRequired,
-    application_required: PropTypes.bool.isRequired,
-    accepting_applications: PropTypes.bool.isRequired,
-    image_url: PropTypes.string.isRequired,
-  }).isRequired,
-  tags: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    link: PropTypes.string.isRequired,
-  }).isRequired,
-}
-
-export default Splash;
+export default renderPage(Splash);

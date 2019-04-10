@@ -6,17 +6,18 @@ const Pop = posed.div({
   hovered: { scale: 1.02 },
 })
 
-class ClubCard extends React.Component {
+class ClubList extends React.Component {
   constructor(props){
     super(props);
     this.state = {
       modal: '',
       hovering: false,
-      favorite: false,
+      favorite: true,
     }
   }
 
-  findTagById(id, tags) {
+  findTagById(id) {
+    var { tags } = this.props
     return tags.find(tag => tag.id == id).name
   }
 
@@ -34,33 +35,42 @@ class ClubCard extends React.Component {
   }
 
   render() {
-    var { club, favorite, tags, openModal, updateFavorites } = this.props
-    var allTags = tags
+    var { club, updateFavorites, openModal } = this.props
+    var { favorite } = this.state
     var { name, id, description, subtitle, tags } = club
     var img = club.img ? club.img : this.randomClub()
     club.img = img
     return (
-      <div className="column is-half">
+      <div style={{margin: '1rem 3rem'}}>
       <Pop
         pose={this.state.hovering ? "hovered" : "idle"}
         onMouseEnter={() => this.setState({ hovering: true })}
         onMouseLeave={() => this.setState({ hovering: false })}>
-          <div className="card is-flex" style={{ padding: 10, borderRadius: 5, borderWidth: 1, boxShadow: "0px 2px 4px #d5d5d5" }}>
-            <div onClick={(e) => openModal(club)} style={{cursor: "pointer"}}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: 10}}>
+          <div
+            className="card is-flex"
+            style={{
+              padding: 20,
+              borderRadius: 5,
+              borderWidth: 1,
+              boxShadow: "0px 2px 4px #d5d5d5",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between"}}>
+            <div className="columns is-vcentered" style={{margin:0}} onClick={(e) => openModal(club)}>
+              <div className="column is-1">
+                <img src={img}/>
+              </div>
+              <div className="column is-3">
                 <b className="is-size-4"> {name} </b>
               </div>
-              {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: "#8089f8", margin: 5}}>{this.findTagById(tag, allTags)}</span>)}
-              <div className="columns" style={{ padding: 10 }}>
-                <div className="column">
-                  <img style={{ height: 200 }} src={img} />
-                </div>
-                <div className="column">
-                  <p>{subtitle}</p>
-                </div>
+              <div className="column is-3">
+                {tags.map(tag => <span className="tag is-rounded has-text-white is-size-7" style={{backgroundColor: "#8089f8", margin: 2}}>{this.findTagById(tag)}</span>)}
+              </div>
+              <div className="column is-5">
+                <p className="is-size-6">{subtitle}</p>
               </div>
             </div>
-            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{float:"right", padding: "10px 10px 0px 0px", cursor: "pointer"}}>
+            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{cursor: "pointer", padding: 10}}>
               <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
             </span>
           </div>
@@ -70,4 +80,4 @@ class ClubCard extends React.Component {
   }
 }
 
-export default ClubCard
+export default ClubList
