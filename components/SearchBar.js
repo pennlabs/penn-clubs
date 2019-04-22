@@ -1,13 +1,21 @@
 import React from 'react'
 import Select from 'react-select'
+import DropdownFilter from './DropdownFilter'
+import posed from 'react-pose'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
+
+const Pop = posed.div({
+  idle: { scale: 1 },
+  hovered: { scale: 1.1 },
+})
 
 class SearchBar extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      tags: [],
-      sizes: [],
-      names: [],
+      tagSelected: [],
+      sizeSelected: [],
+      applicationSelected: [],
       sizeOptions: [
         { value: 1, label: 'less than 20 members' },
         { value: 2, label: '20 to 50 members' },
@@ -15,115 +23,97 @@ class SearchBar extends React.Component {
         { value: 4, label: 'more than 100'}
       ],
       tagOptions: props.tags.map((tag) => ({value: tag.id, label: tag.name})),
-      nameOptions: props.clubs.map((club) => ({value: club.name, label: club.name})),
+      applicationOptions: [
+        {value: 1, label: "Requires application"},
+        {value: 2, label: "Does not require application"},
+        {value: 3, label: "Currently accepting applications"}],
       clubs: props.clubs,
+      hoverList: false,
+      hoverCard: false,
+      hoverDown: false,
     }
   }
 
-  filterClubs(names, sizes, tags) {
-    var clubs1 = this.filterByName(names, this.state.clubs)
-    var clubs2 = this.filterBySize(sizes, clubs1)
-    var clubs3 = this.filterByTag(tags, clubs2)
-    return clubs3
-  }
+  updateClubs() {
 
-  filterBySize(sizes, clubs) {
-    return clubs.length ? sizes.length ? clubs.filter((club) => {
-      var contains;
-      sizes.forEach(size => {
-        if (club.size == size.value) {
-          contains = true;
-        }
-      })
-      return contains;
-    }) : clubs : []
-  }
-
-  filterByTag(tags, clubs) {
-    return clubs.length ? tags.length ? clubs.filter((club) => {
-      return tags.every(tag => club.tags.includes(tag.value))
-    }) : clubs : []
-  }
-
-  filterByName(names, clubs) {
-    return clubs.length ? names.length ? clubs.filter((club) => {
-      var contains
-      names.forEach(name => {
-        if (club.name === name.value) {
-          contains = true;
-        }
-      })
-      return contains;
-    }) : clubs : []
-  }
-
-  updateTags(tags) {
-    this.setState({ tags })
-    var { sizes, names } = this.state
-    this.props.resetDisplay(this.filterClubs(names, sizes, tags))
-  }
-
-  updateNames(names) {
-    this.setState({ names })
-    var { sizes, tags } = this.state
-    this.props.resetDisplay(this.filterClubs(names, sizes, tags))
-  }
-
-  updateSizes(sizes) {
-    this.setState({ sizes })
-    var { tags, names } = this.state
-    this.props.resetDisplay(this.filterClubs(names, sizes, tags))
   }
 
   render() {
-    const { sizes, tags, names, nameOptions, tagOptions, sizeOptions } = this.state
+    console.log(this.state)
+    const { sizes, tags, names, nameOptions, tagOptions, sizeOptions, applicationOptions, tagSelected, sizeSelected, applicationSelected } = this.state
+    const { switchDisplay } = this.props
     return (
-      <div
-        className="hero is-flex"
-        style={{
-          position: "fixed",
-          top: 50,
-          minHeight: 80,
-          width: "100%",
-          backgroundColor: "white",
-          boxShadow: "0px 2px 4px #e5e5e5",
-          padding: 20}}>
-        <div className="columns" style={{ display: "flex", alignItems: "center"}}>
-          <div className="column is-4">
-            <Select
-              closeOnSelect={false}
-              value={names}
-              options={nameOptions}
-              onChange={this.updateNames.bind(this)}
-              isMulti
-              isSearchable
-              placeholder="Any Club"
-              simpleValue
-            />
-            </div>
-            <div className="column is-4">
-              <Select
-                closeOnSelect={false}
-                value={tags}
-                options={tagOptions}
-                onChange={this.updateTags.bind(this)}
-                isMulti
-                placeholder="Any Type"
-                simpleValue
-              />
-            </div>
-            <div className="column is-4">
-              <Select
-                closeOnSelect={false}
-                value={sizes}
-                options={sizeOptions}
-                onChange={this.updateSizes.bind(this)}
-                isMulti
-                placeholder="Any Size"
-                simpleValue
-              />
+      <div style={{height: "100vh", width: "100%", overflow: "hidden", position: "sticky", top: -20}}>
+        <div
+          style={{
+            position: "absolute",
+            height: "100vh",
+            width: "100%",
+            right: -17,
+            padding: "35px 0",
+            overflowY: "scroll",
+            overflowX: "hidden",
+            marginBottom: "8rem"
+          }}>
+          <div className="is-flex" style={{justifyContent: "space-between", padding: "0 3px"}}>
+            <b style={{color: CLUBS_GREY}}>View: </b>
+            <div className="is-flex">
+              <Pop
+                pose={this.state.hoverCard ? "hovered" : "idle"}
+                onMouseEnter={() => this.setState({ hoverCard: true })}
+                onMouseLeave={() => this.setState({ hoverCard: false })}>
+                <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY}} onClick={(e)=>switchDisplay("cards")}>
+                  <i class="fas fa-th-large"></i>
+                </span>
+              </Pop>
+              <Pop
+                pose={this.state.hoverList ? "hovered" : "idle"}
+                onMouseEnter={() => this.setState({ hoverList: true })}
+                onMouseLeave={() => this.setState({ hoverList: false })}>
+                <span className="icon" >
+                  <i class="fas fa-list" style={{cursor: "pointer", color: CLUBS_GREY}} onClick={(e)=>switchDisplay("list")}></i>
+                </span>
+              </Pop>
             </div>
           </div>
+          <div style={{margin: "30px 0"}}>
+            <hr style={{backgroundColor: CLUBS_GREY, height:"2px", margin: 0, padding: 0}}/>
+            <div style={{display: "flex", justifyContent: "space-between", padding: "7px 3px"}}>
+              <input
+                type="text"
+                name="search"
+                placeholder="Search"
+                style={{
+                  borderWidth: 0,
+                  outline: "none",
+                  color: CLUBS_GREY,
+                  width: "100%",
+                  fontSize: "1em",
+                }}/>
+              <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY}}>
+                <i class="fas fa-search"></i>
+              </span>
+            </div>
+          </div>
+          <DropdownFilter
+            name="Type"
+            options={tagOptions}
+            selected={tagSelected}
+            update={(tagSelected) => this.setState({ tagSelected })}
+          />
+          <DropdownFilter
+            name="Size"
+            options={sizeOptions}
+            selected={sizeSelected}
+            update={(sizeSelected) => this.setState({ sizeSelected })}
+          />
+          <DropdownFilter
+            name="Application"
+            options={applicationOptions}
+            selected={applicationSelected}
+            update={(applicationSelected) => this.setState({ applicationSelected })}
+          />
+        </div>
       </div>
     )
   }

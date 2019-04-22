@@ -12,13 +12,11 @@ class ClubList extends React.Component {
     this.state = {
       modal: '',
       hovering: false,
-      favorite: true,
     }
   }
 
   findTagById(id) {
-    var { tags } = this.props
-    return tags.find(tag => tag.id == id).name
+    return this.props.tags.find(tag => tag.id == id).name
   }
 
   randomClub() {
@@ -35,42 +33,41 @@ class ClubList extends React.Component {
   }
 
   render() {
-    var { club, updateFavorites, openModal } = this.props
-    var { favorite } = this.state
+    var { club, openModal, updateFavorites, favorite } = this.props
     var { name, id, description, subtitle, tags } = club
     var img = club.img ? club.img : this.randomClub()
     club.img = img
     return (
-      <div style={{margin: '1rem 3rem'}}>
+      <div style={{margin: '.5rem'}}>
       <Pop
         pose={this.state.hovering ? "hovered" : "idle"}
         onMouseEnter={() => this.setState({ hovering: true })}
         onMouseLeave={() => this.setState({ hovering: false })}>
           <div
-            className="card is-flex"
+            className=" is-flex"
             style={{
-              padding: 20,
+              padding: "0 5px",
               borderRadius: 5,
               borderWidth: 1,
               boxShadow: "0px 2px 4px #d5d5d5",
               flexDirection: "row",
               alignItems: "center",
-              justifyContent: "space-between"}}>
-            <div className="columns is-vcentered" style={{margin:0}} onClick={(e) => openModal(club)}>
+              justifyContent: "space-between" }}>
+            <div className="columns is-vcentered" style={{margin:0, cursor: "pointer"}} onClick={(e) => openModal(club)}>
               <div className="column is-1">
                 <img src={img}/>
               </div>
-              <div className="column is-3">
-                <b className="is-size-4"> {name} </b>
+              <div className="column is-flex" style={{flexDirection: "column"}}>
+                <b className="is-size-6"> {name} </b>
+                <div className="">
+                  {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: "#8089f8", margin: 2, fontSize: '.65em'}}>{this.findTagById(tag)}</span>)}
+                </div>
               </div>
-              <div className="column is-3">
-                {tags.map(tag => <span className="tag is-rounded has-text-white is-size-7" style={{backgroundColor: "#8089f8", margin: 2}}>{this.findTagById(tag)}</span>)}
-              </div>
-              <div className="column is-5">
-                <p className="is-size-6">{subtitle}</p>
+              <div className="column is-7">
+                <p style={{color:"#g3g3g3", fontSize: ".8rem"}}>{subtitle}</p>
               </div>
             </div>
-            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{cursor: "pointer", padding: 10}}>
+            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{cursor: "pointer", padding: "0px 30px"}}>
               <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
             </span>
           </div>

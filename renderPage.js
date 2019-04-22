@@ -1,4 +1,10 @@
 import React from 'react'
+import Header from './components/Header'
+import Footer from './components/Footer'
+import ClubModal from './components/ClubModal'
+import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
+import fetch from 'isomorphic-fetch'
+import { CLUBS_PURPLE_LIGHT } from './colors'
 
 
 function renderPage(Page) {
@@ -7,12 +13,16 @@ function renderPage(Page) {
       super(props)
       this.state = {
         favorites: [],
+        modal: false,
+        modalClub: {}
       }
+      var modalElement = null
     }
 
     componentDidMount() {
       var favorites = JSON.parse(localStorage.getItem('favorites')) || []
       this.setState({ favorites })
+      this.modalElement = document.querySelector('#modal');
     }
 
     updateFavorites(id) {
@@ -27,23 +37,49 @@ function renderPage(Page) {
       this.setState({favorites: newFavs})
     }
 
-    isFavorite(id) {
-      return this.state.favorites.includes(id)
+    openModal(club) {
+      this.state.favorites.includes(club.id)
+      this.setState({modal: true, modalClub: club})
+      disableBodyScroll(this)
+    }
+
+    closeModal(club) {
+      this.setState({modal: false, modalClub: {}})
+      enableBodyScroll(this)
+    }
+
+    mapToClubs(favorites) {
+      var { clubs } = this.props
+      return favorites.map((favorite) => {
+        return (clubs.find((club) => club.id == favorite))
+      })
     }
 
     render() {
       var { clubs, tags } = this.props
-      var { favorites } = this.state
+      var { favorites, modal, modalClub } = this.state
+      var favoriteClubs = this.mapToClubs(favorites)
       return(
-        <div style={{backgroundColor: "#f9f9f9"}}>
+        <div style={{ dispay: "flex", flexDirection: "column", backgroundColor: "#fff"}}>
+          <Header />
           <Page
             clubs={clubs}
             tags={tags}
             favorites={favorites}
             updateFavorites={this.updateFavorites.bind(this)}
-            isFavorite={this.isFavorite.bind(this)}
+            openModal={this.openModal.bind(this)}
+            closeModal={this.closeModal.bind(this)}
+            favoriteClubs={favoriteClubs}
           />
-        </div>
+          <Footer />
+          <ClubModal
+            modal={modal}
+            club={modalClub}
+            tags={tags}
+            closeModal={this.closeModal.bind(this)}
+            updateFavorites={this.updateFavorites.bind(this)}
+            favorite={favorites.includes(modalClub.id)} />
+      </div>
       )
     }
   }

@@ -5,6 +5,7 @@ import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
 import ClubModal from '../components/ClubModal'
 import renderPage from '../renderPage.js'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
 
 
 class Splash extends React.Component {
@@ -13,7 +14,8 @@ class Splash extends React.Component {
     this.state = {
       displayClubs: props.clubs,
       modal: false,
-      modalClub: {}
+      modalClub: {},
+      display: "cards"
     }
   }
 
@@ -22,38 +24,37 @@ class Splash extends React.Component {
     this.forceUpdate()
   }
 
-  openModal(club) {
-    club.favorite = this.props.favorites.includes(club.id)
-    this.setState({modal: true, modalClub: club})
-  }
-
-  closeModal(club) {
-    this.setState({modal: false, modalClub: {}})
+  switchDisplay(display) {
+    this.setState({ display })
+    this.forceUpdate()
   }
 
   render() {
-    var { displayClubs, modal, modalClub } = this.state
-    var { clubs, tags, favorites, updateFavorites, isFavorite } = this.props
+    var { displayClubs, display } = this.state
+    var { clubs, tags, favorites, updateFavorites, openModal, closeModal } = this.props
     return(
-      <div style={ modal ? {position: "fixed", overflow: "hidden"} : {}}>
-        <Header />
-        <ClubDisplay
-          displayClubs={displayClubs}
-          tags={tags}
-          favorites={favorites}
-          openModal={this.openModal.bind(this)}
-          updateFavorites={updateFavorites}/>
-        <SearchBar
-          clubs={clubs}
-          tags={tags}
-          resetDisplay={this.resetDisplay.bind(this)} />
-        <Footer />
-        <ClubModal
-          modal={modal}
-          club={modalClub}
-          closeModal={this.closeModal.bind(this)}
-          updateFavorites={updateFavorites}
-          isFavorite={isFavorite} />
+      <div className="columns is-gapless is-mobile" style={{minHeight: "59vh", marginRight: 20}}>
+        <div className="column is-2-desktop is-3-tablet is-5-mobile">
+          <SearchBar
+            clubs={clubs}
+            tags={tags}
+            resetDisplay={this.resetDisplay.bind(this)}
+            switchDisplay={this.switchDisplay.bind(this)} />
+          </div>
+        <div className="column is-10-desktop is-9-tablet is-7-mobile" style={{marginLeft: 40}}>
+          <div style={{padding: "30px 0"}}>
+            <p className="title" style={{color: CLUBS_GREY}}>Browse Clubs</p>
+            <p className="subtitle is-size-5" style={{color: CLUBS_GREY_LIGHT}}>Find your people!</p>
+          </div>
+          <ClubDisplay
+            displayClubs={displayClubs}
+            display={display}
+            tags={tags}
+            favorites={favorites}
+            openModal={openModal}
+            updateFavorites={updateFavorites} />
+          </div>
+
       </div>
     );
   }
