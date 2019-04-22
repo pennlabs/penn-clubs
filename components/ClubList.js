@@ -1,14 +1,12 @@
 import React from 'react'
 import posed from 'react-pose'
-import { CLUBS_PURPLE, CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_PERIWINKLE } from '../colors'
 
 const Pop = posed.div({
   idle: { scale: 1 },
-  hovered: { scale: 1 },
+  hovered: { scale: 1.02 },
 })
 
-
-class ClubCard extends React.Component {
+class ClubList extends React.Component {
   constructor(props){
     super(props);
     this.state = {
@@ -19,13 +17,6 @@ class ClubCard extends React.Component {
 
   findTagById(id) {
     return this.props.tags.find(tag => tag.id == id).name
-  }
-
-  shorten(desc) {
-    if (desc.length < 280) return desc
-    else {
-      return desc.slice(0, 280) + '...'
-    }
   }
 
   randomClub() {
@@ -41,44 +32,42 @@ class ClubCard extends React.Component {
     return clubs[i];
   }
 
-
-
   render() {
     var { club, openModal, updateFavorites, favorite } = this.props
     var { name, id, description, subtitle, tags } = club
     var img = club.img ? club.img : this.randomClub()
     club.img = img
     return (
-      <div className="column is-half-desktop">
+      <div style={{margin: '.5rem'}}>
       <Pop
         pose={this.state.hovering ? "hovered" : "idle"}
         onMouseEnter={() => this.setState({ hovering: true })}
         onMouseLeave={() => this.setState({ hovering: false })}>
           <div
-            className="card is-flex"
+            className=" is-flex"
             style={{
-              padding: 10,
-              borderRadius: 3,
-              minHeight: 240,
-              boxShadow: "0 0 0 #fff",
-              border: "1px solid #e5e5e5",
-              backgroundColor: this.state.hovering ? "#FAFAFA" : "#fff"
-            }}>
-            <div onClick={(e) => openModal(club)} style={{cursor: "pointer"}}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 3px"}}>
-                <b className="is-size-5" style={{color: CLUBS_GREY}}> {name} </b>
+              padding: "0 5px",
+              borderRadius: 5,
+              borderWidth: 1,
+              boxShadow: "0px 2px 4px #d5d5d5",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between" }}>
+            <div className="columns is-vcentered" style={{margin:0, cursor: "pointer"}} onClick={(e) => openModal(club)}>
+              <div className="column is-1">
+                <img src={img}/>
               </div>
-              {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_PURPLE, margin: "0 3px", fontSize: "0.6em"}}>{this.findTagById(tag)}</span>)}
-              <div className="columns is-desktop is-gapless" style={{ padding: "10px 5px" }}>
-                <div className="column is-narrow">
-                  <img style={{ height: 120, width: 180, borderRadius: 3}} src={img} />
+              <div className="column is-flex" style={{flexDirection: "column"}}>
+                <b className="is-size-6"> {name} </b>
+                <div className="">
+                  {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: "#8089f8", margin: 2, fontSize: '.65em'}}>{this.findTagById(tag)}</span>)}
                 </div>
-                <div className="column">
-                  <p style={{fontSize: ".8em", paddingLeft: 8, color: CLUBS_GREY_LIGHT}}>{this.shorten(subtitle)}</p>
-                </div>
+              </div>
+              <div className="column is-7">
+                <p style={{color:"#g3g3g3", fontSize: ".8rem"}}>{subtitle}</p>
               </div>
             </div>
-            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{color: CLUBS_GREY, float:"right", padding: "10px 10px 0px 0px", cursor: "pointer"}}>
+            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{cursor: "pointer", padding: "0px 30px"}}>
               <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
             </span>
           </div>
@@ -88,4 +77,4 @@ class ClubCard extends React.Component {
   }
 }
 
-export default ClubCard
+export default ClubList
