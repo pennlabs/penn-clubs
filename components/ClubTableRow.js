@@ -35,15 +35,15 @@ class ClubTableRow extends React.Component {
     return (
       <tr style={{borderTop: "1px solid #e5e5e5"}}>
         <div className="columns is-vcentered is-gapless is-mobile">
-          <div className="column">
-            <div onClick={(e) => openModal(club)} className="columns is-gapless" style={{padding: 10}}>
-              <div onCclassName="column is-4">
+          <div className="column" onClick={(e) => openModal(club)}>
+            <div className="columns is-gapless" style={{padding: 10}}>
+              <div className="column is-4">
                 <b className="is-size-6" style={{color: CLUBS_GREY}}> {name} </b>
                 <div>
                   {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_PURPLE, margin: 2, fontSize: '.5em'}}>{this.findTagById(tag)}</span>)}
                 </div>
               </div>
-              <div onClick={(e) => openModal(club)} className="column is-8">
+              <div className="column is-8">
                 <p style={{color: CLUBS_GREY_LIGHT, fontSize: ".8rem", paddingLeft: 10}}>{subtitle}</p>
               </div>
             </div>

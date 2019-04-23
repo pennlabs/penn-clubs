@@ -5,6 +5,7 @@ import Footer from '../components/Footer'
 import ClubList from '../components/ClubList.js'
 import ClubModal from '../components/ClubModal.js'
 import renderPage from '../renderPage.js'
+import { CLUBS_GREY } from '../colors'
 
 
 class Favorites extends React.Component {
@@ -19,9 +20,9 @@ class Favorites extends React.Component {
   render() {
     var { tags, favorites, updateFavorites, openModal, closeModal, favoriteClubs } = this.props
     return (
-      <div style={{padding: '1rem 2rem', marginTop: 60, display: "flex", alignItems: "center", minHeight: "72vh", flexDirection: "column"}}>
-        <div>
-          <h1 className="title">Favorites</h1>
+      <div style={{padding: '0 2rem', display: "flex", alignItems: "center", minHeight: "72vh", flexDirection: "column"}}>
+        <div style={{padding: "30px 0"}}>
+          <h1 className="title" style={{color: CLUBS_GREY}}>Favorites</h1>
         </div>
         {favoriteClubs.map((club) => (
           <ClubList

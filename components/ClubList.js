@@ -1,9 +1,10 @@
 import React from 'react'
 import posed from 'react-pose'
+import { CLUBS_PURPLE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
 
 const Pop = posed.div({
-  idle: { scale: 1 },
-  hovered: { scale: 1.02 },
+  idle: { },
+  hovered: { },
 })
 
 class ClubList extends React.Component {
@@ -38,41 +39,38 @@ class ClubList extends React.Component {
     var img = club.img ? club.img : this.randomClub()
     club.img = img
     return (
-      <div style={{margin: '.5rem'}}>
       <Pop
+        style={{width: "100%"}}
         pose={this.state.hovering ? "hovered" : "idle"}
         onMouseEnter={() => this.setState({ hovering: true })}
         onMouseLeave={() => this.setState({ hovering: false })}>
-          <div
-            className=" is-flex"
-            style={{
-              padding: "0 5px",
-              borderRadius: 5,
-              borderWidth: 1,
-              boxShadow: "0px 2px 4px #d5d5d5",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between" }}>
-            <div className="columns is-vcentered" style={{margin:0, cursor: "pointer"}} onClick={(e) => openModal(club)}>
-              <div className="column is-1">
-                <img src={img}/>
-              </div>
-              <div className="column is-flex" style={{flexDirection: "column"}}>
-                <b className="is-size-6"> {name} </b>
-                <div className="">
-                  {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: "#8089f8", margin: 2, fontSize: '.65em'}}>{this.findTagById(tag)}</span>)}
+        <div style={{ padding: "0 5px", borderRadius: 3, border: "1px solid #e5e5e5", backgroundColor: this.state.hovering ? "#FAFAFA" : "#fff", margin: '.5rem', width: "100%"}}>
+          <div className="columns is-vcentered is-gapless is-mobile">
+            <div onClick={(e) => openModal(club)} className="column">
+              <div className="columns is-gapless is-vcentered" style={{padding: 10, width: "100%"}}>
+                <div className="column is-narrow">
+                  <img style={{ height: 60, width: 90, borderRadius: 3}} src={img} />
+                </div>
+                <div className="column is-4" style={{marginLeft: 20}}>
+                  <b className="is-size-6" style={{color: CLUBS_GREY}}> {name} </b>
+                  <div>
+                    {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_PURPLE, margin: 2, fontSize: '.5em'}}>{this.findTagById(tag)}</span>)}
+                  </div>
+                </div>
+                <div className="column">
+                  <p style={{color: CLUBS_GREY_LIGHT, fontSize: ".8rem", paddingLeft: 10}}>{subtitle}</p>
                 </div>
               </div>
-              <div className="column is-7">
-                <p style={{color:"#g3g3g3", fontSize: ".8rem"}}>{subtitle}</p>
-              </div>
             </div>
-            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{cursor: "pointer", padding: "0px 30px"}}>
-              <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
-            </span>
+            <div className="column is-narrow">
+              <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{color: CLUBS_GREY, cursor: "pointer", paddingRight: 20}}>
+                <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
+              </span>
+            </div>
           </div>
+        </div>
         </Pop>
-      </div>
+
     )
   }
 }

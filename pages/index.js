@@ -1,4 +1,3 @@
-import React from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import SearchBar from '../components/SearchBar'
@@ -20,8 +19,9 @@ class Splash extends React.Component {
   }
 
   resetDisplay(displayClubs) {
-    this.setState({ displayClubs })
-    this.forceUpdate()
+    console.log(displayClubs)
+    this.setState({ displayClubs }, this.forceUpdate())
+
   }
 
   switchDisplay(display) {

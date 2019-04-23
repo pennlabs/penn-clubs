@@ -60,10 +60,10 @@ class ClubModal extends React.Component {
                       <span className="tag is-rounded has-text-dark" style={{margin: 3, backgroundColor:"#ccc", fontSize: ".7em"}}>{this.mapSize(club.size)}</span>
                     </div>
                     <div style={{display: "flex", justifyContent: "space-between"}}>
-                      <b className="is-size-6">Requires Application:</b>  <span className="tag is-rounded has-text-dark" style={{margin: 3, backgroundColor:"#ccc", fontSize: ".7em"}}>Yes</span>
+                      <b className="is-size-6">Requires Application:</b>  <span className="tag is-rounded has-text-dark" style={{margin: 3, backgroundColor:"#ccc", fontSize: ".7em"}}>{club.application_required ? "Yes" : "No"}</span>
                     </div>
                     <div style={{display: "flex", justifyContent: "space-between"}}>
-                      <b className="is-size-6">Currently Recruiting:</b> <span className="tag is-rounded has-text-dark" style={{margin: 3, backgroundColor:"#ccc", fontSize: ".7em"}}>Yes</span>
+                      <b className="is-size-6">Currently Recruiting:</b> <span className="tag is-rounded has-text-dark" style={{margin: 3, backgroundColor:"#ccc", fontSize: ".7em"}}>{club.accepting_applications ? "Yes" : "No"}</span>
                     </div>
                   </div>
                 </div>

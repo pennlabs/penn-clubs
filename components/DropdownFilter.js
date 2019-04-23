@@ -50,8 +50,8 @@ class DropdownFilter extends React.Component {
         </div>
         {drop ? (options.map(option => (
           <div style={{display: "flex", paddingTop: 3}}>
-            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY_LIGHT}} onClick={(e)=>this.toggleSelect(option.label)}>
-              <i className={selected.includes(option.label) ? "far fa-check-square" : "far fa-square"}></i>
+            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY_LIGHT}} onClick={(e)=>this.toggleSelect(option.value)}>
+              <i className={selected.includes(option.value) ? "far fa-check-square" : "far fa-square"}></i>
             </span>
             <p style={{color: CLUBS_GREY_LIGHT}}>{option.label}</p>
           </div>

@@ -16,6 +16,7 @@ class SearchBar extends React.Component {
       tagSelected: [],
       sizeSelected: [],
       applicationSelected: [],
+      nameInput: "",
       sizeOptions: [
         { value: 1, label: 'less than 20 members' },
         { value: 2, label: '20 to 50 members' },
@@ -34,12 +35,39 @@ class SearchBar extends React.Component {
     }
   }
 
-  updateClubs() {
+  getDisplayClubs() {
+    var { clubs, sizeSelected, tagSelected, applicationSelected, nameInput } = this.state
+    clubs = nameInput ? clubs.filter(club => club.name.toLowerCase().indexOf(nameInput.toLowerCase()) !== -1) : clubs
+    clubs = sizeSelected.length && clubs.length ? clubs.filter(club => sizeSelected.includes(club.size)) : clubs
+    clubs = applicationSelected.length && clubs.length ? clubs.filter(club => {
+      var contains = false
+      if (applicationSelected.includes(1) && club.application_required ||
+          applicationSelected.includes(2) && !club.application_required ||
+          applicationSelected.includes(3) && club.accepting_applications
+        ) {
+        contains = true
+      }
+      return contains
+    }): clubs
+    clubs = tagSelected.length && clubs.length ? clubs.filter(club => {
+      var contains
+      club.tags.forEach(tag => {
+        if (tagSelected.includes(tag)) {
+          contains = true
+        }
+      })
+      return contains
+    }): clubs
+    this.props.resetDisplay(clubs)
+  }
 
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.nameInput !== prevState.nameInput) {
+      this.getDisplayClubs()
+    }
   }
 
   render() {
-    console.log(this.state)
     const { sizes, tags, names, nameOptions, tagOptions, sizeOptions, applicationOptions, tagSelected, sizeSelected, applicationSelected } = this.state
     const { switchDisplay } = this.props
     return (
@@ -89,7 +117,10 @@ class SearchBar extends React.Component {
                   color: CLUBS_GREY,
                   width: "100%",
                   fontSize: "1em",
-                }}/>
+                }}
+                value={this.state.nameInput}
+                onInput={(e) => this.setState({nameInput: e.target.value}, this.getDisplayClubs())}
+                />
               <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY}}>
                 <i class="fas fa-search"></i>
               </span>
@@ -99,19 +130,19 @@ class SearchBar extends React.Component {
             name="Type"
             options={tagOptions}
             selected={tagSelected}
-            update={(tagSelected) => this.setState({ tagSelected })}
+            update={(tagSelected) => this.setState({ tagSelected }, this.getDisplayClubs())}
           />
           <DropdownFilter
             name="Size"
             options={sizeOptions}
             selected={sizeSelected}
-            update={(sizeSelected) => this.setState({ sizeSelected })}
+            update={(sizeSelected) => this.setState({ sizeSelected }, this.getDisplayClubs())}
           />
           <DropdownFilter
             name="Application"
             options={applicationOptions}
             selected={applicationSelected}
-            update={(applicationSelected) => this.setState({ applicationSelected })}
+            update={(applicationSelected) => this.setState({ applicationSelected }, this.getDisplayClubs())}
           />
         </div>
       </div>
