@@ -1,5 +1,5 @@
 import posed from 'react-pose'
-import { CLUBS_PURPLE_LIGHT, CLUBS_GREY_LIGHT } from '../colors'
+import { CLUBS_PURPLE_LIGHT, CLUBS_GREY } from '../colors'
 
 const Pop = posed.div({
   idle: { scale: 1 },
@@ -29,7 +29,7 @@ class Header extends React.Component {
           <script src="https://unpkg.com/ionicons@4.5.5/dist/ionicons.js" />
         </head>
 
-        <nav className="navbar" role="navigation" aria-label="main navigation" style={{height: 70, backgroundColor: CLUBS_PURPLE_LIGHT, borderBottom: "0px solid #e5e5e5"}}>
+        <nav className="navbar" role="navigation" aria-label="main navigation" style={{height: 70, backgroundColor: "#f9f9f9", borderBottom: "1px solid #e5e5e5"}}>
           <div className="navbar-brand">
             <a className="navbar-item" href="/">
               <Pop
@@ -49,7 +49,7 @@ class Header extends React.Component {
 
           <div className="navbar-menu">
             <div className="navbar-end" style={{padding: "0px 20px"}}>
-              <a href="/faq" style={{padding: 20, textDecoration: "none", color: CLUBS_GREY_LIGHT}}>
+              <a href="/faq" style={{padding: 20, textDecoration: "underline", color: CLUBS_GREY}}>
                 FAQ
               </a>
               <a href="/favorites" className="" style={{padding: 20}}>
@@ -57,7 +57,7 @@ class Header extends React.Component {
                   pose={this.state.hoverFav ? "hovered" : "idle"}
                   onMouseEnter={() => this.setState({ hoverFav: true })}
                   onMouseLeave={() => this.setState({ hoverFav: false })}>
-                  <span className="icon" style={{color: CLUBS_GREY_LIGHT}}>
+                  <span className="icon" style={{color: CLUBS_GREY}}>
                     <i className="fas fa-heart"></i>
                   </span>
                 </Pop>

@@ -1,28 +1,39 @@
 import fetch from 'isomorphic-unfetch'
-import PropTypes from 'prop-types'
 import renderPage from '../renderPage.js'
 import { CLUBS_GREY } from '../colors'
+import React from 'react'
+import Header from '../components/Header'
+import Footer from '../components/Footer'
 
-const Club = (props) => {
-  const { club, favorites, tags } = props
-  return (
-    <div>
+class Club extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
 
-    </div>
-  )
+    }
+  }
+
+  render() {
+    const { club, tags } = this.props
+    console.log("club", club)
+    return (
+      <div>
+       <Header />
+       <Footer />
+      </div>
+    )
+  }
 }
 
-Club.getInitialProps = async function getProps(props) {
-  const { query } = props
-  const clubRequest = await fetch(`https://clubs.pennlabs.org/clubs/${query.club}`)
-  return { club: clubResponse }
+Club.getInitialProps = async (props) => {
+  const tagsRequest = await fetch('https://clubs.pennlabs.org/tags/?format=json')
+  const tagsResponse = await tagsRequest.json()
+  var { query } = props
+  const clubRequest = await fetch(`https://clubs.pennlabs.org/clubs/${query.club}/?format=json`)
+  const clubResponse = await clubRequest.json()
+  return { club: clubResponse, tags: tagsResponse }
 }
 
-Club.propTypes = {
-  club: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-  }).isRequired,
-}
 
-export default renderPage(Club)
+
+export default Club
