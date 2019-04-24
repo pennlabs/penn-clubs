@@ -36,7 +36,7 @@ class ClubModal extends React.Component {
     return(
       <div className={"modal" + (modal ? 'is-active' : '')} id="modal" style={{position: "fixed", top: 0, height: "100%", width: "100%"}}>
         <div className="modal-background" onClick={(e)=>closeModal(club)} style={{backgroundColor: "#d5d5d5", opacity: .5, position: "fixed"}}></div>
-        <div className="card" style={{ margin: "6rem", borderRadius: 5, borderWidth: 1, boxShadow: "0px 2px 6px rgba(0,0,0,.1)" }}>
+        <div className="card" style={{ margin: "6rem", borderRadius: 3, borderWidth: 1, boxShadow: "0px 2px 6px rgba(0,0,0,.1)" }}>
           <span className="icon" onClick={(e)=>closeModal(club)} style={{float:"right", cursor: "pointer", margin:10}}>
             <i className="fas fa-times"></i>
           </span>
@@ -50,11 +50,11 @@ class ClubModal extends React.Component {
             <div className="columns" style={{marginBottom: 20}}>
               <div className="column">
                 <div style={{display:"flex", flexDirection:"column", justifyContent: "space-between", height: 400}}>
-                  <img style={{ height: 220, width: 330, borderRadius: 5 }} src={club.img ? club.img : this.randomClub()} />
+                  <img style={{ height: 220, width: 330, borderRadius: 3 }} src={club.img ? club.img : this.randomClub()} />
                   <div>
                     {club.tags ? club.tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: "#8089f8", margin: 3}}>{this.findTagById(tag)}</span>) : ""}
                   </div>
-                  <div style={{borderRadius: 5, backgroundColor: "#f2f2f2", height: 100, width: 330, padding: 10, display: "flex", flexDirection:"column", justifyContent: "space-around"}}>
+                  <div style={{borderRadius: 3, backgroundColor: "#f2f2f2", height: 100, width: 330, padding: 10, display: "flex", flexDirection:"column", justifyContent: "space-around"}}>
                     <div style={{display: "flex", justifyContent: "space-between"}}>
                       <b className="is-size-6">Membership:</b>
                       <span className="tag is-rounded has-text-dark" style={{margin: 3, backgroundColor:"#ccc", fontSize: ".7em"}}>{this.mapSize(club.size)}</span>

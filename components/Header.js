@@ -29,7 +29,7 @@ class Header extends React.Component {
           <script src="https://unpkg.com/ionicons@4.5.5/dist/ionicons.js" />
         </head>
 
-        <nav className="navbar" role="navigation" aria-label="main navigation" style={{height: 70, backgroundColor: "#fafafa", borderBottom: "1px solid #e5e5e5"}}>
+        <nav className="navbar" role="navigation" aria-label="main navigation" style={{height: 70, backgroundColor: CLUBS_PURPLE_LIGHT, borderBottom: "0px solid #e5e5e5"}}>
           <div className="navbar-brand">
             <a className="navbar-item" href="/">
               <Pop

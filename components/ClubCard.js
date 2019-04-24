@@ -1,6 +1,7 @@
 import React from 'react'
 import posed from 'react-pose'
 import { CLUBS_PURPLE, CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_PERIWINKLE } from '../colors'
+import TagGroup from './TagGroup'
 
 const Pop = posed.div({
   idle: { scale: 1 },
@@ -15,10 +16,6 @@ class ClubCard extends React.Component {
       modal: '',
       hovering: false,
     }
-  }
-
-  findTagById(id) {
-    return this.props.tags.find(tag => tag.id == id).name
   }
 
   shorten(desc) {
@@ -68,7 +65,7 @@ class ClubCard extends React.Component {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 3px"}}>
                 <b className="is-size-5" style={{color: CLUBS_GREY}}> {name} </b>
               </div>
-              {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_PURPLE, margin: "0 3px", fontSize: "0.6em"}}>{this.findTagById(tag)}</span>)}
+              <TagGroup allTags={this.props.tags} clubTags={tags} />
               <div className="columns is-desktop is-gapless" style={{ padding: "10px 5px" }}>
                 <div className="column is-narrow">
                   <img style={{ height: 120, width: 180, borderRadius: 3}} src={img} />

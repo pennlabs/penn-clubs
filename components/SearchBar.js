@@ -75,10 +75,10 @@ class SearchBar extends React.Component {
         <div
           style={{
             position: "absolute",
-            height: "100vh",
+            height: "90vh",
             width: "100%",
             right: -17,
-            padding: "35px 0",
+            padding: "50px 0",
             overflowY: "scroll",
             overflowX: "hidden",
             marginBottom: "8rem"
