@@ -22,18 +22,27 @@ class DropdownFilter extends React.Component {
   }
 
   toggleSelect(option) {
-    var selected = this.state.selected
-    if (selected.includes(option)) {
-      selected.splice(selected.indexOf(option), 1)
-    } else {
+    var { selected } = this.state
+    var { name } = this.props
+    var i = selected.findIndex(tag => tag.value === option.value)
+    if (i === -1) {
+      option.name = name
       selected.push(option)
+    } else {
+      selected.splice(i, 1)
     }
-    this.props.update(selected)
+    this.props.update(option)
+  }
+
+  isSelected(tag) {
+    var { label, value, name } = tag
+    var { selected } = this.props
+    return selected.find(tag => tag.value === value)
   }
 
   render() {
-    var { name, options } = this.props
-    var { drop, hoverDown, selected } = this.state
+    var { name, options, selected } = this.props
+    var { drop, hoverDown } = this.state
     return(
       <div>
         <hr style={{backgroundColor: CLUBS_GREY, height:"2px", margin: 0, marginTop: 30, padding: 0}}/>
@@ -50,8 +59,8 @@ class DropdownFilter extends React.Component {
         </div>
         {drop ? (options.map(option => (
           <div style={{display: "flex", paddingTop: 3}}>
-            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY_LIGHT}} onClick={(e)=>this.toggleSelect(option.value)}>
-              <i className={selected.includes(option.value) ? "fas fa-check-square" : "far fa-square"}></i>
+            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY_LIGHT}} onClick={(e)=>this.toggleSelect(option)}>
+              <i className={this.isSelected(option) ? "fas fa-check-square" : "far fa-square"}></i>
             </span>
             <p style={{color: CLUBS_GREY_LIGHT}}>{option.label}</p>
           </div>

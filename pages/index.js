@@ -4,7 +4,7 @@ import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
 import ClubModal from '../components/ClubModal'
 import renderPage from '../renderPage.js'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_PURPLE, CLUBS_BLUE } from '../colors'
 
 
 class Splash extends React.Component {
@@ -12,16 +12,44 @@ class Splash extends React.Component {
     super(props)
     this.state = {
       displayClubs: props.clubs,
+      selectedTags: [],
+      nameInput: "",
       modal: false,
       modalClub: {},
       display: "cards"
     }
   }
 
-  resetDisplay(displayClubs) {
-    console.log(displayClubs)
-    this.setState({ displayClubs }, this.forceUpdate())
-
+  resetDisplay(nameInput, selectedTags) {
+    var tagSelected = selectedTags.filter(tag => tag.name === "Type")
+    var sizeSelected = selectedTags.filter(tag => tag.name === "Size")
+    var applicationSelected = selectedTags.filter(tag => tag.name === "Application")
+    var { clubs } = this.props
+    clubs = nameInput ? clubs.filter(club => club.name.toLowerCase().indexOf(nameInput.toLowerCase()) !== -1) : clubs
+    clubs = sizeSelected.length && clubs.length ? clubs.filter(club =>
+      (sizeSelected.findIndex(sizeTag => sizeTag.value === club.size) !== -1)
+    ) : clubs
+    clubs = applicationSelected.length && clubs.length ? clubs.filter(club => {
+      var contains = false
+      if (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 && club.application_required ||
+          applicationSelected.findIndex(appTag => appTag.value === 2) !== -1  && !club.application_required ||
+          applicationSelected.findIndex(appTag => appTag.value === 3) !== -1  && club.accepting_applications
+        ) {
+        contains = true
+      }
+      return contains
+    }): clubs
+    clubs = tagSelected.length && clubs.length ? clubs.filter(club => {
+      var contains
+      club.tags.forEach(id => {
+        if (tagSelected.findIndex(tag => tag.value === id) !== -1 ) {
+          contains = true
+        }
+      })
+      return contains
+    }): clubs
+    var displayClubs = clubs
+    this.setState({ displayClubs, nameInput, selectedTags })
   }
 
   switchDisplay(display) {
@@ -29,8 +57,16 @@ class Splash extends React.Component {
     this.forceUpdate()
   }
 
+  removeTag(tag) {
+    var { selectedTags } = this.state
+    var { name, value, label } = tag
+    var resetDisplay = this.resetDisplay.bind(this)
+    selectedTags.splice(selectedTags.findIndex(tag => tag.value == value && tag.name == name), 1)
+    this.setState({ selectedTags }, resetDisplay(this.state.nameInput, this.state.selectedTags))
+  }
+
   render() {
-    var { displayClubs, display } = this.state
+    var { displayClubs, display, selectedTags } = this.state
     var { clubs, tags, favorites, updateFavorites, openModal, closeModal } = this.props
     return(
       <div className="columns is-gapless is-mobile" style={{minHeight: "59vh", marginRight: 20}}>
@@ -39,12 +75,20 @@ class Splash extends React.Component {
             clubs={clubs}
             tags={tags}
             resetDisplay={this.resetDisplay.bind(this)}
-            switchDisplay={this.switchDisplay.bind(this)} />
+            switchDisplay={this.switchDisplay.bind(this)}
+            selectedTags={selectedTags} />
           </div>
         <div className="column is-10-desktop is-9-tablet is-7-mobile" style={{marginLeft: 40}}>
           <div style={{padding: "30px 0"}}>
             <p className="title" style={{color: CLUBS_GREY}}>Browse Clubs</p>
             <p className="subtitle is-size-5" style={{color: CLUBS_GREY_LIGHT}}>Find your people!</p>
+            <div>
+              {selectedTags ? selectedTags.map(tag => (
+                <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 3}}>
+                  {tag.label}
+                  <button class="delete is-small" onClick={(e)=>this.removeTag(tag)}></button>
+                </span>)) : ""}
+            </div>
           </div>
           <ClubDisplay
             displayClubs={displayClubs}
@@ -52,7 +96,8 @@ class Splash extends React.Component {
             tags={tags}
             favorites={favorites}
             openModal={openModal}
-            updateFavorites={updateFavorites} />
+            updateFavorites={updateFavorites}
+            selectedTags={selectedTags} />
           </div>
 
       </div>

@@ -13,9 +13,6 @@ class SearchBar extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      tagSelected: [],
-      sizeSelected: [],
-      applicationSelected: [],
       nameInput: "",
       sizeOptions: [
         { value: 1, label: 'less than 20 members' },
@@ -28,48 +25,35 @@ class SearchBar extends React.Component {
         {value: 1, label: "Requires application"},
         {value: 2, label: "Does not require application"},
         {value: 3, label: "Currently accepting applications"}],
-      clubs: props.clubs,
       hoverList: false,
       hoverCard: false,
       hoverDown: false,
+      selectedTags: props.selectedTags
     }
   }
 
-  getDisplayClubs() {
-    var { clubs, sizeSelected, tagSelected, applicationSelected, nameInput } = this.state
-    clubs = nameInput ? clubs.filter(club => club.name.toLowerCase().indexOf(nameInput.toLowerCase()) !== -1) : clubs
-    clubs = sizeSelected.length && clubs.length ? clubs.filter(club => sizeSelected.includes(club.size)) : clubs
-    clubs = applicationSelected.length && clubs.length ? clubs.filter(club => {
-      var contains = false
-      if (applicationSelected.includes(1) && club.application_required ||
-          applicationSelected.includes(2) && !club.application_required ||
-          applicationSelected.includes(3) && club.accepting_applications
-        ) {
-        contains = true
-      }
-      return contains
-    }): clubs
-    clubs = tagSelected.length && clubs.length ? clubs.filter(club => {
-      var contains
-      club.tags.forEach(tag => {
-        if (tagSelected.includes(tag)) {
-          contains = true
-        }
-      })
-      return contains
-    }): clubs
-    this.props.resetDisplay(clubs)
+  updateTag(tag) {
+    var { selectedTags } = this.props
+    var { value, label, name } = tag
+    var i = selectedTags.findIndex(tag => tag.value === value && tag.name === name)
+    if (i === -1) {
+      selectedTags.push(tag)
+    } else {
+      selectedTags.splice(i, 1)
+    }
+    this.props.resetDisplay(this.state.nameInput, selectedTags)
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.state.nameInput !== prevState.nameInput) {
-      this.getDisplayClubs()
+    if (prevState.nameInput !== this.state.nameInput) {
+      this.props.resetDisplay(this.state.nameInput, this.state.selectedTags)
     }
   }
 
+
   render() {
-    const { sizes, tags, names, nameOptions, tagOptions, sizeOptions, applicationOptions, tagSelected, sizeSelected, applicationSelected } = this.state
-    const { switchDisplay } = this.props
+    const { tagOptions, sizeOptions, applicationOptions, selectedTags } = this.state
+    const { switchDisplay, resetDisplay } = this.props
     return (
       <div style={{height: "100vh", width: "100%", overflow: "hidden", position: "sticky", top: -20}}>
         <div
@@ -119,30 +103,30 @@ class SearchBar extends React.Component {
                   fontSize: "1em",
                 }}
                 value={this.state.nameInput}
-                onInput={(e) => this.setState({nameInput: e.target.value}, this.getDisplayClubs())}
+                onInput={(e) => this.setState({nameInput: e.target.value})}
                 />
               <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY}}>
-                <i class="fas fa-search"></i>
+                {this.state.nameInput ? <i onClick={(e)=>this.setState({nameInput: ""})} class="fas fa-times"></i> : <i class="fas fa-search"></i>}
               </span>
             </div>
           </div>
           <DropdownFilter
             name="Type"
             options={tagOptions}
-            selected={tagSelected}
-            update={(tagSelected) => this.setState({ tagSelected }, this.getDisplayClubs())}
+            selected={selectedTags.filter(tag => tag.name === "Type")}
+            update={tag => this.updateTag(tag)}
           />
           <DropdownFilter
             name="Size"
             options={sizeOptions}
-            selected={sizeSelected}
-            update={(sizeSelected) => this.setState({ sizeSelected }, this.getDisplayClubs())}
+            selected={selectedTags.filter(tag => tag.name === "Size")}
+            update={tag => this.updateTag(tag)}
           />
           <DropdownFilter
             name="Application"
             options={applicationOptions}
-            selected={applicationSelected}
-            update={(applicationSelected) => this.setState({ applicationSelected }, this.getDisplayClubs())}
+            selected={selectedTags.filter(tag => tag.name === "Application")}
+            update={tag => this.updateTag(tag)}
           />
         </div>
       </div>
