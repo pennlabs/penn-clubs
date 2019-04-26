@@ -2,55 +2,62 @@ import React from 'react'
 import { CLUBS_GREY, CLUBS_PURPLE, CLUBS_GREY_LIGHT } from '../colors'
 
 class ClubTableRow extends React.Component {
-
-  constructor(props){
-    super(props);
+  constructor (props) {
+    super(props)
     this.state = {
-        modal: '',
+      modal: '',
     }
   }
 
-  findTagById(id) {
+  findTagById (id) {
     return this.props.tags.find(tag => tag.id == id).name
   }
 
-  randomClub() {
-    const clubs = ["https://files.slack.com/files-pri/T4EM1119V-FH9E8PE93/images.jpeg",
-    "http://static.asiawebdirect.com/m/kl/portals/kuala-lumpur-ws/homepage/magazine/5-clubs/pagePropertiesImage/best-clubs-kuala-lumpur.jpg.jpg",
-    "https://files.slack.com/files-pri/T4EM1119V-FHA7CVCNT/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH920P727/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH958BEAW/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH6NHNE0Y/seltzer.jpg",
-    "https://s3.envato.com/files/990f2541-adb3-497d-a92e-78e03ab34d9d/inline_image_preview.jpg"
+  randomClub () {
+    const clubs = ['https://files.slack.com/files-pri/T4EM1119V-FH9E8PE93/images.jpeg',
+      'http://static.asiawebdirect.com/m/kl/portals/kuala-lumpur-ws/homepage/magazine/5-clubs/pagePropertiesImage/best-clubs-kuala-lumpur.jpg.jpg',
+      'https://files.slack.com/files-pri/T4EM1119V-FHA7CVCNT/image.png',
+      'https://files.slack.com/files-pri/T4EM1119V-FH920P727/image.png',
+      'https://files.slack.com/files-pri/T4EM1119V-FH958BEAW/image.png',
+      'https://files.slack.com/files-pri/T4EM1119V-FH6NHNE0Y/seltzer.jpg',
+      'https://s3.envato.com/files/990f2541-adb3-497d-a92e-78e03ab34d9d/inline_image_preview.jpg',
     ]
-    const i = Math.floor(Math.random() * (6));
-    return clubs[i];
+    const i = Math.floor(Math.random() * (6))
+    return clubs[i]
   }
 
-  render() {
-    var { club, openModal, updateFavorites, favorite } = this.props
-    var { name, id, description, subtitle, tags } = club
-    var img = club.img ? club.img : this.randomClub()
+  render () {
+    const {
+      club, openModal, updateFavorites, favorite,
+    } = this.props
+    const {
+      name, id, description, subtitle, tags,
+    } = club
+    const img = club.img ? club.img : this.randomClub()
     club.img = img
     return (
-      <tr style={{borderTop: "1px solid #e5e5e5"}}>
+      <tr style={{ borderTop: '1px solid #e5e5e5' }}>
         <div className="columns is-vcentered is-gapless is-mobile">
-          <div className="column" onClick={(e) => openModal(club)}>
-            <div className="columns is-gapless" style={{padding: 10}}>
+          <div className="column" onClick={e => openModal(club)}>
+            <div className="columns is-gapless" style={{ padding: 10 }}>
               <div className="column is-4">
-                <b className="is-size-6" style={{color: CLUBS_GREY}}> {name} </b>
+                <b className="is-size-6" style={{ color: CLUBS_GREY }}>
+                  {' '}
+                  {name}
+                  {' '}
+                </b>
                 <div>
-                  {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_PURPLE, margin: 2, fontSize: '.5em'}}>{this.findTagById(tag)}</span>)}
+                  {tags.map(tag => <span className="tag is-rounded has-text-white" style={{ backgroundColor: CLUBS_PURPLE, margin: 2, fontSize: '.5em' }}>{this.findTagById(tag)}</span>)}
                 </div>
               </div>
               <div className="column is-8">
-                <p style={{color: CLUBS_GREY_LIGHT, fontSize: ".8rem", paddingLeft: 10}}>{subtitle}</p>
+                <p style={{ color: CLUBS_GREY_LIGHT, fontSize: '.8rem', paddingLeft: 10 }}>{subtitle}</p>
               </div>
             </div>
           </div>
           <div className="column is-narrow">
-            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{color: CLUBS_GREY, cursor: "pointer", paddingRight: 20}}>
-              <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
+            <span className="icon" onClick={e => updateFavorites(club.id)} style={{ color: CLUBS_GREY, cursor: 'pointer', paddingRight: 20 }}>
+              <i className={`${favorite ? 'fas' : 'far'} fa-heart`} />
             </span>
           </div>
         </div>
