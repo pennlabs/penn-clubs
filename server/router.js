@@ -1,6 +1,5 @@
 module.exports = function getRoutes (app, platformAuth, handle) {
   app.get('/login', (req, res) => {
-    console.log('HERE')
     const uri = platformAuth.code.getUri()
     res.redirect(uri)
   })
@@ -28,9 +27,7 @@ module.exports = function getRoutes (app, platformAuth, handle) {
         // We should store the token into a database.
         return res.send(user.accessToken)
       })
-      .catch((err) => {
-        console.log('err', err)
-      })
+      .catch(err => console.log('err', err))
   })
 
   // for all react stuff
