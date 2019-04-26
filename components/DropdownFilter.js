@@ -21,19 +21,15 @@ class DropdownFilter extends React.Component {
     this.setState({drop: !this.state.drop})
   }
 
-  toggleSelect(option) {
-    var selected = this.state.selected
-    if (selected.includes(option)) {
-      selected.splice(selected.indexOf(option), 1)
-    } else {
-      selected.push(option)
-    }
-    this.props.update(selected)
+  isSelected(tag) {
+    var { label, value, name } = tag
+    var { selected } = this.props
+    return selected.find(tag => tag.value === value)
   }
 
   render() {
-    var { name, options } = this.props
-    var { drop, hoverDown, selected } = this.state
+    var { name, options, selected, updateTag } = this.props
+    var { drop, hoverDown } = this.state
     return(
       <div>
         <hr style={{backgroundColor: CLUBS_GREY, height:"2px", margin: 0, marginTop: 30, padding: 0}}/>
@@ -48,12 +44,12 @@ class DropdownFilter extends React.Component {
             </span>
           </Pop>
         </div>
-        {drop ? (options.map(option => (
+        {drop ? (options.map(tag => (
           <div style={{display: "flex", paddingTop: 3}}>
-            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY_LIGHT}} onClick={(e)=>this.toggleSelect(option.value)}>
-              <i className={selected.includes(option.value) ? "fas fa-check-square" : "far fa-square"}></i>
+            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY_LIGHT}} onClick={(e)=>updateTag(tag, name)}>
+              <i className={this.isSelected(tag) ? "fas fa-check-square" : "far fa-square"}></i>
             </span>
-            <p style={{color: CLUBS_GREY_LIGHT}}>{option.label}</p>
+            <p style={{color: CLUBS_GREY_LIGHT}}>{tag.label}</p>
           </div>
         ))) : ""}
       </div>
