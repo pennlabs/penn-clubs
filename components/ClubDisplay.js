@@ -1,53 +1,60 @@
 import React from 'react'
-import ClubCard from '../components/ClubCard'
-import ClubList from '../components/ClubList'
-import ClubTableRow from '../components/ClubTableRow'
+import PropTypes from 'prop-types'
+import ClubCard from './ClubCard'
+import ClubTableRow from './ClubTableRow'
 
-class ClubDisplay extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      tagSelected: [],
-      sizeSelected: [],
-      applicationSelected: [],
-      nameInput: "",
-      selectedTags: props.selectedTags
-    }
-  }
-
-  render() {
-    var { displayClubs, tags, openModal, favorites, updateFavorites, display } = this.props
-    return (
-      <div style={{paddingRight: 40}}>
-        {display == "cards" ? (
-          <div className="columns is-multiline is-desktop is-tablet">
-            { displayClubs.map((club) => (
-              <ClubCard
-                club={club}
-                tags={tags}
-                openModal={openModal}
-                updateFavorites={updateFavorites}
-                favorite={favorites.includes(club.id)}/>
-            )) }
-          </div>
-        ) : (
-            <table className="table is-fullwidth is-hoverable" style={{borderTop: "1px solid #e5e5e5"}}>
-              <tbody>
-                {displayClubs.map((club) => (
-                  <ClubTableRow
-                    club={club}
-                    tags={tags}
-                    updateFavorites={updateFavorites}
-                    openModal={openModal}
-                    favorite={favorites.includes(club.id)}/>
-                ))}
-              </tbody>
-            </table>
-        )
-      }
-    </div>
+const ClubDisplay = ({
+  displayClubs,
+  tags,
+  openModal,
+  favorites,
+  updateFavorites,
+  display,
+}) => (
+  <div style={{ paddingRight: 40 }}>
+    {(display === 'cards') ? (
+      <div className="columns is-multiline is-desktop is-tablet">
+        {displayClubs.map(club => (
+          <ClubCard
+            club={club}
+            tags={tags}
+            openModal={openModal}
+            updateFavorites={updateFavorites}
+            favorite={favorites.includes(club.id)}
+          />
+        ))}
+      </div>
+    ) : (
+      <table
+        className="table is-fullwidth is-hoverable"
+        style={{ borderTop: '1px solid #e5e5e5' }}
+      >
+        <tbody>
+          {displayClubs.map(club => (
+            <ClubTableRow
+              club={club}
+              tags={tags}
+              updateFavorites={updateFavorites}
+              openModal={openModal}
+              favorite={favorites.includes(club.id)}
+            />
+          ))}
+        </tbody>
+      </table>
     )
   }
+  </div>
+)
+
+ClubDisplay.propTypes = {
+  displayClubs: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.string,
+  })).isRequired,
+  openModal: PropTypes.func.isRequired,
+  display: PropTypes.string.isRequired,
+  updateFavorites: PropTypes.func.isRequired,
+  tags: PropTypes.arrayOf(PropTypes.string).isRequired,
+  favorites: PropTypes.arrayOf(PropTypes.string).isRequired,
 }
 
 export default ClubDisplay
