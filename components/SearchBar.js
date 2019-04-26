@@ -32,28 +32,15 @@ class SearchBar extends React.Component {
     }
   }
 
-  updateTag(tag) {
-    var { selectedTags } = this.props
-    var { value, label, name } = tag
-    var i = selectedTags.findIndex(tag => tag.value === value && tag.name === name)
-    if (i === -1) {
-      selectedTags.push(tag)
-    } else {
-      selectedTags.splice(i, 1)
-    }
-    this.props.resetDisplay(this.state.nameInput, selectedTags)
-  }
-
   componentDidUpdate(prevProps, prevState) {
     if (prevState.nameInput !== this.state.nameInput) {
       this.props.resetDisplay(this.state.nameInput, this.state.selectedTags)
     }
   }
 
-
   render() {
     const { tagOptions, sizeOptions, applicationOptions, selectedTags } = this.state
-    const { switchDisplay, resetDisplay } = this.props
+    const { switchDisplay, resetDisplay, updateTag } = this.props
     return (
       <div style={{height: "100vh", width: "100%", overflow: "hidden", position: "sticky", top: -20}}>
         <div
@@ -114,19 +101,19 @@ class SearchBar extends React.Component {
             name="Type"
             options={tagOptions}
             selected={selectedTags.filter(tag => tag.name === "Type")}
-            update={tag => this.updateTag(tag)}
+            updateTag={updateTag}
           />
           <DropdownFilter
             name="Size"
             options={sizeOptions}
             selected={selectedTags.filter(tag => tag.name === "Size")}
-            update={tag => this.updateTag(tag)}
+            updateTag={updateTag}
           />
           <DropdownFilter
             name="Application"
             options={applicationOptions}
             selected={selectedTags.filter(tag => tag.name === "Application")}
-            update={tag => this.updateTag(tag)}
+            updateTag={updateTag}
           />
         </div>
       </div>

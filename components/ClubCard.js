@@ -69,8 +69,7 @@ class ClubCard extends React.Component {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 3px"}}>
                 <b className="is-size-5" style={{color: CLUBS_GREY}}> {name} </b>
               </div>
-              {club.tags ? club.tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_PURPLE, margin: 3}}>{this.findTagById(tag)}</span>) : ""}
-
+              {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_PURPLE, margin: 2, fontSize: '.5em'}}>{this.findTagById(tag)}</span>)}
               <div className="columns is-desktop is-gapless" style={{ padding: "10px 5px" }}>
                 <div className="column is-narrow">
                   <img style={{ height: 120, width: 180, borderRadius: 3}} src={img} />

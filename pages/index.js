@@ -4,7 +4,7 @@ import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
 import ClubModal from '../components/ClubModal'
 import renderPage from '../renderPage.js'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_PURPLE, CLUBS_BLUE } from '../colors'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_PURPLE, CLUBS_BLUE, RED, YELLOW } from '../colors'
 
 
 class Splash extends React.Component {
@@ -57,12 +57,17 @@ class Splash extends React.Component {
     this.forceUpdate()
   }
 
-  removeTag(tag) {
+  updateTag(tag, name) {
     var { selectedTags } = this.state
-    var { name, value, label } = tag
-    var resetDisplay = this.resetDisplay.bind(this)
-    selectedTags.splice(selectedTags.findIndex(tag => tag.value == value && tag.name == name), 1)
-    this.setState({ selectedTags }, resetDisplay(this.state.nameInput, this.state.selectedTags))
+    var { value, label } = tag
+    var i = selectedTags.findIndex(tag => tag.value === value && tag.name === name)
+    if (i === -1) {
+      tag.name = name
+      selectedTags.push(tag)
+    } else {
+      selectedTags.splice(i, 1)
+    }
+    this.setState({ selectedTags }, this.resetDisplay(this.state.nameInput, this.state.selectedTags))
   }
 
   render() {
@@ -76,20 +81,31 @@ class Splash extends React.Component {
             tags={tags}
             resetDisplay={this.resetDisplay.bind(this)}
             switchDisplay={this.switchDisplay.bind(this)}
-            selectedTags={selectedTags} />
+            selectedTags={selectedTags}
+            updateTag={this.updateTag.bind(this)} />
           </div>
         <div className="column is-10-desktop is-9-tablet is-7-mobile" style={{marginLeft: 40}}>
           <div style={{padding: "30px 0"}}>
             <p className="title" style={{color: CLUBS_GREY}}>Browse Clubs</p>
             <p className="subtitle is-size-5" style={{color: CLUBS_GREY_LIGHT}}>Find your people!</p>
             <div>
-              {selectedTags ? selectedTags.map(tag => (
-                <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 3}}>
-                  {tag.label}
-                  <button class="delete is-small" onClick={(e)=>this.removeTag(tag)}></button>
-                </span>)) : ""}
+              {selectedTags.length ? (
+                <div>
+                  {selectedTags.map(tag => (
+                    <span
+                      className="tag is-rounded has-text-dark"
+                      style={{
+                        backgroundColor: "#e5e5e5",
+                        margin: 3,
+                      }}>
+                      {tag.label}
+                      <button class="delete is-small" onClick={(e)=>this.updateTag(tag, tag.name)}></button>
+                    </span>
+                  ))}
+                  <span onClick={(e)=>this.setState({selectedTags: []}, this.resetDisplay(this.state.nameInput, this.state.selectedTags))} style={{color: CLUBS_GREY_LIGHT, textDecoration:"underline", fontSize: ".7em", margin: 5}}>Clear All</span>
+                </div>) : ""}
+              </div>
             </div>
-          </div>
           <ClubDisplay
             displayClubs={displayClubs}
             display={display}

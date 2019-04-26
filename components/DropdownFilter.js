@@ -21,19 +21,6 @@ class DropdownFilter extends React.Component {
     this.setState({drop: !this.state.drop})
   }
 
-  toggleSelect(option) {
-    var { selected } = this.state
-    var { name } = this.props
-    var i = selected.findIndex(tag => tag.value === option.value)
-    if (i === -1) {
-      option.name = name
-      selected.push(option)
-    } else {
-      selected.splice(i, 1)
-    }
-    this.props.update(option)
-  }
-
   isSelected(tag) {
     var { label, value, name } = tag
     var { selected } = this.props
@@ -41,7 +28,7 @@ class DropdownFilter extends React.Component {
   }
 
   render() {
-    var { name, options, selected } = this.props
+    var { name, options, selected, updateTag } = this.props
     var { drop, hoverDown } = this.state
     return(
       <div>
@@ -57,12 +44,12 @@ class DropdownFilter extends React.Component {
             </span>
           </Pop>
         </div>
-        {drop ? (options.map(option => (
+        {drop ? (options.map(tag => (
           <div style={{display: "flex", paddingTop: 3}}>
-            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY_LIGHT}} onClick={(e)=>this.toggleSelect(option)}>
-              <i className={this.isSelected(option) ? "fas fa-check-square" : "far fa-square"}></i>
+            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY_LIGHT}} onClick={(e)=>updateTag(tag, name)}>
+              <i className={this.isSelected(tag) ? "fas fa-check-square" : "far fa-square"}></i>
             </span>
-            <p style={{color: CLUBS_GREY_LIGHT}}>{option.label}</p>
+            <p style={{color: CLUBS_GREY_LIGHT}}>{tag.label}</p>
           </div>
         ))) : ""}
       </div>
