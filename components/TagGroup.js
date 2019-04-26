@@ -1,6 +1,9 @@
 import React from 'react'
 import posed from 'react-pose'
-import { CLUBS_PURPLE, CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_PERIWINKLE } from '../colors'
+import PropTypes from 'prop-types'
+import {
+  CLUBS_PURPLE,
+} from '../colors'
 
 const Pop = posed.div({
   idle: { scale: 1 },
@@ -8,37 +11,46 @@ const Pop = posed.div({
 })
 
 class Tag extends React.Component {
-  constructor(props) {
+  constructor (props) {
     super(props)
     this.state = {
-      hover: false
+      hover: false,
     }
   }
 
-  findTagById(id) {
-    return this.props.allTags.find(tag => tag.id == id).name
+  findTagById (id) {
+    const { allTags } = this.props
+    return allTags.find(tag => tag.id === id).name
   }
 
-  render() {
-    var { tag } = this.props
+  render () {
+    const { tag } = this.props
+    const { hover } = this.state
+
     return (
       <Pop
-        pose={this.state.hover ? "hovered" : "idle"}
+        pose={hover ? 'hovered' : 'idle'}
         onMouseEnter={() => this.setState({ hover: true })}
-        onMouseLeave={() => this.setState({ hover: false })}>
+        onMouseLeave={() => this.setState({ hover: false })}
+      >
         <span
           className="tag is-rounded has-text-white"
-          style={{backgroundColor: CLUBS_PURPLE, margin: "0 3px", fontSize: "0.6em"}}>
+          style={{
+            backgroundColor: CLUBS_PURPLE,
+            margin: '0 3px',
+            fontSize: '0.6em',
+          }}
+        >
           {this.findTagById(tag)}
         </span>
-      </Pop>)
+      </Pop>
+    )
   }
 }
 
-
-const TagGroup = (props) => (
+const TagGroup = ({ clubTags, allTags }) => (
   <div className="is-flex">
-    {props.clubTags.map(tag => <Tag allTags={props.allTags} tag={tag}/>)}
+    {clubTags.map(tag => <Tag allTags={allTags} tag={tag} />)}
   </div>
 )
 
