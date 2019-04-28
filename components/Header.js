@@ -1,5 +1,5 @@
 import posed from 'react-pose'
-import { CLUBS_PURPLE_LIGHT, CLUBS_GREY } from '../colors'
+import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
 
 const Pop = posed.div({
   idle: { scale: 1 },
@@ -28,17 +28,17 @@ class Header extends React.Component {
           <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossOrigin="anonymous" />
           <script src="https://unpkg.com/ionicons@4.5.5/dist/ionicons.js" />
         </head>
-
-        <nav className="navbar" role="navigation" aria-label="main navigation" style={{height: 70, backgroundColor: "#f9f9f9", borderBottom: "1px solid #e5e5e5"}}>
+        <nav className="navbar" role="navigation" aria-label="main navigation" style={{height: 70, backgroundColor: "#f9f9f9", borderBottom: "1px solid #fff"}}>
           <div className="navbar-brand">
-            <a className="navbar-item" href="/">
+            <a className="navbar-item" style={{padding: 0}} href="/">
               <Pop
                 pose={this.state.hoverIcon ? "hovered" : "idle"}
                 onMouseEnter={() => this.setState({ hoverIcon: true })}
                 onMouseLeave={() => this.setState({ hoverIcon: false })}>
-                  <img src="/static/img/newlogo.png" style={{paddingLeft: 15, height: "100%", marginBottom: -5}}/>
+                  <img src="/static/img/peoplelogo.png" style={{paddingLeft: 15, height: "100%", marginBottom: -5}}/>
               </Pop>
             </a>
+            <h1 className="title is-size-4" style={{color: "#9B9B9B", marginTop: 20, paddingLeft: 15}}>Penn Clubs </h1>
 
             <a role="button" className="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
               <span aria-hidden="true"></span>
@@ -49,7 +49,7 @@ class Header extends React.Component {
 
           <div className="navbar-menu">
             <div className="navbar-end" style={{padding: "0px 20px"}}>
-              <a href="/faq" style={{padding: 20, textDecoration: "underline", color: CLUBS_GREY}}>
+              <a href="/faq" style={{padding: 20, textDecoration: "underline", color: "#9B9B9B"}}>
                 FAQ
               </a>
               <a href="/favorites" className="" style={{padding: 20}}>
@@ -57,7 +57,7 @@ class Header extends React.Component {
                   pose={this.state.hoverFav ? "hovered" : "idle"}
                   onMouseEnter={() => this.setState({ hoverFav: true })}
                   onMouseLeave={() => this.setState({ hoverFav: false })}>
-                  <span className="icon" style={{color: CLUBS_GREY}}>
+                  <span className="icon" style={{color: "#9B9B9B"}}>
                     <i className="fas fa-heart"></i>
                   </span>
                 </Pop>
