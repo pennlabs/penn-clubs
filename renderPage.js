@@ -61,25 +61,25 @@ function renderPage(Page) {
       var favoriteClubs = this.mapToClubs(favorites)
       return(
         <div style={{ dispay: "flex", flexDirection: "column", backgroundColor: "#fff"}}>
-          <Header />
-          <Page
-            clubs={clubs}
-            tags={tags}
-            favorites={favorites}
-            updateFavorites={this.updateFavorites.bind(this)}
-            openModal={this.openModal.bind(this)}
-            closeModal={this.closeModal.bind(this)}
-            favoriteClubs={favoriteClubs}
-          />
-          <Footer />
-          <ClubModal
-            modal={modal}
-            club={modalClub}
-            tags={tags}
-            closeModal={this.closeModal.bind(this)}
-            updateFavorites={this.updateFavorites.bind(this)}
-            favorite={favorites.includes(modalClub.id)} />
-      </div>
+            <Header />
+            <Page
+              clubs={clubs}
+              tags={tags}
+              favorites={favorites}
+              updateFavorites={this.updateFavorites.bind(this)}
+              openModal={this.openModal.bind(this)}
+              closeModal={this.closeModal.bind(this)}
+              favoriteClubs={favoriteClubs}
+            />
+            <Footer />
+            <ClubModal
+              modal={modal}
+              club={modalClub}
+              tags={tags}
+              closeModal={this.closeModal.bind(this)}
+              updateFavorites={this.updateFavorites.bind(this)}
+              favorite={favorites.includes(modalClub.id)} />
+          </div>
       )
     }
   }

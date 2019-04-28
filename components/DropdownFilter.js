@@ -1,6 +1,6 @@
 import React from 'react'
 import posed from 'react-pose'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW } from '../colors'
 
 const Pop = posed.div({
   idle: { scale: 1 },
@@ -30,6 +30,7 @@ class DropdownFilter extends React.Component {
   render() {
     var { name, options, selected, updateTag } = this.props
     var { drop, hoverDown } = this.state
+    var checkboxcolor = (name == "Type") ? CLUBS_BLUE : name == "Size" ? CLUBS_RED : CLUBS_YELLOW
     return(
       <div>
         <hr style={{backgroundColor: CLUBS_GREY, height:"2px", margin: 0, marginTop: 30, padding: 0}}/>

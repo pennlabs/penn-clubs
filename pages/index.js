@@ -4,7 +4,7 @@ import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
 import ClubModal from '../components/ClubModal'
 import renderPage from '../renderPage.js'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_PURPLE, CLUBS_BLUE, RED, YELLOW } from '../colors'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_PURPLE, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW } from '../colors'
 
 
 class Splash extends React.Component {
@@ -83,40 +83,37 @@ class Splash extends React.Component {
             switchDisplay={this.switchDisplay.bind(this)}
             selectedTags={selectedTags}
             updateTag={this.updateTag.bind(this)} />
-          </div>
+        </div>
         <div className="column is-10-desktop is-9-tablet is-7-mobile" style={{marginLeft: 40}}>
           <div style={{padding: "30px 0"}}>
-            <p className="title" style={{color: CLUBS_GREY}}>Browse Clubs</p>
-            <p className="subtitle is-size-5" style={{color: CLUBS_GREY_LIGHT}}>Find your people!</p>
-            <div>
-              {selectedTags.length ? (
-                <div>
-                  {selectedTags.map(tag => (
-                    <span
-                      className="tag is-rounded has-text-dark"
-                      style={{
-                        backgroundColor: "#e5e5e5",
-                        margin: 3,
-                      }}>
-                      {tag.label}
-                      <button class="delete is-small" onClick={(e)=>this.updateTag(tag, tag.name)}></button>
-                    </span>
-                  ))}
-                  <span onClick={(e)=>this.setState({selectedTags: []}, this.resetDisplay(this.state.nameInput, this.state.selectedTags))} style={{color: CLUBS_GREY_LIGHT, textDecoration:"underline", fontSize: ".7em", margin: 5}}>Clear All</span>
-                </div>) : ""}
-              </div>
-            </div>
-          <ClubDisplay
-            displayClubs={displayClubs}
-            display={display}
-            tags={tags}
-            favorites={favorites}
-            openModal={openModal}
-            updateFavorites={updateFavorites}
-            selectedTags={selectedTags} />
+              <p className="title" style={{color: CLUBS_GREY}}>Browse Clubs</p>
+              <p className="subtitle is-size-5" style={{color: CLUBS_GREY_LIGHT}}>Find your people!</p>
           </div>
-
-      </div>
+          {selectedTags.length ? (
+            <div style={{padding: "0 30px 30px 0"}}>
+              {selectedTags.map(tag => (
+                <span
+                  className="tag is-rounded has-text-white"
+                  style={{
+                    backgroundColor: tag.name == "Type" ? CLUBS_BLUE : (tag.name == "Size" ? CLUBS_RED: CLUBS_YELLOW),
+                    margin: 3,
+                  }}>
+                  {tag.label}
+                  <button class="delete is-small" onClick={(e)=>this.updateTag(tag, tag.name)}></button>
+                </span>
+              ))}
+              <span onClick={(e)=>this.setState({selectedTags: []}, this.resetDisplay(this.state.nameInput, this.state.selectedTags))} style={{color: CLUBS_GREY_LIGHT, textDecoration:"underline", fontSize: ".7em", margin: 5}}>Clear All</span>
+            </div>) : ""}
+            <ClubDisplay
+              displayClubs={displayClubs}
+              display={display}
+              tags={tags}
+              favorites={favorites}
+              openModal={openModal}
+              updateFavorites={updateFavorites}
+              selectedTags={selectedTags} />
+          </div>
+        </div>
     );
   }
 }

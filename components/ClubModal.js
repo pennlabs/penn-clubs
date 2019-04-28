@@ -1,5 +1,5 @@
 import React from 'react'
-import { CLUBS_GREY, CLUBS_PURPLE, CLUBS_GREY_LIGHT } from '../colors'
+import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
 
 class ClubModal extends React.Component {
   constructor(props) {
@@ -34,6 +34,7 @@ class ClubModal extends React.Component {
 
   render() {
     var { modal, club, closeModal, updateFavorites, favorite } = this.props
+    var { name, id, tags, img, size, application_required, accepting_applications, description } = club
     return(
       <div className={"modal" + (modal ? 'is-active' : '')} id="modal" style={{position: "fixed", top: 0, height: "100%", width: "100%"}}>
         <div className="modal-background" onClick={(e)=>closeModal(club)} style={{backgroundColor: "#d5d5d5", opacity: .5, position: "fixed"}}></div>
@@ -43,34 +44,33 @@ class ClubModal extends React.Component {
           </span>
           <div style={{padding: "20px 40px"}}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5}}>
-              <b style={{color: CLUBS_GREY}} className="is-size-2"> {club.name} </b>
-              <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{float:"right", padding: "10px 10px 0px 0px", cursor: "pointer", color: CLUBS_GREY}}>
+              <b style={{color: CLUBS_GREY}} className="is-size-2"> {name} </b>
+              <span className="icon" onClick={(e)=>updateFavorites(id)} style={{float:"right", padding: "10px 10px 0px 0px", cursor: "pointer", color: CLUBS_GREY}}>
                 <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
               </span>
             </div>
-            <div className="columns" style={{marginBottom: 20}}>
-              <div className="column">
-                <div style={{display:"flex", flexDirection:"column", justifyContent: "space-between", height: 400}}>
-                  <img style={{ height: 220, width: 330, borderRadius: 3 }} src={club.img ? club.img : this.randomClub()} />
-                  <div>
-                    {club.tags ? club.tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_PURPLE, margin: 3}}>{this.findTagById(tag)}</span>) : ""}
+            <div className="columns">
+              <div className="column is-4-desktop is-5-mobile" style={{display:"flex", flexDirection:"column", justifyContent: "space-between", height: 400}}>
+                <img style={{ height: 220, width: 330, borderRadius: 3 }} src={img ? img : this.randomClub()} />
+                <div>
+                  {tags ? tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 3}}>{this.findTagById(tag)}</span>) : ""}
+                </div>
+                <div style={{borderRadius: 3, backgroundColor: "#f2f2f2", height: 100, width: 330, padding: 10, display: "flex", flexDirection:"column", justifyContent: "space-around"}}>
+                  <div style={{display: "flex", justifyContent: "space-between"}}>
+                    <b style={{color: CLUBS_GREY}} className="is-size-6">Membership:</b>
+                    <span className="tag is-rounded" style={{margin: 3, color: CLUBS_GREY, backgroundColor:"#ccc", fontSize: ".7em"}}>{this.mapSize(size)}</span>
                   </div>
-                  <div style={{borderRadius: 3, backgroundColor: "#f2f2f2", height: 100, width: 330, padding: 10, display: "flex", flexDirection:"column", justifyContent: "space-around"}}>
-                    <div style={{display: "flex", justifyContent: "space-between"}}>
-                      <b style={{color: CLUBS_GREY}} className="is-size-6">Membership:</b>
-                      <span className="tag is-rounded" style={{margin: 3, color: CLUBS_GREY, backgroundColor:"#ccc", fontSize: ".7em"}}>{this.mapSize(club.size)}</span>
-                    </div>
-                    <div style={{display: "flex", justifyContent: "space-between"}}>
-                      <b style={{color: CLUBS_GREY}} className="is-size-6">Requires Application:</b>  <span className="tag is-rounded" style={{margin: 3, backgroundColor:"#ccc", fontSize: ".7em"}}>{club.application_required ? "Yes" : "No"}</span>
-                    </div>
-                    <div style={{display: "flex", justifyContent: "space-between"}}>
-                      <b style={{color: CLUBS_GREY}} className="is-size-6">Currently Recruiting:</b> <span className="tag is-rounded" style={{margin: 3, backgroundColor:"#ccc", fontSize: ".7em"}}>{club.accepting_applications ? "Yes" : "No"}</span>
-                    </div>
+                  <div style={{display: "flex", justifyContent: "space-between"}}>
+                    <b style={{color: CLUBS_GREY}} className="is-size-6">Requires Application:</b>  <span className="tag is-rounded" style={{margin: 3, backgroundColor:"#ccc", fontSize: ".7em"}}>{application_required ? "Yes" : "No"}</span>
+                  </div>
+                  <div style={{display: "flex", justifyContent: "space-between"}}>
+                    <b style={{color: CLUBS_GREY}} className="is-size-6">Currently Recruiting:</b> <span className="tag is-rounded" style={{margin: 3, backgroundColor:"#ccc", fontSize: ".7em"}}>{accepting_applications ? "Yes" : "No"}</span>
                   </div>
                 </div>
               </div>
-              <div className="column is-8">
-                <p className="has-text-justified is-size-6" style={{height: 400, overflowY: "auto", paddingRight: 10, color: CLUBS_GREY_LIGHT}}>{club.description}</p>
+              <div className="column is-8-desktop is-7-mobile" style={{display:"flex", flexDirection:"column", justifyContent: "space-between", height: 400}}>
+                <p className="has-text-justified is-size-6-desktop is-size-7-touch" style={{height: 370, overflowY: "auto", color: CLUBS_GREY_LIGHT}}>{description}</p>
+                <a className="button" href={"/club?club=" + id} target="_blank" style={{padding: 10, margin: 5, float:"right", borderWidth: 0, backgroundColor: "#f2f2f2", color: CLUBS_GREY}}>See More...</a>
               </div>
             </div>
           </div>
