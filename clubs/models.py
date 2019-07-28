@@ -24,8 +24,10 @@ class Club(models.Model):
     twitter = models.URLField(blank=True, null=True)
     instagram = models.URLField(blank=True, null=True)
     linkedin = models.URLField(blank=True, null=True)
+    how_to_get_involved = models.TextField(blank=True)
     application_required = models.BooleanField(default=True)
-    accepting_applications = models.BooleanField(default=False)
+    application_available = models.BooleanField(default=False)
+    listserv_available = models.BooleanField(default=False)
     image_url = models.URLField(null=True, blank=True)
     tags = models.ManyToManyField("Tag")
 
