@@ -16,6 +16,7 @@ sentry-sdk = "*"
 whitenoise = "*"
 unittest-xml-reporting = "*"
 django = "*"
+django-labs-accounts = "*"
 
 [requires]
 python_version = "3.7"
