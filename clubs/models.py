@@ -1,4 +1,5 @@
 from django.db import models
+from users.models import Person
 
 
 class Club(models.Model):
@@ -29,7 +30,8 @@ class Club(models.Model):
     application_available = models.BooleanField(default=False)
     listserv_available = models.BooleanField(default=False)
     image_url = models.URLField(null=True, blank=True)
-    tags = models.ManyToManyField("Tag")
+    tags = models.ManyToManyField('Tag')
+    members = models.ManyToManyField(Person, through='Membership')
 
     def __str__(self):
         return self.name
@@ -57,3 +59,19 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Membership(models.Model):
+    ROLE_OWNER = 0
+    ROLE_OFFICER = 10
+    ROLE_MEMBER = 20
+    ROLE_CHOICES = (
+        (ROLE_OWNER, 'Owner'),
+        (ROLE_OFFICER, 'Officer'),
+        (ROLE_MEMBER, 'Member')
+    )
+
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default='Member')
+    role = models.IntegerField(choices=ROLE_CHOICES, default=ROLE_MEMBER)

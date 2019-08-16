@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'accounts.apps.AccountsConfig',
+    'users',
     'clubs'
 ]
 
@@ -106,6 +107,8 @@ AUTHENTICATION_BACKENDS = (
     'accounts.backends.LabsUserBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
+
+AUTH_USER_MODEL = 'users.Person'
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
