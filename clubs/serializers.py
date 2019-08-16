@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.template.defaultfilters import slugify
+from users.models import Person
 from clubs.models import Club, Event, Tag, Membership
 
 
@@ -11,13 +12,27 @@ class TagSerializer(serializers.ModelSerializer):
 
 class MembershipSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField('get_full_name')
+    person = serializers.PrimaryKeyRelatedField(queryset=Person.objects.all(), write_only=True)
+    role = serializers.IntegerField(write_only=True, required=False)
 
     def get_full_name(self, obj):
-        return "{} {}".format(obj.person.first_name, obj.person.last_name)
+        return obj.person.full_name
+
+    def validate_role(self, value):
+        membership = Membership.objects.get(person=self.context['request'].user, club=self.context['view'].kwargs.get('club_pk'))
+        if membership.role > value:
+            raise serializers.ValidationError('You cannot promote someone above your own level.')
+        return value
+
+    def save(self):
+        if 'club' not in self.validated_data:
+            self.validated_data['club'] = Club.objects.get(pk=self.context['view'].kwargs.get('club_pk'))
+
+        return super().save()
 
     class Meta:
         model = Membership
-        fields = ('name', 'title')
+        fields = ('name', 'title', 'person', 'role')
 
 
 class ClubSerializer(serializers.ModelSerializer):

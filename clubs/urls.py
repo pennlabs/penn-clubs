@@ -1,17 +1,17 @@
+from rest_framework_nested import routers
 from django.urls import path
-from clubs.views import ClubViewSet, TagViewSet
+from clubs.views import ClubViewSet, TagViewSet, MemberViewSet
+
+
+router = routers.SimpleRouter()
+router.register(r'clubs', ClubViewSet)
+router.register(r'tags', TagViewSet)
+
+clubs_router = routers.NestedSimpleRouter(router, r'clubs', lookup='club')
+clubs_router.register(r'members', MemberViewSet, base_name='club-members')
 
 urlpatterns = [
-    path("clubs/", ClubViewSet.as_view({
-        'get': 'list',
-        'post': 'create'
-    })),
-    path("clubs/<slug:pk>/", ClubViewSet.as_view({
-        'get': 'retrieve',
-        'post': 'partial_update',
-        'delete': 'destroy'
-    })),
-    path("tags/", TagViewSet.as_view({
-        'get': 'list'
-    })),
 ]
+
+urlpatterns += router.urls
+urlpatterns += clubs_router.urls

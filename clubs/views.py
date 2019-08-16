@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions
 from clubs.models import Club, Event, Tag, Membership
-from clubs.serializers import ClubSerializer, TagSerializer
+from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer
 
 
 class ClubPermission(permissions.BasePermission):
@@ -18,7 +18,7 @@ class ClubPermission(permissions.BasePermission):
             return False
 
         if view.action in ['destroy']:
-            return membership.role == Membership.ROLE_OWNER
+            return membership.role <= Membership.ROLE_OWNER
         else:
             return membership.role <= Membership.ROLE_OFFICER
 
@@ -27,6 +27,47 @@ class ClubPermission(permissions.BasePermission):
             return request.user.is_authenticated
         else:
             return True
+
+
+class MemberPermission(permissions.BasePermission):
+    """
+    Members of a higher role can update/delete members of equal or lower roles, except ordinary members.
+    Officers and above can add new members.
+    Anyone can view membership.
+    """
+    def has_object_permission(self, request, view, obj):
+        membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
+        if membership is None:
+            return False
+
+        if view.action in ['retrieve']:
+            return membership.role <= Membership.ROLE_MEMBER
+
+        if membership.role >= Membership.ROLE_MEMBER:
+            return False
+
+        return membership.role <= obj.role
+
+    def has_permission(self, request, view):
+        if view.action in ['update', 'partial_update', 'destroy']:
+            return request.user.is_authenticated
+        elif view.action in ['create']:
+            if not request.user.is_authenticated:
+                return False
+            membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
+            return membership is not None and membership.role <= Membership.ROLE_OFFICER
+        else:
+            return True
+
+
+class MemberViewSet(viewsets.ModelViewSet):
+    serializer_class = MembershipSerializer
+    permission_classes = [MemberPermission]
+    http_method_names = ['get', 'post', 'put', 'patch', 'delete']
+    lookup_field = 'person__username'
+
+    def get_queryset(self):
+        return Membership.objects.filter(club=self.kwargs['club_pk'])
 
 
 class ClubViewSet(viewsets.ModelViewSet):
@@ -39,7 +80,7 @@ class ClubViewSet(viewsets.ModelViewSet):
     queryset = Club.objects.all()
     serializer_class = ClubSerializer
     permission_classes = [ClubPermission]
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
 
 class TagViewSet(viewsets.ModelViewSet):

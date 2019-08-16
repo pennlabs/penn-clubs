@@ -10,6 +10,103 @@ class ClubTestCase(TestCase):
     def setUp(self):
         self.client = Client()
 
+        self.user1 = Person.objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
+        self.user1.first_name = 'Benjamin'
+        self.user1.last_name = 'Franklin'
+        self.user1.save()
+
+        self.user2 = Person.objects.create_user('tjefferson', 'tjefferson@seas.upenn.edu', 'test')
+        self.user2.first_name = 'Thomas'
+        self.user2.last_name = 'Jefferson'
+        self.user2.save()
+
+        self.user3 = Person.objects.create_user('gwashington', 'gwashington@wharton.upenn.edu', 'test')
+        self.user3.first_name = 'George'
+        self.user3.last_name = 'Washington'
+        self.user3.save()
+
+    def test_member_views(self):
+        """
+        Test listing, adding, and removing members.
+        """
+        self.client.login(username=self.user1.username, password='test')
+
+        # create club
+        resp = self.client.post('/clubs/', {
+            'name': 'Penn Labs',
+            'description': 'We code stuff.',
+            'tags': []
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # list members
+        resp = self.client.get('/clubs/penn-labs/members/')
+        self.assertIn(resp.status_code, [200], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+        self.assertEqual(data[0]['name'], self.user1.full_name)
+
+        # add member should fail with insufficient permissions
+        self.client.logout()
+
+        resp = self.client.post('/clubs/penn-labs/members/', {
+            'person': self.user2.pk,
+            'role': Membership.ROLE_OWNER
+        }, content_type='application/json')
+
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        # add member
+        self.client.login(username=self.user1.username, password='test')
+
+        resp = self.client.post('/clubs/penn-labs/members/', {
+            'person': self.user2.pk,
+            'role': Membership.ROLE_OFFICER
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        resp = self.client.post('/clubs/penn-labs/members/', {
+            'person': self.user3.pk,
+            'role': Membership.ROLE_MEMBER
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.assertEqual(Club.objects.get(pk='penn-labs').members.count(), 3)
+        self.assertEqual(Membership.objects.get(person=self.user2, club='penn-labs').role, Membership.ROLE_OFFICER)
+
+        # delete member should fail with insufficient permissions
+        self.client.logout()
+        self.client.login(username=self.user2.username, password='test')
+
+        resp = self.client.delete('/clubs/penn-labs/members/{}/'.format(self.user1.username), content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        # modify self to higher role should fail with insufficient permissions
+        resp = self.client.patch('/clubs/penn-labs/members/{}/'.format(self.user2.username), {
+            'role': Membership.ROLE_OWNER
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        # promote member
+        resp = self.client.patch('/clubs/penn-labs/members/{}/'.format(self.user3.username), {
+            'title': 'Treasurer',
+            'role': Membership.ROLE_OFFICER
+        }, content_type='application/json')
+
+        self.assertEqual(Membership.objects.get(person=self.user3, club='penn-labs').title, 'Treasurer')
+
+        # delete member
+        self.client.login(username=self.user1.username, password='test')
+
+        resp = self.client.delete('/clubs/penn-labs/members/{}/'.format(self.user2.username), content_type='application/json')
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+
+    def test_tag_views(self):
+        # ensure that unauthenticated users cannot create tags
+        resp = self.client.post('/tags/', {
+            'name': 'Some Tag'
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403, 405], resp.content)
+
     def test_club_views(self):
         """
         Test creating, listing, modifying, and deleting a club.
@@ -30,11 +127,7 @@ class ClubTestCase(TestCase):
         }, content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
-        user = Person.objects.create_user('ezwang', 'ezwang@seas.upenn.edu', 'test')
-        user.first_name = 'Eric'
-        user.last_name = 'Wang'
-        user.save()
-        self.client.login(username='ezwang', password='test')
+        self.client.login(username=self.user1.username, password='test')
 
         # test creating club
         resp = self.client.post('/clubs/', {
@@ -63,10 +156,10 @@ class ClubTestCase(TestCase):
         self.assertEqual(data['name'], 'Penn Labs')
         self.assertEqual(data['description'], 'We code stuff.')
         self.assertTrue(data['tags'], data)
-        self.assertEqual(data['members'][0]['name'], 'Eric Wang')
+        self.assertEqual(data['members'][0]['name'], self.user1.full_name)
 
         # test modifying club
-        resp = self.client.post('/clubs/penn-labs/', {
+        resp = self.client.patch('/clubs/penn-labs/', {
             'description': 'We do stuff.',
             'tags': []
         }, content_type='application/json')
