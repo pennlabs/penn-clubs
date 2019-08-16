@@ -111,6 +111,18 @@ class ClubSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
+    id = serializers.SlugField(required=False)
+    club = serializers.PrimaryKeyRelatedField(queryset=Club.objects.all(), required=False)
+
     class Meta:
         model = Event
-        fields = ('name', 'club', 'start_time', 'end_time', 'location', 'url', 'image_url', 'description')
+        fields = ('id', 'name', 'club', 'start_time', 'end_time', 'location', 'url', 'image_url', 'description')
+
+    def save(self):
+        if 'club' not in self.validated_data:
+            self.validated_data['club'] = Club.objects.get(pk=self.context['view'].kwargs.get('club_pk'))
+
+        if not self.validated_data.get('id') and self.validated_data.get('name'):
+            self.validated_data['id'] = slugify(self.validated_data['name'])
+
+        return super().save()

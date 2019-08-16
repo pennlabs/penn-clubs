@@ -1,5 +1,6 @@
 from django.db import models
 from users.models import Person
+from django.template.defaultfilters import slugify
 
 
 class Club(models.Model):
@@ -41,11 +42,12 @@ class Club(models.Model):
 
 
 class Event(models.Model):
+    id = models.SlugField(max_length=255, primary_key=True)
     name = models.CharField(max_length=255)
-    club = models.ForeignKey(Club, on_delete=models.DO_NOTHING)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    location = models.CharField(max_length=255)
+    location = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
     image_url = models.URLField(null=True, blank=True)
     description = models.TextField()

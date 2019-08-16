@@ -1,8 +1,9 @@
 import json
+import datetime
 
 from django.test import TestCase, Client
 
-from clubs.models import Club, Membership, Tag
+from clubs.models import Club, Membership, Tag, Event
 from users.models import Person
 
 
@@ -37,11 +38,30 @@ class ClubTestCase(TestCase):
             'description': 'We code stuff.',
             'tags': []
         }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # list events
-        self.assertIn(resp.status_code, [200, 201], resp.content)
         resp = self.client.get('/clubs/penn-labs/events/', content_type='application/json')
         self.assertIn(resp.status_code, [200], resp.content)
+
+        start_date = datetime.datetime.now() - datetime.timedelta(days=3)
+        end_date = start_date + datetime.timedelta(hours=2)
+
+        # add event
+        resp = self.client.post('/clubs/penn-labs/events/', {
+            'name': 'Interest Meeting',
+            'description': 'Interest Meeting on Friday!',
+            'location': 'JMHH G06',
+            'start_time': start_date.isoformat(),
+            'end_time': end_date.isoformat()
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.assertEqual(Event.objects.count(), 1)
+
+        # delete event
+        resp = self.client.delete('/clubs/penn-labs/events/{}/'.format('interest-meeting'))
+        self.assertIn(resp.status_code, [200, 204], resp.content)
 
     def test_member_views(self):
         """

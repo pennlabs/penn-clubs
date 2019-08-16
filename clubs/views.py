@@ -63,6 +63,19 @@ class MemberPermission(permissions.BasePermission):
             return True
 
 
+class EventPermission(permissions.BasePermission):
+    """
+    Officers and above can create/update/delete events.
+    Everyone else can view and list events.
+    """
+    def has_permission(self, request, view):
+        if view.action in ['create', 'update', 'partial_update', 'destroy']:
+            membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
+            return membership is not None and membership.role <= Membership.ROLE_OFFICER
+        else:
+            return True
+
+
 class MemberViewSet(viewsets.ModelViewSet):
     serializer_class = MembershipSerializer
     permission_classes = [MemberPermission]
@@ -100,7 +113,8 @@ class EventViewSet(viewsets.ModelViewSet):
     Return a list of events.
     """
     serializer_class = EventSerializer
-    http_method_names = ['get']
+    permission_classes = [EventPermission]
+    http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     def get_queryset(self):
         return Event.objects.filter(club=self.kwargs['club_pk'])
