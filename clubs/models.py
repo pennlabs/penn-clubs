@@ -75,3 +75,6 @@ class Membership(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default='Member')
     role = models.IntegerField(choices=ROLE_CHOICES, default=ROLE_MEMBER)
+
+    def __str__(self):
+        return "<Membership: {} in {} ({})>".format(self.person.username, self.club.pk, self.get_role_display())

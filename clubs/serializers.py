@@ -19,9 +19,13 @@ class MembershipSerializer(serializers.ModelSerializer):
         return obj.person.full_name
 
     def validate_role(self, value):
-        membership = Membership.objects.get(person=self.context['request'].user, club=self.context['view'].kwargs.get('club_pk'))
+        club_pk = self.context['view'].kwargs.get('club_pk')
+        membership = Membership.objects.get(person=self.context['request'].user, club=club_pk)
         if membership.role > value:
             raise serializers.ValidationError('You cannot promote someone above your own level.')
+        if value > Membership.ROLE_OWNER and self.context['request'].user.username == self.context['view'].kwargs.get('person__username'):
+            if Membership.objects.filter(club=club_pk, role__lte=Membership.ROLE_OWNER).count() <= 1:
+                raise serializers.ValidationError('You cannot demote yourself if you are the only owner!')
         return value
 
     def save(self):

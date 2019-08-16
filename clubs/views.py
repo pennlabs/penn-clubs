@@ -46,6 +46,9 @@ class MemberPermission(permissions.BasePermission):
         if membership.role >= Membership.ROLE_MEMBER:
             return False
 
+        if view.action in ['destroy'] and membership.pk == obj.pk and membership.role <= Membership.ROLE_OWNER:
+            return False
+
         return membership.role <= obj.role
 
     def has_permission(self, request, view):

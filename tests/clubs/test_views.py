@@ -118,6 +118,16 @@ class ClubTestCase(TestCase):
         resp = self.client.delete('/clubs/penn-labs/members/{}/'.format(self.user2.username), content_type='application/json')
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
+        # ensure cannot demote self if only owner
+        resp = self.client.patch('/clubs/penn-labs/members/{}/'.format(self.user1.username), {
+            'role': Membership.ROLE_OFFICER
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        # ensure cannot delete self if only owner
+        resp = self.client.delete('/clubs/penn-labs/members/{}/'.format(self.user1.username), content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
     def test_tag_views(self):
         # ensure that unauthenticated users cannot create tags
         resp = self.client.post('/tags/', {
