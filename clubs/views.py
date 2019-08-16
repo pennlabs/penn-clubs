@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions
 from clubs.models import Club, Event, Tag, Membership
-from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer
+from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer, EventSerializer
 
 
 class ClubPermission(permissions.BasePermission):
@@ -90,3 +90,14 @@ class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     http_method_names = ['get']
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    """
+    Return a list of events.
+    """
+    serializer_class = EventSerializer
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        return Event.objects.filter(club=self.kwargs['club_pk'])

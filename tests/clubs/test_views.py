@@ -25,6 +25,24 @@ class ClubTestCase(TestCase):
         self.user3.last_name = 'Washington'
         self.user3.save()
 
+    def test_event_views(self):
+        """
+        Test listing events.
+        """
+        self.client.login(username=self.user1.username, password='test')
+
+        # create club
+        resp = self.client.post('/clubs/', {
+            'name': 'Penn Labs',
+            'description': 'We code stuff.',
+            'tags': []
+        }, content_type='application/json')
+
+        # list events
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        resp = self.client.get('/clubs/penn-labs/events/', content_type='application/json')
+        self.assertIn(resp.status_code, [200], resp.content)
+
     def test_member_views(self):
         """
         Test listing, adding, and removing members.
