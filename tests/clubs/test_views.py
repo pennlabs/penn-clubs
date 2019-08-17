@@ -111,6 +111,15 @@ class ClubTestCase(TestCase):
         self.assertEqual(Club.objects.get(pk='penn-labs').members.count(), 3)
         self.assertEqual(Membership.objects.get(person=self.user2, club='penn-labs').role, Membership.ROLE_OFFICER)
 
+        # list member
+        resp = self.client.get('/clubs/penn-labs/members/')
+        self.assertIn(resp.status_code, [200], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+        for item in data:
+            self.assertIn('name', item)
+            self.assertIn('email', item)
+            self.assertIn('role', item)
+
         # delete member should fail with insufficient permissions
         self.client.logout()
         self.client.login(username=self.user2.username, password='test')

@@ -38,7 +38,19 @@ class MembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Membership
-        fields = ('name', 'title', 'person', 'role')
+        fields = ['name', 'title', 'person', 'role']
+
+
+class AuthenticatedMembershipSerializer(MembershipSerializer):
+    role = serializers.IntegerField(required=False)
+    email = serializers.SerializerMethodField('get_email')
+
+    def get_email(self, obj):
+        return obj.person.email
+
+    class Meta:
+        model = Membership
+        fields = MembershipSerializer.Meta.fields + ['email']
 
 
 class ClubSerializer(serializers.ModelSerializer):

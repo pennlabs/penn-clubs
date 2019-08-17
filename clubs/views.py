@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from clubs.models import Club, Event, Tag, Membership
 from clubs.permissions import ClubPermission, EventPermission, MemberPermission
-from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer, EventSerializer
+from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer, AuthenticatedMembershipSerializer, EventSerializer
 
 
 class MemberViewSet(viewsets.ModelViewSet):
@@ -12,6 +12,12 @@ class MemberViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Membership.objects.filter(club=self.kwargs['club_pk'])
+
+    def get_serializer_class(self):
+        if Membership.objects.filter(person=self.request.user, club=self.kwargs['club_pk']).exists():
+            return AuthenticatedMembershipSerializer
+        else:
+            return MembershipSerializer
 
 
 class ClubViewSet(viewsets.ModelViewSet):
