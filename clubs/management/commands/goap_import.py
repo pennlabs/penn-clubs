@@ -1,6 +1,7 @@
 import re
 import requests
 
+from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import slugify
@@ -27,6 +28,8 @@ class Command(BaseCommand):
         grps = soup.select(".grpl .grpl-grp")
         for grp in grps:
             name = grp.select_one("h3 a").text.strip()
+            # TODO: download image and save to more permanant location
+            image_url = urljoin(url, grp.select_one("img")["src"]).strip()
             group_tag = grp.select_one(".grpl-type")
             if group_tag is not None:
                 group_type = group_tag.text.strip()
@@ -44,11 +47,12 @@ class Command(BaseCommand):
             else:
                 tag = None
             cid = slugify(name)
-            club, flag = Club.objects.get_or_create(id=cid, name=name, defaults={
+            club, flag = Club.objects.update_or_create(id=cid, name=name, defaults={
                 'id': cid,
                 'name': name,
                 'description': description,
-                'email': contact_email
+                'email': contact_email,
+                'image_url': image_url
             })
             if tag is not None:
                 club.tags.set([tag])
