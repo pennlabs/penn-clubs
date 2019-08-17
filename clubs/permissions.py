@@ -57,6 +57,9 @@ class MemberPermission(permissions.BasePermission):
         return membership.role <= obj.role
 
     def has_permission(self, request, view):
+        if request.user.is_superuser:
+            return True
+
         if view.action in ['update', 'partial_update', 'destroy']:
             return request.user.is_authenticated
         elif view.action in ['create']:

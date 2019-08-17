@@ -31,6 +31,34 @@ class ClubTestCase(TestCase):
         self.user4.last_name = 'Arnold'
         self.user4.save()
 
+        self.user5 = Person.objects.create_user('jadams', 'jadams@sas.upenn.edu', 'test')
+        self.user5.first_name = 'John'
+        self.user5.last_name = 'Adams'
+        self.user5.is_staff = True
+        self.user5.is_superuser = True
+        self.user5.save()
+
+
+    def test_superuser_views(self):
+        self.client.login(username=self.user1.username, password='test')
+
+        # create club
+        resp = self.client.post('/clubs/', {
+            'name': 'Penn Labs',
+            'description': 'We code stuff.',
+            'tags': []
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # add member as superuser
+        self.client.login(username=self.user5.username, password='test')
+
+        resp = self.client.post('/clubs/penn-labs/members/', {
+            'person': self.user2.pk,
+            'role': Membership.ROLE_OFFICER
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
     def test_favorite_views(self):
         """
         Test listing/adding/deleting favorites.

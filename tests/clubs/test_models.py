@@ -1,7 +1,8 @@
 import datetime
 import pytz
 from django.test import TestCase
-from clubs.models import Club, Event, Tag
+from users.models import Person
+from clubs.models import Club, Event, Tag, Membership, Favorite
 
 
 class ClubTestCase(TestCase):
@@ -29,3 +30,25 @@ class TagTestCase(TestCase):
 
     def test_str(self):
         self.assertEqual(str(self.tag), self.tag.name)
+
+
+class MembershipTestCase(TestCase):
+    def setUp(self):
+        date = pytz.timezone('America/New_York').localize(datetime.datetime(2019, 1, 1))
+        self.person = Person.objects.create_user('test', 'test@example.com', 'test')
+        self.club = Club.objects.create(id='a', name='a', subtitle='a', founded=date, description='a', size=1)
+        self.membership = Membership.objects.create(club=self.club, person=self.person)
+
+    def test_str(self):
+        self.assertTrue(str(self.membership))
+
+
+class FavoriteTestCase(TestCase):
+    def setUp(self):
+        date = pytz.timezone('America/New_York').localize(datetime.datetime(2019, 1, 1))
+        self.person = Person.objects.create_user('test', 'test@example.com', 'test')
+        self.club = Club.objects.create(id='a', name='a', subtitle='a', founded=date, description='a', size=1)
+        self.favorite = Favorite.objects.create(club=self.club, person=self.person)
+
+    def test_str(self):
+        self.assertTrue(str(self.favorite))
