@@ -4,7 +4,7 @@ from clubs.views import ClubViewSet, TagViewSet, MemberViewSet, EventViewSet
 
 
 router = routers.SimpleRouter()
-router.register(r'clubs', ClubViewSet)
+router.register(r'clubs', ClubViewSet, basename='clubs')
 router.register(r'tags', TagViewSet)
 
 clubs_router = routers.NestedSimpleRouter(router, r'clubs', lookup='club')
