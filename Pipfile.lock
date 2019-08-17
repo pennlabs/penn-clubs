@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9fb00c5ff4a38817eca15ace3539a69e8457d1481a4bc48eb2b5e6774398ba6e"
+            "sha256": "24aa54e22ac451ad4b9a4d320692531ee35e7fb4bd7ba737597b4f733f15b63d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -68,14 +68,6 @@
             ],
             "index": "pypi",
             "version": "==2.2.4"
-        },
-        "django-extensions": {
-            "hashes": [
-                "sha256:4aafdb865104eaa5d681b9976b36c52c9d441be89b7d782e40808f1c5c0c8f93",
-                "sha256:8a2552fdeb222b23895ef52cdc28fc56efba976f6da07ca92937f6f5e626e345"
-            ],
-            "index": "pypi",
-            "version": "==2.2.1"
         },
         "django-labs-accounts": {
             "hashes": [
@@ -270,6 +262,14 @@
             ],
             "index": "pypi",
             "version": "==1.8.2"
+        },
+        "django-extensions": {
+            "hashes": [
+                "sha256:4aafdb865104eaa5d681b9976b36c52c9d441be89b7d782e40808f1c5c0c8f93",
+                "sha256:8a2552fdeb222b23895ef52cdc28fc56efba976f6da07ca92937f6f5e626e345"
+            ],
+            "index": "pypi",
+            "version": "==2.2.1"
         },
         "docopt": {
             "hashes": [

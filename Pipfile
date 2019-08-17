@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 coveralls = "*"
 unittest-xml-reporting = "*"
+django-extensions = "*"
 
 [packages]
 dj-database-url = "*"
@@ -17,7 +18,6 @@ whitenoise = "*"
 unittest-xml-reporting = "*"
 django = "*"
 django-labs-accounts = "*"
-django-extensions = "*"
 drf-nested-routers = "*"
 "bs4" = "*"
 bleach = "*"
