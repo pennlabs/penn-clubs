@@ -338,6 +338,22 @@ class ClubTestCase(TestCase):
         }, content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
+        # ordinary members should not be able to modify club
+        Membership.objects.create(
+            club=Club.objects.get(pk='penn-labs'),
+            person=self.user2
+        )
+        self.client.login(username=self.user2.username, password='test')
+        resp = self.client.patch('/clubs/penn-labs/', {
+            'description': 'We do stuff.',
+            'tags': []
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        # they can retrieve club info though
+        resp = self.client.get('/clubs/penn-labs/')
+        self.assertIn(resp.status_code, [200], resp.content)
+
         # test modifying club
         self.client.login(username=self.user1.username, password='test')
         resp = self.client.patch('/clubs/penn-labs/', {
