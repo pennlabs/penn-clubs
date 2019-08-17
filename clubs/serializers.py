@@ -164,12 +164,16 @@ class EventSerializer(serializers.ModelSerializer):
 
 class FavoriteSerializer(serializers.ModelSerializer):
     club = serializers.PrimaryKeyRelatedField(queryset=Club.objects.all())
+    name = serializers.SerializerMethodField('get_name')
 
     def save(self):
         self.validated_data['person'] = self.context['request'].user
 
         return super().save()
 
+    def get_name(self, obj):
+        return obj.club.name
+
     class Meta:
         model = Favorite
-        fields = ('club',)
+        fields = ('club', 'name')
