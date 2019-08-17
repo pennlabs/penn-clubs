@@ -20,6 +20,7 @@ django-labs-accounts = "*"
 django-extensions = "*"
 drf-nested-routers = "*"
 "bs4" = "*"
+bleach = "*"
 
 [requires]
 python_version = "3"

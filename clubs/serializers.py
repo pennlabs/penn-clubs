@@ -1,3 +1,5 @@
+import bleach
+
 from rest_framework import serializers
 from django.template.defaultfilters import slugify
 from users.models import Person
@@ -71,6 +73,12 @@ class ClubSerializer(serializers.ModelSerializer):
 
         return obj
 
+    def validate_description(self, value):
+        """
+        Allow the description to have HTML tags that come from a whitelist.
+        """
+        return bleach.clean(value)
+
     def update(self, instance, validated_data):
         """
         Nested serializers don't support update by default, need to override.
@@ -117,6 +125,12 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ('id', 'name', 'club', 'start_time', 'end_time', 'location', 'url', 'image_url', 'description')
+
+    def validate_description(self, value):
+        """
+        Allow the description to have HTML tags that come from a whitelist.
+        """
+        return bleach.clean(value)
 
     def save(self):
         if 'club' not in self.validated_data:
