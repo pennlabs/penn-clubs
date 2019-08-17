@@ -59,6 +59,14 @@ class ClubTestCase(TestCase):
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+        # remove member as superuser
+        resp = self.client.delete('/clubs/penn-labs/members/{}/'.format(self.user2.username))
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+
+        # delete club as superuser
+        resp = self.client.delete('/clubs/penn-labs/')
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+
     def test_favorite_views(self):
         """
         Test listing/adding/deleting favorites.

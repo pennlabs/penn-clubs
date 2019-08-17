@@ -2,13 +2,13 @@ from rest_framework import viewsets
 from django.db.models import Q
 from clubs.models import Club, Event, Tag, Membership, Favorite
 from rest_framework.permissions import IsAuthenticated
-from clubs.permissions import ClubPermission, EventPermission, MemberPermission
+from clubs.permissions import ClubPermission, EventPermission, MemberPermission, IsSuperuser
 from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer, AuthenticatedMembershipSerializer, EventSerializer, FavoriteSerializer
 
 
 class MemberViewSet(viewsets.ModelViewSet):
     serializer_class = MembershipSerializer
-    permission_classes = [MemberPermission]
+    permission_classes = [MemberPermission|IsSuperuser]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
     lookup_field = 'person__username'
 
@@ -30,7 +30,7 @@ class ClubViewSet(viewsets.ModelViewSet):
     Return a list of clubs.
     """
     serializer_class = ClubSerializer
-    permission_classes = [ClubPermission]
+    permission_classes = [ClubPermission|IsSuperuser]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     def get_queryset(self):
@@ -68,7 +68,7 @@ class EventViewSet(viewsets.ModelViewSet):
     Return a list of events.
     """
     serializer_class = EventSerializer
-    permission_classes = [EventPermission]
+    permission_classes = [EventPermission|IsSuperuser]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     def get_queryset(self):

@@ -2,6 +2,17 @@ from rest_framework import permissions
 from clubs.models import Membership
 
 
+class IsSuperuser(permissions.BasePermission):
+    """
+    Grants permission if the current user is a superuser.
+    """
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_authenticated and request.user.is_superuser
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_superuser
+
+
 class ClubPermission(permissions.BasePermission):
     """
     Only club owners should be able to delete.
@@ -38,9 +49,6 @@ class MemberPermission(permissions.BasePermission):
     Anyone can view membership.
     """
     def has_object_permission(self, request, view, obj):
-        if request.user.is_superuser:
-            return True
-
         membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
         if membership is None:
             return False
@@ -57,9 +65,6 @@ class MemberPermission(permissions.BasePermission):
         return membership.role <= obj.role
 
     def has_permission(self, request, view):
-        if request.user.is_superuser:
-            return True
-
         if view.action in ['update', 'partial_update', 'destroy']:
             return request.user.is_authenticated
         elif view.action in ['create']:
