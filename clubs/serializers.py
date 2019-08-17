@@ -22,7 +22,9 @@ class MembershipSerializer(serializers.ModelSerializer):
 
     def validate_role(self, value):
         club_pk = self.context['view'].kwargs.get('club_pk')
-        membership = Membership.objects.get(person=self.context['request'].user, club=club_pk)
+        membership = Membership.objects.filter(person=self.context['request'].user, club=club_pk).first()
+        if membership is None:
+            return value
         if membership.role > value:
             raise serializers.ValidationError('You cannot promote someone above your own level.')
         if value > Membership.ROLE_OWNER and self.context['request'].user.username == self.context['view'].kwargs.get('person__username'):
@@ -44,13 +46,17 @@ class MembershipSerializer(serializers.ModelSerializer):
 class AuthenticatedMembershipSerializer(MembershipSerializer):
     role = serializers.IntegerField(required=False)
     email = serializers.SerializerMethodField('get_email')
+    username = serializers.SerializerMethodField('get_username')
 
     def get_email(self, obj):
         return obj.person.email
 
+    def get_username(self, obj):
+        return obj.person.username
+
     class Meta:
         model = Membership
-        fields = MembershipSerializer.Meta.fields + ['email']
+        fields = MembershipSerializer.Meta.fields + ['email', 'username']
 
 
 class ClubSerializer(serializers.ModelSerializer):
@@ -150,5 +156,7 @@ class EventSerializer(serializers.ModelSerializer):
 
         if not self.validated_data.get('id') and self.validated_data.get('name'):
             self.validated_data['id'] = slugify(self.validated_data['name'])
+
+        self.validated_data['creator'] = self.context['request'].user
 
         return super().save()

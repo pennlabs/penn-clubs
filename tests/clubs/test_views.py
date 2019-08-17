@@ -58,6 +58,7 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         self.assertEqual(Event.objects.count(), 1)
+        self.assertEqual(Event.objects.first().creator, self.user1)
 
         # delete event
         resp = self.client.delete('/clubs/penn-labs/events/{}/'.format('interest-meeting'))

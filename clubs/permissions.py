@@ -17,7 +17,7 @@ class ClubPermission(permissions.BasePermission):
             return False
 
         if view.action in ['destroy']:
-            return membership.role <= Membership.ROLE_OWNER
+            return membership.role <= Membership.ROLE_OWNER or request.user.is_superuser
         else:
             return membership.role <= Membership.ROLE_OFFICER
 
@@ -38,6 +38,9 @@ class MemberPermission(permissions.BasePermission):
     Anyone can view membership.
     """
     def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            return True
+
         membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
         if membership is None:
             return False
@@ -73,6 +76,6 @@ class EventPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if view.action in ['create', 'update', 'partial_update', 'destroy']:
             membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
-            return membership is not None and membership.role <= Membership.ROLE_OFFICER
+            return (membership is not None and membership.role <= Membership.ROLE_OFFICER) or request.user.is_superuser
         else:
             return True

@@ -14,7 +14,7 @@ class MemberViewSet(viewsets.ModelViewSet):
         return Membership.objects.filter(club=self.kwargs['club_pk'])
 
     def get_serializer_class(self):
-        if Membership.objects.filter(person=self.request.user, club=self.kwargs['club_pk']).exists():
+        if self.request.user.is_superuser or Membership.objects.filter(person=self.request.user, club=self.kwargs['club_pk']).exists():
             return AuthenticatedMembershipSerializer
         else:
             return MembershipSerializer
