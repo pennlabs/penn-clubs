@@ -164,8 +164,15 @@ class ClubTestCase(TestCase):
             self.assertIn('email', item)
             self.assertIn('role', item)
 
-        # delete member should fail with insufficient permissions
+        # list member as outsider
         self.client.logout()
+        resp = self.client.get('/clubs/penn-labs/members/')
+        self.assertIn(resp.status_code, [200], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+        for item in data:
+            self.assertNotIn('email', item)
+
+        # delete member should fail with insufficient permissions
         self.client.login(username=self.user2.username, password='test')
 
         resp = self.client.delete('/clubs/penn-labs/members/{}/'.format(self.user1.username), content_type='application/json')
@@ -235,6 +242,7 @@ class ClubTestCase(TestCase):
         """
         tag1 = Tag.objects.create(name="Computer Science")
         tag2 = Tag.objects.create(name="Engineering")
+        tag3 = Tag.objects.create(name="Wharton")
 
         # passing no data should result in a bad request
         resp = self.client.post('/clubs/', {}, content_type='application/json')
@@ -280,6 +288,12 @@ class ClubTestCase(TestCase):
         self.assertTrue(data['tags'], data)
         self.assertEqual(data['members'][0]['name'], self.user1.full_name)
 
+        # test listing club
+        resp = self.client.get('/clubs/?q=penn')
+        self.assertIn(resp.status_code, [200], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+        self.assertTrue(data)
+
         # outsiders should not be able to modify club
         self.client.login(username=self.user4.username, password='test')
         resp = self.client.patch('/clubs/penn-labs/', {
@@ -292,7 +306,11 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user1.username, password='test')
         resp = self.client.patch('/clubs/penn-labs/', {
             'description': 'We do stuff.',
-            'tags': []
+            'tags': [
+                {
+                    'name': tag3.name
+                }
+            ]
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -301,7 +319,7 @@ class ClubTestCase(TestCase):
 
         data = json.loads(resp.content.decode('utf-8'))
         self.assertEqual(data['description'], 'We do stuff.')
-        self.assertFalse(data['tags'])
+        self.assertEqual(len(data['tags']), 1)
 
         # test deleting club
         resp = self.client.delete('/clubs/penn-labs/')
