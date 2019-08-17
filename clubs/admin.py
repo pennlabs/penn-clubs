@@ -1,5 +1,5 @@
 from django.contrib import admin
-from clubs.models import Club, Tag, Membership
+from clubs.models import Club, Tag, Membership, Favorite
 from django.contrib.auth.models import Group
 
 
@@ -23,3 +23,4 @@ class TagAdmin(admin.ModelAdmin):
 admin.site.register(Club, ClubAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Membership)
+admin.site.register(Favorite)

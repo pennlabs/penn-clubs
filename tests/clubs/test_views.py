@@ -26,6 +26,11 @@ class ClubTestCase(TestCase):
         self.user3.last_name = 'Washington'
         self.user3.save()
 
+        self.user4 = Person.objects.create_user('barnold', 'barnold@wharton.upenn.edu', 'test')
+        self.user4.first_name = 'Benedict'
+        self.user4.last_name = 'Arnold'
+        self.user4.save()
+
     def test_favorite_views(self):
         """
         Test listing/adding/deleting favorites.
@@ -52,7 +57,15 @@ class ClubTestCase(TestCase):
         data = json.loads(resp.content.decode('utf-8'))
         self.assertTrue(data)
 
+        # other people shouldn't see your favorites
+        self.client.login(username=self.user4.username, password='test')
+        resp = self.client.get('/favorites/')
+        self.assertIn(resp.status_code, [200], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+        self.assertFalse(data)
+
         # delete favorite
+        self.client.login(username=self.user1.username, password='test')
         resp = self.client.delete('/favorites/penn-labs/')
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
@@ -158,7 +171,20 @@ class ClubTestCase(TestCase):
         resp = self.client.delete('/clubs/penn-labs/members/{}/'.format(self.user1.username), content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
+        # delete member should fail for people not in club
+        self.client.login(username=self.user4.username, password='test')
+        resp = self.client.delete('/clubs/penn-labs/members/{}/'.format(self.user1.username), content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        # cannot add self to a club that you're not in
+        resp = self.client.post('/clubs/penn-labs/members/', {
+            'person': self.user4.pk,
+            'role': Membership.ROLE_MEMBER
+        })
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
         # modify self to higher role should fail with insufficient permissions
+        self.client.login(username=self.user2.username, password='test')
         resp = self.client.patch('/clubs/penn-labs/members/{}/'.format(self.user2.username), {
             'role': Membership.ROLE_OWNER
         }, content_type='application/json')
@@ -254,7 +280,16 @@ class ClubTestCase(TestCase):
         self.assertTrue(data['tags'], data)
         self.assertEqual(data['members'][0]['name'], self.user1.full_name)
 
+        # outsiders should not be able to modify club
+        self.client.login(username=self.user4.username, password='test')
+        resp = self.client.patch('/clubs/penn-labs/', {
+            'description': 'We do stuff.',
+            'tags': []
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
         # test modifying club
+        self.client.login(username=self.user1.username, password='test')
         resp = self.client.patch('/clubs/penn-labs/', {
             'description': 'We do stuff.',
             'tags': []
