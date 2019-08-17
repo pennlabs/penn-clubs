@@ -1,3 +1,3 @@
 [run]
-omit = */tests/*, */migrations/*, */settings/*, */wsgi.py, */.venv/*, manage.py, */apps.py
+omit = */tests/*, */migrations/*, */settings/*, */wsgi.py, */.venv/*, manage.py, */apps.py, clubs/management/commands/goap_import.py
 source = .

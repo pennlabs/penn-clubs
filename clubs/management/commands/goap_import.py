@@ -15,6 +15,9 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.count = 1
         self.session = requests.Session()
+        self.session.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.85 Safari/537.36'
+        }
         self.process_url(self.START_URL)
 
     def process_url(self, url):
