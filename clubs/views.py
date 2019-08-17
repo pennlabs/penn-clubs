@@ -34,6 +34,7 @@ class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     http_method_names = ['get']
+    lookup_field = 'name'
 
 
 class EventViewSet(viewsets.ModelViewSet):

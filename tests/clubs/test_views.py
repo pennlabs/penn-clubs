@@ -149,10 +149,18 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_tag_views(self):
+        # everyone can view the list of tags
+        resp = self.client.get('/tags/')
+        self.assertIn(resp.status_code, [200], resp.content)
+
         # ensure that unauthenticated users cannot create tags
         resp = self.client.post('/tags/', {
             'name': 'Some Tag'
         }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403, 405], resp.content)
+
+        # ensure that unauthenticated users cannot delete tags
+        resp = self.client.delete('/tags/some-tag/')
         self.assertIn(resp.status_code, [400, 403, 405], resp.content)
 
     def test_club_views(self):
