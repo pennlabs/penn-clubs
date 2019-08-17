@@ -1,8 +1,9 @@
 from rest_framework import viewsets
 from django.db.models import Q
-from clubs.models import Club, Event, Tag, Membership
+from clubs.models import Club, Event, Tag, Membership, Favorite
+from rest_framework.permissions import IsAuthenticated
 from clubs.permissions import ClubPermission, EventPermission, MemberPermission
-from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer, AuthenticatedMembershipSerializer, EventSerializer
+from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer, AuthenticatedMembershipSerializer, EventSerializer, FavoriteSerializer
 
 
 class MemberViewSet(viewsets.ModelViewSet):
@@ -51,6 +52,15 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     http_method_names = ['get']
     lookup_field = 'name'
+
+
+class FavoriteViewSet(viewsets.ModelViewSet):
+    serializer_class = FavoriteSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'club__pk'
+
+    def get_queryset(self):
+        return Favorite.objects.filter(person=self.request.user)
 
 
 class EventViewSet(viewsets.ModelViewSet):

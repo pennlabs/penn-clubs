@@ -1,11 +1,11 @@
 from rest_framework_nested import routers
-from django.urls import path
-from clubs.views import ClubViewSet, TagViewSet, MemberViewSet, EventViewSet
+from clubs.views import ClubViewSet, TagViewSet, MemberViewSet, EventViewSet, FavoriteViewSet
 
 
 router = routers.SimpleRouter()
 router.register(r'clubs', ClubViewSet, basename='clubs')
 router.register(r'tags', TagViewSet)
+router.register(r'favorites', FavoriteViewSet, basename='favorites')
 
 clubs_router = routers.NestedSimpleRouter(router, r'clubs', lookup='club')
 clubs_router.register(r'members', MemberViewSet, base_name='club-members')

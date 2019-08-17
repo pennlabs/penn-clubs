@@ -26,9 +26,39 @@ class ClubTestCase(TestCase):
         self.user3.last_name = 'Washington'
         self.user3.save()
 
+    def test_favorite_views(self):
+        """
+        Test listing/adding/deleting favorites.
+        """
+        self.client.login(username=self.user1.username, password='test')
+
+        # create club
+        resp = self.client.post('/clubs/', {
+            'name': 'Penn Labs',
+            'description': 'We code stuff.',
+            'tags': []
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # add favorite
+        resp = self.client.post('/favorites/', {
+            'club': 'penn-labs'
+        })
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # list favorites
+        resp = self.client.get('/favorites/')
+        self.assertIn(resp.status_code, [200], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+        self.assertTrue(data)
+
+        # delete favorite
+        resp = self.client.delete('/favorites/penn-labs/')
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+
     def test_event_views(self):
         """
-        Test listing events.
+        Test listing/adding/deleting events.
         """
         self.client.login(username=self.user1.username, password='test')
 

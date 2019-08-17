@@ -3,7 +3,7 @@ import bleach
 from rest_framework import serializers
 from django.template.defaultfilters import slugify
 from users.models import Person
-from clubs.models import Club, Event, Tag, Membership
+from clubs.models import Club, Event, Tag, Membership, Favorite
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -160,3 +160,16 @@ class EventSerializer(serializers.ModelSerializer):
         self.validated_data['creator'] = self.context['request'].user
 
         return super().save()
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    club = serializers.PrimaryKeyRelatedField(queryset=Club.objects.all())
+
+    def save(self):
+        self.validated_data['person'] = self.context['request'].user
+
+        return super().save()
+
+    class Meta:
+        model = Favorite
+        fields = ('club',)

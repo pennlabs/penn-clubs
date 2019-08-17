@@ -1,6 +1,5 @@
 from django.db import models
 from users.models import Person
-from django.template.defaultfilters import slugify
 
 
 class Club(models.Model):
@@ -84,3 +83,14 @@ class Membership(models.Model):
 
     def __str__(self):
         return "<Membership: {} in {} ({})>".format(self.person.username, self.club.pk, self.get_role_display())
+
+
+class Favorite(models.Model):
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "<Favorite: {} for {}>".format(self.person.username, self.club.pk)
+
+    class Meta:
+        unique_together = (('person', 'club'),)
