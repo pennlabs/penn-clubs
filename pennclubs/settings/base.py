@@ -137,3 +137,9 @@ PLATFORM_ACCOUNTS = {
     'REDIRECT_URI': 'https://clubs.pennlabs.org/accounts/callback/',
     'ADMIN_PERMISSION': 'clubs_admin'
 }
+
+# Django Rest Framework Settings
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'clubs.utils.custom_exception_handler'
+}

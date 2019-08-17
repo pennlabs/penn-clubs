@@ -19,6 +19,7 @@ django = "*"
 django-labs-accounts = "*"
 django-extensions = "*"
 drf-nested-routers = "*"
+"bs4" = "*"
 
 [requires]
 python_version = "3"
