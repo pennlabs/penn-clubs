@@ -3,6 +3,9 @@ from users.models import Person
 
 
 class Club(models.Model):
+    """
+    Represents a club at the University of Pennsylvania.
+    """
     SIZE_SMALL = 1
     SIZE_MEDIUM = 2
     SIZE_LARGE = 3
@@ -41,6 +44,9 @@ class Club(models.Model):
 
 
 class Event(models.Model):
+    """
+    Represents an event hosted by a club.
+    """
     id = models.SlugField(max_length=255, primary_key=True)
     creator = models.ForeignKey(Person, on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=255)
@@ -60,6 +66,9 @@ class Event(models.Model):
 
 
 class Tag(models.Model):
+    """
+    Represents general categories that clubs fit into.
+    """
     name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -67,6 +76,9 @@ class Tag(models.Model):
 
 
 class Membership(models.Model):
+    """
+    Represents the relationship between a member and a club.
+    """
     ROLE_OWNER = 0
     ROLE_OFFICER = 10
     ROLE_MEMBER = 20
@@ -86,6 +98,9 @@ class Membership(models.Model):
 
 
 class Favorite(models.Model):
+    """
+    Used when people favorite a club to keep track of which clubs were favorited.
+    """
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
 

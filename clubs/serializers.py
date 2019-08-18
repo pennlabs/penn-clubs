@@ -21,6 +21,10 @@ class MembershipSerializer(serializers.ModelSerializer):
         return obj.person.full_name
 
     def validate_role(self, value):
+        """
+        Ensure that users cannot promote themselves to a higher role.
+        Also ensure that owners can't demote themselves without leaving another owner.
+        """
         club_pk = self.context['view'].kwargs.get('club_pk')
         membership = Membership.objects.filter(person=self.context['request'].user, club=club_pk).first()
         if membership is None:
