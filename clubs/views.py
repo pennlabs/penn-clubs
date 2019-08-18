@@ -8,7 +8,7 @@ from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerialize
 
 class MemberViewSet(viewsets.ModelViewSet):
     serializer_class = MembershipSerializer
-    permission_classes = [MemberPermission|IsSuperuser]
+    permission_classes = [MemberPermission | IsSuperuser]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
     lookup_field = 'person__username'
 
@@ -30,7 +30,7 @@ class ClubViewSet(viewsets.ModelViewSet):
     Return a list of clubs.
     """
     serializer_class = ClubSerializer
-    permission_classes = [ClubPermission|IsSuperuser]
+    permission_classes = [ClubPermission | IsSuperuser]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     def get_queryset(self):
@@ -69,7 +69,7 @@ class EventViewSet(viewsets.ModelViewSet):
     Return a list of events.
     """
     serializer_class = EventSerializer
-    permission_classes = [EventPermission|IsSuperuser]
+    permission_classes = [EventPermission | IsSuperuser]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     def get_queryset(self):

@@ -38,7 +38,6 @@ class ClubTestCase(TestCase):
         self.user5.is_superuser = True
         self.user5.save()
 
-
     def test_superuser_views(self):
         self.client.login(username=self.user1.username, password='test')
 
@@ -313,6 +312,14 @@ class ClubTestCase(TestCase):
         self.assertEqual(Club.objects.count(), 1)
         self.assertEqual(Membership.objects.count(), 1)
         self.assertEqual(Club.objects.first().members.count(), 1)
+
+        # creating again should raise an error
+        resp = self.client.post('/clubs/', {
+            'name': 'Penn Labs',
+            'description': 'We code stuff.',
+            'tags': []
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400], resp.content)
 
         resp = self.client.get('/clubs/penn-labs/')
         self.assertIn(resp.status_code, [200], resp.content)

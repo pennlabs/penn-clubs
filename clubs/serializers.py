@@ -3,6 +3,7 @@ import bleach
 from rest_framework import serializers
 from django.template.defaultfilters import slugify
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from clubs.models import Club, Event, Tag, Membership, Favorite
 
 
@@ -94,6 +95,17 @@ class ClubSerializer(serializers.ModelSerializer):
         )
 
         return obj
+
+    def validate_name(self, value):
+        """
+        Ensure that the club name is unique.
+        """
+        value = value.strip()
+
+        if Club.objects.filter(Q(name__iexact=value) | Q(id=slugify(value))).exists():
+            raise serializers.ValidationError("A club with that name already exists.")
+
+        return value
 
     def validate_description(self, value):
         """
