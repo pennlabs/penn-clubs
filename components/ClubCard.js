@@ -39,6 +39,7 @@ class ClubCard extends React.Component {
       <div className="column is-half-desktop">
       <Pop
         pose={this.state.hovering ? "hovered" : "idle"}
+        style={{cursor: "pointer"}}
         onClick={(e) => openModal(club)}
         onMouseEnter={() => this.setState({ hovering: true })}
         onMouseLeave={() => this.setState({ hovering: false })}>
@@ -53,7 +54,7 @@ class ClubCard extends React.Component {
               backgroundColor: this.state.hovering ? "#FAFAFA" : "#fff",
               justifyContent: "space-between"
             }}>
-            <div style={{cursor: "pointer"}}>
+            <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 3px"}}>
                 <b className="is-size-5" style={{color: CLUBS_GREY}}> {name} </b>
               </div>

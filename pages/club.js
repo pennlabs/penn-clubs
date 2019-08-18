@@ -1,7 +1,7 @@
 import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
-import { getDefaultClubImageURL, getServerBaseURL } from '../utils'
+import { getDefaultClubImageURL, getApiBaseURL } from '../utils'
 import React from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
@@ -102,10 +102,10 @@ class Club extends React.Component {
 }
 
 Club.getInitialProps = async (props) => {
-  const tagsRequest = await fetch(`${getServerBaseURL()}/tags/?format=json`)
+  const tagsRequest = await fetch(`${getApiBaseURL()}/tags/?format=json`)
   const tagsResponse = await tagsRequest.json()
   var { query } = props
-  const clubRequest = await fetch(`${getServerBaseURL()}/clubs/${query.club}/?format=json`)
+  const clubRequest = await fetch(`${getApiBaseURL()}/clubs/${query.club}/?format=json`)
   const clubResponse = await clubRequest.json()
   return { club: clubResponse, tags: tagsResponse }
 }
