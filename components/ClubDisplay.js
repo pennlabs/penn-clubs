@@ -23,6 +23,7 @@ class ClubDisplay extends React.Component {
           <div className="columns is-multiline is-desktop is-tablet">
             { displayClubs.map((club) => (
               <ClubCard
+                key={club.id}
                 club={club}
                 tags={tags}
                 openModal={openModal}

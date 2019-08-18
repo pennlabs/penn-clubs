@@ -1,4 +1,5 @@
 import posed from 'react-pose'
+import Head from 'next/head'
 import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
 
 const Pop = posed.div({
@@ -18,7 +19,7 @@ class Header extends React.Component {
   render() {
     return (
       <div>
-        <head>
+        <Head>
           <title>Penn Clubs</title>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -27,7 +28,7 @@ class Header extends React.Component {
           <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossOrigin="anonymous" />
           <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossOrigin="anonymous" />
           <script src="https://unpkg.com/ionicons@4.5.5/dist/ionicons.js" />
-        </head>
+        </Head>
         <nav className="navbar" role="navigation" aria-label="main navigation" style={{height: 70, backgroundColor: "#f9f9f9", borderBottom: "1px solid #fff"}}>
           <div className="navbar-brand">
             <a className="navbar-item" style={{padding: 0}} href="/">

@@ -62,7 +62,7 @@ class SearchBar extends React.Component {
                 onMouseEnter={() => this.setState({ hoverCard: true })}
                 onMouseLeave={() => this.setState({ hoverCard: false })}>
                 <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY}} onClick={(e)=>switchDisplay("cards")}>
-                  <i class="fas fa-th-large"></i>
+                  <i className="fas fa-th-large"></i>
                 </span>
               </Pop>
               <Pop
@@ -70,7 +70,7 @@ class SearchBar extends React.Component {
                 onMouseEnter={() => this.setState({ hoverList: true })}
                 onMouseLeave={() => this.setState({ hoverList: false })}>
                 <span className="icon" >
-                  <i class="fas fa-list" style={{cursor: "pointer", color: CLUBS_GREY}} onClick={(e)=>switchDisplay("list")}></i>
+                  <i className="fas fa-list" style={{cursor: "pointer", color: CLUBS_GREY}} onClick={(e)=>switchDisplay("list")}></i>
                 </span>
               </Pop>
             </div>
@@ -90,10 +90,10 @@ class SearchBar extends React.Component {
                   fontSize: "1em",
                 }}
                 value={this.state.nameInput}
-                onInput={(e) => this.setState({nameInput: e.target.value})}
+                onChange={(e) => this.setState({nameInput: e.target.value})}
                 />
               <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY}}>
-                {this.state.nameInput ? <i onClick={(e)=>this.setState({nameInput: ""})} class="fas fa-times"></i> : <i class="fas fa-search"></i>}
+                {this.state.nameInput ? <i onClick={(e)=>this.setState({nameInput: ""})} className="fas fa-times"></i> : <i className="fas fa-search"></i>}
               </span>
             </div>
           </div>

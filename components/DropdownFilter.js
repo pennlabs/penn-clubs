@@ -41,7 +41,7 @@ class DropdownFilter extends React.Component {
             onMouseEnter={() => this.setState({ hoverDown: true })}
             onMouseLeave={() => this.setState({ hoverDown: false })}>
             <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY}} onClick={(e)=>this.toggleDrop()}>
-              <i class="fas fa-chevron-down"></i>
+              <i className="fas fa-chevron-down"></i>
             </span>
           </Pop>
         </div>

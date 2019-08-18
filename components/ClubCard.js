@@ -1,6 +1,7 @@
 import React from 'react'
 import posed from 'react-pose'
 import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
+import { getDefaultClubImageURL } from '../utils'
 import TagGroup from './TagGroup'
 
 const Pop = posed.div({
@@ -29,25 +30,10 @@ class ClubCard extends React.Component {
     return this.props.tags.find(tag => tag.id == id).name
   }
 
-  randomClub() {
-    const clubs = ["https://files.slack.com/files-pri/T4EM1119V-FH9E8PE93/images.jpeg",
-    "http://static.asiawebdirect.com/m/kl/portals/kuala-lumpur-ws/homepage/magazine/5-clubs/pagePropertiesImage/best-clubs-kuala-lumpur.jpg.jpg",
-    "https://files.slack.com/files-pri/T4EM1119V-FHA7CVCNT/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH920P727/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH958BEAW/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH6NHNE0Y/seltzer.jpg",
-    "https://s3.envato.com/files/990f2541-adb3-497d-a92e-78e03ab34d9d/inline_image_preview.jpg"
-    ]
-    const i = Math.floor(Math.random() * (6));
-    return clubs[i];
-  }
-
-
-
   render() {
     var { club, openModal, updateFavorites, favorite } = this.props
     var { name, id, description, subtitle, tags } = club
-    var img = club.img ? club.img : this.randomClub()
+    var img = club.img ? club.img : getDefaultClubImageURL()
     club.img = img
     return (
       <div className="column is-half-desktop">
@@ -69,7 +55,7 @@ class ClubCard extends React.Component {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 3px"}}>
                 <b className="is-size-5" style={{color: CLUBS_GREY}}> {name} </b>
               </div>
-              {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.5em'}}>{this.findTagById(tag)}</span>)}
+              {tags.map(tag => <span key={tag} className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.5em'}}>{this.findTagById(tag)}</span>)}
               <div className="columns is-desktop is-gapless" style={{ padding: "10px 5px" }}>
                 <div className="column is-narrow">
                   <img style={{ height: 120, width: 180, borderRadius: 3}} src={img} />

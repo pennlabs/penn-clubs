@@ -1,5 +1,6 @@
 import React from 'react'
 import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
+import { getDefaultClubImageURL } from '../utils'
 
 class ClubModal extends React.Component {
   constructor(props) {
@@ -17,19 +18,6 @@ class ClubModal extends React.Component {
     else if (size == 2) return '20 - 50 Members'
     else if (size == 3) return '50 - 100 Members'
     else return '100+ Members'
-  }
-
-  randomClub() {
-    const clubs = ["https://files.slack.com/files-pri/T4EM1119V-FH9E8PE93/images.jpeg",
-    "http://static.asiawebdirect.com/m/kl/portals/kuala-lumpur-ws/homepage/magazine/5-clubs/pagePropertiesImage/best-clubs-kuala-lumpur.jpg.jpg",
-    "https://files.slack.com/files-pri/T4EM1119V-FHA7CVCNT/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH920P727/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH958BEAW/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH6NHNE0Y/seltzer.jpg",
-    "https://s3.envato.com/files/990f2541-adb3-497d-a92e-78e03ab34d9d/inline_image_preview.jpg"
-    ]
-    const i = Math.floor(Math.random() * (6));
-    return clubs[i];
   }
 
   render() {
@@ -51,9 +39,9 @@ class ClubModal extends React.Component {
             </div>
             <div className="columns">
               <div className="column is-4-desktop is-5-mobile" style={{display:"flex", flexDirection:"column", justifyContent: "space-between", height: 400}}>
-                <img style={{ height: 220, width: 330, borderRadius: 3 }} src={img ? img : this.randomClub()} />
+                <img style={{ height: 220, width: 330, borderRadius: 3 }} src={img ? img : getDefaultClubImageURL()} />
                 <div>
-                  {tags ? tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 3}}>{this.findTagById(tag)}</span>) : ""}
+                  {tags ? tags.map(tag => <span key={tag} className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 3}}>{this.findTagById(tag)}</span>) : ""}
                 </div>
                 <div style={{borderRadius: 3, backgroundColor: "#f2f2f2", height: 100, width: 330, padding: 10, display: "flex", flexDirection:"column", justifyContent: "space-around"}}>
                   <div style={{display: "flex", justifyContent: "space-between"}}>

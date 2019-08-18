@@ -99,7 +99,7 @@ class Splash extends React.Component {
                     margin: 3,
                   }}>
                   {tag.label}
-                  <button class="delete is-small" onClick={(e)=>this.updateTag(tag, tag.name)}></button>
+                  <button className="delete is-small" onClick={(e)=>this.updateTag(tag, tag.name)}></button>
                 </span>
               ))}
               <span onClick={(e)=>this.setState({selectedTags: []}, this.resetDisplay(this.state.nameInput, this.state.selectedTags))} style={{color: CLUBS_GREY_LIGHT, textDecoration:"underline", fontSize: ".7em", margin: 5}}>Clear All</span>
