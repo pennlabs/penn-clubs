@@ -56,7 +56,7 @@ class ClubCard extends React.Component {
               {tags.map(tag => <span key={tag.id} className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.7em'}}>{tag.name}</span>)}
               <div className="columns is-desktop is-gapless" style={{ padding: "10px 5px" }}>
                 <div className="column is-narrow">
-                  <img style={{ height: 120, width: 180, borderRadius: 3}} src={img} />
+                  <img style={{ height: 120, width: 180, borderRadius: 3, objectFit: 'contain'}} src={img} />
                 </div>
                 <div className="column">
                   <p style={{fontSize: ".8em", paddingLeft: 8, color: CLUBS_GREY_LIGHT}}>{this.shorten(subtitle)}</p>

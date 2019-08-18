@@ -35,7 +35,7 @@ class ClubModal extends React.Component {
             </div>
             <div className="columns">
               <div className="column is-4-desktop is-5-mobile" style={{display:"flex", flexDirection:"column", justifyContent: "space-between", height: 400}}>
-                <img style={{ height: 220, width: 330, borderRadius: 3 }} src={image_url || getDefaultClubImageURL()} />
+                <img style={{ height: 220, width: 330, borderRadius: 3, objectFit: 'contain' }} src={image_url || getDefaultClubImageURL()} />
                 <div>
                   {tags ? tags.map(tag => <span key={tag.id} className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 3}}>{tag.name}</span>) : ""}
                 </div>
