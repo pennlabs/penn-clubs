@@ -62,7 +62,7 @@ class SearchBar extends React.Component {
                 onMouseEnter={() => this.setState({ hoverCard: true })}
                 onMouseLeave={() => this.setState({ hoverCard: false })}>
                 <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY}} onClick={(e)=>switchDisplay("cards")}>
-                  <i className="fas fa-th-large"></i>
+                  <i className="fas fa-th-large" title="Grid View"></i>
                 </span>
               </Pop>
               <Pop
@@ -70,7 +70,7 @@ class SearchBar extends React.Component {
                 onMouseEnter={() => this.setState({ hoverList: true })}
                 onMouseLeave={() => this.setState({ hoverList: false })}>
                 <span className="icon" >
-                  <i className="fas fa-list" style={{cursor: "pointer", color: CLUBS_GREY}} onClick={(e)=>switchDisplay("list")}></i>
+                  <i className="fas fa-list" title="List View" style={{cursor: "pointer", color: CLUBS_GREY}} onClick={(e)=>switchDisplay("list")}></i>
                 </span>
               </Pop>
             </div>
