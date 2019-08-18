@@ -13,7 +13,7 @@ export function doApiRequest(path, data) {
     }
     data['credentials'] = 'include'
     if (typeof document !== 'undefined') {
-        data['headers'] = Object.assign({'Content-Type': 'application/json', 'X-CSRFToken': (/csrftoken=(\w+)/.exec(document.cookie) | [null, null])[1]}, data['headers'] || {})
+        data['headers'] = Object.assign({'Content-Type': 'application/json', 'X-CSRFToken': (/csrftoken=(\w+)/.exec(document.cookie) || [null, null])[1]}, data['headers'] || {})
     }
     if (data.body) {
         data.body = JSON.stringify(data.body)
