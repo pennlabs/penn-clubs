@@ -41,7 +41,7 @@ class TagViewSet(viewsets.ModelViewSet):
     """
     Return a list of tags.
     """
-    queryset = Tag.objects.all()
+    queryset = Tag.objects.all().order_by('name')
     serializer_class = TagSerializer
     http_method_names = ['get']
     lookup_field = 'name'
