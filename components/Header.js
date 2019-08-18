@@ -21,7 +21,7 @@ class Header extends React.Component {
       <div>
         <Head>
           <title>Penn Clubs</title>
-          <meta charset="utf-8" />
+          <meta charSet="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link rel="shortcut icon" href="/static/favicon.ico" />
           <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css"/>

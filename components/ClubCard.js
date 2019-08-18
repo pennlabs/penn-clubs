@@ -49,7 +49,8 @@ class ClubCard extends React.Component {
               minHeight: 240,
               boxShadow: "0 0 0 #fff",
               border: "1px solid #e5e5e5",
-              backgroundColor: this.state.hovering ? "#FAFAFA" : "#fff"
+              backgroundColor: this.state.hovering ? "#FAFAFA" : "#fff",
+              justifyContent: "space-between"
             }}>
             <div onClick={(e) => openModal(club)} style={{cursor: "pointer"}}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 3px"}}>
