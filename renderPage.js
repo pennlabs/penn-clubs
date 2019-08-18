@@ -31,10 +31,20 @@ function renderPage(Page) {
       var i = newFavs.indexOf(id)
       if (i == -1) {
         newFavs.push(id)
+        fetch(`${getApiBaseURL()}/favorites/?format=json`, {
+          method: 'POST',
+          data: {
+            club: id
+          }
+        })
       } else {
         newFavs.splice(i, 1)
+        fetch(`${getApiBaseURL()}/favorites/${id}/?format=json`, {
+          method: 'DELETE'
+        })
       }
       localStorage.setItem('favorites', JSON.stringify(newFavs))
+
       this.setState({favorites: newFavs})
     }
 
