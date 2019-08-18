@@ -135,3 +135,7 @@ PLATFORM_ACCOUNTS = {
     'REDIRECT_URI': 'https://clubs.pennlabs.org/accounts/callback/',
     'ADMIN_PERMISSION': 'clubs_admin'
 }
+
+# Django CORS Settings
+
+CORS_ALLOW_CREDENTIALS = True
