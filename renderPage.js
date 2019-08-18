@@ -21,8 +21,14 @@ function renderPage(Page) {
     }
 
     componentDidMount() {
-      var favorites = JSON.parse(localStorage.getItem('favorites')) || []
-      this.setState({ favorites })
+      fetch(`${getApiBaseURL()}/favorites/?format=json`).then((resp) => {
+        if (resp.ok) {
+          this.setState({ favorites: resp.json() })
+        }
+        else {
+          this.setState({ favorites: JSON.parse(localStorage.getItem('favorites')) || [] })
+        }
+      })
       this.modalElement = document.querySelector('#modal');
     }
 
