@@ -39,6 +39,7 @@ class ClubCard extends React.Component {
       <div className="column is-half-desktop">
       <Pop
         pose={this.state.hovering ? "hovered" : "idle"}
+        onClick={(e) => openModal(club)}
         onMouseEnter={() => this.setState({ hovering: true })}
         onMouseLeave={() => this.setState({ hovering: false })}>
           <div
@@ -52,7 +53,7 @@ class ClubCard extends React.Component {
               backgroundColor: this.state.hovering ? "#FAFAFA" : "#fff",
               justifyContent: "space-between"
             }}>
-            <div onClick={(e) => openModal(club)} style={{cursor: "pointer"}}>
+            <div style={{cursor: "pointer"}}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 3px"}}>
                 <b className="is-size-5" style={{color: CLUBS_GREY}}> {name} </b>
               </div>
@@ -66,7 +67,7 @@ class ClubCard extends React.Component {
                 </div>
               </div>
             </div>
-            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{color: CLUBS_GREY, float:"right", padding: "10px 10px 0px 0px", cursor: "pointer"}}>
+            <span className="icon" onClick={(e)=>{updateFavorites(club.id); e.stopPropagation()}} style={{color: CLUBS_GREY, float:"right", padding: "10px 10px 0px 0px", cursor: "pointer"}}>
               <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
             </span>
           </div>
