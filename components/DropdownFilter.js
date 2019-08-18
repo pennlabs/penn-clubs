@@ -30,24 +30,28 @@ class DropdownFilter extends React.Component {
   render() {
     var { name, options, selected, updateTag } = this.props
     var { drop, hoverDown } = this.state
-    var checkboxcolor = (name == "Type") ? CLUBS_BLUE : name == "Size" ? CLUBS_RED : CLUBS_YELLOW
+    var checkboxcolor = {
+        'Type': CLUBS_BLUE,
+        'Size': CLUBS_RED,
+        'Application': CLUBS_YELLOW
+    }[name]
     return(
       <div>
         <hr style={{backgroundColor: CLUBS_GREY, height:"2px", margin: 0, marginTop: 30, padding: 0}}/>
-        <div style={{display: "flex", justifyContent: "space-between", padding: "7px 3px"}}>
+        <div style={{display: "flex", justifyContent: "space-between", padding: "7px 3px", cursor: 'pointer'}} onClick={(e)=>this.toggleDrop()}>
           <p style={{color: CLUBS_GREY}}>{name} </p>
           <Pop
             pose={hoverDown ? "hovered" : "idle"}
             onMouseEnter={() => this.setState({ hoverDown: true })}
             onMouseLeave={() => this.setState({ hoverDown: false })}>
-            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY}} onClick={(e)=>this.toggleDrop()}>
+            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY}}>
               <i className="fas fa-chevron-down"></i>
             </span>
           </Pop>
         </div>
         {drop ? (options.map(tag => (
-          <div style={{display: "flex", paddingTop: 3}}>
-            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY_LIGHT}} onClick={(e)=>updateTag(tag, name)}>
+          <div style={{display: "flex", paddingTop: 3, cursor: 'pointer'}} onClick={(e)=>updateTag(tag, name)}>
+            <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY_LIGHT}}>
               <i className={this.isSelected(tag) ? "fas fa-check-square" : "far fa-square"}></i>
             </span>
             <p style={{color: CLUBS_GREY_LIGHT}}>{tag.label}</p>

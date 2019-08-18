@@ -1,6 +1,5 @@
 module.exports = function getRoutes(app, platformAuth, handle) {
   app.get('/login', (req, res) => {
-    console.log("HERE");
     const uri = platformAuth.code.getUri()
     res.redirect(uri)
   })

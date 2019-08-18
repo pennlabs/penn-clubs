@@ -38,8 +38,8 @@ class Header extends React.Component {
                 onMouseLeave={() => this.setState({ hoverIcon: false })}>
                   <img src="/static/img/peoplelogo.png" style={{paddingLeft: 15, height: "100%", marginBottom: -5}}/>
               </Pop>
+              <h1 className="title is-size-4" style={{color: "#9B9B9B", paddingLeft: 15}}>Penn Clubs</h1>
             </a>
-            <h1 className="title is-size-4" style={{color: "#9B9B9B", marginTop: 20, paddingLeft: 15}}>Penn Clubs </h1>
 
             <a role="button" className="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
               <span aria-hidden="true"></span>
