@@ -21,6 +21,7 @@ django-labs-accounts = "*"
 drf-nested-routers = "*"
 "bs4" = "*"
 bleach = "*"
+django-cors-headers = "*"
 
 [requires]
 python_version = "3"
