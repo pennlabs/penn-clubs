@@ -1,5 +1,5 @@
 from rest_framework import filters, viewsets
-from django.db.models import Q
+from django.db.models import Q, Count
 from clubs.models import Club, Event, Tag, Membership, Favorite
 from rest_framework.permissions import IsAuthenticated
 from clubs.permissions import ClubPermission, EventPermission, MemberPermission, IsSuperuser
@@ -41,7 +41,7 @@ class TagViewSet(viewsets.ModelViewSet):
     """
     Return a list of tags.
     """
-    queryset = Tag.objects.all().order_by('name')
+    queryset = Tag.objects.all().annotate(clubs=Count('club')).order_by('name')
     serializer_class = TagSerializer
     http_method_names = ['get']
     lookup_field = 'name'

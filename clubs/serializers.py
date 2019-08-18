@@ -8,9 +8,11 @@ from clubs.models import Club, Event, Tag, Membership, Favorite
 
 
 class TagSerializer(serializers.ModelSerializer):
+    clubs = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Tag
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'clubs')
 
 
 class MembershipSerializer(serializers.ModelSerializer):
