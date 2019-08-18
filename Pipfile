@@ -22,6 +22,7 @@ drf-nested-routers = "*"
 "bs4" = "*"
 bleach = "*"
 django-cors-headers = "*"
+drf-openapi = "*"
 
 [requires]
 python_version = "3"

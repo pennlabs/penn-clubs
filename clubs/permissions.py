@@ -83,6 +83,8 @@ class EventPermission(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         if view.action in ['create', 'update', 'partial_update', 'destroy']:
+            if 'club_pk' not in view.kwargs:
+                return False
             membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
