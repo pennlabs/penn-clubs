@@ -309,9 +309,10 @@ class ClubTestCase(TestCase):
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        self.assertEqual(Club.objects.count(), 1)
-        self.assertEqual(Membership.objects.count(), 1)
-        self.assertEqual(Club.objects.first().members.count(), 1)
+        club_obj = Club.objects.filter(name='Penn Labs').first()
+        self.assertTrue(club_obj)
+        self.assertEqual(Membership.objects.filter(club=club_obj).count(), 1)
+        self.assertEqual(club_obj.members.count(), 1)
 
         # creating again should raise an error
         resp = self.client.post('/clubs/', {
@@ -384,4 +385,4 @@ class ClubTestCase(TestCase):
         resp = self.client.delete('/clubs/penn-labs/')
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
-        self.assertEqual(Club.objects.count(), 0)
+        self.assertFalse(Club.objects.filter(name='Penn Labs').exists())
