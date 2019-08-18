@@ -3,5 +3,5 @@ export function getDefaultClubImageURL() {
 }
 
 export function getApiBaseURL() {
-    return 'https://clubs.pennlabs.org';
+    return process.env.API_BASE_URL || 'https://clubs.pennlabs.org';
 }
