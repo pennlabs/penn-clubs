@@ -141,7 +141,3 @@ PLATFORM_ACCOUNTS = {
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'clubs.utils.custom_exception_handler'
 }
-
-# Django CORS Settings
-
-CORS_ORIGIN_ALLOW_ALL = True
