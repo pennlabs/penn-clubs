@@ -3,7 +3,7 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 import ClubModal from './components/ClubModal'
 import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
-import { getApiBaseURL } from './utils'
+import { doApiRequest } from './utils'
 import fetch from 'isomorphic-fetch'
 import { CLUBS_PURPLE_LIGHT } from './colors'
 
@@ -21,15 +21,13 @@ function renderPage(Page) {
     }
 
     componentDidMount() {
-      fetch(`${getApiBaseURL()}/favorites/?format=json`).then((resp) => {
+      this.setState({ favorites: JSON.parse(localStorage.getItem('favorites')) || [] })
+      doApiRequest('/favorites/?format=json').then((resp) => {
         if (resp.ok) {
-          this.setState({ favorites: resp.json() })
-        }
-        else {
-          this.setState({ favorites: JSON.parse(localStorage.getItem('favorites')) || [] })
+          resp.json().then((data) => this.setState({ favorites: data.map((a) => a.club) }))
         }
       })
-      this.modalElement = document.querySelector('#modal');
+      this.modalElement = document.querySelector('#modal')
     }
 
     updateFavorites(id) {
@@ -37,15 +35,15 @@ function renderPage(Page) {
       var i = newFavs.indexOf(id)
       if (i == -1) {
         newFavs.push(id)
-        fetch(`${getApiBaseURL()}/favorites/?format=json`, {
+        doApiRequest('/favorites/?format=json', {
           method: 'POST',
-          data: {
+          body: {
             club: id
           }
         })
       } else {
         newFavs.splice(i, 1)
-        fetch(`${getApiBaseURL()}/favorites/${id}/?format=json`, {
+        doApiRequest(`/favorites/${id}/?format=json`, {
           method: 'DELETE'
         })
       }
@@ -102,9 +100,9 @@ function renderPage(Page) {
   }
 
   RenderPage.getInitialProps = async () => {
-    const clubRequest = await fetch(`${getApiBaseURL()}/clubs/?format=json`)
+    const clubRequest = await doApiRequest('/clubs/?format=json')
     const clubResponse = await clubRequest.json()
-    const tagsRequest = await fetch(`${getApiBaseURL()}/tags/?format=json`)
+    const tagsRequest = await doApiRequest('/tags/?format=json')
     const tagsResponse = await tagsRequest.json()
     return { clubs: clubResponse, tags: tagsResponse }
   }

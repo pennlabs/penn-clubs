@@ -26,6 +26,7 @@ class Favorites extends React.Component {
         </div>
         {favoriteClubs.map((club) => (
           <ClubList
+            key={club.id}
             club={club}
             tags={tags}
             updateFavorites={updateFavorites}
@@ -34,7 +35,7 @@ class Favorites extends React.Component {
         ))}
         {!favorites.length ? <p className="has-text-light-grey" style={{paddingTop: 200}}>No favorites yet! Browse clubs <a href="/">here.</a></p> : <div></div>}
       </div>
-    );
+    )
   }
 }
 
