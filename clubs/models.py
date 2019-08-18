@@ -1,5 +1,5 @@
 from django.db import models
-from users.models import Person
+from django.conf import settings
 
 
 class Club(models.Model):
@@ -34,7 +34,7 @@ class Club(models.Model):
     listserv_available = models.BooleanField(default=False)
     image_url = models.URLField(null=True, blank=True)
     tags = models.ManyToManyField('Tag')
-    members = models.ManyToManyField(Person, through='Membership')
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL, through='Membership')
 
     def __str__(self):
         return self.name
@@ -48,7 +48,7 @@ class Event(models.Model):
     Represents an event hosted by a club.
     """
     id = models.SlugField(max_length=255, primary_key=True)
-    creator = models.ForeignKey(Person, on_delete=models.SET_NULL, null=True)
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=255)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     start_time = models.DateTimeField()
@@ -88,7 +88,7 @@ class Membership(models.Model):
         (ROLE_MEMBER, 'Member')
     )
 
-    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    person = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default='Member')
     role = models.IntegerField(choices=ROLE_CHOICES, default=ROLE_MEMBER)
@@ -101,7 +101,7 @@ class Favorite(models.Model):
     """
     Used when people favorite a club to keep track of which clubs were favorited.
     """
-    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    person = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
 
     def __str__(self):

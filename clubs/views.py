@@ -16,7 +16,7 @@ class MemberViewSet(viewsets.ModelViewSet):
         return Membership.objects.filter(club=self.kwargs['club_pk'])
 
     def get_serializer_class(self):
-        if self.request.user.is_superuser or self.request.user.is_authenticated and Membership.objects.filter(person=self.request.user, club=self.kwargs['club_pk']).exists():
+        if self.request.user.is_superuser or (self.request.user.is_authenticated and Membership.objects.filter(person=self.request.user, club=self.kwargs['club_pk']).exists()):
             return AuthenticatedMembershipSerializer
         else:
             return MembershipSerializer
@@ -58,6 +58,7 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     serializer_class = FavoriteSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'club__pk'
+    http_method_names = ['get', 'post', 'delete']
 
     def get_queryset(self):
         return Favorite.objects.filter(person=self.request.user)

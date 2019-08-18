@@ -4,7 +4,7 @@ import datetime
 from django.urls import reverse
 from django.test import TestCase, Client
 
-from users.models import Person
+from django.contrib.auth import get_user_model
 from clubs.models import Club, Tag
 
 
@@ -12,7 +12,7 @@ class AdminTestCase(TestCase):
     def setUp(self):
         self.client = Client()
 
-        self.user1 = Person.objects.create_user('jadams', 'jadams@sas.upenn.edu', 'test')
+        self.user1 = get_user_model().objects.create_user('jadams', 'jadams@sas.upenn.edu', 'test')
         self.user1.first_name = 'John'
         self.user1.last_name = 'Adams'
         self.user1.is_staff = True

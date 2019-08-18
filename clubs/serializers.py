@@ -2,7 +2,7 @@ import bleach
 
 from rest_framework import serializers
 from django.template.defaultfilters import slugify
-from users.models import Person
+from django.contrib.auth import get_user_model
 from clubs.models import Club, Event, Tag, Membership, Favorite
 
 
@@ -14,11 +14,11 @@ class TagSerializer(serializers.ModelSerializer):
 
 class MembershipSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField('get_full_name')
-    person = serializers.PrimaryKeyRelatedField(queryset=Person.objects.all(), write_only=True)
+    person = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), write_only=True)
     role = serializers.IntegerField(write_only=True, required=False)
 
     def get_full_name(self, obj):
-        return obj.person.full_name
+        return obj.person.get_full_name()
 
     def validate_role(self, value):
         """

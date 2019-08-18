@@ -2,36 +2,36 @@ import json
 import datetime
 
 from django.test import TestCase, Client
+from django.contrib.auth import get_user_model
 
 from clubs.models import Club, Membership, Tag, Event
-from users.models import Person
 
 
 class ClubTestCase(TestCase):
     def setUp(self):
         self.client = Client()
 
-        self.user1 = Person.objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
+        self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
         self.user1.first_name = 'Benjamin'
         self.user1.last_name = 'Franklin'
         self.user1.save()
 
-        self.user2 = Person.objects.create_user('tjefferson', 'tjefferson@seas.upenn.edu', 'test')
+        self.user2 = get_user_model().objects.create_user('tjefferson', 'tjefferson@seas.upenn.edu', 'test')
         self.user2.first_name = 'Thomas'
         self.user2.last_name = 'Jefferson'
         self.user2.save()
 
-        self.user3 = Person.objects.create_user('gwashington', 'gwashington@wharton.upenn.edu', 'test')
+        self.user3 = get_user_model().objects.create_user('gwashington', 'gwashington@wharton.upenn.edu', 'test')
         self.user3.first_name = 'George'
         self.user3.last_name = 'Washington'
         self.user3.save()
 
-        self.user4 = Person.objects.create_user('barnold', 'barnold@wharton.upenn.edu', 'test')
+        self.user4 = get_user_model().objects.create_user('barnold', 'barnold@wharton.upenn.edu', 'test')
         self.user4.first_name = 'Benedict'
         self.user4.last_name = 'Arnold'
         self.user4.save()
 
-        self.user5 = Person.objects.create_user('jadams', 'jadams@sas.upenn.edu', 'test')
+        self.user5 = get_user_model().objects.create_user('jadams', 'jadams@sas.upenn.edu', 'test')
         self.user5.first_name = 'John'
         self.user5.last_name = 'Adams'
         self.user5.is_staff = True
@@ -161,7 +161,7 @@ class ClubTestCase(TestCase):
         resp = self.client.get('/clubs/penn-labs/members/')
         self.assertIn(resp.status_code, [200], resp.content)
         data = json.loads(resp.content.decode('utf-8'))
-        self.assertEqual(data[0]['name'], self.user1.full_name)
+        self.assertEqual(data[0]['name'], self.user1.get_full_name())
 
         # add member should fail with insufficient permissions
         self.client.logout()
@@ -322,7 +322,7 @@ class ClubTestCase(TestCase):
         self.assertEqual(data['name'], 'Penn Labs')
         self.assertEqual(data['description'], 'We code stuff.')
         self.assertTrue(data['tags'], data)
-        self.assertEqual(data['members'][0]['name'], self.user1.full_name)
+        self.assertEqual(data['members'][0]['name'], self.user1.get_full_name())
 
         # test listing club
         resp = self.client.get('/clubs/?q=penn')
