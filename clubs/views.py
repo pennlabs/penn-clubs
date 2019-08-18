@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import filters, viewsets
 from django.db.models import Q
 from clubs.models import Club, Event, Tag, Membership, Favorite
 from rest_framework.permissions import IsAuthenticated
@@ -29,19 +29,12 @@ class ClubViewSet(viewsets.ModelViewSet):
     list:
     Return a list of clubs.
     """
+    queryset = Club.objects.all()
     serializer_class = ClubSerializer
     permission_classes = [ClubPermission | IsSuperuser]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'subtitle']
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
-
-    def get_queryset(self):
-        """
-        If search parameters are specified, filter the queryset.
-        """
-        queryset = Club.objects.all()
-        query = self.request.query_params.get('q', None)
-        if query is not None:
-            queryset = queryset.filter(Q(name__icontains=query) | Q(subtitle__icontains=query))
-        return queryset
 
 
 class TagViewSet(viewsets.ModelViewSet):

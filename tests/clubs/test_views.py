@@ -334,7 +334,7 @@ class ClubTestCase(TestCase):
         self.assertEqual(data['members'][0]['name'], self.user1.get_full_name())
 
         # test listing club
-        resp = self.client.get('/clubs/?q=penn')
+        resp = self.client.get(reverse('clubs-list') + "?search=penn")
         self.assertIn(resp.status_code, [200], resp.content)
         data = json.loads(resp.content.decode('utf-8'))
         self.assertTrue(data)
