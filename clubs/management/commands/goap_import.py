@@ -32,12 +32,16 @@ class Command(BaseCommand):
             name = grp.select_one("h3 a").text.strip()
             # TODO: download image and save to more permanant location
             image_url = urljoin(url, grp.select_one("img")["src"]).strip()
+            if image_url.endswith("/group_img.png"):
+                image_url = None
             group_tag = grp.select_one(".grpl-type")
             if group_tag is not None:
                 group_type = group_tag.text.strip()
             else:
                 group_type = None
-            description = grp.select_one(".grpl-purpose").text.strip()
+            description = grp.select_one(".grpl-purpose").text.replace("\r\n", "\n").strip()
+            if description == "This group has not written a purpose":
+                description = ""
             contact_tag = grp.select_one(".grpl-contact")
             if contact_tag is not None:
                 contact_email = contact_tag.text.strip()
