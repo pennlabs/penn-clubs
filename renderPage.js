@@ -15,6 +15,7 @@ function renderPage(Page) {
       this.state = {
         favorites: [],
         modal: false,
+        authenticated: false,
         modalClub: {}
       }
       var modalElement = null
@@ -24,7 +25,7 @@ function renderPage(Page) {
       this.setState({ favorites: JSON.parse(localStorage.getItem('favorites')) || [] })
       doApiRequest('/favorites/?format=json').then((resp) => {
         if (resp.ok) {
-          resp.json().then((data) => this.setState({ favorites: data.map((a) => a.club) }))
+          resp.json().then((data) => this.setState({ authenticated: true, favorites: data.map((a) => a.club) }))
         }
       })
       this.modalElement = document.querySelector('#modal')
@@ -35,17 +36,21 @@ function renderPage(Page) {
       var i = newFavs.indexOf(id)
       if (i == -1) {
         newFavs.push(id)
-        doApiRequest('/favorites/?format=json', {
-          method: 'POST',
-          body: {
-            club: id
-          }
-        })
+        if (this.state.authenticated) {
+          doApiRequest('/favorites/?format=json', {
+            method: 'POST',
+            body: {
+              club: id
+            }
+          })
+        }
       } else {
         newFavs.splice(i, 1)
-        doApiRequest(`/favorites/${id}/?format=json`, {
-          method: 'DELETE'
-        })
+        if (this.state.authenticated) {
+          doApiRequest(`/favorites/${id}/?format=json`, {
+            method: 'DELETE'
+          })
+        }
       }
       localStorage.setItem('favorites', JSON.stringify(newFavs))
 
