@@ -1,5 +1,5 @@
 from django.contrib import admin
-from clubs.models import Club, Tag, Membership, Favorite
+from clubs.models import Club, Tag, Event, Membership, Favorite
 from django.contrib.auth.models import Group
 
 
@@ -20,7 +20,22 @@ class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'club_count')
 
 
+class FavoriteAdmin(admin.ModelAdmin):
+    search_fields = ('person__username', 'person__email', 'club__name', 'club__pk')
+
+
+class MembershipAdmin(admin.ModelAdmin):
+    search_fields = ('person__username', 'person__email', 'club__name', 'club__pk', 'title')
+    list_filter = ('role',)
+
+
+class EventAdmin(admin.ModelAdmin):
+    search_fields = ('name', 'club__name')
+    list_filter = ('start_time', 'end_time')
+
+
 admin.site.register(Club, ClubAdmin)
 admin.site.register(Tag, TagAdmin)
-admin.site.register(Membership)
-admin.site.register(Favorite)
+admin.site.register(Membership, MembershipAdmin)
+admin.site.register(Favorite, FavoriteAdmin)
+admin.site.register(Event, EventAdmin)
