@@ -70,6 +70,8 @@ class MemberPermission(permissions.BasePermission):
         elif view.action in ['create']:
             if not request.user.is_authenticated:
                 return False
+            if 'club_pk' not in view.kwargs:
+                return False
             membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
