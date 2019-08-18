@@ -11,15 +11,10 @@ class ClubTableRow extends React.Component {
     }
   }
 
-  findTagById(id) {
-    return this.props.tags.find(tag => tag.id == id).name
-  }
-
   render() {
     var { club, openModal, updateFavorites, favorite } = this.props
     var { name, id, description, subtitle, tags } = club
-    var img = club.img ? club.img : getDefaultClubImageURL()
-    club.img = img
+    var img = club.image_url || getDefaultClubImageURL()
     return (
       <tr style={{borderTop: "1px solid #e5e5e5"}}>
         <div className="columns is-vcentered is-gapless is-mobile">
@@ -28,7 +23,7 @@ class ClubTableRow extends React.Component {
               <div className="column is-4">
                 <b className="is-size-6" style={{color: CLUBS_GREY}}> {name} </b>
                 <div>
-                  {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.7em'}}>{this.findTagById(tag)}</span>)}
+                  {tags.map(tag => <span key={tag.id} className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.7em'}}>{tag.name}</span>)}
                 </div>
               </div>
               <div className="column is-8">

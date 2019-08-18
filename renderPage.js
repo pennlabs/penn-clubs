@@ -3,6 +3,7 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 import ClubModal from './components/ClubModal'
 import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
+import { getApiBaseURL } from './utils'
 import fetch from 'isomorphic-fetch'
 import { CLUBS_PURPLE_LIGHT } from './colors'
 
@@ -85,9 +86,9 @@ function renderPage(Page) {
   }
 
   RenderPage.getInitialProps = async () => {
-    const clubRequest = await fetch('https://clubs.pennlabs.org/clubs/?format=json')
+    const clubRequest = await fetch(`${getApiBaseURL()}/clubs/?format=json`)
     const clubResponse = await clubRequest.json()
-    const tagsRequest = await fetch('https://clubs.pennlabs.org/tags/?format=json')
+    const tagsRequest = await fetch(`${getApiBaseURL()}/tags/?format=json`)
     const tagsResponse = await tagsRequest.json()
     return { clubs: clubResponse, tags: tagsResponse }
   }

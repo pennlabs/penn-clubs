@@ -41,8 +41,8 @@ class Splash extends React.Component {
     }): clubs
     clubs = tagSelected.length && clubs.length ? clubs.filter(club => {
       var contains
-      club.tags.forEach(id => {
-        if (tagSelected.findIndex(tag => tag.value === id) !== -1 ) {
+      club.tags.forEach(club_tag => {
+        if (tagSelected.findIndex(tag => tag.value === club_tag.id) !== -1 ) {
           contains = true
         }
       })
@@ -93,6 +93,7 @@ class Splash extends React.Component {
             <div style={{padding: "0 30px 30px 0"}}>
               {selectedTags.map(tag => (
                 <span
+                  key={tag.label}
                   className="tag is-rounded has-text-white"
                   style={{
                     backgroundColor: tag.name == "Type" ? CLUBS_BLUE : (tag.name == "Size" ? CLUBS_RED: CLUBS_YELLOW),

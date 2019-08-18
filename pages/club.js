@@ -21,10 +21,6 @@ class Club extends React.Component {
     else return '100+ Members'
   }
 
-  findTagById(id) {
-    return this.props.tags.find(tag => tag.id == id).name
-  }
-
   render() {
     const { club, tags } = this.props
     return (
@@ -38,7 +34,7 @@ class Club extends React.Component {
           <i className="fas fa-heart" style={{fontSize: "1.5em"}}></i>
         </div>
          <div style={{marginBottom: 20}}>
-          {club.tags.map(tag => <span key={tag} className="tag is-rounded" style={{backgroundColor: CLUBS_BLUE, color: "#fff", margin: 3,}}>{this.findTagById(tag)} </span>)}
+          {club.tags.map(tag => <span key={tag.id} className="tag is-rounded" style={{backgroundColor: CLUBS_BLUE, color: "#fff", margin: 3,}}>{tag.name} </span>)}
          </div>
          <div className="columns">
           <div className="column is-6">

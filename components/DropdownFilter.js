@@ -50,7 +50,7 @@ class DropdownFilter extends React.Component {
           </Pop>
         </div>
         {drop ? (options.map(tag => (
-          <div style={{display: "flex", paddingTop: 3, cursor: 'pointer'}} onClick={(e)=>updateTag(tag, name)}>
+          <div key={tag.label} style={{display: "flex", paddingTop: 3, cursor: 'pointer'}} onClick={(e)=>updateTag(tag, name)}>
             <span className="icon" style={{cursor: "pointer", color: CLUBS_GREY_LIGHT}}>
               <i className={this.isSelected(tag) ? "fas fa-check-square" : "far fa-square"}></i>
             </span>

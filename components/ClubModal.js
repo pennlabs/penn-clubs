@@ -9,10 +9,6 @@ class ClubModal extends React.Component {
     }
   }
 
-  findTagById(id) {
-    return this.props.tags.find(tag => tag.id == id).name
-  }
-
   mapSize(size) {
     if (size == 1) return '0 - 20 Members'
     else if (size == 2) return '20 - 50 Members'
@@ -22,7 +18,7 @@ class ClubModal extends React.Component {
 
   render() {
     var { modal, club, closeModal, updateFavorites, favorite } = this.props
-    var { name, id, tags, img, size, application_required, accepting_applications, description } = club
+    var { name, id, tags, image_url, size, application_required, accepting_applications, description } = club
     return(
       <div className={"modal" + (modal ? 'is-active' : '')} id="modal" style={{position: "fixed", top: 0, height: "100%", width: "100%"}}>
         <div className="modal-background" onClick={(e)=>closeModal(club)} style={{backgroundColor: "#d5d5d5", opacity: .5, position: "fixed"}}></div>
@@ -39,9 +35,9 @@ class ClubModal extends React.Component {
             </div>
             <div className="columns">
               <div className="column is-4-desktop is-5-mobile" style={{display:"flex", flexDirection:"column", justifyContent: "space-between", height: 400}}>
-                <img style={{ height: 220, width: 330, borderRadius: 3 }} src={img ? img : getDefaultClubImageURL()} />
+                <img style={{ height: 220, width: 330, borderRadius: 3 }} src={image_url || getDefaultClubImageURL()} />
                 <div>
-                  {tags ? tags.map(tag => <span key={tag} className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 3}}>{this.findTagById(tag)}</span>) : ""}
+                  {tags ? tags.map(tag => <span key={tag.id} className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 3}}>{tag.name}</span>) : ""}
                 </div>
                 <div style={{borderRadius: 3, backgroundColor: "#f2f2f2", height: 100, width: 330, padding: 10, display: "flex", flexDirection:"column", justifyContent: "space-around"}}>
                   <div style={{display: "flex", justifyContent: "space-between"}}>
