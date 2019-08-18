@@ -28,7 +28,7 @@ class ClubTableRow extends React.Component {
               <div className="column is-4">
                 <b className="is-size-6" style={{color: CLUBS_GREY}}> {name} </b>
                 <div>
-                  {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.5em'}}>{this.findTagById(tag)}</span>)}
+                  {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.7em'}}>{this.findTagById(tag)}</span>)}
                 </div>
               </div>
               <div className="column is-8">
