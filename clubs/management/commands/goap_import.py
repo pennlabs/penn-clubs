@@ -1,3 +1,4 @@
+import bleach
 import requests
 
 from urllib.parse import urljoin
@@ -42,6 +43,8 @@ class Command(BaseCommand):
             description = grp.select_one(".grpl-purpose").text.replace("\r\n", "\n").strip()
             if description == "This group has not written a purpose":
                 description = ""
+            else:
+                description = bleach.clean(description)
             contact_tag = grp.select_one(".grpl-contact")
             if contact_tag is not None:
                 contact_email = contact_tag.text.strip()
