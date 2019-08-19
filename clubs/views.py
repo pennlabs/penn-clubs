@@ -1,14 +1,9 @@
 from rest_framework import filters, viewsets
 from django.db.models import Q, Count
-from django.shortcuts import render
 from clubs.models import Club, Event, Tag, Membership, Favorite
 from rest_framework.permissions import IsAuthenticated
 from clubs.permissions import ClubPermission, EventPermission, MemberPermission, IsSuperuser
 from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer, AuthenticatedMembershipSerializer, EventSerializer, FavoriteSerializer
-
-
-def splash(request):
-    return render(request, 'splash.html')
 
 
 class MemberViewSet(viewsets.ModelViewSet):
