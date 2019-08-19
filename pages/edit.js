@@ -12,7 +12,9 @@ class ClubForm extends React.Component {
   constructor(props) {
     super(props)
 
-    this.state = {}
+    this.state = {
+      currentTab: 'info'
+    }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
   }
@@ -143,14 +145,65 @@ class ClubForm extends React.Component {
       }
     ]
 
+    const tabs = [
+      {
+        name: 'info',
+        label: 'Information',
+        content: <div>
+          <Form fields={fields} defaults={club} onSubmit={this.submit} />
+          {club && <Link route='club-view' params={{ club: club.id }}>
+            <a className='button is-pulled-right is-secondary is-medium'>View Club</a>
+          </Link>}
+        </div>
+      },
+      {
+        name: 'member',
+        label: 'Membership',
+        content: <div>
+          <table className='table is-fullwidth'>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Title</th>
+              </tr>
+            </thead>
+            <tbody>
+              {club.members && club.members.map((a) => <tr><td>{a.name}</td><td>{a.title}</td></tr>)}
+            </tbody>
+          </table>
+        </div>
+      },
+      {
+        name: 'settings',
+        label: 'Settings',
+        content: <div>
+          <div className='card'>
+            <div className='card-header'>
+              <p className='card-header-title'>Deactivate Club</p>
+            </div>
+            <div className='card-content'>
+              <p>Mark an organization as inactive. This will hide the club from various parts of Penn Clubs and indicate to the public that the club is no longer active. Only owners of the organization may do this.</p>
+              <p><b>Coming Soon!</b></p>
+              <br />
+              <div className='buttons'>
+                <a className='button is-danger is-medium' disabled={true}><i className="fa fa-fw fa-bomb"></i>{' '}Deactivate</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    ]
+
     return (
       <div style={{padding: "30px 50px"}}>
         <h1 className='title is-size-2-desktop is-size-3-mobile'><span style={{ color: CLUBS_GREY_LIGHT }}>{club ? 'Editing' : 'Creating'} Club: </span> {club ? club.name : 'New Club'}</h1>
         {this.state.message && <div className="notification is-primary">{this.state.message}</div>}
-        <Form fields={fields} defaults={club} onSubmit={this.submit} />
-        {club && <Link route='club-view' params={{ club: club.id }}>
-          <a className='button is-pulled-right is-secondary is-medium'>View Club</a>
-        </Link>}
+        <div className='tabs'>
+          <ul>
+            {tabs.map((a) => <li className={a.name === this.state.currentTab ? 'is-active' : undefined} key={a.name}><a onClick={() => this.setState({ currentTab: a.name })}>{a.label}</a></li>)}
+          </ul>
+        </div>
+        {tabs.filter((a) => a.name === this.state.currentTab)[0].content}
       </div>
     )
   }
