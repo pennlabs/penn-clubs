@@ -1,4 +1,5 @@
 import React from 'react'
+import Select from 'react-select'
 import { EditorState, ContentState, convertFromHTML, convertToRaw } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
 import { titleize } from '../utils'
@@ -21,7 +22,7 @@ class Form extends React.Component {
   setDefaults(fields) {
     fields.forEach((item) => {
       if (item.type == 'html') {
-        if (this.props.defaults[item.name]) {
+        if (this.props.defaults && this.props.defaults[item.name]) {
           this.state['editorState-' + item.name] = EditorState.createWithContent(
             ContentState.createFromBlockArray(
               convertFromHTML(this.props.defaults[item.name])
@@ -33,7 +34,12 @@ class Form extends React.Component {
         }
       }
       if (item.type !== 'group') {
-        this.state['field-' + item.name] = this.props.defaults ? this.props.defaults[item.name] || '' : ''
+        if (item.type === 'multiselect') {
+          this.state['field-' + item.name] = this.props.defaults ? (this.props.defaults[item.name] || []).map(item.converter) : []
+        }
+        else {
+          this.state['field-' + item.name] = this.props.defaults ? this.props.defaults[item.name] || '' : ''
+        }
       }
       else {
         this.setDefaults(item.fields)
@@ -47,11 +53,27 @@ class Form extends React.Component {
     })
   }
 
+  getAllFields(fields) {
+    var out = [];
+    (typeof fields === 'undefined' ? this.props.fields : fields).forEach((item) => {
+      if (item.type == 'group') {
+        out = out.concat(this.getAllFields(item.fields))
+      }
+      else {
+        out.push(item)
+      }
+    });
+    return out;
+  }
+
   getData() {
     const out = {}
-    Object.keys(this.state).forEach((key) => {
-      if (key.startsWith("field-")) {
-        out[key.substr(6)] = this.state[key]
+    this.getAllFields().forEach((item) => {
+      if (item.type === 'multiselect') {
+        out[item.name] = this.state['field-' + item.name].map(item.reverser)
+      }
+      else {
+        out[item.name] = this.state['field-' + item.name]
       }
     })
     return out
@@ -70,7 +92,7 @@ class Form extends React.Component {
           </Head>
           {this.state.mounted ? <Editor
             editorState={this.state['editorState-' + item.name]}
-            placeholder='Type your club description here!'
+            placeholder={item.placeholder}
             onEditorStateChange={(state) => {
               this.setState({ ['editorState-' + item.name]: state, ['field-' + item.name]: draftToHtml(convertToRaw(state.getCurrentContent())) })
             }}
@@ -90,13 +112,34 @@ class Form extends React.Component {
           </div>
         </div>
       }
+      else if (item.type == 'multiselect') {
+        if (this.state.mounted) {
+          inpt = <Select
+                   key={item.name}
+                   placeholder={item.placeholder}
+                   isMulti={true}
+                   value={(this.state['field-' + item.name] || [])}
+                   options={item.choices.map(item.converter)}
+                   onChange={(opt) => this.setState({ ['field-' + item.name]: opt })}
+                   styles={{
+                     container: (style) => ({
+                       ...style,
+                       width: '100%'
+                     })
+                   }}
+                 />
+        }
+        else {
+          inpt = <div>Loading...</div>
+        }
+      }
       else {
         inpt = <span style={{ color: 'red' }}>Unknown field type '{item.type}'!</span>
       }
 
       return <div key={item.name} className='field is-horizontal'>
         <div className='field-label is-normal'>
-          <label className='label'>{titleize(item.name)}</label>
+          <label className='label'>{item.label || titleize(item.name)}</label>
         </div>
         <div className='field-body'>
           {inpt}

@@ -34,7 +34,7 @@ class ClubForm extends React.Component {
     else {
       req = doApiRequest('/clubs/?format=json', {
         method: 'POST',
-        data: data
+        body: data
       })
     }
     req.then((resp) => {
@@ -66,7 +66,16 @@ class ClubForm extends React.Component {
           },
           {
             name: 'description',
+            placeholder: 'Type your club description here!',
             type: 'html'
+          },
+          {
+            name: 'tags',
+            type: 'multiselect',
+            placeholder: 'Select tags relevant to your club!',
+            choices: tags,
+            converter: (a) => ({ value: a.id, label: a.name }),
+            reverser: (a) => ({ id: a.value, name: a.label })
           }
         ]
       },
