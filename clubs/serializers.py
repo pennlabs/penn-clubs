@@ -189,6 +189,15 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
         return super().save()
 
+    def validate_club(self, value):
+        """
+        Ensure that the user has not already favorited this club.
+        """
+        if self.context['request'].user.favorite_set.filter(club=value).exists():
+            raise serializers.ValidationError("You have already favorited this club!")
+
+        return value
+
     def get_name(self, obj):
         return obj.club.name
 
