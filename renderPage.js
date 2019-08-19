@@ -23,7 +23,6 @@ function renderPage(Page) {
     }
 
     componentDidMount() {
-      this.setState({ favorites: JSON.parse(localStorage.getItem('favorites')) || [] })
       doApiRequest('/settings/?format=json').then((resp) => {
         if (resp.ok) {
           resp.json().then((data) => this.setState({
@@ -50,9 +49,9 @@ function renderPage(Page) {
     updateFavorites(id) {
       var newFavs = this.state.favorites
       var i = newFavs.indexOf(id)
-      if (i == -1) {
+      if (i === -1) {
         newFavs.push(id)
-        if (this.props.authenticated) {
+        if (this.state.authenticated) {
           doApiRequest('/favorites/?format=json', {
             method: 'POST',
             body: {
@@ -62,14 +61,12 @@ function renderPage(Page) {
         }
       } else {
         newFavs.splice(i, 1)
-        if (this.props.authenticated) {
+        if (this.state.authenticated) {
           doApiRequest(`/favorites/${id}/?format=json`, {
             method: 'DELETE'
           })
         }
       }
-      localStorage.setItem('favorites', JSON.stringify(newFavs))
-
       this.setState({favorites: newFavs})
     }
   }

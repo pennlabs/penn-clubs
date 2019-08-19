@@ -22,17 +22,17 @@ class Club extends React.Component {
   }
 
   render() {
-    const { club, tags } = this.props
+    const { club } = this.props
     return (
       <div style={{padding: "30px 50px"}}>
        <div className="is-flex" style={{justifyContent: "space-between", flexDirection: "row", alignItems: "center", paddingRight: 10}}>
          <h1 className='title is-size-1-desktop is-size-3-mobile' style={{color: CLUBS_GREY, marginBottom: 10}} >
           {club.name}
          </h1>
-         <i className="fas fa-heart" style={{fontSize: "1.5em"}}></i>
+         <i className={(this.props.favorites.includes(club.id) ? "fa" : "far") + " fa-heart"} style={{fontSize: "1.5em", cursor: "pointer"}} onClick={() => this.props.updateFavorites(club.id)}></i>
        </div>
         <div style={{marginBottom: 20}}>
-         {club.tags.map(tag => <span key={tag.id} className="tag is-rounded" style={{backgroundColor: CLUBS_BLUE, color: "#fff", margin: 3,}}>{tag.name} </span>)}
+         {club.tags.map(tag => <span key={tag.id} className="tag is-rounded" style={{backgroundColor: CLUBS_BLUE, color: "#fff", margin: 3,}}>{tag.name}</span>)}
         </div>
         <div className="columns">
          <div className="column is-6">
@@ -92,12 +92,10 @@ class Club extends React.Component {
 }
 
 Club.getInitialProps = async (props) => {
-  const tagsRequest = await doApiRequest('/tags/?format=json')
-  const tagsResponse = await tagsRequest.json()
   var { query } = props
   const clubRequest = await doApiRequest(`/clubs/${query.club}/?format=json`)
   const clubResponse = await clubRequest.json()
-  return { club: clubResponse, tags: tagsResponse }
+  return { club: clubResponse }
 }
 
 
