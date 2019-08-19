@@ -6,6 +6,7 @@
     "client-oauth2": "^4.2.3",
     "create-react-class": "^15.6.3",
     "draft-js": "^0.11.0",
+    "draftjs-to-html": "^0.8.4",
     "express": "^4.16.4",
     "isomorphic-unfetch": "^3.0.0",
     "next": "^7.0.3",

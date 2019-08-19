@@ -1,7 +1,8 @@
 import React from 'react'
-import { EditorState, ContentState, convertFromHTML } from 'draft-js'
+import { EditorState, ContentState, convertFromHTML, convertToRaw } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
 import { titleize } from '../utils'
+import draftToHtml from 'draftjs-to-html'
 import Head from 'next/head'
 
 class Form extends React.Component {
@@ -13,26 +14,47 @@ class Form extends React.Component {
     }
 
     if (process.browser) {
-      this.props.fields.forEach((item) => {
-        if (item.type == 'html') {
-          if (this.props.defaults[item.name]) {
-            this.state['editorState-' + item.name] = EditorState.createWithContent(
-              ContentState.createFromBlockArray(
-                convertFromHTML(this.props.defaults[item.name])
-              )
-            )
-          }
-          else {
-            this.state['editorState-' + item.name] = EditorState.createEmpty()
-          }
-        }
-        this.state['field-' + item.name] = this.props.defaults ? this.props.defaults[item.name] || '' : ''
-      })
+      this.setDefaults(this.props.fields)
     }
   }
 
+  setDefaults(fields) {
+    fields.forEach((item) => {
+      if (item.type == 'html') {
+        if (this.props.defaults[item.name]) {
+          this.state['editorState-' + item.name] = EditorState.createWithContent(
+            ContentState.createFromBlockArray(
+              convertFromHTML(this.props.defaults[item.name])
+            )
+          )
+        }
+        else {
+          this.state['editorState-' + item.name] = EditorState.createEmpty()
+        }
+      }
+      if (item.type !== 'group') {
+        this.state['field-' + item.name] = this.props.defaults ? this.props.defaults[item.name] || '' : ''
+      }
+      else {
+        this.setDefaults(item.fields)
+      }
+    })
+  }
+
   componentDidMount() {
-    this.setState({ mounted: true });
+    this.setState({
+      mounted: true
+    })
+  }
+
+  getData() {
+    const out = {}
+    Object.keys(this.state).forEach((key) => {
+      if (key.startsWith("field-")) {
+        out[key.substr(6)] = this.state[key]
+      }
+    })
+    return out
   }
 
   generateFields(fields) {
@@ -49,7 +71,9 @@ class Form extends React.Component {
           {this.state.mounted ? <Editor
             editorState={this.state['editorState-' + item.name]}
             placeholder='Type your club description here!'
-            onEditorStateChange={(state) => this.setState({ ['editorState-' + item.name]: state })}
+            onEditorStateChange={(state) => {
+              this.setState({ ['editorState-' + item.name]: state, ['field-' + item.name]: draftToHtml(convertToRaw(state.getCurrentContent())) })
+            }}
           /> : <div>Loading...</div>}
         </div>
       }
@@ -82,9 +106,10 @@ class Form extends React.Component {
   }
 
   render() {
-    return <div>
+    return <span>
       {this.generateFields(this.props.fields)}
-    </div>
+      <a className='button is-primary is-medium' onClick={() => this.props.onSubmit && this.props.onSubmit(this.getData())}>Submit</a>
+    </span>
   }
 }
 
