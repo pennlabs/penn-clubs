@@ -2,7 +2,7 @@ import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { doApiRequest, titleize } from '../utils'
 import { CLUBS_GREY_LIGHT } from '../colors'
-import { Link } from '../routes'
+import { Link, Router } from '../routes'
 import React from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
@@ -25,7 +25,8 @@ class ClubForm extends React.Component {
 
   submit(data) {
     var req = null
-    if (this.props.club) {
+    var isEdit = this.props.club
+    if (isEdit) {
       req = doApiRequest(`/clubs/${this.props.club.id}/?format=json`, {
         method: 'PATCH',
         body: data
@@ -39,7 +40,14 @@ class ClubForm extends React.Component {
     }
     req.then((resp) => {
       if (resp.ok) {
-        this.notify("Club has been successfully saved.")
+        if (isEdit) {
+          this.notify("Club has been successfully saved.")
+        }
+        else {
+          resp.json().then((info) => {
+            Router.pushRoute('club-view', {club: info.id})
+          })
+        }
       }
       else {
         resp.json().then((err) => {
