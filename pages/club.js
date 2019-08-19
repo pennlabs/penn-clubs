@@ -1,7 +1,7 @@
 import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
-import { getDefaultClubImageURL, doApiRequest, ROLE_OFFICER } from '../utils'
+import { getDefaultClubImageURL, doApiRequest, ROLE_OFFICER, EMPTY_DESCRIPTION } from '../utils'
 import React from 'react'
 import { Link } from '../routes'
 
@@ -41,7 +41,7 @@ class Club extends React.Component {
         </div>
         <div className="columns">
           <div className="column is-6">
-            <img src={club.image_url || getDefaultClubImageURL()} style={{ width: '100%', borderRadius: 3, marginBottom: 10 }}/>
+            <img src={club.image_url || getDefaultClubImageURL()} style={{ width: '100%', maxHeight: 600, borderRadius: 3, marginBottom: 10, objectFit: 'contain' }}/>
             <div className="columns">
               <div className="column is-6" style={{ backgroundColor: '#f2f2f2', borderRadius: 3, margin: '5px 5px 5px 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -88,7 +88,7 @@ class Club extends React.Component {
             </div>
           </div>
           <div className="column is-6">
-            <div dangerouslySetInnerHTML={{ __html: club.description }} />
+            <div dangerouslySetInnerHTML={{ __html: club.description || EMPTY_DESCRIPTION }} />
           </div>
         </div>
       </div>

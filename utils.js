@@ -9,6 +9,8 @@ export const ROLE_OWNER = 0
 export const ROLE_OFFICER = 10
 export const ROLE_MEMBER = 20
 
+export const EMPTY_DESCRIPTION = '<span style="color:#666">This club has not added a description yet.</span>'
+
 export function doApiRequest(path, data) {
   if (!data) {
     data = {}
