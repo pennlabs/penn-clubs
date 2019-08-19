@@ -74,6 +74,7 @@ function renderPage(Page) {
       if (!this.state.authenticated) {
         localStorage.setItem('favorites', JSON.stringify(newFavs))
       }
+      return i === -1
     }
   }
 

@@ -27,9 +27,11 @@ class Club extends React.Component {
       <div style={{padding: "30px 50px"}}>
        <div className="is-flex" style={{justifyContent: "space-between", flexDirection: "row", alignItems: "center", paddingRight: 10}}>
          <h1 className='title is-size-1-desktop is-size-3-mobile' style={{color: CLUBS_GREY, marginBottom: 10}} >
-          {club.name}
+           {club.name}
          </h1>
-         <i className={(this.props.favorites.includes(club.id) ? "fa" : "far") + " fa-heart"} style={{fontSize: "1.5em", cursor: "pointer"}} onClick={() => this.props.updateFavorites(club.id)}></i>
+         <span style={{fontSize: "1.5em"}}>
+         {club.favorite_count} <i className={(this.props.favorites.includes(club.id) ? "fa" : "far") + " fa-heart"} style={{cursor: "pointer"}} onClick={() => this.props.updateFavorites(club.id) ? club.favorite_count++ : club.favorite_count--}></i>
+         </span>
        </div>
         <div style={{marginBottom: 20}}>
          {club.tags.map(tag => <span key={tag.id} className="tag is-rounded" style={{backgroundColor: CLUBS_BLUE, color: "#fff", margin: 3,}}>{tag.name}</span>)}
