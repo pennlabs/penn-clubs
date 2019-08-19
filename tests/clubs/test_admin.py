@@ -29,3 +29,10 @@ class AdminTestCase(TestCase):
         for page in ['admin:index', 'admin:clubs_club_changelist', 'admin:clubs_favorite_changelist', 'admin:clubs_tag_changelist', 'admin:clubs_membership_changelist']:
             resp = self.client.get(reverse(page))
             self.assertIn(resp.status_code, [200], resp.content)
+
+    def test_openapi_docs(self):
+        """
+        Ensure that openapi schema can be generated correctly.
+        """
+        resp = self.client.get(reverse('openapi-schema'))
+        self.assertIn(resp.status_code, [200], resp.content)

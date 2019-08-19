@@ -5,12 +5,17 @@ from django.urls import reverse
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 
-from clubs.models import Club, Membership, Tag, Event
+from clubs.models import Club, Membership, Tag, Event, Favorite
 
 
 class ClubTestCase(TestCase):
     def setUp(self):
         self.client = Client()
+
+        self.club1 = Club.objects.create(
+            id='test-club',
+            name='Test Club'
+        )
 
         self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
         self.user1.first_name = 'Benjamin'
@@ -41,6 +46,18 @@ class ClubTestCase(TestCase):
 
     def test_user_views(self):
         self.client.login(username=self.user5.username, password='test')
+
+        # add a membership
+        Membership.objects.create(
+            person=self.user5,
+            club=self.club1
+        )
+
+        # add a favorite
+        Favorite.objects.create(
+            person=self.user5,
+            club=self.club1
+        )
 
         # retrieve user
         resp = self.client.get(reverse('users-detail'))
