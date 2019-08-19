@@ -66,11 +66,14 @@ class ClubForm extends React.Component {
         fields: [
           {
             name: 'name',
-            type: 'text'
+            type: 'text',
+            required: true
           },
           {
             name: 'subtitle',
-            type: 'text'
+            type: 'text',
+            required: true,
+            help: 'This text will be shown next to your club name in list and card views.'
           },
           {
             name: 'description',
@@ -84,6 +87,11 @@ class ClubForm extends React.Component {
             choices: tags,
             converter: (a) => ({ value: a.id, label: a.name }),
             reverser: (a) => ({ id: a.value, name: a.label })
+          },
+          {
+            name: 'image_url',
+            type: 'url',
+            label: 'URL to Club Logo Image'
           }
         ]
       },

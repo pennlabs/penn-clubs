@@ -151,10 +151,15 @@ class Form extends React.Component {
 
       return <div key={item.name} className='field is-horizontal'>
         <div className='field-label is-normal'>
-          <label className='label'>{item.type == 'checkbox' ? titleize(item.name) : item.label || titleize(item.name)}</label>
+          <label className='label'>{item.type == 'checkbox' ? titleize(item.name) : item.label || titleize(item.name)}{item.required && <span style={{ color: 'red' }}>*</span>}</label>
         </div>
         <div className='field-body'>
-          {inpt}
+          <div className='field'>
+            <div className='control'>
+              {inpt}
+            </div>
+            {item.help && <p className='help'>{item.help}</p>}
+          </div>
         </div>
       </div>
     })
