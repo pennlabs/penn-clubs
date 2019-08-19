@@ -1,10 +1,9 @@
-import bleach
-
 from rest_framework import serializers
 from django.template.defaultfilters import slugify
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from clubs.models import Club, Event, Tag, Membership, Favorite
+from clubs.utils import clean
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -114,7 +113,7 @@ class ClubSerializer(serializers.ModelSerializer):
         """
         Allow the description to have HTML tags that come from a whitelist.
         """
-        return bleach.clean(value)
+        return clean(value)
 
     def update(self, instance, validated_data):
         """
@@ -167,7 +166,7 @@ class EventSerializer(serializers.ModelSerializer):
         """
         Allow the description to have HTML tags that come from a whitelist.
         """
-        return bleach.clean(value)
+        return clean(value)
 
     def save(self):
         if 'club' not in self.validated_data:
