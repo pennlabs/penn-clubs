@@ -100,6 +100,10 @@ class ClubForm extends React.Component {
             type: 'email'
           },
           {
+            name: 'website',
+            type: 'url'
+          },
+          {
             name: 'facebook',
             type: 'url'
           },

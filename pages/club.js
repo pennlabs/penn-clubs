@@ -22,8 +22,7 @@ class Club extends React.Component {
 
   render() {
     const { club } = this.props
-    const in_club = this.props.userInfo && (this.props.userInfo.membership_set.filter((a) => a.id === club.id) || [false])[0]
-    console.log(this.props.userInfo)
+    const inClub = this.props.userInfo && (this.props.userInfo.membership_set.filter((a) => a.id === club.id) || [false])[0]
 
     return (
       <div style={{ padding: '30px 50px' }}>
@@ -33,7 +32,7 @@ class Club extends React.Component {
           </h1>
           <span style={{ fontSize: '1.5em' }}>
             {club.favorite_count} <i className={(this.props.favorites.includes(club.id) ? 'fa' : 'far') + ' fa-heart'} style={{ cursor: 'pointer' }} onClick={() => this.props.updateFavorites(club.id) ? club.favorite_count++ : club.favorite_count--}></i>
-            {in_club && in_club.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: club.id }}><a className='button is-success' style={{ marginLeft: 15 }}>Edit</a></Link>}
+            {inClub && inClub.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: club.id }}><a className='button is-success' style={{ marginLeft: 15 }}>Edit</a></Link>}
           </span>
         </div>
         <div style={{ marginBottom: 20 }}>
@@ -59,30 +58,31 @@ class Club extends React.Component {
               </div>
               <div className="column is-6" style={{ backgroundColor: '#f2f2f2', borderRadius: 3, margin: '5px 0 5px 5px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-evenly', padding: '10px 0px 10px 0px' }}>
-                  <div className="has-text-centered">
-                    <a href={club.facebook} style={{ color: CLUBS_GREY }}>
+                  {[
+                    {
+                      name: 'facebook',
+                      label: 'Facebook',
+                      icon: 'fab fa-facebook-square'
+                    },
+                    {
+                      name: 'email',
+                      label: 'Email',
+                      prefix: 'mailto:',
+                      icon: 'fa fa-at'
+                    },
+                    {
+                      name: 'website',
+                      label: 'Website',
+                      icon: 'fa fa-link'
+                    }
+                  ].map((item) => <div key={item.name} className="has-text-centered">
+                    <a href={club[item.name] ? (item.prefix || '') + club[item.name] : undefined} style={{ color: club[item.name] ? CLUBS_GREY : '#ccc' }}>
                       <span className="icon">
-                        <i className="fab fa-facebook-square fa-3x" style={{ height: '100%' }}></i>
+                        <i className={'fa-3x ' + item.icon} style={{ height: '100%' }}></i>
                       </span>
                     </a>
-                    <h6>Facebook</h6>
-                  </div>
-                  <div className="has-text-centered">
-                    <a href={`mailto:${club.email}`} style={{ color: club.email ? CLUBS_GREY : '#CCC' }}>
-                      <span className="icon">
-                        <i className="fas fa-at fa-3x" style={{ height: '100%' }}></i>
-                      </span>
-                    </a>
-                    <h6 style={{ color: club.email ? CLUBS_GREY : '#CCC' }}>Email</h6>
-                  </div>
-                  <div className="has-text-centered">
-                    <a href={club.website} style={{ color: '#ccc' }}>
-                      <span className="icon">
-                        <i className="fas fa-link fa-3x" style={{ height: '100%' }}></i>
-                      </span>
-                    </a>
-                    <h6 style={{ color: '#CCC' }}>Website</h6>
-                  </div>
+                    <h6 style={{ color: club[item.name] ? CLUBS_GREY : '#ccc' }}>{item.label}</h6>
+                  </div>)}
                 </div>
               </div>
             </div>

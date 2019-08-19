@@ -25,6 +25,7 @@
         "space-before-function-paren": ["error", "never"],
         "no-unused-vars": ["warn"],
         "camelcase": ["warn"],
-        "react/jsx-uses-vars": [2]
+        "react/jsx-uses-vars": [2],
+        "no-console": ["warn"]
     }
 }
