@@ -32,7 +32,10 @@ function renderPage(Page) {
           }))
         }
         else {
-          this.setState({ authenticated: false })
+          this.setState({
+            authenticated: false,
+            favorites: JSON.parse(localStorage.getItem('favorites')) || []
+          })
         }
       })
       this.modalElement = document.querySelector('#modal')
@@ -68,6 +71,9 @@ function renderPage(Page) {
         }
       }
       this.setState({favorites: newFavs})
+      if (!this.state.authenticated) {
+        localStorage.setItem('favorites', JSON.stringify(newFavs))
+      }
     }
   }
 
