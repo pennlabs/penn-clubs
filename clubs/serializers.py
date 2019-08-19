@@ -140,8 +140,11 @@ class ClubSerializer(serializers.ModelSerializer):
         if 'name' in self.validated_data:
             self.validated_data['name'] = self.validated_data['name'].strip()
 
-        if not self.validated_data.get('id') and self.validated_data.get('name'):
-            self.validated_data['id'] = slugify(self.validated_data['name'])
+        if not self.instance:
+            if not self.validated_data.get('id') and self.validated_data.get('name'):
+                self.validated_data['id'] = slugify(self.validated_data['name'])
+        elif 'id' in self.validated_data:
+            del self.validated_data['id']
 
         return super().save()
 
