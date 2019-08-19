@@ -1,10 +1,11 @@
 import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
-import { getDefaultClubImageURL, doApiRequest } from '../utils'
+import { getDefaultClubImageURL, doApiRequest, ROLE_OFFICER } from '../utils'
 import React from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import { Link } from '../routes'
 
 class Club extends React.Component {
   constructor(props) {
@@ -23,6 +24,9 @@ class Club extends React.Component {
 
   render() {
     const { club } = this.props
+    const in_club = this.props.userInfo && (this.props.userInfo.membership_set.filter((a) => a.id === club.id) || [false])[0]
+    console.log(this.props.userInfo)
+
     return (
       <div style={{padding: "30px 50px"}}>
        <div className="is-flex" style={{justifyContent: "space-between", flexDirection: "row", alignItems: "center", paddingRight: 10}}>
@@ -31,6 +35,7 @@ class Club extends React.Component {
          </h1>
          <span style={{fontSize: "1.5em"}}>
          {club.favorite_count} <i className={(this.props.favorites.includes(club.id) ? "fa" : "far") + " fa-heart"} style={{cursor: "pointer"}} onClick={() => this.props.updateFavorites(club.id) ? club.favorite_count++ : club.favorite_count--}></i>
+         {in_club && in_club.role <= ROLE_OFFICER && <Link route='club-edit' params={{club: club.id}}><a className='button is-success' style={{ marginLeft: 15 }}>Edit</a></Link>}
          </span>
        </div>
         <div style={{marginBottom: 20}}>

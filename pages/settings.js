@@ -1,6 +1,6 @@
 import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
-import { doApiRequest, titleize, API_BASE_URL } from '../utils'
+import { doApiRequest, titleize, API_BASE_URL, ROLE_OFFICER } from '../utils'
 import { CLUBS_GREY_LIGHT } from '../colors'
 import { Link, Router } from '../routes'
 import React from 'react'
@@ -97,7 +97,7 @@ class SettingsForm extends React.Component {
                     <Link route='club-view' params={{club: item.id}}>
                       <a className='button is-link'>View</a>
                     </Link>
-                    {item.role <= 10 && <Link route='club-edit' params={{club: item.id}}>
+                    {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{club: item.id}}>
                       <a className='button is-success'>Edit</a>
                     </Link>}
                   </td>

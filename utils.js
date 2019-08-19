@@ -6,6 +6,9 @@ export function getDefaultClubImageURL() {
 }
 
 export const API_BASE_URL = getConfig().publicRuntimeConfig.API_BASE_URL || 'https://api.pennclubs.com'
+export const ROLE_OWNER = 0
+export const ROLE_OFFICER = 10
+export const ROLE_MEMBER = 20
 
 export function doApiRequest(path, data) {
     if (!data) {
