@@ -1,5 +1,6 @@
 import posed from 'react-pose'
 import Head from 'next/head'
+import { API_BASE_URL } from '../utils'
 import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
 
 const Pop = posed.div({
@@ -64,6 +65,7 @@ class Header extends React.Component {
                   </span>
                 </Pop>
               </a>
+              {this.props.authenticated !== false || <a style={{ padding: 20, textDecoration: "underline", color: "#9B9B9B" }} href={`${API_BASE_URL}/accounts/login/?next=${window.location.href}`}>Login</a>}
             </div>
           </div>
         </nav>

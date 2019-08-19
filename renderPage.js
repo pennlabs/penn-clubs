@@ -15,7 +15,7 @@ function renderPage(Page) {
       this.state = {
         favorites: [],
         modal: false,
-        authenticated: false,
+        authenticated: null,
         modalClub: {}
       }
       var modalElement = null
@@ -26,6 +26,9 @@ function renderPage(Page) {
       doApiRequest('/favorites/?format=json').then((resp) => {
         if (resp.ok) {
           resp.json().then((data) => this.setState({ authenticated: true, favorites: data.map((a) => a.club) }))
+        }
+        else {
+          this.setState({ authenticated: false })
         }
       })
       this.modalElement = document.querySelector('#modal')
@@ -81,7 +84,7 @@ function renderPage(Page) {
       var favoriteClubs = this.mapToClubs(favorites)
       return(
         <div style={{ dispay: "flex", flexDirection: "column", backgroundColor: "#fff"}}>
-            <Header />
+            <Header authenticated={this.state.authenticated} />
             <Page
               clubs={clubs}
               tags={tags}
