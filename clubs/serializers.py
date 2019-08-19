@@ -17,7 +17,7 @@ class TagSerializer(serializers.ModelSerializer):
 class UserMembershipSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField('get_id')
     name = serializers.SerializerMethodField('get_name')
-    role = serializers.SerializerMethodField('get_role')
+    role_display = serializers.SerializerMethodField('get_role_display')
 
     def get_id(self, obj):
         return obj.club.id
@@ -25,12 +25,12 @@ class UserMembershipSerializer(serializers.ModelSerializer):
     def get_name(self, obj):
         return obj.club.name
 
-    def get_role(self, obj):
+    def get_role_display(self, obj):
         return obj.get_role_display()
 
     class Meta:
         model = Membership
-        fields = ('id', 'name', 'title', 'role')
+        fields = ('id', 'name', 'title', 'role', 'role_display')
 
 
 class MembershipSerializer(serializers.ModelSerializer):
@@ -89,6 +89,7 @@ class ClubSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     subtitle = serializers.CharField(required=False)
     members = MembershipSerializer(many=True, source='membership_set', read_only=True)
+    favorite_count = serializers.IntegerField(read_only=True)
 
     def create(self, validated_data):
         """
@@ -172,7 +173,7 @@ class ClubSerializer(serializers.ModelSerializer):
         fields = (
             'name', 'id', 'description', 'founded', 'size', 'email', 'facebook', 'twitter', 'instagram', 'linkedin',
             'how_to_get_involved', 'tags', 'subtitle', 'application_required', 'application_available',
-            'listserv_available', 'image_url', 'members'
+            'listserv_available', 'image_url', 'members', 'favorite_count'
         )
 
 

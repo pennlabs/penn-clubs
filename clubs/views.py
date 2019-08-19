@@ -29,7 +29,7 @@ class ClubViewSet(viewsets.ModelViewSet):
     list:
     Return a list of clubs.
     """
-    queryset = Club.objects.all().order_by('name')
+    queryset = Club.objects.all().annotate(favorite_count=Count('favorite')).order_by('name')
     serializer_class = ClubSerializer
     permission_classes = [ClubPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter]
