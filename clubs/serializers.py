@@ -103,8 +103,9 @@ class ClubSerializer(serializers.ModelSerializer):
         Ensure that the club name is unique.
         """
         value = value.strip()
+        same_clubs = Club.objects.filter(Q(name__iexact=value) | Q(id=slugify(value)))
 
-        if Club.objects.filter(Q(name__iexact=value) | Q(id=slugify(value))).exists():
+        if same_clubs.exists() and not same_clubs.first() == self.instance:
             raise serializers.ValidationError("A club with that name already exists.")
 
         return value
