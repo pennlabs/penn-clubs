@@ -102,6 +102,12 @@ class ClubTestCase(TestCase):
         })
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+        # attempt to add existing favorite
+        resp = self.client.post('/favorites/', {
+            'club': 'penn-labs'
+        })
+        self.assertIn(resp.status_code, [400], resp.content)
+
         # list favorites
         resp = self.client.get('/favorites/')
         self.assertIn(resp.status_code, [200], resp.content)
