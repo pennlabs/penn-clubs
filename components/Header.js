@@ -65,7 +65,7 @@ class Header extends React.Component {
                   </span>
                 </Pop>
               </a>
-              {this.props.authenticated !== false || <a style={{ padding: 20, textDecoration: "underline", color: "#9B9B9B" }} href={`${API_BASE_URL}/accounts/login/?next=${window.location.href}`}>Login</a>}
+              {this.props.authenticated === null || <a style={{ padding: 20, textDecoration: "underline", color: "#9B9B9B" }} href={this.props.authenticated ? `${API_BASE_URL}/accounts/logout/` : `${API_BASE_URL}/accounts/login/?next=${window.location.href}`}>{this.props.authenticated ? 'Logout' : 'Login'}</a>}
             </div>
           </div>
         </nav>
