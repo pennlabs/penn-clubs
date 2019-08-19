@@ -39,6 +39,21 @@ class ClubTestCase(TestCase):
         self.user5.is_superuser = True
         self.user5.save()
 
+    def test_user_views(self):
+        self.client.login(username=self.user5.username, password='test')
+
+        # retrieve user
+        resp = self.client.get(reverse('users-detail'))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # update user
+        resp = self.client.patch(reverse('users-detail'))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+
+        for field in ['username', 'email']:
+            self.assertIn(field, data)
+
     def test_superuser_views(self):
         self.client.login(username=self.user1.username, password='test')
 

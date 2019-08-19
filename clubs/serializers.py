@@ -204,3 +204,17 @@ class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = ('club', 'name')
+
+
+class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(read_only=True)
+    email = serializers.EmailField(read_only=True)
+    name = serializers.SerializerMethodField('get_full_name')
+    membership_set = AuthenticatedMembershipSerializer(many=True, read_only=True)
+
+    def get_full_name(self, obj):
+        return obj.get_full_name()
+
+    class Meta:
+        model = get_user_model()
+        fields = ('username', 'name', 'email', 'membership_set')

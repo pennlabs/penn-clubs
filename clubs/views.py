@@ -1,9 +1,9 @@
-from rest_framework import filters, viewsets
+from rest_framework import filters, viewsets, generics
 from django.db.models import Q, Count
 from clubs.models import Club, Event, Tag, Membership, Favorite
 from rest_framework.permissions import IsAuthenticated
 from clubs.permissions import ClubPermission, EventPermission, MemberPermission, IsSuperuser
-from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer, AuthenticatedMembershipSerializer, EventSerializer, FavoriteSerializer
+from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer, AuthenticatedMembershipSerializer, EventSerializer, FavoriteSerializer, UserSerializer
 
 
 class MemberViewSet(viewsets.ModelViewSet):
@@ -67,3 +67,11 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Event.objects.filter(club=self.kwargs['club_pk'])
+
+
+class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return self.request.user
