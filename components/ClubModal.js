@@ -1,6 +1,7 @@
 import React from 'react'
 import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
 import { getDefaultClubImageURL } from '../utils'
+import { Link } from '../routes'
 
 class ClubModal extends React.Component {
   constructor(props) {
@@ -54,7 +55,9 @@ class ClubModal extends React.Component {
               </div>
               <div className="column is-8-desktop is-7-mobile" style={{display:"flex", flexDirection:"column", justifyContent: "space-between", height: 400}}>
                 <p className="has-text-justified is-size-6-desktop is-size-7-touch" style={{height: 370, overflowY: "auto", color: CLUBS_GREY_LIGHT}}>{description}</p>
-                <a className="button" href={"/club?club=" + id} target="_blank" style={{padding: 10, margin: 5, float:"right", borderWidth: 0, backgroundColor: "#f2f2f2", color: CLUBS_GREY}}>See More...</a>
+                <Link route='club' params={{ club: String(id) }}>
+                    <a className="button" target="_blank" style={{padding: 10, margin: 5, float:"right", borderWidth: 0, backgroundColor: "#f2f2f2", color: CLUBS_GREY}}>See More...</a>
+                </Link>
               </div>
             </div>
           </div>
