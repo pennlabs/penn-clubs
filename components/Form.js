@@ -1,9 +1,10 @@
 import React from 'react'
 import Select from 'react-select'
-import { EditorState, ContentState, convertFromHTML, convertToRaw } from 'draft-js'
+import { EditorState, ContentState, convertToRaw } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
 import { titleize } from '../utils'
 import draftToHtml from 'draftjs-to-html'
+import htmlToDraft from 'html-to-draftjs'
 import Head from 'next/head'
 
 class Form extends React.Component {
@@ -25,7 +26,7 @@ class Form extends React.Component {
         if (this.props.defaults && this.props.defaults[item.name]) {
           this.state['editorState-' + item.name] = EditorState.createWithContent(
             ContentState.createFromBlockArray(
-              convertFromHTML(this.props.defaults[item.name])
+              htmlToDraft(this.props.defaults[item.name]).contentBlocks
             )
           )
         }
@@ -95,6 +96,9 @@ class Form extends React.Component {
             placeholder={item.placeholder}
             onEditorStateChange={(state) => {
               this.setState({ ['editorState-' + item.name]: state, ['field-' + item.name]: draftToHtml(convertToRaw(state.getCurrentContent())) })
+            }}
+            toolbar={{
+              options: ['inline', 'fontSize', 'fontFamily', 'list', 'textAlign', 'colorPicker', 'link', 'image', 'remove', 'history']
             }}
           /> : <div>Loading...</div>}
         </div>
