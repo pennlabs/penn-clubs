@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
+from django.conf import settings
 from rest_framework.schemas import get_schema_view
 
 
@@ -10,7 +11,8 @@ urlpatterns = [
     path('', include('clubs.urls')),
     path('', TemplateView.as_view(template_name='splash.html'), name='homepage'),
     path('openapi/', get_schema_view(
-        title='Clubs Backend Documentation'
+        title='Clubs Backend Documentation',
+        public=settings.DEBUG
     ), name='openapi-schema'),
     path('documentation/', TemplateView.as_view(
         template_name='redoc.html',
