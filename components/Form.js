@@ -73,6 +73,9 @@ class Form extends React.Component {
       if (item.type === 'multiselect') {
         out[item.name] = this.state['field-' + item.name].map(item.reverser)
       }
+      else if (item.type === 'checkbox') {
+        out[item.name] = !!this.state['field-' + item.name];
+      }
       else {
         out[item.name] = this.state['field-' + item.name]
       }
@@ -137,13 +140,18 @@ class Form extends React.Component {
           inpt = <div>Loading...</div>
         }
       }
+      else if (item.type == 'checkbox') {
+        inpt = <label className='checkbox'>
+          <input type='checkbox' checked={this.state['field-' + item.name]} onChange={(e) => this.setState({ ['field-' + item.name]: e.target.checked })} /> {item.label}
+        </label>
+      }
       else {
         inpt = <span style={{ color: 'red' }}>Unknown field type '{item.type}'!</span>
       }
 
       return <div key={item.name} className='field is-horizontal'>
         <div className='field-label is-normal'>
-          <label className='label'>{item.label || titleize(item.name)}</label>
+          <label className='label'>{item.type == 'checkbox' ? titleize(item.name) : item.label || titleize(item.name)}</label>
         </div>
         <div className='field-body'>
           {inpt}

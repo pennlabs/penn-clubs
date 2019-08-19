@@ -118,6 +118,16 @@ class ClubForm extends React.Component {
         type: 'group',
         fields: [
           {
+            name: 'application_required',
+            label: 'Is an application required to join your organization?',
+            type: 'checkbox'
+          },
+          {
+            name: 'application_available',
+            label: 'Are you currently accepting applications at this time?',
+            type: 'checkbox'
+          },
+          {
             name: 'how_to_get_involved',
             type: 'textarea'
           }
