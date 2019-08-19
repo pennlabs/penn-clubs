@@ -1,11 +1,8 @@
-import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { doApiRequest, titleize } from '../utils'
 import { CLUBS_GREY_LIGHT } from '../colors'
 import { Link, Router } from '../routes'
 import React from 'react'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
 import Form from '../components/Form'
 
 class ClubForm extends React.Component {
@@ -33,8 +30,7 @@ class ClubForm extends React.Component {
         method: 'PATCH',
         body: data
       })
-    }
-    else {
+    } else {
       req = doApiRequest('/clubs/?format=json', {
         method: 'POST',
         body: data
@@ -43,15 +39,13 @@ class ClubForm extends React.Component {
     req.then((resp) => {
       if (resp.ok) {
         if (isEdit) {
-          this.notify("Club has been successfully saved.")
-        }
-        else {
+          this.notify('Club has been successfully saved.')
+        } else {
           resp.json().then((info) => {
-            Router.pushRoute('club-view', {club: info.id})
+            Router.pushRoute('club-view', { club: info.id })
           })
         }
-      }
-      else {
+      } else {
         resp.json().then((err) => {
           this.notify(Object.keys(err).map((a) => <div key={a}><b>{titleize(a)}:</b> {err[a]}</div>))
         })
@@ -195,7 +189,7 @@ class ClubForm extends React.Component {
     ]
 
     return (
-      <div style={{padding: "30px 50px"}}>
+      <div style={{ padding: '30px 50px' }}>
         <h1 className='title is-size-2-desktop is-size-3-mobile'><span style={{ color: CLUBS_GREY_LIGHT }}>{club ? 'Editing' : 'Creating'} Club: </span> {club ? club.name : 'New Club'}</h1>
         {this.state.message && <div className="notification is-primary">{this.state.message}</div>}
         <div className='tabs'>
@@ -209,13 +203,12 @@ class ClubForm extends React.Component {
   }
 }
 
-ClubForm.getInitialProps = async ({ query }) => {
+ClubForm.getInitialProps = async({ query }) => {
   const tagsRequest = await doApiRequest('/tags/?format=json')
   const tagsResponse = await tagsRequest.json()
   const clubRequest = query.club ? await doApiRequest(`/clubs/${query.club}/?format=json`) : null
   const clubResponse = clubRequest && await clubRequest.json()
   return { club: clubResponse, tags: tagsResponse }
 }
-
 
 export default renderPage(ClubForm)

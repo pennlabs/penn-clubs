@@ -27,9 +27,8 @@ class SettingsForm extends React.Component {
       body: data
     }).then((resp) => {
       if (resp.ok) {
-        this.notify("Your preferences have been saved.")
-      }
-      else {
+        this.notify('Your preferences have been saved.')
+      } else {
         resp.json().then((err) => {
           this.notify(Object.keys(err).map((a) => <div key={a}><b>{titleize(a)}:</b> {err[a]}</div>))
         })
@@ -94,10 +93,10 @@ class SettingsForm extends React.Component {
                   <td>{item.title}</td>
                   <td>{item.role_display}</td>
                   <td className='buttons'>
-                    <Link route='club-view' params={{club: item.id}}>
+                    <Link route='club-view' params={{ club: item.id }}>
                       <a className='button is-link'>View</a>
                     </Link>
-                    {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{club: item.id}}>
+                    {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: item.id }}>
                       <a className='button is-success'>Edit</a>
                     </Link>}
                   </td>
@@ -110,7 +109,7 @@ class SettingsForm extends React.Component {
     ]
 
     if (this.props.authenticated === null) {
-      return <div></div>;
+      return <div></div>
     }
 
     if (!this.props.userInfo) {
@@ -118,7 +117,7 @@ class SettingsForm extends React.Component {
     }
 
     return (
-      <div style={{padding: "30px 50px"}}>
+      <div style={{ padding: '30px 50px' }}>
         <h1 className='title is-size-2-desktop is-size-3-mobile'><span style={{ color: CLUBS_GREY_LIGHT }}>Preferences: </span> {this.props.userInfo.username}</h1>
         {this.state.message && <div className="notification is-primary">{this.state.message}</div>}
         <Form fields={fields} defaults={this.props.userInfo} onSubmit={this.submit} />
@@ -128,13 +127,12 @@ class SettingsForm extends React.Component {
   }
 }
 
-SettingsForm.getInitialProps = async ({ query }) => {
+SettingsForm.getInitialProps = async({ query }) => {
   const tagsRequest = await doApiRequest('/tags/?format=json')
   const tagsResponse = await tagsRequest.json()
   const clubRequest = query.club ? await doApiRequest(`/clubs/${query.club}/?format=json`) : null
   const clubResponse = clubRequest && await clubRequest.json()
   return { club: clubResponse, tags: tagsResponse }
 }
-
 
 export default renderPage(SettingsForm)

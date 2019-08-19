@@ -10,7 +10,7 @@ class ClubDisplay extends React.Component {
       tagSelected: [],
       sizeSelected: [],
       applicationSelected: [],
-      nameInput: "",
+      nameInput: '',
       selectedTags: props.selectedTags
     }
   }
@@ -18,8 +18,8 @@ class ClubDisplay extends React.Component {
   render() {
     var { displayClubs, tags, openModal, favorites, updateFavorites, display } = this.props
     return (
-      <div style={{paddingRight: 40}}>
-        {display == "cards" ? (
+      <div style={{ paddingRight: 40 }}>
+        {display === 'cards' ? (
           <div className="columns is-multiline is-desktop is-tablet">
             { displayClubs.map((club) => (
               <ClubCard
@@ -32,21 +32,21 @@ class ClubDisplay extends React.Component {
             )) }
           </div>
         ) : (
-            <table className="table is-fullwidth is-hoverable" style={{borderTop: "1px solid #e5e5e5"}}>
-              <tbody>
-                {displayClubs.map((club) => (
-                  <ClubTableRow
-                    club={club}
-                    tags={tags}
-                    updateFavorites={updateFavorites}
-                    openModal={openModal}
-                    favorite={favorites.includes(club.id)}/>
-                ))}
-              </tbody>
-            </table>
+          <table className="table is-fullwidth is-hoverable" style={{ borderTop: '1px solid #e5e5e5' }}>
+            <tbody>
+              {displayClubs.map((club) => (
+                <ClubTableRow
+                  club={club}
+                  tags={tags}
+                  updateFavorites={updateFavorites}
+                  openModal={openModal}
+                  favorite={favorites.includes(club.id)}/>
+              ))}
+            </tbody>
+          </table>
         )
-      }
-    </div>
+        }
+      </div>
     )
   }
 }

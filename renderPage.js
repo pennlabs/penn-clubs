@@ -7,7 +7,6 @@ import { doApiRequest } from './utils'
 import fetch from 'isomorphic-fetch'
 import { CLUBS_PURPLE_LIGHT } from './colors'
 
-
 function renderPage(Page) {
   class RenderPage extends React.Component {
     constructor(props) {
@@ -30,8 +29,7 @@ function renderPage(Page) {
             favorites: data.favorite_set.map((a) => a.club),
             userInfo: data
           }))
-        }
-        else {
+        } else {
           this.setState({
             authenticated: false,
             favorites: JSON.parse(localStorage.getItem('favorites')) || []
@@ -42,7 +40,7 @@ function renderPage(Page) {
     }
 
     render() {
-      return <div style={{ dispay: "flex", flexDirection: "column", backgroundColor: "#fff"}}>
+      return <div style={{ dispay: 'flex', flexDirection: 'column', backgroundColor: '#fff' }}>
         <Header authenticated={this.state.authenticated} userInfo={this.state.userInfo} />
         <Page {...this.props} {...this.state} updateFavorites={this.updateFavorites} />
         <Footer />
@@ -70,7 +68,7 @@ function renderPage(Page) {
           })
         }
       }
-      this.setState({favorites: newFavs})
+      this.setState({ favorites: newFavs })
       if (!this.state.authenticated) {
         localStorage.setItem('favorites', JSON.stringify(newFavs))
       }
@@ -78,7 +76,7 @@ function renderPage(Page) {
     }
   }
 
-  RenderPage.getInitialProps = async (info) => {
+  RenderPage.getInitialProps = async(info) => {
     if (Page.getInitialProps) {
       return Page.getInitialProps(info)
     }
@@ -87,7 +85,6 @@ function renderPage(Page) {
 
   return RenderPage
 }
-
 
 export function renderListPage(Page) {
   class RenderListPage extends React.Component {
@@ -101,19 +98,19 @@ export function renderListPage(Page) {
     }
 
     openModal(club) {
-      this.setState({modal: true, modalClub: club})
+      this.setState({ modal: true, modalClub: club })
       disableBodyScroll(this)
     }
 
     closeModal(club) {
-      this.setState({modal: false, modalClub: {}})
+      this.setState({ modal: false, modalClub: {} })
       enableBodyScroll(this)
     }
 
     mapToClubs(favorites) {
       var { clubs } = this.props
       return favorites.map((favorite) => {
-        return (clubs.find((club) => club.id == favorite))
+        return (clubs.find((club) => club.id === favorite))
       })
     }
 
@@ -121,30 +118,30 @@ export function renderListPage(Page) {
       var { favorites, clubs, tags } = this.props
       var { modal, modalClub } = this.state
       var favoriteClubs = this.mapToClubs(favorites)
-      return(
+      return (
         <div>
-            <Page
-              clubs={clubs}
-              tags={tags}
-              favorites={favorites}
-              updateFavorites={this.props.updateFavorites}
-              openModal={this.openModal.bind(this)}
-              closeModal={this.closeModal.bind(this)}
-              favoriteClubs={favoriteClubs}
-            />
-            <ClubModal
-              modal={modal}
-              club={modalClub}
-              tags={tags}
-              closeModal={this.closeModal.bind(this)}
-              updateFavorites={this.props.updateFavorites}
-              favorite={favorites.includes(modalClub.id)} />
-          </div>
+          <Page
+            clubs={clubs}
+            tags={tags}
+            favorites={favorites}
+            updateFavorites={this.props.updateFavorites}
+            openModal={this.openModal.bind(this)}
+            closeModal={this.closeModal.bind(this)}
+            favoriteClubs={favoriteClubs}
+          />
+          <ClubModal
+            modal={modal}
+            club={modalClub}
+            tags={tags}
+            closeModal={this.closeModal.bind(this)}
+            updateFavorites={this.props.updateFavorites}
+            favorite={favorites.includes(modalClub.id)} />
+        </div>
       )
     }
   }
 
-  RenderListPage.getInitialProps = async () => {
+  RenderListPage.getInitialProps = async() => {
     const clubRequest = await doApiRequest('/clubs/?format=json')
     const clubResponse = await clubRequest.json()
     const tagsRequest = await doApiRequest('/tags/?format=json')
@@ -153,7 +150,6 @@ export function renderListPage(Page) {
   }
 
   return renderPage(RenderListPage)
-
 }
 
 export default renderPage

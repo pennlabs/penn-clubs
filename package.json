@@ -20,17 +20,22 @@
     "react-select": "^3.0.4"
   },
   "scripts": {
-    "lint": "eslint \"./{pages,components}/**/*.js\"",
+    "lint": "eslint \"./{pages,components}/**/*.js\" \"*.js\"",
     "dev": "node server/index.js",
     "build": "next build",
     "start": "node server/index.js"
   },
   "license": "MIT",
   "devDependencies": {
-    "eslint": "^5.13.0",
+    "babel-eslint": "^10.0.2",
+    "eslint": "^6.2.0",
     "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-import": "^2.16.0",
+    "eslint-config-standard": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jsx-a11y": "^6.2.0",
-    "eslint-plugin-react": "^7.12.4"
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-react": "^7.14.3",
+    "eslint-plugin-standard": "^4.0.1"
   }
 }
