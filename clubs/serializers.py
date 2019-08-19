@@ -14,6 +14,25 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'clubs')
 
 
+class UserMembershipSerializer(serializers.ModelSerializer):
+    id = serializers.SerializerMethodField('get_id')
+    name = serializers.SerializerMethodField('get_name')
+    role = serializers.SerializerMethodField('get_role')
+
+    def get_id(self, obj):
+        return obj.club.id
+
+    def get_name(self, obj):
+        return obj.club.name
+
+    def get_role(self, obj):
+        return obj.get_role_display()
+
+    class Meta:
+        model = Membership
+        fields = ('id', 'name', 'title', 'role')
+
+
 class MembershipSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField('get_full_name')
     person = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), write_only=True)
@@ -213,7 +232,7 @@ class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
     email = serializers.EmailField(read_only=True)
     name = serializers.SerializerMethodField('get_full_name')
-    membership_set = AuthenticatedMembershipSerializer(many=True, read_only=True)
+    membership_set = UserMembershipSerializer(many=True, read_only=True)
     favorite_set = FavoriteSerializer(many=True, read_only=True)
 
     def get_full_name(self, obj):
