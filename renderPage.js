@@ -41,7 +41,7 @@ function renderPage(Page) {
 
     render() {
       return <div style={{ dispay: "flex", flexDirection: "column", backgroundColor: "#fff"}}>
-        <Header authenticated={this.state.authenticated} />
+        <Header authenticated={this.state.authenticated} userInfo={this.state.userInfo} />
         <Page {...this.props} {...this.state} updateFavorites={this.updateFavorites} />
         <Footer />
       </div>

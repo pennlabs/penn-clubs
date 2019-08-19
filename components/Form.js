@@ -87,7 +87,7 @@ class Form extends React.Component {
     return fields.map((item) => {
       var inpt = null
       if (['text', 'url', 'email'].includes(item.type)) {
-        inpt = <input className='input' value={this.state['field-' + item.name]} onChange={(e) => this.setState({ ['field-' + item.name]: e.target.value })} key={item.name} type={item.type} name={item.name} />
+        inpt = <input className='input' disabled={item.readonly} value={this.state['field-' + item.name]} onChange={(e) => this.setState({ ['field-' + item.name]: e.target.value })} key={item.name} type={item.type} name={item.name} />
       }
       else if (item.type == 'html') {
         inpt = <div>
@@ -118,6 +118,9 @@ class Form extends React.Component {
             {this.generateFields(item.fields)}
           </div>
         </div>
+      }
+      else if (item.type == 'component') {
+        return <div key={item.name}>{item.content}</div>
       }
       else if (item.type == 'multiselect') {
         if (this.state.mounted) {

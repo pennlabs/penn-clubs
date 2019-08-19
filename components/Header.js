@@ -1,6 +1,7 @@
 import posed from 'react-pose'
 import Head from 'next/head'
 import { API_BASE_URL } from '../utils'
+import { Link } from '../routes'
 import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
 
 const Pop = posed.div({
@@ -65,9 +66,10 @@ class Header extends React.Component {
                   </span>
                 </Pop>
               </a>
-              {typeof this.props.authenticated === 'undefined' || this.props.authenticated === null || <a style={{ padding: 20, textDecoration: "underline", color: "#9B9B9B" }} href={
-                  this.props.authenticated ? `${API_BASE_URL}/accounts/logout/?next=${window.location.href}` : `${API_BASE_URL}/accounts/login/?next=${window.location.href}`
-              }>{this.props.authenticated ? 'Logout' : 'Login'}</a>}
+              {this.props.authenticated === false && <a style={{ padding: 20, textDecoration: "underline", color: "#9B9B9B" }} href={
+                  `${API_BASE_URL}/accounts/login/?next=${window.location.href}`
+              }>Login</a>}
+              {this.props.userInfo && <Link route='settings'><a style={{ padding: 20, color: "#9B9B9B" }}><i className='fa fa-fw fa-user'></i> {this.props.userInfo.name || this.props.userInfo.username}</a></Link>}
             </div>
           </div>
         </nav>
