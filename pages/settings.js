@@ -62,7 +62,7 @@ class SettingsForm extends React.Component {
         ]
       },
       {
-        name: 'Notifications',
+        name: 'Privacy & Notifications',
         type: 'group',
         fields: [
           {
@@ -92,14 +92,14 @@ class SettingsForm extends React.Component {
                 {this.props.userInfo && this.props.userInfo.membership_set.map((item) => <tr key={item.id}>
                   <td>{item.name}</td>
                   <td>{item.title}</td>
-                  <td>{item.role}</td>
+                  <td>{item.role_display}</td>
                   <td className='buttons'>
                     <Link route='club-view' params={{club: item.id}}>
                       <a className='button is-link'>View</a>
                     </Link>
-                    <Link route='club-edit' params={{club: item.id}}>
+                    {item.role <= 10 && <Link route='club-edit' params={{club: item.id}}>
                       <a className='button is-success'>Edit</a>
-                    </Link>
+                    </Link>}
                   </td>
                 </tr>)}
               </tbody>
