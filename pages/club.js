@@ -85,9 +85,7 @@ class Club extends React.Component {
             </div>
           </div>
           <div className="column is-6">
-            <p>
-              {club.description}
-            </p>
+            <p dangerouslySetInnerHTML={{__html: club.description}} />
           </div>
        </div>
      </div>
