@@ -4,7 +4,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import ClubList from '../components/ClubList.js'
 import ClubModal from '../components/ClubModal.js'
-import renderPage from '../renderPage.js'
+import { renderListPage } from '../renderPage.js'
 import { CLUBS_GREY } from '../colors'
 
 
@@ -40,4 +40,4 @@ class Favorites extends React.Component {
 }
 
 
-export default renderPage(Favorites);
+export default renderListPage(Favorites);

@@ -3,7 +3,7 @@ import Footer from '../components/Footer'
 import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
 import ClubModal from '../components/ClubModal'
-import renderPage from '../renderPage.js'
+import { renderListPage } from '../renderPage.js'
 import { CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_PURPLE, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW } from '../colors'
 
 
@@ -119,4 +119,4 @@ class Splash extends React.Component {
   }
 }
 
-export default renderPage(Splash);
+export default renderListPage(Splash);

@@ -144,17 +144,13 @@ class ClubForm extends React.Component {
     ]
 
     return (
-      <div>
-        <Header />
-        <div style={{padding: "30px 50px"}}>
-          <h1 className='title is-size-2-desktop is-size-3-mobile'><span style={{ color: CLUBS_GREY_LIGHT }}>{club ? 'Editing' : 'Creating'} Club: </span> {club ? club.name : 'New Club'}</h1>
-          {this.state.message && <div className="notification is-primary">{this.state.message}</div>}
-          <Form fields={fields} defaults={club} onSubmit={this.submit} />
-          {club && <Link route='club-view' params={{ club: club.id }}>
-            <a className='button is-pulled-right is-secondary is-medium'>View Club</a>
-          </Link>}
-        </div>
-        <Footer />
+      <div style={{padding: "30px 50px"}}>
+        <h1 className='title is-size-2-desktop is-size-3-mobile'><span style={{ color: CLUBS_GREY_LIGHT }}>{club ? 'Editing' : 'Creating'} Club: </span> {club ? club.name : 'New Club'}</h1>
+        {this.state.message && <div className="notification is-primary">{this.state.message}</div>}
+        <Form fields={fields} defaults={club} onSubmit={this.submit} />
+        {club && <Link route='club-view' params={{ club: club.id }}>
+          <a className='button is-pulled-right is-secondary is-medium'>View Club</a>
+        </Link>}
       </div>
     )
   }
@@ -169,4 +165,4 @@ ClubForm.getInitialProps = async ({ query }) => {
 }
 
 
-export default ClubForm
+export default renderPage(ClubForm)

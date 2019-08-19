@@ -12,20 +12,25 @@ function renderPage(Page) {
   class RenderPage extends React.Component {
     constructor(props) {
       super(props)
+
       this.state = {
-        favorites: [],
-        modal: false,
         authenticated: null,
-        modalClub: {}
+        userInfo: null,
+        favorites: []
       }
-      var modalElement = null
+
+      this.updateFavorites = this.updateFavorites.bind(this)
     }
 
     componentDidMount() {
       this.setState({ favorites: JSON.parse(localStorage.getItem('favorites')) || [] })
-      doApiRequest('/favorites/?format=json').then((resp) => {
+      doApiRequest('/settings/?format=json').then((resp) => {
         if (resp.ok) {
-          resp.json().then((data) => this.setState({ authenticated: true, favorites: data.map((a) => a.club) }))
+          resp.json().then((data) => this.setState({
+            authenticated: true,
+            favorites: data.favorite_set.map((a) => a.club),
+            userInfo: data
+          }))
         }
         else {
           this.setState({ authenticated: false })
@@ -34,12 +39,20 @@ function renderPage(Page) {
       this.modalElement = document.querySelector('#modal')
     }
 
+    render() {
+      return <div style={{ dispay: "flex", flexDirection: "column", backgroundColor: "#fff"}}>
+        <Header authenticated={this.state.authenticated} />
+        <Page {...this.props} {...this.state} updateFavorites={this.updateFavorites} />
+        <Footer />
+      </div>
+    }
+
     updateFavorites(id) {
       var newFavs = this.state.favorites
       var i = newFavs.indexOf(id)
       if (i == -1) {
         newFavs.push(id)
-        if (this.state.authenticated) {
+        if (this.props.authenticated) {
           doApiRequest('/favorites/?format=json', {
             method: 'POST',
             body: {
@@ -49,7 +62,7 @@ function renderPage(Page) {
         }
       } else {
         newFavs.splice(i, 1)
-        if (this.state.authenticated) {
+        if (this.props.authenticated) {
           doApiRequest(`/favorites/${id}/?format=json`, {
             method: 'DELETE'
           })
@@ -59,9 +72,31 @@ function renderPage(Page) {
 
       this.setState({favorites: newFavs})
     }
+  }
+
+  RenderPage.getInitialProps = async (info) => {
+    if (Page.getInitialProps) {
+      return Page.getInitialProps(info)
+    }
+    return {}
+  }
+
+  return RenderPage
+}
+
+
+export function renderListPage(Page) {
+  class RenderListPage extends React.Component {
+    constructor(props) {
+      super(props)
+      this.state = {
+        modal: false,
+        modalClub: {}
+      }
+      var modalElement = null
+    }
 
     openModal(club) {
-      this.state.favorites.includes(club.id)
       this.setState({modal: true, modalClub: club})
       disableBodyScroll(this)
     }
@@ -79,35 +114,33 @@ function renderPage(Page) {
     }
 
     render() {
-      var { clubs, tags } = this.props
-      var { favorites, modal, modalClub } = this.state
+      var { favorites, clubs, tags } = this.props
+      var { modal, modalClub } = this.state
       var favoriteClubs = this.mapToClubs(favorites)
       return(
-        <div style={{ dispay: "flex", flexDirection: "column", backgroundColor: "#fff"}}>
-            <Header authenticated={this.state.authenticated} />
+        <div>
             <Page
               clubs={clubs}
               tags={tags}
               favorites={favorites}
-              updateFavorites={this.updateFavorites.bind(this)}
+              updateFavorites={this.props.updateFavorites}
               openModal={this.openModal.bind(this)}
               closeModal={this.closeModal.bind(this)}
               favoriteClubs={favoriteClubs}
             />
-            <Footer />
             <ClubModal
               modal={modal}
               club={modalClub}
               tags={tags}
               closeModal={this.closeModal.bind(this)}
-              updateFavorites={this.updateFavorites.bind(this)}
+              updateFavorites={this.props.updateFavorites}
               favorite={favorites.includes(modalClub.id)} />
           </div>
       )
     }
   }
 
-  RenderPage.getInitialProps = async () => {
+  RenderListPage.getInitialProps = async () => {
     const clubRequest = await doApiRequest('/clubs/?format=json')
     const clubResponse = await clubRequest.json()
     const tagsRequest = await doApiRequest('/tags/?format=json')
@@ -115,7 +148,7 @@ function renderPage(Page) {
     return { clubs: clubResponse, tags: tagsResponse }
   }
 
-  return RenderPage
+  return renderPage(RenderListPage)
 
 }
 
