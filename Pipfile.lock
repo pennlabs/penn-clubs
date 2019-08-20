@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "cd027b3bb8e01475338a9cd9b610aa59c13942048d91c6d06947a2607234d087"
+            "sha256": "f0e64e8b2dc2a711207cba53b2e87f824cf44c30f3eb53e4c1c794331e9b96b6"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -199,14 +199,6 @@
             ],
             "version": "==0.3.0"
         },
-        "unittest-xml-reporting": {
-            "hashes": [
-                "sha256:140982e4b58e4052d9ecb775525b246a96bfc1fc26097806e05ea06e9166dd6c",
-                "sha256:d1fbc7a1b6c6680ccfe75b5e9701e5431c646970de049e687b4bb35ba4325d72"
-            ],
-            "index": "pypi",
-            "version": "==2.5.1"
-        },
         "uritemplate": {
             "hashes": [
                 "sha256:01c69f4fe8ed503b2951bef85d996a9d22434d2431584b5b107b2981ff416fbd",
@@ -328,12 +320,34 @@
             "index": "pypi",
             "version": "==3.7.8"
         },
+        "flake8-isort": {
+            "hashes": [
+                "sha256:1e67b6b90a9b980ac3ff73782087752d406ce0a729ed928b92797f9fa188917e",
+                "sha256:81a8495eefed3f2f63f26cd2d766c7b1191e923a15b9106e6233724056572c68"
+            ],
+            "index": "pypi",
+            "version": "==2.7.0"
+        },
+        "flake8-quotes": {
+            "hashes": [
+                "sha256:5dbaf668887873f28346fb87943d6da2e4b9f77ce9f2169cff21764a0a4934ed"
+            ],
+            "index": "pypi",
+            "version": "==2.1.0"
+        },
         "idna": {
             "hashes": [
                 "sha256:c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407",
                 "sha256:ea8b7f6188e6fa117537c3df7da9fc686d485087abf6ac197f9c46432f7e4a3c"
             ],
             "version": "==2.8"
+        },
+        "isort": {
+            "hashes": [
+                "sha256:54da7e92468955c4fceacd0c86bd0ec997b0e1ee80d97f67c35a78b719dccab1",
+                "sha256:6e811fcb295968434526407adb8796944f1988c5b65e8139058f2014cbe100fd"
+            ],
+            "version": "==4.3.21"
         },
         "mccabe": {
             "hashes": [
@@ -369,6 +383,13 @@
                 "sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"
             ],
             "version": "==1.12.0"
+        },
+        "testfixtures": {
+            "hashes": [
+                "sha256:665a298976c8d77f311b65c46f16b7cda7229a47dff5ad7c822e5b3371a439e2",
+                "sha256:9d230c5c80746f9f86a16a1f751a5cf5d8e317d4cc48243a19fb180d22303bce"
+            ],
+            "version": "==6.10.0"
         },
         "unittest-xml-reporting": {
             "hashes": [

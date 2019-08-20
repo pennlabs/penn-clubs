@@ -5,9 +5,11 @@ verify_ssl = true
 
 [dev-packages]
 coveralls = "*"
-unittest-xml-reporting = "*"
 django-extensions = "*"
-"flake8" = "*"
+flake8 = "*"
+flake8-isort = "*"
+flake8-quotes = "*"
+unittest-xml-reporting = "*"
 
 [packages]
 dj-database-url = "*"
@@ -16,7 +18,6 @@ gunicorn = "*"
 mysqlclient = "*"
 sentry-sdk = "*"
 whitenoise = "*"
-unittest-xml-reporting = "*"
 django = "*"
 django-labs-accounts = "*"
 drf-nested-routers = "*"
