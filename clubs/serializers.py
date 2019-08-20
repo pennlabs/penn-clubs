@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from clubs.models import Club, Event, Tag, Membership, Favorite
 from clubs.utils import clean
+from urllib.parse import urlparse
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -135,6 +136,63 @@ class ClubSerializer(serializers.ModelSerializer):
         """
         return clean(value)
 
+    def validate_facebook(self, value):
+        """
+        Ensure that URL is actually a Facebook link.
+        """
+        if value:
+            parsed = urlparse(value)
+            return 'https://www.facebook.com{}'.format(parsed.path if parsed.path.startswith('/') else '/groups/{}/'.format(parsed.path))
+        return value
+
+    def validate_twitter(self, value):
+        """
+        Ensure that URL is actually a Twitter link.
+        """
+        if value:
+            parsed = urlparse(value)
+            return 'https://twitter.com{}'.format(parsed.path if parsed.path.startswith('/') else '/{}'.format(parsed.path))
+        return value
+
+    def validate_instagram(self, value):
+        """
+        Ensure that the URL is actually a instagram link.
+        """
+        if value:
+            parsed = urlparse(value)
+            return 'https://www.instagram.com{}'.format(parsed.path if parsed.path.startswith('/') else '/{}/'.format(parsed.path))
+        return value
+
+    def validate_website(self, value):
+        """
+        Ensure that the URL looks like a website.
+        """
+        if value:
+            parsed = urlparse(value)
+            scheme = parsed.scheme
+            if scheme not in ['http', 'https']:
+                scheme = 'http'
+            return '{}://{}{}'.format(scheme, parsed.netloc, parsed.path)
+        return value
+
+    def validate_linkedin(self, value):
+        """
+        Ensure that URL is actually a LinkedIn URL. Attempt to convert into correct format with limited information.
+        """
+        if value:
+            parsed = urlparse(value)
+            return 'https://www.linkedin.com{}'.format(parsed.path if parsed.path.startswith('/') else '/company/{}/'.format(parsed.path))
+        return value
+
+    def validate_github(self, value):
+        """
+        Ensure that URL is actually a GitHub URL.
+        """
+        if value:
+            parsed = urlparse(value)
+            return 'https://github.com{}'.format(parsed.path if parsed.path.startswith('/') else '/{}'.format(parsed.path))
+        return value
+
     def update(self, instance, validated_data):
         """
         Nested serializers don't support update by default, need to override.
@@ -172,7 +230,7 @@ class ClubSerializer(serializers.ModelSerializer):
         model = Club
         fields = (
             'name', 'id', 'description', 'founded', 'size', 'email', 'facebook', 'twitter', 'instagram', 'linkedin',
-            'website', 'how_to_get_involved', 'tags', 'subtitle', 'application_required', 'application_available',
+            'github', 'website', 'how_to_get_involved', 'tags', 'subtitle', 'application_required', 'application_available',
             'listserv_available', 'image_url', 'members', 'favorite_count'
         )
 

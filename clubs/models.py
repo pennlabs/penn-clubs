@@ -28,6 +28,7 @@ class Club(models.Model):
     twitter = models.URLField(blank=True, null=True)
     instagram = models.URLField(blank=True, null=True)
     linkedin = models.URLField(blank=True, null=True)
+    github = models.URLField(blank=True, null=True)
     how_to_get_involved = models.TextField(blank=True)
     application_required = models.BooleanField(default=True)
     application_available = models.BooleanField(default=False)

@@ -344,7 +344,13 @@ class ClubTestCase(TestCase):
                 {
                     'name': tag2.name
                 }
-            ]
+            ],
+            'facebook': 'https://www.facebook.com/groups/966590693376781/?ref=nf_target&fref=nf',
+            'twitter': 'https://twitter.com/Penn',
+            'instagram': 'https://www.instagram.com/uofpenn/?hl=en',
+            'website': 'https://pennlabs.org',
+            'linkedin': 'https://www.linkedin.com/school/university-of-pennsylvania/',
+            'github': 'https://github.com/pennlabs'
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -370,6 +376,9 @@ class ClubTestCase(TestCase):
         self.assertEqual(data['description'], 'We code stuff.')
         self.assertTrue(data['tags'], data)
         self.assertEqual(data['members'][0]['name'], self.user1.get_full_name())
+
+        for link in ['facebook', 'twitter', 'instagram', 'website', 'github']:
+            self.assertIn(link, data)
 
         # test listing club
         resp = self.client.get(reverse('clubs-list') + "?search=penn")
