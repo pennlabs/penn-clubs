@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/pennclubs
     docker:
-      - image: circleci/python:3.7.1
+      - image: circleci/python:3.7
         environment:
           PIPENV_VENV_IN_PROJECT: true
           DATABASE_URL: mysql://root:password@127.0.0.1:3306/circle_test
@@ -19,23 +19,10 @@ jobs:
       - restore_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
-          name: install dockerize
-          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
-          environment:
-            DOCKERIZE_VERSION: v0.3.0
-      - run:
           name: Install dependencies
           command: |
             sudo pip install pipenv
             pipenv install -d
-      - run:
-          name: Run flake8
-          command: |
-            pipenv run flake8 . --ignore=E501 --exclude=.venv,.git,./pennclubs/settings/*
-            pipenv run flake8 ./pennclubs/settings/* --ignore E501,F401,F403,F405
-      - run:
-          name: Wait for db
-          command: dockerize -wait tcp://localhost:3306 -timeout 1m
       - save_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
@@ -43,21 +30,26 @@ jobs:
             - "/usr/local/bin"
             - "/usr/local/lib/python3.7/site-packages"
       - run:
+          name: Lint
           command: |
-            pipenv run python manage.py test --settings=pennclubs.settings.ci
+            pipenv run flake8 .
+      - run:
+          name: Run tests
+          command: |
+            pipenv run coverage run manage.py test --settings=pennclubs.settings.ci
+      - run:
+          name: Upload code coverage
+          command: |
+            pipenv run coveralls
       - store_test_results:
           path: test-results
       - store_artifacts:
           path: test_results
           destination: trl
-      - run:
-          command: |
-            pipenv run coverage run manage.py test
-            pipenv run coveralls
   deploy:
     working_directory: ~/pennclubs
     docker:
-      - image: circleci/python:3.7.1
+      - image: circleci/python:3.7
     steps:
       - checkout
       - run:
