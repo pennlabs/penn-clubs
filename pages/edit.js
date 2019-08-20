@@ -55,6 +55,13 @@ class ClubForm extends React.Component {
 
   render() {
     const { club, tags } = this.props
+
+    if (!club.id) {
+      return <div className='has-text-centered' style={{ margin: 30 }}>
+        <div className='title is-h1'>404 Not Found</div>
+      </div>
+    }
+
     const fields = [
       {
         name: 'General',
