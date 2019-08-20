@@ -31,7 +31,7 @@ jobs:
       - run:
           name: Run flake8
           command: |
-            pipenv run flake8 . --ignore=E501 --exclude=./pennclubs/settings/*
+            pipenv run flake8 . --ignore=E501 --exclude=.venv,.git,./pennclubs/settings/*
             pipenv run flake8 ./pennclubs/settings/* --ignore E501,F401,F403,F405
       - run:
           name: Wait for db
