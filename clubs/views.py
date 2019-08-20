@@ -38,7 +38,7 @@ class ClubViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.request is not None and self.request.user.is_authenticated:
-            if self.request.user.is_superuser or ('club_pk' in self.kwargs and Membership.objects.filter(person=self.request.user, club=self.kwargs['club_pk']).exists()):
+            if self.request.user.is_superuser or ('pk' in self.kwargs and Membership.objects.filter(person=self.request.user, club=self.kwargs['pk']).exists()):
                 return AuthenticatedClubSerializer
         return ClubSerializer
 
