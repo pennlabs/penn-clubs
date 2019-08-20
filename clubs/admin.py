@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Exists, OuterRef
 from clubs.models import Club, Tag, Event, Membership, Favorite
 from django.contrib.auth.models import Group
 
@@ -8,8 +9,14 @@ admin.site.unregister(Group)
 
 class ClubAdmin(admin.ModelAdmin):
     search_fields = ('name', 'subtitle', 'email')
-    list_display = ('name', 'email')
+    list_display = ('name', 'email', 'has_owner')
     list_filter = ('size', 'application_required', 'application_available', 'listserv_available')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(has_owner=Exists(Membership.objects.filter(club=OuterRef('pk'), role__lte=0)))
+
+    def has_owner(self, obj):
+        return obj.has_owner
 
 
 class TagAdmin(admin.ModelAdmin):
