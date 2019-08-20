@@ -55,6 +55,7 @@ class SettingsForm extends React.Component {
           },
           {
             name: 'email',
+            label: 'Primary Email',
             type: 'text',
             readonly: true
           }

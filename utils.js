@@ -4,7 +4,14 @@ export function getDefaultClubImageURL() {
   return 'http://static.asiawebdirect.com/m/kl/portals/kuala-lumpur-ws/homepage/magazine/5-clubs/pagePropertiesImage/best-clubs-kuala-lumpur.jpg.jpg'
 }
 
-export const API_BASE_URL = getConfig().publicRuntimeConfig.API_BASE_URL || 'https://api.pennclubs.com'
+function removeEndingSlash(val) {
+  if (val.endsWith('/')) {
+    return val.substring(0, val.length - 1)
+  }
+  return val
+}
+
+export const API_BASE_URL = removeEndingSlash(getConfig().publicRuntimeConfig.API_BASE_URL) || 'https://api.pennclubs.com'
 export const ROLE_OWNER = 0
 export const ROLE_OFFICER = 10
 export const ROLE_MEMBER = 20
