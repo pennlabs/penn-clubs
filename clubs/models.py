@@ -21,7 +21,7 @@ class Club(models.Model):
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
     description = models.TextField(blank=True)
-    founded = models.DateField(null=True)
+    founded = models.DateField(blank=True, null=True)
     size = models.IntegerField(choices=SIZE_CHOICES, default=SIZE_SMALL)
     email = models.EmailField(blank=True, null=True)
     facebook = models.URLField(blank=True, null=True)
