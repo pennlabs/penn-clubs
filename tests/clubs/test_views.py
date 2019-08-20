@@ -45,6 +45,9 @@ class ClubTestCase(TestCase):
         self.user5.save()
 
     def test_user_views(self):
+        """
+        Test retrieving and updating user settings.
+        """
         self.client.login(username=self.user5.username, password='test')
 
         # add a membership
@@ -72,9 +75,12 @@ class ClubTestCase(TestCase):
             self.assertIn(field, data)
 
     def test_superuser_views(self):
-        self.client.login(username=self.user1.username, password='test')
+        """
+        Test performing club/membership operations as a superuser.
+        """
+        self.client.login(username=self.user5.username, password='test')
 
-        # create club
+        # create club as superuser
         resp = self.client.post(reverse('clubs-list'), {
             'name': 'Penn Labs',
             'description': 'We code stuff.',
@@ -105,67 +111,57 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user1.username, password='test')
 
-        # create club
-        resp = self.client.post(reverse('clubs-list'), {
-            'name': 'Penn Labs',
-            'description': 'We code stuff.',
-            'tags': []
-        }, content_type='application/json')
-        self.assertIn(resp.status_code, [200, 201], resp.content)
-
         # add favorite
-        resp = self.client.post('/favorites/', {
-            'club': 'penn-labs'
+        resp = self.client.post(reverse('favorites-list'), {
+            'club': 'test-club'
         })
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # attempt to add existing favorite
-        resp = self.client.post('/favorites/', {
-            'club': 'penn-labs'
+        resp = self.client.post(reverse('favorites-list'), {
+            'club': 'test-club'
         })
         self.assertIn(resp.status_code, [400], resp.content)
 
         # list favorites
-        resp = self.client.get('/favorites/')
+        resp = self.client.get(reverse('favorites-list'))
         self.assertIn(resp.status_code, [200], resp.content)
         data = json.loads(resp.content.decode('utf-8'))
         self.assertTrue(data)
 
         # other people shouldn't see your favorites
         self.client.login(username=self.user4.username, password='test')
-        resp = self.client.get('/favorites/')
+        resp = self.client.get(reverse('favorites-list'))
         self.assertIn(resp.status_code, [200], resp.content)
         data = json.loads(resp.content.decode('utf-8'))
         self.assertFalse(data)
 
         # delete favorite
         self.client.login(username=self.user1.username, password='test')
-        resp = self.client.delete('/favorites/penn-labs/')
+        resp = self.client.delete(reverse('favorites-detail', args=('test-club',)))
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
-    def test_event_views(self):
+    def test_event_list(self):
         """
-        Test listing/adding/deleting events.
+        Test listing club events.
         """
-        self.client.login(username=self.user1.username, password='test')
-
-        # create club
-        resp = self.client.post(reverse('clubs-list'), {
-            'name': 'Penn Labs',
-            'description': 'We code stuff.',
-            'tags': []
-        }, content_type='application/json')
-        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.client.login(username=self.user5.username, password='test')
 
         # list events
-        resp = self.client.get(reverse('club-events-list', args=('penn-labs',)), content_type='application/json')
+        resp = self.client.get(reverse('club-events-list', args=('test-club',)), content_type='application/json')
         self.assertIn(resp.status_code, [200], resp.content)
+
+    def test_event_create_delete(self):
+        """
+        Test creating and deleting a club event.
+        """
+        self.client.login(username=self.user5.username, password='test')
 
         start_date = datetime.datetime.now() - datetime.timedelta(days=3)
         end_date = start_date + datetime.timedelta(hours=2)
 
         # add event
-        resp = self.client.post(reverse('club-events-list', args=('penn-labs',)), {
+        resp = self.client.post(reverse('club-events-list', args=('test-club',)), {
             'name': 'Interest Meeting',
             'description': 'Interest Meeting on Friday!',
             'location': 'JMHH G06',
@@ -174,11 +170,12 @@ class ClubTestCase(TestCase):
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+        # ensure event exists
         self.assertEqual(Event.objects.count(), 1)
-        self.assertEqual(Event.objects.first().creator, self.user1)
+        self.assertEqual(Event.objects.first().creator, self.user5)
 
         # delete event
-        resp = self.client.delete(reverse('club-events-detail', args=('penn-labs', 'interest-meeting')))
+        resp = self.client.delete(reverse('club-events-detail', args=('test-club', 'interest-meeting')))
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
     def test_member_views(self):
@@ -310,19 +307,38 @@ class ClubTestCase(TestCase):
         resp = self.client.delete('/tags/some-tag/')
         self.assertIn(resp.status_code, [400, 403, 405], resp.content)
 
-    def test_club_views(self):
+    def test_club_create_empty(self):
         """
-        Test creating, listing, modifying, and deleting a club.
+        Test creating a club with empty fields.
         """
-        tag1 = Tag.objects.create(name="Computer Science")
-        tag2 = Tag.objects.create(name="Engineering")
-        tag3 = Tag.objects.create(name="Wharton")
+        self.client.login(username=self.user5.username, password='test')
 
-        # passing no data should result in a bad request
+        resp = self.client.post(reverse('clubs-list'), {
+            'name': 'Penn Labs',
+            'description': '',
+            'tags': [],
+            'facebook': '',
+            'twitter': '',
+            'instagram': '',
+            'website': '',
+            'linkedin': '',
+            'github': ''
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+    def test_club_create_no_input(self):
+        """
+        Passing in no data should result in a bad request.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
         resp = self.client.post(reverse('clubs-list'), {}, content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
-        # creating without auth should result in a error
+    def test_club_create_no_auth(self):
+        """
+        Creating a club without authentication should result in an error.
+        """
         resp = self.client.post(reverse('clubs-list'), {
             'name': 'Penn Labs',
             'description': 'We code stuff.',
@@ -331,9 +347,15 @@ class ClubTestCase(TestCase):
         }, content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
-        self.client.login(username=self.user1.username, password='test')
+    def test_club_create(self):
+        """
+        Test properly creating a club.
+        """
+        tag1 = Tag.objects.create(name="Wharton")
+        tag2 = Tag.objects.create(name="Engineering")
 
-        # test creating club
+        self.client.login(username=self.user5.username, password='test')
+
         resp = self.client.post(reverse('clubs-list'), {
             'name': 'Penn Labs',
             'description': 'We code stuff.',
@@ -354,19 +376,13 @@ class ClubTestCase(TestCase):
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+        # ensure club was actually created
         club_obj = Club.objects.filter(name='Penn Labs').first()
         self.assertTrue(club_obj)
         self.assertEqual(Membership.objects.filter(club=club_obj).count(), 1)
         self.assertEqual(club_obj.members.count(), 1)
 
-        # creating again should raise an error
-        resp = self.client.post(reverse('clubs-list'), {
-            'name': 'Penn Labs',
-            'description': 'We code stuff.',
-            'tags': []
-        }, content_type='application/json')
-        self.assertIn(resp.status_code, [400], resp.content)
-
+        # ensure lookup returns the correct information
         resp = self.client.get(reverse('clubs-detail', args=('penn-labs',)))
         self.assertIn(resp.status_code, [200], resp.content)
 
@@ -375,44 +391,78 @@ class ClubTestCase(TestCase):
         self.assertEqual(data['name'], 'Penn Labs')
         self.assertEqual(data['description'], 'We code stuff.')
         self.assertTrue(data['tags'], data)
-        self.assertEqual(data['members'][0]['name'], self.user1.get_full_name())
+        self.assertEqual(data['members'][0]['name'], self.user5.get_full_name())
 
         for link in ['facebook', 'twitter', 'instagram', 'website', 'github']:
             self.assertIn(link, data)
 
-        # test listing club
-        resp = self.client.get(reverse('clubs-list') + "?search=penn")
+    def test_club_create_duplicate(self):
+        """
+        Creating a duplicate club should result in an 400 error.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        resp = self.client.post(reverse('clubs-list'), {
+            'name': 'Test Club',
+            'tags': []
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_club_list_search(self):
+        """
+        Test simple club filtering.
+        """
+        resp = self.client.get(reverse('clubs-list') + "?search=test")
         self.assertIn(resp.status_code, [200], resp.content)
         data = json.loads(resp.content.decode('utf-8'))
         self.assertTrue(data)
 
-        # outsiders should not be able to modify club
+    def test_club_modify_wrong_auth(self):
+        """
+        Outsiders should not be able to modify a club.
+        """
         self.client.login(username=self.user4.username, password='test')
-        resp = self.client.patch(reverse('clubs-detail', args=('penn-labs',)), {
+        resp = self.client.patch(reverse('clubs-detail', args=('test-club',)), {
             'description': 'We do stuff.',
             'tags': []
         }, content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
-        # ordinary members should not be able to modify club
+    def test_club_modify_insufficient_auth(self):
+        """
+        Ordinary members should not be able to modify the club.
+        """
         Membership.objects.create(
-            club=Club.objects.get(pk='penn-labs'),
+            club=Club.objects.get(pk='test-club'),
             person=self.user2
         )
         self.client.login(username=self.user2.username, password='test')
-        resp = self.client.patch(reverse('clubs-detail', args=('penn-labs',)), {
+        resp = self.client.patch(reverse('clubs-detail', args=('test-club',)), {
             'description': 'We do stuff.',
             'tags': []
         }, content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
-        # they can retrieve club info though
-        resp = self.client.get(reverse('clubs-detail', args=('penn-labs',)))
+    def test_club_retrieve(self):
+        """
+        Ordinary members should be able to retrieve the club.
+        """
+        Membership.objects.create(
+            club=Club.objects.get(pk='test-club'),
+            person=self.user2
+        )
+        self.client.login(username=self.user2.username, password='test')
+        resp = self.client.get(reverse('clubs-detail', args=('test-club',)))
         self.assertIn(resp.status_code, [200], resp.content)
 
-        # test modifying club
-        self.client.login(username=self.user1.username, password='test')
-        resp = self.client.patch(reverse('clubs-detail', args=('penn-labs',)), {
+    def test_club_modify(self):
+        """
+        Owners and officers should be able to modify the club.
+        """
+        tag3 = Tag.objects.create(name="College")
+
+        self.client.login(username=self.user5.username, password='test')
+        resp = self.client.patch(reverse('clubs-detail', args=('test-club',)), {
             'description': 'We do stuff.',
             'tags': [
                 {
@@ -422,15 +472,29 @@ class ClubTestCase(TestCase):
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        resp = self.client.get(reverse('clubs-detail', args=('penn-labs',)))
+        # ensure that changes were made
+        resp = self.client.get(reverse('clubs-detail', args=('test-club',)))
         self.assertIn(resp.status_code, [200], resp.content)
 
         data = json.loads(resp.content.decode('utf-8'))
         self.assertEqual(data['description'], 'We do stuff.')
         self.assertEqual(len(data['tags']), 1)
 
-        # test deleting club
-        resp = self.client.delete(reverse('clubs-detail', args=('penn-labs',)))
+    def test_club_delete_no_auth(self):
+        """
+        Unauthenticated users should not be able to delete a club.
+        """
+        resp = self.client.delete(reverse('clubs-detail', args=('test-club',)))
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_club_delete(self):
+        """
+        Owners should be able to delete the club.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        resp = self.client.delete(reverse('clubs-detail', args=('test-club',)))
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
-        self.assertFalse(Club.objects.filter(name='Penn Labs').exists())
+        # ensure club was deleted
+        self.assertFalse(Club.objects.filter(name='Test Club').exists())
