@@ -55,8 +55,9 @@ class ClubForm extends React.Component {
 
   render() {
     const { club, tags } = this.props
+    const isEdit = club !== null
 
-    if (!club.id) {
+    if (isEdit && !club.id) {
       return <div className='has-text-centered' style={{ margin: 30 }}>
         <div className='title is-h1'>404 Not Found</div>
       </div>
@@ -70,7 +71,8 @@ class ClubForm extends React.Component {
           {
             name: 'name',
             type: 'text',
-            required: true
+            required: true,
+            help: !isEdit && 'Your club URL will be generated from your club name, and cannot be changed upon creation. Your club name can still be changed afterwards.'
           },
           {
             name: 'subtitle',
@@ -177,10 +179,11 @@ class ClubForm extends React.Component {
               </tr>
             </thead>
             <tbody>
-              {club.members && club.members.map((a) => <tr><td>{a.name}</td><td>{a.title}</td></tr>)}
+              {club && club.members && club.members.map((a) => <tr><td>{a.name}</td><td>{a.title}</td></tr>)}
             </tbody>
           </table>
-        </div>
+        </div>,
+        disabled: !isEdit
       },
       {
         name: 'settings',
@@ -199,7 +202,8 @@ class ClubForm extends React.Component {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        disabled: !isEdit
       }
     ]
 
@@ -209,7 +213,7 @@ class ClubForm extends React.Component {
         {this.state.message && <div className="notification is-primary">{this.state.message}</div>}
         <div className='tabs'>
           <ul>
-            {tabs.map((a) => <li className={a.name === this.state.currentTab ? 'is-active' : undefined} key={a.name}><a onClick={() => this.setState({ currentTab: a.name })}>{a.label}</a></li>)}
+            {tabs.filter((a) => !a.disabled).map((a) => <li className={a.name === this.state.currentTab ? 'is-active' : undefined} key={a.name}><a onClick={() => this.setState({ currentTab: a.name })}>{a.label}</a></li>)}
           </ul>
         </div>
         {tabs.filter((a) => a.name === this.state.currentTab)[0].content}
