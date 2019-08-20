@@ -59,8 +59,10 @@ class MembershipSerializer(serializers.ModelSerializer):
         mem_user_id = self.instance.person.id if self.instance else self.initial_data['person']
         club_pk = self.context['view'].kwargs.get('club_pk')
         membership = Membership.objects.filter(person=user, club=club_pk).first()
-        if membership is None:
+        if user.is_superuser:
             return value
+        if membership is None:
+            raise serializers.ValidationError('You must be a member of this club to modify roles!')
         if membership.role > value:
             raise serializers.ValidationError('You cannot promote someone above your own level.')
         if value > Membership.ROLE_OWNER and user.id == mem_user_id:
