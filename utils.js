@@ -26,6 +26,12 @@ export function getSizeDisplay(size) {
   else return 'Unknown'
 }
 
+export function getRoleDisplay(role) {
+  if (role <= 0) return 'Owner'
+  else if (role <= 10) return 'Officer'
+  else return 'Member'
+}
+
 export function doApiRequest(path, data) {
   if (!data) {
     data = {}

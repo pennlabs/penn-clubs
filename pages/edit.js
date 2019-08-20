@@ -1,5 +1,5 @@
 import renderPage from '../renderPage.js'
-import { doApiRequest, titleize } from '../utils'
+import { doApiRequest, titleize, getRoleDisplay } from '../utils'
 import { CLUBS_GREY_LIGHT } from '../colors'
 import { Link, Router } from '../routes'
 import React from 'react'
@@ -10,7 +10,8 @@ class ClubForm extends React.Component {
     super(props)
 
     this.state = {
-      currentTab: 'info'
+      currentTab: 'info',
+      club: null
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -26,7 +27,7 @@ class ClubForm extends React.Component {
     var req = null
     var isEdit = this.props.club
     if (isEdit) {
-      req = doApiRequest(`/clubs/${this.props.club.id}/?format=json`, {
+      req = doApiRequest(`/clubs/${this.props.club_id}/?format=json`, {
         method: 'PATCH',
         body: data
       })
@@ -53,9 +54,22 @@ class ClubForm extends React.Component {
     })
   }
 
+  componentDidMount() {
+    doApiRequest(`/clubs/${this.props.club_id}/?format=json`)
+      .then((resp) => resp.json())
+      .then((data) => this.setState({
+        club: data, currentTab: window.location.hash.substring(1) || this.state.currentTab
+      }))
+  }
+
   render() {
-    const { club, tags } = this.props
-    const isEdit = club !== null
+    const { club_id, tags } = this.props
+    const { club } = this.state
+    const isEdit = club_id !== null
+
+    if (club === null) {
+      return <div>Loading...</div>
+    }
 
     if (isEdit && !club.id) {
       return <div className='has-text-centered' style={{ margin: 30 }}>
@@ -175,11 +189,12 @@ class ClubForm extends React.Component {
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Title</th>
+                <th>Title (Permissions)</th>
+                <th>Email</th>
               </tr>
             </thead>
             <tbody>
-              {club && club.members && club.members.map((a) => <tr><td>{a.name}</td><td>{a.title}</td></tr>)}
+              {club && club.members && club.members.map((a) => <tr key={a.username}><td>{a.name}</td><td>{a.title} ({getRoleDisplay(a.role)})</td><td>{a.email}</td></tr>)}
             </tbody>
           </table>
         </div>,
@@ -213,7 +228,10 @@ class ClubForm extends React.Component {
         {this.state.message && <div className="notification is-primary">{this.state.message}</div>}
         <div className='tabs'>
           <ul>
-            {tabs.filter((a) => !a.disabled).map((a) => <li className={a.name === this.state.currentTab ? 'is-active' : undefined} key={a.name}><a onClick={() => this.setState({ currentTab: a.name })}>{a.label}</a></li>)}
+            {tabs.filter((a) => !a.disabled).map((a) => <li className={a.name === this.state.currentTab ? 'is-active' : undefined} key={a.name}><a onClick={() => {
+              this.setState({ currentTab: a.name })
+              window.location.hash = "#" + a.name
+            }}>{a.label}</a></li>)}
           </ul>
         </div>
         {tabs.filter((a) => a.name === this.state.currentTab)[0].content}
@@ -225,9 +243,7 @@ class ClubForm extends React.Component {
 ClubForm.getInitialProps = async({ query }) => {
   const tagsRequest = await doApiRequest('/tags/?format=json')
   const tagsResponse = await tagsRequest.json()
-  const clubRequest = query.club ? await doApiRequest(`/clubs/${query.club}/?format=json`) : null
-  const clubResponse = clubRequest && await clubRequest.json()
-  return { club: clubResponse, tags: tagsResponse }
+  return { club_id: query.club, tags: tagsResponse }
 }
 
 export default renderPage(ClubForm)
