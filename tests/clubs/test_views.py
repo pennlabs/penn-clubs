@@ -552,6 +552,21 @@ class ClubTestCase(TestCase):
         self.assertEqual(data['description'], 'We do stuff.')
         self.assertEqual(len(data['tags']), 1)
 
+    def test_club_modify_no_id(self):
+        """
+        The club ID cannot be modified after creation (breaks ForeignKeys).
+        """
+        self.client.login(username=self.user5.username, password='test')
+        resp = self.client.patch(reverse('clubs-detail', args=('test-club',)), {
+            'id': 'one-two-three',
+            'name': 'One Two Three'
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure id is still the same
+        resp = self.client.get(reverse('clubs-detail', args=('test-club',)))
+        self.assertIn(resp.status_code, [200], resp.content)
+
     def test_club_delete_no_auth(self):
         """
         Unauthenticated users should not be able to delete a club.
