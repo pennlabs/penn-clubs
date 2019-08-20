@@ -94,7 +94,7 @@ class Splash extends React.Component {
                   key={tag.label}
                   className="tag is-rounded has-text-white"
                   style={{
-                    backgroundColor: tag.name === 'Type' ? CLUBS_BLUE : (tag.name === 'Size' ? CLUBS_RED : CLUBS_YELLOW),
+                    backgroundColor: {'Type': CLUBS_BLUE, 'Size': CLUBS_RED, 'Application': CLUBS_YELLOW}[tag.name],
                     margin: 3
                   }}>
                   {tag.label}

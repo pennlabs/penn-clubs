@@ -19,7 +19,7 @@ class SearchBar extends React.Component {
         { value: 3, label: '50 to 100 members' },
         { value: 4, label: 'more than 100' }
       ],
-      tagOptions: props.tags.map((tag) => ({ value: tag.id, label: tag.name })),
+      tagOptions: props.tags.map((tag) => ({ value: tag.id, label: tag.name, count: tag.clubs })),
       applicationOptions: [
         { value: 1, label: 'Requires application' },
         { value: 2, label: 'Does not require application' },
