@@ -1,11 +1,11 @@
-import json
 import datetime
+import json
 
-from django.urls import reverse
-from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
 
-from clubs.models import Club, Membership, Tag, Event, Favorite
+from clubs.models import Club, Event, Favorite, Membership, Tag
 
 
 class ClubTestCase(TestCase):
@@ -246,12 +246,14 @@ class ClubTestCase(TestCase):
         # delete member should fail with insufficient permissions
         self.client.login(username=self.user2.username, password='test')
 
-        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user1.username)), content_type='application/json')
+        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user1.username)),
+                                  content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
         # delete member should fail for people not in club
         self.client.login(username=self.user4.username, password='test')
-        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user1.username)), content_type='application/json')
+        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user1.username)),
+                                  content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
         # cannot add self to a club that you're not in
@@ -279,7 +281,8 @@ class ClubTestCase(TestCase):
         # delete member
         self.client.login(username=self.user1.username, password='test')
 
-        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user2.username)), content_type='application/json')
+        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user2.username)),
+                                  content_type='application/json')
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
         # ensure cannot demote self if only owner
@@ -289,7 +292,8 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
         # ensure cannot delete self if only owner
-        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user1.username)), content_type='application/json')
+        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user1.username)),
+                                  content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_tag_views(self):
@@ -332,7 +336,7 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password='test')
 
-        exploit_string = "javascript:alert(1)"
+        exploit_string = 'javascript:alert(1)'
 
         resp = self.client.post(reverse('clubs-list'), {
             'name': 'Bad Club',
@@ -350,7 +354,7 @@ class ClubTestCase(TestCase):
         """
         Ensure that descriptions are properly sanitized.
         """
-        test_good_string = '''<p>Here\'s some <b>bold</b>, <i>italic</i>, <u>underline</u>, and a <a href="http://example.com">link</a>.<br></p>
+        test_good_string = """<p>Here\'s some <b>bold</b>, <i>italic</i>, <u>underline</u>, and a <a href=\"http://example.com\">link</a>.<br></p>
 <ul>
     <li>One</li>
     <li>Two</li>
@@ -361,7 +365,7 @@ class ClubTestCase(TestCase):
     <li>Two</li>
     <li>Three</li>
 </ol>
-<img src="/test.png">'''
+<img src=\"/test.png\">"""
 
         self.client.login(username=self.user5.username, password='test')
         resp = self.client.post(reverse('clubs-list'), {
@@ -423,8 +427,8 @@ class ClubTestCase(TestCase):
         """
         Test properly creating a club.
         """
-        tag1 = Tag.objects.create(name="Wharton")
-        tag2 = Tag.objects.create(name="Engineering")
+        tag1 = Tag.objects.create(name='Wharton')
+        tag2 = Tag.objects.create(name='Engineering')
 
         self.client.login(username=self.user5.username, password='test')
 
@@ -484,7 +488,7 @@ class ClubTestCase(TestCase):
         """
         Test simple club filtering.
         """
-        resp = self.client.get(reverse('clubs-list') + "?search=test")
+        resp = self.client.get(reverse('clubs-list') + '?search=test')
         self.assertIn(resp.status_code, [200], resp.content)
         data = json.loads(resp.content.decode('utf-8'))
         self.assertTrue(data)
@@ -531,7 +535,7 @@ class ClubTestCase(TestCase):
         """
         Owners and officers should be able to modify the club.
         """
-        tag3 = Tag.objects.create(name="College")
+        tag3 = Tag.objects.create(name='College')
 
         self.client.login(username=self.user5.username, password='test')
         resp = self.client.patch(reverse('clubs-detail', args=('test-club',)), {

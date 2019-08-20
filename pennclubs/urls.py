@@ -1,11 +1,11 @@
-from django.contrib import admin
-from django.urls import path, include
-from django.views.generic import TemplateView
 from django.conf import settings
+from django.contrib import admin
+from django.urls import include, path
+from django.views.generic import TemplateView
 from rest_framework.schemas import get_schema_view
 
 
-admin.site.site_header = "Clubs Backend Admin"
+admin.site.site_header = 'Clubs Backend Admin'
 
 urlpatterns = [
     path('', include('clubs.urls')),

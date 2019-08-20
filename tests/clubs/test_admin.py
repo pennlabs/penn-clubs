@@ -1,7 +1,7 @@
-from django.urls import reverse
-from django.test import TestCase, Client
-
 from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
+
 from clubs.models import Club, Tag
 
 
@@ -26,7 +26,8 @@ class AdminTestCase(TestCase):
         """
         self.client.login(username=self.user1.username, password='test')
 
-        for page in ['admin:index', 'admin:clubs_club_changelist', 'admin:clubs_favorite_changelist', 'admin:clubs_tag_changelist', 'admin:clubs_membership_changelist']:
+        for page in ['admin:index', 'admin:clubs_club_changelist', 'admin:clubs_favorite_changelist',
+                     'admin:clubs_tag_changelist', 'admin:clubs_membership_changelist']:
             resp = self.client.get(reverse(page))
             self.assertIn(resp.status_code, [200], resp.content)
 

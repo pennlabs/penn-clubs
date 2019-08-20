@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.db import models
 
 
 class Club(models.Model):
@@ -66,14 +66,18 @@ class Event(models.Model):
         return self.name
 
 
-class Tag(models.Model):
+class Favorite(models.Model):
     """
-    Represents general categories that clubs fit into.
+    Used when people favorite a club to keep track of which clubs were favorited.
     """
-    name = models.CharField(max_length=255)
+    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return '<Favorite: {} for {}>'.format(self.person.username, self.club.pk)
+
+    class Meta:
+        unique_together = (('person', 'club'),)
 
 
 class Membership(models.Model):
@@ -95,18 +99,14 @@ class Membership(models.Model):
     role = models.IntegerField(choices=ROLE_CHOICES, default=ROLE_MEMBER)
 
     def __str__(self):
-        return "<Membership: {} in {} ({})>".format(self.person.username, self.club.pk, self.get_role_display())
+        return '<Membership: {} in {} ({})>'.format(self.person.username, self.club.pk, self.get_role_display())
 
 
-class Favorite(models.Model):
+class Tag(models.Model):
     """
-    Used when people favorite a club to keep track of which clubs were favorited.
+    Represents general categories that clubs fit into.
     """
-    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
 
     def __str__(self):
-        return "<Favorite: {} for {}>".format(self.person.username, self.club.pk)
-
-    class Meta:
-        unique_together = (('person', 'club'),)
+        return self.name

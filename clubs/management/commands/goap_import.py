@@ -1,6 +1,6 @@
-import requests
-
 from urllib.parse import urljoin
+
+import requests
 from bs4 import BeautifulSoup
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import slugify
@@ -10,14 +10,16 @@ from clubs.utils import clean
 
 
 class Command(BaseCommand):
-    help = "Imports existing groups from Groups Online @ Penn."
-    START_URL = "https://upenn-community.symplicity.com/index.php?s=student_group"
+    help = 'Imports existing groups from Groups Online @ Penn.'
+    START_URL = 'https://upenn-community.symplicity.com/index.php?s=student_group'
 
     def handle(self, *args, **kwargs):
         self.count = 1
         self.session = requests.Session()
+        self.agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' + \
+                     ' Chrome/40.0.2214.85 Safari/537.36'
         self.session.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.85 Safari/537.36'
+            'User-Agent': self.agent
         }
         self.process_url(self.START_URL)
 
@@ -27,25 +29,25 @@ class Command(BaseCommand):
         resp = self.session.get(url)
         resp.raise_for_status()
 
-        soup = BeautifulSoup(resp.content, "html.parser")
-        grps = soup.select(".grpl .grpl-grp")
+        soup = BeautifulSoup(resp.content, 'html.parser')
+        grps = soup.select('.grpl .grpl-grp')
         for grp in grps:
-            name = grp.select_one("h3 a").text.strip()
+            name = grp.select_one('h3 a').text.strip()
             # TODO: download image and save to more permanant location
-            image_url = urljoin(url, grp.select_one("img")["src"]).strip()
-            if image_url.endswith("/group_img.png"):
+            image_url = urljoin(url, grp.select_one('img')['src']).strip()
+            if image_url.endswith('/group_img.png'):
                 image_url = None
-            group_tag = grp.select_one(".grpl-type")
+            group_tag = grp.select_one('.grpl-type')
             if group_tag is not None:
                 group_type = group_tag.text.strip()
             else:
                 group_type = None
-            description = grp.select_one(".grpl-purpose").text.replace("\r\n", "\n").strip()
-            if description == "This group has not written a purpose":
-                description = ""
+            description = grp.select_one('.grpl-purpose').text.replace('\r\n', '\n').strip()
+            if description == 'This group has not written a purpose':
+                description = ''
             else:
                 description = clean(description)
-            contact_tag = grp.select_one(".grpl-contact")
+            contact_tag = grp.select_one('.grpl-contact')
             if contact_tag is not None:
                 contact_email = contact_tag.text.strip()
             else:
@@ -65,10 +67,10 @@ class Command(BaseCommand):
             })
             if tag is not None:
                 club.tags.set([tag])
-            self.stdout.write("{} '{}'".format("Created" if flag else "Updated", name))
+            self.stdout.write("{} '{}'".format('Created' if flag else 'Updated', name))
 
         next_tag = soup.find(text='Next >')
         if next_tag is not None:
             next_link = next_tag.find_parent('a')['href']
-            next_url = url.split("?", 1)[0] + next_link
+            next_url = url.split('?', 1)[0] + next_link
             self.process_url(next_url)

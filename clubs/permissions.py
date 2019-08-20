@@ -1,16 +1,6 @@
 from rest_framework import permissions
+
 from clubs.models import Membership
-
-
-class IsSuperuser(permissions.BasePermission):
-    """
-    Grants permission if the current user is a superuser.
-    """
-    def has_object_permission(self, request, view, obj):
-        return request.user.is_authenticated and request.user.is_superuser
-
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.is_superuser
 
 
 class ClubPermission(permissions.BasePermission):
@@ -42,6 +32,32 @@ class ClubPermission(permissions.BasePermission):
             return True
 
 
+class EventPermission(permissions.BasePermission):
+    """
+    Officers and above can create/update/delete events.
+    Everyone else can view and list events.
+    """
+    def has_permission(self, request, view):
+        if view.action in ['create', 'update', 'partial_update', 'destroy']:
+            if 'club_pk' not in view.kwargs:
+                return False
+            membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
+            return membership is not None and membership.role <= Membership.ROLE_OFFICER
+        else:
+            return True
+
+
+class IsSuperuser(permissions.BasePermission):
+    """
+    Grants permission if the current user is a superuser.
+    """
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_authenticated and request.user.is_superuser
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_superuser
+
+
 class MemberPermission(permissions.BasePermission):
     """
     Members of a higher role can update/delete members of equal or lower roles, except ordinary members.
@@ -70,21 +86,6 @@ class MemberPermission(permissions.BasePermission):
         elif view.action in ['create']:
             if not request.user.is_authenticated:
                 return False
-            if 'club_pk' not in view.kwargs:
-                return False
-            membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
-            return membership is not None and membership.role <= Membership.ROLE_OFFICER
-        else:
-            return True
-
-
-class EventPermission(permissions.BasePermission):
-    """
-    Officers and above can create/update/delete events.
-    Everyone else can view and list events.
-    """
-    def has_permission(self, request, view):
-        if view.action in ['create', 'update', 'partial_update', 'destroy']:
             if 'club_pk' not in view.kwargs:
                 return False
             membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()

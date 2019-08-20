@@ -1,10 +1,12 @@
-from rest_framework import serializers
-from django.template.defaultfilters import slugify
+from urllib.parse import urlparse
+
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from clubs.models import Club, Event, Tag, Membership, Favorite
+from django.template.defaultfilters import slugify
+from rest_framework import serializers
+
+from clubs.models import Club, Event, Favorite, Membership, Tag
 from clubs.utils import clean
-from urllib.parse import urlparse
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -59,7 +61,8 @@ class MembershipSerializer(serializers.ModelSerializer):
             return value
         if membership.role > value:
             raise serializers.ValidationError('You cannot promote someone above your own level.')
-        if value > Membership.ROLE_OWNER and self.context['request'].user.username == self.context['view'].kwargs.get('person__username'):
+        if (value > Membership.ROLE_OWNER and
+           self.context['request'].user.username == self.context['view'].kwargs.get('person__username')):
             if Membership.objects.filter(club=club_pk, role__lte=Membership.ROLE_OWNER).count() <= 1:
                 raise serializers.ValidationError('You cannot demote yourself if you are the only owner!')
         return value
@@ -136,7 +139,7 @@ class ClubSerializer(serializers.ModelSerializer):
         same_clubs = Club.objects.filter(Q(name__iexact=value) | Q(id=slugify(value)))
 
         if same_clubs.exists() and not same_clubs.first() == self.instance:
-            raise serializers.ValidationError("A club with that name already exists.")
+            raise serializers.ValidationError('A club with that name already exists.')
 
         return value
 
@@ -152,7 +155,9 @@ class ClubSerializer(serializers.ModelSerializer):
         """
         if value:
             parsed = urlparse(value)
-            return 'https://www.facebook.com{}'.format(parsed.path if parsed.path.startswith('/') else '/groups/{}/'.format(parsed.path))
+            return 'https://www.facebook.com{}'.format(
+                parsed.path if parsed.path.startswith('/') else '/groups/{}/'.format(parsed.path)
+            )
         return value
 
     def validate_twitter(self, value):
@@ -161,7 +166,9 @@ class ClubSerializer(serializers.ModelSerializer):
         """
         if value:
             parsed = urlparse(value)
-            return 'https://twitter.com{}'.format(parsed.path if parsed.path.startswith('/') else '/{}'.format(parsed.path))
+            return 'https://twitter.com{}'.format(
+                parsed.path if parsed.path.startswith('/') else '/{}'.format(parsed.path)
+            )
         return value
 
     def validate_instagram(self, value):
@@ -170,7 +177,9 @@ class ClubSerializer(serializers.ModelSerializer):
         """
         if value:
             parsed = urlparse(value)
-            return 'https://www.instagram.com{}'.format(parsed.path if parsed.path.startswith('/') else '/{}/'.format(parsed.path))
+            return 'https://www.instagram.com{}'.format(
+                parsed.path if parsed.path.startswith('/') else '/{}/'.format(parsed.path)
+            )
         return value
 
     def validate_linkedin(self, value):
@@ -179,7 +188,9 @@ class ClubSerializer(serializers.ModelSerializer):
         """
         if value:
             parsed = urlparse(value)
-            return 'https://www.linkedin.com{}'.format(parsed.path if parsed.path.startswith('/') else '/company/{}/'.format(parsed.path))
+            return 'https://www.linkedin.com{}'.format(
+                parsed.path if parsed.path.startswith('/') else '/company/{}/'.format(parsed.path)
+            )
         return value
 
     def validate_github(self, value):
@@ -188,7 +199,9 @@ class ClubSerializer(serializers.ModelSerializer):
         """
         if value:
             parsed = urlparse(value)
-            return 'https://github.com{}'.format(parsed.path if parsed.path.startswith('/') else '/{}'.format(parsed.path))
+            return 'https://github.com{}'.format(
+                parsed.path if parsed.path.startswith('/') else '/{}'.format(parsed.path)
+            )
         return value
 
     def update(self, instance, validated_data):
@@ -228,8 +241,8 @@ class ClubSerializer(serializers.ModelSerializer):
         model = Club
         fields = (
             'name', 'id', 'description', 'founded', 'size', 'email', 'facebook', 'twitter', 'instagram', 'linkedin',
-            'github', 'website', 'how_to_get_involved', 'tags', 'subtitle', 'application_required', 'application_available',
-            'listserv_available', 'image_url', 'members', 'favorite_count'
+            'github', 'website', 'how_to_get_involved', 'tags', 'subtitle', 'application_required',
+            'application_available', 'listserv_available', 'image_url', 'members', 'favorite_count'
         )
 
 
@@ -284,7 +297,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         Ensure that the user has not already favorited this club.
         """
         if self.context['request'].user.favorite_set.filter(club=value).exists():
-            raise serializers.ValidationError("You have already favorited this club!")
+            raise serializers.ValidationError('You have already favorited this club!')
 
         return value
 
