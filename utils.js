@@ -5,6 +5,9 @@ export function getDefaultClubImageURL() {
 }
 
 function removeEndingSlash(val) {
+  if (typeof val !== 'string') {
+    return val
+  }
   if (val.endsWith('/')) {
     return val.substring(0, val.length - 1)
   }

@@ -11,7 +11,8 @@ class ClubForm extends React.Component {
 
     this.state = {
       currentTab: 'info',
-      club: null
+      club: null,
+      isEdit: typeof this.props.club_id !== 'undefined'
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -25,8 +26,7 @@ class ClubForm extends React.Component {
 
   submit(data) {
     var req = null
-    var isEdit = this.props.club
-    if (isEdit) {
+    if (this.state.isEdit) {
       req = doApiRequest(`/clubs/${this.props.club_id}/?format=json`, {
         method: 'PATCH',
         body: data
@@ -39,7 +39,7 @@ class ClubForm extends React.Component {
     }
     req.then((resp) => {
       if (resp.ok) {
-        if (isEdit) {
+        if (this.state.isEdit) {
           this.notify('Club has been successfully saved.')
         } else {
           resp.json().then((info) => {
@@ -55,23 +55,24 @@ class ClubForm extends React.Component {
   }
 
   componentDidMount() {
-    doApiRequest(`/clubs/${this.props.club_id}/?format=json`)
-      .then((resp) => resp.json())
-      .then((data) => this.setState({
-        club: data, currentTab: window.location.hash.substring(1) || this.state.currentTab
-      }))
+    if (this.state.isEdit) {
+      doApiRequest(`/clubs/${this.props.club_id}/?format=json`)
+        .then((resp) => resp.json())
+        .then((data) => this.setState({
+          club: data, currentTab: window.location.hash.substring(1) || this.state.currentTab
+        }))
+    }
   }
 
   render() {
-    const { club_id, tags } = this.props
+    const { tags } = this.props
     const { club } = this.state
-    const isEdit = club_id !== null
 
-    if (club === null) {
+    if (this.state.isEdit && club === null) {
       return <div>Loading...</div>
     }
 
-    if (isEdit && !club.id) {
+    if (this.state.isEdit && !club.id) {
       return <div className='has-text-centered' style={{ margin: 30 }}>
         <div className='title is-h1'>404 Not Found</div>
       </div>
@@ -86,7 +87,7 @@ class ClubForm extends React.Component {
             name: 'name',
             type: 'text',
             required: true,
-            help: !isEdit && 'Your club URL will be generated from your club name, and cannot be changed upon creation. Your club name can still be changed afterwards.'
+            help: !this.state.isEdit && 'Your club URL will be generated from your club name, and cannot be changed upon creation. Your club name can still be changed afterwards.'
           },
           {
             name: 'subtitle',
@@ -111,6 +112,11 @@ class ClubForm extends React.Component {
             name: 'image_url',
             type: 'url',
             label: 'URL to Club Logo Image'
+          },
+          {
+            name: 'founded',
+            type: 'date',
+            label: 'Date Founded'
           }
         ]
       },
@@ -198,7 +204,7 @@ class ClubForm extends React.Component {
             </tbody>
           </table>
         </div>,
-        disabled: !isEdit
+        disabled: !this.state.isEdit
       },
       {
         name: 'settings',
@@ -218,7 +224,7 @@ class ClubForm extends React.Component {
             </div>
           </div>
         </div>,
-        disabled: !isEdit
+        disabled: !this.state.isEdit
       }
     ]
 

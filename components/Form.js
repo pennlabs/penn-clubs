@@ -66,12 +66,19 @@ class Form extends React.Component {
   getData() {
     const out = {}
     this.getAllFields().forEach((item) => {
-      if (item.type === 'multiselect') {
-        out[item.name] = (this.state['field-' + item.name] || []).map(item.reverser)
-      } else if (item.type === 'checkbox') {
-        out[item.name] = !!this.state['field-' + item.name]
-      } else {
-        out[item.name] = this.state['field-' + item.name]
+      const val = this.state['field-' + item.name]
+      switch (item.type) {
+        case 'multiselect':
+          out[item.name] = (val || []).map(item.reverser)
+          break
+        case 'checkbox':
+          out[item.name] = !!val
+          break
+        case 'date':
+          out[item.name] = val || null
+          break
+        default:
+          out[item.name] = val
       }
     })
     return out
@@ -80,7 +87,7 @@ class Form extends React.Component {
   generateFields(fields) {
     return fields.map((item) => {
       var inpt = null
-      if (['text', 'url', 'email'].includes(item.type)) {
+      if (['text', 'url', 'email', 'date'].includes(item.type)) {
         inpt = <input className='input' disabled={item.readonly} value={this.state['field-' + item.name]} onChange={(e) => this.setState({ ['field-' + item.name]: e.target.value })} key={item.name} type={item.type} name={item.name} />
       } else if (item.type === 'html') {
         inpt = <div>
