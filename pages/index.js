@@ -94,14 +94,22 @@ class Splash extends React.Component {
                   key={tag.label}
                   className="tag is-rounded has-text-white"
                   style={{
-                    backgroundColor: {'Type': CLUBS_BLUE, 'Size': CLUBS_RED, 'Application': CLUBS_YELLOW}[tag.name],
+                    backgroundColor: { Type: CLUBS_BLUE, Size: CLUBS_RED, Application: CLUBS_YELLOW }[tag.name],
                     margin: 3
                   }}>
                   {tag.label}
                   <button className="delete is-small" onClick={(e) => this.updateTag(tag, tag.name)}></button>
                 </span>
               ))}
-              <span onClick={(e) => this.setState({ selectedTags: [] }, this.resetDisplay(this.state.nameInput, this.state.selectedTags))} style={{ color: CLUBS_GREY_LIGHT, textDecoration: 'underline', fontSize: '.7em', margin: 5 }}>Clear All</span>
+              <span
+                onClick={(e) => this.setState({ selectedTags: [] }, this.resetDisplay(this.state.nameInput, this.state.selectedTags))}
+                style={{
+                  cursor: 'pointer',
+                  color: CLUBS_GREY_LIGHT,
+                  textDecoration: 'underline',
+                  fontSize: '.7em',
+                  margin: 5
+                }}>Clear All</span>
             </div>) : ''}
           <ClubDisplay
             displayClubs={displayClubs}

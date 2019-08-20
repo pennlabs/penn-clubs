@@ -11,6 +11,14 @@ export const ROLE_MEMBER = 20
 
 export const EMPTY_DESCRIPTION = '<span style="color:#666">This club has not added a description yet.</span>'
 
+export function getSizeDisplay(size) {
+  if (size === 1) return '0 - 20 Members'
+  else if (size === 2) return '20 - 50 Members'
+  else if (size === 3) return '50 - 100 Members'
+  else if (size === 0) return '100+ Members'
+  else return 'Unknown'
+}
+
 export function doApiRequest(path, data) {
   if (!data) {
     data = {}

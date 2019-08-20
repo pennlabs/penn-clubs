@@ -1,7 +1,7 @@
 import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
-import { getDefaultClubImageURL, doApiRequest, ROLE_OFFICER, EMPTY_DESCRIPTION } from '../utils'
+import { getDefaultClubImageURL, getSizeDisplay, doApiRequest, ROLE_OFFICER, EMPTY_DESCRIPTION } from '../utils'
 import React from 'react'
 import { Link } from '../routes'
 
@@ -11,13 +11,6 @@ class Club extends React.Component {
     this.state = {
 
     }
-  }
-
-  mapSize(size) {
-    if (size === 1) return '0 - 20 Members'
-    else if (size === 2) return '20 - 50 Members'
-    else if (size === 3) return '50 - 100 Members'
-    else return '100+ Members'
   }
 
   render() {
@@ -53,7 +46,7 @@ class Club extends React.Component {
               <div className="column is-6" style={{ backgroundColor: '#f2f2f2', borderRadius: 3, margin: '5px 5px 5px 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <b className="is-size-6 is-size-7-mobile"> Membership: </b>
-                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: '#ccc', color: '#fff', fontSize: '.7rem', margin: 2 }}>{this.mapSize(this.size)} </span>
+                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: '#ccc', color: '#fff', fontSize: '.7rem', margin: 2 }}>{getSizeDisplay(club.size)} </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <b className="is-size-6"> Requires Application: </b>

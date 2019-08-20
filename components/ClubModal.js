@@ -1,6 +1,6 @@
 import React from 'react'
 import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
-import { getDefaultClubImageURL, EMPTY_DESCRIPTION } from '../utils'
+import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../utils'
 import { Link } from '../routes'
 
 class ClubModal extends React.Component {
@@ -8,13 +8,6 @@ class ClubModal extends React.Component {
     super(props)
     this.state = {
     }
-  }
-
-  mapSize(size) {
-    if (size === 1) return '0 - 20 Members'
-    else if (size === 2) return '20 - 50 Members'
-    else if (size === 3) return '50 - 100 Members'
-    else return '100+ Members'
   }
 
   render() {
@@ -43,7 +36,7 @@ class ClubModal extends React.Component {
                 <div style={{ borderRadius: 3, backgroundColor: '#f2f2f2', height: 100, width: 330, padding: 10, display: 'flex', flexDirection: 'column', justifyContent: 'space-around' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <b style={{ color: CLUBS_GREY }} className="is-size-6">Membership:</b>
-                    <span className="tag is-rounded" style={{ margin: 3, color: CLUBS_GREY, backgroundColor: '#ccc', fontSize: '.7em' }}>{this.mapSize(size)}</span>
+                    <span className="tag is-rounded" style={{ margin: 3, color: CLUBS_GREY, backgroundColor: '#ccc', fontSize: '.7em' }}>{getSizeDisplay(size)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <b style={{ color: CLUBS_GREY }} className="is-size-6">Requires Application:</b>  <span className="tag is-rounded" style={{ margin: 3, backgroundColor: '#ccc', fontSize: '.7em' }}>{application_required ? 'Yes' : 'No'}</span>
