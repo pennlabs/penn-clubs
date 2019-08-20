@@ -163,18 +163,6 @@ class ClubSerializer(serializers.ModelSerializer):
             return 'https://www.instagram.com{}'.format(parsed.path if parsed.path.startswith('/') else '/{}/'.format(parsed.path))
         return value
 
-    def validate_website(self, value):
-        """
-        Ensure that the URL looks like a website.
-        """
-        if value:
-            parsed = urlparse(value)
-            scheme = parsed.scheme
-            if scheme not in ['http', 'https']:
-                scheme = 'http'
-            return '{}://{}{}'.format(scheme, parsed.netloc, parsed.path)
-        return value
-
     def validate_linkedin(self, value):
         """
         Ensure that URL is actually a LinkedIn URL. Attempt to convert into correct format with limited information.
