@@ -67,7 +67,7 @@ class Form extends React.Component {
     const out = {}
     this.getAllFields().forEach((item) => {
       if (item.type === 'multiselect') {
-        out[item.name] = this.state['field-' + item.name].map(item.reverser)
+        out[item.name] = (this.state['field-' + item.name] || []).map(item.reverser)
       } else if (item.type === 'checkbox') {
         out[item.name] = !!this.state['field-' + item.name]
       } else {
