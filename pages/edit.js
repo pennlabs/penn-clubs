@@ -118,6 +118,10 @@ class ClubForm extends React.Component {
           {
             name: 'linkedin',
             type: 'url'
+          },
+          {
+            name: 'github',
+            type: 'url'
           }
         ]
       },

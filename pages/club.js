@@ -22,6 +22,14 @@ class Club extends React.Component {
 
   render() {
     const { club } = this.props
+
+    if (!club.id) {
+      return <div className='has-text-centered' style={{ margin: 30 }}>
+        <h1 className='title is-h1'>404 Not Found</h1>
+        <p>The club you are looking for does not exist.</p>
+      </div>
+    }
+
     const inClub = this.props.userInfo && (this.props.userInfo.membership_set.filter((a) => a.id === club.id) || [false])[0]
 
     return (
@@ -76,12 +84,15 @@ class Club extends React.Component {
                       icon: 'fa fa-link'
                     }
                   ].map((item) => <div key={item.name} className="has-text-centered">
-                    <a href={club[item.name] ? (item.prefix || '') + club[item.name] : undefined} style={{ color: club[item.name] ? CLUBS_GREY : '#ccc' }}>
+                    <a href={club[item.name] ? (item.prefix || '') + club[item.name] : undefined} style={{
+                      color: club[item.name] ? CLUBS_GREY : '#ccc',
+                      cursor: club[item.name] ? 'pointer' : 'inherit'
+                    }}>
                       <span className="icon">
                         <i className={'fa-3x ' + item.icon} style={{ height: '100%' }}></i>
                       </span>
+                      <h6>{item.label}</h6>
                     </a>
-                    <h6 style={{ color: club[item.name] ? CLUBS_GREY : '#ccc' }}>{item.label}</h6>
                   </div>)}
                 </div>
               </div>
