@@ -1,5 +1,5 @@
 from rest_framework import filters, viewsets, generics
-from django.db.models import Q, Count
+from django.db.models import Count
 from clubs.models import Club, Event, Tag, Membership, Favorite
 from rest_framework.permissions import IsAuthenticated
 from clubs.permissions import ClubPermission, EventPermission, MemberPermission, IsSuperuser
@@ -16,8 +16,9 @@ class MemberViewSet(viewsets.ModelViewSet):
         return Membership.objects.filter(club=self.kwargs['club_pk'])
 
     def get_serializer_class(self):
-        if self.request is not None and (self.request.user.is_superuser or (self.request.user.is_authenticated and 'club_pk' in self.kwargs and Membership.objects.filter(person=self.request.user, club=self.kwargs['club_pk']).exists())):
-            return AuthenticatedMembershipSerializer
+        if self.request is not None and self.request.user.is_authenticated:
+            if self.request.user.is_superuser or ('club_pk' in self.kwargs and Membership.objects.filter(person=self.request.user, club=self.kwargs['club_pk']).exists()):
+                return AuthenticatedMembershipSerializer
         else:
             return MembershipSerializer
 
