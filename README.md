@@ -6,7 +6,11 @@ The REST API written in Django for Penn Clubs infrastructure.
 
 ## Installation
 
-Running the backend requires Python 3.
+Running the backend requires Python 3. In order to use authentication, set the following environment variables:
+- `OAUTHLIB_INSECURE_TRANSPORT=1`
+- `LABS_REDIRECT_URI=http://localhost:8000/accounts/callback/`
+- `LABS_CLIENT_ID` (from Platform)
+- `LABS_CLIENT_SECRET` (from Platform)
 
 ```bash
 pipenv install

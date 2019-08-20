@@ -3,7 +3,7 @@ from django.db.models import Count
 from clubs.models import Club, Event, Tag, Membership, Favorite
 from rest_framework.permissions import IsAuthenticated
 from clubs.permissions import ClubPermission, EventPermission, MemberPermission, IsSuperuser
-from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer, AuthenticatedMembershipSerializer, EventSerializer, FavoriteSerializer, UserSerializer
+from clubs.serializers import ClubSerializer, TagSerializer, MembershipSerializer, AuthenticatedMembershipSerializer, EventSerializer, FavoriteSerializer, UserSerializer, AuthenticatedClubSerializer
 
 
 class MemberViewSet(viewsets.ModelViewSet):
@@ -31,11 +31,16 @@ class ClubViewSet(viewsets.ModelViewSet):
     Return a list of clubs.
     """
     queryset = Club.objects.all().annotate(favorite_count=Count('favorite')).order_by('name')
-    serializer_class = ClubSerializer
     permission_classes = [ClubPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'subtitle']
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
+
+    def get_serializer_class(self):
+        if self.request is not None and self.request.user.is_authenticated:
+            if self.request.user.is_superuser or ('club_pk' in self.kwargs and Membership.objects.filter(person=self.request.user, club=self.kwargs['club_pk']).exists()):
+                return AuthenticatedClubSerializer
+        return ClubSerializer
 
 
 class TagViewSet(viewsets.ModelViewSet):

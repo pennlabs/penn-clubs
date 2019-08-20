@@ -16,6 +16,9 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class UserMembershipSerializer(serializers.ModelSerializer):
+    """
+    Used for listing which clubs a user is in.
+    """
     id = serializers.SerializerMethodField('get_id')
     name = serializers.SerializerMethodField('get_name')
     role_display = serializers.SerializerMethodField('get_role_display')
@@ -35,6 +38,9 @@ class UserMembershipSerializer(serializers.ModelSerializer):
 
 
 class MembershipSerializer(serializers.ModelSerializer):
+    """
+    Used for listing which users are in a club.
+    """
     name = serializers.SerializerMethodField('get_full_name')
     person = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), write_only=True)
     role = serializers.IntegerField(write_only=True, required=False)
@@ -70,6 +76,10 @@ class MembershipSerializer(serializers.ModelSerializer):
 
 
 class AuthenticatedMembershipSerializer(MembershipSerializer):
+    """
+    Provides additional information about members, such as email address.
+    Should only be available to users in the club.
+    """
     role = serializers.IntegerField(required=False)
     email = serializers.SerializerMethodField('get_email')
     username = serializers.SerializerMethodField('get_username')
@@ -221,6 +231,17 @@ class ClubSerializer(serializers.ModelSerializer):
             'github', 'website', 'how_to_get_involved', 'tags', 'subtitle', 'application_required', 'application_available',
             'listserv_available', 'image_url', 'members', 'favorite_count'
         )
+
+
+class AuthenticatedClubSerializer(ClubSerializer):
+    """
+    Provides additional information about the club to members in the club.
+    """
+    members = AuthenticatedMembershipSerializer(many=True, source='membership_set', read_only=True)
+
+    class Meta:
+        model = ClubSerializer.Meta.model
+        fields = ClubSerializer.Meta.fields
 
 
 class EventSerializer(serializers.ModelSerializer):
