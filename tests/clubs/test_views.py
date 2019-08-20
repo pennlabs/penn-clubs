@@ -326,6 +326,78 @@ class ClubTestCase(TestCase):
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+    def test_club_create_url_sanitize(self):
+        """
+        Test creating clubs with malicious URLs.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        exploit_string = "javascript:alert(1)"
+
+        resp = self.client.post(reverse('clubs-list'), {
+            'name': 'Bad Club',
+            'tags': [],
+            'facebook': exploit_string,
+            'twitter': exploit_string,
+            'instagram': exploit_string,
+            'website': exploit_string,
+            'linkedin': exploit_string,
+            'github': exploit_string
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_club_create_description_sanitize_good(self):
+        """
+        Ensure that descriptions are properly sanitized.
+        """
+        test_good_string = '''<p>Here\'s some <b>bold</b>, <i>italic</i>, <u>underline</u>, and a <a href="http://example.com">link</a>.<br></p>
+<ul>
+    <li>One</li>
+    <li>Two</li>
+    <li>Three</li>
+</ul>
+<ol>
+    <li>One</li>
+    <li>Two</li>
+    <li>Three</li>
+</ol>
+<img src="/test.png">'''
+
+        self.client.login(username=self.user5.username, password='test')
+        resp = self.client.post(reverse('clubs-list'), {
+            'name': 'Penn Labs',
+            'tags': [],
+            'description': test_good_string
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        resp = self.client.get(reverse('clubs-detail', args=('penn-labs',)))
+        self.assertIn(resp.status_code, [200], resp.content)
+
+        data = json.loads(resp.content.decode('utf-8'))
+        self.assertEqual(data['description'], test_good_string)
+
+    def test_club_create_description_sanitize_bad(self):
+        """
+        Ensure that descriptions are properly sanitized.
+        """
+        test_bad_string = '<script>alert(1);</script><img src="javascript:alert(1)">'
+
+        self.client.login(username=self.user5.username, password='test')
+        resp = self.client.post(reverse('clubs-list'), {
+            'name': 'Penn Labs',
+            'tags': [],
+            'description': test_bad_string
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        resp = self.client.get(reverse('clubs-detail', args=('penn-labs',)))
+        self.assertIn(resp.status_code, [200], resp.content)
+
+        data = json.loads(resp.content.decode('utf-8'))
+        self.assertNotIn('<script>', data['description'])
+        self.assertNotIn('javascript:', data['description'])
+
     def test_club_create_no_input(self):
         """
         Passing in no data should result in a bad request.
