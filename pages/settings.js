@@ -100,7 +100,7 @@ class SettingsForm extends React.Component {
                       <a className='button is-success'>Edit</a>
                     </Link>}
                   </td>
-                </tr>)}
+                </tr>) && <tr><td className='has-text-grey' colspan='4'>You are not a member of any clubs yet.</td></tr>}
               </tbody>
             </table>
           }
