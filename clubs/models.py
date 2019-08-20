@@ -17,6 +17,7 @@ class Club(models.Model):
         (SIZE_VERY_LARGE, '101+'),
     )
     id = models.SlugField(max_length=255, primary_key=True)
+    active = models.BooleanField(default=True)
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
     description = models.TextField(blank=True)
@@ -93,10 +94,15 @@ class Membership(models.Model):
         (ROLE_MEMBER, 'Member')
     )
 
+    active = models.BooleanField(default=True)
+
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default='Member')
     role = models.IntegerField(choices=ROLE_CHOICES, default=ROLE_MEMBER)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return '<Membership: {} in {} ({})>'.format(self.person.username, self.club.pk, self.get_role_display())

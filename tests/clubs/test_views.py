@@ -589,3 +589,32 @@ class ClubTestCase(TestCase):
 
         # ensure club was deleted
         self.assertFalse(Club.objects.filter(name='Test Club').exists())
+
+    def test_club_deactivate(self):
+        """
+        Owners should be able to deactivate the club.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        resp = self.client.patch(reverse('clubs-detail', args=('test-club',)), {
+            'active': False
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+
+        # ensure club was deactivated
+        self.assertFalse(Club.objects.get(name='Test Club').active)
+
+    def test_club_deactivate_insufficient_auth(self):
+        """
+        Officers should not be able to deactivate the club.
+        """
+        Membership.objects.create(
+            club=Club.objects.get(pk='test-club'),
+            person=self.user2,
+            role=Membership.ROLE_OFFICER
+        )
+        self.client.login(username=self.user2.username, password='test')
+        resp = self.client.patch(reverse('clubs-detail', args=('test-club',)), {
+            'active': False
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)

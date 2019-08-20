@@ -36,7 +36,7 @@ class UserMembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Membership
-        fields = ('id', 'name', 'title', 'role', 'role_display')
+        fields = ('id', 'name', 'title', 'role', 'role_display', 'active')
 
 
 class MembershipSerializer(serializers.ModelSerializer):
@@ -55,14 +55,15 @@ class MembershipSerializer(serializers.ModelSerializer):
         Ensure that users cannot promote themselves to a higher role.
         Also ensure that owners can't demote themselves without leaving another owner.
         """
+        user = self.context['request'].user
+        mem_user_id = self.instance.person.id if self.instance else self.initial_data['person']
         club_pk = self.context['view'].kwargs.get('club_pk')
-        membership = Membership.objects.filter(person=self.context['request'].user, club=club_pk).first()
+        membership = Membership.objects.filter(person=user, club=club_pk).first()
         if membership is None:
             return value
         if membership.role > value:
             raise serializers.ValidationError('You cannot promote someone above your own level.')
-        if (value > Membership.ROLE_OWNER and
-           self.context['request'].user.username == self.context['view'].kwargs.get('person__username')):
+        if value > Membership.ROLE_OWNER and user.id == mem_user_id:
             if Membership.objects.filter(club=club_pk, role__lte=Membership.ROLE_OWNER).count() <= 1:
                 raise serializers.ValidationError('You cannot demote yourself if you are the only owner!')
         return value
@@ -75,7 +76,7 @@ class MembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Membership
-        fields = ['name', 'title', 'person', 'role']
+        fields = ['name', 'title', 'person', 'role', 'active']
 
 
 class AuthenticatedMembershipSerializer(MembershipSerializer):
@@ -204,6 +205,17 @@ class ClubSerializer(serializers.ModelSerializer):
             )
         return value
 
+    def validate_active(self, value):
+        """
+        Only owners and superusers may change the active status of a club.
+        """
+        user = self.context['request'].user
+        club_pk = self.context['view'].kwargs.get('pk')
+        membership = Membership.objects.filter(person=user, club=club_pk).first()
+        if (membership and membership.role <= Membership.ROLE_OWNER) or user.is_superuser:
+            return value
+        raise serializers.ValidationError('You do not have permissions to change the active status of the club.')
+
     def update(self, instance, validated_data):
         """
         Nested serializers don't support update by default, need to override.
@@ -242,7 +254,7 @@ class ClubSerializer(serializers.ModelSerializer):
         fields = (
             'name', 'id', 'description', 'founded', 'size', 'email', 'facebook', 'twitter', 'instagram', 'linkedin',
             'github', 'website', 'how_to_get_involved', 'tags', 'subtitle', 'application_required',
-            'application_available', 'listserv_available', 'image_url', 'members', 'favorite_count'
+            'application_available', 'listserv_available', 'image_url', 'members', 'favorite_count', 'active'
         )
 
 
