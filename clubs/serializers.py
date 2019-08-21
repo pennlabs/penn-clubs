@@ -21,6 +21,7 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
     id = serializers.CharField(max_length=8, read_only=True)
     email = serializers.EmailField(read_only=True)
     token = serializers.CharField(max_length=128, write_only=True)
+    name = serializers.SerializerMethodField('get_club_name')
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
@@ -37,9 +38,12 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         instance.claim(user)
         return instance
 
+    def get_club_name(self, obj):
+        return obj.club.name
+
     class Meta:
         model = MembershipInvite
-        fields = ['email', 'token', 'id']
+        fields = ['email', 'token', 'id', 'name']
 
 
 class UserMembershipSerializer(serializers.ModelSerializer):
