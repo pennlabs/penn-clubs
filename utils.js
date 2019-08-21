@@ -8,7 +8,7 @@ export function stripTags(val) {
 }
 
 export function getDefaultClubImageURL() {
-  return 'http://static.asiawebdirect.com/m/kl/portals/kuala-lumpur-ws/homepage/magazine/5-clubs/pagePropertiesImage/best-clubs-kuala-lumpur.jpg.jpg'
+  return '/static/img/hatlogo.png'
 }
 
 function removeEndingSlash(val) {
