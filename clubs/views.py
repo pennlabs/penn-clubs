@@ -122,6 +122,10 @@ class MassInviteAPIView(APIView):
         emails = [x.strip() for x in re.split('\n|,', request.POST.get('emails', request.data.get('emails', '')))]
         emails = [x for x in emails if x]
 
+        # remove users that are already in the club
+        exist = Membership.objects.filter(club=club, person__email__in=emails).values_list('person__email', flat=True)
+        emails = list(set(emails) - set(exist))
+
         for email in emails:
             validate_email(email)
 
