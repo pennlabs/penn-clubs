@@ -34,7 +34,7 @@ class Club extends React.Component {
           </h1>
           <span style={{ fontSize: '1.5em' }}>
             {club.favorite_count} <i className={(this.props.favorites.includes(club.id) ? 'fa' : 'far') + ' fa-heart'} style={{ cursor: 'pointer' }} onClick={() => this.props.updateFavorites(club.id) ? club.favorite_count++ : club.favorite_count--}></i>
-            {canEdit && <Link route='club-edit' params={{ club: club.id }}><a className='button is-success' style={{ marginLeft: 15 }}>Edit</a></Link>}
+            {canEdit && <Link route='club-edit' params={{ club: club.id }}><a className='button is-success' style={{ marginLeft: 15 }}>Edit Club</a></Link>}
           </span>
         </div>
         <div style={{ marginBottom: 20 }}>

@@ -4,13 +4,13 @@ import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../colors'
 import { Link, Router } from '../routes'
 import React from 'react'
 import Form from '../components/Form'
+import TabView from '../components/TabView'
 
 class ClubForm extends React.Component {
   constructor(props) {
     super(props)
 
     this.state = {
-      currentTab: 'info',
       club: null,
       invites: [],
       isEdit: typeof this.props.club_id !== 'undefined',
@@ -148,7 +148,7 @@ class ClubForm extends React.Component {
       doApiRequest(`/clubs/${club_id}/?format=json`)
         .then((resp) => resp.json())
         .then((data) => this.setState({
-          club: data, currentTab: window.location.hash.substring(1) || this.state.currentTab
+          club: data
         }))
       doApiRequest(`/clubs/${club_id}/invites/?format=json`)
         .then((resp) => resp.json())
@@ -276,9 +276,6 @@ class ClubForm extends React.Component {
         label: 'Information',
         content: <div>
           <Form fields={fields} defaults={club} onSubmit={this.submit} />
-          {club && <Link route='club-view' params={{ club: club.id }}>
-            <a className='button is-pulled-right is-secondary is-medium'>View Club</a>
-          </Link>}
         </div>
       },
       {
@@ -409,20 +406,15 @@ class ClubForm extends React.Component {
         <h1 className='title is-size-2-desktop is-size-3-mobile'>
           <span style={{ color: CLUBS_GREY_LIGHT }}>{club ? 'Editing' : 'Creating'} Club: </span> {club ? club.name : 'New Club'}
           {(club && club.active) || !this.state.isEdit || <span style={{ color: CLUBS_RED }}>{' '}(Inactive)</span>}
+          {club && <Link route='club-view' params={{ club: club.id }}>
+            <a className='button is-pulled-right is-secondary is-medium' style={{ fontWeight: 'normal' }}>View Club</a>
+          </Link>}
         </h1>
         {this.state.message && <div className="notification is-primary">
           <button className="delete" onClick={() => this.setState({ message: null })}></button>
           {this.state.message}
         </div>}
-        <div className='tabs'>
-          <ul>
-            {tabs.filter((a) => !a.disabled).map((a) => <li className={a.name === this.state.currentTab ? 'is-active' : undefined} key={a.name}><a onClick={() => {
-              this.setState({ currentTab: a.name })
-              window.location.hash = '#' + a.name
-            }}>{a.label}</a></li>)}
-          </ul>
-        </div>
-        {tabs.filter((a) => a.name === this.state.currentTab)[0].content}
+        <TabView tabs={tabs} />
       </div>
     )
   }
