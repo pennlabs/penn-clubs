@@ -32,7 +32,7 @@ export function getSizeDisplay(size) {
   if (size === 1) return '0 - 20 Members'
   else if (size === 2) return '20 - 50 Members'
   else if (size === 3) return '50 - 100 Members'
-  else if (size === 0) return '100+ Members'
+  else if (size === 4) return '100+ Members'
   else return 'Unknown'
 }
 
@@ -48,7 +48,10 @@ export function doApiRequest(path, data) {
   }
   data.credentials = 'include'
   if (typeof document !== 'undefined') {
-    data.headers = Object.assign({ 'Content-Type': 'application/json', 'X-CSRFToken': (/csrftoken=(\w+)/.exec(document.cookie) || [null, null])[1] }, data.headers || {})
+    data.headers = Object.assign({
+      'Content-Type': 'application/json',
+      'X-CSRFToken': (/csrftoken=(\w+)/.exec(document.cookie) || [null, null])[1]
+    }, data.headers || {})
   }
   if (data.body) {
     data.body = JSON.stringify(data.body)
