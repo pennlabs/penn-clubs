@@ -31,7 +31,7 @@ class ClubForm extends React.Component {
   }
 
   toggleClubActive() {
-    doApiRequest(`/clubs/${this.props.club_id}/?format=json`, {
+    doApiRequest(`/clubs/${this.state.club.id}/?format=json`, {
       method: 'PATCH',
       body: {
         active: !this.state.club.active
@@ -50,7 +50,7 @@ class ClubForm extends React.Component {
 
   deleteClub() {
     if (confirm(`Are you absolutely sure you want to delete ${this.state.club.name}?`)) {
-      doApiRequest(`/clubs/${this.props.club_id}/?format=json`, {
+      doApiRequest(`/clubs/${this.state.club.id}/?format=json`, {
         method: 'DELETE'
       }).then((resp) => {
         if (!resp.ok) {
@@ -65,8 +65,26 @@ class ClubForm extends React.Component {
     }
   }
 
+  deleteMembership(member) {
+    if (confirm(`Are you sure you want to kick ${member} from ${this.state.club.name}?`)) {
+      doApiRequest(`/clubs/${this.state.club.id}/members/${member}/?format=json`, {
+        method: 'DELETE'
+      }).then((resp) => {
+        if (resp.ok) {
+          this.notify(`${member} has been kicked out!`)
+          this.componentDidMount()
+        }
+        else {
+          resp.json().then((err) => {
+            this.notify(this.formatError(err))
+          })
+        }
+      })
+    }
+  }
+
   sendInvites() {
-    doApiRequest(`/clubs/${this.props.club_id}/invite/?format=json`, {
+    doApiRequest(`/clubs/${this.state.club.id}/invite/?format=json`, {
       method: 'POST',
       body: {
         emails: this.state.inviteEmails
@@ -79,7 +97,7 @@ class ClubForm extends React.Component {
   submit(data) {
     var req = null
     if (this.state.isEdit) {
-      req = doApiRequest(`/clubs/${this.props.club_id}/?format=json`, {
+      req = doApiRequest(`/clubs/${this.state.club.id}/?format=json`, {
         method: 'PATCH',
         body: data
       })
@@ -111,7 +129,7 @@ class ClubForm extends React.Component {
 
   componentDidMount() {
     if (this.state.isEdit) {
-      doApiRequest(`/clubs/${this.props.club_id}/?format=json`)
+      doApiRequest(`/clubs/${this.state.club !== null && this.state.club.id ? this.state.club.id : this.props.club_id}/?format=json`)
         .then((resp) => resp.json())
         .then((data) => this.setState({
           club: data, currentTab: window.location.hash.substring(1) || this.state.currentTab
@@ -260,7 +278,9 @@ class ClubForm extends React.Component {
                 <td>{a.name}</td>
                 <td>{a.title} ({getRoleDisplay(a.role)})</td>
                 <td>{a.email}</td>
-                <td>None</td>
+                <td>
+                  <button className='button is-small is-danger' onClick={() => this.deleteMembership(a.username)}><i className='fa fa-fw fa-times'></i> Kick</button>
+                </td>
               </tr>) : <tr><td colSpan='4' className='has-text-grey'>There are no members in this club.</td></tr>}
             </tbody>
           </table>
