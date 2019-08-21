@@ -3,7 +3,7 @@ import re
 from django.core.validators import validate_email
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, generics, viewsets
+from rest_framework import filters, generics, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -107,10 +107,17 @@ class MassInviteAPIView(APIView):
     """
     Send out invites and add invite objects given a list of emails.
     """
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         club = get_object_or_404(Club, pk=kwargs['club_pk'])
+
+        mem = Membership.objects.filter(club=club, person=request.user).first()
+
+        if not request.user.is_superuser and (not mem or not mem.role <= Membership.ROLE_OFFICER):
+            return Response({
+                'detail': 'You do not have permission to invite new members!'
+            }, status=status.HTTP_403_FORBIDDEN)
 
         emails = [x.strip() for x in re.split('\n|,', request.POST.get('emails', request.data.get('emails', '')))]
         emails = [x for x in emails if x]
@@ -120,7 +127,9 @@ class MassInviteAPIView(APIView):
 
         num_created = 0
         for email in emails:
-            _, created = MembershipInvite.objects.get_or_create(email=email, club=club)
+            _, created = MembershipInvite.objects.get_or_create(email=email, club=club, defaults={
+                    'creator': request.user
+                })
             if created:
                 num_created += 1
 

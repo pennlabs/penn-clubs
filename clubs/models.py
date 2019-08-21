@@ -122,6 +122,7 @@ class MembershipInvite(models.Model):
     Represents an invitation to a club.
     """
     active = models.BooleanField(default=True)
+    creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     email = models.EmailField()

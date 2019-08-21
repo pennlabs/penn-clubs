@@ -609,7 +609,7 @@ class ClubTestCase(TestCase):
         Officers should not be able to deactivate the club.
         """
         Membership.objects.create(
-            club=Club.objects.get(pk='test-club'),
+            club=self.club1,
             person=self.user2,
             role=Membership.ROLE_OFFICER
         )
@@ -638,3 +638,15 @@ class ClubTestCase(TestCase):
         for token in MembershipInvite.objects.filter(club__pk='test-club').values_list('token', flat=True):
             resp = self.client.get(reverse('club-invites-detail', args=('test-club', token)))
             self.assertIn(resp.status_code, [200, 201], resp.content)
+
+    def test_club_invite_insufficient_auth(self):
+        self.client.login(username=self.user2.username, password='test')
+        Membership.objects.create(
+            person=self.user2,
+            club=self.club1
+        )
+
+        resp = self.client.post(reverse('club-invite', args=('test-club',)), {
+            'emails': 'one@pennlabs.org, two@pennlabs.org, three@pennlabs.org'
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
