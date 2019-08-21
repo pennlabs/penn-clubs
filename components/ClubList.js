@@ -37,6 +37,7 @@ class ClubList extends React.Component {
                 <div className="column is-4" style={{ marginLeft: 20 }}>
                   <b className="is-size-6" style={{ color: CLUBS_GREY }}> {name} </b>
                   <div>
+                    {club.active || <span className='tag is-rounded has-text-white' style={{ backgroundColor: CLUBS_GREY, margin: 2, fontSize: '.7em' }}>Inactive</span>}
                     {tags.map(tag => <span key={tag.id} className="tag is-rounded has-text-white" style={{ backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.7em' }}>{tag.name}</span>)}
                   </div>
                 </div>

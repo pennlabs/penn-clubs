@@ -52,6 +52,7 @@ class ClubCard extends React.Component {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 3px' }}>
                 <b className="is-size-5" style={{ color: CLUBS_GREY }}> {name} </b>
               </div>
+              {club.active || <span className='tag is-rounded has-text-white' style={{ backgroundColor: CLUBS_GREY, margin: 2, fontSize: '.7em' }}>Inactive</span>}
               {tags.map(tag => <span key={tag.id} className="tag is-rounded has-text-white" style={{ backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.7em' }}>{tag.name}</span>)}
               <div className="columns is-desktop is-gapless" style={{ padding: '10px 5px' }}>
                 <div className="column is-narrow">
