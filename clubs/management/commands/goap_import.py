@@ -58,19 +58,23 @@ class Command(BaseCommand):
             else:
                 tag = None
             cid = slugify(name)
-            club, flag = Club.objects.update_or_create(id=cid, name=name, defaults={
-                'id': cid,
-                'name': name,
-                'description': description,
-                'email': contact_email,
-                'image_url': image_url
-            })
+            club, flag = Club.objects.get_or_create(id=cid)
+
+            # only overwrite blank fields
+            if not club.name:
+                club.name = name
+            if not club.description:
+                club.description = description
+            if not club.image_url:
+                club.image_url = image_url
+            if not club.email:
+                club.email = contact_email
 
             # mark newly created clubs as inactive (has no owner)
             if flag:
                 club.active = False
-                club.save()
-            if tag is not None:
+            club.save()
+            if tag is not None and not club.tags.count():
                 club.tags.set([tag])
             self.stdout.write("{} '{}'".format('Created' if flag else 'Updated', name))
 
