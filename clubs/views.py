@@ -1,10 +1,10 @@
 import re
 
+from django.core.validators import validate_email
 from django.db.models import Count
 from django.http.response import JsonResponse
-from django.core.validators import validate_email
-from rest_framework.decorators import api_view
 from rest_framework import filters, generics, viewsets
+from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 
 from clubs.models import Club, Event, Favorite, Membership, Tag

@@ -1,8 +1,8 @@
 from django.urls import path
 from rest_framework_nested import routers
 
-from clubs.views import (ClubViewSet, EventViewSet, FavoriteViewSet, MemberViewSet, TagViewSet,
-                         UserUpdateAPIView, invite_view)
+from clubs.views import (ClubViewSet, EventViewSet, FavoriteViewSet, MemberViewSet,
+                         TagViewSet, UserUpdateAPIView, invite_view)
 
 
 router = routers.SimpleRouter()
