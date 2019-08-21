@@ -106,7 +106,7 @@ class Club extends React.Component {
             <TabView tabs={[
               {
                 name: 'description',
-                content: <div dangerouslySetInnerHTML={{ __html: club.description || EMPTY_DESCRIPTION }} />
+                content: <div style={{ whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: club.description || EMPTY_DESCRIPTION }} />
               },
               {
                 name: 'members',
