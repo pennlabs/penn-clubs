@@ -81,6 +81,7 @@ class SearchBar extends React.Component {
                 type="text"
                 name="search"
                 placeholder="Search"
+                aria-label="Search"
                 style={{
                   borderWidth: 0,
                   outline: 'none',
