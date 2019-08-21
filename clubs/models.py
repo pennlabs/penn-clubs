@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils.crypto import get_random_string
 
 
 class Club(models.Model):
@@ -106,6 +107,31 @@ class Membership(models.Model):
 
     def __str__(self):
         return '<Membership: {} in {} ({})>'.format(self.person.username, self.club.pk, self.get_role_display())
+
+
+def get_token():
+    """
+    Generate a secure token for membership invites.
+    Is a custom function because Django can't serialize lambdas.
+    """
+    return get_random_string(length=128)
+
+
+class MembershipInvite(models.Model):
+    """
+    Represents an invitation to a club.
+    """
+    active = models.BooleanField(default=True)
+
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    email = models.EmailField()
+    token = models.CharField(max_length=128, default=get_token)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return '<MembershipInvite: {} for {}>'.format(self.club.pk, self.email)
 
 
 class Tag(models.Model):

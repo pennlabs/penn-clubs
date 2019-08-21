@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from clubs.models import Club, Event, Favorite, Membership, Tag
+from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
 
 
 class ClubTestCase(TestCase):
@@ -623,7 +623,18 @@ class ClubTestCase(TestCase):
         """
         Incomplete test to test the email invitation feature.
         """
+        self.client.login(username=self.user5.username, password='test')
+
         resp = self.client.post(reverse('club-invite', args=('test-club',)), {
-            'emails': 'contact@pennlabs.org'
+            'emails': 'one@pennlabs.org, two@pennlabs.org, three@pennlabs.org'
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+
+        # ensure membership invite was created
+        self.assertEqual(MembershipInvite.objects.filter(club__pk='test-club').count(), 3, data)
+
+        # ensure we can get all memberships
+        for token in MembershipInvite.objects.filter(club__pk='test-club').values_list('token', flat=True):
+            resp = self.client.get(reverse('club-invites-detail', args=('test-club', token)))
+            self.assertIn(resp.status_code, [200, 201], resp.content)

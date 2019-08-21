@@ -2,15 +2,17 @@ import re
 
 from django.core.validators import validate_email
 from django.db.models import Count
-from django.http.response import JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics, viewsets
-from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from clubs.models import Club, Event, Favorite, Membership, Tag
+from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.permissions import ClubPermission, EventPermission, IsSuperuser, MemberPermission
 from clubs.serializers import (AuthenticatedClubSerializer, AuthenticatedMembershipSerializer, ClubSerializer,
-                               EventSerializer, FavoriteSerializer, MembershipSerializer, TagSerializer, UserSerializer)
+                               EventSerializer, FavoriteSerializer, MembershipInviteSerializer,
+                               MembershipSerializer, TagSerializer, UserSerializer)
 
 
 class ClubViewSet(viewsets.ModelViewSet):
@@ -92,19 +94,38 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-@api_view(['POST'])
-def invite_view(request, pk):
+class MemberInviteAPIView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = MembershipInviteSerializer
+    lookup_field = 'token'
+
+    def get_object(self):
+        return get_object_or_404(MembershipInvite, club__id=self.kwargs['club_pk'], token=self.kwargs['token'])
+
+
+class MassInviteAPIView(APIView):
     """
     Send out invites and add invite objects given a list of emails.
     """
-    emails = [x.strip() for x in re.split('\n|,', request.POST.get('emails', ''))]
-    emails = [x for x in emails if x]
+    permission_classes = []
 
-    for email in emails:
-        validate_email(email)
+    def post(self, request, *args, **kwargs):
+        club = get_object_or_404(Club, pk=kwargs['club_pk'])
 
-    # TODO: implement email invites
+        emails = [x.strip() for x in re.split('\n|,', request.POST.get('emails', request.data.get('emails', '')))]
+        emails = [x for x in emails if x]
 
-    return JsonResponse({
-        'detail': 'Sent invite(s) to {} email(s)!'.format(len(emails))
-    })
+        for email in emails:
+            validate_email(email)
+
+        num_created = 0
+        for email in emails:
+            _, created = MembershipInvite.objects.get_or_create(email=email, club=club)
+            if created:
+                num_created += 1
+
+        # TODO: implement sending emails
+
+        return Response({
+            'detail': 'Sent invite(s) to {} email(s)!'.format(num_created)
+        })

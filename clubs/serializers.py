@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.template.defaultfilters import slugify
 from rest_framework import serializers
 
-from clubs.models import Club, Event, Favorite, Membership, Tag
+from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.utils import clean
 
 
@@ -15,6 +15,14 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'clubs')
+
+
+class MembershipInviteSerializer(serializers.ModelSerializer):
+    token = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = MembershipInvite
+        fields = ['token']
 
 
 class UserMembershipSerializer(serializers.ModelSerializer):

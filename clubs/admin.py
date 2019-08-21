@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.db.models import Exists, OuterRef
 
-from clubs.models import Club, Event, Favorite, Membership, Tag
+from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
 
 
 class ClubAdmin(admin.ModelAdmin):
@@ -48,4 +48,5 @@ admin.site.register(Club, ClubAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(Membership, MembershipAdmin)
+admin.site.register(MembershipInvite)
 admin.site.register(Tag, TagAdmin)
