@@ -1,7 +1,7 @@
 {% extends 'emails/base.html' %}
 
 {% block content %}
-    <p>You have been invited to join <b>{{ name }}</b> on Penn Clubs!</p>
-    <p>Click the button below to join the club. You will need a valid PennKey in order to complete the process.</p>
-    <a style="margin: 15px; padding: 15px; color: white; background-color: green" href="{{ url }}">Join {{ name }}</a>
+    <h2>Join <b>{{ name }}</b> on Penn Clubs</h2>
+    <p>You've been invited by <b>{{ sender.username }}</b> (<i>{{ sender.email }}</i>) to join <b>{{ name }}</b> on Penn Clubs! Click the button below to join the club. You will need a valid PennKey in order to complete the process.</p>
+    <a style="padding: 5px 20px; font-size: 1.2em; margin-top: 20px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ url }}">Join {{ name }}</a>
 {% endblock %}

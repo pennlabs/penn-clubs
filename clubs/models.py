@@ -160,7 +160,7 @@ class MembershipInvite(models.Model):
             club=self.club
         )
 
-    def send_mail(self):
+    def send_mail(self, request):
         """
         Send the email associated with this invitation to the user.
         """
@@ -169,13 +169,14 @@ class MembershipInvite(models.Model):
             'name': self.club.name,
             'id': self.id,
             'club_id': self.club.id,
+            'sender': request.user,
             'url': settings.INVITE_URL.format(id=self.id, token=self.token, club=self.club.id)
         }
         text_content = render_to_string('emails/invite.txt', context)
         html_content = render_to_string('emails/invite.html', context)
 
         msg = EmailMultiAlternatives(
-            'Invite to {}'.format(self.club.name),
+            '{}Invitation to {}'.format(settings.EMAIL_SUBJECT_PREFIX, self.club.name),
             text_content,
             settings.FROM_EMAIL,
             [self.email]
