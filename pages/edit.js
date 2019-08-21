@@ -284,12 +284,30 @@ class ClubForm extends React.Component {
               </tr>) : <tr><td colSpan='4' className='has-text-grey'>There are no members in this club.</td></tr>}
             </tbody>
           </table>
-          <div className='card'>
+          {club && club.invites.length && <div className='card' style={{ marginBottom: 20 }}>
             <div className='card-header'>
-              <p className='card-header-title'>Invite Member(s)</p>
+              <p className='card-header-title'>Pending Invites ({ club.invites.length })</p>
             </div>
             <div className='card-content'>
-              <p>Enter an email address or a list of email addresses separated by commas or newlines in the box below. All emails listed will be sent an invite to join the club. The invite process will go more smoothly if you use Penn email addresses, but normal email addresses will work provided that the recipient has a PennKey account.</p>
+              <table className='table is-fullwidth'>
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {club.invites.map((item) => <tr key={item.email}><td>{item.email}</td><td>None</td></tr>)}
+                </tbody>
+              </table>
+            </div>
+          </div>}
+          <div className='card'>
+            <div className='card-header'>
+              <p className='card-header-title'>Invite Members</p>
+            </div>
+            <div className='card-content'>
+              <p>Enter an email address or a list of email addresses separated by commas or newlines in the box below. All emails listed will be sent an invite to join the club. The invite process will go more smoothly if you use Penn email addresses, but normal email addresses will work provided that the recipient has a PennKey account. We will not send an invite if the account associated with an email is already in the club.</p>
               <br />
               <textarea value={this.state.inviteEmails} onChange={(e) => this.setState({ inviteEmails: e.target.value })} className='textarea' placeholder='Enter email addresses here!'></textarea>
               <br />
@@ -302,6 +320,7 @@ class ClubForm extends React.Component {
       {
         name: 'events',
         label: 'Events',
+        disabled: !this.state.isEdit,
         content: <div>
           Coming Soon!
         </div>
@@ -309,6 +328,7 @@ class ClubForm extends React.Component {
       {
         name: 'qa',
         label: 'Q & A',
+        disabled: !this.state.isEdit,
         content: <div>
           Coming Soon!
         </div>
