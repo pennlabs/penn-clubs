@@ -1,7 +1,7 @@
 import re
 
 from django.core.validators import validate_email
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics, status, viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -22,7 +22,11 @@ class ClubViewSet(viewsets.ModelViewSet):
     list:
     Return a list of clubs.
     """
-    queryset = Club.objects.all().annotate(favorite_count=Count('favorite')).order_by('name')
+    queryset = (Club.objects.all()
+                            .annotate(favorite_count=Count('favorite')).order_by('name')
+                            .prefetch_related(
+                                Prefetch('members', queryset=Membership.objects.order_by('role'))
+                            ))
     permission_classes = [ClubPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'subtitle']
