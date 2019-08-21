@@ -139,3 +139,7 @@ PLATFORM_ACCOUNTS = {
 # Django CORS Settings
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Email Settings
+
+FROM_EMAIL = 'info@pennclubs.com'

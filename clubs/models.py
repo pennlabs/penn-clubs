@@ -1,5 +1,8 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.mail import EmailMultiAlternatives
 from django.db import models
+from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 
 
@@ -135,6 +138,9 @@ class MembershipInvite(models.Model):
         return '<MembershipInvite: {} for {}>'.format(self.club.pk, self.email)
 
     def claim(self, user):
+        """
+        Claim an invitation using a user.
+        """
         self.active = False
         self.save()
 
@@ -142,6 +148,30 @@ class MembershipInvite(models.Model):
             person=user,
             club=self.club
         )
+
+    def send_mail(self):
+        """
+        Send the email associated with this invitation to the user.
+        """
+        context = {
+            'token': self.token,
+            'name': self.club.name,
+            'id': self.club.id
+        }
+        text_content = render_to_string('emails/invite.txt', context)
+        html_content = render_to_string('emails/invite.html', context)
+
+        msg = EmailMultiAlternatives(
+            'Invite to {}'.format(self.club.name),
+            text_content,
+            settings.FROM_EMAIL,
+            [self.email]
+        )
+        msg.attach_alternative(html_content, 'text/html')
+        msg.send(fail_silently=False)
+
+    class Meta:
+        unique_together = (('club', 'email'),)
 
 
 class Tag(models.Model):

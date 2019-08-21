@@ -130,11 +130,8 @@ class MassInviteAPIView(APIView):
         for email in emails:
             validate_email(email)
 
-        MembershipInvite.objects.bulk_create(
-            [MembershipInvite(email=email, club=club, creator=request.user) for email in emails]
-        )
-
-        # TODO: implement sending emails
+        for email in emails:
+            MembershipInvite.objects.create(email=email, club=club, creator=request.user).send_mail()
 
         return Response({
             'detail': 'Sent invite(s) to {} email(s)!'.format(len(emails))

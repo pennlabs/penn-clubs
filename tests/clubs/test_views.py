@@ -2,6 +2,7 @@ import datetime
 import json
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -633,6 +634,7 @@ class ClubTestCase(TestCase):
 
         # ensure membership invite was created
         self.assertEqual(MembershipInvite.objects.filter(club__pk=self.club1.id).count(), 3, data)
+        self.assertEqual(len(mail.outbox), 3, mail.outbox)
 
         # ensure we can get all memberships
         tokens = MembershipInvite.objects.filter(club__pk=self.club1.id).values_list('token', flat=True)

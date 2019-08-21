@@ -1,0 +1,6 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    You have been invited to join <b>{{ name }}</b>!
+    Use the following token to redeem your membership: <b>{{ token }}</b>
+{% endblock %}
