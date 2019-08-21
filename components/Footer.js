@@ -5,10 +5,10 @@ const Footer = () => (
         <p style={{ fontSize: '0.85rem' }}>
             Made with <span className="icon is-small" style={{ color: '#F56F71' }}><i className="fa fa-heart"></i></span> by <a style={{ color: 'inherit' }} href="https://pennlabs.org/">Penn Labs</a>
         </p>
-        <a href="https://github.com/pennlabs/" style={{ marginRight: '1rem' }}>
+        <a href="https://github.com/pennlabs/" style={{ marginRight: '1rem' }} aria-label='GitHub'>
           <span><i className="fab fa-github"></i></span>
         </a>
-        <a href="https://www.facebook.com/labsatpenn/">
+        <a href="https://www.facebook.com/labsatpenn/" aria-label='Facebook'>
           <span><i className="fab fa-facebook-square"></i></span>
         </a>
       </div>
