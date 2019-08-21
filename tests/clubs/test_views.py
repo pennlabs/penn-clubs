@@ -652,6 +652,18 @@ class ClubTestCase(TestCase):
 
         self.assertTrue(Membership.objects.filter(club=self.club1, person=self.user5).exists())
 
+        # ensure invite cannot be reclaimed
+
+        resp = self.client.patch(reverse('club-invites-detail', args=(self.club1.id, ids_and_tokens[0][0])), {
+            'token': ids_and_tokens[0][1]
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403, 404], resp.content)
+
+        # ensure invite can be deleted
+        self.client.login(username=self.user5.username, password='test')
+        resp = self.client.delete(reverse('club-invites-detail', args=(self.club1.id, ids_and_tokens[1][0])))
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+
     def test_club_invite_insufficient_auth(self):
         self.client.login(username=self.user2.username, password='test')
         Membership.objects.create(

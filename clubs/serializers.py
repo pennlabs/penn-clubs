@@ -23,9 +23,6 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
     token = serializers.CharField(max_length=128, write_only=True)
 
     def update(self, instance, validated_data):
-        if not instance.active:
-            raise serializers.ValidationError('This invitation has already been claimed!')
-
         user = self.context['request'].user
 
         if not self.validated_data.get('token') == self.instance.token:
