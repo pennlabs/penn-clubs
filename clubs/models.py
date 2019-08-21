@@ -111,6 +111,9 @@ class Membership(models.Model):
     def __str__(self):
         return '<Membership: {} in {} ({})>'.format(self.person.username, self.club.pk, self.get_role_display())
 
+    class Meta:
+        unique_together = (('club', 'person'),)
+
 
 def get_token():
     """
@@ -179,9 +182,6 @@ class MembershipInvite(models.Model):
         )
         msg.attach_alternative(html_content, 'text/html')
         msg.send(fail_silently=False)
-
-    class Meta:
-        unique_together = (('club', 'email'),)
 
 
 class Tag(models.Model):
