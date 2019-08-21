@@ -59,7 +59,7 @@ class ClubCard extends React.Component {
                   <img style={{ height: 120, width: 180, borderRadius: 3, objectFit: 'contain' }} src={img} />
                 </div>
                 <div className="column">
-                  <p style={{ fontSize: '.8em', paddingLeft: 8, color: CLUBS_GREY_LIGHT }}>{this.shorten(subtitle || stripTags(description))}</p>
+                  <p style={{ paddingLeft: 15, color: CLUBS_GREY_LIGHT }}>{this.shorten(subtitle || stripTags(description) || 'This club has no description.')}</p>
                 </div>
               </div>
             </div>
