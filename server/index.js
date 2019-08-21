@@ -1,10 +1,12 @@
 const PORT = process.env.PORT || 3000
-const dev = process.env.NODE_DEV !== 'production' //true false
+const dev = process.env.NODE_ENV !== 'production'
+
 const path = require('path')
 const express = require('express')
 const { createServer } = require('http')
 const next = require('next')
 const routes = require('../routes')
+
 const nextApp = next({ dev })
 const handler = routes.getRequestHandler(nextApp)
 
