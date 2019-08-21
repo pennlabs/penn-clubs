@@ -18,13 +18,18 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(max_length=8, read_only=True)
     email = serializers.EmailField(read_only=True)
+    token = serializers.CharField(max_length=128, write_only=True)
 
     def update(self, instance, validated_data):
         if not instance.active:
             raise serializers.ValidationError('This invitation has already been claimed!')
 
         user = self.context['request'].user
+
+        if not self.validated_data.get('token') == self.instance.token:
+            raise serializers.ValidationError('Missing or invalid token in request!')
 
         if self.instance.email.endswith('.upenn.edu'):
             invite_username = self.instance.email.rsplit('@', 1)[0]
@@ -37,7 +42,7 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MembershipInvite
-        fields = ['email']
+        fields = ['email', 'token', 'id']
 
 
 class UserMembershipSerializer(serializers.ModelSerializer):

@@ -120,10 +120,18 @@ def get_token():
     return get_random_string(length=128)
 
 
+def get_invite_id():
+    """
+    Generate a secure ID for membership invites.
+    """
+    return get_random_string(length=8)
+
+
 class MembershipInvite(models.Model):
     """
     Represents an invitation to a club.
     """
+    id = models.CharField(max_length=8, primary_key=True, default=get_invite_id)
     active = models.BooleanField(default=True)
     creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
 
@@ -156,7 +164,8 @@ class MembershipInvite(models.Model):
         context = {
             'token': self.token,
             'name': self.club.name,
-            'id': self.club.id
+            'id': self.id,
+            'club_id': self.club.id
         }
         text_content = render_to_string('emails/invite.txt', context)
         html_content = render_to_string('emails/invite.html', context)

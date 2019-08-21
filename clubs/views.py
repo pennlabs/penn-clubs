@@ -98,7 +98,6 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
     permission_classes = [InvitePermission | IsSuperuser]
     serializer_class = MembershipInviteSerializer
     http_method_names = ['get', 'put', 'patch', 'delete']
-    lookup_field = 'token'
 
     def get_queryset(self):
         return MembershipInvite.objects.filter(club=self.kwargs['club_pk'], active=True)
