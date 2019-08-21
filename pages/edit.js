@@ -24,6 +24,28 @@ class ClubForm extends React.Component {
     }, () => window.scrollTo(0, 0))
   }
 
+  formatError(err) {
+    return Object.keys(err).map((a) => <div key={a}><b>{titleize(a)}:</b> {err[a]}</div>)
+  }
+
+  toggleClubActive() {
+    doApiRequest(`/clubs/${this.props.club_id}/?format=json`, {
+      method: 'PATCH',
+      body: {
+        active: !this.state.club.active
+      }
+    }).then((resp) => {
+      if (resp.ok) {
+        this.notify(`Successfully ${this.state.club.active ? 'deactivated' : 'activated'} this club.`)
+        this.componentDidMount()
+      } else {
+        resp.json().then((err) => {
+          this.notify(this.formatError(err))
+        })
+      }
+    })
+  }
+
   submit(data) {
     var req = null
     if (this.state.isEdit) {
@@ -39,16 +61,19 @@ class ClubForm extends React.Component {
     }
     req.then((resp) => {
       if (resp.ok) {
-        if (this.state.isEdit) {
-          this.notify('Club has been successfully saved.')
-        } else {
-          resp.json().then((info) => {
-            Router.pushRoute('club-view', { club: info.id })
+        this.notify('Club has been successfully saved.')
+        resp.json().then((info) => {
+          if (!this.state.isEdit) {
+            Router.replaceRoute('club-edit', { club: info.id }, { shallow: true })
+          }
+          this.setState({
+            isEdit: true,
+            club: info
           })
-        }
+        })
       } else {
         resp.json().then((err) => {
-          this.notify(Object.keys(err).map((a) => <div key={a}><b>{titleize(a)}:</b> {err[a]}</div>))
+          this.notify(this.formatError(err))
         })
       }
     })
@@ -212,14 +237,18 @@ class ClubForm extends React.Component {
         content: <div>
           <div className='card'>
             <div className='card-header'>
-              <p className='card-header-title'>Deactivate Club</p>
+              <p className='card-header-title'>{club && club.active ? 'Deactivate' : 'Reactivate'} Club</p>
             </div>
             <div className='card-content'>
-              <p>Mark an organization as inactive. This will hide the club from various parts of Penn Clubs and indicate to the public that the club is no longer active. Only owners of the organization may do this.</p>
-              <p><b>Coming Soon!</b></p>
+              {club && club.active
+                ? <p>Mark this organization as inactive. This will hide the club from various parts of Penn Clubs and indicate to the public that the club is no longer active.</p>
+                : <p>Reactivate this club, indicating to the public that this club is currently active and running.</p>}
+              <p>Only owners of the organization may perform this action.</p>
               <br />
               <div className='buttons'>
-                <a className='button is-danger is-medium' disabled={true}><i className="fa fa-fw fa-bomb"></i>{' '}Deactivate</a>
+                <a className='button is-danger is-medium' onClick={() => this.toggleClubActive()}>
+                  {club && club.active ? <span><i className="fa fa-fw fa-bomb"></i> Deactivate</span> : <span><i className="fa fa-fw fa-plus"></i> Reactivate</span>}
+                </a>
               </div>
             </div>
           </div>
@@ -230,13 +259,19 @@ class ClubForm extends React.Component {
 
     return (
       <div style={{ padding: '30px 50px' }}>
-        <h1 className='title is-size-2-desktop is-size-3-mobile'><span style={{ color: CLUBS_GREY_LIGHT }}>{club ? 'Editing' : 'Creating'} Club: </span> {club ? club.name : 'New Club'}</h1>
-        {this.state.message && <div className="notification is-primary">{this.state.message}</div>}
+        <h1 className='title is-size-2-desktop is-size-3-mobile'>
+          <span style={{ color: CLUBS_GREY_LIGHT }}>{club ? 'Editing' : 'Creating'} Club: </span> {club ? club.name : 'New Club'}
+          {(club && club.active) || !this.state.isEdit || <span style={{ color: CLUBS_GREY_LIGHT }}>{' '}(Inactive)</span>}
+        </h1>
+        {this.state.message && <div className="notification is-primary">
+          <button className="delete" onClick={() => this.setState({ message: null })}></button>
+          {this.state.message}
+        </div>}
         <div className='tabs'>
           <ul>
             {tabs.filter((a) => !a.disabled).map((a) => <li className={a.name === this.state.currentTab ? 'is-active' : undefined} key={a.name}><a onClick={() => {
               this.setState({ currentTab: a.name })
-              window.location.hash = "#" + a.name
+              window.location.hash = '#' + a.name
             }}>{a.label}</a></li>)}
           </ul>
         </div>
