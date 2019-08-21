@@ -1,4 +1,5 @@
 import React from 'react'
+import { titleize } from '../utils'
 
 class TabView extends React.Component {
   constructor(props) {
@@ -24,7 +25,7 @@ class TabView extends React.Component {
           {tabs.filter((a) => !a.disabled).map((a) => <li className={a.name === this.state.currentTab ? 'is-active' : undefined} key={a.name}><a onClick={() => {
             this.setState({ currentTab: a.name })
             window.location.hash = '#' + a.name
-          }}>{a.label}</a></li>)}
+          }}>{a.label || titleize(a.name)}</a></li>)}
         </ul>
       </div>
       {(tabs.filter((a) => a.name === this.state.currentTab)[0] || { content: <div>Invalid tab selected.</div> }).content}

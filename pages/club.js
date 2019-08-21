@@ -4,17 +4,27 @@ import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
 import { getDefaultClubImageURL, getSizeDisplay, doApiRequest, ROLE_OFFICER, EMPTY_DESCRIPTION } from '../utils'
 import React from 'react'
 import { Link } from '../routes'
+import TabView from '../components/TabView'
 
 class Club extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-
+      club: null
     }
   }
 
+  componentDidMount() {
+    doApiRequest(`/clubs/${this.props.query.club}/?format=json`).then((resp) => resp.json()).then((data) => this.setState({ club: data }))
+  }
+
   render() {
-    const { club, userInfo } = this.props
+    const { club } = this.state
+    const { userInfo } = this.props
+
+    if (!club) {
+      return <div>Loading...</div>
+    }
 
     if (!club.id) {
       return <div className='has-text-centered' style={{ margin: 30 }}>
@@ -93,7 +103,36 @@ class Club extends React.Component {
             </div>
           </div>
           <div className="column is-6">
-            <div dangerouslySetInnerHTML={{ __html: club.description || EMPTY_DESCRIPTION }} />
+            <TabView tabs={[
+              {
+                name: 'description',
+                content: <div dangerouslySetInnerHTML={{ __html: club.description || EMPTY_DESCRIPTION }} />
+              },
+              {
+                name: 'members',
+                content: <div>
+                  {club.members.map((a, i) => <div className='media' key={i}>
+                    <div className="media-left">
+                      <figure className="has-background-light image is-48x48">
+                      </figure>
+                    </div>
+                    <div className='media-content'>
+                      <p className='title is-4'>{a.name || 'No Name'}</p>
+                      <p className='subtitle is-6'>{a.email ? <span><a href={'mailto:' + a.email}>{a.email}</a> ({a.title})</span> : a.title}</p>
+                    </div>
+                  </div>)}
+                </div>
+              },
+              {
+                name: 'events',
+                content: <div>Coming Soon!</div>
+              },
+              {
+                name: 'qa',
+                label: 'Q & A',
+                content: <div>Coming Soon!</div>
+              }
+            ]} />
           </div>
         </div>
       </div>
@@ -103,9 +142,7 @@ class Club extends React.Component {
 
 Club.getInitialProps = async(props) => {
   var { query } = props
-  const clubRequest = await doApiRequest(`/clubs/${query.club}/?format=json`)
-  const clubResponse = await clubRequest.json()
-  return { club: clubResponse }
+  return { query: query }
 }
 
 export default renderPage(Club)
