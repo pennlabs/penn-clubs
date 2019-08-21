@@ -299,8 +299,13 @@ class ClubForm extends React.Component {
                 <td>{a.name}</td>
                 <td>{a.title} ({getRoleDisplay(a.role)})</td>
                 <td>{a.email}</td>
-                <td>
-                  <button className='button is-small is-danger' onClick={() => this.deleteMembership(a.username)}><i className='fa fa-fw fa-times'></i> Kick</button>
+                <td className='buttons'>
+                  <button className='button is-small is-primary'>
+                    <i className='fa fa-fw fa-edit'></i> Edit
+                  </button>
+                  <button className='button is-small is-danger' onClick={() => this.deleteMembership(a.username)}>
+                    <i className='fa fa-fw fa-times'></i> Kick
+                  </button>
                 </td>
               </tr>) : <tr><td colSpan='4' className='has-text-grey'>There are no members in this club.</td></tr>}
             </tbody>
