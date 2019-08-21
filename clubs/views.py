@@ -23,7 +23,7 @@ class ClubViewSet(viewsets.ModelViewSet):
     Return a list of clubs.
     """
     queryset = (Club.objects.all()
-                            .order_by('active')
+                            .order_by('active', 'name')
                             .annotate(favorite_count=Count('favorite')).order_by('name')
                             .prefetch_related(
                                 Prefetch('members', queryset=Membership.objects.order_by('role'))
