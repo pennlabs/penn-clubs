@@ -18,11 +18,11 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
-    token = serializers.CharField(read_only=True)
+    email = serializers.EmailField(read_only=True)
 
     class Meta:
         model = MembershipInvite
-        fields = ['token']
+        fields = ['email']
 
 
 class UserMembershipSerializer(serializers.ModelSerializer):
@@ -261,11 +261,11 @@ class ClubSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Club
-        fields = (
+        fields = [
             'name', 'id', 'description', 'founded', 'size', 'email', 'facebook', 'twitter', 'instagram', 'linkedin',
             'github', 'website', 'how_to_get_involved', 'tags', 'subtitle', 'application_required',
             'application_available', 'listserv_available', 'image_url', 'members', 'favorite_count', 'active'
-        )
+        ]
 
 
 class AuthenticatedClubSerializer(ClubSerializer):
@@ -273,10 +273,11 @@ class AuthenticatedClubSerializer(ClubSerializer):
     Provides additional information about the club to members in the club.
     """
     members = AuthenticatedMembershipSerializer(many=True, source='membership_set', read_only=True)
+    invites = MembershipInviteSerializer(many=True, source='membershipinvite_set', read_only=True)
 
     class Meta:
         model = ClubSerializer.Meta.model
-        fields = ClubSerializer.Meta.fields
+        fields = ClubSerializer.Meta.fields + ['invites']
 
 
 class EventSerializer(serializers.ModelSerializer):
