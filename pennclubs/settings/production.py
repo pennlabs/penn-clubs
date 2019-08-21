@@ -33,6 +33,7 @@ sentry_sdk.init(
 
 # Share cookie with frontend
 SESSION_COOKIE_DOMAIN = ".pennclubs.com"
+CSRF_COOKIE_DOMAIN = ".pennclubs.com"
 
 # Django CORS Settings
 CORS_ORIGIN_REGEX_WHITELIST = [
