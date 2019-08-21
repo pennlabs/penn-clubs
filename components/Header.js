@@ -39,7 +39,7 @@ class Header extends React.Component {
                 pose={this.state.hoverIcon ? 'hovered' : 'idle'}
                 onMouseEnter={() => this.setState({ hoverIcon: true })}
                 onMouseLeave={() => this.setState({ hoverIcon: false })}>
-                <img src="/static/img/peoplelogo.png" style={{ paddingLeft: 15, height: '100%', marginBottom: -5 }}/>
+                <img src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" style={{ paddingLeft: 15, height: '100%', marginBottom: -5 }}/>
               </Pop>
               <h1 className="title is-size-4" style={{ color: '#9B9B9B', paddingLeft: 15 }}>Penn Clubs</h1>
             </a>
