@@ -17,7 +17,7 @@
     "lint": "eslint \"./{pages,components}/**/*.js\"",
     "dev": "node server/index.js",
     "build": "next build && node server/index.js",
-    "start": "next start -p $PORT",
+    "start": "PORT=$PORT node server/index.js",
     "heroku-postbuild": "next build"
   },
   "license": "MIT",
