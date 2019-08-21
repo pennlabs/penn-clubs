@@ -2,6 +2,6 @@
 
 {% block content %}
     <h2>Join <b>{{ name }}</b> on Penn Clubs</h2>
-    <p>You've been invited by <b>{{ sender.username }}</b> (<i>{{ sender.email }}</i>) to join <b>{{ name }}</b> on Penn Clubs! Click the button below to join the club. You will need a valid PennKey in order to complete the process.</p>
-    <a style="padding: 5px 20px; font-size: 1.2em; margin-top: 20px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ url }}">Join {{ name }}</a>
+    <p style="font-size: 1.2em">You've been invited by <b>{{ sender.username }}</b> (<i>{{ sender.email }}</i>) to join <b>{{ name }}</b> on Penn Clubs! Click the button below to join the club. You will need a valid PennKey in order to complete the process.</p>
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 20px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ url }}">Join {{ name }}</a>
 {% endblock %}
