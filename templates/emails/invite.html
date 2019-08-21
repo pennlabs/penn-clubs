@@ -1,6 +1,7 @@
 {% extends 'emails/base.html' %}
 
 {% block content %}
-    You have been invited to join <b>{{ name }}</b>!
-    Use the following token to redeem your membership: <b>{{ token }}</b>
+    <p>You have been invited to join <b>{{ name }}</b> on Penn Clubs!</p>
+    <p>Click the button below to join the club. You will need a valid PennKey in order to complete the process.</p>
+    <a style="margin: 15px; padding: 15px; color: white; background-color: green" href="{% url %}">Join {{ name }}</a>
 {% endblock %}

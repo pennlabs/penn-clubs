@@ -165,7 +165,8 @@ class MembershipInvite(models.Model):
             'token': self.token,
             'name': self.club.name,
             'id': self.id,
-            'club_id': self.club.id
+            'club_id': self.club.id,
+            'url': settings.INVITE_URL.format(id=self.id, token=self.token)
         }
         text_content = render_to_string('emails/invite.txt', context)
         html_content = render_to_string('emails/invite.html', context)

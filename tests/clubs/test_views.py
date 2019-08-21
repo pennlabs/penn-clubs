@@ -637,15 +637,17 @@ class ClubTestCase(TestCase):
         self.assertEqual(len(mail.outbox), 3, mail.outbox)
 
         # ensure we can get all memberships
-        tokens = MembershipInvite.objects.filter(club__pk=self.club1.id).values_list('token', flat=True)
-        for token in tokens:
-            resp = self.client.get(reverse('club-invites-detail', args=(self.club1.id, token)))
+        ids_and_tokens = MembershipInvite.objects.filter(club__pk=self.club1.id).values_list('id', 'token')
+        for id, token in ids_and_tokens:
+            resp = self.client.get(reverse('club-invites-detail', args=(self.club1.id, id)))
             self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure invite can be redeemed
         self.client.login(username=self.user5.username, password='test')
 
-        resp = self.client.patch(reverse('club-invites-detail', args=(self.club1.id, tokens[0])))
+        resp = self.client.patch(reverse('club-invites-detail', args=(self.club1.id, ids_and_tokens[0][0])), {
+            'token': ids_and_tokens[0][1]
+        }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         self.assertTrue(Membership.objects.filter(club=self.club1, person=self.user5).exists())

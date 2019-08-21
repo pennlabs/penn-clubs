@@ -143,3 +143,4 @@ CORS_ALLOW_CREDENTIALS = True
 # Email Settings
 
 FROM_EMAIL = 'info@pennclubs.com'
+INVITE_URL = 'https://pennclubs.com/invite/{id}/{token}'
