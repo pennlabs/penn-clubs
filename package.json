@@ -11,14 +11,14 @@
     "prop-types": "^15.7.2",
     "react": "^16.6.3",
     "react-dom": "^16.6.3",
-    "react-pose": "^4.0.8"
+    "react-pose": "^4.0.8",
+    "react-select": "^3.0.4"
   },
   "scripts": {
     "lint": "eslint \"./{pages,components}/**/*.js\"",
     "dev": "node server/index.js",
-    "build": "next build && node server/index.js",
-    "start": "PORT=$PORT node server/index.js",
-    "heroku-postbuild": "next build"
+    "build": "next build",
+    "start": "node server/index.js"
   },
   "license": "MIT",
   "devDependencies": {

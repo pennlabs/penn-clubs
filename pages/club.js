@@ -36,8 +36,6 @@ class Club extends React.Component {
   render() {
 
     const { club, tags } = this.props
-    console.log("club", club)
-    console.log(club.email);
     return (
       <div>
        <Header />

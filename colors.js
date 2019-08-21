@@ -28,7 +28,7 @@ export const MUSTARD = '#efb717'
 export const ORANGE = '#faa432'
 export const PURPLE = '#834fa0'
 
-//export const CLUBS_PURPLE = "#66C1FF"
+export const CLUBS_PURPLE = "#66C1FF"
 export const CLUBS_PURPLE_LIGHT = "#F2F2F7"
 export const CLUBS_GREY = "#414654"
 export const CLUBS_GREY_LIGHT = "#636773"
