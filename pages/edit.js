@@ -1,6 +1,6 @@
 import renderPage from '../renderPage.js'
 import { doApiRequest, titleize, getRoleDisplay } from '../utils'
-import { CLUBS_GREY_LIGHT } from '../colors'
+import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../colors'
 import { Link, Router } from '../routes'
 import React from 'react'
 import Form from '../components/Form'
@@ -44,6 +44,23 @@ class ClubForm extends React.Component {
         })
       }
     })
+  }
+
+  deleteClub() {
+    if (confirm(`Are you absolutely sure you want to delete ${this.state.club.name}?`)) {
+      doApiRequest(`/clubs/${this.props.club_id}/?format=json`, {
+        method: 'DELETE'
+      }).then((resp) => {
+        if (!resp.ok) {
+          resp.json().then((err) => {
+            this.notify(this.formatError(err))
+          })
+        }
+        else {
+          Router.pushRoute('/')
+        }
+      })
+    }
   }
 
   submit(data) {
@@ -136,7 +153,7 @@ class ClubForm extends React.Component {
           {
             name: 'image_url',
             type: 'url',
-            label: 'URL to Club Logo Image'
+            label: 'Club Logo Image URL'
           },
           {
             name: 'founded',
@@ -235,20 +252,34 @@ class ClubForm extends React.Component {
         name: 'settings',
         label: 'Settings',
         content: <div>
-          <div className='card'>
+          <div className='card' style={{ marginBottom: 20 }}>
             <div className='card-header'>
               <p className='card-header-title'>{club && club.active ? 'Deactivate' : 'Reactivate'} Club</p>
             </div>
             <div className='card-content'>
               {club && club.active
-                ? <p>Mark this organization as inactive. This will hide the club from various parts of Penn Clubs and indicate to the public that the club is no longer active.</p>
+                ? <p>Mark this organization as inactive. This will hide the club from various listings and indicate to the public that the club is no longer active.</p>
                 : <p>Reactivate this club, indicating to the public that this club is currently active and running.</p>}
               <p>Only owners of the organization may perform this action.</p>
               <br />
               <div className='buttons'>
-                <a className='button is-danger is-medium' onClick={() => this.toggleClubActive()}>
+                <a className={'button is-medium ' + (club && club.active ? 'is-danger' : 'is-success')} onClick={() => this.toggleClubActive()}>
                   {club && club.active ? <span><i className="fa fa-fw fa-bomb"></i> Deactivate</span> : <span><i className="fa fa-fw fa-plus"></i> Reactivate</span>}
                 </a>
+              </div>
+            </div>
+          </div>
+          <div className='card'>
+            <div className='card-header'>
+              <p className='card-header-title'>Delete Club</p>
+            </div>
+            <div className='card-content'>
+              <p>Remove this club entry from Penn Clubs. <b className='has-text-danger'>This action is permanant and irreversible!</b> All club history and membership information will be permanantly lost. In almost all cases, you want to deactivate this club instead.</p>
+              <br />
+              <div className='buttons'>
+                {club && !club.active ? <a className='button is-danger is-medium' onClick={() => this.deleteClub()}>
+                  <i className="fa fa-fw fa-bomb"></i> Delete Club
+                </a> : <b>You must deactivate this club before enabling this button.</b>}
               </div>
             </div>
           </div>
@@ -258,10 +289,10 @@ class ClubForm extends React.Component {
     ]
 
     return (
-      <div style={{ padding: '30px 50px' }}>
+      <div style={{ padding: '30px 50px', maxWidth: 1200, margin: '0 auto' }}>
         <h1 className='title is-size-2-desktop is-size-3-mobile'>
           <span style={{ color: CLUBS_GREY_LIGHT }}>{club ? 'Editing' : 'Creating'} Club: </span> {club ? club.name : 'New Club'}
-          {(club && club.active) || !this.state.isEdit || <span style={{ color: CLUBS_GREY_LIGHT }}>{' '}(Inactive)</span>}
+          {(club && club.active) || !this.state.isEdit || <span style={{ color: CLUBS_RED }}>{' '}(Inactive)</span>}
         </h1>
         {this.state.message && <div className="notification is-primary">
           <button className="delete" onClick={() => this.setState({ message: null })}></button>

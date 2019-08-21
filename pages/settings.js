@@ -89,7 +89,7 @@ class SettingsForm extends React.Component {
                 </tr>
               </thead>
               <tbody>
-                {this.props.userInfo && this.props.userInfo.membership_set.map((item) => <tr key={item.id}>
+                {this.props.userInfo && this.props.userInfo.membership_set.length ? this.props.userInfo.membership_set.map((item) => <tr key={item.id}>
                   <td>{item.name}</td>
                   <td>{item.title}</td>
                   <td>{item.role_display}</td>
@@ -101,7 +101,7 @@ class SettingsForm extends React.Component {
                       <a className='button is-success'>Edit</a>
                     </Link>}
                   </td>
-                </tr>) && <tr><td className='has-text-grey' colspan='4'>You are not a member of any clubs yet.</td></tr>}
+                </tr>) : <tr><td className='has-text-grey' colspan='4'>You are not a member of any clubs yet.</td></tr>}
               </tbody>
             </table>
           }

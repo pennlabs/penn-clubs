@@ -14,7 +14,7 @@ class Club extends React.Component {
   }
 
   render() {
-    const { club } = this.props
+    const { club, userInfo } = this.props
 
     if (!club.id) {
       return <div className='has-text-centered' style={{ margin: 30 }}>
@@ -23,7 +23,8 @@ class Club extends React.Component {
       </div>
     }
 
-    const inClub = this.props.userInfo && (this.props.userInfo.membership_set.filter((a) => a.id === club.id) || [false])[0]
+    const inClub = userInfo && (userInfo.membership_set.filter((a) => a.id === club.id) || [false])[0]
+    const canEdit = (inClub && inClub.role <= ROLE_OFFICER) || (userInfo && userInfo.is_superuser)
 
     return (
       <div style={{ padding: '30px 50px' }}>
@@ -33,7 +34,7 @@ class Club extends React.Component {
           </h1>
           <span style={{ fontSize: '1.5em' }}>
             {club.favorite_count} <i className={(this.props.favorites.includes(club.id) ? 'fa' : 'far') + ' fa-heart'} style={{ cursor: 'pointer' }} onClick={() => this.props.updateFavorites(club.id) ? club.favorite_count++ : club.favorite_count--}></i>
-            {inClub && inClub.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: club.id }}><a className='button is-success' style={{ marginLeft: 15 }}>Edit</a></Link>}
+            {canEdit && <Link route='club-edit' params={{ club: club.id }}><a className='button is-success' style={{ marginLeft: 15 }}>Edit</a></Link>}
           </span>
         </div>
         <div style={{ marginBottom: 20 }}>
