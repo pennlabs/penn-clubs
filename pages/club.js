@@ -131,6 +131,10 @@ class Club extends React.Component {
                 name: 'qa',
                 label: 'Q & A',
                 content: <div>Coming Soon!</div>
+              },
+              {
+                name: 'files',
+                content: <div>Coming Soon!</div>
               }
             ]} />
           </div>
