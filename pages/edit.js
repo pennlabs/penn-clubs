@@ -239,14 +239,46 @@ class ClubForm extends React.Component {
                 <th>Name</th>
                 <th>Title (Permissions)</th>
                 <th>Email</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {club && club.members && club.members.map((a) => <tr key={a.username}><td>{a.name}</td><td>{a.title} ({getRoleDisplay(a.role)})</td><td>{a.email}</td></tr>)}
+              {club && club.members.length ? club.members.map((a) => <tr key={a.username}>
+                <td>{a.name}</td>
+                <td>{a.title} ({getRoleDisplay(a.role)})</td>
+                <td>{a.email}</td>
+                <td>None</td>
+              </tr>) : <tr><td colspan='4' className='has-text-grey'>There are no members in this club.</td></tr>}
             </tbody>
           </table>
+          <div className='card'>
+            <div className='card-header'>
+              <p className='card-header-title'>Invite Member(s)</p>
+            </div>
+            <div className='card-content'>
+              <p>Enter an email address or a list of email addresses separated by commas or newlines in the box below. All emails listed will be sent an invite to join the club. The invite process will go more smoothly if you use Penn email addresses, but normal email addresses will work provided that the recipient has a PennKey account.</p>
+              <br />
+              <textarea className='textarea' placeholder='Enter email addresses here!'></textarea>
+              <br />
+              <button className='button is-primary'><i className='fa fa-fw fa-envelope' style={{ marginRight: 5 }}></i> Send Invite(s)</button>
+            </div>
+          </div>
         </div>,
         disabled: !this.state.isEdit
+      },
+      {
+        name: 'events',
+        label: 'Events',
+        content: <div>
+          Coming Soon!
+        </div>
+      },
+      {
+        name: 'qa',
+        label: 'Q & A',
+        content: <div>
+          Coming Soon!
+        </div>
       },
       {
         name: 'settings',
