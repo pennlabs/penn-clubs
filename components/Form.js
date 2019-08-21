@@ -103,7 +103,7 @@ class Form extends React.Component {
             toolbar={{
               options: ['inline', 'fontSize', 'fontFamily', 'list', 'textAlign', 'colorPicker', 'link', 'image', 'remove', 'history']
             }}
-          /> : <div>Loading...</div>}
+          /> : <div />}
         </div>
       } else if (item.type === 'textarea') {
         inpt = <textarea className='textarea' value={this.state['field-' + item.name]} onChange={(e) => this.setState({ ['field-' + item.name]: e.target.value })}></textarea>

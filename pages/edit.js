@@ -163,7 +163,7 @@ class ClubForm extends React.Component {
     const { club, invites } = this.state
 
     if (this.state.isEdit && club === null) {
-      return <div>Loading...</div>
+      return <div />
     }
 
     if (this.state.isEdit && !club.id) {

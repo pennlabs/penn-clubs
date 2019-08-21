@@ -30,7 +30,6 @@ class Header extends React.Component {
           <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css"/>
           <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossOrigin="anonymous" />
           <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossOrigin="anonymous" />
-          <script src="https://unpkg.com/ionicons@4.5.5/dist/ionicons.js" />
         </Head>
         <nav className="navbar" role="navigation" aria-label="main navigation" style={{ height: 70, backgroundColor: '#f9f9f9', borderBottom: '1px solid #fff' }}>
           <div className="navbar-brand">

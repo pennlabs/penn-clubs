@@ -23,7 +23,7 @@ class Club extends React.Component {
     const { userInfo } = this.props
 
     if (!club) {
-      return <div>Loading...</div>
+      return <div />
     }
 
     if (!club.id) {
