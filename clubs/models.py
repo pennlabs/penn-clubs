@@ -155,7 +155,7 @@ class MembershipInvite(models.Model):
         self.active = False
         self.save()
 
-        Membership.objects.create(
+        Membership.objects.get_or_create(
             person=user,
             club=self.club
         )
