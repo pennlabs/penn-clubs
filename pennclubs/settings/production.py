@@ -1,6 +1,7 @@
 import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
 from pennclubs.settings.base import *
+from sentry_sdk.integrations.django import DjangoIntegration
+
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
@@ -32,26 +33,26 @@ sentry_sdk.init(
 )
 
 # Share cookie with frontend
-SESSION_COOKIE_DOMAIN = ".pennclubs.com"
-CSRF_COOKIE_DOMAIN = ".pennclubs.com"
+SESSION_COOKIE_DOMAIN = '.pennclubs.com'
+CSRF_COOKIE_DOMAIN = '.pennclubs.com'
 CSRF_COOKIE_SAMESITE = None
 
 # Django CORS Settings
 CORS_ORIGIN_REGEX_WHITELIST = [
-    r"^https://[\w-]+.pennlabs.org$",
-    r"^https://pennlabs.org$",
-    r"^https://[\w-]+.pennclubs.com$",
-    r"^https://pennclubs.com$",
-    r"^https://[\w-]+.upenn.club$",
-    r"^https://upenn.club$"
+    r'^https://[\w-]+.pennlabs.org$',
+    r'^https://pennlabs.org$',
+    r'^https://[\w-]+.pennclubs.com$',
+    r'^https://pennclubs.com$',
+    r'^https://[\w-]+.upenn.club$',
+    r'^https://upenn.club$'
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    ".pennlabs.org",
-    ".pennclubs.com",
-    "pennclubs.com",
-    ".upenn.club",
-    "upenn.club"
+    '.pennlabs.org',
+    '.pennclubs.com',
+    'pennclubs.com',
+    '.upenn.club',
+    'upenn.club'
 ]
 
 # Email client information
@@ -60,3 +61,9 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv('EMAIL_USERNAME')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
 EMAIL_USE_TLS = True
+
+# Upload file storage
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_ACCESS_SECRET_ID = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
