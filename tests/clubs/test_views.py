@@ -618,3 +618,12 @@ class ClubTestCase(TestCase):
             'active': False
         }, content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_club_invite(self):
+        """
+        Incomplete test to test the email invitation feature.
+        """
+        resp = self.client.post(reverse('club-invite', args=('test-club',)), {
+            'emails': 'contact@pennlabs.org'
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)

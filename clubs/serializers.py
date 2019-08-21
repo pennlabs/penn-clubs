@@ -329,10 +329,11 @@ class UserSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField('get_full_name')
     membership_set = UserMembershipSerializer(many=True, read_only=True)
     favorite_set = FavoriteSerializer(many=True, read_only=True)
+    is_superuser = serializers.BooleanField(read_only=True)
 
     def get_full_name(self, obj):
         return obj.get_full_name()
 
     class Meta:
         model = get_user_model()
-        fields = ('username', 'name', 'email', 'membership_set', 'favorite_set')
+        fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'is_superuser')

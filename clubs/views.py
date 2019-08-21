@@ -1,4 +1,9 @@
+import re
+
 from django.db.models import Count
+from django.http.response import JsonResponse
+from django.core.validators import validate_email
+from rest_framework.decorators import api_view
 from rest_framework import filters, generics, viewsets
 from rest_framework.permissions import IsAuthenticated
 
@@ -85,3 +90,21 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+@api_view(['POST'])
+def invite_view(request, pk):
+    """
+    Send out invites and add invite objects given a list of emails.
+    """
+    emails = [x.strip() for x in re.split('\n|,', request.POST.get('emails', ''))]
+    emails = [x for x in emails if x]
+
+    for email in emails:
+        validate_email(email)
+
+    # TODO: implement email invites
+
+    return JsonResponse({
+        'detail': 'Sent invite(s) to {} email(s)!'.format(len(emails))
+    })
