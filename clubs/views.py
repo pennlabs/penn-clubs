@@ -3,15 +3,15 @@ import re
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, generics, status, viewsets
+from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.permissions import ClubPermission, EventPermission, InvitePermission, IsSuperuser, MemberPermission
-from clubs.serializers import (AuthenticatedClubSerializer, AuthenticatedMembershipSerializer, ClubSerializer,
-                               EventSerializer, FavoriteSerializer, MembershipInviteSerializer,
+from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
+                               ClubSerializer, EventSerializer, FavoriteSerializer, MembershipInviteSerializer,
                                MembershipSerializer, TagSerializer, UserSerializer)
 
 
@@ -79,6 +79,20 @@ class MemberViewSet(viewsets.ModelViewSet):
                 return AuthenticatedMembershipSerializer
         else:
             return MembershipSerializer
+
+
+class AssetViewSet(viewsets.ModelViewSet):
+    serializer_class = AssetSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [parsers.MultiPartParser]
+    http_method_names = ['get', 'post', 'delete']
+
+    def get_queryset(self):
+        return Asset.objects.filter(creator=self.request.user)
+
+    def perform_create(self, serializer):
+        name = self.request.FILES.get('file').name
+        serializer.save(name=name, creator=self.request.user)
 
 
 class TagViewSet(viewsets.ModelViewSet):

@@ -145,3 +145,8 @@ CORS_ALLOW_CREDENTIALS = True
 FROM_EMAIL = 'Penn Clubs <info@pennclubs.com>'
 EMAIL_SUBJECT_PREFIX = '[Penn Clubs] '
 INVITE_URL = 'https://pennclubs.com/invite/{club}/{id}/{token}'
+
+# File upload settings
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')

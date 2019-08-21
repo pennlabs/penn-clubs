@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.template.defaultfilters import slugify
 from rest_framework import serializers
 
-from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.utils import clean
 
 
@@ -136,6 +136,12 @@ class ClubSerializer(serializers.ModelSerializer):
     subtitle = serializers.CharField(required=False)
     members = MembershipSerializer(many=True, source='membership_set', read_only=True)
     favorite_count = serializers.IntegerField(read_only=True)
+    image_url = serializers.SerializerMethodField('get_image_url')
+
+    def get_image_url(self, obj):
+        if not obj.image:
+            return None
+        return obj.image.url
 
     def create(self, validated_data):
         """
@@ -303,6 +309,12 @@ class AuthenticatedClubSerializer(ClubSerializer):
 class EventSerializer(serializers.ModelSerializer):
     id = serializers.SlugField(required=False)
     club = serializers.PrimaryKeyRelatedField(queryset=Club.objects.all(), required=False)
+    image_url = serializers.SerializerMethodField('get_image_url')
+
+    def get_image_url(self, obj):
+        if not obj.image:
+            return None
+        return obj.image.url
 
     class Meta:
         model = Event
@@ -366,3 +378,18 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'is_superuser')
+
+
+class AssetSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True)
+    file_url = serializers.SerializerMethodField('get_file_url')
+    file = serializers.FileField(write_only=True)
+
+    def get_file_url(self, obj):
+        if not obj.file:
+            return None
+        return obj.file.url
+
+    class Meta:
+        model = Asset
+        fields = ('id', 'name', 'file_url', 'file')
