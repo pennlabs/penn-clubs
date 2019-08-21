@@ -32,11 +32,12 @@ sentry_sdk.init(
 )
 
 # Django CORS Settings
-CORS_ORIGIN_WHITELIST = [
-    "https://pennlabs.org",
-    "https://www.pennlabs.org",
-    "https://pennclubs.com",
-    "https://www.pennclubs.com",
-    "https://upenn.club",
-    "https://www.upenn.club"
+CORS_ORIGIN_REGEX_WHITELIST = [
+    r"^https://[\w-]+.pennlabs.org$",
+    r"^https://pennlabs.org$",
+    r"^https://[\w-]+.pennclubs.com$",
+    r"^https://pennclubs.com$",
+    r"^https://[\w-]+.upenn.club$",
+    r"^https://upenn.club$",
+    r"^https://[\w-]+.apps.pennlabs.org$"
 ]
