@@ -12,6 +12,7 @@ class ClubForm extends React.Component {
     this.state = {
       currentTab: 'info',
       club: null,
+      invites: [],
       isEdit: typeof this.props.club_id !== 'undefined',
       inviteEmails: ''
     }
@@ -57,8 +58,7 @@ class ClubForm extends React.Component {
           resp.json().then((err) => {
             this.notify(this.formatError(err))
           })
-        }
-        else {
+        } else {
           Router.pushRoute('/')
         }
       })
@@ -73,8 +73,7 @@ class ClubForm extends React.Component {
         if (resp.ok) {
           this.notify(`${member} has been kicked out!`)
           this.componentDidMount()
-        }
-        else {
+        } else {
           resp.json().then((err) => {
             this.notify(this.formatError(err))
           })
@@ -129,17 +128,23 @@ class ClubForm extends React.Component {
 
   componentDidMount() {
     if (this.state.isEdit) {
-      doApiRequest(`/clubs/${this.state.club !== null && this.state.club.id ? this.state.club.id : this.props.club_id}/?format=json`)
+      const club_id = this.state.club !== null && this.state.club.id ? this.state.club.id : this.props.club_id
+      doApiRequest(`/clubs/${club_id}/?format=json`)
         .then((resp) => resp.json())
         .then((data) => this.setState({
           club: data, currentTab: window.location.hash.substring(1) || this.state.currentTab
+        }))
+      doApiRequest(`/clubs/${club_id}/invites/?format=json`)
+        .then((resp) => resp.json())
+        .then((data) => this.setState({
+          invites: data
         }))
     }
   }
 
   render() {
     const { tags } = this.props
-    const { club } = this.state
+    const { club, invites } = this.state
 
     if (this.state.isEdit && club === null) {
       return <div>Loading...</div>
@@ -284,9 +289,9 @@ class ClubForm extends React.Component {
               </tr>) : <tr><td colSpan='4' className='has-text-grey'>There are no members in this club.</td></tr>}
             </tbody>
           </table>
-          {club && club.invites.length && <div className='card' style={{ marginBottom: 20 }}>
+          {invites && !!invites.length && <div className='card' style={{ marginBottom: 20 }}>
             <div className='card-header'>
-              <p className='card-header-title'>Pending Invites ({ club.invites.length })</p>
+              <p className='card-header-title'>Pending Invites ({ invites.length })</p>
             </div>
             <div className='card-content'>
               <table className='table is-fullwidth'>
@@ -297,7 +302,7 @@ class ClubForm extends React.Component {
                   </tr>
                 </thead>
                 <tbody>
-                  {club.invites.map((item) => <tr key={item.email}><td>{item.email}</td><td>None</td></tr>)}
+                  {invites.map((item) => <tr key={item.email}><td>{item.email}</td><td>None</td></tr>)}
                 </tbody>
               </table>
             </div>
