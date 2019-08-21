@@ -92,3 +92,21 @@ class MemberPermission(permissions.BasePermission):
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
             return True
+
+
+class InvitePermission(permissions.BasePermission):
+    """
+    Officers and higher can list/delete invitations.
+    Anyone authenticated can redeem invitations.
+    """
+
+    def has_permission(self, request, view):
+        if view.action in ['retrieve', 'update', 'partial_update']:
+            return request.user.is_authenticated
+        else:
+            if not request.user.is_authenticated:
+                return False
+            if 'club_pk' not in view.kwargs:
+                return False
+            membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
+            return membership is not None and membership.role <= Membership.ROLE_OFFICER

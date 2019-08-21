@@ -20,6 +20,21 @@ class TagSerializer(serializers.ModelSerializer):
 class MembershipInviteSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(read_only=True)
 
+    def update(self, instance, validated_data):
+        if not instance.active:
+            raise serializers.ValidationError('This invitation has already been claimed!')
+
+        user = self.context['request'].user
+
+        if self.instance.email.endswith('.upenn.edu'):
+            invite_username = self.instance.email.rsplit('@', 1)[0]
+            if not invite_username.lower() == user.username.lower():
+                raise serializers.ValidationError('This invitation was meant for "{}", but you are logged in as "{}"!'
+                                                  .format(invite_username, user.username))
+
+        instance.claim(user)
+        return instance
+
     class Meta:
         model = MembershipInvite
         fields = ['email']
@@ -273,11 +288,10 @@ class AuthenticatedClubSerializer(ClubSerializer):
     Provides additional information about the club to members in the club.
     """
     members = AuthenticatedMembershipSerializer(many=True, source='membership_set', read_only=True)
-    invites = MembershipInviteSerializer(many=True, source='membershipinvite_set', read_only=True)
 
     class Meta:
         model = ClubSerializer.Meta.model
-        fields = ClubSerializer.Meta.fields + ['invites']
+        fields = ClubSerializer.Meta.fields
 
 
 class EventSerializer(serializers.ModelSerializer):

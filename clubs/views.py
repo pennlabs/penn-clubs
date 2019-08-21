@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
-from clubs.permissions import ClubPermission, EventPermission, IsSuperuser, MemberPermission
+from clubs.permissions import ClubPermission, EventPermission, InvitePermission, IsSuperuser, MemberPermission
 from clubs.serializers import (AuthenticatedClubSerializer, AuthenticatedMembershipSerializer, ClubSerializer,
                                EventSerializer, FavoriteSerializer, MembershipInviteSerializer,
                                MembershipSerializer, TagSerializer, UserSerializer)
@@ -94,13 +94,14 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-class MemberInviteAPIView(generics.RetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated]
+class MemberInviteViewSet(viewsets.ModelViewSet):
+    permission_classes = [InvitePermission | IsSuperuser]
     serializer_class = MembershipInviteSerializer
+    http_method_names = ['get', 'put', 'patch', 'delete']
     lookup_field = 'token'
 
-    def get_object(self):
-        return get_object_or_404(MembershipInvite, club__id=self.kwargs['club_pk'], token=self.kwargs['token'])
+    def get_queryset(self):
+        return MembershipInvite.objects.filter(club=self.kwargs['club_pk'], active=True)
 
 
 class MassInviteAPIView(APIView):
@@ -129,16 +130,12 @@ class MassInviteAPIView(APIView):
         for email in emails:
             validate_email(email)
 
-        num_created = 0
-        for email in emails:
-            _, created = MembershipInvite.objects.get_or_create(email=email, club=club, defaults={
-                    'creator': request.user
-                })
-            if created:
-                num_created += 1
+        MembershipInvite.objects.bulk_create(
+            [MembershipInvite(email=email, club=club, creator=request.user) for email in emails]
+        )
 
         # TODO: implement sending emails
 
         return Response({
-            'detail': 'Sent invite(s) to {} email(s)!'.format(num_created)
+            'detail': 'Sent invite(s) to {} email(s)!'.format(len(emails))
         })

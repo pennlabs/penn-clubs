@@ -134,6 +134,15 @@ class MembershipInvite(models.Model):
     def __str__(self):
         return '<MembershipInvite: {} for {}>'.format(self.club.pk, self.email)
 
+    def claim(self, user):
+        self.active = False
+        self.save()
+
+        Membership.objects.create(
+            person=user,
+            club=self.club
+        )
+
 
 class Tag(models.Model):
     """
