@@ -31,8 +31,8 @@ sentry_sdk.init(
     integrations=[DjangoIntegration()]
 )
 
-#Share cookie with frontend
-SESSION_COOKIE_DOMAIN=".pennclubs.com"
+# Share cookie with frontend
+SESSION_COOKIE_DOMAIN = ".pennclubs.com"
 
 # Django CORS Settings
 CORS_ORIGIN_REGEX_WHITELIST = [
@@ -41,6 +41,13 @@ CORS_ORIGIN_REGEX_WHITELIST = [
     r"^https://[\w-]+.pennclubs.com$",
     r"^https://pennclubs.com$",
     r"^https://[\w-]+.upenn.club$",
-    r"^https://upenn.club$",
-    r"^https://[\w-]+.apps.pennlabs.org$"
+    r"^https://upenn.club$"
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    ".pennlabs.org",
+    ".pennclubs.com",
+    "pennclubs.com",
+    ".upenn.club",
+    "upenn.club"
 ]
