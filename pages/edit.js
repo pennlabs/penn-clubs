@@ -12,10 +12,12 @@ class ClubForm extends React.Component {
     this.state = {
       currentTab: 'info',
       club: null,
-      isEdit: typeof this.props.club_id !== 'undefined'
+      isEdit: typeof this.props.club_id !== 'undefined',
+      inviteEmails: ''
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
+    this.sendInvites = this.sendInvites.bind(this)
   }
 
   notify(msg) {
@@ -61,6 +63,17 @@ class ClubForm extends React.Component {
         }
       })
     }
+  }
+
+  sendInvites() {
+    doApiRequest(`/clubs/${this.props.club_id}/invite/?format=json`, {
+      method: 'POST',
+      body: {
+        emails: this.state.inviteEmails
+      }
+    }).then((resp) => resp.json()).then((data) => {
+      this.notify(this.formatError(data))
+    })
   }
 
   submit(data) {
@@ -248,7 +261,7 @@ class ClubForm extends React.Component {
                 <td>{a.title} ({getRoleDisplay(a.role)})</td>
                 <td>{a.email}</td>
                 <td>None</td>
-              </tr>) : <tr><td colspan='4' className='has-text-grey'>There are no members in this club.</td></tr>}
+              </tr>) : <tr><td colSpan='4' className='has-text-grey'>There are no members in this club.</td></tr>}
             </tbody>
           </table>
           <div className='card'>
@@ -258,9 +271,9 @@ class ClubForm extends React.Component {
             <div className='card-content'>
               <p>Enter an email address or a list of email addresses separated by commas or newlines in the box below. All emails listed will be sent an invite to join the club. The invite process will go more smoothly if you use Penn email addresses, but normal email addresses will work provided that the recipient has a PennKey account.</p>
               <br />
-              <textarea className='textarea' placeholder='Enter email addresses here!'></textarea>
+              <textarea value={this.state.inviteEmails} onChange={(e) => this.setState({ inviteEmails: e.target.value })} className='textarea' placeholder='Enter email addresses here!'></textarea>
               <br />
-              <button className='button is-primary'><i className='fa fa-fw fa-envelope' style={{ marginRight: 5 }}></i> Send Invite(s)</button>
+              <button className='button is-primary' onClick={this.sendInvites}><i className='fa fa-fw fa-envelope' style={{ marginRight: 5 }}></i> Send Invite(s)</button>
             </div>
           </div>
         </div>,
