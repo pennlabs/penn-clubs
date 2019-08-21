@@ -65,6 +65,11 @@ class Command(BaseCommand):
                 'email': contact_email,
                 'image_url': image_url
             })
+
+            # mark newly created clubs as inactive (has no owner)
+            if flag:
+                club.active = False
+                club.save()
             if tag is not None:
                 club.tags.set([tag])
             self.stdout.write("{} '{}'".format('Created' if flag else 'Updated', name))
