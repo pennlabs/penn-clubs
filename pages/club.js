@@ -40,7 +40,7 @@ class Club extends React.Component {
       <div style={{ padding: '30px 50px' }}>
         <div className="is-flex" style={{ justifyContent: 'space-between', flexDirection: 'row', alignItems: 'center', paddingRight: 10 }}>
           <h1 className='title is-size-1-desktop is-size-3-mobile' style={{ color: CLUBS_GREY, marginBottom: 10 }} >
-            {club.name}
+            {club.name} {club.active || <span className='has-text-grey'>(Inactive)</span>}
           </h1>
           <span style={{ fontSize: '1.5em' }}>
             {club.favorite_count} <i className={(this.props.favorites.includes(club.id) ? 'fa' : 'far') + ' fa-heart'} style={{ cursor: 'pointer' }} onClick={() => this.props.updateFavorites(club.id) ? club.favorite_count++ : club.favorite_count--}></i>
@@ -111,7 +111,7 @@ class Club extends React.Component {
               {
                 name: 'members',
                 content: <div>
-                  {club.members.map((a, i) => <div className='media' key={i}>
+                  {club.members.length ? club.members.map((a, i) => <div className='media' key={i}>
                     <div className="media-left">
                       <figure className="has-background-light image is-48x48">
                       </figure>
@@ -120,7 +120,7 @@ class Club extends React.Component {
                       <p className='title is-4'>{a.name || 'No Name'}</p>
                       <p className='subtitle is-6'>{a.email ? <span><a href={'mailto:' + a.email}>{a.email}</a> ({a.title})</span> : a.title}</p>
                     </div>
-                  </div>)}
+                  </div>) : <p>There are no members in this club.</p>}
                 </div>
               },
               {
