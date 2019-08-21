@@ -50,9 +50,11 @@ class Invite extends React.Component {
 
     return (
       <div style={{ padding: '30px 50px' }} className='has-text-centered'>
-        <h1 className='title is-h1'>Accept Invitation</h1>
-        <p><b>{invite.name}</b> has invited you, <b>{invite.email}</b>, to join their club.</p>
-        <button className='button is-large is-success' onClick={this.accept}>Accept</button>
+        <h1 className='title is-1'>Accept Invitation</h1>
+        <div className='title is-4' style={{ fontWeight: 'normal' }}><b>{invite.name}</b> has invited you, <b>{invite.email}</b>, to join their club.</div>
+        <p>By accepting this invitation, you will be able to view the contact information of other members and internal club documents.</p>
+        <br /><br />
+        <button className='button is-large is-success' onClick={this.accept}>Accept Invitation</button>
       </div>
     )
   }
