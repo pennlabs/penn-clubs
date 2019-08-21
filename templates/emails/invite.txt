@@ -1,0 +1,6 @@
+{% extends 'emails/base.txt' %}
+
+{% block content %}
+You have been invited to join {{ name }}!
+Go to {{ url }} to join the club. You will need a valid PennKey to complete the process.
+{% endblock %}

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
     'accounts.apps.AccountsConfig',
     'clubs'
 ]
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -58,7 +60,7 @@ ROOT_URLCONF = 'pennclubs.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -130,6 +132,15 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 # Labs Accounts Settings
 
 PLATFORM_ACCOUNTS = {
-    'REDIRECT_URI': 'https://clubs.pennlabs.org/accounts/callback/',
+    'REDIRECT_URI': os.environ.get('LABS_REDIRECT_URI', 'https://clubs.pennlabs.org/accounts/callback/'),
     'ADMIN_PERMISSION': 'clubs_admin'
 }
+
+# Django CORS Settings
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Email Settings
+
+FROM_EMAIL = 'info@pennclubs.com'
+INVITE_URL = 'https://pennclubs.com/invite/{club}/{id}/{token}'

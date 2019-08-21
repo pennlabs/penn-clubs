@@ -22,7 +22,7 @@ DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Allow production host headers
-ALLOWED_HOSTS = ['clubs.pennlabs.org', 'clubs-backend.apps.pennlabs.org']
+ALLOWED_HOSTS = ['clubs.pennlabs.org', 'clubs-backend.apps.pennlabs.org', 'api.pennclubs.com']
 
 SENTRY_URL = os.environ.get('SENTRY_URL', '')
 
@@ -30,3 +30,13 @@ sentry_sdk.init(
     dsn=SENTRY_URL,
     integrations=[DjangoIntegration()]
 )
+
+# Django CORS Settings
+CORS_ORIGIN_WHITELIST = [
+    "https://pennlabs.org",
+    "https://www.pennlabs.org",
+    "https://pennclubs.com",
+    "https://www.pennclubs.com",
+    "https://upenn.club",
+    "https://www.upenn.club"
+]

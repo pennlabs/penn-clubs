@@ -1,0 +1,10 @@
+{% extends "rest_framework/base.html" %}
+{% load i18n %}
+
+{% block title %}{% if name %}{{ name }} – {% endif %}Penn Clubs API{% endblock %}
+
+{% block branding %}
+<a class="navbar-brand" rel="nofollow" href="{% url 'homepage' %}">
+    {% trans 'Penn Clubs REST API' %}
+</a>
+{% endblock %}

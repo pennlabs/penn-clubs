@@ -1,7 +1,10 @@
 import datetime
+
 import pytz
+from django.contrib.auth import get_user_model
 from django.test import TestCase
-from clubs.models import Club, Event, Tag
+
+from clubs.models import Club, Event, Favorite, Membership, Tag
 
 
 class ClubTestCase(TestCase):
@@ -23,9 +26,31 @@ class EventTestCase(TestCase):
         self.assertEqual(str(self.event), self.event.name)
 
 
+class FavoriteTestCase(TestCase):
+    def setUp(self):
+        date = pytz.timezone('America/New_York').localize(datetime.datetime(2019, 1, 1))
+        self.person = get_user_model().objects.create_user('test', 'test@example.com', 'test')
+        self.club = Club.objects.create(id='a', name='a', subtitle='a', founded=date, description='a', size=1)
+        self.favorite = Favorite.objects.create(club=self.club, person=self.person)
+
+    def test_str(self):
+        self.assertTrue(str(self.favorite))
+
+
+class MembershipTestCase(TestCase):
+    def setUp(self):
+        date = pytz.timezone('America/New_York').localize(datetime.datetime(2019, 1, 1))
+        self.person = get_user_model().objects.create_user('test', 'test@example.com', 'test')
+        self.club = Club.objects.create(id='a', name='a', subtitle='a', founded=date, description='a', size=1)
+        self.membership = Membership.objects.create(club=self.club, person=self.person)
+
+    def test_str(self):
+        self.assertTrue(str(self.membership))
+
+
 class TagTestCase(TestCase):
     def setUp(self):
-        self.tag = Tag.objects.create(name="super interesting tag")
+        self.tag = Tag.objects.create(name='super interesting tag')
 
     def test_str(self):
         self.assertEqual(str(self.tag), self.tag.name)
