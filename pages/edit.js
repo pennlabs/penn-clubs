@@ -82,6 +82,21 @@ class ClubForm extends React.Component {
     }
   }
 
+  deleteInvite(id) {
+    doApiRequest(`/clubs/${this.state.club.id}/invites/${id}/?format=json`, {
+      method: 'DELETE'
+    }).then((resp) => {
+      if (resp.ok) {
+        this.notify('Invitation has been removed!')
+        this.componentDidMount()
+      } else {
+        resp.json().then((err) => {
+          this.notify(this.formatError(err))
+        })
+      }
+    })
+  }
+
   sendInvites() {
     doApiRequest(`/clubs/${this.state.club.id}/invite/?format=json`, {
       method: 'POST',
@@ -90,6 +105,7 @@ class ClubForm extends React.Component {
       }
     }).then((resp) => resp.json()).then((data) => {
       this.notify(this.formatError(data))
+      this.componentDidMount()
     })
   }
 
@@ -302,7 +318,12 @@ class ClubForm extends React.Component {
                   </tr>
                 </thead>
                 <tbody>
-                  {invites.map((item) => <tr key={item.email}><td>{item.email}</td><td>None</td></tr>)}
+                  {invites.map((item) => <tr key={item.email}>
+                    <td>{item.email}</td>
+                    <td>
+                      <button className='button is-small is-danger' onClick={() => this.deleteInvite(item.id)}><i className='fa fa-fw fa-times'></i> Remove</button>
+                    </td>
+                  </tr>)}
                 </tbody>
               </table>
             </div>
