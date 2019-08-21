@@ -1,7 +1,7 @@
 import React from 'react'
 import posed from 'react-pose'
 import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
-import { getDefaultClubImageURL } from '../utils'
+import { getDefaultClubImageURL, stripTags } from '../utils'
 import TagGroup from './TagGroup'
 
 const Pop = posed.div({
@@ -59,7 +59,7 @@ class ClubCard extends React.Component {
                   <img style={{ height: 120, width: 180, borderRadius: 3, objectFit: 'contain' }} src={img} />
                 </div>
                 <div className="column">
-                  <p style={{ fontSize: '.8em', paddingLeft: 8, color: CLUBS_GREY_LIGHT }}>{this.shorten(subtitle)}</p>
+                  <p style={{ fontSize: '.8em', paddingLeft: 8, color: CLUBS_GREY_LIGHT }}>{this.shorten(subtitle || stripTags(description))}</p>
                 </div>
               </div>
             </div>

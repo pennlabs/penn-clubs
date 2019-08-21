@@ -1,5 +1,12 @@
 import getConfig from 'next/config'
 
+export function stripTags(val) {
+  if (!val) {
+    return val
+  }
+  return val.replace(/(<[^>]+>)/ig, '').trim()
+}
+
 export function getDefaultClubImageURL() {
   return 'http://static.asiawebdirect.com/m/kl/portals/kuala-lumpur-ws/homepage/magazine/5-clubs/pagePropertiesImage/best-clubs-kuala-lumpur.jpg.jpg'
 }
