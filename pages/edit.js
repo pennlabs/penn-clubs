@@ -13,15 +13,15 @@ class ClubForm extends React.Component {
 
     this.roles = [
       {
-        value: 30,
+        value: 20,
         label: 'Member'
       },
       {
-        value: 20,
+        value: 10,
         label: 'Officer'
       },
       {
-        value: 10,
+        value: 0,
         label: 'Owner'
       }
     ]
@@ -32,7 +32,8 @@ class ClubForm extends React.Component {
       isEdit: typeof this.props.club_id !== 'undefined',
       inviteEmails: '',
       inviteRole: this.roles[0],
-      inviteTitle: 'Member'
+      inviteTitle: 'Member',
+      editMember: null
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -162,6 +163,22 @@ class ClubForm extends React.Component {
     })
   }
 
+  saveMember(username, data) {
+    doApiRequest(`/clubs/${this.state.club.id}/members/${username}/?format=json`, {
+      method: 'PATCH',
+      body: data
+    }).then((resp) => {
+      if (resp.ok) {
+        this.notify(`Member ${username} has been updated!`)
+        this.componentDidMount()
+      } else {
+        resp.json().then((err) => {
+          this.notify(this.formatError(err))
+        })
+      }
+    })
+  }
+
   componentDidMount() {
     if (this.state.isEdit) {
       const club_id = this.state.club !== null && this.state.club.id ? this.state.club.id : this.props.club_id
@@ -180,7 +197,7 @@ class ClubForm extends React.Component {
 
   render() {
     const { tags } = this.props
-    const { club, invites } = this.state
+    const { club, invites, editMember } = this.state
 
     if (this.state.isEdit && club === null) {
       return <div />
@@ -317,7 +334,7 @@ class ClubForm extends React.Component {
                 <td>{a.title} ({getRoleDisplay(a.role)})</td>
                 <td>{a.email}</td>
                 <td className='buttons'>
-                  <button className='button is-small is-primary'>
+                  <button className='button is-small is-primary' onClick={() => this.setState({ editMember: a })}>
                     <i className='fa fa-fw fa-edit'></i> Edit
                   </button>
                   <button className='button is-small is-danger' onClick={() => this.deleteMembership(a.username)}>
@@ -327,6 +344,34 @@ class ClubForm extends React.Component {
               </tr>) : <tr><td colSpan='4' className='has-text-grey'>There are no members in this club.</td></tr>}
             </tbody>
           </table>
+          {editMember && <div className='card' style={{ marginBottom: 20 }}>
+            <div className='card-header'>
+              <p className='card-header-title'>Edit Member:&nbsp;<span className='has-text-grey'>{editMember.name} (<i>{editMember.email}</i>)</span></p>
+            </div>
+            <div className='card-content'>
+              <Form
+                fields={[
+                  {
+                    name: 'title',
+                    type: 'text'
+                  },
+                  {
+                    name: 'role',
+                    type: 'select',
+                    choices: this.roles,
+                    converter: (a) => this.roles.find((x) => x.value === a),
+                    reverser: (a) => a.value
+                  }
+                ]}
+                defaults={editMember}
+                submitButton={<button className='button is-primary'><i className='fa fa-edit' /> &nbsp; Save Member</button>}
+                onSubmit={(data) => {
+                  this.saveMember(editMember.username, data)
+                  this.setState({ editMember: null })
+                }}
+              />
+            </div>
+          </div>}
           {invites && !!invites.length && <div className='card' style={{ marginBottom: 20 }}>
             <div className='card-header'>
               <p className='card-header-title'>Pending Invites ({ invites.length })</p>
@@ -374,7 +419,7 @@ class ClubForm extends React.Component {
                 </div>
                 <p className='help'>The title is shown on the member listing and will not affect user permissions.</p>
               </div>
-              <button className='button is-primary' onClick={this.sendInvites}><i className='fa fa-fw fa-envelope' style={{ marginRight: 5 }}></i> Send Invite(s)</button>
+              <button className='button is-primary' onClick={this.sendInvites}><i className='fa fa-fw fa-envelope'></i>&nbsp; Send Invite(s)</button>
             </div>
           </div>
         </div>,

@@ -36,6 +36,8 @@ class Form extends React.Component {
       if (item.type !== 'group') {
         if (item.type === 'multiselect') {
           this.state['field-' + item.name] = this.props.defaults ? (this.props.defaults[item.name] || []).map(item.converter) : []
+        } else if (item.type === 'select') {
+          this.state['field-' + item.name] = this.props.defaults ? item.converter(this.props.defaults[item.name]) : null
         } else {
           this.state['field-' + item.name] = this.props.defaults ? this.props.defaults[item.name] || '' : ''
         }
@@ -70,6 +72,9 @@ class Form extends React.Component {
       switch (item.type) {
         case 'multiselect':
           out[item.name] = (val || []).map(item.reverser)
+          break
+        case 'select':
+          out[item.name] = item.reverser(val)
           break
         case 'checkbox':
           out[item.name] = !!val
@@ -137,6 +142,13 @@ class Form extends React.Component {
         } else {
           inpt = <div>Loading...</div>
         }
+      } else if (item.type === 'select') {
+        inpt = <Select
+          key={item.name}
+          value={this.state['field-' + item.name]}
+          options={item.choices}
+          onChange={(opt) => this.setState({ ['field-' + item.name]: opt })}
+        />
       } else if (item.type === 'checkbox') {
         inpt = <label className='checkbox'>
           <input type='checkbox' checked={this.state['field-' + item.name]} onChange={(e) => this.setState({ ['field-' + item.name]: e.target.checked })} /> {item.label}
@@ -145,7 +157,9 @@ class Form extends React.Component {
         inpt = <span style={{ color: 'red' }}>Unknown field type '{item.type}'!</span>
       }
 
-      return <div key={item.name} className='field is-horizontal'>
+      const isHorizontal = typeof this.props.isHorizontal !== 'undefined' ? this.props.isHorizontal : true
+
+      return <div key={item.name} className={'field' + (isHorizontal ? ' is-horizontal' : '')}>
         <div className='field-label is-normal'>
           <label className='label'>{item.type === 'checkbox' ? titleize(item.name) : item.label || titleize(item.name)}{item.required && <span style={{ color: 'red' }}>*</span>}</label>
         </div>
@@ -164,7 +178,7 @@ class Form extends React.Component {
   render() {
     return <span>
       {this.generateFields(this.props.fields)}
-      <a className='button is-primary is-medium' onClick={() => this.props.onSubmit && this.props.onSubmit(this.getData())}>Submit</a>
+      {typeof this.props.submitButton !== 'undefined' ? <span onClick={() => this.props.onSubmit(this.getData())}>{this.props.submitButton}</span> : <a className='button is-primary is-medium' onClick={() => this.props.onSubmit && this.props.onSubmit(this.getData())}>Submit</a>}
     </span>
   }
 }
