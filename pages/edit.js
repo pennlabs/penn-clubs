@@ -3,6 +3,7 @@ import { doApiRequest, titleize, getRoleDisplay } from '../utils'
 import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../colors'
 import { Link, Router } from '../routes'
 import React from 'react'
+import Select from 'react-select'
 import Form from '../components/Form'
 import TabView from '../components/TabView'
 
@@ -10,11 +11,28 @@ class ClubForm extends React.Component {
   constructor(props) {
     super(props)
 
+    this.roles = [
+      {
+        value: 30,
+        label: 'Member'
+      },
+      {
+        value: 20,
+        label: 'Officer'
+      },
+      {
+        value: 10,
+        label: 'Owner'
+      }
+    ]
+
     this.state = {
       club: null,
       invites: [],
       isEdit: typeof this.props.club_id !== 'undefined',
-      inviteEmails: ''
+      inviteEmails: '',
+      inviteRole: this.roles[0],
+      inviteTitle: 'Member'
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -101,7 +119,9 @@ class ClubForm extends React.Component {
     doApiRequest(`/clubs/${this.state.club.id}/invite/?format=json`, {
       method: 'POST',
       body: {
-        emails: this.state.inviteEmails
+        emails: this.state.inviteEmails,
+        role: this.state.inviteRole.value,
+        title: this.state.inviteTitle
       }
     }).then((resp) => resp.json()).then((data) => {
       this.notify(this.formatError(data))
@@ -337,8 +357,23 @@ class ClubForm extends React.Component {
             <div className='card-content'>
               <p>Enter an email address or a list of email addresses separated by commas or newlines in the box below. All emails listed will be sent an invite to join the club. The invite process will go more smoothly if you use Penn email addresses, but normal email addresses will work provided that the recipient has a PennKey account. We will not send an invite if the account associated with an email is already in the club.</p>
               <br />
-              <textarea value={this.state.inviteEmails} onChange={(e) => this.setState({ inviteEmails: e.target.value })} className='textarea' placeholder='Enter email addresses here!'></textarea>
-              <br />
+              <div className='field'>
+                <textarea value={this.state.inviteEmails} onChange={(e) => this.setState({ inviteEmails: e.target.value })} className='textarea' placeholder='Enter email addresses here!'></textarea>
+              </div>
+              <div className='field'>
+                <label className='label'>Permissions</label>
+                <div className='control'>
+                  <Select options={this.roles} value={this.state.inviteRole} onChange={(opt) => this.setState({ inviteRole: opt })} />
+                </div>
+                <p className='help'>Owners have full control over the club, officers can perform editing, and members have read-only permissions.</p>
+              </div>
+              <div className='field'>
+                <label className='label'>Title</label>
+                <div className='control'>
+                  <input className='input' value={this.state.inviteTitle} onChange={(e) => this.setState({ inviteTitle: e.target.value })} />
+                </div>
+                <p className='help'>The title is shown on the member listing and will not affect user permissions.</p>
+              </div>
               <button className='button is-primary' onClick={this.sendInvites}><i className='fa fa-fw fa-envelope' style={{ marginRight: 5 }}></i> Send Invite(s)</button>
             </div>
           </div>
