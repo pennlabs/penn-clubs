@@ -19,6 +19,7 @@ function renderPage(Page) {
       }
 
       this.updateFavorites = this.updateFavorites.bind(this)
+      this.updateUserInfo = this.componentDidMount.bind(this)
     }
 
     componentDidMount() {
@@ -42,7 +43,7 @@ function renderPage(Page) {
     render() {
       return <div style={{ dispay: 'flex', flexDirection: 'column', backgroundColor: '#fff' }}>
         <Header authenticated={this.state.authenticated} userInfo={this.state.userInfo} />
-        <Page {...this.props} {...this.state} updateFavorites={this.updateFavorites} />
+        <Page {...this.props} {...this.state} updateFavorites={this.updateFavorites} updateUserInfo={this.updateUserInfo} />
         <Footer />
       </div>
     }

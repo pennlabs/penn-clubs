@@ -21,6 +21,10 @@ class SettingsForm extends React.Component {
     }, () => window.scrollTo(0, 0))
   }
 
+  formatError(err) {
+    return Object.keys(err).map((a) => <div key={a}><b>{titleize(a)}:</b> {err[a]}</div>)
+  }
+
   submit(data) {
     doApiRequest('/settings/?format=json', {
       method: 'PATCH',
@@ -30,7 +34,26 @@ class SettingsForm extends React.Component {
         this.notify('Your preferences have been saved.')
       } else {
         resp.json().then((err) => {
-          this.notify(Object.keys(err).map((a) => <div key={a}><b>{titleize(a)}:</b> {err[a]}</div>))
+          this.notify(this.formatError(err))
+        })
+      }
+    })
+  }
+
+  togglePublic(club) {
+    doApiRequest(`/clubs/${club.id}/members/${this.props.userInfo.username}/?format=json`, {
+      method: 'PATCH',
+      body: {
+        public: !club.public
+      }
+    }).then((resp) => {
+      if (resp.ok) {
+        this.notify(`Your privacy setting for ${club.name} has been changed.`)
+        this.props.updateUserInfo()
+      }
+      else {
+        resp.json().then((err) => {
+          this.notify(this.formatError(err))
         })
       }
     })
@@ -62,52 +85,48 @@ class SettingsForm extends React.Component {
         ]
       },
       {
-        name: 'Privacy & Notifications',
-        type: 'group',
-        fields: [
-          {
-            name: 'soon-1',
-            type: 'component',
-            content: <div>Coming Soon!</div>
-          }
-        ]
-      },
-      {
         name: 'Membership',
         type: 'group',
         fields: [
           {
             name: 'membership',
             type: 'component',
-            content: <table className='table is-fullwidth'>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Position</th>
-                  <th>Permissions</th>
-                  <th>Active</th>
-                  <th>Public</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {this.props.userInfo && this.props.userInfo.membership_set.length ? this.props.userInfo.membership_set.map((item) => <tr key={item.id}>
-                  <td>{item.name}</td>
-                  <td>{item.title}</td>
-                  <td>{item.role_display}</td>
-                  <td><i className={item.active ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} /></td>
-                  <td><i className={item.public ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} /></td>
-                  <td className='buttons'>
-                    <Link route='club-view' params={{ club: item.id }}>
-                      <a className='button is-small is-link'>View</a>
-                    </Link>
-                    {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: item.id }}>
-                      <a className='button is-small is-success'>Edit</a>
-                    </Link>}
-                  </td>
-                </tr>) : <tr><td className='has-text-grey' colSpan='4'>You are not a member of any clubs yet.</td></tr>}
-              </tbody>
-            </table>
+            content: <div>
+                <p>The list below shows what clubs you are a member of. If you would like to hide a particular club from the public, click on the <i className='fa fa-fw fa-check-circle has-text-success'></i> icon under the Public column. This will not hide your membership from other club members.</p>
+                <table className='table is-fullwidth'>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Permissions</th>
+                    <th className='has-text-centered'>Active</th>
+                    <th className='has-text-centered'>Public</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {this.props.userInfo && this.props.userInfo.membership_set.length ? this.props.userInfo.membership_set.map((item) => <tr key={item.id}>
+                    <td>{item.name}</td>
+                    <td>{item.title}</td>
+                    <td>{item.role_display}</td>
+                    <td className='has-text-centered'>
+                      <i className={item.active ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} />
+                    </td>
+                    <td className='has-text-centered'>
+                      <i style={{ cursor: 'pointer' }} onClick={() => this.togglePublic(item)} className={item.public ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} />
+                    </td>
+                    <td className='buttons'>
+                      <Link route='club-view' params={{ club: item.id }}>
+                        <a className='button is-small is-link'>View</a>
+                      </Link>
+                      {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: item.id }}>
+                        <a className='button is-small is-success'>Edit</a>
+                      </Link>}
+                    </td>
+                  </tr>) : <tr><td className='has-text-grey' colSpan='4'>You are not a member of any clubs yet.</td></tr>}
+                </tbody>
+              </table>
+            </div>
           }
         ]
       }
