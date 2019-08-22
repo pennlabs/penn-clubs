@@ -85,6 +85,8 @@ class SettingsForm extends React.Component {
                   <th>Name</th>
                   <th>Position</th>
                   <th>Permissions</th>
+                  <th>Active</th>
+                  <th>Public</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -93,12 +95,14 @@ class SettingsForm extends React.Component {
                   <td>{item.name}</td>
                   <td>{item.title}</td>
                   <td>{item.role_display}</td>
+                  <td><i className={item.active ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} /></td>
+                  <td><i className={item.public ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} /></td>
                   <td className='buttons'>
                     <Link route='club-view' params={{ club: item.id }}>
-                      <a className='button is-link'>View</a>
+                      <a className='button is-small is-link'>View</a>
                     </Link>
                     {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: item.id }}>
-                      <a className='button is-success'>Edit</a>
+                      <a className='button is-small is-success'>Edit</a>
                     </Link>}
                   </td>
                 </tr>) : <tr><td className='has-text-grey' colSpan='4'>You are not a member of any clubs yet.</td></tr>}
