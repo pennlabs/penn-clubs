@@ -160,6 +160,9 @@ class MembershipInvite(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    title = models.CharField(max_length=255, default='Member')
+    role = models.IntegerField(default=Membership.ROLE_MEMBER)
+
     def __str__(self):
         return '<MembershipInvite: {} for {}>'.format(self.club.pk, self.email)
 
@@ -172,7 +175,11 @@ class MembershipInvite(models.Model):
 
         Membership.objects.get_or_create(
             person=user,
-            club=self.club
+            club=self.club,
+            defaults={
+                'role': self.role,
+                'title': self.title
+            }
         )
 
     def send_mail(self, request):

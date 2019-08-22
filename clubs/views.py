@@ -138,6 +138,14 @@ class MassInviteAPIView(APIView):
                 'detail': 'You do not have permission to invite new members!'
             }, status=status.HTTP_403_FORBIDDEN)
 
+        role = request.POST.get('role', Membership.ROLE_MEMBER)
+        title = request.POST.get('title', 'Member')
+
+        if mem and mem.role > role:
+            return Response({
+                'detail': 'You cannot send invites for a role higher than your own!'
+            }, status=status.HTTP_403_FORBIDDEN)
+
         emails = [x.strip() for x in re.split('\n|,', request.POST.get('emails', request.data.get('emails', '')))]
         emails = [x for x in emails if x]
 
@@ -149,7 +157,13 @@ class MassInviteAPIView(APIView):
             validate_email(email)
 
         for email in emails:
-            MembershipInvite.objects.create(email=email, club=club, creator=request.user).send_mail(request)
+            MembershipInvite.objects.create(
+                email=email,
+                club=club,
+                creator=request.user,
+                role=role,
+                title=title
+            ).send_mail(request)
 
         return Response({
             'detail': 'Sent invite(s) to {} email(s)!'.format(len(emails))
