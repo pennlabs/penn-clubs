@@ -297,6 +297,29 @@ class ClubTestCase(TestCase):
                                   content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
+    def test_membership_auth(self):
+        Membership.objects.create(
+            club=self.club1,
+            person=self.user1
+        )
+        self.client.login(username=self.user1.username, password='test')
+        bad_tries = [{'title': 'Supreme Leader'}, {'role': Membership.ROLE_OFFICER}, {'active': False}]
+        for bad in bad_tries:
+            resp = self.client.patch(reverse('club-members-detail', args=(self.club1.id, self.user1.username)),
+                                     bad,
+                                     content_type='application/json')
+            self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        good_tries = [{'public': True}, {'public': False}]
+        for good in good_tries:
+            resp = self.client.patch(reverse('club-members-detail', args=(self.club1.id, self.user1.username)),
+                                     good,
+                                     content_type='application/json')
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        resp = self.client.delete(reverse('club-members-detail', args=(self.club1.id, self.user1.username)))
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+
     def test_tag_views(self):
         # everyone can view the list of tags
         resp = self.client.get('/tags/')

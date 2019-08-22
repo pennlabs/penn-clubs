@@ -64,18 +64,20 @@ class UserMembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Membership
-        fields = ('id', 'name', 'title', 'role', 'role_display', 'active')
+        fields = ('id', 'name', 'title', 'role', 'role_display', 'active', 'public')
 
 
 class MembershipSerializer(serializers.ModelSerializer):
     """
-    Used for listing which users are in a club.
+    Used for listing which users are in a club for members who are not in the club.
     """
     name = serializers.SerializerMethodField('get_full_name')
     person = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), write_only=True)
     role = serializers.IntegerField(write_only=True, required=False)
 
     def get_full_name(self, obj):
+        if not obj.public:
+            return 'Anonymous'
         return obj.person.get_full_name()
 
     def validate_role(self, value):
@@ -85,9 +87,7 @@ class MembershipSerializer(serializers.ModelSerializer):
         """
         user = self.context['request'].user
         mem_user_id = self.instance.person.id if self.instance else self.initial_data['person']
-        club_pk = self.context['view'].kwargs.get('club_pk')
-        if club_pk is None:
-            club_pk = self.context['view'].kwargs.get('pk')
+        club_pk = self.context['view'].kwargs.get('club_pk', self.context['view'].kwargs.get('pk'))
         membership = Membership.objects.filter(person=user, club=club_pk).first()
         if user.is_superuser:
             return value
@@ -99,6 +99,21 @@ class MembershipSerializer(serializers.ModelSerializer):
             if Membership.objects.filter(club=club_pk, role__lte=Membership.ROLE_OWNER).count() <= 1:
                 raise serializers.ValidationError('You cannot demote yourself if you are the only owner!')
         return value
+
+    def validate(self, data):
+        """
+        Normal members can only change a small subset of information.
+        """
+        user = self.context['request'].user
+        club_pk = self.context['view'].kwargs.get('club_pk', self.context['view'].kwargs.get('pk'))
+
+        membership = Membership.objects.filter(person=user, club=club_pk).first()
+
+        if membership is None or membership.role > Membership.ROLE_OFFICER:
+            for field in data:
+                if field not in ['public']:
+                    raise serializers.ValidationError('Normal members are not allowed to change "{}"!'.format(field))
+        return data
 
     def save(self):
         if 'club' not in self.validated_data:

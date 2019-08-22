@@ -114,6 +114,7 @@ class Membership(models.Model):
     )
 
     active = models.BooleanField(default=True)
+    public = models.BooleanField(default=True)
 
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
