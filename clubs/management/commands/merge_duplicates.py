@@ -49,7 +49,7 @@ class Command(BaseCommand):
                     raise CommandError('You must specify at least two clubs to merge!')
                 final, rest = clubs[0], clubs[1:]
                 for item in rest:
-                    final = self.merge_clubs(final, rest)
+                    final = self.merge_clubs(final, item)
                 self.stdout.write('Merged {}'.format(final.name))
 
     def merge_tags(self, one, two):
