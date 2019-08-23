@@ -237,3 +237,15 @@ class Asset(models.Model):
 def asset_delete_cleanup(sender, instance, **kwargs):
     if instance.file:
         instance.file.delete(save=False)
+
+
+@receiver(models.signals.post_delete, sender=Club)
+def club_delete_cleanup(sender, instance, **kwargs):
+    if instance.image:
+        instance.image.delete(save=False)
+
+
+@receiver(models.signals.post_delete, sender=Event)
+def event_delete_cleanup(sender, instance, **kwargs):
+    if instance.image:
+        instance.image.delete(save=False)
