@@ -90,10 +90,6 @@ class AssetViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Asset.objects.filter(creator=self.request.user)
 
-    def perform_create(self, serializer):
-        name = self.request.FILES.get('file').name
-        serializer.save(name=name, creator=self.request.user)
-
 
 class TagViewSet(viewsets.ModelViewSet):
     """

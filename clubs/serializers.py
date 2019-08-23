@@ -126,7 +126,7 @@ class MembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Membership
-        fields = ['name', 'title', 'person', 'role', 'active']
+        fields = ['name', 'title', 'person', 'role', 'active', 'public']
         validators = [validators.UniqueTogetherValidator(queryset=Membership.objects.all(), fields=['person', 'club'])]
 
 
@@ -379,7 +379,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 class AssetSerializer(serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    name = serializers.CharField(read_only=True)
     file_url = serializers.SerializerMethodField('get_file_url')
     file = serializers.FileField(write_only=True)
 
@@ -390,4 +389,4 @@ class AssetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Asset
-        fields = ('id', 'name', 'file_url', 'file', 'creator')
+        fields = ('id', 'file_url', 'file', 'creator')

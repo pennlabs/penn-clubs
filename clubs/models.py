@@ -5,12 +5,13 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
+from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 
 
 def get_asset_file_name(instance, fname):
-    return os.path.join('assets', uuid.uuid4().hex)
+    return os.path.join('assets', uuid.uuid4().hex, fname)
 
 
 def get_club_file_name(instance, fname):
@@ -223,8 +224,16 @@ class Asset(models.Model):
     Represents an uploaded file object.
     """
     creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
-    name = models.CharField(max_length=255)
     file = models.FileField(upload_to=get_asset_file_name)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+@receiver(models.signals.post_delete, sender=Asset)
+def asset_delete_cleanup(sender, instance, **kwargs):
+    if instance.file:
+        instance.file.delete(save=False)
