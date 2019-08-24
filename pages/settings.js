@@ -143,7 +143,10 @@ class SettingsForm extends React.Component {
     return (
       <div style={{ padding: '30px 50px' }}>
         <h1 className='title is-size-2-desktop is-size-3-mobile'><span style={{ color: CLUBS_GREY_LIGHT }}>Preferences: </span> {this.props.userInfo.username}</h1>
-        {this.state.message && <div className="notification is-primary">{this.state.message}</div>}
+        {this.state.message && <div className="notification is-primary">
+          <button className="delete" onClick={() => this.setState({ message: null })}></button>
+          {this.state.message}
+        </div>}
         <Form fields={fields} defaults={this.props.userInfo} onSubmit={this.submit} />
         <a href={`${API_BASE_URL}/accounts/logout/?next=${window.location.href}`} className='button is-pulled-right is-danger is-medium'>Logout</a>
       </div>
