@@ -56,11 +56,11 @@ class Club extends React.Component {
             <div className="columns">
               <div className="column is-6" style={{ backgroundColor: '#f2f2f2', borderRadius: 3, margin: '5px 5px 5px 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <b className="is-size-6 is-size-7-mobile"> Membership: </b>
+                  <b className="is-size-6 is-size-7-mobile"> Membership </b>
                   <span className="tag is-rounded has-text-dark" style={{ backgroundColor: '#ccc', color: '#fff', fontSize: '.7rem', margin: 2 }}>{getSizeDisplay(club.size)} </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <b className="is-size-6"> Requires Application: </b>
+                  <b className="is-size-6"> Requires Application </b>
                   <span className="tag is-rounded has-text-dark" style={{ backgroundColor: '#ccc', color: '#fff', fontSize: '.7rem', margin: 2 }}>{club.application_required ? 'Yes' : 'No'} </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -86,8 +86,42 @@ class Club extends React.Component {
                       name: 'website',
                       label: 'Website',
                       icon: 'fa fa-link'
+                    },
+                    {
+                      name: 'github',
+                      label: 'GitHub',
+                      icon: 'fab fa-github'
+                    },
+                    {
+                      name: 'linkedin',
+                      label: 'LinkedIn',
+                      icon: 'fab fa-linkedin'
+                    },
+                    {
+                      name: 'instagram',
+                      label: 'Instagram',
+                      icon: 'fab fa-instagram'
+                    },
+                    {
+                      name: 'twitter',
+                      label: 'Twitter',
+                      icon: 'fab fa-twitter'
                     }
-                  ].map((item) => <div key={item.name} className="has-text-centered">
+                  ].map((data, idx) => {
+                    data.index = idx
+                    return data
+                  }).sort((a, b) => {
+                    if (club[a.name] && club[b.name]) {
+                      return a - b
+                    }
+                    if (club[a.name]) {
+                      return -1
+                    }
+                    if (club[b.name]) {
+                      return 1
+                    }
+                    return a - b
+                  }).slice(0, 3).map((item) => <div key={item.name} className="has-text-centered">
                     <a href={club[item.name] ? (item.prefix || '') + club[item.name] : undefined} style={{
                       color: club[item.name] ? CLUBS_GREY : '#ccc',
                       cursor: club[item.name] ? 'pointer' : 'inherit'
