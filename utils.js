@@ -48,12 +48,13 @@ export function doApiRequest(path, data) {
   }
   data.credentials = 'include'
   if (typeof document !== 'undefined') {
-    data.headers = Object.assign({
-      'Content-Type': 'application/json',
-      'X-CSRFToken': (/csrftoken=(\w+)/.exec(document.cookie) || [null, null])[1]
-    }, data.headers || {})
+    data.headers = data.headers || {}
+    if (!(data.body instanceof FormData)) {
+      data.headers['Content-Type'] = 'application/json'
+    }
+    data.headers['X-CSRFToken'] = (/csrftoken=(\w+)/.exec(document.cookie) || [null, null])[1]
   }
-  if (data.body) {
+  if (data.body && !(data.body instanceof FormData)) {
     data.body = JSON.stringify(data.body)
   }
   return fetch(API_BASE_URL + path, data)

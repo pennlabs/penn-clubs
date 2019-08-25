@@ -131,6 +131,9 @@ class ClubForm extends React.Component {
   }
 
   submit(data) {
+    const photo = data['image']
+    delete data['image']
+
     var req = null
     if (this.state.isEdit) {
       req = doApiRequest(`/clubs/${this.state.club.id}/?format=json`, {
@@ -145,7 +148,6 @@ class ClubForm extends React.Component {
     }
     req.then((resp) => {
       if (resp.ok) {
-        this.notify('Club has been successfully saved.')
         resp.json().then((info) => {
           if (!this.state.isEdit) {
             Router.replaceRoute('club-edit', { club: info.id }, { shallow: true })
@@ -154,6 +156,22 @@ class ClubForm extends React.Component {
             isEdit: true,
             club: info
           })
+          if (photo.get('file') instanceof File) {
+            doApiRequest(`/clubs/${this.state.club.id}/upload/?format=json`, {
+              method: 'POST',
+              body: photo
+            }).then((resp) => {
+              if (resp.ok) {
+                this.notify('Club and images have been successfully saved.')
+              }
+              else {
+                this.notify('Failed to upload club image file!')
+              }
+            })
+          }
+          else {
+            this.notify('Club has been successfully saved.')
+          }
         })
       } else {
         resp.json().then((err) => {
@@ -240,9 +258,10 @@ class ClubForm extends React.Component {
             reverser: (a) => ({ id: a.value, name: a.label })
           },
           {
-            name: 'image_url',
-            type: 'url',
-            label: 'Club Logo Image URL'
+            name: 'image',
+            accept: 'image/*',
+            type: 'file',
+            label: 'Club Logo'
           },
           {
             name: 'founded',
