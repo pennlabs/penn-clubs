@@ -709,7 +709,7 @@ class ClubTestCase(TestCase):
         # ensure membership invite was created
         invites = MembershipInvite.objects.filter(club__pk=self.club1.id)
         self.assertEqual(invites.count(), 3, data)
-        self.assertEqual(invites.values_list('role', flat=True), [Membership.ROLE_OFFICER] * 3, data)
+        self.assertEqual(list(invites.values_list('role', flat=True)), [Membership.ROLE_OFFICER] * 3, data)
         self.assertEqual(len(mail.outbox), 3, mail.outbox)
 
         # ensure we can get all memberships
