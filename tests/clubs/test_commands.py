@@ -1,4 +1,5 @@
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase
 
 from clubs.models import Club, Tag
@@ -11,7 +12,8 @@ class MergeDuplicatesTestCase(TestCase):
 
         self.club1 = Club.objects.create(
             id='one',
-            name='Same Name'
+            name='Same Name',
+            active=False
         )
         self.club1.tags.add(self.tag1)
         self.club2 = Club.objects.create(
@@ -48,3 +50,14 @@ class MergeDuplicatesTestCase(TestCase):
         call_command('merge_duplicates', '--tag', 'One', 'Two')
 
         self.assertEqual(Tag.objects.count(), 1)
+
+    def test_wrong_arguments(self):
+        """
+        Test with wrong number of arguments.
+        """
+
+        with self.assertRaises(CommandError):
+            call_command('merge_duplicates')
+
+        with self.assertRaises(CommandError):
+            call_command('merge_duplicates', '--tag')

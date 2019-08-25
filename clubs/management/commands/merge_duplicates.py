@@ -85,8 +85,7 @@ class Command(BaseCommand):
             setattr(primary, field, getattr(primary, field) or getattr(secondary, field))
 
         # Use the larger club size
-        if secondary.size > primary.size:
-            primary.size = secondary.size
+        primary.size = max(primary.size, secondary.size)
 
         # Take all tags
         primary.tags.add(*secondary.tags.all())
