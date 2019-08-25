@@ -17,6 +17,21 @@ from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, Aut
                                MembershipSerializer, TagSerializer, UserSerializer)
 
 
+def upload_endpoint_helper(request, cls, pk, field):
+    obj = get_object_or_404(cls, pk=pk)
+    if 'file' in request.data and isinstance(request.data['file'], UploadedFile):
+        getattr(obj, field).delete(save=False)
+        setattr(obj, field, request.data['file'])
+        obj.save()
+    else:
+        return Response({
+            'file': 'No image file was uploaded!'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+        'detail': 'Club image uploaded!'
+    })
+
+
 class ClubViewSet(viewsets.ModelViewSet):
     """
     retrieve:
@@ -37,18 +52,7 @@ class ClubViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def upload(self, request, *args, **kwargs):
-        club = get_object_or_404(Club, pk=kwargs['pk'])
-        if 'file' in request.data and isinstance(request.data['file'], UploadedFile):
-            club.image.delete(save=False)
-            club.image = request.data['file']
-            club.save()
-        else:
-            return Response({
-                'file': 'No image file was uploaded!'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        return Response({
-            'detail': 'Club image uploaded!'
-        })
+        return upload_endpoint_helper(request, Club, kwargs['pk'], 'image')
 
     def get_serializer_class(self):
         if self.action == 'upload':
@@ -67,6 +71,10 @@ class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
     permission_classes = [EventPermission | IsSuperuser]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
+
+    @action(detail=True, methods=['post'])
+    def upload(self, request, *args, **kwargs):
+        return upload_endpoint_helper(request, Event, kwargs['pk'], 'image')
 
     def get_queryset(self):
         return Event.objects.filter(club=self.kwargs['club_pk'])

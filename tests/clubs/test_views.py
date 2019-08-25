@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
 
@@ -17,6 +18,14 @@ class ClubTestCase(TestCase):
         self.club1 = Club.objects.create(
             id='test-club',
             name='Test Club'
+        )
+
+        self.event1 = Event.objects.create(
+            id='test-event',
+            club=self.club1,
+            name='Test Event',
+            start_time=timezone.now(),
+            end_time=timezone.now()
         )
 
         self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
@@ -53,23 +62,38 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password='test')
 
         # empty image throws an error
-        resp = self.client.post(reverse('clubs-upload', args=('test-club',)))
+        resp = self.client.post(reverse('clubs-upload', args=(self.club1.id,)))
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
         # successful image upload
-        resp = self.client.post(reverse('clubs-upload', args=('test-club',)), {
+        resp = self.client.post(reverse('clubs-upload', args=(self.club1.id,)), {
             'file': io.BytesIO(b'')
         })
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure image url is set
-        resp = self.client.get(reverse('clubs-detail', args=('test-club',)))
+        resp = self.client.get(reverse('clubs-detail', args=(self.club1.id,)))
         self.assertIn(resp.status_code, [200, 204], resp.content)
         data = json.loads(resp.content.decode('utf-8'))
         self.assertTrue(data['image_url'])
 
         # ensure cleanup doesn't throw error
         self.club1.delete()
+
+    def test_event_upload(self):
+        """
+        Test uploading an event image.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        # successful image upload
+        resp = self.client.post(reverse('club-events-upload', args=(self.club1.id, self.event1.id)), {
+            'file': io.BytesIO(b'')
+        })
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure cleanup doesn't throw error
+        self.event1.delete()
 
     def test_user_views(self):
         """
@@ -198,8 +222,8 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure event exists
-        self.assertEqual(Event.objects.count(), 1)
-        self.assertEqual(Event.objects.first().creator, self.user5)
+        self.assertEqual(Event.objects.filter(name='Interest Meeting').count(), 1)
+        self.assertEqual(Event.objects.get(name='Interest Meeting').creator, self.user5)
 
         # delete event
         resp = self.client.delete(reverse('club-events-detail', args=(self.club1.id, 'interest-meeting')))
