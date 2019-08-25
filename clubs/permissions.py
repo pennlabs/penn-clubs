@@ -23,7 +23,7 @@ class ClubPermission(permissions.BasePermission):
             return membership.role <= Membership.ROLE_OFFICER
 
     def has_permission(self, request, view):
-        if view.action in ['update', 'partial_update', 'destroy']:
+        if view.action in ['update', 'upload', 'partial_update', 'destroy']:
             return request.user.is_authenticated
         elif view.action in ['create']:
             # TODO: more strict permissions for creating clubs
