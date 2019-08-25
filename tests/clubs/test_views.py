@@ -52,13 +52,24 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password='test')
 
+        # empty image throws an error
         resp = self.client.post(reverse('clubs-upload', args=('test-club',)))
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
+        # successful image upload
         resp = self.client.post(reverse('clubs-upload', args=('test-club',)), {
             'file': io.BytesIO(b'')
         })
         self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure image url is set
+        resp = self.client.get(reverse('clubs-detail', args=('test-club',)))
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+        self.assertTrue(data['image_url'])
+
+        # ensure cleanup doesn't throw error
+        self.club1.delete()
 
     def test_user_views(self):
         """

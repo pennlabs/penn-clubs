@@ -27,7 +27,8 @@ class AdminTestCase(TestCase):
         self.client.login(username=self.user1.username, password='test')
 
         for page in ['admin:index', 'admin:clubs_club_changelist', 'admin:clubs_favorite_changelist',
-                     'admin:clubs_tag_changelist', 'admin:clubs_membership_changelist']:
+                     'admin:clubs_tag_changelist', 'admin:clubs_membership_changelist',
+                     'admin:clubs_membershipinvite_changelist']:
             resp = self.client.get(reverse(page))
             self.assertIn(resp.status_code, [200], resp.content)
 
