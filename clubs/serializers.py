@@ -139,6 +139,9 @@ class AuthenticatedMembershipSerializer(MembershipSerializer):
     email = serializers.SerializerMethodField('get_email')
     username = serializers.SerializerMethodField('get_username')
 
+    def get_full_name(self, obj):
+        return obj.person.get_full_name()
+
     def get_email(self, obj):
         return obj.person.email
 
