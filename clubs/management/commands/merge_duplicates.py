@@ -74,7 +74,7 @@ class Command(BaseCommand):
 
         # Choose longest string or string that exists
         for field in ['name', 'subtitle', 'description', 'email', 'facebook', 'website', 'twitter',
-                      'instagram', 'github', 'how_to_get_involved', 'image_url']:
+                      'instagram', 'github', 'how_to_get_involved']:
             value = getattr(secondary, field)
             old_value = getattr(primary, field)
             if old_value is None or (value is not None and len(value) > len(old_value)):
