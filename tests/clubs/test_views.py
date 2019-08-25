@@ -695,18 +695,21 @@ class ClubTestCase(TestCase):
 
     def test_club_invite(self):
         """
-        Incomplete test to test the email invitation feature.
+        Test the email invitation feature.
         """
         self.client.login(username=self.user5.username, password='test')
 
         resp = self.client.post(reverse('club-invite', args=(self.club1.id,)), {
-            'emails': 'one@pennlabs.org, two@pennlabs.org, three@pennlabs.org'
+            'emails': 'one@pennlabs.org, two@pennlabs.org, three@pennlabs.org',
+            'role': Membership.ROLE_OFFICER
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = json.loads(resp.content.decode('utf-8'))
 
         # ensure membership invite was created
-        self.assertEqual(MembershipInvite.objects.filter(club__pk=self.club1.id).count(), 3, data)
+        invites = MembershipInvite.objects.filter(club__pk=self.club1.id)
+        self.assertEqual(invites.count(), 3, data)
+        self.assertEqual(invites.values_list('role', flat=True), [Membership.ROLE_OFFICER] * 3, data)
         self.assertEqual(len(mail.outbox), 3, mail.outbox)
 
         # ensure we can get all memberships
@@ -746,5 +749,20 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(reverse('club-invite', args=(self.club1.id,)), {
             'emails': 'one@pennlabs.org, two@pennlabs.org, three@pennlabs.org'
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_club_invite_insufficient_permissions(self):
+        self.client.login(username=self.user2.username, password='test')
+        Membership.objects.create(
+            person=self.user2,
+            club=self.club1,
+            role=Membership.ROLE_OFFICER
+        )
+
+        resp = self.client.post(reverse('club-invite', args=(self.club1.id,)), {
+            'emails': 'one@pennlabs.org, two@pennlabs.org, three@pennlabs.org',
+            'role': Membership.ROLE_OWNER,
+            'title': 'Supreme Leader'
         }, content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)

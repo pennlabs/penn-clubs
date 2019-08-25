@@ -161,15 +161,15 @@ class MassInviteAPIView(APIView):
                 'detail': 'You do not have permission to invite new members!'
             }, status=status.HTTP_403_FORBIDDEN)
 
-        role = request.POST.get('role', Membership.ROLE_MEMBER)
-        title = request.POST.get('title', 'Member')
+        role = request.data.get('role', Membership.ROLE_MEMBER)
+        title = request.data.get('title', 'Member')
 
         if mem and mem.role > role:
             return Response({
                 'detail': 'You cannot send invites for a role higher than your own!'
             }, status=status.HTTP_403_FORBIDDEN)
 
-        emails = [x.strip() for x in re.split('\n|,', request.POST.get('emails', request.data.get('emails', '')))]
+        emails = [x.strip() for x in re.split('\n|,', request.data.get('emails', ''))]
         emails = [x for x in emails if x]
 
         # remove users that are already in the club
