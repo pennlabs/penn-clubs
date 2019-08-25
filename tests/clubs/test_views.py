@@ -1,4 +1,5 @@
 import datetime
+import io
 import json
 
 from django.contrib.auth import get_user_model
@@ -44,6 +45,20 @@ class ClubTestCase(TestCase):
         self.user5.is_staff = True
         self.user5.is_superuser = True
         self.user5.save()
+
+    def test_club_upload(self):
+        """
+        Test uploading a club logo.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        resp = self.client.post(reverse('clubs-upload', args=('test-club',)))
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        resp = self.client.post(reverse('clubs-upload', args=('test-club',)), {
+            'file': io.BytesIO(b'')
+        })
+        self.assertIn(resp.status_code, [200, 201], resp.content)
 
     def test_user_views(self):
         """
