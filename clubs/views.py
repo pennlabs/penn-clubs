@@ -39,6 +39,7 @@ class ClubViewSet(viewsets.ModelViewSet):
     def upload(self, request, *args, **kwargs):
         club = get_object_or_404(Club, pk=kwargs['pk'])
         if 'file' in request.data and isinstance(request.data['file'], UploadedFile):
+            club.image.delete(save=False)
             club.image = request.data['file']
             club.save()
         else:
