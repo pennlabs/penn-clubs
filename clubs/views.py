@@ -1,9 +1,11 @@
 import re
 
+from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics, parsers, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -33,7 +35,23 @@ class ClubViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'subtitle']
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
+    @action(detail=True, methods=['post'])
+    def upload(self, request, *args, **kwargs):
+        club = get_object_or_404(Club, pk=kwargs['pk'])
+        if 'file' in request.data and isinstance(request.data['file'], UploadedFile):
+            club.image = request.data['file']
+            club.save()
+        else:
+            return Response({
+                'file': 'No image file was uploaded!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'detail': 'Club image uploaded!'
+        })
+
     def get_serializer_class(self):
+        if self.action == 'upload':
+            return AssetSerializer
         if self.request is not None and self.request.user.is_authenticated:
             if self.request.user.is_superuser or ('pk' in self.kwargs and
                Membership.objects.filter(person=self.request.user, club=self.kwargs['pk']).exists()):

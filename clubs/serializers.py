@@ -165,7 +165,7 @@ class ClubSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         if not obj.image:
             return None
-        return obj.image.url
+        return self.context['request'].build_absolute_uri(obj.image.url)
 
     def create(self, validated_data):
         """
