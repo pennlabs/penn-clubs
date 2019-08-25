@@ -329,7 +329,10 @@ class EventSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         if not obj.image:
             return None
-        return obj.image.url
+        if obj.image.url.startswith('http'):
+            return obj.image.url
+        else:
+            return self.context['request'].build_absolute_uri(obj.image.url)
 
     class Meta:
         model = Event
@@ -391,7 +394,10 @@ class AssetSerializer(serializers.ModelSerializer):
     def get_file_url(self, obj):
         if not obj.file:
             return None
-        return obj.file.url
+        if obj.file.url.startswith('http'):
+            return obj.file.url
+        else:
+            return self.context['request'].build_absolute_uri(obj.file.url)
 
     class Meta:
         model = Asset
