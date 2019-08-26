@@ -29,6 +29,7 @@ class Header extends React.Component {
           <link rel="shortcut icon" href="/static/favicon.ico" />
           <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css"/>
           <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossOrigin="anonymous" />
+          <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet" />
           <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossOrigin="anonymous" />
         </Head>
         <nav className="navbar" role="navigation" aria-label="main navigation" style={{ height: 70, backgroundColor: '#f9f9f9', borderBottom: '1px solid #fff' }}>
@@ -52,20 +53,13 @@ class Header extends React.Component {
 
           <div className="navbar-menu">
             <div className="navbar-end" style={{ padding: '0px 20px' }}>
-              <a href="/faq" style={{ padding: 20, textDecoration: 'underline', color: '#9B9B9B' }}>
+              <a href="/faq" style={{ padding: 20, color: '#9B9B9B' }}>
                 FAQ
               </a>
-              <a href="/favorites" aria-label='Favorites' style={{ padding: 20 }}>
-                <Pop
-                  pose={this.state.hoverFav ? 'hovered' : 'idle'}
-                  onMouseEnter={() => this.setState({ hoverFav: true })}
-                  onMouseLeave={() => this.setState({ hoverFav: false })}>
-                  <span className="icon" style={{ color: '#9B9B9B' }}>
-                    <i className="fas fa-heart"></i>
-                  </span>
-                </Pop>
+              <a href="/favorites" style={{ padding: 20, color: '#9B9B9B' }}>
+                Favorites
               </a>
-              {this.props.authenticated === false && <a style={{ padding: 20, textDecoration: 'underline', color: '#9B9B9B' }} href={
+              {this.props.authenticated === false && <a style={{ padding: 20, color: '#9B9B9B' }} href={
                   `${API_BASE_URL}/accounts/login/?next=${window.location.href}`
               }>Login</a>}
               {this.props.userInfo && <Link route='settings'><a style={{ padding: 20, color: '#9B9B9B' }}><i className='fa fa-fw fa-user'></i> {this.props.userInfo.name || this.props.userInfo.username}</a></Link>}
