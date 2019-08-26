@@ -11,19 +11,19 @@ class ClubModal extends React.Component {
   }
 
   render() {
-    var { modal, club, closeModal, updateFavorites, favorite } = this.props
-    var { name, id, tags, image_url, size, application_required, accepting_applications, description } = club
+    const { modal, club, closeModal, updateFavorites, favorite } = this.props
+    const { name, id, tags, image_url, size, application_required, accepting_applications, description } = club
     return (
       <div className={'modal' + (modal ? 'is-active' : '')} id="modal" style={{ position: 'fixed', top: 0, height: '100%', width: '100%' }}>
-        <div className="modal-background" onClick={(e) => closeModal(club)} style={{ backgroundColor: '#d5d5d5', opacity: 0.5, position: 'fixed' }}></div>
+        <div className="modal-background" onClick={() => closeModal(club)} style={{ backgroundColor: '#d5d5d5', opacity: 0.5, position: 'fixed' }}></div>
         <div className="card" style={{ margin: '6rem', borderRadius: 3, borderWidth: 1, boxShadow: '0px 2px 6px rgba(0,0,0,.1)' }}>
-          <span className="icon" onClick={(e) => closeModal(club)} style={{ float: 'right', cursor: 'pointer', margin: 10, color: CLUBS_GREY }}>
+          <span className="icon" onClick={() => closeModal(club)} style={{ float: 'right', cursor: 'pointer', margin: 10, color: CLUBS_GREY }}>
             <i className="fas fa-times"></i>
           </span>
           <div style={{ padding: '20px 40px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
               <b style={{ color: CLUBS_GREY }} className="is-size-2"> {name} </b>
-              <span className="icon" onClick={(e) => updateFavorites(id)} style={{ float: 'right', padding: '10px 10px 0px 0px', cursor: 'pointer', color: CLUBS_GREY }}>
+              <span className="icon" onClick={() => updateFavorites(id)} style={{ float: 'right', padding: '10px 10px 0px 0px', cursor: 'pointer', color: CLUBS_GREY }}>
                 <i className={(favorite ? 'fas' : 'far') + ' fa-heart'} ></i>
               </span>
             </div>

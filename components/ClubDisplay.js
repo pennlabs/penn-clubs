@@ -21,7 +21,7 @@ class ClubDisplay extends React.Component {
       <div style={{ paddingRight: 40 }}>
         {display === 'cards' ? (
           <div className="columns is-multiline is-desktop is-tablet">
-            { displayClubs.map((club) => (
+            { displayClubs.map(club => (
               <ClubCard
                 key={club.id}
                 club={club}
@@ -34,7 +34,7 @@ class ClubDisplay extends React.Component {
         ) : (
           <table className="table is-fullwidth is-hoverable" style={{ borderTop: '1px solid #e5e5e5' }}>
             <tbody>
-              {displayClubs.map((club) => (
+              {displayClubs.map(club => (
                 <ClubTableRow
                   club={club}
                   tags={tags}

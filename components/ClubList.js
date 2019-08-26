@@ -18,16 +18,17 @@ class ClubList extends React.Component {
   }
 
   render() {
-    var { club, openModal, updateFavorites, favorite } = this.props
-    var { name, id, description, subtitle, tags } = club
-    var img = club.image_url || getDefaultClubImageURL()
+    const { club, openModal, updateFavorites, favorite } = this.props
+    const { hovering } = this.state
+    const { name, id, description, subtitle, tags } = club
+    const img = club.image_url || getDefaultClubImageURL()
     return (
       <Pop
         style={{ width: '100%' }}
-        pose={this.state.hovering ? 'hovered' : 'idle'}
+        pose={hovering ? 'hovered' : 'idle'}
         onMouseEnter={() => this.setState({ hovering: true })}
         onMouseLeave={() => this.setState({ hovering: false })}>
-        <div style={{ padding: '0 5px', borderRadius: 3, border: '1px solid #e5e5e5', backgroundColor: this.state.hovering ? '#FAFAFA' : '#fff', margin: '.5rem', width: '100%' }}>
+        <div style={{ padding: '0 5px', borderRadius: 3, border: '1px solid #e5e5e5', backgroundColor: hovering ? '#FAFAFA' : '#fff', margin: '.5rem', width: '100%' }}>
           <div className="columns is-vcentered is-gapless is-mobile">
             <div onClick={(e) => openModal(club)} className="column">
               <div className="columns is-gapless is-vcentered" style={{ padding: 10, width: '100%' }}>
