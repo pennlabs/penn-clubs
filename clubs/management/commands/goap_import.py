@@ -17,6 +17,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.count = 1
+        self.club_count = 0
         self.session = requests.Session()
         self.agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' + \
                      ' Chrome/40.0.2214.85 Safari/537.36'
@@ -24,6 +25,7 @@ class Command(BaseCommand):
             'User-Agent': self.agent
         }
         self.process_url(self.START_URL)
+        self.stdout.write('Imported {} clubs!'.format(self.club_count))
 
     def process_url(self, url):
         self.stdout.write('Processing Page {}'.format(self.count))
@@ -58,8 +60,12 @@ class Command(BaseCommand):
                 tag = Tag.objects.get_or_create(name=group_type)[0]
             else:
                 tag = None
-            cid = slugify(name)
-            club, flag = Club.objects.get_or_create(id=cid)
+            if Club.objects.filter(name=name).exists():
+                club = Club.objects.get(name__iexact=name)
+                flag = False
+            else:
+                cid = slugify(name)
+                club, flag = Club.objects.get_or_create(id=cid)
 
             # only overwrite blank fields
             if not club.name:
@@ -79,6 +85,7 @@ class Command(BaseCommand):
             club.save()
             if tag is not None and not club.tags.count():
                 club.tags.set([tag])
+            self.club_count += 1
             self.stdout.write("{} '{}'".format('Created' if flag else 'Updated', name))
 
         next_tag = soup.find(text='Next >')
