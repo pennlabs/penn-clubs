@@ -28,6 +28,7 @@ uritemplate = "*"
 pyyaml = "*"
 django-storages = "*"
 pillow = "*"
+"boto3" = "*"
 
 [requires]
 python_version = "3"
