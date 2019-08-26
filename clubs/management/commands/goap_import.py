@@ -1,7 +1,9 @@
+import os
 from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.template.defaultfilters import slugify
 
@@ -33,7 +35,6 @@ class Command(BaseCommand):
         grps = soup.select('.grpl .grpl-grp')
         for grp in grps:
             name = grp.select_one('h3 a').text.strip()
-            # TODO: download image and save to more permanant location
             image_url = urljoin(url, grp.select_one('img')['src']).strip()
             if image_url.endswith('/group_img.png'):
                 image_url = None
@@ -65,8 +66,10 @@ class Command(BaseCommand):
                 club.name = name
             if not club.description:
                 club.description = description
-            if not club.image_url:
-                club.image_url = image_url
+            if not club.image and image_url:
+                resp = requests.get(image_url, allow_redirects=True)
+                resp.raise_for_status()
+                club.image.save(os.path.basename(image_url), ContentFile(resp.content))
             if not club.email:
                 club.email = contact_email
 
