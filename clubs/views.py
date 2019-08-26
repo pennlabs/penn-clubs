@@ -1,18 +1,35 @@
 import re
 
+from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, generics, status, viewsets
+from rest_framework import filters, generics, parsers, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.permissions import ClubPermission, EventPermission, InvitePermission, IsSuperuser, MemberPermission
-from clubs.serializers import (AuthenticatedClubSerializer, AuthenticatedMembershipSerializer, ClubSerializer,
-                               EventSerializer, FavoriteSerializer, MembershipInviteSerializer,
+from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
+                               ClubSerializer, EventSerializer, FavoriteSerializer, MembershipInviteSerializer,
                                MembershipSerializer, TagSerializer, UserSerializer)
+
+
+def upload_endpoint_helper(request, cls, pk, field):
+    obj = get_object_or_404(cls, pk=pk)
+    if 'file' in request.data and isinstance(request.data['file'], UploadedFile):
+        getattr(obj, field).delete(save=False)
+        setattr(obj, field, request.data['file'])
+        obj.save()
+    else:
+        return Response({
+            'file': 'No image file was uploaded!'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+        'detail': 'Club image uploaded!'
+    })
 
 
 class ClubViewSet(viewsets.ModelViewSet):
@@ -33,7 +50,13 @@ class ClubViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'subtitle']
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
+    @action(detail=True, methods=['post'])
+    def upload(self, request, *args, **kwargs):
+        return upload_endpoint_helper(request, Club, kwargs['pk'], 'image')
+
     def get_serializer_class(self):
+        if self.action == 'upload':
+            return AssetSerializer
         if self.request is not None and self.request.user.is_authenticated:
             if self.request.user.is_superuser or ('pk' in self.kwargs and
                Membership.objects.filter(person=self.request.user, club=self.kwargs['pk']).exists()):
@@ -48,6 +71,10 @@ class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
     permission_classes = [EventPermission | IsSuperuser]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
+
+    @action(detail=True, methods=['post'])
+    def upload(self, request, *args, **kwargs):
+        return upload_endpoint_helper(request, Event, kwargs['pk'], 'image')
 
     def get_queryset(self):
         return Event.objects.filter(club=self.kwargs['club_pk'])
@@ -79,6 +106,16 @@ class MemberViewSet(viewsets.ModelViewSet):
                 return AuthenticatedMembershipSerializer
         else:
             return MembershipSerializer
+
+
+class AssetViewSet(viewsets.ModelViewSet):
+    serializer_class = AssetSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [parsers.MultiPartParser]
+    http_method_names = ['get', 'post', 'delete']
+
+    def get_queryset(self):
+        return Asset.objects.filter(creator=self.request.user)
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -124,7 +161,15 @@ class MassInviteAPIView(APIView):
                 'detail': 'You do not have permission to invite new members!'
             }, status=status.HTTP_403_FORBIDDEN)
 
-        emails = [x.strip() for x in re.split('\n|,', request.POST.get('emails', request.data.get('emails', '')))]
+        role = request.data.get('role', Membership.ROLE_MEMBER)
+        title = request.data.get('title', 'Member')
+
+        if mem and mem.role > role:
+            return Response({
+                'detail': 'You cannot send invites for a role higher than your own!'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        emails = [x.strip() for x in re.split('\n|,', request.data.get('emails', ''))]
         emails = [x for x in emails if x]
 
         # remove users that are already in the club
@@ -135,7 +180,13 @@ class MassInviteAPIView(APIView):
             validate_email(email)
 
         for email in emails:
-            MembershipInvite.objects.create(email=email, club=club, creator=request.user).send_mail(request)
+            MembershipInvite.objects.create(
+                email=email,
+                club=club,
+                creator=request.user,
+                role=role,
+                title=title
+            ).send_mail(request)
 
         return Response({
             'detail': 'Sent invite(s) to {} email(s)!'.format(len(emails))

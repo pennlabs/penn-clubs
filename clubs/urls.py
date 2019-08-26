@@ -1,11 +1,14 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path
 from rest_framework_nested import routers
 
-from clubs.views import (ClubViewSet, EventViewSet, FavoriteViewSet, MassInviteAPIView,
+from clubs.views import (AssetViewSet, ClubViewSet, EventViewSet, FavoriteViewSet, MassInviteAPIView,
                          MemberInviteViewSet, MemberViewSet, TagViewSet, UserUpdateAPIView)
 
 
 router = routers.SimpleRouter()
+router.register(r'assets', AssetViewSet, basename='assets')
 router.register(r'clubs', ClubViewSet, basename='clubs')
 router.register(r'tags', TagViewSet)
 router.register(r'favorites', FavoriteViewSet, basename='favorites')
@@ -22,3 +25,6 @@ urlpatterns = [
 
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

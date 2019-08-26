@@ -26,6 +26,8 @@ bleach = "*"
 django-cors-headers = "*"
 uritemplate = "*"
 pyyaml = "*"
+django-storages = "*"
+pillow = "*"
 
 [requires]
 python_version = "3"

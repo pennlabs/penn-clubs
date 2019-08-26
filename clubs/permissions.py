@@ -23,7 +23,7 @@ class ClubPermission(permissions.BasePermission):
             return membership.role <= Membership.ROLE_OFFICER
 
     def has_permission(self, request, view):
-        if view.action in ['update', 'partial_update', 'destroy']:
+        if view.action in ['update', 'upload', 'partial_update', 'destroy']:
             return request.user.is_authenticated
         elif view.action in ['create']:
             # TODO: more strict permissions for creating clubs
@@ -61,6 +61,7 @@ class IsSuperuser(permissions.BasePermission):
 class MemberPermission(permissions.BasePermission):
     """
     Members of a higher role can update/delete members of equal or lower roles, except ordinary members.
+    Members can edit themselves, with additional restrictions on the serializer level.
     Officers and above can add new members.
     Anyone can view membership.
     """
@@ -69,15 +70,22 @@ class MemberPermission(permissions.BasePermission):
         if membership is None:
             return False
 
+        # any member can retrieve a membership
         if view.action in ['retrieve']:
             return membership.role <= Membership.ROLE_MEMBER
 
+        # can modify own membership, with restrictions
+        if obj == membership and view.action in ['update', 'partial_update', 'destroy']:
+            # owners cannot delete themselves without passing on ownership
+            if view.action in ['destroy'] and membership.role <= Membership.ROLE_OWNER:
+                return False
+            return True
+
+        # only officers and above can edit other users
         if membership.role >= Membership.ROLE_MEMBER:
             return False
 
-        if view.action in ['destroy'] and membership.pk == obj.pk and membership.role <= Membership.ROLE_OWNER:
-            return False
-
+        # users can edit other users with same authority or lower
         return membership.role <= obj.role
 
     def has_permission(self, request, view):

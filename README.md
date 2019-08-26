@@ -12,6 +12,13 @@ Running the backend requires Python 3. In order to use authentication, set the f
 - `LABS_CLIENT_ID` (from Platform)
 - `LABS_CLIENT_SECRET` (from Platform)
 
+In production, you also need to set the following environment variables:
+- `SECRET_KEY`
+- `SENTRY_URL`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_STORAGE_BUCKET_NAME`
+
 ```bash
 pipenv install
 pipenv shell

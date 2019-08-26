@@ -1,10 +1,12 @@
 import datetime
+import io
 import json
 
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
 
@@ -16,6 +18,14 @@ class ClubTestCase(TestCase):
         self.club1 = Club.objects.create(
             id='test-club',
             name='Test Club'
+        )
+
+        self.event1 = Event.objects.create(
+            id='test-event',
+            club=self.club1,
+            name='Test Event',
+            start_time=timezone.now(),
+            end_time=timezone.now()
         )
 
         self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
@@ -44,6 +54,46 @@ class ClubTestCase(TestCase):
         self.user5.is_staff = True
         self.user5.is_superuser = True
         self.user5.save()
+
+    def test_club_upload(self):
+        """
+        Test uploading a club logo.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        # empty image throws an error
+        resp = self.client.post(reverse('clubs-upload', args=(self.club1.id,)))
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        # successful image upload
+        resp = self.client.post(reverse('clubs-upload', args=(self.club1.id,)), {
+            'file': io.BytesIO(b'')
+        })
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure image url is set
+        resp = self.client.get(reverse('clubs-detail', args=(self.club1.id,)))
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+        self.assertTrue(data['image_url'])
+
+        # ensure cleanup doesn't throw error
+        self.club1.delete()
+
+    def test_event_upload(self):
+        """
+        Test uploading an event image.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        # successful image upload
+        resp = self.client.post(reverse('club-events-upload', args=(self.club1.id, self.event1.id)), {
+            'file': io.BytesIO(b'')
+        })
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure cleanup doesn't throw error
+        self.event1.delete()
 
     def test_user_views(self):
         """
@@ -172,8 +222,8 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure event exists
-        self.assertEqual(Event.objects.count(), 1)
-        self.assertEqual(Event.objects.first().creator, self.user5)
+        self.assertEqual(Event.objects.filter(name='Interest Meeting').count(), 1)
+        self.assertEqual(Event.objects.get(name='Interest Meeting').creator, self.user5)
 
         # delete event
         resp = self.client.delete(reverse('club-events-detail', args=(self.club1.id, 'interest-meeting')))
@@ -296,6 +346,29 @@ class ClubTestCase(TestCase):
         resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user1.username)),
                                   content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_membership_auth(self):
+        Membership.objects.create(
+            club=self.club1,
+            person=self.user1
+        )
+        self.client.login(username=self.user1.username, password='test')
+        bad_tries = [{'title': 'Supreme Leader'}, {'role': Membership.ROLE_OFFICER}, {'active': False}]
+        for bad in bad_tries:
+            resp = self.client.patch(reverse('club-members-detail', args=(self.club1.id, self.user1.username)),
+                                     bad,
+                                     content_type='application/json')
+            self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        good_tries = [{'public': True}, {'public': False}]
+        for good in good_tries:
+            resp = self.client.patch(reverse('club-members-detail', args=(self.club1.id, self.user1.username)),
+                                     good,
+                                     content_type='application/json')
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        resp = self.client.delete(reverse('club-members-detail', args=(self.club1.id, self.user1.username)))
+        self.assertIn(resp.status_code, [200, 204], resp.content)
 
     def test_tag_views(self):
         # everyone can view the list of tags
@@ -622,18 +695,21 @@ class ClubTestCase(TestCase):
 
     def test_club_invite(self):
         """
-        Incomplete test to test the email invitation feature.
+        Test the email invitation feature.
         """
         self.client.login(username=self.user5.username, password='test')
 
         resp = self.client.post(reverse('club-invite', args=(self.club1.id,)), {
-            'emails': 'one@pennlabs.org, two@pennlabs.org, three@pennlabs.org'
+            'emails': 'one@pennlabs.org, two@pennlabs.org, three@pennlabs.org',
+            'role': Membership.ROLE_OFFICER
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = json.loads(resp.content.decode('utf-8'))
 
         # ensure membership invite was created
-        self.assertEqual(MembershipInvite.objects.filter(club__pk=self.club1.id).count(), 3, data)
+        invites = MembershipInvite.objects.filter(club__pk=self.club1.id)
+        self.assertEqual(invites.count(), 3, data)
+        self.assertEqual(list(invites.values_list('role', flat=True)), [Membership.ROLE_OFFICER] * 3, data)
         self.assertEqual(len(mail.outbox), 3, mail.outbox)
 
         # ensure we can get all memberships
@@ -673,5 +749,20 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(reverse('club-invite', args=(self.club1.id,)), {
             'emails': 'one@pennlabs.org, two@pennlabs.org, three@pennlabs.org'
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_club_invite_insufficient_permissions(self):
+        self.client.login(username=self.user2.username, password='test')
+        Membership.objects.create(
+            person=self.user2,
+            club=self.club1,
+            role=Membership.ROLE_OFFICER
+        )
+
+        resp = self.client.post(reverse('club-invite', args=(self.club1.id,)), {
+            'emails': 'one@pennlabs.org, two@pennlabs.org, three@pennlabs.org',
+            'role': Membership.ROLE_OWNER,
+            'title': 'Supreme Leader'
         }, content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)

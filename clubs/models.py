@@ -1,9 +1,25 @@
+import os
+import uuid
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
+from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
+
+
+def get_asset_file_name(instance, fname):
+    return os.path.join('assets', uuid.uuid4().hex, fname)
+
+
+def get_club_file_name(instance, fname):
+    return os.path.join('clubs', '{}.{}'.format(uuid.uuid4().hex, fname.rsplit('.', 1)[-1]))
+
+
+def get_event_file_name(instance, fname):
+    return os.path.join('events', '{}.{}'.format(uuid.uuid4().hex, fname.rsplit('.', 1)[-1]))
 
 
 class Club(models.Model):
@@ -38,7 +54,7 @@ class Club(models.Model):
     application_required = models.BooleanField(default=True)
     application_available = models.BooleanField(default=False)
     listserv_available = models.BooleanField(default=False)
-    image_url = models.URLField(null=True, blank=True)
+    image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
     tags = models.ManyToManyField('Tag')
     members = models.ManyToManyField(get_user_model(), through='Membership')
 
@@ -61,7 +77,7 @@ class Event(models.Model):
     end_time = models.DateTimeField()
     location = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
-    image_url = models.URLField(null=True, blank=True)
+    image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
     description = models.TextField()
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -99,6 +115,7 @@ class Membership(models.Model):
     )
 
     active = models.BooleanField(default=True)
+    public = models.BooleanField(default=True)
 
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
@@ -145,6 +162,9 @@ class MembershipInvite(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    title = models.CharField(max_length=255, default='Member')
+    role = models.IntegerField(default=Membership.ROLE_MEMBER)
+
     def __str__(self):
         return '<MembershipInvite: {} for {}>'.format(self.club.pk, self.email)
 
@@ -157,7 +177,11 @@ class MembershipInvite(models.Model):
 
         Membership.objects.get_or_create(
             person=user,
-            club=self.club
+            club=self.club,
+            defaults={
+                'role': self.role,
+                'title': self.title
+            }
         )
 
     def send_mail(self, request):
@@ -193,3 +217,35 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Asset(models.Model):
+    """
+    Represents an uploaded file object.
+    """
+    creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
+    file = models.FileField(upload_to=get_asset_file_name)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+@receiver(models.signals.post_delete, sender=Asset)
+def asset_delete_cleanup(sender, instance, **kwargs):
+    if instance.file:
+        instance.file.delete(save=False)
+
+
+@receiver(models.signals.post_delete, sender=Club)
+def club_delete_cleanup(sender, instance, **kwargs):
+    if instance.image:
+        instance.image.delete(save=False)
+
+
+@receiver(models.signals.post_delete, sender=Event)
+def event_delete_cleanup(sender, instance, **kwargs):
+    if instance.image:
+        instance.image.delete(save=False)

@@ -1,11 +1,10 @@
 from urllib.parse import urlparse
 
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 from django.template.defaultfilters import slugify
-from rest_framework import serializers
+from rest_framework import serializers, validators
 
-from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.utils import clean
 
 
@@ -65,18 +64,20 @@ class UserMembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Membership
-        fields = ('id', 'name', 'title', 'role', 'role_display', 'active')
+        fields = ('id', 'name', 'title', 'role', 'role_display', 'active', 'public')
 
 
 class MembershipSerializer(serializers.ModelSerializer):
     """
-    Used for listing which users are in a club.
+    Used for listing which users are in a club for members who are not in the club.
     """
     name = serializers.SerializerMethodField('get_full_name')
     person = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), write_only=True)
     role = serializers.IntegerField(write_only=True, required=False)
 
     def get_full_name(self, obj):
+        if not obj.public:
+            return 'Anonymous'
         return obj.person.get_full_name()
 
     def validate_role(self, value):
@@ -86,7 +87,7 @@ class MembershipSerializer(serializers.ModelSerializer):
         """
         user = self.context['request'].user
         mem_user_id = self.instance.person.id if self.instance else self.initial_data['person']
-        club_pk = self.context['view'].kwargs.get('club_pk')
+        club_pk = self.context['view'].kwargs.get('club_pk', self.context['view'].kwargs.get('pk'))
         membership = Membership.objects.filter(person=user, club=club_pk).first()
         if user.is_superuser:
             return value
@@ -99,15 +100,34 @@ class MembershipSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('You cannot demote yourself if you are the only owner!')
         return value
 
+    def validate(self, data):
+        """
+        Normal members can only change a small subset of information.
+        """
+        user = self.context['request'].user
+        club_pk = self.context['view'].kwargs.get('club_pk', self.context['view'].kwargs.get('pk'))
+
+        membership = Membership.objects.filter(person=user, club=club_pk).first()
+
+        if membership is None or membership.role > Membership.ROLE_OFFICER:
+            for field in data:
+                if field not in ['public']:
+                    raise serializers.ValidationError('Normal members are not allowed to change "{}"!'.format(field))
+        return data
+
     def save(self):
         if 'club' not in self.validated_data:
-            self.validated_data['club'] = Club.objects.get(pk=self.context['view'].kwargs.get('club_pk'))
+            club_pk = self.context['view'].kwargs.get('club_pk')
+            if club_pk is None:
+                club_pk = self.context['view'].kwargs.get('pk')
+            self.validated_data['club'] = Club.objects.get(pk=club_pk)
 
         return super().save()
 
     class Meta:
         model = Membership
-        fields = ['name', 'title', 'person', 'role', 'active']
+        fields = ['name', 'title', 'person', 'role', 'active', 'public']
+        validators = [validators.UniqueTogetherValidator(queryset=Membership.objects.all(), fields=['person', 'club'])]
 
 
 class AuthenticatedMembershipSerializer(MembershipSerializer):
@@ -118,6 +138,9 @@ class AuthenticatedMembershipSerializer(MembershipSerializer):
     role = serializers.IntegerField(required=False)
     email = serializers.SerializerMethodField('get_email')
     username = serializers.SerializerMethodField('get_username')
+
+    def get_full_name(self, obj):
+        return obj.person.get_full_name()
 
     def get_email(self, obj):
         return obj.person.email
@@ -131,11 +154,21 @@ class AuthenticatedMembershipSerializer(MembershipSerializer):
 
 
 class ClubSerializer(serializers.ModelSerializer):
-    id = serializers.SlugField(required=False)
+    id = serializers.SlugField(required=False, validators=[validators.UniqueValidator(queryset=Club.objects.all())])
+    name = serializers.CharField(validators=[validators.UniqueValidator(queryset=Club.objects.all())])
     tags = TagSerializer(many=True)
     subtitle = serializers.CharField(required=False)
     members = MembershipSerializer(many=True, source='membership_set', read_only=True)
     favorite_count = serializers.IntegerField(read_only=True)
+    image_url = serializers.SerializerMethodField('get_image_url')
+
+    def get_image_url(self, obj):
+        if not obj.image:
+            return None
+        if obj.image.url.startswith('http'):
+            return obj.image.url
+        else:
+            return self.context['request'].build_absolute_uri(obj.image.url)
 
     def create(self, validated_data):
         """
@@ -162,18 +195,6 @@ class ClubSerializer(serializers.ModelSerializer):
         )
 
         return obj
-
-    def validate_name(self, value):
-        """
-        Ensure that the club name is unique.
-        """
-        value = value.strip()
-        same_clubs = Club.objects.filter(Q(name__iexact=value) | Q(id=slugify(value)))
-
-        if same_clubs.exists() and not same_clubs.first() == self.instance:
-            raise serializers.ValidationError('A club with that name already exists.')
-
-        return value
 
     def validate_description(self, value):
         """
@@ -303,6 +324,15 @@ class AuthenticatedClubSerializer(ClubSerializer):
 class EventSerializer(serializers.ModelSerializer):
     id = serializers.SlugField(required=False)
     club = serializers.PrimaryKeyRelatedField(queryset=Club.objects.all(), required=False)
+    image_url = serializers.SerializerMethodField('get_image_url')
+
+    def get_image_url(self, obj):
+        if not obj.image:
+            return None
+        if obj.image.url.startswith('http'):
+            return obj.image.url
+        else:
+            return self.context['request'].build_absolute_uri(obj.image.url)
 
     class Meta:
         model = Event
@@ -327,29 +357,17 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
+    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.PrimaryKeyRelatedField(queryset=Club.objects.all())
     name = serializers.SerializerMethodField('get_name')
-
-    def save(self):
-        self.validated_data['person'] = self.context['request'].user
-
-        return super().save()
-
-    def validate_club(self, value):
-        """
-        Ensure that the user has not already favorited this club.
-        """
-        if self.context['request'].user.favorite_set.filter(club=value).exists():
-            raise serializers.ValidationError('You have already favorited this club!')
-
-        return value
 
     def get_name(self, obj):
         return obj.club.name
 
     class Meta:
         model = Favorite
-        fields = ('club', 'name')
+        fields = ('club', 'name', 'person')
+        validators = [validators.UniqueTogetherValidator(queryset=Favorite.objects.all(), fields=['club', 'person'])]
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -366,3 +384,21 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'is_superuser')
+
+
+class AssetSerializer(serializers.ModelSerializer):
+    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    file_url = serializers.SerializerMethodField('get_file_url')
+    file = serializers.FileField(write_only=True)
+
+    def get_file_url(self, obj):
+        if not obj.file:
+            return None
+        if obj.file.url.startswith('http'):
+            return obj.file.url
+        else:
+            return self.context['request'].build_absolute_uri(obj.file.url)
+
+    class Meta:
+        model = Asset
+        fields = ('id', 'file_url', 'file', 'creator')
