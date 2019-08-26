@@ -26,15 +26,16 @@ class ClubCard extends React.Component {
   }
 
   render() {
-    var { club, openModal, updateFavorites, favorite } = this.props
-    var { name, id, description, subtitle, tags } = club
-    var img = club.image_url || getDefaultClubImageURL()
+    const { club, openModal, updateFavorites, favorite } = this.props
+    const { hovering } = this.state
+    const { name, id, description, subtitle, tags } = club
+    const img = club.image_url || getDefaultClubImageURL()
     return (
       <div className="column is-half-desktop">
         <Pop
-          pose={this.state.hovering ? 'hovered' : 'idle'}
+          pose={hovering ? 'hovered' : 'idle'}
           style={{ cursor: 'pointer' }}
-          onClick={(e) => openModal(club)}
+          onClick={() => openModal(club)}
           onMouseEnter={() => this.setState({ hovering: true })}
           onMouseLeave={() => this.setState({ hovering: false })}>
           <div
@@ -45,7 +46,7 @@ class ClubCard extends React.Component {
               minHeight: 240,
               boxShadow: '0 0 0 #fff',
               border: '1px solid #e5e5e5',
-              backgroundColor: this.state.hovering ? '#FAFAFA' : '#fff',
+              backgroundColor: hovering ? '#FAFAFA' : '#fff',
               justifyContent: 'space-between'
             }}>
             <div>

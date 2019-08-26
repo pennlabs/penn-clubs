@@ -15,7 +15,9 @@ class Club extends React.Component {
   }
 
   componentDidMount() {
-    doApiRequest(`/clubs/${this.props.query.club}/?format=json`).then((resp) => resp.json()).then((data) => this.setState({ club: data }))
+    doApiRequest(`/clubs/${this.props.query.club}/?format=json`)
+      .then((resp) => resp.json())
+      .then((data) => this.setState({ club: data }))
   }
 
   render() {

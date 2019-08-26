@@ -72,25 +72,31 @@ class Form extends React.Component {
     this.getAllFields().forEach((item) => {
       const val = this.state['field-' + item.name]
       switch (item.type) {
-        case 'multiselect':
+        case 'multiselect': {
           out[item.name] = (val || []).map(item.reverser)
           break
-        case 'select':
+        }
+        case 'select': {
           out[item.name] = item.reverser(val)
           break
-        case 'checkbox':
+        }
+        case 'checkbox': {
           out[item.name] = !!val
           break
-        case 'date':
+        }
+        case 'date': {
           out[item.name] = val || null
           break
-        case 'file':
+        }
+        case 'file': {
           const data = new FormData()
           data.append('file', this.files[item.name].files[0])
           out[item.name] = data
           break
-        default:
+        }
+        default: {
           out[item.name] = val
+        }
       }
     })
     return out
@@ -133,10 +139,10 @@ class Form extends React.Component {
       } else if (item.type === 'file') {
         inpt = <div className='file' key={item.name}>
           <label className='file-label'>
-            <input className="file-input" ref={(c) => {this.files[item.name] = c}} accept={item.accept} type="file" name={item.name} />
+            <input className="file-input" ref={(c) => { this.files[item.name] = c }} accept={item.accept} type="file" name={item.name} />
             <span className="file-cta">
               <span className="file-icon">
-                  <i className="fas fa-upload"></i>
+                <i className="fas fa-upload"></i>
               </span>
               <span className="file-label">
                 Choose a file...

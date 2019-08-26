@@ -50,8 +50,7 @@ class SettingsForm extends React.Component {
       if (resp.ok) {
         this.notify(`Your privacy setting for ${club.name} has been changed.`)
         this.props.updateUserInfo()
-      }
-      else {
+      } else {
         resp.json().then((err) => {
           this.notify(this.formatError(err))
         })
@@ -92,8 +91,8 @@ class SettingsForm extends React.Component {
             name: 'membership',
             type: 'component',
             content: <div>
-                <p>The list below shows what clubs you are a member of. If you would like to hide a particular club from the public, click on the <i className='fa fa-fw fa-check-circle has-text-success'></i> icon under the Public column. This will not hide your membership from other club members.</p>
-                <table className='table is-fullwidth'>
+              <p>The list below shows what clubs you are a member of. If you would like to hide a particular club from the public, click on the <i className='fa fa-fw fa-check-circle has-text-success'></i> icon under the Public column. This will not hide your membership from other club members.</p>
+              <table className='table is-fullwidth'>
                 <thead>
                   <tr>
                     <th>Name</th>

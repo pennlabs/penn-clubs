@@ -131,8 +131,8 @@ class ClubForm extends React.Component {
   }
 
   submit(data) {
-    const photo = data['image']
-    delete data['image']
+    const photo = data.image
+    delete data.image
 
     var req = null
     if (this.state.isEdit) {
@@ -163,13 +163,11 @@ class ClubForm extends React.Component {
             }).then((resp) => {
               if (resp.ok) {
                 this.notify('Club and images have been successfully saved.')
-              }
-              else {
+              } else {
                 this.notify('Failed to upload club image file!')
               }
             })
-          }
-          else {
+          } else {
             this.notify('Club has been successfully saved.')
           }
         })
