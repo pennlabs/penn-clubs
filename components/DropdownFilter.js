@@ -28,8 +28,8 @@ class DropdownFilter extends React.Component {
   }
 
   render() {
-    var { name, options, selected, updateTag } = this.props
-    var { drop, hoverDown } = this.state
+    const { name, options, selected, updateTag } = this.props
+    const { drop, hoverDown } = this.state
     var checkboxcolor = {
       Type: CLUBS_BLUE,
       Size: CLUBS_RED,
@@ -49,18 +49,20 @@ class DropdownFilter extends React.Component {
             </span>
           </Pop>
         </div>
-        {drop && <table>
-          <tbody>
-            {options.map(tag => (
-              <tr key={tag.label} style={{ paddingTop: 3, cursor: 'pointer' }} onClick={(e) => updateTag(tag, name)}>
-                <td className="icon" style={{ cursor: 'pointer', color: CLUBS_GREY_LIGHT }}>
-                  <i className={this.isSelected(tag) ? 'fas fa-check-square' : 'far fa-square'}></i>
-                </td>
-                <td style={{ color: CLUBS_GREY_LIGHT }}>{tag.label}{ typeof tag.count !== 'undefined' && <span className='has-text-grey'> ({tag.count})</span> }</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>}
+        {drop && (
+          <table>
+            <tbody>
+              {options.map(tag => (
+                <tr key={tag.label} style={{ paddingTop: 3, cursor: 'pointer' }} onClick={(e) => updateTag(tag, name)}>
+                  <td className="icon" style={{ cursor: 'pointer', color: CLUBS_GREY_LIGHT }}>
+                    <i className={this.isSelected(tag) ? 'fas fa-check-square' : 'far fa-square'}></i>
+                  </td>
+                  <td style={{ color: CLUBS_GREY_LIGHT }}>{tag.label}{ typeof tag.count !== 'undefined' && <span className='has-text-grey'> ({tag.count})</span> }</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     )
   }

@@ -6,8 +6,7 @@ import renderPage from '../renderPage.js'
 import PropTypes from 'prop-types'
 
 export const FAQ = () => (
-  <div style={{ backgroundColor: '#f9f9f9' }}>
-  </div>
+  <div style={{ backgroundColor: '#f9f9f9' }} />
 )
 
 export default renderPage(FAQ)
