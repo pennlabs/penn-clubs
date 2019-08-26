@@ -59,13 +59,13 @@ class MergeDuplicatesTestCase(TestCase):
         self.tag2 = Tag.objects.create(name='Two')
 
         self.club1 = Club.objects.create(
-            id='one',
+            code='one',
             name='Same Name',
             active=False
         )
         self.club1.tags.add(self.tag1)
         self.club2 = Club.objects.create(
-            id='two',
+            code='two',
             name='Same Name',
             github='https://github.com/pennlabs/'
         )

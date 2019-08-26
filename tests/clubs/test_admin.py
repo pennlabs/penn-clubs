@@ -17,7 +17,7 @@ class AdminTestCase(TestCase):
         self.user1.save()
 
         self.tag1 = Tag.objects.create(name='Engineering')
-        self.club1 = Club.objects.create(id='penn-labs', name='Penn Labs')
+        self.club1 = Club.objects.create(code='penn-labs', name='Penn Labs')
         self.club1.tags.add(self.tag1)
 
     def test_admin_views(self):

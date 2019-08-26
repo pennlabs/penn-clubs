@@ -45,7 +45,7 @@ class Club(models.Model):
         (APPLICATION_REQUIRED_SOME, 'Application Required For Some Positions'),
         (APPLICATION_REQUIRED_ALL, 'Application Required For All Positions'),
     )
-    id = models.SlugField(max_length=255, primary_key=True)
+    code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=True)
     approved = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
@@ -82,7 +82,7 @@ class Event(models.Model):
     """
     Represents an event hosted by a club.
     """
-    id = models.SlugField(max_length=255, primary_key=True)
+    code = models.SlugField(max_length=255, unique=True, db_index=True)
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=255)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
