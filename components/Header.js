@@ -15,7 +15,8 @@ class Header extends React.Component {
     super(props)
     this.state = {
       hoverIcon: false,
-      hoverFav: false
+      hoverFav: false,
+      hoverFeedback: false
     }
   }
 
@@ -41,7 +42,8 @@ class Header extends React.Component {
                 onMouseLeave={() => this.setState({ hoverIcon: false })}>
                 <img src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" style={{ paddingLeft: 15, height: '100%', marginBottom: -5 }}/>
               </Pop>
-              <h1 className="title is-size-4" style={{ color: '#9B9B9B', paddingLeft: 15 }}>Penn Clubs</h1>
+              <h1 className="title is-size-4" style={{ color: '#9B9B9B', paddingLeft: 15, marginBottom: 0 }}>Penn Clubs</h1>
+              <span className="tag is-medium" style={{ marginLeft: 10, backgroundColor: '#60B8F2', color: 'white' }}>Beta</span>
             </a>
 
             <a role="button" className="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
@@ -66,6 +68,32 @@ class Header extends React.Component {
             </div>
           </div>
         </nav>
+        <a
+          style={{
+            display: 'inline-block',
+            width: '2.5rem',
+            height: '2.5rem',
+            borderRadius: '3rem',
+            backgroundColor: this.state.hoverFeedback ? '#ddd' : 'white',
+            position: 'fixed',
+            bottom: 20,
+            right: 20,
+            textAlign: 'center',
+            boxShadow: '0 0 7px #ccc',
+            cursor: 'pointer',
+            zIndex: 10
+          }}
+          href="https://airtable.com/shrCsYFWxCwfwE7cf"
+          title="Feedback"
+          target="_blank"
+          onMouseEnter={() => this.setState({ hoverFeedback: true })}
+          onMouseLeave={() => this.setState({ hoverFeedback: false })}>
+          <i className={'fa-comment ' + (this.state.hoverFeedback ? 'fa' : 'far')} style={{
+            fontSize: '1.2em',
+            color: '#6a6a6a',
+            lineHeight: '2.5rem'
+          }} />
+        </a>
       </div>
     )
   }
