@@ -11,13 +11,13 @@ class ClubTableRow extends React.Component {
   }
 
   render() {
-    var { club, openModal, updateFavorites, favorite } = this.props
-    var { name, id, description, subtitle, tags } = club
-    var img = club.image_url || getDefaultClubImageURL()
+    const { club, openModal, updateFavorites, favorite } = this.props
+    const { name, id, description, subtitle, tags } = club
+    const img = club.image_url || getDefaultClubImageURL()
     return (
       <tr style={{ borderTop: '1px solid #e5e5e5' }}>
         <div className="columns is-vcentered is-gapless is-mobile">
-          <div className="column" onClick={(e) => openModal(club)}>
+          <div className="column" onClick={() => openModal(club)}>
             <div className="columns is-gapless" style={{ padding: 10 }}>
               <div className="column is-4">
                 <b className="is-size-6" style={{ color: CLUBS_GREY }}> {name} </b>
@@ -31,7 +31,7 @@ class ClubTableRow extends React.Component {
             </div>
           </div>
           <div className="column is-narrow">
-            <span className="icon" onClick={(e) => updateFavorites(club.id)} style={{ color: CLUBS_GREY, cursor: 'pointer', paddingRight: 20 }}>
+            <span className="icon" onClick={() => updateFavorites(club.id)} style={{ color: CLUBS_GREY, cursor: 'pointer', paddingRight: 20 }}>
               <i className={(favorite ? 'fas' : 'far') + ' fa-heart'} ></i>
             </span>
           </div>

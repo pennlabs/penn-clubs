@@ -30,7 +30,7 @@ class DropdownFilter extends React.Component {
   render() {
     const { name, options, selected, updateTag } = this.props
     const { drop, hoverDown } = this.state
-    var checkboxcolor = {
+    const checkboxColor = {
       Type: CLUBS_BLUE,
       Size: CLUBS_RED,
       Application: CLUBS_YELLOW

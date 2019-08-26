@@ -30,7 +30,7 @@ class ClubList extends React.Component {
         onMouseLeave={() => this.setState({ hovering: false })}>
         <div style={{ padding: '0 5px', borderRadius: 3, border: '1px solid #e5e5e5', backgroundColor: hovering ? '#FAFAFA' : '#fff', margin: '.5rem', width: '100%' }}>
           <div className="columns is-vcentered is-gapless is-mobile">
-            <div onClick={(e) => openModal(club)} className="column">
+            <div onClick={() => openModal(club)} className="column">
               <div className="columns is-gapless is-vcentered" style={{ padding: 10, width: '100%' }}>
                 <div className="column is-narrow">
                   <img style={{ height: 60, width: 90, borderRadius: 3 }} src={img} />
@@ -48,7 +48,7 @@ class ClubList extends React.Component {
               </div>
             </div>
             <div className="column is-narrow">
-              <span className="icon" onClick={(e) => updateFavorites(club.id)} style={{ color: CLUBS_GREY, cursor: 'pointer', paddingRight: 20 }}>
+              <span className="icon" onClick={() => updateFavorites(club.id)} style={{ color: CLUBS_GREY, cursor: 'pointer', paddingRight: 20 }}>
                 <i className={(favorite ? 'fas' : 'far') + ' fa-heart'} ></i>
               </span>
             </div>
