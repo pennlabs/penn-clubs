@@ -1,6 +1,7 @@
 import sentry_sdk
-from pennclubs.settings.base import *
 from sentry_sdk.integrations.django import DjangoIntegration
+
+from pennclubs.settings.base import *
 
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
