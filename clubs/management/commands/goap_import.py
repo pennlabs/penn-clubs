@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 from django.core.files.base import ContentFile
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.template.defaultfilters import slugify
 
 from clubs.models import Club, Tag
@@ -15,15 +15,27 @@ class Command(BaseCommand):
     help = 'Imports existing groups from Groups Online @ Penn.'
     START_URL = 'https://upenn-community.symplicity.com/index.php?s=student_group'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--dry-run',
+            dest='dry_run',
+            action='store_true',
+            help='Do not actually import anything.'
+        )
+        parser.set_defaults(dry_run=False)
+
     def handle(self, *args, **kwargs):
         self.count = 1
         self.club_count = 0
+        self.dry_run = kwargs['dry_run']
         self.session = requests.Session()
         self.agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' + \
                      ' Chrome/40.0.2214.85 Safari/537.36'
         self.session.headers = {
             'User-Agent': self.agent
         }
+        if self.dry_run:
+            self.stdout.write('Not actually importing anything!')
         self.process_url(self.START_URL)
         self.stdout.write('Imported {} clubs!'.format(self.club_count))
 
@@ -56,16 +68,26 @@ class Command(BaseCommand):
             else:
                 contact_email = None
 
-            if group_type is not None:
+            if group_type is not None and not self.dry_run:
                 tag = Tag.objects.get_or_create(name=group_type)[0]
             else:
                 tag = None
-            if Club.objects.filter(name=name).exists():
-                club = Club.objects.get(name__iexact=name)
+            clubs = Club.objects.filter(name__iexact=name)
+            if clubs.exists():
+                if clubs.count() > 1:
+                    raise CommandError("Club with name '{}' exists twice!".format(name))
+                club = clubs.first()
                 flag = False
             else:
                 cid = slugify(name)
-                club, flag = Club.objects.get_or_create(id=cid)
+                if not self.dry_run:
+                    club, flag = Club.objects.get_or_create(id=cid)
+                elif Club.objects.filter(id=cid).exists():
+                    club = Club.objects.get(id=cid)
+                    flag = False
+                else:
+                    club = Club(id=cid)
+                    flag = True
 
             # only overwrite blank fields
             if not club.name:
@@ -73,18 +95,20 @@ class Command(BaseCommand):
             if not club.description:
                 club.description = description
             if not club.image and image_url:
-                resp = requests.get(image_url, allow_redirects=True)
-                resp.raise_for_status()
-                club.image.save(os.path.basename(image_url), ContentFile(resp.content))
+                if not self.dry_run:
+                    resp = requests.get(image_url, allow_redirects=True)
+                    resp.raise_for_status()
+                    club.image.save(os.path.basename(image_url), ContentFile(resp.content))
             if not club.email:
                 club.email = contact_email
 
             # mark newly created clubs as inactive (has no owner)
             if flag:
                 club.active = False
-            club.save()
-            if tag is not None and not club.tags.count():
-                club.tags.set([tag])
+            if not self.dry_run:
+                club.save()
+                if tag is not None and not club.tags.count():
+                    club.tags.set([tag])
             self.club_count += 1
             self.stdout.write("{} '{}'".format('Created' if flag else 'Updated', name))
 
