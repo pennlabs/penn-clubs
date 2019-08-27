@@ -45,7 +45,7 @@ class Club extends React.Component {
             {club.name} {club.active || <span className='has-text-grey'>(Inactive)</span>}
           </h1>
           <span style={{ fontSize: '1.5em' }}>
-            {club.favorite_count} <i className={(this.props.favorites.includes(club.id) ? 'fa' : 'far') + ' fa-heart'} style={{ cursor: 'pointer' }} onClick={() => this.props.updateFavorites(club.id) ? club.favorite_count++ : club.favorite_count--}></i>
+            {club.favorite_count} <i className={(this.props.favorites.includes(club.id) ? 'fa' : 'far') + ' fa-heart'} style={{ cursor: 'pointer' }} onClick={() => this.props.updateFavorites(club.id) ? club.favorite_count++ : Math.max(0, club.favorite_count--)}></i>
             {canEdit && <Link route='club-edit' params={{ club: club.id }}><a className='button is-success' style={{ marginLeft: 15 }}>Edit Club</a></Link>}
           </span>
         </div>
