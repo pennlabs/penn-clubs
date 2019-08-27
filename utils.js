@@ -64,3 +64,7 @@ export function titleize(str) {
   if (!str) return str
   return str.replace(/_/g, ' ').split(' ').map((a) => a[0].toUpperCase() + a.substr(1).toLowerCase()).join(' ')
 }
+
+export function formatResponse(err) {
+  return Object.keys(err).map((a) => <div key={a}><b>{titleize(a)}:</b> {err[a]}</div>)
+}

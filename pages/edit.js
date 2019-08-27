@@ -1,5 +1,5 @@
 import renderPage from '../renderPage.js'
-import { doApiRequest, titleize, getRoleDisplay } from '../utils'
+import { doApiRequest, formatResponse, getRoleDisplay } from '../utils'
 import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../colors'
 import { Link, Router } from '../routes'
 import React from 'react'
@@ -46,10 +46,6 @@ class ClubForm extends React.Component {
     }, () => window.scrollTo(0, 0))
   }
 
-  formatError(err) {
-    return Object.keys(err).map((a) => <div key={a}><b>{titleize(a)}:</b> {err[a]}</div>)
-  }
-
   toggleClubActive() {
     doApiRequest(`/clubs/${this.state.club.id}/?format=json`, {
       method: 'PATCH',
@@ -62,7 +58,7 @@ class ClubForm extends React.Component {
         this.componentDidMount()
       } else {
         resp.json().then((err) => {
-          this.notify(this.formatError(err))
+          this.notify(formatResponse(err))
         })
       }
     })
@@ -75,7 +71,7 @@ class ClubForm extends React.Component {
       }).then((resp) => {
         if (!resp.ok) {
           resp.json().then((err) => {
-            this.notify(this.formatError(err))
+            this.notify(formatResponse(err))
           })
         } else {
           Router.pushRoute('/')
@@ -94,7 +90,7 @@ class ClubForm extends React.Component {
           this.componentDidMount()
         } else {
           resp.json().then((err) => {
-            this.notify(this.formatError(err))
+            this.notify(formatResponse(err))
           })
         }
       })
@@ -110,7 +106,7 @@ class ClubForm extends React.Component {
         this.componentDidMount()
       } else {
         resp.json().then((err) => {
-          this.notify(this.formatError(err))
+          this.notify(formatResponse(err))
         })
       }
     })
@@ -125,7 +121,7 @@ class ClubForm extends React.Component {
         title: this.state.inviteTitle
       }
     }).then((resp) => resp.json()).then((data) => {
-      this.notify(this.formatError(data))
+      this.notify(formatResponse(data))
       this.componentDidMount()
     })
   }
@@ -173,7 +169,7 @@ class ClubForm extends React.Component {
         })
       } else {
         resp.json().then((err) => {
-          this.notify(this.formatError(err))
+          this.notify(formatResponse(err))
         })
       }
     })
@@ -189,7 +185,7 @@ class ClubForm extends React.Component {
         this.componentDidMount()
       } else {
         resp.json().then((err) => {
-          this.notify(this.formatError(err))
+          this.notify(formatResponse(err))
         })
       }
     })

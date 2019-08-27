@@ -1,6 +1,6 @@
 import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
-import { doApiRequest, titleize, API_BASE_URL, ROLE_OFFICER } from '../utils'
+import { doApiRequest, formatResponse, API_BASE_URL, ROLE_OFFICER } from '../utils'
 import { CLUBS_GREY_LIGHT } from '../colors'
 import { Link, Router } from '../routes'
 import React from 'react'
@@ -21,10 +21,6 @@ class SettingsForm extends React.Component {
     }, () => window.scrollTo(0, 0))
   }
 
-  formatError(err) {
-    return Object.keys(err).map((a) => <div key={a}><b>{titleize(a)}:</b> {err[a]}</div>)
-  }
-
   submit(data) {
     doApiRequest('/settings/?format=json', {
       method: 'PATCH',
@@ -34,7 +30,7 @@ class SettingsForm extends React.Component {
         this.notify('Your preferences have been saved.')
       } else {
         resp.json().then((err) => {
-          this.notify(this.formatError(err))
+          this.notify(formatResponse(err))
         })
       }
     })
@@ -52,7 +48,7 @@ class SettingsForm extends React.Component {
         this.props.updateUserInfo()
       } else {
         resp.json().then((err) => {
-          this.notify(this.formatError(err))
+          this.notify(formatResponse(err))
         })
       }
     })
