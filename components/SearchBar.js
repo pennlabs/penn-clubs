@@ -47,7 +47,7 @@ class SearchBar extends React.Component {
             position: 'absolute',
             height: '90vh',
             width: '100%',
-            right: -17,
+            // right: -17,
             padding: '50px 0',
             overflowY: 'scroll',
             overflowX: 'hidden',
