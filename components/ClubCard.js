@@ -16,7 +16,7 @@ const Card = s.div`
   min-height: 240px;
   box-shadow: 0 0 0 #fff;
   border: 1px solid #e5e5e5;
-  background-color: ${({ hovering }) => hovering ? '#FAFAFA' : '#fff'},
+  background-color: ${({ hovering }) => hovering ? '#FAFAFA' : '#fff'};
   justify-content: space-between;
 `
 
