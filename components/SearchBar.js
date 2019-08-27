@@ -92,7 +92,7 @@ class SearchBar extends React.Component {
                   borderWidth: 0,
                   outline: 'none',
                   color: CLUBS_GREY,
-                  width: '100%',
+                  width: '88%',
                   fontSize: '1em'
                 }}
                 value={this.state.nameInput}
