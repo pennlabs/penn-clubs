@@ -233,7 +233,7 @@ class ClubTestCase(TestCase):
         """
         Test listing, adding, and removing members.
         """
-        self.client.login(username=self.user1.username, password='test')
+        self.client.login(username=self.user5.username, password='test')
 
         # create club
         resp = self.client.post(reverse('clubs-list'), {
@@ -247,7 +247,7 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse('club-members-list', args=('penn-labs',)))
         self.assertIn(resp.status_code, [200], resp.content)
         data = json.loads(resp.content.decode('utf-8'))
-        self.assertEqual(data[0]['name'], self.user1.get_full_name())
+        self.assertEqual(data[0]['name'], self.user5.get_full_name())
 
         # add member should fail with insufficient permissions
         self.client.logout()
@@ -260,7 +260,7 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
         # add member
-        self.client.login(username=self.user1.username, password='test')
+        self.client.login(username=self.user5.username, password='test')
 
         resp = self.client.post(reverse('club-members-list', args=('penn-labs',)), {
             'person': self.user2.pk,
@@ -297,13 +297,13 @@ class ClubTestCase(TestCase):
         # delete member should fail with insufficient permissions
         self.client.login(username=self.user2.username, password='test')
 
-        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user1.username)),
+        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user5.username)),
                                   content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
         # delete member should fail for people not in club
         self.client.login(username=self.user4.username, password='test')
-        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user1.username)),
+        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user5.username)),
                                   content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
@@ -330,20 +330,23 @@ class ClubTestCase(TestCase):
         self.assertEqual(Membership.objects.get(person=self.user3, club='penn-labs').title, 'Treasurer')
 
         # delete member
-        self.client.login(username=self.user1.username, password='test')
+        self.client.login(username=self.user5.username, password='test')
 
         resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user2.username)),
                                   content_type='application/json')
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
-        # ensure cannot demote self if only owner
-        resp = self.client.patch(reverse('club-members-detail', args=('penn-labs', self.user1.username)), {
+        # ensure cannot demote self if only owner and not superuser
+        self.user5.is_superuser = False
+        self.user5.save()
+
+        resp = self.client.patch(reverse('club-members-detail', args=('penn-labs', self.user5.username)), {
             'role': Membership.ROLE_OFFICER
         }, content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
         # ensure cannot delete self if only owner
-        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user1.username)),
+        resp = self.client.delete(reverse('club-members-detail', args=('penn-labs', self.user5.username)),
                                   content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
