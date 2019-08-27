@@ -56,20 +56,18 @@ class Form extends React.Component {
   }
 
   getAllFields(fields) {
-    var out = [];
-    (typeof fields === 'undefined' ? this.props.fields : fields).forEach((item) => {
+    return (typeof fields === 'undefined' ? this.props.fields : fields).reduce((out, item) => {
       if (item.type === 'group') {
         out = out.concat(this.getAllFields(item.fields))
       } else {
         out.push(item)
       }
-    })
-    return out
+      return out
+    }, [])
   }
 
   getData() {
-    const out = {}
-    this.getAllFields().forEach((item) => {
+    return this.getAllFields().reduce((out, item) => {
       const val = this.state['field-' + item.name]
       switch (item.type) {
         case 'multiselect': {
@@ -98,8 +96,8 @@ class Form extends React.Component {
           out[item.name] = val
         }
       }
-    })
-    return out
+      return out
+    }, {})
   }
 
   generateFields(fields) {
