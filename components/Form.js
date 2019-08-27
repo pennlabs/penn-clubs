@@ -81,7 +81,7 @@ class Form extends React.Component {
           break
         }
         case 'checkbox': {
-          out[item.name] = !!val
+          out[item.name] = Boolean(val)
           break
         }
         case 'date': {
