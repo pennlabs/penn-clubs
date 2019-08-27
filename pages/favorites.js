@@ -1,8 +1,6 @@
 import React from 'react'
-import Select from 'react-select'
-import ClubList from '../components/ClubList.js'
-import ClubModal from '../components/ClubModal.js'
-import { renderListPage } from '../renderPage.js'
+import ClubList from '../components/ClubList'
+import { renderListPage } from '../renderPage'
 import { CLUBS_GREY } from '../colors'
 
 class Favorites extends React.Component {

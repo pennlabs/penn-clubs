@@ -12,7 +12,7 @@ class ClubTableRow extends React.Component {
 
   render() {
     const { club, openModal, updateFavorites, favorite } = this.props
-    const { name, id, description, subtitle, tags } = club
+    const { name, subtitle, tags } = club
     const img = club.image_url || getDefaultClubImageURL()
     return (
       <tr style={{ borderTop: '1px solid #e5e5e5' }}>
