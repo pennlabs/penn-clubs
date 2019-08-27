@@ -35,7 +35,10 @@ class Club extends React.Component {
       </div>
     }
 
+    // inClub is set to the membership object if the user is in the club, or false otherwise
     const inClub = userInfo && (userInfo.membership_set.filter((a) => a.id === club.id) || [false])[0]
+
+    // a user can edit a club if they are either a superuser or in the club and at least an officer
     const canEdit = (inClub && inClub.role <= ROLE_OFFICER) || (userInfo && userInfo.is_superuser)
 
     return (
