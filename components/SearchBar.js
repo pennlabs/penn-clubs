@@ -42,16 +42,22 @@ class SearchBar extends React.Component {
     const { switchDisplay, resetDisplay, updateTag } = this.props
     return (
       <div style={{ height: '100vh', width: '100%', overflow: 'hidden', position: 'sticky', top: -20 }}>
+        <style jsx>{`
+          .no-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
         <div
+          className='no-scrollbar'
           style={{
             position: 'absolute',
             height: '90vh',
-            width: '100%',
-            right: -17,
+            width: 'calc(100% - 17px)',
             padding: '50px 0',
             overflowY: 'scroll',
             overflowX: 'hidden',
-            marginBottom: '8rem'
+            marginBottom: '8rem',
+            marginLeft: 17
           }}>
           <div className="is-flex" style={{ justifyContent: 'space-between', padding: '0 3px' }}>
             <b style={{ color: CLUBS_GREY }}>View: </b>
@@ -86,7 +92,7 @@ class SearchBar extends React.Component {
                   borderWidth: 0,
                   outline: 'none',
                   color: CLUBS_GREY,
-                  width: '100%',
+                  width: '88%',
                   fontSize: '1em'
                 }}
                 value={this.state.nameInput}

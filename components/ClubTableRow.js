@@ -15,7 +15,7 @@ class ClubTableRow extends React.Component {
     const { name, subtitle, tags } = club
     const img = club.image_url || getDefaultClubImageURL()
     return (
-      <tr style={{ borderTop: '1px solid #e5e5e5' }}>
+      <tr style={{ borderTop: '1px solid #e5e5e5', cursor: 'pointer' }}>
         <div className="columns is-vcentered is-gapless is-mobile">
           <div className="column" onClick={() => openModal(club)}>
             <div className="columns is-gapless" style={{ padding: 10 }}>

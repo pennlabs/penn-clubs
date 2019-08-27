@@ -32,6 +32,15 @@ class Header extends React.Component {
           <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossOrigin="anonymous" />
           <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet" />
           <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossOrigin="anonymous" />
+        
+          <script async src="https://www.googletagmanager.com/gtag/js?id=UA-21029575-14"></script>
+          <script dangerouslySetInnerHTML={{__html: `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'UA-21029575-14');
+          `}}/>
         </Head>
         <nav className="navbar" role="navigation" aria-label="main navigation" style={{ height: 70, backgroundColor: '#f9f9f9', borderBottom: '1px solid #fff' }}>
           <div className="navbar-brand">
