@@ -1,6 +1,6 @@
 import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
-import { doApiRequest, formatResponse } from '../utils'
+import { doApiRequest, formatResponse, LOGIN_URL } from '../utils'
 import React from 'react'
 import { Router } from '../routes'
 
@@ -20,6 +20,8 @@ class Invite extends React.Component {
     doApiRequest(`/clubs/${query.club}/invites/${query.invite}/?format=json`).then((resp) => {
       if (resp.ok) {
         resp.json().then(data => this.setState({ invite: data }))
+      } else if (resp.status === 403 && this.props.authenticated === false) {
+        window.location.href = `${LOGIN_URL}?next=${window.location.href}`
       } else {
         resp.json().then(data => this.setState({ error: data }))
       }
@@ -48,7 +50,7 @@ class Invite extends React.Component {
       return <div className='has-text-centered' style={{ margin: 30 }}>
         <h1 className='title is-h1'>404 Not Found</h1>
         <p>The invite you are looking for does not exist. Perhaps it was already claimed?</p>
-        <p>{formatResponse(error)}</p>
+        <p>{error && formatResponse(error)}</p>
       </div>
     }
 

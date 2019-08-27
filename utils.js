@@ -27,6 +27,7 @@ export const ROLE_OFFICER = 10
 export const ROLE_MEMBER = 20
 
 export const EMPTY_DESCRIPTION = '<span style="color:#666">This club has not added a description yet.</span>'
+export const LOGIN_URL = `${API_BASE_URL}/accounts/login/`
 
 export function getSizeDisplay(size) {
   if (size === 1) return '0 - 20 Members'
