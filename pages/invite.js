@@ -18,13 +18,15 @@ class Invite extends React.Component {
   componentDidMount() {
     const { query } = this.props
     doApiRequest(`/clubs/${query.club}/invites/${query.invite}/?format=json`).then((resp) => {
-      if (resp.ok) {
-        resp.json().then(data => this.setState({ invite: data }))
-      } else if (resp.status === 403 && this.props.authenticated === false) {
-        window.location.href = `${LOGIN_URL}?next=${window.location.href}`
-      } else {
-        resp.json().then(data => this.setState({ error: data }))
-      }
+      resp.json().then(data => {
+        if (resp.ok) {
+          this.setState({ invite: data })
+        } else if (resp.status === 403 && data.detail === 'Authentication credentials were not provided.') {
+          window.location.href = `${LOGIN_URL}?next=${window.location.href}`
+        } else {
+          this.setState({ error: data })
+        }
+      })
     })
   }
 
