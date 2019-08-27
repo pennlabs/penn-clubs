@@ -95,6 +95,9 @@ class Favorite(models.Model):
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return '<Favorite: {} for {}>'.format(self.person.username, self.club.pk)
 
