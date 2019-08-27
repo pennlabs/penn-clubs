@@ -43,7 +43,7 @@ class Header extends React.Component {
                 <img src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" style={{ paddingLeft: 15, height: '100%', marginBottom: -5 }}/>
               </Pop>
               <h1 className="title is-size-4" style={{ color: '#9B9B9B', paddingLeft: 15, marginBottom: 0 }}>Penn Clubs</h1>
-              <span className="tag is-medium" style={{ marginLeft: 10, backgroundColor: '#60B8F2', color: 'white' }}>Beta</span>
+              <span className="tag is-normal" style={{ marginLeft: 10, borderRadius: 25, backgroundColor: '#60B8F2', color: 'white', marginTop: -3 }}>Beta</span>
             </a>
 
             <a role="button" className="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
