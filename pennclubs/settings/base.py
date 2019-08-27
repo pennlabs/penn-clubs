@@ -144,7 +144,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 FROM_EMAIL = 'Penn Clubs <info@pennclubs.com>'
 EMAIL_SUBJECT_PREFIX = '[Penn Clubs] '
-INVITE_URL = 'https://pennclubs.com/invite/{club}/{id}/{token}'
+INVITE_URL = 'https://{domain}/invite/{club}/{id}/{token}'
 
 # File upload settings
 

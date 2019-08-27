@@ -1,5 +1,6 @@
 import os
 import uuid
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -188,13 +189,21 @@ class MembershipInvite(models.Model):
         """
         Send the email associated with this invitation to the user.
         """
+        # make the beta/testing sites work
+        domain = 'pennclubs.com'
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            host = urlparse(referer).netloc
+            if host and host.endswith(domain):
+                domain = host
+
         context = {
             'token': self.token,
             'name': self.club.name,
             'id': self.id,
             'club_id': self.club.id,
             'sender': request.user,
-            'url': settings.INVITE_URL.format(id=self.id, token=self.token, club=self.club.id)
+            'url': settings.INVITE_URL.format(domain=domain, id=self.id, token=self.token, club=self.club.id)
         }
         text_content = render_to_string('emails/invite.txt', context)
         html_content = render_to_string('emails/invite.html', context)
