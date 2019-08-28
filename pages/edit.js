@@ -439,30 +439,6 @@ class ClubForm extends React.Component {
         disabled: !this.state.isEdit
       },
       {
-        name: 'events',
-        label: 'Events',
-        disabled: !this.state.isEdit,
-        content: <div>
-          Coming Soon!
-        </div>
-      },
-      {
-        name: 'qa',
-        label: 'Q & A',
-        disabled: !this.state.isEdit,
-        content: <div>
-          Coming Soon!
-        </div>
-      },
-      {
-        name: 'files',
-        label: 'Files',
-        disabled: !this.state.isEdit,
-        content: <div>
-          Coming Soon!
-        </div>
-      },
-      {
         name: 'settings',
         label: 'Settings',
         content: <div>
