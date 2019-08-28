@@ -68,7 +68,7 @@ const OverviewCol = s.div`
 
 const ClubImage = s.img`
   max-height: 220px;
-  max-width: 330px;
+  max-width: 100%;
   object-fit: contain;
 `
 
