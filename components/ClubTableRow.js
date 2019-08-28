@@ -1,16 +1,20 @@
 import React from 'react'
 import s from 'styled-components'
-import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../constants/colors'
+import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT, HOVER_GRAY } from '../constants/colors'
 import { getDefaultClubImageURL } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 
-const Row = s.tr`
-  borderTop: 1px solid #e5e5e5;
+const Row = s.div`
+  border-top: 1px solid #e5e5e5;
   cursor: pointer;
+
+  &:hover {
+    background: ${HOVER_GRAY};
+  }
 `
 
 const Tag = s.span`
-  background-color: ${CLUBS_BLUE};
+  background-color: ${CLUBS_BLUE} !important;
   margin: 2px;
   font-size: .7em;
 `
@@ -29,10 +33,21 @@ class ClubTableRow extends React.Component {
     }
   }
 
+  getSubtitle() {
+    const { club } = this.props
+    const { subtitle, description } = club
+
+    if (subtitle) return subtitle
+
+    if (description.length < 200) return description
+
+    return description.substring(0, 200) + '...'
+  }
+
   render() {
     const { club, openModal, updateFavorites, favorite } = this.props
-    const { name, subtitle, tags } = club
-    const img = club.image_url || getDefaultClubImageURL()
+    const { name, tags } = club
+
     return (
       <Row>
         <div className="columns is-vcentered is-gapless is-mobile">
@@ -45,7 +60,7 @@ class ClubTableRow extends React.Component {
                 </div>
               </div>
               <div className="column is-8">
-                <Subtitle>{subtitle}</Subtitle>
+                <Subtitle>{this.getSubtitle()}</Subtitle>
               </div>
             </div>
           </div>
