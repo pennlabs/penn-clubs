@@ -1,6 +1,7 @@
 import React from 'react'
 import posed from 'react-pose'
 import s from 'styled-components'
+import LazyLoad from 'react-lazy-load'
 import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
 import { getDefaultClubImageURL, stripTags } from '../utils'
 
@@ -90,7 +91,9 @@ class ClubCard extends React.Component {
               ))}
               <div className="columns is-desktop is-gapless" style={{ padding: '10px 5px' }}>
                 <div className="column is-narrow">
-                  <Image src={img} alt={`${name} Logo`} />
+                  <LazyLoad width={180} height={120} offset={1000}>
+                    <Image src={img} alt={`${name} Logo`} />
+                  </LazyLoad>
                 </div>
                 <div className="column">
                   <p style={{ paddingLeft: 15, color: CLUBS_GREY_LIGHT }}>

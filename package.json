@@ -16,6 +16,7 @@
     "react": "^16.6.3",
     "react-dom": "^16.6.3",
     "react-draft-wysiwyg": "^1.13.2",
+    "react-lazy-load": "^3.0.13",
     "react-pose": "^4.0.8",
     "react-select": "^3.0.4",
     "styled-components": "^4.3.2"
