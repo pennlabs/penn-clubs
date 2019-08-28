@@ -37,8 +37,8 @@ const FAQ = () => (
         <br />
       You’ll need to have Administrator permission for that organization. We’ve invited people as Administrators based on information submitted by clubs to SAC during Spring 2019.
         <ul style={{ listStyleType: 'disc', marginLeft: '2rem', marginTop: '0.5rem' }}>
-          <li>If you did not receive Administrator permission and you believe you should have, let us know at contact@pennclubs.com and we’ll work with you to verify your request.</li>
-          <li>If your club did not submit this information to SAC, we’ve been contacting clubs by their listed email to ask for the names of people who need Administrator permission. You can also email us at contact@pennclubs.com and we’ll work with you to verify your request.</li>
+          <li>If you did not receive Administrator permission and you believe you should have, let us know at <a href='mailto:contact@pennclubs.com'>contact@pennclubs.com</a> and we’ll work with you to verify your request.</li>
+          <li>If your club did not submit this information to SAC, we’ve been contacting clubs by their listed email to ask for the names of people who need Administrator permission. You can also email us at <a href='mailto:contact@pennclubs.com'>contact@pennclubs.com</a> and we’ll work with you to verify your request.</li>
         </ul>
         <br /><br />
         <b className='is-size-5'>Why I can’t find an organization on Penn Clubs?</b>
