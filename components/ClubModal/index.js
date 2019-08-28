@@ -70,7 +70,11 @@ const ClubImage = s.img`
   max-height: 220px;
   max-width: 330px;
   object-fit: contain;
-  text-align: left;
+`
+
+const ClubImageWrapper = s.div`
+  text-align: center;
+  flex: 1;
 `
 
 const DescriptionCol = s.div`
@@ -159,7 +163,9 @@ class ClubModal extends React.Component {
 
             <div className="columns">
               <OverviewCol className="column is-4-desktop is-5-mobile">
-                <ClubImage src={image_url || getDefaultClubImageURL()}/>
+                <ClubImageWrapper>
+                  <ClubImage src={image_url || getDefaultClubImageURL()}/>
+                </ClubImageWrapper>
 
                 <Tags tags={tags} />
 
