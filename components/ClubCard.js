@@ -2,7 +2,10 @@ import React from 'react'
 import posed from 'react-pose'
 import s from 'styled-components'
 import LazyLoad from 'react-lazy-load'
-import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
+import {
+  CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY
+} from '../constants/colors'
+import { BORDER_RADIUS } from '../../constants/measurements'
 import { getDefaultClubImageURL, stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 
@@ -14,11 +17,11 @@ const Pop = posed.div({
 
 const Card = s.div`
   padding: 10px;
-  border-radius: 3px;
+  border-radius: ${BORDER_RADIUS};
   min-height: 240px;
-  box-shadow: 0 0 0 #fff;
-  border: 1px solid #e5e5e5;
-  background-color: ${({ hovering }) => hovering ? '#FAFAFA' : '#fff'};
+  box-shadow: 0 0 0 ${WHITE};
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: ${({ hovering }) => hovering ? HOVER_GRAY : WHITE};
   justify-content: space-between;
 `
 

@@ -1,3 +1,4 @@
+// Neutral colors
 export const WHITE = '#fff'
 export const SHADOW = 'rgba(0, 0, 0, 0.07)'
 export const SNOW = '#fafcff'
@@ -12,12 +13,14 @@ export const FOCUS_GRAY = '#F0F0F0'
 export const HOVER_GRAY = '#F8F8F8'
 export const BORDER = 'rgba(0, 0, 0, 0.1)'
 
+// Blues
 export const BABY_BLUE = '#eff7ff'
 export const LIGHTER_BLUE = '#d9eafc'
 export const LIGHT_BLUE = '#84add5'
 export const BLUE = '#2980B9'
 export const DARK_BLUE = '#246793'
 
+// Secondary colors
 export const LIGHT_GREEN = '#e8f9ec'
 export const GREEN = '#3eaa6d'
 export const FOREST = '#3a7553'
@@ -28,6 +31,7 @@ export const MUSTARD = '#efb717'
 export const ORANGE = '#faa432'
 export const PURPLE = '#834fa0'
 
+// Clubs colors
 export const CLUBS_PURPLE = '#66C1FF'
 export const CLUBS_PURPLE_LIGHT = '#F2F2F7'
 export const CLUBS_GREY = '#414654'
