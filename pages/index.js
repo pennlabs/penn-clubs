@@ -1,5 +1,6 @@
 import React from 'react'
 import s from 'styled-components'
+import Fuse from 'fuse.js'
 import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
 import { renderListPage } from '../renderPage.js'
@@ -18,47 +19,43 @@ const ClearAllLink = s.span`
 class Splash extends React.Component {
   constructor(props) {
     super(props)
-
     this.state = {
-      displayClubs: props.clubs,
+      displayClubs: props.clubs.sort(() => Math.random() - 0.5),
       selectedTags: [],
       nameInput: '',
       modal: false,
       modalClub: {},
       display: 'cards'
     }
+    this.fuseOptions = {
+      keys: [
+        'name',
+        'tags.name',
+      ]
+    }
+    this.fuse = new Fuse(this.props.clubs, this.fuseOptions)
   }
 
   resetDisplay(nameInput, selectedTags) {
     const tagSelected = selectedTags.filter(tag => tag.name === 'Type')
     const sizeSelected = selectedTags.filter(tag => tag.name === 'Size')
     const applicationSelected = selectedTags.filter(tag => tag.name === 'Application')
-    let { clubs } = this.props
-    clubs = nameInput ? clubs.filter(club => club.name.toLowerCase().indexOf(nameInput.toLowerCase()) !== -1) : clubs
-    clubs = sizeSelected.length && clubs.length ? clubs.filter(club =>
-      (sizeSelected.findIndex(sizeTag => sizeTag.value === club.size) !== -1)
-    ) : clubs
-    clubs = applicationSelected.length && clubs.length ? clubs.filter((club) => {
-      let contains = false
+    var { clubs } = this.props
 
-      if ((applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 && club.application_required) ||
-          (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 && !club.application_required) ||
-          (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 && club.accepting_applications)
-      ) {
-        contains = true
-      }
+    // fuzzy search
+    clubs = this.fuse.search(nameInput)
 
-      return contains
-    }) : clubs
-    clubs = tagSelected.length && clubs.length ? clubs.filter(club => {
-      let contains
-      club.tags.forEach(clubTag => {
-        if (tagSelected.findIndex(tag => tag.value === clubTag.id) !== -1) {
-          contains = true
-        }
-      })
-      return contains
-    }) : clubs
+    // checkbox filters
+    clubs = clubs.filter(club => {
+      const clubRightSize = !sizeSelected.length || sizeSelected.findIndex(sizeTag => sizeTag.value === club.size) !== -1
+      const appRequired = !applicationSelected.length || (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 && club.application_required) ||
+        (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 && !club.application_required) ||
+        (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 && club.accepting_applications)
+      const rightTags = !tagSelected.length || club.tags.some(club_tag => tagSelected.findIndex(tag => tag.value === club_tag.id) !== -1)
+      
+      return clubRightSize && appRequired && rightTags
+    })
+
     var displayClubs = clubs
     this.setState({ displayClubs, nameInput, selectedTags })
   }
@@ -97,7 +94,12 @@ class Splash extends React.Component {
         </div>
         <div className="column is-10-desktop is-9-tablet is-7-mobile" style={{ marginLeft: 40 }}>
           <div style={{ padding: '30px 0' }}>
-            <p className="title" style={{ color: CLUBS_GREY }}>Browse Clubs</p>
+            <p className="title" style={{ color: CLUBS_GREY }}>Browse Clubs
+            <button onClick={() => {
+              this.setState({displayClubs: displayClubs.sort(() => Math.random() - 0.5)})}
+              } className="button is-light" style={{float: 'right', 'right': '40px'}}>
+              <i className="fas fa-random"></i>&nbsp;&nbsp;Shuffle
+            </button></p>
             <p className="subtitle is-size-5" style={{ color: CLUBS_GREY_LIGHT }}>Find your people!</p>
           </div>
 
