@@ -28,7 +28,7 @@ const Card = s.div`
 const Image = s.img`
   height: 120px;
   width: 180px;
-  border-radius: 3px;
+  border-radius: ${BORDER_RADIUS};
   object-fit: contain;
   text-align: left;
 `

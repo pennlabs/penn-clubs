@@ -5,15 +5,20 @@ import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
 import { renderListPage } from '../renderPage.js'
 import {
-  CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW
+  CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW, FOCUS_GRAY
 } from '../constants/colors'
 
 const ClearAllLink = s.span`
   cursor: pointer;
   color: ${CLUBS_GREY_LIGHT};
-  text-decoration: underline;
+  text-decoration: none !important;
+  background: transparent !important;
   fontSize: .7em;
   margin: 5px;
+
+  &:hover {
+    background: ${FOCUS_GRAY} !important;
+  }
 `
 
 class Splash extends React.Component {
@@ -125,6 +130,7 @@ class Splash extends React.Component {
                 </span>
               ))}
               <ClearAllLink
+                className="tag is-rounded"
                 onClick={(e) => this.setState({ selectedTags: [] }, this.resetDisplay(this.state.nameInput, this.state.selectedTags))}>
                 Clear All
               </ClearAllLink>

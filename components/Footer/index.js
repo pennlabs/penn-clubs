@@ -20,8 +20,12 @@ const Footer = () => (
       <span className="icon is-small" style={{ color: RED }}>
         <i className="fa fa-heart"></i>
       </span>
-      {' '} by {' '}
-      <a href="https://pennlabs.org/">Penn Labs</a>
+      {' '}
+      by
+      {' '}
+      <a href="https://pennlabs.org/">
+        Penn Labs
+      </a>
     </p>
     <Social />
   </Foot>
