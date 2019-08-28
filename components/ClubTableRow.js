@@ -1,6 +1,25 @@
 import React from 'react'
+import s from 'styled-components'
 import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
 import { getDefaultClubImageURL } from '../utils'
+import FavoriteIcon from './common/FavoriteIcon'
+
+const Row = s.tr`
+  borderTop: 1px solid #e5e5e5;
+  cursor: pointer;
+`
+
+const Tag = s.span`
+  background-color: ${CLUBS_BLUE};
+  margin: 2px;
+  font-size: .7em;
+`
+
+const Subtitle = s.p`
+  color: ${CLUBS_GREY_LIGHT};
+  font-size: .8rem;
+  padding-left: 10px;
+`
 
 class ClubTableRow extends React.Component {
   constructor(props) {
@@ -15,28 +34,26 @@ class ClubTableRow extends React.Component {
     const { name, subtitle, tags } = club
     const img = club.image_url || getDefaultClubImageURL()
     return (
-      <tr style={{ borderTop: '1px solid #e5e5e5', cursor: 'pointer' }}>
+      <Row>
         <div className="columns is-vcentered is-gapless is-mobile">
           <div className="column" onClick={() => openModal(club)}>
             <div className="columns is-gapless" style={{ padding: 10 }}>
               <div className="column is-4">
                 <b className="is-size-6" style={{ color: CLUBS_GREY }}> {name} </b>
                 <div>
-                  {tags.map(tag => <span key={tag.id} className="tag is-rounded has-text-white" style={{ backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.7em' }}>{tag.name}</span>)}
+                  {tags.map(tag => <Tag key={tag.id} className="tag is-rounded has-text-white">{tag.name}</Tag>)}
                 </div>
               </div>
               <div className="column is-8">
-                <p style={{ color: CLUBS_GREY_LIGHT, fontSize: '.8rem', paddingLeft: 10 }}>{subtitle}</p>
+                <Subtitle>{subtitle}</Subtitle>
               </div>
             </div>
           </div>
           <div className="column is-narrow">
-            <span className="icon" onClick={() => updateFavorites(club.id)} style={{ color: CLUBS_GREY, cursor: 'pointer', paddingRight: 20 }}>
-              <i className={(favorite ? 'fas' : 'far') + ' fa-heart'} ></i>
-            </span>
+            <FavoriteIcon club={club} favorite={favorite} updateFavorites={updateFavorites} />
           </div>
         </div>
-      </tr>
+      </Row>
     )
   }
 }
