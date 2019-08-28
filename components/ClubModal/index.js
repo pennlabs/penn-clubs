@@ -137,7 +137,7 @@ class ClubModal extends React.Component {
             <CardHeader>
               <CardTitle className="is-size-2">{name}</CardTitle>
               <FavoriteIcon className="icon" onClick={() => updateFavorites(id)}>
-                {(favorite ? <p>Favourite</p> : <p>Unfavourite</p>)}
+                {(favorite ? <p>Unfavourite</p> : <p>Favourite</p>)}
               </FavoriteIcon>
             </CardHeader>
 
