@@ -68,6 +68,7 @@ const ClubImage = s.img`
   max-width: 330px;
   border-radius: 3px;
   object-fit: contain;
+  text-align: left;
 `
 
 const DescriptionCol = s.div`
@@ -136,13 +137,13 @@ class ClubModal extends React.Component {
             <CardHeader>
               <CardTitle className="is-size-2">{name}</CardTitle>
               <FavoriteIcon className="icon" onClick={() => updateFavorites(id)}>
-                <i className={(favorite ? 'fas' : 'far') + ' fa-heart'} ></i>
+                {(favorite ? <p>Favourite</p> : <p>Unfavourite</p>)}
               </FavoriteIcon>
             </CardHeader>
 
             <div className="columns">
               <OverviewCol className="column is-4-desktop is-5-mobile">
-                <ClubImage src={image_url || getDefaultClubImageURL()} />
+                <ClubImage src={image_url || getDefaultClubImageURL()}/>
 
                 <Tags tags={tags} />
 

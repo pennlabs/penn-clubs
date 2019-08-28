@@ -26,6 +26,7 @@ const Image = s.img`
   width: 180px;
   border-radius: 3px;
   object-fit: contain;
+  text-align: left;
 `
 
 const CardHeader = s.div`
