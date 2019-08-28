@@ -1,7 +1,7 @@
 import React from 'react'
 import s from 'styled-components'
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../../constants/colors'
-import { BORDER_RADIUS } from '../../constants/measurements'
+import { BORDER_RADIUS_LG } from '../../constants/measurements'
 import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
 import { Link } from '../../routes'
 
@@ -23,9 +23,7 @@ const ModalBackground = s.div`
 
 const ModalCard = s.div`
   margin: 6rem;
-  border-radius: ${BORDER_RADIUS};
-  border-width: 1px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
+  border-radius: ${BORDER_RADIUS_LG};
 `
 
 const CloseModalIcon = s.span`
