@@ -15,7 +15,6 @@ const Nav = s.nav`
 const Logo = s.img`
   padding-left: 15px;
   height: 100%;
-  margin-bottom: -5px;
   transform: scale(1);
   transition: all 0.2s ease;
 
