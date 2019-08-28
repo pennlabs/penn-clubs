@@ -18,7 +18,7 @@ const Tag = s.span`
 const Subtitle = s.p`
   color: ${CLUBS_GREY_LIGHT};
   font-size: .8rem;
-  padding-left: 10;
+  padding-left: 10px;
 `
 
 class ClubTableRow extends React.Component {
