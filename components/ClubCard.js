@@ -5,7 +5,7 @@ import LazyLoad from 'react-lazy-load'
 import {
   CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY
 } from '../constants/colors'
-import { BORDER_RADIUS } from '../../constants/measurements'
+import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL, stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 
