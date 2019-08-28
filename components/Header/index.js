@@ -5,9 +5,11 @@ import Burger from './Burger'
 import Feedback from './Feedback'
 import Links from './Links'
 
+import { WHITE } from '../../colors'
+
 const Nav = s.nav`
   height: 64px;
-  background-color: #fff;
+  background-color: ${WHITE};
   borderBottom: 1px solid rgba(0, 0, 0, .1);
   box-shadow: 0 0 8px 0 rgba(0, 0, 0, .1);
 `
@@ -24,15 +26,14 @@ const Logo = s.img`
 `
 
 const BetaTag = s.span`
-  margin-left: 10px;
+  margin-left: 12px;
   border-radius: 25px;
-  background-color: #60B8F2;
-  color: white;
-  margin-top: -3px;
+  background-color: #60B8F2 !important;
+  color: ${WHITE};
+  margin-top: 2px;
 `
 
 const Title = s.h1`
-  color: #9B9B9B;
   padding-left: 15px;
   margin-bottom: 0 !important;
 `
