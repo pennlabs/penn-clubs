@@ -34,11 +34,9 @@ const CloseModalIcon = s.span`
   color: ${CLUBS_GREY};
 `
 
-const FavoriteIcon = s.span`
+const FavoriteIcon = s.div`
   float: right;
-  padding: 10px 10px 0 0;
-  cursor: pointer;
-  color: ${CLUBS_GREY};
+  min-width: 80px;
 `
 
 const CardBody = s.div`
@@ -136,8 +134,8 @@ class ClubModal extends React.Component {
           <CardBody>
             <CardHeader style={{paddingBottom: "1rem"}}>
               <CardTitle className="is-size-2">{name}</CardTitle>
-              <FavoriteIcon className="icon" onClick={() => updateFavorites(id)}>
-                {(favorite ? <p>Unfavourite</p> : <p>Favourite</p>)}
+              <FavoriteIcon className="button is-small is-link" onClick={() => updateFavorites(id)}>
+                {(favorite ? <p>Favorite</p> : <p>Unfavorite</p>)}
               </FavoriteIcon>
             </CardHeader>
 
