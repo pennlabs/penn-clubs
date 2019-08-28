@@ -12,7 +12,7 @@ const FAQ = () => (
 	  	<p>
 	  		<b className='is-size-5'>What is Penn Clubs?</b>
 	  		<br />
-			Penn Clubs is meant to be your central source of information about student organizations. Keep discovering new clubs throughout the year, not just at the SAC Fair. 
+			Penn Clubs is meant to be your central source of information about student organizations. Keep discovering new clubs throughout the year, not just at the SAC Fair.
 			<br /><br />
 			<b className='is-size-5'>Why is this a beta?</b>
 	  		<br />
@@ -24,7 +24,7 @@ const FAQ = () => (
 	  		<br />
 			Logging in allows us to create an account for you on Penn Clubs. When you click the heart button on a club, it will be saved to your Favorites list. You can use this to keep track of clubs you’re interested in, or a part of.
 
-			We have new features planned that will make further use of your user account! For example, you’ll be able to join club rosters as a Member or Officer. 
+			We have new features planned that will make further use of your user account! For example, you’ll be able to join club rosters as a Member or Officer.
 			<br /><br />
 			<b className='is-size-5'>How do I use this site?</b>
 	  		<br />
@@ -35,7 +35,7 @@ const FAQ = () => (
 			<br /><br />
 			<b className='is-size-5'>How do I edit an organization’s profile?</b>
 	  		<br />
-			You’ll need to have Administrator permission for that organization. We’ve invited people as Administrators based on information submitted by clubs to SAC during Spring 2019. 
+			You’ll need to have Administrator permission for that organization. We’ve invited people as Administrators based on information submitted by clubs to SAC during Spring 2019.
 			<ul style={{ listStyleType:'disc', marginLeft:'2rem', marginTop:'0.5rem' }}>
 			<li>If you did not receive Administrator permission and you believe you should have, let us know at contact@pennclubs.com and we’ll work with you to verify your request.</li>
 			<li>If your club did not submit this information to SAC, we’ve been contacting clubs by their listed email to ask for the names of people who need Administrator permission. You can also email us at contact@pennclubs.com and we’ll work with you to verify your request.</li>

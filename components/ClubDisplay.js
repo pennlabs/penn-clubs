@@ -37,15 +37,29 @@ class ClubDisplay extends React.Component {
           </div>
         ) : (
           <div>
-            {displayClubs.map(club => (
-              <ClubTableRow
-                club={club}
-                key={club.id}
-                tags={tags}
-                updateFavorites={updateFavorites}
-                openModal={openModal}
-                favorite={favorites.includes(club.id)}/>
-            ))}
+            <div>
+              {displayClubs.map(club => (
+                <ClubTableRow
+                  club={club}
+                  key={club.id}
+                  tags={tags}
+                  updateFavorites={updateFavorites}
+                  openModal={openModal}
+                  favorite={favorites.includes(club.id)}/>
+              ))}
+            </div>
+            <table className="table is-fullwidth is-hoverable">
+              <tbody>
+                {displayClubs.map(club => (
+                  <ClubTableRow
+                    club={club}
+                    tags={tags}
+                    updateFavorites={updateFavorites}
+                    openModal={openModal}
+                    favorite={favorites.includes(club.id)}/>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </Wrapper>

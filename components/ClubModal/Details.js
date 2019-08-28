@@ -1,11 +1,11 @@
 import React from 'react'
+import { CLUBS_GREY, ALLBIRDS_GRAY, LIGHT_GRAY } from '../../constants/colors'
 import { BORDER_RADIUS } from '../../constants/measurements'
-import { CLUBS_GREY } from '../../constants/colors'
 import s from 'styled-components'
 
 const Details = s.div`
   border-radius: ${BORDER_RADIUS};
-  background-color: #f2f2f2;
+  background-color: ${ALLBIRDS_GRAY};
   height: 100px;
   width: 330px;
   padding: 10px;
@@ -22,7 +22,7 @@ const Detail = s.div`
 const DetailTag = s.span`
   margin: 3px;
   color: ${CLUBS_GREY};
-  background-color: #ccc;
+  background-color: #ccc !important;
   font-size: .7em;
 `
 

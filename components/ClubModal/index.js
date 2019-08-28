@@ -1,6 +1,6 @@
 import React from 'react'
 import s from 'styled-components'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT, MEDIUM_GRAY, LIGHT_GRAY } from '../../constants/colors'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT, MEDIUM_GRAY, LIGHT_GRAY, ALLBIRDS_GRAY } from '../../constants/colors'
 import { BORDER_RADIUS_LG } from '../../constants/measurements'
 import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
 import { Link } from '../../routes'
@@ -16,7 +16,7 @@ const ModalWrapper = s.div`
 `
 
 const ModalBackground = s.div`
-  background-color: #d5d5d5;
+  background-color: ${ALLBIRDS_GRAY};
   opacity: .5;
   position: fixed;
 `
@@ -92,7 +92,7 @@ const SeeMoreButton = s.a`
   margin: 5px;
   float: right;
   border-width: 0;
-  background-color: #f2f2f2;
+  background-color: ${ALLBIRDS_GRAY};
   color: ${CLUBS_GREY};
 `
 

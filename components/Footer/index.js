@@ -1,9 +1,10 @@
 import s from 'styled-components'
 import Social from './Social'
+import { ALLBIRDS_GRAY, RED } from '../../constants/colors'
 
 const Foot = s.footer`
   height: 8rem;
-  backgroundColor: #f2f2f2;
+  backgroundColor: ${ALLBIRDS_GRAY};
   fontSize: 0.85rem;
   display: flex;
   justify-content: center;
@@ -15,10 +16,8 @@ const Foot = s.footer`
 
 const Footer = () => (
   <Foot className="footer">
-    <p style={{ marginBottom: '1rem' }}>
-      Made with
-      {' '}
-      <span className="icon is-small" style={{ color: '#F56F71' }}>
+    <p>Made with {' '}
+      <span className="icon is-small" style={{ color: RED }}>
         <i className="fa fa-heart"></i>
       </span>
       {' '}

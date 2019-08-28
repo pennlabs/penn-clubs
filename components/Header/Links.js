@@ -15,7 +15,7 @@ const StyledLink = s.a`
 
 export default ({ userInfo, authenticated }) => (
   <div className="navbar-menu">
-    <div className="navbar-end" style={{ padding: '0' }}>
+    <div className="navbar-end" style={{ padding: '0px 20px' }}>
       <StyledLink href="/faq">
         FAQ
       </StyledLink>
