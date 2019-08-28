@@ -20,6 +20,9 @@ class Form extends React.Component {
     if (process.browser) {
       this.setDefaults(this.props.fields)
     }
+
+    this.generateField = this.generateField.bind(this)
+    this.generateFields = this.generateFields.bind(this)
   }
 
   setDefaults(fields) {
