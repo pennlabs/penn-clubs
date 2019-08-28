@@ -11,7 +11,7 @@ const Row = s.tr`
 
 const Tag = s.span`
   background-color: ${CLUBS_BLUE};
-  margin: 2;
+  margin: 2px;
   font-size: .7em;
 `
 
