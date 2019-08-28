@@ -1,6 +1,6 @@
 import React from 'react'
 import s from 'styled-components'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../../constants/colors'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT, MEDIUM_GRAY, LIGHT_GRAY } from '../../constants/colors'
 import { BORDER_RADIUS_LG } from '../../constants/measurements'
 import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
 import { Link } from '../../routes'
@@ -24,16 +24,22 @@ const ModalBackground = s.div`
 const ModalCard = s.div`
   margin: 6rem;
   border-radius: ${BORDER_RADIUS_LG};
+  border: 0 !important;
+  box-shadow: none !important;
 `
 
 const CloseModalIcon = s.span`
   float: right;
   cursor: pointer;
   margin: 10px;
-  color: ${CLUBS_GREY};
+  color: ${LIGHT_GRAY};
+
+  &:hover {
+    color: ${MEDIUM_GRAY};
+  }
 `
 
-const FavoriteIcon = s.div`
+const FavoriteButton = s.div`
   float: right;
   min-width: 120px;
 `
@@ -132,9 +138,23 @@ class ClubModal extends React.Component {
           <CardBody>
             <CardHeader style={{ paddingBottom: '1rem' }}>
               <CardTitle className="is-size-2">{name}</CardTitle>
-              <FavoriteIcon className="button is-small is-link" onClick={() => updateFavorites(id)}>
-                {(favorite ? <p><i className="fa fa-heart" /> Favorited</p> : <p><i className="far fa-heart" /> Not Favorited</p>)}
-              </FavoriteIcon>
+              <FavoriteButton
+                className="button is-small is-link"
+                onClick={() => updateFavorites(id)}>
+                {favorite ? (
+                  <p>
+                    Favorited
+                    {' '}&nbsp;
+                    <i className="fa fa-heart" />
+                  </p>
+                ) : (
+                  <p>
+                    Not Favorited
+                    {' '}&nbsp;
+                    <i className="far fa-heart" />
+                  </p>
+                )}
+              </FavoriteButton>
             </CardHeader>
 
             <div className="columns">
