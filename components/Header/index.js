@@ -6,9 +6,10 @@ import Feedback from './Feedback'
 import Links from './Links'
 
 const Nav = s.nav`
-  height: 70px;
-  background-color: #f9f9f9;
-  borderBottom: 1px solid #fff;
+  height: 64px;
+  background-color: #fff;
+  borderBottom: 1px solid rgba(0, 0, 0, .1);
+  box-shadow: 0 0 8px 0 rgba(0, 0, 0, .1);
 `
 
 const Logo = s.img`

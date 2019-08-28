@@ -4,7 +4,7 @@ import s from 'styled-components'
 import { LOGIN_URL } from '../../utils'
 
 const StyledLink = s.a`
-  padding: 20px;
+  padding: 18px;
   color: #9B9B9B;
 `
 

@@ -23,28 +23,29 @@ class Form extends React.Component {
   }
 
   setDefaults(fields) {
-    fields.forEach((item) => {
-      if (item.type === 'html') {
-        if (this.props.defaults && this.props.defaults[item.name]) {
-          this.state['editorState-' + item.name] = EditorState.createWithContent(
+    const { defaults } = this.props
+    fields.forEach(({ name, type, converter, fields }) => {
+      if (type === 'html') {
+        if (defaults && defaults[name]) {
+          this.state['editorState-' + name] = EditorState.createWithContent(
             ContentState.createFromBlockArray(
-              htmlToDraft(this.props.defaults[item.name]).contentBlocks
+              htmlToDraft(this.props.defaults[name]).contentBlocks
             )
           )
         } else {
-          this.state['editorState-' + item.name] = EditorState.createEmpty()
+          this.state['editorState-' + name] = EditorState.createEmpty()
         }
       }
-      if (item.type !== 'group') {
-        if (item.type === 'multiselect') {
-          this.state['field-' + item.name] = this.props.defaults ? (this.props.defaults[item.name] || []).map(item.converter) : []
-        } else if (item.type === 'select') {
-          this.state['field-' + item.name] = this.props.defaults ? item.converter(this.props.defaults[item.name]) : null
+      if (type !== 'group') {
+        if (type === 'multiselect') {
+          this.state[`field-${name}`] = defaults ? (defaults[name] || []).map(converter) : []
+        } else if (type === 'select') {
+          this.state[`field-${name}`] = defaults ? converter(defaults[name]) : null
         } else {
-          this.state['field-' + item.name] = this.props.defaults ? this.props.defaults[item.name] || '' : ''
+          this.state[`field-${name}`] = defaults ? defaults[name] || '' : ''
         }
       } else {
-        this.setDefaults(item.fields)
+        this.setDefaults(fields)
       }
     })
   }
@@ -67,96 +68,134 @@ class Form extends React.Component {
   }
 
   getData() {
-    return this.getAllFields().reduce((out, item) => {
-      const val = this.state['field-' + item.name]
-      switch (item.type) {
+    return this.getAllFields().reduce((out, { type, name, reverser }) => {
+      const val = this.state[`field-${name}`]
+      switch (type) {
         case 'multiselect': {
-          out[item.name] = (val || []).map(item.reverser)
+          out[name] = (val || []).map(reverser)
           break
         }
         case 'select': {
-          out[item.name] = item.reverser(val)
+          out[name] = reverser(val)
           break
         }
         case 'checkbox': {
-          out[item.name] = Boolean(val)
+          out[name] = Boolean(val)
           break
         }
         case 'date': {
-          out[item.name] = val || null
+          out[name] = val || null
           break
         }
         case 'file': {
           const data = new FormData()
-          data.append('file', this.files[item.name].files[0])
-          out[item.name] = data
+          data.append('file', this.files[name].files[0])
+          out[name] = data
           break
         }
         default: {
-          out[item.name] = val
+          out[name] = val
         }
       }
       return out
     }, {})
   }
 
-  generateFields(fields) {
-    return fields.map((item) => {
-      var inpt = null
-      if (['text', 'url', 'email', 'date'].includes(item.type)) {
-        inpt = <input className='input' disabled={item.readonly} value={this.state['field-' + item.name]} onChange={(e) => this.setState({ ['field-' + item.name]: e.target.value })} key={item.name} type={item.type} name={item.name} />
-      } else if (item.type === 'html') {
-        inpt = <div>
+  generateField(field) {
+    const {
+      name, fields, type, readonly, placeholder = '', content, accept, choices,
+      converter, label, required, help
+    } = field
+
+    let inpt = null
+
+    if (['text', 'url', 'email', 'date'].includes(type)) {
+      inpt = (
+        <input
+          className="input"
+          disabled={readonly}
+          value={this.state['field-' + name]}
+          onChange={(e) => this.setState({ ['field-' + name]: e.target.value })}
+          key={name}
+          type={type}
+          name={name}
+        />
+      )
+    } else if (type === 'html') {
+      inpt = (
+        <div>
           <Head>
             <link href='/static/css/react-draft-wysiwyg.css' rel='stylesheet' key='editor-css' />
           </Head>
-          {this.state.mounted ? <Editor
-            editorState={this.state['editorState-' + item.name]}
-            placeholder={item.placeholder}
-            onEditorStateChange={(state) => {
-              this.setState({ ['editorState-' + item.name]: state, ['field-' + item.name]: draftToHtml(convertToRaw(state.getCurrentContent())) })
-            }}
-            toolbar={{
-              options: ['inline', 'fontSize', 'fontFamily', 'list', 'textAlign', 'colorPicker', 'link', 'image', 'remove', 'history']
-            }}
-          /> : <div />}
+          {this.state.mounted ? (
+            <Editor
+              editorState={this.state[`editorState-${name}`]}
+              placeholder={placeholder}
+              onEditorStateChange={(state) => {
+                this.setState({
+                  [`editorState-${name}`]: state,
+                  [`field-${name}`]: draftToHtml(convertToRaw(state.getCurrentContent()))
+                })
+              }}
+              toolbar={{
+                options: [
+                  'inline', 'fontSize', 'fontFamily', 'list', 'textAlign',
+                  'colorPicker', 'link', 'image', 'remove', 'history'
+                ]
+              }}
+            />
+          ) : <div />}
         </div>
-      } else if (item.type === 'textarea') {
-        inpt = <textarea className='textarea' value={this.state['field-' + item.name]} onChange={(e) => this.setState({ ['field-' + item.name]: e.target.value })}></textarea>
-      } else if (item.type === 'group') {
-        return <div key={item.name} className='card' style={{ marginBottom: 20 }}>
+      )
+    } else if (type === 'textarea') {
+      inpt = (
+        <textarea
+          className="textarea"
+          value={this.state[`field-${name}`]}
+          onChange={(e) => this.setState({ [`field-${name}`]: e.target.value })}
+        />
+      )
+    } else if (type === 'group') {
+      return (
+        <div key={name} className='card' style={{ marginBottom: 20 }}>
           <div className='card-header'>
-            <div className='card-header-title'>{item.name}</div>
+            <div className='card-header-title'>{name}</div>
           </div>
           <div className='card-content'>
-            {this.generateFields(item.fields)}
+            {this.generateFields(fields)}
           </div>
         </div>
-      } else if (item.type === 'component') {
-        return <div key={item.name}>{item.content}</div>
-      } else if (item.type === 'file') {
-        inpt = <div className='file' key={item.name}>
-          <label className='file-label'>
-            <input className="file-input" ref={(c) => { this.files[item.name] = c }} accept={item.accept} type="file" name={item.name} />
-            <span className="file-cta">
-              <span className="file-icon">
-                <i className="fas fa-upload"></i>
-              </span>
-              <span className="file-label">
-                Choose a file...
-              </span>
+      )
+    } else if (type === 'component') {
+      return <div key={name}>{content}</div>
+    } else if (type === 'file') {
+      inpt = <div className='file' key={name}>
+        <label className='file-label'>
+          <input
+            className="file-input"
+            ref={(c) => { this.files[name] = c }}
+            accept={accept} type="file"
+            name={name} />
+          <span className="file-cta">
+            <span className="file-icon">
+              <i className="fas fa-upload"></i>
             </span>
-          </label>
-        </div>
-      } else if (item.type === 'multiselect') {
-        if (this.state.mounted) {
-          inpt = <Select
-            key={item.name}
-            placeholder={item.placeholder}
+            <span className="file-label">
+              Choose a file...
+            </span>
+          </span>
+        </label>
+      </div>
+    } else if (type === 'multiselect') {
+      if (this.state.mounted) {
+        inpt = (
+          <Select
+            key={name}
+            placeholder={placeholder}
             isMulti={true}
-            value={(this.state['field-' + item.name] || [])}
-            options={item.choices.map(item.converter)}
-            onChange={(opt) => this.setState({ ['field-' + item.name]: opt })}
+            value={(this.state[`field-${name}`] || [])}
+            options={choices.map(converter)}
+            onChange={(opt) => this.setState({ [`field-${name}`]: opt })}
             styles={{
               container: (style) => ({
                 ...style,
@@ -164,47 +203,82 @@ class Form extends React.Component {
               })
             }}
           />
-        } else {
-          inpt = <div>Loading...</div>
-        }
-      } else if (item.type === 'select') {
-        inpt = <Select
-          key={item.name}
-          value={this.state['field-' + item.name]}
-          options={item.choices}
-          onChange={(opt) => this.setState({ ['field-' + item.name]: opt })}
-        />
-      } else if (item.type === 'checkbox') {
-        inpt = <label className='checkbox'>
-          <input type='checkbox' checked={this.state['field-' + item.name]} onChange={(e) => this.setState({ ['field-' + item.name]: e.target.checked })} /> {item.label}
-        </label>
+        )
       } else {
-        inpt = <span style={{ color: 'red' }}>Unknown field type '{item.type}'!</span>
+        inpt = (<div>Loading...</div>)
       }
+    } else if (type === 'select') {
+      inpt = (
+        <Select
+          key={name}
+          value={this.state[`field-${name}`]}
+          options={choices}
+          onChange={(opt) => this.setState({ [`field-${name}`]: opt })}
+        />
+      )
+    } else if (type === 'checkbox') {
+      inpt = (
+        <label className='checkbox'>
+          <input
+            type="checkbox"
+            checked={this.state[`field-${name}`]}
+            onChange={(e) => this.setState({ [`field-${name}`]: e.target.checked })}
+          />
+          {label}
+        </label>
+      )
+    } else {
+      inpt = (
+        <span style={{ color: 'red' }}>
+          {`Unknown field type '${type}'!`}
+        </span>
+      )
+    }
 
-      const isHorizontal = typeof this.props.isHorizontal !== 'undefined' ? this.props.isHorizontal : true
+    const isHorizontal = typeof this.props.isHorizontal !== 'undefined' ? this.props.isHorizontal : true
 
-      return <div key={item.name} className={'field' + (isHorizontal ? ' is-horizontal' : '')}>
+    return (
+      <div key={name} className={'field' + (isHorizontal ? ' is-horizontal' : '')}>
         <div className='field-label is-normal'>
-          <label className='label'>{item.type === 'checkbox' ? titleize(item.name) : item.label || titleize(item.name)}{item.required && <span style={{ color: 'red' }}>*</span>}</label>
+          <label className='label'>
+            {type === 'checkbox' ? titleize(name) : label || titleize(name)}
+            {required && (<span style={{ color: 'red' }}>*</span>)}
+          </label>
         </div>
         <div className='field-body'>
           <div className='field'>
             <div className='control'>
               {inpt}
             </div>
-            {item.help && <p className='help'>{item.help}</p>}
+            {help && <p className='help'>{help}</p>}
           </div>
         </div>
       </div>
-    })
+    )
+  }
+
+  generateFields(fields) {
+    return fields.map(this.generateField)
   }
 
   render() {
-    return <span>
-      {this.generateFields(this.props.fields)}
-      {typeof this.props.submitButton !== 'undefined' ? <span onClick={() => this.props.onSubmit(this.getData())}>{this.props.submitButton}</span> : <a className='button is-primary is-medium' onClick={() => this.props.onSubmit && this.props.onSubmit(this.getData())}>Submit</a>}
-    </span>
+    const { submitButton, onSubmit, fields } = this.props
+    return (
+      <span>
+        {this.generateFields(fields)}
+        {(typeof submitButton !== 'undefined') ? (
+          <span onClick={() => onSubmit(this.getData())}>
+            {submitButton}
+          </span>
+        ) : (
+          <a
+            className='button is-primary is-medium'
+            onClick={() => onSubmit && onSubmit(this.getData())}>
+            Submit
+          </a>
+        )}
+      </span>
+    )
   }
 }
 

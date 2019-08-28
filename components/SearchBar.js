@@ -1,12 +1,54 @@
 import React from 'react'
+import s from 'styled-components'
 import DropdownFilter from './DropdownFilter'
-import posed from 'react-pose'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
+import { CLUBS_GREY } from '../colors'
 
-const Pop = posed.div({
-  idle: { scale: 1 },
-  hovered: { scale: 1.1 }
-})
+const Wrapper = s.div`
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  position: sticky;
+  top: -20px;
+`
+
+const Icon = s.span`
+  transform: scale(1);
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+`
+
+const Content = s.div`
+  position: absolute;
+  height: 90vh;
+  width: calc(100% - 17px);
+  padding: 50px 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  margin-bottom: 8rem;
+  margin-left: 17px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`
+
+const Line = s.hr`
+  background-color: rgba(0, 0, 0, 0.1);
+  height: 2px;
+  margin: 0;
+  padding: 0;
+`
+
+const Input = s.input`
+  border-width: 0;
+  outline: none;
+  color: ${CLUBS_GREY};
+  width: 88%;
+  font-size: 1em;
+`
 
 class SearchBar extends React.Component {
   constructor(props) {
@@ -24,9 +66,6 @@ class SearchBar extends React.Component {
         { value: 1, label: 'Requires application' },
         { value: 2, label: 'Does not require application' },
         { value: 3, label: 'Currently accepting applications' }],
-      hoverList: false,
-      hoverCard: false,
-      hoverDown: false,
       selectedTags: props.selectedTags
     }
   }
@@ -39,62 +78,36 @@ class SearchBar extends React.Component {
 
   render() {
     const { tagOptions, sizeOptions, applicationOptions, selectedTags } = this.state
-    const { switchDisplay, resetDisplay, updateTag } = this.props
+    const { switchDisplay, updateTag } = this.props
     return (
-      <div style={{ height: '100vh', width: '100%', overflow: 'hidden', position: 'sticky', top: -20 }}>
-        <style jsx>{`
-          .no-scrollbar::-webkit-scrollbar {
-            display: none;
-          }
-        `}</style>
-        <div
-          className='no-scrollbar'
-          style={{
-            position: 'absolute',
-            height: '90vh',
-            width: 'calc(100% - 17px)',
-            padding: '50px 0',
-            overflowY: 'scroll',
-            overflowX: 'hidden',
-            marginBottom: '8rem',
-            marginLeft: 17
-          }}>
+      <Wrapper>
+        <Content>
           <div className="is-flex" style={{ justifyContent: 'space-between', padding: '0 3px' }}>
-            <b style={{ color: CLUBS_GREY }}>View: </b>
+            <strong style={{ color: CLUBS_GREY, opacity: 0.75 }}>View:</strong>
             <div className="is-flex">
-              <Pop
-                pose={this.state.hoverCard ? 'hovered' : 'idle'}
-                onMouseEnter={() => this.setState({ hoverCard: true })}
-                onMouseLeave={() => this.setState({ hoverCard: false })}>
-                <span className="icon" style={{ cursor: 'pointer', color: CLUBS_GREY }} onClick={(e) => switchDisplay('cards')}>
-                  <i className="fas fa-th-large" title="Grid View"></i>
-                </span>
-              </Pop>
-              <Pop
-                pose={this.state.hoverList ? 'hovered' : 'idle'}
-                onMouseEnter={() => this.setState({ hoverList: true })}
-                onMouseLeave={() => this.setState({ hoverList: false })}>
-                <span className="icon" >
-                  <i className="fas fa-list" title="List View" style={{ cursor: 'pointer', color: CLUBS_GREY }} onClick={(e) => switchDisplay('list')}></i>
-                </span>
-              </Pop>
+              <Icon
+                className="icon"
+                style={{ cursor: 'pointer', color: CLUBS_GREY }}
+                onClick={(e) => switchDisplay('cards')}>
+                <i className="fas fa-th-large" title="Grid View" />
+              </Icon>
+              <Icon className="icon" >
+                <i
+                  className="fas fa-list"
+                  title="List View"
+                  style={{ cursor: 'pointer', color: CLUBS_GREY }}
+                  onClick={(e) => switchDisplay('list')} />
+              </Icon>
             </div>
           </div>
           <div style={{ margin: '30px 0' }}>
-            <hr style={{ backgroundColor: CLUBS_GREY, height: '2px', margin: 0, padding: 0 }}/>
+            <Line />
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 3px' }}>
-              <input
+              <Input
                 type="text"
                 name="search"
                 placeholder="Search"
                 aria-label="Search"
-                style={{
-                  borderWidth: 0,
-                  outline: 'none',
-                  color: CLUBS_GREY,
-                  width: '88%',
-                  fontSize: '1em'
-                }}
                 value={this.state.nameInput}
                 onChange={(e) => this.setState({ nameInput: e.target.value })}
               />
@@ -121,8 +134,8 @@ class SearchBar extends React.Component {
             selected={selectedTags.filter(tag => tag.name === 'Application')}
             updateTag={updateTag}
           />
-        </div>
-      </div>
+        </Content>
+      </Wrapper>
     )
   }
 }
