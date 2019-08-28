@@ -24,6 +24,18 @@ const TableRow = s.tr`
   cursor: pointer;
 `
 
+const TableWrapper = s.div`
+  max-height: 0;
+  opacity: 0;
+  transition: all 0.2s ease;
+  overflow: hidden;
+
+  ${({ drop }) => drop && `
+    max-height: 100vh;
+    opacity: 1;
+  `}
+`
+
 class DropdownFilter extends React.Component {
   constructor(props) {
     super(props)
@@ -63,7 +75,7 @@ class DropdownFilter extends React.Component {
             <i className="fas fa-chevron-down"></i>
           </span>
         </DropdownHeader>
-        {drop && (
+        <TableWrapper drop={drop}>
           <table>
             <tbody>
               {options.map(tag => (
@@ -83,7 +95,7 @@ class DropdownFilter extends React.Component {
               ))}
             </tbody>
           </table>
-        )}
+        </TableWrapper>
       </div>
     )
   }

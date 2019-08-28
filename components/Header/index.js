@@ -8,7 +8,7 @@ import Links from './Links'
 import { WHITE } from '../../constants/colors'
 
 const Nav = s.nav`
-  height: 64px;
+  height: 3.25rem;
   background-color: ${WHITE};
   borderBottom: 1px solid rgba(0, 0, 0, .1);
   box-shadow: 0 0 8px 0 rgba(0, 0, 0, .1);
