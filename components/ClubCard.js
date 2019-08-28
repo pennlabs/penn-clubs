@@ -8,6 +8,7 @@ import {
 import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL, stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
+import TagGroup from './common/TagGroup'
 
 // TODO what is this "Pop" thing
 const Pop = posed.div({
@@ -79,14 +80,7 @@ class ClubCard extends React.Component {
                   Inactive
                 </span>
               )}
-              {tags.map(tag => (
-                <span
-                  key={tag.id}
-                  className="tag is-rounded has-text-white"
-                  style={{ backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.7em' }}>
-                  {tag.name}
-                </span>
-              ))}
+              <TagGroup tags={tags} />
               <div className="columns is-desktop is-gapless" style={{ padding: '10px 5px' }}>
                 <div className="column is-narrow">
                   <LazyLoad width={180} height={120} offset={1000}>

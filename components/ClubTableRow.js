@@ -3,6 +3,7 @@ import s from 'styled-components'
 import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT, HOVER_GRAY } from '../constants/colors'
 import { getDefaultClubImageURL } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
+import TagGroup from './common/TagGroup'
 
 const Row = s.div`
   cursor: pointer;
@@ -10,12 +11,6 @@ const Row = s.div`
   &:hover {
     background: ${HOVER_GRAY};
   }
-`
-
-const Tag = s.span`
-  background-color: ${CLUBS_BLUE} !important;
-  margin: 2px;
-  font-size: .7em;
 `
 
 const Subtitle = s.p`
@@ -54,9 +49,7 @@ class ClubTableRow extends React.Component {
             <div className="columns is-gapless" style={{ padding: 10 }}>
               <div className="column is-4">
                 <b className="is-size-6" style={{ color: CLUBS_GREY }}> {name} </b>
-                <div>
-                  {tags.map(tag => <Tag key={tag.id} className="tag is-rounded has-text-white">{tag.name}</Tag>)}
-                </div>
+                <TagGroup tags={tags} />
               </div>
               <div className="column is-8">
                 <Subtitle>{this.getSubtitle()}</Subtitle>
