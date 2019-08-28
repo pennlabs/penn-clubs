@@ -14,10 +14,9 @@ const Nav = s.nav`
 
 const Logo = s.img`
   padding-left: 15px;
-  height: 100%;
-  margin-bottom: -5px;
-  transform: scale(1);
+  transform: scale(1.0);
   transition: all 0.2s ease;
+  max-height: 2.5rem !important;
 
   &:hover {
     transform: scale(1.1);
@@ -55,7 +54,7 @@ class Header extends React.Component {
         <Nav className="navbar" role="navigation" aria-label="main navigation">
           <div className="navbar-brand">
             <a className="navbar-item" style={{ padding: 0 }} href="/">
-              <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
+              <Logo src="/static/img/peoplecirclelogo.png" alt="Penn Clubs Logo" />
 
               <Title className="title is-size-4">Penn Clubs</Title>
               <BetaTag className="tag is-info is-rounded">Beta</BetaTag>
