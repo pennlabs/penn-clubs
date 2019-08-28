@@ -8,10 +8,13 @@ const Tag = s.span`
 `
 
 export default (props) => {
-  if (!props.tags) return null
+  const { tags } = props
+  if (!tags || !tags.length) return null
   return (
     <div>
-      {props.tags.map(tag => <Tag key={tag.id} className="tag is-rounded has-text-white">{tag.name}</Tag>)}
+      {tags.map(({ id, name }) => (
+        <Tag key={id} className="tag is-rounded has-text-white">{name}</Tag>
+      ))}
     </div>
   )
 }
