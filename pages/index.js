@@ -48,7 +48,10 @@ class Splash extends React.Component {
       keys: [
         'name',
         'tags.name'
-      ]
+      ],
+      shouldSort: true,
+      minMatchCharLength: 2,
+      threshold: 0.2,
     }
     this.fuse = new Fuse(this.props.clubs, this.fuseOptions)
   }
