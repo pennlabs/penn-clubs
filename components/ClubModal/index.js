@@ -1,6 +1,6 @@
 import React from 'react'
 import s from 'styled-components'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../../colors'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../../constants/colors'
 import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
 import { Link } from '../../routes'
 
@@ -134,7 +134,7 @@ class ClubModal extends React.Component {
           </CloseModalIcon>
 
           <CardBody>
-            <CardHeader style={{paddingBottom: "1rem"}}>
+            <CardHeader style={{ paddingBottom: '1rem' }}>
               <CardTitle className="is-size-2">{name}</CardTitle>
               <FavoriteIcon className="icon" onClick={() => updateFavorites(id)}>
                 {(favorite ? <p>Unfavourite</p> : <p>Favourite</p>)}

@@ -1,7 +1,7 @@
 import React from 'react'
 import ClubList from '../components/ClubList'
 import { renderListPage } from '../renderPage'
-import { CLUBS_GREY } from '../colors'
+import { CLUBS_GREY } from '../constants/colors'
 
 class Favorites extends React.Component {
   constructor(props) {

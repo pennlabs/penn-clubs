@@ -2,7 +2,7 @@ import React from 'react'
 import { Link } from '../../routes'
 import s from 'styled-components'
 import { LOGIN_URL } from '../../utils'
-import { MEDIUM_GRAY, DARK_GRAY } from '../../colors'
+import { MEDIUM_GRAY, DARK_GRAY } from '../../constants/colors'
 
 const StyledLink = s.a`
   padding: 20px;

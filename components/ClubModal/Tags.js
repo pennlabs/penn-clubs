@@ -1,5 +1,5 @@
 import React from 'react'
-import { CLUBS_BLUE } from '../../colors'
+import { CLUBS_BLUE } from '../../constants/colors'
 
 export default ({ tags }) => {
   if (!tags || !tags.length) return null

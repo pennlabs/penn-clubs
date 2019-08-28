@@ -1,6 +1,6 @@
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../utils'
-import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../colors'
+import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../constants/colors'
 import { Link, Router } from '../routes'
 import React from 'react'
 import Select from 'react-select'

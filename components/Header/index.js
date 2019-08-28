@@ -5,7 +5,7 @@ import Burger from './Burger'
 import Feedback from './Feedback'
 import Links from './Links'
 
-import { WHITE } from '../../colors'
+import { WHITE } from '../../constants/colors'
 
 const Nav = s.nav`
   height: 64px;

@@ -5,7 +5,7 @@ import ClubDisplay from '../components/ClubDisplay'
 import { renderListPage } from '../renderPage.js'
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW
-} from '../colors'
+} from '../constants/colors'
 
 const ClearAllLink = s.span`
   cursor: pointer;

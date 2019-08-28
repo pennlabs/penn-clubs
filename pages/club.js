@@ -1,6 +1,6 @@
 import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
-import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
+import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../constants/colors'
 import { getDefaultClubImageURL, getSizeDisplay, doApiRequest, ROLE_OFFICER, EMPTY_DESCRIPTION } from '../utils'
 import React from 'react'
 import { Link } from '../routes'

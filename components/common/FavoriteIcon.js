@@ -1,5 +1,5 @@
 import s from 'styled-components'
-import { CLUBS_GREY } from '../../colors'
+import { CLUBS_GREY } from '../../constants/colors'
 
 const FavoriteIcon = s.span`
   color: ${CLUBS_GREY};

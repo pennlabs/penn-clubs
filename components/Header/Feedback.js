@@ -1,7 +1,7 @@
 import React from 'react'
 import s from 'styled-components'
 
-import { HOVER_GRAY, MEDIUM_GRAY } from '../../colors'
+import { HOVER_GRAY, MEDIUM_GRAY } from '../../constants/colors'
 
 const DIAMETER = '3rem'
 const OFFSET = '18px'

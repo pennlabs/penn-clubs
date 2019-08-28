@@ -5,7 +5,7 @@ import ClubModal from './components/ClubModal'
 import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
 import { doApiRequest } from './utils'
 import fetch from 'isomorphic-fetch'
-import { CLUBS_PURPLE_LIGHT } from './colors'
+import { CLUBS_PURPLE_LIGHT } from './constants/colors'
 
 function renderPage(Page) {
   class RenderPage extends React.Component {

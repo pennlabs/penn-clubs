@@ -1,6 +1,6 @@
 import React from 'react'
 import s from 'styled-components'
-import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
+import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../constants/colors'
 import { getDefaultClubImageURL } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 

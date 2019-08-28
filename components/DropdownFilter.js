@@ -1,6 +1,8 @@
 import React from 'react'
 import s from 'styled-components'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW } from '../colors'
+import {
+  CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW
+} from '../constants/colors'
 
 const Line = s.hr`
   background-color: rgba(0, 0, 0, .1);

@@ -2,7 +2,7 @@ import React from 'react'
 import posed from 'react-pose'
 import s from 'styled-components'
 import LazyLoad from 'react-lazy-load'
-import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
+import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
 import { getDefaultClubImageURL, stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 
