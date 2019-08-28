@@ -158,7 +158,7 @@ class ClubModal extends React.Component {
                   className="has-text-justified is-size-6-desktop is-size-7-touch"
                   dangerouslySetInnerHTML={{ __html: description || EMPTY_DESCRIPTION }}
                 />
-                <Link route='club-view' params={{ club: String(id) }}>
+                <Link route='club-view' params={{ club: String(id) }} passHref>
                   <SeeMoreButton className="button" target="_blank">
                     See More...
                   </SeeMoreButton>
