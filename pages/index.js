@@ -139,9 +139,12 @@ class Splash extends React.Component {
                 </Icon>
               </button>
               <button
-                onClick={() => this.setState({
-                  displayClubs: displayClubs.sort(() => Math.random() - 0.5)
-                })}
+                onClick={() => {
+                  logEvent('shuffle', 'click')
+                  this.setState({
+                    displayClubs: displayClubs.sort(() => Math.random() - 0.5)
+                  })
+                }}
                 className="button is-light is-small">
                 <i className="fas fa-random"></i>
                 &nbsp;&nbsp;

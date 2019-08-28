@@ -3,6 +3,7 @@ import s from 'styled-components'
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW
 } from '../constants/colors'
+import { logEvent } from '../utils/analytics';
 
 const Line = s.hr`
   background-color: rgba(0, 0, 0, .1);
@@ -81,7 +82,10 @@ class DropdownFilter extends React.Component {
               {options.map(tag => (
                 <TableRow
                   key={tag.label}
-                  onClick={(e) => updateTag(tag, name)}>
+                  onClick={(e) => {
+                    logEvent('filter', name)
+                    updateTag(tag, name)
+                  }}>
                   <td className="icon" style={{ cursor: 'pointer', color: CLUBS_GREY_LIGHT }}>
                     <i className={this.isSelected(tag) ? 'fas fa-check-square' : 'far fa-square'} />
                   </td>
