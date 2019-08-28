@@ -1,7 +1,7 @@
 import React from 'react'
 import s from 'styled-components'
 
-import {logEvent} from '../../utils/analytics'
+import { logEvent } from '../../utils/analytics'
 
 import { HOVER_GRAY, MEDIUM_GRAY } from '../../constants/colors'
 

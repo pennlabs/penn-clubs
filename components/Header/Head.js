@@ -4,13 +4,14 @@ import Head from 'next/head'
 import { initGA, logPageView } from '../../utils/analytics'
 
 export default class Heading extends React.Component {
-  componentDidMount () {
+  componentDidMount() {
     if (!window.GA_INITIALIZED) {
       initGA()
       window.GA_INITIALIZED = true
     }
     logPageView()
   }
+
   render() {
     return (
       <Head>

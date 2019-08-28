@@ -6,8 +6,7 @@ import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'bo
 import { doApiRequest } from './utils'
 import fetch from 'isomorphic-fetch'
 import { CLUBS_PURPLE_LIGHT } from './constants/colors'
-import {logEvent} from './utils/analytics'
-
+import { logEvent } from './utils/analytics'
 
 function renderPage(Page) {
   class RenderPage extends React.Component {
