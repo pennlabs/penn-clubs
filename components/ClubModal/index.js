@@ -35,7 +35,7 @@ const CloseModalIcon = s.span`
 
 const FavoriteIcon = s.div`
   float: right;
-  min-width: 80px;
+  min-width: 120px;
 `
 
 const CardBody = s.div`
@@ -133,7 +133,7 @@ class ClubModal extends React.Component {
             <CardHeader style={{ paddingBottom: '1rem' }}>
               <CardTitle className="is-size-2">{name}</CardTitle>
               <FavoriteIcon className="button is-small is-link" onClick={() => updateFavorites(id)}>
-                {(favorite ? <p>Favorite</p> : <p>Unfavorite</p>)}
+                {(favorite ? <p><i className="fa fa-heart" /> Favorited</p> : <p><i className="far fa-heart" /> Not Favorited</p>)}
               </FavoriteIcon>
             </CardHeader>
 

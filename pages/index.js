@@ -30,7 +30,7 @@ class Splash extends React.Component {
     this.fuseOptions = {
       keys: [
         'name',
-        'tags.name',
+        'tags.name'
       ]
     }
     this.fuse = new Fuse(this.props.clubs, this.fuseOptions)
@@ -43,7 +43,9 @@ class Splash extends React.Component {
     var { clubs } = this.props
 
     // fuzzy search
-    clubs = this.fuse.search(nameInput)
+    if (nameInput.length) {
+      clubs = this.fuse.search(nameInput)
+    }
 
     // checkbox filters
     clubs = clubs.filter(club => {
@@ -52,7 +54,7 @@ class Splash extends React.Component {
         (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 && !club.application_required) ||
         (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 && club.accepting_applications)
       const rightTags = !tagSelected.length || club.tags.some(club_tag => tagSelected.findIndex(tag => tag.value === club_tag.id) !== -1)
-      
+
       return clubRightSize && appRequired && rightTags
     })
 
@@ -95,11 +97,12 @@ class Splash extends React.Component {
         <div className="column is-10-desktop is-9-tablet is-7-mobile" style={{ marginLeft: 40 }}>
           <div style={{ padding: '30px 0' }}>
             <p className="title" style={{ color: CLUBS_GREY }}>Browse Clubs
-            <button onClick={() => {
-              this.setState({displayClubs: displayClubs.sort(() => Math.random() - 0.5)})}
-              } className="button is-light" style={{float: 'right', 'right': '40px'}}>
-              <i className="fas fa-random"></i>&nbsp;&nbsp;Shuffle
-            </button></p>
+              <button onClick={() => {
+                this.setState({ displayClubs: displayClubs.sort(() => Math.random() - 0.5) })
+              }
+              } className="button is-light" style={{ float: 'right', right: '40px' }}>
+                <i className="fas fa-random"></i>&nbsp;&nbsp;Shuffle
+              </button></p>
             <p className="subtitle is-size-5" style={{ color: CLUBS_GREY_LIGHT }}>Find your people!</p>
           </div>
 
