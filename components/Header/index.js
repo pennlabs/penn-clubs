@@ -4,7 +4,7 @@ import Head from './Head'
 import Burger from './Burger'
 import Feedback from './Feedback'
 import Links from './Links'
-import { WHITE, CLUBS_BLUE, LIGHT_GRAY, ALLBIRDS_GRAY } from '../../constants/colors'
+import { WHITE, CLUBS_BLUE, DARK_GRAY, ALLBIRDS_GRAY } from '../../constants/colors'
 
 const Nav = s.nav`
   height: 3.25rem;
@@ -28,12 +28,12 @@ const BetaTag = s.span`
   margin-left: 10px;
   border-radius: 25px;
   background-color: ${CLUBS_BLUE};
-  color: white;
-  margin-top: -3px;
+  color: ${WHITE};
+  margin-top: 2px;
 `
 
 const Title = s.h1`
-  color: ${LIGHT_GRAY};
+  color: ${DARK_GRAY};
   padding-left: 15px;
   margin-bottom: 0 !important;
 `

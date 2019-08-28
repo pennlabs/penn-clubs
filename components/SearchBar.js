@@ -14,20 +14,11 @@ const Wrapper = s.div`
   top: -20px;
 `
 
-const Icon = s.span`
-  transform: scale(1);
-  transition: transform 0.2s ease;
-
-  &:hover {
-    transform: scale(1.1);
-  }
-`
-
 const Content = s.div`
   position: absolute;
   height: 90vh;
   width: calc(100% - 17px);
-  padding: 50px 0;
+  padding: 42px 0 0 0;
   overflow-y: scroll;
   overflow-x: hidden;
   margin-bottom: 8rem;
@@ -93,29 +84,11 @@ class SearchBar extends React.Component {
 
   render() {
     const { tagOptions, sizeOptions, applicationOptions, selectedTags } = this.state
-    const { switchDisplay, updateTag } = this.props
+    const { updateTag } = this.props
     return (
       <Wrapper>
         <Content>
-          <div className="is-flex" style={{ justifyContent: 'space-between', padding: '0 3px' }}>
-            <strong style={{ color: CLUBS_GREY, opacity: 0.75 }}>View:</strong>
-            <div className="is-flex">
-              <Icon
-                className="icon"
-                style={{ cursor: 'pointer', color: CLUBS_GREY }}
-                onClick={(e) => switchDisplay('cards')}>
-                <i className="fas fa-th-large" title="Grid View" />
-              </Icon>
-              <Icon className="icon" >
-                <i
-                  className="fas fa-list"
-                  title="List View"
-                  style={{ cursor: 'pointer', color: CLUBS_GREY }}
-                  onClick={(e) => switchDisplay('list')} />
-              </Icon>
-            </div>
-          </div>
-          <div style={{ margin: '30px 0' }}>
+          <div style={{ marginBottom: '30px' }}>
             <SearchIcon className="icon">
               {this.state.nameInput ? <i onClick={(e) => this.setState({ nameInput: '' })} className="fas fa-times"></i> : <i className="fas fa-search"></i>}
             </SearchIcon>

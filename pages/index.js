@@ -21,6 +21,17 @@ const ClearAllLink = s.span`
   }
 `
 
+const Icon = s.span``
+
+const DisplayButtons = s.div`
+  position: absolute;
+  right: 20px;
+
+  button {
+    margin-left: 8px;
+  }
+`
+
 class Splash extends React.Component {
   constructor(props) {
     super(props)
@@ -96,27 +107,46 @@ class Splash extends React.Component {
     var { clubs, tags, favorites, updateFavorites, openModal } = this.props
     return (
       <div className="columns is-gapless is-mobile" style={{ minHeight: '59vh', marginRight: 20 }}>
-        <div className="column is-2-desktop is-3-tablet is-5-mobile">
+        <div className="column is-2-desktop is-3-tablet is-12-mobile">
           <SearchBar
             clubs={clubs}
             tags={tags}
             resetDisplay={this.resetDisplay.bind(this)}
             switchDisplay={this.switchDisplay.bind(this)}
             selectedTags={selectedTags}
-            updateTag={this.updateTag.bind(this)} />
+            updateTag={this.updateTag.bind(this)}
+          />
         </div>
-        <div className="column is-10-desktop is-9-tablet is-7-mobile" style={{ marginLeft: 40 }}>
+        <div className="column is-10-desktop is-9-tablet is-12-mobile" style={{ marginLeft: 40 }}>
           <div style={{ padding: '30px 0' }}>
-            <button
-              onClick={() => this.setState({
-                displayClubs: displayClubs.sort(() => Math.random() - 0.5)
-              })}
-              className="button is-light is-small"
-              style={{ float: 'right', right: '40px' }}>
-              <i className="fas fa-random"></i>
-              &nbsp;&nbsp;
-              Shuffle
-            </button>
+            <DisplayButtons>
+              <button onClick={(e) => this.switchDisplay('cards')} className="button is-light is-small">
+                <Icon
+                  className="icon"
+                  style={{ cursor: 'pointer', color: CLUBS_GREY }}>
+                  <i className="fas fa-th-large" title="Grid View" />
+                </Icon>
+              </button>
+              <button onClick={(e) => this.switchDisplay('list')} className="button is-light is-small">
+                <Icon className="icon">
+                  <i
+                    className="fas fa-list"
+                    title="List View"
+                    style={{ cursor: 'pointer', color: CLUBS_GREY }}
+                  />
+                </Icon>
+              </button>
+              <button
+                onClick={() => this.setState({
+                  displayClubs: displayClubs.sort(() => Math.random() - 0.5)
+                })}
+                className="button is-light is-small">
+                <i className="fas fa-random"></i>
+                &nbsp;&nbsp;
+                Shuffle
+              </button>
+            </DisplayButtons>
+
             <p className="title" style={{ color: CLUBS_GREY }}>
               Browse Clubs
             </p>
