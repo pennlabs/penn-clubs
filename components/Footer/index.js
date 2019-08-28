@@ -15,12 +15,18 @@ const Foot = s.footer`
 
 const Footer = () => (
   <Foot className="footer">
-    <p>Made with {' '}
+    <p style={{ marginBottom: '1rem' }}>
+      Made with
+      {' '}
       <span className="icon is-small" style={{ color: '#F56F71' }}>
         <i className="fa fa-heart"></i>
       </span>
-      {' '} by {' '}
-      <a href="https://pennlabs.org/">Penn Labs</a>
+      {' '}
+      by
+      {' '}
+      <a href="https://pennlabs.org/">
+        Penn Labs
+      </a>
     </p>
     <Social />
   </Foot>

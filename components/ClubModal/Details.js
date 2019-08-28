@@ -1,9 +1,10 @@
 import React from 'react'
+import { BORDER_RADIUS } from '../../constants/measurements'
 import { CLUBS_GREY } from '../../constants/colors'
 import s from 'styled-components'
 
 const Details = s.div`
-  border-radius: 3px;
+  border-radius: ${BORDER_RADIUS};
   background-color: #f2f2f2;
   height: 100px;
   width: 330px;
