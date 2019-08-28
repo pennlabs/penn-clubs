@@ -25,7 +25,7 @@ class Splash extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      displayClubs: props.clubs.sort(() => Math.random() - 0.5),
+      displayClubs: props.clubs,
       selectedTags: [],
       nameInput: '',
       modal: false,
@@ -39,6 +39,12 @@ class Splash extends React.Component {
       ]
     }
     this.fuse = new Fuse(this.props.clubs, this.fuseOptions)
+  }
+
+  componentDidMount() {
+    this.setState((state) => ({
+      displayClubs: state.displayClubs.sort(() => Math.random() - 0.5)
+    }))
   }
 
   resetDisplay(nameInput, selectedTags) {
