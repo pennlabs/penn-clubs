@@ -43,7 +43,9 @@ class Splash extends React.Component {
     var { clubs } = this.props
 
     // fuzzy search
-    clubs = this.fuse.search(nameInput)
+    if (nameInput.length) {
+      clubs = this.fuse.search(nameInput)
+    }
 
     // checkbox filters
     clubs = clubs.filter(club => {
