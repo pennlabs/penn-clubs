@@ -3,7 +3,7 @@ import { Link } from '../../routes'
 import s from 'styled-components'
 import { LOGIN_URL } from '../../utils'
 import { MEDIUM_GRAY, DARK_GRAY } from '../../constants/colors'
-import { logEvent } from '../../utils/analytics';
+import { logEvent } from '../../utils/analytics'
 
 const StyledLink = s.a`
   padding: 14px 20px;
@@ -12,10 +12,28 @@ const StyledLink = s.a`
   &:hover {
     color: ${DARK_GRAY} !important;
   }
+
+  @media screen and (max-width: 1087px) {
+    padding: 8px 0;
+  }
 `
 
-export default ({ userInfo, authenticated }) => (
-  <div className="navbar-menu">
+const Menu = s.div`
+  @media screen and (max-width: 1087px) {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+
+    a {
+      display: block;
+      width: 100%;
+    }
+
+    ${({ show }) => show && 'display: block;'}
+  }
+`
+
+export default ({ userInfo, authenticated, show }) => (
+  <Menu className="navbar-menu" show={show}>
     <div className="navbar-end" style={{ padding: '0px 20px' }}>
       <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
         FAQ
@@ -35,5 +53,5 @@ export default ({ userInfo, authenticated }) => (
         </Link>
       )}
     </div>
-  </div>
+  </Menu>
 )

@@ -42,12 +42,19 @@ class Header extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      hoverFav: false
+      show: false
     }
+    this.toggleLinks = this.toggleLinks.bind(this)
+  }
+
+  toggleLinks() {
+    const { show } = this.state
+    this.setState({ show: !show })
   }
 
   render() {
     const { authenticated, userInfo } = this.props
+    const { show } = this.state
     return (
       <div>
         <Heading />
@@ -61,10 +68,14 @@ class Header extends React.Component {
               <BetaTag className="tag is-info is-rounded">Beta</BetaTag>
             </a>
 
-            <Burger />
+            <Burger toggle={this.toggleLinks} />
           </div>
 
-          <Links userInfo={userInfo} authenticated={authenticated} />
+          <Links
+            userInfo={userInfo}
+            authenticated={authenticated}
+            show={show}
+          />
         </Nav>
 
         <Feedback />

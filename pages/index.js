@@ -22,6 +22,15 @@ const ClearAllLink = s.span`
   }
 `
 
+const Wrapper = s.div`
+  min-height: 59vh;
+  margin-right: 20px;
+
+  @media screen and (max-width: 1047px) {
+    margin-right: 0;
+  }
+`
+
 const Icon = s.span``
 
 const DisplayButtons = s.div`
@@ -108,7 +117,7 @@ class Splash extends React.Component {
     var { displayClubs, display, selectedTags } = this.state
     var { clubs, tags, favorites, updateFavorites, openModal } = this.props
     return (
-      <div className="columns is-gapless is-mobile" style={{ minHeight: '59vh', marginRight: 20 }}>
+      <Wrapper className="columns is-gapless is-mobile">
         <div className="column is-2-desktop is-3-tablet is-12-mobile">
           <SearchBar
             clubs={clubs}
@@ -202,7 +211,7 @@ class Splash extends React.Component {
             selectedTags={selectedTags}
           />
         </div>
-      </div>
+      </Wrapper>
     )
   }
 }

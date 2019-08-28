@@ -12,6 +12,13 @@ const Wrapper = s.div`
   overflow: hidden;
   position: sticky;
   top: -20px;
+
+  @media screen and (max-width: 1047px) {
+    position: relative;
+    height: auto;
+    overflow: visible;
+    top: 0;
+  }
 `
 
 const Content = s.div`
@@ -26,6 +33,15 @@ const Content = s.div`
 
   &::-webkit-scrollbar {
     display: none;
+  }
+
+  @media screen and (max-width: 1047px) {
+    position: relative;
+    height: auto;
+    overflow: visible;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
   }
 `
 
@@ -90,7 +106,14 @@ class SearchBar extends React.Component {
         <Content>
           <div style={{ marginBottom: '30px' }}>
             <SearchIcon className="icon">
-              {this.state.nameInput ? <i onClick={(e) => this.setState({ nameInput: '' })} className="fas fa-times"></i> : <i className="fas fa-search"></i>}
+              {this.state.nameInput ? (
+                <i
+                  onClick={(e) => this.setState({ nameInput: '' })}
+                  className="fas fa-times"
+                />
+              ) : (
+                <i className="fas fa-search" />
+              )}
             </SearchIcon>
             <Input
               type="text"
