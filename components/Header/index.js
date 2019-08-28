@@ -1,6 +1,6 @@
 import React from 'react'
 import s from 'styled-components'
-import Head from './Head'
+import Heading from './Head'
 import Burger from './Burger'
 import Feedback from './Feedback'
 import Links from './Links'
@@ -50,7 +50,7 @@ class Header extends React.Component {
     const { authenticated, userInfo } = this.props
     return (
       <div>
-        <Head />
+        <Heading />
 
         <Nav className="navbar" role="navigation" aria-label="main navigation">
           <div className="navbar-brand">

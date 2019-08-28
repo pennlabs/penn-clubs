@@ -1,6 +1,8 @@
 import React from 'react'
 import s from 'styled-components'
 
+import {logEvent} from '../../utils/analytics'
+
 import { HOVER_GRAY, MEDIUM_GRAY } from '../../constants/colors'
 
 const DIAMETER = '3rem'
@@ -36,7 +38,8 @@ export default () => (
   <FeedbackLink
     href="https://airtable.com/shrCsYFWxCwfwE7cf"
     title="Feedback"
-    target="_blank">
+    target="_blank"
+    onClick={() => logEvent('feedback', 'clicked')}>
     <Icon className="fa-comment far fa-lg" />
   </FeedbackLink>
 )

@@ -4,7 +4,10 @@ import Footer from './components/Footer'
 import ClubModal from './components/ClubModal'
 import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
 import { doApiRequest } from './utils'
-import fetch from 'isomorphic-unfetch'
+import fetch from 'isomorphic-fetch'
+import { CLUBS_PURPLE_LIGHT } from './constants/colors'
+import {logEvent} from './utils/analytics'
+
 
 function renderPage(Page) {
   class RenderPage extends React.Component {
@@ -53,6 +56,7 @@ function renderPage(Page) {
       if (i === -1) {
         newFavs.push(id)
         if (this.state.authenticated) {
+          logEvent('favorite', id)
           doApiRequest('/favorites/?format=json', {
             method: 'POST',
             body: {
@@ -62,6 +66,7 @@ function renderPage(Page) {
         }
       } else {
         newFavs.splice(i, 1)
+        logEvent('unfavorite', id)
         if (this.state.authenticated) {
           doApiRequest(`/favorites/${id}/?format=json`, {
             method: 'DELETE'
@@ -98,6 +103,7 @@ export function renderListPage(Page) {
     }
 
     openModal(club) {
+      logEvent('openModal', club.name)
       this.setState({ modal: true, modalClub: club })
       disableBodyScroll(this)
     }
