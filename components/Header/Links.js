@@ -2,11 +2,15 @@ import React from 'react'
 import { Link } from '../../routes'
 import s from 'styled-components'
 import { LOGIN_URL } from '../../utils'
-import { LIGHT_GRAY } from '../../constants/colors'
+import { MEDIUM_GRAY, DARK_GRAY } from '../../constants/colors'
 
 const StyledLink = s.a`
-  padding: 18px;
-  color: ${LIGHT_GRAY};
+  padding: 14px 20px;
+  color: ${MEDIUM_GRAY} !important;
+
+  &:hover {
+    color: ${DARK_GRAY} !important;
+  }
 `
 
 export default ({ userInfo, authenticated }) => (

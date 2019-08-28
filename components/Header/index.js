@@ -7,7 +7,7 @@ import Links from './Links'
 import { WHITE, CLUBS_BLUE, LIGHT_GRAY, ALLBIRDS_GRAY } from '../../constants/colors'
 
 const Nav = s.nav`
-  height: 64px;
+  height: 3.25rem;
   background-color: ${WHITE};
   borderBottom: 1px solid ${ALLBIRDS_GRAY};
   box-shadow: 0 0 8px 0 rgba(0, 0, 0, .1);
