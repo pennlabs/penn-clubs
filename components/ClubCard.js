@@ -4,6 +4,7 @@ import s from 'styled-components'
 import LazyLoad from 'react-lazy-load'
 import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
 import { getDefaultClubImageURL, stripTags } from '../utils'
+import FavoriteIcon from './common/FavoriteIcon'
 
 // TODO what is this "Pop" thing
 const Pop = posed.div({
@@ -33,13 +34,6 @@ const CardHeader = s.div`
   align-items: center;
   justify-content: space-between;
   margin: 0 3px;
-`
-
-const FavoriteIcon = s.span`
-  color: ${CLUBS_GREY};
-  float: right;
-  padding: 10px 10px 0 0;
-  cursor: pointer;
 `
 
 class ClubCard extends React.Component {
@@ -102,11 +96,7 @@ class ClubCard extends React.Component {
                 </div>
               </div>
             </div>
-            <FavoriteIcon
-              className="icon"
-              onClick={(e) => { updateFavorites(club.id); e.stopPropagation() }}>
-              <i className={(favorite ? 'fas' : 'far') + ' fa-heart'} ></i>
-            </FavoriteIcon>
+            <FavoriteIcon club={club} favorite={favorite} updateFavorites={updateFavorites} />
           </Card>
         </Pop>
       </div>
