@@ -4,9 +4,9 @@ import { CLUBS_GREY, CLUBS_GREY_LIGHT, MEDIUM_GRAY, LIGHT_GRAY, ALLBIRDS_GRAY } 
 import { BORDER_RADIUS_LG } from '../../constants/measurements'
 import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
 import { Link } from '../../routes'
+import TagGroup from '../common/TagGroup'
 
 import Details from './Details'
-import Tags from './Tags'
 
 const ModalWrapper = s.div`
   position: fixed;
@@ -167,7 +167,7 @@ class ClubModal extends React.Component {
                   <ClubImage src={image_url || getDefaultClubImageURL()}/>
                 </ClubImageWrapper>
 
-                <Tags tags={tags} />
+                <TagGroup tags={tags} />
 
                 <Details
                   size={getSizeDisplay(size)}
