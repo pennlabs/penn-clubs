@@ -55,9 +55,8 @@ class Invite extends React.Component {
           <p>The invite you are looking for does not exist. Perhaps it was already claimed?</p>
           <p>{error && formatResponse(error)}</p>
         </div>
-      }
-      else {
-        return <div className='has-text-centered', style={{ margin: 30 }}>
+      } else {
+        return <div className='has-text-centered' style={{ margin: 30 }}>
           <h1 className='title is-1'>Loading...</h1>
           <p>Processing your invitation...</p>
         </div>
