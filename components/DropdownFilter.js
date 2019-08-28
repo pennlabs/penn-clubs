@@ -3,7 +3,7 @@ import s from 'styled-components'
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW
 } from '../constants/colors'
-import { logEvent } from '../utils/analytics';
+import { logEvent } from '../utils/analytics'
 
 const Line = s.hr`
   background-color: rgba(0, 0, 0, .1);
