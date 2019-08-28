@@ -5,7 +5,6 @@ import { getDefaultClubImageURL } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 
 const Row = s.div`
-  border-top: 1px solid #e5e5e5;
   cursor: pointer;
 
   &:hover {

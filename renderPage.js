@@ -4,8 +4,7 @@ import Footer from './components/Footer'
 import ClubModal from './components/ClubModal'
 import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
 import { doApiRequest } from './utils'
-import fetch from 'isomorphic-fetch'
-import { CLUBS_PURPLE_LIGHT } from './constants/colors'
+import fetch from 'isomorphic-unfetch'
 
 function renderPage(Page) {
   class RenderPage extends React.Component {

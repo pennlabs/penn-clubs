@@ -2,20 +2,16 @@ import React from 'react'
 import { Link } from '../../routes'
 import s from 'styled-components'
 import { LOGIN_URL } from '../../utils'
-import { MEDIUM_GRAY, DARK_GRAY } from '../../constants/colors'
+import { LIGHT_GRAY } from '../../constants/colors'
 
 const StyledLink = s.a`
-  padding: 20px;
-  color: ${MEDIUM_GRAY} !important;
-
-  &:hover {
-    color: ${DARK_GRAY} !important;
-  }
+  padding: 18px;
+  color: ${LIGHT_GRAY};
 `
 
 export default ({ userInfo, authenticated }) => (
   <div className="navbar-menu">
-    <div className="navbar-end" style={{ padding: '0px 20px 0 0' }}>
+    <div className="navbar-end" style={{ padding: '0px 20px' }}>
       <StyledLink href="/faq">
         FAQ
       </StyledLink>

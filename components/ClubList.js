@@ -1,6 +1,7 @@
 import React from 'react'
-import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY } from '../constants/colors'
+import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
+import posed from 'react-pose'
 import { getDefaultClubImageURL } from '../utils'
 import s from 'styled-components'
 
@@ -23,7 +24,7 @@ const InactiveTag = s(Tag)`
 const Wrapper = s.div`
   padding: 0 5px;
   border-radius: ${BORDER_RADIUS};
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid ${ALLBIRDS_GRAY};
   background-color: ${({ hovering }) => hovering ? HOVER_GRAY : WHITE};
   margin: .5rem;
   width: 100%;

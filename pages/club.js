@@ -53,27 +53,27 @@ class Club extends React.Component {
           </span>
         </div>
         <div style={{ marginBottom: 20 }}>
-          {club.tags.map(tag => <span key={tag.id} className="tag is-rounded" style={{ backgroundColor: CLUBS_BLUE, color: '#fff', margin: 3 }}>{tag.name}</span>)}
+          {club.tags.map(tag => <span key={tag.id} className="tag is-rounded" style={{ backgroundColor: CLUBS_BLUE, color: WHITE, margin: 3 }}>{tag.name}</span>)}
         </div>
         <div className="columns">
           <div className="column is-6">
             <img src={club.image_url || getDefaultClubImageURL()} style={{ width: '100%', maxHeight: 600, borderRadius: 3, marginBottom: 10, objectFit: 'contain' }}/>
             <div className="columns">
-              <div className="column is-6" style={{ backgroundColor: '#f2f2f2', borderRadius: 3, margin: '5px 5px 5px 0' }}>
+              <div className="column is-6" style={{ backgroundColor: ALLBIRDS_GRAY, borderRadius: 3, margin: '5px 5px 5px 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <b className="is-size-6 is-size-7-mobile"> Membership </b>
-                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: '#ccc', color: '#fff', fontSize: '.7rem', margin: 2 }}>{getSizeDisplay(club.size)} </span>
+                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: LIGHT_GRAY, color: WHITE, fontSize: '.7rem', margin: 2 }}>{getSizeDisplay(club.size)} </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <b className="is-size-6"> Requires Application </b>
-                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: '#ccc', color: '#fff', fontSize: '.7rem', margin: 2 }}>{club.application_required ? 'Yes' : 'No'} </span>
+                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: LIGHT_GRAY, color: WHITE, fontSize: '.7rem', margin: 2 }}>{club.application_required ? 'Yes' : 'No'} </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <b className="is-size-6"> Currently Recruiting </b>
-                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: '#ccc', color: '#fff', fontSize: '.7rem', margin: 2 }}>{club.accepting_applications ? 'Yes' : 'No'} </span>
+                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: LIGHT_GRAY, color: WHITE, fontSize: '.7rem', margin: 2 }}>{club.accepting_applications ? 'Yes' : 'No'} </span>
                 </div>
               </div>
-              <div className="column is-6" style={{ backgroundColor: '#f2f2f2', borderRadius: 3, margin: '5px 0 5px 5px' }}>
+              <div className="column is-6" style={{ backgroundColor: ALLBIRDS_GRAY, borderRadius: 3, margin: '5px 0 5px 5px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-evenly', padding: '10px 0px 10px 0px' }}>
                   {[
                     {
@@ -128,7 +128,7 @@ class Club extends React.Component {
                     return a - b
                   }).slice(0, 3).map((item) => <div key={item.name} className="has-text-centered">
                     <a href={club[item.name] ? (item.prefix || '') + club[item.name] : undefined} style={{
-                      color: club[item.name] ? CLUBS_GREY : '#ccc',
+                      color: club[item.name] ? CLUBS_GREY : LIGHT_GRAY,
                       cursor: club[item.name] ? 'pointer' : 'inherit'
                     }}>
                       <span className="icon">

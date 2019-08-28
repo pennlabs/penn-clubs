@@ -4,13 +4,12 @@ import Head from './Head'
 import Burger from './Burger'
 import Feedback from './Feedback'
 import Links from './Links'
-
-import { WHITE } from '../../constants/colors'
+import { WHITE, CLUBS_BLUE, LIGHT_GRAY, ALLBIRDS_GRAY } from '../../constants/colors'
 
 const Nav = s.nav`
   height: 64px;
   background-color: ${WHITE};
-  borderBottom: 1px solid rgba(0, 0, 0, .1);
+  borderBottom: 1px solid ${ALLBIRDS_GRAY};
   box-shadow: 0 0 8px 0 rgba(0, 0, 0, .1);
 `
 
@@ -26,14 +25,15 @@ const Logo = s.img`
 `
 
 const BetaTag = s.span`
-  margin-left: 12px;
+  margin-left: 10px;
   border-radius: 25px;
-  background-color: #60B8F2 !important;
-  color: ${WHITE};
-  margin-top: 2px;
+  background-color: ${CLUBS_BLUE};
+  color: white;
+  margin-top: -3px;
 `
 
 const Title = s.h1`
+  color: ${LIGHT_GRAY};
   padding-left: 15px;
   margin-bottom: 0 !important;
 `

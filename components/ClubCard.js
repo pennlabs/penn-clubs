@@ -3,7 +3,7 @@ import posed from 'react-pose'
 import s from 'styled-components'
 import LazyLoad from 'react-lazy-load'
 import {
-  CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY
+  CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY
 } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL, stripTags } from '../utils'
@@ -20,8 +20,8 @@ const Card = s.div`
   border-radius: ${BORDER_RADIUS};
   min-height: 240px;
   box-shadow: 0 0 0 ${WHITE};
-  border: 1px solid rgba(0, 0, 0, 0.1);
   background-color: ${({ hovering }) => hovering ? HOVER_GRAY : WHITE};
+  border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
 `
 
