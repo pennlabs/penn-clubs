@@ -1,23 +1,27 @@
 import React from 'react'
 import s from 'styled-components'
 
+const DIAMETER = '3rem'
+const OFFSET = '18px'
+
 // TODO style this better
 const FeedbackLink = s.a`
   display: inline-block;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: ${DIAMETER};
+  height: ${DIAMETER};
   border-radius: 3rem;
   background-color: white;
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  textAlign: center;
-  boxShadow: 0 0 7px #ccc;
+  bottom: ${OFFSET};
+  right: ${OFFSET};
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
   cursor: pointer;
   z-index: 10;
+  transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: #ddd;
+    background-color: #efefef;
   }
 `
 
@@ -26,10 +30,10 @@ export default () => (
     href="https://airtable.com/shrCsYFWxCwfwE7cf"
     title="Feedback"
     target="_blank">
-    <i className={'fa-comment'} style={{
+    <i className={'fa-comment far'} style={{
       fontSize: '1.2em',
       color: '#6a6a6a',
-      lineHeight: '2.5rem'
+      lineHeight: DIAMETER
     }} />
   </FeedbackLink>
 )
