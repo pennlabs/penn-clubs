@@ -6,9 +6,8 @@ import s from 'styled-components'
 const Details = s.div`
   border-radius: ${BORDER_RADIUS};
   background-color: ${ALLBIRDS_GRAY};
-  height: 100px;
-  width: 330px;
   padding: 10px;
+  margin-top: 5px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
