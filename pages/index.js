@@ -101,14 +101,22 @@ class Splash extends React.Component {
         </div>
         <div className="column is-10-desktop is-9-tablet is-7-mobile" style={{ marginLeft: 40 }}>
           <div style={{ padding: '30px 0' }}>
-            <p className="title" style={{ color: CLUBS_GREY }}>Browse Clubs
-              <button onClick={() => {
-                this.setState({ displayClubs: displayClubs.sort(() => Math.random() - 0.5) })
-              }
-              } className="button is-light" style={{ float: 'right', right: '40px' }}>
-                <i className="fas fa-random"></i>&nbsp;&nbsp;Shuffle
-              </button></p>
-            <p className="subtitle is-size-5" style={{ color: CLUBS_GREY_LIGHT }}>Find your people!</p>
+            <button
+              onClick={() => this.setState({
+                displayClubs: displayClubs.sort(() => Math.random() - 0.5)
+              })}
+              className="button is-light is-small"
+              style={{ float: 'right', right: '40px' }}>
+              <i className="fas fa-random"></i>
+              &nbsp;&nbsp;
+              Shuffle
+            </button>
+            <p className="title" style={{ color: CLUBS_GREY }}>
+              Browse Clubs
+            </p>
+            <p className="subtitle is-size-5" style={{ color: CLUBS_GREY_LIGHT }}>
+              Find your people!
+            </p>
           </div>
 
           {selectedTags.length ? (
@@ -126,12 +134,18 @@ class Splash extends React.Component {
                     margin: 3
                   }}>
                   {tag.label}
-                  <button className="delete is-small" onClick={(e) => this.updateTag(tag, tag.name)}></button>
+                  <button
+                    className="delete is-small"
+                    onClick={(e) => this.updateTag(tag, tag.name)}
+                  />
                 </span>
               ))}
               <ClearAllLink
                 className="tag is-rounded"
-                onClick={(e) => this.setState({ selectedTags: [] }, this.resetDisplay(this.state.nameInput, this.state.selectedTags))}>
+                onClick={(e) => this.setState(
+                  { selectedTags: [] },
+                  this.resetDisplay(this.state.nameInput, this.state.selectedTags)
+                )}>
                 Clear All
               </ClearAllLink>
             </div>

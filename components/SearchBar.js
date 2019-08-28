@@ -1,7 +1,10 @@
 import React from 'react'
 import s from 'styled-components'
 import DropdownFilter from './DropdownFilter'
-import { CLUBS_GREY } from '../constants/colors'
+import { BORDER_RADIUS } from '../constants/measurements'
+import {
+  MEDIUM_GRAY, HOVER_GRAY, FOCUS_GRAY, CLUBS_GREY
+} from '../constants/colors'
 
 const Wrapper = s.div`
   height: 100vh;
@@ -35,19 +38,30 @@ const Content = s.div`
   }
 `
 
-const Line = s.hr`
-  background-color: rgba(0, 0, 0, 0.1);
-  height: 2px;
-  margin: 0;
-  padding: 0;
-`
-
 const Input = s.input`
   border-width: 0;
   outline: none;
   color: ${CLUBS_GREY};
-  width: 88%;
+  width: 100%;
   font-size: 1em;
+  padding: 8px 10px;
+  background: ${HOVER_GRAY};
+  border-radius: ${BORDER_RADIUS};
+
+  &:hover,
+  &:active,
+  &:focus {
+    background: ${FOCUS_GRAY};
+  }
+`
+
+const SearchIcon = s.span`
+  cursor: pointer;
+  color: ${MEDIUM_GRAY};
+  opacity: 0.5;
+  right: 6px;
+  padding-top: 8px;
+  position: absolute;
 `
 
 class SearchBar extends React.Component {
@@ -102,20 +116,17 @@ class SearchBar extends React.Component {
             </div>
           </div>
           <div style={{ margin: '30px 0' }}>
-            <Line />
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 3px' }}>
-              <Input
-                type="text"
-                name="search"
-                placeholder="Search"
-                aria-label="Search"
-                value={this.state.nameInput}
-                onChange={(e) => this.setState({ nameInput: e.target.value })}
-              />
-              <span className="icon" style={{ cursor: 'pointer', color: CLUBS_GREY }}>
-                {this.state.nameInput ? <i onClick={(e) => this.setState({ nameInput: '' })} className="fas fa-times"></i> : <i className="fas fa-search"></i>}
-              </span>
-            </div>
+            <SearchIcon className="icon">
+              {this.state.nameInput ? <i onClick={(e) => this.setState({ nameInput: '' })} className="fas fa-times"></i> : <i className="fas fa-search"></i>}
+            </SearchIcon>
+            <Input
+              type="text"
+              name="search"
+              placeholder="Search"
+              aria-label="Search"
+              value={this.state.nameInput}
+              onChange={(e) => this.setState({ nameInput: e.target.value })}
+            />
           </div>
           <DropdownFilter
             name="Type"
