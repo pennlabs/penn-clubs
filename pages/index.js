@@ -88,7 +88,7 @@ class Splash extends React.Component {
       const appRequired = !applicationSelected.length || (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 && club.application_required) ||
         (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 && !club.application_required) ||
         (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 && club.accepting_applications)
-      const rightTags = !tagSelected.length || club.tags.some(club_tag => tagSelected.findIndex(tag => tag.value === club_tag.id) !== -1)
+      const rightTags = !tagSelected.length || club.tags.some(clubTag => tagSelected.findIndex(tag => tag.value === clubTag.id) !== -1)
 
       return clubRightSize && appRequired && rightTags
     })

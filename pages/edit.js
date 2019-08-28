@@ -29,7 +29,7 @@ class ClubForm extends React.Component {
     this.state = {
       club: null,
       invites: [],
-      isEdit: typeof this.props.club_id !== 'undefined',
+      isEdit: typeof this.props.clubId !== 'undefined',
       inviteEmails: '',
       inviteRole: this.roles[0],
       inviteTitle: 'Member',
@@ -193,13 +193,13 @@ class ClubForm extends React.Component {
 
   componentDidMount() {
     if (this.state.isEdit) {
-      const club_id = this.state.club !== null && this.state.club.id ? this.state.club.id : this.props.club_id
-      doApiRequest(`/clubs/${club_id}/?format=json`)
+      const clubId = this.state.club !== null && this.state.club.id ? this.state.club.id : this.props.clubId
+      doApiRequest(`/clubs/${clubId}/?format=json`)
         .then((resp) => resp.json())
         .then((data) => this.setState({
           club: data
         }))
-      doApiRequest(`/clubs/${club_id}/invites/?format=json`)
+      doApiRequest(`/clubs/${clubId}/invites/?format=json`)
         .then((resp) => resp.json())
         .then((data) => this.setState({
           invites: data
@@ -500,7 +500,7 @@ class ClubForm extends React.Component {
 ClubForm.getInitialProps = async({ query }) => {
   const tagsRequest = await doApiRequest('/tags/?format=json')
   const tagsResponse = await tagsRequest.json()
-  return { club_id: query.club, tags: tagsResponse }
+  return { clubId: query.club, tags: tagsResponse }
 }
 
 export default renderPage(ClubForm)
