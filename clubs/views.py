@@ -4,6 +4,8 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -53,12 +55,18 @@ class ClubViewSet(viewsets.ModelViewSet):
     def upload(self, request, *args, **kwargs):
         return upload_endpoint_helper(request, Club, kwargs['pk'], 'image')
 
+    @method_decorator(cache_page(60*5))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
     def get_serializer_class(self):
         if self.action == 'upload':
             return AssetSerializer
         if self.request is not None and self.request.user.is_authenticated:
-            if self.request.user.is_superuser or ('pk' in self.kwargs and
-               Membership.objects.filter(person=self.request.user, club=self.kwargs['pk']).exists()):
+            if 'pk' in self.kwargs and (
+                self.request.user.is_superuser or
+                Membership.objects.filter(person=self.request.user, club=self.kwargs['pk']).exists()
+            ):
                 return AuthenticatedClubSerializer
         return ClubSerializer
 
