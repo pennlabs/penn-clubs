@@ -145,8 +145,8 @@ export function renderListPage(Page) {
     }
 
     mapToClubs(favorites) {
-      const { clubs } = this.props
-      if (!clubs || !clubs.length) return
+      const { clubs } = this.state
+      if (!clubs || !clubs.length) return []
 
       return favorites.map((favorite) => {
         return (clubs.find((club) => club.id === favorite))
@@ -154,9 +154,8 @@ export function renderListPage(Page) {
     }
 
     render() {
-      var { favorites } = this.props
-      var { modal, modalClub, clubs, tags } = this.state
-      var favoriteClubs = this.mapToClubs(favorites)
+      const { favorites } = this.props
+      const { modal, modalClub, clubs, tags } = this.state
 
       if (clubs === null || tags === null) {
         return <div className="has-text-centered" style={{ margin: '25vh 0', opacity: 0.25 }}>
@@ -167,6 +166,8 @@ export function renderListPage(Page) {
           </div>
         </div>
       }
+
+      const favoriteClubs = this.mapToClubs(favorites)
 
       return (
         <div>

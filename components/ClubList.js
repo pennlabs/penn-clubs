@@ -2,7 +2,7 @@ import React from 'react'
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY
 } from '../constants/colors'
-import { Tag, InactiveTag } from './common/Tags'
+import { BlueTag, InactiveTag } from './common/Tags'
 import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL } from '../utils'
 import s from 'styled-components'
@@ -31,6 +31,7 @@ const Subtitle = s.p`
 const Image = s.img`
   height: 60px;
   width: 90px;
+  object-fit: contain;
   border-radius: ${BORDER_RADIUS};
 `
 
@@ -64,9 +65,9 @@ class ClubList extends React.Component {
                     </InactiveTag>
                   )}
                   {tags.map(tag => (
-                    <Tag key={tag.id} className="tag is-rounded has-text-white">
+                    <BlueTag key={tag.id} className="tag is-rounded has-text-white">
                       {tag.name}
-                    </Tag>
+                    </BlueTag>
                   ))}
                 </div>
               </div>
