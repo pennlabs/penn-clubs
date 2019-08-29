@@ -1,7 +1,6 @@
 import React from 'react'
 import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
-import posed from 'react-pose'
 import { getDefaultClubImageURL } from '../utils'
 import s from 'styled-components'
 

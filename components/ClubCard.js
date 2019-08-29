@@ -1,20 +1,13 @@
 import React from 'react'
-import posed from 'react-pose'
 import s from 'styled-components'
 import LazyLoad from 'react-lazy-load'
 import {
-  CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY
+  CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY
 } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL, stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
-
-// TODO what is this "Pop" thing
-const Pop = posed.div({
-  idle: { scale: 1 },
-  hovered: { scale: 1 }
-})
 
 const Card = s.div`
   padding: 10px;
@@ -45,8 +38,7 @@ class ClubCard extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      modal: '',
-      hovering: false
+      modal: ''
     }
   }
 
@@ -57,17 +49,13 @@ class ClubCard extends React.Component {
 
   render() {
     const { club, openModal, updateFavorites, favorite } = this.props
-    const { hovering } = this.state
     const { name, description, subtitle, tags } = club
     const img = club.image_url || getDefaultClubImageURL()
     return (
       <div className="column is-half-desktop">
-        <Pop
-          pose={hovering ? 'hovered' : 'idle'}
+        <div
           style={{ cursor: 'pointer' }}
-          onClick={() => openModal(club)}
-          onMouseEnter={() => this.setState({ hovering: true })}
-          onMouseLeave={() => this.setState({ hovering: false })}>
+          onClick={() => openModal(club)}>
           <Card className="card is-flex">
             <div>
               <CardHeader>
@@ -96,7 +84,7 @@ class ClubCard extends React.Component {
             </div>
             <FavoriteIcon club={club} favorite={favorite} updateFavorites={updateFavorites} />
           </Card>
-        </Pop>
+        </div>
       </div>
     )
   }

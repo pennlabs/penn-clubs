@@ -3,6 +3,7 @@ import s from 'styled-components'
 import Fuse from 'fuse.js'
 import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
+import DisplayButtons from '../components/DisplayButtons'
 import { renderListPage } from '../renderPage.js'
 import { mediaMaxWidth, MD } from '../constants/measurements'
 import {
@@ -32,15 +33,8 @@ const Wrapper = s.div`
   }
 `
 
-const Icon = s.span``
-
-const DisplayButtons = s.div`
-  position: absolute;
-  right: 20px;
-
-  button {
-    margin-left: 8px;
-  }
+const Container = s.div`
+  padding: 0 1rem;
 `
 
 class Splash extends React.Component {
@@ -64,6 +58,9 @@ class Splash extends React.Component {
       threshold: 0.2
     }
     this.fuse = new Fuse(this.props.clubs, this.fuseOptions)
+
+    this.shuffle = this.shuffle.bind(this)
+    this.switchDisplay = this.switchDisplay.bind(this)
   }
 
   componentDidMount() {
@@ -117,9 +114,18 @@ class Splash extends React.Component {
     this.setState({ selectedTags }, this.resetDisplay(this.state.nameInput, this.state.selectedTags))
   }
 
+  shuffle() {
+    logEvent('shuffle', 'click')
+    const { displayClubs } = this.state
+    this.setState({
+      displayClubs: displayClubs.sort(() => Math.random() - 0.5)
+    })
+  }
+
   render() {
-    var { displayClubs, display, selectedTags } = this.state
-    var { clubs, tags, favorites, updateFavorites, openModal } = this.props
+    const { displayClubs, display, selectedTags } = this.state
+    const { clubs, tags, favorites, updateFavorites, openModal } = this.props
+
     return (
       <Wrapper className="columns is-gapless is-mobile">
         <div className="column is-2-desktop is-3-tablet is-12-mobile">
@@ -132,88 +138,64 @@ class Splash extends React.Component {
             updateTag={this.updateTag.bind(this)}
           />
         </div>
-        <div className="column is-10-desktop is-9-tablet is-12-mobile" style={{ marginLeft: 40 }}>
-          <div style={{ padding: '30px 0' }}>
-            <DisplayButtons>
-              <button onClick={(e) => this.switchDisplay('cards')} className="button is-light is-small">
-                <Icon
-                  className="icon"
-                  style={{ cursor: 'pointer', color: CLUBS_GREY }}>
-                  <i className="fas fa-th-large" title="Grid View" />
-                </Icon>
-              </button>
-              <button onClick={(e) => this.switchDisplay('list')} className="button is-light is-small">
-                <Icon className="icon">
-                  <i
-                    className="fas fa-list"
-                    title="List View"
-                    style={{ cursor: 'pointer', color: CLUBS_GREY }}
-                  />
-                </Icon>
-              </button>
-              <button
-                onClick={() => {
-                  logEvent('shuffle', 'click')
-                  this.setState({
-                    displayClubs: displayClubs.sort(() => Math.random() - 0.5)
-                  })
-                }}
-                className="button is-light is-small">
-                <i className="fas fa-random"></i>
-                &nbsp;&nbsp;
-                Shuffle
-              </button>
-            </DisplayButtons>
+        <div className="column is-10-desktop is-9-tablet is-12-mobile">
+          <Container>
+            <div style={{ padding: '30px 0' }}>
+              <DisplayButtons
+                shuffle={this.shuffle}
+                switchDisplay={this.switchDisplay}
+              />
 
-            <p className="title" style={{ color: CLUBS_GREY }}>
-              Browse Clubs
-            </p>
-            <p className="subtitle is-size-5" style={{ color: CLUBS_GREY_LIGHT }}>
-              Find your people!
-            </p>
-          </div>
-
-          {selectedTags.length ? (
-            <div style={{ padding: '0 30px 30px 0' }}>
-              {selectedTags.map(tag => (
-                <span
-                  key={tag.label}
-                  className="tag is-rounded has-text-white"
-                  style={{
-                    backgroundColor: {
-                      Type: CLUBS_BLUE,
-                      Size: CLUBS_RED,
-                      Application: CLUBS_YELLOW
-                    }[tag.name],
-                    margin: 3
-                  }}>
-                  {tag.label}
-                  <button
-                    className="delete is-small"
-                    onClick={(e) => this.updateTag(tag, tag.name)}
-                  />
-                </span>
-              ))}
-              <ClearAllLink
-                className="tag is-rounded"
-                onClick={(e) => this.setState(
-                  { selectedTags: [] },
-                  this.resetDisplay(this.state.nameInput, this.state.selectedTags)
-                )}>
-                Clear All
-              </ClearAllLink>
+              <p className="title" style={{ color: CLUBS_GREY }}>
+                Browse Clubs
+              </p>
+              <p className="subtitle is-size-5" style={{ color: CLUBS_GREY_LIGHT }}>
+                Find your people!
+              </p>
             </div>
-          ) : ''}
 
-          <ClubDisplay
-            displayClubs={displayClubs}
-            display={display}
-            tags={tags}
-            favorites={favorites}
-            openModal={openModal}
-            updateFavorites={updateFavorites}
-            selectedTags={selectedTags}
-          />
+            {selectedTags.length ? (
+              <div style={{ padding: '0 30px 30px 0' }}>
+                {selectedTags.map(tag => (
+                  <span
+                    key={tag.label}
+                    className="tag is-rounded has-text-white"
+                    style={{
+                      backgroundColor: {
+                        Type: CLUBS_BLUE,
+                        Size: CLUBS_RED,
+                        Application: CLUBS_YELLOW
+                      }[tag.name],
+                      margin: 3
+                    }}>
+                    {tag.label}
+                    <button
+                      className="delete is-small"
+                      onClick={(e) => this.updateTag(tag, tag.name)}
+                    />
+                  </span>
+                ))}
+                <ClearAllLink
+                  className="tag is-rounded"
+                  onClick={(e) => this.setState(
+                    { selectedTags: [] },
+                    this.resetDisplay(this.state.nameInput, this.state.selectedTags)
+                  )}>
+                  Clear All
+                </ClearAllLink>
+              </div>
+            ) : ''}
+
+            <ClubDisplay
+              displayClubs={displayClubs}
+              display={display}
+              tags={tags}
+              favorites={favorites}
+              openModal={openModal}
+              updateFavorites={updateFavorites}
+              selectedTags={selectedTags}
+            />
+          </Container>
         </div>
       </Wrapper>
     )
