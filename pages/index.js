@@ -10,6 +10,7 @@ import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW, FOCUS_GRAY
 } from '../constants/colors'
 import { logEvent } from '../utils/analytics'
+import withSentry from '../utils/sentry'
 
 const ClearAllLink = s.span`
   cursor: pointer;
