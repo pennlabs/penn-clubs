@@ -180,13 +180,17 @@ class MassInviteAPIView(APIView):
             validate_email(email)
 
         for email in emails:
-            MembershipInvite.objects.create(
+            invite = MembershipInvite.objects.create(
                 email=email,
                 club=club,
                 creator=request.user,
                 role=role,
                 title=title
-            ).send_mail(request)
+            )
+            if role <= Membership.ROLE_OWNER:
+                invite.send_owner_invite()
+            else:
+                invite.send_mail(request)
 
         return Response({
             'detail': 'Sent invite(s) to {} email(s)!'.format(len(emails))
