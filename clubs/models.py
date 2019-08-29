@@ -224,7 +224,7 @@ class MembershipInvite(models.Model):
         html_content = render_to_string('emails/invite.html', context)
 
         msg = EmailMultiAlternatives(
-            '{}Invitation to {}'.format(settings.EMAIL_SUBJECT_PREFIX, self.club.name),
+            'Invitation to {}'.format(self.club.name),
             text_content,
             settings.FROM_EMAIL,
             [self.email]
@@ -256,7 +256,7 @@ class MembershipInvite(models.Model):
         html_content = render_to_string('emails/owner.html', context)
 
         msg = EmailMultiAlternatives(
-            '{}Welcome to Penn Clubs!'.format(settings.EMAIL_SUBJECT_PREFIX),
+            'Welcome to Penn Clubs!',
             text_content,
             settings.FROM_EMAIL,
             [self.email]
