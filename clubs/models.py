@@ -189,17 +189,18 @@ class MembershipInvite(models.Model):
             }
         )
 
-    def send_mail(self, request):
+    def send_mail(self, request=None):
         """
         Send the email associated with this invitation to the user.
         """
         # make the beta/testing sites work
         domain = 'pennclubs.com'
-        referer = request.META.get('HTTP_REFERER')
-        if referer:
-            host = urlparse(referer).netloc
-            if host and host.endswith(domain):
-                domain = host
+        if request is not None:
+            referer = request.META.get('HTTP_REFERER')
+            if referer:
+                host = urlparse(referer).netloc
+                if host and host.endswith(domain):
+                    domain = host
 
         context = {
             'token': self.token,
@@ -223,7 +224,7 @@ class MembershipInvite(models.Model):
         msg.attach_alternative(html_content, 'text/html')
         msg.send(fail_silently=False)
 
-    def send_owner_invite(self):
+    def send_owner_invite(self, request=None):
         """
         Send the initial email invitation to owner(s) of the club.
         """
@@ -231,6 +232,12 @@ class MembershipInvite(models.Model):
             raise ValueError('This invite should grant owner permissions if sending out the owner email!')
 
         domain = 'pennclubs.com'
+        if request is not None:
+            referer = request.META.get('HTTP_REFERER')
+            if referer:
+                host = urlparse(referer).netloc
+                if host and host.endswith(domain):
+                    domain = host
 
         context = {
             'name': self.club.name,

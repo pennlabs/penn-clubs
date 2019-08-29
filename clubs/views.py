@@ -188,7 +188,7 @@ class MassInviteAPIView(APIView):
                 title=title
             )
             if role <= Membership.ROLE_OWNER and not mem:
-                invite.send_owner_invite()
+                invite.send_owner_invite(request)
             else:
                 invite.send_mail(request)
 
