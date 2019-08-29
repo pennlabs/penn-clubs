@@ -116,10 +116,21 @@ export function renderListPage(Page) {
       super(props)
       this.state = {
         modal: false,
+        clubs: props.clubs,
+        tags: props.tags,
         modalClub: {}
       }
 
       var modalElement = null
+    }
+
+    componentDidMount() {
+      doApiRequest('/clubs/?format=json')
+        .then(resp => resp.json())
+        .then(data => this.setState({ clubs: data }))
+      doApiRequest('/tags/?format=json')
+        .then(resp => resp.json())
+        .then(data => this.setState({ tags: data }))
     }
 
     openModal(club) {
@@ -141,9 +152,14 @@ export function renderListPage(Page) {
     }
 
     render() {
-      var { favorites, clubs, tags } = this.props
-      var { modal, modalClub } = this.state
+      var { favorites } = this.props
+      var { modal, modalClub, clubs, tags } = this.state
       var favoriteClubs = this.mapToClubs(favorites)
+
+      if (clubs === null || tags === null) {
+        return <div />
+      }
+
       return (
         <div>
           <Page
@@ -169,11 +185,7 @@ export function renderListPage(Page) {
   }
 
   RenderListPage.getInitialProps = async() => {
-    const clubRequest = await doApiRequest('/clubs/?format=json')
-    const clubResponse = await clubRequest.json()
-    const tagsRequest = await doApiRequest('/tags/?format=json')
-    const tagsResponse = await tagsRequest.json()
-    return { clubs: clubResponse, tags: tagsResponse }
+    return { clubs: null, tags: null }
   }
 
   return renderPage(RenderListPage)
