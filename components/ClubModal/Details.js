@@ -25,7 +25,7 @@ const DetailTag = s.span`
   font-size: .7em;
 `
 
-export default ({ size, application_required, accepting_applications }) => (
+export default ({ size, application_required, accepting_members }) => (
   <Details>
     <Detail>
       <b style={{ color: CLUBS_GREY }} className="is-size-6">Membership:</b>
@@ -40,9 +40,9 @@ export default ({ size, application_required, accepting_applications }) => (
     </Detail>
 
     <Detail>
-      <b style={{ color: CLUBS_GREY }} className="is-size-6">Currently Recruiting:</b>
+      <b style={{ color: CLUBS_GREY }} className="is-size-6">Accepting Members:</b>
       <DetailTag className="tag is-rounded">
-        {accepting_applications ? 'Yes' : 'No'}
+        {accepting_members ? 'Yes' : 'No'}
       </DetailTag>
     </Detail>
   </Details>
