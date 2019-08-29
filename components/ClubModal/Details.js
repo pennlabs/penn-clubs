@@ -1,12 +1,10 @@
 import React from 'react'
-import { CLUBS_GREY, ALLBIRDS_GRAY, LIGHT_GRAY } from '../../constants/colors'
-import { BORDER_RADIUS } from '../../constants/measurements'
+import { CLUBS_GREY } from '../../constants/colors'
+import { DetailTag } from '../common/Tags'
 import s from 'styled-components'
 
 const Details = s.div`
-  border-radius: ${BORDER_RADIUS};
-  background-color: ${ALLBIRDS_GRAY};
-  padding: 10px;
+  padding: 10px 0 0 0;
   margin-top: 5px;
   display: flex;
   flex-direction: column;
@@ -16,13 +14,6 @@ const Details = s.div`
 const Detail = s.div`
   display: flex;
   justify-content: space-between;
-`
-
-const DetailTag = s.span`
-  margin: 3px;
-  color: ${CLUBS_GREY};
-  background-color: #ccc !important;
-  font-size: .7em;
 `
 
 export default ({ size, application_required, accepting_members }) => (
@@ -39,7 +30,7 @@ export default ({ size, application_required, accepting_members }) => (
           1: 'No',
           2: 'Some Roles',
           3: 'All Roles'
-        }[application_required]}
+        }[application_required] || 'Uknown'}
       </DetailTag>
     </Detail>
 

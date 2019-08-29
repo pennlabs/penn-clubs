@@ -9,11 +9,12 @@ import { NAV_HEIGHT, mediaMaxWidth, MD } from '../../constants/measurements'
 
 const Nav = s.nav`
   height: ${NAV_HEIGHT};
-  background-color: ${WHITE};
+  background-color: ${WHITE} !important;
   borderBottom: 1px solid ${ALLBIRDS_GRAY};
   box-shadow: 0 0 8px 0 rgba(0, 0, 0, .1);
   width: 100%;
   position: fixed;
+  z-index: 999;
 `
 
 const NavSpacer = s.div`

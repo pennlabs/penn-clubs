@@ -1,7 +1,10 @@
 import React from 'react'
 import s from 'styled-components'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT, MEDIUM_GRAY, LIGHT_GRAY, ALLBIRDS_GRAY } from '../../constants/colors'
-import { BORDER_RADIUS_LG } from '../../constants/measurements'
+import {
+  CLUBS_GREY, CLUBS_GREY_LIGHT, MEDIUM_GRAY, LIGHT_GRAY, ALLBIRDS_GRAY,
+  LIGHTER_BLUE, DARK_BLUE, BABY_BLUE
+} from '../../constants/colors'
+import { BORDER_RADIUS_LG, mediaMaxWidth, MD, SM } from '../../constants/measurements'
 import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
 import { Link } from '../../routes'
 import TagGroup from '../common/TagGroup'
@@ -12,7 +15,16 @@ const ModalWrapper = s.div`
   position: fixed;
   top: 0;
   height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
   width: 100%;
+  z-index: 1001;
+
+  ${mediaMaxWidth(MD)} {
+    &.is-active {
+      display: block !important;
+    }
+  }
 `
 
 const ModalBackground = s.div`
@@ -22,10 +34,18 @@ const ModalBackground = s.div`
 `
 
 const ModalCard = s.div`
-  margin: 6rem;
+  margin: 1rem 20% 1rem 20%;
   border-radius: ${BORDER_RADIUS_LG};
   border: 0 !important;
   box-shadow: none !important;
+
+  ${mediaMaxWidth(MD)} {
+    margin: 1rem 15%;
+  }
+
+  ${mediaMaxWidth(SM)} {
+    margin: 1rem;
+  }
 `
 
 const CloseModalIcon = s.span`
@@ -57,13 +77,14 @@ const CardHeader = s.div`
 
 const CardTitle = s.strong`
   color: ${CLUBS_GREY};
+  line-height: 1;
 `
 
 const OverviewCol = s.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 400px;
+  height: min-400px;
 `
 
 const ClubImage = s.img`
@@ -81,23 +102,27 @@ const DescriptionCol = s.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 400px;
+  height: min-400px;
 `
 
 const Description = s.div`
-  height: 370px;
   overflow-y: auto;
   color: ${CLUBS_GREY_LIGHT};
   white-space: pre-wrap;
+  margin-bottom: 1rem;
 `
 
 const SeeMoreButton = s.a`
   padding: 10px;
-  margin: 5px;
   float: right;
   border-width: 0;
-  background-color: ${ALLBIRDS_GRAY};
-  color: ${CLUBS_GREY};
+  background-color: ${BABY_BLUE};
+  font-weight: 600;
+  color: ${DARK_BLUE} !important;
+
+  &:hover {
+    background-color: ${LIGHTER_BLUE};
+  }
 `
 
 class ClubModal extends React.Component {
@@ -162,12 +187,14 @@ class ClubModal extends React.Component {
             </CardHeader>
 
             <div className="columns">
-              <OverviewCol className="column is-4-desktop is-5-mobile">
+              <OverviewCol className="column is-4-desktop is-12-mobile">
                 <ClubImageWrapper>
                   <ClubImage src={image_url || getDefaultClubImageURL()}/>
                 </ClubImageWrapper>
 
-                <TagGroup tags={tags} />
+                <div>
+                  <TagGroup tags={tags} />
+                </div>
 
                 <Details
                   size={getSizeDisplay(size)}
@@ -176,7 +203,7 @@ class ClubModal extends React.Component {
                 />
               </OverviewCol>
 
-              <DescriptionCol className="column is-8-desktop is-7-mobile">
+              <DescriptionCol className="column is-8-desktop is-12-mobile">
                 <Description
                   className="has-text-justified is-size-6-desktop is-size-7-touch"
                   dangerouslySetInnerHTML={{ __html: description || EMPTY_DESCRIPTION }}

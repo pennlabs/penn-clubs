@@ -18,3 +18,5 @@ export const InactiveTag = s(Tag)`
   background-color: ${FOCUS_GRAY} !important;
   color: ${DARK_GRAY} !important;
 `
+
+export const DetailTag = InactiveTag
