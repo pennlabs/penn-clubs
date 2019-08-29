@@ -1,10 +1,23 @@
 import React from 'react'
 import s from 'styled-components'
 import DropdownFilter from './DropdownFilter'
-import { BORDER_RADIUS, mediaMaxWidth, MD, NAV_HEIGHT } from '../constants/measurements'
 import {
-  MEDIUM_GRAY, HOVER_GRAY, FOCUS_GRAY, CLUBS_GREY
+  BORDER_RADIUS, mediaMaxWidth, MD, NAV_HEIGHT, mediaMinWidth,
+  SEARCH_BAR_MOBILE_HEIGHT
+} from '../constants/measurements'
+import {
+  MEDIUM_GRAY, HOVER_GRAY, FOCUS_GRAY, CLUBS_GREY, BORDER, WHITE
 } from '../constants/colors'
+
+const MobileSearchBarSpacer = s.div`
+  display: block;
+  width: 100%;
+  height: ${SEARCH_BAR_MOBILE_HEIGHT};
+
+  ${mediaMinWidth(MD)} {
+    display: none !important;
+  }
+`
 
 const Wrapper = s.div`
   height: 100vh;
@@ -24,6 +37,14 @@ const Wrapper = s.div`
   }
 `
 
+const SearchWrapper = s.div`
+  margin-bottom: 30px;
+
+  ${mediaMaxWidth(MD)} {
+    margin-bottom: 8px;
+  }
+`
+
 const Content = s.div`
   padding: 36px 17px 12px 17px;
   width: 100%;
@@ -38,7 +59,13 @@ const Content = s.div`
     overflow: visible;
     width: 100%;
     margin: 0;
-    padding: 20px;
+    padding: 8px 1rem;
+    border-top: 1px solid ${BORDER};
+    border-bottom: 1px solid ${BORDER};
+    position: fixed;
+    z-index: 1000;
+    background: ${WHITE};
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.075);
   }
 `
 
@@ -97,54 +124,63 @@ class SearchBar extends React.Component {
       clearTimeout(this.timeout)
       this.timeout = setTimeout(() => this.props.resetDisplay(this.state.nameInput, this.state.selectedTags), 200)
     }
+    if (prevProps.selectedTags !== this.props.selectedTags) {
+      this.setState({
+        selectedTags: this.props.selectedTags
+      })
+    }
   }
 
   render() {
     const { tagOptions, sizeOptions, applicationOptions, selectedTags } = this.state
     const { updateTag } = this.props
     return (
-      <Wrapper>
-        <Content>
-          <div style={{ marginBottom: '30px' }}>
-            <SearchIcon className="icon">
-              {this.state.nameInput ? (
-                <i
-                  onClick={(e) => this.setState({ nameInput: '' })}
-                  className="fas fa-times"
-                />
-              ) : (
-                <i className="fas fa-search" />
-              )}
-            </SearchIcon>
-            <Input
-              type="text"
-              name="search"
-              placeholder="Search"
-              aria-label="Search"
-              value={this.state.nameInput}
-              onChange={(e) => this.setState({ nameInput: e.target.value })}
+      <>
+        <Wrapper>
+          <Content>
+            <SearchWrapper>
+              <SearchIcon className="icon">
+                {this.state.nameInput ? (
+                  <i
+                    onClick={(e) => this.setState({ nameInput: '' })}
+                    className="fas fa-times"
+                  />
+                ) : (
+                  <i className="fas fa-search" />
+                )}
+              </SearchIcon>
+              <Input
+                type="text"
+                name="search"
+                placeholder="Search"
+                aria-label="Search"
+                value={this.state.nameInput}
+                onChange={(e) => this.setState({ nameInput: e.target.value })}
+              />
+            </SearchWrapper>
+            <DropdownFilter
+              name="Type"
+              options={tagOptions}
+              selected={selectedTags.filter(tag => tag.name === 'Type')}
+              updateTag={updateTag}
             />
-          </div>
-          <DropdownFilter
-            name="Type"
-            options={tagOptions}
-            selected={selectedTags.filter(tag => tag.name === 'Type')}
-            updateTag={updateTag}
-          />
-          <DropdownFilter
-            name="Size"
-            options={sizeOptions}
-            selected={selectedTags.filter(tag => tag.name === 'Size')}
-            updateTag={updateTag}
-          />
-          <DropdownFilter
-            name="Application"
-            options={applicationOptions}
-            selected={selectedTags.filter(tag => tag.name === 'Application')}
-            updateTag={updateTag}
-          />
-        </Content>
-      </Wrapper>
+            <DropdownFilter
+              name="Size"
+              options={sizeOptions}
+              selected={selectedTags.filter(tag => tag.name === 'Size')}
+              updateTag={updateTag}
+            />
+            <DropdownFilter
+              name="Application"
+              options={applicationOptions}
+              selected={selectedTags.filter(tag => tag.name === 'Application')}
+              updateTag={updateTag}
+            />
+          </Content>
+        </Wrapper>
+
+        <MobileSearchBarSpacer />
+      </>
     )
   }
 }

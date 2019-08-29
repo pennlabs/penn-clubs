@@ -1,4 +1,5 @@
 import getConfig from 'next/config'
+import fetch from 'isomorphic-unfetch'
 
 export function stripTags(val) {
   if (!val) {

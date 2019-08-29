@@ -10,7 +10,12 @@ import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW, FOCUS_GRAY
 } from '../constants/colors'
 import { logEvent } from '../utils/analytics'
-import withSentry from '../utils/sentry'
+
+const colorMap = {
+  Type: CLUBS_BLUE,
+  Size: CLUBS_RED,
+  Application: CLUBS_YELLOW
+}
 
 const ClearAllLink = s.span`
   cursor: pointer;
@@ -99,9 +104,9 @@ class Splash extends React.Component {
     // checkbox filters
     clubs = clubs.filter(club => {
       const clubRightSize = !sizeSelected.length || sizeSelected.findIndex(sizeTag => sizeTag.value === club.size) !== -1
-      const appRequired = !applicationSelected.length || (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 && club.application_required) ||
-        (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 && !club.application_required) ||
-        (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 && club.accepting_applications)
+      const appRequired = !applicationSelected.length || (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 && club.application_required !== 1) ||
+        (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 && club.application_required === 1) ||
+        (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 && club.accepting_members)
       const rightTags = !tagSelected.length || club.tags.some(clubTag => tagSelected.findIndex(tag => tag.value === clubTag.id) !== -1)
 
       return clubRightSize && appRequired && rightTags
@@ -119,15 +124,20 @@ class Splash extends React.Component {
 
   updateTag(tag, name) {
     const { selectedTags } = this.state
-    var { value } = tag
-    var i = selectedTags.findIndex(tag => tag.value === value && tag.name === name)
+    const { value } = tag
+    const i = selectedTags.findIndex(tag => tag.value === value && tag.name === name)
+
     if (i === -1) {
       tag.name = name
       selectedTags.push(tag)
     } else {
       selectedTags.splice(i, 1)
     }
-    this.setState({ selectedTags }, this.resetDisplay(this.state.nameInput, this.state.selectedTags))
+
+    this.setState(
+      { selectedTags },
+      this.resetDisplay(this.state.nameInput, this.state.selectedTags)
+    )
   }
 
   shuffle() {
@@ -175,11 +185,8 @@ class Splash extends React.Component {
                   key={tag.label}
                   className="tag is-rounded has-text-white"
                   style={{
-                    backgroundColor: {
-                      Type: CLUBS_BLUE,
-                      Size: CLUBS_RED,
-                      Application: CLUBS_YELLOW
-                    }[tag.name],
+                    backgroundColor: colorMap[tag.name],
+                    fontWeight: 600,
                     margin: 3
                   }}>
                   {tag.label}

@@ -1,18 +1,14 @@
-import s from 'styled-components'
-import { CLUBS_BLUE } from '../../constants/colors'
-
-const Tag = s.span`
-  background-color: ${CLUBS_BLUE} !important;
-  margin: 2px;
-  font-size: .7em;
-`
+import React from 'react'
+import { BlueTag } from './Tags'
 
 export default (props) => {
   const { tags } = props
   if (!tags || !tags.length) return null
   return (
     tags.map(({ id, name }) => (
-      <Tag key={id} className="tag is-rounded has-text-white">{name}</Tag>
+      <BlueTag key={id} className="tag is-rounded has-text-white">
+        {name}
+      </BlueTag>
     ))
   )
 }

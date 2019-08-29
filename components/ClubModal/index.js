@@ -117,7 +117,7 @@ class ClubModal extends React.Component {
       image_url,
       size,
       application_required,
-      accepting_applications,
+      accepting_members,
       description
     } = club
 
@@ -152,7 +152,7 @@ class ClubModal extends React.Component {
                 <Details
                   size={getSizeDisplay(size)}
                   application_required={application_required}
-                  accepting_applications={accepting_applications}
+                  accepting_members={accepting_members}
                 />
               </OverviewCol>
 

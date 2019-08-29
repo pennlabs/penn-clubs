@@ -1,9 +1,18 @@
 import React from 'react'
-import ClubCard from '../components/ClubCard'
-import ClubTableRow from '../components/ClubTableRow'
 import s from 'styled-components'
 
-const Wrapper = s.div`
+import ClubCard from '../components/ClubCard'
+import ClubTableRow from '../components/ClubTableRow'
+import { mediaMaxWidth, SM } from '../constants/measurements'
+
+const Wrapper = s.div``
+
+const ClubTableRowWrapper = s.div`
+  ${mediaMaxWidth(SM)} {
+    margin-left: -1rem;
+    margin-right: 1rem;
+    width: calc(100vw);
+  }
 `
 
 class ClubDisplay extends React.Component {
@@ -54,19 +63,17 @@ class ClubDisplay extends React.Component {
             ))}
           </div>
         ) : (
-          <div>
-            <div>
-              {clubsToShow.map(club => (
-                <ClubTableRow
-                  club={club}
-                  key={club.id}
-                  tags={tags}
-                  updateFavorites={updateFavorites}
-                  openModal={openModal}
-                  favorite={favorites.includes(club.id)}/>
-              ))}
-            </div>
-          </div>
+          <ClubTableRowWrapper>
+            {clubsToShow.map(club => (
+              <ClubTableRow
+                club={club}
+                key={club.id}
+                tags={tags}
+                updateFavorites={updateFavorites}
+                openModal={openModal}
+                favorite={favorites.includes(club.id)}/>
+            ))}
+          </ClubTableRowWrapper>
         )}
       </Wrapper>
     )
