@@ -74,15 +74,17 @@ class Command(BaseCommand):
 
         # Choose longest string or string that exists
         for field in ['name', 'subtitle', 'description', 'email', 'facebook', 'website', 'twitter',
-                      'instagram', 'github', 'how_to_get_involved']:
+                      'instagram', 'github', 'how_to_get_involved', 'listserv']:
             value = getattr(secondary, field)
             old_value = getattr(primary, field)
             if old_value is None or (value is not None and len(value) > len(old_value)):
                 setattr(primary, field, value)
 
-        # If either one is checked, the final one is checked
-        for field in ['application_required', 'application_available', 'listserv_available']:
-            setattr(primary, field, getattr(primary, field) or getattr(secondary, field))
+        # If either one is accepting members, the final one is as well
+        primary.accepting_members = primary.accepting_members or secondary.accepting_members
+
+        # Choose most restrictive application_required
+        primary.application_required = max(primary.application_required, secondary.application_required)
 
         # Use the larger club size
         primary.size = max(primary.size, secondary.size)
