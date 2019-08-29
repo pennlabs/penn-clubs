@@ -165,7 +165,7 @@ class Club extends React.Component {
                       <p className='title is-4'>{a.name || 'No Name'}</p>
                       <p className='subtitle is-6'>{a.email ? <span><a href={'mailto:' + a.email}>{a.email}</a> ({a.title})</span> : a.title}</p>
                     </div>
-                  </div>) : <p>There are no members in this club.</p>}
+                  </div>) : <p>No club members have linked their accounts on Penn Clubs yet. Check back later for a list of club members!</p>}
                 </div>
               }
             ]} />
