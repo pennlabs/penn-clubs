@@ -8,7 +8,7 @@ from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInv
 class ClubAdmin(admin.ModelAdmin):
     search_fields = ('name', 'subtitle', 'email')
     list_display = ('name', 'email', 'has_owner')
-    list_filter = ('size', 'application_required', 'application_available', 'listserv_available')
+    list_filter = ('size', 'application_required', 'accepting_members', 'listserv')
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(

@@ -37,6 +37,14 @@ class Club(models.Model):
         (SIZE_LARGE, '51-100'),
         (SIZE_VERY_LARGE, '101+'),
     )
+    APPLICATION_REQUIRED_NONE = 1
+    APPLICATION_REQUIRED_SOME = 2
+    APPLICATION_REQUIRED_ALL = 3
+    APPLCIATION_CHOICES = (
+        (APPLICATION_REQUIRED_NONE, 'No Application Required'),
+        (APPLICATION_REQUIRED_SOME, 'Application Required For Some Positions'),
+        (APPLICATION_REQUIRED_ALL, 'Application Required For All Positions'),
+    )
     id = models.SlugField(max_length=255, primary_key=True)
     active = models.BooleanField(default=True)
     name = models.CharField(max_length=255)
@@ -52,9 +60,9 @@ class Club(models.Model):
     linkedin = models.URLField(blank=True, null=True)
     github = models.URLField(blank=True, null=True)
     how_to_get_involved = models.TextField(blank=True)
-    application_required = models.BooleanField(default=True)
-    application_available = models.BooleanField(default=False)
-    listserv_available = models.BooleanField(default=False)
+    application_required = models.IntegerField(choices=APPLCIATION_CHOICES, default=APPLICATION_REQUIRED_ALL)
+    accepting_members = models.BooleanField(default=False)
+    listserv = models.CharField(blank=True, max_length=255)
     image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
     tags = models.ManyToManyField('Tag')
     members = models.ManyToManyField(get_user_model(), through='Membership')
