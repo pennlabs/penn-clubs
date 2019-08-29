@@ -4,6 +4,7 @@ import Fuse from 'fuse.js'
 import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
 import { renderListPage } from '../renderPage.js'
+import { mediaMaxWidth, MD } from '../constants/measurements'
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW, FOCUS_GRAY
 } from '../constants/colors'
@@ -26,7 +27,7 @@ const Wrapper = s.div`
   min-height: 59vh;
   margin-right: 20px;
 
-  @media screen and (max-width: 1047px) {
+  ${mediaMaxWidth(MD)} {
     margin-right: 0;
   }
 `

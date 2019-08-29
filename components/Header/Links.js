@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from '../../routes'
 import s from 'styled-components'
 import { LOGIN_URL } from '../../utils'
+import { mediaMaxWidth, MD } from '../../constants/measurements'
 import { MEDIUM_GRAY, DARK_GRAY } from '../../constants/colors'
 import { logEvent } from '../../utils/analytics'
 
@@ -13,13 +14,13 @@ const StyledLink = s.a`
     color: ${DARK_GRAY} !important;
   }
 
-  @media screen and (max-width: 1087px) {
+  ${mediaMaxWidth(MD)} {
     padding: 8px 0;
   }
 `
 
 const Menu = s.div`
-  @media screen and (max-width: 1087px) {
+  ${mediaMaxWidth(MD)} {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
 

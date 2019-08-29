@@ -1,7 +1,7 @@
 import React from 'react'
 import s from 'styled-components'
 import DropdownFilter from './DropdownFilter'
-import { BORDER_RADIUS } from '../constants/measurements'
+import { BORDER_RADIUS, mediaMaxWidth, MD } from '../constants/measurements'
 import {
   MEDIUM_GRAY, HOVER_GRAY, FOCUS_GRAY, CLUBS_GREY
 } from '../constants/colors'
@@ -13,7 +13,7 @@ const Wrapper = s.div`
   position: sticky;
   top: -20px;
 
-  @media screen and (max-width: 1047px) {
+  ${mediaMaxWidth(MD)} {
     position: relative;
     height: auto;
     overflow: visible;
@@ -25,7 +25,7 @@ const Content = s.div`
   position: absolute;
   height: 90vh;
   width: calc(100% - 17px);
-  padding: 42px 0 0 0;
+  padding: 36px 0 0 0;
   overflow-y: scroll;
   overflow-x: hidden;
   margin-bottom: 8rem;
@@ -35,7 +35,7 @@ const Content = s.div`
     display: none;
   }
 
-  @media screen and (max-width: 1047px) {
+  ${mediaMaxWidth(MD)} {
     position: relative;
     height: auto;
     overflow: visible;
