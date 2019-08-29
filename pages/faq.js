@@ -16,7 +16,7 @@ const FAQ = () => (
         <br /><br />
         <b className='is-size-5'>Why is this a beta?</b>
         <br />
-      This is the public beta version of Penn Clubs, which means we’re still working out some kinks and (more importantly) adding useful features. Please be patient as we improve the site! The reason we decided to roll out a beta is so that you can use Penn Clubs to find and join clubs this fall.
+      This is the public beta version of Penn Clubs, which means we’re still squashing some bugs and (more importantly) adding useful features. Please be patient as we improve the site! The reason we decided to roll out a beta is so that you can use Penn Clubs to find and join clubs this fall.
         <br />
       We’re so excited to let everyone at Penn contribute to the development of Penn Clubs! Your feedback is incredibly important to us. Have any questions or comments? Find any bugs? <a href='https://airtable.com/shrCsYFWxCwfwE7cf'>Please let us know on our feedback form.</a>
         <br /><br />
