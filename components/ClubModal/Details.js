@@ -16,7 +16,7 @@ const Detail = s.div`
   justify-content: space-between;
 `
 
-export default ({ size, application_required, accepting_members }) => (
+export default ({ size, applicationRequired, acceptingMembers }) => (
   <Details>
     <Detail>
       <b style={{ color: CLUBS_GREY }} className="is-size-6">Membership:</b>
@@ -30,14 +30,14 @@ export default ({ size, application_required, accepting_members }) => (
           1: 'No',
           2: 'Some Roles',
           3: 'All Roles'
-        }[application_required] || 'Uknown'}
+        }[applicationRequired] || 'Uknown'}
       </DetailTag>
     </Detail>
 
     <Detail>
       <b style={{ color: CLUBS_GREY }} className="is-size-6">Accepting Members:</b>
       <DetailTag className="tag is-rounded">
-        {accepting_members ? 'Yes' : 'No'}
+        {acceptingMembers ? 'Yes' : 'No'}
       </DetailTag>
     </Detail>
   </Details>

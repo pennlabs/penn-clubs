@@ -159,10 +159,11 @@ export function renderListPage(Page) {
       var favoriteClubs = this.mapToClubs(favorites)
 
       if (clubs === null || tags === null) {
-        return <div className="has-text-centered" style={{ margin: 30 }}>
-          <div className="fa-5x">
+        return <div className="has-text-centered" style={{ margin: '25vh 0', opacity: 0.25 }}>
+          <div className="fa-3x">
             <i className="fas fa-spinner fa-pulse" />
-            <div className="title is-3">Loading...</div>
+            <br />
+            <p className="title is-5">Loading...</p>
           </div>
         </div>
       }

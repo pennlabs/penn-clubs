@@ -2,13 +2,14 @@ import React from 'react'
 import s from 'styled-components'
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, MEDIUM_GRAY, LIGHT_GRAY, ALLBIRDS_GRAY,
-  LIGHTER_BLUE, DARK_BLUE, BABY_BLUE
+  LIGHTER_BLUE, DARK_BLUE, BABY_BLUE, RED
 } from '../../constants/colors'
 import { BORDER_RADIUS_LG, mediaMaxWidth, MD, SM } from '../../constants/measurements'
 import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
 import { Link } from '../../routes'
 import TagGroup from '../common/TagGroup'
-import FavoriteIcon from '../common/FavoriteIcon'
+// import FavoriteIcon from '../common/FavoriteIcon'
+import FavoriteButton from './FavoriteButton'
 
 import Details from './Details'
 
@@ -35,13 +36,13 @@ const ModalBackground = s.div`
 `
 
 const ModalCard = s.div`
-  margin: 1rem 20% 1rem 20%;
+  margin: 1rem 18%;
   border-radius: ${BORDER_RADIUS_LG};
   border: 0 !important;
   box-shadow: none !important;
 
   ${mediaMaxWidth(MD)} {
-    margin: 1rem 15%;
+    margin: 1rem 8%;
   }
 
   ${mediaMaxWidth(SM)} {
@@ -62,6 +63,14 @@ const CloseModalIcon = s.span`
 
 const CardBody = s.div`
   padding: 20px 40px;
+
+  ${mediaMaxWidth(MD)} {
+    padding: 20px;
+  }
+
+  ${mediaMaxWidth(SM)} {
+    padding: 1rem;
+  }
 `
 
 const CardHeader = s.div`
@@ -115,9 +124,19 @@ const SeeMoreButton = s.a`
   background-color: ${BABY_BLUE};
   font-weight: 600;
   color: ${DARK_BLUE} !important;
+  line-height: 1;
 
   &:hover {
     background-color: ${LIGHTER_BLUE};
+  }
+`
+
+const ButtonWrapper = s.div`
+  width: 100%;
+
+  .button {
+    width: 100%;
+    display: block;
   }
 `
 
@@ -163,7 +182,12 @@ class ClubModal extends React.Component {
           <CardBody>
             <CardHeader style={{ paddingBottom: '1rem' }}>
               <CardTitle className="is-size-2">{name}</CardTitle>
-              <FavoriteIcon club={club} favorite={favorite} updateFavorites={updateFavorites} />
+              {/* <FavoriteIcon
+                absolute
+                club={club}
+                favorite={favorite}
+                updateFavorites={updateFavorites}
+              /> */}
             </CardHeader>
 
             <div className="columns">
@@ -178,21 +202,29 @@ class ClubModal extends React.Component {
 
                 <Details
                   size={getSizeDisplay(size)}
-                  application_required={application_required}
-                  accepting_members={accepting_members}
+                  applicationRequired={application_required}
+                  acceptingMembers={accepting_members}
                 />
               </OverviewCol>
 
               <DescriptionCol className="column is-8-desktop is-12-mobile">
                 <Description
-                  className="has-text-justified is-size-6-desktop is-size-7-touch"
+                  className="is-size-6-desktop is-size-7-touch is-size-5-mobile"
                   dangerouslySetInnerHTML={{ __html: description || EMPTY_DESCRIPTION }}
                 />
-                <Link route='club-view' params={{ club: String(id) }} passHref>
-                  <SeeMoreButton className="button" target="_blank">
-                    See More...
-                  </SeeMoreButton>
-                </Link>
+
+                <ButtonWrapper>
+                  <FavoriteButton
+                    club={club}
+                    favorite={favorite}
+                    updateFavorites={updateFavorites}
+                  />
+                  <Link route='club-view' params={{ club: String(id) }} passHref>
+                    <SeeMoreButton className="button" target="_blank">
+                      See More...
+                    </SeeMoreButton>
+                  </Link>
+                </ButtonWrapper>
               </DescriptionCol>
             </div>
           </CardBody>
