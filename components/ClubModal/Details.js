@@ -35,7 +35,11 @@ export default ({ size, application_required, accepting_members }) => (
     <Detail>
       <b style={{ color: CLUBS_GREY }} className="is-size-6">Requires Application:</b>
       <DetailTag className="tag is-rounded">
-        {application_required ? 'Yes' : 'No'}
+        {{
+          1: 'No',
+          2: 'Some Roles',
+          3: 'All Roles'
+        }[application_required]}
       </DetailTag>
     </Detail>
 
