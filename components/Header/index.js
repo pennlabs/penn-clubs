@@ -14,7 +14,11 @@ const Nav = s.nav`
   box-shadow: 0 0 8px 0 rgba(0, 0, 0, .1);
   width: 100%;
   position: fixed;
-  z-index: 999;
+  z-index: 1001;
+
+  ${mediaMaxWidth(MD)} {
+    box-shadow: none;
+  }
 `
 
 const NavSpacer = s.div`

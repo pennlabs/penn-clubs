@@ -1,14 +1,14 @@
 import React from 'react'
 import s from 'styled-components'
+
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, MEDIUM_GRAY, LIGHT_GRAY, ALLBIRDS_GRAY,
-  LIGHTER_BLUE, DARK_BLUE, BABY_BLUE, RED
+  LIGHTER_BLUE, DARK_BLUE, BABY_BLUE
 } from '../../constants/colors'
 import { BORDER_RADIUS_LG, mediaMaxWidth, MD, SM } from '../../constants/measurements'
 import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
 import { Link } from '../../routes'
 import TagGroup from '../common/TagGroup'
-// import FavoriteIcon from '../common/FavoriteIcon'
 import FavoriteButton from './FavoriteButton'
 
 import Details from './Details'
@@ -16,11 +16,22 @@ import Details from './Details'
 const ModalWrapper = s.div`
   position: fixed;
   top: 0;
+  left: 0;
   height: 100%;
+  width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-  width: 100%;
-  z-index: 1001;
+  z-index: 1002;
+
+  padding: 1rem 12%;
+
+  ${mediaMaxWidth(MD)} {
+    padding: 1rem 6%;
+  }
+
+  ${mediaMaxWidth(SM)} {
+    padding: 1rem;
+  }
 
   ${mediaMaxWidth(MD)} {
     &.is-active {
@@ -31,23 +42,21 @@ const ModalWrapper = s.div`
 
 const ModalBackground = s.div`
   background-color: ${ALLBIRDS_GRAY};
-  opacity: .5;
+  opacity: .75;
   position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
 `
 
 const ModalCard = s.div`
-  margin: 1rem 18%;
   border-radius: ${BORDER_RADIUS_LG};
   border: 0 !important;
   box-shadow: none !important;
-
-  ${mediaMaxWidth(MD)} {
-    margin: 1rem 8%;
-  }
-
-  ${mediaMaxWidth(SM)} {
-    margin: 1rem;
-  }
+  height: auto;
+  width: 100%;
 `
 
 const CloseModalIcon = s.span`
@@ -74,10 +83,8 @@ const CardBody = s.div`
 `
 
 const CardHeader = s.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 5;
+  display: block;
+  padding-bottom: 1rem;
 `
 
 const CardTitle = s.strong`
@@ -89,13 +96,16 @@ const OverviewCol = s.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: min-400px;
 `
 
 const ClubImage = s.img`
   max-height: 220px;
   max-width: 100%;
   object-fit: contain;
+
+  ${mediaMaxWidth(SM)} {
+    margin-bottom: 1rem;
+  }
 `
 
 const ClubImageWrapper = s.div`
@@ -158,10 +168,10 @@ class ClubModal extends React.Component {
       name,
       id,
       tags,
-      image_url,
+      image_url: imageUrl,
       size,
-      application_required,
-      accepting_members,
+      application_required: appRequired,
+      accepting_members: acceptingMembers,
       description
     } = club
 
@@ -180,20 +190,14 @@ class ClubModal extends React.Component {
           </CloseModalIcon>
 
           <CardBody>
-            <CardHeader style={{ paddingBottom: '1rem' }}>
+            <CardHeader>
               <CardTitle className="is-size-2">{name}</CardTitle>
-              {/* <FavoriteIcon
-                absolute
-                club={club}
-                favorite={favorite}
-                updateFavorites={updateFavorites}
-              /> */}
             </CardHeader>
 
             <div className="columns">
               <OverviewCol className="column is-4-desktop is-12-mobile">
                 <ClubImageWrapper>
-                  <ClubImage src={image_url || getDefaultClubImageURL()}/>
+                  <ClubImage src={imageUrl || getDefaultClubImageURL()}/>
                 </ClubImageWrapper>
 
                 <div>
@@ -202,8 +206,8 @@ class ClubModal extends React.Component {
 
                 <Details
                   size={getSizeDisplay(size)}
-                  applicationRequired={application_required}
-                  acceptingMembers={accepting_members}
+                  applicationRequired={appRequired}
+                  acceptingMembers={acceptingMembers}
                 />
               </OverviewCol>
 
