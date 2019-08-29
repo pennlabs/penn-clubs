@@ -3,7 +3,7 @@ import s from 'styled-components'
 
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, MEDIUM_GRAY, LIGHT_GRAY, ALLBIRDS_GRAY,
-  LIGHTER_BLUE, DARK_BLUE, BABY_BLUE
+  LIGHTER_BLUE, DARK_BLUE, BABY_BLUE, WHITE
 } from '../../constants/colors'
 import { BORDER_RADIUS_LG, mediaMaxWidth, MD, SM } from '../../constants/measurements'
 import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
@@ -57,6 +57,12 @@ const ModalCard = s.div`
   box-shadow: none !important;
   height: auto;
   width: 100%;
+
+  ${mediaMaxWidth(SM)} {
+    max-height: calc(100vh - 2rem);
+    overflow: hidden;
+    padding-bottom: 140px;
+  }
 `
 
 const CloseModalIcon = s.span`
@@ -79,6 +85,7 @@ const CardBody = s.div`
 
   ${mediaMaxWidth(SM)} {
     padding: 1rem;
+    overflow: hidden;
   }
 `
 
@@ -111,6 +118,11 @@ const ClubImage = s.img`
 const ClubImageWrapper = s.div`
   text-align: center;
   flex: 1;
+
+  ${mediaMaxWidth(SM)} {
+    width: 100%;
+    padding: 0 1rem;
+  }
 `
 
 const DescriptionCol = s.div`
@@ -143,10 +155,33 @@ const SeeMoreButton = s.a`
 
 const ButtonWrapper = s.div`
   width: 100%;
+  background: ${WHITE};
 
   .button {
     width: 100%;
     display: block;
+  }
+
+  ${mediaMaxWidth(SM)} {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 0 1rem 1rem 1rem;
+  }
+`
+
+const ButtonWrapperGradient = s.div`
+  display: none;
+
+  ${mediaMaxWidth(SM)} {
+    position: absolute;
+    bottom: 96px;
+    left: 0;
+    display: block;
+    width: 100%;
+    height: 1.5rem;
+    background-image: linear-gradient(rgba(255, 255, 255, 0), ${WHITE});
   }
 `
 
@@ -191,7 +226,7 @@ class ClubModal extends React.Component {
 
           <CardBody>
             <CardHeader>
-              <CardTitle className="is-size-2">{name}</CardTitle>
+              <CardTitle className="is-size-2-tablet is-size-3-mobile">{name}</CardTitle>
             </CardHeader>
 
             <div className="columns">
@@ -216,6 +251,8 @@ class ClubModal extends React.Component {
                   className="is-size-6-desktop is-size-7-touch is-size-5-mobile"
                   dangerouslySetInnerHTML={{ __html: description || EMPTY_DESCRIPTION }}
                 />
+
+                <ButtonWrapperGradient />
 
                 <ButtonWrapper>
                   <FavoriteButton

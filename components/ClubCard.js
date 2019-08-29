@@ -75,31 +75,38 @@ class ClubCard extends React.Component {
         <div
           style={{ cursor: 'pointer' }}
           onClick={() => openModal(club)}>
-          <Card className="card is-flex">
+          <Card className="card">
             <div>
-              <CardHeader>
-                <CardTitle className="is-size-5">{name}</CardTitle>
-              </CardHeader>
-              {club.active || (
-                <InactiveTag className="tag is-rounded">
-                  Inactive
-                </InactiveTag>
-              )}
-              <TagGroup tags={tags} />
-              <div className="columns is-desktop is-gapless" style={{ padding: '10px 5px' }}>
-                <div className="column is-narrow">
-                  <LazyLoad width={180} height={120} offset={1000}>
-                    <Image src={img} alt={`${name} Logo`} />
-                  </LazyLoad>
-                </div>
-                <div className="column">
-                  <p style={{ paddingLeft: 15, color: CLUBS_GREY_LIGHT }}>
-                    {this.shorten(subtitle || stripTags(description) || 'This club has no description.')}
-                  </p>
-                </div>
+              <div>
+                <FavoriteIcon
+                  club={club}
+                  favorite={favorite}
+                  updateFavorites={updateFavorites}
+                  padding="0"
+                />
+                <CardHeader>
+                  <CardTitle className="is-size-5">{name}</CardTitle>
+                </CardHeader>
               </div>
             </div>
-            <FavoriteIcon club={club} favorite={favorite} updateFavorites={updateFavorites} />
+            {club.active || (
+              <InactiveTag className="tag is-rounded">
+                Inactive
+              </InactiveTag>
+            )}
+            <TagGroup tags={tags} />
+            <div className="columns is-desktop is-gapless" style={{ padding: '10px 5px' }}>
+              <div className="column is-narrow">
+                <LazyLoad width={180} height={120} offset={1000}>
+                  <Image src={img} alt={`${name} Logo`} />
+                </LazyLoad>
+              </div>
+              <div className="column">
+                <p style={{ color: CLUBS_GREY_LIGHT }}>
+                  {this.shorten(subtitle || stripTags(description) || 'This club has no description.')}
+                </p>
+              </div>
+            </div>
           </Card>
         </div>
       </CardWrapper>

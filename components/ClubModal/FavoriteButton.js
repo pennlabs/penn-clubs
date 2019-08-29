@@ -4,6 +4,7 @@ import s from 'styled-components'
 import {
   HOVER_GRAY, FOCUS_GRAY, LIGHTER_RED, LIGHT_RED, RED, DARK_GRAY
 } from '../../constants/colors'
+import { mediaMaxWidth, SM } from '../../constants/measurements'
 
 const FavoriteButton = s.button`
   padding: 10px 10px 0 0;
@@ -29,6 +30,10 @@ const FavoriteButton = s.button`
       background-color: ${LIGHT_RED};
     }
   `}
+
+  ${mediaMaxWidth(SM)} {
+    margin-bottom: 0.5rem;
+  }
 `
 
 const Icon = s.i`

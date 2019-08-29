@@ -4,7 +4,7 @@ import { LIGHT_GRAY, MEDIUM_GRAY, RED } from '../../constants/colors'
 const FavoriteIcon = s.span`
   color: ${LIGHT_GRAY};
   float: right;
-  padding: 10px 10px 0 0;
+  padding: ${({ padding }) => padding || '10px 10px 0 0'};
   cursor: pointer;
 
   &:hover {
@@ -22,10 +22,11 @@ const FavoriteIcon = s.span`
   `}
 `
 
-export default ({ updateFavorites, club, favorite, absolute = false }) => (
+export default ({ updateFavorites, club, favorite, absolute = false, padding }) => (
   <FavoriteIcon
     favorite={favorite}
     absolute={absolute}
+    padding={padding}
     onClick={(e) => {
       updateFavorites(club.id)
       e.stopPropagation()
