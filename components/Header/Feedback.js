@@ -3,7 +3,7 @@ import s from 'styled-components'
 
 import { logEvent } from '../../utils/analytics'
 
-import { HOVER_GRAY, MEDIUM_GRAY } from '../../constants/colors'
+import { WHITE, CLUBS_BLUE, CLUBS_DEEP_BLUE } from '../../constants/colors'
 
 const DIAMETER = '3rem'
 const OFFSET = '18px'
@@ -13,24 +13,24 @@ const FeedbackLink = s.a`
   width: ${DIAMETER};
   height: ${DIAMETER};
   border-radius: 3rem;
-  background-color: white;
+  background-color: ${CLUBS_BLUE};
   position: fixed;
   bottom: ${OFFSET};
   right: ${OFFSET};
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+  box-shadow: 0 2px 8px rgba(25, 89, 130, .4);
   cursor: pointer;
   z-index: 10;
   transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: ${HOVER_GRAY};
+    background-color: ${CLUBS_DEEP_BLUE};
   }
 `
 
 const Icon = s.i`
   fontSize: 24px;
-  color: ${MEDIUM_GRAY};
+  color: ${WHITE};
   line-height: ${DIAMETER};
 `
 

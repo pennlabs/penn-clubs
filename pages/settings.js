@@ -2,7 +2,7 @@ import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, API_BASE_URL, ROLE_OFFICER } from '../utils'
 import { CLUBS_GREY_LIGHT } from '../constants/colors'
-import { Link, Router } from '../routes'
+import { Link } from '../routes'
 import React from 'react'
 import Form from '../components/Form'
 
@@ -55,7 +55,7 @@ class SettingsForm extends React.Component {
   }
 
   render() {
-    const { club, tags } = this.props
+    const { userInfo, authenticated } = this.props
     const fields = [
       {
         name: 'General',
@@ -100,25 +100,33 @@ class SettingsForm extends React.Component {
                   </tr>
                 </thead>
                 <tbody>
-                  {this.props.userInfo && this.props.userInfo.membership_set.length ? this.props.userInfo.membership_set.map((item) => <tr key={item.id}>
-                    <td>{item.name}</td>
-                    <td>{item.title}</td>
-                    <td>{item.role_display}</td>
-                    <td className='has-text-centered'>
-                      <i className={item.active ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} />
-                    </td>
-                    <td className='has-text-centered'>
-                      <i style={{ cursor: 'pointer' }} onClick={() => this.togglePublic(item)} className={item.public ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} />
-                    </td>
-                    <td className='buttons'>
-                      <Link route='club-view' params={{ club: item.id }}>
-                        <a className='button is-small is-link'>View</a>
-                      </Link>
-                      {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: item.id }}>
-                        <a className='button is-small is-success'>Edit</a>
-                      </Link>}
-                    </td>
-                  </tr>) : <tr><td className='has-text-grey' colSpan='4'>You are not a member of any clubs yet.</td></tr>}
+                  {(userInfo && userInfo.membership_set && userInfo.membership_set.length) ? userInfo.membership_set.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.name}</td>
+                      <td>{item.title}</td>
+                      <td>{item.role_display}</td>
+                      <td className='has-text-centered'>
+                        <i className={item.active ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} />
+                      </td>
+                      <td className='has-text-centered'>
+                        <i style={{ cursor: 'pointer' }} onClick={() => this.togglePublic(item)} className={item.public ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} />
+                      </td>
+                      <td className='buttons'>
+                        <Link route='club-view' params={{ club: item.id }}>
+                          <a className='button is-small is-link'>View</a>
+                        </Link>
+                        {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: item.id }}>
+                          <a className='button is-small is-success'>Edit</a>
+                        </Link>}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td className='has-text-grey' colSpan='4'>
+                        You are not a member of any clubs yet.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -127,23 +135,35 @@ class SettingsForm extends React.Component {
       }
     ]
 
-    if (this.props.authenticated === null) {
+    if (authenticated === null) {
       return <div></div>
     }
 
-    if (!this.props.userInfo) {
-      return <div style={{ minHeight: 'calc(100vh - 180px)' }}>You must be authenticated in order to use this page.</div>
+    if (!userInfo) {
+      return (
+        <div>You must be authenticated in order to use this page.</div>
+      )
     }
 
+    const { message } = this.state
+
     return (
-      <div style={{ padding: '30px 50px', minHeight: 'calc(100vh - 180px)' }}>
-        <h1 className='title is-size-2-desktop is-size-3-mobile'><span style={{ color: CLUBS_GREY_LIGHT }}>Preferences: </span> {this.props.userInfo.username}</h1>
-        {this.state.message && <div className="notification is-primary">
-          <button className="delete" onClick={() => this.setState({ message: null })}></button>
-          {this.state.message}
+      <div style={{ padding: '30px 50px' }}>
+        <h1 className='title is-size-2-desktop is-size-3-mobile'>
+          <span style={{ color: CLUBS_GREY_LIGHT }}>Preferences: </span>
+          {this.props.userInfo.username}
+        </h1>
+
+        {message && <div className="notification is-primary">
+          <button className="delete" onClick={() => this.setState({ message: null })} />
+          {message}
         </div>}
         <Form fields={fields} defaults={this.props.userInfo} onSubmit={this.submit} />
-        <a href={`${API_BASE_URL}/accounts/logout/?next=${window.location.href}`} className='button is-pulled-right is-danger is-medium'>Logout</a>
+        <a
+          href={`${API_BASE_URL}/accounts/logout/?next=${window.location.href}`}
+          className='button is-pulled-right is-danger is-medium'>
+          Logout
+        </a>
       </div>
     )
   }
