@@ -71,7 +71,7 @@ const TableWrapper = s.div`
   }
 
   ${({ drop }) => drop && `
-    max-height: 100vh;
+    max-height: none;
     opacity: 1;
   `}
 `
