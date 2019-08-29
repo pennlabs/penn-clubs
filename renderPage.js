@@ -161,7 +161,7 @@ export function renderListPage(Page) {
       if (clubs === null || tags === null) {
         return <div className="has-text-centered" style={{ margin: 30 }}>
           <div className="fa-5x">
-            <i className="fas fa-spinner fa-spin" />
+            <i className="fas fa-spinner fa-pulse" />
             <div className="title is-3">Loading...</div>
           </div>
         </div>
