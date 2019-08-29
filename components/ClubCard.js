@@ -34,6 +34,12 @@ const CardHeader = s.div`
   margin: 0 3px;
 `
 
+const CardTitle = s.strong`
+  line-height: 1.2;
+  color: ${CLUBS_GREY};
+  margin-bottom: 0.5rem;
+`
+
 class ClubCard extends React.Component {
   constructor(props) {
     super(props)
@@ -59,7 +65,7 @@ class ClubCard extends React.Component {
           <Card className="card is-flex">
             <div>
               <CardHeader>
-                <strong className="is-size-5" style={{ color: CLUBS_GREY }}>{name}</strong>
+                <CardTitle className="is-size-5">{name}</CardTitle>
               </CardHeader>
               {club.active || (
                 <span
