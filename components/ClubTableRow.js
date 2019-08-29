@@ -1,7 +1,7 @@
 import React from 'react'
 import s from 'styled-components'
 import { CLUBS_GREY, CLUBS_GREY_LIGHT, HOVER_GRAY } from '../constants/colors'
-import { mediaMaxWidth, MD } from '../constants/measurements'
+import { mediaMaxWidth, MD, SM } from '../constants/measurements'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
 
@@ -10,6 +10,10 @@ const Row = s.div`
 
   &:hover {
     background: ${HOVER_GRAY};
+  }
+
+  ${mediaMaxWidth(SM)} {
+    padding: 0 0.25rem;
   }
 `
 
@@ -24,13 +28,6 @@ const Subtitle = s.p`
 `
 
 class ClubTableRow extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      modal: ''
-    }
-  }
-
   getSubtitle() {
     const { club } = this.props
     const { subtitle, description } = club

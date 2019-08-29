@@ -4,10 +4,17 @@ import LazyLoad from 'react-lazy-load'
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY
 } from '../constants/colors'
-import { BORDER_RADIUS } from '../constants/measurements'
+import { BORDER_RADIUS, mediaMaxWidth, SM } from '../constants/measurements'
 import { getDefaultClubImageURL, stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
+
+const CardWrapper = s.div`
+  ${mediaMaxWidth(SM)} {
+    padding-top: 0;
+    padding-bottom: 1rem;
+  }
+`
 
 const Card = s.div`
   padding: 10px;
@@ -17,6 +24,11 @@ const Card = s.div`
   background-color: ${({ hovering }) => hovering ? HOVER_GRAY : WHITE};
   border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
+
+  ${mediaMaxWidth(SM)} {
+    width: calc(100%);
+    padding: 8px;
+  }
 `
 
 const Image = s.img`
@@ -58,7 +70,7 @@ class ClubCard extends React.Component {
     const { name, description, subtitle, tags } = club
     const img = club.image_url || getDefaultClubImageURL()
     return (
-      <div className="column is-half-desktop">
+      <CardWrapper className="column is-half-desktop">
         <div
           style={{ cursor: 'pointer' }}
           onClick={() => openModal(club)}>
@@ -91,7 +103,7 @@ class ClubCard extends React.Component {
             <FavoriteIcon club={club} favorite={favorite} updateFavorites={updateFavorites} />
           </Card>
         </div>
-      </div>
+      </CardWrapper>
     )
   }
 }

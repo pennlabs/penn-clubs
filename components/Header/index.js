@@ -40,9 +40,10 @@ const Logo = s.img`
 const BetaTag = s.span`
   margin-left: 10px;
   border-radius: 25px;
-  background-color: ${CLUBS_BLUE};
-  color: ${WHITE};
+  background-color: ${CLUBS_BLUE} !important;
+  color: ${WHITE} !important;
   margin-top: 2px;
+  box-shadow: 0 0px 8px rgba(25, 89, 130, .4);
 `
 
 const Title = s.h1`
@@ -80,7 +81,7 @@ class Header extends React.Component {
               <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
 
               <Title className="title is-size-4">Penn Clubs</Title>
-              <BetaTag className="tag is-info is-rounded">Beta</BetaTag>
+              <BetaTag className="tag is-rounded">Beta</BetaTag>
             </a>
 
             <Burger toggle={this.toggleLinks} />
