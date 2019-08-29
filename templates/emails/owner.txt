@@ -2,7 +2,7 @@
 
 {% block content %}
 Welcome to Penn Clubs!
-Penn Clubs is meant to be your central source of information about student organizations. Keep learning about new clubs throughout the year, not just at the SAC Fair. We hope you'll use Penn Clubs to find communities that matter to you.
+Penn Clubs is meant to be the central source of information about student organizations. Keep learning about new clubs throughout the year, not just at the SAC Fair. We hope you'll use Penn Clubs to find communities that matter to you.
 You've been invited to join the {{ name }} page! You have administrator permissions for {{ name }}, which means you can edit the {{ name }} page. This lets you update the information that will be displayed at {{ view_url }}.
 Go to {{ url }} to join. You will need to sign in with your PennKey in order to complete the process.
 {% endblock %}
