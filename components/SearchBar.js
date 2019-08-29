@@ -124,6 +124,11 @@ class SearchBar extends React.Component {
       clearTimeout(this.timeout)
       this.timeout = setTimeout(() => this.props.resetDisplay(this.state.nameInput, this.state.selectedTags), 200)
     }
+    if (prevProps.selectedTags !== this.props.selectedTags) {
+      this.setState({
+        selectedTags: this.props.selectedTags
+      })
+    }
   }
 
   render() {
