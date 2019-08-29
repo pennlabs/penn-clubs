@@ -66,9 +66,10 @@ const ModalCard = s.div`
 `
 
 const CloseModalIcon = s.span`
-  float: right;
+  position: absolute;
+  right: 10px;
+  top: 10px;
   cursor: pointer;
-  margin: 10px;
   color: ${LIGHT_GRAY};
 
   &:hover {
