@@ -99,9 +99,9 @@ class Splash extends React.Component {
     // checkbox filters
     clubs = clubs.filter(club => {
       const clubRightSize = !sizeSelected.length || sizeSelected.findIndex(sizeTag => sizeTag.value === club.size) !== -1
-      const appRequired = !applicationSelected.length || (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 && club.application_required) ||
-        (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 && !club.application_required) ||
-        (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 && club.accepting_applications)
+      const appRequired = !applicationSelected.length || (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 && club.application_required !== 1) ||
+        (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 && club.application_required === 1) ||
+        (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 && club.accepting_members)
       const rightTags = !tagSelected.length || club.tags.some(clubTag => tagSelected.findIndex(tag => tag.value === clubTag.id) !== -1)
 
       return clubRightSize && appRequired && rightTags
