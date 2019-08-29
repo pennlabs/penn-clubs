@@ -26,6 +26,40 @@ class ClubForm extends React.Component {
       }
     ]
 
+    this.applications = [
+      {
+        value: 1,
+        label: 'No Application Required'
+      },
+      {
+        value: 2,
+        label: 'Application Required For Some Positions'
+      },
+      {
+        value: 3,
+        label: 'Application Required For All Positions'
+      }
+    ]
+
+    this.sizes = [
+      {
+        value: 1,
+        label: '1-20'
+      },
+      {
+        value: 2,
+        label: '21-50'
+      },
+      {
+        value: 3,
+        label: '51-100'
+      },
+      {
+        value: 4,
+        label: '101+'
+      }
+    ]
+
     this.state = {
       club: null,
       invites: [],
@@ -258,6 +292,13 @@ class ClubForm extends React.Component {
             label: 'Club Logo'
           },
           {
+            name: 'size',
+            type: 'select',
+            choices: this.sizes,
+            converter: (a) => this.sizes.find((x) => x.value === a),
+            reverser: (a) => a.value
+          },
+          {
             name: 'founded',
             type: 'date',
             label: 'Date Founded'
@@ -295,6 +336,10 @@ class ClubForm extends React.Component {
           {
             name: 'github',
             type: 'url'
+          },
+          {
+            name: 'listserv',
+            type: 'text'
           }
         ]
       },
@@ -305,10 +350,13 @@ class ClubForm extends React.Component {
           {
             name: 'application_required',
             label: 'Is an application required to join your organization?',
-            type: 'checkbox'
+            type: 'select',
+            choices: this.applications,
+            converter: (a) => this.applications.find((x) => x.value === a),
+            reverser: (a) => a.value
           },
           {
-            name: 'application_available',
+            name: 'accepting_members',
             label: 'Are you currently accepting applications at this time?',
             type: 'checkbox'
           },
