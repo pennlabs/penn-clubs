@@ -145,7 +145,9 @@ export function renderListPage(Page) {
     }
 
     mapToClubs(favorites) {
-      var { clubs } = this.props
+      const { clubs } = this.props
+      if (!clubs || !clubs.length) return
+
       return favorites.map((favorite) => {
         return (clubs.find((club) => club.id === favorite))
       })

@@ -85,9 +85,11 @@ const ChevronIcon = s.span`
   }
 `
 
-const DropdownHeaderText = s.strong`
+const DropdownHeaderText = s.p`
   color: ${CLUBS_GREY};
   opacity: 0.8;
+  font-weight: 600;
+  margin-bottom: 0;
 
   ${mediaMaxWidth(MD)} {
     color: rgba(0, 0, 0, 0.5);

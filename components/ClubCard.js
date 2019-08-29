@@ -8,6 +8,7 @@ import { BORDER_RADIUS, mediaMaxWidth, SM } from '../constants/measurements'
 import { getDefaultClubImageURL, stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
+import { InactiveTag } from './common/Tags'
 
 const CardWrapper = s.div`
   ${mediaMaxWidth(SM)} {
@@ -80,11 +81,9 @@ class ClubCard extends React.Component {
                 <CardTitle className="is-size-5">{name}</CardTitle>
               </CardHeader>
               {club.active || (
-                <span
-                  className="tag is-rounded has-text-white"
-                  style={{ backgroundColor: CLUBS_GREY, margin: 2, fontSize: '.7em' }}>
+                <InactiveTag className="tag is-rounded">
                   Inactive
-                </span>
+                </InactiveTag>
               )}
               <TagGroup tags={tags} />
               <div className="columns is-desktop is-gapless" style={{ padding: '10px 5px' }}>

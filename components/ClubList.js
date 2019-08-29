@@ -1,5 +1,8 @@
 import React from 'react'
-import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY } from '../constants/colors'
+import {
+  CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY
+} from '../constants/colors'
+import { Tag, InactiveTag } from './common/Tags'
 import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL } from '../utils'
 import s from 'styled-components'
@@ -8,16 +11,6 @@ const FavoriteIcon = s.span`
   color: ${CLUBS_GREY};
   cursor: pointer;
   padding-right: 20px;
-`
-
-const Tag = s.span`
-  background-color: ${CLUBS_BLUE};
-  margin: 2px;
-  fontSize: .7em;
-`
-
-const InactiveTag = s(Tag)`
-  background-color: ${CLUBS_GREY};
 `
 
 const Wrapper = s.div`

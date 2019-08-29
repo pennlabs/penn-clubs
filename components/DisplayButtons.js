@@ -1,6 +1,6 @@
 import React from 'react'
 import s from 'styled-components'
-import { MEDIUM_GRAY } from '../constants/colors'
+import { DARK_GRAY } from '../constants/colors'
 
 const DisplayButtons = s.div`
   float: right;
@@ -12,7 +12,7 @@ const DisplayButtons = s.div`
 
 const Icon = s.span`
   cursor: pointer;
-  color: ${MEDIUM_GRAY};
+  color: ${DARK_GRAY};
 `
 
 export default ({ switchDisplay, shuffle }) => (
@@ -29,6 +29,7 @@ export default ({ switchDisplay, shuffle }) => (
     </button>
     <button
       onClick={shuffle}
+      style={{ color: DARK_GRAY, fontWeight: 600 }}
       className="button is-light is-small">
       <Icon className="icon">
         <i className="fas fa-random" />
