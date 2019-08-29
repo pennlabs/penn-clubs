@@ -66,11 +66,15 @@ class Club extends React.Component {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <b className="is-size-6"> Requires Application </b>
-                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: LIGHT_GRAY, color: WHITE, fontSize: '.7rem', margin: 2 }}>{club.application_required ? 'Yes' : 'No'} </span>
+                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: LIGHT_GRAY, color: WHITE, fontSize: '.7rem', margin: 2 }}>{{
+                    1: 'No',
+                    2: 'Some Roles',
+                    3: 'All Roles'
+                  }[club.application_required]} </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <b className="is-size-6"> Currently Recruiting </b>
-                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: LIGHT_GRAY, color: WHITE, fontSize: '.7rem', margin: 2 }}>{club.accepting_applications ? 'Yes' : 'No'} </span>
+                  <span className="tag is-rounded has-text-dark" style={{ backgroundColor: LIGHT_GRAY, color: WHITE, fontSize: '.7rem', margin: 2 }}>{club.accepting_members ? 'Yes' : 'No'} </span>
                 </div>
               </div>
               <div className="column is-6" style={{ backgroundColor: ALLBIRDS_GRAY, borderRadius: 3, margin: '5px 0 5px 5px' }}>
