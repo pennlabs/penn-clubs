@@ -45,7 +45,6 @@ function renderPage(Page) {
           })
         }
       })
-      this.modalElement = document.querySelector('#modal')
     }
 
     render() {
@@ -120,8 +119,6 @@ export function renderListPage(Page) {
         tags: props.tags,
         modalClub: {}
       }
-
-      var modalElement = null
     }
 
     componentDidMount() {
@@ -170,7 +167,15 @@ export function renderListPage(Page) {
       const favoriteClubs = this.mapToClubs(favorites)
 
       return (
-        <div>
+        <>
+          <ClubModal
+            modal={modal}
+            club={modalClub}
+            tags={tags}
+            closeModal={this.closeModal.bind(this)}
+            updateFavorites={this.props.updateFavorites}
+            favorite={favorites.includes(modalClub.id)}
+          />
           <Page
             clubs={clubs}
             tags={tags}
@@ -180,15 +185,7 @@ export function renderListPage(Page) {
             closeModal={this.closeModal.bind(this)}
             favoriteClubs={favoriteClubs}
           />
-          <ClubModal
-            modal={modal}
-            club={modalClub}
-            tags={tags}
-            closeModal={this.closeModal.bind(this)}
-            updateFavorites={this.props.updateFavorites}
-            favorite={favorites.includes(modalClub.id)}
-          />
-        </div>
+        </>
       )
     }
   }

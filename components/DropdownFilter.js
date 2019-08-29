@@ -2,7 +2,7 @@ import React from 'react'
 import s from 'styled-components'
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW, BORDER,
-  LIGHT_GRAY, WHITE, MUSTARD
+  LIGHT_GRAY, WHITE
 } from '../constants/colors'
 import {
   mediaMaxWidth, MD, SEARCH_BAR_MOBILE_HEIGHT, NAV_HEIGHT
