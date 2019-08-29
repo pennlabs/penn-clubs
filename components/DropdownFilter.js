@@ -134,12 +134,18 @@ class DropdownFilter extends React.Component {
                   }}>
                   <td className="icon" style={{ cursor: 'pointer', color: CLUBS_GREY_LIGHT }}>
                     <i className={this.isSelected(tag) ? 'fas fa-check-square' : 'far fa-square'} />
+                    &nbsp;
                   </td>
                   <td style={{ color: CLUBS_GREY_LIGHT }}>
-                    {tag.label}
-                    {(typeof tag.count !== 'undefined') && (
-                      <span className='has-text-grey'> ({tag.count})</span>
-                    )}
+                    <p style={{ marginBottom: '3px' }}>
+                      {tag.label}
+                      {(typeof tag.count !== 'undefined') && (
+                        <span className='has-text-grey'>
+                          {' '}
+                          ({tag.count})
+                        </span>
+                      )}
+                    </p>
                   </td>
                 </TableRow>
               ))}
