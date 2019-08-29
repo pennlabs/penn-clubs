@@ -1,0 +1,7 @@
+{% extends 'emails/base.txt' %}
+
+{% block content %}
+Welcome to Penn Clubs! You are the owner of {{ name }}!
+
+Go to {{ url }} to join the club. You will need a valid PennKey to complete the process.
+{% endblock %}

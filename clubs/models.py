@@ -157,6 +157,7 @@ class MembershipInvite(models.Model):
     """
     id = models.CharField(max_length=8, primary_key=True, default=get_invite_id)
     active = models.BooleanField(default=True)
+    auto = models.BooleanField(default=False)
     creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
@@ -215,6 +216,31 @@ class MembershipInvite(models.Model):
 
         msg = EmailMultiAlternatives(
             '{}Invitation to {}'.format(settings.EMAIL_SUBJECT_PREFIX, self.club.name),
+            text_content,
+            settings.FROM_EMAIL,
+            [self.email]
+        )
+        msg.attach_alternative(html_content, 'text/html')
+        msg.send(fail_silently=False)
+
+    def send_owner_invite(self):
+        """
+        Send the initial email invitation to owner(s) of the club.
+        """
+        if self.role > Membership.ROLE_OWNER:
+            raise ValueError('This invite should grant owner permissions if sending out the owner email!')
+
+        domain = 'pennclubs.com'
+
+        context = {
+            'name': self.club.name,
+            'url': settings.INVITE_URL.format(domain=domain, id=self.id, token=self.token, club=self.club.id)
+        }
+        text_content = render_to_string('emails/owner.txt', context)
+        html_content = render_to_string('emails/owner.html', context)
+
+        msg = EmailMultiAlternatives(
+            '{}Welcome to Penn Clubs!'.format(settings.EMAIL_SUBJECT_PREFIX),
             text_content,
             settings.FROM_EMAIL,
             [self.email]
