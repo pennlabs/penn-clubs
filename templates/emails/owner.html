@@ -2,6 +2,17 @@
 
 {% block content %}
     <h2>Join <b>{{ name }}</b> on Penn Clubs</h2>
-    <p style="font-size: 1.2em">Welcome to Penn Clubs! You are the owner of <b>{{ name }}</b>!</p>
+    <p style="font-size: 1.2em">
+        Welcome to Penn Clubs!
+    </p>
+    <p style="font-size: 1.2em">
+        Penn Clubs is meant to be your central source of information about student organizations. Keep learning about new clubs throughout the year, not just at the SAC Fair. We hope you'll use Penn Clubs to find communities that matter to you.
+    </p>
+    <p style="font-size: 1.2em">
+        You've been invited to join the {{ name }} page! You have administrator permissions for {{ name }}, which means you can edit the {{ name }} page. This lets you update the information that will be displayed <a href="{{ view_url }}">here</a>.
+    </p>
+    <p style="font-size: 1.2em">
+        Click the button below to join. You will need to sign in with your PennKey in order to complete the process.
+    </p>
     <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 20px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ url }}">Join {{ name }}</a>
 {% endblock %}

@@ -22,12 +22,19 @@ class Command(BaseCommand):
             action='store_true',
             help='Do not actually import anything.'
         )
-        parser.set_defaults(dry_run=False)
+        parser.add_argument(
+            '--skip-tags',
+            dest='skip_tags',
+            action='store_true',
+            help='Skip importing tags.'
+        )
+        parser.set_defaults(dry_run=False, skip_tags=False)
 
     def handle(self, *args, **kwargs):
         self.count = 1
         self.club_count = 0
         self.dry_run = kwargs['dry_run']
+        self.skip_tags = kwargs['skip_tags']
         self.session = requests.Session()
         self.agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' + \
                      ' Chrome/40.0.2214.85 Safari/537.36'
@@ -36,6 +43,8 @@ class Command(BaseCommand):
         }
         if self.dry_run:
             self.stdout.write('Not actually importing anything!')
+        if self.skip_tags:
+            self.stdout.write('Skipping tag imports...')
         self.process_url(self.START_URL)
         self.stdout.write('Imported {} clubs!'.format(self.club_count))
 
@@ -68,7 +77,7 @@ class Command(BaseCommand):
             else:
                 contact_email = None
 
-            if group_type is not None and not self.dry_run:
+            if group_type is not None and not self.dry_run and not self.skip_tags:
                 tag = Tag.objects.get_or_create(name=group_type)[0]
             else:
                 tag = None
@@ -94,11 +103,18 @@ class Command(BaseCommand):
                 club.name = name
             if not club.description:
                 club.description = description
-            if not club.image and image_url:
+            use_image = False
+            if image_url:
                 if not self.dry_run:
-                    resp = requests.get(image_url, allow_redirects=True)
-                    resp.raise_for_status()
-                    club.image.save(os.path.basename(image_url), ContentFile(resp.content))
+                    if club.image:
+                        resp = requests.head(image_url, allow_redirects=True)
+                        use_image = not resp.ok
+                    else:
+                        use_image = True
+                    if use_image:
+                        resp = requests.get(image_url, allow_redirects=True)
+                        resp.raise_for_status()
+                        club.image.save(os.path.basename(image_url), ContentFile(resp.content))
             if not club.email:
                 club.email = contact_email
 
@@ -110,7 +126,7 @@ class Command(BaseCommand):
                 if tag is not None and not club.tags.count():
                     club.tags.set([tag])
             self.club_count += 1
-            self.stdout.write("{} '{}'".format('Created' if flag else 'Updated', name))
+            self.stdout.write("{} '{}' (image: {})".format('Created' if flag else 'Updated', name, use_image))
 
         next_tag = soup.find(text='Next >')
         if next_tag is not None:

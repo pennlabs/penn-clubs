@@ -1,7 +1,8 @@
 {% extends 'emails/base.txt' %}
 
 {% block content %}
-Welcome to Penn Clubs! You are the owner of {{ name }}!
-
-Go to {{ url }} to join the club. You will need a valid PennKey to complete the process.
+Welcome to Penn Clubs!
+Penn Clubs is meant to be your central source of information about student organizations. Keep learning about new clubs throughout the year, not just at the SAC Fair. We hope you'll use Penn Clubs to find communities that matter to you.
+You've been invited to join the {{ name }} page! You have administrator permissions for {{ name }}, which means you can edit the {{ name }} page. This lets you update the information that will be displayed at {{ view_url }}.
+Go to {{ url }} to join. You will need to sign in with your PennKey in order to complete the process.
 {% endblock %}

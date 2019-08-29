@@ -234,6 +234,7 @@ class MembershipInvite(models.Model):
 
         context = {
             'name': self.club.name,
+            'view_url': settings.VIEW_URL.format(domain=domain, club=self.club.id),
             'url': settings.INVITE_URL.format(domain=domain, id=self.id, token=self.token, club=self.club.id)
         }
         text_content = render_to_string('emails/owner.txt', context)
