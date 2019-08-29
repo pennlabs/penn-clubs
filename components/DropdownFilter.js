@@ -9,6 +9,12 @@ import {
 } from '../constants/measurements'
 import { logEvent } from '../utils/analytics'
 
+const checkboxColorMap = {
+  Type: CLUBS_BLUE,
+  Size: CLUBS_RED,
+  Application: CLUBS_YELLOW
+}
+
 const Line = s.hr`
   background-color: rgba(0, 0, 0, .1);
   height: 2px;
@@ -37,9 +43,8 @@ const DropdownHeader = s.div`
     font-size: 80%;
     color: ${LIGHT_GRAY};
 
-    ${({ drop }) => drop && `
-      background: ${CLUBS_YELLOW};
-      border-color: ${MUSTARD};
+    ${({ drop, color }) => drop && `
+      background: ${color || CLUBS_YELLOW};
     `}
   }
 `
@@ -80,6 +85,16 @@ const ChevronIcon = s.span`
   }
 `
 
+const DropdownHeaderText = s.strong`
+  color: ${CLUBS_GREY};
+  opacity: 0.8;
+
+  ${mediaMaxWidth(MD)} {
+    color: rgba(0, 0, 0, 0.5);
+    opacity: 1;
+  }
+`
+
 const Chevron = () => (
   <ChevronIcon className="icon">
     <i className="fas fa-chevron-down" />
@@ -109,17 +124,14 @@ class DropdownFilter extends React.Component {
   render() {
     const { name, options, updateTag } = this.props
     const { drop } = this.state
-    const checkboxColor = {
-      Type: CLUBS_BLUE,
-      Size: CLUBS_RED,
-      Application: CLUBS_YELLOW
-    }[name]
+
+    const color = checkboxColorMap[name]
 
     return (
       <>
         <Line />
-        <DropdownHeader onClick={(e) => this.toggleDrop()} drop={drop}>
-          <strong style={{ color: CLUBS_GREY, opacity: 0.75 }}>{name}</strong>
+        <DropdownHeader onClick={(e) => this.toggleDrop()} drop={drop} color={color}>
+          <DropdownHeaderText>{name}</DropdownHeaderText>
           <Chevron />
         </DropdownHeader>
         <TableWrapper drop={drop}>
@@ -132,7 +144,7 @@ class DropdownFilter extends React.Component {
                     logEvent('filter', name)
                     updateTag(tag, name)
                   }}>
-                  <td className="icon" style={{ cursor: 'pointer', color: CLUBS_GREY_LIGHT }}>
+                  <td className="icon" style={{ cursor: 'pointer', color: color || CLUBS_GREY_LIGHT }}>
                     <i className={this.isSelected(tag) ? 'fas fa-check-square' : 'far fa-square'} />
                     &nbsp;
                   </td>
