@@ -306,7 +306,7 @@ class ClubSerializer(serializers.ModelSerializer):
         fields = [
             'name', 'id', 'description', 'founded', 'size', 'email', 'facebook', 'twitter', 'instagram', 'linkedin',
             'github', 'website', 'how_to_get_involved', 'tags', 'subtitle', 'application_required',
-            'application_available', 'listserv_available', 'image_url', 'members', 'favorite_count', 'active'
+            'accepting_members', 'listserv', 'image_url', 'members', 'favorite_count', 'active'
         ]
 
 
