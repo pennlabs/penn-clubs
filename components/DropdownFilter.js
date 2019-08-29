@@ -67,13 +67,18 @@ const TableWrapper = s.div`
     top: calc(${SEARCH_BAR_MOBILE_HEIGHT} + ${NAV_HEIGHT});
     background: ${WHITE};
     height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
-    padding: 1rem;
   }
 
   ${({ drop }) => drop && `
     max-height: none;
     opacity: 1;
   `}
+`
+
+const TableContainer = s.div`
+  ${mediaMaxWidth(MD)} {
+    padding: 1rem;
+  }
 `
 
 const ChevronIcon = s.span`
@@ -137,34 +142,36 @@ class DropdownFilter extends React.Component {
           <Chevron />
         </DropdownHeader>
         <TableWrapper drop={drop}>
-          <table>
-            <tbody>
-              {options.map(tag => (
-                <TableRow
-                  key={tag.label}
-                  onClick={(e) => {
-                    logEvent('filter', name)
-                    updateTag(tag, name)
-                  }}>
-                  <td className="icon" style={{ cursor: 'pointer', color: color || CLUBS_GREY_LIGHT }}>
-                    <i className={this.isSelected(tag) ? 'fas fa-check-square' : 'far fa-square'} />
-                    &nbsp;
-                  </td>
-                  <td style={{ color: CLUBS_GREY_LIGHT }}>
-                    <p style={{ marginBottom: '3px' }}>
-                      {tag.label}
-                      {(typeof tag.count !== 'undefined') && (
-                        <span className='has-text-grey'>
-                          {' '}
-                          ({tag.count})
-                        </span>
-                      )}
-                    </p>
-                  </td>
-                </TableRow>
-              ))}
-            </tbody>
-          </table>
+          <TableContainer>
+            <table>
+              <tbody>
+                {options.map(tag => (
+                  <TableRow
+                    key={tag.label}
+                    onClick={(e) => {
+                      logEvent('filter', name)
+                      updateTag(tag, name)
+                    }}>
+                    <td className="icon" style={{ cursor: 'pointer', color: color || CLUBS_GREY_LIGHT }}>
+                      <i className={this.isSelected(tag) ? 'fas fa-check-square' : 'far fa-square'} />
+                      &nbsp;
+                    </td>
+                    <td style={{ color: CLUBS_GREY_LIGHT }}>
+                      <p style={{ marginBottom: '3px' }}>
+                        {tag.label}
+                        {(typeof tag.count !== 'undefined') && (
+                          <span className='has-text-grey'>
+                            {' '}
+                            ({tag.count})
+                          </span>
+                        )}
+                      </p>
+                    </td>
+                  </TableRow>
+                ))}
+              </tbody>
+            </table>
+          </TableContainer>
         </TableWrapper>
       </>
     )

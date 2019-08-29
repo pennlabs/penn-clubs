@@ -4,7 +4,7 @@ import LazyLoad from 'react-lazy-load'
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY
 } from '../constants/colors'
-import { BORDER_RADIUS, mediaMaxWidth, SM } from '../constants/measurements'
+import { BORDER_RADIUS, mediaMaxWidth, SM, mediaMinWidth, MD } from '../constants/measurements'
 import { getDefaultClubImageURL, stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
@@ -14,6 +14,14 @@ const CardWrapper = s.div`
   ${mediaMaxWidth(SM)} {
     padding-top: 0;
     padding-bottom: 1rem;
+  }
+`
+
+const Description = s.p`
+  color: ${CLUBS_GREY_LIGHT};
+
+  ${mediaMinWidth(MD)} {
+    margin-left: 10px;
   }
 `
 
@@ -102,9 +110,9 @@ class ClubCard extends React.Component {
                 </LazyLoad>
               </div>
               <div className="column">
-                <p style={{ color: CLUBS_GREY_LIGHT }}>
+                <Description>
                   {this.shorten(subtitle || stripTags(description) || 'This club has no description.')}
-                </p>
+                </Description>
               </div>
             </div>
           </Card>
