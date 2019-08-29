@@ -15,17 +15,34 @@ class ClubDisplay extends React.Component {
       sizeSelected: [],
       applicationSelected: [],
       nameInput: '',
-      selectedTags: props.selectedTags
+      selectedTags: props.selectedTags,
+      end: 8,
     }
+  }
+
+  onScroll = () => {
+    if ((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 500)) {
+      console.log('load!')
+      this.setState({end: this.state.end + 20})
+    }
+  }
+
+  componentDidMount() {
+    window.addEventListener('scroll', this.onScroll, false);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this.onScroll, false);
   }
 
   render() {
     const { displayClubs, tags, openModal, favorites, updateFavorites, display } = this.props
+    let clubsToShow = displayClubs.slice(0, this.state.end);
     return (
       <Wrapper>
         {display === 'cards' ? (
           <div className="columns is-multiline is-desktop is-tablet">
-            {displayClubs.map(club => (
+            {clubsToShow.map(club => (
               <ClubCard
                 key={club.id}
                 club={club}
@@ -38,7 +55,7 @@ class ClubDisplay extends React.Component {
         ) : (
           <div>
             <div>
-              {displayClubs.map(club => (
+              {clubsToShow.map(club => (
                 <ClubTableRow
                   club={club}
                   key={club.id}
@@ -48,18 +65,6 @@ class ClubDisplay extends React.Component {
                   favorite={favorites.includes(club.id)}/>
               ))}
             </div>
-            <table className="table is-fullwidth is-hoverable">
-              <tbody>
-                {displayClubs.map(club => (
-                  <ClubTableRow
-                    club={club}
-                    tags={tags}
-                    updateFavorites={updateFavorites}
-                    openModal={openModal}
-                    favorite={favorites.includes(club.id)}/>
-                ))}
-              </tbody>
-            </table>
           </div>
         )}
       </Wrapper>
