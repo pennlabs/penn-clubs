@@ -11,10 +11,8 @@ export default (props) => {
   const { tags } = props
   if (!tags || !tags.length) return null
   return (
-    <div>
-      {tags.map(({ id, name }) => (
-        <Tag key={id} className="tag is-rounded has-text-white">{name}</Tag>
-      ))}
-    </div>
+    tags.map(({ id, name }) => (
+      <Tag key={id} className="tag is-rounded has-text-white">{name}</Tag>
+    ))
   )
 }
