@@ -8,6 +8,7 @@ import { BORDER_RADIUS_LG, mediaMaxWidth, MD, SM } from '../../constants/measure
 import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
 import { Link } from '../../routes'
 import TagGroup from '../common/TagGroup'
+import FavoriteIcon from '../common/FavoriteIcon'
 
 import Details from './Details'
 
@@ -57,11 +58,6 @@ const CloseModalIcon = s.span`
   &:hover {
     color: ${MEDIUM_GRAY};
   }
-`
-
-const FavoriteButton = s.div`
-  float: right;
-  min-width: 120px;
 `
 
 const CardBody = s.div`
@@ -167,23 +163,7 @@ class ClubModal extends React.Component {
           <CardBody>
             <CardHeader style={{ paddingBottom: '1rem' }}>
               <CardTitle className="is-size-2">{name}</CardTitle>
-              <FavoriteButton
-                className="button is-small is-link"
-                onClick={() => updateFavorites(id)}>
-                {favorite ? (
-                  <p>
-                    Favorited
-                    {' '}&nbsp;
-                    <i className="fa fa-heart" />
-                  </p>
-                ) : (
-                  <p>
-                    Not Favorited
-                    {' '}&nbsp;
-                    <i className="far fa-heart" />
-                  </p>
-                )}
-              </FavoriteButton>
+              <FavoriteIcon club={club} favorite={favorite} updateFavorites={updateFavorites} />
             </CardHeader>
 
             <div className="columns">
