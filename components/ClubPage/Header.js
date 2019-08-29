@@ -1,6 +1,7 @@
 import s from 'styled-components'
 import { CLUBS_GREY, CLUBS_BLUE, WHITE } from '../../constants/colors'
 import { ROLE_OFFICER } from '../../utils'
+import { Link } from '../../routes'
 
 const Title = s.div`
   display: flex;
