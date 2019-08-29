@@ -48,27 +48,16 @@ const Icon = s.a`
 export default (props) => {
   const { club } = props
   return (
-    <div style={{ display: 'flex' }}>
+    <div>
       {socials.map((data, idx) => {
         data.index = idx
         return data
-      }).sort((a, b) => {
-        if (club[a.name] && club[b.name]) {
-          return a - b
-        }
-        if (club[a.name]) {
-          return -1
-        }
-        if (club[b.name]) {
-          return 1
-        }
-        return a - b
       })
         .filter(item => club[item.name])
         .map(item => (
-          <div key={item.name} className="has-text-centered">
+          <div key={item.name}>
             <Icon href={club[item.name] ? (item.prefix || '') + club[item.name] : undefined}>
-              <i className={item.icon} style={{ height: '100%' }}></i>
+              <i className={'fa-fw ' + item.icon} style={{ height: '100%' }}></i>{' '}{club[item.name]}
             </Icon>
           </div>
         ))
