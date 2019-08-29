@@ -61,7 +61,7 @@ const TableWrapper = s.div`
   overflow: hidden;
 
   ${({ drop }) => drop && `
-    max-height: 100vh;
+    max-height: none;
     opacity: 1;
   `}
 
