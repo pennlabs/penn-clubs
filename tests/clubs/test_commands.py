@@ -1,8 +1,56 @@
+import tempfile
+
+from django.contrib.auth import get_user_model
+from django.core import mail
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 
-from clubs.models import Club, Tag
+from clubs.models import Club, Membership, MembershipInvite, Tag
+
+
+class SendInvitesTestCase(TestCase):
+    def setUp(self):
+        self.club1 = Club.objects.create(
+            id='one',
+            name='Club One',
+            active=True,
+            email='test@example.com'
+        )
+
+        self.club2 = Club.objects.create(
+            id='two',
+            name='Club Two',
+            active=True,
+            email='test2@example.com'
+        )
+
+        self.club3 = Club.objects.create(
+            id='three',
+            name='Club Three',
+            active=True,
+            email='test3@example.com'
+        )
+
+        self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
+
+        Membership.objects.create(
+            club=self.club3,
+            person=self.user1,
+            role=Membership.ROLE_OWNER
+        )
+
+    def test_send_invites(self):
+        with tempfile.NamedTemporaryFile() as tmp:
+            call_command('send_invites', tmp.name)
+
+        self.assertEqual(MembershipInvite.objects.count(), 2)
+        self.assertEqual(list(MembershipInvite.objects.values_list('role', flat=True)), [Membership.ROLE_OWNER] * 2)
+        self.assertEqual(len(mail.outbox), 2)
+
+        for msg in mail.outbox:
+            self.assertIn('Penn Clubs', msg.body)
+            self.assertTrue('one' in msg.body or 'two' in msg.body)
 
 
 class MergeDuplicatesTestCase(TestCase):
