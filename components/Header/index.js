@@ -5,7 +5,7 @@ import Burger from './Burger'
 import Feedback from './Feedback'
 import Links from './Links'
 import { WHITE, CLUBS_BLUE, DARK_GRAY, ALLBIRDS_GRAY } from '../../constants/colors'
-import { NAV_HEIGHT } from '../../constants/measurements'
+import { NAV_HEIGHT, mediaMaxWidth, MD } from '../../constants/measurements'
 
 const Nav = s.nav`
   height: ${NAV_HEIGHT};
@@ -30,6 +30,10 @@ const Logo = s.img`
 
   &:hover {
     transform: scale(1.1);
+  }
+
+  ${mediaMaxWidth(MD)} {
+    padding-left: 1rem;
   }
 `
 

@@ -1,13 +1,19 @@
 import React from 'react'
+import s from 'styled-components'
+import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock'
+
 import Header from './components/Header'
 import Footer from './components/Footer'
 import ClubModal from './components/ClubModal'
-import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
+
+import { WHITE } from './constants/colors'
 import { doApiRequest } from './utils'
-import fetch from 'isomorphic-fetch'
-import { CLUBS_PURPLE_LIGHT } from './constants/colors'
 import { logEvent } from './utils/analytics'
-import {logException} from './utils/sentry'
+import { logException } from './utils/sentry'
+
+const Wrapper = s.div`
+  min-height: calc(100vh);
+`
 
 function renderPage(Page) {
   class RenderPage extends React.Component {
@@ -44,11 +50,20 @@ function renderPage(Page) {
 
     render() {
       try {
-        return <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff' }}>
-          <Header authenticated={this.state.authenticated} userInfo={this.state.userInfo} />
-          <Page {...this.props} {...this.state} updateFavorites={this.updateFavorites} updateUserInfo={this.updateUserInfo} />
-          <Footer />
-        </div>
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: WHITE }}>
+            <Header authenticated={this.state.authenticated} userInfo={this.state.userInfo} />
+            <Wrapper>
+              <Page
+                {...this.props}
+                {...this.state}
+                updateFavorites={this.updateFavorites}
+                updateUserInfo={this.updateUserInfo}
+              />
+            </Wrapper>
+            <Footer />
+          </div>
+        )
       } catch (ex) {
         logException(ex)
       }
@@ -103,6 +118,7 @@ export function renderListPage(Page) {
         modal: false,
         modalClub: {}
       }
+
       var modalElement = null
     }
 
@@ -145,7 +161,8 @@ export function renderListPage(Page) {
             tags={tags}
             closeModal={this.closeModal.bind(this)}
             updateFavorites={this.props.updateFavorites}
-            favorite={favorites.includes(modalClub.id)} />
+            favorite={favorites.includes(modalClub.id)}
+          />
         </div>
       )
     }

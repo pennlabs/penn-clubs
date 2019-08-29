@@ -9,3 +9,4 @@ export const LG = '1204px'
 export const XL = '1440px'
 
 export const NAV_HEIGHT = '3.25rem'
+export const SEARCH_BAR_MOBILE_HEIGHT = '91px'
