@@ -60,11 +60,6 @@ const TableWrapper = s.div`
   transition: all 0.2s ease;
   overflow: hidden;
 
-  ${({ drop }) => drop && `
-    max-height: 100vh;
-    opacity: 1;
-  `}
-
   ${mediaMaxWidth(MD)} {
     position: fixed;
     left: 0;
@@ -74,6 +69,11 @@ const TableWrapper = s.div`
     height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
     padding: 1rem;
   }
+
+  ${({ drop }) => drop && `
+    max-height: 100vh;
+    opacity: 1;
+  `}
 `
 
 const ChevronIcon = s.span`

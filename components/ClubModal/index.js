@@ -23,6 +23,16 @@ const ModalWrapper = s.div`
   overflow-y: auto;
   z-index: 1002;
 
+  padding: 1rem 12%;
+
+  ${mediaMaxWidth(MD)} {
+    padding: 1rem 6%;
+  }
+
+  ${mediaMaxWidth(SM)} {
+    padding: 1rem;
+  }
+
   ${mediaMaxWidth(MD)} {
     &.is-active {
       display: block !important;
@@ -32,23 +42,21 @@ const ModalWrapper = s.div`
 
 const ModalBackground = s.div`
   background-color: ${ALLBIRDS_GRAY};
-  opacity: .5;
+  opacity: .75;
   position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
 `
 
 const ModalCard = s.div`
-  margin: 1rem 18%;
   border-radius: ${BORDER_RADIUS_LG};
   border: 0 !important;
   box-shadow: none !important;
-
-  ${mediaMaxWidth(MD)} {
-    margin: 1rem 8%;
-  }
-
-  ${mediaMaxWidth(SM)} {
-    margin: 1rem;
-  }
+  height: auto;
+  width: 100%;
 `
 
 const CloseModalIcon = s.span`
@@ -88,7 +96,6 @@ const OverviewCol = s.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: min-400px;
 `
 
 const ClubImage = s.img`

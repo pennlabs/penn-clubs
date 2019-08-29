@@ -90,7 +90,7 @@ const SearchIcon = s.span`
   cursor: pointer;
   color: ${MEDIUM_GRAY};
   opacity: 0.5;
-  padding-top: 8px;
+  padding-top: 10px;
   position: absolute;
   right: 20px;
 
