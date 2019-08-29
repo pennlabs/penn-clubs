@@ -7,6 +7,7 @@ import { doApiRequest } from './utils'
 import fetch from 'isomorphic-fetch'
 import { CLUBS_PURPLE_LIGHT } from './constants/colors'
 import { logEvent } from './utils/analytics'
+import {logException} from './utils/sentry'
 
 function renderPage(Page) {
   class RenderPage extends React.Component {
@@ -42,11 +43,15 @@ function renderPage(Page) {
     }
 
     render() {
-      return <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff' }}>
-        <Header authenticated={this.state.authenticated} userInfo={this.state.userInfo} />
-        <Page {...this.props} {...this.state} updateFavorites={this.updateFavorites} updateUserInfo={this.updateUserInfo} />
-        <Footer />
-      </div>
+      try {
+        return <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff' }}>
+          <Header authenticated={this.state.authenticated} userInfo={this.state.userInfo} />
+          <Page {...this.props} {...this.state} updateFavorites={this.updateFavorites} updateUserInfo={this.updateUserInfo} />
+          <Footer />
+        </div>
+      } catch (ex) {
+        logException(ex)
+      }
     }
 
     updateFavorites(id) {
