@@ -1,35 +1,32 @@
 import React from 'react'
 import s from 'styled-components'
 import DropdownFilter from './DropdownFilter'
-import { BORDER_RADIUS, mediaMaxWidth, MD } from '../constants/measurements'
+import { BORDER_RADIUS, mediaMaxWidth, MD, NAV_HEIGHT } from '../constants/measurements'
 import {
   MEDIUM_GRAY, HOVER_GRAY, FOCUS_GRAY, CLUBS_GREY
 } from '../constants/colors'
 
 const Wrapper = s.div`
   height: 100vh;
-  width: 100%;
-  overflow: hidden;
-  position: sticky;
-  top: -20px;
+  width: 20vw;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: fixed;
+  top: 0;
+  padding-top: ${NAV_HEIGHT};
 
   ${mediaMaxWidth(MD)} {
     position: relative;
     height: auto;
     overflow: visible;
-    top: 0;
+    padding-top: 0;
+    width: 100%;
   }
 `
 
 const Content = s.div`
-  position: absolute;
-  height: 90vh;
-  width: calc(100% - 17px);
-  padding: 36px 0 0 0;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  margin-bottom: 8rem;
-  margin-left: 17px;
+  padding: 36px 17px 12px 17px;
+  width: 100%;
 
   &::-webkit-scrollbar {
     display: none;
@@ -66,9 +63,13 @@ const SearchIcon = s.span`
   cursor: pointer;
   color: ${MEDIUM_GRAY};
   opacity: 0.5;
-  right: 6px;
   padding-top: 8px;
   position: absolute;
+  right: 20px;
+
+  ${mediaMaxWidth(MD)} {
+    right: 24px;
+  }
 `
 
 class SearchBar extends React.Component {

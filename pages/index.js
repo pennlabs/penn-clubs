@@ -5,7 +5,7 @@ import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
 import DisplayButtons from '../components/DisplayButtons'
 import { renderListPage } from '../renderPage.js'
-import { mediaMaxWidth, MD } from '../constants/measurements'
+import { mediaMaxWidth, mediaMinWidth, MD, LG, XL } from '../constants/measurements'
 import {
   CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW, FOCUS_GRAY
 } from '../constants/colors'
@@ -34,7 +34,22 @@ const Wrapper = s.div`
 `
 
 const Container = s.div`
+  width: 80vw;
+  margin-left: 20vw;
   padding: 0 1rem;
+
+  ${mediaMinWidth(LG)} {
+    padding: 0 calc(2.5% + 1rem);
+  }
+
+  ${mediaMinWidth(XL)} {
+    padding: 0 calc(5% + 1rem);
+  }
+
+  ${mediaMaxWidth(MD)} {
+    width: 100%;
+    margin-left: 0;
+  }
 `
 
 class Splash extends React.Component {
@@ -127,76 +142,73 @@ class Splash extends React.Component {
     const { clubs, tags, favorites, updateFavorites, openModal } = this.props
 
     return (
-      <Wrapper className="columns is-gapless is-mobile">
-        <div className="column is-2-desktop is-3-tablet is-12-mobile">
-          <SearchBar
-            clubs={clubs}
-            tags={tags}
-            resetDisplay={this.resetDisplay.bind(this)}
-            switchDisplay={this.switchDisplay.bind(this)}
-            selectedTags={selectedTags}
-            updateTag={this.updateTag.bind(this)}
-          />
-        </div>
-        <div className="column is-10-desktop is-9-tablet is-12-mobile">
-          <Container>
-            <div style={{ padding: '30px 0' }}>
-              <DisplayButtons
-                shuffle={this.shuffle}
-                switchDisplay={this.switchDisplay}
-              />
+      <Wrapper>
+        <SearchBar
+          clubs={clubs}
+          tags={tags}
+          resetDisplay={this.resetDisplay.bind(this)}
+          switchDisplay={this.switchDisplay.bind(this)}
+          selectedTags={selectedTags}
+          updateTag={this.updateTag.bind(this)}
+        />
 
-              <p className="title" style={{ color: CLUBS_GREY }}>
-                Browse Clubs
-              </p>
-              <p className="subtitle is-size-5" style={{ color: CLUBS_GREY_LIGHT }}>
-                Find your people!
-              </p>
-            </div>
-
-            {selectedTags.length ? (
-              <div style={{ padding: '0 30px 30px 0' }}>
-                {selectedTags.map(tag => (
-                  <span
-                    key={tag.label}
-                    className="tag is-rounded has-text-white"
-                    style={{
-                      backgroundColor: {
-                        Type: CLUBS_BLUE,
-                        Size: CLUBS_RED,
-                        Application: CLUBS_YELLOW
-                      }[tag.name],
-                      margin: 3
-                    }}>
-                    {tag.label}
-                    <button
-                      className="delete is-small"
-                      onClick={(e) => this.updateTag(tag, tag.name)}
-                    />
-                  </span>
-                ))}
-                <ClearAllLink
-                  className="tag is-rounded"
-                  onClick={(e) => this.setState(
-                    { selectedTags: [] },
-                    this.resetDisplay(this.state.nameInput, this.state.selectedTags)
-                  )}>
-                  Clear All
-                </ClearAllLink>
-              </div>
-            ) : ''}
-
-            <ClubDisplay
-              displayClubs={displayClubs}
-              display={display}
-              tags={tags}
-              favorites={favorites}
-              openModal={openModal}
-              updateFavorites={updateFavorites}
-              selectedTags={selectedTags}
+        <Container>
+          <div style={{ padding: '30px 0' }}>
+            <DisplayButtons
+              shuffle={this.shuffle}
+              switchDisplay={this.switchDisplay}
             />
-          </Container>
-        </div>
+
+            <p className="title" style={{ color: CLUBS_GREY }}>
+              Browse Clubs
+            </p>
+            <p className="subtitle is-size-5" style={{ color: CLUBS_GREY_LIGHT }}>
+              Find your people!
+            </p>
+          </div>
+
+          {selectedTags.length ? (
+            <div style={{ padding: '0 30px 30px 0' }}>
+              {selectedTags.map(tag => (
+                <span
+                  key={tag.label}
+                  className="tag is-rounded has-text-white"
+                  style={{
+                    backgroundColor: {
+                      Type: CLUBS_BLUE,
+                      Size: CLUBS_RED,
+                      Application: CLUBS_YELLOW
+                    }[tag.name],
+                    margin: 3
+                  }}>
+                  {tag.label}
+                  <button
+                    className="delete is-small"
+                    onClick={(e) => this.updateTag(tag, tag.name)}
+                  />
+                </span>
+              ))}
+              <ClearAllLink
+                className="tag is-rounded"
+                onClick={(e) => this.setState(
+                  { selectedTags: [] },
+                  this.resetDisplay(this.state.nameInput, this.state.selectedTags)
+                )}>
+                Clear All
+              </ClearAllLink>
+            </div>
+          ) : ''}
+
+          <ClubDisplay
+            displayClubs={displayClubs}
+            display={display}
+            tags={tags}
+            favorites={favorites}
+            openModal={openModal}
+            updateFavorites={updateFavorites}
+            selectedTags={selectedTags}
+          />
+        </Container>
       </Wrapper>
     )
   }

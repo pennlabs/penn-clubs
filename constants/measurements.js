@@ -5,3 +5,7 @@ export const mediaMinWidth = (width) => `@media screen and (min-width: ${width})
 export const mediaMaxWidth = (width) => `@media screen and (max-width: ${width})`
 
 export const MD = '1047px'
+export const LG = '1204px'
+export const XL = '1440px'
+
+export const NAV_HEIGHT = '3.25rem'

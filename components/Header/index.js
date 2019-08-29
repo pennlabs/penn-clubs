@@ -5,12 +5,21 @@ import Burger from './Burger'
 import Feedback from './Feedback'
 import Links from './Links'
 import { WHITE, CLUBS_BLUE, DARK_GRAY, ALLBIRDS_GRAY } from '../../constants/colors'
+import { NAV_HEIGHT } from '../../constants/measurements'
 
 const Nav = s.nav`
-  height: 3.25rem;
+  height: ${NAV_HEIGHT};
   background-color: ${WHITE};
   borderBottom: 1px solid ${ALLBIRDS_GRAY};
   box-shadow: 0 0 8px 0 rgba(0, 0, 0, .1);
+  width: 100%;
+  position: fixed;
+`
+
+const NavSpacer = s.div`
+  width: 100%;
+  display: block;
+  height: ${NAV_HEIGHT};
 `
 
 const Logo = s.img`
@@ -56,8 +65,10 @@ class Header extends React.Component {
     const { authenticated, userInfo } = this.props
     const { show } = this.state
     return (
-      <div>
+      <>
         <Heading />
+
+        <NavSpacer />
 
         <Nav className="navbar" role="navigation" aria-label="main navigation">
           <div className="navbar-brand">
@@ -79,7 +90,7 @@ class Header extends React.Component {
         </Nav>
 
         <Feedback />
-      </div>
+      </>
     )
   }
 }

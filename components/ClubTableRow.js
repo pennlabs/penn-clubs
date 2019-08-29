@@ -1,7 +1,7 @@
 import React from 'react'
 import s from 'styled-components'
-import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT, HOVER_GRAY } from '../constants/colors'
-import { getDefaultClubImageURL } from '../utils'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT, HOVER_GRAY } from '../constants/colors'
+import { mediaMaxWidth, MD } from '../constants/measurements'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
 
@@ -17,6 +17,10 @@ const Subtitle = s.p`
   color: ${CLUBS_GREY_LIGHT};
   font-size: .8rem;
   padding-left: 10px;
+
+  ${mediaMaxWidth(MD)} {
+    padding-left: 0;
+  }
 `
 
 class ClubTableRow extends React.Component {
@@ -44,14 +48,14 @@ class ClubTableRow extends React.Component {
 
     return (
       <Row>
-        <div className="columns is-vcentered is-gapless is-mobile">
+        <div className="columns is-gapless is-mobile">
           <div className="column" onClick={() => openModal(club)}>
             <div className="columns is-gapless" style={{ padding: 10 }}>
-              <div className="column is-4">
+              <div className="column is-4-desktop is-12-mobile">
                 <b className="is-size-6" style={{ color: CLUBS_GREY }}> {name} </b>
                 <TagGroup tags={tags} />
               </div>
-              <div className="column is-8">
+              <div className="column is-8-desktop is-12-mobile">
                 <Subtitle>{this.getSubtitle()}</Subtitle>
               </div>
             </div>
