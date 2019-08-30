@@ -1,60 +1,67 @@
 import React from 'react'
-import { CLUBS_GREY, CLUBS_BLUE, CLUBS_GREY_LIGHT } from '../colors'
+import s from 'styled-components'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT, HOVER_GRAY } from '../constants/colors'
+import { mediaMaxWidth, MD, SM } from '../constants/measurements'
+import FavoriteIcon from './common/FavoriteIcon'
+import TagGroup from './common/TagGroup'
+
+const Row = s.div`
+  cursor: pointer;
+
+  &:hover {
+    background: ${HOVER_GRAY};
+  }
+
+  ${mediaMaxWidth(SM)} {
+    padding: 0 0.25rem;
+  }
+`
+
+const Subtitle = s.p`
+  color: ${CLUBS_GREY_LIGHT};
+  font-size: .8rem;
+  padding-left: 10px;
+
+  ${mediaMaxWidth(MD)} {
+    padding-left: 0;
+  }
+`
 
 class ClubTableRow extends React.Component {
+  getSubtitle() {
+    const { club } = this.props
+    const { subtitle, description } = club
 
-  constructor(props){
-    super(props);
-    this.state = {
-        modal: '',
-    }
-  }
+    if (subtitle) return subtitle
 
-  findTagById(id) {
-    return this.props.tags.find(tag => tag.id == id).name
-  }
+    if (description.length < 200) return description
 
-  randomClub() {
-    const clubs = ["https://files.slack.com/files-pri/T4EM1119V-FH9E8PE93/images.jpeg",
-    "http://static.asiawebdirect.com/m/kl/portals/kuala-lumpur-ws/homepage/magazine/5-clubs/pagePropertiesImage/best-clubs-kuala-lumpur.jpg.jpg",
-    "https://files.slack.com/files-pri/T4EM1119V-FHA7CVCNT/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH920P727/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH958BEAW/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH6NHNE0Y/seltzer.jpg",
-    "https://s3.envato.com/files/990f2541-adb3-497d-a92e-78e03ab34d9d/inline_image_preview.jpg"
-    ]
-    const i = Math.floor(Math.random() * (6));
-    return clubs[i];
+    return description.substring(0, 200) + '...'
   }
 
   render() {
-    var { club, openModal, updateFavorites, favorite } = this.props
-    var { name, id, description, subtitle, tags } = club
-    var img = club.img ? club.img : this.randomClub()
-    club.img = img
+    const { club, openModal, updateFavorites, favorite } = this.props
+    const { name, tags } = club
+
     return (
-      <tr style={{borderTop: "1px solid #e5e5e5"}}>
-        <div className="columns is-vcentered is-gapless is-mobile">
-          <div className="column" onClick={(e) => openModal(club)}>
-            <div className="columns is-gapless" style={{padding: 10}}>
-              <div className="column is-4">
-                <b className="is-size-6" style={{color: CLUBS_GREY}}> {name} </b>
-                <div>
-                  {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.5em'}}>{this.findTagById(tag)}</span>)}
-                </div>
+      <Row>
+        <div className="columns is-gapless is-mobile">
+          <div className="column" onClick={() => openModal(club)}>
+            <div className="columns is-gapless" style={{ padding: 10 }}>
+              <div className="column is-4-desktop is-12-mobile">
+                <b className="is-size-6" style={{ color: CLUBS_GREY }}> {name} </b>
+                <TagGroup tags={tags} />
               </div>
-              <div className="column is-8">
-                <p style={{color: CLUBS_GREY_LIGHT, fontSize: ".8rem", paddingLeft: 10}}>{subtitle}</p>
+              <div className="column is-8-desktop is-12-mobile">
+                <Subtitle>{this.getSubtitle()}</Subtitle>
               </div>
             </div>
           </div>
           <div className="column is-narrow">
-            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{color: CLUBS_GREY, cursor: "pointer", paddingRight: 20}}>
-              <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
-            </span>
+            <FavoriteIcon club={club} favorite={favorite} updateFavorites={updateFavorites} />
           </div>
         </div>
-      </tr>
+      </Row>
     )
   }
 }

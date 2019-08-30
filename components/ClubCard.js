@@ -1,90 +1,123 @@
 import React from 'react'
-import posed from 'react-pose'
-import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
-import TagGroup from './TagGroup'
+import s from 'styled-components'
+import LazyLoad from 'react-lazy-load'
+import {
+  CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY
+} from '../constants/colors'
+import { BORDER_RADIUS, mediaMaxWidth, SM, mediaMinWidth, MD } from '../constants/measurements'
+import { getDefaultClubImageURL, stripTags } from '../utils'
+import FavoriteIcon from './common/FavoriteIcon'
+import TagGroup from './common/TagGroup'
+import { InactiveTag } from './common/Tags'
 
-const Pop = posed.div({
-  idle: { scale: 1 },
-  hovered: { scale: 1 },
-})
+const CardWrapper = s.div`
+  ${mediaMaxWidth(SM)} {
+    padding-top: 0;
+    padding-bottom: 1rem;
+  }
+`
 
+const Description = s.p`
+  color: ${CLUBS_GREY_LIGHT};
+
+  ${mediaMinWidth(MD)} {
+    margin-left: 10px;
+  }
+`
+
+const Card = s.div`
+  padding: 10px;
+  border-radius: ${BORDER_RADIUS};
+  min-height: 240px;
+  box-shadow: 0 0 0 ${WHITE};
+  background-color: ${({ hovering }) => hovering ? HOVER_GRAY : WHITE};
+  border: 1px solid ${ALLBIRDS_GRAY};
+  justify-content: space-between;
+
+  ${mediaMaxWidth(SM)} {
+    width: calc(100%);
+    padding: 8px;
+  }
+`
+
+const Image = s.img`
+  height: 120px;
+  width: 180px;
+  border-radius: ${BORDER_RADIUS};
+  object-fit: contain;
+  text-align: left;
+`
+
+const CardHeader = s.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 3px;
+`
+
+const CardTitle = s.strong`
+  line-height: 1.2;
+  color: ${CLUBS_GREY};
+  margin-bottom: 0.5rem;
+`
 
 class ClubCard extends React.Component {
-  constructor(props){
-    super(props);
+  constructor(props) {
+    super(props)
     this.state = {
-      modal: '',
-      hovering: false,
+      modal: ''
     }
   }
 
   shorten(desc) {
     if (desc.length < 280) return desc
-    else {
-      return desc.slice(0, 280) + '...'
-    }
+    return desc.slice(0, 280) + '...'
   }
-
-  findTagById(id) {
-    return this.props.tags.find(tag => tag.id == id).name
-  }
-
-  randomClub() {
-    const clubs = ["https://files.slack.com/files-pri/T4EM1119V-FH9E8PE93/images.jpeg",
-    "http://static.asiawebdirect.com/m/kl/portals/kuala-lumpur-ws/homepage/magazine/5-clubs/pagePropertiesImage/best-clubs-kuala-lumpur.jpg.jpg",
-    "https://files.slack.com/files-pri/T4EM1119V-FHA7CVCNT/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH920P727/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH958BEAW/image.png",
-    "https://files.slack.com/files-pri/T4EM1119V-FH6NHNE0Y/seltzer.jpg",
-    "https://s3.envato.com/files/990f2541-adb3-497d-a92e-78e03ab34d9d/inline_image_preview.jpg"
-    ]
-    const i = Math.floor(Math.random() * (6));
-    return clubs[i];
-  }
-
-
 
   render() {
-    var { club, openModal, updateFavorites, favorite } = this.props
-    var { name, id, description, subtitle, tags } = club
-    var img = club.img ? club.img : this.randomClub()
-    club.img = img
+    const { club, openModal, updateFavorites, favorite } = this.props
+    const { name, description, subtitle, tags } = club
+    const img = club.image_url || getDefaultClubImageURL()
     return (
-      <div className="column is-half-desktop">
-      <Pop
-        pose={this.state.hovering ? "hovered" : "idle"}
-        onMouseEnter={() => this.setState({ hovering: true })}
-        onMouseLeave={() => this.setState({ hovering: false })}>
-          <div
-            className="card is-flex"
-            style={{
-              padding: 10,
-              borderRadius: 3,
-              minHeight: 240,
-              boxShadow: "0 0 0 #fff",
-              border: "1px solid #e5e5e5",
-              backgroundColor: this.state.hovering ? "#FAFAFA" : "#fff"
-            }}>
-            <div onClick={(e) => openModal(club)} style={{cursor: "pointer"}}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 3px"}}>
-                <b className="is-size-5" style={{color: CLUBS_GREY}}> {name} </b>
-              </div>
-              {tags.map(tag => <span className="tag is-rounded has-text-white" style={{backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.5em'}}>{this.findTagById(tag)}</span>)}
-              <div className="columns is-desktop is-gapless" style={{ padding: "10px 5px" }}>
-                <div className="column is-narrow">
-                  <img style={{ height: 120, width: 180, borderRadius: 3}} src={img} />
-                </div>
-                <div className="column">
-                  <p style={{fontSize: ".8em", paddingLeft: 8, color: CLUBS_GREY_LIGHT}}>{this.shorten(subtitle)}</p>
-                </div>
+      <CardWrapper className="column is-half-desktop">
+        <div
+          style={{ cursor: 'pointer' }}
+          onClick={() => openModal(club)}>
+          <Card className="card">
+            <div>
+              <div>
+                <FavoriteIcon
+                  club={club}
+                  favorite={favorite}
+                  updateFavorites={updateFavorites}
+                  padding="0"
+                />
+                <CardHeader>
+                  <CardTitle className="is-size-5">{name}</CardTitle>
+                </CardHeader>
               </div>
             </div>
-            <span className="icon" onClick={(e)=>updateFavorites(club.id)} style={{color: CLUBS_GREY, float:"right", padding: "10px 10px 0px 0px", cursor: "pointer"}}>
-              <i className={(favorite ? "fas" : "far") + " fa-heart"} ></i>
-            </span>
-          </div>
-        </Pop>
-      </div>
+            {club.active || (
+              <InactiveTag className="tag is-rounded">
+                Inactive
+              </InactiveTag>
+            )}
+            <TagGroup tags={tags} />
+            <div className="columns is-desktop is-gapless" style={{ padding: '10px 5px' }}>
+              <div className="column is-narrow">
+                <LazyLoad width={180} height={120} offset={1000}>
+                  <Image src={img} alt={`${name} Logo`} />
+                </LazyLoad>
+              </div>
+              <div className="column">
+                <Description>
+                  {this.shorten(subtitle || stripTags(description) || 'This club has no description.')}
+                </Description>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </CardWrapper>
     )
   }
 }

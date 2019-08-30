@@ -1,11 +1,62 @@
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import React from 'react'
+import s from 'styled-components'
+import Fuse from 'fuse.js'
 import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
-import ClubModal from '../components/ClubModal'
-import renderPage from '../renderPage.js'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_PURPLE, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW } from '../colors'
+import DisplayButtons from '../components/DisplayButtons'
+import { renderListPage } from '../renderPage.js'
+import { mediaMaxWidth, mediaMinWidth, MD, LG, XL } from '../constants/measurements'
+import {
+  CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW, FOCUS_GRAY
+} from '../constants/colors'
+import { logEvent } from '../utils/analytics'
 
+const colorMap = {
+  Type: CLUBS_BLUE,
+  Size: CLUBS_RED,
+  Application: CLUBS_YELLOW
+}
+
+const ClearAllLink = s.span`
+  cursor: pointer;
+  color: ${CLUBS_GREY_LIGHT};
+  text-decoration: none !important;
+  background: transparent !important;
+  fontSize: .7em;
+  margin: 5px;
+
+  &:hover {
+    background: ${FOCUS_GRAY} !important;
+  }
+`
+
+const Wrapper = s.div`
+  min-height: 59vh;
+  margin-right: 20px;
+
+  ${mediaMaxWidth(MD)} {
+    margin-right: 0;
+  }
+`
+
+const Container = s.div`
+  width: 80vw;
+  margin-left: 20vw;
+  padding: 0 1rem;
+
+  ${mediaMinWidth(LG)} {
+    padding: 0 calc(2.5% + 1rem);
+  }
+
+  ${mediaMinWidth(XL)} {
+    padding: 0 calc(5% + 1rem);
+  }
+
+  ${mediaMaxWidth(MD)} {
+    width: 100%;
+    margin-left: 0;
+  }
+`
 
 class Splash extends React.Component {
   constructor(props) {
@@ -13,109 +64,162 @@ class Splash extends React.Component {
     this.state = {
       displayClubs: props.clubs,
       selectedTags: [],
-      nameInput: "",
+      nameInput: '',
       modal: false,
       modalClub: {},
-      display: "cards"
+      display: 'cards'
     }
+    this.fuseOptions = {
+      keys: [
+        'name',
+        'tags.name'
+      ],
+      shouldSort: true,
+      minMatchCharLength: 2,
+      threshold: 0.2
+    }
+    this.fuse = new Fuse(this.props.clubs, this.fuseOptions)
+
+    this.shuffle = this.shuffle.bind(this)
+    this.switchDisplay = this.switchDisplay.bind(this)
+  }
+
+  componentDidMount() {
+    this.setState((state) => ({
+      displayClubs: state.displayClubs.sort(() => Math.random() - 0.5)
+    }))
   }
 
   resetDisplay(nameInput, selectedTags) {
-    var tagSelected = selectedTags.filter(tag => tag.name === "Type")
-    var sizeSelected = selectedTags.filter(tag => tag.name === "Size")
-    var applicationSelected = selectedTags.filter(tag => tag.name === "Application")
+    const tagSelected = selectedTags.filter(tag => tag.name === 'Type')
+    const sizeSelected = selectedTags.filter(tag => tag.name === 'Size')
+    const applicationSelected = selectedTags.filter(tag => tag.name === 'Application')
     var { clubs } = this.props
-    clubs = nameInput ? clubs.filter(club => club.name.toLowerCase().indexOf(nameInput.toLowerCase()) !== -1) : clubs
-    clubs = sizeSelected.length && clubs.length ? clubs.filter(club =>
-      (sizeSelected.findIndex(sizeTag => sizeTag.value === club.size) !== -1)
-    ) : clubs
-    clubs = applicationSelected.length && clubs.length ? clubs.filter(club => {
-      var contains = false
-      if (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 && club.application_required ||
-          applicationSelected.findIndex(appTag => appTag.value === 2) !== -1  && !club.application_required ||
-          applicationSelected.findIndex(appTag => appTag.value === 3) !== -1  && club.accepting_applications
-        ) {
-        contains = true
-      }
-      return contains
-    }): clubs
-    clubs = tagSelected.length && clubs.length ? clubs.filter(club => {
-      var contains
-      club.tags.forEach(id => {
-        if (tagSelected.findIndex(tag => tag.value === id) !== -1 ) {
-          contains = true
-        }
-      })
-      return contains
-    }): clubs
+
+    // fuzzy search
+    if (nameInput.length) {
+      clubs = this.fuse.search(nameInput)
+    }
+
+    // checkbox filters
+    clubs = clubs.filter(club => {
+      const clubRightSize = !sizeSelected.length || sizeSelected.findIndex(sizeTag => sizeTag.value === club.size) !== -1
+      const appRequired = !applicationSelected.length || (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 && club.application_required !== 1) ||
+        (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 && club.application_required === 1) ||
+        (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 && club.accepting_members)
+      const rightTags = !tagSelected.length || club.tags.some(clubTag => tagSelected.findIndex(tag => tag.value === clubTag.id) !== -1)
+
+      return clubRightSize && appRequired && rightTags
+    })
+
     var displayClubs = clubs
     this.setState({ displayClubs, nameInput, selectedTags })
   }
 
   switchDisplay(display) {
+    logEvent('viewMode', display)
     this.setState({ display })
     this.forceUpdate()
   }
 
   updateTag(tag, name) {
-    var { selectedTags } = this.state
-    var { value, label } = tag
-    var i = selectedTags.findIndex(tag => tag.value === value && tag.name === name)
+    const { selectedTags } = this.state
+    const { value } = tag
+    const i = selectedTags.findIndex(tag => tag.value === value && tag.name === name)
+
     if (i === -1) {
       tag.name = name
       selectedTags.push(tag)
     } else {
       selectedTags.splice(i, 1)
     }
-    this.setState({ selectedTags }, this.resetDisplay(this.state.nameInput, this.state.selectedTags))
+
+    this.setState(
+      { selectedTags },
+      this.resetDisplay(this.state.nameInput, this.state.selectedTags)
+    )
+  }
+
+  shuffle() {
+    logEvent('shuffle', 'click')
+    const { displayClubs } = this.state
+    this.setState({
+      displayClubs: displayClubs.sort(() => Math.random() - 0.5)
+    })
   }
 
   render() {
-    var { displayClubs, display, selectedTags } = this.state
-    var { clubs, tags, favorites, updateFavorites, openModal, closeModal } = this.props
-    return(
-      <div className="columns is-gapless is-mobile" style={{minHeight: "59vh", marginRight: 20}}>
-        <div className="column is-2-desktop is-3-tablet is-5-mobile">
-          <SearchBar
-            clubs={clubs}
-            tags={tags}
-            resetDisplay={this.resetDisplay.bind(this)}
-            switchDisplay={this.switchDisplay.bind(this)}
-            selectedTags={selectedTags}
-            updateTag={this.updateTag.bind(this)} />
-        </div>
-        <div className="column is-10-desktop is-9-tablet is-7-mobile" style={{marginLeft: 40}}>
-          <div style={{padding: "30px 0"}}>
-              <p className="title" style={{color: CLUBS_GREY}}>Browse Clubs</p>
-              <p className="subtitle is-size-5" style={{color: CLUBS_GREY_LIGHT}}>Find your people!</p>
+    const { displayClubs, display, selectedTags } = this.state
+    const { clubs, tags, favorites, updateFavorites, openModal } = this.props
+
+    return (
+      <Wrapper>
+        <SearchBar
+          clubs={clubs}
+          tags={tags}
+          resetDisplay={this.resetDisplay.bind(this)}
+          switchDisplay={this.switchDisplay.bind(this)}
+          selectedTags={selectedTags}
+          updateTag={this.updateTag.bind(this)}
+        />
+
+        <Container>
+          <div style={{ padding: '30px 0' }}>
+            <DisplayButtons
+              shuffle={this.shuffle}
+              switchDisplay={this.switchDisplay}
+            />
+
+            <p className="title" style={{ color: CLUBS_GREY }}>
+              Browse Clubs
+            </p>
+            <p className="subtitle is-size-5" style={{ color: CLUBS_GREY_LIGHT }}>
+              Find your people!
+            </p>
           </div>
+
           {selectedTags.length ? (
-            <div style={{padding: "0 30px 30px 0"}}>
+            <div style={{ padding: '0 30px 30px 0' }}>
               {selectedTags.map(tag => (
                 <span
+                  key={tag.label}
                   className="tag is-rounded has-text-white"
                   style={{
-                    backgroundColor: tag.name == "Type" ? CLUBS_BLUE : (tag.name == "Size" ? CLUBS_RED: CLUBS_YELLOW),
-                    margin: 3,
+                    backgroundColor: colorMap[tag.name],
+                    fontWeight: 600,
+                    margin: 3
                   }}>
                   {tag.label}
-                  <button class="delete is-small" onClick={(e)=>this.updateTag(tag, tag.name)}></button>
+                  <button
+                    className="delete is-small"
+                    onClick={(e) => this.updateTag(tag, tag.name)}
+                  />
                 </span>
               ))}
-              <span onClick={(e)=>this.setState({selectedTags: []}, this.resetDisplay(this.state.nameInput, this.state.selectedTags))} style={{color: CLUBS_GREY_LIGHT, textDecoration:"underline", fontSize: ".7em", margin: 5}}>Clear All</span>
-            </div>) : ""}
-            <ClubDisplay
-              displayClubs={displayClubs}
-              display={display}
-              tags={tags}
-              favorites={favorites}
-              openModal={openModal}
-              updateFavorites={updateFavorites}
-              selectedTags={selectedTags} />
-          </div>
-        </div>
-    );
+              <ClearAllLink
+                className="tag is-rounded"
+                onClick={(e) => this.setState(
+                  { selectedTags: [] },
+                  this.resetDisplay(this.state.nameInput, this.state.selectedTags)
+                )}>
+                Clear All
+              </ClearAllLink>
+            </div>
+          ) : ''}
+
+          <ClubDisplay
+            displayClubs={displayClubs}
+            display={display}
+            tags={tags}
+            favorites={favorites}
+            openModal={openModal}
+            updateFavorites={updateFavorites}
+            selectedTags={selectedTags}
+          />
+        </Container>
+      </Wrapper>
+    )
   }
 }
 
-export default renderPage(Splash);
+export default renderListPage(Splash)

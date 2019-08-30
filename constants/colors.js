@@ -28,12 +28,13 @@ export const MUSTARD = '#efb717'
 export const ORANGE = '#faa432'
 export const PURPLE = '#834fa0'
 
-export const CLUBS_PURPLE = "#66C1FF"
-export const CLUBS_PURPLE_LIGHT = "#F2F2F7"
-export const CLUBS_GREY = "#414654"
-export const CLUBS_GREY_LIGHT = "#636773"
-export const CLUBS_PERIWINKLE = "#D1D3F6"
-//export const CLUBS_BLUE = "#66C1FF"
-export const CLUBS_RED = "#FF776D"
-export const CLUBS_YELLOW = "#FFCF59"
-export const CLUBS_BLUE = "#60B8F2"
+export const LIGHT_RED = '#f7dcdc'
+export const LIGHTER_RED = '#f7e6e6'
+
+export const CLUBS_PURPLE = '#66C1FF'
+export const CLUBS_GREY = '#414654'
+export const CLUBS_GREY_LIGHT = '#636773'
+export const CLUBS_RED = '#FF776D'
+export const CLUBS_YELLOW = '#FFCF59'
+export const CLUBS_BLUE = '#60B8F2'
+export const CLUBS_DEEP_BLUE = '#5ab0e8'

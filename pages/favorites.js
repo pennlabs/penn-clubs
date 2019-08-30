@@ -1,42 +1,56 @@
 import React from 'react'
-import Select from 'react-select'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
-import ClubList from '../components/ClubList.js'
-import ClubModal from '../components/ClubModal.js'
-import renderPage from '../renderPage.js'
-import { CLUBS_GREY } from '../colors'
+import s from 'styled-components'
 
+import ClubList from '../components/ClubList'
+import { renderListPage } from '../renderPage'
+import { CLUBS_GREY } from '../constants/colors'
+
+const Wrapper = s.div`
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+`
 
 class Favorites extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
       modal: false,
-      modalClub: {},
+      modalClub: {}
     }
   }
 
   render() {
-    var { tags, favorites, updateFavorites, openModal, closeModal, favoriteClubs } = this.props
+    const {
+      tags, favorites, updateFavorites, openModal, favoriteClubs
+    } = this.props
+
     return (
-      <div style={{padding: '0 2rem', display: "flex", alignItems: "center", marginBottom:"8rem", minHeight: "72vh", flexDirection: "column"}}>
-        <div style={{padding: "30px 0"}}>
-          <h1 className="title" style={{color: CLUBS_GREY}}>Favorites</h1>
+      <Wrapper>
+        <div style={{ padding: '30px 0' }}>
+          <h1 className="title" style={{ color: CLUBS_GREY }}>Favorites</h1>
         </div>
+
         {favoriteClubs.map((club) => (
           <ClubList
+            key={club.id}
             club={club}
             tags={tags}
             updateFavorites={updateFavorites}
             openModal={openModal}
-            favorite={favorites.includes(club.id)}/>
+            favorite={favorites.includes(club.id)}
+          />
         ))}
-        {!favorites.length ? <p className="has-text-light-grey" style={{paddingTop: 200}}>No favorites yet! Browse clubs <a href="/">here.</a></p> : <div></div>}
-      </div>
-    );
+
+        {(!favorites.length) ? (
+          <p className="has-text-light-grey" style={{ paddingTop: 200 }}>
+            No favorites yet! Browse clubs <a href="/">here.</a>
+          </p>
+        ) : (<div />)}
+      </Wrapper>
+    )
   }
 }
 
-
-export default renderPage(Favorites);
+export default renderListPage(Favorites)
