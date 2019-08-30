@@ -157,6 +157,7 @@ const SeeMoreButton = s.a`
 const ButtonWrapper = s.div`
   width: 100%;
   background: ${WHITE};
+  border-radius: 0 0 ${BORDER_RADIUS_LG} ${BORDER_RADIUS_LG};
 
   .button {
     width: 100%;
