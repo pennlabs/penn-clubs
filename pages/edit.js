@@ -1,6 +1,6 @@
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../utils'
-import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../colors'
+import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../constants/colors'
 import { Link, Router } from '../routes'
 import React from 'react'
 import Select from 'react-select'
@@ -26,10 +26,44 @@ class ClubForm extends React.Component {
       }
     ]
 
+    this.applications = [
+      {
+        value: 1,
+        label: 'No Application Required'
+      },
+      {
+        value: 2,
+        label: 'Application Required For Some Positions'
+      },
+      {
+        value: 3,
+        label: 'Application Required For All Positions'
+      }
+    ]
+
+    this.sizes = [
+      {
+        value: 1,
+        label: '1-20'
+      },
+      {
+        value: 2,
+        label: '21-50'
+      },
+      {
+        value: 3,
+        label: '51-100'
+      },
+      {
+        value: 4,
+        label: '101+'
+      }
+    ]
+
     this.state = {
       club: null,
       invites: [],
-      isEdit: typeof this.props.club_id !== 'undefined',
+      isEdit: typeof this.props.clubId !== 'undefined',
       inviteEmails: '',
       inviteRole: this.roles[0],
       inviteTitle: 'Member',
@@ -193,13 +227,13 @@ class ClubForm extends React.Component {
 
   componentDidMount() {
     if (this.state.isEdit) {
-      const club_id = this.state.club !== null && this.state.club.id ? this.state.club.id : this.props.club_id
-      doApiRequest(`/clubs/${club_id}/?format=json`)
+      const clubId = this.state.club !== null && this.state.club.id ? this.state.club.id : this.props.clubId
+      doApiRequest(`/clubs/${clubId}/?format=json`)
         .then((resp) => resp.json())
         .then((data) => this.setState({
           club: data
         }))
-      doApiRequest(`/clubs/${club_id}/invites/?format=json`)
+      doApiRequest(`/clubs/${clubId}/invites/?format=json`)
         .then((resp) => resp.json())
         .then((data) => this.setState({
           invites: data
@@ -258,6 +292,13 @@ class ClubForm extends React.Component {
             label: 'Club Logo'
           },
           {
+            name: 'size',
+            type: 'select',
+            choices: this.sizes,
+            converter: (a) => this.sizes.find((x) => x.value === a),
+            reverser: (a) => a.value
+          },
+          {
             name: 'founded',
             type: 'date',
             label: 'Date Founded'
@@ -295,6 +336,10 @@ class ClubForm extends React.Component {
           {
             name: 'github',
             type: 'url'
+          },
+          {
+            name: 'listserv',
+            type: 'text'
           }
         ]
       },
@@ -305,10 +350,13 @@ class ClubForm extends React.Component {
           {
             name: 'application_required',
             label: 'Is an application required to join your organization?',
-            type: 'checkbox'
+            type: 'select',
+            choices: this.applications,
+            converter: (a) => this.applications.find((x) => x.value === a),
+            reverser: (a) => a.value
           },
           {
-            name: 'application_available',
+            name: 'accepting_members',
             label: 'Are you currently accepting applications at this time?',
             type: 'checkbox'
           },
@@ -439,30 +487,6 @@ class ClubForm extends React.Component {
         disabled: !this.state.isEdit
       },
       {
-        name: 'events',
-        label: 'Events',
-        disabled: !this.state.isEdit,
-        content: <div>
-          Coming Soon!
-        </div>
-      },
-      {
-        name: 'qa',
-        label: 'Q & A',
-        disabled: !this.state.isEdit,
-        content: <div>
-          Coming Soon!
-        </div>
-      },
-      {
-        name: 'files',
-        label: 'Files',
-        disabled: !this.state.isEdit,
-        content: <div>
-          Coming Soon!
-        </div>
-      },
-      {
         name: 'settings',
         label: 'Settings',
         content: <div>
@@ -524,7 +548,7 @@ class ClubForm extends React.Component {
 ClubForm.getInitialProps = async({ query }) => {
   const tagsRequest = await doApiRequest('/tags/?format=json')
   const tagsResponse = await tagsRequest.json()
-  return { club_id: query.club, tags: tagsResponse }
+  return { clubId: query.club, tags: tagsResponse }
 }
 
 export default renderPage(ClubForm)

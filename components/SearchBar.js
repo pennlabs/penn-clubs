@@ -1,53 +1,102 @@
 import React from 'react'
 import s from 'styled-components'
 import DropdownFilter from './DropdownFilter'
-import { CLUBS_GREY } from '../colors'
+import {
+  BORDER_RADIUS, mediaMaxWidth, MD, NAV_HEIGHT, mediaMinWidth,
+  SEARCH_BAR_MOBILE_HEIGHT
+} from '../constants/measurements'
+import {
+  MEDIUM_GRAY, HOVER_GRAY, FOCUS_GRAY, CLUBS_GREY, BORDER, WHITE
+} from '../constants/colors'
+
+const MobileSearchBarSpacer = s.div`
+  display: block;
+  width: 100%;
+  height: ${SEARCH_BAR_MOBILE_HEIGHT};
+
+  ${mediaMinWidth(MD)} {
+    display: none !important;
+  }
+`
 
 const Wrapper = s.div`
   height: 100vh;
-  width: 100%;
-  overflow: hidden;
-  position: sticky;
-  top: -20px;
+  width: 20vw;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: fixed;
+  top: 0;
+  padding-top: ${NAV_HEIGHT};
+
+  ${mediaMaxWidth(MD)} {
+    position: relative;
+    height: auto;
+    overflow: visible;
+    padding-top: 0;
+    width: 100%;
+  }
 `
 
-const Icon = s.span`
-  transform: scale(1);
-  transition: transform 0.2s ease;
+const SearchWrapper = s.div`
+  margin-bottom: 30px;
 
-  &:hover {
-    transform: scale(1.1);
+  ${mediaMaxWidth(MD)} {
+    margin-bottom: 8px;
   }
 `
 
 const Content = s.div`
-  position: absolute;
-  height: 90vh;
-  width: calc(100% - 17px);
-  padding: 50px 0;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  margin-bottom: 8rem;
-  margin-left: 17px;
+  padding: 36px 17px 12px 17px;
+  width: 100%;
 
   &::-webkit-scrollbar {
     display: none;
   }
-`
 
-const Line = s.hr`
-  background-color: rgba(0, 0, 0, 0.1);
-  height: 2px;
-  margin: 0;
-  padding: 0;
+  ${mediaMaxWidth(MD)} {
+    position: relative;
+    height: auto;
+    overflow: visible;
+    width: 100%;
+    margin: 0;
+    padding: 8px 1rem;
+    border-top: 1px solid ${BORDER};
+    border-bottom: 1px solid ${BORDER};
+    position: fixed;
+    z-index: 1000;
+    background: ${WHITE};
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.075);
+  }
 `
 
 const Input = s.input`
   border-width: 0;
   outline: none;
   color: ${CLUBS_GREY};
-  width: 88%;
+  width: 100%;
   font-size: 1em;
+  padding: 8px 10px;
+  background: ${HOVER_GRAY};
+  border-radius: ${BORDER_RADIUS};
+
+  &:hover,
+  &:active,
+  &:focus {
+    background: ${FOCUS_GRAY};
+  }
+`
+
+const SearchIcon = s.span`
+  cursor: pointer;
+  color: ${MEDIUM_GRAY};
+  opacity: 0.5;
+  padding-top: 10px;
+  position: absolute;
+  right: 20px;
+
+  ${mediaMaxWidth(MD)} {
+    right: 24px;
+  }
 `
 
 class SearchBar extends React.Component {
@@ -72,37 +121,34 @@ class SearchBar extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.nameInput !== this.state.nameInput) {
-      this.props.resetDisplay(this.state.nameInput, this.state.selectedTags)
+      clearTimeout(this.timeout)
+      this.timeout = setTimeout(() => this.props.resetDisplay(this.state.nameInput, this.state.selectedTags), 200)
+    }
+    if (prevProps.selectedTags !== this.props.selectedTags) {
+      this.setState({
+        selectedTags: this.props.selectedTags
+      })
     }
   }
 
   render() {
     const { tagOptions, sizeOptions, applicationOptions, selectedTags } = this.state
-    const { switchDisplay, updateTag } = this.props
+    const { updateTag } = this.props
     return (
-      <Wrapper>
-        <Content>
-          <div className="is-flex" style={{ justifyContent: 'space-between', padding: '0 3px' }}>
-            <strong style={{ color: CLUBS_GREY, opacity: 0.75 }}>View:</strong>
-            <div className="is-flex">
-              <Icon
-                className="icon"
-                style={{ cursor: 'pointer', color: CLUBS_GREY }}
-                onClick={(e) => switchDisplay('cards')}>
-                <i className="fas fa-th-large" title="Grid View" />
-              </Icon>
-              <Icon className="icon" >
-                <i
-                  className="fas fa-list"
-                  title="List View"
-                  style={{ cursor: 'pointer', color: CLUBS_GREY }}
-                  onClick={(e) => switchDisplay('list')} />
-              </Icon>
-            </div>
-          </div>
-          <div style={{ margin: '30px 0' }}>
-            <Line />
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 3px' }}>
+      <>
+        <Wrapper>
+          <Content>
+            <SearchWrapper>
+              <SearchIcon className="icon">
+                {this.state.nameInput ? (
+                  <i
+                    onClick={(e) => this.setState({ nameInput: '' })}
+                    className="fas fa-times"
+                  />
+                ) : (
+                  <i className="fas fa-search" />
+                )}
+              </SearchIcon>
               <Input
                 type="text"
                 name="search"
@@ -111,31 +157,30 @@ class SearchBar extends React.Component {
                 value={this.state.nameInput}
                 onChange={(e) => this.setState({ nameInput: e.target.value })}
               />
-              <span className="icon" style={{ cursor: 'pointer', color: CLUBS_GREY }}>
-                {this.state.nameInput ? <i onClick={(e) => this.setState({ nameInput: '' })} className="fas fa-times"></i> : <i className="fas fa-search"></i>}
-              </span>
-            </div>
-          </div>
-          <DropdownFilter
-            name="Type"
-            options={tagOptions}
-            selected={selectedTags.filter(tag => tag.name === 'Type')}
-            updateTag={updateTag}
-          />
-          <DropdownFilter
-            name="Size"
-            options={sizeOptions}
-            selected={selectedTags.filter(tag => tag.name === 'Size')}
-            updateTag={updateTag}
-          />
-          <DropdownFilter
-            name="Application"
-            options={applicationOptions}
-            selected={selectedTags.filter(tag => tag.name === 'Application')}
-            updateTag={updateTag}
-          />
-        </Content>
-      </Wrapper>
+            </SearchWrapper>
+            <DropdownFilter
+              name="Type"
+              options={tagOptions}
+              selected={selectedTags.filter(tag => tag.name === 'Type')}
+              updateTag={updateTag}
+            />
+            <DropdownFilter
+              name="Size"
+              options={sizeOptions}
+              selected={selectedTags.filter(tag => tag.name === 'Size')}
+              updateTag={updateTag}
+            />
+            <DropdownFilter
+              name="Application"
+              options={applicationOptions}
+              selected={selectedTags.filter(tag => tag.name === 'Application')}
+              updateTag={updateTag}
+            />
+          </Content>
+        </Wrapper>
+
+        <MobileSearchBarSpacer />
+      </>
     )
   }
 }

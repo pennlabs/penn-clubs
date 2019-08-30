@@ -1,31 +1,51 @@
 import React from 'react'
-import posed from 'react-pose'
 import s from 'styled-components'
 import LazyLoad from 'react-lazy-load'
-import { CLUBS_BLUE, CLUBS_GREY, CLUBS_GREY_LIGHT } from '../colors'
+import {
+  CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY
+} from '../constants/colors'
+import { BORDER_RADIUS, mediaMaxWidth, SM, mediaMinWidth, MD } from '../constants/measurements'
 import { getDefaultClubImageURL, stripTags } from '../utils'
+import FavoriteIcon from './common/FavoriteIcon'
+import TagGroup from './common/TagGroup'
+import { InactiveTag } from './common/Tags'
 
-// TODO what is this "Pop" thing
-const Pop = posed.div({
-  idle: { scale: 1 },
-  hovered: { scale: 1 }
-})
+const CardWrapper = s.div`
+  ${mediaMaxWidth(SM)} {
+    padding-top: 0;
+    padding-bottom: 1rem;
+  }
+`
+
+const Description = s.p`
+  color: ${CLUBS_GREY_LIGHT};
+
+  ${mediaMinWidth(MD)} {
+    margin-left: 10px;
+  }
+`
 
 const Card = s.div`
   padding: 10px;
-  border-radius: 3px;
+  border-radius: ${BORDER_RADIUS};
   min-height: 240px;
-  box-shadow: 0 0 0 #fff;
-  border: 1px solid #e5e5e5;
-  background-color: ${({ hovering }) => hovering ? '#FAFAFA' : '#fff'};
+  box-shadow: 0 0 0 ${WHITE};
+  background-color: ${({ hovering }) => hovering ? HOVER_GRAY : WHITE};
+  border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
+
+  ${mediaMaxWidth(SM)} {
+    width: calc(100%);
+    padding: 8px;
+  }
 `
 
 const Image = s.img`
   height: 120px;
   width: 180px;
-  border-radius: 3px;
+  border-radius: ${BORDER_RADIUS};
   object-fit: contain;
+  text-align: left;
 `
 
 const CardHeader = s.div`
@@ -35,19 +55,17 @@ const CardHeader = s.div`
   margin: 0 3px;
 `
 
-const FavoriteIcon = s.span`
+const CardTitle = s.strong`
+  line-height: 1.2;
   color: ${CLUBS_GREY};
-  float: right;
-  padding: 10px 10px 0 0;
-  cursor: pointer;
+  margin-bottom: 0.5rem;
 `
 
 class ClubCard extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      modal: '',
-      hovering: false
+      modal: ''
     }
   }
 
@@ -58,58 +76,48 @@ class ClubCard extends React.Component {
 
   render() {
     const { club, openModal, updateFavorites, favorite } = this.props
-    const { hovering } = this.state
     const { name, description, subtitle, tags } = club
     const img = club.image_url || getDefaultClubImageURL()
     return (
-      <div className="column is-half-desktop">
-        <Pop
-          pose={hovering ? 'hovered' : 'idle'}
+      <CardWrapper className="column is-half-desktop">
+        <div
           style={{ cursor: 'pointer' }}
-          onClick={() => openModal(club)}
-          onMouseEnter={() => this.setState({ hovering: true })}
-          onMouseLeave={() => this.setState({ hovering: false })}>
-          <Card className="card is-flex">
+          onClick={() => openModal(club)}>
+          <Card className="card">
             <div>
-              <CardHeader>
-                <strong className="is-size-5" style={{ color: CLUBS_GREY }}>{name}</strong>
-              </CardHeader>
-              {club.active || (
-                <span
-                  className="tag is-rounded has-text-white"
-                  style={{ backgroundColor: CLUBS_GREY, margin: 2, fontSize: '.7em' }}>
-                  Inactive
-                </span>
-              )}
-              {tags.map(tag => (
-                <span
-                  key={tag.id}
-                  className="tag is-rounded has-text-white"
-                  style={{ backgroundColor: CLUBS_BLUE, margin: 2, fontSize: '.7em' }}>
-                  {tag.name}
-                </span>
-              ))}
-              <div className="columns is-desktop is-gapless" style={{ padding: '10px 5px' }}>
-                <div className="column is-narrow">
-                  <LazyLoad width={180} height={120} offset={1000}>
-                    <Image src={img} alt={`${name} Logo`} />
-                  </LazyLoad>
-                </div>
-                <div className="column">
-                  <p style={{ paddingLeft: 15, color: CLUBS_GREY_LIGHT }}>
-                    {this.shorten(subtitle || stripTags(description) || 'This club has no description.')}
-                  </p>
-                </div>
+              <div>
+                <FavoriteIcon
+                  club={club}
+                  favorite={favorite}
+                  updateFavorites={updateFavorites}
+                  padding="0"
+                />
+                <CardHeader>
+                  <CardTitle className="is-size-5">{name}</CardTitle>
+                </CardHeader>
               </div>
             </div>
-            <FavoriteIcon
-              className="icon"
-              onClick={(e) => { updateFavorites(club.id); e.stopPropagation() }}>
-              <i className={(favorite ? 'fas' : 'far') + ' fa-heart'} ></i>
-            </FavoriteIcon>
+            {club.active || (
+              <InactiveTag className="tag is-rounded">
+                Inactive
+              </InactiveTag>
+            )}
+            <TagGroup tags={tags} />
+            <div className="columns is-desktop is-gapless" style={{ padding: '10px 5px' }}>
+              <div className="column is-narrow">
+                <LazyLoad width={180} height={120} offset={1000}>
+                  <Image src={img} alt={`${name} Logo`} />
+                </LazyLoad>
+              </div>
+              <div className="column">
+                <Description>
+                  {this.shorten(subtitle || stripTags(description) || 'This club has no description.')}
+                </Description>
+              </div>
+            </div>
           </Card>
-        </Pop>
-      </div>
+        </div>
+      </CardWrapper>
     )
   }
 }

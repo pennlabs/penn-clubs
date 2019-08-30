@@ -1,39 +1,58 @@
 import React from 'react'
 import s from 'styled-components'
-import Head from './Head'
+import Heading from './Head'
 import Burger from './Burger'
 import Feedback from './Feedback'
 import Links from './Links'
+import { WHITE, CLUBS_BLUE, DARK_GRAY, ALLBIRDS_GRAY } from '../../constants/colors'
+import { NAV_HEIGHT, mediaMaxWidth, MD } from '../../constants/measurements'
 
 const Nav = s.nav`
-  height: 64px;
-  background-color: #fff;
-  borderBottom: 1px solid rgba(0, 0, 0, .1);
+  height: ${NAV_HEIGHT};
+  background-color: ${WHITE} !important;
+  borderBottom: 1px solid ${ALLBIRDS_GRAY};
   box-shadow: 0 0 8px 0 rgba(0, 0, 0, .1);
+  width: 100%;
+  position: fixed;
+  z-index: 1001;
+
+  ${mediaMaxWidth(MD)} {
+    box-shadow: none;
+  }
+`
+
+const NavSpacer = s.div`
+  width: 100%;
+  display: block;
+  height: ${NAV_HEIGHT};
 `
 
 const Logo = s.img`
-  padding-left: 15px;
+  padding-left: 20px;
   height: 100%;
-  margin-bottom: -5px;
   transform: scale(1);
   transition: all 0.2s ease;
 
   &:hover {
     transform: scale(1.1);
   }
+
+  ${mediaMaxWidth(MD)} {
+    padding-left: 1rem;
+  }
 `
 
 const BetaTag = s.span`
   margin-left: 10px;
   border-radius: 25px;
-  background-color: #60B8F2;
-  color: white;
-  margin-top: -3px;
+  background-color: ${CLUBS_BLUE} !important;
+  color: ${WHITE} !important;
+  margin-top: 2px;
+  box-shadow: 0 0px 8px rgba(25, 89, 130, .4);
 `
 
 const Title = s.h1`
-  color: #9B9B9B;
+  color: ${DARK_GRAY};
   padding-left: 15px;
   margin-bottom: 0 !important;
 `
@@ -42,15 +61,24 @@ class Header extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      hoverFav: false
+      show: false
     }
+    this.toggleLinks = this.toggleLinks.bind(this)
+  }
+
+  toggleLinks() {
+    const { show } = this.state
+    this.setState({ show: !show })
   }
 
   render() {
     const { authenticated, userInfo } = this.props
+    const { show } = this.state
     return (
-      <div>
-        <Head />
+      <>
+        <Heading />
+
+        <NavSpacer />
 
         <Nav className="navbar" role="navigation" aria-label="main navigation">
           <div className="navbar-brand">
@@ -58,17 +86,21 @@ class Header extends React.Component {
               <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
 
               <Title className="title is-size-4">Penn Clubs</Title>
-              <BetaTag className="tag is-info is-rounded">Beta</BetaTag>
+              <BetaTag className="tag is-rounded">Beta</BetaTag>
             </a>
 
-            <Burger />
+            <Burger toggle={this.toggleLinks} />
           </div>
 
-          <Links userInfo={userInfo} authenticated={authenticated} />
+          <Links
+            userInfo={userInfo}
+            authenticated={authenticated}
+            show={show}
+          />
         </Nav>
 
         <Feedback />
-      </div>
+      </>
     )
   }
 }

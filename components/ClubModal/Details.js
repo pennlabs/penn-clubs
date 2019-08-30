@@ -1,13 +1,11 @@
 import React from 'react'
-import { CLUBS_GREY } from '../../colors'
+import { CLUBS_GREY } from '../../constants/colors'
+import { DetailTag } from '../common/Tags'
 import s from 'styled-components'
 
 const Details = s.div`
-  border-radius: 3px;
-  background-color: #f2f2f2;
-  height: 100px;
-  width: 330px;
-  padding: 10px;
+  padding: 10px 0 0 0;
+  margin-top: 5px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -18,14 +16,7 @@ const Detail = s.div`
   justify-content: space-between;
 `
 
-const DetailTag = s.span`
-  margin: 3px;
-  color: ${CLUBS_GREY};
-  background-color: #ccc;
-  font-size: .7em;
-`
-
-export default ({ size, application_required, accepting_applications }) => (
+export default ({ size, applicationRequired, acceptingMembers }) => (
   <Details>
     <Detail>
       <b style={{ color: CLUBS_GREY }} className="is-size-6">Membership:</b>
@@ -35,14 +26,18 @@ export default ({ size, application_required, accepting_applications }) => (
     <Detail>
       <b style={{ color: CLUBS_GREY }} className="is-size-6">Requires Application:</b>
       <DetailTag className="tag is-rounded">
-        {application_required ? 'Yes' : 'No'}
+        {{
+          1: 'No',
+          2: 'Some Roles',
+          3: 'All Roles'
+        }[applicationRequired] || 'Uknown'}
       </DetailTag>
     </Detail>
 
     <Detail>
-      <b style={{ color: CLUBS_GREY }} className="is-size-6">Currently Recruiting:</b>
+      <b style={{ color: CLUBS_GREY }} className="is-size-6">Accepting Members:</b>
       <DetailTag className="tag is-rounded">
-        {accepting_applications ? 'Yes' : 'No'}
+        {acceptingMembers ? 'Yes' : 'No'}
       </DetailTag>
     </Detail>
   </Details>

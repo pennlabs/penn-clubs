@@ -1,10 +1,18 @@
 import React from 'react'
-import ClubCard from '../components/ClubCard'
-import ClubTableRow from '../components/ClubTableRow'
 import s from 'styled-components'
 
-const Wrapper = s.div`
-  padding-right: 40px;
+import ClubCard from '../components/ClubCard'
+import ClubTableRow from '../components/ClubTableRow'
+import { mediaMaxWidth, SM } from '../constants/measurements'
+
+const Wrapper = s.div``
+
+const ClubTableRowWrapper = s.div`
+  ${mediaMaxWidth(SM)} {
+    margin-left: -1rem;
+    margin-right: 1rem;
+    width: calc(100vw);
+  }
 `
 
 class ClubDisplay extends React.Component {
@@ -15,17 +23,36 @@ class ClubDisplay extends React.Component {
       sizeSelected: [],
       applicationSelected: [],
       nameInput: '',
-      selectedTags: props.selectedTags
+      selectedTags: props.selectedTags,
+      end: 8
     }
   }
 
+  onScroll = () => {
+    if ((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 500)) {
+      this.setState({ end: this.state.end + 20 })
+    }
+  }
+
+  componentDidMount() {
+    window.addEventListener('scroll', this.onScroll, false)
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this.onScroll, false)
+  }
+
   render() {
-    const { displayClubs, tags, openModal, favorites, updateFavorites, display } = this.props
+    const {
+      displayClubs, tags, openModal, favorites, updateFavorites, display
+    } = this.props
+    const clubsToShow = displayClubs.slice(0, this.state.end)
+
     return (
       <Wrapper>
         {display === 'cards' ? (
           <div className="columns is-multiline is-desktop is-tablet">
-            {displayClubs.map(club => (
+            {clubsToShow.map(club => (
               <ClubCard
                 key={club.id}
                 club={club}
@@ -36,18 +63,17 @@ class ClubDisplay extends React.Component {
             ))}
           </div>
         ) : (
-          <table className="table is-fullwidth is-hoverable" style={{ borderTop: '1px solid #e5e5e5' }}>
-            <tbody>
-              {displayClubs.map(club => (
-                <ClubTableRow
-                  club={club}
-                  tags={tags}
-                  updateFavorites={updateFavorites}
-                  openModal={openModal}
-                  favorite={favorites.includes(club.id)}/>
-              ))}
-            </tbody>
-          </table>
+          <ClubTableRowWrapper>
+            {clubsToShow.map(club => (
+              <ClubTableRow
+                club={club}
+                key={club.id}
+                tags={tags}
+                updateFavorites={updateFavorites}
+                openModal={openModal}
+                favorite={favorites.includes(club.id)}/>
+            ))}
+          </ClubTableRowWrapper>
         )}
       </Wrapper>
     )

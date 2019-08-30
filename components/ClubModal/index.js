@@ -1,96 +1,190 @@
 import React from 'react'
 import s from 'styled-components'
-import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../../colors'
+
+import {
+  CLUBS_GREY, CLUBS_GREY_LIGHT, MEDIUM_GRAY, LIGHT_GRAY, ALLBIRDS_GRAY,
+  LIGHTER_BLUE, DARK_BLUE, BABY_BLUE, WHITE
+} from '../../constants/colors'
+import { BORDER_RADIUS_LG, mediaMaxWidth, MD, SM } from '../../constants/measurements'
 import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
 import { Link } from '../../routes'
+import TagGroup from '../common/TagGroup'
+import FavoriteButton from './FavoriteButton'
 
 import Details from './Details'
-import Tags from './Tags'
 
 const ModalWrapper = s.div`
   position: fixed;
   top: 0;
+  left: 0;
   height: 100%;
   width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: 1002;
+
+  padding: 1rem 12%;
+
+  ${mediaMaxWidth(MD)} {
+    padding: 1rem 6%;
+  }
+
+  ${mediaMaxWidth(SM)} {
+    padding: 1rem;
+  }
+
+  ${mediaMaxWidth(MD)} {
+    &.is-active {
+      display: block !important;
+    }
+  }
 `
 
 const ModalBackground = s.div`
-  background-color: #d5d5d5;
-  opacity: .5;
+  background-color: ${ALLBIRDS_GRAY};
+  opacity: .75;
   position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
 `
 
 const ModalCard = s.div`
-  margin: 6rem;
-  border-radius: 3px;
-  border-width: 1px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
+  border-radius: ${BORDER_RADIUS_LG};
+  border: 0 !important;
+  box-shadow: none !important;
+  height: auto;
+  width: 100%;
+
+  ${mediaMaxWidth(SM)} {
+    max-height: calc(100vh - 2rem);
+    overflow: hidden;
+    padding-bottom: 140px;
+  }
 `
 
 const CloseModalIcon = s.span`
-  float: right;
+  position: absolute;
+  right: 10px;
+  top: 10px;
   cursor: pointer;
-  margin: 10px;
-  color: ${CLUBS_GREY};
-`
+  color: ${LIGHT_GRAY};
 
-const FavoriteIcon = s.span`
-  float: right;
-  padding: 10px 10px 0 0;
-  cursor: pointer;
-  color: ${CLUBS_GREY};
+  &:hover {
+    color: ${MEDIUM_GRAY};
+  }
 `
 
 const CardBody = s.div`
   padding: 20px 40px;
+
+  ${mediaMaxWidth(MD)} {
+    padding: 20px;
+  }
+
+  ${mediaMaxWidth(SM)} {
+    padding: 1rem;
+    overflow: hidden;
+  }
 `
 
 const CardHeader = s.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 5;
+  display: block;
+  padding-bottom: 1rem;
 `
 
 const CardTitle = s.strong`
   color: ${CLUBS_GREY};
+  line-height: 1;
 `
 
 const OverviewCol = s.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 400px;
 `
 
 const ClubImage = s.img`
   max-height: 220px;
-  max-width: 330px;
-  border-radius: 3px;
+  max-width: 100%;
   object-fit: contain;
+
+  ${mediaMaxWidth(SM)} {
+    margin-bottom: 1rem;
+  }
+`
+
+const ClubImageWrapper = s.div`
+  text-align: center;
+  flex: 1;
+
+  ${mediaMaxWidth(SM)} {
+    width: 100%;
+    padding: 0 1rem;
+  }
 `
 
 const DescriptionCol = s.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 400px;
+  height: min-400px;
 `
 
 const Description = s.div`
-  height: 370px;
   overflow-y: auto;
   color: ${CLUBS_GREY_LIGHT};
   white-space: pre-wrap;
+  margin-bottom: 1rem;
 `
 
 const SeeMoreButton = s.a`
   padding: 10px;
-  margin: 5px;
   float: right;
   border-width: 0;
-  background-color: #f2f2f2;
-  color: ${CLUBS_GREY};
+  background-color: ${BABY_BLUE};
+  font-weight: 600;
+  color: ${DARK_BLUE} !important;
+  line-height: 1;
+
+  &:hover {
+    background-color: ${LIGHTER_BLUE};
+  }
+`
+
+const ButtonWrapper = s.div`
+  width: 100%;
+  background: ${WHITE};
+  border-radius: 0 0 ${BORDER_RADIUS_LG} ${BORDER_RADIUS_LG};
+
+  .button {
+    width: 100%;
+    display: block;
+  }
+
+  ${mediaMaxWidth(SM)} {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 0 1rem 1rem 1rem;
+  }
+`
+
+const ButtonWrapperGradient = s.div`
+  display: none;
+
+  ${mediaMaxWidth(SM)} {
+    position: absolute;
+    bottom: 96px;
+    left: 0;
+    display: block;
+    width: 100%;
+    height: 1.5rem;
+    background-image: linear-gradient(rgba(255, 255, 255, 0), ${WHITE});
+  }
 `
 
 class ClubModal extends React.Component {
@@ -111,10 +205,10 @@ class ClubModal extends React.Component {
       name,
       id,
       tags,
-      image_url,
+      image_url: imageUrl,
       size,
-      application_required,
-      accepting_applications,
+      application_required: appRequired,
+      accepting_members: acceptingMembers,
       description
     } = club
 
@@ -134,35 +228,46 @@ class ClubModal extends React.Component {
 
           <CardBody>
             <CardHeader>
-              <CardTitle className="is-size-2">{name}</CardTitle>
-              <FavoriteIcon className="icon" onClick={() => updateFavorites(id)}>
-                <i className={(favorite ? 'fas' : 'far') + ' fa-heart'} ></i>
-              </FavoriteIcon>
+              <CardTitle className="is-size-2-tablet is-size-3-mobile">{name}</CardTitle>
             </CardHeader>
 
             <div className="columns">
-              <OverviewCol className="column is-4-desktop is-5-mobile">
-                <ClubImage src={image_url || getDefaultClubImageURL()} />
+              <OverviewCol className="column is-4-desktop is-12-mobile">
+                <ClubImageWrapper>
+                  <ClubImage src={imageUrl || getDefaultClubImageURL()}/>
+                </ClubImageWrapper>
 
-                <Tags tags={tags} />
+                <div>
+                  <TagGroup tags={tags} />
+                </div>
 
                 <Details
                   size={getSizeDisplay(size)}
-                  application_required={application_required}
-                  accepting_applications={accepting_applications}
+                  applicationRequired={appRequired}
+                  acceptingMembers={acceptingMembers}
                 />
               </OverviewCol>
 
-              <DescriptionCol className="column is-8-desktop is-7-mobile">
+              <DescriptionCol className="column is-8-desktop is-12-mobile">
                 <Description
-                  className="has-text-justified is-size-6-desktop is-size-7-touch"
+                  className="is-size-6-desktop is-size-7-touch is-size-5-mobile"
                   dangerouslySetInnerHTML={{ __html: description || EMPTY_DESCRIPTION }}
                 />
-                <Link route='club-view' params={{ club: String(id) }} passHref>
-                  <SeeMoreButton className="button" target="_blank">
-                    See More...
-                  </SeeMoreButton>
-                </Link>
+
+                <ButtonWrapperGradient />
+
+                <ButtonWrapper>
+                  <FavoriteButton
+                    club={club}
+                    favorite={favorite}
+                    updateFavorites={updateFavorites}
+                  />
+                  <Link route='club-view' params={{ club: String(id) }} passHref>
+                    <SeeMoreButton className="button" target="_blank">
+                      See More...
+                    </SeeMoreButton>
+                  </Link>
+                </ButtonWrapper>
               </DescriptionCol>
             </div>
           </CardBody>

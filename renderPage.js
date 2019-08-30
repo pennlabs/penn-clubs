@@ -1,11 +1,19 @@
 import React from 'react'
+import s from 'styled-components'
+import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock'
+
 import Header from './components/Header'
 import Footer from './components/Footer'
 import ClubModal from './components/ClubModal'
-import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
+
+import { WHITE } from './constants/colors'
 import { doApiRequest } from './utils'
-import fetch from 'isomorphic-fetch'
-import { CLUBS_PURPLE_LIGHT } from './colors'
+import { logEvent } from './utils/analytics'
+import { logException } from './utils/sentry'
+
+const Wrapper = s.div`
+  min-height: calc(100vh);
+`
 
 function renderPage(Page) {
   class RenderPage extends React.Component {
@@ -37,15 +45,27 @@ function renderPage(Page) {
           })
         }
       })
-      this.modalElement = document.querySelector('#modal')
     }
 
     render() {
-      return <div style={{ dispay: 'flex', flexDirection: 'column', backgroundColor: '#fff' }}>
-        <Header authenticated={this.state.authenticated} userInfo={this.state.userInfo} />
-        <Page {...this.props} {...this.state} updateFavorites={this.updateFavorites} updateUserInfo={this.updateUserInfo} />
-        <Footer />
-      </div>
+      try {
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: WHITE }}>
+            <Header authenticated={this.state.authenticated} userInfo={this.state.userInfo} />
+            <Wrapper>
+              <Page
+                {...this.props}
+                {...this.state}
+                updateFavorites={this.updateFavorites}
+                updateUserInfo={this.updateUserInfo}
+              />
+            </Wrapper>
+            <Footer />
+          </div>
+        )
+      } catch (ex) {
+        logException(ex)
+      }
     }
 
     updateFavorites(id) {
@@ -54,6 +74,7 @@ function renderPage(Page) {
       if (i === -1) {
         newFavs.push(id)
         if (this.state.authenticated) {
+          logEvent('favorite', id)
           doApiRequest('/favorites/?format=json', {
             method: 'POST',
             body: {
@@ -63,6 +84,7 @@ function renderPage(Page) {
         }
       } else {
         newFavs.splice(i, 1)
+        logEvent('unfavorite', id)
         if (this.state.authenticated) {
           doApiRequest(`/favorites/${id}/?format=json`, {
             method: 'DELETE'
@@ -93,12 +115,23 @@ export function renderListPage(Page) {
       super(props)
       this.state = {
         modal: false,
+        clubs: props.clubs,
+        tags: props.tags,
         modalClub: {}
       }
-      var modalElement = null
+    }
+
+    componentDidMount() {
+      doApiRequest('/clubs/?format=json')
+        .then(resp => resp.json())
+        .then(data => this.setState({ clubs: data }))
+      doApiRequest('/tags/?format=json')
+        .then(resp => resp.json())
+        .then(data => this.setState({ tags: data }))
     }
 
     openModal(club) {
+      logEvent('openModal', club.name)
       this.setState({ modal: true, modalClub: club })
       disableBodyScroll(this)
     }
@@ -109,18 +142,40 @@ export function renderListPage(Page) {
     }
 
     mapToClubs(favorites) {
-      var { clubs } = this.props
+      const { clubs } = this.state
+      if (!clubs || !clubs.length) return []
+
       return favorites.map((favorite) => {
         return (clubs.find((club) => club.id === favorite))
       })
     }
 
     render() {
-      var { favorites, clubs, tags } = this.props
-      var { modal, modalClub } = this.state
-      var favoriteClubs = this.mapToClubs(favorites)
+      const { favorites } = this.props
+      const { modal, modalClub, clubs, tags } = this.state
+
+      if (clubs === null || tags === null) {
+        return <div className="has-text-centered" style={{ margin: '25vh 0', opacity: 0.25 }}>
+          <div className="fa-3x">
+            <i className="fas fa-spinner fa-pulse" />
+            <br />
+            <p className="title is-5">Loading...</p>
+          </div>
+        </div>
+      }
+
+      const favoriteClubs = this.mapToClubs(favorites)
+
       return (
-        <div>
+        <>
+          <ClubModal
+            modal={modal}
+            club={modalClub}
+            tags={tags}
+            closeModal={this.closeModal.bind(this)}
+            updateFavorites={this.props.updateFavorites}
+            favorite={favorites.includes(modalClub.id)}
+          />
           <Page
             clubs={clubs}
             tags={tags}
@@ -130,24 +185,13 @@ export function renderListPage(Page) {
             closeModal={this.closeModal.bind(this)}
             favoriteClubs={favoriteClubs}
           />
-          <ClubModal
-            modal={modal}
-            club={modalClub}
-            tags={tags}
-            closeModal={this.closeModal.bind(this)}
-            updateFavorites={this.props.updateFavorites}
-            favorite={favorites.includes(modalClub.id)} />
-        </div>
+        </>
       )
     }
   }
 
   RenderListPage.getInitialProps = async() => {
-    const clubRequest = await doApiRequest('/clubs/?format=json')
-    const clubResponse = await clubRequest.json()
-    const tagsRequest = await doApiRequest('/tags/?format=json')
-    const tagsResponse = await tagsRequest.json()
-    return { clubs: clubResponse, tags: tagsResponse }
+    return { clubs: null, tags: null }
   }
 
   return renderPage(RenderListPage)
