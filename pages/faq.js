@@ -29,9 +29,11 @@ const FAQ = () => (
 			<b className='is-size-5'>How do I use this site?</b>
 	  		<br />
 			The #1 way to use this site is to browse clubs at Penn! You can:
-			Search for clubs by name, and use filters like Type (tags that describe the club), Size (number of members), and Applications (if applications are required to join).
-			Add clubs to your Favorites list to keep track of them
-			Browse information that clubs post: description, how to join, member testimonials
+			<ul style={{ listStyleType:'disc', marginLeft:'2rem', marginTop:'0.5rem' }}>
+			<li>Search for clubs by name, and use filters like Type (tags that describe the club), Size (number of members), and Applications (if applications are required to join).</li>
+			<li>Add clubs to your Favorites list to keep track of them</li>
+			<li>Browse information that clubs post: description, how to join, member testimonials</li>
+			</ul>
 			<br /><br />
 			<b className='is-size-5'>How do I edit an organization’s profile?</b>
 	  		<br />
