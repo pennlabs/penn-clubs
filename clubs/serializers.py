@@ -355,7 +355,8 @@ class EventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ('id', 'name', 'club', 'creator', 'start_time', 'end_time', 'location', 'url', 'image_url', 'description')
+        fields = ('id', 'name', 'club', 'creator', 'start_time', 'end_time', 'location', 'url',
+                  'image_url', 'description')
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
