@@ -119,6 +119,9 @@ const ClubImage = s.img`
 const ClubImageWrapper = s.div`
   text-align: center;
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   ${mediaMaxWidth(SM)} {
     width: 100%;
