@@ -13,7 +13,11 @@ class HasOwnerListFilter(admin.SimpleListFilter):
         return [('true', 'True'), ('false', 'False')]
 
     def queryset(self, request, queryset):
-        return queryset.filter(has_owner=self.value() == 'true')
+        val = self.value()
+        if val:
+            return queryset.filter(has_owner=val == 'true')
+        else:
+            return queryset
 
 
 class HasInviteListFilter(admin.SimpleListFilter):
@@ -24,7 +28,11 @@ class HasInviteListFilter(admin.SimpleListFilter):
         return [('true', 'True'), ('false', 'False')]
 
     def queryset(self, request, queryset):
-        return queryset.filter(has_invite=self.value() == 'true')
+        val = self.value()
+        if val:
+            return queryset.filter(has_invite=val == 'true')
+        else:
+            return queryset
 
 
 class ClubAdmin(admin.ModelAdmin):
