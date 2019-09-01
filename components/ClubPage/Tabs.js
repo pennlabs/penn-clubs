@@ -9,7 +9,7 @@ export default (props) => (
         <div style={{ whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: props.club.description || EMPTY_DESCRIPTION }} />
         {props.club.how_to_get_involved && <div>
           <div style={{ marginTop: 20 }}><b>Getting Involved</b></div>
-          <div>{ props.club.how_to_get_involved }</div>
+          <div style={{ whiteSpace: 'pre-wrap' }}>{ props.club.how_to_get_involved }</div>
         </div>}
       </div>
     },
