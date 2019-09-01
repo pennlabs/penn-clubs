@@ -40,8 +40,8 @@ const FAQ = () => (
         <br />
         You’ll need to have administrator permission for that organization. We’ve invited people as administrators based on information submitted by clubs to SAC during Spring 2019.
         <ul style={{ listStyleType: 'disc', marginLeft: '2rem', marginTop: '0.5rem' }}>
-          <li>If you did not receive administrator permission and you believe you should have, let us know at contact@pennclubs.com and we’ll work with you to verify your request.</li>
-          <li>If your club did not submit this information to SAC, we’ve been contacting clubs by their listed email to ask for the names of people who need administrator permission. You can also email us at contact@pennclubs.com and we’ll work with you to verify your request.</li>
+          <li>If you did not receive administrator permission and you believe you should have, let us know at <a href='mailto:contact@pennclubs.com'>contact@pennclubs.com</a> and we’ll work with you to verify your request.</li>
+          <li>If your club did not submit this information to SAC, we’ve been contacting clubs by their listed email to ask for the names of people who need administrator permission. You can also email us at <a href='mailto:contact@pennclubs.com'>contact@pennclubs.com</a> and we’ll work with you to verify your request.</li>
         </ul>
         <br />
         Note that there are 2 levels of administrators: Officers and Owners. Officers are able to edit the page, invite other members, and grant administrator permissions. In addition to those abilities, Owners are able to deactivate or delete the club page.

@@ -5,7 +5,13 @@ export function stripTags(val) {
   if (!val) {
     return val
   }
-  return val.replace(/(<[^>]+>)/ig, '').trim()
+  return val.replace(/(<[^>]+>)/ig, '')
+    .replace('&amp;', '&')
+    .replace('&lt;', '<')
+    .replace('&gt;', '>')
+    .replace('&ndash;', '-')
+    .replace('&mdash;', '-')
+    .trim()
 }
 
 export function getDefaultClubImageURL() {
