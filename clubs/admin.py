@@ -85,12 +85,9 @@ class MembershipAdmin(admin.ModelAdmin):
 
 
 class MembershipInviteAdmin(admin.ModelAdmin):
-    search_fields = ('person__username', 'person__email', 'club__name', 'club__pk')
-    list_display = ('person', 'club', 'role', 'title')
+    search_fields = ('email', 'club__name', 'club__pk')
+    list_display = ('email', 'club', 'role', 'title')
     list_filter = ('role',)
-
-    def person(self, obj):
-        return obj.person.username
 
     def club(self, obj):
         return obj.club.name
