@@ -47,6 +47,7 @@ class Club(models.Model):
     )
     id = models.SlugField(max_length=255, primary_key=True)
     active = models.BooleanField(default=True)
+    approved = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
     description = models.TextField(blank=True)
