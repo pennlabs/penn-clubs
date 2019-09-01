@@ -16,10 +16,21 @@ class HasOwnerListFilter(admin.SimpleListFilter):
         return queryset.filter(has_owner=self.value() == 'true')
 
 
+class HasInviteListFilter(admin.SimpleListFilter):
+    title = 'has invite'
+    parameter_name = 'has_invite'
+
+    def lookups(self, request, model_admin):
+        return [('true', 'True'), ('false', 'False')]
+
+    def queryset(self, request, queryset):
+        return queryset.filter(has_invite=self.value() == 'true')
+
+
 class ClubAdmin(admin.ModelAdmin):
     search_fields = ('name', 'subtitle', 'email')
     list_display = ('name', 'email', 'has_owner', 'has_invite')
-    list_filter = ('size', 'application_required', 'accepting_members', HasOwnerListFilter)
+    list_filter = ('size', 'application_required', 'accepting_members', HasOwnerListFilter, HasInviteListFilter)
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(
