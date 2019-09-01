@@ -7,7 +7,7 @@ const FAQ = () => (
       <p>
         <b className='is-size-5'>What is Penn Clubs?</b>
         <br />
-        Penn Clubs is meant to be your central source of information about student organizations. Keep discovering new clubs throughout the year, not just at the SAC Fair.
+        Penn Clubs is meant to be your central source of information about student organizations at the University of Pennsylvania. Keep discovering new clubs throughout the year, not just at the SAC Fair.
         <br /><br />
         <b className='is-size-5'>Why is this a beta?</b>
         <br />
