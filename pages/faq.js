@@ -48,6 +48,28 @@ const FAQ = () => (
         <b className='is-size-5'>I have another question!</b>
         <br />
         <a href='https://airtable.com/shrCsYFWxCwfwE7cf'>Please let us know on our feedback form :)</a>
+        <br />
+        <hr />
+        <b className='is-size-5'>Special Thanks</b>
+        <br />
+        Thank you to the organizations below for their support in launching Penn Clubs! We're excited to continue building this valuable resource together.
+        <br />
+        <div>
+          {[
+            {
+              name: 'Student Activities Council',
+              image: '/static/img/collaborators/sac.png',
+              url: 'https://sacfunded.net/'
+            },
+            {
+              name: 'Undergraduate Assembly',
+              image: '/static/img/collaborators/ua.png',
+              url: 'https://pennua.org/'
+            }
+          ].map(item => <a href={item.url} target='_blank' key={item.name}>
+            <img style={{ maxWidth: 100, verticalAlign: 'middle', margin: 10 }} src={item.image} alt={item.name} title={item.name} />
+          </a>)}
+        </div>
       </p>
     </div>
   </div>
