@@ -28,7 +28,7 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         if not self.validated_data.get('token') == self.instance.token:
             raise serializers.ValidationError('Missing or invalid token in request!')
 
-        if self.instance.email.endswith('.upenn.edu'):
+        if self.instance.email.endswith('.upenn.edu') and self.instance.club.membership_set.count() > 0:
             invite_username = self.instance.email.rsplit('@', 1)[0]
             if not invite_username.lower() == user.username.lower():
                 raise serializers.ValidationError('This invitation was meant for "{}", but you are logged in as "{}"!'
