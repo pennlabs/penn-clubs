@@ -1,4 +1,3 @@
-import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, API_BASE_URL, ROLE_OFFICER } from '../utils'
 import { CLUBS_GREY_LIGHT } from '../constants/colors'

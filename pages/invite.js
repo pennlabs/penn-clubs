@@ -1,4 +1,3 @@
-import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, LOGIN_URL } from '../utils'
 import React from 'react'
@@ -46,7 +45,6 @@ class Invite extends React.Component {
 
   render() {
     const { invite, error } = this.state
-    const { userInfo } = this.props
 
     if (!invite || !invite.id) {
       if (error) {

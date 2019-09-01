@@ -1,4 +1,3 @@
-import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { getDefaultClubImageURL, doApiRequest } from '../utils'
 import React from 'react'
