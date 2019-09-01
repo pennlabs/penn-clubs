@@ -67,6 +67,9 @@ class Club(models.Model):
     tags = models.ManyToManyField('Tag')
     members = models.ManyToManyField(get_user_model(), through='Membership')
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return self.name
 
