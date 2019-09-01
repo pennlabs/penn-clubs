@@ -37,8 +37,9 @@ class HasInviteListFilter(admin.SimpleListFilter):
 
 class ClubAdmin(admin.ModelAdmin):
     search_fields = ('name', 'subtitle', 'email')
-    list_display = ('name', 'email', 'has_owner', 'has_invite')
-    list_filter = ('size', 'application_required', 'accepting_members', HasOwnerListFilter, HasInviteListFilter)
+    list_display = ('name', 'email', 'has_owner', 'has_invite', 'active', 'approved')
+    list_filter = ('size', 'application_required', 'accepting_members', 'active', 'approved',
+                   HasOwnerListFilter, HasInviteListFilter)
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(
