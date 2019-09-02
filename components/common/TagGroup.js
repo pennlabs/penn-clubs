@@ -15,7 +15,7 @@ export default (props) => {
           className="tag is-rounded has-text-white"
           onClick={(e) => {
             e.stopPropagation()
-            updateTag(matchedTag, matchedTag.name)
+            updateTag && updateTag(matchedTag, matchedTag.name)
           }}
         >
           {tag.name}
@@ -27,7 +27,7 @@ export default (props) => {
         className="tag is-rounded has-text-white"
         onClick={(e) => {
           e.stopPropagation()
-          updateTag({
+          updateTag && updateTag({
             value: tag.id,
             label: tag.name,
             name: "Type"
