@@ -23,7 +23,6 @@ class ClubDisplay extends React.Component {
       sizeSelected: [],
       applicationSelected: [],
       nameInput: '',
-      selectedTags: props.selectedTags,
       end: 8
     }
   }
@@ -44,7 +43,7 @@ class ClubDisplay extends React.Component {
 
   render() {
     const {
-      displayClubs, tags, openModal, favorites, updateFavorites, display
+      displayClubs, tags, openModal, favorites, updateFavorites, display, updateTag, selectedTags
     } = this.props
     const clubsToShow = displayClubs.slice(0, this.state.end)
 
@@ -57,6 +56,8 @@ class ClubDisplay extends React.Component {
                 key={club.id}
                 club={club}
                 tags={tags}
+                selectedTags={selectedTags}
+                updateTag={updateTag}
                 openModal={openModal}
                 updateFavorites={updateFavorites}
                 favorite={favorites.includes(club.id)}/>
@@ -69,6 +70,8 @@ class ClubDisplay extends React.Component {
                 club={club}
                 key={club.id}
                 tags={tags}
+                selectedTags={selectedTags}
+                updateTag={updateTag}
                 updateFavorites={updateFavorites}
                 openModal={openModal}
                 favorite={favorites.includes(club.id)}/>
