@@ -25,3 +25,4 @@ pipenv shell
 ./manage.py migrate
 ./manage.py runserver
 ```
+When installing locally for development, run `./manage.py migrate` with the `--dev` flag.
