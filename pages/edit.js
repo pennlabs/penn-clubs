@@ -44,7 +44,7 @@ class ClubForm extends React.Component {
     this.sizes = [
       {
         value: 1,
-        label: '1-20'
+        label: '< 20'
       },
       {
         value: 2,
