@@ -54,7 +54,7 @@ class ClubTableRow extends React.Component {
                   tags={tags}
                   selectedTags={selectedTags}
                   updateTag={updateTag}
-                  />
+                />
               </div>
               <div className="column is-8-desktop is-12-mobile">
                 <Subtitle>{this.getSubtitle()}</Subtitle>
