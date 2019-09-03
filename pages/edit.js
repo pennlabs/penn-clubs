@@ -56,7 +56,7 @@ class ClubForm extends React.Component {
       },
       {
         value: 4,
-        label: '101+'
+        label: '> 100'
       }
     ]
 

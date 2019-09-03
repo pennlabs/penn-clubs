@@ -40,7 +40,7 @@ export function getSizeDisplay(size) {
   if (size === 1) return '< 20 Members'
   else if (size === 2) return '20 - 50 Members'
   else if (size === 3) return '50 - 100 Members'
-  else if (size === 4) return '100+ Members'
+  else if (size === 4) return '> 100 Members'
   else return 'Unknown'
 }
 
