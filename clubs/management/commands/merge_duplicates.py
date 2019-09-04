@@ -101,7 +101,7 @@ def merge_clubs(one, two):
     MembershipInvite.objects.filter(club=secondary).update(club=primary)
 
     # Take all favorites
-    Favorite.objects.filter(club=secondary).update(club=primary)
+    Favorite.objects.filter(club=secondary).exclude(person__favorite__club=primary).update(club=primary)
 
     # Take all events
     Event.objects.filter(club=secondary).update(club=primary)

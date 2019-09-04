@@ -6,7 +6,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 
-from clubs.models import Club, Membership, MembershipInvite, Tag
+from clubs.models import Club, Favorite, Membership, MembershipInvite, Tag
 
 
 class SendInvitesTestCase(TestCase):
@@ -71,6 +71,18 @@ class MergeDuplicatesTestCase(TestCase):
         )
         self.club2.tags.add(self.tag2)
 
+        self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
+
+        Favorite.objects.create(
+            person=self.user1,
+            club=self.club1
+        )
+
+        Favorite.objects.create(
+            person=self.user1,
+            club=self.club2
+        )
+
     def test_merge_duplicates_auto(self):
         """
         Test merging duplicates in automatic mode.
@@ -90,6 +102,8 @@ class MergeDuplicatesTestCase(TestCase):
         self.assertEqual(Club.objects.count(), 1)
         self.assertEqual(Club.objects.first().tags.count(), 2)
         self.assertTrue(Club.objects.first().github)
+
+        self.assertEqual(Favorite.objects.count(), 1)
 
     def test_merge_duplicate_tags(self):
         """
