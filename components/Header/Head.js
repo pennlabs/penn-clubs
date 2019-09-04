@@ -11,7 +11,7 @@ const keywords = [
   'wharton', 'seas', 'school'
 ].join(', ')
 const author = 'Penn Labs <contact@pennlabs.org>'
-const description = 'Penn Clubs is your central source of information about student organizations. Keep discovering new clubs throughout the year.'
+const description = 'Penn Clubs is your central source of information about student organizations at the University of Pennsylvania. Keep discovering new clubs throughout the year.'
 const url = 'https://pennclubs.com'
 const image = 'https://pennlabs-assets.s3.amazonaws.com/metadata-images/penn-clubs.png'
 const imageAlt = 'Penn Clubs logo'
