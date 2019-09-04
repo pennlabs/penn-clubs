@@ -68,10 +68,18 @@ def merge_clubs(one, two):
     """
     primary = one
     secondary = two
+
+    # Keep the active club
     if not one.active and two.active:
         secondary = one
         primary = two
 
+    # Keep the club that breaks the least invites
+    if one.membershipinvite_set.count() < two.membershipinvite_set.count():
+        secondary = one
+        primary = two
+
+    # If either club is active, set the resulting club as active
     primary.active = one.active or two.active
 
     # Choose longest string or string that exists
