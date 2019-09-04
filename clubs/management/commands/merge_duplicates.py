@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Count, Q
 
-from clubs.models import Club, Membership, Tag
+from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
 
 
 class Command(BaseCommand):
@@ -94,6 +94,15 @@ class Command(BaseCommand):
 
         # Take all members
         Membership.objects.filter(club=secondary).update(club=primary)
+
+        # Take all membership invites
+        MembershipInvite.objects.filter(club=secondary).update(club=primary)
+
+        # Take all favorites
+        Favorite.objects.filter(club=secondary).update(club=primary)
+
+        # Take all events
+        Event.objects.filter(club=secondary).update(club=primary)
 
         primary.save()
         secondary.delete()
