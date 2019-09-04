@@ -75,7 +75,7 @@ class ClubCard extends React.Component {
   }
 
   render() {
-    const { club, openModal, updateFavorites, favorite } = this.props
+    const { club, openModal, updateFavorites, favorite, selectedTags, updateTag } = this.props
     const { name, description, subtitle, tags } = club
     const img = club.image_url || getDefaultClubImageURL()
     return (
@@ -102,7 +102,11 @@ class ClubCard extends React.Component {
                 Inactive
               </InactiveTag>
             )}
-            <TagGroup tags={tags} />
+            <TagGroup
+              tags={tags}
+              selectedTags={selectedTags}
+              updateTag={updateTag}
+            />
             <div className="columns is-desktop is-gapless" style={{ padding: '10px 5px' }}>
               <div className="column is-narrow">
                 <LazyLoad width={180} height={120} offset={1000}>

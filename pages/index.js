@@ -231,6 +231,7 @@ class Splash extends React.Component {
             openModal={openModal}
             updateFavorites={updateFavorites}
             selectedTags={selectedTags}
+            updateTag={this.updateTag.bind(this)}
           />
         </Container>
       </Wrapper>
