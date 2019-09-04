@@ -30,8 +30,8 @@ export default (props) => {
           updateTag && updateTag({
             value: tag.id,
             label: tag.name,
-            name: "Type"
-          }, "Type")
+            name: 'Type'
+          }, 'Type')
         }}
       >
         {tag.name}

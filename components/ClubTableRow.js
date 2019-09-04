@@ -50,7 +50,7 @@ class ClubTableRow extends React.Component {
             <div className="columns is-gapless" style={{ padding: 10 }}>
               <div className="column is-4-desktop is-12-mobile">
                 <b className="is-size-6" style={{ color: CLUBS_GREY }}> {name} </b>
-                <TagGroup 
+                <TagGroup
                   tags={tags}
                   selectedTags={selectedTags}
                   updateTag={updateTag}
