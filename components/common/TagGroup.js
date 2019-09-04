@@ -14,6 +14,8 @@ export default (props) => {
           key={tag.value}
           className="tag is-rounded has-text-white"
           onClick={(e) => {
+            // Prevent click event from propagating so clicking on the tag doesn't
+            // open the ClubModal displaying the club the tag is nested inside
             e.stopPropagation()
             updateTag && updateTag(matchedTag, matchedTag.name)
           }}
@@ -26,6 +28,7 @@ export default (props) => {
         key={tag.id}
         className="tag is-rounded has-text-white"
         onClick={(e) => {
+          // Stop propagation of click event for same reasons as above
           e.stopPropagation()
           updateTag && updateTag({
             value: tag.id,
