@@ -53,14 +53,14 @@ class ClubDisplay extends React.Component {
           <div className="columns is-multiline is-desktop is-tablet">
             {clubsToShow.map(club => (
               <ClubCard
-                key={club.id}
+                key={club.code}
                 club={club}
                 tags={tags}
                 selectedTags={selectedTags}
                 updateTag={updateTag}
                 openModal={openModal}
                 updateFavorites={updateFavorites}
-                favorite={favorites.includes(club.id)}/>
+                favorite={favorites.includes(club.code)}/>
             ))}
           </div>
         ) : (
@@ -68,13 +68,13 @@ class ClubDisplay extends React.Component {
             {clubsToShow.map(club => (
               <ClubTableRow
                 club={club}
-                key={club.id}
+                key={club.code}
                 tags={tags}
                 selectedTags={selectedTags}
                 updateTag={updateTag}
                 updateFavorites={updateFavorites}
                 openModal={openModal}
-                favorite={favorites.includes(club.id)}/>
+                favorite={favorites.includes(club.code)}/>
             ))}
           </ClubTableRowWrapper>
         )}

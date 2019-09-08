@@ -206,7 +206,7 @@ class ClubModal extends React.Component {
     } = this.props
     const {
       name,
-      id,
+      code,
       tags,
       image_url: imageUrl,
       size,
@@ -265,7 +265,7 @@ class ClubModal extends React.Component {
                     favorite={favorite}
                     updateFavorites={updateFavorites}
                   />
-                  <Link route='club-view' params={{ club: String(id) }} passHref>
+                  <Link route='club-view' params={{ club: String(code) }} passHref>
                     <SeeMoreButton className="button" target="_blank">
                       See More...
                     </SeeMoreButton>

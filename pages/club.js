@@ -34,7 +34,7 @@ class Club extends React.Component {
       return <div />
     }
 
-    if (!club.id) {
+    if (!club.code) {
       return <div className='has-text-centered' style={{ margin: 30 }}>
         <h1 className='title is-h1'>404 Not Found</h1>
         <p>The club you are looking for does not exist.</p>

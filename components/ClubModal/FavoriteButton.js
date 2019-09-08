@@ -45,7 +45,7 @@ export default ({ updateFavorites, club, favorite }) => (
   <FavoriteButton
     favorite={favorite}
     onClick={(e) => {
-      updateFavorites(club.id)
+      updateFavorites(club.code)
       e.stopPropagation()
     }}
     className="button">
