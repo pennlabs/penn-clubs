@@ -88,14 +88,14 @@ class Command(BaseCommand):
                 club = clubs.first()
                 flag = False
             else:
-                cid = slugify(name)
+                code = slugify(name)
                 if not self.dry_run:
-                    club, flag = Club.objects.get_or_create(id=cid)
-                elif Club.objects.filter(id=cid).exists():
-                    club = Club.objects.get(id=cid)
+                    club, flag = Club.objects.get_or_create(code=code)
+                elif Club.objects.filter(code=code).exists():
+                    club = Club.objects.get(code=code)
                     flag = False
                 else:
-                    club = Club(id=cid)
+                    club = Club(code=code)
                     flag = True
 
             # only overwrite blank fields
