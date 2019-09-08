@@ -11,3 +11,5 @@ CORS_ORIGIN_REGEX_WHITELIST = [
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+PLATFORM_ACCOUNTS['CUSTOM_ADMIN'] = False
