@@ -44,7 +44,7 @@ class Command(BaseCommand):
 
                 self.stdout.write('Merged {}'.format(final.name))
             else:
-                clubs = Club.objects.filter(Q(id__in=items) | Q(name__in=items))
+                clubs = Club.objects.filter(Q(code__in=items) | Q(name__in=items))
                 if clubs.count() < 2:
                     raise CommandError('You must specify at least two clubs to merge!')
                 final, rest = clubs[0], clubs[1:]

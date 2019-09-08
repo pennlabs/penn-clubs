@@ -20,7 +20,7 @@ from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, Aut
 
 
 def upload_endpoint_helper(request, cls, pk, field):
-    obj = get_object_or_404(cls, pk=pk)
+    obj = get_object_or_404(cls, code=pk)
     if 'file' in request.data and isinstance(request.data['file'], UploadedFile):
         getattr(obj, field).delete(save=False)
         setattr(obj, field, request.data['file'])
@@ -49,11 +49,12 @@ class ClubViewSet(viewsets.ModelViewSet):
     permission_classes = [ClubPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'subtitle']
+    lookup_field = 'code'
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     @action(detail=True, methods=['post'])
     def upload(self, request, *args, **kwargs):
-        return upload_endpoint_helper(request, Club, kwargs['pk'], 'image')
+        return upload_endpoint_helper(request, Club, kwargs['code'], 'image')
 
     @method_decorator(cache_page(60*5))
     def list(self, request, *args, **kwargs):
@@ -65,7 +66,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         if self.request is not None and self.request.user.is_authenticated:
             if 'pk' in self.kwargs and (
                 self.request.user.is_superuser or
-                Membership.objects.filter(person=self.request.user, club=self.kwargs['pk']).exists()
+                Membership.objects.filter(person=self.request.user, club__code=self.kwargs['code']).exists()
             ):
                 return AuthenticatedClubSerializer
         return ClubSerializer
@@ -77,20 +78,21 @@ class EventViewSet(viewsets.ModelViewSet):
     """
     serializer_class = EventSerializer
     permission_classes = [EventPermission | IsSuperuser]
+    lookup_field = 'code'
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     @action(detail=True, methods=['post'])
     def upload(self, request, *args, **kwargs):
-        return upload_endpoint_helper(request, Event, kwargs['pk'], 'image')
+        return upload_endpoint_helper(request, Event, kwargs['code'], 'image')
 
     def get_queryset(self):
-        return Event.objects.filter(club=self.kwargs['club_pk'])
+        return Event.objects.filter(club__code=self.kwargs['club_code'])
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
     serializer_class = FavoriteSerializer
     permission_classes = [IsAuthenticated]
-    lookup_field = 'club__pk'
+    lookup_field = 'club__code'
     http_method_names = ['get', 'post', 'delete']
 
     def get_queryset(self):
@@ -104,12 +106,12 @@ class MemberViewSet(viewsets.ModelViewSet):
     lookup_field = 'person__username'
 
     def get_queryset(self):
-        return Membership.objects.filter(club=self.kwargs['club_pk'])
+        return Membership.objects.filter(club__code=self.kwargs['club_code'])
 
     def get_serializer_class(self):
         if self.request is not None and self.request.user.is_authenticated:
-            if self.request.user.is_superuser or ('club_pk' in self.kwargs and
-               Membership.objects.filter(person=self.request.user, club=self.kwargs['club_pk']).exists()):
+            if self.request.user.is_superuser or ('club_code' in self.kwargs and
+               Membership.objects.filter(person=self.request.user, club__code=self.kwargs['club_code']).exists()):
                 return AuthenticatedMembershipSerializer
         else:
             return MembershipSerializer
@@ -149,7 +151,7 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'put', 'patch', 'delete']
 
     def get_queryset(self):
-        return MembershipInvite.objects.filter(club=self.kwargs['club_pk'], active=True)
+        return MembershipInvite.objects.filter(club__code=self.kwargs['club_code'], active=True)
 
 
 class MassInviteAPIView(APIView):
@@ -159,7 +161,7 @@ class MassInviteAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        club = get_object_or_404(Club, pk=kwargs['club_pk'])
+        club = get_object_or_404(Club, code=kwargs['club_code'])
 
         mem = Membership.objects.filter(club=club, person=request.user).first()
 

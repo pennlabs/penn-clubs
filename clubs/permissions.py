@@ -38,9 +38,9 @@ class EventPermission(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         if view.action in ['create', 'update', 'partial_update', 'destroy']:
-            if 'club_pk' not in view.kwargs:
+            if 'club_code' not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
+            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
             return True
@@ -65,7 +65,7 @@ class MemberPermission(permissions.BasePermission):
     Anyone can view membership.
     """
     def has_object_permission(self, request, view, obj):
-        membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
+        membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
         if membership is None:
             return False
 
@@ -93,9 +93,9 @@ class MemberPermission(permissions.BasePermission):
         elif view.action in ['create']:
             if not request.user.is_authenticated:
                 return False
-            if 'club_pk' not in view.kwargs:
+            if 'club_code' not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
+            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
             return True
@@ -113,7 +113,7 @@ class InvitePermission(permissions.BasePermission):
         else:
             if not request.user.is_authenticated:
                 return False
-            if 'club_pk' not in view.kwargs:
+            if 'club_code' not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_pk']).first()
+            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER

@@ -45,7 +45,7 @@ class Club(models.Model):
         (APPLICATION_REQUIRED_SOME, 'Application Required For Some Positions'),
         (APPLICATION_REQUIRED_ALL, 'Application Required For All Positions'),
     )
-    id = models.SlugField(max_length=255, primary_key=True)
+    code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=True)
     approved = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
@@ -82,7 +82,7 @@ class Event(models.Model):
     """
     Represents an event hosted by a club.
     """
-    id = models.SlugField(max_length=255, primary_key=True)
+    code = models.SlugField(max_length=255, unique=True, db_index=True)
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=255)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
@@ -218,11 +218,11 @@ class MembershipInvite(models.Model):
             'token': self.token,
             'name': self.club.name,
             'id': self.id,
-            'club_id': self.club.id,
+            'club_id': self.club.code,
             'sender': request.user,
             'role': self.role,
             'title': self.title,
-            'url': settings.INVITE_URL.format(domain=domain, id=self.id, token=self.token, club=self.club.id)
+            'url': settings.INVITE_URL.format(domain=domain, id=self.id, token=self.token, club=self.club.code)
         }
         text_content = render_to_string('emails/invite.txt', context)
         html_content = render_to_string('emails/invite.html', context)
@@ -253,8 +253,8 @@ class MembershipInvite(models.Model):
 
         context = {
             'name': self.club.name,
-            'view_url': settings.VIEW_URL.format(domain=domain, club=self.club.id),
-            'url': settings.INVITE_URL.format(domain=domain, id=self.id, token=self.token, club=self.club.id)
+            'view_url': settings.VIEW_URL.format(domain=domain, club=self.club.code),
+            'url': settings.INVITE_URL.format(domain=domain, id=self.id, token=self.token, club=self.club.code)
         }
         text_content = render_to_string('emails/owner.txt', context)
         html_content = render_to_string('emails/owner.html', context)
