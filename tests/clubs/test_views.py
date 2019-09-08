@@ -275,7 +275,10 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         self.assertEqual(Club.objects.get(code='penn-labs').members.count(), 3)
-        self.assertEqual(Membership.objects.get(person=self.user2, club__code='penn-labs').role, Membership.ROLE_OFFICER)
+        self.assertEqual(
+            Membership.objects.get(person=self.user2, club__code='penn-labs').role,
+            Membership.ROLE_OFFICER
+        )
 
         # list member
         resp = self.client.get(reverse('club-members-list', args=('penn-labs',)))
