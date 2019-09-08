@@ -249,7 +249,7 @@ class ClubForm extends React.Component {
       return <div />
     }
 
-    if (this.state.isEdit && !club.id) {
+    if (this.state.isEdit && !club.code) {
       return <div className='has-text-centered' style={{ margin: 30 }}>
         <div className='title is-h1'>404 Not Found</div>
       </div>
@@ -531,7 +531,7 @@ class ClubForm extends React.Component {
         <h1 className='title is-size-2-desktop is-size-3-mobile'>
           <span style={{ color: CLUBS_GREY_LIGHT }}>{club ? 'Editing' : 'Creating'} Club: </span> {club ? club.name : 'New Club'}
           {(club && club.active) || !this.state.isEdit || <span style={{ color: CLUBS_RED }}>{' '}(Inactive)</span>}
-          {club && <Link route='club-view' params={{ club: club.id }}>
+          {club && <Link route='club-view' params={{ club: club.code }}>
             <a className='button is-pulled-right is-secondary is-medium' style={{ fontWeight: 'normal' }}>View Club</a>
           </Link>}
         </h1>

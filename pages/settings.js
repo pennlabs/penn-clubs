@@ -36,7 +36,7 @@ class SettingsForm extends React.Component {
   }
 
   togglePublic(club) {
-    doApiRequest(`/clubs/${club.id}/members/${this.props.userInfo.username}/?format=json`, {
+    doApiRequest(`/clubs/${club.code}/members/${this.props.userInfo.username}/?format=json`, {
       method: 'PATCH',
       body: {
         public: !club.public
