@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'accounts.apps.AccountsConfig',
-    'clubs'
+    'clubs.apps.ClubsConfig'
 ]
 
 MIDDLEWARE = [
