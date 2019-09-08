@@ -142,7 +142,7 @@ class Membership(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return '<Membership: {} in {} ({})>'.format(self.person.username, self.club.pk, self.get_role_display())
+        return '<Membership: {} in {} ({})>'.format(self.person.username, self.club.code, self.get_role_display())
 
     class Meta:
         unique_together = (('club', 'person'),)
@@ -183,7 +183,7 @@ class MembershipInvite(models.Model):
     role = models.IntegerField(default=Membership.ROLE_MEMBER)
 
     def __str__(self):
-        return '<MembershipInvite: {} for {}>'.format(self.club.pk, self.email)
+        return '<MembershipInvite: {} for {}>'.format(self.club.code, self.email)
 
     def claim(self, user):
         """
