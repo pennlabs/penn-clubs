@@ -87,8 +87,8 @@ class MembershipSerializer(serializers.ModelSerializer):
         """
         user = self.context['request'].user
         mem_user_id = self.instance.person.id if self.instance else self.initial_data['person']
-        club_code = self.context['view'].kwargs.get('club_code', self.context['view'].kwargs.get('pk'))
-        membership = Membership.objects.filter(person=user, club=club_code).first()
+        club_code = self.context['view'].kwargs.get('club_code', self.context['view'].kwargs.get('code'))
+        membership = Membership.objects.filter(person=user, club__code=club_code).first()
         if user.is_superuser:
             return value
         if membership is None:
@@ -96,7 +96,7 @@ class MembershipSerializer(serializers.ModelSerializer):
         if membership.role > value:
             raise serializers.ValidationError('You cannot promote someone above your own level.')
         if value > Membership.ROLE_OWNER and user.id == mem_user_id:
-            if Membership.objects.filter(club=club_code, role__lte=Membership.ROLE_OWNER).count() <= 1:
+            if Membership.objects.filter(club__code=club_code, role__lte=Membership.ROLE_OWNER).count() <= 1:
                 raise serializers.ValidationError('You cannot demote yourself if you are the only owner!')
         return value
 
@@ -105,9 +105,9 @@ class MembershipSerializer(serializers.ModelSerializer):
         Normal members can only change a small subset of information.
         """
         user = self.context['request'].user
-        club_code = self.context['view'].kwargs.get('club_code', self.context['view'].kwargs.get('pk'))
+        club_code = self.context['view'].kwargs.get('club_code', self.context['view'].kwargs.get('code'))
 
-        membership = Membership.objects.filter(person=user, club=club_code).first()
+        membership = Membership.objects.filter(person=user, club__code=club_code).first()
 
         if membership is None or membership.role > Membership.ROLE_OFFICER:
             for field in data:
@@ -263,7 +263,7 @@ class ClubSerializer(serializers.ModelSerializer):
         """
         user = self.context['request'].user
         club_code = self.context['view'].kwargs.get('pk')
-        membership = Membership.objects.filter(person=user, club=club_code).first()
+        membership = Membership.objects.filter(person=user, club__code=club_code).first()
         if (membership and membership.role <= Membership.ROLE_OWNER) or user.is_superuser:
             return value
         raise serializers.ValidationError('You do not have permissions to change the active status of the club.')
@@ -323,12 +323,9 @@ class AuthenticatedClubSerializer(ClubSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     id = serializers.SlugField(required=False)
-    club = serializers.PrimaryKeyRelatedField(queryset=Club.objects.all(), required=False)
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), required=False, slug_field='code')
     image_url = serializers.SerializerMethodField('get_image_url')
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
-    def validate_club(self, value):
-        return Club.objects.get(code=value).id
 
     def get_image_url(self, obj):
         if not obj.image:
@@ -361,14 +358,11 @@ class EventSerializer(serializers.ModelSerializer):
 
 class FavoriteSerializer(serializers.ModelSerializer):
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    club = serializers.PrimaryKeyRelatedField(queryset=Club.objects.all())
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
     name = serializers.SerializerMethodField('get_name')
 
     def get_name(self, obj):
         return obj.club.name
-
-    def validate_club(self, value):
-        return Club.objects.get(code=value).id
 
     class Meta:
         model = Favorite

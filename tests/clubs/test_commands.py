@@ -12,21 +12,21 @@ from clubs.models import Club, Favorite, Membership, MembershipInvite, Tag
 class SendInvitesTestCase(TestCase):
     def setUp(self):
         self.club1 = Club.objects.create(
-            id='one',
+            code='one',
             name='Club One',
             active=True,
             email='test@example.com'
         )
 
         self.club2 = Club.objects.create(
-            id='two',
+            code='two',
             name='Club Two',
             active=True,
             email='test2@example.com'
         )
 
         self.club3 = Club.objects.create(
-            id='three',
+            code='three',
             name='Club Three',
             active=True,
             email='test3@example.com'

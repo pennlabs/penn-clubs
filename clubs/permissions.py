@@ -40,7 +40,7 @@ class EventPermission(permissions.BasePermission):
         if view.action in ['create', 'update', 'partial_update', 'destroy']:
             if 'club_code' not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_code']).first()
+            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
             return True
@@ -65,7 +65,7 @@ class MemberPermission(permissions.BasePermission):
     Anyone can view membership.
     """
     def has_object_permission(self, request, view, obj):
-        membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_code']).first()
+        membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
         if membership is None:
             return False
 
@@ -95,7 +95,7 @@ class MemberPermission(permissions.BasePermission):
                 return False
             if 'club_code' not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_code']).first()
+            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
             return True
@@ -115,5 +115,5 @@ class InvitePermission(permissions.BasePermission):
                 return False
             if 'club_code' not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(person=request.user, club=view.kwargs['club_code']).first()
+            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER

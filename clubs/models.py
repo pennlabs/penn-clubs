@@ -218,11 +218,11 @@ class MembershipInvite(models.Model):
             'token': self.token,
             'name': self.club.name,
             'id': self.id,
-            'club_id': self.club.id,
+            'club_id': self.club.code,
             'sender': request.user,
             'role': self.role,
             'title': self.title,
-            'url': settings.INVITE_URL.format(domain=domain, id=self.id, token=self.token, club=self.club.id)
+            'url': settings.INVITE_URL.format(domain=domain, id=self.id, token=self.token, club=self.club.code)
         }
         text_content = render_to_string('emails/invite.txt', context)
         html_content = render_to_string('emails/invite.html', context)
@@ -253,8 +253,8 @@ class MembershipInvite(models.Model):
 
         context = {
             'name': self.club.name,
-            'view_url': settings.VIEW_URL.format(domain=domain, club=self.club.id),
-            'url': settings.INVITE_URL.format(domain=domain, id=self.id, token=self.token, club=self.club.id)
+            'view_url': settings.VIEW_URL.format(domain=domain, club=self.club.code),
+            'url': settings.INVITE_URL.format(domain=domain, id=self.id, token=self.token, club=self.club.code)
         }
         text_content = render_to_string('emails/owner.txt', context)
         html_content = render_to_string('emails/owner.html', context)

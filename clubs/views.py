@@ -66,7 +66,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         if self.request is not None and self.request.user.is_authenticated:
             if 'pk' in self.kwargs and (
                 self.request.user.is_superuser or
-                Membership.objects.filter(person=self.request.user, club=self.kwargs['pk']).exists()
+                Membership.objects.filter(person=self.request.user, club__code=self.kwargs['code']).exists()
             ):
                 return AuthenticatedClubSerializer
         return ClubSerializer
@@ -86,13 +86,13 @@ class EventViewSet(viewsets.ModelViewSet):
         return upload_endpoint_helper(request, Event, kwargs['code'], 'image')
 
     def get_queryset(self):
-        return Event.objects.filter(club=self.kwargs['club_code'])
+        return Event.objects.filter(club__code=self.kwargs['club_code'])
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
     serializer_class = FavoriteSerializer
     permission_classes = [IsAuthenticated]
-    lookup_field = 'club__pk'
+    lookup_field = 'club__code'
     http_method_names = ['get', 'post', 'delete']
 
     def get_queryset(self):
@@ -106,12 +106,12 @@ class MemberViewSet(viewsets.ModelViewSet):
     lookup_field = 'person__username'
 
     def get_queryset(self):
-        return Membership.objects.filter(club=self.kwargs['club_code'])
+        return Membership.objects.filter(club__code=self.kwargs['club_code'])
 
     def get_serializer_class(self):
         if self.request is not None and self.request.user.is_authenticated:
             if self.request.user.is_superuser or ('club_code' in self.kwargs and
-               Membership.objects.filter(person=self.request.user, club=self.kwargs['club_code']).exists()):
+               Membership.objects.filter(person=self.request.user, club__code=self.kwargs['club_code']).exists()):
                 return AuthenticatedMembershipSerializer
         else:
             return MembershipSerializer
@@ -151,7 +151,7 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'put', 'patch', 'delete']
 
     def get_queryset(self):
-        return MembershipInvite.objects.filter(club=self.kwargs['club_code'], active=True)
+        return MembershipInvite.objects.filter(club__code=self.kwargs['club_code'], active=True)
 
 
 class MassInviteAPIView(APIView):

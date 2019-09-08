@@ -275,7 +275,7 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         self.assertEqual(Club.objects.get(code='penn-labs').members.count(), 3)
-        self.assertEqual(Membership.objects.get(person=self.user2, club='penn-labs').role, Membership.ROLE_OFFICER)
+        self.assertEqual(Membership.objects.get(person=self.user2, club__code='penn-labs').role, Membership.ROLE_OFFICER)
 
         # list member
         resp = self.client.get(reverse('club-members-list', args=('penn-labs',)))
@@ -327,7 +327,7 @@ class ClubTestCase(TestCase):
             'role': Membership.ROLE_OFFICER
         }, content_type='application/json')
 
-        self.assertEqual(Membership.objects.get(person=self.user3, club='penn-labs').title, 'Treasurer')
+        self.assertEqual(Membership.objects.get(person=self.user3, club__code='penn-labs').title, 'Treasurer')
 
         # delete member
         self.client.login(username=self.user5.username, password='test')
@@ -732,17 +732,17 @@ class ClubTestCase(TestCase):
     def test_club_invite_email_check(self):
         self.client.login(username=self.user5.username, password='test')
 
-        resp = self.client.post(reverse('club-invite', args=(self.club1.id,)), {
+        resp = self.client.post(reverse('club-invite', args=(self.club1.code,)), {
             'emails': 'test@example.upenn.edu',
             'role': Membership.ROLE_OFFICER
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        invite = MembershipInvite.objects.filter(club__pk=self.club1.id).first()
+        invite = MembershipInvite.objects.filter(club__code=self.club1.code).first()
 
         self.client.login(username=self.user1.username, password='test')
 
-        resp = self.client.patch(reverse('club-invites-detail', args=(self.club1.id, invite.id)), {
+        resp = self.client.patch(reverse('club-invites-detail', args=(self.club1.code, invite.id)), {
             'token': invite.token
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
