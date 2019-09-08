@@ -12,7 +12,7 @@ import sys
 def convert_fixtures(fixtures):
     out = []
     id_mapping = {}
-    id_count = 0
+    id_count = 1
     for fixture in fixtures:
         model = fixture['model']
         if model.startswith('clubs.'):
