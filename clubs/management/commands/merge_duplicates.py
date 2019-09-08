@@ -74,10 +74,9 @@ def merge_clubs(one, two):
         secondary = one
         primary = two
 
-    # Keep the club that breaks the least invites
+    # Keep the club code that breaks the least invites
     if one.membershipinvite_set.count() < two.membershipinvite_set.count():
-        secondary = one
-        primary = two
+        primary.code = secondary.code
 
     # If either club is active, set the resulting club as active
     primary.active = one.active or two.active
