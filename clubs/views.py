@@ -64,7 +64,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         if self.action == 'upload':
             return AssetSerializer
         if self.request is not None and self.request.user.is_authenticated:
-            if 'pk' in self.kwargs and (
+            if 'code' in self.kwargs and (
                 self.request.user.is_superuser or
                 Membership.objects.filter(person=self.request.user, club__code=self.kwargs['code']).exists()
             ):
