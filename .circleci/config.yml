@@ -44,7 +44,7 @@ jobs:
       - store_test_results:
           path: test-results
       - store_artifacts:
-          path: test_results
+          path: test-results
           destination: trl
   deploy:
     working_directory: ~/pennclubs
