@@ -111,10 +111,10 @@ class SettingsForm extends React.Component {
                         <i style={{ cursor: 'pointer' }} onClick={() => this.togglePublic(item)} className={item.public ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} />
                       </td>
                       <td className='buttons'>
-                        <Link route='club-view' params={{ club: item.id }}>
+                        <Link route='club-view' params={{ club: item.code }}>
                           <a className='button is-small is-link'>View</a>
                         </Link>
-                        {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: item.id }}>
+                        {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: item.code }}>
                           <a className='button is-small is-success'>Edit</a>
                         </Link>}
                       </td>
