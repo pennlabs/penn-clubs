@@ -33,6 +33,7 @@ const Card = s.div`
   background-color: ${({ hovering }) => hovering ? HOVER_GRAY : WHITE};
   border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
+  height: 100%;
 
   ${mediaMaxWidth(SM)} {
     width: calc(100%);
@@ -41,8 +42,8 @@ const Card = s.div`
 `
 
 const Image = s.img`
-  height: 120px;
-  width: 180px;
+  height: 100px;
+  width: 150px;
   border-radius: ${BORDER_RADIUS};
   object-fit: contain;
   text-align: left;
@@ -70,8 +71,8 @@ class ClubCard extends React.Component {
   }
 
   shorten(desc) {
-    if (desc.length < 280) return desc
-    return desc.slice(0, 280) + '...'
+    if (desc.length < 250) return desc
+    return desc.slice(0, 250) + '...'
   }
 
   render() {
@@ -81,7 +82,7 @@ class ClubCard extends React.Component {
     return (
       <CardWrapper className="column is-half-desktop">
         <div
-          style={{ cursor: 'pointer' }}
+          style={{ cursor: 'pointer', height: '100%' }}
           onClick={() => openModal(club)}>
           <Card className="card">
             <div>
@@ -107,9 +108,9 @@ class ClubCard extends React.Component {
               selectedTags={selectedTags}
               updateTag={updateTag}
             />
-            <div className="columns is-desktop is-gapless" style={{ padding: '10px 5px' }}>
-              <div className="column is-narrow">
-                <LazyLoad width={180} height={120} offset={1000}>
+            <div className="columns is-vcentered is-desktop is-gapless" style={{ padding: '10px 5px' }}>
+              <div className="column is-narrow" style={{ height: '100%' }}>
+                <LazyLoad width={150} height={100} offset={1000}>
                   <Image src={img} alt={`${name} Logo`} />
                 </LazyLoad>
               </div>
