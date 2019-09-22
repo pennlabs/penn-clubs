@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
-from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.utils import clean
 
 
@@ -14,6 +14,12 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'clubs')
+
+
+class BadgeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Badge
+        fields = ('id', 'label', 'color', 'description')
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
@@ -161,6 +167,8 @@ class ClubSerializer(serializers.ModelSerializer):
     members = MembershipSerializer(many=True, source='membership_set', read_only=True)
     favorite_count = serializers.IntegerField(read_only=True)
     image_url = serializers.SerializerMethodField('get_image_url')
+    parent_orgs = serializers.SerializerMethodField('get_parent_orgs')
+    badges = BadgeSerializer(many=True, required=False)
 
     def get_image_url(self, obj):
         if not obj.image:
@@ -170,22 +178,49 @@ class ClubSerializer(serializers.ModelSerializer):
         else:
             return self.context['request'].build_absolute_uri(obj.image.url)
 
+    def get_parent_orgs(self, obj):
+        return []
+        # return [c.slug for c in obj.parent_orgs.all()]
+
     def create(self, validated_data):
         """
         Manual create method because DRF does not support writable nested fields by default.
         """
         # assign tags to new club
-        has_tags = 'tags' in validated_data
+        tags = None
+        parent_orgs = None
+        badges = None
 
-        if has_tags:
+        if 'tags' in validated_data:
             tags = []
             for tag in validated_data.pop('tags'):
                 tags.append(Tag.objects.get(**tag))
 
+        # Don't let clubs add parent orgs for now; they will be added through the admin
+        # interface.
+
+        # if 'parent_orgs' in validated_data:
+        #     parent_orgs = []
+        #     for parent_org in validated_data.pop('parent_orgs'):
+        #         parent_orgs.append(Club.objects.get(**parent_org))
+
+        if 'badges' in validated_data:
+            badges = []
+            for badge in validated_data.pop('badges'):
+                badges.append(Badge.objects.get(**badge))
+
+        # Note: it's important that all nested fields are POPPED from the validated data at this point. Otherwise,
+        # DRF will throw an error calling create on the superclass.
         obj = super().create(validated_data)
 
-        if has_tags:
+        if tags is not None:
             obj.tags.set(tags)
+
+        if parent_orgs is not None:
+            obj.parent_orgs.set(parent_orgs)
+
+        if badges is not None:
+            obj.badges.set(badges)
 
         # assign user who created as owner
         Membership.objects.create(
@@ -195,6 +230,9 @@ class ClubSerializer(serializers.ModelSerializer):
         )
 
         return obj
+
+    def validate_badges(self, value):
+        return value
 
     def validate_description(self, value):
         """
@@ -272,17 +310,41 @@ class ClubSerializer(serializers.ModelSerializer):
         """
         Nested serializers don't support update by default, need to override.
         """
-        has_tags = 'tags' in validated_data
 
-        if has_tags:
+        tags = None
+        parent_orgs = None
+        badges = None
+
+        if 'tags' in validated_data:
             tags = []
             for tag in validated_data.pop('tags'):
                 tags.append(Tag.objects.get(**tag))
 
+        # Don't let clubs add parent orgs for now; they will be added through the admin
+        # interface.
+
+        # if 'parent_orgs' in validated_data:
+        #     parent_orgs = []
+        #     for parent_org in validated_data.pop('parent_orgs'):
+        #         parent_orgs.append(Club.objects.get(**parent_org))
+
+        if 'badges' in validated_data:
+            badges = []
+            for badge in validated_data.pop('badges'):
+                badges.append(Badge.objects.get(**badge))
+
+        # Note: it's important that all nested fields are POPPED from the validated data at this point. Otherwise,
+        # DRF will throw an error calling create on the superclass.
         obj = super().update(instance, validated_data)
 
-        if has_tags:
+        if tags is not None:
             obj.tags.set(tags)
+
+        if parent_orgs is not None:
+            obj.parent_orgs.set(parent_orgs)
+
+        if badges is not None:
+            obj.badges.set(badges)
 
         return obj
 
@@ -306,7 +368,8 @@ class ClubSerializer(serializers.ModelSerializer):
         fields = [
             'name', 'code', 'description', 'founded', 'size', 'email', 'facebook', 'twitter', 'instagram', 'linkedin',
             'github', 'website', 'how_to_get_involved', 'tags', 'subtitle', 'application_required',
-            'accepting_members', 'listserv', 'image_url', 'members', 'favorite_count', 'active'
+            'accepting_members', 'listserv', 'image_url', 'members', 'favorite_count', 'active', 'parent_orgs',
+            'badges',
         ]
 
 

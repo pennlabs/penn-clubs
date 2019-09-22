@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group
 from django.db.models import Exists, OuterRef
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
-from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
 
 
 class HasOwnerListFilter(admin.SimpleListFilter):
@@ -140,11 +140,21 @@ class TagAdmin(admin.ModelAdmin):
     actions = [do_merge_tags]
 
 
+class BadgeAdmin(admin.ModelAdmin):
+    def club_count(self, obj):
+        return obj.club_set.count()
+
+    search_fields = ('label',)
+    list_display = ('label', 'club_count')
+    actions = [do_merge_tags]
+
+
 admin.site.unregister(Group)
 
 
 admin.site.register(Asset)
 admin.site.register(Club, ClubAdmin)
+admin.site.register(Badge, BadgeAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(Membership, MembershipAdmin)

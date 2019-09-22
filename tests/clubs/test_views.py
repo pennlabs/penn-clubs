@@ -8,7 +8,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
 
 
 class ClubTestCase(TestCase):
@@ -511,11 +511,14 @@ class ClubTestCase(TestCase):
         tag1 = Tag.objects.create(name='Wharton')
         tag2 = Tag.objects.create(name='Engineering')
 
+        badge1 = Badge.objects.create(label='SAC Funded')
+
         self.client.login(username=self.user5.username, password='test')
 
         resp = self.client.post(reverse('clubs-list'), {
             'name': 'Penn Labs',
             'description': 'We code stuff.',
+            'badges': [{'label': 'SAC Funded'}],
             'tags': [
                 {
                     'name': tag1.name
@@ -529,7 +532,7 @@ class ClubTestCase(TestCase):
             'instagram': 'https://www.instagram.com/uofpenn/?hl=en',
             'website': 'https://pennlabs.org',
             'linkedin': 'https://www.linkedin.com/school/university-of-pennsylvania/',
-            'github': 'https://github.com/pennlabs'
+            'github': 'https://github.com/pennlabs',
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -552,6 +555,9 @@ class ClubTestCase(TestCase):
 
         for link in ['facebook', 'twitter', 'instagram', 'website', 'github']:
             self.assertIn(link, data)
+
+        self.assertEqual(club_obj.badges.count(), 1)
+        self.assertEqual(club_obj.badges.all()[0].label, badge1.label)
 
     def test_club_create_duplicate(self):
         """
@@ -776,3 +782,12 @@ class ClubTestCase(TestCase):
             'title': 'Supreme Leader'
         }, content_type='application/json')
         self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_club_has_badges(self):
+        badge = Badge(label='SAC Funded', description='')
+        badge.save()
+        self.club1.badges.add(badge)
+        resp = self.client.get(reverse('clubs-detail', args=(self.club1.code,)))
+        club = json.loads(resp.content)
+        badge_json = club['badges'][0]
+        self.assertEqual(badge.label, badge_json['label'])

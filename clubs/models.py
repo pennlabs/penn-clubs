@@ -67,6 +67,10 @@ class Club(models.Model):
     image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
     tags = models.ManyToManyField('Tag')
     members = models.ManyToManyField(get_user_model(), through='Membership')
+    # Represents which organizations this club is directly under in the organizational structure.
+    # For example, SAC is a parent of PAC, which is a parent of TAC-E which is a parent of Penn Players.
+    parent_orgs = models.ManyToManyField('Club')
+    badges = models.ManyToManyField('Badge')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -277,6 +281,20 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Badge(models.Model):
+    label = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+
+    # The color of the badge to be displayed on the frontend.
+    color = models.CharField(max_length=16, default='')
+
+    # The organization that this badge represents (If this is the "SAC Funded" badge, then this would link to SAC)
+    org = models.ForeignKey(Club, on_delete=models.CASCADE, blank=True, null=True)
+
+    def __str__(self):
+        return self.label
 
 
 class Asset(models.Model):
