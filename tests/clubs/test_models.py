@@ -4,7 +4,7 @@ import pytz
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from clubs.models import Club, Event, Favorite, Membership, Tag
+from clubs.models import Badge, Club, Event, Favorite, Membership, Tag
 
 
 class ClubTestCase(TestCase):
@@ -54,3 +54,11 @@ class TagTestCase(TestCase):
 
     def test_str(self):
         self.assertEqual(str(self.tag), self.tag.name)
+
+
+class BadgeTestCase(TestCase):
+    def setUp(self):
+        self.badge = Badge.objects.create(label='SAC Funded', description='SAC Funded Club')
+
+    def test_str(self):
+        self.assertTrue(str(self.badge), self.badge.label)
