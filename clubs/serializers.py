@@ -26,7 +26,7 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
     id = serializers.CharField(max_length=8, read_only=True)
     email = serializers.EmailField(read_only=True)
     token = serializers.CharField(max_length=128, write_only=True)
-    name = serializers.SerializerMethodField('get_club_name')
+    name = serializers.CharField(source='club.name', read_only=True)
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
@@ -43,9 +43,6 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         instance.claim(user)
         return instance
 
-    def get_club_name(self, obj):
-        return obj.club.name
-
     class Meta:
         model = MembershipInvite
         fields = ['email', 'token', 'id', 'name']
@@ -55,22 +52,16 @@ class UserMembershipSerializer(serializers.ModelSerializer):
     """
     Used for listing which clubs a user is in.
     """
-    id = serializers.SerializerMethodField('get_id')
-    name = serializers.SerializerMethodField('get_name')
+    code = serializers.SlugField(source='club.code', read_only=True)
+    name = serializers.CharField(source='club.name', read_only=True)
     role_display = serializers.SerializerMethodField('get_role_display')
-
-    def get_id(self, obj):
-        return obj.club.id
-
-    def get_name(self, obj):
-        return obj.club.name
 
     def get_role_display(self, obj):
         return obj.get_role_display()
 
     class Meta:
         model = Membership
-        fields = ('id', 'name', 'title', 'role', 'role_display', 'active', 'public')
+        fields = ('code', 'name', 'title', 'role', 'role_display', 'active', 'public')
 
 
 class MembershipSerializer(serializers.ModelSerializer):
@@ -142,17 +133,11 @@ class AuthenticatedMembershipSerializer(MembershipSerializer):
     Should only be available to users in the club.
     """
     role = serializers.IntegerField(required=False)
-    email = serializers.SerializerMethodField('get_email')
-    username = serializers.SerializerMethodField('get_username')
+    email = serializers.EmailField(source='person.email', read_only=True)
+    username = serializers.CharField(source='person.username', read_only=True)
 
     def get_full_name(self, obj):
         return obj.person.get_full_name()
-
-    def get_email(self, obj):
-        return obj.person.email
-
-    def get_username(self, obj):
-        return obj.person.username
 
     class Meta:
         model = Membership
@@ -422,10 +407,7 @@ class EventSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
-    name = serializers.SerializerMethodField('get_name')
-
-    def get_name(self, obj):
-        return obj.club.name
+    name = serializers.CharField(source='club.name', read_only=True)
 
     class Meta:
         model = Favorite
