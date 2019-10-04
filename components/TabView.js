@@ -6,13 +6,13 @@ class TabView extends React.Component {
     super(props)
 
     this.state = {
-      currentTab: this.props.tabs[0].name
+      currentTab: this.props.tabs[0].name,
     }
   }
 
   componentDidMount() {
     this.setState({
-      currentTab: window.location.hash.substring(1) || this.state.currentTab
+      currentTab: window.location.hash.substring(1) || this.state.currentTab,
     })
   }
 
@@ -21,15 +21,36 @@ class TabView extends React.Component {
 
     return (
       <div>
-        <div className='tabs'>
+        <div className="tabs">
           <ul>
-            {tabs.filter((a) => !a.disabled).map((a) => <li className={a.name === this.state.currentTab ? 'is-active' : undefined} key={a.name}><a onClick={() => {
-              this.setState({ currentTab: a.name })
-              window.location.hash = '#' + a.name
-            }}>{a.label || titleize(a.name)}</a></li>)}
+            {tabs
+              .filter(a => !a.disabled)
+              .map(a => (
+                <li
+                  className={
+                    a.name === this.state.currentTab ? 'is-active' : undefined
+                  }
+                  key={a.name}
+                >
+                  <a
+                    onClick={() => {
+                      this.setState({ currentTab: a.name })
+                      window.location.hash = '#' + a.name
+                    }}
+                  >
+                    {a.label || titleize(a.name)}
+                  </a>
+                </li>
+              ))}
           </ul>
         </div>
-        {(tabs.filter((a) => a.name === this.state.currentTab)[0] || { content: <div>Invalid tab selected.</div> }).content}
+        {
+          (
+            tabs.filter(a => a.name === this.state.currentTab)[0] || {
+              content: <div>Invalid tab selected.</div>,
+            }
+          ).content
+        }
       </div>
     )
   }
