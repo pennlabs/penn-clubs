@@ -89,8 +89,11 @@ class ClubList extends React.Component {
             </div>
           </div>
           <div className="column is-narrow">
-            <FavoriteIcon className="icon" onClick={() => updateFavorites(club.code)}>
-              <i className={(favorite ? 'fas' : 'far') + ' fa-heart'} ></i>
+            <FavoriteIcon
+              className="icon"
+              onClick={() => updateFavorites(club.code)}
+            >
+              <i className={(favorite ? 'fas' : 'far') + ' fa-heart'}></i>
             </FavoriteIcon>
           </div>
         </div>
