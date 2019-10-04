@@ -1,4 +1,3 @@
-import React from 'react'
 import s from 'styled-components'
 
 import { logEvent } from '../../utils/analytics'
@@ -39,7 +38,8 @@ export default () => (
     href="https://airtable.com/shrCsYFWxCwfwE7cf"
     title="Feedback"
     target="_blank"
-    onClick={() => logEvent('feedback', 'clicked')}>
+    onClick={() => logEvent('feedback', 'clicked')}
+  >
     <Icon className="fa-comment far fa-lg" />
   </FeedbackLink>
 )

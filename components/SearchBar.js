@@ -2,11 +2,20 @@ import React from 'react'
 import s from 'styled-components'
 import DropdownFilter from './DropdownFilter'
 import {
-  BORDER_RADIUS, mediaMaxWidth, MD, NAV_HEIGHT, mediaMinWidth,
-  SEARCH_BAR_MOBILE_HEIGHT
+  BORDER_RADIUS,
+  mediaMaxWidth,
+  MD,
+  NAV_HEIGHT,
+  mediaMinWidth,
+  SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import {
-  MEDIUM_GRAY, HOVER_GRAY, FOCUS_GRAY, CLUBS_GREY, BORDER, WHITE
+  MEDIUM_GRAY,
+  HOVER_GRAY,
+  FOCUS_GRAY,
+  CLUBS_GREY,
+  BORDER,
+  WHITE,
 } from '../constants/colors'
 
 const MobileSearchBarSpacer = s.div`
@@ -108,31 +117,48 @@ class SearchBar extends React.Component {
         { value: 1, label: 'less than 20 members' },
         { value: 2, label: '20 to 50 members' },
         { value: 3, label: '50 to 100 members' },
-        { value: 4, label: 'more than 100' }
+        { value: 4, label: 'more than 100' },
       ],
-      tagOptions: props.tags.map((tag) => ({ value: tag.id, label: tag.name, count: tag.clubs })),
+      tagOptions: props.tags.map(tag => ({
+        value: tag.id,
+        label: tag.name,
+        count: tag.clubs,
+      })),
       applicationOptions: [
         { value: 1, label: 'Requires application' },
         { value: 2, label: 'Does not require application' },
-        { value: 3, label: 'Currently accepting applications' }],
-      selectedTags: props.selectedTags
+        { value: 3, label: 'Currently accepting applications' },
+      ],
+      selectedTags: props.selectedTags,
     }
   }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.nameInput !== this.state.nameInput) {
       clearTimeout(this.timeout)
-      this.timeout = setTimeout(() => this.props.resetDisplay(this.state.nameInput, this.state.selectedTags), 200)
+      this.timeout = setTimeout(
+        () =>
+          this.props.resetDisplay(
+            this.state.nameInput,
+            this.state.selectedTags
+          ),
+        200
+      )
     }
     if (prevProps.selectedTags !== this.props.selectedTags) {
       this.setState({
-        selectedTags: this.props.selectedTags
+        selectedTags: this.props.selectedTags,
       })
     }
   }
 
   render() {
-    const { tagOptions, sizeOptions, applicationOptions, selectedTags } = this.state
+    const {
+      tagOptions,
+      sizeOptions,
+      applicationOptions,
+      selectedTags,
+    } = this.state
     const { updateTag } = this.props
     return (
       <>
@@ -142,7 +168,7 @@ class SearchBar extends React.Component {
               <SearchIcon className="icon">
                 {this.state.nameInput ? (
                   <i
-                    onClick={(e) => this.setState({ nameInput: '' })}
+                    onClick={e => this.setState({ nameInput: '' })}
                     className="fas fa-times"
                   />
                 ) : (
@@ -155,7 +181,7 @@ class SearchBar extends React.Component {
                 placeholder="Search"
                 aria-label="Search"
                 value={this.state.nameInput}
-                onChange={(e) => this.setState({ nameInput: e.target.value })}
+                onChange={e => this.setState({ nameInput: e.target.value })}
               />
             </SearchWrapper>
             <DropdownFilter
