@@ -1,11 +1,17 @@
 import s from 'styled-components'
+import PropTypes from 'prop-types'
 
 import {
-  HOVER_GRAY, FOCUS_GRAY, LIGHTER_RED, LIGHT_RED, RED, DARK_GRAY
+  HOVER_GRAY,
+  FOCUS_GRAY,
+  LIGHTER_RED,
+  LIGHT_RED,
+  RED,
+  DARK_GRAY,
 } from '../../constants/colors'
 import { mediaMaxWidth, SM } from '../../constants/measurements'
 
-const FavoriteButton = s.button`
+const FavoriteButtonTag = s.button`
   padding: 10px 10px 0 0;
   cursor: pointer;
   line-height: 0;
@@ -21,7 +27,9 @@ const FavoriteButton = s.button`
     background-color: ${FOCUS_GRAY};
   }
 
-  ${({ favorite }) => favorite && `
+  ${({ favorite }) =>
+    favorite &&
+    `
     color: ${RED} !important;
     background-color: ${LIGHTER_RED};
 
@@ -41,16 +49,30 @@ const Icon = s.i`
   top: 10px;
 `
 
-export default ({ updateFavorites, club, favorite }) => (
-  <FavoriteButton
+const FavoriteButton = ({ updateFavorites, club, favorite }) => (
+  <FavoriteButtonTag
     favorite={favorite}
-    onClick={(e) => {
+    onClick={e => {
       updateFavorites(club.code)
       e.stopPropagation()
     }}
-    className="button">
-    {favorite ? 'Favorite' : 'Add to Favorites'}
-    {' '}
+    className="button"
+  >
+    {favorite ? 'Favorite' : 'Add to Favorites'}{' '}
     <Icon className={`fa-heart ${favorite ? 'fas' : 'far'}`} />
-  </FavoriteButton>
+  </FavoriteButtonTag>
 )
+
+FavoriteButton.defaultProps = {
+  favorite: false,
+}
+
+FavoriteButton.propTypes = {
+  updateFavorites: PropTypes.func.isRequired,
+  club: PropTypes.shape({
+    code: PropTypes.string,
+  }).isRequired,
+  favorite: PropTypes.bool,
+}
+
+export default FavoriteButton
