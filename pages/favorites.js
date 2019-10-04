@@ -17,22 +17,28 @@ class Favorites extends React.Component {
     super(props)
     this.state = {
       modal: false,
-      modalClub: {}
+      modalClub: {},
     }
   }
 
   render() {
     const {
-      tags, favorites, updateFavorites, openModal, favoriteClubs
+      tags,
+      favorites,
+      updateFavorites,
+      openModal,
+      favoriteClubs,
     } = this.props
 
     return (
       <Wrapper>
         <div style={{ padding: '30px 0' }}>
-          <h1 className="title" style={{ color: CLUBS_GREY }}>Favorites</h1>
+          <h1 className="title" style={{ color: CLUBS_GREY }}>
+            Favorites
+          </h1>
         </div>
 
-        {favoriteClubs.map((club) => (
+        {favoriteClubs.map(club => (
           <ClubList
             key={club.code}
             club={club}
@@ -43,11 +49,13 @@ class Favorites extends React.Component {
           />
         ))}
 
-        {(!favorites.length) ? (
+        {!favorites.length ? (
           <p className="has-text-light-grey" style={{ paddingTop: 200 }}>
             No favorites yet! Browse clubs <a href="/">here.</a>
           </p>
-        ) : (<div />)}
+        ) : (
+          <div />
+        )}
       </Wrapper>
     )
   }
