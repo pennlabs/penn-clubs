@@ -1,5 +1,6 @@
 import React from 'react'
 import s from 'styled-components'
+
 import { CLUBS_GREY, CLUBS_GREY_LIGHT, HOVER_GRAY } from '../constants/colors'
 import { mediaMaxWidth, MD, SM } from '../constants/measurements'
 import FavoriteIcon from './common/FavoriteIcon'
@@ -40,7 +41,14 @@ class ClubTableRow extends React.Component {
   }
 
   render() {
-    const { club, openModal, updateFavorites, favorite, selectedTags, updateTag } = this.props
+    const {
+      club,
+      openModal,
+      updateFavorites,
+      favorite,
+      selectedTags,
+      updateTag,
+    } = this.props
     const { name, tags } = club
 
     return (
@@ -49,7 +57,10 @@ class ClubTableRow extends React.Component {
           <div className="column" onClick={() => openModal(club)}>
             <div className="columns is-gapless" style={{ padding: 10 }}>
               <div className="column is-4-desktop is-12-mobile">
-                <b className="is-size-6" style={{ color: CLUBS_GREY }}> {name} </b>
+                <b className="is-size-6" style={{ color: CLUBS_GREY }}>
+                  {' '}
+                  {name}{' '}
+                </b>
                 <TagGroup
                   tags={tags}
                   selectedTags={selectedTags}
@@ -62,7 +73,11 @@ class ClubTableRow extends React.Component {
             </div>
           </div>
           <div className="column is-narrow">
-            <FavoriteIcon club={club} favorite={favorite} updateFavorites={updateFavorites} />
+            <FavoriteIcon
+              club={club}
+              favorite={favorite}
+              updateFavorites={updateFavorites}
+            />
           </div>
         </div>
       </Row>

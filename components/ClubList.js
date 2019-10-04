@@ -1,6 +1,10 @@
 import React from 'react'
 import {
-  CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY
+  CLUBS_GREY,
+  CLUBS_GREY_LIGHT,
+  WHITE,
+  HOVER_GRAY,
+  ALLBIRDS_GRAY,
 } from '../constants/colors'
 import { BlueTag, InactiveTag } from './common/Tags'
 import { BORDER_RADIUS } from '../constants/measurements'
@@ -17,7 +21,7 @@ const Wrapper = s.div`
   padding: 0 5px;
   border-radius: ${BORDER_RADIUS};
   border: 1px solid ${ALLBIRDS_GRAY};
-  background-color: ${({ hovering }) => hovering ? HOVER_GRAY : WHITE};
+  background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
   margin: .5rem;
   width: 100%;
 `
@@ -39,7 +43,7 @@ class ClubList extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      modal: ''
+      modal: '',
     }
   }
 
@@ -52,12 +56,17 @@ class ClubList extends React.Component {
       <Wrapper>
         <div className="columns is-vcentered is-gapless is-mobile">
           <div onClick={() => openModal(club)} className="column">
-            <div className="columns is-gapless is-vcentered" style={{ padding: 10, width: '100%' }}>
+            <div
+              className="columns is-gapless is-vcentered"
+              style={{ padding: 10, width: '100%' }}
+            >
               <div className="column is-narrow">
                 <Image src={img} />
               </div>
               <div className="column is-4" style={{ marginLeft: 20 }}>
-                <strong className="is-size-6" style={{ color: CLUBS_GREY }}>{name}</strong>
+                <strong className="is-size-6" style={{ color: CLUBS_GREY }}>
+                  {name}
+                </strong>
                 <div>
                   {club.active || (
                     <InactiveTag className="tag is-rounded has-text-white">
@@ -65,7 +74,10 @@ class ClubList extends React.Component {
                     </InactiveTag>
                   )}
                   {tags.map(tag => (
-                    <BlueTag key={tag.id} className="tag is-rounded has-text-white">
+                    <BlueTag
+                      key={tag.id}
+                      className="tag is-rounded has-text-white"
+                    >
                       {tag.name}
                     </BlueTag>
                   ))}
@@ -77,8 +89,11 @@ class ClubList extends React.Component {
             </div>
           </div>
           <div className="column is-narrow">
-            <FavoriteIcon className="icon" onClick={() => updateFavorites(club.code)}>
-              <i className={(favorite ? 'fas' : 'far') + ' fa-heart'} ></i>
+            <FavoriteIcon
+              className="icon"
+              onClick={() => updateFavorites(club.code)}
+            >
+              <i className={(favorite ? 'fas' : 'far') + ' fa-heart'}></i>
             </FavoriteIcon>
           </div>
         </div>
