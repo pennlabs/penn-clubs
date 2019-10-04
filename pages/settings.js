@@ -1,4 +1,3 @@
-import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, API_BASE_URL, ROLE_OFFICER } from '../utils'
 import { CLUBS_GREY_LIGHT } from '../constants/colors'
@@ -37,7 +36,7 @@ class SettingsForm extends React.Component {
   }
 
   togglePublic(club) {
-    doApiRequest(`/clubs/${club.id}/members/${this.props.userInfo.username}/?format=json`, {
+    doApiRequest(`/clubs/${club.code}/members/${this.props.userInfo.username}/?format=json`, {
       method: 'PATCH',
       body: {
         public: !club.public
@@ -112,10 +111,10 @@ class SettingsForm extends React.Component {
                         <i style={{ cursor: 'pointer' }} onClick={() => this.togglePublic(item)} className={item.public ? 'fa fa-check-circle has-text-success' : 'fa fa-times-circle has-text-danger'} />
                       </td>
                       <td className='buttons'>
-                        <Link route='club-view' params={{ club: item.id }}>
+                        <Link route='club-view' params={{ club: String(item.code) }}>
                           <a className='button is-small is-link'>View</a>
                         </Link>
-                        {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: item.id }}>
+                        {item.role <= ROLE_OFFICER && <Link route='club-edit' params={{ club: String(item.code) }}>
                           <a className='button is-small is-success'>Edit</a>
                         </Link>}
                       </td>

@@ -5,7 +5,13 @@ export function stripTags(val) {
   if (!val) {
     return val
   }
-  return val.replace(/(<[^>]+>)/ig, '').trim()
+  return val.replace(/(<[^>]+>)/ig, '')
+    .replace('&amp;', '&')
+    .replace('&lt;', '<')
+    .replace('&gt;', '>')
+    .replace('&ndash;', '-')
+    .replace('&mdash;', '-')
+    .trim()
 }
 
 export function getDefaultClubImageURL() {
@@ -31,10 +37,10 @@ export const EMPTY_DESCRIPTION = '<span style="color:#666">This club has not add
 export const LOGIN_URL = `${API_BASE_URL}/accounts/login/`
 
 export function getSizeDisplay(size) {
-  if (size === 1) return '0 - 20 Members'
+  if (size === 1) return '< 20 Members'
   else if (size === 2) return '20 - 50 Members'
   else if (size === 3) return '50 - 100 Members'
-  else if (size === 4) return '100+ Members'
+  else if (size === 4) return '> 100 Members'
   else return 'Unknown'
 }
 

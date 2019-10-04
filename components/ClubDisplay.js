@@ -23,7 +23,6 @@ class ClubDisplay extends React.Component {
       sizeSelected: [],
       applicationSelected: [],
       nameInput: '',
-      selectedTags: props.selectedTags,
       end: 8
     }
   }
@@ -44,7 +43,7 @@ class ClubDisplay extends React.Component {
 
   render() {
     const {
-      displayClubs, tags, openModal, favorites, updateFavorites, display
+      displayClubs, tags, openModal, favorites, updateFavorites, display, updateTag, selectedTags
     } = this.props
     const clubsToShow = displayClubs.slice(0, this.state.end)
 
@@ -54,12 +53,14 @@ class ClubDisplay extends React.Component {
           <div className="columns is-multiline is-desktop is-tablet">
             {clubsToShow.map(club => (
               <ClubCard
-                key={club.id}
+                key={club.code}
                 club={club}
                 tags={tags}
+                selectedTags={selectedTags}
+                updateTag={updateTag}
                 openModal={openModal}
                 updateFavorites={updateFavorites}
-                favorite={favorites.includes(club.id)}/>
+                favorite={favorites.includes(club.code)}/>
             ))}
           </div>
         ) : (
@@ -67,11 +68,13 @@ class ClubDisplay extends React.Component {
             {clubsToShow.map(club => (
               <ClubTableRow
                 club={club}
-                key={club.id}
+                key={club.code}
                 tags={tags}
+                selectedTags={selectedTags}
+                updateTag={updateTag}
                 updateFavorites={updateFavorites}
                 openModal={openModal}
-                favorite={favorites.includes(club.id)}/>
+                favorite={favorites.includes(club.code)}/>
             ))}
           </ClubTableRowWrapper>
         )}

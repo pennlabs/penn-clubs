@@ -1,4 +1,3 @@
-import React from 'react'
 import { CLUBS_GREY } from '../../constants/colors'
 import { DetailTag } from '../common/Tags'
 import s from 'styled-components'

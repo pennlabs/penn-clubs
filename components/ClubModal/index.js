@@ -92,7 +92,7 @@ const CardBody = s.div`
 
 const CardHeader = s.div`
   display: block;
-  padding-bottom: 1rem;
+  padding-bottom: 2rem;
 `
 
 const CardTitle = s.strong`
@@ -108,8 +108,9 @@ const OverviewCol = s.div`
 
 const ClubImage = s.img`
   max-height: 220px;
-  max-width: 100%;
+  max-width: 80%;
   object-fit: contain;
+  padding-bottom: 2rem;
 
   ${mediaMaxWidth(SM)} {
     margin-bottom: 1rem;
@@ -119,6 +120,9 @@ const ClubImage = s.img`
 const ClubImageWrapper = s.div`
   text-align: center;
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   ${mediaMaxWidth(SM)} {
     width: 100%;
@@ -203,7 +207,7 @@ class ClubModal extends React.Component {
     } = this.props
     const {
       name,
-      id,
+      code,
       tags,
       image_url: imageUrl,
       size,
@@ -262,7 +266,7 @@ class ClubModal extends React.Component {
                     favorite={favorite}
                     updateFavorites={updateFavorites}
                   />
-                  <Link route='club-view' params={{ club: String(id) }} passHref>
+                  <Link route='club-view' params={{ club: String(code) }} passHref>
                     <SeeMoreButton className="button" target="_blank">
                       See More...
                     </SeeMoreButton>

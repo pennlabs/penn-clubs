@@ -34,12 +34,12 @@ class Favorites extends React.Component {
 
         {favoriteClubs.map((club) => (
           <ClubList
-            key={club.id}
+            key={club.code}
             club={club}
             tags={tags}
             updateFavorites={updateFavorites}
             openModal={openModal}
-            favorite={favorites.includes(club.id)}
+            favorite={favorites.includes(club.code)}
           />
         ))}
 

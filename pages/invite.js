@@ -1,4 +1,3 @@
-import fetch from 'isomorphic-unfetch'
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, LOGIN_URL } from '../utils'
 import React from 'react'
@@ -40,24 +39,31 @@ class Invite extends React.Component {
     }).then((resp) => {
       if (resp.ok) {
         Router.pushRoute('club-view', { club: query.club })
+      } else {
+        resp.json().then(data => {
+          this.setState({
+            invite: null,
+            error: data
+          })
+        })
       }
     })
   }
 
   render() {
     const { invite, error } = this.state
-    const { userInfo } = this.props
 
     if (!invite || !invite.id) {
       if (error) {
-        return <div className='has-text-centered' style={{ margin: 30 }}>
-          <h1 className='title is-1'>404 Not Found</h1>
+        return <div className='has-text-centered' style={{ margin: 30, marginTop: 60 }}>
+          <h1 className='title is-2'>404 Not Found</h1>
           <p>The invite you are looking for does not exist. Perhaps it was already claimed?</p>
+          <p>If you believe that this is an error, please contact <a href='mailto:contact@pennclubs.com'>contact@pennclubs.com</a>.</p>
           <p>{error && formatResponse(error)}</p>
         </div>
       } else {
-        return <div className='has-text-centered' style={{ margin: 30 }}>
-          <h1 className='title is-1'>Loading...</h1>
+        return <div className='has-text-centered' style={{ margin: 30, marginTop: 60 }}>
+          <h1 className='title is-2'>Loading...</h1>
           <p>Processing your invitation...</p>
         </div>
       }

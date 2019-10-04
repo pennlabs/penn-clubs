@@ -28,7 +28,7 @@ export default ({ updateFavorites, club, favorite, absolute = false, padding }) 
     absolute={absolute}
     padding={padding}
     onClick={(e) => {
-      updateFavorites(club.id)
+      updateFavorites(club.code)
       e.stopPropagation()
     }}
     className="icon">

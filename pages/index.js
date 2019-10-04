@@ -71,9 +71,25 @@ class Splash extends React.Component {
     }
     this.fuseOptions = {
       keys: [
-        'name',
-        'tags.name'
+        {
+          name: 'name',
+          weight: 0.6
+        },
+        {
+          name: 'tags.name',
+          weight: 0.5
+        },
+        {
+          name: 'subtitle',
+          weight: 0.3
+        },
+        {
+          name: 'description',
+          weight: 0.1
+        }
       ],
+      tokenize: true,
+      findAllMatches: true,
       shouldSort: true,
       minMatchCharLength: 2,
       threshold: 0.2
@@ -215,6 +231,7 @@ class Splash extends React.Component {
             openModal={openModal}
             updateFavorites={updateFavorites}
             selectedTags={selectedTags}
+            updateTag={this.updateTag.bind(this)}
           />
         </Container>
       </Wrapper>

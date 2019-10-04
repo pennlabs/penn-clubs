@@ -44,7 +44,7 @@ class ClubForm extends React.Component {
     this.sizes = [
       {
         value: 1,
-        label: '1-20'
+        label: '< 20'
       },
       {
         value: 2,
@@ -56,7 +56,7 @@ class ClubForm extends React.Component {
       },
       {
         value: 4,
-        label: '101+'
+        label: '> 100'
       }
     ]
 
@@ -81,7 +81,7 @@ class ClubForm extends React.Component {
   }
 
   toggleClubActive() {
-    doApiRequest(`/clubs/${this.state.club.id}/?format=json`, {
+    doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
       method: 'PATCH',
       body: {
         active: !this.state.club.active
@@ -100,7 +100,7 @@ class ClubForm extends React.Component {
 
   deleteClub() {
     if (confirm(`Are you absolutely sure you want to delete ${this.state.club.name}?`)) {
-      doApiRequest(`/clubs/${this.state.club.id}/?format=json`, {
+      doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
         method: 'DELETE'
       }).then((resp) => {
         if (!resp.ok) {
@@ -116,7 +116,7 @@ class ClubForm extends React.Component {
 
   deleteMembership(member) {
     if (confirm(`Are you sure you want to kick ${member} from ${this.state.club.name}?`)) {
-      doApiRequest(`/clubs/${this.state.club.id}/members/${member}/?format=json`, {
+      doApiRequest(`/clubs/${this.state.club.code}/members/${member}/?format=json`, {
         method: 'DELETE'
       }).then((resp) => {
         if (resp.ok) {
@@ -132,7 +132,7 @@ class ClubForm extends React.Component {
   }
 
   deleteInvite(id) {
-    doApiRequest(`/clubs/${this.state.club.id}/invites/${id}/?format=json`, {
+    doApiRequest(`/clubs/${this.state.club.code}/invites/${id}/?format=json`, {
       method: 'DELETE'
     }).then((resp) => {
       if (resp.ok) {
@@ -147,7 +147,7 @@ class ClubForm extends React.Component {
   }
 
   sendInvites() {
-    doApiRequest(`/clubs/${this.state.club.id}/invite/?format=json`, {
+    doApiRequest(`/clubs/${this.state.club.code}/invite/?format=json`, {
       method: 'POST',
       body: {
         emails: this.state.inviteEmails,
@@ -166,7 +166,7 @@ class ClubForm extends React.Component {
 
     var req = null
     if (this.state.isEdit) {
-      req = doApiRequest(`/clubs/${this.state.club.id}/?format=json`, {
+      req = doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
         method: 'PATCH',
         body: data
       })
@@ -187,7 +187,7 @@ class ClubForm extends React.Component {
             club: info
           })
           if (photo.get('file') instanceof File) {
-            doApiRequest(`/clubs/${this.state.club.id}/upload/?format=json`, {
+            doApiRequest(`/clubs/${this.state.club.code}/upload/?format=json`, {
               method: 'POST',
               body: photo
             }).then((resp) => {
@@ -210,7 +210,7 @@ class ClubForm extends React.Component {
   }
 
   saveMember(username, data) {
-    doApiRequest(`/clubs/${this.state.club.id}/members/${username}/?format=json`, {
+    doApiRequest(`/clubs/${this.state.club.code}/members/${username}/?format=json`, {
       method: 'PATCH',
       body: data
     }).then((resp) => {
@@ -227,7 +227,7 @@ class ClubForm extends React.Component {
 
   componentDidMount() {
     if (this.state.isEdit) {
-      const clubId = this.state.club !== null && this.state.club.id ? this.state.club.id : this.props.clubId
+      const clubId = this.state.club !== null && this.state.club.code ? this.state.club.code : this.props.clubId
       doApiRequest(`/clubs/${clubId}/?format=json`)
         .then((resp) => resp.json())
         .then((data) => this.setState({
@@ -249,7 +249,7 @@ class ClubForm extends React.Component {
       return <div />
     }
 
-    if (this.state.isEdit && !club.id) {
+    if (this.state.isEdit && !club.code) {
       return <div className='has-text-centered' style={{ margin: 30 }}>
         <div className='title is-h1'>404 Not Found</div>
       </div>
@@ -531,7 +531,7 @@ class ClubForm extends React.Component {
         <h1 className='title is-size-2-desktop is-size-3-mobile'>
           <span style={{ color: CLUBS_GREY_LIGHT }}>{club ? 'Editing' : 'Creating'} Club: </span> {club ? club.name : 'New Club'}
           {(club && club.active) || !this.state.isEdit || <span style={{ color: CLUBS_RED }}>{' '}(Inactive)</span>}
-          {club && <Link route='club-view' params={{ club: club.id }}>
+          {club && <Link route='club-view' params={{ club: club.code }}>
             <a className='button is-pulled-right is-secondary is-medium' style={{ fontWeight: 'normal' }}>View Club</a>
           </Link>}
         </h1>

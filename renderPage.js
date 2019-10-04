@@ -146,7 +146,7 @@ export function renderListPage(Page) {
       if (!clubs || !clubs.length) return []
 
       return favorites.map((favorite) => {
-        return (clubs.find((club) => club.id === favorite))
+        return (clubs.find((club) => club.code === favorite))
       })
     }
 
