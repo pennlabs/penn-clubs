@@ -2,3 +2,4 @@ node_modules/
 .next/
 env.sh
 yarn-error.log
+.DS_STORE
