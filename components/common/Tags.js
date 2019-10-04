@@ -1,7 +1,14 @@
 import React from 'react'
 import s from 'styled-components'
 
-import { DARK_BLUE, LIGHTER_BLUE, WHITE, CLUBS_BLUE, DARK_GRAY, FOCUS_GRAY } from '../../constants/colors'
+import {
+  DARK_BLUE,
+  LIGHTER_BLUE,
+  WHITE,
+  CLUBS_BLUE,
+  DARK_GRAY,
+  FOCUS_GRAY,
+} from '../../constants/colors'
 
 export const Tag = s.span`
   margin: 2px;
