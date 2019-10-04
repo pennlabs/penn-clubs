@@ -23,7 +23,7 @@ function renderPage(Page) {
       this.state = {
         authenticated: null,
         userInfo: null,
-        favorites: []
+        favorites: [],
       }
 
       this.updateFavorites = this.updateFavorites.bind(this)
@@ -31,17 +31,19 @@ function renderPage(Page) {
     }
 
     componentDidMount() {
-      doApiRequest('/settings/?format=json').then((resp) => {
+      doApiRequest('/settings/?format=json').then(resp => {
         if (resp.ok) {
-          resp.json().then((data) => this.setState({
-            authenticated: true,
-            favorites: data.favorite_set.map((a) => a.club),
-            userInfo: data
-          }))
+          resp.json().then(data =>
+            this.setState({
+              authenticated: true,
+              favorites: data.favorite_set.map(a => a.club),
+              userInfo: data,
+            })
+          )
         } else {
           this.setState({
             authenticated: false,
-            favorites: JSON.parse(localStorage.getItem('favorites')) || []
+            favorites: JSON.parse(localStorage.getItem('favorites')) || [],
           })
         }
       })
@@ -50,8 +52,17 @@ function renderPage(Page) {
     render() {
       try {
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: WHITE }}>
-            <Header authenticated={this.state.authenticated} userInfo={this.state.userInfo} />
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: WHITE,
+            }}
+          >
+            <Header
+              authenticated={this.state.authenticated}
+              userInfo={this.state.userInfo}
+            />
             <Wrapper>
               <Page
                 {...this.props}
@@ -78,8 +89,8 @@ function renderPage(Page) {
           doApiRequest('/favorites/?format=json', {
             method: 'POST',
             body: {
-              club: id
-            }
+              club: id,
+            },
           })
         }
       } else {
@@ -87,7 +98,7 @@ function renderPage(Page) {
         logEvent('unfavorite', id)
         if (this.state.authenticated) {
           doApiRequest(`/favorites/${id}/?format=json`, {
-            method: 'DELETE'
+            method: 'DELETE',
           })
         }
       }
@@ -99,7 +110,7 @@ function renderPage(Page) {
     }
   }
 
-  RenderPage.getInitialProps = async(info) => {
+  RenderPage.getInitialProps = async info => {
     if (Page.getInitialProps) {
       return Page.getInitialProps(info)
     }
@@ -117,7 +128,7 @@ export function renderListPage(Page) {
         modal: false,
         clubs: props.clubs,
         tags: props.tags,
-        modalClub: {}
+        modalClub: {},
       }
     }
 
@@ -145,8 +156,8 @@ export function renderListPage(Page) {
       const { clubs } = this.state
       if (!clubs || !clubs.length) return []
 
-      return favorites.map((favorite) => {
-        return (clubs.find((club) => club.code === favorite))
+      return favorites.map(favorite => {
+        return clubs.find(club => club.code === favorite)
       })
     }
 
@@ -155,13 +166,18 @@ export function renderListPage(Page) {
       const { modal, modalClub, clubs, tags } = this.state
 
       if (clubs === null || tags === null) {
-        return <div className="has-text-centered" style={{ margin: '25vh 0', opacity: 0.25 }}>
-          <div className="fa-3x">
-            <i className="fas fa-spinner fa-pulse" />
-            <br />
-            <p className="title is-5">Loading...</p>
+        return (
+          <div
+            className="has-text-centered"
+            style={{ margin: '25vh 0', opacity: 0.25 }}
+          >
+            <div className="fa-3x">
+              <i className="fas fa-spinner fa-pulse" />
+              <br />
+              <p className="title is-5">Loading...</p>
+            </div>
           </div>
-        </div>
+        )
       }
 
       const favoriteClubs = this.mapToClubs(favorites)
@@ -190,7 +206,7 @@ export function renderListPage(Page) {
     }
   }
 
-  RenderListPage.getInitialProps = async() => {
+  RenderListPage.getInitialProps = async () => {
     return { clubs: null, tags: null }
   }
 

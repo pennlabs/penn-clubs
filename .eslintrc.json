@@ -21,7 +21,14 @@
   "plugins": ["react"],
   "rules": {
     "comma-dangle": ["error", "always-multiline"],
-    "space-before-function-paren": ["error", "never"],
+    "space-before-function-paren": [
+      "error",
+      {
+        "anonymous": "never",
+        "named": "never",
+        "asyncArrow": "always"
+      }
+    ],
     "no-unused-vars": ["warn"],
     "camelcase": ["warn", { "ignoreDestructuring": true }],
     "react/jsx-uses-vars": [2],

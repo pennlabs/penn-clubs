@@ -17,14 +17,14 @@ class Club extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      club: null
+      club: null,
     }
   }
 
   componentDidMount() {
     doApiRequest(`/clubs/${this.props.query.club}/?format=json`)
-      .then((resp) => resp.json())
-      .then((data) => this.setState({ club: data }))
+      .then(resp => resp.json())
+      .then(data => this.setState({ club: data }))
   }
 
   render() {
@@ -35,22 +35,29 @@ class Club extends React.Component {
     }
 
     if (!club.code) {
-      return <div className='has-text-centered' style={{ margin: 30 }}>
-        <h1 className='title is-h1'>404 Not Found</h1>
-        <p>The club you are looking for does not exist.</p>
-      </div>
+      return (
+        <div className="has-text-centered" style={{ margin: 30 }}>
+          <h1 className="title is-h1">404 Not Found</h1>
+          <p>The club you are looking for does not exist.</p>
+        </div>
+      )
     }
 
     return (
       <div style={{ padding: '30px 50px' }}>
-        <Header club={club} userInfo={this.props.userInfo} favorites={this.props.favorites} updateFavorites={this.props.updateFavorites}/>
+        <Header
+          club={club}
+          userInfo={this.props.userInfo}
+          favorites={this.props.favorites}
+          updateFavorites={this.props.updateFavorites}
+        />
         <div className="columns">
           <div className="column is-6">
-            <Image src={club.image_url || getDefaultClubImageURL()}/>
+            <Image src={club.image_url || getDefaultClubImageURL()} />
           </div>
           <div className="column is-6">
             <InfoBox club={club} />
-            <SocialIcons club={club}/>
+            <SocialIcons club={club} />
             <Tabs club={club} />
           </div>
         </div>
@@ -59,7 +66,7 @@ class Club extends React.Component {
   }
 }
 
-Club.getInitialProps = async(props) => {
+Club.getInitialProps = async props => {
   var { query } = props
   return { query: query }
 }
