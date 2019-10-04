@@ -11,27 +11,38 @@ const FavoriteIcon = s.span`
     color: ${MEDIUM_GRAY};
   }
 
-  ${({ absolute }) => absolute && `
+  ${({ absolute }) =>
+    absolute &&
+    `
     float: none;
     position: absolute;
     right: 0;
   `}
 
-  ${({ favorite }) => favorite && `
+  ${({ favorite }) =>
+    favorite &&
+    `
     color: ${RED} !important;
   `}
 `
 
-export default ({ updateFavorites, club, favorite, absolute = false, padding }) => (
+export default ({
+  updateFavorites,
+  club,
+  favorite,
+  absolute = false,
+  padding,
+}) => (
   <FavoriteIcon
     favorite={favorite}
     absolute={absolute}
     padding={padding}
-    onClick={(e) => {
+    onClick={e => {
       updateFavorites(club.code)
       e.stopPropagation()
     }}
-    className="icon">
+    className="icon"
+  >
     <i className={`fa-heart ${favorite ? 'fas' : 'far'}`} />
   </FavoriteIcon>
 )
