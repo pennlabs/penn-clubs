@@ -52,7 +52,7 @@ const Icon = s.i`
 const FavoriteButton = ({ updateFavorites, club, favorite }) => (
   <FavoriteButtonTag
     favorite={favorite}
-    onClick={(e) => {
+    onClick={e => {
       updateFavorites(club.code)
       e.stopPropagation()
     }}
