@@ -13,11 +13,8 @@ const Title = s.div`
 
 const Header = props => {
   const { club, userInfo } = props
-  // inClub is set to the membership object if the user is in the club, or false
-  // otherwise
-  const inClub =
-    userInfo &&
-    (userInfo.membership_set.filter(a => a.id === club.code) || [false])[0]
+  // inClub is set to the membership object if the user is in the club, or false otherwise
+  const inClub = userInfo && (userInfo.membership_set.filter((a) => a.id === club.code) || [false])[0]
 
   // a user can e dit a club if they are either a superuser or in the club and
   // at least an officer
@@ -35,25 +32,8 @@ const Header = props => {
           {club.active || <span className="has-text-grey">(Inactive)</span>}
         </h1>
         <span style={{ fontSize: '1.5em' }}>
-          {club.favorite_count}{' '}
-          <i
-            className={
-              (props.favorites.includes(club.code) ? 'fa' : 'far') + ' fa-heart'
-            }
-            style={{ cursor: 'pointer' }}
-            onClick={() =>
-              props.updateFavorites(club.code)
-                ? club.favorite_count++
-                : Math.max(0, club.favorite_count--)
-            }
-          ></i>
-          {canEdit && (
-            <Link route="club-edit" params={{ club: club.code }}>
-              <a className="button is-success" style={{ marginLeft: 15 }}>
-                Edit Club
-              </a>
-            </Link>
-          )}
+          {club.favorite_count} <i className={(props.favorites.includes(club.code) ? 'fa' : 'far') + ' fa-heart'} style={{ cursor: 'pointer' }} onClick={() => props.updateFavorites(club.code) ? club.favorite_count++ : Math.max(0, club.favorite_count--)}></i>
+          {canEdit && <Link route='club-edit' params={{ club: club.code }}><a className='button is-success' style={{ marginLeft: 15 }}>Edit Club</a></Link>}
         </span>
       </Title>
       <div style={{ marginBottom: 20 }}>

@@ -84,20 +84,20 @@ class Splash extends React.Component {
       keys: [
         {
           name: 'name',
-          weight: 0.6,
+          weight: 0.6
         },
         {
           name: 'tags.name',
-          weight: 0.5,
+          weight: 0.5
         },
         {
           name: 'subtitle',
-          weight: 0.3,
+          weight: 0.3
         },
         {
           name: 'description',
-          weight: 0.1,
-        },
+          weight: 0.1
+        }
       ],
       tokenize: true,
       findAllMatches: true,

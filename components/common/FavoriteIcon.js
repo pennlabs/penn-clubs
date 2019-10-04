@@ -37,7 +37,7 @@ export default ({
     favorite={favorite}
     absolute={absolute}
     padding={padding}
-    onClick={e => {
+    onClick={(e) => {
       updateFavorites(club.code)
       e.stopPropagation()
     }}

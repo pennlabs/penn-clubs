@@ -156,8 +156,8 @@ export function renderListPage(Page) {
       const { clubs } = this.state
       if (!clubs || !clubs.length) return []
 
-      return favorites.map(favorite => {
-        return clubs.find(club => club.code === favorite)
+      return favorites.map((favorite) => {
+        return (clubs.find((club) => club.code === favorite))
       })
     }
 

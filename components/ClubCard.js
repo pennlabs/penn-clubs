@@ -86,22 +86,14 @@ class ClubCard extends React.Component {
   }
 
   render() {
-    const {
-      club,
-      openModal,
-      updateFavorites,
-      favorite,
-      selectedTags,
-      updateTag,
-    } = this.props
+    const { club, openModal, updateFavorites, favorite, selectedTags, updateTag } = this.props
     const { name, description, subtitle, tags } = club
     const img = club.image_url || getDefaultClubImageURL()
     return (
       <CardWrapper className="column is-half-desktop">
         <div
           style={{ cursor: 'pointer', height: '100%' }}
-          onClick={() => openModal(club)}
-        >
+          onClick={() => openModal(club)}>
           <Card className="card">
             <div>
               <div>
@@ -124,10 +116,7 @@ class ClubCard extends React.Component {
               selectedTags={selectedTags}
               updateTag={updateTag}
             />
-            <div
-              className="columns is-vcentered is-desktop is-gapless"
-              style={{ padding: '10px 5px' }}
-            >
+            <div className="columns is-vcentered is-desktop is-gapless" style={{ padding: '10px 5px' }}>
               <div className="column is-narrow" style={{ height: '100%' }}>
                 <LazyLoad width={150} height={100} offset={1000}>
                   <Image src={img} alt={`${name} Logo`} />

@@ -44,7 +44,7 @@ class ClubForm extends React.Component {
     this.sizes = [
       {
         value: 1,
-        label: '< 20',
+        label: '< 20'
       },
       {
         value: 2,
@@ -56,8 +56,8 @@ class ClubForm extends React.Component {
       },
       {
         value: 4,
-        label: '> 100',
-      },
+        label: '> 100'
+      }
     ]
 
     this.state = {
@@ -106,14 +106,10 @@ class ClubForm extends React.Component {
   }
 
   deleteClub() {
-    if (
-      confirm(
-        `Are you absolutely sure you want to delete ${this.state.club.name}?`
-      )
-    ) {
+    if (confirm(`Are you absolutely sure you want to delete ${this.state.club.name}?`)) {
       doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
-        method: 'DELETE',
-      }).then(resp => {
+        method: 'DELETE'
+      }).then((resp) => {
         if (!resp.ok) {
           resp.json().then(err => {
             this.notify(formatResponse(err))
@@ -126,17 +122,10 @@ class ClubForm extends React.Component {
   }
 
   deleteMembership(member) {
-    if (
-      confirm(
-        `Are you sure you want to kick ${member} from ${this.state.club.name}?`
-      )
-    ) {
-      doApiRequest(
-        `/clubs/${this.state.club.code}/members/${member}/?format=json`,
-        {
-          method: 'DELETE',
-        }
-      ).then(resp => {
+    if (confirm(`Are you sure you want to kick ${member} from ${this.state.club.name}?`)) {
+      doApiRequest(`/clubs/${this.state.club.code}/members/${member}/?format=json`, {
+        method: 'DELETE'
+      }).then((resp) => {
         if (resp.ok) {
           this.notify(`${member} has been kicked out!`)
           this.componentDidMount()
@@ -151,8 +140,8 @@ class ClubForm extends React.Component {
 
   deleteInvite(id) {
     doApiRequest(`/clubs/${this.state.club.code}/invites/${id}/?format=json`, {
-      method: 'DELETE',
-    }).then(resp => {
+      method: 'DELETE'
+    }).then((resp) => {
       if (resp.ok) {
         this.notify('Invitation has been removed!')
         this.componentDidMount()
@@ -234,13 +223,10 @@ class ClubForm extends React.Component {
   }
 
   saveMember(username, data) {
-    doApiRequest(
-      `/clubs/${this.state.club.code}/members/${username}/?format=json`,
-      {
-        method: 'PATCH',
-        body: data,
-      }
-    ).then(resp => {
+    doApiRequest(`/clubs/${this.state.club.code}/members/${username}/?format=json`, {
+      method: 'PATCH',
+      body: data
+    }).then((resp) => {
       if (resp.ok) {
         this.notify(`Member ${username} has been updated!`)
         this.componentDidMount()
@@ -254,10 +240,7 @@ class ClubForm extends React.Component {
 
   componentDidMount() {
     if (this.state.isEdit) {
-      const clubId =
-        this.state.club !== null && this.state.club.code
-          ? this.state.club.code
-          : this.props.clubId
+      const clubId = this.state.club !== null && this.state.club.code ? this.state.club.code : this.props.clubId
       doApiRequest(`/clubs/${clubId}/?format=json`)
         .then(resp => resp.json())
         .then(data =>
@@ -284,11 +267,9 @@ class ClubForm extends React.Component {
     }
 
     if (this.state.isEdit && !club.code) {
-      return (
-        <div className="has-text-centered" style={{ margin: 30 }}>
-          <div className="title is-h1">404 Not Found</div>
-        </div>
-      )
+      return <div className='has-text-centered' style={{ margin: 30 }}>
+        <div className='title is-h1'>404 Not Found</div>
+      </div>
     }
 
     const fields = [
@@ -691,24 +672,12 @@ class ClubForm extends React.Component {
 
     return (
       <div style={{ padding: '30px 50px', maxWidth: 1200, margin: '0 auto' }}>
-        <h1 className="title is-size-2-desktop is-size-3-mobile">
-          <span style={{ color: CLUBS_GREY_LIGHT }}>
-            {club ? 'Editing' : 'Creating'} Club:{' '}
-          </span>{' '}
-          {club ? club.name : 'New Club'}
-          {(club && club.active) || !this.state.isEdit || (
-            <span style={{ color: CLUBS_RED }}> (Inactive)</span>
-          )}
-          {club && (
-            <Link route="club-view" params={{ club: club.code }}>
-              <a
-                className="button is-pulled-right is-secondary is-medium"
-                style={{ fontWeight: 'normal' }}
-              >
-                View Club
-              </a>
-            </Link>
-          )}
+        <h1 className='title is-size-2-desktop is-size-3-mobile'>
+          <span style={{ color: CLUBS_GREY_LIGHT }}>{club ? 'Editing' : 'Creating'} Club: </span> {club ? club.name : 'New Club'}
+          {(club && club.active) || !this.state.isEdit || <span style={{ color: CLUBS_RED }}>{' '}(Inactive)</span>}
+          {club && <Link route='club-view' params={{ club: club.code }}>
+            <a className='button is-pulled-right is-secondary is-medium' style={{ fontWeight: 'normal' }}>View Club</a>
+          </Link>}
         </h1>
         {this.state.message && (
           <div className="notification is-primary">

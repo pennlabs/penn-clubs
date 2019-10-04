@@ -41,14 +41,7 @@ class ClubTableRow extends React.Component {
   }
 
   render() {
-    const {
-      club,
-      openModal,
-      updateFavorites,
-      favorite,
-      selectedTags,
-      updateTag,
-    } = this.props
+    const { club, openModal, updateFavorites, favorite, selectedTags, updateTag } = this.props
     const { name, tags } = club
 
     return (
@@ -57,10 +50,7 @@ class ClubTableRow extends React.Component {
           <div className="column" onClick={() => openModal(club)}>
             <div className="columns is-gapless" style={{ padding: 10 }}>
               <div className="column is-4-desktop is-12-mobile">
-                <b className="is-size-6" style={{ color: CLUBS_GREY }}>
-                  {' '}
-                  {name}{' '}
-                </b>
+                <b className="is-size-6" style={{ color: CLUBS_GREY }}> {name} </b>
                 <TagGroup
                   tags={tags}
                   selectedTags={selectedTags}
