@@ -1,8 +1,6 @@
 import React from 'react'
 import { BlueTag, SelectedTag } from './Tags'
 
-console.log("Opened TagGroup")
-
 export default (props) => {
   let { tags, selectedTags, updateTag } = props
   if (!tags || !tags.length) return null
@@ -10,7 +8,7 @@ export default (props) => {
   // TODO: Use same tag format between DropdownFilter and TagGroup, should simplify
   return (
     tags.map(tag => {
-      const matchedTag = selectedTags.find(({ value, name: filterType }) => filterType === "Type"  && value === tag.id)
+      const matchedTag = selectedTags.find(({ value, name: filterType }) => filterType === 'Type' && value === tag.id)
       if (matchedTag) {
         return <SelectedTag
           key={tag.value}
