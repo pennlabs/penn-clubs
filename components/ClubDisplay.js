@@ -5,6 +5,8 @@ import ClubCard from '../components/ClubCard'
 import ClubTableRow from '../components/ClubTableRow'
 import { mediaMaxWidth, SM } from '../constants/measurements'
 
+// TODO PropTypes
+
 const Wrapper = s.div``
 
 const ClubTableRowWrapper = s.div`
@@ -23,17 +25,24 @@ class ClubDisplay extends React.Component {
       sizeSelected: [],
       applicationSelected: [],
       nameInput: '',
-      end: 8
+      end: 8,
     }
   }
 
   onScroll = () => {
-    if ((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 500)) {
-      this.setState({ end: this.state.end + 20 })
+    const { innerHeight = 0, scrollY = 0 } = window
+    const {
+      body: { offsetHeight = 0 },
+    } = document
+    const { end } = this.state
+
+    if (innerHeight + scrollY >= offsetHeight - 500) {
+      this.setState({ end: end + 20 })
     }
   }
 
   componentDidMount() {
+    // The "false" means do not add additional event listener options
     window.addEventListener('scroll', this.onScroll, false)
   }
 
@@ -43,7 +52,14 @@ class ClubDisplay extends React.Component {
 
   render() {
     const {
-      displayClubs, tags, openModal, favorites, updateFavorites, display, updateTag, selectedTags
+      displayClubs,
+      tags,
+      openModal,
+      favorites,
+      updateFavorites,
+      display,
+      updateTag,
+      selectedTags,
     } = this.props
     const clubsToShow = displayClubs.slice(0, this.state.end)
 
@@ -60,7 +76,8 @@ class ClubDisplay extends React.Component {
                 updateTag={updateTag}
                 openModal={openModal}
                 updateFavorites={updateFavorites}
-                favorite={favorites.includes(club.code)}/>
+                favorite={favorites.includes(club.code)}
+              />
             ))}
           </div>
         ) : (
@@ -74,7 +91,8 @@ class ClubDisplay extends React.Component {
                 updateTag={updateTag}
                 updateFavorites={updateFavorites}
                 openModal={openModal}
-                favorite={favorites.includes(club.code)}/>
+                favorite={favorites.includes(club.code)}
+              />
             ))}
           </ClubTableRowWrapper>
         )}

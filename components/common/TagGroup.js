@@ -1,10 +1,9 @@
-import React from 'react'
+import PropTypes from 'prop-types'
 import { BlueTag, SelectedTag } from './Tags'
 
-export default props => {
-  let { tags, selectedTags, updateTag } = props
+const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
   if (!tags || !tags.length) return null
-  selectedTags = selectedTags || []
+
   // TODO: Use same tag format between DropdownFilter and TagGroup
   return tags.map(tag => {
     const matchedTag = selectedTags.find(({ value }) => value === tag.id)
@@ -48,3 +47,25 @@ export default props => {
     )
   })
 }
+
+TagGroup.defaultProps = {
+  selectedTags: [],
+  tags: [],
+}
+
+TagGroup.propTypes = {
+  tags: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string,
+      id: PropTypes.string,
+    })
+  ),
+  selectedTags: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string,
+    })
+  ),
+  updateTag: PropTypes.func.isRequired,
+}
+
+export default TagGroup
