@@ -49,7 +49,7 @@ export default ({ updateFavorites, club, favorite }) => (
       e.stopPropagation()
     }}
     className="button">
-    {favorite ? 'Favorite' : 'Add to Favorites'}
+    {favorite ? 'Remove From Favorites' : 'Add to Favorites'}
     {' '}
     <Icon className={`fa-heart ${favorite ? 'fas' : 'far'}`} />
   </FavoriteButton>
