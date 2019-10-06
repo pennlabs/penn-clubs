@@ -12,7 +12,7 @@ class Form extends React.Component {
     super(props)
 
     this.state = {
-      mounted: false
+      mounted: false,
     }
 
     this.files = {}
@@ -41,9 +41,13 @@ class Form extends React.Component {
       }
       if (type !== 'group') {
         if (type === 'multiselect') {
-          this.state[`field-${name}`] = defaults ? (defaults[name] || []).map(converter) : []
+          this.state[`field-${name}`] = defaults
+            ? (defaults[name] || []).map(converter)
+            : []
         } else if (type === 'select') {
-          this.state[`field-${name}`] = defaults ? converter(defaults[name]) : null
+          this.state[`field-${name}`] = defaults
+            ? converter(defaults[name])
+            : null
         } else {
           this.state[`field-${name}`] = defaults ? defaults[name] || '' : ''
         }
@@ -55,19 +59,22 @@ class Form extends React.Component {
 
   componentDidMount() {
     this.setState({
-      mounted: true
+      mounted: true,
     })
   }
 
   getAllFields(fields) {
-    return (typeof fields === 'undefined' ? this.props.fields : fields).reduce((out, item) => {
-      if (item.type === 'group') {
-        out = out.concat(this.getAllFields(item.fields))
-      } else {
-        out.push(item)
-      }
-      return out
-    }, [])
+    return (typeof fields === 'undefined' ? this.props.fields : fields).reduce(
+      (out, item) => {
+        if (item.type === 'group') {
+          out = out.concat(this.getAllFields(item.fields))
+        } else {
+          out.push(item)
+        }
+        return out
+      },
+      []
+    )
   }
 
   getData() {
@@ -106,8 +113,18 @@ class Form extends React.Component {
 
   generateField(field) {
     const {
-      name, fields, type, readonly, placeholder = '', content, accept, choices,
-      converter, label, required, help
+      name,
+      fields,
+      type,
+      readonly,
+      placeholder = '',
+      content,
+      accept,
+      choices,
+      converter,
+      label,
+      required,
+      help,
     } = field
 
     let inpt = null
@@ -118,7 +135,7 @@ class Form extends React.Component {
           className="input"
           disabled={readonly}
           value={this.state['field-' + name]}
-          onChange={(e) => this.setState({ ['field-' + name]: e.target.value })}
+          onChange={e => this.setState({ ['field-' + name]: e.target.value })}
           key={name}
           type={type}
           name={name}
@@ -128,26 +145,42 @@ class Form extends React.Component {
       inpt = (
         <div>
           <Head>
-            <link href='/static/css/react-draft-wysiwyg.css' rel='stylesheet' key='editor-css' />
+            <link
+              href="/static/css/react-draft-wysiwyg.css"
+              rel="stylesheet"
+              key="editor-css"
+            />
           </Head>
           {this.state.mounted ? (
             <Editor
               editorState={this.state[`editorState-${name}`]}
               placeholder={placeholder}
-              onEditorStateChange={(state) => {
+              onEditorStateChange={state => {
                 this.setState({
                   [`editorState-${name}`]: state,
-                  [`field-${name}`]: draftToHtml(convertToRaw(state.getCurrentContent()))
+                  [`field-${name}`]: draftToHtml(
+                    convertToRaw(state.getCurrentContent())
+                  ),
                 })
               }}
               toolbar={{
                 options: [
-                  'inline', 'fontSize', 'fontFamily', 'list', 'textAlign',
-                  'colorPicker', 'link', 'image', 'remove', 'history'
-                ]
+                  'inline',
+                  'fontSize',
+                  'fontFamily',
+                  'list',
+                  'textAlign',
+                  'colorPicker',
+                  'link',
+                  'image',
+                  'remove',
+                  'history',
+                ],
               }}
             />
-          ) : <div />}
+          ) : (
+            <div />
+          )}
         </div>
       )
     } else if (type === 'textarea') {
@@ -155,40 +188,42 @@ class Form extends React.Component {
         <textarea
           className="textarea"
           value={this.state[`field-${name}`]}
-          onChange={(e) => this.setState({ [`field-${name}`]: e.target.value })}
+          onChange={e => this.setState({ [`field-${name}`]: e.target.value })}
         />
       )
     } else if (type === 'group') {
       return (
-        <div key={name} className='card' style={{ marginBottom: 20 }}>
-          <div className='card-header'>
-            <div className='card-header-title'>{name}</div>
+        <div key={name} className="card" style={{ marginBottom: 20 }}>
+          <div className="card-header">
+            <div className="card-header-title">{name}</div>
           </div>
-          <div className='card-content'>
-            {this.generateFields(fields)}
-          </div>
+          <div className="card-content">{this.generateFields(fields)}</div>
         </div>
       )
     } else if (type === 'component') {
       return <div key={name}>{content}</div>
     } else if (type === 'file') {
-      inpt = <div className='file' key={name}>
-        <label className='file-label'>
-          <input
-            className="file-input"
-            ref={(c) => { this.files[name] = c }}
-            accept={accept} type="file"
-            name={name} />
-          <span className="file-cta">
-            <span className="file-icon">
-              <i className="fas fa-upload"></i>
+      inpt = (
+        <div className="file" key={name}>
+          <label className="file-label">
+            <input
+              className="file-input"
+              ref={c => {
+                this.files[name] = c
+              }}
+              accept={accept}
+              type="file"
+              name={name}
+            />
+            <span className="file-cta">
+              <span className="file-icon">
+                <i className="fas fa-upload"></i>
+              </span>
+              <span className="file-label">Choose a file...</span>
             </span>
-            <span className="file-label">
-              Choose a file...
-            </span>
-          </span>
-        </label>
-      </div>
+          </label>
+        </div>
+      )
     } else if (type === 'multiselect') {
       if (this.state.mounted) {
         inpt = (
@@ -196,19 +231,19 @@ class Form extends React.Component {
             key={name}
             placeholder={placeholder}
             isMulti={true}
-            value={(this.state[`field-${name}`] || [])}
+            value={this.state[`field-${name}`] || []}
             options={choices.map(converter)}
-            onChange={(opt) => this.setState({ [`field-${name}`]: opt })}
+            onChange={opt => this.setState({ [`field-${name}`]: opt })}
             styles={{
-              container: (style) => ({
+              container: style => ({
                 ...style,
-                width: '100%'
-              })
+                width: '100%',
+              }),
             }}
           />
         )
       } else {
-        inpt = (<div>Loading...</div>)
+        inpt = <div>Loading...</div>
       }
     } else if (type === 'select') {
       inpt = (
@@ -216,44 +251,48 @@ class Form extends React.Component {
           key={name}
           value={this.state[`field-${name}`]}
           options={choices}
-          onChange={(opt) => this.setState({ [`field-${name}`]: opt })}
+          onChange={opt => this.setState({ [`field-${name}`]: opt })}
         />
       )
     } else if (type === 'checkbox') {
       inpt = (
-        <label className='checkbox'>
+        <label className="checkbox">
           <input
             type="checkbox"
             checked={this.state[`field-${name}`]}
-            onChange={(e) => this.setState({ [`field-${name}`]: e.target.checked })}
+            onChange={e =>
+              this.setState({ [`field-${name}`]: e.target.checked })
+            }
           />
           {label}
         </label>
       )
     } else {
       inpt = (
-        <span style={{ color: 'red' }}>
-          {`Unknown field type '${type}'!`}
-        </span>
+        <span style={{ color: 'red' }}>{`Unknown field type '${type}'!`}</span>
       )
     }
 
-    const isHorizontal = typeof this.props.isHorizontal !== 'undefined' ? this.props.isHorizontal : true
+    const isHorizontal =
+      typeof this.props.isHorizontal !== 'undefined'
+        ? this.props.isHorizontal
+        : true
 
     return (
-      <div key={name} className={'field' + (isHorizontal ? ' is-horizontal' : '')}>
-        <div className='field-label is-normal'>
-          <label className='label'>
+      <div
+        key={name}
+        className={'field' + (isHorizontal ? ' is-horizontal' : '')}
+      >
+        <div className="field-label is-normal">
+          <label className="label">
             {type === 'checkbox' ? titleize(name) : label || titleize(name)}
-            {required && (<span style={{ color: 'red' }}>*</span>)}
+            {required && <span style={{ color: 'red' }}>*</span>}
           </label>
         </div>
-        <div className='field-body'>
-          <div className='field'>
-            <div className='control'>
-              {inpt}
-            </div>
-            {help && <p className='help'>{help}</p>}
+        <div className="field-body">
+          <div className="field">
+            <div className="control">{inpt}</div>
+            {help && <p className="help">{help}</p>}
           </div>
         </div>
       </div>
@@ -269,14 +308,13 @@ class Form extends React.Component {
     return (
       <span>
         {this.generateFields(fields)}
-        {(typeof submitButton !== 'undefined') ? (
-          <span onClick={() => onSubmit(this.getData())}>
-            {submitButton}
-          </span>
+        {typeof submitButton !== 'undefined' ? (
+          <span onClick={() => onSubmit(this.getData())}>{submitButton}</span>
         ) : (
           <a
-            className='button is-primary is-medium'
-            onClick={() => onSubmit && onSubmit(this.getData())}>
+            className="button is-primary is-medium"
+            onClick={() => onSubmit && onSubmit(this.getData())}
+          >
             Submit
           </a>
         )}

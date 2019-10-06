@@ -5,16 +5,27 @@ import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
 import DisplayButtons from '../components/DisplayButtons'
 import { renderListPage } from '../renderPage.js'
-import { mediaMaxWidth, mediaMinWidth, MD, LG, XL } from '../constants/measurements'
 import {
-  CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW, FOCUS_GRAY
+  mediaMaxWidth,
+  mediaMinWidth,
+  MD,
+  LG,
+  XL,
+} from '../constants/measurements'
+import {
+  CLUBS_GREY,
+  CLUBS_GREY_LIGHT,
+  CLUBS_BLUE,
+  CLUBS_RED,
+  CLUBS_YELLOW,
+  FOCUS_GRAY,
 } from '../constants/colors'
 import { logEvent } from '../utils/analytics'
 
 const colorMap = {
   Type: CLUBS_BLUE,
   Size: CLUBS_RED,
-  Application: CLUBS_YELLOW
+  Application: CLUBS_YELLOW,
 }
 
 const ClearAllLink = s.span`
@@ -67,32 +78,32 @@ class Splash extends React.Component {
       nameInput: '',
       modal: false,
       modalClub: {},
-      display: 'cards'
+      display: 'cards',
     }
     this.fuseOptions = {
       keys: [
         {
           name: 'name',
-          weight: 0.6
+          weight: 0.6,
         },
         {
           name: 'tags.name',
-          weight: 0.5
+          weight: 0.5,
         },
         {
           name: 'subtitle',
-          weight: 0.3
+          weight: 0.3,
         },
         {
           name: 'description',
-          weight: 0.1
-        }
+          weight: 0.1,
+        },
       ],
       tokenize: true,
       findAllMatches: true,
       shouldSort: true,
       minMatchCharLength: 2,
-      threshold: 0.2
+      threshold: 0.2,
     }
     this.fuse = new Fuse(this.props.clubs, this.fuseOptions)
 
@@ -101,15 +112,17 @@ class Splash extends React.Component {
   }
 
   componentDidMount() {
-    this.setState((state) => ({
-      displayClubs: state.displayClubs.sort(() => Math.random() - 0.5)
+    this.setState(state => ({
+      displayClubs: state.displayClubs.sort(() => Math.random() - 0.5),
     }))
   }
 
   resetDisplay(nameInput, selectedTags) {
     const tagSelected = selectedTags.filter(tag => tag.name === 'Type')
     const sizeSelected = selectedTags.filter(tag => tag.name === 'Size')
-    const applicationSelected = selectedTags.filter(tag => tag.name === 'Application')
+    const applicationSelected = selectedTags.filter(
+      tag => tag.name === 'Application'
+    )
     var { clubs } = this.props
 
     // fuzzy search
@@ -119,11 +132,23 @@ class Splash extends React.Component {
 
     // checkbox filters
     clubs = clubs.filter(club => {
-      const clubRightSize = !sizeSelected.length || sizeSelected.findIndex(sizeTag => sizeTag.value === club.size) !== -1
-      const appRequired = !applicationSelected.length || (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 && club.application_required !== 1) ||
-        (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 && club.application_required === 1) ||
-        (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 && club.accepting_members)
-      const rightTags = !tagSelected.length || club.tags.some(clubTag => tagSelected.findIndex(tag => tag.value === clubTag.id) !== -1)
+      const clubRightSize =
+        !sizeSelected.length ||
+        sizeSelected.findIndex(sizeTag => sizeTag.value === club.size) !== -1
+      const appRequired =
+        !applicationSelected.length ||
+        (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 &&
+          club.application_required !== 1) ||
+        (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 &&
+          club.application_required === 1) ||
+        (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 &&
+          club.accepting_members)
+      const rightTags =
+        !tagSelected.length ||
+        club.tags.some(
+          clubTag =>
+            tagSelected.findIndex(tag => tag.value === clubTag.id) !== -1
+        )
 
       return clubRightSize && appRequired && rightTags
     })
@@ -141,7 +166,9 @@ class Splash extends React.Component {
   updateTag(tag, name) {
     const { selectedTags } = this.state
     const { value } = tag
-    const i = selectedTags.findIndex(tag => tag.value === value && tag.name === name)
+    const i = selectedTags.findIndex(
+      tag => tag.value === value && tag.name === name
+    )
 
     if (i === -1) {
       tag.name = name
@@ -160,7 +187,7 @@ class Splash extends React.Component {
     logEvent('shuffle', 'click')
     const { displayClubs } = this.state
     this.setState({
-      displayClubs: displayClubs.sort(() => Math.random() - 0.5)
+      displayClubs: displayClubs.sort(() => Math.random() - 0.5),
     })
   }
 
@@ -189,7 +216,10 @@ class Splash extends React.Component {
             <p className="title" style={{ color: CLUBS_GREY }}>
               Browse Clubs
             </p>
-            <p className="subtitle is-size-5" style={{ color: CLUBS_GREY_LIGHT }}>
+            <p
+              className="subtitle is-size-5"
+              style={{ color: CLUBS_GREY_LIGHT }}
+            >
               Find your people!
             </p>
           </div>
@@ -203,25 +233,34 @@ class Splash extends React.Component {
                   style={{
                     backgroundColor: colorMap[tag.name],
                     fontWeight: 600,
-                    margin: 3
-                  }}>
+                    margin: 3,
+                  }}
+                >
                   {tag.label}
                   <button
                     className="delete is-small"
-                    onClick={(e) => this.updateTag(tag, tag.name)}
+                    onClick={e => this.updateTag(tag, tag.name)}
                   />
                 </span>
               ))}
               <ClearAllLink
                 className="tag is-rounded"
-                onClick={(e) => this.setState(
-                  { selectedTags: [] },
-                  this.resetDisplay(this.state.nameInput, this.state.selectedTags)
-                )}>
+                onClick={e =>
+                  this.setState(
+                    { selectedTags: [] },
+                    this.resetDisplay(
+                      this.state.nameInput,
+                      this.state.selectedTags
+                    )
+                  )
+                }
+              >
                 Clear All
               </ClearAllLink>
             </div>
-          ) : ''}
+          ) : (
+            ''
+          )}
 
           <ClubDisplay
             displayClubs={displayClubs}

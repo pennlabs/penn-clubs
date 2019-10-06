@@ -4,7 +4,12 @@ import Heading from './Head'
 import Burger from './Burger'
 import Feedback from './Feedback'
 import Links from './Links'
-import { WHITE, CLUBS_BLUE, DARK_GRAY, ALLBIRDS_GRAY } from '../../constants/colors'
+import {
+  WHITE,
+  CLUBS_BLUE,
+  DARK_GRAY,
+  ALLBIRDS_GRAY,
+} from '../../constants/colors'
 import { NAV_HEIGHT, mediaMaxWidth, MD } from '../../constants/measurements'
 
 const Nav = s.nav`
@@ -61,7 +66,7 @@ class Header extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      show: false
+      show: false,
     }
     this.toggleLinks = this.toggleLinks.bind(this)
   }
