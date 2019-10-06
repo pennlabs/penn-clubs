@@ -159,7 +159,7 @@ class SettingsForm extends React.Component {
         </div>}
         <Form fields={fields} defaults={this.props.userInfo} onSubmit={this.submit} />
         <a
-          href={`${API_BASE_URL}/accounts/logout/?next=${window.location.href}`}
+          href={`${API_BASE_URL}/accounts/logout/?next=/`}
           className='button is-pulled-right is-danger is-medium'>
           Logout
         </a>
