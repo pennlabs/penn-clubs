@@ -8,57 +8,59 @@ import { CLUBS_GREY } from '../constants/colors'
 const Wrapper = s.div`
   padding: 0 2rem;
   display: flex;
-  align-items: center;
   flex-direction: column;
 `
 
-class Favorites extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      modal: false,
-      modalClub: {},
-    }
-  }
+const Image = s.img`
+  max-width: 100%;
+  width: 12rem;
+`
 
-  render() {
-    const {
-      tags,
-      favorites,
-      updateFavorites,
-      openModal,
-      favoriteClubs,
-    } = this.props
+// TODO PropTypes
 
-    return (
-      <Wrapper>
-        <div style={{ padding: '30px 0' }}>
-          <h1 className="title" style={{ color: CLUBS_GREY }}>
-            Favorites
-          </h1>
-        </div>
+const Favorites = ({
+  tags,
+  favorites,
+  updateFavorites,
+  openModal,
+  favoriteClubs,
+}) => (
+  <Wrapper>
+    <div style={{ padding: '30px 0' }}>
+      <h1 className="title" style={{ color: CLUBS_GREY }}>
+        Favorites
+      </h1>
+    </div>
 
-        {favoriteClubs.map(club => (
-          <ClubList
-            key={club.code}
-            club={club}
-            tags={tags}
-            updateFavorites={updateFavorites}
-            openModal={openModal}
-            favorite={favorites.includes(club.code)}
-          />
-        ))}
+    {favoriteClubs.map(club => (
+      <ClubList
+        key={club.code}
+        club={club}
+        tags={tags}
+        updateFavorites={updateFavorites}
+        openModal={openModal}
+        favorite={favorites.includes(club.code)}
+      />
+    ))}
 
-        {!favorites.length ? (
-          <p className="has-text-light-grey" style={{ paddingTop: 200 }}>
-            No favorites yet! Browse clubs <a href="/">here.</a>
-          </p>
-        ) : (
-          <div />
-        )}
-      </Wrapper>
-    )
-  }
-}
+    {!favorites.length && (
+      <div
+        style={{
+          paddingTop: '1rem',
+          textAlign: 'center',
+          marginBottom: '1rem',
+        }}
+      >
+        <Image src="/static/img/no-favorites.svg" alt="No favorites" />
+        <p className="has-text-light-grey" style={{ marginBottom: '1rem' }}>
+          {"You haven't selected any favorites yet!"}
+        </p>
+        <a href="/" className="button is-info">
+          Browse Clubs
+        </a>
+      </div>
+    )}
+  </Wrapper>
+)
 
 export default renderListPage(Favorites)
