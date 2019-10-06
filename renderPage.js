@@ -15,6 +15,14 @@ const Wrapper = s.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
 `
 
+function mapToClubs(favorites, clubs) {
+  if (!clubs || !clubs.length) return []
+
+  return favorites.map((favorite) => {
+    return (clubs.find((club) => club.code === favorite))
+  })
+}
+
 function renderPage(Page) {
   class RenderPage extends React.Component {
     constructor(props) {
@@ -31,15 +39,20 @@ function renderPage(Page) {
     }
 
     componentDidMount() {
-      doApiRequest('/settings/?format=json').then(resp => {
+      doApiRequest('/clubs/?format=json')
+        .then(resp => resp.json())
+        .then(data => this.setState({ clubs: data }))
+      doApiRequest('/settings/?format=json').then((resp) => {
         if (resp.ok) {
-          resp.json().then(data =>
+          resp.json().then((data) => {
+            const favorites = data.favorite_set.map((a) => a.club)
             this.setState({
               authenticated: true,
-              favorites: data.favorite_set.map(a => a.club),
-              userInfo: data,
+              favorites: favorites,
+              favoriteClubs: mapToClubs(favorites, this.state.clubs),
+              userInfo: data
             })
-          )
+          })
         } else {
           this.setState({
             authenticated: false,
@@ -139,13 +152,15 @@ export function renderListPage(Page) {
         .then(data => this.setState({ tags: data }))
     }
 
-    mapToClubs(favorites) {
-      const { clubs } = this.state
-      if (!clubs || !clubs.length) return []
+    openModal(club) {
+      logEvent('openModal', club.name)
+      this.setState({ modal: true, modalClub: club })
+      disableBodyScroll(this)
+    }
 
-      return favorites.map(favorite => {
-        return clubs.find(club => club.code === favorite)
-      })
+    closeModal(club) {
+      this.setState({ modal: false, modalClub: {} })
+      enableBodyScroll(this)
     }
 
     render() {
@@ -156,7 +171,7 @@ export function renderListPage(Page) {
         return <Loading />
       }
 
-      const favoriteClubs = this.mapToClubs(favorites)
+      const favoriteClubs = mapToClubs(favorites, clubs)
 
       return (
         <Page
