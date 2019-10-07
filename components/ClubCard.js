@@ -2,9 +2,19 @@ import React from 'react'
 import s from 'styled-components'
 import LazyLoad from 'react-lazy-load'
 import {
-  CLUBS_GREY, CLUBS_GREY_LIGHT, WHITE, HOVER_GRAY, ALLBIRDS_GRAY
+  CLUBS_GREY,
+  CLUBS_GREY_LIGHT,
+  WHITE,
+  HOVER_GRAY,
+  ALLBIRDS_GRAY,
 } from '../constants/colors'
-import { BORDER_RADIUS, mediaMaxWidth, SM, mediaMinWidth, MD } from '../constants/measurements'
+import {
+  BORDER_RADIUS,
+  mediaMaxWidth,
+  SM,
+  mediaMinWidth,
+  MD,
+} from '../constants/measurements'
 import { getDefaultClubImageURL, stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
@@ -30,7 +40,7 @@ const Card = s.div`
   border-radius: ${BORDER_RADIUS};
   min-height: 240px;
   box-shadow: 0 0 0 ${WHITE};
-  background-color: ${({ hovering }) => hovering ? HOVER_GRAY : WHITE};
+  background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
   border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
   height: 100%;
@@ -66,7 +76,7 @@ class ClubCard extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      modal: ''
+      modal: '',
     }
   }
 
@@ -76,14 +86,22 @@ class ClubCard extends React.Component {
   }
 
   render() {
-    const { club, openModal, updateFavorites, favorite, selectedTags, updateTag } = this.props
+    const {
+      club,
+      openModal,
+      updateFavorites,
+      favorite,
+      selectedTags,
+      updateTag,
+    } = this.props
     const { name, description, subtitle, tags } = club
     const img = club.image_url || getDefaultClubImageURL()
     return (
       <CardWrapper className="column is-half-desktop">
         <div
           style={{ cursor: 'pointer', height: '100%' }}
-          onClick={() => openModal(club)}>
+          onClick={() => openModal(club)}
+        >
           <Card className="card">
             <div>
               <div>
@@ -99,16 +117,17 @@ class ClubCard extends React.Component {
               </div>
             </div>
             {club.active || (
-              <InactiveTag className="tag is-rounded">
-                Inactive
-              </InactiveTag>
+              <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
             )}
             <TagGroup
               tags={tags}
               selectedTags={selectedTags}
               updateTag={updateTag}
             />
-            <div className="columns is-vcentered is-desktop is-gapless" style={{ padding: '10px 5px' }}>
+            <div
+              className="columns is-vcentered is-desktop is-gapless"
+              style={{ padding: '10px 5px' }}
+            >
               <div className="column is-narrow" style={{ height: '100%' }}>
                 <LazyLoad width={150} height={100} offset={1000}>
                   <Image src={img} alt={`${name} Logo`} />
@@ -116,7 +135,11 @@ class ClubCard extends React.Component {
               </div>
               <div className="column">
                 <Description>
-                  {this.shorten(subtitle || stripTags(description) || 'This club has no description.')}
+                  {this.shorten(
+                    subtitle ||
+                      stripTags(description) ||
+                      'This club has no description.'
+                  )}
                 </Description>
               </div>
             </div>

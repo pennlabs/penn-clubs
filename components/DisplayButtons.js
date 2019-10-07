@@ -1,7 +1,9 @@
 import s from 'styled-components'
+import PropTypes from 'prop-types'
+
 import { DARK_GRAY } from '../constants/colors'
 
-const DisplayButtons = s.div`
+const DisplayButtonsTag = s.div`
   float: right;
 
   button {
@@ -14,14 +16,20 @@ const Icon = s.span`
   color: ${DARK_GRAY};
 `
 
-export default ({ switchDisplay, shuffle }) => (
-  <DisplayButtons>
-    <button onClick={() => switchDisplay('cards')} className="button is-light is-small">
+const DisplayButtons = ({ switchDisplay, shuffle }) => (
+  <DisplayButtonsTag>
+    <button
+      onClick={() => switchDisplay('cards')}
+      className="button is-light is-small"
+    >
       <Icon className="icon">
         <i className="fas fa-th-large" title="Grid View" />
       </Icon>
     </button>
-    <button onClick={() => switchDisplay('list')} className="button is-light is-small">
+    <button
+      onClick={() => switchDisplay('list')}
+      className="button is-light is-small"
+    >
       <Icon className="icon">
         <i className="fas fa-list" title="List View" />
       </Icon>
@@ -29,12 +37,19 @@ export default ({ switchDisplay, shuffle }) => (
     <button
       onClick={shuffle}
       style={{ color: DARK_GRAY, fontWeight: 600 }}
-      className="button is-light is-small">
+      className="button is-light is-small"
+    >
       <Icon className="icon">
         <i className="fas fa-random" />
       </Icon>
-      &nbsp;&nbsp;
-      Shuffle
+      &nbsp;&nbsp; Shuffle
     </button>
-  </DisplayButtons>
+  </DisplayButtonsTag>
 )
+
+DisplayButtons.propTypes = {
+  switchDisplay: PropTypes.func.isRequired,
+  shuffle: PropTypes.func.isRequired,
+}
+
+export default DisplayButtons

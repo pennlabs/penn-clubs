@@ -2,11 +2,27 @@ import React from 'react'
 import s from 'styled-components'
 
 import {
-  CLUBS_GREY, CLUBS_GREY_LIGHT, MEDIUM_GRAY, LIGHT_GRAY, ALLBIRDS_GRAY,
-  LIGHTER_BLUE, DARK_BLUE, BABY_BLUE, WHITE
+  CLUBS_GREY,
+  CLUBS_GREY_LIGHT,
+  MEDIUM_GRAY,
+  LIGHT_GRAY,
+  ALLBIRDS_GRAY,
+  LIGHTER_BLUE,
+  DARK_BLUE,
+  BABY_BLUE,
+  WHITE,
 } from '../../constants/colors'
-import { BORDER_RADIUS_LG, mediaMaxWidth, MD, SM } from '../../constants/measurements'
-import { getDefaultClubImageURL, getSizeDisplay, EMPTY_DESCRIPTION } from '../../utils'
+import {
+  BORDER_RADIUS_LG,
+  mediaMaxWidth,
+  MD,
+  SM,
+} from '../../constants/measurements'
+import {
+  getDefaultClubImageURL,
+  getSizeDisplay,
+  EMPTY_DESCRIPTION,
+} from '../../utils'
 import { Link } from '../../routes'
 import TagGroup from '../common/TagGroup'
 import FavoriteButton from './FavoriteButton'
@@ -198,13 +214,7 @@ class ClubModal extends React.Component {
   }
 
   render() {
-    const {
-      modal,
-      club,
-      closeModal,
-      updateFavorites,
-      favorite
-    } = this.props
+    const { modal, club, closeModal, updateFavorites, favorite } = this.props
     const {
       name,
       code,
@@ -213,13 +223,11 @@ class ClubModal extends React.Component {
       size,
       application_required: appRequired,
       accepting_members: acceptingMembers,
-      description
+      description,
     } = club
 
     return (
-      <ModalWrapper
-        className={`modal ${modal ? 'is-active' : ''}`}
-        id="modal">
+      <ModalWrapper className={`modal ${modal ? 'is-active' : ''}`} id="modal">
         <ModalBackground
           className="modal-background"
           onClick={() => closeModal(club)}
@@ -232,13 +240,15 @@ class ClubModal extends React.Component {
 
           <CardBody>
             <CardHeader>
-              <CardTitle className="is-size-2-tablet is-size-3-mobile">{name}</CardTitle>
+              <CardTitle className="is-size-2-tablet is-size-3-mobile">
+                {name}
+              </CardTitle>
             </CardHeader>
 
             <div className="columns">
               <OverviewCol className="column is-4-desktop is-12-mobile">
                 <ClubImageWrapper>
-                  <ClubImage src={imageUrl || getDefaultClubImageURL()}/>
+                  <ClubImage src={imageUrl || getDefaultClubImageURL()} />
                 </ClubImageWrapper>
 
                 <div>
@@ -255,7 +265,9 @@ class ClubModal extends React.Component {
               <DescriptionCol className="column is-8-desktop is-12-mobile">
                 <Description
                   className="is-size-6-desktop is-size-7-touch is-size-5-mobile"
-                  dangerouslySetInnerHTML={{ __html: description || EMPTY_DESCRIPTION }}
+                  dangerouslySetInnerHTML={{
+                    __html: description || EMPTY_DESCRIPTION,
+                  }}
                 />
 
                 <ButtonWrapperGradient />
@@ -266,7 +278,11 @@ class ClubModal extends React.Component {
                     favorite={favorite}
                     updateFavorites={updateFavorites}
                   />
-                  <Link route='club-view' params={{ club: String(code) }} passHref>
+                  <Link
+                    route="club-view"
+                    params={{ club: String(code) }}
+                    passHref
+                  >
                     <SeeMoreButton className="button" target="_blank">
                       See More...
                     </SeeMoreButton>
