@@ -1,18 +1,27 @@
 import React from 'react'
 import s from 'styled-components'
 import {
-  CLUBS_GREY, CLUBS_GREY_LIGHT, CLUBS_BLUE, CLUBS_RED, CLUBS_YELLOW, BORDER,
-  LIGHT_GRAY, WHITE
+  CLUBS_GREY,
+  CLUBS_GREY_LIGHT,
+  CLUBS_BLUE,
+  CLUBS_RED,
+  CLUBS_YELLOW,
+  BORDER,
+  LIGHT_GRAY,
+  WHITE,
 } from '../constants/colors'
 import {
-  mediaMaxWidth, MD, SEARCH_BAR_MOBILE_HEIGHT, NAV_HEIGHT
+  mediaMaxWidth,
+  MD,
+  SEARCH_BAR_MOBILE_HEIGHT,
+  NAV_HEIGHT,
 } from '../constants/measurements'
 import { logEvent } from '../utils/analytics'
 
 const checkboxColorMap = {
   Type: CLUBS_BLUE,
   Size: CLUBS_RED,
-  Application: CLUBS_YELLOW
+  Application: CLUBS_YELLOW,
 }
 
 const Line = s.hr`
@@ -43,7 +52,9 @@ const DropdownHeader = s.div`
     font-size: 80%;
     color: ${LIGHT_GRAY};
 
-    ${({ drop, color }) => drop && `
+    ${({ drop, color }) =>
+      drop &&
+      `
       background: ${color || CLUBS_YELLOW};
     `}
   }
@@ -69,7 +80,9 @@ const TableWrapper = s.div`
     height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
   }
 
-  ${({ drop }) => drop && `
+  ${({ drop }) =>
+    drop &&
+    `
     max-height: none;
     opacity: 1;
   `}
@@ -114,12 +127,13 @@ class DropdownFilter extends React.Component {
     this.state = {
       hoverArrow: false,
       drop: false,
-      selected: props.selected
+      selected: props.selected,
     }
   }
 
   toggleDrop() {
-    this.setState({ drop: !this.state.drop })
+    const { drop } = this.state
+    this.setState({ drop: !drop })
   }
 
   isSelected(tag) {
@@ -137,7 +151,11 @@ class DropdownFilter extends React.Component {
     return (
       <>
         <Line />
-        <DropdownHeader onClick={(e) => this.toggleDrop()} drop={drop} color={color}>
+        <DropdownHeader
+          onClick={e => this.toggleDrop()}
+          drop={drop}
+          color={color}
+        >
           <DropdownHeaderText>{name}</DropdownHeaderText>
           <Chevron />
         </DropdownHeader>
@@ -148,22 +166,32 @@ class DropdownFilter extends React.Component {
                 {options.map(tag => (
                   <TableRow
                     key={tag.label}
-                    onClick={(e) => {
+                    onClick={e => {
                       logEvent('filter', name)
                       updateTag(tag, name)
-                    }}>
-                    <td className="icon" style={{ cursor: 'pointer', color: color || CLUBS_GREY_LIGHT }}>
-                      <i className={this.isSelected(tag) ? 'fas fa-check-square' : 'far fa-square'} />
+                    }}
+                  >
+                    <td
+                      className="icon"
+                      style={{
+                        cursor: 'pointer',
+                        color: color || CLUBS_GREY_LIGHT,
+                      }}
+                    >
+                      <i
+                        className={
+                          this.isSelected(tag)
+                            ? 'fas fa-check-square'
+                            : 'far fa-square'
+                        }
+                      />
                       &nbsp;
                     </td>
                     <td style={{ color: CLUBS_GREY_LIGHT }}>
                       <p style={{ marginBottom: '3px' }}>
                         {tag.label}
-                        {(typeof tag.count !== 'undefined') && (
-                          <span className='has-text-grey'>
-                            {' '}
-                            ({tag.count})
-                          </span>
+                        {typeof tag.count !== 'undefined' && (
+                          <span className="has-text-grey"> ({tag.count})</span>
                         )}
                       </p>
                     </td>

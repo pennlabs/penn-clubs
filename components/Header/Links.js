@@ -1,6 +1,6 @@
-import React from 'react'
-import { Link } from '../../routes'
 import s from 'styled-components'
+
+import { Link } from '../../routes'
 import { LOGIN_URL } from '../../utils'
 import { mediaMaxWidth, MD } from '../../constants/measurements'
 import { MEDIUM_GRAY, DARK_GRAY } from '../../constants/colors'
@@ -39,16 +39,19 @@ export default ({ userInfo, authenticated, show }) => (
       <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
         FAQ
       </StyledLink>
-      <StyledLink href="/favorites">
-        Favorites
-      </StyledLink>
-      {(authenticated === false) && (
-        <StyledLink href={`${LOGIN_URL}?next=${window.location.href}`} onClick={() => logEvent('login', 'click')}>Login</StyledLink>
+      <StyledLink href="/favorites">Favorites</StyledLink>
+      {authenticated === false && (
+        <StyledLink
+          href={`${LOGIN_URL}?next=${window.location.href}`}
+          onClick={() => logEvent('login', 'click')}
+        >
+          Login
+        </StyledLink>
       )}
       {userInfo && (
-        <Link route='settings'>
+        <Link route="settings">
           <StyledLink>
-            <i className='fa fa-fw fa-user'></i>
+            <i className="fa fa-fw fa-user"></i>
             {userInfo.name || userInfo.username}
           </StyledLink>
         </Link>
