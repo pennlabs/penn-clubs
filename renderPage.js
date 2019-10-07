@@ -190,7 +190,7 @@ export function renderListPage(Page) {
             tags={tags}
             closeModal={this.closeModal.bind(this)}
             updateFavorites={this.props.updateFavorites}
-            favorite={favorites.includes(modalClub.id)}
+            favorite={favorites.includes(modalClub.code)}
           />
           <Page
             clubs={clubs}

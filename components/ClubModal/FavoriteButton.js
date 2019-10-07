@@ -58,7 +58,7 @@ const FavoriteButton = ({ updateFavorites, club, favorite }) => (
     }}
     className="button"
   >
-    {favorite ? 'Favorite' : 'Add to Favorites'}{' '}
+    {favorite ? 'Remove From Favorites' : 'Add to Favorites'}{' '}
     <Icon className={`fa-heart ${favorite ? 'fas' : 'far'}`} />
   </FavoriteButtonTag>
 )
