@@ -3,10 +3,10 @@ import { BlueTag, SelectedTag } from './Tags'
 
 const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
   if (!tags || !tags.length) return null
-
+  
   // TODO: Use same tag format between DropdownFilter and TagGroup
   return tags.map(tag => {
-    const matchedTag = selectedTags.find(({ value }) => value === tag.id)
+    const matchedTag = selectedTags.find(({ value, name: filterType }) => filterType === 'Type' && value === tag.id)
     if (matchedTag) {
       return (
         <SelectedTag
