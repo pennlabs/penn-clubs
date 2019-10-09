@@ -1,7 +1,8 @@
+import PropTypes from 'prop-types'
 import s from 'styled-components'
 import { LIGHT_GRAY, MEDIUM_GRAY, RED } from '../../constants/colors'
 
-const FavoriteIcon = s.span`
+const FavoriteIconTag = s.span`
   color: ${LIGHT_GRAY};
   float: right;
   padding: ${({ padding }) => padding || '10px 10px 0 0'};
@@ -26,14 +27,14 @@ const FavoriteIcon = s.span`
   `}
 `
 
-export default ({
+const FavoriteIcon = ({
   updateFavorites,
   club,
   favorite,
   absolute = false,
   padding,
 }) => (
-  <FavoriteIcon
+  <FavoriteIconTag
     favorite={favorite}
     absolute={absolute}
     padding={padding}
@@ -44,5 +45,23 @@ export default ({
     className="icon"
   >
     <i className={`fa-heart ${favorite ? 'fas' : 'far'}`} />
-  </FavoriteIcon>
+  </FavoriteIconTag>
 )
+
+FavoriteIcon.defaultProps = {
+  absolute: false,
+  favorite: false,
+  padding: null,
+}
+
+FavoriteIcon.propTypes = {
+  updateFavorites: PropTypes.func.isRequired,
+  absolute: PropTypes.bool,
+  club: PropTypes.shape({
+    code: PropTypes.string,
+  }).isRequired,
+  favorite: PropTypes.bool,
+  padding: PropTypes.string,
+}
+
+export default FavoriteIcon

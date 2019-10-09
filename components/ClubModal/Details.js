@@ -50,10 +50,15 @@ const Details = ({ size, applicationRequired, acceptingMembers }) => (
   </DetailsTag>
 )
 
+Details.defaultProps = {
+  applicationRequired: null,
+  acceptingMembers: false,
+}
+
 Details.propTypes = {
   size: PropTypes.string.isRequired,
-  applicationRequired: PropTypes.number.isRequired,
-  acceptingMember: PropTypes.bool.isRequired,
+  applicationRequired: PropTypes.number,
+  acceptingMembers: PropTypes.bool,
 }
 
 export default Details

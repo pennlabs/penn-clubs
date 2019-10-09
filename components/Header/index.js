@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState } from 'react'
 import s from 'styled-components'
 import Heading from './Head'
 import Burger from './Burger'
@@ -57,52 +57,35 @@ const Title = s.h1`
   margin-bottom: 0 !important;
 `
 
-class Header extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      show: false,
-    }
-    this.toggleLinks = this.toggleLinks.bind(this)
-  }
+const Header = ({ authenticated, userInfo }) => {
+  const [show, setShow] = useState(false)
 
-  toggleLinks() {
-    const { show } = this.state
-    this.setState({ show: !show })
-  }
+  const toggle = () => setShow(!show)
 
-  render() {
-    const { authenticated, userInfo } = this.props
-    const { show } = this.state
-    return (
-      <>
-        <Heading />
+  return (
+    <>
+      <Heading />
 
-        <NavSpacer />
+      <NavSpacer />
 
-        <Nav className="navbar" role="navigation" aria-label="main navigation">
-          <div className="navbar-brand">
-            <a className="navbar-item" style={{ padding: 0 }} href="/">
-              <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
+      <Nav className="navbar" role="navigation" aria-label="main navigation">
+        <div className="navbar-brand">
+          <a className="navbar-item" style={{ padding: 0 }} href="/">
+            <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
 
-              <Title className="title is-size-4">Penn Clubs</Title>
-              <BetaTag className="tag is-rounded">Beta</BetaTag>
-            </a>
+            <Title className="title is-size-4">Penn Clubs</Title>
+            <BetaTag className="tag is-rounded">Beta</BetaTag>
+          </a>
 
-            <Burger toggle={this.toggleLinks} />
-          </div>
+          <Burger toggle={toggle} />
+        </div>
 
-          <Links
-            userInfo={userInfo}
-            authenticated={authenticated}
-            show={show}
-          />
-        </Nav>
+        <Links userInfo={userInfo} authenticated={authenticated} show={show} />
+      </Nav>
 
-        <Feedback />
-      </>
-    )
-  }
+      <Feedback />
+    </>
+  )
 }
 
 export default Header
