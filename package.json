@@ -28,12 +28,21 @@
     "lint": "eslint \"./{pages,components}/**/*.js\" \"*.js\"",
     "dev": "node server/index.js",
     "build": "next build",
-    "start": "NODE_ENV=production node server/index.js"
+    "start": "NODE_ENV=production node server/index.js",
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook"
   },
   "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.3.4",
+    "@storybook/addon-actions": "^5.0.2",
+    "@storybook/addon-links": "^5.0.2",
+    "@storybook/addons": "^5.0.2",
+    "@storybook/react": "^5.0.2",
     "babel-eslint": "^10.0.2",
-    "eslint": "^6.2.0",
+    "babel-loader": "^8.0.5",
+    "babel-preset-next": "^1.2.0",
+    "eslint": "^5.13.0",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-config-standard": "^14.0.0",
     "eslint-plugin-import": "^2.18.2",
