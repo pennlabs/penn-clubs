@@ -2,10 +2,11 @@ import React from 'react'
 import Select from 'react-select'
 import { EditorState, ContentState, convertToRaw } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
-import { titleize } from '../utils'
 import draftToHtml from 'draftjs-to-html'
 import htmlToDraft from 'html-to-draftjs'
 import Head from 'next/head'
+
+import { titleize } from '../utils'
 
 class Form extends React.Component {
   constructor(props) {
@@ -264,6 +265,7 @@ class Form extends React.Component {
               this.setState({ [`field-${name}`]: e.target.checked })
             }
           />
+          &nbsp;
           {label}
         </label>
       )
