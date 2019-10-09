@@ -1,10 +1,10 @@
 import s from 'styled-components'
 import Social from './Social'
-import { ALLBIRDS_GRAY, RED } from '../../constants/colors'
+import { SNOW, RED } from '../../constants/colors'
 
 const Foot = s.footer`
   height: 8rem;
-  backgroundColor: ${ALLBIRDS_GRAY};
+  backgroundColor: ${SNOW};
   fontSize: 0.85rem;
   display: flex;
   justify-content: center;
