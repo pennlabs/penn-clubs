@@ -4,18 +4,13 @@ import Heading from './Head'
 import Burger from './Burger'
 import Feedback from './Feedback'
 import Links from './Links'
-import {
-  WHITE,
-  CLUBS_BLUE,
-  DARK_GRAY,
-  ALLBIRDS_GRAY,
-} from '../../constants/colors'
+import { WHITE, CLUBS_BLUE, DARK_GRAY, BORDER } from '../../constants/colors'
 import { NAV_HEIGHT, mediaMaxWidth, MD } from '../../constants/measurements'
 
 const Nav = s.nav`
   height: ${NAV_HEIGHT};
   background-color: ${WHITE} !important;
-  borderBottom: 1px solid ${ALLBIRDS_GRAY};
+  borderBottom: 1px solid ${BORDER};
   box-shadow: 0 0 8px 0 rgba(0, 0, 0, .1);
   width: 100%;
   position: fixed;
