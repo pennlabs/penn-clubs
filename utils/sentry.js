@@ -1,12 +1,24 @@
 import React from 'react'
-import Raven from 'raven-js'
+let Sentry
 
-Raven.config(
-  'https://d24382d743314dadadb80d1eabdb139e@sentry.pennlabs.org/13'
-).install()
+const { SENTRY_URL } = process.env
+
+if (!SENTRY_URL) {
+  console.log('Missing SENTRY_URL in process environment.') // eslint-disable-line no-console
+}
+
+if (process.browser) {
+  // If the code is running in user's browser
+  Sentry = require('@sentry/browser')
+} else {
+  // If code is running on the server
+  Sentry = require('@sentry/node')
+}
+
+Sentry.init({ dsn: SENTRY_URL })
 
 export function logException(ex, context) {
-  Raven.captureException(ex, {
+  Sentry.captureException(ex, {
     extra: context,
   })
   window.console && console.error && console.error(ex) // eslint-disable-line no-console
