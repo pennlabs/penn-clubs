@@ -15,12 +15,13 @@ const Wrapper = s.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
 `
 
-function mapToClubs(favorites, clubs) {
+async function mapToClubs(favorites, clubs) {
   if (!clubs || !clubs.length) return []
 
-  return favorites.map((favorite) => {
+  const favoriteClubs = await favorites.map(favorite => {
     return (clubs.find((club) => club.code === favorite))
   })
+  return favoriteClubs
 }
 
 function renderPage(Page) {
@@ -46,12 +47,15 @@ function renderPage(Page) {
         if (resp.ok) {
           resp.json().then((data) => {
             const favorites = data.favorite_set.map((a) => a.club)
-            this.setState({
-              authenticated: true,
-              favorites: favorites,
-              favoriteClubs: mapToClubs(favorites, this.state.clubs),
-              userInfo: data
-            })
+            mapToClubs(favorites, this.state.clubs)
+              .then(favoriteClubs => (
+                this.setState({
+                  authenticated: true,
+                  favorites: favorites,
+                  favoriteClubs: favoriteClubs,
+                  userInfo: data
+                })
+              ))
           })
         } else {
           this.setState({

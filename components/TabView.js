@@ -14,27 +14,41 @@ const TabView = ({ tabs }) => {
 
   const enabledTabs = tabs.filter(tab => !tab.disabled)
 
-  return (
-    <>
-      <div className="tabs">
-        <ul style={{ borderBottomWidth: '2px' }}>
-          {enabledTabs.map(({ name, label }) => (
-            <li
-              className={name === currentTab ? 'is-active' : ''}
-              key={`tab-${name}`}
-            >
-              <a
-                style={{ borderBottomWidth: '2px', marginBottom: '-2px' }}
-                onClick={() => {
-                  setCurrentTab(name)
-                  window.location.hash = `#${name}`
-                }}
-              >
-                {label || titleize(name)}
-              </a>
-            </li>
-          ))}
-        </ul>
+  render() {
+    const { tabs, tabStyle } = this.props
+
+    return (
+      <div>
+        <div className={'tabs ' + tabStyle}>
+          <ul>
+            {tabs
+              .filter(a => !a.disabled)
+              .map(a => (
+                <li
+                  className={
+                    a.name === this.state.currentTab ? 'is-active' : undefined
+                  }
+                  key={a.name}
+                >
+                  <a
+                    onClick={() => {
+                      this.setState({ currentTab: a.name })
+                      window.location.hash = '#' + a.name
+                    }}
+                  >
+                    {a.label || titleize(a.name)}
+                  </a>
+                </li>
+              ))}
+          </ul>
+        </div>
+        {
+          (
+            tabs.filter(a => a.name === this.state.currentTab)[0] || {
+              content: <div>Invalid tab selected.</div>,
+            }
+          ).content
+        }
       </div>
       {getTabContent()}
     </>
