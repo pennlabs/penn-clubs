@@ -6,7 +6,9 @@ const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
 
   // TODO: Use same tag format between DropdownFilter and TagGroup
   return tags.map(tag => {
-    const matchedTag = selectedTags.find(({ value }) => value === tag.id)
+    const matchedTag = selectedTags.find(
+      ({ value, name: filterType }) => filterType === 'Type' && value === tag.id
+    )
     if (matchedTag) {
       return (
         <SelectedTag
@@ -51,13 +53,14 @@ const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
 TagGroup.defaultProps = {
   selectedTags: [],
   tags: [],
+  updateTag: undefined,
 }
 
 TagGroup.propTypes = {
   tags: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string,
-      id: PropTypes.string,
+      id: PropTypes.number,
     })
   ),
   selectedTags: PropTypes.arrayOf(
@@ -65,7 +68,7 @@ TagGroup.propTypes = {
       value: PropTypes.string,
     })
   ),
-  updateTag: PropTypes.func.isRequired,
+  updateTag: PropTypes.func,
 }
 
 export default TagGroup

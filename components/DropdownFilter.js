@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState } from 'react'
 import s from 'styled-components'
 import {
   CLUBS_GREY,
@@ -121,89 +121,69 @@ const Chevron = () => (
   </ChevronIcon>
 )
 
-class DropdownFilter extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      hoverArrow: false,
-      drop: false,
-      selected: props.selected,
-    }
-  }
+const DropdownFilter = ({ selected, name, options, updateTag }) => {
+  const [drop, setDrop] = useState(false)
 
-  toggleDrop() {
-    const { drop } = this.state
-    this.setState({ drop: !drop })
-  }
+  const toggleDrop = () => setDrop(!drop)
 
-  isSelected(tag) {
+  const isSelected = tag => {
     const { value } = tag
-    const { selected } = this.props
     return selected.find(tag => tag.value === value)
   }
 
-  render() {
-    const { name, options, updateTag } = this.props
-    const { drop } = this.state
+  const color = checkboxColorMap[name]
 
-    const color = checkboxColorMap[name]
-
-    return (
-      <>
-        <Line />
-        <DropdownHeader
-          onClick={e => this.toggleDrop()}
-          drop={drop}
-          color={color}
-        >
-          <DropdownHeaderText>{name}</DropdownHeaderText>
-          <Chevron />
-        </DropdownHeader>
-        <TableWrapper drop={drop}>
-          <TableContainer>
-            <table>
-              <tbody>
-                {options.map(tag => (
-                  <TableRow
-                    key={tag.label}
-                    onClick={e => {
-                      logEvent('filter', name)
-                      updateTag(tag, name)
+  return (
+    <>
+      <Line />
+      <DropdownHeader onClick={e => toggleDrop()} drop={drop} color={color}>
+        <DropdownHeaderText>{name}</DropdownHeaderText>
+        <Chevron />
+      </DropdownHeader>
+      <TableWrapper drop={drop}>
+        <TableContainer>
+          <table>
+            <tbody>
+              {options.map(tag => (
+                <TableRow
+                  key={tag.label}
+                  onClick={() => {
+                    logEvent('filter', name)
+                    updateTag(tag, name)
+                  }}
+                >
+                  <td
+                    className="icon"
+                    style={{
+                      cursor: 'pointer',
+                      color: color || CLUBS_GREY_LIGHT,
                     }}
                   >
-                    <td
-                      className="icon"
-                      style={{
-                        cursor: 'pointer',
-                        color: color || CLUBS_GREY_LIGHT,
-                      }}
-                    >
-                      <i
-                        className={
-                          this.isSelected(tag)
-                            ? 'fas fa-check-square'
-                            : 'far fa-square'
-                        }
-                      />
-                      &nbsp;
-                    </td>
-                    <td style={{ color: CLUBS_GREY_LIGHT }}>
-                      <p style={{ marginBottom: '3px' }}>
-                        {tag.label}
-                        {typeof tag.count !== 'undefined' && (
-                          <span className="has-text-grey"> ({tag.count})</span>
-                        )}
-                      </p>
-                    </td>
-                  </TableRow>
-                ))}
-              </tbody>
-            </table>
-          </TableContainer>
-        </TableWrapper>
-      </>
-    )
-  }
+                    <i
+                      className={
+                        isSelected(tag)
+                          ? 'fas fa-check-square'
+                          : 'far fa-square'
+                      }
+                    />
+                    &nbsp;
+                  </td>
+                  <td style={{ color: CLUBS_GREY_LIGHT }}>
+                    <p style={{ marginBottom: '3px' }}>
+                      {tag.label}
+                      {typeof tag.count !== 'undefined' && (
+                        <span className="has-text-grey"> ({tag.count})</span>
+                      )}
+                    </p>
+                  </td>
+                </TableRow>
+              ))}
+            </tbody>
+          </table>
+        </TableContainer>
+      </TableWrapper>
+    </>
+  )
 }
 
 export default DropdownFilter

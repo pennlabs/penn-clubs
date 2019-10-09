@@ -9,9 +9,9 @@ const Burger = ({ toggle }) => (
     data-target="navbarBasicExample"
     onClick={toggle}
   >
-    <span aria-hidden="true"></span>
-    <span aria-hidden="true"></span>
-    <span aria-hidden="true"></span>
+    <span aria-hidden="true" />
+    <span aria-hidden="true" />
+    <span aria-hidden="true" />
   </a>
 )
 
