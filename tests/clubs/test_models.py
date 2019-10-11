@@ -22,6 +22,15 @@ class ClubTestCase(TestCase):
         self.assertEqual(self.club1.children_orgs.first(), self.club2)
 
 
+class ProfileTestCase(TestCase):
+    def test_profile_creation(self):
+        """
+        Ensure that a Profile object is created when the user is created.
+        """
+        self.person = get_user_model().objects.create_user('test', 'test@example.com', 'test')
+        self.assertTrue(self.person.profile)
+
+
 class EventTestCase(TestCase):
     def setUp(self):
         date = pytz.timezone('America/New_York').localize(datetime.datetime(2019, 1, 1))
