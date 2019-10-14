@@ -126,9 +126,14 @@ const DropdownFilter = ({ selected, name, options, updateTag }) => {
 
   const toggleDrop = () => setDrop(!drop)
 
+  /**
+   * Returns if the supplied tag is in the list of selected tags
+   *
+   * @param {{value: string}} tag
+   */
   const isSelected = tag => {
     const { value } = tag
-    return selected.find(tag => tag.value === value)
+    return Boolean(selected.find(tag => tag.value === value))
   }
 
   const color = checkboxColorMap[name]
