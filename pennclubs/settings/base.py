@@ -132,7 +132,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 # Labs Accounts Settings
 
 PLATFORM_ACCOUNTS = {
-    'REDIRECT_URI': os.environ.get('LABS_REDIRECT_URI', 'https://clubs.pennlabs.org/accounts/callback/'),
+    'REDIRECT_URI': os.environ.get('LABS_REDIRECT_URI', 'https://api.pennclubs.com/accounts/callback/'),
     'ADMIN_PERMISSION': 'clubs_admin'
 }
 
