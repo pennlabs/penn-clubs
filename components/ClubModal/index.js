@@ -211,6 +211,11 @@ class ClubModal extends React.Component {
   constructor(props) {
     super(props)
     this.state = {}
+    const { closeModal, club, modal } = props
+    // When the esc key is pressed, close this Modal.
+    document.addEventListener('keydown', ({ key }) => {
+      if (modal && key === 'Escape') closeModal(club)
+    })
   }
 
   render() {
