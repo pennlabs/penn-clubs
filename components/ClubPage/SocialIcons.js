@@ -1,5 +1,7 @@
 import { CLUBS_GREY } from '../../constants/colors.js'
+import { CLUBS_BLUE } from '../../constants/colors.js'
 import s from 'styled-components'
+import SocialLink from './SocialLink'
 
 const socials = [
   {
@@ -55,9 +57,17 @@ export default (props) => {
       })
         .filter(item => club[item.name])
         .map(item => (
-          <div key={item.name}>
+          <div key={item.name}
+            style={{ marginBottom: '5px' }}   >
             <Icon href={club[item.name] ? (item.prefix || '') + club[item.name] : undefined}>
-              <i className={'fa-fw ' + item.icon} style={{ height: '100%' }}></i>{' '}{club[item.name]}
+              <i className={'fa-fw ' + item.icon}
+                style={{
+                  height: '100%',
+                  marginRight: '5px'
+                }}>
+              </i>
+              {' '}
+              <SocialLink club={club} item={item} type={item.name}/>
             </Icon>
           </div>
         ))
@@ -65,3 +75,5 @@ export default (props) => {
     </div>
   )
 }
+
+
