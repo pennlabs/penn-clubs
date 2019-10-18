@@ -40,6 +40,8 @@ class EventPermission(permissions.BasePermission):
         if view.action in ['create', 'update', 'partial_update', 'destroy']:
             if 'club_code' not in view.kwargs:
                 return False
+            if not request.user.is_authenticated:
+                return False
             membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
