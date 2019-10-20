@@ -33,6 +33,20 @@ def upload_endpoint_helper(request, cls, pk, field):
         'detail': 'Club image uploaded!'
     })
 
+def find_children_helper(club_object):
+    """
+    Format and retrieve all children of a club into tree
+    """
+    children           = club_object.children_orgs.all()
+    children_recurse   = []
+    for child in children:
+        children_recurse.append({child.code: find_children_helper(child)})
+
+    return {
+        "name": club_object.name,
+        "code": club_object.code,
+        "children": children_recurse
+    }
 
 class ClubViewSet(viewsets.ModelViewSet):
     """
@@ -57,6 +71,11 @@ class ClubViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def upload(self, request, *args, **kwargs):
         return upload_endpoint_helper(request, Club, kwargs['code'], 'image')
+
+    @action(detail=True, methods=['get'])
+    def children(self, request, *args, **kwargs):
+        child_tree = find_children_helper(self.get_object())
+        return Response(child_tree)
 
     @method_decorator(cache_page(60*5))
     def list(self, request, *args, **kwargs):
