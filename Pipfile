@@ -29,6 +29,8 @@ pyyaml = "*"
 django-storages = "*"
 pillow = "*"
 "boto3" = "*"
+django-phonenumber-field = "*"
+phonenumbers = "*"
 
 [requires]
 python_version = "3"
