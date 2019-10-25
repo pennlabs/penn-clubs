@@ -19,10 +19,13 @@ spec:
     spec:
       containers:
         - name: "worker"
-          image: "{{ .Values.backend.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          image: "{{ .Values.backend.image }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.backend.service.port }}
+            - containerPort: {{ .Values.backend.port }}
+          env:
+            - name: ALLOWED_HOST
+              value: {{ if .Values.staging }}staging.{{ end }}{{ .Values.backend.ingress.domain }}
           envFrom:
             - secretRef:
                 name: {{ .Values.backend.secrets.secretEnv }}

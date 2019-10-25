@@ -24,7 +24,7 @@ DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Allow production host headers
-ALLOWED_HOSTS = ['api.pennclubs.com']
+ALLOWED_HOSTS = [os.environ.get('ALLOWED_HOST', 'api.pennclubs.com')]
 
 SENTRY_URL = os.environ.get('SENTRY_URL', '')
 
@@ -41,12 +41,15 @@ CSRF_COOKIE_SAMESITE = None
 # Django CORS Settings
 CORS_ORIGIN_REGEX_WHITELIST = [
     r'^https://[\w-]+.pennclubs.com$',
-    r'^https://pennclubs.com$'
+    r'^https://pennclubs.com$',
+    r'^https://[\w-]+.clubs.upenn.club$'
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     '.pennclubs.com',
-    'pennclubs.com'
+    'pennclubs.com',
+    'clubs.upenn.club',
+    '.clubs.upenn.club'
 ]
 
 # Email client information

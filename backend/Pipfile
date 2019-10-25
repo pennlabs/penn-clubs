@@ -29,6 +29,7 @@ pyyaml = "*"
 django-storages = "*"
 pillow = "*"
 "boto3" = "*"
+uwsgi = "*"
 
 [requires]
 python_version = "3"

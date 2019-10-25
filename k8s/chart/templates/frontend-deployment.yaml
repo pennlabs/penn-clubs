@@ -19,13 +19,15 @@ spec:
     spec:
       containers:
         - name: "worker"
-          image: "{{ .Values.frontend.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          image: "{{ .Values.frontend.image }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.frontend.service.port }}
+            - containerPort: {{ .Values.frontend.port }}
           env:
             - name: API_BASE_URL
-              value: {{ if .Values.staging }}staging.{{ end }}{{ .Values.backend.ingress.domain }}
+              value: https://{{ if .Values.staging }}staging.{{ end }}{{ .Values.backend.ingress.domain }}
+            - name: PORT
+              value: "{{ .Values.frontend.port }}"
           envFrom:
             - secretRef:
                 name: {{ .Values.frontend.secrets.secretEnv }}

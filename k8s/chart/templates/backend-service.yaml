@@ -7,7 +7,7 @@ metadata:
 {{- end }}
 spec:
   ports:
-    - port: {{ .Values.backend.service.port }}
+    - port: {{ .Values.backend.port }}
       targetPort: 80
   selector:
     name: {{ .Release.Name }}-backend
