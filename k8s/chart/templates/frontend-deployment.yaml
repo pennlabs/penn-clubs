@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-frontend-dep
+{{- if .Values.staging }}
+  namespace: staging
+{{- end }}
+  labels:
+    name: {{ .Release.Name }}-frontend
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      name: {{ .Release.Name }}-frontend
+  template:
+    metadata:
+      labels:
+        name: {{ .Release.Name }}-frontend
+    spec:
+      containers:
+        - name: "worker"
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.frontend.service.port }}
+          env:
+            - name: API_BASE_URL
+              value: {{ if .Values.staging }}staging.{{ end }}{{ .Values.backend.ingress.domain }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.frontend.secrets.secretEnv }}

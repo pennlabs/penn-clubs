@@ -1,0 +1,34 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+coveralls = "*"
+django-extensions = "*"
+flake8 = "*"
+flake8-isort = "*"
+flake8-quotes = "*"
+unittest-xml-reporting = "*"
+
+[packages]
+dj-database-url = "*"
+djangorestframework = "*"
+gunicorn = "*"
+mysqlclient = "*"
+sentry-sdk = "*"
+whitenoise = "*"
+django = "*"
+django-labs-accounts = "*"
+drf-nested-routers = "*"
+"bs4" = "*"
+bleach = "*"
+django-cors-headers = "*"
+uritemplate = "*"
+pyyaml = "*"
+django-storages = "*"
+pillow = "*"
+"boto3" = "*"
+
+[requires]
+python_version = "3"

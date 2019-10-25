@@ -1,0 +1,18 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-backend
+{{- if .Values.staging }}
+  namespace: staging
+{{- end }}
+spec:
+  rules:
+  - host: {{ if .Values.staging }}staging.{{ end }}{{ .Values.backend.ingress.domain }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {{ .Release.Name }}-backend-svc
+          servicePort: 80
+{{- end }}

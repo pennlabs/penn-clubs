@@ -1,0 +1,9 @@
+.env
+.idea/
+venv/
+__pycache__/
+db.sqlite3
+.vscode/
+test-results/
+uploads/
+.coverage

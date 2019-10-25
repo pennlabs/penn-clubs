@@ -1,0 +1,26 @@
+replicaCount: 1
+
+staging: false
+
+image:
+  tag: stable
+
+frontend:
+  image: nginx
+  pullPolicy: IfNotPresent
+  port: 80
+  ingress:
+    enabled: false
+    domain: ""
+  secrets:
+    secretEnv: ""
+
+backend:
+  image: nginx
+  pullPolicy: IfNotPresent
+  port: 80
+  ingress:
+    enabled: false
+    domain: ""
+  secrets:
+    secretEnv: ""

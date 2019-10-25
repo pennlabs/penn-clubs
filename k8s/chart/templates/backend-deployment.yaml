@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-backend-dep
+{{- if .Values.staging }}
+  namespace: staging
+{{- end }}
+  labels:
+    name: {{ .Release.Name }}-backend
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      name: {{ .Release.Name }}-backend
+  template:
+    metadata:
+      labels:
+        name: {{ .Release.Name }}-backend
+    spec:
+      containers:
+        - name: "worker"
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.backend.service.port }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.backend.secrets.secretEnv }}

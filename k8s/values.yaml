@@ -1,0 +1,21 @@
+replicaCount: 1
+
+frontend:
+  image: pennlabs/clubs-frontend
+  pullPolicy: IfNotPresent
+  port: 80
+  ingress:
+    enabled: true
+    domain: clubs.upenn.club
+  secrets:
+    secretEnv: clubs-frontend
+
+backend:
+  image: pennlabs/clubs-backend
+  pullPolicy: IfNotPresent
+  port: 80
+  ingress:
+    enabled: true
+    domain: api.clubs.upenn.club
+  secrets:
+    secretEnv: clubs-backend
