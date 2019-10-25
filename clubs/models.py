@@ -69,8 +69,8 @@ class Club(models.Model):
     members = models.ManyToManyField(get_user_model(), through='Membership')
     # Represents which organizations this club is directly under in the organizational structure.
     # For example, SAC is a parent of PAC, which is a parent of TAC-E which is a parent of Penn Players.
-    parent_orgs = models.ManyToManyField('Club', related_name='children_orgs')
-    badges = models.ManyToManyField('Badge')
+    parent_orgs = models.ManyToManyField('Club', related_name='children_orgs', blank=True)
+    badges = models.ManyToManyField('Badge', blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
