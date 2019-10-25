@@ -1,20 +1,34 @@
 import React from 'react'
 import s from 'styled-components'
 
-import { CLUBS_GREY, CLUBS_GREY_LIGHT, HOVER_GRAY } from '../constants/colors'
+import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
 import { mediaMaxWidth, MD, SM } from '../constants/measurements'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
 
+const ROW_PADDING = 0.8
+
 const Row = s.div`
   cursor: pointer;
+  border-radius: 4px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  box-shadow: 0 0 0 transparent;
+  transition: all 0.2s ease;
+  padding: ${ROW_PADDING}rem;
+  width: calc(100% + ${2 * ROW_PADDING}rem);
+  margin: 0 -${ROW_PADDING}rem;
 
   &:hover {
-    background: ${HOVER_GRAY};
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   }
 
-  ${mediaMaxWidth(SM)} {
-    padding: 0 0.25rem;
+  ${mediaMaxWidth(MD)} {
+    margin: 0;
+    width: 100%;
+    border-radius: 0;
   }
 `
 
@@ -27,6 +41,15 @@ const Subtitle = s.p`
     padding-left: 0;
   }
 `
+
+const Name = ({ children }) => (
+  <p
+    className="is-size-6"
+    style={{ color: CLUBS_GREY, marginBottom: '0.2rem' }}
+  >
+    <strong>{children}</strong>
+  </p>
+)
 
 class ClubTableRow extends React.Component {
   getSubtitle() {
@@ -55,17 +78,16 @@ class ClubTableRow extends React.Component {
       <Row>
         <div className="columns is-gapless is-mobile">
           <div className="column" onClick={() => openModal(club)}>
-            <div className="columns is-gapless" style={{ padding: 10 }}>
+            <div className="columns is-gapless">
               <div className="column is-4-desktop is-12-mobile">
-                <b className="is-size-6" style={{ color: CLUBS_GREY }}>
-                  {' '}
-                  {name}{' '}
-                </b>
-                <TagGroup
-                  tags={tags}
-                  selectedTags={selectedTags}
-                  updateTag={updateTag}
-                />
+                <Name>{name}</Name>
+                <div>
+                  <TagGroup
+                    tags={tags}
+                    selectedTags={selectedTags}
+                    updateTag={updateTag}
+                  />
+                </div>
               </div>
               <div className="column is-8-desktop is-12-mobile">
                 <Subtitle>{this.getSubtitle()}</Subtitle>
