@@ -8,17 +8,13 @@ import {
   HOVER_GRAY,
   ALLBIRDS_GRAY,
 } from '../constants/colors'
-import {
-  BORDER_RADIUS,
-  mediaMaxWidth,
-  SM,
-  mediaMinWidth,
-  MD,
-} from '../constants/measurements'
-import { getDefaultClubImageURL, stripTags } from '../utils'
+import { BORDER_RADIUS, mediaMaxWidth, SM } from '../constants/measurements'
+import { stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
 import { InactiveTag } from './common/Tags'
+
+const MIN_HEIGHT = '200px'
 
 const CardWrapper = s.div`
   ${mediaMaxWidth(SM)} {
@@ -28,11 +24,9 @@ const CardWrapper = s.div`
 `
 
 const Description = s.p`
+  margin-top: 0.2rem;
   color: ${CLUBS_GREY_LIGHT};
-
-  ${mediaMinWidth(MD)} {
-    margin-left: 10px;
-  }
+  width: 100%;
 `
 
 const Card = s.div`
@@ -40,7 +34,7 @@ const Card = s.div`
   box-shadow: 0 0 0 transparent;
   transition: all 0.2s ease;
   border-radius: ${BORDER_RADIUS};
-  min-height: 240px;
+  min-height: ${MIN_HEIGHT};
   box-shadow: 0 0 0 ${WHITE};
   background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
   border: 1px solid ${ALLBIRDS_GRAY};
@@ -60,11 +54,11 @@ const Card = s.div`
 `
 
 const Image = s.img`
-  height: 100px;
-  width: 150px;
+  height: 100%;
+  max-width: 150px;
   border-radius: ${BORDER_RADIUS};
-  object-fit: contain;
-  text-align: left;
+  border-radius: 4px;
+  overflow: hidden;
 `
 
 const CardHeader = s.div`
@@ -94,11 +88,11 @@ const ClubCard = ({
   updateTag,
 }) => {
   const { name, description, subtitle, tags } = club
+  const img = club.image_url
   const textDescription = shorten(
     subtitle || stripTags(description) || 'This club has no description.'
   )
 
-  const img = club.image_url || getDefaultClubImageURL()
   return (
     <CardWrapper className="column is-half-desktop">
       <Card
@@ -106,40 +100,36 @@ const ClubCard = ({
         onClick={() => openModal(club)}
         style={{ cursor: 'pointer', height: '100%' }}
       >
-        <div>
-          <div>
-            <FavoriteIcon
-              club={club}
-              favorite={favorite}
-              updateFavorites={updateFavorites}
-              padding="0"
+        <div style={{ display: 'flex' }}>
+          <div style={{ flex: 1 }}>
+            <div>
+              <FavoriteIcon
+                club={club}
+                favorite={favorite}
+                updateFavorites={updateFavorites}
+                padding="0"
+              />
+              <CardHeader>
+                <CardTitle className="is-size-5">{name}</CardTitle>
+              </CardHeader>
+            </div>
+            {club.active || (
+              <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
+            )}
+            <TagGroup
+              tags={tags}
+              selectedTags={selectedTags}
+              updateTag={updateTag}
             />
-            <CardHeader>
-              <CardTitle className="is-size-5">{name}</CardTitle>
-            </CardHeader>
           </div>
-        </div>
-        {club.active || (
-          <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
-        )}
-        <TagGroup
-          tags={tags}
-          selectedTags={selectedTags}
-          updateTag={updateTag}
-        />
-        <div
-          className="columns is-vcentered is-desktop is-gapless"
-          style={{ padding: '10px 5px' }}
-        >
-          <div className="column is-narrow" style={{ height: '100%' }}>
-            <LazyLoad width={150} height={100} offset={1000}>
+          {img && (
+            <LazyLoad height={62} offset={800}>
               <Image src={img} alt={`${name} Logo`} />
             </LazyLoad>
-          </div>
-          <div className="column">
-            <Description>{textDescription}</Description>
-          </div>
+          )}
         </div>
+
+        <Description>{textDescription}</Description>
       </Card>
     </CardWrapper>
   )
