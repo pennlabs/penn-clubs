@@ -37,6 +37,8 @@ const Description = s.p`
 
 const Card = s.div`
   padding: 10px;
+  box-shadow: 0 0 0 transparent;
+  transition: all 0.2s ease;
   border-radius: ${BORDER_RADIUS};
   min-height: 240px;
   box-shadow: 0 0 0 ${WHITE};
@@ -44,6 +46,12 @@ const Card = s.div`
   border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
   height: 100%;
+
+  &:hover,
+  &:active,
+  &:focus {
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+  }
 
   ${mediaMaxWidth(SM)} {
     width: calc(100%);

@@ -10,7 +10,7 @@ import {
 } from '../../constants/colors'
 
 export const Tag = s.span`
-  margin: 2px;
+  margin: 0 4px 4px 0;
   fontSize: .7em;
   font-weight: 600;
 `

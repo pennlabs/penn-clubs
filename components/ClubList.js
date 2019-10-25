@@ -6,6 +6,7 @@ import {
   HOVER_GRAY,
   ALLBIRDS_GRAY,
 } from '../constants/colors'
+import Card from './common/Card'
 import { BlueTag, InactiveTag } from './common/Tags'
 import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL } from '../utils'
@@ -56,10 +57,7 @@ class ClubList extends React.Component {
       <Wrapper>
         <div className="columns is-vcentered is-gapless is-mobile">
           <div onClick={() => openModal(club)} className="column">
-            <div
-              className="columns is-gapless is-vcentered"
-              style={{ padding: 10, width: '100%' }}
-            >
+            <Card className="columns is-gapless is-vcentered">
               <div className="column is-narrow">
                 <Image src={img} />
               </div>
@@ -86,7 +84,7 @@ class ClubList extends React.Component {
               <div className="column">
                 <Subtitle>{subtitle}</Subtitle>
               </div>
-            </div>
+            </Card>
           </div>
           <div className="column is-narrow">
             <FavoriteIcon
