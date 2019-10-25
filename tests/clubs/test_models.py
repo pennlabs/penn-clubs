@@ -4,7 +4,7 @@ import pytz
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from clubs.models import Badge, Club, Event, Favorite, Membership, Tag
+from clubs.models import Advisor, Badge, Club, Event, Favorite, Membership, Tag
 
 
 class ClubTestCase(TestCase):
@@ -62,3 +62,13 @@ class BadgeTestCase(TestCase):
 
     def test_str(self):
         self.assertTrue(str(self.badge), self.badge.label)
+
+
+class AdvisorTestCase(TestCase):
+    def setUp(self):
+        date = pytz.timezone('America/New_York').localize(datetime.datetime(2019, 1, 1))
+        club = Club.objects.create(code='a', name='a', subtitle='a', founded=date, description='a', size=1)
+        self.advisor = Advisor.objects.create(name='Eric Wang', phone='+12025550133', club=club)
+
+    def test_str(self):
+        self.assertEqual(str(self.advisor), self.advisor.name)
