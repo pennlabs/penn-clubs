@@ -13,6 +13,7 @@ import { stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
 import { InactiveTag } from './common/Tags'
+import ClubDetails from './ClubDetails'
 
 const MIN_HEIGHT = '200px'
 
@@ -87,7 +88,15 @@ const ClubCard = ({
   selectedTags,
   updateTag,
 }) => {
-  const { name, description, subtitle, tags } = club
+  const {
+    name,
+    description,
+    subtitle,
+    tags,
+    accepting_members: acceptingMembers,
+    size,
+    application_required: applicationRequired,
+  } = club
   const img = club.image_url
   const textDescription = shorten(
     subtitle || stripTags(description) || 'This club has no description.'
@@ -130,6 +139,12 @@ const ClubCard = ({
         </div>
 
         <Description>{textDescription}</Description>
+
+        <ClubDetails
+          size={size}
+          applicationRequired={applicationRequired}
+          acceptingMembers={acceptingMembers}
+        />
       </Card>
     </CardWrapper>
   )
