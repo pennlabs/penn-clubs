@@ -38,10 +38,11 @@ def find_children_helper(club_object):
     """
     Format and retrieve all children of a club into tree
     """
-    children = club_object.children_orgs.all()
+    children = (club_object.children_orgs.all()
+                                         .prefetch_related("children_orgs"))
     children_recurse = []
     for child in children:
-        children_recurse.append({child.code: find_children_helper(child)})
+        children_recurse.append(find_children_helper(child))
 
     return {
         'name': club_object.name,
