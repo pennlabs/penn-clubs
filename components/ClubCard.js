@@ -80,82 +80,69 @@ const CardTitle = s.strong`
   margin-bottom: 0.5rem;
 `
 
-class ClubCard extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      modal: '',
-    }
-  }
+const shorten = desc => {
+  if (desc.length < 250) return desc
+  return desc.slice(0, 250) + '...'
+}
 
-  shorten(desc) {
-    if (desc.length < 250) return desc
-    return desc.slice(0, 250) + '...'
-  }
+const ClubCard = ({
+  club,
+  openModal,
+  updateFavorites,
+  favorite,
+  selectedTags,
+  updateTag,
+}) => {
+  const { name, description, subtitle, tags } = club
+  const textDescription = shorten(
+    subtitle || stripTags(description) || 'This club has no description.'
+  )
 
-  render() {
-    const {
-      club,
-      openModal,
-      updateFavorites,
-      favorite,
-      selectedTags,
-      updateTag,
-    } = this.props
-    const { name, description, subtitle, tags } = club
-    const img = club.image_url || getDefaultClubImageURL()
-    return (
-      <CardWrapper className="column is-half-desktop">
-        <div
-          style={{ cursor: 'pointer', height: '100%' }}
-          onClick={() => openModal(club)}
-        >
-          <Card className="card">
-            <div>
-              <div>
-                <FavoriteIcon
-                  club={club}
-                  favorite={favorite}
-                  updateFavorites={updateFavorites}
-                  padding="0"
-                />
-                <CardHeader>
-                  <CardTitle className="is-size-5">{name}</CardTitle>
-                </CardHeader>
-              </div>
-            </div>
-            {club.active || (
-              <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
-            )}
-            <TagGroup
-              tags={tags}
-              selectedTags={selectedTags}
-              updateTag={updateTag}
+  const img = club.image_url || getDefaultClubImageURL()
+  return (
+    <CardWrapper className="column is-half-desktop">
+      <Card
+        className="card"
+        onClick={() => openModal(club)}
+        style={{ cursor: 'pointer', height: '100%' }}
+      >
+        <div>
+          <div>
+            <FavoriteIcon
+              club={club}
+              favorite={favorite}
+              updateFavorites={updateFavorites}
+              padding="0"
             />
-            <div
-              className="columns is-vcentered is-desktop is-gapless"
-              style={{ padding: '10px 5px' }}
-            >
-              <div className="column is-narrow" style={{ height: '100%' }}>
-                <LazyLoad width={150} height={100} offset={1000}>
-                  <Image src={img} alt={`${name} Logo`} />
-                </LazyLoad>
-              </div>
-              <div className="column">
-                <Description>
-                  {this.shorten(
-                    subtitle ||
-                      stripTags(description) ||
-                      'This club has no description.'
-                  )}
-                </Description>
-              </div>
-            </div>
-          </Card>
+            <CardHeader>
+              <CardTitle className="is-size-5">{name}</CardTitle>
+            </CardHeader>
+          </div>
         </div>
-      </CardWrapper>
-    )
-  }
+        {club.active || (
+          <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
+        )}
+        <TagGroup
+          tags={tags}
+          selectedTags={selectedTags}
+          updateTag={updateTag}
+        />
+        <div
+          className="columns is-vcentered is-desktop is-gapless"
+          style={{ padding: '10px 5px' }}
+        >
+          <div className="column is-narrow" style={{ height: '100%' }}>
+            <LazyLoad width={150} height={100} offset={1000}>
+              <Image src={img} alt={`${name} Logo`} />
+            </LazyLoad>
+          </div>
+          <div className="column">
+            <Description>{textDescription}</Description>
+          </div>
+        </div>
+      </Card>
+    </CardWrapper>
+  )
 }
 
 export default ClubCard
