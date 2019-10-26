@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth.models import Group
-from django.db.models import Exists, OuterRef, Count
+from django.db.models import Count, Exists, OuterRef
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
 from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
