@@ -57,7 +57,8 @@ do_merge_clubs.short_description = 'Merge selected clubs'
 
 class ClubAdminForm(forms.ModelForm):
     parent_orgs = forms.ModelMultipleChoiceField(
-        queryset=Club.objects.annotate(num_children=Count('children_orgs')).order_by('-num_children')
+        queryset=Club.objects.annotate(num_children=Count('children_orgs')).order_by('-num_children'),
+        required=False
     )
 
 
