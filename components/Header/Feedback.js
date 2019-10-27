@@ -1,10 +1,11 @@
 import s from 'styled-components'
 
+import Icon from '../common/Icon'
 import { logEvent } from '../../utils/analytics'
-
-import { WHITE, CLUBS_BLUE, CLUBS_DEEP_BLUE } from '../../constants/colors'
+import { CLUBS_BLUE, CLUBS_DEEP_BLUE } from '../../constants/colors'
 
 const DIAMETER = '3rem'
+const ICON_SIZE = '1.5rem'
 const OFFSET = '18px'
 
 const FeedbackLink = s.a`
@@ -27,12 +28,6 @@ const FeedbackLink = s.a`
   }
 `
 
-const Icon = s.i`
-  fontSize: 24px;
-  color: ${WHITE};
-  line-height: ${DIAMETER};
-`
-
 export default () => (
   <FeedbackLink
     href="https://airtable.com/shrCsYFWxCwfwE7cf"
@@ -40,6 +35,11 @@ export default () => (
     target="_blank"
     onClick={() => logEvent('feedback', 'clicked')}
   >
-    <Icon className="fa-comment far fa-lg" />
+    <Icon
+      name="message-circle-white"
+      alt="Feedback"
+      size={ICON_SIZE}
+      style={{ marginTop: '0.5rem' }}
+    />
   </FeedbackLink>
 )
