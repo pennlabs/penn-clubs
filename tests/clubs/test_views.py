@@ -618,6 +618,14 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse('clubs-detail', args=(self.club1.code,)))
         self.assertIn(resp.status_code, [200], resp.content)
 
+    def test_club_children(self):
+        """
+        Any user should be able to view clubs children tree.
+        """
+        self.client.login(username=self.user3.username, password='test')
+        resp = self.client.get(reverse('clubs-children', args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200], resp.content)
+
     def test_club_modify(self):
         """
         Owners and officers should be able to modify the club.

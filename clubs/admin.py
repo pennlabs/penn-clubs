@@ -1,6 +1,7 @@
+from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth.models import Group
-from django.db.models import Exists, OuterRef
+from django.db.models import Count, Exists, OuterRef
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
 from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
@@ -54,12 +55,20 @@ def do_merge_clubs(modeladmin, request, queryset):
 do_merge_clubs.short_description = 'Merge selected clubs'
 
 
+class ClubAdminForm(forms.ModelForm):
+    parent_orgs = forms.ModelMultipleChoiceField(
+        queryset=Club.objects.annotate(num_children=Count('children_orgs')).order_by('-num_children'),
+        required=False
+    )
+
+
 class ClubAdmin(admin.ModelAdmin):
     search_fields = ('name', 'subtitle', 'email')
     list_display = ('name', 'email', 'has_owner', 'has_invite', 'active', 'approved')
     list_filter = ('size', 'application_required', 'accepting_members', 'active', 'approved',
                    HasOwnerListFilter, HasInviteListFilter)
     actions = [do_merge_clubs]
+    form = ClubAdminForm
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(
