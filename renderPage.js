@@ -1,10 +1,8 @@
 import React from 'react'
 import s from 'styled-components'
-import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock'
 
 import Header from './components/Header'
 import Footer from './components/Footer'
-import ClubModal from './components/ClubModal'
 
 import { WHITE } from './constants/colors'
 import { doApiRequest } from './utils'
@@ -125,10 +123,8 @@ export function renderListPage(Page) {
     constructor(props) {
       super(props)
       this.state = {
-        modal: false,
         clubs: props.clubs,
         tags: props.tags,
-        modalClub: {},
       }
     }
 
@@ -139,17 +135,6 @@ export function renderListPage(Page) {
       doApiRequest('/tags/?format=json')
         .then(resp => resp.json())
         .then(data => this.setState({ tags: data }))
-    }
-
-    openModal(club) {
-      logEvent('openModal', club.name)
-      this.setState({ modal: true, modalClub: club })
-      disableBodyScroll(this)
-    }
-
-    closeModal(club) {
-      this.setState({ modal: false, modalClub: {} })
-      enableBodyScroll(this)
     }
 
     mapToClubs(favorites) {
@@ -163,9 +148,9 @@ export function renderListPage(Page) {
 
     render() {
       const { favorites } = this.props
-      const { modal, modalClub, clubs, tags } = this.state
+      const { clubs, tags } = this.state
 
-      if (clubs === null || tags === null) {
+      if (!clubs || !tags) {
         return (
           <div
             className="has-text-centered"
@@ -183,25 +168,13 @@ export function renderListPage(Page) {
       const favoriteClubs = this.mapToClubs(favorites)
 
       return (
-        <>
-          <ClubModal
-            modal={modal}
-            club={modalClub}
-            tags={tags}
-            closeModal={this.closeModal.bind(this)}
-            updateFavorites={this.props.updateFavorites}
-            favorite={favorites.includes(modalClub.code)}
-          />
-          <Page
-            clubs={clubs}
-            tags={tags}
-            favorites={favorites}
-            updateFavorites={this.props.updateFavorites}
-            openModal={this.openModal.bind(this)}
-            closeModal={this.closeModal.bind(this)}
-            favoriteClubs={favoriteClubs}
-          />
-        </>
+        <Page
+          clubs={clubs}
+          tags={tags}
+          favorites={favorites}
+          updateFavorites={this.props.updateFavorites}
+          favoriteClubs={favoriteClubs}
+        />
       )
     }
   }

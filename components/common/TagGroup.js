@@ -16,7 +16,7 @@ const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
           className="tag is-rounded has-text-white"
           onClick={e => {
             // Prevent click event from propagating so clicking on the tag doesn't
-            // open the ClubModal displaying the club the tag is nested inside
+            // fire the generic club handle click
             e.stopPropagation()
             updateTag && updateTag(matchedTag, matchedTag.name)
           }}
