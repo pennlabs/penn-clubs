@@ -19,13 +19,7 @@ const Image = s.img`
 
 // TODO PropTypes
 
-const Favorites = ({
-  tags,
-  favorites,
-  updateFavorites,
-  openModal,
-  favoriteClubs,
-}) => (
+const Favorites = ({ tags, favorites, updateFavorites, favoriteClubs }) => (
   <Wrapper>
     <div style={{ padding: '30px 0' }}>
       <h1 className="title" style={{ color: CLUBS_GREY }}>
@@ -39,7 +33,6 @@ const Favorites = ({
         club={club}
         tags={tags}
         updateFavorites={updateFavorites}
-        openModal={openModal}
         favorite={favorites.includes(club.code)}
       />
     ))}

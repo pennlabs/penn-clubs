@@ -11,6 +11,7 @@ import { BlueTag, InactiveTag } from './common/Tags'
 import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL } from '../utils'
 import s from 'styled-components'
+import { CLUB_ROUTE } from '../constants/routes'
 
 const FavoriteIcon = s.span`
   color: ${CLUBS_GREY};
@@ -49,52 +50,54 @@ class ClubList extends React.Component {
   }
 
   render() {
-    const { club, openModal, updateFavorites, favorite } = this.props
-    const { name, subtitle, tags } = club
+    const { club, updateFavorites, favorite } = this.props
+    const { name, subtitle, tags, code } = club
     const img = club.image_url || getDefaultClubImageURL()
 
     return (
       <Wrapper>
-        <div className="columns is-vcentered is-gapless is-mobile">
-          <div onClick={() => openModal(club)} className="column">
-            <Card className="columns is-gapless is-vcentered">
-              <div className="column is-narrow">
-                <Image src={img} />
-              </div>
-              <div className="column is-4" style={{ marginLeft: 20 }}>
-                <strong className="is-size-6" style={{ color: CLUBS_GREY }}>
-                  {name}
-                </strong>
-                <div>
-                  {club.active || (
-                    <InactiveTag className="tag is-rounded has-text-white">
-                      Inactive
-                    </InactiveTag>
-                  )}
-                  {tags.map(tag => (
-                    <BlueTag
-                      key={tag.id}
-                      className="tag is-rounded has-text-white"
-                    >
-                      {tag.name}
-                    </BlueTag>
-                  ))}
+        <a href={CLUB_ROUTE(code)}>
+          <div className="columns is-vcentered is-gapless is-mobile">
+            <div className="column">
+              <Card className="columns is-gapless is-vcentered">
+                <div className="column is-narrow">
+                  <Image src={img} />
                 </div>
-              </div>
-              <div className="column">
-                <Subtitle>{subtitle}</Subtitle>
-              </div>
-            </Card>
+                <div className="column is-4" style={{ marginLeft: 20 }}>
+                  <strong className="is-size-6" style={{ color: CLUBS_GREY }}>
+                    {name}
+                  </strong>
+                  <div>
+                    {club.active || (
+                      <InactiveTag className="tag is-rounded has-text-white">
+                        Inactive
+                      </InactiveTag>
+                    )}
+                    {tags.map(tag => (
+                      <BlueTag
+                        key={tag.id}
+                        className="tag is-rounded has-text-white"
+                      >
+                        {tag.name}
+                      </BlueTag>
+                    ))}
+                  </div>
+                </div>
+                <div className="column">
+                  <Subtitle>{subtitle}</Subtitle>
+                </div>
+              </Card>
+            </div>
+            <div className="column is-narrow">
+              <FavoriteIcon
+                className="icon"
+                onClick={() => updateFavorites(club.code)}
+              >
+                <i className={(favorite ? 'fas' : 'far') + ' fa-heart'}></i>
+              </FavoriteIcon>
+            </div>
           </div>
-          <div className="column is-narrow">
-            <FavoriteIcon
-              className="icon"
-              onClick={() => updateFavorites(club.code)}
-            >
-              <i className={(favorite ? 'fas' : 'far') + ' fa-heart'}></i>
-            </FavoriteIcon>
-          </div>
-        </div>
+        </a>
       </Wrapper>
     )
   }
