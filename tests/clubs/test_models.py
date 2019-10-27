@@ -10,11 +10,16 @@ from clubs.models import Badge, Club, Event, Favorite, Membership, Tag
 class ClubTestCase(TestCase):
     def setUp(self):
         date = pytz.timezone('America/New_York').localize(datetime.datetime(2019, 1, 1))
-        self.club = Club.objects.create(code='a', name='a', subtitle='a', founded=date, description='a', size=1)
+        self.club1 = Club.objects.create(code='a', name='a', subtitle='a', founded=date, description='a', size=1)
+        self.club2 = Club.objects.create(code='b', name='b', subtitle='b', founded=date, description='b', size=1)
+        self.club2.parent_orgs.add(self.club1)
 
     def test_str(self):
-        self.assertEqual(str(self.club), self.club.name)
+        self.assertEqual(str(self.club1), self.club1.name)
 
+    def test_parent_children(self):
+        self.assertEqual(self.club2.parent_orgs.first(), self.club1)
+        self.assertEqual(self.club1.children_orgs.first(), self.club2)
 
 class EventTestCase(TestCase):
     def setUp(self):
