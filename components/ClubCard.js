@@ -15,8 +15,6 @@ import TagGroup from './common/TagGroup'
 import { InactiveTag } from './common/Tags'
 import ClubDetails from './ClubDetails'
 
-const MIN_HEIGHT = '200px'
-
 const CardWrapper = s.div`
   ${mediaMaxWidth(SM)} {
     padding-top: 0;
@@ -35,7 +33,6 @@ const Card = s.div`
   box-shadow: 0 0 0 transparent;
   transition: all 0.2s ease;
   border-radius: ${BORDER_RADIUS};
-  min-height: ${MIN_HEIGHT};
   box-shadow: 0 0 0 ${WHITE};
   background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
   border: 1px solid ${ALLBIRDS_GRAY};

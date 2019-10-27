@@ -40,11 +40,12 @@ export const EMPTY_DESCRIPTION =
   '<span style="color:#666">This club has not added a description yet.</span>'
 export const LOGIN_URL = `${API_BASE_URL}/accounts/login/`
 
-export function getSizeDisplay(size) {
-  if (size === 1) return '< 20 Members'
-  else if (size === 2) return '20 - 50 Members'
-  else if (size === 3) return '50 - 100 Members'
-  else if (size === 4) return '> 100 Members'
+export function getSizeDisplay(size, showMembersLabel = true) {
+  const postfix = showMembersLabel ? ' Members' : ''
+  if (size === 1) return '< 20' + postfix
+  else if (size === 2) return '20 - 50' + postfix
+  else if (size === 3) return '50 - 100' + postfix
+  else if (size === 4) return '> 100' + postfix
   else return 'Unknown'
 }
 

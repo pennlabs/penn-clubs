@@ -2,9 +2,10 @@ import React from 'react'
 import s from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
-import { mediaMaxWidth, MD, SM } from '../constants/measurements'
+import { mediaMaxWidth, MD } from '../constants/measurements'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
+import ClubDetails from './ClubDetails'
 
 const ROW_PADDING = 0.8
 
@@ -72,7 +73,13 @@ class ClubTableRow extends React.Component {
       selectedTags,
       updateTag,
     } = this.props
-    const { name, tags } = club
+    const {
+      name,
+      tags,
+      accepting_members: acceptingMembers,
+      size,
+      application_required: applicationRequired,
+    } = club
 
     return (
       <Row>
@@ -91,6 +98,11 @@ class ClubTableRow extends React.Component {
               </div>
               <div className="column is-8-desktop is-12-mobile">
                 <Subtitle>{this.getSubtitle()}</Subtitle>
+                <ClubDetails
+                  size={size}
+                  applicationRequired={applicationRequired}
+                  acceptingMembers={acceptingMembers}
+                />
               </div>
             </div>
           </div>
