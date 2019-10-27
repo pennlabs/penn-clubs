@@ -1,5 +1,6 @@
 import s from 'styled-components'
 
+import Icon from '../common/Icon'
 import { Link } from '../../routes'
 import { LOGIN_URL } from '../../utils'
 import { mediaMaxWidth, MD } from '../../constants/measurements'
@@ -51,7 +52,11 @@ export default ({ userInfo, authenticated, show }) => (
       {userInfo && (
         <Link route="settings">
           <StyledLink>
-            <i className="fa fa-fw fa-user"></i>
+            <Icon
+              name="user"
+              alt="settings"
+              style={{ opacity: 0.5, marginRight: '4px' }}
+            />
             {userInfo.name || userInfo.username}
           </StyledLink>
         </Link>

@@ -1,6 +1,9 @@
 import s from 'styled-components'
+
 import Social from './Social'
-import { SNOW, RED } from '../../constants/colors'
+import { SNOW } from '../../constants/colors'
+import Icon from '../common/Icon'
+import { SmallText } from '../common/Typography'
 
 const Foot = s.footer`
   height: 8rem;
@@ -16,13 +19,15 @@ const Foot = s.footer`
 
 const Footer = () => (
   <Foot className="footer">
-    <p>
+    <SmallText>
       Made with{' '}
-      <span className="icon is-small" style={{ color: RED }}>
-        <i className="fa fa-heart"></i>
-      </span>{' '}
+      <Icon
+        name="heart-red"
+        alt="love"
+        style={{ transform: 'translateY(2.5px)' }}
+      />{' '}
       by <a href="https://pennlabs.org/">Penn Labs</a>
-    </p>
+    </SmallText>
     <Social />
   </Foot>
 )

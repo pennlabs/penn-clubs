@@ -7,6 +7,7 @@ const IconTag = s.img`
   width: 1rem;
   object-fit: contain;
   margin-bottom: 0;
+  transform: translateY(2.5px);
 `
 
 const Icon = ({ name, alt, style }) => (
