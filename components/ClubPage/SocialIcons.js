@@ -1,49 +1,48 @@
-import { CLUBS_GREY } from '../../constants/colors.js'
-import s from 'styled-components'
+import Icon from '../common/Icon'
 
 const socials = [
   {
     name: 'facebook',
     label: 'Facebook',
-    icon: 'fab fa-facebook-square',
+    icon: 'facebook',
   },
   {
     name: 'email',
     label: 'Email',
     prefix: 'mailto:',
-    icon: 'fas fa-envelope',
+    icon: 'mail',
   },
   {
     name: 'website',
     label: 'Website',
-    icon: 'fa fa-link',
+    icon: 'link',
   },
   {
     name: 'github',
     label: 'GitHub',
-    icon: 'fab fa-github',
+    icon: 'github',
   },
   {
     name: 'linkedin',
     label: 'LinkedIn',
-    icon: 'fab fa-linkedin',
+    icon: 'linkedin',
   },
   {
     name: 'instagram',
     label: 'Instagram',
-    icon: 'fab fa-instagram',
+    icon: 'instagram',
   },
   {
     name: 'twitter',
     label: 'Twitter',
-    icon: 'fab fa-twitter',
+    icon: 'twitter',
   },
 ]
 
-const Icon = s.a`
-  color: ${CLUBS_GREY};
-  padding-right: 5px;
-`
+const iconStyles = {
+  opacity: 0.5,
+  paddingRight: '5px',
+}
 
 export default props => {
   const { club } = props
@@ -57,19 +56,14 @@ export default props => {
         .filter(item => club[item.name])
         .map(item => (
           <div key={item.name}>
-            <Icon
+            <Icon styles={iconStyles} name={item.icon} alt={item.icon} />
+            <a
               href={
-                club[item.name]
-                  ? (item.prefix || '') + club[item.name]
-                  : undefined
+                club[item.name] ? (item.prefix || '') + club[item.name] : '#'
               }
             >
-              <i
-                className={'fa-fw ' + item.icon}
-                style={{ height: '100%' }}
-              ></i>{' '}
               {club[item.name]}
-            </Icon>
+            </a>
           </div>
         ))}
     </div>
