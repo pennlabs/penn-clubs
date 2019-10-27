@@ -5,7 +5,8 @@ export function stripTags(val) {
   if (!val) {
     return val
   }
-  return val.replace(/(<[^>]+>)/ig, '')
+  return val
+    .replace(/(<[^>]+>)/gi, '')
     .replace('&amp;', '&')
     .replace('&lt;', '<')
     .replace('&gt;', '>')
@@ -28,19 +29,23 @@ function removeEndingSlash(val) {
   return val
 }
 
-export const API_BASE_URL = removeEndingSlash(getConfig().publicRuntimeConfig.API_BASE_URL) || 'https://api.pennclubs.com'
+export const API_BASE_URL =
+  removeEndingSlash(getConfig().publicRuntimeConfig.API_BASE_URL) ||
+  'https://api.pennclubs.com'
 export const ROLE_OWNER = 0
 export const ROLE_OFFICER = 10
 export const ROLE_MEMBER = 20
 
-export const EMPTY_DESCRIPTION = '<span style="color:#666">This club has not added a description yet.</span>'
+export const EMPTY_DESCRIPTION =
+  '<span style="color:#666">This club has not added a description yet.</span>'
 export const LOGIN_URL = `${API_BASE_URL}/accounts/login/`
 
-export function getSizeDisplay(size) {
-  if (size === 1) return '< 20 Members'
-  else if (size === 2) return '20 - 50 Members'
-  else if (size === 3) return '50 - 100 Members'
-  else if (size === 4) return '> 100 Members'
+export function getSizeDisplay(size, showMembersLabel = true) {
+  const postfix = showMembersLabel ? ' Members' : ''
+  if (size === 1) return '< 20' + postfix
+  else if (size === 2) return '20 - 50' + postfix
+  else if (size === 3) return '50 - 100' + postfix
+  else if (size === 4) return '> 100' + postfix
   else return 'Unknown'
 }
 
@@ -60,7 +65,10 @@ export function doApiRequest(path, data) {
     if (!(data.body instanceof FormData)) {
       data.headers['Content-Type'] = 'application/json'
     }
-    data.headers['X-CSRFToken'] = (/csrftoken=(\w+)/.exec(document.cookie) || [null, null])[1]
+    data.headers['X-CSRFToken'] = (/csrftoken=(\w+)/.exec(document.cookie) || [
+      null,
+      null,
+    ])[1]
   }
   if (data.body && !(data.body instanceof FormData)) {
     data.body = JSON.stringify(data.body)
@@ -70,9 +78,17 @@ export function doApiRequest(path, data) {
 
 export function titleize(str) {
   if (!str) return str
-  return str.replace(/_/g, ' ').split(' ').map((a) => a[0].toUpperCase() + a.substr(1).toLowerCase()).join(' ')
+  return str
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map(a => a[0].toUpperCase() + a.substr(1).toLowerCase())
+    .join(' ')
 }
 
 export function formatResponse(err) {
-  return Object.keys(err).map((a) => <div key={a}><b>{titleize(a)}:</b> {err[a]}</div>)
+  return Object.keys(err).map(a => (
+    <div key={a}>
+      <b>{titleize(a)}:</b> {err[a]}
+    </div>
+  ))
 }

@@ -4,6 +4,7 @@ import s from 'styled-components'
 import ClubList from '../components/ClubList'
 import { renderListPage } from '../renderPage'
 import { CLUBS_GREY } from '../constants/colors'
+import { HOME_ROUTE } from '../constants/routes'
 
 const Wrapper = s.div`
   padding: 0 2rem;
@@ -18,13 +19,7 @@ const Image = s.img`
 
 // TODO PropTypes
 
-const Favorites = ({
-  tags,
-  favorites,
-  updateFavorites,
-  openModal,
-  favoriteClubs,
-}) => (
+const Favorites = ({ tags, favorites, updateFavorites, favoriteClubs }) => (
   <Wrapper>
     <div style={{ padding: '30px 0' }}>
       <h1 className="title" style={{ color: CLUBS_GREY }}>
@@ -38,7 +33,6 @@ const Favorites = ({
         club={club}
         tags={tags}
         updateFavorites={updateFavorites}
-        openModal={openModal}
         favorite={favorites.includes(club.code)}
       />
     ))}
@@ -55,7 +49,7 @@ const Favorites = ({
         <p className="has-text-light-grey" style={{ marginBottom: '1rem' }}>
           {"You haven't selected any favorites yet!"}
         </p>
-        <a href="/" className="button is-info">
+        <a href={HOME_ROUTE} className="button is-info">
           Browse Clubs
         </a>
       </div>

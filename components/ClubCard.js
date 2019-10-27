@@ -8,17 +8,13 @@ import {
   HOVER_GRAY,
   ALLBIRDS_GRAY,
 } from '../constants/colors'
-import {
-  BORDER_RADIUS,
-  mediaMaxWidth,
-  SM,
-  mediaMinWidth,
-  MD,
-} from '../constants/measurements'
-import { getDefaultClubImageURL, stripTags } from '../utils'
+import { BORDER_RADIUS, mediaMaxWidth, SM } from '../constants/measurements'
+import { stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
 import { InactiveTag } from './common/Tags'
+import ClubDetails from './ClubDetails'
+import { CLUB_ROUTE } from '../constants/routes'
 
 const CardWrapper = s.div`
   ${mediaMaxWidth(SM)} {
@@ -28,22 +24,27 @@ const CardWrapper = s.div`
 `
 
 const Description = s.p`
+  margin-top: 0.2rem;
   color: ${CLUBS_GREY_LIGHT};
-
-  ${mediaMinWidth(MD)} {
-    margin-left: 10px;
-  }
+  width: 100%;
 `
 
 const Card = s.div`
   padding: 10px;
+  box-shadow: 0 0 0 transparent;
+  transition: all 0.2s ease;
   border-radius: ${BORDER_RADIUS};
-  min-height: 240px;
   box-shadow: 0 0 0 ${WHITE};
   background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
   border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
   height: 100%;
+
+  &:hover,
+  &:active,
+  &:focus {
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+  }
 
   ${mediaMaxWidth(SM)} {
     width: calc(100%);
@@ -52,11 +53,11 @@ const Card = s.div`
 `
 
 const Image = s.img`
-  height: 100px;
-  width: 150px;
+  height: 100%;
+  max-width: 150px;
   border-radius: ${BORDER_RADIUS};
-  object-fit: contain;
-  text-align: left;
+  border-radius: 4px;
+  overflow: hidden;
 `
 
 const CardHeader = s.div`
@@ -72,38 +73,39 @@ const CardTitle = s.strong`
   margin-bottom: 0.5rem;
 `
 
-class ClubCard extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      modal: '',
-    }
-  }
+const shorten = desc => {
+  if (desc.length < 250) return desc
+  return desc.slice(0, 250) + '...'
+}
 
-  shorten(desc) {
-    if (desc.length < 250) return desc
-    return desc.slice(0, 250) + '...'
-  }
+const ClubCard = ({
+  club,
+  updateFavorites,
+  favorite,
+  selectedTags,
+  updateTag,
+}) => {
+  const {
+    name,
+    description,
+    subtitle,
+    tags,
+    accepting_members: acceptingMembers,
+    size,
+    code,
+    application_required: applicationRequired,
+  } = club
+  const img = club.image_url
+  const textDescription = shorten(
+    subtitle || stripTags(description) || 'This club has no description.'
+  )
 
-  render() {
-    const {
-      club,
-      openModal,
-      updateFavorites,
-      favorite,
-      selectedTags,
-      updateTag,
-    } = this.props
-    const { name, description, subtitle, tags } = club
-    const img = club.image_url || getDefaultClubImageURL()
-    return (
-      <CardWrapper className="column is-half-desktop">
-        <div
-          style={{ cursor: 'pointer', height: '100%' }}
-          onClick={() => openModal(club)}
-        >
-          <Card className="card">
-            <div>
+  return (
+    <CardWrapper className="column is-half-desktop">
+      <a href={CLUB_ROUTE(code)} target="_BLANK">
+        <Card className="card" style={{ cursor: 'pointer', height: '100%' }}>
+          <div style={{ display: 'flex' }}>
+            <div style={{ flex: 1 }}>
               <div>
                 <FavoriteIcon
                   club={club}
@@ -115,39 +117,33 @@ class ClubCard extends React.Component {
                   <CardTitle className="is-size-5">{name}</CardTitle>
                 </CardHeader>
               </div>
+              {club.active || (
+                <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
+              )}
+              <TagGroup
+                tags={tags}
+                selectedTags={selectedTags}
+                updateTag={updateTag}
+              />
             </div>
-            {club.active || (
-              <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
+            {img && (
+              <LazyLoad height={62} offset={800}>
+                <Image src={img} alt={`${name} Logo`} />
+              </LazyLoad>
             )}
-            <TagGroup
-              tags={tags}
-              selectedTags={selectedTags}
-              updateTag={updateTag}
-            />
-            <div
-              className="columns is-vcentered is-desktop is-gapless"
-              style={{ padding: '10px 5px' }}
-            >
-              <div className="column is-narrow" style={{ height: '100%' }}>
-                <LazyLoad width={150} height={100} offset={1000}>
-                  <Image src={img} alt={`${name} Logo`} />
-                </LazyLoad>
-              </div>
-              <div className="column">
-                <Description>
-                  {this.shorten(
-                    subtitle ||
-                      stripTags(description) ||
-                      'This club has no description.'
-                  )}
-                </Description>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </CardWrapper>
-    )
-  }
+          </div>
+
+          <Description>{textDescription}</Description>
+
+          <ClubDetails
+            size={size}
+            applicationRequired={applicationRequired}
+            acceptingMembers={acceptingMembers}
+          />
+        </Card>
+      </a>
+    </CardWrapper>
+  )
 }
 
 export default ClubCard

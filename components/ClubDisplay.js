@@ -54,7 +54,6 @@ class ClubDisplay extends React.Component {
     const {
       displayClubs,
       tags,
-      openModal,
       favorites,
       updateFavorites,
       display,
@@ -63,40 +62,38 @@ class ClubDisplay extends React.Component {
     } = this.props
     const clubsToShow = displayClubs.slice(0, this.state.end)
 
+    if (display === 'cards') {
+      return (
+        <div className="columns is-multiline is-desktop is-tablet">
+          {clubsToShow.map(club => (
+            <ClubCard
+              key={club.code}
+              club={club}
+              tags={tags}
+              selectedTags={selectedTags}
+              updateTag={updateTag}
+              updateFavorites={updateFavorites}
+              favorite={favorites.includes(club.code)}
+            />
+          ))}
+        </div>
+      )
+    }
+
     return (
-      <Wrapper>
-        {display === 'cards' ? (
-          <div className="columns is-multiline is-desktop is-tablet">
-            {clubsToShow.map(club => (
-              <ClubCard
-                key={club.code}
-                club={club}
-                tags={tags}
-                selectedTags={selectedTags}
-                updateTag={updateTag}
-                openModal={openModal}
-                updateFavorites={updateFavorites}
-                favorite={favorites.includes(club.code)}
-              />
-            ))}
-          </div>
-        ) : (
-          <ClubTableRowWrapper>
-            {clubsToShow.map(club => (
-              <ClubTableRow
-                club={club}
-                key={club.code}
-                tags={tags}
-                selectedTags={selectedTags}
-                updateTag={updateTag}
-                updateFavorites={updateFavorites}
-                openModal={openModal}
-                favorite={favorites.includes(club.code)}
-              />
-            ))}
-          </ClubTableRowWrapper>
-        )}
-      </Wrapper>
+      <ClubTableRowWrapper>
+        {clubsToShow.map(club => (
+          <ClubTableRow
+            club={club}
+            key={club.code}
+            tags={tags}
+            selectedTags={selectedTags}
+            updateTag={updateTag}
+            updateFavorites={updateFavorites}
+            favorite={favorites.includes(club.code)}
+          />
+        ))}
+      </ClubTableRowWrapper>
     )
   }
 }
