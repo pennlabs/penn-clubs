@@ -1,0 +1,59 @@
+{
+  "name": "2020 Class Board",
+  "code": "2020-class-board",
+  "description": "",
+  "founded": null,
+  "size": 1,
+  "email": "karimels@wharton.upenn.edu",
+  "facebook": null,
+  "twitter": null,
+  "instagram": null,
+  "linkedin": null,
+  "github": null,
+  "website": null,
+  "how_to_get_involved": "",
+  "tags": [
+    {
+      "id": 2,
+      "name": "STUDENT GOVERNANCE"
+    }
+  ],
+  "children": [
+    {
+      "name": "Fossil Free Penn",
+      "code": "fossil-free-penn",
+      "children": [
+        {
+          "name": "2022 Class Board",
+          "code": "2022-class-board",
+          "children": []
+        },
+        {
+          "name": "Access Engineering",
+          "code": "access-engineering",
+          "children": []
+        }
+      ]
+    },
+    {
+      "name": "Penn Beekeeping Club",
+      "code": "penn-beekeeping-club",
+      "children": []
+    },
+    {
+      "name": "Penn Vegan Society",
+      "code": "penn-vegan-society",
+      "children": []
+    }
+  ],
+  "subtitle": "",
+  "application_required": 3,
+  "accepting_members": false,
+  "listserv": "",
+  "image_url": null,
+  "members": [],
+  "favorite_count": 0,
+  "active": false,
+  "parent_orgs": [],
+  "badges": []
+}

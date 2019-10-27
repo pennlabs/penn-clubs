@@ -26,7 +26,7 @@
   },
   "scripts": {
     "lint": "eslint \"./{pages,components}/**/*.js\" \"*.js\"",
-    "dev": "node server/index.js",
+    "dev": "nodemon server/index.js",
     "build": "next build",
     "start": "NODE_ENV=production node server/index.js",
     "storybook": "start-storybook -p 6006",
