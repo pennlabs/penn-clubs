@@ -54,7 +54,6 @@ class ClubDisplay extends React.Component {
     const {
       displayClubs,
       tags,
-      openModal,
       favorites,
       updateFavorites,
       display,
@@ -73,7 +72,6 @@ class ClubDisplay extends React.Component {
               tags={tags}
               selectedTags={selectedTags}
               updateTag={updateTag}
-              openModal={openModal}
               updateFavorites={updateFavorites}
               favorite={favorites.includes(club.code)}
             />
@@ -92,7 +90,6 @@ class ClubDisplay extends React.Component {
             selectedTags={selectedTags}
             updateTag={updateTag}
             updateFavorites={updateFavorites}
-            openModal={openModal}
             favorite={favorites.includes(club.code)}
           />
         ))}

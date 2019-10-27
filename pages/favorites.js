@@ -4,6 +4,7 @@ import s from 'styled-components'
 import ClubList from '../components/ClubList'
 import { renderListPage } from '../renderPage'
 import { CLUBS_GREY } from '../constants/colors'
+import { HOME_ROUTE } from '../constants/routes'
 
 const Wrapper = s.div`
   padding: 0 2rem;
@@ -55,7 +56,7 @@ const Favorites = ({
         <p className="has-text-light-grey" style={{ marginBottom: '1rem' }}>
           {"You haven't selected any favorites yet!"}
         </p>
-        <a href="/" className="button is-info">
+        <a href={HOME_ROUTE} className="button is-info">
           Browse Clubs
         </a>
       </div>

@@ -2,10 +2,11 @@ import React from 'react'
 import s from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
-import { mediaMaxWidth, MD } from '../constants/measurements'
+import { mediaMaxWidth, mediaMinWidth, MD, LG } from '../constants/measurements'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
 import ClubDetails from './ClubDetails'
+import { CLUB_ROUTE } from '../constants/routes'
 
 const ROW_PADDING = 0.8
 
@@ -33,14 +34,15 @@ const Row = s.div`
   }
 `
 
+const Content = s.div`
+  ${mediaMinWidth(LG)} {
+    padding: 0 0.75rem;
+  }
+`
+
 const Subtitle = s.p`
   color: ${CLUBS_GREY_LIGHT};
   font-size: .8rem;
-  padding-left: 10px;
-
-  ${mediaMaxWidth(MD)} {
-    padding-left: 0;
-  }
 `
 
 const Name = ({ children }) => (
@@ -67,7 +69,6 @@ class ClubTableRow extends React.Component {
   render() {
     const {
       club,
-      openModal,
       updateFavorites,
       favorite,
       selectedTags,
@@ -78,42 +79,47 @@ class ClubTableRow extends React.Component {
       tags,
       accepting_members: acceptingMembers,
       size,
+      code,
       application_required: applicationRequired,
     } = club
 
     return (
       <Row>
-        <div className="columns is-gapless is-mobile">
-          <div className="column" onClick={() => openModal(club)}>
-            <div className="columns is-gapless">
-              <div className="column is-4-desktop is-12-mobile">
-                <Name>{name}</Name>
-                <div>
-                  <TagGroup
-                    tags={tags}
-                    selectedTags={selectedTags}
-                    updateTag={updateTag}
-                  />
+        <a href={CLUB_ROUTE(code)} target="_BLANK">
+          <div className="columns is-gapless is-mobile">
+            <div className="column">
+              <div className="columns is-gapless">
+                <div className="column is-4-desktop is-12-mobile">
+                  <Name>{name}</Name>
+                  <div>
+                    <TagGroup
+                      tags={tags}
+                      selectedTags={selectedTags}
+                      updateTag={updateTag}
+                    />
+                  </div>
+                </div>
+                <div className="column is-8-desktop is-12-mobile">
+                  <Content>
+                    <Subtitle>{this.getSubtitle()}</Subtitle>
+                    <ClubDetails
+                      size={size}
+                      applicationRequired={applicationRequired}
+                      acceptingMembers={acceptingMembers}
+                    />
+                  </Content>
                 </div>
               </div>
-              <div className="column is-8-desktop is-12-mobile">
-                <Subtitle>{this.getSubtitle()}</Subtitle>
-                <ClubDetails
-                  size={size}
-                  applicationRequired={applicationRequired}
-                  acceptingMembers={acceptingMembers}
-                />
-              </div>
+            </div>
+            <div className="column is-narrow">
+              <FavoriteIcon
+                club={club}
+                favorite={favorite}
+                updateFavorites={updateFavorites}
+              />
             </div>
           </div>
-          <div className="column is-narrow">
-            <FavoriteIcon
-              club={club}
-              favorite={favorite}
-              updateFavorites={updateFavorites}
-            />
-          </div>
-        </div>
+        </a>
       </Row>
     )
   }
