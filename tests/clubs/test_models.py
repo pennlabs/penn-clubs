@@ -21,6 +21,7 @@ class ClubTestCase(TestCase):
         self.assertEqual(self.club2.parent_orgs.first(), self.club1)
         self.assertEqual(self.club1.children_orgs.first(), self.club2)
 
+
 class EventTestCase(TestCase):
     def setUp(self):
         date = pytz.timezone('America/New_York').localize(datetime.datetime(2019, 1, 1))
