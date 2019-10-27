@@ -1,3 +1,4 @@
+import Icon from '../components/common/Icon'
 import renderPage from '../renderPage.js'
 import {
   doApiRequest,
@@ -107,10 +108,9 @@ class SettingsForm extends React.Component {
                 <p>
                   The list below shows what clubs you are a member of. If you
                   would like to hide a particular club from the public, click on
-                  the{' '}
-                  <i className="fa fa-fw fa-check-circle has-text-success"></i>{' '}
-                  icon under the Public column. This will not hide your
-                  membership from other club members.
+                  the <Icon name="check-circle-green" alt="public" /> icon under
+                  the Public column. This will not hide your membership from
+                  other club members.
                 </p>
                 <table className="table is-fullwidth">
                   <thead>
@@ -131,23 +131,23 @@ class SettingsForm extends React.Component {
                           <td>{item.title}</td>
                           <td>{item.role_display}</td>
                           <td className="has-text-centered">
-                            <i
-                              className={
+                            <Icon
+                              name={
                                 item.active
-                                  ? 'fa fa-check-circle has-text-success'
-                                  : 'fa fa-times-circle has-text-danger'
+                                  ? 'check-circle-green'
+                                  : 'x-circle-red'
                               }
+                              alt={item.active ? 'active' : 'inactive'}
                             />
                           </td>
                           <td className="has-text-centered">
-                            <i
-                              style={{ cursor: 'pointer' }}
-                              onClick={() => this.togglePublic(item)}
-                              className={
+                            <Icon
+                              name={
                                 item.public
-                                  ? 'fa fa-check-circle has-text-success'
-                                  : 'fa fa-times-circle has-text-danger'
+                                  ? 'check-circle-green'
+                                  : 'x-circle-red'
                               }
+                              alt={item.public ? 'public' : 'not public'}
                             />
                           </td>
                           <td className="buttons">

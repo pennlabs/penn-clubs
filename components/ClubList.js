@@ -1,4 +1,6 @@
 import React from 'react'
+import s from 'styled-components'
+
 import {
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
@@ -10,7 +12,6 @@ import Card from './common/Card'
 import { BlueTag, InactiveTag } from './common/Tags'
 import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL } from '../utils'
-import s from 'styled-components'
 import { CLUB_ROUTE } from '../constants/routes'
 
 const FavoriteIcon = s.span`
