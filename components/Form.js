@@ -6,6 +6,7 @@ import draftToHtml from 'draftjs-to-html'
 import htmlToDraft from 'html-to-draftjs'
 import Head from 'next/head'
 
+import Icon from './common/Icon'
 import { titleize } from '../utils'
 
 class Form extends React.Component {
@@ -218,7 +219,7 @@ class Form extends React.Component {
             />
             <span className="file-cta">
               <span className="file-icon">
-                <i className="fas fa-upload"></i>
+                <Icon name="upload" alt="upload" />
               </span>
               <span className="file-label">Choose a file...</span>
             </span>

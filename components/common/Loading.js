@@ -10,7 +10,7 @@ const TIMER = '1.25s'
 
 const LoadingWrapper = s.div`
   width: 100%;
-  padding: 1rem 0;
+  padding: calc(1rem + 5vh) 0;
   text-align: center;
   transition: opacity 0.5s ease;
   opacity: ${({ hide }) => (hide ? '0' : '1')};
