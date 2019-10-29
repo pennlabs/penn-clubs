@@ -1,5 +1,7 @@
 import React from 'react'
 import s from 'styled-components'
+
+import Icon from './common/Icon'
 import DropdownFilter from './DropdownFilter'
 import {
   BORDER_RADIUS,
@@ -99,9 +101,9 @@ const SearchIcon = s.span`
   cursor: pointer;
   color: ${MEDIUM_GRAY};
   opacity: 0.5;
-  padding-top: 10px;
+  padding-top: 4px;
   position: absolute;
-  right: 20px;
+  right: 24px;
 
   ${mediaMaxWidth(MD)} {
     right: 24px;
@@ -165,14 +167,15 @@ class SearchBar extends React.Component {
         <Wrapper>
           <Content>
             <SearchWrapper>
-              <SearchIcon className="icon">
+              <SearchIcon>
                 {this.state.nameInput ? (
-                  <i
-                    onClick={e => this.setState({ nameInput: '' })}
-                    className="fas fa-times"
+                  <Icon
+                    name="x"
+                    alt="cancel search"
+                    onClick={() => this.setState({ nameInput: '' })}
                   />
                 ) : (
-                  <i className="fas fa-search" />
+                  <Icon name="search" alt="search" />
                 )}
               </SearchIcon>
               <Input
