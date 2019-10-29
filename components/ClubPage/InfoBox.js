@@ -27,18 +27,18 @@ const InfoBox = ({
     </p>
     {acceptingMembers ? (
       <p>
-        <Icon name="check-circle" style={iconStyles} />
+        <Icon name="check-circle" style={iconStyles} alt="check" />
         {' Currently Accepting Members'}
       </p>
     ) : (
       <p>
-        <Icon name="x-circle" style={iconStyles} />
+        <Icon name="x-circle" style={iconStyles} alt="negative" />
         {' Not Currently Accepting Members'}
       </p>
     )}
 
     <p>
-      <Icon name="edit" style={iconStyles} />
+      <Icon name="edit" style={iconStyles} alt="edit" />
       {' ' + applicationTextMap[applicationRequired] || defaultApplicationText}
     </p>
   </div>

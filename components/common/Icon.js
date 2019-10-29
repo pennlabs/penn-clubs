@@ -12,12 +12,13 @@ const IconTag = s.img`
   transform: translateY(2.5px);
 `
 
-const Icon = ({ name, alt, size, style }) => (
+const Icon = ({ name, alt, size, style, ...props }) => (
   <IconTag
     src={`/static/img/icons/${name}.svg`}
     alt={alt}
     style={style}
     size={size}
+    {...props}
   />
 )
 

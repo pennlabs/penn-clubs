@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import s from 'styled-components'
+
+import Icon from '../common/Icon'
 import { CLUBS_GREY, CLUBS_BLUE, WHITE } from '../../constants/colors'
 import { ROLE_OFFICER } from '../../utils'
 import { Link } from '../../routes'
@@ -12,7 +15,10 @@ const Title = s.div`
 `
 
 const Header = props => {
-  const { club, userInfo } = props
+  const { club, userInfo, favorites } = props
+
+  const isFavorite = favorites.includes(club.code)
+
   // inClub is set to the membership object if the user is in the club, or false
   // otherwise
   const inClub =
@@ -24,29 +30,32 @@ const Header = props => {
   const canEdit =
     (inClub && inClub.role <= ROLE_OFFICER) ||
     (userInfo && userInfo.is_superuser)
+
+  const [favCount, setFavCount] = useState(club.favorite_count || 0)
+
   return (
     <div>
       <Title>
         <h1
-          className="title is-size-1-desktop is-size-3-mobile"
+          className="title is-size-2-desktop is-size-3-mobile"
           style={{ color: CLUBS_GREY, marginBottom: 10 }}
         >
           {club.name}{' '}
           {club.active || <span className="has-text-grey">(Inactive)</span>}
         </h1>
-        <span style={{ fontSize: '1.5em' }}>
-          {club.favorite_count}{' '}
-          <i
-            className={
-              (props.favorites.includes(club.code) ? 'fa' : 'far') + ' fa-heart'
-            }
+        <span>
+          {favCount}{' '}
+          <Icon
+            name={isFavorite ? 'heart-red' : 'heart'}
+            alt={isFavorite ? 'click to unfavorite' : 'click to favorite'}
             style={{ cursor: 'pointer' }}
-            onClick={() =>
+            onClick={() => {
+              console.log('click')
               props.updateFavorites(club.code)
-                ? club.favorite_count++
-                : Math.max(0, club.favorite_count--)
-            }
-          ></i>
+                ? setFavCount(favCount + 1)
+                : setFavCount(Math.max(0, favCount - 1))
+            }}
+          />
           {canEdit && (
             <Link route="club-edit" params={{ club: club.code }}>
               <a className="button is-success" style={{ marginLeft: 15 }}>

@@ -3,6 +3,7 @@ import s from 'styled-components'
 
 import Header from './components/Header'
 import Footer from './components/Footer'
+import Loading from './components/common/Loading'
 
 import { WHITE } from './constants/colors'
 import { doApiRequest } from './utils'
@@ -151,18 +152,7 @@ export function renderListPage(Page) {
       const { clubs, tags } = this.state
 
       if (!clubs || !tags) {
-        return (
-          <div
-            className="has-text-centered"
-            style={{ margin: '25vh 0', opacity: 0.25 }}
-          >
-            <div className="fa-3x">
-              <i className="fas fa-spinner fa-pulse" />
-              <br />
-              <p className="title is-5">Loading...</p>
-            </div>
-          </div>
-        )
+        return <Loading />
       }
 
       const favoriteClubs = this.mapToClubs(favorites)

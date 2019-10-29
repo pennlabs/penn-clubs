@@ -39,8 +39,8 @@ const FavoriteIcon = ({
     absolute={absolute}
     padding={padding}
     onClick={e => {
-      updateFavorites(club.code)
       e.stopPropagation()
+      updateFavorites(club.code)
     }}
     className="icon"
   >
