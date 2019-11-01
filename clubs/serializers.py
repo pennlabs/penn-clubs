@@ -439,13 +439,14 @@ class UserSerializer(serializers.ModelSerializer):
         return obj.get_full_name()
 
     def update(self, instance, validated_data):
-        profile_fields = validated_data.pop('profile')
-        profile = instance.profile
-        valid_fields = {'image'}
-        for key, value in profile_fields.items():
-            if key in valid_fields:
-                setattr(profile, key, value)
-        profile.save()
+        if 'profile' in validated_data:
+            profile_fields = validated_data.pop('profile')
+            profile = instance.profile
+            valid_fields = {'image'}
+            for key, value in profile_fields.items():
+                if key in valid_fields:
+                    setattr(profile, key, value)
+            profile.save()
 
         return super().update(instance, validated_data)
 
