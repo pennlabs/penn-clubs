@@ -15,15 +15,6 @@ const Wrapper = s.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
 `
 
-async function mapToClubs(favorites, clubs) {
-  if (!clubs || !clubs.length) return []
-
-  const favoriteClubs = await favorites.map(favorite => {
-    return (clubs.find((club) => club.code === favorite))
-  })
-  return favoriteClubs
-}
-
 function renderPage(Page) {
   class RenderPage extends React.Component {
     constructor(props) {
@@ -36,34 +27,11 @@ function renderPage(Page) {
       }
 
       this.updateFavorites = this.updateFavorites.bind(this)
-      this.updateUserInfo = this.componentDidMount.bind(this)
+      this.updateUserInfo = this.updateUserInfo.bind(this)
     }
 
     componentDidMount() {
-      doApiRequest('/clubs/?format=json')
-        .then(resp => resp.json())
-        .then(data => this.setState({ clubs: data }))
-      doApiRequest('/settings/?format=json').then((resp) => {
-        if (resp.ok) {
-          resp.json().then((data) => {
-            const favorites = data.favorite_set.map((a) => a.club)
-            mapToClubs(favorites, this.state.clubs)
-              .then(favoriteClubs => (
-                this.setState({
-                  authenticated: true,
-                  favorites: favorites,
-                  favoriteClubs: favoriteClubs,
-                  userInfo: data
-                })
-              ))
-          })
-        } else {
-          this.setState({
-            authenticated: false,
-            favorites: JSON.parse(localStorage.getItem('favorites')) || [],
-          })
-        }
-      })
+      this.updateUserInfo()
     }
 
     render() {
@@ -125,6 +93,28 @@ function renderPage(Page) {
       }
       return i === -1
     }
+
+    updateUserInfo() {
+      doApiRequest('/clubs/?format=json')
+        .then(resp => resp.json())
+        .then(data => this.setState({ clubs: data }))
+      doApiRequest('/settings/?format=json').then((resp) => {
+        if (resp.ok) {
+          resp.json().then(data => {
+            this.setState({
+              authenticated: true,
+              favorites: data.favorite_set.map(a => a.club),
+              userInfo: data,
+            })
+          })
+        } else {
+          this.setState({
+            authenticated: false,
+            favorites: JSON.parse(localStorage.getItem('favorites')) || [],
+          })
+        }
+      })
+    }
   }
 
   RenderPage.getInitialProps = async info => {
@@ -156,17 +146,6 @@ export function renderListPage(Page) {
         .then(data => this.setState({ tags: data }))
     }
 
-    openModal(club) {
-      logEvent('openModal', club.name)
-      this.setState({ modal: true, modalClub: club })
-      disableBodyScroll(this)
-    }
-
-    closeModal(club) {
-      this.setState({ modal: false, modalClub: {} })
-      enableBodyScroll(this)
-    }
-
     render() {
       const { favorites } = this.props
       const { clubs, tags } = this.state
@@ -175,15 +154,13 @@ export function renderListPage(Page) {
         return <Loading />
       }
 
-      const favoriteClubs = mapToClubs(favorites, clubs)
-
       return (
         <Page
           clubs={clubs}
           tags={tags}
           favorites={favorites}
           updateFavorites={this.props.updateFavorites}
-          favoriteClubs={favoriteClubs}
+          updateUserInfo={this.props.updateUserInfo}
         />
       )
     }

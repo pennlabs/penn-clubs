@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { titleize } from '../utils'
 
-const TabView = ({ tabs }) => {
+const TabView = ({ tabs, tabStyle }) => {
   const hashString = window.location.hash.substring(1)
   const [currentTab, setCurrentTab] = useState(hashString || tabs[0].name)
 
@@ -14,43 +14,31 @@ const TabView = ({ tabs }) => {
 
   const enabledTabs = tabs.filter(tab => !tab.disabled)
 
-  render() {
-    const { tabs, tabStyle } = this.props
-
-    return (
-      <div>
-        <div className={'tabs ' + tabStyle}>
-          <ul>
-            {tabs
-              .filter(a => !a.disabled)
-              .map(a => (
-                <li
-                  className={
-                    a.name === this.state.currentTab ? 'is-active' : undefined
-                  }
-                  key={a.name}
-                >
-                  <a
-                    onClick={() => {
-                      this.setState({ currentTab: a.name })
-                      window.location.hash = '#' + a.name
-                    }}
-                  >
-                    {a.label || titleize(a.name)}
-                  </a>
-                </li>
-              ))}
-          </ul>
-        </div>
-        {
-          (
-            tabs.filter(a => a.name === this.state.currentTab)[0] || {
-              content: <div>Invalid tab selected.</div>,
-            }
-          ).content
-        }
+  return (
+    <>
+      <div className={'tabs ' + tabStyle}>
+        <ul style={{ borderBottomWidth: '1px' }}>
+          {enabledTabs.map(({ name, label }) => (
+            <li
+              className={name === currentTab ? 'is-active' : ''}
+              key={`tab-${name}`}
+            >
+              <a
+                style={{ borderBottomWidth: '2px', marginBottom: '-2px' }}
+                onClick={() => {
+                  setCurrentTab(name)
+                  window.location.hash = `#${name}`
+                }}
+              >
+                {label || titleize(name)}
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
-      {getTabContent()}
+      <div style={{ padding: '0 2rem' }}>
+        {getTabContent()}
+      </div>
     </>
   )
 }

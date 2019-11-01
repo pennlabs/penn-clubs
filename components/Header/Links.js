@@ -40,7 +40,7 @@ export default ({ userInfo, authenticated, show }) => (
       <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
         FAQ
       </StyledLink>
-      {(authenticated === false) && (
+      {!authenticated && (
         <StyledLink href={`${LOGIN_URL}?next=${window.location.href}`} onClick={() => logEvent('login', 'click')}>Login</StyledLink>
       )}
       {userInfo && (

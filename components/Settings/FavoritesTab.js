@@ -1,19 +1,21 @@
 import ClubTableRow from '../ClubTableRow'
 
 export default (props) => {
-  const { favoriteClubs, updateFavorites, favorites } = props
+  const { updateFavorites, favorites, clubs } = props
+
+  const findClub = clubs ? code => clubs.find(club => club.code === code) : {}
+
   return (
     <div>
-      {favoriteClubs.map((club) => (
+      {favorites.map((favorite) => (
         <ClubTableRow
-          club={club}
+          club={findClub(favorite)}
           updateFavorites={updateFavorites}
           openModal={null}
-          favorite={favorites.includes(club.code)}
+          favorite={true}
         />
       ))}
-
-      {(!favoriteClubs.length) ? (
+      {(!favorites.length) ? (
         <p className="has-text-light-grey" style={{ paddingTop: 200, textAlign: 'center' }}>
           No favorites yet! Browse clubs <a href="/">here.</a>
         </p>

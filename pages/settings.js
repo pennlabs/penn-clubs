@@ -1,35 +1,49 @@
 import React from 'react'
+import { BODY_FONT } from '../constants/styles'
 
-import { Icon } from '../components/common'
 import renderPage from '../renderPage'
 import {
   doApiRequest,
   formatResponse,
-  API_BASE_URL,
 } from '../utils'
-import { CLUBS_GREY_LIGHT, DARK_GRAY } from '../constants/colors'
-import React from 'react'
+import { DARK_GRAY } from '../constants/colors'
 import s from 'styled-components'
 import TabView from '../components/TabView'
 import ClubTab from '../components/Settings/ClubTab'
 import FavoritesTab from '../components/Settings/FavoritesTab'
-import AccountTab from '../components/Settings/AccountTab'
+import ProfileTab from '../components/Settings/ProfileTab'
 
 const Header = s.div`
   width: 470px;
   height: 72px;
-  font-family: HelveticaNeue;
+  font-family: ${BODY_FONT};
   font-size: 45px;
   font-weight: bold;
   color: ${DARK_GRAY};
+  margin-bottom: 1rem;
+
+`
+const Notification = s.span`
+  border-radius: 4px;
+  background-color: #c5e7f7;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 5px;
+  width: 500px;
+  float: right;
+  margin: 2rem;
+  overflow-wrap: break-word;
 `
 
-class SettingsForm extends React.Component {
+class Settings extends React.Component {
   constructor(props) {
     super(props)
     this.state = {}
-    this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
+    this.togglePublic = this.togglePublic.bind(this)
+    this.toggleActive = this.toggleActive.bind(this)
+    this.leaveClub = this.leaveClub.bind(this)
+    this.updateUserInfo = this.props.updateUserInfo
   }
 
   /**
@@ -43,21 +57,6 @@ class SettingsForm extends React.Component {
       },
       () => window.scrollTo(0, 0)
     )
-  }
-
-  submit(data) {
-    doApiRequest('/settings/?format=json', {
-      method: 'PATCH',
-      body: data,
-    }).then(resp => {
-      if (resp.ok) {
-        this.notify('Your preferences have been saved.')
-      } else {
-        resp.json().then(err => {
-          this.notify(formatResponse(err))
-        })
-      }
-    })
   }
 
   togglePublic(club) {
@@ -81,9 +80,47 @@ class SettingsForm extends React.Component {
     })
   }
 
+  toggleActive(club) {
+    doApiRequest(
+      `/clubs/${club.code}/members/${this.props.userInfo.username}/?format=json`,
+      {
+        method: 'PATCH',
+        body: {
+          active: !club.active,
+        },
+      }
+    ).then(resp => {
+      if (resp.ok) {
+        this.notify(`Your activity setting for ${club.name} has been changed.`)
+        this.props.updateUserInfo()
+      } else {
+        resp.json().then(err => {
+          this.notify(formatResponse(err))
+        })
+      }
+    })
+  }
+
+  leaveClub(club) {
+    if (confirm(`Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`)) {
+      doApiRequest(`/clubs/${club.code}/members/${this.props.userInfo.username}`, {
+        method: 'DELETE',
+      }).then(resp => {
+        if (!resp.ok) {
+          resp.json().then(err => {
+            this.notify(formatResponse(err))
+          })
+        } else {
+          this.notify(`You have left ${club.name}.`)
+          this.updateUserInfo()
+        }
+      })
+    }
+  }
+
   render() {
     const {
-      userInfo, authenticated, favorites, updateFavorites, favoriteClubs,
+      clubs, userInfo, authenticated, favorites, updateFavorites,
     } = this.props
     if (authenticated === null) {
       return <div></div>
@@ -100,68 +137,56 @@ class SettingsForm extends React.Component {
     const tabs = [
       {
         name: 'Clubs',
+        icon: 'peoplelogo',
         content: (
           <ClubTab
             togglePublic={this.togglePublic}
+            toggleActive={this.toggleActive}
+            leaveClub={this.leaveClub}
             userInfo={userInfo}
           />
         ),
       },
       {
-        name: 'Account',
+        name: 'Favorites',
+        icon: 'heart',
         content: (
-          <AccountTab
-            defaults={userInfo}
-            onSubmit={this.submit}
+          <FavoritesTab
+            clubs={clubs}
+            favorites={favorites}
+            updateFavorites={updateFavorites}
           />
         ),
       },
       {
-        name: 'Favorites',
+        name: 'Profile',
+        icon: 'user',
         content: (
-          <FavoritesTab
-            favoriteClubs={favoriteClubs}
-            favorites={favorites}
-            updateFavorites={updateFavorites}
+          <ProfileTab
+            defaults={userInfo}
           />
         ),
       },
     ]
 
     return (
-      <div style={{ padding: '50px 50px' }}>
-        {message && (
-          <div className="notification is-primary">
+      <div style={{ padding: 50 }}>
+        <Header>
+          Welcome, {this.props.userInfo.name}!
+        </Header>
+        <TabView tabs={tabs} tabStyle='is-boxed'/>
+        {message ? (
+          <Notification className="notification">
             <button
               className="delete"
               onClick={() => this.setState({ message: null })}
             />
             {message}
-          </div>
-        )}
-        <Header>
-          Welcome, {this.props.userInfo.name}!
-        </Header>
-        <TabView tabs={tabs} tabStyle='is-boxed'/>
+          </Notification>
+        ) : null}
       </div>
     )
   }
 }
 
-// <a
-//   href={`${API_BASE_URL}/accounts/logout/?next=${window.location.href}`}
-//   className='button is-pulled-right is-danger is-medium'>
-//     Logout
-// </a>
-
-SettingsForm.getInitialProps = async ({ query }) => {
-  const tagsRequest = await doApiRequest('/tags/?format=json')
-  const tagsResponse = await tagsRequest.json()
-  const clubRequest = query.club
-    ? await doApiRequest(`/clubs/${query.club}/?format=json`)
-    : null
-  const clubResponse = clubRequest && (await clubRequest.json())
-  return { club: clubResponse, tags: tagsResponse }
-}
-
-export default renderPage(SettingsForm)
+export default renderPage(Settings)

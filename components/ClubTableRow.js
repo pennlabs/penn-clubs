@@ -85,19 +85,30 @@ class ClubTableRow extends React.Component {
 
     return (
       <Row>
-        <div className="columns is-gapless is-mobile">
-          <div className="column" onClick={() => openModal ? openModal(club) : {}}>
-            <div className="columns is-gapless" style={{ padding: 10 }}>
-              <div className="column is-4-desktop is-12-mobile">
-                <b className="is-size-6" style={{ color: CLUBS_GREY }}> {name} </b>
-                <TagGroup
-                  tags={tags}
-                  selectedTags={selectedTags}
-                  updateTag={updateTag}
-                />
-              </div>
-              <div className="column is-8-desktop is-12-mobile">
-                <Subtitle>{this.getSubtitle()}</Subtitle>
+        <a href={CLUB_ROUTE(code)} target="_BLANK">
+          <div className="columns is-gapless is-mobile">
+            <div className="column">
+              <div className="columns is-gapless">
+                <div className="column is-4-desktop is-12-mobile">
+                  <Name>{name}</Name>
+                  <div>
+                    <TagGroup
+                      tags={tags}
+                      selectedTags={selectedTags}
+                      updateTag={updateTag}
+                    />
+                  </div>
+                </div>
+                <div className="column is-8-desktop is-12-mobile">
+                  <Content>
+                    <Subtitle>{this.getSubtitle()}</Subtitle>
+                    <ClubDetails
+                      size={size}
+                      applicationRequired={applicationRequired}
+                      acceptingMembers={acceptingMembers}
+                    />
+                  </Content>
+                </div>
               </div>
             </div>
             <div className="column is-narrow">
@@ -108,7 +119,7 @@ class ClubTableRow extends React.Component {
               />
             </div>
           </div>
-        </div>
+        </a>
       </Row>
     )
   }
