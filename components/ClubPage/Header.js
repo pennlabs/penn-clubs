@@ -12,7 +12,7 @@ const Title = s.div`
   flex-direction: row;
   align-items: center;
   padding-right: 10px;
-`
+`;
 
 const Header = props => {
   const { club, userInfo, favorites } = props
