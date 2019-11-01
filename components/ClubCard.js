@@ -38,7 +38,8 @@ const Card = s.div`
   background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
   border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
-  height: 100%;
+  height: auto;
+  cursor: pointer;
 
   &:hover,
   &:active,
@@ -87,6 +88,7 @@ const ClubCard = ({
 }) => {
   const {
     name,
+    active,
     description,
     subtitle,
     tags,
@@ -103,7 +105,7 @@ const ClubCard = ({
   return (
     <CardWrapper className="column is-half-desktop">
       <a href={CLUB_ROUTE(code)} target="_BLANK">
-        <Card className="card" style={{ cursor: 'pointer', height: '100%' }}>
+        <Card className="card">
           <div style={{ display: 'flex' }}>
             <div style={{ flex: 1 }}>
               <div>
@@ -117,7 +119,7 @@ const ClubCard = ({
                   <CardTitle className="is-size-5">{name}</CardTitle>
                 </CardHeader>
               </div>
-              {club.active || (
+              {!active && (
                 <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
               )}
               <TagGroup

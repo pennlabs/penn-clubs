@@ -19,7 +19,12 @@ import {
 import { logEvent } from '../utils/analytics'
 import Icon from './common/Icon'
 
-// TODO colored check boxes
+// Helper map for getting icon posftix from icon name
+const colorToColorNameMap = {
+  [CLUBS_BLUE]: '-blue',
+  [CLUBS_RED]: '-red',
+  [CLUBS_YELLOW]: '-yellow',
+}
 
 const checkboxColorMap = {
   Type: CLUBS_BLUE,
@@ -139,6 +144,7 @@ const DropdownFilter = ({ selected, name, options, updateTag }) => {
   }
 
   const color = checkboxColorMap[name]
+  const iconPostfix = colorToColorNameMap[color] || ''
 
   return (
     <>
@@ -167,7 +173,12 @@ const DropdownFilter = ({ selected, name, options, updateTag }) => {
                     }}
                   >
                     <Icon
-                      name={isSelected(tag) ? 'check-square' : 'square'}
+                      style={{ transform: 'none' }}
+                      name={
+                        isSelected(tag)
+                          ? `check-box${iconPostfix}`
+                          : `box${iconPostfix}`
+                      }
                       alt={isSelected(tag) ? 'selected' : 'not selected'}
                     />
                     &nbsp;
