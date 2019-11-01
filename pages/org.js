@@ -64,14 +64,14 @@ class Org extends Component {
         />
         <div></div>
         <div className="columns">
-          <div className="column is-6">
-            <OrgChildren children={children}></OrgChildren>
-            {/* <Image src={club.image_url || getDefaultClubImageURL()} /> */}
-          </div>
-          <div className="column is-6">
+          <div className="column is-4">
             <InfoBox club={club} />
             <SocialIcons club={club} />
             <Tabs club={club} />
+          </div>
+          <div className="column is-8">
+            <OrgChildren children={children}></OrgChildren>
+            {/* <Image src={club.image_url || getDefaultClubImageURL()} /> */}
           </div>
         </div>
         {/* <OrgChildren children={club.children}></OrgChildren> */}
