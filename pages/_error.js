@@ -1,20 +1,5 @@
 import PropTypes from 'prop-types'
 
-<<<<<<< HEAD
-const Error = ({ statusCode }) => {
-  return (
-    <p>
-      {statusCode
-        ? `An error ${statusCode} occurred on server`
-        : 'An error occurred on client'}
-    </p>
-  )
-}
-
-Error.getInitialProps = ({ res = { statusCode: 500 }, err }) => {
-  const { statusCode } = res
-  return { statusCode }
-=======
 import renderPage from '../renderPage.js'
 import Container from '../components/common/Container'
 import { SNOW } from '../constants/colors'
@@ -48,26 +33,16 @@ Error.getInitialProps = ({ res, err } = {}) => {
   }
 
   return { statusCode, message }
->>>>>>> 0fe4973... working on err page
 }
 
 Error.defaultProps = {
   statusCode: 500,
-<<<<<<< HEAD
-=======
   message: 'Something went wrong',
->>>>>>> 0fe4973... working on err page
 }
 
 Error.propTypes = {
   statusCode: PropTypes.number,
-<<<<<<< HEAD
-}
-
-export default Error
-=======
   message: PropTypes.string,
 }
 
 export default renderPage(Error)
->>>>>>> 0fe4973... working on err page
