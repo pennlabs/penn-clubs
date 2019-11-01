@@ -1,5 +1,7 @@
 import PropTypes from 'prop-types'
 import s from 'styled-components'
+
+import Icon from '../common/Icon'
 import { LIGHT_GRAY, MEDIUM_GRAY, RED } from '../../constants/colors'
 
 const FavoriteIconTag = s.span`
@@ -39,12 +41,14 @@ const FavoriteIcon = ({
     absolute={absolute}
     padding={padding}
     onClick={e => {
-      updateFavorites(club.code)
       e.stopPropagation()
+      updateFavorites(club.code)
     }}
-    className="icon"
   >
-    <i className={`fa-heart ${favorite ? 'fas' : 'far'}`} />
+    <Icon
+      name={favorite ? 'heart-red' : 'heart'}
+      alt={favorite ? 'click to unfavorite' : 'click to favorite'}
+    />
   </FavoriteIconTag>
 )
 

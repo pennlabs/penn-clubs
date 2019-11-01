@@ -1,11 +1,13 @@
+import React from 'react'
+import Select from 'react-select'
+
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../utils'
 import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../constants/colors'
 import { Link, Router } from '../routes'
-import React from 'react'
-import Select from 'react-select'
 import Form from '../components/Form'
 import TabView from '../components/TabView'
+import Icon from '../components/common/Icon'
 
 class ClubForm extends React.Component {
   constructor(props) {
@@ -445,13 +447,13 @@ class ClubForm extends React.Component {
                           className="button is-small is-primary"
                           onClick={() => this.setState({ editMember: a })}
                         >
-                          <i className="fa fa-fw fa-edit"></i> Edit
+                          <Icon name="edit" alt="edit member" /> Edit
                         </button>
                         <button
                           className="button is-small is-danger"
                           onClick={() => this.deleteMembership(a.username)}
                         >
-                          <i className="fa fa-fw fa-times"></i> Kick
+                          <Icon name="times" alt="kick member" /> Kick
                         </button>
                       </td>
                     </tr>
@@ -493,7 +495,8 @@ class ClubForm extends React.Component {
                     defaults={editMember}
                     submitButton={
                       <button className="button is-primary">
-                        <i className="fa fa-edit" /> &nbsp; Save Member
+                        <Icon name="edit" alt="save member" /> &nbsp; Save
+                        Member
                       </button>
                     }
                     onSubmit={data => {
@@ -528,7 +531,7 @@ class ClubForm extends React.Component {
                               className="button is-small is-danger"
                               onClick={() => this.deleteInvite(item.id)}
                             >
-                              <i className="fa fa-fw fa-times"></i> Remove
+                              <Icon name="times" alt="remove invite" /> Remove
                             </button>
                           </td>
                         </tr>
@@ -597,7 +600,8 @@ class ClubForm extends React.Component {
                   className="button is-primary"
                   onClick={this.sendInvites}
                 >
-                  <i className="fa fa-fw fa-envelope"></i>&nbsp; Send Invite(s)
+                  <Icon name="mail" alt="send invites" />
+                  &nbsp; Send Invite(s)
                 </button>
               </div>
             </div>
@@ -641,11 +645,11 @@ class ClubForm extends React.Component {
                   >
                     {club && club.active ? (
                       <span>
-                        <i className="fa fa-fw fa-bomb"></i> Deactivate
+                        <Icon name="trash" alt="deactivate" /> Deactivate
                       </span>
                     ) : (
                       <span>
-                        <i className="fa fa-fw fa-plus"></i> Reactivate
+                        <Icon name="plus" alt="Reactivate" /> Reactivate
                       </span>
                     )}
                   </a>
@@ -673,7 +677,7 @@ class ClubForm extends React.Component {
                       className="button is-danger is-medium"
                       onClick={() => this.deleteClub()}
                     >
-                      <i className="fa fa-fw fa-bomb"></i> Delete Club
+                      <Icon name="trash" alt="delete" /> Delete Club
                     </a>
                   ) : (
                     <b>

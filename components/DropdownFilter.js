@@ -17,6 +17,9 @@ import {
   NAV_HEIGHT,
 } from '../constants/measurements'
 import { logEvent } from '../utils/analytics'
+import Icon from './common/Icon'
+
+// TODO colored check boxes
 
 const checkboxColorMap = {
   Type: CLUBS_BLUE,
@@ -104,7 +107,6 @@ const ChevronIcon = s.span`
 `
 
 const DropdownHeaderText = s.p`
-  color: ${CLUBS_GREY};
   opacity: 0.8;
   font-weight: 600;
   margin-bottom: 0;
@@ -117,7 +119,7 @@ const DropdownHeaderText = s.p`
 
 const Chevron = () => (
   <ChevronIcon className="icon">
-    <i className="fas fa-chevron-down" />
+    <Icon name="chevron-down" alt="toggle dropdown" />
   </ChevronIcon>
 )
 
@@ -164,12 +166,9 @@ const DropdownFilter = ({ selected, name, options, updateTag }) => {
                       color: color || CLUBS_GREY_LIGHT,
                     }}
                   >
-                    <i
-                      className={
-                        isSelected(tag)
-                          ? 'fas fa-check-square'
-                          : 'far fa-square'
-                      }
+                    <Icon
+                      name={isSelected(tag) ? 'check-square' : 'square'}
+                      alt={isSelected(tag) ? 'selected' : 'not selected'}
                     />
                     &nbsp;
                   </td>

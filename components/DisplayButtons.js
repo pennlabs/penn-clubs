@@ -1,6 +1,7 @@
 import s from 'styled-components'
 import PropTypes from 'prop-types'
 
+import Icon from './common/Icon'
 import { DARK_GRAY } from '../constants/colors'
 
 const DisplayButtonsTag = s.div`
@@ -11,10 +12,10 @@ const DisplayButtonsTag = s.div`
   }
 `
 
-const Icon = s.span`
-  cursor: pointer;
-  color: ${DARK_GRAY};
-`
+const iconStyles = {
+  transform: 'translateY(0px)',
+  opacity: 0.6,
+}
 
 const DisplayButtons = ({ switchDisplay, shuffle }) => (
   <DisplayButtonsTag>
@@ -22,26 +23,20 @@ const DisplayButtons = ({ switchDisplay, shuffle }) => (
       onClick={() => switchDisplay('cards')}
       className="button is-light is-small"
     >
-      <Icon className="icon">
-        <i className="fas fa-th-large" title="Grid View" />
-      </Icon>
+      <Icon name="grid" alt="switch to grid view" style={iconStyles} />
     </button>
     <button
       onClick={() => switchDisplay('list')}
       className="button is-light is-small"
     >
-      <Icon className="icon">
-        <i className="fas fa-list" title="List View" />
-      </Icon>
+      <Icon name="list" alt="switch to list view" style={iconStyles} />
     </button>
     <button
       onClick={shuffle}
       style={{ color: DARK_GRAY, fontWeight: 600 }}
       className="button is-light is-small"
     >
-      <Icon className="icon">
-        <i className="fas fa-random" />
-      </Icon>
+      <Icon name="shuffle" alt="shuffle club order" style={iconStyles} />
       &nbsp;&nbsp; Shuffle
     </button>
   </DisplayButtonsTag>

@@ -1,6 +1,10 @@
 import { getSizeDisplay } from '../../utils'
+import Icon from '../common/Icon'
 
-const Icon = ({ name }) => <i className={`fa-fw fas fa-${name}`} />
+const iconStyles = {
+  opacity: 0.5,
+  marginRight: '5px',
+}
 
 const applicationTextMap = {
   3: 'Application Required for All Roles',
@@ -18,23 +22,23 @@ const InfoBox = ({
 }) => (
   <div>
     <p>
-      <Icon name="user-friends" />
+      <Icon name="user" alt="members" style={iconStyles} />
       {' ' + getSizeDisplay(size)}
     </p>
     {acceptingMembers ? (
       <p>
-        <Icon name="door-open" />
+        <Icon name="check-circle" style={iconStyles} alt="check" />
         {' Currently Accepting Members'}
       </p>
     ) : (
       <p>
-        <Icon name="door-closed" />
+        <Icon name="x-circle" style={iconStyles} alt="negative" />
         {' Not Currently Accepting Members'}
       </p>
     )}
 
     <p>
-      <Icon name="user-plus" />
+      <Icon name="edit" style={iconStyles} alt="edit" />
       {' ' + applicationTextMap[applicationRequired] || defaultApplicationText}
     </p>
   </div>
