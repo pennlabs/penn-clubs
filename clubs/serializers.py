@@ -151,7 +151,7 @@ class ClubSerializer(serializers.ModelSerializer):
     subtitle = serializers.CharField(required=False)
     members = MembershipSerializer(many=True, source='membership_set', read_only=True)
     favorite_count = serializers.IntegerField(read_only=True)
-    image = serializers.ImageField(write_only=True)
+    image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField('get_image_url')
     parent_orgs = serializers.SerializerMethodField('get_parent_orgs')
     badges = BadgeSerializer(many=True, required=False)
@@ -373,7 +373,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
 class EventSerializer(serializers.ModelSerializer):
     id = serializers.SlugField(required=False)
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), required=False, slug_field='code')
-    image = serializers.ImageField(write_only=True)
+    image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField('get_image_url')
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
