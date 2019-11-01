@@ -1,11 +1,6 @@
-export default props => {
-  let club = props.club;
-  let item = props.item;
-  let social = props.type;
-
-  if (social == "email") {
+export default ({ club, item, type }) => {
+  if (type === "email") {
     return club[item.name];
-  } else {
-    return <a href={club[item.name]}>{club.name}</a>;
   }
+  return <a href={club[item.name]}>{club.name}</a>;
 };
