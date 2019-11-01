@@ -4,7 +4,7 @@ from django.contrib.auth.models import Group
 from django.db.models import Count, Exists, OuterRef
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
-from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Advisor, Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
 
 
 class HasOwnerListFilter(admin.SimpleListFilter):
@@ -122,6 +122,14 @@ class MembershipInviteAdmin(admin.ModelAdmin):
         return obj.club.name
 
 
+class AdvisorAdmin(admin.ModelAdmin):
+    search_fields = ('name', 'title', 'email', 'phone', 'club__name')
+    list_display = ('name', 'title', 'email', 'phone', 'club')
+
+    def club(self, obj):
+        return obj.club.name
+
+
 def do_merge_tags(modeladmin, request, queryset):
     if queryset.count() < 2:
         modeladmin.message_user(request, 'You must select at least two tags to merge!', level=messages.ERROR)
@@ -162,6 +170,7 @@ admin.site.unregister(Group)
 
 
 admin.site.register(Asset)
+admin.site.register(Advisor, AdvisorAdmin)
 admin.site.register(Club, ClubAdmin)
 admin.site.register(Badge, BadgeAdmin)
 admin.site.register(Event, EventAdmin)

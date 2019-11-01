@@ -5,10 +5,12 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
+from django.core.validators import validate_email
 from django.db import models
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 def get_asset_file_name(instance, fname):
@@ -119,6 +121,25 @@ class Favorite(models.Model):
 
     class Meta:
         unique_together = (('person', 'club'),)
+
+
+class Advisor(models.Model):
+    """
+    Represents the faculty advisor of a club
+    """
+    name = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, blank=True, null=True)
+    email = models.CharField(
+            max_length=255,
+            blank=True,
+            null=True,
+            validators=[validate_email]
+    )
+    phone = PhoneNumberField(null=False, blank=False, unique=True)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 
 
 class Membership(models.Model):
