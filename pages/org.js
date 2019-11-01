@@ -9,12 +9,6 @@ import clubEx from "./club_tree_example.json";
 import OrgChildren from "../components/OrgPage/OrgChildren.js";
 import OrgTabs from "../components/OrgPage/OrgsTabs.js";
 
-const Image = s.img`
-  max-height: 300px;
-  max-width: 100%;
-  object-fit: contain;
-`;
-
 class Org extends Component {
   constructor(props) {
     super(props);
@@ -36,11 +30,9 @@ class Org extends Component {
       });
     doApiRequest(`/clubs/${this.props.query.club}/children/?format=json`)
       .then(resp => {
-        console.log("SECOND RESP", resp);
         return resp.json();
       })
       .then(data => {
-        console.log("SECOND DAT", data);
         this.setState({ children: data.children });
       });
     console.log(this.state.children);
@@ -50,14 +42,14 @@ class Org extends Component {
     if (!club) {
       return (
         <div className="has-text-centered">
-          <h1 className="title is-h1">404 Not Found</h1>
+          <h1 className="title is-h1">Loading...</h1>
         </div>
       );
     }
     if (!children) {
       return (
         <div className="has-text-centered">
-          <h1 className="title is-h1">404 Not Found</h1>
+          <h1 className="title is-h1">No Children</h1>
           <p>Club you are looking for has no children</p>
         </div>
       );
