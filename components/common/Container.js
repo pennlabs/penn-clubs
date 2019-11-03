@@ -2,7 +2,13 @@ import PropTypes from 'prop-types'
 import s from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
-import { mediaMinWidth, MD, LG, XL } from '../../constants/measurements'
+import {
+  mediaMinWidth,
+  MD,
+  LG,
+  XL,
+  NAV_HEIGHT,
+} from '../../constants/measurements'
 
 const getPadding = percent => {
   if (!percent) return 'padding-left: 1rem; padding-right: 1rem;'
@@ -27,21 +33,31 @@ const Wrapper = s.div`
   ${mediaMinWidth(XL)} {
     ${getPadding(25)}
   }
+
+  ${({ fullHeight }) =>
+    fullHeight &&
+    `
+    min-height: calc(100vh - ${NAV_HEIGHT});
+  `}
 `
 
-const Container = ({ background = WHITE, children }) => (
+const Container = ({ background = WHITE, fullHeight, children }) => (
   <div style={{ background }}>
-    <Wrapper className="container">{children}</Wrapper>
+    <Wrapper className="container" fullHeight={fullHeight}>
+      {children}
+    </Wrapper>
   </div>
 )
 
 Container.defaultProps = {
   background: WHITE,
+  fullHeight: false,
 }
 
 Container.propTypes = {
   background: PropTypes.string,
   children: PropTypes.node.isRequired,
+  fullHeight: PropTypes.bool,
 }
 
 export default Container
