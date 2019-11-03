@@ -31,7 +31,7 @@ const Club = ({ query, userInfo, favorites, updateFavorites }) => {
     doApiRequest(`/clubs/${query.club}/?format=json`)
       .then(resp => resp.json())
       .then(data => setClub(data))
-  })
+  }, [query])
 
   if (!club) return null
   if (!club.code) {
