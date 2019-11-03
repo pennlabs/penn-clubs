@@ -64,11 +64,11 @@ const WideWrapper = s(Wrapper)`
   }
 
   ${mediaMinWidth(LG)} {
-    ${getPadding(7.5)}
+    ${getPadding(5)}
   }
 
   ${mediaMinWidth(XL)} {
-    ${getPadding(12.5)}
+    ${getPadding(10)}
   }
 `
 

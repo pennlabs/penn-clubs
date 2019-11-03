@@ -14,6 +14,7 @@ import {
   Flex,
   Title,
   Text,
+  Container,
 } from '../components/common'
 
 const Image = s.img`
@@ -36,10 +37,12 @@ const Club = ({ query, userInfo, favorites, updateFavorites }) => {
   if (!club) return null
   if (!club.code) {
     return (
-      <div className="has-text-centered" style={{ margin: 30 }}>
-        <Title>404 Not Found</Title>
-        <Text>The club you are looking for does not exist.</Text>
-      </div>
+      <Container>
+        <div className="has-text-centered">
+          <Title>404 Not Found</Title>
+          <Text>The club you are looking for does not exist.</Text>
+        </div>
+      </Container>
     )
   }
 
