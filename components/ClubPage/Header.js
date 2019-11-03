@@ -14,7 +14,7 @@ const Title = s.div`
   padding-right: 10px;
 `
 
-const Header = ({ club, userInfo, favorites, style }) => {
+const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
   const isFavorite = favorites.includes(club.code)
 
   // inClub is set to the membership object if the user is in the club, or false
@@ -48,8 +48,7 @@ const Header = ({ club, userInfo, favorites, style }) => {
             alt={isFavorite ? 'click to unfavorite' : 'click to favorite'}
             style={{ cursor: 'pointer' }}
             onClick={() => {
-              console.log('click')
-              props.updateFavorites(club.code)
+              updateFavorites(club.code)
                 ? setFavCount(favCount + 1)
                 : setFavCount(Math.max(0, favCount - 1))
             }}
