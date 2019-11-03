@@ -1,4 +1,5 @@
 import Icon from '../common/Icon'
+import SocialLink from './SocialLink'
 
 const socials = [
   {
@@ -62,7 +63,7 @@ export default props => {
                 club[item.name] ? (item.prefix || '') + club[item.name] : '#'
               }
             >
-              {club[item.name]}
+              <SocialLink club={club} item={item} type={item.name} />
             </a>
           </div>
         ))}
