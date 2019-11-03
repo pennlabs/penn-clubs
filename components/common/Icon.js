@@ -24,11 +24,13 @@ const Icon = ({ name, alt, size, style, ...props }) => (
 
 Icon.defaultProps = {
   style: {},
+  size: undefined,
 }
 
 Icon.propTypes = {
   name: PropTypes.string.isRequired,
   alt: PropTypes.string.isRequired,
+  size: PropTypes.string,
   style: PropTypes.object,
 }
 
