@@ -15,8 +15,8 @@ from rest_framework.views import APIView
 from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.permissions import ClubPermission, EventPermission, InvitePermission, IsSuperuser, MemberPermission
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
-                               ClubSerializer, EventSerializer, FavoriteSerializer, MembershipInviteSerializer,
-                               MembershipSerializer, TagSerializer, UserSerializer)
+                               ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer,
+                               MembershipInviteSerializer, MembershipSerializer, TagSerializer, UserSerializer)
 
 
 def upload_endpoint_helper(request, cls, field, **kwargs):
@@ -87,6 +87,8 @@ class ClubViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'upload':
             return AssetSerializer
+        if self.action == 'list':
+            return ClubListSerializer
         if self.request is not None and self.request.user.is_authenticated:
             if 'code' in self.kwargs and (
                 self.request.user.is_superuser or
