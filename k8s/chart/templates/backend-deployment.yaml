@@ -24,8 +24,17 @@ spec:
           ports:
             - containerPort: {{ .Values.backend.port }}
           env:
-            - name: ALLOWED_HOST
+            - name: FRONTEND_DOMAIN
+              value: {{ if .Values.staging }}staging.{{ end }}{{ .Values.frontend.ingress.domain }}
+            - name: BACKEND_DOMAIN
               value: {{ if .Values.staging }}staging.{{ end }}{{ .Values.backend.ingress.domain }}
+{{- if .Values.staging }}
+            - name: DJANGO_SETTINGS_MODULE
+              value: pennclubs.settings.staging
+{{- else }}
+            - name: DJANGO_SETTINGS_MODULE
+              value: pennclubs.settings.production
+{{- end }}
           envFrom:
             - secretRef:
                 name: {{ .Values.backend.secrets.secretEnv }}

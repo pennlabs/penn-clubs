@@ -24,7 +24,7 @@ DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Allow production host headers
-ALLOWED_HOSTS = [BACKEND_DOMAIN]
+ALLOWED_HOSTS = [FRONTEND_DOMAIN]
 
 SENTRY_URL = os.environ.get('SENTRY_URL', '')
 
@@ -46,7 +46,7 @@ CORS_ORIGIN_REGEX_WHITELIST = [
 
 CSRF_TRUSTED_ORIGINS = [
     '.' + FRONTEND_DOMAIN,
-    FRONTEND_DOMAIN
+    FRONTEND_DOMAIN,
 ]
 
 # Email client information
@@ -62,3 +62,13 @@ AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_ACCESS_SECRET_ID = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
 AWS_QUERYSTRING_AUTH = False
+
+PLATFORM_ACCOUNTS.update(
+    {
+        'REDIRECT_URI': os.environ.get('LABS_REDIRECT_URI', f'http://{FRONTEND_DOMAIN}/accounts/callback/'),
+        'CLIENT_ID': 'clientid',
+        'CLIENT_SECRET': 'supersecretclientsecret',
+        'PLATFORM_URL': 'https://platform-dev.pennlabs.org',
+        'CUSTOM_ADMIN': False,
+    }
+)
