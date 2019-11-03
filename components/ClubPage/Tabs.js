@@ -1,5 +1,5 @@
-import { EMPTY_DESCRIPTION } from "../../utils";
-import TabView from "../TabView";
+import { EMPTY_DESCRIPTION } from '../../utils'
+import TabView from '../TabView'
 
 export default props => (
   <TabView
