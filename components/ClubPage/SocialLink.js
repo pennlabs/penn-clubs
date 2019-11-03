@@ -1,6 +1,13 @@
-export default ({ club, item, type }) => {
+const SocialLink = ({ club, item, type }) => {
+  let url
+
   if (type === 'email') {
-    return ' ' + club[item.name]
+    url = `mailto:${club[item.name]`
+  } else {
+    url = club[item.name]
   }
-  return <a href={club[item.name]}> {club.name}</a>
+
+  return <a href={url}>{' '}{club.name}</a>
 }
+
+export default SocialLink
