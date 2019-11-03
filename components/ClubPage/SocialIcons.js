@@ -56,8 +56,8 @@ export default props => {
         })
         .filter(item => club[item.name])
         .map(item => (
-          <div key={item.name} style={{ marginBottom: '5px' }}>
-            <Icon style={iconStyles} name={item.icon} alt={item.icon} />
+          <div key={item.name}>
+            <Icon style={iconStyles} name={item.icon} alt={item.icon} />{' '}
             <a
               href={
                 club[item.name] ? (item.prefix || '') + club[item.name] : '#'
