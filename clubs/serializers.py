@@ -81,9 +81,9 @@ class MembershipSerializer(serializers.ModelSerializer):
     def get_image(self, obj):
         if not obj.public:
             return None
-        image_url = obj.person.profile.image.url
-        if not image_url:
+        if not obj.person.profile.image:
             return None
+        image_url = obj.person.profile.image.url
         if image_url.startswith('http'):
             return image_url
         else:
