@@ -71,11 +71,21 @@ class MembershipSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField('get_full_name')
     person = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), write_only=True)
     role = serializers.IntegerField(write_only=True, required=False)
+    image = serializers.SerializerMethodField('get_image')
 
     def get_full_name(self, obj):
         if not obj.public:
             return 'Anonymous'
         return obj.person.get_full_name()
+
+    def get_image(self, obj):
+        if not obj.public:
+            return None
+        image_url = obj.person.profile.image.url
+        if image_url.startswith('http'):
+            return image_url
+        else:
+            return self.context['request'].build_absolute_uri(image_url)
 
     def validate_role(self, value):
         """
@@ -123,7 +133,7 @@ class MembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Membership
-        fields = ['name', 'title', 'person', 'role', 'active', 'public']
+        fields = ['name', 'title', 'person', 'role', 'active', 'public', 'image']
         validators = [validators.UniqueTogetherValidator(queryset=Membership.objects.all(), fields=['person', 'club'])]
 
 
