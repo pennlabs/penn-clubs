@@ -20,30 +20,30 @@ const defaultApplicationText = 'No Application Required'
 export default props => {
   const data = [
     {
-      icon: "user",
-      alt: "members",
-      text: ' ' + getSizeDisplay(props.club.size)
+      icon: 'user',
+      alt: 'members',
+      text: ' ' + getSizeDisplay(props.club.size),
     },
     {
       icon: props.club.accepting_members
-        ? "check-circle"
-        : "x-circle",
+        ? 'check-circle'
+        : 'x-circle',
       text: props.club.accepting_members
-        ? " Currently Accepting Members"
-        : " Not Currently Accepting Members"
+        ? ' Currently Accepting Members'
+        : ' Not Currently Accepting Members',
     },
     {
-      icon: "edit",
-      text: ' ' + applicationTextMap[props.club.application_required] || defaultApplicationText
-    }
-  ];
+      icon: 'edit',
+      text: ' ' + applicationTextMap[props.club.application_required] || defaultApplicationText,
+    },
+  ]
 
   const items = data.map(({ icon, text }) => (
     <li style={infoStyles}>
       <Icon name={icon} style={iconStyles} alt={text} />
       {text}
     </li>
-  ));
+  ))
 
   return (
     <div>
@@ -51,5 +51,5 @@ export default props => {
         <ul>{items}</ul>
       </p>
     </div>
-  );
-};
+  )
+}
