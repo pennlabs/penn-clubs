@@ -19,8 +19,8 @@ from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, Aut
                                MembershipSerializer, TagSerializer, UserSerializer)
 
 
-def upload_endpoint_helper(request, cls, pk, field):
-    obj = get_object_or_404(cls, code=pk)
+def upload_endpoint_helper(request, cls, field, **kwargs):
+    obj = get_object_or_404(cls, **kwargs)
     if 'file' in request.data and isinstance(request.data['file'], UploadedFile):
         getattr(obj, field).delete(save=False)
         setattr(obj, field, request.data['file'])
@@ -73,7 +73,7 @@ class ClubViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def upload(self, request, *args, **kwargs):
-        return upload_endpoint_helper(request, Club, kwargs['code'], 'image')
+        return upload_endpoint_helper(request, Club, 'image', code=kwargs['code'])
 
     @action(detail=True, methods=['get'])
     def children(self, request, *args, **kwargs):
@@ -107,7 +107,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def upload(self, request, *args, **kwargs):
-        return upload_endpoint_helper(request, Event, kwargs['code'], 'image')
+        return upload_endpoint_helper(request, Event, 'image', code=kwargs['code'])
 
     def get_queryset(self):
         return Event.objects.filter(club__code=self.kwargs['club_code'])

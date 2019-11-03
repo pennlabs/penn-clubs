@@ -25,6 +25,10 @@ def get_event_file_name(instance, fname):
     return os.path.join('events', '{}.{}'.format(uuid.uuid4().hex, fname.rsplit('.', 1)[-1]))
 
 
+def get_user_file_name(instance, fname):
+    return os.path.join('users', '{}.{}'.format(uuid.uuid4().hex, fname.rsplit('.', 1)[-1]))
+
+
 class Club(models.Model):
     """
     Represents a club at the University of Pennsylvania.
@@ -332,6 +336,14 @@ class Asset(models.Model):
         return self.name
 
 
+class Profile(models.Model):
+    """
+    Additional information attached to a user account.
+    """
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, primary_key=True)
+    image = models.ImageField(upload_to=get_user_file_name, null=True, blank=True)
+
+
 @receiver(models.signals.post_delete, sender=Asset)
 def asset_delete_cleanup(sender, instance, **kwargs):
     if instance.file:
@@ -346,5 +358,17 @@ def club_delete_cleanup(sender, instance, **kwargs):
 
 @receiver(models.signals.post_delete, sender=Event)
 def event_delete_cleanup(sender, instance, **kwargs):
+    if instance.image:
+        instance.image.delete(save=False)
+
+
+@receiver(models.signals.post_save, sender=get_user_model())
+def user_create(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+
+@receiver(models.signals.post_delete, sender=Profile)
+def profile_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)

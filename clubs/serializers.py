@@ -71,11 +71,23 @@ class MembershipSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField('get_full_name')
     person = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), write_only=True)
     role = serializers.IntegerField(write_only=True, required=False)
+    image = serializers.SerializerMethodField('get_image')
 
     def get_full_name(self, obj):
         if not obj.public:
             return 'Anonymous'
         return obj.person.get_full_name()
+
+    def get_image(self, obj):
+        if not obj.public:
+            return None
+        if not obj.person.profile.image:
+            return None
+        image_url = obj.person.profile.image.url
+        if image_url.startswith('http'):
+            return image_url
+        else:
+            return self.context['request'].build_absolute_uri(image_url)
 
     def validate_role(self, value):
         """
@@ -123,7 +135,7 @@ class MembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Membership
-        fields = ['name', 'title', 'person', 'role', 'active', 'public']
+        fields = ['name', 'title', 'person', 'role', 'active', 'public', 'image']
         validators = [validators.UniqueTogetherValidator(queryset=Membership.objects.all(), fields=['person', 'club'])]
 
 
@@ -151,6 +163,7 @@ class ClubSerializer(serializers.ModelSerializer):
     subtitle = serializers.CharField(required=False)
     members = MembershipSerializer(many=True, source='membership_set', read_only=True)
     favorite_count = serializers.IntegerField(read_only=True)
+    image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField('get_image_url')
     parent_orgs = serializers.SerializerMethodField('get_parent_orgs')
     badges = BadgeSerializer(many=True, required=False)
@@ -354,7 +367,7 @@ class ClubSerializer(serializers.ModelSerializer):
             'name', 'code', 'description', 'founded', 'size', 'email', 'facebook', 'twitter', 'instagram', 'linkedin',
             'github', 'website', 'how_to_get_involved', 'tags', 'subtitle', 'application_required',
             'accepting_members', 'listserv', 'image_url', 'members', 'favorite_count', 'active', 'parent_orgs',
-            'badges',
+            'badges', 'image'
         ]
 
 
@@ -372,6 +385,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
 class EventSerializer(serializers.ModelSerializer):
     id = serializers.SlugField(required=False)
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), required=False, slug_field='code')
+    image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField('get_image_url')
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
@@ -401,7 +415,7 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ('id', 'name', 'club', 'creator', 'start_time', 'end_time', 'location', 'url',
-                  'image_url', 'description')
+                  'image_url', 'description', 'image')
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
@@ -422,13 +436,35 @@ class UserSerializer(serializers.ModelSerializer):
     membership_set = UserMembershipSerializer(many=True, read_only=True)
     favorite_set = FavoriteSerializer(many=True, read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
+    image = serializers.ImageField(source='profile.image', write_only=True)
+    image_url = serializers.SerializerMethodField('get_image_url')
+
+    def get_image_url(self, obj):
+        if not obj.profile.image:
+            return None
+        if obj.profile.image.url.startswith('http'):
+            return obj.profile.image.url
+        else:
+            return self.context['request'].build_absolute_uri(obj.profile.image.url)
 
     def get_full_name(self, obj):
         return obj.get_full_name()
 
+    def update(self, instance, validated_data):
+        if 'profile' in validated_data:
+            profile_fields = validated_data.pop('profile')
+            profile = instance.profile
+            valid_fields = {'image'}
+            for key, value in profile_fields.items():
+                if key in valid_fields:
+                    setattr(profile, key, value)
+            profile.save()
+
+        return super().update(instance, validated_data)
+
     class Meta:
         model = get_user_model()
-        fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'is_superuser')
+        fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'is_superuser', 'image_url', 'image')
 
 
 class AssetSerializer(serializers.ModelSerializer):
