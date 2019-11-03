@@ -24,7 +24,7 @@ DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Allow production host headers
-ALLOWED_HOSTS = [FRONTEND_DOMAIN]
+ALLOWED_HOSTS = [BACKEND_DOMAIN]
 
 SENTRY_URL = os.environ.get('SENTRY_URL', '')
 
