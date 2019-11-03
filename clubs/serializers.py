@@ -82,6 +82,8 @@ class MembershipSerializer(serializers.ModelSerializer):
         if not obj.public:
             return None
         image_url = obj.person.profile.image.url
+        if not image_url:
+            return None
         if image_url.startswith('http'):
             return image_url
         else:
