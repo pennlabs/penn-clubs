@@ -1,8 +1,7 @@
 import PropTypes from 'prop-types'
 
 import renderPage from '../renderPage.js'
-import { Container } from '../components/common/Container'
-import { Line } from '../components/common/Line'
+import { Container, Line } from '../components/common'
 import { SNOW } from '../constants/colors.js'
 
 const Question = ({ title, children }) => (

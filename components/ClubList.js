@@ -1,18 +1,11 @@
 import s from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
-import { Card } from './common/Card'
-import { BlueTag, InactiveTag } from './common/Tags'
+import { Card, BlueTag, InactiveTag, Icon } from './common'
+
 import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL } from '../utils'
 import { CLUB_ROUTE } from '../constants/routes'
-import Icon from './common/Icon'
-
-const FavoriteIcon = s.span`
-  color: ${CLUBS_GREY};
-  cursor: pointer;
-  padding-right: 20px;
-`
 
 const Subtitle = s.p`
   color: ${CLUBS_GREY_LIGHT} !important;

@@ -7,7 +7,7 @@ import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../constants/colors'
 import { Link, Router } from '../routes'
 import Form from '../components/Form'
 import TabView from '../components/TabView'
-import Icon from '../components/common/Icon'
+import { Icon } from '../components/common'
 
 class ClubForm extends React.Component {
   constructor(props) {

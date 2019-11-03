@@ -1,7 +1,7 @@
 import React from 'react'
 import s from 'styled-components'
 
-import Icon from './common/Icon'
+import { Icon } from './common'
 import DropdownFilter from './DropdownFilter'
 import {
   BORDER_RADIUS,

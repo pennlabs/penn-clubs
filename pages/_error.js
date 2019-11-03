@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types'
 import s from 'styled-components'
 
-import renderPage from '../renderPage.js'
-import { Container } from '../components/common/Container'
+import renderPage from '../renderPage'
+import { Container } from '../components/common'
 import { SNOW } from '../constants/colors'
 import { HOME_ROUTE } from '../constants/routes'
 

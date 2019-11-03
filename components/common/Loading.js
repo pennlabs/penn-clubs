@@ -35,7 +35,7 @@ const LoadingCircle = s.span`
   animation: ${spin} ${TIMER} infinite linear;
 `
 
-const Loading = ({ title = 'Loading...', delay }) => {
+export const Loading = ({ title = 'Loading...', delay }) => {
   const [hidden, toggleHidden] = useState(true)
 
   useEffect(() => {
@@ -65,5 +65,3 @@ Loading.propTypes = {
   title: PropTypes.string,
   delay: PropTypes.number,
 }
-
-export default Loading

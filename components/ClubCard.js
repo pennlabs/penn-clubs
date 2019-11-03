@@ -12,7 +12,7 @@ import { BORDER_RADIUS, mediaMaxWidth, SM } from '../constants/measurements'
 import { stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
-import { InactiveTag } from './common/Tags'
+import { InactiveTag } from './common'
 import ClubDetails from './ClubDetails'
 import { CLUB_ROUTE } from '../constants/routes'
 

@@ -6,7 +6,7 @@ import draftToHtml from 'draftjs-to-html'
 import htmlToDraft from 'html-to-draftjs'
 import Head from 'next/head'
 
-import Icon from './common/Icon'
+import { Icon } from './common'
 import { titleize } from '../utils'
 
 class Form extends React.Component {

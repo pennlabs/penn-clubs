@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import s from 'styled-components'
 
-import Icon from '../common/Icon'
+import { Icon } from '../common'
 import { CLUBS_GREY, CLUBS_BLUE, WHITE } from '../../constants/colors'
 import { ROLE_OFFICER } from '../../utils'
 import { Link } from '../../routes'

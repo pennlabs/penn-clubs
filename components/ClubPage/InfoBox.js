@@ -1,5 +1,5 @@
 import { getSizeDisplay } from '../../utils'
-import Icon from '../common/Icon'
+import { Icon } from '../common'
 
 const iconStyles = {
   opacity: 0.5,

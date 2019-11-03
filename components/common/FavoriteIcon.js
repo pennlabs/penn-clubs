@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import s from 'styled-components'
 
-import Icon from '../common/Icon'
+import { Icon } from '../common'
 import { LIGHT_GRAY, MEDIUM_GRAY, RED } from '../../constants/colors'
 
 const FavoriteIconTag = s.span`

@@ -1,6 +1,6 @@
 import s from 'styled-components'
-import Icon from '../common/Icon'
 
+import { Icon } from '../common'
 import { BLACK } from '../../constants/colors'
 
 const Icons = s.div`
