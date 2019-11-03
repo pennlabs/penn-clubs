@@ -156,17 +156,17 @@ class AuthenticatedMembershipSerializer(MembershipSerializer):
         fields = MembershipSerializer.Meta.fields + ['email', 'username']
 
 
-class ClubSerializer(serializers.ModelSerializer):
+class ClubListSerializer(serializers.ModelSerializer):
+    """
+    The club list serializer returns a subset of the information that the full serializer returns.
+    This is done for a quicker response.
+    """
     code = serializers.SlugField(required=False, validators=[validators.UniqueValidator(queryset=Club.objects.all())])
     name = serializers.CharField(validators=[validators.UniqueValidator(queryset=Club.objects.all())])
-    tags = TagSerializer(many=True)
     subtitle = serializers.CharField(required=False)
-    members = MembershipSerializer(many=True, source='membership_set', read_only=True)
-    favorite_count = serializers.IntegerField(read_only=True)
-    image = serializers.ImageField(write_only=True, required=False)
+    tags = TagSerializer(many=True)
     image_url = serializers.SerializerMethodField('get_image_url')
-    parent_orgs = serializers.SerializerMethodField('get_parent_orgs')
-    badges = BadgeSerializer(many=True, required=False)
+    favorite_count = serializers.IntegerField(read_only=True)
 
     def get_image_url(self, obj):
         if not obj.image:
@@ -175,6 +175,20 @@ class ClubSerializer(serializers.ModelSerializer):
             return obj.image.url
         else:
             return self.context['request'].build_absolute_uri(obj.image.url)
+
+    class Meta:
+        model = Club
+        fields = [
+            'name', 'code', 'description', 'founded', 'size', 'email', 'tags', 'subtitle',
+            'application_required', 'accepting_members', 'image_url', 'favorite_count', 'active'
+        ]
+
+
+class ClubSerializer(ClubListSerializer):
+    members = MembershipSerializer(many=True, source='membership_set', read_only=True)
+    image = serializers.ImageField(write_only=True, required=False)
+    parent_orgs = serializers.SerializerMethodField('get_parent_orgs')
+    badges = BadgeSerializer(many=True, required=False)
 
     def get_parent_orgs(self, obj):
         return []
@@ -361,12 +375,11 @@ class ClubSerializer(serializers.ModelSerializer):
 
         return super().save()
 
-    class Meta:
-        model = Club
-        fields = [
-            'name', 'code', 'description', 'founded', 'size', 'email', 'facebook', 'twitter', 'instagram', 'linkedin',
-            'github', 'website', 'how_to_get_involved', 'tags', 'subtitle', 'application_required',
-            'accepting_members', 'listserv', 'image_url', 'members', 'favorite_count', 'active', 'parent_orgs',
+    class Meta(ClubListSerializer.Meta):
+        fields = ClubListSerializer.Meta.fields + [
+            'facebook', 'twitter', 'instagram', 'linkedin',
+            'github', 'website', 'how_to_get_involved',
+            'listserv', 'members', 'parent_orgs',
             'badges', 'image'
         ]
 
@@ -377,7 +390,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
     """
     members = AuthenticatedMembershipSerializer(many=True, source='membership_set', read_only=True)
 
-    class Meta:
+    class Meta(ClubSerializer.Meta):
         model = ClubSerializer.Meta.model
         fields = ClubSerializer.Meta.fields
 
