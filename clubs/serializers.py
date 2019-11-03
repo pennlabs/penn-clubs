@@ -157,10 +157,10 @@ class AuthenticatedMembershipSerializer(MembershipSerializer):
 
 
 class ClubListSerializer(serializers.ModelSerializer):
-    '''
+    """
     The club list serializer returns a subset of the information that the full serializer returns.
     This is done for a quicker response.
-    '''
+    """
     code = serializers.SlugField(required=False, validators=[validators.UniqueValidator(queryset=Club.objects.all())])
     name = serializers.CharField(validators=[validators.UniqueValidator(queryset=Club.objects.all())])
     subtitle = serializers.CharField(required=False)
