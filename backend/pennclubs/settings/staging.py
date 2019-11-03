@@ -65,7 +65,7 @@ AWS_QUERYSTRING_AUTH = False
 
 PLATFORM_ACCOUNTS.update(
     {
-        'REDIRECT_URI': os.environ.get('LABS_REDIRECT_URI', f'http://{BACKEND_DOMAIN}/accounts/callback/'),
+        'REDIRECT_URI': os.environ.get('LABS_REDIRECT_URI', f'https://{BACKEND_DOMAIN}/accounts/callback/'),
         'CLIENT_ID': 'clientid',
         'CLIENT_SECRET': 'supersecretclientsecret',
         'PLATFORM_URL': 'https://platform-dev.pennlabs.org',
