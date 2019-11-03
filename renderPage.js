@@ -3,7 +3,7 @@ import s from 'styled-components'
 
 import Header from './components/Header'
 import Footer from './components/Footer'
-import Loading from './components/common/Loading'
+import { Loading } from './components/common'
 
 import { WHITE } from './constants/colors'
 import { doApiRequest } from './utils'

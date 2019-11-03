@@ -17,7 +17,7 @@ import {
   NAV_HEIGHT,
 } from '../constants/measurements'
 import { logEvent } from '../utils/analytics'
-import Icon from './common/Icon'
+import { Icon } from './common'
 
 // Helper map for getting icon posftix from icon name
 const colorToColorNameMap = {

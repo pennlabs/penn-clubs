@@ -3,7 +3,7 @@ import s from 'styled-components'
 
 import { CLUBS_GREY } from '../constants/colors'
 import { getSizeDisplay } from '../utils'
-import Icon from './common/Icon'
+import { Icon } from './common'
 
 const Wrapper = s.div`
   margin-top: 0.25rem;
@@ -19,8 +19,6 @@ const iconStyles = {
   opacity: 0.5,
   transform: 'translateY(3px)',
 }
-
-// TODO add icons
 
 const Details = ({ size, applicationRequired, acceptingMembers }) => (
   <Wrapper>

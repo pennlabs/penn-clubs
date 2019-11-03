@@ -7,8 +7,6 @@ import { mediaMaxWidth, SM } from '../constants/measurements'
 
 // TODO PropTypes
 
-const Wrapper = s.div``
-
 const ClubTableRowWrapper = s.div`
   ${mediaMaxWidth(SM)} {
     margin-left: -1rem;

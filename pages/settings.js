@@ -1,5 +1,7 @@
-import Icon from '../components/common/Icon'
-import renderPage from '../renderPage.js'
+import React from 'react'
+
+import { Icon } from '../components/common'
+import renderPage from '../renderPage'
 import {
   doApiRequest,
   formatResponse,
@@ -8,7 +10,6 @@ import {
 } from '../utils'
 import { CLUBS_GREY_LIGHT } from '../constants/colors'
 import { Link } from '../routes'
-import React from 'react'
 import Form from '../components/Form'
 
 class SettingsForm extends React.Component {
