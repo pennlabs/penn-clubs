@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 
 import renderPage from '../renderPage.js'
-import Container from '../components/common/Container'
+import { Container } from '../components/common/Container'
 import { Line } from '../components/common/Line'
 import { SNOW } from '../constants/colors.js'
 

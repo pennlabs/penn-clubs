@@ -14,9 +14,7 @@ const Title = s.div`
   padding-right: 10px;
 `
 
-const Header = props => {
-  const { club, userInfo, favorites } = props
-
+const Header = ({ club, userInfo, favorites, style }) => {
   const isFavorite = favorites.includes(club.code)
 
   // inClub is set to the membership object if the user is in the club, or false
@@ -34,7 +32,7 @@ const Header = props => {
   const [favCount, setFavCount] = useState(club.favorite_count || 0)
 
   return (
-    <div>
+    <div style={style}>
       <Title>
         <h1
           className="title is-size-2-desktop is-size-3-mobile"

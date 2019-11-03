@@ -20,8 +20,6 @@ const iconStyles = {
   transform: 'translateY(3px)',
 }
 
-// TODO add icons
-
 const Details = ({ size, applicationRequired, acceptingMembers }) => (
   <Wrapper>
     <p style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8 }}>

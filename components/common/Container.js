@@ -41,11 +41,9 @@ const Wrapper = s.div`
   `}
 `
 
-const Container = ({ background = WHITE, fullHeight, children }) => (
+export const Container = ({ background = WHITE, fullHeight, children }) => (
   <div style={{ background }}>
-    <Wrapper className="container" fullHeight={fullHeight}>
-      {children}
-    </Wrapper>
+    <Wrapper fullHeight={fullHeight}>{children}</Wrapper>
   </div>
 )
 
@@ -60,4 +58,22 @@ Container.propTypes = {
   fullHeight: PropTypes.bool,
 }
 
-export default Container
+const WideWrapper = s(Wrapper)`
+  ${mediaMinWidth(MD)} {
+    ${getPadding(2.5)}
+  }
+
+  ${mediaMinWidth(LG)} {
+    ${getPadding(7.5)}
+  }
+
+  ${mediaMinWidth(XL)} {
+    ${getPadding(12.5)}
+  }
+`
+
+export const WideContainer = ({ background = WHITE, fullHeight, children }) => (
+  <div style={{ background }}>
+    <WideWrapper fullHeight={fullHeight}>{children}</WideWrapper>
+  </div>
+)

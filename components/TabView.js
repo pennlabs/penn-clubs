@@ -1,59 +1,44 @@
-import React from 'react'
+import { useState } from 'react'
 import { titleize } from '../utils'
 
-class TabView extends React.Component {
-  constructor(props) {
-    super(props)
+const TabView = ({ tabs }) => {
+  const hashString = window.location.hash.substring(1)
+  const [currentTab, setCurrentTab] = useState(hashString || tabs[0].name)
 
-    this.state = {
-      currentTab: this.props.tabs[0].name,
-    }
-  }
+  const getTabContent = () =>
+    (
+      tabs.filter(a => a.name === currentTab)[0] || {
+        content: <div>Invalid tab selected.</div>,
+      }
+    ).content
 
-  componentDidMount() {
-    this.setState({
-      currentTab: window.location.hash.substring(1) || this.state.currentTab,
-    })
-  }
+  const enabledTabs = tabs.filter(tab => !tab.disabled)
 
-  render() {
-    const { tabs } = this.props
-
-    return (
-      <div>
-        <div className="tabs">
-          <ul>
-            {tabs
-              .filter(a => !a.disabled)
-              .map(a => (
-                <li
-                  className={
-                    a.name === this.state.currentTab ? 'is-active' : undefined
-                  }
-                  key={a.name}
-                >
-                  <a
-                    onClick={() => {
-                      this.setState({ currentTab: a.name })
-                      window.location.hash = '#' + a.name
-                    }}
-                  >
-                    {a.label || titleize(a.name)}
-                  </a>
-                </li>
-              ))}
-          </ul>
-        </div>
-        {
-          (
-            tabs.filter(a => a.name === this.state.currentTab)[0] || {
-              content: <div>Invalid tab selected.</div>,
-            }
-          ).content
-        }
+  return (
+    <>
+      <div className="tabs">
+        <ul style={{ borderBottomWidth: '2px' }}>
+          {enabledTabs.map(({ name, label }) => (
+            <li
+              className={name === currentTab ? 'is-active' : ''}
+              key={`tab-${name}`}
+            >
+              <a
+                style={{ borderBottomWidth: '2px', marginBottom: '-2px' }}
+                onClick={() => {
+                  setCurrentTab(name)
+                  window.location.hash = `#${name}`
+                }}
+              >
+                {label || titleize(name)}
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
-    )
-  }
+      {getTabContent()}
+    </>
+  )
 }
 
 export default TabView
