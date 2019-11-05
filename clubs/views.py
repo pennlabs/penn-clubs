@@ -13,7 +13,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
-from clubs.permissions import ClubPermission, EventPermission, InvitePermission, IsSuperuser, MemberPermission
+from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
+                               InvitePermission, IsSuperuser, MemberPermission)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
                                ClubSerializer, EventSerializer, FavoriteSerializer, MembershipInviteSerializer,
                                MembershipSerializer, TagSerializer, UserSerializer)
@@ -143,7 +144,7 @@ class MemberViewSet(viewsets.ModelViewSet):
 
 class AssetViewSet(viewsets.ModelViewSet):
     serializer_class = AssetSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AssetPermission | IsSuperuser]
     parser_classes = [parsers.MultiPartParser]
     http_method_names = ['get', 'post', 'delete']
 

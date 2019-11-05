@@ -435,6 +435,7 @@ class AssetSerializer(serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
     file_url = serializers.SerializerMethodField('get_file_url')
     file = serializers.FileField(write_only=True)
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), required=False, slug_field='code')
 
     def get_file_url(self, obj):
         if not obj.file:
@@ -444,6 +445,13 @@ class AssetSerializer(serializers.ModelSerializer):
         else:
             return self.context['request'].build_absolute_uri(obj.file.url)
 
+    # Upload size is at most 1GB
+    def validate_file(self, data):
+        if data.size <= 1073741824:
+            return data
+        else:
+            raise serializers.ValidationError('You cannot upload a file that is more than 1GB of space')
+
     class Meta:
         model = Asset
-        fields = ('id', 'file_url', 'file', 'creator')
+        fields = ('id', 'file_url', 'file', 'creator', 'club')
