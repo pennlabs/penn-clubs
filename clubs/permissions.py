@@ -10,7 +10,7 @@ class ClubPermission(permissions.BasePermission):
     Anyone with permission should be able to create.
     """
     def has_object_permission(self, request, view, obj):
-        if view.action in ['retrieve']:
+        if view.action in ['retrieve', 'children']:
             return True
 
         membership = Membership.objects.filter(person=request.user, club=obj).first()
@@ -23,7 +23,7 @@ class ClubPermission(permissions.BasePermission):
             return membership.role <= Membership.ROLE_OFFICER
 
     def has_permission(self, request, view):
-        if view.action in ['update', 'upload', 'partial_update', 'destroy']:
+        if view.action in ['update', 'upload', 'children', 'partial_update', 'destroy']:
             return request.user.is_authenticated
         elif view.action in ['create']:
             return request.user.is_authenticated and request.user.is_superuser

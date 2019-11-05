@@ -5,10 +5,12 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
+from django.core.validators import validate_email
 from django.db import models
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 def get_asset_file_name(instance, fname):
@@ -21,6 +23,10 @@ def get_club_file_name(instance, fname):
 
 def get_event_file_name(instance, fname):
     return os.path.join('events', '{}.{}'.format(uuid.uuid4().hex, fname.rsplit('.', 1)[-1]))
+
+
+def get_user_file_name(instance, fname):
+    return os.path.join('users', '{}.{}'.format(uuid.uuid4().hex, fname.rsplit('.', 1)[-1]))
 
 
 class Club(models.Model):
@@ -119,6 +125,25 @@ class Favorite(models.Model):
 
     class Meta:
         unique_together = (('person', 'club'),)
+
+
+class Advisor(models.Model):
+    """
+    Represents the faculty advisor of a club
+    """
+    name = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, blank=True, null=True)
+    email = models.CharField(
+            max_length=255,
+            blank=True,
+            null=True,
+            validators=[validate_email]
+    )
+    phone = PhoneNumberField(null=False, blank=False, unique=True)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 
 
 class Membership(models.Model):
@@ -312,6 +337,14 @@ class Asset(models.Model):
         return self.name
 
 
+class Profile(models.Model):
+    """
+    Additional information attached to a user account.
+    """
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, primary_key=True)
+    image = models.ImageField(upload_to=get_user_file_name, null=True, blank=True)
+
+
 @receiver(models.signals.post_delete, sender=Asset)
 def asset_delete_cleanup(sender, instance, **kwargs):
     if instance.file:
@@ -326,5 +359,17 @@ def club_delete_cleanup(sender, instance, **kwargs):
 
 @receiver(models.signals.post_delete, sender=Event)
 def event_delete_cleanup(sender, instance, **kwargs):
+    if instance.image:
+        instance.image.delete(save=False)
+
+
+@receiver(models.signals.post_save, sender=get_user_model())
+def user_create(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+
+@receiver(models.signals.post_delete, sender=Profile)
+def profile_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
