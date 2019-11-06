@@ -75,7 +75,7 @@ workflows:
             - test
           image: pennlabs/clubs-frontend
           tag: "0.0.${CIRCLE_SHA1}"
-          workspace-root: frontend
+          path: frontend
           context: docker-publish
       - docker/publish:
           name: publish-backend
@@ -83,7 +83,7 @@ workflows:
             - test
           image: pennlabs/clubs-backend
           tag: "0.0.${CIRCLE_SHA1}"
-          workspace-root: backend
+          path: backend
           context: docker-publish
       - deploy:
           requires:
