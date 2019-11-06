@@ -70,6 +70,7 @@ workflows:
     jobs:
       - test
       - docker/publish:
+          name: publish-frontend
           requires:
             - test
           image: pennlabs/clubs-frontend
@@ -77,6 +78,7 @@ workflows:
           workspace-root: frontend
           context: docker-publish
       - docker/publish:
+          name: publish-backend
           requires:
             - test
           image: pennlabs/clubs-backend
@@ -85,6 +87,7 @@ workflows:
           context: docker-publish
       - deploy:
           requires:
-            - docker/publish
+            - publish-frontend
+            - publish-backend
           context: k8s-deploy
           <<: *branch-filters
