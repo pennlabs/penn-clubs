@@ -55,22 +55,6 @@ jobs:
       - store_artifacts:
           path: backend/test-results
           destination: trl
-  publish-frontend:
-    executor: docker/docker
-    steps:
-      - docker/publish:
-          image: pennlabs/clubs-frontend
-          tag: "0.0.${CIRCLE_SHA1}"
-          workspace-root: frontend
-          context: docker-publish
-  publish-backend:
-    executor: docker/docker
-    steps:
-      - docker/publish:
-          image: pennlabs/clubs-backend
-          tag: "0.0.${CIRCLE_SHA1}"
-          workspace-root: backend
-          context: docker-publish
   deploy:
     working_directory: ~/pennlabs
     docker:
@@ -85,16 +69,22 @@ workflows:
   build-and-deploy:
     jobs:
       - test
-      - publish-frontend:
+      - docker/publish:
           requires:
             - test
-          <<: *branch-filters
-      - publish-backend:
+          image: pennlabs/clubs-frontend
+          tag: "0.0.${CIRCLE_SHA1}"
+          workspace-root: frontend
+          context: docker-publish
+      - docker/publish:
           requires:
             - test
-          <<: *branch-filters
+          image: pennlabs/clubs-backend
+          tag: "0.0.${CIRCLE_SHA1}"
+          workspace-root: backend
+          context: docker-publish
       - deploy:
           requires:
-            - publish-backend
-            - publish-frontend
+            - docker/publish
           context: k8s-deploy
+          <<: *branch-filters
