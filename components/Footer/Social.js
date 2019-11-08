@@ -3,6 +3,9 @@ import Icon from '../common/Icon'
 
 import { BLACK } from '../../constants/colors'
 
+import { Icon } from '../common'
+import { BLACK } from '../../constants/colors'
+
 const Icons = s.div`
   display: flex;
   justify-content: center;

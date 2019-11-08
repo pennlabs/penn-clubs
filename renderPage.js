@@ -3,15 +3,16 @@ import s from 'styled-components'
 
 import Header from './components/Header'
 import Footer from './components/Footer'
-import Loading from './components/common/Loading'
+import { Loading } from './components/common'
 
 import { WHITE } from './constants/colors'
 import { doApiRequest } from './utils'
 import { logEvent } from './utils/analytics'
 import { logException } from './utils/sentry'
+import { NAV_HEIGHT } from './constants/measurements'
 
 const Wrapper = s.div`
-  min-height: calc(100vh);
+  min-height: calc(100vh - ${NAV_HEIGHT});
 `
 
 function renderPage(Page) {

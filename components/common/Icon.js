@@ -1,4 +1,3 @@
-import React from 'react'
 import PropTypes from 'prop-types'
 import s from 'styled-components'
 
@@ -12,7 +11,7 @@ const IconTag = s.img`
   transform: translateY(2.5px);
 `
 
-const Icon = ({ name, alt, size, style, ...props }) => (
+export const Icon = ({ name, alt, size, style, ...props }) => (
   <IconTag
     src={`/static/img/icons/${name}.svg`}
     alt={alt}
@@ -24,12 +23,12 @@ const Icon = ({ name, alt, size, style, ...props }) => (
 
 Icon.defaultProps = {
   style: {},
+  size: undefined,
 }
 
 Icon.propTypes = {
   name: PropTypes.string.isRequired,
   alt: PropTypes.string.isRequired,
+  size: PropTypes.string,
   style: PropTypes.object,
 }
-
-export default Icon

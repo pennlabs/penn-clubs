@@ -1,88 +1,85 @@
-import renderPage from '../renderPage.js'
-import { getDefaultClubImageURL, doApiRequest } from '../utils'
-import React from 'react'
+import { useState, useEffect } from 'react'
 import s from 'styled-components'
-import Tabs from '../components/ClubPage/Tabs.js'
-import Header from '../components/ClubPage/Header.js'
-import InfoBox from '../components/ClubPage/InfoBox.js'
-import SocialIcons from '../components/ClubPage/SocialIcons.js'
+
+import renderPage from '../renderPage.js'
+import { doApiRequest } from '../utils'
+import Tabs from '../components/ClubPage/Tabs'
+import Header from '../components/ClubPage/Header'
+import InfoBox from '../components/ClubPage/InfoBox'
+import SocialIcons from '../components/ClubPage/SocialIcons'
+import {
+  Card,
+  StrongText,
+  WideContainer,
+  Flex,
+  Title,
+  Text,
+  Container,
+} from '../components/common'
 
 const Image = s.img`
-  max-height: 300px;
-  max-width: 100%;
+  height: 86px;
+  width: auto;
+  max-width: 242px;
+  margin-right: 1rem;
   object-fit: contain;
 `
 
-class Club extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      club: null
-    };
-  }
+const Club = ({ query, userInfo, favorites, updateFavorites }) => {
+  const [club, setClub] = useState(null)
 
-  componentDidMount() {
-    doApiRequest(`/clubs/${this.props.query.club}/?format=json`)
+  useEffect(() => {
+    doApiRequest(`/clubs/${query.club}/?format=json`)
       .then(resp => resp.json())
-      .then(data => this.setState({ club: data }));
-  }
+      .then(data => setClub(data))
+  }, [query])
 
-  render() {
-    const { club } = this.state
-
-    if (!club) {
-      return <div />
-    }
-
-    if (!club.code) {
-      return (
-        <div className="has-text-centered" style={{ margin: 30 }}>
-          <h1 className="title is-h1">404 Not Found</h1>
-          <p>The club you are looking for does not exist.</p>
-        </div>
-<<<<<<< Updated upstream
-      );
-    }
-
+  if (!club) return null
+  if (!club.code) {
     return (
-      <div style={{ padding: "30px 50px" }}>
-=======
-      )
-    }
-
-    return (
-      <div style={{ padding: '30px 50px' }}>
->>>>>>> Stashed changes
-        <Header
-          club={club}
-          userInfo={this.props.userInfo}
-          favorites={this.props.favorites}
-          updateFavorites={this.props.updateFavorites}
-        />
-        <div className="columns">
-          <div className="column is-6">
-            <Image src={club.image_url || getDefaultClubImageURL()} />
-          </div>
-          <div className="column is-6">
-            <InfoBox club={club} />
-            <SocialIcons club={club} />
-            <Tabs club={club} />
-          </div>
+      <Container>
+        <div className="has-text-centered">
+          <Title>404 Not Found</Title>
+          <Text>The club you are looking for does not exist.</Text>
         </div>
-      </div>
+      </Container>
     )
   }
+
+  const { image_url: image } = club
+
+  return (
+    <WideContainer>
+      <Flex>
+        {image && <Image src={image} />}
+        <Header
+          club={club}
+          userInfo={userInfo}
+          favorites={favorites}
+          updateFavorites={updateFavorites}
+          style={{ flex: 1 }}
+        />
+      </Flex>
+
+      <div className="columns">
+        <div className="column">
+          <Tabs club={club} />
+        </div>
+        <div className="column is-one-third">
+          <Card bordered style={{ marginBottom: '1rem' }}>
+            <StrongText>About</StrongText>
+            <InfoBox club={club} />
+            <SocialIcons club={club} />
+          </Card>
+        </div>
+      </div>
+    </WideContainer>
+  )
 }
 
 Club.getInitialProps = async props => {
-<<<<<<< Updated upstream
-  var { query } = props;
-  return { query: query };
-};
-=======
-  var { query } = props
-  return { query: query }
+  const { query } = props
+  return { query }
 }
->>>>>>> Stashed changes
 
 export default renderPage(Club)

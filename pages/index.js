@@ -5,13 +5,7 @@ import SearchBar from '../components/SearchBar'
 import ClubDisplay from '../components/ClubDisplay'
 import DisplayButtons from '../components/DisplayButtons'
 import { renderListPage } from '../renderPage.js'
-import {
-  mediaMaxWidth,
-  mediaMinWidth,
-  MD,
-  LG,
-  XL,
-} from '../constants/measurements'
+import { mediaMaxWidth, MD } from '../constants/measurements'
 import {
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
@@ -21,6 +15,7 @@ import {
   FOCUS_GRAY,
 } from '../constants/colors'
 import { logEvent } from '../utils/analytics'
+import { WideContainer } from '../components/common'
 
 const colorMap = {
   Type: CLUBS_BLUE,
@@ -41,27 +36,10 @@ const ClearAllLink = s.span`
   }
 `
 
-const Wrapper = s.div`
-  min-height: 59vh;
-  margin-right: 20px;
-
-  ${mediaMaxWidth(MD)} {
-    margin-right: 0;
-  }
-`
-
 const Container = s.div`
   width: 80vw;
   margin-left: 20vw;
-  padding: 0 1rem;
-
-  ${mediaMinWidth(LG)} {
-    padding: 0 calc(2.5% + 1rem);
-  }
-
-  ${mediaMinWidth(XL)} {
-    padding: 0 calc(5% + 1rem);
-  }
+  padding: 0;
 
   ${mediaMaxWidth(MD)} {
     width: 100%;
@@ -76,8 +54,6 @@ class Splash extends React.Component {
       displayClubs: props.clubs,
       selectedTags: [],
       nameInput: '',
-      modal: false,
-      modalClub: {},
       display: 'cards',
     }
     this.fuseOptions = {
@@ -123,7 +99,7 @@ class Splash extends React.Component {
     const applicationSelected = selectedTags.filter(
       tag => tag.name === 'Application'
     )
-    var { clubs } = this.props
+    let { clubs } = this.props
 
     // fuzzy search
     if (nameInput.length) {
@@ -153,7 +129,7 @@ class Splash extends React.Component {
       return clubRightSize && appRequired && rightTags
     })
 
-    var displayClubs = clubs
+    const displayClubs = clubs
     this.setState({ displayClubs, nameInput, selectedTags })
   }
 
@@ -184,7 +160,6 @@ class Splash extends React.Component {
   }
 
   shuffle() {
-    logEvent('shuffle', 'click')
     const { displayClubs } = this.state
     this.setState({
       displayClubs: displayClubs.sort(() => Math.random() - 0.5),
@@ -192,11 +167,11 @@ class Splash extends React.Component {
   }
 
   render() {
-    const { displayClubs, display, selectedTags } = this.state
+    const { displayClubs, display, selectedTags, nameInput } = this.state
     const { clubs, tags, favorites, updateFavorites } = this.props
 
     return (
-      <Wrapper>
+      <div>
         <SearchBar
           clubs={clubs}
           tags={tags}
@@ -207,72 +182,71 @@ class Splash extends React.Component {
         />
 
         <Container>
-          <div style={{ padding: '30px 0' }}>
-            <DisplayButtons
-              shuffle={this.shuffle}
-              switchDisplay={this.switchDisplay}
-            />
+          <WideContainer>
+            <div style={{ padding: '30px 0' }}>
+              <DisplayButtons
+                shuffle={this.shuffle}
+                switchDisplay={this.switchDisplay}
+              />
 
-            <p className="title" style={{ color: CLUBS_GREY }}>
-              Browse Clubs
-            </p>
-            <p
-              className="subtitle is-size-5"
-              style={{ color: CLUBS_GREY_LIGHT }}
-            >
-              Find your people!
-            </p>
-          </div>
-
-          {selectedTags.length ? (
-            <div style={{ padding: '0 30px 30px 0' }}>
-              {selectedTags.map(tag => (
-                <span
-                  key={tag.label}
-                  className="tag is-rounded has-text-white"
-                  style={{
-                    backgroundColor: colorMap[tag.name],
-                    fontWeight: 600,
-                    margin: 3,
-                  }}
-                >
-                  {tag.label}
-                  <button
-                    className="delete is-small"
-                    onClick={e => this.updateTag(tag, tag.name)}
-                  />
-                </span>
-              ))}
-              <ClearAllLink
-                className="tag is-rounded"
-                onClick={e =>
-                  this.setState(
-                    { selectedTags: [] },
-                    this.resetDisplay(
-                      this.state.nameInput,
-                      this.state.selectedTags
-                    )
-                  )
-                }
+              <p className="title" style={{ color: CLUBS_GREY }}>
+                Browse Clubs
+              </p>
+              <p
+                className="subtitle is-size-5"
+                style={{ color: CLUBS_GREY_LIGHT }}
               >
-                Clear All
-              </ClearAllLink>
+                Find your people!
+              </p>
             </div>
-          ) : (
-            ''
-          )}
 
-          <ClubDisplay
-            displayClubs={displayClubs}
-            display={display}
-            tags={tags}
-            favorites={favorites}
-            updateFavorites={updateFavorites}
-            selectedTags={selectedTags}
-            updateTag={this.updateTag.bind(this)}
-          />
+            {selectedTags.length ? (
+              <div style={{ padding: '0 30px 30px 0' }}>
+                {selectedTags.map(tag => (
+                  <span
+                    key={tag.label}
+                    className="tag is-rounded has-text-white"
+                    style={{
+                      backgroundColor: colorMap[tag.name],
+                      fontWeight: 600,
+                      margin: 3,
+                    }}
+                  >
+                    {tag.label}
+                    <button
+                      className="delete is-small"
+                      onClick={e => this.updateTag(tag, tag.name)}
+                    />
+                  </span>
+                ))}
+                <ClearAllLink
+                  className="tag is-rounded"
+                  onClick={e =>
+                    this.setState(
+                      { selectedTags: [] },
+                      this.resetDisplay(nameInput, selectedTags)
+                    )
+                  }
+                >
+                  Clear All
+                </ClearAllLink>
+              </div>
+            ) : (
+              ''
+            )}
+
+            <ClubDisplay
+              displayClubs={displayClubs}
+              display={display}
+              tags={tags}
+              favorites={favorites}
+              updateFavorites={updateFavorites}
+              selectedTags={selectedTags}
+              updateTag={this.updateTag.bind(this)}
+            />
+          </WideContainer>
         </Container>
-      </Wrapper>
+      </div>
     )
   }
 }

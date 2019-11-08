@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import s from 'styled-components'
 
-import Icon from '../common/Icon'
+import { Icon } from '../common'
 import { CLUBS_GREY, CLUBS_BLUE, WHITE } from '../../constants/colors'
 import { ROLE_OFFICER } from '../../utils'
 import { Link } from '../../routes'
@@ -14,9 +14,7 @@ const Title = s.div`
   padding-right: 10px;
 `
 
-const Header = props => {
-  const { club, userInfo, favorites } = props
-
+const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
   const isFavorite = favorites.includes(club.code)
 
   // inClub is set to the membership object if the user is in the club, or false
@@ -34,7 +32,7 @@ const Header = props => {
   const [favCount, setFavCount] = useState(club.favorite_count || 0)
 
   return (
-    <div>
+    <div style={style}>
       <Title>
         <h1
           className="title is-size-2-desktop is-size-3-mobile"
@@ -50,8 +48,7 @@ const Header = props => {
             alt={isFavorite ? 'click to unfavorite' : 'click to favorite'}
             style={{ cursor: 'pointer' }}
             onClick={() => {
-              console.log('click')
-              props.updateFavorites(club.code)
+              updateFavorites(club.code)
                 ? setFavCount(favCount + 1)
                 : setFavCount(Math.max(0, favCount - 1))
             }}

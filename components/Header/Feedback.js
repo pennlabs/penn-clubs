@@ -1,6 +1,6 @@
 import s from 'styled-components'
 
-import Icon from '../common/Icon'
+import { Icon } from '../common'
 import { logEvent } from '../../utils/analytics'
 import { CLUBS_BLUE, CLUBS_DEEP_BLUE } from '../../constants/colors'
 

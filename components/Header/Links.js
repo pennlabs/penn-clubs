@@ -1,6 +1,6 @@
 import s from 'styled-components'
 
-import Icon from '../common/Icon'
+import { Icon } from '../common'
 import { Link } from '../../routes'
 import { LOGIN_URL } from '../../utils'
 import { mediaMaxWidth, MD } from '../../constants/measurements'

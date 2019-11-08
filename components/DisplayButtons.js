@@ -1,7 +1,7 @@
 import s from 'styled-components'
 import PropTypes from 'prop-types'
 
-import Icon from './common/Icon'
+import { Icon } from './common'
 import { DARK_GRAY } from '../constants/colors'
 
 const DisplayButtonsTag = s.div`

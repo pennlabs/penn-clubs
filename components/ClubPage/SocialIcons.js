@@ -1,4 +1,5 @@
-import Icon from '../common/Icon'
+import { Icon } from '../common'
+import SocialLink from './SocialLink'
 
 const socials = [
   {
@@ -41,31 +42,23 @@ const socials = [
 
 const iconStyles = {
   opacity: 0.5,
-  paddingRight: '5px',
+  marginRight: '5px',
 }
 
-export default props => {
-  const { club } = props
-  return (
-    <div>
-      {socials
-        .map((data, idx) => {
-          data.index = idx
-          return data
-        })
-        .filter(item => club[item.name])
-        .map(item => (
-          <div key={item.name}>
-            <Icon styles={iconStyles} name={item.icon} alt={item.icon} />
-            <a
-              href={
-                club[item.name] ? (item.prefix || '') + club[item.name] : '#'
-              }
-            >
-              {club[item.name]}
-            </a>
-          </div>
-        ))}
-    </div>
-  )
-}
+const SocialIcons = ({ club }) =>
+  socials
+    .map((data, idx) => {
+      data.index = idx
+      return data
+    })
+    .filter(item => club[item.name])
+    .map(item => (
+      <div key={item.name}>
+        <Icon style={iconStyles} name={item.icon} alt={item.icon} />{' '}
+        <a href={club[item.name] ? (item.prefix || '') + club[item.name] : '#'}>
+          <SocialLink club={club} item={item} type={item.name} />
+        </a>
+      </div>
+    ))
+
+export default SocialIcons

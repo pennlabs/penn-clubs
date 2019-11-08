@@ -1,9 +1,13 @@
 import { getSizeDisplay } from '../../utils'
-import Icon from '../common/Icon'
+import { Icon } from '../common'
 
 const iconStyles = {
   opacity: 0.5,
   marginRight: '5px',
+}
+
+const infoStyles = {
+  marginBottom: '5px',
 }
 
 const applicationTextMap = {
@@ -13,35 +17,33 @@ const applicationTextMap = {
 }
 const defaultApplicationText = 'No Application Required'
 
-const InfoBox = ({
-  club: {
-    size,
-    accepting_members: acceptingMembers,
-    application_required: applicationRequired,
-  },
-}) => (
-  <div>
-    <p>
-      <Icon name="user" alt="members" style={iconStyles} />
-      {' ' + getSizeDisplay(size)}
-    </p>
-    {acceptingMembers ? (
-      <p>
-        <Icon name="check-circle" style={iconStyles} alt="check" />
-        {' Currently Accepting Members'}
-      </p>
-    ) : (
-      <p>
-        <Icon name="x-circle" style={iconStyles} alt="negative" />
-        {' Not Currently Accepting Members'}
-      </p>
-    )}
+const InfoBox = props => {
+  const data = [
+    {
+      icon: 'user',
+      alt: 'members',
+      text: ' ' + getSizeDisplay(props.club.size),
+    },
+    {
+      icon: props.club.accepting_members ? 'check-circle' : 'x-circle',
+      text: props.club.accepting_members
+        ? ' Currently Accepting Members'
+        : ' Not Currently Accepting Members',
+    },
+    {
+      icon: 'edit',
+      text:
+        ' ' + applicationTextMap[props.club.application_required] ||
+        defaultApplicationText,
+    },
+  ]
 
-    <p>
-      <Icon name="edit" style={iconStyles} alt="edit" />
-      {' ' + applicationTextMap[applicationRequired] || defaultApplicationText}
+  return data.map(({ icon, text }) => (
+    <p style={infoStyles}>
+      <Icon name={icon} style={iconStyles} alt={text} />
+      {text}
     </p>
-  </div>
-)
+  ))
+}
 
 export default InfoBox
