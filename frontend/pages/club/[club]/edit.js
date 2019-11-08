@@ -853,6 +853,45 @@ class ClubForm extends Component {
         ),
       },
       {
+        name: 'files',
+        label: 'Files',
+        content: (
+          <div>
+            <table className="table is-fullwidth">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {club && club.files && club.files.length ? (club.files.map(a =>
+                  <tr key={a.name}>
+                    <td>{a.name}</td>
+                    <td className="buttons">
+                      <button
+                        className="button is-small is-danger">
+                        <Icon name="times" alt="delete file" /> Delete
+                      </button>
+                      <button
+                        className="button is-small is-primary">
+                        <Icon name="download" alt="download file" /> Download
+                      </button>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan="2" className="has-text-grey">
+                      There are no uploaded files for this club.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        ),
+      },
+      {
         name: 'settings',
         label: 'Settings',
         content: (
