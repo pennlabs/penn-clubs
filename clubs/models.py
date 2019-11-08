@@ -145,6 +145,20 @@ class Advisor(models.Model):
     def __str__(self):
         return self.name
 
+class Note(models.Model):
+    """
+    Represents a note created by a parent about a
+    constituient club
+    """
+
+    creator = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    creating_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='creating_club')
+    subject_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='subject_club')
+    title = models.CharField(max_length=255, default='Note')
+    content = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class Membership(models.Model):
     """

@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
-from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag, Note
 from clubs.utils import clean
 
 
@@ -504,3 +504,14 @@ class AssetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = ('id', 'file_url', 'file', 'creator', 'club')
+
+class NoteSerializer(serializers.ModelSerializer):
+    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    creating_club = serializers.SlugRelatedField(queryset=Club.objects.all(), required=False, slug_field='code')
+    subject_club = serializers.SlugRelatedField(queryset=Club.objects.all(), required=False, slug_field='code')
+    title = serializers.CharField(max_length=255, default='Note')
+    content = serializers.CharField()
+
+    class Meta:
+        model = Note
+        fields = ('id', 'creator', 'creating_club', 'subject_club', 'title', 'content')

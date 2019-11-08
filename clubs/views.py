@@ -12,12 +12,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag, Note
 from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
                                InvitePermission, IsSuperuser, MemberPermission)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
                                ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer,
-                               MembershipInviteSerializer, MembershipSerializer, TagSerializer, UserSerializer)
+                               MembershipInviteSerializer, MembershipSerializer, TagSerializer, UserSerializer, NoteSerializer)
 
 
 def upload_endpoint_helper(request, cls, field, **kwargs):
@@ -152,6 +152,14 @@ class AssetViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Asset.objects.filter(creator=self.request.user)
+
+class NoteViewSet(viewsets.ModelViewSet):
+    serializer_class = NoteSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post', 'delete']
+
+    def get_queryset(self):
+        return Note.objects.filter(creator=self.request.user)
 
 
 class TagViewSet(viewsets.ModelViewSet):
