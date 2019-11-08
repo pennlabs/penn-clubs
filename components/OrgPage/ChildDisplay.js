@@ -1,93 +1,97 @@
-import React, { useState, Component } from "react";
-import OrgChildren from "./OrgChildren";
-import { Link } from "../../routes";
+import React, { useState, Component } from 'react'
+import OrgChildren from './OrgChildren'
+import { Link } from '../../routes'
 import {
   LIGHT_GRAY,
   BLACK,
   CLUBS_GREY_LIGHT,
   WHITE,
-  BABY_BLUE
-} from "../../constants/colors";
-import s from "styled-components";
-
+  BABY_BLUE,
+} from '../../constants/colors'
+import s from 'styled-components'
+import Icon from '../common/Icon'
 const Child = s.div`
   display: flex;
   flex-direction: row; 
   justify-content: space-between;
-  margin: 5px 20px;
+  margin: 5px;
   margin-left: 30px;
-  border-radius: 20px;
-  background: ${CLUBS_GREY_LIGHT};
+  border-radius: 10px;
+  background: ${WHITE};
   padding: 20px; 
+  border: 1px ${BLACK} solid
 
   &:hover{
     background: ${LIGHT_GRAY}
     color: ${BLACK}
   }
-`;
+`
 const Text = s.p`
-  color: ${WHITE};
+  color: ${BLACK};
   font-size: 16px;
 
   &:hover{
-    font-weight: bold;
-    color: ${BABY_BLUE}
   }
-`;
+`
 const TextLink = s.a`
-  color: ${WHITE};
+  color: ${BLACK};
   font-size: 16px;
 
   &:hover{
     font-weight: bold;
     
   }
-`;
+`
 
 export default class ChildDisplay extends Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
-      show: false
-    };
-    this.handleClick = this.handleClick.bind(this);
-    this.handleDetails = this.handleDetails.bind(this);
+      show: false,
+    }
+    this.handleClick = this.handleClick.bind(this)
+    this.handleDetails = this.handleDetails.bind(this)
   }
   handleClick() {
     this.setState(state => ({
-      show: !state.show
-    }));
+      show: !state.show,
+    }))
   }
   handleDetails() {
-    console.log(this.state.child);
+    console.log(this.state.child)
   }
   render() {
-    const { child } = this.props;
+    const { child } = this.props
     return (
-      <div style={{ margin: "10px", borderRadius: "20px" }}>
+      <div
+        style={{
+          margin: '10px',
+          borderRadius: '5px',
+          // border: `2px black solid`,
+          borderRadius: '10px',
+        }}
+      >
         <div
           style={{
             marginTop: 20,
-            cursor: "pointer"
+            cursor: 'pointer',
           }}
         >
-          <Child>
+          <Child onClick={this.handleClick}>
             <Text
               style={{
-                fontSize: "15px",
-                color: "white"
+                fontSize: '15px',
               }}
-              onClick={this.handleClick}
             >
               {child.name}
             </Text>
             {/* <Link>Click for info</Link> */}
             <TextLink
               href={`/club/${child.code}/admin`}
-              style={{ color: "white" }}
               onClick={this.handleDetails}
             >
-              Click for info
+              View{` `}
+              <Icon name="external-link" alt="View Club Page"></Icon>
             </TextLink>
           </Child>
           {this.state.show && child.children.length ? (
@@ -95,6 +99,6 @@ export default class ChildDisplay extends Component {
           ) : null}
         </div>
       </div>
-    );
+    )
   }
 }

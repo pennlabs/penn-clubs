@@ -33,6 +33,23 @@ class SettingsForm extends React.Component {
   }
 
   submit(data) {
+    const photo = data.img
+    console.log(data)
+    console.log(photo)
+    if (photo.get('file') instanceof File) {
+      photo.set('image', photo.get('file'))
+      photo.delete('file')
+      doApiRequest('/settings/?format=json', {
+        method: 'PATCH',
+        body: photo,
+      }).then(resp => {
+        if (resp.ok) {
+          this.notify('Personal info and image successfully saved.')
+        } else {
+          this.notify('Failed to upload')
+        }
+      })
+    }
     doApiRequest('/settings/?format=json', {
       method: 'PATCH',
       body: data,
@@ -93,6 +110,12 @@ class SettingsForm extends React.Component {
             label: 'Primary Email',
             type: 'text',
             readonly: true,
+          },
+          {
+            name: 'img',
+            label: 'Profile Image',
+            accept: 'image/*',
+            type: 'file',
           },
         ],
       },

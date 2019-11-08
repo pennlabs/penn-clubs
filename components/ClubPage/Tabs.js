@@ -35,7 +35,9 @@ export default props => (
               props.club.members.map((a, i) => (
                 <div className="media" key={i}>
                   <div className="media-left">
-                    <figure className="has-background-light image is-48x48"></figure>
+                    <figure className="has-background-light image is-48x48">
+                      <img src={a.image_url || null}></img>
+                    </figure>
                   </div>
                   <div className="media-content">
                     <p className="title is-4">{a.name || 'No Name'}</p>
