@@ -33,7 +33,6 @@ class Org extends Component {
       .then(data => {
         this.setState({ children: data.children })
       })
-    console.log(this.state.children)
   }
   render() {
     const { club, children } = this.state
@@ -72,7 +71,6 @@ class Org extends Component {
             {/* <Image src={club.image_url || getDefaultClubImageURL()} /> */}
           </div>
         </div>
-        {/* <OrgChildren children={club.children}></OrgChildren> */}
       </div>
     )
   }
