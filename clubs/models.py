@@ -328,8 +328,8 @@ class Asset(models.Model):
     """
     creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
     file = models.FileField(upload_to=get_asset_file_name)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, default=-1)
-    name = models.CharField(max_length=255, default='Untitled')
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, default=None)
+    name = models.CharField(max_length=255, default='')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
