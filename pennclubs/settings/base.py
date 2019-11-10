@@ -151,3 +151,4 @@ VIEW_URL = 'https://{domain}/club/{club}'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
+MAX_FILE_SIZE = 1073741824 # 10GB
