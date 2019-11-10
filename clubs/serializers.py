@@ -1,9 +1,9 @@
 from urllib.parse import urlparse
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
-from django.conf import settings
 
 from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.utils import clean
