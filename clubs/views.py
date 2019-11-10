@@ -81,6 +81,13 @@ class ClubViewSet(viewsets.ModelViewSet):
         child_tree = find_children_helper(self.get_object())
         return Response(child_tree)
 
+    @action(detail=True, methods=['get'])
+    def notes(self, request, *args, **kwargs):
+        notes = self.get_object().note_of_club.all()
+        print(notes[0].note_tags)
+        serialized = NoteSerializer(notes, many=True)
+        return Response(serialized.data)
+
     @method_decorator(cache_page(60*5))
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
@@ -153,13 +160,13 @@ class AssetViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Asset.objects.filter(creator=self.request.user)
 
-class NoteViewSet(viewsets.ModelViewSet):
-    serializer_class = NoteSerializer
-    permission_classes = [IsAuthenticated]
-    http_method_names = ['get', 'post', 'delete']
-
-    def get_queryset(self):
-        return Note.objects.filter(creator=self.request.user)
+# class NoteViewSet(viewsets.ModelViewSet):
+#     serializer_class = NoteSerializer
+#     permission_classes = [IsAuthenticated]
+#     http_method_names = ['get', 'post', 'delete']
+#
+#     def get_queryset(self):
+#         return Note.objects
 
 
 class TagViewSet(viewsets.ModelViewSet):

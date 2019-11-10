@@ -152,13 +152,23 @@ class Note(models.Model):
     """
 
     creator = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    creating_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='creating_club')
-    subject_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='subject_club')
+    creating_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='note_by_club')
+    subject_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='note_of_club')
+    note_tags = models.ManyToManyField('NoteTag')
     title = models.CharField(max_length=255, default='Note')
     content = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+class NoteTag(models.Model):
+    """
+    Represents primary reason for creating a note about a club.
+    """
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
 
 class Membership(models.Model):
     """
