@@ -441,11 +441,14 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ('club', 'name', 'person')
         validators = [validators.UniqueTogetherValidator(queryset=Favorite.objects.all(), fields=['club', 'person'])]
 
-#Subscribe Serializer
 class SubscribeSerializer(serializers.ModelSerializer):
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
     name = serializers.CharField(source='club.name', read_only=True)
+    email = serializers.EmailField(read_only=True)
+
+    class Meta:
+        model = Subscribe
 
 
 

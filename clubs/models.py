@@ -126,19 +126,19 @@ class Favorite(models.Model):
     class Meta:
         unique_together = (('person', 'club'),)
 
-#Subscribe Model
 class Subscribe(models.Model):
     """""
     Used when people subscribe to a club and clubs will be able to see the users' email addresses
     """""
     person = models.ForeignKey(get_user_model(), on_delete= models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    email = models.EmailField()
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return '<Subscribe: {} for {}>'.format(self.person.username, self.club.pk)
+        return '<Subscribe: {} for {}, with email {}>'.format(self.person.username, self.club.pk, self.email)
 
     class Meta:
         unique_together = (('person', 'club'),)
