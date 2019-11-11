@@ -496,12 +496,14 @@ class AssetSerializer(serializers.ModelSerializer):
         else:
             return self.context['request'].build_absolute_uri(obj.file.url)
 
-    # Upload size is at most 1GB
+    # Cannot exceed maximum upload size
     def validate_file(self, data):
         if data.size <= settings.MAX_FILE_SIZE:
             return data
         else:
-            raise serializers.ValidationError('You cannot upload a file that is more than 1GB of space')
+            raise serializers.ValidationError('You cannot upload a file that is more than '
+                                                + (settings.MAX_FILE_SIZE / settings.FILE_SIZE_ONE_GB)
+                                                + 'GB of space')
 
     class Meta:
         model = Asset
