@@ -501,9 +501,8 @@ class AssetSerializer(serializers.ModelSerializer):
         if data.size <= settings.MAX_FILE_SIZE:
             return data
         else:
-            raise serializers.ValidationError('You cannot upload a file that is more than '
-                                              + (settings.MAX_FILE_SIZE / settings.FILE_SIZE_ONE_GB)
-                                              + 'GB of space')
+            raise serializers.ValidationError('You cannot upload a file that is more than {} GB of space!'
+                                              .format(settings.MAX_FILE_SIZE / settings.FILE_SIZE_ONE_GB))
 
     class Meta:
         model = Asset
