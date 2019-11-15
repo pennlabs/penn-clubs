@@ -15,6 +15,8 @@ class Form extends React.Component {
 
     this.state = {
       mounted: false,
+      hasImg: false,
+      imgName: null,
     }
 
     this.files = {}
@@ -25,6 +27,19 @@ class Form extends React.Component {
 
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
+    this.handleUpload = this.handleUpload.bind(this)
+  }
+  handleUpload(e) {
+    // console.log('HANDLE UPLOAD', e)
+    if (e.target.files[0]) {
+      this.setState({
+        hasImg: true,
+        imgName: e.target.files[0].name,
+      })
+    }
+
+    // console.log(e.target.files[0].name, 'woo')
+    // console.log(e.currentTarget, 'CT')
   }
 
   setDefaults(fields) {
@@ -47,9 +62,7 @@ class Form extends React.Component {
             ? (defaults[name] || []).map(converter)
             : []
         } else if (type === 'select') {
-          this.state[`field-${name}`] = defaults
-            ? converter(defaults[name])
-            : null
+          this.state[`field-${name}`] = defaults ? converter(defaults[name]) : null
         } else {
           this.state[`field-${name}`] = defaults ? defaults[name] || '' : ''
         }
@@ -160,9 +173,7 @@ class Form extends React.Component {
               onEditorStateChange={state => {
                 this.setState({
                   [`editorState-${name}`]: state,
-                  [`field-${name}`]: draftToHtml(
-                    convertToRaw(state.getCurrentContent())
-                  ),
+                  [`field-${name}`]: draftToHtml(convertToRaw(state.getCurrentContent())),
                 })
               }}
               toolbar={{
@@ -216,6 +227,7 @@ class Form extends React.Component {
               accept={accept}
               type="file"
               name={name}
+              onChange={e => this.handleUpload(e)}
             />
             <span className="file-cta">
               <span className="file-icon">
@@ -224,6 +236,14 @@ class Form extends React.Component {
               <span className="file-label">Choose a file...</span>
             </span>
           </label>
+          {this.state.hasImg ? (
+            <span>
+              {' '}
+              <Icon name="check-circle-green" size="1.8rem" alt="checkbox"></Icon>
+              {'   '}
+              {this.state.imgName}
+            </span>
+          ) : null}
         </div>
       )
     } else if (type === 'multiselect') {
@@ -262,30 +282,21 @@ class Form extends React.Component {
           <input
             type="checkbox"
             checked={this.state[`field-${name}`]}
-            onChange={e =>
-              this.setState({ [`field-${name}`]: e.target.checked })
-            }
+            onChange={e => this.setState({ [`field-${name}`]: e.target.checked })}
           />
           &nbsp;
           {label}
         </label>
       )
     } else {
-      inpt = (
-        <span style={{ color: 'red' }}>{`Unknown field type '${type}'!`}</span>
-      )
+      inpt = <span style={{ color: 'red' }}>{`Unknown field type '${type}'!`}</span>
     }
 
     const isHorizontal =
-      typeof this.props.isHorizontal !== 'undefined'
-        ? this.props.isHorizontal
-        : true
+      typeof this.props.isHorizontal !== 'undefined' ? this.props.isHorizontal : true
 
     return (
-      <div
-        key={name}
-        className={'field' + (isHorizontal ? ' is-horizontal' : '')}
-      >
+      <div key={name} className={'field' + (isHorizontal ? ' is-horizontal' : '')}>
         <div className="field-label is-normal">
           <label className="label">
             {type === 'checkbox' ? titleize(name) : label || titleize(name)}
@@ -308,6 +319,7 @@ class Form extends React.Component {
 
   render() {
     const { submitButton, onSubmit, fields } = this.props
+
     return (
       <span>
         {this.generateFields(fields)}

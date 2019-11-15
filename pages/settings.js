@@ -2,12 +2,7 @@ import React from 'react'
 
 import { Icon } from '../components/common'
 import renderPage from '../renderPage'
-import {
-  doApiRequest,
-  formatResponse,
-  API_BASE_URL,
-  ROLE_OFFICER,
-} from '../utils'
+import { doApiRequest, formatResponse, API_BASE_URL, ROLE_OFFICER } from '../utils'
 import { CLUBS_GREY_LIGHT } from '../constants/colors'
 import { Link } from '../routes'
 import Form from '../components/Form'
@@ -130,11 +125,10 @@ class SettingsForm extends React.Component {
             content: (
               <div>
                 <p>
-                  The list below shows what clubs you are a member of. If you
-                  would like to hide a particular club from the public, click on
-                  the <Icon name="check-circle-green" alt="public" /> icon under
-                  the Public column. This will not hide your membership from
-                  other club members.
+                  The list below shows what clubs you are a member of. If you would like
+                  to hide a particular club from the public, click on the{' '}
+                  <Icon name="check-circle-green" alt="public" /> icon under the Public
+                  column. This will not hide your membership from other club members.
                 </p>
                 <table className="table is-fullwidth">
                   <thead>
@@ -156,29 +150,18 @@ class SettingsForm extends React.Component {
                           <td>{item.role_display}</td>
                           <td className="has-text-centered">
                             <Icon
-                              name={
-                                item.active
-                                  ? 'check-circle-green'
-                                  : 'x-circle-red'
-                              }
+                              name={item.active ? 'check-circle-green' : 'x-circle-red'}
                               alt={item.active ? 'active' : 'inactive'}
                             />
                           </td>
                           <td className="has-text-centered">
                             <Icon
-                              name={
-                                item.public
-                                  ? 'check-circle-green'
-                                  : 'x-circle-red'
-                              }
+                              name={item.public ? 'check-circle-green' : 'x-circle-red'}
                               alt={item.public ? 'public' : 'not public'}
                             />
                           </td>
                           <td className="buttons">
-                            <Link
-                              route="club-view"
-                              params={{ club: String(item.code) }}
-                            >
+                            <Link route="club-view" params={{ club: String(item.code) }}>
                               <a className="button is-small is-link">View</a>
                             </Link>
                             {item.role <= ROLE_OFFICER && (
@@ -186,9 +169,7 @@ class SettingsForm extends React.Component {
                                 route="club-edit"
                                 params={{ club: String(item.code) }}
                               >
-                                <a className="button is-small is-success">
-                                  Edit
-                                </a>
+                                <a className="button is-small is-success">Edit</a>
                               </Link>
                             )}
                           </td>
@@ -229,18 +210,11 @@ class SettingsForm extends React.Component {
 
         {message && (
           <div className="notification is-primary">
-            <button
-              className="delete"
-              onClick={() => this.setState({ message: null })}
-            />
+            <button className="delete" onClick={() => this.setState({ message: null })} />
             {message}
           </div>
         )}
-        <Form
-          fields={fields}
-          defaults={this.props.userInfo}
-          onSubmit={this.submit}
-        />
+        <Form fields={fields} defaults={this.props.userInfo} onSubmit={this.submit} />
         <a
           href={`${API_BASE_URL}/accounts/logout/?next=${window.location.href}`}
           className="button is-pulled-right is-danger is-medium"

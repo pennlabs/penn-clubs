@@ -1,8 +1,4 @@
 import s from 'styled-components'
-import Icon from '../common/Icon'
-
-import { BLACK } from '../../constants/colors'
-
 import { Icon } from '../common'
 import { BLACK } from '../../constants/colors'
 
