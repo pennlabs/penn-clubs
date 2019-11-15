@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
@@ -484,7 +485,8 @@ class AssetSerializer(serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
     file_url = serializers.SerializerMethodField('get_file_url')
     file = serializers.FileField(write_only=True)
-    club = serializers.SlugRelatedField(queryset=Club.objects.all(), required=False, slug_field='code')
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
+    name = serializers.CharField(max_length=255, required=True)
 
     def get_file_url(self, obj):
         if not obj.file:
@@ -494,16 +496,18 @@ class AssetSerializer(serializers.ModelSerializer):
         else:
             return self.context['request'].build_absolute_uri(obj.file.url)
 
-    # Upload size is at most 1GB
+    # Cannot exceed maximum upload size
     def validate_file(self, data):
-        if data.size <= 1073741824:
+        if data.size <= settings.MAX_FILE_SIZE:
             return data
         else:
-            raise serializers.ValidationError('You cannot upload a file that is more than 1GB of space')
+            max_file_size_in_gb = round((settings.MAX_FILE_SIZE / settings.FILE_SIZE_ONE_GB), 3)
+            raise serializers.ValidationError('You cannot upload a file that is more than {} GB of space!'
+                                              .format(max_file_size_in_gb))
 
     class Meta:
         model = Asset
-        fields = ('id', 'file_url', 'file', 'creator', 'club')
+        fields = ('id', 'file_url', 'file', 'creator', 'club', 'name')
 
 
 class NoteTagSerializer(serializers.ModelSerializer):

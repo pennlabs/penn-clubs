@@ -105,7 +105,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Authentication Backends
 
 AUTHENTICATION_BACKENDS = (
-    'accounts.backends.LabsUserBackend',
+    'clubs.backends.LabsUserBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -151,3 +151,5 @@ VIEW_URL = 'https://{domain}/club/{club}'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
+MAX_FILE_SIZE = 1073741824 # Max file size
+FILE_SIZE_ONE_GB = 1073741824 # 1GB

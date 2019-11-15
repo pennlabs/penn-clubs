@@ -158,7 +158,7 @@ class AssetViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'delete']
 
     def get_queryset(self):
-        return Asset.objects.filter(creator=self.request.user)
+        return Asset.objects.filter(club__code=self.kwargs['club_code'])
 
 # class NoteViewSet(viewsets.ModelViewSet):
 #     serializer_class = NoteSerializer
