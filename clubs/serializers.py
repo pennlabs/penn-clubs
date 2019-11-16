@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
-from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag, Subscribe
 from clubs.utils import clean
 
 
@@ -441,6 +441,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ('club', 'name', 'person')
         validators = [validators.UniqueTogetherValidator(queryset=Favorite.objects.all(), fields=['club', 'person'])]
 
+
 class SubscribeSerializer(serializers.ModelSerializer):
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
@@ -449,7 +450,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscribe
-
+        fields = ('club', 'name', 'person', 'email')
+        validators = [validators.UniqueTogetherValidator(queryset=Subscribe.objects.all(), fields=['club', 'person'])]
 
 
 class UserSerializer(serializers.ModelSerializer):

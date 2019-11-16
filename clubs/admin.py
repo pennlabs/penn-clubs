@@ -4,7 +4,8 @@ from django.contrib.auth.models import Group
 from django.db.models import Count, Exists, OuterRef
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
-from clubs.models import Advisor, Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Profile, Tag
+from clubs.models import Advisor, Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Profile, Tag, \
+                         Subscribe
 
 
 class HasOwnerListFilter(admin.SimpleListFilter):
@@ -100,6 +101,19 @@ class FavoriteAdmin(admin.ModelAdmin):
     def club(self, obj):
         return obj.club.name
 
+class SubscribeAdmin(admin.ModelAdmin):
+    search_fields = ('person__username', 'person__email', 'club__name', 'club__pk')
+    list_display = ('person', 'club', 'email')
+
+    def person(self, obj):
+        return obj.person.username
+
+    def club(self, obj):
+        return obj.club.name
+
+    def email(self, obj):
+        return obj.person.email
+
 
 class MembershipAdmin(admin.ModelAdmin):
     search_fields = ('person__username', 'person__email', 'club__name', 'club__pk', 'title')
@@ -175,6 +189,7 @@ admin.site.register(Club, ClubAdmin)
 admin.site.register(Badge, BadgeAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
+admin.site.register(Subscribe, SubscribeAdmin)
 admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)
 admin.site.register(Profile)
