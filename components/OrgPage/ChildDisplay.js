@@ -57,9 +57,7 @@ export default class ChildDisplay extends Component {
       show: !state.show,
     }))
   }
-  handleDetails() {
-    console.log(this.state.child)
-  }
+  handleDetails() {}
   render() {
     const { child } = this.props
     return (
@@ -85,11 +83,7 @@ export default class ChildDisplay extends Component {
             >
               {child.name}
             </Text>
-            {/* <Link>Click for info</Link> */}
-            <TextLink
-              href={`/club/${child.code}/admin`}
-              onClick={this.handleDetails}
-            >
+            <TextLink href={`/club/${child.code}/admin`} onClick={this.handleDetails}>
               View{` `}
               <Icon name="external-link" alt="View Club Page"></Icon>
             </TextLink>

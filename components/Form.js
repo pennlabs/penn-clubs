@@ -32,7 +32,6 @@ class Form extends React.Component {
     this.formSubmit = this.formSubmit.bind(this)
   }
   handleUpload(e) {
-    // console.log('HANDLE UPLOAD', e)
     if (e.target.files[0]) {
       this.setState({
         hasImg: true,

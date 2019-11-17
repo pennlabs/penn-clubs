@@ -30,8 +30,6 @@ class SettingsForm extends React.Component {
 
   submit(data) {
     const photo = data.img
-    console.log(data)
-    console.log(photo)
     if (photo.get('file') instanceof File) {
       photo.set('image', photo.get('file'))
       photo.delete('file')
