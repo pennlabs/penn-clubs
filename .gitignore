@@ -1,5 +1,5 @@
 node_modules/
 .next/
-env.sh
+.env
 yarn-error.log
 .DS_STORE
