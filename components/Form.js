@@ -28,6 +28,8 @@ class Form extends React.Component {
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
     this.handleUpload = this.handleUpload.bind(this)
+    this.handleClick = this.handleClick.bind(this)
+    this.formSubmit = this.formSubmit.bind(this)
   }
   handleUpload(e) {
     // console.log('HANDLE UPLOAD', e)
@@ -37,9 +39,19 @@ class Form extends React.Component {
         imgName: e.target.files[0].name,
       })
     }
-
-    // console.log(e.target.files[0].name, 'woo')
-    // console.log(e.currentTarget, 'CT')
+  }
+  handleClick(e) {
+    this.setState({
+      hasImg: false,
+      imgName: null,
+    })
+  }
+  formSubmit(data) {
+    this.setState({
+      hasImg: false,
+      imgName: null,
+    })
+    this.props.onSubmit && this.props.onSubmit(data)
   }
 
   setDefaults(fields) {
@@ -228,6 +240,7 @@ class Form extends React.Component {
               type="file"
               name={name}
               onChange={e => this.handleUpload(e)}
+              onClick={e => this.handleClick(e)}
             />
             <span className="file-cta">
               <span className="file-icon">
@@ -328,7 +341,8 @@ class Form extends React.Component {
         ) : (
           <a
             className="button is-primary is-medium"
-            onClick={() => onSubmit && onSubmit(this.getData())}
+            onClick={() => this.formSubmit(this.getData())}
+            // onClick={() => onSubmit && onSubmit(this.getData())}
           >
             Submit
           </a>
