@@ -4,7 +4,7 @@ from django.urls import path
 from rest_framework_nested import routers
 
 from clubs.views import (AssetViewSet, ClubViewSet, EventViewSet, FavoriteViewSet, MassInviteAPIView,
-                         MemberInviteViewSet, MemberViewSet, TagViewSet, UserUpdateAPIView)
+                         MemberInviteViewSet, MemberViewSet, NoteViewSet, TagViewSet, UserUpdateAPIView)
 
 
 router = routers.SimpleRouter()
@@ -17,6 +17,7 @@ clubs_router.register(r'members', MemberViewSet, base_name='club-members')
 clubs_router.register(r'events', EventViewSet, base_name='club-events')
 clubs_router.register(r'invites', MemberInviteViewSet, basename='club-invites')
 clubs_router.register(r'assets', AssetViewSet, basename='club-assets')
+clubs_router.register(r'notes', NoteViewSet, basename='club-notes')
 
 urlpatterns = [
     path(r'settings/', UserUpdateAPIView.as_view(), name='users-detail'),

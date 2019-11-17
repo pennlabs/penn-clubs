@@ -145,6 +145,7 @@ class Advisor(models.Model):
     def __str__(self):
         return self.name
 
+
 class Note(models.Model):
     """
     Represents a note created by a parent about a
@@ -161,6 +162,7 @@ class Note(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
 class NoteTag(models.Model):
     """
     Represents primary reason for creating a note about a club.
@@ -169,6 +171,7 @@ class NoteTag(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Membership(models.Model):
     """

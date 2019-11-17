@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
-from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag, Note, NoteTag
+from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Note, NoteTag, Tag
 from clubs.utils import clean
 
 
@@ -511,8 +511,6 @@ class AssetSerializer(serializers.ModelSerializer):
 
 
 class NoteTagSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(max_length=255)
-
     class Meta:
         model = NoteTag
         fields = ('id', 'name')
@@ -525,6 +523,28 @@ class NoteSerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, default='Note')
     content = serializers.CharField()
     note_tags = NoteTagSerializer(many=True)
+
+    def create(self, validated_data):
+        """
+        Manual create method because DRF does not support writable nested fields by default.
+        """
+        # assign tags to new club
+        note_tags = None
+
+        if 'note_tags' in validated_data:
+            note_tags = []
+            for note_tag in validated_data.pop('note_tags'):
+                (note_tag_object, _) = NoteTag.objects.get_or_create(**note_tag)
+                note_tags.append(note_tag_object)
+
+        # Note: it's important that all nested fields are POPPED from the validated data at this point. Otherwise,
+        # DRF will throw an error calling create on the superclass.
+        obj = super().create(validated_data)
+
+        if note_tags is not None:
+            obj.note_tags.set(note_tags)
+
+        return obj
 
     class Meta:
         model = Note

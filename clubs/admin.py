@@ -4,7 +4,8 @@ from django.contrib.auth.models import Group
 from django.db.models import Count, Exists, OuterRef
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
-from clubs.models import Advisor, Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Profile, Tag, Note, NoteTag
+from clubs.models import (Advisor, Asset, Badge, Club, Event, Favorite, Membership,
+                          MembershipInvite, Note, NoteTag, Profile, Tag)
 
 
 class HasOwnerListFilter(admin.SimpleListFilter):
