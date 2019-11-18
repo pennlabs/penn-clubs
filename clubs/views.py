@@ -14,6 +14,9 @@ from rest_framework.views import APIView
 
 from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag, Subscribe
 from clubs.permissions import ClubPermission, EventPermission, InvitePermission, IsSuperuser, MemberPermission
+from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
+                               InvitePermission, IsSuperuser, MemberPermission)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
                                ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer,
                                MembershipInviteSerializer, MembershipSerializer, TagSerializer, UserSerializer,
@@ -170,12 +173,12 @@ class MemberViewSet(viewsets.ModelViewSet):
 
 class AssetViewSet(viewsets.ModelViewSet):
     serializer_class = AssetSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AssetPermission | IsSuperuser]
     parser_classes = [parsers.MultiPartParser]
     http_method_names = ['get', 'post', 'delete']
 
     def get_queryset(self):
-        return Asset.objects.filter(creator=self.request.user)
+        return Asset.objects.filter(club__code=self.kwargs['club_code'])
 
 
 class TagViewSet(viewsets.ModelViewSet):

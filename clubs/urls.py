@@ -9,7 +9,6 @@ from clubs.views import (AssetViewSet, ClubViewSet, EventViewSet, FavoriteViewSe
 
 
 router = routers.SimpleRouter()
-router.register(r'assets', AssetViewSet, basename='assets')
 router.register(r'clubs', ClubViewSet, basename='clubs')
 router.register(r'tags', TagViewSet)
 router.register(r'favorites', FavoriteViewSet, basename='favorites')
@@ -20,6 +19,7 @@ clubs_router.register(r'members', MemberViewSet, base_name='club-members')
 clubs_router.register(r'events', EventViewSet, base_name='club-events')
 clubs_router.register(r'invites', MemberInviteViewSet, basename='club-invites')
 clubs_router.register(r'subscription', ClubSubscribeViewSet, basename='club-subscribe')
+clubs_router.register(r'assets', AssetViewSet, basename='club-assets')
 
 urlpatterns = [
     path(r'settings/', UserUpdateAPIView.as_view(), name='users-detail'),
