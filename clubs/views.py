@@ -81,6 +81,10 @@ class ClubViewSet(viewsets.ModelViewSet):
         child_tree = find_children_helper(self.get_object())
         return Response(child_tree)
 
+    #@action(detail= True, methods = ['get'])
+    #def subscription(self, request, *args, **kwargs):
+        #return Response(Subscribe.objects.filter(club__code=self.kwargs['code']))
+
     @method_decorator(cache_page(60*5))
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
@@ -134,6 +138,16 @@ class SubscribeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Subscribe.objects.filter(person=self.request.user)
+
+
+class ClubSubscribeViewSet(viewsets.ModelViewSet):
+    serializer_class = SubscribeSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'person_username'
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        return Subscribe.objects.filter(club__code=self.kwargs['club_code'])
 
 
 class MemberViewSet(viewsets.ModelViewSet):
