@@ -3,6 +3,7 @@ import s from 'styled-components'
 import { Icon } from '../common'
 import { logEvent } from '../../utils/analytics'
 import { CLUBS_BLUE, CLUBS_DEEP_BLUE } from '../../constants/colors'
+import { ANIMATION_DURATION } from '../../constants/measurements'
 
 const DIAMETER = '3rem'
 const ICON_SIZE = '1.5rem'
@@ -21,7 +22,7 @@ const FeedbackLink = s.a`
   box-shadow: 0 2px 8px rgba(25, 89, 130, .4);
   cursor: pointer;
   z-index: 10;
-  transition: background-color 0.2s ease;
+  transition: background-color ${ANIMATION_DURATION}ms ease;
 
   &:hover {
     background-color: ${CLUBS_DEEP_BLUE};

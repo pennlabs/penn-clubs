@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import s from 'styled-components'
 import {
   CLUBS_GREY,
@@ -15,6 +14,7 @@ import {
   MD,
   SEARCH_BAR_MOBILE_HEIGHT,
   NAV_HEIGHT,
+  ANIMATION_DURATION,
 } from '../constants/measurements'
 import { logEvent } from '../utils/analytics'
 import { Icon } from './common'
@@ -33,7 +33,7 @@ const checkboxColorMap = {
 }
 
 const Line = s.hr`
-  background-color: rgba(0, 0, 0, .1);
+  background-color: ${BORDER};
   height: 2px;
   margin: 0;
   margin-top: 30px;
@@ -60,11 +60,7 @@ const DropdownHeader = s.div`
     font-size: 80%;
     color: ${LIGHT_GRAY};
 
-    ${({ drop, color }) =>
-      drop &&
-      `
-      background: ${color || CLUBS_YELLOW};
-    `}
+    ${({ active, color }) => active && `background: ${color || CLUBS_YELLOW};`}
   }
 `
 
@@ -76,8 +72,10 @@ const TableRow = s.tr`
 const TableWrapper = s.div`
   max-height: 0;
   opacity: 0;
-  transition: all 0.2s ease;
   overflow: hidden;
+  transition: all ${ANIMATION_DURATION}ms ease;
+
+  ${({ active }) => active && 'max-height: 150vh; opacity: 1;'}
 
   ${mediaMaxWidth(MD)} {
     position: fixed;
@@ -86,14 +84,12 @@ const TableWrapper = s.div`
     top: calc(${SEARCH_BAR_MOBILE_HEIGHT} + ${NAV_HEIGHT});
     background: ${WHITE};
     height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
+    ${({ active }) =>
+      active &&
+      `
+      overflow-y: auto;
+      max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});`}
   }
-
-  ${({ drop }) =>
-    drop &&
-    `
-    max-height: none;
-    opacity: 1;
-  `}
 `
 
 const TableContainer = s.div`
@@ -105,6 +101,10 @@ const TableContainer = s.div`
 const ChevronIcon = s.span`
   cursor: pointer;
   color: ${CLUBS_GREY};
+  transform: rotate(0deg) translateY(0);
+  transition: transform ${ANIMATION_DURATION}ms ease;
+
+  ${({ active }) => active && 'transform: rotate(180deg) translateY(-4px);'}
 
   ${mediaMaxWidth(MD)} {
     display: none !important;
@@ -122,17 +122,20 @@ const DropdownHeaderText = s.p`
   }
 `
 
-const Chevron = () => (
-  <ChevronIcon className="icon">
+const Chevron = ({ active }) => (
+  <ChevronIcon className="icon" active={active}>
     <Icon name="chevron-down" alt="toggle dropdown" />
   </ChevronIcon>
 )
 
-const DropdownFilter = ({ selected, name, options, updateTag }) => {
-  const [drop, setDrop] = useState(false)
-
-  const toggleDrop = () => setDrop(!drop)
-
+const DropdownFilter = ({
+  selected,
+  name,
+  options,
+  updateTag,
+  active,
+  toggleActive,
+}) => {
   /**
    * Returns if the supplied tag is in the list of selected tags
    *
@@ -149,11 +152,15 @@ const DropdownFilter = ({ selected, name, options, updateTag }) => {
   return (
     <>
       <Line />
-      <DropdownHeader onClick={e => toggleDrop()} drop={drop} color={color}>
+      <DropdownHeader
+        onClick={() => toggleActive()}
+        active={active}
+        color={color}
+      >
         <DropdownHeaderText>{name}</DropdownHeaderText>
-        <Chevron />
+        <Chevron active={active} />
       </DropdownHeader>
-      <TableWrapper drop={drop}>
+      <TableWrapper active={active}>
         <TableContainer>
           <table>
             <tbody>
@@ -168,7 +175,6 @@ const DropdownFilter = ({ selected, name, options, updateTag }) => {
                   <td
                     className="icon"
                     style={{
-                      cursor: 'pointer',
                       color: color || CLUBS_GREY_LIGHT,
                     }}
                   >
