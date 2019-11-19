@@ -61,6 +61,16 @@ export default props => (
           </div>
         ),
       },
+      {
+        name: 'subscribers',
+        content: (
+          <div>
+            <p>
+              List of mailing list subscribers!
+            </p>
+          </div>
+        ),
+      }
     ]}
   />
 )

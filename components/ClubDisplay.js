@@ -54,6 +54,7 @@ class ClubDisplay extends React.Component {
       tags,
       favorites,
       updateFavorites,
+      updateSubscriptions,
       display,
       updateTag,
       selectedTags,
@@ -71,6 +72,7 @@ class ClubDisplay extends React.Component {
               selectedTags={selectedTags}
               updateTag={updateTag}
               updateFavorites={updateFavorites}
+              updateSubscriptions={updateSubscriptions}
               favorite={favorites.includes(club.code)}
             />
           ))}
@@ -88,6 +90,7 @@ class ClubDisplay extends React.Component {
             selectedTags={selectedTags}
             updateTag={updateTag}
             updateFavorites={updateFavorites}
+            updateSubscriptions={updateSubscriptions}
             favorite={favorites.includes(club.code)}
           />
         ))}

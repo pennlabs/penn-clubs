@@ -27,6 +27,7 @@ function renderPage(Page) {
       }
 
       this.updateFavorites = this.updateFavorites.bind(this)
+      this.updateSubscriptions = this.updateSubscriptions.bind(this)
       this.updateUserInfo = this.componentDidMount.bind(this)
     }
 
@@ -68,6 +69,7 @@ function renderPage(Page) {
                 {...this.props}
                 {...this.state}
                 updateFavorites={this.updateFavorites}
+                updateSubscriptions={this.updateSubscriptions}
                 updateUserInfo={this.updateUserInfo}
               />
             </Wrapper>
@@ -108,6 +110,11 @@ function renderPage(Page) {
       }
       return i === -1
     }
+
+    updateSubscriptions(id) {
+      this.updateFavorites(id)
+    }
+
   }
 
   RenderPage.getInitialProps = async info => {
@@ -164,6 +171,7 @@ export function renderListPage(Page) {
           tags={tags}
           favorites={favorites}
           updateFavorites={this.props.updateFavorites}
+          updateSubscriptions={this.props.updateSubscriptions}
           favoriteClubs={favoriteClubs}
         />
       )

@@ -14,8 +14,10 @@ const Title = s.div`
   padding-right: 10px;
 `
 
-const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
+const Header = ({ club, userInfo, favorites, style, updateFavorites, updateSubscriptions }) => {
   const isFavorite = favorites.includes(club.code)
+  /*const isSubscribed = subscriptions.includes(club.code)*/
+  const isSubscribed = favorites.includes(club.code)
 
   // inClub is set to the membership object if the user is in the club, or false
   // otherwise
@@ -23,7 +25,7 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
     userInfo &&
     (userInfo.membership_set.filter(a => a.id === club.code) || [false])[0]
 
-  // a user can e dit a club if they are either a superuser or in the club and
+  // a user can edit a club if they are either a superuser or in the club and
   // at least an officer
   const canEdit =
     (inClub && inClub.role <= ROLE_OFFICER) ||
@@ -60,6 +62,19 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
               </a>
             </Link>
           )}
+          <Link route="" params={{ club: club.code }}>
+            <a
+              className={(isSubscribed) ? 'button is-danger' : 'button is-info'}
+              style={{ marginLeft: 15 }}
+              onClick={() => {
+                updateSubscriptions(club.code)
+                ? setFavCount(favCount + 1)
+                : setFavCount(Math.max(0, favCount - 1))
+              }}
+            >
+              {(isSubscribed) ? 'Unsubscribe' : 'Subscribe to Mailing List'}
+            </a>
+          </Link>
         </span>
       </Title>
       <div style={{ marginBottom: 20 }}>
