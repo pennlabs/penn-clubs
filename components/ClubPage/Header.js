@@ -1,8 +1,14 @@
 import { useState } from 'react'
 import s from 'styled-components'
 
-import { Icon } from '../common'
-import { CLUBS_GREY, CLUBS_BLUE, WHITE } from '../../constants/colors'
+import { Icon, TagGroup } from '../common'
+import {
+  CLUBS_GREY,
+  // CLUBS_BLUE,
+  // WHITE,
+  BLACK_ALPHA,
+  DARK_GRAY,
+} from '../../constants/colors'
 import { ROLE_OFFICER } from '../../utils'
 import { Link } from '../../routes'
 
@@ -12,6 +18,18 @@ const Title = s.div`
   flex-direction: row;
   align-items: center;
   padding-right: 10px;
+`
+
+const InactiveMarker = s.span`
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 1rem;
+  background: ${BLACK_ALPHA(0.05)};
+  color: ${DARK_GRAY};
+  opacity: 0.8;
+  padding: 0.5rem 0.6rem;
+  transform: translateY(-0.5rem);
+  border-radius: 0.2rem;
 `
 
 const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
@@ -31,6 +49,8 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
 
   const [favCount, setFavCount] = useState(club.favorite_count || 0)
 
+  const { active, name, tags } = club
+
   return (
     <div style={style}>
       <Title>
@@ -38,8 +58,8 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
           className="title is-size-2-desktop is-size-3-mobile"
           style={{ color: CLUBS_GREY, marginBottom: 10 }}
         >
-          {club.name}{' '}
-          {club.active || <span className="has-text-grey">(Inactive)</span>}
+          {name}
+          {!active && <InactiveMarker>Inactive</InactiveMarker>}
         </h1>
         <span>
           {favCount}{' '}
@@ -63,7 +83,8 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
         </span>
       </Title>
       <div style={{ marginBottom: 20 }}>
-        {club.tags.map(tag => (
+        <TagGroup tags={tags} />
+        {/* {club.tags.map(tag => (
           <span
             key={tag.id}
             className="tag is-rounded"
@@ -71,7 +92,7 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
           >
             {tag.name}
           </span>
-        ))}
+        ))} */}
       </div>
     </div>
   )

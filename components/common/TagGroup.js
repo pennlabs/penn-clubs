@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { BlueTag, SelectedTag } from './Tags'
 
-const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
+export const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
   if (!tags || !tags.length) return null
 
   // TODO: Use same tag format between DropdownFilter and TagGroup
@@ -70,5 +70,3 @@ TagGroup.propTypes = {
   ),
   updateTag: PropTypes.func,
 }
-
-export default TagGroup
