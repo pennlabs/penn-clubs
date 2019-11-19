@@ -4,8 +4,6 @@ import s from 'styled-components'
 import { Icon, TagGroup } from '../common'
 import {
   CLUBS_GREY,
-  // CLUBS_BLUE,
-  // WHITE,
   BLACK_ALPHA,
   DARK_GRAY,
 } from '../../constants/colors'
