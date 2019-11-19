@@ -24,6 +24,7 @@ function renderPage(Page) {
         authenticated: null,
         userInfo: null,
         favorites: [],
+        subscriptions: [],
       }
 
       this.updateFavorites = this.updateFavorites.bind(this)
@@ -45,6 +46,7 @@ function renderPage(Page) {
           this.setState({
             authenticated: false,
             favorites: JSON.parse(localStorage.getItem('favorites')) || [],
+            subscriptions: JSON.parse(localStorage.getItem('subscriptions')) || [],
           })
         }
       })
@@ -112,9 +114,34 @@ function renderPage(Page) {
     }
 
     updateSubscriptions(id) {
-      this.updateFavorites(id)
+      var newSubs = this.state.subscriptions
+      var i = newSubs.indexOf(id)
+      if (i === -1) {
+        newSubs.push(id)
+        if (this.state.authenticated) {
+          logEvent('subscribe', id)
+          doApiRequest('/subscribe/?format=json', {
+            method: 'POST',
+            body: {
+              club: id,
+            },
+          })
+        }
+      } else {
+        newSubs.splice(i, 1)
+        logEvent('unsubscribe', id)
+        if (this.state.authenticated) {
+          doApiRequest(`/subscribe/${id}/?format=json`, {
+            method: 'DELETE',
+          })
+        }
+      }
+      this.setState({ subscriptions: newSubs })
+      if (!this.state.authenticated) {
+        localStorage.setItem('subscriptions', JSON.stringify(newSubs))
+      }
+      return i === -1
     }
-
   }
 
   RenderPage.getInitialProps = async info => {
@@ -156,7 +183,7 @@ export function renderListPage(Page) {
     }
 
     render() {
-      const { favorites } = this.props
+      const { favorites, subscriptions } = this.props
       const { clubs, tags } = this.state
 
       if (!clubs || !tags) {
@@ -164,6 +191,7 @@ export function renderListPage(Page) {
       }
 
       const favoriteClubs = this.mapToClubs(favorites)
+      const subscribedClubs = this.mapToClubs(subscriptions)
 
       return (
         <Page
@@ -171,8 +199,10 @@ export function renderListPage(Page) {
           tags={tags}
           favorites={favorites}
           updateFavorites={this.props.updateFavorites}
+          subscriptions={this.props.subscriptions}
           updateSubscriptions={this.props.updateSubscriptions}
           favoriteClubs={favoriteClubs}
+          subscribedClubs={subscribedClubs}
         />
       )
     }

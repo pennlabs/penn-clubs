@@ -168,7 +168,7 @@ class Splash extends React.Component {
 
   render() {
     const { displayClubs, display, selectedTags, nameInput } = this.state
-    const { clubs, tags, favorites, updateFavorites } = this.props
+    const { clubs, tags, favorites, updateFavorites, subscriptions, updateSubscriptions } = this.props
 
     return (
       <div>
@@ -241,6 +241,8 @@ class Splash extends React.Component {
               tags={tags}
               favorites={favorites}
               updateFavorites={updateFavorites}
+              subscriptions={subscriptions}
+              updateSubscriptions={updateSubscriptions}
               selectedTags={selectedTags}
               updateTag={this.updateTag.bind(this)}
             />

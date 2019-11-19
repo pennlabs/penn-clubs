@@ -54,6 +54,7 @@ class ClubDisplay extends React.Component {
       tags,
       favorites,
       updateFavorites,
+      subscriptions,
       updateSubscriptions,
       display,
       updateTag,
@@ -74,6 +75,7 @@ class ClubDisplay extends React.Component {
               updateFavorites={updateFavorites}
               updateSubscriptions={updateSubscriptions}
               favorite={favorites.includes(club.code)}
+              subscribed={subscriptions.includes(club.code)}
             />
           ))}
         </div>
@@ -92,6 +94,7 @@ class ClubDisplay extends React.Component {
             updateFavorites={updateFavorites}
             updateSubscriptions={updateSubscriptions}
             favorite={favorites.includes(club.code)}
+            subscribed={subscriptions.includes(club.code)}
           />
         ))}
       </ClubTableRowWrapper>

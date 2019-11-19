@@ -14,10 +14,17 @@ const Title = s.div`
   padding-right: 10px;
 `
 
-const Header = ({ club, userInfo, favorites, style, updateFavorites, updateSubscriptions }) => {
+const Header = ({
+  club,
+  userInfo,
+  favorites,
+  subscriptions,
+  style,
+  updateFavorites,
+  updateSubscriptions,
+}) => {
   const isFavorite = favorites.includes(club.code)
-  /*const isSubscribed = subscriptions.includes(club.code)*/
-  const isSubscribed = favorites.includes(club.code)
+  const isSubscribed = subscriptions.includes(club.code)
 
   // inClub is set to the membership object if the user is in the club, or false
   // otherwise
@@ -64,15 +71,13 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites, updateSubsc
           )}
           <Link route="" params={{ club: club.code }}>
             <a
-              className={(isSubscribed) ? 'button is-danger' : 'button is-info'}
+              className={isSubscribed ? 'button is-danger' : 'button is-info'}
               style={{ marginLeft: 15 }}
               onClick={() => {
                 updateSubscriptions(club.code)
-                ? setFavCount(favCount + 1)
-                : setFavCount(Math.max(0, favCount - 1))
               }}
             >
-              {(isSubscribed) ? 'Unsubscribe' : 'Subscribe to Mailing List'}
+              {isSubscribed ? 'Unsubscribe' : 'Subscribe to Mailing List'}
             </a>
           </Link>
         </span>
