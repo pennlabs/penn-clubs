@@ -82,15 +82,6 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
       </Title>
       <div style={{ marginBottom: 20 }}>
         <TagGroup tags={tags} />
-        {/* {club.tags.map(tag => (
-          <span
-            key={tag.id}
-            className="tag is-rounded"
-            style={{ backgroundColor: CLUBS_BLUE, color: WHITE, margin: 3 }}
-          >
-            {tag.name}
-          </span>
-        ))} */}
       </div>
     </div>
   )
