@@ -133,6 +133,9 @@ class SearchBar extends React.Component {
       ],
       selectedTags: props.selectedTags,
     }
+
+    this.inputRef = React.createRef()
+    this.focus = this.focus.bind(this)
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -154,6 +157,10 @@ class SearchBar extends React.Component {
     }
   }
 
+  focus() {
+    this.inputRef.current.focus()
+  }
+
   render() {
     const {
       tagOptions,
@@ -172,10 +179,13 @@ class SearchBar extends React.Component {
                   <Icon
                     name="x"
                     alt="cancel search"
-                    onClick={() => this.setState({ nameInput: '' })}
+                    onClick={() => {
+                      this.setState({ nameInput: '' })
+                      this.focus()
+                    }}
                   />
                 ) : (
-                  <Icon name="search" alt="search" />
+                  <Icon name="search" alt="search" onClick={this.focus} />
                 )}
               </SearchIcon>
               <Input
@@ -183,6 +193,7 @@ class SearchBar extends React.Component {
                 name="search"
                 placeholder="Search"
                 aria-label="Search"
+                ref={this.inputRef}
                 value={this.state.nameInput}
                 onChange={e => this.setState({ nameInput: e.target.value })}
               />
