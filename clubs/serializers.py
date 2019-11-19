@@ -448,7 +448,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
     name = serializers.CharField(source='person.username', read_only=True)
-    email = serializers.EmailField(source= "person.email", read_only=True)
+    email = serializers.EmailField(source='person.email', read_only=True)
 
     class Meta:
         model = Subscribe
