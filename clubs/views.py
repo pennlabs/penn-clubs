@@ -141,6 +141,7 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Subscribe.objects.filter(person=self.request.user)
 
+
 class MemberViewSet(viewsets.ModelViewSet):
     serializer_class = MembershipSerializer
     permission_classes = [MemberPermission | IsSuperuser]
