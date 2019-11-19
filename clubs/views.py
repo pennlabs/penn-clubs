@@ -13,8 +13,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag, Subscribe
-from clubs.permissions import ClubPermission, EventPermission, InvitePermission, IsSuperuser, MemberPermission
-from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
                                InvitePermission, IsSuperuser, MemberPermission)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
@@ -84,9 +82,10 @@ class ClubViewSet(viewsets.ModelViewSet):
         child_tree = find_children_helper(self.get_object())
         return Response(child_tree)
 
-    #@action(detail= True, methods = ['get'])
-    #def subscription(self, request, *args, **kwargs):
-        #return Response(Subscribe.objects.filter(club__code=self.kwargs['code']))
+    @action(detail= True, methods = ['get'])
+    def subscription(self, request, *args, **kwargs):
+        serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']),  many=True)
+        return Response(serializer.data)
 
     @method_decorator(cache_page(60*5))
     def list(self, request, *args, **kwargs):
@@ -141,17 +140,6 @@ class SubscribeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Subscribe.objects.filter(person=self.request.user)
-
-
-class ClubSubscribeViewSet(viewsets.ModelViewSet):
-    serializer_class = SubscribeSerializer
-    permission_classes = [IsAuthenticated]
-    lookup_field = 'person_username'
-    http_method_names = ['get']
-
-    def get_queryset(self):
-        return Subscribe.objects.filter(club__code=self.kwargs['club_code'])
-
 
 class MemberViewSet(viewsets.ModelViewSet):
     serializer_class = MembershipSerializer
