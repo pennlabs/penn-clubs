@@ -16,7 +16,7 @@ const TabView = ({ tabs, tabStyle }) => {
 
   return (
     <>
-      <div className={'tabs ' + tabStyle}>
+      <div className={`tabs  ${tabStyle}`}>
         <ul style={{ borderBottomWidth: '1px' }}>
           {enabledTabs.map(({ name, label }) => (
             <li

@@ -33,14 +33,14 @@ const Menu = s.div`
     ${({ show }) => show && 'display: block;'}
   }
 `
-
+// Checks authenticated === false to confirm browser has loaded and user is not logged in. Will be undefined if browser has not loaded and true is browser has loaded and user is logged in.
 export default ({ userInfo, authenticated, show }) => (
   <Menu className="navbar-menu" show={show}>
     <div className="navbar-end" style={{ padding: '0px 20px' }}>
       <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
         FAQ
       </StyledLink>
-      {!authenticated && (
+      {authenticated === false && (
         <StyledLink href={`${LOGIN_URL}?next=${window.location.href}`} onClick={() => logEvent('login', 'click')}>Login</StyledLink>
       )}
       {userInfo && (

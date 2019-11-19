@@ -1,4 +1,4 @@
-// modified from basics
+// Modified from basics
 import { Component } from 'react'
 import s from 'styled-components'
 import PropTypes from 'prop-types'
@@ -59,7 +59,6 @@ const Circle = s.div`
  * @param {string} filterOffText: text rendered when the filter is off
  * @param {string} filterOnText text rendered when filter is on
  */
-
 class Toggle extends Component {
   constructor(props) {
     super(props)

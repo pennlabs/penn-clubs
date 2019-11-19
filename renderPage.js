@@ -147,7 +147,7 @@ export function renderListPage(Page) {
     }
 
     render() {
-      const { favorites } = this.props
+      const { favorites, updateUserInfo, updateFavorites } = this.props
       const { clubs, tags } = this.state
 
       if (!clubs || !tags) {
@@ -159,8 +159,8 @@ export function renderListPage(Page) {
           clubs={clubs}
           tags={tags}
           favorites={favorites}
-          updateFavorites={this.props.updateFavorites}
-          updateUserInfo={this.props.updateUserInfo}
+          updateFavorites={updateFavorites}
+          updateUserInfo={updateUserInfo}
         />
       )
     }

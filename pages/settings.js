@@ -1,12 +1,13 @@
 import React from 'react'
 import { BODY_FONT } from '../constants/styles'
+import { BORDER_RADIUS } from '../constants/measurements'
+import { CLUBS_BLUE, DARK_GRAY, WHITE } from '../constants/colors'
 
 import renderPage from '../renderPage'
 import {
   doApiRequest,
   formatResponse,
 } from '../utils'
-import { DARK_GRAY } from '../constants/colors'
 import s from 'styled-components'
 import TabView from '../components/TabView'
 import ClubTab from '../components/Settings/ClubTab'
@@ -24,15 +25,17 @@ const Header = s.div`
 
 `
 const Notification = s.span`
-  border-radius: 4px;
-  background-color: #c5e7f7;
+  border-radius: ${BORDER_RADIUS};
+  background-color: ${CLUBS_BLUE};
+  color: ${WHITE};
   font-size: 16px;
-  font-weight: 500;
-  padding: 5px;
-  width: 500px;
-  float: right;
-  margin: 2rem;
+  padding: 5px 10px;
   overflow-wrap: break-word;
+  position: absolute;
+  right: 2rem;
+  margin-top: 2rem;
+  padding-right: 35px;
+  max-width: 50%;
 `
 
 class Settings extends React.Component {
@@ -60,8 +63,9 @@ class Settings extends React.Component {
   }
 
   togglePublic(club) {
+    const { userInfo: { username } } = this.props
     doApiRequest(
-      `/clubs/${club.code}/members/${this.props.userInfo.username}/?format=json`,
+      `/clubs/${club.code}/members/${username}/?format=json`,
       {
         method: 'PATCH',
         body: {
@@ -81,8 +85,9 @@ class Settings extends React.Component {
   }
 
   toggleActive(club) {
+    const { userInfo: { username } } = this.props
     doApiRequest(
-      `/clubs/${club.code}/members/${this.props.userInfo.username}/?format=json`,
+      `/clubs/${club.code}/members/${username}/?format=json`,
       {
         method: 'PATCH',
         body: {
@@ -102,8 +107,10 @@ class Settings extends React.Component {
   }
 
   leaveClub(club) {
-    if (confirm(`Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`)) {
-      doApiRequest(`/clubs/${club.code}/members/${this.props.userInfo.username}`, {
+    const { userInfo: { username } } = this.props
+    if (!username) this.notify('You must be logged in to perform this action.')
+    else if (confirm(`Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`)) {
+      doApiRequest(`/clubs/${club.code}/members/${username}`, {
         method: 'DELETE',
       }).then(resp => {
         if (!resp.ok) {
