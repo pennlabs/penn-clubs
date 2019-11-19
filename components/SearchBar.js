@@ -115,22 +115,11 @@ class SearchBar extends React.Component {
     super(props)
     this.state = {
       nameInput: '',
-      sizeOptions: [
-        { value: 1, label: 'less than 20 members' },
-        { value: 2, label: '20 to 50 members' },
-        { value: 3, label: '50 to 100 members' },
-        { value: 4, label: 'more than 100' },
-      ],
       tagOptions: props.tags.map(tag => ({
         value: tag.id,
         label: tag.name,
         count: tag.clubs,
       })),
-      applicationOptions: [
-        { value: 1, label: 'Requires application' },
-        { value: 2, label: 'Does not require application' },
-        { value: 3, label: 'Currently accepting applications' },
-      ],
       selectedTags: props.selectedTags,
     }
 
@@ -162,12 +151,25 @@ class SearchBar extends React.Component {
   }
 
   render() {
-    const {
-      tagOptions,
-      sizeOptions,
-      applicationOptions,
-      selectedTags,
-    } = this.state
+    const { tagOptions, selectedTags, nameInput } = this.state
+
+    const isTextInSearchBar = Boolean(nameInput)
+
+    const dropdowns = {
+      Type: tagOptions,
+      Size: [
+        { value: 1, label: 'less than 20 members' },
+        { value: 2, label: '20 to 50 members' },
+        { value: 3, label: '50 to 100 members' },
+        { value: 4, label: 'more than 100' },
+      ],
+      Application: [
+        { value: 1, label: 'Requires application' },
+        { value: 2, label: 'Does not require application' },
+        { value: 3, label: 'Currently accepting applications' },
+      ],
+    }
+
     const { updateTag } = this.props
     return (
       <>
@@ -175,7 +177,7 @@ class SearchBar extends React.Component {
           <Content>
             <SearchWrapper>
               <SearchIcon>
-                {this.state.nameInput ? (
+                {isTextInSearchBar ? (
                   <Icon
                     name="x"
                     alt="cancel search"
@@ -194,28 +196,19 @@ class SearchBar extends React.Component {
                 placeholder="Search"
                 aria-label="Search"
                 ref={this.inputRef}
-                value={this.state.nameInput}
+                value={nameInput}
                 onChange={e => this.setState({ nameInput: e.target.value })}
               />
             </SearchWrapper>
-            <DropdownFilter
-              name="Type"
-              options={tagOptions}
-              selected={selectedTags.filter(tag => tag.name === 'Type')}
-              updateTag={updateTag}
-            />
-            <DropdownFilter
-              name="Size"
-              options={sizeOptions}
-              selected={selectedTags.filter(tag => tag.name === 'Size')}
-              updateTag={updateTag}
-            />
-            <DropdownFilter
-              name="Application"
-              options={applicationOptions}
-              selected={selectedTags.filter(tag => tag.name === 'Application')}
-              updateTag={updateTag}
-            />
+            {Object.keys(dropdowns).map(key => (
+              <DropdownFilter
+                name={key}
+                key={key}
+                options={dropdowns[key]}
+                selected={selectedTags.filter(tag => tag.name === key)}
+                updateTag={updateTag}
+              />
+            ))}
           </Content>
         </Wrapper>
 
