@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { titleize } from '../utils'
 
-const TabView = ({ tabs }) => {
+const TabView = ({ tabs, tabStyle }) => {
   const hashString = window.location.hash.substring(1)
   const [currentTab, setCurrentTab] = useState(hashString || tabs[0].name)
 
@@ -16,8 +16,8 @@ const TabView = ({ tabs }) => {
 
   return (
     <>
-      <div className="tabs">
-        <ul style={{ borderBottomWidth: '2px' }}>
+      <div className={`tabs  ${tabStyle}`}>
+        <ul style={{ borderBottomWidth: '1px' }}>
           {enabledTabs.map(({ name, label }) => (
             <li
               className={name === currentTab ? 'is-active' : ''}
@@ -36,7 +36,9 @@ const TabView = ({ tabs }) => {
           ))}
         </ul>
       </div>
-      {getTabContent()}
+      <div style={{ padding: '0 2rem' }}>
+        {getTabContent()}
+      </div>
     </>
   )
 }

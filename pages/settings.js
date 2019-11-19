@@ -1,23 +1,52 @@
 import React from 'react'
+import { BODY_FONT } from '../constants/styles'
+import { BORDER_RADIUS } from '../constants/measurements'
+import { CLUBS_BLUE, DARK_GRAY, WHITE } from '../constants/colors'
 
-import { Icon } from '../components/common'
 import renderPage from '../renderPage'
 import {
   doApiRequest,
   formatResponse,
-  API_BASE_URL,
-  ROLE_OFFICER,
 } from '../utils'
-import { CLUBS_GREY_LIGHT } from '../constants/colors'
-import { Link } from '../routes'
-import Form from '../components/Form'
+import s from 'styled-components'
+import TabView from '../components/TabView'
+import ClubTab from '../components/Settings/ClubTab'
+import FavoritesTab from '../components/Settings/FavoritesTab'
+import ProfileTab from '../components/Settings/ProfileTab'
 
-class SettingsForm extends React.Component {
+const Header = s.div`
+  width: 470px;
+  height: 72px;
+  font-family: ${BODY_FONT};
+  font-size: 45px;
+  font-weight: bold;
+  color: ${DARK_GRAY};
+  margin-bottom: 1rem;
+
+`
+const Notification = s.span`
+  border-radius: ${BORDER_RADIUS};
+  background-color: ${CLUBS_BLUE};
+  color: ${WHITE};
+  font-size: 16px;
+  padding: 5px 10px;
+  overflow-wrap: break-word;
+  position: absolute;
+  right: 2rem;
+  margin-top: 2rem;
+  padding-right: 35px;
+  max-width: 50%;
+`
+
+class Settings extends React.Component {
   constructor(props) {
     super(props)
     this.state = {}
-    this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
+    this.togglePublic = this.togglePublic.bind(this)
+    this.toggleActive = this.toggleActive.bind(this)
+    this.leaveClub = this.leaveClub.bind(this)
+    this.updateUserInfo = this.props.updateUserInfo
   }
 
   /**
@@ -33,24 +62,10 @@ class SettingsForm extends React.Component {
     )
   }
 
-  submit(data) {
-    doApiRequest('/settings/?format=json', {
-      method: 'PATCH',
-      body: data,
-    }).then(resp => {
-      if (resp.ok) {
-        this.notify('Your preferences have been saved.')
-      } else {
-        resp.json().then(err => {
-          this.notify(formatResponse(err))
-        })
-      }
-    })
-  }
-
   togglePublic(club) {
+    const { userInfo: { username } } = this.props
     doApiRequest(
-      `/clubs/${club.code}/members/${this.props.userInfo.username}/?format=json`,
+      `/clubs/${club.code}/members/${username}/?format=json`,
       {
         method: 'PATCH',
         body: {
@@ -69,174 +84,116 @@ class SettingsForm extends React.Component {
     })
   }
 
-  render() {
-    const { userInfo, authenticated } = this.props
-    const isMembershipSet = Boolean(
-      userInfo && userInfo.membership_set && userInfo.membership_set.length
-    )
-    const fields = [
+  toggleActive(club) {
+    const { userInfo: { username } } = this.props
+    doApiRequest(
+      `/clubs/${club.code}/members/${username}/?format=json`,
       {
-        name: 'General',
-        type: 'group',
-        fields: [
-          {
-            name: 'name',
-            type: 'text',
-            readonly: true,
-          },
-          {
-            name: 'username',
-            type: 'text',
-            readonly: true,
-          },
-          {
-            name: 'email',
-            label: 'Primary Email',
-            type: 'text',
-            readonly: true,
-          },
-        ],
-      },
-      {
-        name: 'Membership',
-        type: 'group',
-        fields: [
-          {
-            name: 'membership',
-            type: 'component',
-            content: (
-              <div>
-                <p>
-                  The list below shows what clubs you are a member of. If you
-                  would like to hide a particular club from the public, click on
-                  the <Icon name="check-circle-green" alt="public" /> icon under
-                  the Public column. This will not hide your membership from
-                  other club members.
-                </p>
-                <table className="table is-fullwidth">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Position</th>
-                      <th>Permissions</th>
-                      <th className="has-text-centered">Active</th>
-                      <th className="has-text-centered">Public</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {isMembershipSet ? (
-                      userInfo.membership_set.map(item => (
-                        <tr key={item.id}>
-                          <td>{item.name}</td>
-                          <td>{item.title}</td>
-                          <td>{item.role_display}</td>
-                          <td className="has-text-centered">
-                            <Icon
-                              name={
-                                item.active
-                                  ? 'check-circle-green'
-                                  : 'x-circle-red'
-                              }
-                              alt={item.active ? 'active' : 'inactive'}
-                            />
-                          </td>
-                          <td className="has-text-centered">
-                            <Icon
-                              name={
-                                item.public
-                                  ? 'check-circle-green'
-                                  : 'x-circle-red'
-                              }
-                              alt={item.public ? 'public' : 'not public'}
-                            />
-                          </td>
-                          <td className="buttons">
-                            <Link
-                              route="club-view"
-                              params={{ club: String(item.code) }}
-                            >
-                              <a className="button is-small is-link">View</a>
-                            </Link>
-                            {item.role <= ROLE_OFFICER && (
-                              <Link
-                                route="club-edit"
-                                params={{ club: String(item.code) }}
-                              >
-                                <a className="button is-small is-success">
-                                  Edit
-                                </a>
-                              </Link>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td className="has-text-grey" colSpan="4">
-                          You are not a member of any clubs yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            ),
-          },
-        ],
-      },
-    ]
+        method: 'PATCH',
+        body: {
+          active: !club.active,
+        },
+      }
+    ).then(resp => {
+      if (resp.ok) {
+        this.notify(`Your activity setting for ${club.name} has been changed.`)
+        this.props.updateUserInfo()
+      } else {
+        resp.json().then(err => {
+          this.notify(formatResponse(err))
+        })
+      }
+    })
+  }
 
+  leaveClub(club) {
+    const { userInfo: { username } } = this.props
+    if (!username) this.notify('You must be logged in to perform this action.')
+    else if (confirm(`Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`)) {
+      doApiRequest(`/clubs/${club.code}/members/${username}`, {
+        method: 'DELETE',
+      }).then(resp => {
+        if (!resp.ok) {
+          resp.json().then(err => {
+            this.notify(formatResponse(err))
+          })
+        } else {
+          this.notify(`You have left ${club.name}.`)
+          this.updateUserInfo()
+        }
+      })
+    }
+  }
+
+  render() {
+    const {
+      clubs, userInfo, authenticated, favorites, updateFavorites,
+    } = this.props
     if (authenticated === null) {
       return <div></div>
     }
 
     if (!userInfo) {
-      return <div>You must be authenticated in order to use this page.</div>
+      return (
+        <div>You must be authenticated in order to use this page.</div>
+      )
     }
 
     const { message } = this.state
 
-    return (
-      <div style={{ padding: '30px 50px' }}>
-        <h1 className="title is-size-2-desktop is-size-3-mobile">
-          <span style={{ color: CLUBS_GREY_LIGHT }}>Preferences: </span>
-          {this.props.userInfo.username}
-        </h1>
+    const tabs = [
+      {
+        name: 'Clubs',
+        icon: 'peoplelogo',
+        content: (
+          <ClubTab
+            togglePublic={this.togglePublic}
+            toggleActive={this.toggleActive}
+            leaveClub={this.leaveClub}
+            userInfo={userInfo}
+          />
+        ),
+      },
+      {
+        name: 'Favorites',
+        icon: 'heart',
+        content: (
+          <FavoritesTab
+            clubs={clubs}
+            favorites={favorites}
+            updateFavorites={updateFavorites}
+          />
+        ),
+      },
+      {
+        name: 'Profile',
+        icon: 'user',
+        content: (
+          <ProfileTab
+            defaults={userInfo}
+          />
+        ),
+      },
+    ]
 
-        {message && (
-          <div className="notification is-primary">
+    return (
+      <div style={{ padding: 50 }}>
+        <Header>
+          Welcome, {this.props.userInfo.name}!
+        </Header>
+        <TabView tabs={tabs} tabStyle='is-boxed'/>
+        {message ? (
+          <Notification className="notification">
             <button
               className="delete"
               onClick={() => this.setState({ message: null })}
             />
             {message}
-          </div>
-        )}
-        <Form
-          fields={fields}
-          defaults={this.props.userInfo}
-          onSubmit={this.submit}
-        />
-        <a
-          href={`${API_BASE_URL}/accounts/logout/?next=${window.location.href}`}
-          className="button is-pulled-right is-danger is-medium"
-        >
-          Logout
-        </a>
+          </Notification>
+        ) : null}
       </div>
     )
   }
 }
 
-SettingsForm.getInitialProps = async ({ query }) => {
-  const tagsRequest = await doApiRequest('/tags/?format=json')
-  const tagsResponse = await tagsRequest.json()
-  const clubRequest = query.club
-    ? await doApiRequest(`/clubs/${query.club}/?format=json`)
-    : null
-  const clubResponse = clubRequest && (await clubRequest.json())
-  return { club: clubResponse, tags: tagsResponse }
-}
-
-export default renderPage(SettingsForm)
+export default renderPage(Settings)

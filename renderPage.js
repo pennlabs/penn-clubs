@@ -27,26 +27,11 @@ function renderPage(Page) {
       }
 
       this.updateFavorites = this.updateFavorites.bind(this)
-      this.updateUserInfo = this.componentDidMount.bind(this)
+      this.updateUserInfo = this.updateUserInfo.bind(this)
     }
 
     componentDidMount() {
-      doApiRequest('/settings/?format=json').then(resp => {
-        if (resp.ok) {
-          resp.json().then(data =>
-            this.setState({
-              authenticated: true,
-              favorites: data.favorite_set.map(a => a.club),
-              userInfo: data,
-            })
-          )
-        } else {
-          this.setState({
-            authenticated: false,
-            favorites: JSON.parse(localStorage.getItem('favorites')) || [],
-          })
-        }
-      })
+      this.updateUserInfo()
     }
 
     render() {
@@ -108,6 +93,28 @@ function renderPage(Page) {
       }
       return i === -1
     }
+
+    updateUserInfo() {
+      doApiRequest('/clubs/?format=json')
+        .then(resp => resp.json())
+        .then(data => this.setState({ clubs: data }))
+      doApiRequest('/settings/?format=json').then((resp) => {
+        if (resp.ok) {
+          resp.json().then(data => {
+            this.setState({
+              authenticated: true,
+              favorites: data.favorite_set.map(a => a.club),
+              userInfo: data,
+            })
+          })
+        } else {
+          this.setState({
+            authenticated: false,
+            favorites: JSON.parse(localStorage.getItem('favorites')) || [],
+          })
+        }
+      })
+    }
   }
 
   RenderPage.getInitialProps = async info => {
@@ -139,32 +146,21 @@ export function renderListPage(Page) {
         .then(data => this.setState({ tags: data }))
     }
 
-    mapToClubs(favorites) {
-      const { clubs } = this.state
-      if (!clubs || !clubs.length) return []
-
-      return favorites.map(favorite => {
-        return clubs.find(club => club.code === favorite)
-      })
-    }
-
     render() {
-      const { favorites } = this.props
+      const { favorites, updateUserInfo, updateFavorites } = this.props
       const { clubs, tags } = this.state
 
       if (!clubs || !tags) {
         return <Loading />
       }
 
-      const favoriteClubs = this.mapToClubs(favorites)
-
       return (
         <Page
           clubs={clubs}
           tags={tags}
           favorites={favorites}
-          updateFavorites={this.props.updateFavorites}
-          favoriteClubs={favoriteClubs}
+          updateFavorites={updateFavorites}
+          updateUserInfo={updateUserInfo}
         />
       )
     }
