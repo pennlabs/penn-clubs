@@ -12,13 +12,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from clubs.models import (Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag, Subscribe)
+from clubs.models import (Asset, Club, Event, Favorite, Subscribe, Membership, MembershipInvite, Tag)
 from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
                                InvitePermission, IsSuperuser, MemberPermission)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
-                               ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer,
-                               MembershipInviteSerializer, MembershipSerializer, TagSerializer, UserSerializer,
-                               SubscribeSerializer)
+                               ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer, SubscribeSerializer,
+                               MembershipInviteSerializer, MembershipSerializer, TagSerializer, UserSerializer)
 
 
 def upload_endpoint_helper(request, cls, field, **kwargs):
@@ -82,7 +81,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         child_tree = find_children_helper(self.get_object())
         return Response(child_tree)
 
-    @action(detail= True, methods=['get'])
+    @action(detail=True, methods=['get'])
     def subscription(self, request, *args, **kwargs):
         serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']),  many=True)
         return Response(serializer.data)

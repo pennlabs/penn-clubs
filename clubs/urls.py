@@ -3,8 +3,8 @@ from django.conf.urls.static import static
 from django.urls import path
 from rest_framework_nested import routers
 
-from clubs.views import (AssetViewSet, ClubViewSet, EventViewSet, FavoriteViewSet, MassInviteAPIView,
-                         MemberInviteViewSet, MemberViewSet, TagViewSet, UserUpdateAPIView, SubscribeViewSet)
+from clubs.views import (AssetViewSet, ClubViewSet, EventViewSet, FavoriteViewSet, SubscribeViewSet, MassInviteAPIView,
+                         MemberInviteViewSet, MemberViewSet, TagViewSet, UserUpdateAPIView)
 
 router = routers.SimpleRouter()
 router.register(r'clubs', ClubViewSet, basename='clubs')
@@ -22,7 +22,6 @@ urlpatterns = [
     path(r'settings/', UserUpdateAPIView.as_view(), name='users-detail'),
     path(r'clubs/<slug:club_code>/invite/', MassInviteAPIView.as_view(), name='club-invite'),
 ]
-
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls
 
