@@ -9,10 +9,11 @@ export const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
     const matchedTag = selectedTags.find(
       ({ value, name: filterType }) => filterType === 'Type' && value === tag.id
     )
+    const key = `${tag.id}-${tag.value}`
     if (matchedTag) {
       return (
         <SelectedTag
-          key={tag.value}
+          key={key}
           className="tag is-rounded has-text-white"
           onClick={e => {
             // Prevent click event from propagating so clicking on the tag doesn't
@@ -28,7 +29,7 @@ export const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
     }
     return (
       <BlueTag
-        key={tag.id}
+        key={key}
         className="tag is-rounded has-text-white"
         onClick={e => {
           // Stop propagation of click event for same reasons as above

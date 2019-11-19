@@ -2,7 +2,13 @@ import React from 'react'
 import s from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
-import { mediaMaxWidth, mediaMinWidth, MD, LG } from '../constants/measurements'
+import {
+  mediaMaxWidth,
+  mediaMinWidth,
+  MD,
+  LG,
+  ANIMATION_DURATION,
+} from '../constants/measurements'
 import FavoriteIcon from './common/FavoriteIcon'
 import TagGroup from './common/TagGroup'
 import ClubDetails from './ClubDetails'
@@ -17,7 +23,7 @@ const Row = s.div`
   border-style: solid;
   border-color: transparent;
   box-shadow: 0 0 0 transparent;
-  transition: all 0.2s ease;
+  transition: all ${ANIMATION_DURATION}ms ease;
   padding: ${ROW_PADDING}rem;
   width: calc(100% + ${2 * ROW_PADDING}rem);
   margin: 0 -${ROW_PADDING}rem;

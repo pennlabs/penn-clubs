@@ -113,29 +113,29 @@ const SearchIcon = s.span`
 class SearchBar extends React.Component {
   constructor(props) {
     super(props)
+    const { tags, selectedTags } = props
     this.state = {
       nameInput: '',
-      tagOptions: props.tags.map(tag => ({
+      tagOptions: tags.map(tag => ({
         value: tag.id,
         label: tag.name,
         count: tag.clubs,
       })),
-      selectedTags: props.selectedTags,
+      activeDropdownFilter: null,
+      selectedTags: selectedTags,
     }
 
     this.inputRef = React.createRef()
     this.focus = this.focus.bind(this)
+    this.toggleActiveDropdownFilter = this.toggleActiveDropdownFilter.bind(this)
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.nameInput !== this.state.nameInput) {
+    const { nameInput } = this.state
+    if (prevState.nameInput !== nameInput) {
       clearTimeout(this.timeout)
       this.timeout = setTimeout(
-        () =>
-          this.props.resetDisplay(
-            this.state.nameInput,
-            this.state.selectedTags
-          ),
+        () => this.props.resetDisplay(nameInput, this.state.selectedTags),
         200
       )
     }
@@ -146,12 +146,26 @@ class SearchBar extends React.Component {
     }
   }
 
+  toggleActiveDropdownFilter(name) {
+    const { activeDropdownFilter } = this.state
+    if (activeDropdownFilter === name) {
+      this.setState({ activeDropdownFilter: null })
+    } else {
+      this.setState({ activeDropdownFilter: name })
+    }
+  }
+
   focus() {
     this.inputRef.current.focus()
   }
 
   render() {
-    const { tagOptions, selectedTags, nameInput } = this.state
+    const {
+      tagOptions,
+      selectedTags,
+      nameInput,
+      activeDropdownFilter,
+    } = this.state
 
     const isTextInSearchBar = Boolean(nameInput)
 
@@ -202,6 +216,8 @@ class SearchBar extends React.Component {
             </SearchWrapper>
             {Object.keys(dropdowns).map(key => (
               <DropdownFilter
+                active={activeDropdownFilter === key}
+                toggleActive={() => this.toggleActiveDropdownFilter(key)}
                 name={key}
                 key={key}
                 options={dropdowns[key]}
