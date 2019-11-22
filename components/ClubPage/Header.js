@@ -77,7 +77,7 @@ const Header = ({
                 updateSubscriptions(club.code)
               }}
             >
-              {isSubscribed ? 'Unsubscribe' : 'Subscribe to Mailing List'}
+              {isSubscribed ? 'Unsubscribe' : 'Subscribe'}
             </a>
           </Link>
         </span>

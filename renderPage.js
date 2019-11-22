@@ -39,6 +39,7 @@ function renderPage(Page) {
             this.setState({
               authenticated: true,
               favorites: data.favorite_set.map(a => a.club),
+              subscriptions: data.favorite_set.map(a => a.club),
               userInfo: data,
             })
           )
