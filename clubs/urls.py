@@ -23,6 +23,7 @@ urlpatterns = [
     path(r'settings/', UserUpdateAPIView.as_view(), name='users-detail'),
     path(r'clubs/<slug:club_code>/invite/', MassInviteAPIView.as_view(), name='club-invite'),
 ]
+
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls
 
