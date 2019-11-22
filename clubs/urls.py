@@ -1,3 +1,4 @@
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
@@ -21,9 +22,11 @@ clubs_router.register(r'assets', AssetViewSet, basename='club-assets')
 
 urlpatterns = [
     path(r'settings/', UserUpdateAPIView.as_view(), name='users-detail'),
-    path(r'clubs/<slug:club_code>/invite/', MassInviteAPIView.as_view(), name='club-invite'),
+    path(r'clubs/<slug:club_code>/invite/', MassInviteAPIView.as_view(), name='club-invite')
 ]
+
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
