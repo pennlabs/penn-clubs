@@ -71,7 +71,6 @@ const Content = s.div`
     width: 100%;
     margin: 0;
     padding: 8px 1rem;
-    border-top: 1px solid ${BORDER};
     border-bottom: 1px solid ${BORDER};
     position: fixed;
     z-index: 1000;

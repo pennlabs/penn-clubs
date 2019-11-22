@@ -1,29 +1,16 @@
 import React from 'react'
-import { BODY_FONT } from '../constants/styles'
 import { BORDER_RADIUS } from '../constants/measurements'
-import { CLUBS_BLUE, DARK_GRAY, WHITE } from '../constants/colors'
+import { CLUBS_BLUE, WHITE } from '../constants/colors'
 
 import renderPage from '../renderPage'
-import {
-  doApiRequest,
-  formatResponse,
-} from '../utils'
+import { doApiRequest, formatResponse } from '../utils'
 import s from 'styled-components'
 import TabView from '../components/TabView'
 import ClubTab from '../components/Settings/ClubTab'
 import FavoritesTab from '../components/Settings/FavoritesTab'
 import ProfileTab from '../components/Settings/ProfileTab'
+import { Title, Container } from '../components/common'
 
-const Header = s.div`
-  width: 470px;
-  height: 72px;
-  font-family: ${BODY_FONT};
-  font-size: 45px;
-  font-weight: bold;
-  color: ${DARK_GRAY};
-  margin-bottom: 1rem;
-
-`
 const Notification = s.span`
   border-radius: ${BORDER_RADIUS};
   background-color: ${CLUBS_BLUE};
@@ -63,16 +50,15 @@ class Settings extends React.Component {
   }
 
   togglePublic(club) {
-    const { userInfo: { username } } = this.props
-    doApiRequest(
-      `/clubs/${club.code}/members/${username}/?format=json`,
-      {
-        method: 'PATCH',
-        body: {
-          public: !club.public,
-        },
-      }
-    ).then(resp => {
+    const {
+      userInfo: { username },
+    } = this.props
+    doApiRequest(`/clubs/${club.code}/members/${username}/?format=json`, {
+      method: 'PATCH',
+      body: {
+        public: !club.public,
+      },
+    }).then(resp => {
       if (resp.ok) {
         this.notify(`Your privacy setting for ${club.name} has been changed.`)
         this.props.updateUserInfo()
@@ -85,16 +71,15 @@ class Settings extends React.Component {
   }
 
   toggleActive(club) {
-    const { userInfo: { username } } = this.props
-    doApiRequest(
-      `/clubs/${club.code}/members/${username}/?format=json`,
-      {
-        method: 'PATCH',
-        body: {
-          active: !club.active,
-        },
-      }
-    ).then(resp => {
+    const {
+      userInfo: { username },
+    } = this.props
+    doApiRequest(`/clubs/${club.code}/members/${username}/?format=json`, {
+      method: 'PATCH',
+      body: {
+        active: !club.active,
+      },
+    }).then(resp => {
       if (resp.ok) {
         this.notify(`Your activity setting for ${club.name} has been changed.`)
         this.props.updateUserInfo()
@@ -107,9 +92,15 @@ class Settings extends React.Component {
   }
 
   leaveClub(club) {
-    const { userInfo: { username } } = this.props
+    const {
+      userInfo: { username },
+    } = this.props
     if (!username) this.notify('You must be logged in to perform this action.')
-    else if (confirm(`Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`)) {
+    else if (
+      confirm(
+        `Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`
+      )
+    ) {
       doApiRequest(`/clubs/${club.code}/members/${username}`, {
         method: 'DELETE',
       }).then(resp => {
@@ -127,16 +118,18 @@ class Settings extends React.Component {
 
   render() {
     const {
-      clubs, userInfo, authenticated, favorites, updateFavorites,
+      clubs,
+      userInfo,
+      authenticated,
+      favorites,
+      updateFavorites,
     } = this.props
     if (authenticated === null) {
       return <div></div>
     }
 
     if (!userInfo) {
-      return (
-        <div>You must be authenticated in order to use this page.</div>
-      )
+      return <div>You must be authenticated in order to use this page.</div>
     }
 
     const { message } = this.state
@@ -168,30 +161,35 @@ class Settings extends React.Component {
       {
         name: 'Profile',
         icon: 'user',
-        content: (
-          <ProfileTab
-            defaults={userInfo}
-          />
-        ),
+        content: <ProfileTab defaults={userInfo} />,
       },
     ]
 
+    const { name } = this.props.userInfo
+
+    const gradient = 'linear-gradient(to right, #4954f4, #44469a)'
+
     return (
-      <div style={{ padding: 50 }}>
-        <Header>
-          Welcome, {this.props.userInfo.name}!
-        </Header>
-        <TabView tabs={tabs} tabStyle='is-boxed'/>
-        {message ? (
-          <Notification className="notification">
-            <button
-              className="delete"
-              onClick={() => this.setState({ message: null })}
-            />
-            {message}
-          </Notification>
-        ) : null}
-      </div>
+      <>
+        <Container background={gradient}>
+          <Title style={{ marginTop: '2.5vw', color: WHITE, opacity: 0.95 }}>
+            Welcome, {name}
+          </Title>
+        </Container>
+        <TabView background={gradient} tabs={tabs} tabClassName="is-boxed" />
+
+        {message && (
+          <Container>
+            <Notification className="notification">
+              <button
+                className="delete"
+                onClick={() => this.setState({ message: null })}
+              />
+              {message}
+            </Notification>
+          </Container>
+        )}
+      </>
     )
   }
 }

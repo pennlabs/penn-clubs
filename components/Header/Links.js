@@ -1,15 +1,17 @@
 import s from 'styled-components'
+import Link from 'next/link'
 
 import { Icon } from '../common'
-import { Link } from '../../routes'
 import { LOGIN_URL } from '../../utils'
 import { mediaMaxWidth, MD } from '../../constants/measurements'
-import { MEDIUM_GRAY, DARK_GRAY } from '../../constants/colors'
+import { MEDIUM_GRAY, DARK_GRAY, BORDER } from '../../constants/colors'
 import { logEvent } from '../../utils/analytics'
 
 const StyledLink = s.a`
   padding: 14px 20px;
   color: ${MEDIUM_GRAY} !important;
+  display: inline-block;
+  cursor: pointer;
 
   &:hover {
     color: ${DARK_GRAY} !important;
@@ -22,8 +24,8 @@ const StyledLink = s.a`
 
 const Menu = s.div`
   ${mediaMaxWidth(MD)} {
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid ${BORDER};
+    box-shadow: 0 4px 4px ${BORDER};
 
     a {
       display: block;
@@ -37,14 +39,19 @@ const Menu = s.div`
 export default ({ userInfo, authenticated, show }) => (
   <Menu className="navbar-menu" show={show}>
     <div className="navbar-end" style={{ padding: '0px 20px' }}>
-      <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
-        FAQ
-      </StyledLink>
+      <Link href="/faq" onClick={() => logEvent('faq', 'click')}>
+        <StyledLink>FAQ</StyledLink>
+      </Link>
       {authenticated === false && (
-        <StyledLink href={`${LOGIN_URL}?next=${window.location.href}`} onClick={() => logEvent('login', 'click')}>Login</StyledLink>
+        <a
+          href={`${LOGIN_URL}?next=${window.location.href}`}
+          onClick={() => logEvent('login', 'click')}
+        >
+          <StyledLink>Login</StyledLink>
+        </a>
       )}
       {userInfo && (
-        <Link route="settings">
+        <Link href="/settings">
           <StyledLink>
             <Icon
               name="user"

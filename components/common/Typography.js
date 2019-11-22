@@ -13,8 +13,8 @@ export const StrongText = s.p`
   font-weight: bold;
 `
 
-export const Title = ({ children }) => (
-  <h1 className="title is-h1">
+export const Title = ({ style, children }) => (
+  <h1 className="title is-h1" style={style}>
     <strong>{children}</strong>
   </h1>
 )

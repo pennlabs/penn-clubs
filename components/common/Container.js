@@ -41,9 +41,16 @@ const Wrapper = s.div`
   `}
 `
 
-export const Container = ({ background = WHITE, fullHeight, children }) => (
+export const Container = ({
+  background = WHITE,
+  fullHeight,
+  style,
+  children,
+}) => (
   <div style={{ background }}>
-    <Wrapper fullHeight={fullHeight}>{children}</Wrapper>
+    <Wrapper fullHeight={fullHeight} style={style}>
+      {children}
+    </Wrapper>
   </div>
 )
 
