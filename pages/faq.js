@@ -1,17 +1,18 @@
 import PropTypes from 'prop-types'
 
 import renderPage from '../renderPage.js'
-import { Container, Line } from '../components/common'
+import { Container, Line, Title, StrongText, Text } from '../components/common'
 import { SNOW } from '../constants/colors.js'
 
 const Question = ({ title, children }) => (
-  <p>
-    <b className="is-size-5">{title}</b>
-    <br />
-    {children}
-    <br />
-    <br />
-  </p>
+  <>
+    <StrongText style={{ marginBottom: '0.5rem' }}>{title}</StrongText>
+    <Text>
+      {children}
+      <br />
+      <br />
+    </Text>
+  </>
 )
 
 Question.propTypes = {
@@ -21,9 +22,9 @@ Question.propTypes = {
 
 const FAQ = () => (
   <Container background={SNOW}>
-    <h1 className="is-size-2" style={{ paddingBottom: '2rem' }}>
+    <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
       Frequently Asked Questions
-    </h1>
+    </Title>
     <p>
       <Question title="What is Penn Clubs?">
         Penn Clubs is meant to be your central source of information about
@@ -31,7 +32,7 @@ const FAQ = () => (
         discovering new clubs throughout the year, not just at the SAC Fair.
       </Question>
       <Question title="Why is this a beta?">
-        This is the public beta version of Penn Clubs, which means we’re still
+        This is the public beta version of Penn Clubs, which means we're still
         working out some kinks and (more importantly) adding useful features.
         Please be patient as we improve the site! The reason we decided to roll
         out a beta is so that you can use Penn Clubs to find and join clubs this
@@ -130,6 +131,7 @@ const FAQ = () => (
         Thank you to the organizations below for their support in launching Penn
         Clubs! We're excited to continue building this valuable resource
         together.
+        <br />
         <br />
         <div>
           {[

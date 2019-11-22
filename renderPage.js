@@ -10,9 +10,11 @@ import { doApiRequest } from './utils'
 import { logEvent } from './utils/analytics'
 import { logException } from './utils/sentry'
 import { NAV_HEIGHT } from './constants/measurements'
+import { BODY_FONT } from './constants/styles'
 
 const Wrapper = s.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
+  font-family: ${BODY_FONT};
 `
 
 function renderPage(Page) {
@@ -98,7 +100,7 @@ function renderPage(Page) {
       doApiRequest('/clubs/?format=json')
         .then(resp => resp.json())
         .then(data => this.setState({ clubs: data }))
-      doApiRequest('/settings/?format=json').then((resp) => {
+      doApiRequest('/settings/?format=json').then(resp => {
         if (resp.ok) {
           resp.json().then(data => {
             this.setState({
