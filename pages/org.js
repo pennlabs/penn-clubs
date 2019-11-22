@@ -8,6 +8,7 @@ import SocialIcons from '../components/ClubPage/SocialIcons.js'
 import clubEx from './club_tree_example.json'
 import OrgChildren from '../components/OrgPage/OrgChildren.js'
 import OrgTabs from '../components/OrgPage/OrgsTabs.js'
+import { EMPTY_DESCRIPTION } from '../utils'
 
 class Org extends Component {
   constructor(props) {
@@ -64,10 +65,14 @@ class Org extends Component {
           <div className="column is-4">
             <InfoBox club={club} />
             <SocialIcons club={club} />
-            <OrgTabs club={club} />
+            <div>{club.description || EMPTY_DESCRIPTION}</div>
+            {/* {console.log(club)} */}
+            {/* <OrgTabs club={club} /> */}
           </div>
           <div className="column is-8">
-            <OrgChildren children={children}></OrgChildren>
+            <OrgTabs club={club} children={children} />
+            {console.log(children)}
+            {/* <OrgChildren children={children}></OrgChildren> */}
             {/* <Image src={club.image_url || getDefaultClubImageURL()} /> */}
           </div>
         </div>

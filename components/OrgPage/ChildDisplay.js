@@ -9,7 +9,7 @@ import {
   BABY_BLUE,
 } from '../../constants/colors'
 import s from 'styled-components'
-import Icon from '../common/Icon'
+import { Icon } from '../common'
 const Child = s.div`
   display: flex;
   flex-direction: row; 
@@ -83,7 +83,10 @@ export default class ChildDisplay extends Component {
             >
               {child.name}
             </Text>
-            <TextLink href={`/club/${child.code}/admin`} onClick={this.handleDetails}>
+            <TextLink
+              href={`/club/${child.code}/admin`}
+              onClick={this.handleDetails}
+            >
               View{` `}
               <Icon name="external-link" alt="View Club Page"></Icon>
             </TextLink>

@@ -5,14 +5,15 @@ import s from 'styled-components'
 
 export default function OrgChildren(props) {
   const { children } = props
+  if (!children) {
+    return <div>No children</div>
+  }
   return (
     <div
       style={{
         whiteSpace: 'pre-wrap',
       }}
     >
-      {console.log('CHILDREN', children)}
-
       {children.map(c => {
         return <ChildDisplay child={c}></ChildDisplay>
       })}
