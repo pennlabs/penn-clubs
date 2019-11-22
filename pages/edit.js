@@ -3,11 +3,11 @@ import Select from 'react-select'
 
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../utils'
-import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../constants/colors'
+import { CLUBS_RED } from '../constants/colors'
 import { Link, Router } from '../routes'
 import Form from '../components/Form'
 import TabView from '../components/TabView'
-import { Icon, Container } from '../components/common'
+import { Icon, Container, Title, InactiveMarker } from '../components/common'
 
 class ClubForm extends React.Component {
   constructor(props) {
@@ -695,17 +695,13 @@ class ClubForm extends React.Component {
 
     const { message, isEdit } = this.state
     const nameOrDefault = (club && club.name) || 'New Club'
+    const showInactiveMarker = !(club && club.active) && isEdit
 
     return (
       <Container>
-        <h1 className="title is-size-2-desktop is-size-3-mobile">
-          <span style={{ color: CLUBS_GREY_LIGHT }}>
-            {club ? 'Editing' : 'Creating'} Club:{' '}
-          </span>{' '}
+        <Title>
           {nameOrDefault}
-          {(club && club.active) || !isEdit || (
-            <span style={{ color: CLUBS_RED }}> (Inactive)</span>
-          )}
+          {showInactiveMarker && <InactiveMarker />}
           {club && (
             <Link route="club-view" params={{ club: club.code }}>
               <a
@@ -716,7 +712,7 @@ class ClubForm extends React.Component {
               </a>
             </Link>
           )}
-        </h1>
+        </Title>
         {message && (
           <div className="notification is-primary">
             <button
