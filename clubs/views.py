@@ -12,12 +12,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from clubs.models import (Asset, Club, Event, Favorite, Subscribe, Membership, MembershipInvite, Tag)
+from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Subscribe, Tag
 from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
                                InvitePermission, IsSuperuser, MemberPermission)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
-                               ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer, SubscribeSerializer,
-                               MembershipInviteSerializer, MembershipSerializer, TagSerializer, UserSerializer)
+                               ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer,
+                               MembershipInviteSerializer, MembershipSerializer, SubscribeSerializer,
+                               TagSerializer, UserSerializer)
 
 
 def upload_endpoint_helper(request, cls, field, **kwargs):

@@ -3,8 +3,9 @@ from django.conf.urls.static import static
 from django.urls import path
 from rest_framework_nested import routers
 
-from clubs.views import (AssetViewSet, ClubViewSet, EventViewSet, FavoriteViewSet, SubscribeViewSet, MassInviteAPIView,
-                         MemberInviteViewSet, MemberViewSet, TagViewSet, UserUpdateAPIView)
+from clubs.views import (AssetViewSet, ClubViewSet, EventViewSet, FavoriteViewSet, MassInviteAPIView,
+                         MemberInviteViewSet, MemberViewSet, SubscribeViewSet, TagViewSet, UserUpdateAPIView)
+
 
 router = routers.SimpleRouter()
 router.register(r'clubs', ClubViewSet, basename='clubs')
