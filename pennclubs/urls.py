@@ -22,4 +22,3 @@ urlpatterns = [
     path('accounts/', include('accounts.urls', namespace='accounts')),
     path('test_s', include('clubs.urls'))
 ]
-
