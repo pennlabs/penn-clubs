@@ -12,12 +12,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Subscribe, Tag
 from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
                                InvitePermission, IsSuperuser, MemberPermission)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
                                ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer,
-                               MembershipInviteSerializer, MembershipSerializer, TagSerializer, UserSerializer)
+                               MembershipInviteSerializer, MembershipSerializer, SubscribeSerializer,
+                               TagSerializer, UserSerializer)
 
 
 def upload_endpoint_helper(request, cls, field, **kwargs):
@@ -81,6 +82,11 @@ class ClubViewSet(viewsets.ModelViewSet):
         child_tree = find_children_helper(self.get_object())
         return Response(child_tree)
 
+    @action(detail=True, methods=['get'])
+    def subscription(self, request, *args, **kwargs):
+        serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']),  many=True)
+        return Response(serializer.data)
+
     @method_decorator(cache_page(60*5))
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
@@ -124,6 +130,16 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Favorite.objects.filter(person=self.request.user)
+
+
+class SubscribeViewSet(viewsets.ModelViewSet):
+    serializer_class = SubscribeSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'club__code'
+    http_method_names = ['get', 'post', 'delete']
+
+    def get_queryset(self):
+        return Subscribe.objects.filter(person=self.request.user)
 
 
 class MemberViewSet(viewsets.ModelViewSet):
