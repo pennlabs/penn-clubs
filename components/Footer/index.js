@@ -7,7 +7,7 @@ import { Icon, SmallText } from '../common'
 const Foot = s.footer`
   height: 8rem;
   background-color: ${SNOW};
-  fontSize: 0.85rem;
+  font-size: 0.85rem;
   display: flex;
   justify-content: center;
   flex-direction: column;
