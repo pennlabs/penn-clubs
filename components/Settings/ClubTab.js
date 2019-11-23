@@ -30,7 +30,7 @@ export default props => {
           <th>
             Permissions
             <Icon
-              data-tip="Shows your level of access to club management tools. Can either be a Member, Officer, or Admin."
+              data-tip="Shows your level of access to club management tools. Can be a Member, Officer, or Owner."
               data-effect="solid"
               data-multiline="true"
               name="info"
