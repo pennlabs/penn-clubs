@@ -518,11 +518,11 @@ class NoteTagSerializer(serializers.ModelSerializer):
 
 class NoteSerializer(serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    creating_club = serializers.SlugRelatedField(queryset=Club.objects.all(), required=False, slug_field='code')
-    subject_club = serializers.SlugRelatedField(queryset=Club.objects.all(), required=False, slug_field='code')
+    creating_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
+    subject_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
     title = serializers.CharField(max_length=255, default='Note')
-    content = serializers.CharField()
-    note_tags = NoteTagSerializer(many=True)
+    content = serializers.CharField(required=False)
+    note_tags = NoteTagSerializer(many=True, required=False)
 
     def create(self, validated_data):
         """
@@ -548,4 +548,5 @@ class NoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Note
-        fields = ('id', 'creator', 'creating_club', 'subject_club', 'title', 'content', 'note_tags')
+        fields = ('id', 'creator', 'creating_club', 'subject_club', 'title', 'content', 'note_tags',
+                  'creating_club_permission', 'outside_club_permission')

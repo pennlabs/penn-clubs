@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Note, Tag
 from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
-                               InvitePermission, IsSuperuser, MemberPermission)
+                               InvitePermission, IsSuperuser, MemberPermission, NotePermission)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer,
                                AuthenticatedMembershipSerializer, ClubListSerializer, ClubSerializer,
                                EventSerializer, FavoriteSerializer, MembershipInviteSerializer,
@@ -53,6 +53,31 @@ def find_children_helper(club_object):
     }
 
 
+def filter_note_permission(queryset, club, user):
+    """
+    Filter the note queryset so that only notes the user has access
+    to remain in the queryset
+    """
+    creating_club_membership = Membership.objects.filter(club=club, person=user).first()
+    subject_club_membership = Membership.objects.filter(club=club, person=user).first()
+
+    # Convert memberships into actual numerical representation
+    if (creating_club_membership is None):
+        creating_club_membership = Note.PERMISSION_PUBLIC
+    else:
+        creating_club_membership = creating_club_membership.role
+
+    if (subject_club_membership is None):
+        subject_club_membership = Note.PERMISSION_PUBLIC
+    else:
+        subject_club_membership = subject_club_membership.role
+
+    queryset = queryset.filter(creating_club_permission__gte=creating_club_membership) \
+        | queryset.filter(outside_club_permission__gte=subject_club_membership)
+
+    return queryset
+
+
 class ClubViewSet(viewsets.ModelViewSet):
     """
     retrieve:
@@ -81,6 +106,14 @@ class ClubViewSet(viewsets.ModelViewSet):
     def children(self, request, *args, **kwargs):
         child_tree = find_children_helper(self.get_object())
         return Response(child_tree)
+
+    @action(detail=True, methods=['get'], url_path='notes-about')
+    def notes_about(self, request, *args, **kwards):
+        club = self.get_object()
+        queryset = Note.objects.filter(subject_club__code=club.code)
+        queryset = filter_note_permission(queryset, club, self.request.user)
+        serializer = NoteSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     @method_decorator(cache_page(60*5))
     def list(self, request, *args, **kwargs):
@@ -157,11 +190,16 @@ class AssetViewSet(viewsets.ModelViewSet):
 
 class NoteViewSet(viewsets.ModelViewSet):
     serializer_class = NoteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NotePermission | IsSuperuser]
     http_method_names = ['get', 'post', 'delete']
 
     def get_queryset(self):
-        return Note.objects
+        club = get_object_or_404(Club, code=self.kwargs['club_code'])
+
+        queryset = Note.objects.filter(creating_club__code=self.kwargs['club_code'])
+        queryset = filter_note_permission(queryset, club, self.request.user)
+
+        return queryset
 
 
 class TagViewSet(viewsets.ModelViewSet):

@@ -159,6 +159,34 @@ class Note(models.Model):
     title = models.CharField(max_length=255, default='Note')
     content = models.TextField(blank=True)
 
+    PERMISSION_CREATING_CLUB_OWNER = 10
+    PERMISSION_CREATING_CLUB_OFFICER = 20
+    PERMISSION_CREATING_CLUB_MEMBER = 30
+
+    PERMISSION_NONE = 0
+    PERMISSION_SUBJECT_CLUB_OWNER = 10
+    PERMISSION_SUBJECT_CLUB_OFFICER = 20
+    PERMISSION_SUBJECT_CLUB_MEMBER = 30
+    PERMISSION_PUBLIC = 100
+
+    CREATING_CLUB_PERMISSION_CHOICES = (
+        (PERMISSION_CREATING_CLUB_OWNER, 'Creating Club Owner'),
+        (PERMISSION_CREATING_CLUB_OFFICER, 'Creating Club Officers'),
+        (PERMISSION_CREATING_CLUB_MEMBER, 'Creating Club Members')
+    )
+
+    OUTSIDE_CLUB_PERMISSION_CHOICES = (
+        (PERMISSION_NONE, 'None'),
+        (PERMISSION_SUBJECT_CLUB_OWNER, 'Subject Club Owner'),
+        (PERMISSION_SUBJECT_CLUB_OFFICER, 'Subject Club Officers'),
+        (PERMISSION_SUBJECT_CLUB_MEMBER, 'Subject Club Members'),
+        (PERMISSION_PUBLIC, 'Public')
+    )
+
+    creating_club_permission = models.IntegerField(choices=CREATING_CLUB_PERMISSION_CHOICES,
+                                                   default=PERMISSION_CREATING_CLUB_MEMBER)
+    outside_club_permission = models.IntegerField(choices=OUTSIDE_CLUB_PERMISSION_CHOICES,
+                                                  default=PERMISSION_SUBJECT_CLUB_MEMBER)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
