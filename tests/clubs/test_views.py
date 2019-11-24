@@ -8,7 +8,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from clubs.models import Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag, Note
 
 
 class ClubTestCase(TestCase):
@@ -799,3 +799,51 @@ class ClubTestCase(TestCase):
         club = json.loads(resp.content)
         badge_json = club['badges'][0]
         self.assertEqual(badge.label, badge_json['label'])
+
+    def test_create_note(self):
+        self.client.login(username=self.user2.username, password='test')
+
+        # Try to create note without permissions
+        resp = self.client.post("/clubs/{}/notes/".format(self.club1.code), {
+            'creator': self.user2.username,
+            'creating_club': self.club1.code,
+            'subject_club': self.club1.code,
+            'title': "Note1",
+            'content': "Content",
+            'creating_club_permission': 20,
+            'outside_club_permission': 0
+        }, content_type='application/json')
+
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        Membership.objects.create(
+            person=self.user2,
+            club=self.club1,
+            role=Membership.ROLE_OFFICER
+        )
+
+        # Creating note after given permissions
+        resp = self.client.post("/clubs/{}/notes/".format(self.club1.code), {
+            'creator': self.user2.username,
+            'creating_club': self.club1.code,
+            'subject_club': self.club1.code,
+            'title': "Note1",
+            'content': "Content",
+            'creating_club_permission': 20,
+            'outside_club_permission': 0
+        }, content_type='application/json')
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Still cannot create note above permission level
+        resp = self.client.post("/clubs/{}/notes/".format(self.club1.code), {
+            'creator': self.user2.username,
+            'creating_club': self.club1.code,
+            'subject_club': self.club1.code,
+            'title': "Note1",
+            'content': "Content",
+            'creating_club_permission': 0,
+            'outside_club_permission': 0
+        }, content_type='application/json')
+
+        self.assertIn(resp.status_code, [400, 403], resp.content)

@@ -4,7 +4,7 @@ import pytz
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from clubs.models import Advisor, Badge, Club, Event, Favorite, Membership, Tag
+from clubs.models import Advisor, Badge, Club, Event, Favorite, Membership, Tag, Note
 
 
 class ClubTestCase(TestCase):
@@ -87,3 +87,20 @@ class AdvisorTestCase(TestCase):
 
     def test_str(self):
         self.assertEqual(str(self.advisor), self.advisor.name)
+
+
+class NoteTestCase(TestCase):
+    def setUp(self):
+        date = pytz.timezone('America/New_York').localize(datetime.datetime(2019, 1, 1))
+        self.person = get_user_model().objects.create_user('test', 'test@example.com', 'test')
+        self.club1 = Club.objects.create(code='a', name='a', subtitle='a', founded=date, description='a', size=1)
+        self.club2 = Club.objects.create(code='b', name='b', subtitle='b', founded=date, description='b', size=1)
+        self.note1 = Note.objects.create(creator=self.person, creating_club=self.club1, subject_club=self.club2,
+                                         title="Note1", content="content", creating_club_permission=10,
+                                         outside_club_permission=0)
+
+    def test_club_relation(self):
+        self.assertEqual(self.note1.creating_club, self.club1)
+        self.assertEqual(self.note1, self.club1.note_by_club.first())
+        self.assertEqual(self.note1.subject_club, self.club2)
+        self.assertEqual(self.note1, self.club2.note_of_club.first())
