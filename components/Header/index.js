@@ -15,8 +15,8 @@ import {
 const Nav = s.nav`
   height: ${NAV_HEIGHT};
   background-color: ${WHITE} !important;
-  borderBottom: 1px solid ${BORDER};
-  box-shadow: 0 0 8px 0 rgba(0, 0, 0, .1);
+  border-bottom: 1px solid ${BORDER};
+  box-shadow: 0 1px 4px 0 ${BORDER};
   width: 100%;
   position: fixed;
   z-index: 1001;

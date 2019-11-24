@@ -1,33 +1,15 @@
 import { useState } from 'react'
 import s from 'styled-components'
 
-import { Icon, TagGroup } from '../common'
-import {
-  CLUBS_GREY,
-  BLACK_ALPHA,
-  DARK_GRAY,
-} from '../../constants/colors'
+import { Icon, TagGroup, InactiveMarker, Title } from '../common'
 import { ROLE_OFFICER } from '../../utils'
 import { Link } from '../../routes'
 
-const Title = s.div`
+const Wrapper = s.div`
   display: flex;
   justify-content: space-between;
   flex-direction: row;
   align-items: center;
-  padding-right: 10px;
-`
-
-const InactiveMarker = s.span`
-  display: inline-block;
-  margin-left: 0.5rem;
-  font-size: 1rem;
-  background: ${BLACK_ALPHA(0.05)};
-  color: ${DARK_GRAY};
-  opacity: 0.8;
-  padding: 0.5rem 0.6rem;
-  transform: translateY(-0.5rem);
-  border-radius: 0.2rem;
 `
 
 const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
@@ -51,14 +33,11 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
 
   return (
     <div style={style}>
-      <Title>
-        <h1
-          className="title is-size-2-desktop is-size-3-mobile"
-          style={{ color: CLUBS_GREY, marginBottom: 10 }}
-        >
+      <Wrapper>
+        <Title style={{ marginBottom: '0.25rem' }}>
           {name}
-          {!active && <InactiveMarker>Inactive</InactiveMarker>}
-        </h1>
+          {!active && <InactiveMarker />}
+        </Title>
         <span>
           {favCount}{' '}
           <Icon
@@ -79,8 +58,8 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
             </Link>
           )}
         </span>
-      </Title>
-      <div style={{ marginBottom: 20 }}>
+      </Wrapper>
+      <div style={{ marginBottom: '1rem' }}>
         <TagGroup tags={tags} />
       </div>
     </div>

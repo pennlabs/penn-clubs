@@ -10,9 +10,13 @@ export const Card = s.div`
 
   ${({ bordered }) => bordered && `border: 1px solid ${BORDER};`}
 
+  ${({ hoverable }) =>
+    hoverable &&
+    `
   &:hover,
   &:active,
   &:focus {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   }
+  `}
 `
