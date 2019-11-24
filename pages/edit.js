@@ -453,7 +453,7 @@ class ClubForm extends React.Component {
                           className="button is-small is-danger"
                           onClick={() => this.deleteMembership(a.username)}
                         >
-                          <Icon name="times" alt="kick member" /> Kick
+                          <Icon name="x" alt="kick member" /> Kick
                         </button>
                       </td>
                     </tr>
@@ -531,7 +531,7 @@ class ClubForm extends React.Component {
                               className="button is-small is-danger"
                               onClick={() => this.deleteInvite(item.id)}
                             >
-                              <Icon name="times" alt="remove invite" /> Remove
+                              <Icon name="x" alt="remove invite" /> Remove
                             </button>
                           </td>
                         </tr>
