@@ -127,6 +127,23 @@ class Favorite(models.Model):
         unique_together = (('person', 'club'),)
 
 
+class Subscribe(models.Model):
+    """
+    Used when people subscribe to a club and clubs will be able to see the users' email addresses
+    """
+    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return '<Subscribe: {} for {}, with email {}>'.format(self.person.username, self.club.pk, self.person.email)
+
+    class Meta:
+        unique_together = (('person', 'club'),)
+
+
 class Advisor(models.Model):
     """
     Represents the faculty advisor of a club
@@ -187,8 +204,7 @@ class Note(models.Model):
                                                    default=PERMISSION_CREATING_CLUB_MEMBER)
     outside_club_permission = models.IntegerField(choices=OUTSIDE_CLUB_PERMISSION_CHOICES,
                                                   default=PERMISSION_SUBJECT_CLUB_MEMBER)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True))
 
 
 class NoteTag(models.Model):

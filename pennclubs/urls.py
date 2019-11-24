@@ -19,5 +19,5 @@ urlpatterns = [
         extra_context={'schema_url': 'openapi-schema'}
     ), name='documentation'),
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls', namespace='accounts')),
+    path('accounts/', include('accounts.urls', namespace='accounts'))
 ]
