@@ -32,6 +32,7 @@ pillow = "*"
 django-phonenumber-field = "*"
 phonenumbers = "*"
 qrcode = "*"
+drf-renderer-xlsx = "*"
 
 [requires]
 python_version = "3"

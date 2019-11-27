@@ -11,6 +11,8 @@ from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from drf_renderer_xlsx.mixins import XLSXFileMixin
+from drf_renderer_xlsx.renderers import XLSXRenderer
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -244,6 +246,19 @@ class YearViewSet(viewsets.ModelViewSet):
     serializer_class = YearSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     queryset = Year.objects.all()
+
+
+class ClubReportViewSet(XLSXFileMixin, viewsets.ReadOnlyModelViewSet):
+    queryset = (Club.objects.all()
+                .prefetch_related('tags')
+                .prefetch_related('badges')
+                .annotate(favorite_count=Count('favorite'))
+                .prefetch_related(
+                    Prefetch('members', queryset=Membership.objects.order_by('role'))
+                ))
+    serializer_class = AuthenticatedClubSerializer
+    renderer_classes = [XLSXRenderer]
+    filename = 'report.xlsx'
 
 
 class EventViewSet(viewsets.ModelViewSet):
