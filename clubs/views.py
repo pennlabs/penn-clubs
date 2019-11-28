@@ -12,7 +12,6 @@ from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_renderer_xlsx.mixins import XLSXFileMixin
-from drf_renderer_xlsx.renderers import XLSXRenderer
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -25,8 +24,8 @@ from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
                                IsSuperuser, MemberPermission, NotePermission, ReadOnly)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
                                ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer, MajorSerializer,
-                               MembershipInviteSerializer, MembershipSerializer, NoteSerializer, SchoolSerializer,
-                               SubscribeSerializer, TagSerializer, UserSerializer, YearSerializer)
+                               MembershipInviteSerializer, MembershipSerializer, NoteSerializer, ReportClubSerializer,
+                               SchoolSerializer, SubscribeSerializer, TagSerializer, UserSerializer, YearSerializer)
 
 
 def upload_endpoint_helper(request, cls, field, **kwargs):
@@ -256,8 +255,7 @@ class ClubReportViewSet(XLSXFileMixin, viewsets.ReadOnlyModelViewSet):
                 .prefetch_related(
                     Prefetch('members', queryset=Membership.objects.order_by('role'))
                 ))
-    serializer_class = AuthenticatedClubSerializer
-    renderer_classes = [XLSXRenderer]
+    serializer_class = ReportClubSerializer
     filename = 'report.xlsx'
 
 

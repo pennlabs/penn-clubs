@@ -946,3 +946,24 @@ class ClubTestCase(TestCase):
         }, content_type='application/json')
 
         self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_club_report_selects_one_field(self):
+        res = self.client.get(reverse('reports-list'), {'format': 'json', 'fields': 'name'})
+        self.assertEqual(200, res.status_code)
+        self.assertEqual(1, len(res.data))
+        self.assertTrue(isinstance(res.data[0], dict))
+        self.assertEqual(1, len(res.data[0]))
+
+    def test_club_report_selects_few_fields(self):
+        res = self.client.get(reverse('reports-list'), {'format': 'json', 'fields': 'name,code'})
+        self.assertEqual(200, res.status_code)
+        self.assertEqual(1, len(res.data))
+        self.assertTrue(isinstance(res.data[0], dict))
+        self.assertEqual(2, len(res.data[0]))
+
+    def test_club_report_selects_all_fields(self):
+        res = self.client.get(reverse('reports-list'), {'format': 'json'})
+        self.assertEqual(200, res.status_code)
+        self.assertEqual(1, len(res.data))
+        self.assertTrue(isinstance(res.data[0], dict))
+        self.assertTrue(len(res.data[0]) > 2)

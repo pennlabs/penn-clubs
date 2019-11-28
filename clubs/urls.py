@@ -14,7 +14,7 @@ router.register(r'clubs', ClubViewSet, basename='clubs')
 router.register(r'tags', TagViewSet)
 router.register(r'favorites', FavoriteViewSet, basename='favorites')
 router.register(r'subscribe', SubscribeViewSet, basename='subscribe')
-router.register(r'reports', ClubReportViewSet)
+router.register(r'reports', ClubReportViewSet, basename='reports')
 
 router.register(r'schools', SchoolViewSet, basename='schools')
 router.register(r'majors', MajorViewSet, basename='majors')
