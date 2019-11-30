@@ -417,6 +417,9 @@ class AuthenticatedClubSerializer(ClubSerializer):
 
 
 class ReportClubSerializer(AuthenticatedClubSerializer):
+
+    tags = serializers.SlugRelatedField(slug_field='name', read_only=True, many=True)
+
     def get_fields(self):
         all_fields = super().get_fields()
         fields_param = self.context.get('request', dict()).GET.get('fields', '')

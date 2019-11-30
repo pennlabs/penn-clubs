@@ -258,6 +258,13 @@ class ClubReportViewSet(XLSXFileMixin, viewsets.ReadOnlyModelViewSet):
     serializer_class = ReportClubSerializer
     filename = 'report.xlsx'
 
+    @action(detail=False, methods=['GET'])
+    def fields(self, request, *args, **kwargs):
+        return Response({
+            f.verbose_name.title(): f.name
+            for f in Club._meta._get_fields(reverse=False)
+        })
+
 
 class EventViewSet(viewsets.ModelViewSet):
     """
