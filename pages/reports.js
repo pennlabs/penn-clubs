@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react'
 import s from 'styled-components'
-
+import {useState} from 'react'
 import renderPage from '../renderPage.js'
 import { Icon, Flex } from '../components/common'
+import {API_BASE_URL} from '../utils'
 import { Sidebar } from '../components/common/Sidebar'
+import Checkbox from '../components/common/Checkbox'
 import { Container, WideContainer } from '../components/common/Container'
-import { CLUBS_GREY, RED } from '../constants/colors'
+import { CLUBS_GREY, RED, ALLBIRDS_GRAY, MEDIUM_GRAY } from '../constants/colors'
 
 
 const TallTextArea = s.textarea`
@@ -24,47 +25,28 @@ const GroupLabel = s.h4`
   color: #626572;
 `
 
-// Hide checkbox visually but remain accessible to screen readers.
-// Source: https://polished.js.org/docs/#hidevisually
-const HiddenCheckbox = s.input.attrs({ type: 'checkbox' })`
-  border: 0;
-  clip: rect(0 0 0 0);
-  clippath: inset(50%);
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  padding: 0;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
+const HoverListElement = s.li`
+
+  span {
+    display: none;
+  }
+
+  &:hover span {
+    display: inline;
+    cursor: pointer;
+  }
+
 `
 
-const StyledCheckbox = s.div`
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  transition: all 150ms;
-`
+const SelectedManager = ({ value, onClick }) => (
+  <HoverListElement>
+    {value}
+    
+    <span style={{marginLeft: '1em'}} onClick={onClick}>X</span>
+  </HoverListElement>
+)
 
-const CheckboxContainer = s.div`
-  display: inline-block;
-  vertical-align: middle;
-`
-
-const Checkbox = ({ className, ...props }) => {
-  let [checked, setChecked] = useState()
-  let onchange = () => {console.log("ow"); setChecked(!checked)}
-  return (
-    <CheckboxContainer className={className}>
-      <HiddenCheckbox checked={checked} onChange={onchange} {...props} />
-      <StyledCheckbox onClick={onchange} checked={checked}>
-        <Icon name={checked ? 'check-box-red' : 'box-red'} /> 
-      </StyledCheckbox>
-    </CheckboxContainer>
-  )
-}
-const Reports = ({query, userInfo, favorites, updateFavorites}) => {
-
+const Reports = () => {
   const fields = {  // TODO: Get this from the server.
     'Basics': [
       'Name',
@@ -74,9 +56,9 @@ const Reports = ({query, userInfo, favorites, updateFavorites}) => {
       'Size',
       'Activity',
       'Approval Status',
-      'Parent Organization(s)',
-      'How to get involved',
-      'Badges'
+      'Parent Orgs',
+      'How to Get Involved',
+      'Tags'
     ],
     'Additional Links': [
       'Website',
@@ -95,24 +77,87 @@ const Reports = ({query, userInfo, favorites, updateFavorites}) => {
     ]
   }
 
+  const nameToCode = {
+      "Id": "id",
+      "Code": "code",
+      "Active": "active",
+      "Approved": "approved",
+      "Name": "name",
+      "Subtitle": "subtitle",
+      "Description": "description",
+      "Date Founded": "founded",
+      "Size": "size",
+      "Email": "email",
+      "Facebook": "facebook",
+      "Website": "website",
+      "Twitter": "twitter",
+      "Instagram": "instagram",
+      "Linkedin": "linkedin",
+      "Github": "github",
+      "How To Get Involved": "how_to_get_involved",
+      "Application Required": "application_required",
+      "Accepting Members": "accepting_members",
+      "Listserv": "listserv",
+      "Image": "image",
+      "Created At": "created_at",
+      "Updated At": "updated_at",
+      "Tags": "tags",
+      "Members": "members",
+      "Parent Orgs": "parent_orgs",
+      "Badges": "badges"
+  }
+
+  const [includedFields, setIncludedFields] = useState(
+    (() => {
+      let initial = {}
+      Object.keys(fields).forEach(group => fields[group].forEach(f => initial[f] = false));
+      return initial
+    })()
+  )
+
+  const query = {
+    format: 'xlsx',
+    fields: Object.keys(includedFields)
+                  .filter(field => includedFields[field])
+                  .map(name => nameToCode[name])
+                  .filter(e => e !== undefined)
+  }
+
+  console.log(query)
+
   const generateCheckboxGroup = (groupName, fields) => {
     return (
       <div style={{flexBasis: '50%', flexShrink: 0}}>
         <GroupLabel key={groupName} className="subtitle is-4" style={{ color: CLUBS_GREY }}>{groupName}</GroupLabel>
         { fields.map((field, idx) => (
           <div>
-            <Checkbox id={field} key={idx} />{'  '}
-            <label for={field}>{field}</label>
+            <Checkbox 
+              id={field} 
+              key={idx} 
+              checked={includedFields[field]} 
+              onChange={() => {
+                setIncludedFields(prev => ({ ...prev, [field]: !prev[field] }))
+              }} 
+            />
+            {'  '}
+            <label htmlFor={field}>{field}</label>
           </div>
         )) }
       </div>
     )
   }
 
+
   return (
     <div>
       <Sidebar>
-        Sidebar! 
+        <hr />
+        <h4 className="title is-4" style={{ color: MEDIUM_GRAY }}>Fields</h4>
+        <ul>
+          {Object.keys(includedFields).map(f => includedFields[f] ? (
+            <SelectedManager value={f} onClick={() => setIncludedFields(prev => ({ ...prev, [f]: false }))} />
+          ) : null)}
+        </ul>
       </Sidebar>        
       <Container>
         <WideContainer>
@@ -148,6 +193,14 @@ const Reports = ({query, userInfo, favorites, updateFavorites}) => {
               </Flex>
             </div>
           </div>
+          <button 
+            className="button is-info"
+            onClick={() => {
+              window.open(`${API_BASE_URL}/reports?format=xlsx&fields=${query.fields.join(',')}`, '_blank')
+            }}
+          >
+            Generate Report
+          </button>
         </WideContainer>
       </Container>
     </div>
