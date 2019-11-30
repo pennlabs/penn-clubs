@@ -44,10 +44,6 @@ const StyledCheckbox = s.div`
   width: 16px;
   height: 16px;
   transition: all 150ms;
-
-  ${HiddenCheckbox}:focus + & {
-    box-shadow: 0 0 0 3px pink;
-  }
 `
 
 const CheckboxContainer = s.div`
@@ -57,10 +53,11 @@ const CheckboxContainer = s.div`
 
 const Checkbox = ({ className, ...props }) => {
   let [checked, setChecked] = useState()
+  let onchange = () => {console.log("ow"); setChecked(!checked)}
   return (
-    <CheckboxContainer className={className} onClick={() => {console.log('ow!'); setChecked(!checked)}}>
-      <HiddenCheckbox checked={checked} {...props} />
-      <StyledCheckbox checked={checked}>
+    <CheckboxContainer className={className}>
+      <HiddenCheckbox checked={checked} onChange={onchange} {...props} />
+      <StyledCheckbox onClick={onchange} checked={checked}>
         <Icon name={checked ? 'check-box-red' : 'box-red'} /> 
       </StyledCheckbox>
     </CheckboxContainer>
@@ -68,7 +65,7 @@ const Checkbox = ({ className, ...props }) => {
 }
 const Reports = ({query, userInfo, favorites, updateFavorites}) => {
 
-  const fields = {
+  const fields = {  // TODO: Get this from the server.
     'Basics': [
       'Name',
       'Subtitle',
@@ -101,11 +98,11 @@ const Reports = ({query, userInfo, favorites, updateFavorites}) => {
   const generateCheckboxGroup = (groupName, fields) => {
     return (
       <div style={{flexBasis: '50%', flexShrink: 0}}>
-        <GroupLabel className="subtitle is-4" style={{ color: CLUBS_GREY }}>{groupName}</GroupLabel>
-        { fields.map(field => (
+        <GroupLabel key={groupName} className="subtitle is-4" style={{ color: CLUBS_GREY }}>{groupName}</GroupLabel>
+        { fields.map((field, idx) => (
           <div>
-            <Checkbox />{'  '}
-            <span>{field}</span>
+            <Checkbox id={field} key={idx} />{'  '}
+            <label for={field}>{field}</label>
           </div>
         )) }
       </div>
