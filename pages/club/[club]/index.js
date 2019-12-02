@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import s from 'styled-components'
 
 import renderPage from '../../../renderPage.js'
