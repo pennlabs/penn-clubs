@@ -83,7 +83,7 @@ Club.getInitialProps = async props => {
   const { query } = props
   const resp = await doApiRequest(`/clubs/${query.club}/?format=json`)
   const club = await resp.json()
-  return { serverClub: club }
+  return { club }
 }
 
 export default renderPage(Club)
