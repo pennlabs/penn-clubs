@@ -67,8 +67,9 @@ const Club = ({ query, userInfo, favorites, updateFavorites }) => {
         </div>
         <div className="column is-one-third">
           <Card bordered style={{ marginBottom: '1rem' }}>
-            <StrongText>About</StrongText>
+            <StrongText>Basic Info</StrongText>
             <InfoBox club={club} />
+            <StrongText>Social</StrongText>
             <SocialIcons club={club} />
           </Card>
         </div>
