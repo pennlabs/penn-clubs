@@ -5,7 +5,8 @@ from django.contrib.auth import get_user_model
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
-from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Note, NoteTag, Subscribe, Tag
+from clubs.models import (Asset, Badge, Club, Event, Favorite, Membership,
+                          MembershipInvite, Note, NoteTag, Subscribe, Tag)
 from clubs.utils import clean
 
 

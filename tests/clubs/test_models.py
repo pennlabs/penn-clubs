@@ -4,7 +4,7 @@ import pytz
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from clubs.models import Advisor, Badge, Club, Event, Favorite, Membership, Tag, Note
+from clubs.models import Advisor, Badge, Club, Event, Favorite, Membership, Note, Tag
 
 
 class ClubTestCase(TestCase):
@@ -96,7 +96,7 @@ class NoteTestCase(TestCase):
         self.club1 = Club.objects.create(code='a', name='a', subtitle='a', founded=date, description='a', size=1)
         self.club2 = Club.objects.create(code='b', name='b', subtitle='b', founded=date, description='b', size=1)
         self.note1 = Note.objects.create(creator=self.person, creating_club=self.club1, subject_club=self.club2,
-                                         title="Note1", content="content", creating_club_permission=10,
+                                         title='Note1', content='content', creating_club_permission=10,
                                          outside_club_permission=0)
 
     def test_club_relation(self):

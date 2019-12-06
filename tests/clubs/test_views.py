@@ -8,7 +8,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from clubs.models import Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag, Note
+from clubs.models import Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
 
 
 class ClubTestCase(TestCase):
@@ -804,12 +804,12 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user2.username, password='test')
 
         # Try to create note without permissions
-        resp = self.client.post("/clubs/{}/notes/".format(self.club1.code), {
+        resp = self.client.post('/clubs/{}/notes/'.format(self.club1.code), {
             'creator': self.user2.username,
             'creating_club': self.club1.code,
             'subject_club': self.club1.code,
-            'title': "Note1",
-            'content': "Content",
+            'title': 'Note1',
+            'content': 'Content',
             'creating_club_permission': 20,
             'outside_club_permission': 0
         }, content_type='application/json')
@@ -823,12 +823,12 @@ class ClubTestCase(TestCase):
         )
 
         # Creating note after given permissions
-        resp = self.client.post("/clubs/{}/notes/".format(self.club1.code), {
+        resp = self.client.post('/clubs/{}/notes/'.format(self.club1.code), {
             'creator': self.user2.username,
             'creating_club': self.club1.code,
             'subject_club': self.club1.code,
-            'title': "Note1",
-            'content': "Content",
+            'title': 'Note1',
+            'content': 'Content',
             'creating_club_permission': 20,
             'outside_club_permission': 0
         }, content_type='application/json')
@@ -836,12 +836,12 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # Still cannot create note above permission level
-        resp = self.client.post("/clubs/{}/notes/".format(self.club1.code), {
+        resp = self.client.post('/clubs/{}/notes/'.format(self.club1.code), {
             'creator': self.user2.username,
             'creating_club': self.club1.code,
             'subject_club': self.club1.code,
-            'title': "Note1",
-            'content': "Content",
+            'title': 'Note1',
+            'content': 'Content',
             'creating_club_permission': 0,
             'outside_club_permission': 0
         }, content_type='application/json')

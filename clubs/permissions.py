@@ -138,6 +138,7 @@ class AssetPermission(permissions.BasePermission):
             membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
+
 class NotePermission(permissions.BasePermission):
     """
     There are two permission classes for notes
@@ -162,8 +163,8 @@ class NotePermission(permissions.BasePermission):
         # and they cannot create notes that are above their permission level
         if view.action in ['list', 'retrieve']:
             return request.user.is_authenticated
-        elif (view.action in ['create', '']):
-            creating_club_permission = request.data.get("creating_club_permission")
+        elif (view.action in ['create']):
+            creating_club_permission = request.data.get('creating_club_permission')
 
             # Running create without actually passing any data
             # causes problems

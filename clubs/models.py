@@ -204,7 +204,7 @@ class Note(models.Model):
                                                    default=PERMISSION_CREATING_CLUB_MEMBER)
     outside_club_permission = models.IntegerField(choices=OUTSIDE_CLUB_PERMISSION_CHOICES,
                                                   default=PERMISSION_SUBJECT_CLUB_MEMBER)
-    created_at = models.DateTimeField(auto_now_add=True))
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class NoteTag(models.Model):
