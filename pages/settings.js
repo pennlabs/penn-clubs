@@ -148,7 +148,7 @@ class Settings extends React.Component {
         ),
       },
       {
-        name: 'Favorites',
+        name: 'Bookmarks',
         icon: 'heart',
         content: (
           <FavoritesTab

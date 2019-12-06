@@ -29,7 +29,7 @@ const FavoriteIconTag = s.span`
   `}
 `
 
-const FavoriteIcon = ({
+export const FavoriteIcon = ({
   updateFavorites,
   club,
   favorite,
@@ -46,8 +46,8 @@ const FavoriteIcon = ({
     }}
   >
     <Icon
-      name={favorite ? 'heart-red' : 'heart'}
-      alt={favorite ? 'click to unfavorite' : 'click to favorite'}
+      name={favorite ? 'bookmark-fill' : 'bookmark'}
+      alt={favorite ? 'click to unbookmark' : 'click to bookmark'}
     />
   </FavoriteIconTag>
 )
@@ -67,5 +67,3 @@ FavoriteIcon.propTypes = {
   favorite: PropTypes.bool,
   padding: PropTypes.string,
 }
-
-export default FavoriteIcon

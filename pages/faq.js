@@ -48,9 +48,9 @@ const FAQ = () => (
       <Line />
       <Question title="Why do I have to log in?">
         Logging in allows us to create an account for you on Penn Clubs. This
-        gives you access to many useful and upcoming features! When you click
-        the heart button on a club, it will be saved to your Favorites list. You
-        can use this to keep track of clubs you’re interested in, or a part of.
+        gives you access to many useful and upcoming features! When you bookmark
+        a club, it will be saved to your bookmarked list. You can use this to
+        keep track of clubs you’re interested in, or a part of.
         You can also be invited to join club Member lists. Finally, you'll need
         to log in if you want to use your administrator permissions to edit a
         club page.
@@ -69,7 +69,7 @@ const FAQ = () => (
             describe the club), Size (number of members), and Applications (if
             applications are required to join)
           </li>
-          <li>Add clubs to your Favorites list to keep track of them</li>
+          <li>Bookmark clubs to keep track of them</li>
           <li>
             Browse information that clubs post: description, how to join, member
             testimonials

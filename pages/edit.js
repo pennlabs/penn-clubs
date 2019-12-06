@@ -3,7 +3,6 @@ import Select from 'react-select'
 
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../utils'
-import { CLUBS_RED } from '../constants/colors'
 import { Link, Router } from '../routes'
 import Form from '../components/Form'
 import TabView from '../components/TabView'

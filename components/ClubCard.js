@@ -14,8 +14,7 @@ import {
   ANIMATION_DURATION,
 } from '../constants/measurements'
 import { stripTags } from '../utils'
-import FavoriteIcon from './common/FavoriteIcon'
-import { InactiveTag, TagGroup } from './common'
+import { InactiveTag, TagGroup, FavoriteIcon } from './common'
 import ClubDetails from './ClubDetails'
 import { CLUB_ROUTE } from '../constants/routes'
 

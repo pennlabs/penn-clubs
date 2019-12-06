@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import s from 'styled-components'
 
-import { Icon, TagGroup, InactiveMarker, Title } from '../common'
+import { TagGroup, InactiveMarker, Title, FavoriteIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
 import { Link } from '../../routes'
 
@@ -40,15 +40,11 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
         </Title>
         <span>
           {favCount}{' '}
-          <Icon
-            name={isFavorite ? 'heart-red' : 'heart'}
-            alt={isFavorite ? 'click to unfavorite' : 'click to favorite'}
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              updateFavorites(club.code)
-                ? setFavCount(favCount + 1)
-                : setFavCount(Math.max(0, favCount - 1))
-            }}
+          <FavoriteIcon
+            club={club}
+            favorite={isFavorite}
+            updateFavorites={updateFavorites}
+            padding="0"
           />
           {canEdit && (
             <Link route="club-edit" params={{ club: club.code }}>

@@ -9,8 +9,7 @@ import {
   LG,
   ANIMATION_DURATION,
 } from '../constants/measurements'
-import FavoriteIcon from './common/FavoriteIcon'
-import { TagGroup } from './common/TagGroup'
+import { TagGroup, FavoriteIcon } from './common'
 import ClubDetails from './ClubDetails'
 import { CLUB_ROUTE } from '../constants/routes'
 

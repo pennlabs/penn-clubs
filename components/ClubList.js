@@ -1,7 +1,7 @@
 import s from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
-import { Card, BlueTag, InactiveTag, Icon } from './common'
+import { Card, BlueTag, InactiveTag } from './common'
 
 import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL } from '../utils'
@@ -61,13 +61,11 @@ const ClubList = ({ club, updateFavorites, favorite }) => {
             </div>
           </div>
           <div className="column is-narrow">
-            <Icon
-              onClick={e => {
-                e.stopPropagation()
-                updateFavorites(club.code)
-              }}
-              name={favorite ? 'heart-red' : 'heart'}
-              alt={favorite ? 'click to unfavorite' : 'click to favorite'}
+            <FavoriteIcon
+              club={club}
+              favorite={favorite}
+              updateFavorites={updateFavorites}
+              padding="0"
             />
           </div>
         </div>

@@ -8,7 +8,7 @@ export default (props) => {
   if (!favorites || !favorites.length) {
     return (
       <p className="has-text-light-grey" style={{ paddingTop: 200, textAlign: 'center' }}>
-        No favorites yet! Browse clubs <a href="/">here.</a>
+        No bookmarks yet! Browse clubs <a href="/">here.</a>
       </p>
     )
   }
