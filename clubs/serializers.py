@@ -422,7 +422,7 @@ class ReportClubSerializer(AuthenticatedClubSerializer):
 
     def get_fields(self):
         all_fields = super().get_fields()
-        fields_param = self.context.get('request', dict()).GET.get('fields', '')
+        fields_param = getattr(self.context.get('request', dict()), 'GET', {}).get('fields', '')
         if len(fields_param) > 0:
             fields_param = fields_param.split(',')
         else:
