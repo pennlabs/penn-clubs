@@ -71,7 +71,6 @@ const Content = s.div`
     width: 100%;
     margin: 0;
     padding: 8px 1rem;
-    border-top: 1px solid ${BORDER};
     border-bottom: 1px solid ${BORDER};
     position: fixed;
     z-index: 1000;
@@ -113,37 +112,29 @@ const SearchIcon = s.span`
 class SearchBar extends React.Component {
   constructor(props) {
     super(props)
+    const { tags, selectedTags } = props
     this.state = {
       nameInput: '',
-      sizeOptions: [
-        { value: 1, label: 'less than 20 members' },
-        { value: 2, label: '20 to 50 members' },
-        { value: 3, label: '50 to 100 members' },
-        { value: 4, label: 'more than 100' },
-      ],
-      tagOptions: props.tags.map(tag => ({
+      tagOptions: tags.map(tag => ({
         value: tag.id,
         label: tag.name,
         count: tag.clubs,
       })),
-      applicationOptions: [
-        { value: 1, label: 'Requires application' },
-        { value: 2, label: 'Does not require application' },
-        { value: 3, label: 'Currently accepting applications' },
-      ],
-      selectedTags: props.selectedTags,
+      activeDropdownFilter: null,
+      selectedTags: selectedTags,
     }
+
+    this.inputRef = React.createRef()
+    this.focus = this.focus.bind(this)
+    this.toggleActiveDropdownFilter = this.toggleActiveDropdownFilter.bind(this)
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.nameInput !== this.state.nameInput) {
+    const { nameInput } = this.state
+    if (prevState.nameInput !== nameInput) {
       clearTimeout(this.timeout)
       this.timeout = setTimeout(
-        () =>
-          this.props.resetDisplay(
-            this.state.nameInput,
-            this.state.selectedTags
-          ),
+        () => this.props.resetDisplay(nameInput, this.state.selectedTags),
         200
       )
     }
@@ -154,13 +145,44 @@ class SearchBar extends React.Component {
     }
   }
 
+  toggleActiveDropdownFilter(name) {
+    const { activeDropdownFilter } = this.state
+    if (activeDropdownFilter === name) {
+      this.setState({ activeDropdownFilter: null })
+    } else {
+      this.setState({ activeDropdownFilter: name })
+    }
+  }
+
+  focus() {
+    this.inputRef.current.focus()
+  }
+
   render() {
     const {
       tagOptions,
-      sizeOptions,
-      applicationOptions,
       selectedTags,
+      nameInput,
+      activeDropdownFilter,
     } = this.state
+
+    const isTextInSearchBar = Boolean(nameInput)
+
+    const dropdowns = {
+      Type: tagOptions,
+      Size: [
+        { value: 1, label: 'less than 20 members' },
+        { value: 2, label: '20 to 50 members' },
+        { value: 3, label: '50 to 100 members' },
+        { value: 4, label: 'more than 100' },
+      ],
+      Application: [
+        { value: 1, label: 'Requires application' },
+        { value: 2, label: 'Does not require application' },
+        { value: 3, label: 'Currently accepting applications' },
+      ],
+    }
+
     const { updateTag } = this.props
     return (
       <>
@@ -168,14 +190,17 @@ class SearchBar extends React.Component {
           <Content>
             <SearchWrapper>
               <SearchIcon>
-                {this.state.nameInput ? (
+                {isTextInSearchBar ? (
                   <Icon
                     name="x"
                     alt="cancel search"
-                    onClick={() => this.setState({ nameInput: '' })}
+                    onClick={() => {
+                      this.setState({ nameInput: '' })
+                      this.focus()
+                    }}
                   />
                 ) : (
-                  <Icon name="search" alt="search" />
+                  <Icon name="search" alt="search" onClick={this.focus} />
                 )}
               </SearchIcon>
               <Input
@@ -183,28 +208,22 @@ class SearchBar extends React.Component {
                 name="search"
                 placeholder="Search"
                 aria-label="Search"
-                value={this.state.nameInput}
+                ref={this.inputRef}
+                value={nameInput}
                 onChange={e => this.setState({ nameInput: e.target.value })}
               />
             </SearchWrapper>
-            <DropdownFilter
-              name="Type"
-              options={tagOptions}
-              selected={selectedTags.filter(tag => tag.name === 'Type')}
-              updateTag={updateTag}
-            />
-            <DropdownFilter
-              name="Size"
-              options={sizeOptions}
-              selected={selectedTags.filter(tag => tag.name === 'Size')}
-              updateTag={updateTag}
-            />
-            <DropdownFilter
-              name="Application"
-              options={applicationOptions}
-              selected={selectedTags.filter(tag => tag.name === 'Application')}
-              updateTag={updateTag}
-            />
+            {Object.keys(dropdowns).map(key => (
+              <DropdownFilter
+                active={activeDropdownFilter === key}
+                toggleActive={() => this.toggleActiveDropdownFilter(key)}
+                name={key}
+                key={key}
+                options={dropdowns[key]}
+                selected={selectedTags.filter(tag => tag.name === key)}
+                updateTag={updateTag}
+              />
+            ))}
           </Content>
         </Wrapper>
 

@@ -64,8 +64,12 @@ class Org extends Component {
         <div className="columns">
           <div className="column is-4">
             <InfoBox club={club} />
-            <SocialIcons club={club} />
-            <div>{club.description || EMPTY_DESCRIPTION}</div>
+            {/* <SocialIcons club={club} /> */}
+            <div
+              dangerouslySetInnerHTML={{
+                __html: club.description || EMPTY_DESCRIPTION,
+              }}
+            ></div>
             {/* {console.log(club)} */}
             {/* <OrgTabs club={club} /> */}
           </div>

@@ -1,15 +1,17 @@
 import s from 'styled-components'
 
 import { Icon } from '../common'
-import { Link } from '../../routes'
 import { LOGIN_URL } from '../../utils'
 import { mediaMaxWidth, MD } from '../../constants/measurements'
-import { MEDIUM_GRAY, DARK_GRAY } from '../../constants/colors'
+import { MEDIUM_GRAY, DARK_GRAY, BORDER } from '../../constants/colors'
 import { logEvent } from '../../utils/analytics'
+import { Link } from '../../routes'
 
 const StyledLink = s.a`
   padding: 14px 20px;
   color: ${MEDIUM_GRAY} !important;
+  display: inline-block;
+  cursor: pointer;
 
   &:hover {
     color: ${DARK_GRAY} !important;
@@ -22,8 +24,8 @@ const StyledLink = s.a`
 
 const Menu = s.div`
   ${mediaMaxWidth(MD)} {
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid ${BORDER};
+    box-shadow: 0 4px 4px ${BORDER};
 
     a {
       display: block;
@@ -33,14 +35,13 @@ const Menu = s.div`
     ${({ show }) => show && 'display: block;'}
   }
 `
-
+// Checks authenticated === false to confirm browser has loaded and user is not logged in. Will be undefined if browser has not loaded and true is browser has loaded and user is logged in.
 export default ({ userInfo, authenticated, show }) => (
   <Menu className="navbar-menu" show={show}>
-    <div className="navbar-end" style={{ padding: '0px 20px' }}>
+    <div className="navbar-end" style={{ padding: '0 1rem' }}>
       <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
         FAQ
       </StyledLink>
-      <StyledLink href="/favorites">Favorites</StyledLink>
       {authenticated === false && (
         <StyledLink
           href={`${LOGIN_URL}?next=${window.location.href}`}

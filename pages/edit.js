@@ -3,11 +3,11 @@ import Select from 'react-select'
 
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../utils'
-import { CLUBS_GREY_LIGHT, CLUBS_RED } from '../constants/colors'
+import { CLUBS_RED } from '../constants/colors'
 import { Link, Router } from '../routes'
 import Form from '../components/Form'
 import TabView from '../components/TabView'
-import { Icon } from '../components/common'
+import { Icon, Container, Title, InactiveMarker } from '../components/common'
 
 class ClubForm extends React.Component {
   constructor(props) {
@@ -453,7 +453,7 @@ class ClubForm extends React.Component {
                           className="button is-small is-danger"
                           onClick={() => this.deleteMembership(a.username)}
                         >
-                          <Icon name="times" alt="kick member" /> Kick
+                          <Icon name="x" alt="kick member" /> Kick
                         </button>
                       </td>
                     </tr>
@@ -531,7 +531,7 @@ class ClubForm extends React.Component {
                               className="button is-small is-danger"
                               onClick={() => this.deleteInvite(item.id)}
                             >
-                              <Icon name="times" alt="remove invite" /> Remove
+                              <Icon name="x" alt="remove invite" /> Remove
                             </button>
                           </td>
                         </tr>
@@ -693,16 +693,15 @@ class ClubForm extends React.Component {
       },
     ]
 
+    const { message, isEdit } = this.state
+    const nameOrDefault = (club && club.name) || 'New Club'
+    const showInactiveMarker = !(club && club.active) && isEdit
+
     return (
-      <div style={{ padding: '30px 50px', maxWidth: 1200, margin: '0 auto' }}>
-        <h1 className="title is-size-2-desktop is-size-3-mobile">
-          <span style={{ color: CLUBS_GREY_LIGHT }}>
-            {club ? 'Editing' : 'Creating'} Club:{' '}
-          </span>{' '}
-          {club ? club.name : 'New Club'}
-          {(club && club.active) || !this.state.isEdit || (
-            <span style={{ color: CLUBS_RED }}> (Inactive)</span>
-          )}
+      <Container>
+        <Title>
+          {nameOrDefault}
+          {showInactiveMarker && <InactiveMarker />}
           {club && (
             <Link route="club-view" params={{ club: club.code }}>
               <a
@@ -713,18 +712,18 @@ class ClubForm extends React.Component {
               </a>
             </Link>
           )}
-        </h1>
-        {this.state.message && (
+        </Title>
+        {message && (
           <div className="notification is-primary">
             <button
               className="delete"
               onClick={() => this.setState({ message: null })}
-            ></button>
-            {this.state.message}
+            />
+            {message}
           </div>
         )}
         <TabView tabs={tabs} />
-      </div>
+      </Container>
     )
   }
 }

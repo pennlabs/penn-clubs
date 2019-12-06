@@ -23,6 +23,7 @@
     "react-lazy-load": "^3.0.13",
     "react-router-dom": "^5.1.2",
     "react-select": "^3.0.4",
+    "react-tooltip": "^3.11.1",
     "styled-components": "^4.3.2"
   },
   "scripts": {

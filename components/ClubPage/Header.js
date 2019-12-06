@@ -1,17 +1,15 @@
 import { useState } from 'react'
 import s from 'styled-components'
 
-import { Icon } from '../common'
-import { CLUBS_GREY, CLUBS_BLUE, WHITE } from '../../constants/colors'
+import { Icon, TagGroup, InactiveMarker, Title } from '../common'
 import { ROLE_OFFICER } from '../../utils'
 import { Link } from '../../routes'
 
-const Title = s.div`
+const Wrapper = s.div`
   display: flex;
   justify-content: space-between;
   flex-direction: row;
   align-items: center;
-  padding-right: 10px;
 `
 
 const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
@@ -31,16 +29,15 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
 
   const [favCount, setFavCount] = useState(club.favorite_count || 0)
 
+  const { active, name, tags } = club
+
   return (
     <div style={style}>
-      <Title>
-        <h1
-          className="title is-size-2-desktop is-size-3-mobile"
-          style={{ color: CLUBS_GREY, marginBottom: 10 }}
-        >
-          {club.name}{' '}
-          {club.active || <span className="has-text-grey">(Inactive)</span>}
-        </h1>
+      <Wrapper>
+        <Title style={{ marginBottom: '0.25rem' }}>
+          {name}
+          {!active && <InactiveMarker />}
+        </Title>
         <span>
           {favCount}{' '}
           <Icon
@@ -61,17 +58,9 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
             </Link>
           )}
         </span>
-      </Title>
-      <div style={{ marginBottom: 20 }}>
-        {club.tags.map(tag => (
-          <span
-            key={tag.id}
-            className="tag is-rounded"
-            style={{ backgroundColor: CLUBS_BLUE, color: WHITE, margin: 3 }}
-          >
-            {tag.name}
-          </span>
-        ))}
+      </Wrapper>
+      <div style={{ marginBottom: '1rem' }}>
+        <TagGroup tags={tags} />
       </div>
     </div>
   )

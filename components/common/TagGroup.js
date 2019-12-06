@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { BlueTag, SelectedTag } from './Tags'
 
-const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
+export const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
   if (!tags || !tags.length) return null
 
   // TODO: Use same tag format between DropdownFilter and TagGroup
@@ -9,10 +9,11 @@ const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
     const matchedTag = selectedTags.find(
       ({ value, name: filterType }) => filterType === 'Type' && value === tag.id
     )
+    const key = `${tag.id}-${tag.value}`
     if (matchedTag) {
       return (
         <SelectedTag
-          key={tag.value}
+          key={key}
           className="tag is-rounded has-text-white"
           onClick={e => {
             // Prevent click event from propagating so clicking on the tag doesn't
@@ -28,7 +29,7 @@ const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
     }
     return (
       <BlueTag
-        key={tag.id}
+        key={key}
         className="tag is-rounded has-text-white"
         onClick={e => {
           // Stop propagation of click event for same reasons as above
@@ -70,5 +71,3 @@ TagGroup.propTypes = {
   ),
   updateTag: PropTypes.func,
 }
-
-export default TagGroup

@@ -1,36 +1,20 @@
 import { EMPTY_DESCRIPTION } from '../../utils'
 import TabView from '../TabView'
 import OrgChildren from '../OrgPage/OrgChildren'
+import OrgLinks from '../OrgPage/OrgLinks'
+import { Icon } from '../common'
+import SocialIcons from '../ClubPage/SocialIcons'
 
 export default props => (
   <TabView
     tabs={[
       {
-        name: 'children',
+        name: 'constituents',
         content: <OrgChildren children={props.children} />,
       },
       {
-        name: 'description',
-        content: (
-          <div>
-            <div
-              style={{ whiteSpace: 'pre-wrap' }}
-              dangerouslySetInnerHTML={{
-                __html: props.club.description || EMPTY_DESCRIPTION,
-              }}
-            />
-            {props.club.how_to_get_involved && (
-              <div>
-                <div style={{ marginTop: 20 }}>
-                  <b>Getting Involved</b>
-                </div>
-                <div style={{ whiteSpace: 'pre-wrap' }}>
-                  {props.club.how_to_get_involved}
-                </div>
-              </div>
-            )}
-          </div>
-        ),
+        name: 'links',
+        content: <SocialIcons club={props.club} />,
       },
       {
         name: 'members',

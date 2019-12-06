@@ -7,11 +7,15 @@ import {
   HOVER_GRAY,
   ALLBIRDS_GRAY,
 } from '../constants/colors'
-import { BORDER_RADIUS, mediaMaxWidth, SM } from '../constants/measurements'
+import {
+  BORDER_RADIUS,
+  mediaMaxWidth,
+  SM,
+  ANIMATION_DURATION,
+} from '../constants/measurements'
 import { stripTags } from '../utils'
 import FavoriteIcon from './common/FavoriteIcon'
-import TagGroup from './common/TagGroup'
-import { InactiveTag } from './common'
+import { InactiveTag, TagGroup } from './common'
 import ClubDetails from './ClubDetails'
 import { CLUB_ROUTE } from '../constants/routes'
 
@@ -31,7 +35,7 @@ const Description = s.p`
 const Card = s.div`
   padding: 10px;
   box-shadow: 0 0 0 transparent;
-  transition: all 0.2s ease;
+  transition: all ${ANIMATION_DURATION}ms ease;
   border-radius: ${BORDER_RADIUS};
   box-shadow: 0 0 0 ${WHITE};
   background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
