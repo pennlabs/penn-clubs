@@ -3,7 +3,7 @@ import s from 'styled-components'
 
 import { CLUBS_GREY } from '../constants/colors'
 import { getSizeDisplay } from '../utils'
-import { Icon } from './common'
+import { Icon, BookmarkIcon } from './common'
 
 const Wrapper = s.div`
   margin-top: 0.25rem;
@@ -20,7 +20,7 @@ const iconStyles = {
   transform: 'translateY(3px)',
 }
 
-const Details = ({ size, applicationRequired, acceptingMembers }) => (
+const Details = ({ size, applicationRequired, acceptingMembers, club, favorite, updateFavorites }) => (
   <Wrapper>
     <p style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8 }}>
       <Icon name="user" alt="members" style={iconStyles} />
@@ -46,6 +46,12 @@ const Details = ({ size, applicationRequired, acceptingMembers }) => (
       )}
       {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
     </p>
+    <BookmarkIcon
+      club={club}
+      favorite={favorite}
+      updateFavorites={updateFavorites}
+      padding="0"
+    />
   </Wrapper>
 )
 

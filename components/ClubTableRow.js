@@ -9,7 +9,7 @@ import {
   LG,
   ANIMATION_DURATION,
 } from '../constants/measurements'
-import { TagGroup, FavoriteIcon } from './common'
+import { TagGroup } from './common'
 import ClubDetails from './ClubDetails'
 import { CLUB_ROUTE } from '../constants/routes'
 
@@ -111,17 +111,13 @@ class ClubTableRow extends React.Component {
                       size={size}
                       applicationRequired={applicationRequired}
                       acceptingMembers={acceptingMembers}
+                      club={club}
+                      favorite={favorite}
+                      updateFavorites={updateFavorites}
                     />
                   </Content>
                 </div>
               </div>
-            </div>
-            <div className="column is-narrow">
-              <FavoriteIcon
-                club={club}
-                favorite={favorite}
-                updateFavorites={updateFavorites}
-              />
             </div>
           </div>
         </a>

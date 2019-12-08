@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import s from 'styled-components'
 
-import { TagGroup, InactiveMarker, Title, FavoriteIcon } from '../common'
+import { TagGroup, InactiveTag, Title, BookmarkIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
 import { Link } from '../../routes'
 
@@ -36,11 +36,11 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
       <Wrapper>
         <Title style={{ marginBottom: '0.25rem' }}>
           {name}
-          {!active && <InactiveMarker />}
+          {!active && <InactiveTag />}
         </Title>
         <span>
           {favCount}{' '}
-          <FavoriteIcon
+          <BookmarkIcon
             club={club}
             favorite={isFavorite}
             updateFavorites={updateFavorites}

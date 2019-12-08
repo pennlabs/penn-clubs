@@ -60,14 +60,6 @@ const ClubList = ({ club, updateFavorites, favorite }) => {
               </div>
             </div>
           </div>
-          <div className="column is-narrow">
-            <FavoriteIcon
-              club={club}
-              favorite={favorite}
-              updateFavorites={updateFavorites}
-              padding="0"
-            />
-          </div>
         </div>
       </Card>
     </a>

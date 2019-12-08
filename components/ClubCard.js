@@ -14,7 +14,7 @@ import {
   ANIMATION_DURATION,
 } from '../constants/measurements'
 import { stripTags } from '../utils'
-import { InactiveTag, TagGroup, FavoriteIcon } from './common'
+import { InactiveTag, TagGroup } from './common'
 import ClubDetails from './ClubDetails'
 import { CLUB_ROUTE } from '../constants/routes'
 
@@ -111,12 +111,6 @@ const ClubCard = ({
           <div style={{ display: 'flex' }}>
             <div style={{ flex: 1 }}>
               <div>
-                <FavoriteIcon
-                  club={club}
-                  favorite={favorite}
-                  updateFavorites={updateFavorites}
-                  padding="0"
-                />
                 <CardHeader>
                   <CardTitle className="is-size-5">{name}</CardTitle>
                 </CardHeader>
@@ -143,6 +137,9 @@ const ClubCard = ({
             size={size}
             applicationRequired={applicationRequired}
             acceptingMembers={acceptingMembers}
+            club={club}
+            favorite={favorite}
+            updateFavorites={updateFavorites}
           />
         </Card>
       </a>

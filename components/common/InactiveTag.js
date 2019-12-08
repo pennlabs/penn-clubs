@@ -15,4 +15,4 @@ const Span = s.span`
   font-weight: 500;
 `
 
-export const InactiveMarker = () => <Span>Inactive</Span>
+export const InactiveTag = () => <Span>Inactive</Span>
