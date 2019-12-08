@@ -163,7 +163,7 @@ class NotePermission(permissions.BasePermission):
         # and they cannot create notes that are above their permission level
         if view.action in ['list', 'retrieve']:
             return request.user.is_authenticated
-        elif (view.action in ['create']):
+        elif view.action in ['create']:
             creating_club_permission = request.data.get('creating_club_permission')
 
             # Running create without actually passing any data
@@ -173,7 +173,7 @@ class NotePermission(permissions.BasePermission):
 
             membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
 
-            if (membership is None or membership.role > creating_club_permission):
+            if membership is None or membership.role > creating_club_permission:
                 return False
 
             return True

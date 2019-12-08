@@ -62,12 +62,12 @@ def filter_note_permission(queryset, club, user):
     subject_club_membership = Membership.objects.filter(club=club, person=user).first()
 
     # Convert memberships into actual numerical representation
-    if (creating_club_membership is None):
+    if creating_club_membership is None:
         creating_club_membership = Note.PERMISSION_PUBLIC
     else:
         creating_club_membership = creating_club_membership.role
 
-    if (subject_club_membership is None):
+    if subject_club_membership is None:
         subject_club_membership = Note.PERMISSION_PUBLIC
     else:
         subject_club_membership = subject_club_membership.role
