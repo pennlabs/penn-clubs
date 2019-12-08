@@ -47,8 +47,8 @@ class Org extends Component {
     if (!children) {
       return (
         <div className="has-text-centered">
-          <h1 className="title is-h1">No Children</h1>
-          <p>Club you are looking for has no children</p>
+          <h1 className="title is-h1">Waiting for some great content...</h1>
+          <p>Thank you for your patience!</p>
         </div>
       )
     }

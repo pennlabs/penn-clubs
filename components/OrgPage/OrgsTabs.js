@@ -10,7 +10,11 @@ export default props => (
     tabs={[
       {
         name: 'constituents',
-        content: <OrgChildren children={props.children} />,
+        content: props.children.length ? (
+          <OrgChildren children={props.children} />
+        ) : (
+          'This club currently has no constituents!'
+        ),
       },
       {
         name: 'links',

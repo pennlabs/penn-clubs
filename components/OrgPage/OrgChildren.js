@@ -8,17 +8,18 @@ export default function OrgChildren(props) {
   if (!children) {
     return <div>No children</div>
   }
+  if (!children.length) {
+    return <ChildDisplay noChildren={true}></ChildDisplay>
+  }
   return (
     <div
       style={{
         whiteSpace: 'pre-wrap',
+        margin: '0px',
       }}
     >
       {children.map(c => {
         return <ChildDisplay child={c}></ChildDisplay>
-      })}
-      {children.map(c => {
-        ;<p>{c.name} uh</p>
       })}
     </div>
   )

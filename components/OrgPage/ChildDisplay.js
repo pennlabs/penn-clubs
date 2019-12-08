@@ -16,6 +16,7 @@ const Child = s.div`
   justify-content: space-between;
   margin: 5px;
   margin-left: 30px;
+  margin-right: 0px; 
   border-radius: 10px;
   background: ${WHITE};
   padding: 20px; 
@@ -59,13 +60,27 @@ export default class ChildDisplay extends Component {
   }
   handleDetails() {}
   render() {
-    const { child } = this.props
+    const { child, noChildren } = this.props
+    let icon = !this.state.show ? 'chevron-down' : 'chevron-up'
+    if (noChildren) {
+      return (
+        <div
+          style={{
+            margin: '0px',
+            marginLeft: '50px',
+            borderRadius: '5px',
+          }}
+        >
+          Club has no constituents
+        </div>
+      )
+    }
     return (
       <div
         style={{
-          margin: '10px',
+          margin: '0px',
+          marginLeft: '50px',
           borderRadius: '5px',
-          // border: `2px black solid`,
           borderRadius: '10px',
         }}
       >
@@ -75,7 +90,7 @@ export default class ChildDisplay extends Component {
             cursor: 'pointer',
           }}
         >
-          <Child onClick={this.handleClick}>
+          <Child>
             <Text
               style={{
                 fontSize: '15px',
@@ -83,15 +98,23 @@ export default class ChildDisplay extends Component {
             >
               {child.name}
             </Text>
-            <TextLink
-              href={`/club/${child.code}/admin`}
-              onClick={this.handleDetails}
-            >
-              View{` `}
-              <Icon name="external-link" alt="View Club Page"></Icon>
-            </TextLink>
+            <div>
+              <TextLink
+                href={`/club/${child.code}/admin`}
+                onClick={this.handleDetails}
+                target="_blank"
+              >
+                <Icon name="external-link" alt="View Club Page"></Icon>
+              </TextLink>
+              <Icon
+                name={icon}
+                alt="Display constituents"
+                onClick={this.handleClick}
+              ></Icon>
+            </div>
           </Child>
-          {this.state.show && child.children.length ? (
+          {this.state.show ? (
+            // && child.children.length
             <OrgChildren children={this.props.child.children} />
           ) : null}
         </div>
