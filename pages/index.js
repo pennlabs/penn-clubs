@@ -36,6 +36,14 @@ const ClearAllLink = s.span`
   }
 `
 
+const ResultsText = s.div`
+  color: ${CLUBS_GREY_LIGHT};
+  text-decoration: none !important;
+  background: transparent !important;
+  fontSize: .7em;
+  margin: 5px;
+`
+
 const Container = s.div`
   width: 80vw;
   margin-left: 20vw;
@@ -169,7 +177,6 @@ class Splash extends React.Component {
   render() {
     const { displayClubs, display, selectedTags, nameInput } = this.state
     const { clubs, tags, favorites, updateFavorites } = this.props
-
     return (
       <div>
         <SearchBar
@@ -199,6 +206,7 @@ class Splash extends React.Component {
                 Find your people!
               </p>
             </div>
+            <ResultsText> {displayClubs.length} results </ResultsText>
 
             {selectedTags.length ? (
               <div style={{ padding: '0 30px 30px 0' }}>
@@ -224,7 +232,7 @@ class Splash extends React.Component {
                   onClick={e =>
                     this.setState(
                       { selectedTags: [] },
-                      this.resetDisplay(nameInput, selectedTags)
+                      this.resetDisplay(nameInput, [])
                     )
                   }
                 >
