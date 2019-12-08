@@ -5,7 +5,8 @@ from django.contrib.auth import get_user_model
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
-from clubs.models import Asset, Badge, Club, Event, Favorite, Membership, MembershipInvite, Subscribe, Tag
+from clubs.models import (Asset, Badge, Club, Event, Favorite, Membership,
+                          MembershipInvite, Note, NoteTag, Subscribe, Tag)
 from clubs.utils import clean
 
 
@@ -521,3 +522,45 @@ class AssetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = ('id', 'file_url', 'file', 'creator', 'club', 'name')
+
+
+class NoteTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NoteTag
+        fields = ('id', 'name')
+
+
+class NoteSerializer(serializers.ModelSerializer):
+    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    creating_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
+    subject_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
+    title = serializers.CharField(max_length=255, default='Note')
+    content = serializers.CharField(required=False)
+    note_tags = NoteTagSerializer(many=True, required=False)
+
+    def create(self, validated_data):
+        """
+        Manual create method because DRF does not support writable nested fields by default.
+        """
+        # assign tags to new club
+        note_tags = None
+
+        if 'note_tags' in validated_data:
+            note_tags = []
+            for note_tag in validated_data.pop('note_tags'):
+                (note_tag_object, _) = NoteTag.objects.get_or_create(**note_tag)
+                note_tags.append(note_tag_object)
+
+        # Note: it's important that all nested fields are POPPED from the validated data at this point. Otherwise,
+        # DRF will throw an error calling create on the superclass.
+        obj = super().create(validated_data)
+
+        if note_tags is not None:
+            obj.note_tags.set(note_tags)
+
+        return obj
+
+    class Meta:
+        model = Note
+        fields = ('id', 'creator', 'creating_club', 'subject_club', 'title', 'content', 'note_tags',
+                  'creating_club_permission', 'outside_club_permission')

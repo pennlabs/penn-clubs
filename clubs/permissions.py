@@ -137,3 +137,45 @@ class AssetPermission(permissions.BasePermission):
                 return False
             membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
+
+
+class NotePermission(permissions.BasePermission):
+    """
+    There are two permission classes for notes
+
+    creating_club_permission (Creating Club Owner,
+                              Creating Club Officers,
+                              Creating Club Members):
+    This keeps track of who within the club is allowed to view or modify a
+    particular note.
+
+    outside_club_permission (None,
+                             Subject Club Owner,
+                             Subject Club Officer,
+                             Subject Club Member,
+                             Public):
+    This keeps track of who outside of the creating club is allowed to view a
+    note. No one outside of the creating club is allowed to modify the note.
+    """
+
+    def has_permission(self, request, view):
+        # Only users who are in clubs can creating notes for those clubs
+        # and they cannot create notes that are above their permission level
+        if view.action in ['list', 'retrieve']:
+            return request.user.is_authenticated
+        elif view.action in ['create']:
+            creating_club_permission = request.data.get('creating_club_permission')
+
+            # Running create without actually passing any data
+            # causes problems
+            if creating_club_permission is None:
+                return False
+
+            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
+
+            if membership is None or membership.role > creating_club_permission:
+                return False
+
+            return True
+        else:
+            return request.user.is_authenticated

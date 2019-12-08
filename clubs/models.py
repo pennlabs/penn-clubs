@@ -163,6 +163,60 @@ class Advisor(models.Model):
         return self.name
 
 
+class Note(models.Model):
+    """
+    Represents a note created by a parent about a
+    constituient club
+    """
+
+    creator = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    creating_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='note_by_club')
+    subject_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='note_of_club')
+    note_tags = models.ManyToManyField('NoteTag')
+    title = models.CharField(max_length=255, default='Note')
+    content = models.TextField(blank=True)
+
+    PERMISSION_CREATING_CLUB_OWNER = 0
+    PERMISSION_CREATING_CLUB_OFFICER = 10
+    PERMISSION_CREATING_CLUB_MEMBER = 20
+
+    PERMISSION_NONE = -1
+    PERMISSION_SUBJECT_CLUB_OWNER = 0
+    PERMISSION_SUBJECT_CLUB_OFFICER = 10
+    PERMISSION_SUBJECT_CLUB_MEMBER = 20
+    PERMISSION_PUBLIC = 100
+
+    CREATING_CLUB_PERMISSION_CHOICES = (
+        (PERMISSION_CREATING_CLUB_OWNER, 'Creating Club Owner'),
+        (PERMISSION_CREATING_CLUB_OFFICER, 'Creating Club Officers'),
+        (PERMISSION_CREATING_CLUB_MEMBER, 'Creating Club Members')
+    )
+
+    OUTSIDE_CLUB_PERMISSION_CHOICES = (
+        (PERMISSION_NONE, 'None'),
+        (PERMISSION_SUBJECT_CLUB_OWNER, 'Subject Club Owner'),
+        (PERMISSION_SUBJECT_CLUB_OFFICER, 'Subject Club Officers'),
+        (PERMISSION_SUBJECT_CLUB_MEMBER, 'Subject Club Members'),
+        (PERMISSION_PUBLIC, 'Public')
+    )
+
+    creating_club_permission = models.IntegerField(choices=CREATING_CLUB_PERMISSION_CHOICES,
+                                                   default=PERMISSION_CREATING_CLUB_MEMBER)
+    outside_club_permission = models.IntegerField(choices=OUTSIDE_CLUB_PERMISSION_CHOICES,
+                                                  default=PERMISSION_SUBJECT_CLUB_MEMBER)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class NoteTag(models.Model):
+    """
+    Represents primary reason for creating a note about a club.
+    """
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
 class Membership(models.Model):
     """
     Represents the relationship between a member and a club.
