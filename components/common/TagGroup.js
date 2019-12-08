@@ -18,6 +18,7 @@ export const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
           onClick={e => {
             // Prevent click event from propagating so clicking on the tag doesn't
             // fire the generic club handle click
+            e.preventDefault()
             e.stopPropagation()
             updateTag && updateTag(matchedTag, matchedTag.name)
           }}
@@ -33,6 +34,7 @@ export const TagGroup = ({ tags = [], selectedTags = [], updateTag }) => {
         className="tag is-rounded has-text-white"
         onClick={e => {
           // Stop propagation of click event for same reasons as above
+          e.preventDefault()
           e.stopPropagation()
           updateTag &&
             updateTag(

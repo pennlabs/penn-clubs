@@ -6,7 +6,7 @@ import { doApiRequest, formatResponse, getRoleDisplay } from '../utils'
 import { Link, Router } from '../routes'
 import Form from '../components/Form'
 import TabView from '../components/TabView'
-import { Icon, Container, Title, InactiveMarker } from '../components/common'
+import { Icon, Container, Title, InactiveTag } from '../components/common'
 
 class ClubForm extends React.Component {
   constructor(props) {
@@ -694,13 +694,13 @@ class ClubForm extends React.Component {
 
     const { message, isEdit } = this.state
     const nameOrDefault = (club && club.name) || 'New Club'
-    const showInactiveMarker = !(club && club.active) && isEdit
+    const showInactiveTag = !(club && club.active) && isEdit
 
     return (
       <Container>
         <Title>
           {nameOrDefault}
-          {showInactiveMarker && <InactiveMarker />}
+          {showInactiveTag && <InactiveTag />}
           {club && (
             <Link route="club-view" params={{ club: club.code }}>
               <a
