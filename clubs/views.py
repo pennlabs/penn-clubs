@@ -1,4 +1,5 @@
 import os
+import datetime
 import re
 
 import qrcode
@@ -256,7 +257,24 @@ class ClubReportViewSet(XLSXFileMixin, viewsets.ReadOnlyModelViewSet):
                     Prefetch('members', queryset=Membership.objects.order_by('role'))
                 ))
     serializer_class = ReportClubSerializer
-    filename = 'report.xlsx'
+
+    def get_filename(self):
+        """
+        Return the name of the generated excel file.
+        """
+        return 'report-{}.xlsx'.format(datetime.datetime.now().strftime('%Y%m%d'))
+
+    def get_column_header(self):
+        """
+        Return the style of the column header.
+        """
+        return {
+            'style': {
+                'font': {
+                    'bold': True
+                }
+            }
+        }
 
     @action(detail=False, methods=['GET'])
     def fields(self, request, *args, **kwargs):
