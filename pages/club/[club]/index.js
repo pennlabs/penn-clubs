@@ -34,7 +34,9 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
   }, [initialClub])
 
   if (!club) return null
-  if (!club.code) {
+
+  const { code } = club
+  if (!code) {
     return (
       <Container>
         <div className="has-text-centered">
