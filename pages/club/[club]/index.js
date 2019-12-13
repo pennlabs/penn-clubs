@@ -1,5 +1,5 @@
 import s from 'styled-components'
-
+import { useState, useEffect } from 'react'
 import renderPage from '../../../renderPage.js'
 import { doApiRequest } from '../../../utils'
 import Tabs from '../../../components/ClubPage/Tabs'
@@ -83,7 +83,7 @@ Club.getInitialProps = async props => {
   const { query } = props
   const resp = await doApiRequest(`/clubs/${query.club}/?format=json`)
   const club = await resp.json()
-  return { club }
+  return { serverClub: club }
 }
 
 export default renderPage(Club)
