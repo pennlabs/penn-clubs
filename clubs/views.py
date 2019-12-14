@@ -86,11 +86,15 @@ class ClubViewSet(viewsets.ModelViewSet):
     Return a list of clubs.
     """
     queryset = (Club.objects.all()
-                            .prefetch_related('tags')
-                            .prefetch_related('badges')
                             .annotate(favorite_count=Count('favorite'))
                             .prefetch_related(
-                                Prefetch('members', queryset=Membership.objects.order_by('role'))
+                                'tags',
+                                'badges',
+                                Prefetch('membership_set', queryset=Membership.objects.order_by(
+                                    'role',
+                                    'person__first_name',
+                                    'person__last_name'
+                                ))
                             ))
     permission_classes = [ClubPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter]
