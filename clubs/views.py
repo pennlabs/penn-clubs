@@ -244,6 +244,15 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
     serializer_class = MembershipInviteSerializer
     http_method_names = ['get', 'put', 'patch', 'delete']
 
+    @action(detail=True, methods=['put', 'patch'])
+    def resend(self, request, *args, **kwargs):
+        invite = self.get_object()
+        invite.send_mail(request)
+
+        return Response({
+            'detail': 'Resent email invitation to {}!'.format(invite.email)
+        })
+
     def get_queryset(self):
         return MembershipInvite.objects.filter(club__code=self.kwargs['club_code'], active=True)
 

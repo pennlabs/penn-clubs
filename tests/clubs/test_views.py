@@ -764,6 +764,25 @@ class ClubTestCase(TestCase):
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+        self.assertTrue(len(mail.outbox), 2)
+
+    def test_club_invite_email_resend(self):
+        self.client.login(username=self.user5.username, password='test')
+
+        resp = self.client.post(reverse('club-invite', args=(self.club1.code,)), {
+            'emails': 'test@example.upenn.edu',
+            'role': Membership.ROLE_MEMBER
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        invite = MembershipInvite.objects.filter(club__code=self.club1.code).first()
+
+        resp = self.client.put(
+            reverse('club-invites-resend', args=(self.club1.code, invite.id)),
+            content_type='application/json'
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
     def test_club_invite_insufficient_auth(self):
         self.client.login(username=self.user2.username, password='test')
         Membership.objects.create(
