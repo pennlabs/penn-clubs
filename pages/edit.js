@@ -167,7 +167,7 @@ class ClubForm extends React.Component {
 
   resendInvite(id) {
     doApiRequest(`/clubs/${this.state.club.code}/invites/${id}/resend/?format=json`, {
-      method: 'PUT'
+      method: 'PUT',
     }).then(resp => resp.json()).then(resp => {
       this.notify(resp.detail)
     })
