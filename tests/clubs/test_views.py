@@ -359,14 +359,14 @@ class ClubTestCase(TestCase):
             person=self.user1
         )
         self.client.login(username=self.user1.username, password='test')
-        bad_tries = [{'title': 'Supreme Leader'}, {'role': Membership.ROLE_OFFICER}, {'active': False}]
+        bad_tries = [{'title': 'Supreme Leader'}, {'role': Membership.ROLE_OFFICER}]
         for bad in bad_tries:
             resp = self.client.patch(reverse('club-members-detail', args=(self.club1.code, self.user1.username)),
                                      bad,
                                      content_type='application/json')
             self.assertIn(resp.status_code, [400, 403], resp.content)
 
-        good_tries = [{'public': True}, {'public': False}]
+        good_tries = [{'public': True}, {'public': False}, {'active': True}, {'active': False}]
         for good in good_tries:
             resp = self.client.patch(reverse('club-members-detail', args=(self.club1.code, self.user1.username)),
                                      good,
