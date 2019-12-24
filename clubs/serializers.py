@@ -123,7 +123,7 @@ class MembershipSerializer(serializers.ModelSerializer):
 
         if membership is None or membership.role > Membership.ROLE_OFFICER:
             for field in data:
-                if field not in ['public']:
+                if field not in ['public', 'active']:
                     raise serializers.ValidationError('Normal members are not allowed to change "{}"!'.format(field))
         return data
 
