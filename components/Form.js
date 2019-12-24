@@ -1,13 +1,13 @@
 import React from 'react'
 import Select from 'react-select'
 import { EditorState, ContentState, convertToRaw } from 'draft-js'
-import { Editor } from 'react-draft-wysiwyg'
 import draftToHtml from 'draftjs-to-html'
-import htmlToDraft from 'html-to-draftjs'
 import Head from 'next/head'
 
 import { Icon } from './common'
 import { titleize } from '../utils'
+
+let htmlToDraft, Editor
 
 class Form extends React.Component {
   constructor(props) {
@@ -20,6 +20,9 @@ class Form extends React.Component {
     this.files = {}
 
     if (process.browser) {
+      htmlToDraft = require('html-to-draftjs').default
+      Editor = require('react-draft-wysiwyg').Editor
+
       this.setDefaults(this.props.fields)
     }
 
@@ -31,14 +34,16 @@ class Form extends React.Component {
     const { defaults } = this.props
     fields.forEach(({ name, type, converter, fields }) => {
       if (type === 'html') {
-        if (defaults && defaults[name]) {
-          this.state['editorState-' + name] = EditorState.createWithContent(
-            ContentState.createFromBlockArray(
-              htmlToDraft(this.props.defaults[name]).contentBlocks
+        if (process.browser) {
+          if (defaults && defaults[name]) {
+            this.state['editorState-' + name] = EditorState.createWithContent(
+              ContentState.createFromBlockArray(
+                htmlToDraft(this.props.defaults[name]).contentBlocks
+              )
             )
-          )
-        } else {
-          this.state['editorState-' + name] = EditorState.createEmpty()
+          } else {
+            this.state['editorState-' + name] = EditorState.createEmpty()
+          }
         }
       }
       if (type !== 'group') {
@@ -178,6 +183,10 @@ class Form extends React.Component {
                   'remove',
                   'history',
                 ],
+              }}
+              editorStyle={{
+                border: '1px solid #dbdbdb',
+                padding: '0 1em',
               }}
             />
           ) : (
