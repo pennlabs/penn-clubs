@@ -409,12 +409,30 @@ class Asset(models.Model):
         return self.name
 
 
+class School(models.Model):
+    """
+    Represents a school (ex: Engineering, Wharton, etc).
+    """
+    name = models.TextField()
+
+
+class Major(models.Model):
+    """
+    Represents a major (ex: Computer Science, BSE).
+    """
+    name = models.TextField()
+
+
 class Profile(models.Model):
     """
     Additional information attached to a user account.
     """
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, primary_key=True)
     image = models.ImageField(upload_to=get_user_file_name, null=True, blank=True)
+
+    graduation_year = models.PositiveSmallIntegerField(null=True, blank=True)
+    school = models.ManyToManyField(School)
+    major = models.ManyToManyField(Major)
 
 
 @receiver(models.signals.post_delete, sender=Asset)

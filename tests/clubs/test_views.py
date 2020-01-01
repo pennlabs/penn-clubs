@@ -8,7 +8,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from clubs.models import Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Badge, Club, Event, Favorite, Membership, MembershipInvite, School, Tag
 
 
 class ClubTestCase(TestCase):
@@ -113,6 +113,14 @@ class ClubTestCase(TestCase):
             club=self.club1
         )
 
+        # add some schools
+        School.objects.create(
+            name='Wharton'
+        )
+        School.objects.create(
+            name='Engineering'
+        )
+
         # retrieve user
         resp = self.client.get(reverse('users-detail'))
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -124,6 +132,29 @@ class ClubTestCase(TestCase):
 
         for field in ['username', 'email']:
             self.assertIn(field, data)
+
+        # update user with fields
+        # user field should not be updated
+        resp = self.client.patch(reverse('users-detail'), {
+            'user': self.user1.id,
+            'graduation_year': 3000,
+            'school': [
+                {
+                    'name': 'Wharton'
+                },
+                {
+                    'name': 'Engineering'
+                }
+            ]
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure fields have been updated
+        resp = self.client.get(reverse('users-detail'))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+        self.assertEqual(data['graduation_year'], 3000)
+        self.assertEqual(set([s['name'] for s in data['school']]), {'Wharton', 'Engineering'})
 
     def test_superuser_views(self):
         """

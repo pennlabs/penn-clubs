@@ -2,11 +2,12 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import models
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
-from clubs.models import (Asset, Badge, Club, Event, Favorite, Membership,
-                          MembershipInvite, Note, NoteTag, Subscribe, Tag)
+from clubs.models import (Asset, Badge, Club, Event, Favorite, Major, Membership,
+                          MembershipInvite, Note, NoteTag, Profile, School, Subscribe, Tag)
 from clubs.utils import clean
 
 
@@ -458,6 +459,22 @@ class SubscribeSerializer(serializers.ModelSerializer):
         validators = [validators.UniqueTogetherValidator(queryset=Subscribe.objects.all(), fields=['club', 'person'])]
 
 
+class SchoolSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = School
+        fields = ('name',)
+
+
+class MajorSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = Major
+        fields = ('name',)
+
+
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
     email = serializers.EmailField(read_only=True)
@@ -467,6 +484,10 @@ class UserSerializer(serializers.ModelSerializer):
     is_superuser = serializers.BooleanField(read_only=True)
     image = serializers.ImageField(source='profile.image', write_only=True)
     image_url = serializers.SerializerMethodField('get_image_url')
+
+    graduation_year = serializers.IntegerField(source='profile.graduation_year')
+    school = SchoolSerializer(many=True, source='profile.school')
+    major = MajorSerializer(many=True, source='profile.major')
 
     def get_image_url(self, obj):
         if not obj.profile.image:
@@ -483,17 +504,25 @@ class UserSerializer(serializers.ModelSerializer):
         if 'profile' in validated_data:
             profile_fields = validated_data.pop('profile')
             profile = instance.profile
-            valid_fields = {'image'}
+            valid_fields = {f.name: f for f in Profile._meta.get_fields()}
             for key, value in profile_fields.items():
                 if key in valid_fields:
-                    setattr(profile, key, value)
+                    field = valid_fields[key]
+                    if isinstance(field, models.ManyToManyField):
+                        related_objects = getattr(profile, field.get_attname())
+                        related_objects.clear()
+                        for item in value:
+                            related_objects.add(field.related_model.objects.get(**item))
+                    else:
+                        setattr(profile, key, value)
             profile.save()
 
         return super().update(instance, validated_data)
 
     class Meta:
         model = get_user_model()
-        fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'is_superuser', 'image_url', 'image')
+        fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'is_superuser',
+                  'image_url', 'image', 'graduation_year', 'school', 'major')
 
 
 class AssetSerializer(serializers.ModelSerializer):
