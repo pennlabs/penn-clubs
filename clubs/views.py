@@ -12,13 +12,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Note, Subscribe, Tag
-from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
-                               InvitePermission, IsSuperuser, MemberPermission, NotePermission)
+from clubs.models import Asset, Club, Event, Favorite, Major, Membership, MembershipInvite, Note, School, Subscribe, Tag
+from clubs.permissions import (AssetPermission, ClubPermission, EventPermission, InvitePermission,
+                               IsSuperuser, MemberPermission, NotePermission, ReadOnly)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
                                ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer,
-                               MembershipInviteSerializer, MembershipSerializer, NoteSerializer,
-                               SubscribeSerializer, TagSerializer, UserSerializer)
+                               MajorSerializer, MembershipInviteSerializer, MembershipSerializer, NoteSerializer,
+                               SchoolSerializer, SubscribeSerializer, TagSerializer, UserSerializer)
 
 
 def upload_endpoint_helper(request, cls, field, **kwargs):
@@ -140,6 +140,18 @@ class ClubViewSet(viewsets.ModelViewSet):
             ):
                 return AuthenticatedClubSerializer
         return ClubSerializer
+
+
+class SchoolViewSet(viewsets.ModelViewSet):
+    serializer_class = SchoolSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    queryset = School.objects.all()
+
+
+class MajorViewSet(viewsets.ModelViewSet):
+    serializer_class = MajorSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    queryset = Major.objects.all()
 
 
 class EventViewSet(viewsets.ModelViewSet):

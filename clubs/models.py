@@ -415,12 +415,18 @@ class School(models.Model):
     """
     name = models.TextField()
 
+    def __str__(self):
+        return self.name
+
 
 class Major(models.Model):
     """
     Represents a major (ex: Computer Science, BSE).
     """
     name = models.TextField()
+
+    def __str__(self):
+        return self.name
 
 
 class Profile(models.Model):
