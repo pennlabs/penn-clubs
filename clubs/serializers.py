@@ -30,7 +30,7 @@ class SchoolSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = School
-        fields = ('name',)
+        fields = ('id', 'name')
 
 
 class MajorSerializer(serializers.ModelSerializer):
@@ -38,7 +38,7 @@ class MajorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Major
-        fields = ('name',)
+        fields = ('id', 'name')
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
