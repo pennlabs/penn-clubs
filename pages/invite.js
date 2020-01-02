@@ -18,7 +18,7 @@ class Invite extends React.Component {
 
   componentDidMount() {
     const { query } = this.props
-    if (query.invite === 'example') {
+    if (query.invite === 'example' && query.token === 'example') {
       this.setState({
         invite: {
           id: -1,
