@@ -165,6 +165,14 @@ class ClubForm extends React.Component {
     })
   }
 
+  resendInvite(id) {
+    doApiRequest(`/clubs/${this.state.club.code}/invites/${id}/resend/?format=json`, {
+      method: 'PUT',
+    }).then(resp => resp.json()).then(resp => {
+      this.notify(resp.detail)
+    })
+  }
+
   sendInvites() {
     doApiRequest(`/clubs/${this.state.club.code}/invite/?format=json`, {
       method: 'POST',
@@ -526,6 +534,11 @@ class ClubForm extends React.Component {
                         <tr key={item.email}>
                           <td>{item.email}</td>
                           <td>
+                            <button
+                              className="button is-small is-link"
+                              onClick={() => this.resendInvite(item.id)}>
+                              <Icon name="mail" alt="resend invite" /> Resend
+                            </button>{' '}
                             <button
                               className="button is-small is-danger"
                               onClick={() => this.deleteInvite(item.id)}
