@@ -22,7 +22,7 @@
     "react-lazy-load": "^3.0.13",
     "react-select": "^3.0.4",
     "react-tooltip": "^3.11.1",
-    "styled-components": "^4.3.2"
+    "styled-components": "^4.4.1"
   },
   "scripts": {
     "lint": "eslint \"./{pages,components}/**/*.js\" \"*.js\"",
@@ -43,6 +43,7 @@
     "@storybook/react": "^5.0.2",
     "babel-eslint": "^10.0.2",
     "babel-loader": "^8.0.5",
+    "babel-plugin-styled-components": "^1.10.6",
     "babel-preset-next": "^1.2.0",
     "eslint": "^5.13.0",
     "eslint-config-airbnb": "^17.1.0",
