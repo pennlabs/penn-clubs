@@ -24,6 +24,9 @@ class ClubPermission(permissions.BasePermission):
         if view.action in ['retrieve', 'children']:
             return True
 
+        if not request.user.is_authenticated:
+            return False
+
         membership = Membership.objects.filter(person=request.user, club=obj).first()
         if membership is None:
             return False
