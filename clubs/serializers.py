@@ -417,7 +417,9 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
-
+    """
+    Used by club owners/officers to see who has subscribed to their club.
+    """
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
     name = serializers.CharField(source='person.username', read_only=True)
@@ -429,12 +431,24 @@ class SubscribeSerializer(serializers.ModelSerializer):
         validators = [validators.UniqueTogetherValidator(queryset=Subscribe.objects.all(), fields=['club', 'person'])]
 
 
+class UserSubscribeSerializer(serializers.ModelSerializer):
+    """
+    Used by the UserSerializer to return the clubs that the user has favorited.
+    """
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
+
+    class Meta:
+        model = Subscribe
+        fields = ('club',)
+
+
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
     email = serializers.EmailField(read_only=True)
     name = serializers.SerializerMethodField('get_full_name')
     membership_set = UserMembershipSerializer(many=True, read_only=True)
     favorite_set = FavoriteSerializer(many=True, read_only=True)
+    subscribe_set = UserSubscribeSerializer(many=True, read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     image = serializers.ImageField(source='profile.image', write_only=True)
     image_url = serializers.SerializerMethodField('get_image_url')
@@ -475,8 +489,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'is_superuser',
-                  'image_url', 'image', 'graduation_year', 'school', 'major')
+        fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'subscribe_set',
+                  'is_superuser', 'image_url', 'image', 'graduation_year', 'school', 'major')
 
 
 class AssetSerializer(serializers.ModelSerializer):
