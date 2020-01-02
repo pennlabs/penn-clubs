@@ -9,6 +9,11 @@ const IconTag = s.img`
   object-fit: contain;
   margin-bottom: 0;
   transform: translateY(2.5px);
+  .button & {
+    filter: invert(100%);
+    margin-right: 3px;
+    margin-top: -5px;
+  }
 `
 
 export const Icon = ({ name, alt, size, style, ...props }) => (
