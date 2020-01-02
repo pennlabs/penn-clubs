@@ -43,7 +43,8 @@ const Div = s.div`
 const Tabs = s.div``
 
 const TabView = ({ tabs, tabClassName, background }) => {
-  const hashString = process.browser ? window.location.hash.substring(1) : null
+  // the server side rendering does not have a window object
+  const hashString = typeof window !== 'undefined' ? window.location.hash.substring(1) : null
   const [currentTab, setCurrentTab] = useState(hashString || tabs[0].name)
 
   const getTabContent = () =>

@@ -12,7 +12,15 @@ const Wrapper = s.div`
   align-items: center;
 `
 
-const Header = ({ club, userInfo, favorites, style, updateFavorites, subscriptions, updateSubscriptions }) => {
+const Header = ({
+  club,
+  userInfo,
+  favorites,
+  style,
+  updateFavorites,
+  subscriptions,
+  updateSubscriptions,
+}) => {
   const isFavorite = favorites.includes(club.code)
   const isSubscription = subscriptions.includes(club.code)
 
@@ -47,7 +55,11 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites, subscriptio
             updateFavorites={updateFavorites}
             padding="0"
           />
-          <div className="button is-success" onClick={() => updateSubscriptions(club.code)} style={{ marginLeft: 15 }}>
+          <div
+            className="button is-success"
+            onClick={() => updateSubscriptions(club.code)}
+            style={{ marginLeft: 15 }}
+          >
             {isSubscription ? 'Unsubscribe' : 'Subscribe'}
           </div>
           {canEdit && (

@@ -22,8 +22,8 @@ class Invite extends React.Component {
       this.setState({
         invite: {
           id: -1,
-          name: 'Example Name',
-          email: 'Example Email',
+          name: 'Example name',
+          email: 'Example email',
         },
       })
     } else {
@@ -110,6 +110,7 @@ class Invite extends React.Component {
 
     return (
       <div style={{ padding: '30px 50px' }} className="has-text-centered">
+        {/* &#x1F389; is the confetti emoji. */}
         <h2 className="title is-2">&#x1F389; Invitation for {club.name} &#x1F389;</h2>
         <div className="title is-4" style={{ fontWeight: 'normal' }}>
           <b>{invite.name}</b> has invited you, <b>{invite.email}</b>, to join <Link route="club-view" params={{ club: club.code }}>{club.name}</Link>.

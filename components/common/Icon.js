@@ -9,6 +9,7 @@ const IconTag = s.img`
   object-fit: contain;
   margin-bottom: 0;
   transform: translateY(2.5px);
+
   .button:not(.is-light) & {
     filter: invert(100%);
     margin-right: 3px;
