@@ -1,5 +1,5 @@
-import renderPage from '../renderPage.js'
-import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../utils'
+import renderPage from '../../../../../renderPage.js'
+import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils.js'
 import React from 'react'
 import { withRouter } from 'next/router'
 
@@ -139,4 +139,4 @@ Invite.getInitialProps = async props => {
   return { query: props.query }
 }
 
-export default renderPage(withRouter(Invite))
+export default withRouter(renderPage(Invite))

@@ -781,4 +781,4 @@ ClubForm.getInitialProps = async ({ query }) => {
   return { clubId: query.club, tags: tagsResponse }
 }
 
-export default renderPage(withRouter(ClubForm))
+export default withRouter(renderPage(ClubForm))
