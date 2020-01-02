@@ -1,3 +1,4 @@
+import { Link } from 'next/link'
 import s from 'styled-components'
 
 import { Icon } from '../common'
@@ -5,7 +6,6 @@ import { LOGIN_URL } from '../../utils'
 import { mediaMaxWidth, MD } from '../../constants/measurements'
 import { MEDIUM_GRAY, DARK_GRAY, BORDER } from '../../constants/colors'
 import { logEvent } from '../../utils/analytics'
-import { Link } from '../../routes'
 
 const StyledIcon = s(Icon)`
   opacity: 0.5;
@@ -56,7 +56,7 @@ export default ({ userInfo, authenticated, show }) => (
         </StyledLink>
       )}
       {userInfo && (
-        <Link route="settings">
+        <Link href="/settings">
           <StyledLink>
             <StyledIcon
               name="user"
