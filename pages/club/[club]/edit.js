@@ -1,5 +1,5 @@
 import React from 'react'
-import Router from 'next/router'
+import { withRouter } from 'next/router'
 import Link from 'next/link'
 import Select from 'react-select'
 
@@ -123,7 +123,7 @@ class ClubForm extends React.Component {
             this.notify(formatResponse(err))
           })
         } else {
-          Router.push('/')
+          this.props.router.push('/')
         }
       })
     }
@@ -212,7 +212,7 @@ class ClubForm extends React.Component {
       if (resp.ok) {
         resp.json().then(info => {
           if (!this.state.isEdit) {
-            Router.push(
+            this.props.router.push(
               '/club/[club]/edit',
               `/club/${info.id}/edit`,
               { shallow: true }
@@ -781,4 +781,4 @@ ClubForm.getInitialProps = async ({ query }) => {
   return { clubId: query.club, tags: tagsResponse }
 }
 
-export default renderPage(ClubForm)
+export default renderPage(withRouter(ClubForm))
