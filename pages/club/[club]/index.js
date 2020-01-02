@@ -80,6 +80,8 @@ const Club = ({ query, userInfo, favorites, updateFavorites, subscriptions, upda
   )
 }
 
-Club.getInitialProps = async ({ query }) => { query }
+Club.getInitialProps = async ({ query }) => {
+  return { query }
+}
 
 export default renderPage(Club)
