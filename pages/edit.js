@@ -69,6 +69,8 @@ class ClubForm extends React.Component {
       inviteRole: this.roles[0],
       inviteTitle: 'Member',
       editMember: null,
+      schools: [],
+      majors: [],
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -282,11 +284,27 @@ class ClubForm extends React.Component {
           })
         )
     }
+
+    doApiRequest('/schools/?format=json')
+      .then(resp => resp.json())
+      .then(data =>
+        this.setState({
+          schools: data,
+        })
+      )
+
+    doApiRequest('/majors/?format=json')
+      .then(resp => resp.json())
+      .then(data =>
+        this.setState({
+          majors: data,
+        })
+      )
   }
 
   render() {
     const { tags } = this.props
-    const { club, invites, editMember } = this.state
+    const { club, schools, majors, invites, editMember } = this.state
 
     if (this.state.isEdit && club === null) {
       return <div />
@@ -411,6 +429,22 @@ class ClubForm extends React.Component {
           {
             name: 'how_to_get_involved',
             type: 'textarea',
+          },
+          {
+            name: 'target_schools',
+            type: 'multiselect',
+            placeholder: 'Select schools relevant to your club!',
+            choices: schools,
+            converter: a => ({ value: a.id, label: a.name }),
+            reverser: a => ({ id: a.value, name: a.label }),
+          },
+          {
+            name: 'target_majors',
+            type: 'multiselect',
+            placeholder: 'Select majors relevant to your club!',
+            choices: majors,
+            converter: a => ({ value: a.id, label: a.name }),
+            reverser: a => ({ id: a.value, name: a.label }),
           },
         ],
       },
