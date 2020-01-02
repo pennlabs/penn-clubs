@@ -90,6 +90,8 @@ class ClubViewSet(viewsets.ModelViewSet):
                             .prefetch_related(
                                 'tags',
                                 'badges',
+                                'target_schools',
+                                'target_majors',
                                 Prefetch('membership_set', queryset=Membership.objects.order_by(
                                     'role',
                                     'person__first_name',
