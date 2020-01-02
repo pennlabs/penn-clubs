@@ -23,6 +23,10 @@ const LogoutLink = s.a`
   margin-bottom: 12px;
 `
 
+const Empty = s.span`
+  color: #888;
+`
+
 export default ({ defaults }) => {
   const { name, username, email } = defaults
 
@@ -35,9 +39,9 @@ export default ({ defaults }) => {
           <div>Email</div>
         </div>
         <div className="column is-narrow">
-          <div>{name}</div>
-          <div>{username}</div>
-          <div>{email}</div>
+          <div>{name || <Empty>None</Empty>}</div>
+          <div>{username || <Empty>None</Empty>}</div>
+          <div>{email || <Empty>None</Empty>}</div>
         </div>
       </div>
       <div>
