@@ -766,14 +766,16 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password='test')
 
         resp = self.client.patch(reverse('club-invites-detail', args=(self.club1.code, ids_and_tokens[0][0])), {
-            'token': ids_and_tokens[0][1]
+            'token': ids_and_tokens[0][1],
+            'public': True
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        self.assertTrue(Membership.objects.filter(club=self.club1, person=self.user5).exists())
+        flt = Membership.objects.filter(club=self.club1, person=self.user5)
+        self.assertTrue(flt.exists())
+        self.assertTrue(flt.first().public)
 
         # ensure invite cannot be reclaimed
-
         resp = self.client.patch(reverse('club-invites-detail', args=(self.club1.code, ids_and_tokens[0][0])), {
             'token': ids_and_tokens[0][1]
         }, content_type='application/json')
@@ -783,6 +785,19 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password='test')
         resp = self.client.delete(reverse('club-invites-detail', args=(self.club1.code, ids_and_tokens[1][0])))
         self.assertIn(resp.status_code, [200, 204], resp.content)
+
+        # ensure a second invite can be claimed without toggling on public status
+        self.client.login(username=self.user4.username, password='test')
+
+        resp = self.client.patch(reverse('club-invites-detail', args=(self.club1.code, ids_and_tokens[2][0])), {
+            'token': ids_and_tokens[2][1],
+            'public': False
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        flt = Membership.objects.filter(club=self.club1, person=self.user4)
+        self.assertTrue(flt.exists())
+        self.assertFalse(flt.first().public)
 
     def test_club_invite_email_check(self):
         self.client.login(username=self.user5.username, password='test')

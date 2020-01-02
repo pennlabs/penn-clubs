@@ -46,9 +46,15 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(read_only=True)
     token = serializers.CharField(max_length=128, write_only=True)
     name = serializers.CharField(source='club.name', read_only=True)
+    public = serializers.BooleanField(write_only=True, required=False)
+
+    def create(self, validated_data):
+        validated_data.pop('public', None)
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
+        public = validated_data.pop('public', False)
 
         if not self.validated_data.get('token') == self.instance.token:
             raise serializers.ValidationError('Missing or invalid token in request!')
@@ -60,12 +66,16 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('This invitation was meant for "{}", but you are logged in as "{}"!'
                                                   .format(invite_username, user.username))
 
-        instance.claim(user)
+        # claim the invite and set the membership public status
+        obj = instance.claim(user)
+        obj.public = public
+        obj.save()
+
         return instance
 
     class Meta:
         model = MembershipInvite
-        fields = ['email', 'token', 'id', 'name']
+        fields = ['email', 'token', 'id', 'name', 'public']
 
 
 class UserMembershipSerializer(serializers.ModelSerializer):

@@ -295,7 +295,7 @@ class MembershipInvite(models.Model):
         self.active = False
         self.save()
 
-        Membership.objects.get_or_create(
+        obj, _ = Membership.objects.get_or_create(
             person=user,
             club=self.club,
             defaults={
@@ -303,6 +303,8 @@ class MembershipInvite(models.Model):
                 'title': self.title
             }
         )
+
+        return obj
 
     def send_mail(self, request=None):
         """
