@@ -25,6 +25,22 @@ class BadgeSerializer(serializers.ModelSerializer):
         fields = ('id', 'label', 'color', 'description')
 
 
+class SchoolSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = School
+        fields = ('name',)
+
+
+class MajorSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = Major
+        fields = ('name',)
+
+
 class MembershipInviteSerializer(serializers.ModelSerializer):
     id = serializers.CharField(max_length=8, read_only=True)
     email = serializers.EmailField(read_only=True)
@@ -172,6 +188,9 @@ class ClubListSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField('get_image_url')
     favorite_count = serializers.IntegerField(read_only=True)
 
+    target_schools = SchoolSerializer(many=True, required=False)
+    target_majors = MajorSerializer(many=True, required=False)
+
     def get_image_url(self, obj):
         if not obj.image:
             return None
@@ -184,7 +203,8 @@ class ClubListSerializer(serializers.ModelSerializer):
         model = Club
         fields = [
             'name', 'code', 'description', 'founded', 'size', 'email', 'tags', 'subtitle',
-            'application_required', 'accepting_members', 'image_url', 'favorite_count', 'active'
+            'application_required', 'accepting_members', 'image_url', 'favorite_count', 'active',
+            'target_schools', 'target_majors'
         ]
 
 
@@ -202,41 +222,8 @@ class ClubSerializer(ClubListSerializer):
         """
         Manual create method because DRF does not support writable nested fields by default.
         """
-        # assign tags to new club
-        tags = None
-        parent_orgs = None
-        badges = None
 
-        if 'tags' in validated_data:
-            tags = []
-            for tag in validated_data.pop('tags'):
-                tags.append(Tag.objects.get(**tag))
-
-        # Don't let clubs add parent orgs for now; they will be added through the admin
-        # interface.
-
-        # if 'parent_orgs' in validated_data:
-        #     parent_orgs = []
-        #     for parent_org in validated_data.pop('parent_orgs'):
-        #         parent_orgs.append(Club.objects.get(**parent_org))
-
-        if 'badges' in validated_data:
-            badges = []
-            for badge in validated_data.pop('badges'):
-                badges.append(Badge.objects.get(**badge))
-
-        # Note: it's important that all nested fields are POPPED from the validated data at this point. Otherwise,
-        # DRF will throw an error calling create on the superclass.
         obj = super().create(validated_data)
-
-        if tags is not None:
-            obj.tags.set(tags)
-
-        if parent_orgs is not None:
-            obj.parent_orgs.set(parent_orgs)
-
-        if badges is not None:
-            obj.badges.set(badges)
 
         # assign user who created as owner
         Membership.objects.create(
@@ -322,51 +309,10 @@ class ClubSerializer(ClubListSerializer):
             return value
         raise serializers.ValidationError('You do not have permissions to change the active status of the club.')
 
-    def update(self, instance, validated_data):
-        """
-        Nested serializers don't support update by default, need to override.
-        """
-
-        tags = None
-        parent_orgs = None
-        badges = None
-
-        if 'tags' in validated_data:
-            tags = []
-            for tag in validated_data.pop('tags'):
-                tags.append(Tag.objects.get(**tag))
-
-        # Don't let clubs add parent orgs for now; they will be added through the admin
-        # interface.
-
-        # if 'parent_orgs' in validated_data:
-        #     parent_orgs = []
-        #     for parent_org in validated_data.pop('parent_orgs'):
-        #         parent_orgs.append(Club.objects.get(**parent_org))
-
-        if 'badges' in validated_data:
-            badges = []
-            for badge in validated_data.pop('badges'):
-                badges.append(Badge.objects.get(**badge))
-
-        # Note: it's important that all nested fields are POPPED from the validated data at this point. Otherwise,
-        # DRF will throw an error calling create on the superclass.
-        obj = super().update(instance, validated_data)
-
-        if tags is not None:
-            obj.tags.set(tags)
-
-        if parent_orgs is not None:
-            obj.parent_orgs.set(parent_orgs)
-
-        if badges is not None:
-            obj.badges.set(badges)
-
-        return obj
-
     def save(self):
         """
         Override save in order to replace ID with slugified name if not specified.
+        Also make updating ManyToMany fields work.
         """
         if 'name' in self.validated_data:
             self.validated_data['name'] = self.validated_data['name'].strip()
@@ -377,7 +323,31 @@ class ClubSerializer(ClubListSerializer):
         elif 'code' in self.validated_data:
             del self.validated_data['code']
 
-        return super().save()
+        # save many to many fields
+        m2m_to_save = [
+            ('tags', Tag),
+            ('badges', Badge),
+            ('target_schools', School),
+            ('target_majors', Major)
+        ]
+
+        # remove m2m from validated data and save
+        m2m_lists = {}
+        for m2m, model in m2m_to_save:
+            m2m_lists[m2m] = []
+            items = self.validated_data.pop(m2m, None)
+            if items is None:
+                continue
+            for item in items:
+                m2m_lists[m2m].append(model.objects.get(**item))
+
+        obj = super().save()
+
+        # link models to this model
+        for m2m, _ in m2m_to_save:
+            getattr(obj, m2m).set(m2m_lists[m2m])
+
+        return obj
 
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
@@ -457,22 +427,6 @@ class SubscribeSerializer(serializers.ModelSerializer):
         model = Subscribe
         fields = ('club', 'name', 'person', 'email')
         validators = [validators.UniqueTogetherValidator(queryset=Subscribe.objects.all(), fields=['club', 'person'])]
-
-
-class SchoolSerializer(serializers.ModelSerializer):
-    name = serializers.CharField()
-
-    class Meta:
-        model = School
-        fields = ('name',)
-
-
-class MajorSerializer(serializers.ModelSerializer):
-    name = serializers.CharField()
-
-    class Meta:
-        model = Major
-        fields = ('name',)
 
 
 class UserSerializer(serializers.ModelSerializer):
