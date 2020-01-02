@@ -12,6 +12,12 @@ const Wrapper = s.div`
   align-items: center;
 `
 
+const BookmarkWrapper = s.span`
+  display: inline-block;
+  vertical-align: middle;
+  margin-top: .375em;
+`
+
 const Header = ({
   club,
   userInfo,
@@ -48,13 +54,18 @@ const Header = ({
           {!active && <InactiveTag />}
         </Title>
         <span>
-          {favCount}{' '}
-          <BookmarkIcon
-            club={club}
-            favorite={isFavorite}
-            updateFavorites={updateFavorites}
-            padding="0"
-          />
+          <BookmarkWrapper>
+            {favCount}{' '}
+            <BookmarkIcon
+              club={club}
+              favorite={isFavorite}
+              updateFavorites={(id) => {
+                const upd = updateFavorites(id)
+                setFavCount(favCount + (upd ? 1 : -1))
+              }}
+              padding="0"
+            />
+          </BookmarkWrapper>
           <div
             className="button is-success"
             onClick={() => updateSubscriptions(club.code)}
