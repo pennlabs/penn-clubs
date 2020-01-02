@@ -750,7 +750,7 @@ class ClubForm extends React.Component {
           {nameOrDefault}
           {showInactiveTag && <InactiveTag />}
           {club && (
-            <Link href="/club/[club]" as={`/post/${club.code}`}>
+            <Link href="/club/[club]" as={`/club/${club.code}`}>
               <a
                 className="button is-pulled-right is-secondary is-medium"
                 style={{ fontWeight: 'normal' }}
