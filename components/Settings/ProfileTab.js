@@ -4,8 +4,8 @@ import { LOGOUT_URL } from '../../utils'
 import { Icon, SmallText } from '../common'
 import { MEDIUM_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
-
 import { logEvent } from '../../utils/analytics'
+import { SmallText } from '../common'
 
 const Wrapper = s.div`
   font-family: ${BODY_FONT};
@@ -24,7 +24,7 @@ const LogoutLink = s.a`
 `
 
 const Empty = s.span`
-  color: #888;
+  color: ${MEDIUM_GRAY};
 `
 
 export default ({ defaults }) => {
