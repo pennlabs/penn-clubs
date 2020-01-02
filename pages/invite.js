@@ -1,7 +1,7 @@
 import renderPage from '../renderPage.js'
 import { doApiRequest, formatResponse, LOGIN_URL } from '../utils'
 import React from 'react'
-import { Router } from '../routes'
+import { Router, Link } from '../routes'
 
 class Invite extends React.Component {
   constructor(props) {
@@ -112,7 +112,7 @@ class Invite extends React.Component {
       <div style={{ padding: '30px 50px' }} className="has-text-centered">
         <h2 className="title is-2">&#x1F389; Invitation for {club.name} &#x1F389;</h2>
         <div className="title is-4" style={{ fontWeight: 'normal' }}>
-          <b>{invite.name}</b> has invited you, <b>{invite.email}</b>, to join {club.name}.
+          <b>{invite.name}</b> has invited you, <b>{invite.email}</b>, to join <Link route="club-view" params={{ club: club.code }}>{club.name}</Link>.
         </div>
         {club.image_url && <img src={club.image_url} alt={club.name} style={{ maxHeight: 100, marginBottom: 15 }} />}
         <p style={{ marginBottom: 15 }}>
