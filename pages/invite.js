@@ -121,7 +121,7 @@ class Invite extends React.Component {
         </p>
         <p>
           <label>
-            <input type="checkbox" checked={this.state.isPublic} onClick={() => this.setState({ isPublic: !this.state.isPublic })} />
+            <input type="checkbox" checked={this.state.isPublic} onChange={() => this.setState({ isPublic: !this.state.isPublic })} />
             {' '} Make my membership to this club public. Outsiders will be able to see my name and role in {club.name}.
           </label>
         </p>
