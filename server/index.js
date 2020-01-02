@@ -6,10 +6,7 @@ const path = require('path')
 const express = require('express')
 const { createServer } = require('http')
 const next = require('next')
-const routes = require('../routes')
-
 const nextApp = next({ dev })
-const handler = routes.getRequestHandler(nextApp)
 
 if (process.env.MAINTENANCE) {
   const app = express()
@@ -23,7 +20,7 @@ if (process.env.MAINTENANCE) {
   )
 } else {
   nextApp.prepare().then(() => {
-    createServer(handler).listen(PORT, err => {
+    createServer().listen(PORT, err => {
       if (err) throw err
       console.log(`ready at http://localhost:${PORT}`) // eslint-disable-line
     })
