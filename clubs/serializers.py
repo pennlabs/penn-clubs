@@ -36,7 +36,8 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         if not self.validated_data.get('token') == self.instance.token:
             raise serializers.ValidationError('Missing or invalid token in request!')
 
-        if self.instance.email.endswith('.upenn.edu') and self.instance.club.membership_set.count() > 0:
+        # if there is an owner and the invite is for a upenn email, do strict username checking
+        if self.instance.email.endswith(('.upenn.edu', '@upenn.edu')) and self.instance.club.membership_set.count() > 0:
             invite_username = self.instance.email.rsplit('@', 1)[0]
             if not invite_username.lower() == user.username.lower():
                 raise serializers.ValidationError('This invitation was meant for "{}", but you are logged in as "{}"!'
@@ -122,7 +123,7 @@ class MembershipSerializer(serializers.ModelSerializer):
 
         if membership is None or membership.role > Membership.ROLE_OFFICER:
             for field in data:
-                if field not in ['public']:
+                if field not in ['public', 'active']:
                     raise serializers.ValidationError('Normal members are not allowed to change "{}"!'.format(field))
         return data
 
