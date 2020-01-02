@@ -1,7 +1,7 @@
 import renderPage from '../renderPage.js'
-import { doApiRequest, formatResponse, LOGIN_URL } from '../utils'
+import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../utils'
 import React from 'react'
-import { Router, Link } from '../routes'
+import { withRouter } from 'next/router'
 
 class Invite extends React.Component {
   constructor(props) {
@@ -52,7 +52,7 @@ class Invite extends React.Component {
   }
 
   accept(isPublic) {
-    const { query } = this.props
+    const { query, router } = this.props
     doApiRequest(`/clubs/${query.club}/invites/${query.invite}/?format=json`, {
       method: 'PATCH',
       body: {
@@ -61,7 +61,7 @@ class Invite extends React.Component {
       },
     }).then(resp => {
       if (resp.ok) {
-        Router.pushRoute('club-view', { club: query.club })
+        router.push('/club/[club]', `/club/${query.club}`)
       } else {
         resp.json().then(data => {
           this.setState({
@@ -139,4 +139,4 @@ Invite.getInitialProps = async props => {
   return { query: props.query }
 }
 
-export default renderPage(Invite)
+export default renderPage(withRouter(Invite))
