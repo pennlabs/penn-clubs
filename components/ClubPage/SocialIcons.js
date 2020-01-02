@@ -51,9 +51,7 @@ const SocialIcons = ({ club }) =>
     .map(item => (
       <div key={item.name}>
         <Icon style={iconStyles} name={item.icon} alt={item.icon} />{' '}
-        <a href={club[item.name] ? (item.prefix || '') + club[item.name] : '#'}>
-          <SocialLink club={club} item={item} type={item.name} />
-        </a>
+        <SocialLink club={club} item={item} type={item.name} />
       </div>
     ))
 

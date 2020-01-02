@@ -39,7 +39,7 @@ const InfoBox = props => {
   ]
 
   return data.map(({ icon, text }) => (
-    <p style={infoStyles}>
+    <p style={infoStyles} key={text}>
       <Icon name={icon} style={iconStyles} alt={text} />
       {text}
     </p>
