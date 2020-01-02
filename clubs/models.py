@@ -78,6 +78,9 @@ class Club(models.Model):
     parent_orgs = models.ManyToManyField('Club', related_name='children_orgs', blank=True)
     badges = models.ManyToManyField('Badge', blank=True)
 
+    target_schools = models.ManyToManyField('School', blank=True)
+    target_majors = models.ManyToManyField('Major', blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -437,8 +440,8 @@ class Profile(models.Model):
     image = models.ImageField(upload_to=get_user_file_name, null=True, blank=True)
 
     graduation_year = models.PositiveSmallIntegerField(null=True, blank=True)
-    school = models.ManyToManyField(School)
-    major = models.ManyToManyField(Major)
+    school = models.ManyToManyField(School, blank=True)
+    major = models.ManyToManyField(Major, blank=True)
 
 
 @receiver(models.signals.post_delete, sender=Asset)
