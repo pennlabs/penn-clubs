@@ -25,7 +25,7 @@ const Image = s.img`
   object-fit: contain;
 `
 
-const Club = ({ query, userInfo, favorites, updateFavorites }) => {
+const Club = ({ query, userInfo, favorites, updateFavorites, subscriptions, updateSubscriptions }) => {
   const [club, setClub] = useState(null)
 
   useEffect(() => {
@@ -57,6 +57,8 @@ const Club = ({ query, userInfo, favorites, updateFavorites }) => {
           userInfo={userInfo}
           favorites={favorites}
           updateFavorites={updateFavorites}
+          subscriptions={subscriptions}
+          updateSubscriptions={updateSubscriptions}
           style={{ flex: 1 }}
         />
       </Flex>

@@ -12,8 +12,9 @@ const Wrapper = s.div`
   align-items: center;
 `
 
-const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
+const Header = ({ club, userInfo, favorites, style, updateFavorites, subscriptions, updateSubscriptions }) => {
   const isFavorite = favorites.includes(club.code)
+  const isSubscription = subscriptions.includes(club.code)
 
   // inClub is set to the membership object if the user is in the club, or false
   // otherwise
@@ -46,6 +47,9 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
             updateFavorites={updateFavorites}
             padding="0"
           />
+          <div className="button is-success" onClick={() => updateSubscriptions(club.code)} style={{ marginLeft: 15 }}>
+            {isSubscription ? 'Unsubscribe' : 'Subscribe'}
+          </div>
           {canEdit && (
             <Link route="club-edit" params={{ club: club.code }}>
               <a className="button is-success" style={{ marginLeft: 15 }}>
