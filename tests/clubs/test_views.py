@@ -543,6 +543,7 @@ class ClubTestCase(TestCase):
         tag2 = Tag.objects.create(name='Engineering')
 
         badge1 = Badge.objects.create(label='SAC Funded')
+        school1 = School.objects.create(name='Engineering')
 
         self.client.login(username=self.user5.username, password='test')
 
@@ -556,6 +557,11 @@ class ClubTestCase(TestCase):
                 },
                 {
                     'name': tag2.name
+                }
+            ],
+            'target_schools': [
+                {
+                    'name': school1.name
                 }
             ],
             'facebook': 'https://www.facebook.com/groups/966590693376781/?ref=nf_target&fref=nf',
@@ -572,6 +578,7 @@ class ClubTestCase(TestCase):
         self.assertTrue(club_obj)
         self.assertEqual(Membership.objects.filter(club=club_obj).count(), 1)
         self.assertEqual(club_obj.members.count(), 1)
+        self.assertEqual(club_obj.target_schools.count(), 1)
 
         # ensure lookup returns the correct information
         resp = self.client.get(reverse('clubs-detail', args=('penn-labs',)))
