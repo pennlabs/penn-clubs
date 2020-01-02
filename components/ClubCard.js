@@ -16,7 +16,7 @@ import {
 import { stripTags } from '../utils'
 import { InactiveTag, TagGroup } from './common'
 import ClubDetails from './ClubDetails'
-import { CLUB_ROUTE } from '../constants/routes'
+import { Link } from '../routes'
 
 const CardWrapper = s.div`
   ${mediaMaxWidth(SM)} {
@@ -106,43 +106,45 @@ const ClubCard = ({
 
   return (
     <CardWrapper className="column is-half-desktop">
-      <a href={CLUB_ROUTE(code)} target="_BLANK">
-        <Card className="card">
-          <div style={{ display: 'flex' }}>
-            <div style={{ flex: 1 }}>
-              <div>
-                <CardHeader>
-                  <CardTitle className="is-size-5">{name}</CardTitle>
-                </CardHeader>
+      <Link route="club-view" params={{ club: code }}>
+        <a target="_blank">
+          <Card className="card">
+            <div style={{ display: 'flex' }}>
+              <div style={{ flex: 1 }}>
+                <div>
+                  <CardHeader>
+                    <CardTitle className="is-size-5">{name}</CardTitle>
+                  </CardHeader>
+                </div>
+                {!active && (
+                  <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
+                )}
+                <TagGroup
+                  tags={tags}
+                  selectedTags={selectedTags}
+                  updateTag={updateTag}
+                />
               </div>
-              {!active && (
-                <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
+              {img && (
+                <LazyLoad height={62} offset={800}>
+                  <Image src={img} alt={`${name} Logo`} />
+                </LazyLoad>
               )}
-              <TagGroup
-                tags={tags}
-                selectedTags={selectedTags}
-                updateTag={updateTag}
-              />
             </div>
-            {img && (
-              <LazyLoad height={62} offset={800}>
-                <Image src={img} alt={`${name} Logo`} />
-              </LazyLoad>
-            )}
-          </div>
 
-          <Description>{textDescription}</Description>
+            <Description>{textDescription}</Description>
 
-          <ClubDetails
-            size={size}
-            applicationRequired={applicationRequired}
-            acceptingMembers={acceptingMembers}
-            club={club}
-            favorite={favorite}
-            updateFavorites={updateFavorites}
-          />
-        </Card>
-      </a>
+            <ClubDetails
+              size={size}
+              applicationRequired={applicationRequired}
+              acceptingMembers={acceptingMembers}
+              club={club}
+              favorite={favorite}
+              updateFavorites={updateFavorites}
+            />
+          </Card>
+        </a>
+      </Link>
     </CardWrapper>
   )
 }

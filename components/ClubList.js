@@ -5,7 +5,7 @@ import { Card, BlueTag, InactiveTag } from './common'
 
 import { BORDER_RADIUS } from '../constants/measurements'
 import { getDefaultClubImageURL } from '../utils'
-import { CLUB_ROUTE } from '../constants/routes'
+import { Link } from '../routes'
 
 const Subtitle = s.p`
   color: ${CLUBS_GREY_LIGHT} !important;
@@ -27,7 +27,7 @@ const ClubList = ({ club, updateFavorites, favorite }) => {
   const img = club.image_url || getDefaultClubImageURL()
 
   return (
-    <a href={CLUB_ROUTE(code)}>
+    <Link route="club-view" params={{ club: code }}>
       <Card>
         <div className="columns is-vcentered is-gapless is-mobile">
           <div className="column">
@@ -62,7 +62,7 @@ const ClubList = ({ club, updateFavorites, favorite }) => {
           </div>
         </div>
       </Card>
-    </a>
+    </Link>
   )
 }
 
