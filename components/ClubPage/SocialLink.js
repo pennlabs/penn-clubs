@@ -1,6 +1,9 @@
+const stripUrl = url => {
+  return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '')
+}
+
 const SocialLink = ({ club, item, type }) => {
-  let url
-  let text
+  let url, text
 
   if (type === 'email') {
     const email = club[item.name]
@@ -8,7 +11,7 @@ const SocialLink = ({ club, item, type }) => {
     text = email
   } else {
     url = club[item.name]
-    text = url
+    text = stripUrl(url)
   }
 
   return <a href={url}> {text}</a>

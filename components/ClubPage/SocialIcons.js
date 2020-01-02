@@ -47,10 +47,6 @@ const iconStyles = {
 
 const SocialIcons = ({ club }) =>
   socials
-    .map((data, idx) => {
-      data.index = idx
-      return data
-    })
     .filter(item => club[item.name])
     .map(item => (
       <div key={item.name}>
