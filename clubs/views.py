@@ -341,6 +341,7 @@ def email_preview(request):
         context = {
             'name': '[Club Name]',
             'url': '[URL]',
+            'view_url': '[URL]',
             'sender': {
                 'username': '[Sender Username]',
                 'email': '[Sender Email]'
