@@ -344,7 +344,8 @@ def email_preview(request):
             'sender': {
                 'username': '[Sender Username]',
                 'email': '[Sender Email]'
-            }
+            },
+            'role': 0
         }
         email = render_to_string('emails/{}.html'.format(email_path), context)
         text_email = render_to_string('emails/{}.txt'.format(email_path), context)
