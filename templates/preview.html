@@ -17,6 +17,10 @@
             font-size: 13px;
             padding: 15px;
         }
+        #email a
+        {
+            color: #15c;
+        }
         #text-email
         {
             font-family: monospace;
@@ -36,6 +40,16 @@
             background-color: #eee;
         }
         </style>
+        <script>
+            window.addEventListener('load', e => {
+                const links = document.querySelectorAll('#email a')
+                for (const link of links) {
+                    link.addEventListener('click', e => {
+                        e.preventDefault()
+                    })
+                }
+            })
+        </script>
     </head>
     <body>
         <div id="templates">
