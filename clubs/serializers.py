@@ -463,6 +463,7 @@ class UserSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(source='profile.image', write_only=True)
     image_url = serializers.SerializerMethodField('get_image_url')
 
+    has_been_prompted = serializers.BooleanField(source='profile.has_been_prompted')
     graduation_year = serializers.IntegerField(source='profile.graduation_year')
     school = SchoolSerializer(many=True, source='profile.school')
     major = MajorSerializer(many=True, source='profile.major')
@@ -500,7 +501,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'subscribe_set',
-                  'is_superuser', 'image_url', 'image', 'graduation_year', 'school', 'major')
+                  'is_superuser', 'image_url', 'image', 'graduation_year', 'school', 'major',
+                  'has_been_prompted')
 
 
 class AssetSerializer(serializers.ModelSerializer):
