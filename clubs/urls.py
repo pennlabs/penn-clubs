@@ -6,7 +6,7 @@ from rest_framework_nested import routers
 
 from clubs.views import (AssetViewSet, ClubViewSet, EventViewSet, FavoriteViewSet, MajorViewSet,
                          MassInviteAPIView, MemberInviteViewSet, MemberViewSet, NoteViewSet,
-                         SchoolViewSet, SubscribeViewSet, TagViewSet, UserUpdateAPIView)
+                         SchoolViewSet, SubscribeViewSet, TagViewSet, UserUpdateAPIView, email_preview)
 
 
 router = routers.SimpleRouter()
@@ -27,7 +27,8 @@ clubs_router.register(r'notes', NoteViewSet, basename='club-notes')
 
 urlpatterns = [
     path(r'settings/', UserUpdateAPIView.as_view(), name='users-detail'),
-    path(r'clubs/<slug:club_code>/invite/', MassInviteAPIView.as_view(), name='club-invite')
+    path(r'clubs/<slug:club_code>/invite/', MassInviteAPIView.as_view(), name='club-invite'),
+    path(r'emailpreview/', email_preview, name='email-preview'),
 ]
 
 urlpatterns += router.urls

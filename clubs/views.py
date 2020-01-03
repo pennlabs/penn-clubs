@@ -1,9 +1,12 @@
+import os
 import re
 
+from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework import filters, generics, parsers, status, viewsets
@@ -321,3 +324,33 @@ class MassInviteAPIView(APIView):
         return Response({
             'detail': 'Sent invite(s) to {} email(s)!'.format(len(emails))
         })
+
+
+def email_preview(request):
+    """
+    Debug endpoint used for previewing how email templates will look.
+    """
+    email_templates = os.listdir(os.path.join(settings.BASE_DIR, 'templates', 'emails'))
+    email_templates = [e.rsplit('.', 1)[0] for e in email_templates if e.endswith('.html')]
+
+    email = None
+    text_email = None
+
+    if 'email' in request.GET:
+        email_path = os.path.basename(request.GET.get('email'))
+        context = {
+            'name': '[Club Name]',
+            'url': '[URL]',
+            'sender': {
+                'username': '[Sender Username]',
+                'email': '[Sender Email]'
+            }
+        }
+        email = render_to_string('emails/{}.html'.format(email_path), context)
+        text_email = render_to_string('emails/{}.txt'.format(email_path), context)
+
+    return render(request, 'preview.html', {
+        'templates': email_templates,
+        'email': email,
+        'text_email': text_email
+    })

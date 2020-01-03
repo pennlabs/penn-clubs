@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Email Template Preview</title>
+        <style>
+        body
+        {
+            background-color: #ccc;
+        }
+        #email, #text-email
+        {
+            max-width: 800px;
+            background-color: white;
+            border: 1px solid #aaa;
+            margin: 15px auto;
+            font-family: sans-serif;
+            font-size: 13px;
+            padding: 15px;
+        }
+        #text-email
+        {
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        #templates
+        {
+            text-align: center;
+            margin-top: 15px;
+        }
+        #templates a
+        {
+            padding: 6px 10px;
+            border-radius: 3px;
+            text-decoration: none;
+            margin: 5px;
+            background-color: #eee;
+        }
+        </style>
+    </head>
+    <body>
+        <div id="templates">
+        {% for template in templates %}
+            <a href="?email={{template}}">{{template|title}}</a>
+        {% endfor %}
+        </div>
+        <div id="email">
+            {{email}}
+        </div>
+        <div id="text-email">{{text_email}}</div>
+    </body>
+</html>
