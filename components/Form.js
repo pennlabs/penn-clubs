@@ -93,7 +93,7 @@ class Form extends React.Component {
           break
         }
         case 'select': {
-          out[name] = reverser(val)
+          out[name] = val ? reverser(val) : val
           break
         }
         case 'checkbox': {
