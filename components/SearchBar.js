@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import s from 'styled-components'
 
 import { Icon } from './common'
@@ -109,128 +109,93 @@ const SearchIcon = s.span`
   }
 `
 
-class SearchBar extends React.Component {
-  constructor(props) {
-    super(props)
-    const { tags, selectedTags } = props
-    this.state = {
-      nameInput: '',
-      tagOptions: tags.map(tag => ({
-        value: tag.id,
-        label: tag.name,
-        count: tag.clubs,
-      })),
-      activeDropdownFilter: null,
-      selectedTags: selectedTags,
-    }
 
-    this.inputRef = React.createRef()
-    this.focus = this.focus.bind(this)
-    this.toggleActiveDropdownFilter = this.toggleActiveDropdownFilter.bind(this)
+const SearchBar = ({ tags, updateTag, selectedTags: propTags, resetDisplay }) => {
+  const [nameInput, setNameInput] = useState('')
+  const [tagOptions, setTagOptions] = useState(
+    tags.map(tag => ({
+      value: tag.id,
+      label: tag.name,
+      count: tag.clubs,
+    }))
+  )
+  const [activeDropdownFilter, setActiveDropdownFilter] = useState(null)
+  const [selectedTags, setSelectedTags] = useState(propTags)
+  const [timeout, storeTimeout] = useState(null)
+  const inputRef = useRef();
+
+  useEffect(() => setTagOptions(tags), [tags])
+  useEffect(() => setSelectedTags(propTags), [propTags])
+  useEffect(() => {
+    clearTimeout(timeout)
+    storeTimeout(setTimeout(() => resetDisplay(nameInput, selectedTags), 200))
+  }, [nameInput])
+
+  const toggleActiveDropdownFilter = name => setActiveDropdownFilter(activeDropdownFilter === name ? null : name)
+  const focus = () => inputRef.current.focus()
+
+  const isTextInSearchBar = Boolean(nameInput)
+  const dropdowns = {
+    Type: tagOptions,
+    Size: [
+      { value: 1, label: 'less than 20 members' },
+      { value: 2, label: '20 to 50 members' },
+      { value: 3, label: '50 to 100 members' },
+      { value: 4, label: 'more than 100' },
+    ],
+    Application: [
+      { value: 1, label: 'Requires application' },
+      { value: 2, label: 'Does not require application' },
+      { value: 3, label: 'Currently accepting applications' },
+    ],
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    const { nameInput } = this.state
-    if (prevState.nameInput !== nameInput) {
-      clearTimeout(this.timeout)
-      this.timeout = setTimeout(
-        () => this.props.resetDisplay(nameInput, this.state.selectedTags),
-        200
-      )
-    }
-    if (prevProps.selectedTags !== this.props.selectedTags) {
-      this.setState({
-        selectedTags: this.props.selectedTags,
-      })
-    }
-  }
-
-  toggleActiveDropdownFilter(name) {
-    const { activeDropdownFilter } = this.state
-    if (activeDropdownFilter === name) {
-      this.setState({ activeDropdownFilter: null })
-    } else {
-      this.setState({ activeDropdownFilter: name })
-    }
-  }
-
-  focus() {
-    this.inputRef.current.focus()
-  }
-
-  render() {
-    const {
-      tagOptions,
-      selectedTags,
-      nameInput,
-      activeDropdownFilter,
-    } = this.state
-
-    const isTextInSearchBar = Boolean(nameInput)
-
-    const dropdowns = {
-      Type: tagOptions,
-      Size: [
-        { value: 1, label: 'less than 20 members' },
-        { value: 2, label: '20 to 50 members' },
-        { value: 3, label: '50 to 100 members' },
-        { value: 4, label: 'more than 100' },
-      ],
-      Application: [
-        { value: 1, label: 'Requires application' },
-        { value: 2, label: 'Does not require application' },
-        { value: 3, label: 'Currently accepting applications' },
-      ],
-    }
-
-    const { updateTag } = this.props
-    return (
-      <>
-        <Wrapper>
-          <Content>
-            <SearchWrapper>
-              <SearchIcon>
-                {isTextInSearchBar ? (
-                  <Icon
-                    name="x"
-                    alt="cancel search"
-                    onClick={() => {
-                      this.setState({ nameInput: '' })
-                      this.focus()
-                    }}
-                  />
-                ) : (
-                  <Icon name="search" alt="search" onClick={this.focus} />
+  return (
+    <>
+      <Wrapper>
+        <Content>
+          <SearchWrapper>
+            <SearchIcon>
+              {isTextInSearchBar ? (
+                <Icon
+                  name="x"
+                  alt="cancel search"
+                  onClick={() => {
+                    setNameInput('')
+                    focus()
+                  }}
+                />
+              ) : (
+                  <Icon name="search" alt="search" onClick={focus} />
                 )}
-              </SearchIcon>
-              <Input
-                type="text"
-                name="search"
-                placeholder="Search"
-                aria-label="Search"
-                ref={this.inputRef}
-                value={nameInput}
-                onChange={e => this.setState({ nameInput: e.target.value })}
-              />
-            </SearchWrapper>
-            {Object.keys(dropdowns).map(key => (
-              <DropdownFilter
-                active={activeDropdownFilter === key}
-                toggleActive={() => this.toggleActiveDropdownFilter(key)}
-                name={key}
-                key={key}
-                options={dropdowns[key]}
-                selected={selectedTags.filter(tag => tag.name === key)}
-                updateTag={updateTag}
-              />
-            ))}
-          </Content>
-        </Wrapper>
+            </SearchIcon>
+            <Input
+              type="text"
+              name="search"
+              placeholder="Search"
+              aria-label="Search"
+              ref={inputRef}
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+            />
+          </SearchWrapper>
+          {Object.keys(dropdowns).map(key => (
+            <DropdownFilter
+              active={activeDropdownFilter === key}
+              toggleActive={() => toggleActiveDropdownFilter(key)}
+              name={key}
+              key={key}
+              options={dropdowns[key]}
+              selected={selectedTags.filter(tag => tag.name === key)}
+              updateTag={updateTag}
+            />
+          ))}
+        </Content>
+      </Wrapper>
 
-        <MobileSearchBarSpacer />
-      </>
-    )
-  }
+      <MobileSearchBarSpacer />
+    </>
+  )
 }
 
 export default SearchBar
