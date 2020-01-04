@@ -1,5 +1,6 @@
 import os
 import re
+import qrcode
 
 from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
@@ -14,6 +15,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.http import HttpResponse
 
 from clubs.models import Asset, Club, Event, Favorite, Major, Membership, MembershipInvite, Note, School, Subscribe, Tag
 from clubs.permissions import (AssetPermission, ClubPermission, EventPermission, InvitePermission,
@@ -135,7 +137,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         return Response(child_tree)
 
     @action(detail=True, methods=['get'], url_path='notes-about')
-    def notes_about(self, request, *args, **kwards):
+    def notes_about(self, request, *args, **kwargs):
         """
         Return a list of notes about this club, used by members of parent organizations.
         """
@@ -144,6 +146,14 @@ class ClubViewSet(viewsets.ModelViewSet):
         queryset = filter_note_permission(queryset, club, self.request.user)
         serializer = NoteSerializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def qr(self, request, *args, **kwargs):
+        url = 'https://pennclubs.com/club/{}'.format(self.kwargs['code'])
+        response = HttpResponse(content_type='image/png')
+        qr_image = qrcode.make(url, box_size=20)
+        qr_image.save(response, 'PNG')
+        return response
 
     @action(detail=True, methods=['get'])
     def subscription(self, request, *args, **kwargs):
