@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import s from 'styled-components'
 
 import { Icon } from './common'
@@ -109,22 +109,13 @@ const SearchIcon = s.span`
   }
 `
 
-
 const SearchBar = ({ tags, updateTag, selectedTags: propTags, resetDisplay }) => {
   const [nameInput, setNameInput] = useState('')
-  const [tagOptions, setTagOptions] = useState(
-    tags.map(tag => ({
-      value: tag.id,
-      label: tag.name,
-      count: tag.clubs,
-    }))
-  )
   const [activeDropdownFilter, setActiveDropdownFilter] = useState(null)
   const [selectedTags, setSelectedTags] = useState(propTags)
   const [timeout, storeTimeout] = useState(null)
-  const inputRef = useRef();
+  const inputRef = useRef()
 
-  useEffect(() => setTagOptions(tags), [tags])
   useEffect(() => setSelectedTags(propTags), [propTags])
   useEffect(() => {
     clearTimeout(timeout)
@@ -136,7 +127,11 @@ const SearchBar = ({ tags, updateTag, selectedTags: propTags, resetDisplay }) =>
 
   const isTextInSearchBar = Boolean(nameInput)
   const dropdowns = {
-    Type: tagOptions,
+    Type: tags.map(tag => ({
+      value: tag.id,
+      label: tag.name,
+      count: tag.clubs,
+    })),
     Size: [
       { value: 1, label: 'less than 20 members' },
       { value: 2, label: '20 to 50 members' },
@@ -166,8 +161,8 @@ const SearchBar = ({ tags, updateTag, selectedTags: propTags, resetDisplay }) =>
                   }}
                 />
               ) : (
-                  <Icon name="search" alt="search" onClick={focus} />
-                )}
+                <Icon name="search" alt="search" onClick={focus} />
+              )}
             </SearchIcon>
             <Input
               type="text"
