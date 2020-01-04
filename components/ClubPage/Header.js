@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import s from 'styled-components'
 
-import { TagGroup, InactiveTag, Title, BookmarkIcon } from '../common'
+import { TagGroup, InactiveTag, Title, BookmarkIcon, SubscribeIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
 import { Link } from '../../routes'
 
@@ -66,13 +66,11 @@ const Header = ({
               padding="0"
             />
           </BookmarkWrapper>
-          <div
-            className="button is-success"
-            onClick={() => updateSubscriptions(club.code)}
-            style={{ marginLeft: 15 }}
-          >
-            {isSubscription ? 'Unsubscribe' : 'Subscribe'}
-          </div>
+          <SubscribeIcon
+            club={club}
+            subscribe={isSubscription}
+            updateSubscribes={updateSubscriptions}
+          />
           {canEdit && (
             <Link route="club-edit" params={{ club: club.code }}>
               <a className="button is-success" style={{ marginLeft: 15 }}>
