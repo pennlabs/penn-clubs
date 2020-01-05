@@ -1,5 +1,5 @@
 const stripUrl = url => {
-  return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '')
+  return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').replace(/\/$/, '')
 }
 
 const SocialLink = ({ club, item, type }) => {
