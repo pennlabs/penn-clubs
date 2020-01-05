@@ -84,9 +84,11 @@ def filter_note_permission(queryset, club, user):
 class ClubViewSet(viewsets.ModelViewSet):
     """
     retrieve:
-    Return a single club.
+    Return a single club with all information fields present.
     list:
-    Return a list of clubs.
+    Return a list of clubs with partial information for each club.
+    destroy:
+    Delete a club. Consider marking the club as inactive instead of deleting the club.
     """
     queryset = (Club.objects.all()
                             .annotate(favorite_count=Count('favorite'))
@@ -109,15 +111,24 @@ class ClubViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def upload(self, request, *args, **kwargs):
+        """
+        Upload the club logo.
+        """
         return upload_endpoint_helper(request, Club, 'image', code=kwargs['code'])
 
     @action(detail=True, methods=['get'])
     def children(self, request, *args, **kwargs):
+        """
+        Return a recursive list of all children that this club is a parent of.
+        """
         child_tree = find_children_helper(self.get_object())
         return Response(child_tree)
 
     @action(detail=True, methods=['get'], url_path='notes-about')
     def notes_about(self, request, *args, **kwards):
+        """
+        Return a list of notes about this club, used by members of parent organizations.
+        """
         club = self.get_object()
         queryset = Note.objects.filter(subject_club__code=club.code)
         queryset = filter_note_permission(queryset, club, self.request.user)
@@ -126,11 +137,17 @@ class ClubViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def subscription(self, request, *args, **kwargs):
+        """
+        Return a list of all students that have subscribed to the club, including their names and emails.
+        """
         serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']), many=True)
         return Response(serializer.data)
 
     @method_decorator(cache_page(60*5))
     def list(self, request, *args, **kwargs):
+        """
+        Return a list of all clubs. Note that some fields are removed in order to improve the response time.
+        """
         return super().list(request, *args, **kwargs)
 
     def get_serializer_class(self):
@@ -170,6 +187,9 @@ class EventViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def upload(self, request, *args, **kwargs):
+        """
+        Upload a picture for the event.
+        """
         return upload_endpoint_helper(request, Event, 'image', code=kwargs['code'])
 
     def get_queryset(self):
@@ -177,6 +197,13 @@ class EventViewSet(viewsets.ModelViewSet):
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of clubs that the logged in user has favorited.
+
+    create: Favorite a club.
+
+    destroy: Unfavorite a club.
+    """
     serializer_class = FavoriteSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'club__code'
@@ -187,6 +214,13 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
 
 class SubscribeViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of clubs that the logged in user has subscribed to.
+
+    create: Subscribe to a club.
+
+    destroy: Unsubscribe from a club.
+    """
     serializer_class = SubscribeSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'club__code'
@@ -239,6 +273,7 @@ class NoteViewSet(viewsets.ModelViewSet):
 
 class TagViewSet(viewsets.ModelViewSet):
     """
+    list:
     Return a list of tags.
     """
     queryset = Tag.objects.all().annotate(clubs=Count('club')).order_by('name')
@@ -248,6 +283,16 @@ class TagViewSet(viewsets.ModelViewSet):
 
 
 class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
+    """
+    get: Return information about the logged in user, including bookmarks,
+    subscriptions, and school/major/graduation year information.
+
+    put: Update information about the logged in user.
+    All fields are required.
+
+    patch: Update information about the logged in user.
+    Only updates fields that are passed to the server.
+    """
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
@@ -262,6 +307,9 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['put', 'patch'])
     def resend(self, request, *args, **kwargs):
+        """
+        Resend an email invitation that has already been issued.
+        """
         invite = self.get_object()
         invite.send_mail(request)
 
@@ -275,7 +323,7 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
 
 class MassInviteAPIView(APIView):
     """
-    Send out invites and add invite objects given a list of emails.
+    Send out invites and add invite objects given a list of comma or newline separated emails.
     """
     permission_classes = [IsAuthenticated]
 

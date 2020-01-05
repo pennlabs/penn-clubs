@@ -191,9 +191,6 @@ class ClubListSerializer(serializers.ModelSerializer):
     The club list serializer returns a subset of the information that the full serializer returns.
     This is done for a quicker response.
     """
-    code = serializers.SlugField(required=False, validators=[validators.UniqueValidator(queryset=Club.objects.all())])
-    name = serializers.CharField(validators=[validators.UniqueValidator(queryset=Club.objects.all())])
-    subtitle = serializers.CharField(required=False)
     tags = TagSerializer(many=True)
     image_url = serializers.SerializerMethodField('get_image_url')
     favorite_count = serializers.IntegerField(read_only=True)
@@ -216,6 +213,27 @@ class ClubListSerializer(serializers.ModelSerializer):
             'application_required', 'accepting_members', 'image_url', 'favorite_count', 'active',
             'target_schools', 'target_majors'
         ]
+        extra_kwargs = {
+            'name': {
+                'validators': [validators.UniqueValidator(queryset=Club.objects.all())],
+                'help_text': 'The name of the club.'
+            },
+            'code': {
+                'required': False,
+                'validators': [validators.UniqueValidator(queryset=Club.objects.all())],
+                'help_text': 'An alphanumeric string shown in the URL and used to identify this club.'
+            },
+            'description': {
+                'help_text': 'A long description for the club. Certain HTML tags are allowed.'
+            },
+            'email': {
+                'help_text': 'The primary contact email for the club.'
+            },
+            'subtitle': {
+                'required': False,
+                'help_text': 'The text shown to the user in a preview card. Short description of the club.'
+            }
+        }
 
 
 class ClubSerializer(ClubListSerializer):
@@ -417,7 +435,7 @@ class EventSerializer(serializers.ModelSerializer):
 
 class FavoriteSerializer(serializers.ModelSerializer):
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code', help_text='The club code shown in the URL of the club page.')
     name = serializers.CharField(source='club.name', read_only=True)
 
     class Meta:
