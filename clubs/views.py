@@ -126,7 +126,7 @@ class ClubViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def subscription(self, request, *args, **kwargs):
-        serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']),  many=True)
+        serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']), many=True)
         return Response(serializer.data)
 
     @method_decorator(cache_page(60*5))
@@ -210,8 +210,7 @@ class MemberViewSet(viewsets.ModelViewSet):
             if self.request.user.is_superuser or ('club_code' in self.kwargs and
                Membership.objects.filter(person=self.request.user, club__code=self.kwargs['club_code']).exists()):
                 return AuthenticatedMembershipSerializer
-        else:
-            return MembershipSerializer
+        return MembershipSerializer
 
 
 class AssetViewSet(viewsets.ModelViewSet):
