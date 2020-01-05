@@ -132,6 +132,7 @@ function renderPage(Page) {
           this.setState({
             authenticated: false,
             favorites: [],
+            subscriptions: [],
           })
         }
       })
