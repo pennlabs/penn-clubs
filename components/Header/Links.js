@@ -1,4 +1,4 @@
-import { Link } from 'next/link'
+import Link from 'next/link'
 import s from 'styled-components'
 
 import { Icon } from '../common'

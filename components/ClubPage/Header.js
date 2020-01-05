@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'next/link'
+import Link from 'next/link'
 import s from 'styled-components'
 
 import { TagGroup, InactiveTag, Title, BookmarkIcon, SubscribeIcon } from '../common'
@@ -36,7 +36,7 @@ const Header = ({
     userInfo &&
     (userInfo.membership_set.filter(a => a.id === club.code) || [false])[0]
 
-  // a user can e dit a club if they are either a superuser or in the club and
+  // a user can edit a club if they are either a superuser or in the club and
   // at least an officer
   const canEdit =
     (inClub && inClub.role <= ROLE_OFFICER) ||
@@ -72,7 +72,7 @@ const Header = ({
             updateSubscribes={updateSubscriptions}
           />
           {canEdit && (
-            <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
+          <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
               <a className="button is-success" style={{ marginLeft: 15 }}>
                 Edit Club
               </a>
