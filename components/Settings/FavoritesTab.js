@@ -1,9 +1,17 @@
+import { useState } from 'react'
 import ClubTableRow from '../ClubTableRow'
 
-export default (props) => {
-  const { keyword, updateFavorites, favorites, clubs } = props
-
+export default ({ clubs, favorites, keyword, updateFavorites }) => {
+  const [table, setTable] = useState(() => {
+    const ret = {}
+    favorites.forEach(favorite => { ret[favorite] = true })
+    return ret
+  })
   const findClub = clubs ? code => clubs.find(club => club.code === code) : () => {}
+  const toggleFavorite = code => {
+    setTable({ ...table, [code]: !table[code] })
+    updateFavorites(code)
+  }
 
   if (!favorites || !favorites.length) {
     return (
@@ -14,12 +22,11 @@ export default (props) => {
   }
   return (
     <div>
-      {favorites.map((favorite) => (
+      {Object.keys(table).map((favorite) => (
         <ClubTableRow
           club={findClub(favorite)}
-          updateFavorites={updateFavorites}
-          openModal={null}
-          favorite={true}
+          updateFavorites={toggleFavorite}
+          favorite={table[favorite]}
           key={favorite}
         />
       ))}
