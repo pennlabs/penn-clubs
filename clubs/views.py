@@ -165,12 +165,38 @@ class ClubViewSet(viewsets.ModelViewSet):
 
 
 class SchoolViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Retrieve a list of all of the schools (ex: Wharton, Engineering).
+
+    retrieve:
+    Retrieve a single school by ID.
+
+    create:
+    Add a new school to the list of schools.
+
+    destroy:
+    Delete a school from the list of schools.
+    """
     serializer_class = SchoolSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     queryset = School.objects.all()
 
 
 class MajorViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Retrieve a list of all the majors (ex: Computer Science, BAS).
+
+    retrieve:
+    Retrieve a single major by ID.
+
+    create:
+    Add a new major to the list of majors.
+
+    destroy:
+    Remove a major from the list of majors.
+    """
     serializer_class = MajorSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     queryset = Major.objects.all()
@@ -178,7 +204,14 @@ class MajorViewSet(viewsets.ModelViewSet):
 
 class EventViewSet(viewsets.ModelViewSet):
     """
-    Return a list of events.
+    list:
+    Return a list of events for this club.
+
+    retrieve:
+    Return a single event.
+
+    destroy:
+    Delete an event.
     """
     serializer_class = EventSerializer
     permission_classes = [EventPermission | IsSuperuser]
@@ -231,6 +264,29 @@ class SubscribeViewSet(viewsets.ModelViewSet):
 
 
 class MemberViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of members that are in the club.
+    Returns more information about each member if the logged in user
+    is a superuser or in the club.
+
+    update:
+    Update the role/title/status for a membership.
+    You must specify all fields or use a patch request.
+
+    partial_update:
+    Update the role/title/status for a membership.
+    Specify only the fields you want to change.
+
+    retrieve:
+    Return information about a specific membership between a student and the club.
+
+    create:
+    Add a member to a club.
+
+    destroy:
+    Kick out a member from a club.
+    """
     serializer_class = MembershipSerializer
     permission_classes = [MemberPermission | IsSuperuser]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
@@ -248,6 +304,19 @@ class MemberViewSet(viewsets.ModelViewSet):
 
 
 class AssetViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of files that belong to this club.
+
+    retrieve:
+    Retrieve information about a specific file that belongs to this club.
+
+    create:
+    Upload a new file to the club file repository.
+
+    destroy:
+    Delete a file from the club file repository.
+    """
     serializer_class = AssetSerializer
     permission_classes = [AssetPermission | IsSuperuser]
     parser_classes = [parsers.MultiPartParser]
@@ -258,6 +327,19 @@ class AssetViewSet(viewsets.ModelViewSet):
 
 
 class NoteViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of notes that this club has created for other clubs.
+
+    retrieve:
+    Return a specific note that this club has created for another club.
+
+    create:
+    Create a new note on another club.
+
+    destroy:
+    Destroy an existing note on another club.
+    """
     serializer_class = NoteSerializer
     permission_classes = [NotePermission | IsSuperuser]
     http_method_names = ['get', 'post', 'delete']
@@ -301,6 +383,16 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
+    """
+    update:
+    Accept a membership invite.
+
+    partial_update:
+    Accept a membership invite.
+
+    destroy:
+    Rescind a membership invite.
+    """
     permission_classes = [InvitePermission | IsSuperuser]
     serializer_class = MembershipInviteSerializer
     http_method_names = ['get', 'put', 'patch', 'delete']

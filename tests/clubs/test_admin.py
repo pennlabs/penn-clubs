@@ -1,3 +1,4 @@
+import yaml
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -54,3 +55,27 @@ class AdminTestCase(TestCase):
         self.client.login(username=self.user1.username, password='test')
         resp = self.client.get(reverse('openapi-schema'))
         self.assertIn(resp.status_code, [200], resp.content)
+
+        # test to ensure schema is parsable
+        docs = yaml.safe_load(resp.content)
+
+        total_routes = 0
+        missing_descriptions = []
+
+        for path in docs['paths']:
+            for method in docs['paths'][path]:
+                total_routes += 1
+                description = docs['paths'][path][method]['description']
+                if not description:
+                    missing_descriptions.append((path, method))
+
+        # ensure that a certain percentage of the api is documented
+        percent_missing = len(missing_descriptions) / total_routes
+        required_percent = 0.25
+        if percent_missing > required_percent:
+            formatted_missing = '\n'.join('\t{1} {0}'.format(*x) for x in missing_descriptions)
+            self.fail('Too many endpoints missing API descriptions ({}% > {}%):\n{}'.format(
+                round(percent_missing * 100, 2),
+                round(required_percent * 100, 2),
+                formatted_missing
+            ))
