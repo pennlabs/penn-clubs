@@ -70,33 +70,25 @@ function renderPage(Page) {
     }
 
     updateFavorites(id) {
-      const { favorites: newFavs } = this.state
-      const i = newFavs.indexOf(id)
-      if (i === -1) {
-        newFavs.push(id)
-        if (this.state.authenticated) {
+      if (this.state.authenticated) {
+        const { favorites: newFavs } = this.state
+        const i = newFavs.indexOf(id)
+        if (i === -1) {
+          newFavs.push(id)
           logEvent('favorite', id)
           doApiRequest('/favorites/?format=json', {
             method: 'POST',
-            body: {
-              club: id,
-            },
+            body: { club: id },
           })
-        }
-      } else {
-        newFavs.splice(i, 1)
-        logEvent('unfavorite', id)
-        if (this.state.authenticated) {
+        } else {
+          newFavs.splice(i, 1)
+          logEvent('unfavorite', id)
           doApiRequest(`/favorites/${id}/?format=json`, {
             method: 'DELETE',
           })
         }
+        this.setState({ favorites: newFavs })
       }
-      this.setState({ favorites: newFavs })
-      if (!this.state.authenticated) {
-        localStorage.setItem('favorites', JSON.stringify(newFavs))
-      }
-      return i === -1
     }
 
     updateSubscriptions(id) {
@@ -139,8 +131,7 @@ function renderPage(Page) {
         } else {
           this.setState({
             authenticated: false,
-            favorites: JSON.parse(localStorage.getItem('favorites')) || [],
-            subscriptions: [],
+            favorites: [],
           })
         }
       })
