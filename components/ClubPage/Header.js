@@ -72,7 +72,7 @@ const Header = ({
             updateSubscribes={updateSubscriptions}
           />
           {canEdit && (
-          <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
+            <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
               <a className="button is-success" style={{ marginLeft: 15 }}>
                 Edit Club
               </a>
