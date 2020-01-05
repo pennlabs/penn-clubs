@@ -16,6 +16,11 @@ class AdminTestCase(TestCase):
         self.user1.is_superuser = True
         self.user1.save()
 
+        self.user2 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
+        self.user2.first_name = 'Benjamin'
+        self.user2.last_name = 'Franklin'
+        self.user2.save()
+
         self.tag1 = Tag.objects.create(name='Engineering')
         self.club1 = Club.objects.create(code='penn-labs', name='Penn Labs')
         self.club1.tags.add(self.tag1)
@@ -36,5 +41,16 @@ class AdminTestCase(TestCase):
         """
         Ensure that openapi schema can be generated correctly.
         """
+        # test unauthenticated schema
+        resp = self.client.get(reverse('openapi-schema'))
+        self.assertIn(resp.status_code, [200], resp.content)
+
+        # test normal user schema
+        self.client.login(username=self.user2.username, password='test')
+        resp = self.client.get(reverse('openapi-schema'))
+        self.assertIn(resp.status_code, [200], resp.content)
+
+        # test superuser schema
+        self.client.login(username=self.user1.username, password='test')
         resp = self.client.get(reverse('openapi-schema'))
         self.assertIn(resp.status_code, [200], resp.content)
