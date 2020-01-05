@@ -39,6 +39,7 @@ export const ROLE_MEMBER = 20
 export const EMPTY_DESCRIPTION =
   '<span style="color:#666">This club has not added a description yet.</span>'
 export const LOGIN_URL = `${API_BASE_URL}/accounts/login/`
+export const LOGOUT_URL = `${API_BASE_URL}/accounts/logout/`
 
 export function getSizeDisplay(size, showMembersLabel = true) {
   const postfix = showMembersLabel ? ' Members' : ''
