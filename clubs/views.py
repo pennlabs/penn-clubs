@@ -85,8 +85,18 @@ class ClubViewSet(viewsets.ModelViewSet):
     """
     retrieve:
     Return a single club with all information fields present.
+
     list:
     Return a list of clubs with partial information for each club.
+
+    update:
+    Update all fields in the club.
+    You must specify all of the fields or use a patch request.
+
+    partial_update:
+    Update certain fields in the club.
+    Only specify the fields that you want to change.
+
     destroy:
     Delete a club. Consider marking the club as inactive instead of deleting the club.
     """
