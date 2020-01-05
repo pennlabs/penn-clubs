@@ -435,7 +435,9 @@ class EventSerializer(serializers.ModelSerializer):
 
 class FavoriteSerializer(serializers.ModelSerializer):
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code', help_text='The club code shown in the URL of the club page.')
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(),
+                                        slug_field='code',
+                                        help_text='The club code shown in the URL of the club page.')
     name = serializers.CharField(source='club.name', read_only=True)
 
     class Meta:
