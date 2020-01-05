@@ -1,11 +1,16 @@
 import s from 'styled-components'
 
 import { Icon } from '../common'
-import { LOGIN_URL } from '../../utils'
+import { LOGIN_URL, LOGOUT_URL } from '../../utils'
 import { mediaMaxWidth, MD } from '../../constants/measurements'
 import { MEDIUM_GRAY, DARK_GRAY, BORDER } from '../../constants/colors'
 import { logEvent } from '../../utils/analytics'
 import { Link } from '../../routes'
+
+const StyledIcon = s(Icon)`
+  opacity: 0.5;
+  marginRight: 4px;
+`
 
 const StyledLink = s.a`
   padding: 14px 20px;
@@ -53,14 +58,24 @@ export default ({ userInfo, authenticated, show }) => (
       {userInfo && (
         <Link route="settings">
           <StyledLink>
-            <Icon
+            <StyledIcon
               name="user"
               alt="settings"
-              style={{ opacity: 0.5, marginRight: '4px' }}
             />
             {userInfo.name || userInfo.username}
           </StyledLink>
         </Link>
+      )}
+      {authenticated === true && (
+        <StyledLink
+          href={`${LOGOUT_URL}?next=${window.location.href}`}
+          onClick={() => logEvent('logout', 'click')}
+        >
+          <StyledIcon
+            name="log-out"
+            alt="logout"
+          />
+        </StyledLink>
       )}
     </div>
   </Menu>
