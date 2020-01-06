@@ -4,7 +4,9 @@ import ClubTableRow from '../ClubTableRow'
 export default ({ clubs, favorites, keyword, updateFavorites }) => {
   const [table, setTable] = useState(() => {
     const ret = {}
-    favorites.forEach(favorite => { ret[favorite] = true })
+    favorites.forEach(favorite => {
+      ret[favorite] = true
+    })
     return ret
   })
   const findClub = clubs ? code => clubs.find(club => club.code === code) : () => {}
