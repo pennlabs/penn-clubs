@@ -70,7 +70,7 @@ function renderPage(Page) {
     }
 
     updateFavorites(id) {
-      const newFavs = this.state.favorites
+      const { favorites: newFavs } = this.state
       const i = newFavs.indexOf(id)
       if (i === -1) {
         newFavs.push(id)
@@ -100,7 +100,7 @@ function renderPage(Page) {
     }
 
     updateSubscriptions(id) {
-      const newSubs = this.state.subscriptions
+      const { subscriptions: newSubs } = this.state
       const i = newSubs.indexOf(id)
       if (i === -1) {
         newSubs.push(id)

@@ -15,7 +15,7 @@ const Wrapper = s.div`
 const BookmarkWrapper = s.span`
   display: inline-block;
   vertical-align: middle;
-  margin-top: .375em;
+  margin-top: 0.375em;
 `
 
 const Header = ({
