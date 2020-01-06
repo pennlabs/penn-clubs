@@ -1,10 +1,9 @@
 import s from 'styled-components'
 
 import { LOGOUT_URL } from '../../utils'
-import { Icon } from '../common'
+import { Icon, SmallText } from '../common'
 import { MEDIUM_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
-import { SmallText } from '../common'
 
 import { logEvent } from '../../utils/analytics'
 
