@@ -42,7 +42,7 @@ const Header = ({
     (inClub && inClub.role <= ROLE_OFFICER) ||
     (userInfo && userInfo.is_superuser)
 
-  const [favCount] = useState(club.favorite_count || 0)
+  const favCount = club.favorite_count || 0
 
   const { active, code, name, tags } = club
 
