@@ -1,14 +1,30 @@
 import s from 'styled-components'
+
+import { LOGOUT_URL } from '../../utils'
+import { Icon, SmallText } from '../common'
+import { MEDIUM_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
-import { SmallText } from '../common'
+
+import { logEvent } from '../../utils/analytics'
 
 const Wrapper = s.div`
   font-family: ${BODY_FONT};
   font-size: 18px;
 `
 
-export default props => {
-  const { name, username, email } = props.defaults
+const LogoutIcon = s(Icon)`
+  opacity: 0.5;
+  margin-right: 4px;
+`
+
+const LogoutLink = s.a`
+  color: ${MEDIUM_GRAY} !important;
+  display: inline-block;
+  margin-bottom: 12px;
+`
+
+export default ({ defaults }) => {
+  const { name, username, email } = defaults
 
   return (
     <Wrapper>
@@ -25,6 +41,17 @@ export default props => {
         </div>
       </div>
       <div>
+        <LogoutLink
+          className="button"
+          href={`${LOGOUT_URL}?next=${window.location.origin}`}
+          onClick={() => logEvent('logout', 'click')}
+        >
+          <LogoutIcon
+            name="log-out"
+            alt="logout"
+          />
+          Logout
+        </LogoutLink>
         <SmallText>
           If your information is incorrect, please send an email to{' '}
           <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>{' '}

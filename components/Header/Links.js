@@ -7,6 +7,11 @@ import { MEDIUM_GRAY, DARK_GRAY, BORDER } from '../../constants/colors'
 import { logEvent } from '../../utils/analytics'
 import { Link } from '../../routes'
 
+const StyledIcon = s(Icon)`
+  opacity: 0.5;
+  margin-right: 4px;
+`
+
 const StyledLink = s.a`
   padding: 14px 20px;
   color: ${MEDIUM_GRAY} !important;
@@ -53,10 +58,9 @@ export default ({ userInfo, authenticated, show }) => (
       {userInfo && (
         <Link route="settings">
           <StyledLink>
-            <Icon
+            <StyledIcon
               name="user"
               alt="settings"
-              style={{ opacity: 0.5, marginRight: '4px' }}
             />
             {userInfo.name || userInfo.username}
           </StyledLink>
