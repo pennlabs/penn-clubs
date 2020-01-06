@@ -2,11 +2,12 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import models
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
-from clubs.models import (Asset, Badge, Club, Event, Favorite, Membership,
-                          MembershipInvite, Note, NoteTag, Subscribe, Tag)
+from clubs.models import (Asset, Badge, Club, Event, Favorite, Major, Membership,
+                          MembershipInvite, Note, NoteTag, Profile, School, Subscribe, Tag)
 from clubs.utils import clean
 
 
@@ -24,14 +25,36 @@ class BadgeSerializer(serializers.ModelSerializer):
         fields = ('id', 'label', 'color', 'description')
 
 
+class SchoolSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = School
+        fields = ('id', 'name')
+
+
+class MajorSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = Major
+        fields = ('id', 'name')
+
+
 class MembershipInviteSerializer(serializers.ModelSerializer):
     id = serializers.CharField(max_length=8, read_only=True)
     email = serializers.EmailField(read_only=True)
     token = serializers.CharField(max_length=128, write_only=True)
     name = serializers.CharField(source='club.name', read_only=True)
+    public = serializers.BooleanField(write_only=True, required=False)
+
+    def create(self, validated_data):
+        validated_data.pop('public', None)
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
+        public = validated_data.pop('public', False)
 
         if not self.validated_data.get('token') == self.instance.token:
             raise serializers.ValidationError('Missing or invalid token in request!')
@@ -43,12 +66,16 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('This invitation was meant for "{}", but you are logged in as "{}"!'
                                                   .format(invite_username, user.username))
 
-        instance.claim(user)
+        # claim the invite and set the membership public status
+        obj = instance.claim(user)
+        obj.public = public
+        obj.save()
+
         return instance
 
     class Meta:
         model = MembershipInvite
-        fields = ['email', 'token', 'id', 'name']
+        fields = ['email', 'token', 'id', 'name', 'public']
 
 
 class UserMembershipSerializer(serializers.ModelSerializer):
@@ -164,12 +191,12 @@ class ClubListSerializer(serializers.ModelSerializer):
     The club list serializer returns a subset of the information that the full serializer returns.
     This is done for a quicker response.
     """
-    code = serializers.SlugField(required=False, validators=[validators.UniqueValidator(queryset=Club.objects.all())])
-    name = serializers.CharField(validators=[validators.UniqueValidator(queryset=Club.objects.all())])
-    subtitle = serializers.CharField(required=False)
     tags = TagSerializer(many=True)
     image_url = serializers.SerializerMethodField('get_image_url')
     favorite_count = serializers.IntegerField(read_only=True)
+
+    target_schools = SchoolSerializer(many=True, required=False)
+    target_majors = MajorSerializer(many=True, required=False)
 
     def get_image_url(self, obj):
         if not obj.image:
@@ -183,8 +210,30 @@ class ClubListSerializer(serializers.ModelSerializer):
         model = Club
         fields = [
             'name', 'code', 'description', 'founded', 'size', 'email', 'tags', 'subtitle',
-            'application_required', 'accepting_members', 'image_url', 'favorite_count', 'active'
+            'application_required', 'accepting_members', 'image_url', 'favorite_count', 'active',
+            'target_schools', 'target_majors'
         ]
+        extra_kwargs = {
+            'name': {
+                'validators': [validators.UniqueValidator(queryset=Club.objects.all())],
+                'help_text': 'The name of the club.'
+            },
+            'code': {
+                'required': False,
+                'validators': [validators.UniqueValidator(queryset=Club.objects.all())],
+                'help_text': 'An alphanumeric string shown in the URL and used to identify this club.'
+            },
+            'description': {
+                'help_text': 'A long description for the club. Certain HTML tags are allowed.'
+            },
+            'email': {
+                'help_text': 'The primary contact email for the club.'
+            },
+            'subtitle': {
+                'required': False,
+                'help_text': 'The text shown to the user in a preview card. Short description of the club.'
+            }
+        }
 
 
 class ClubSerializer(ClubListSerializer):
@@ -201,41 +250,8 @@ class ClubSerializer(ClubListSerializer):
         """
         Manual create method because DRF does not support writable nested fields by default.
         """
-        # assign tags to new club
-        tags = None
-        parent_orgs = None
-        badges = None
 
-        if 'tags' in validated_data:
-            tags = []
-            for tag in validated_data.pop('tags'):
-                tags.append(Tag.objects.get(**tag))
-
-        # Don't let clubs add parent orgs for now; they will be added through the admin
-        # interface.
-
-        # if 'parent_orgs' in validated_data:
-        #     parent_orgs = []
-        #     for parent_org in validated_data.pop('parent_orgs'):
-        #         parent_orgs.append(Club.objects.get(**parent_org))
-
-        if 'badges' in validated_data:
-            badges = []
-            for badge in validated_data.pop('badges'):
-                badges.append(Badge.objects.get(**badge))
-
-        # Note: it's important that all nested fields are POPPED from the validated data at this point. Otherwise,
-        # DRF will throw an error calling create on the superclass.
         obj = super().create(validated_data)
-
-        if tags is not None:
-            obj.tags.set(tags)
-
-        if parent_orgs is not None:
-            obj.parent_orgs.set(parent_orgs)
-
-        if badges is not None:
-            obj.badges.set(badges)
 
         # assign user who created as owner
         Membership.objects.create(
@@ -321,51 +337,10 @@ class ClubSerializer(ClubListSerializer):
             return value
         raise serializers.ValidationError('You do not have permissions to change the active status of the club.')
 
-    def update(self, instance, validated_data):
-        """
-        Nested serializers don't support update by default, need to override.
-        """
-
-        tags = None
-        parent_orgs = None
-        badges = None
-
-        if 'tags' in validated_data:
-            tags = []
-            for tag in validated_data.pop('tags'):
-                tags.append(Tag.objects.get(**tag))
-
-        # Don't let clubs add parent orgs for now; they will be added through the admin
-        # interface.
-
-        # if 'parent_orgs' in validated_data:
-        #     parent_orgs = []
-        #     for parent_org in validated_data.pop('parent_orgs'):
-        #         parent_orgs.append(Club.objects.get(**parent_org))
-
-        if 'badges' in validated_data:
-            badges = []
-            for badge in validated_data.pop('badges'):
-                badges.append(Badge.objects.get(**badge))
-
-        # Note: it's important that all nested fields are POPPED from the validated data at this point. Otherwise,
-        # DRF will throw an error calling create on the superclass.
-        obj = super().update(instance, validated_data)
-
-        if tags is not None:
-            obj.tags.set(tags)
-
-        if parent_orgs is not None:
-            obj.parent_orgs.set(parent_orgs)
-
-        if badges is not None:
-            obj.badges.set(badges)
-
-        return obj
-
     def save(self):
         """
         Override save in order to replace ID with slugified name if not specified.
+        Also make updating ManyToMany fields work.
         """
         if 'name' in self.validated_data:
             self.validated_data['name'] = self.validated_data['name'].strip()
@@ -376,7 +351,31 @@ class ClubSerializer(ClubListSerializer):
         elif 'code' in self.validated_data:
             del self.validated_data['code']
 
-        return super().save()
+        # save many to many fields
+        m2m_to_save = [
+            ('tags', Tag),
+            ('badges', Badge),
+            ('target_schools', School),
+            ('target_majors', Major)
+        ]
+
+        # remove m2m from validated data and save
+        m2m_lists = {}
+        for m2m, model in m2m_to_save:
+            m2m_lists[m2m] = []
+            items = self.validated_data.pop(m2m, None)
+            if items is None:
+                continue
+            for item in items:
+                m2m_lists[m2m].append(model.objects.get(**item))
+
+        obj = super().save()
+
+        # link models to this model
+        for m2m, _ in m2m_to_save:
+            getattr(obj, m2m).set(m2m_lists[m2m])
+
+        return obj
 
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
@@ -436,7 +435,9 @@ class EventSerializer(serializers.ModelSerializer):
 
 class FavoriteSerializer(serializers.ModelSerializer):
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(),
+                                        slug_field='code',
+                                        help_text='The club code shown in the URL of the club page.')
     name = serializers.CharField(source='club.name', read_only=True)
 
     class Meta:
@@ -446,7 +447,9 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
-
+    """
+    Used by club owners/officers to see who has subscribed to their club.
+    """
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
     name = serializers.CharField(source='person.username', read_only=True)
@@ -458,15 +461,32 @@ class SubscribeSerializer(serializers.ModelSerializer):
         validators = [validators.UniqueTogetherValidator(queryset=Subscribe.objects.all(), fields=['club', 'person'])]
 
 
+class UserSubscribeSerializer(serializers.ModelSerializer):
+    """
+    Used by the UserSerializer to return the clubs that the user has favorited.
+    """
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
+
+    class Meta:
+        model = Subscribe
+        fields = ('club',)
+
+
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
     email = serializers.EmailField(read_only=True)
     name = serializers.SerializerMethodField('get_full_name')
     membership_set = UserMembershipSerializer(many=True, read_only=True)
     favorite_set = FavoriteSerializer(many=True, read_only=True)
+    subscribe_set = UserSubscribeSerializer(many=True, read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     image = serializers.ImageField(source='profile.image', write_only=True)
     image_url = serializers.SerializerMethodField('get_image_url')
+
+    has_been_prompted = serializers.BooleanField(source='profile.has_been_prompted')
+    graduation_year = serializers.IntegerField(source='profile.graduation_year')
+    school = SchoolSerializer(many=True, source='profile.school')
+    major = MajorSerializer(many=True, source='profile.major')
 
     def get_image_url(self, obj):
         if not obj.profile.image:
@@ -483,17 +503,26 @@ class UserSerializer(serializers.ModelSerializer):
         if 'profile' in validated_data:
             profile_fields = validated_data.pop('profile')
             profile = instance.profile
-            valid_fields = {'image'}
+            valid_fields = {f.name: f for f in Profile._meta.get_fields()}
             for key, value in profile_fields.items():
                 if key in valid_fields:
-                    setattr(profile, key, value)
+                    field = valid_fields[key]
+                    if isinstance(field, models.ManyToManyField):
+                        related_objects = getattr(profile, field.get_attname())
+                        related_objects.clear()
+                        for item in value:
+                            related_objects.add(field.related_model.objects.get(**item))
+                    else:
+                        setattr(profile, key, value)
             profile.save()
 
         return super().update(instance, validated_data)
 
     class Meta:
         model = get_user_model()
-        fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'is_superuser', 'image_url', 'image')
+        fields = ('username', 'name', 'email', 'membership_set', 'favorite_set', 'subscribe_set',
+                  'is_superuser', 'image_url', 'image', 'graduation_year', 'school', 'major',
+                  'has_been_prompted')
 
 
 class AssetSerializer(serializers.ModelSerializer):

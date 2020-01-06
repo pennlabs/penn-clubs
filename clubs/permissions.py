@@ -3,6 +3,17 @@ from rest_framework import permissions
 from clubs.models import Membership
 
 
+class ReadOnly(permissions.BasePermission):
+    """
+    Only allow read access. Deny write access to everyone.
+    """
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        else:
+            return False
+
+
 class ClubPermission(permissions.BasePermission):
     """
     Only club owners should be able to delete.
@@ -12,6 +23,9 @@ class ClubPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if view.action in ['retrieve', 'children']:
             return True
+
+        if not request.user.is_authenticated:
+            return False
 
         membership = Membership.objects.filter(person=request.user, club=obj).first()
         if membership is None:

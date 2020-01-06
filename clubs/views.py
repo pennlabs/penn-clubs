@@ -1,9 +1,12 @@
+import os
 import re
 
+from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework import filters, generics, parsers, status, viewsets
@@ -12,13 +15,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from clubs.models import Asset, Club, Event, Favorite, Membership, MembershipInvite, Note, Subscribe, Tag
-from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
-                               InvitePermission, IsSuperuser, MemberPermission, NotePermission)
+from clubs.models import Asset, Club, Event, Favorite, Major, Membership, MembershipInvite, Note, School, Subscribe, Tag
+from clubs.permissions import (AssetPermission, ClubPermission, EventPermission, InvitePermission,
+                               IsSuperuser, MemberPermission, NotePermission, ReadOnly)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
                                ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer,
-                               MembershipInviteSerializer, MembershipSerializer, NoteSerializer,
-                               SubscribeSerializer, TagSerializer, UserSerializer)
+                               MajorSerializer, MembershipInviteSerializer, MembershipSerializer, NoteSerializer,
+                               SchoolSerializer, SubscribeSerializer, TagSerializer, UserSerializer)
 
 
 def upload_endpoint_helper(request, cls, field, **kwargs):
@@ -81,15 +84,29 @@ def filter_note_permission(queryset, club, user):
 class ClubViewSet(viewsets.ModelViewSet):
     """
     retrieve:
-    Return a single club.
+    Return a single club with all information fields present.
+
     list:
-    Return a list of clubs.
+    Return a list of clubs with partial information for each club.
+
+    update:
+    Update all fields in the club.
+    You must specify all of the fields or use a patch request.
+
+    partial_update:
+    Update certain fields in the club.
+    Only specify the fields that you want to change.
+
+    destroy:
+    Delete a club. Consider marking the club as inactive instead of deleting the club.
     """
     queryset = (Club.objects.all()
                             .annotate(favorite_count=Count('favorite'))
                             .prefetch_related(
                                 'tags',
                                 'badges',
+                                'target_schools',
+                                'target_majors',
                                 Prefetch('membership_set', queryset=Membership.objects.order_by(
                                     'role',
                                     'person__first_name',
@@ -104,15 +121,24 @@ class ClubViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def upload(self, request, *args, **kwargs):
+        """
+        Upload the club logo.
+        """
         return upload_endpoint_helper(request, Club, 'image', code=kwargs['code'])
 
     @action(detail=True, methods=['get'])
     def children(self, request, *args, **kwargs):
+        """
+        Return a recursive list of all children that this club is a parent of.
+        """
         child_tree = find_children_helper(self.get_object())
         return Response(child_tree)
 
     @action(detail=True, methods=['get'], url_path='notes-about')
     def notes_about(self, request, *args, **kwards):
+        """
+        Return a list of notes about this club, used by members of parent organizations.
+        """
         club = self.get_object()
         queryset = Note.objects.filter(subject_club__code=club.code)
         queryset = filter_note_permission(queryset, club, self.request.user)
@@ -121,11 +147,17 @@ class ClubViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def subscription(self, request, *args, **kwargs):
-        serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']),  many=True)
+        """
+        Return a list of all students that have subscribed to the club, including their names and emails.
+        """
+        serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']), many=True)
         return Response(serializer.data)
 
     @method_decorator(cache_page(60*5))
     def list(self, request, *args, **kwargs):
+        """
+        Return a list of all clubs. Note that some fields are removed in order to improve the response time.
+        """
         return super().list(request, *args, **kwargs)
 
     def get_serializer_class(self):
@@ -142,9 +174,54 @@ class ClubViewSet(viewsets.ModelViewSet):
         return ClubSerializer
 
 
+class SchoolViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Retrieve a list of all of the schools (ex: Wharton, Engineering).
+
+    retrieve:
+    Retrieve a single school by ID.
+
+    create:
+    Add a new school to the list of schools.
+
+    destroy:
+    Delete a school from the list of schools.
+    """
+    serializer_class = SchoolSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    queryset = School.objects.all()
+
+
+class MajorViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Retrieve a list of all the majors (ex: Computer Science, BAS).
+
+    retrieve:
+    Retrieve a single major by ID.
+
+    create:
+    Add a new major to the list of majors.
+
+    destroy:
+    Remove a major from the list of majors.
+    """
+    serializer_class = MajorSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    queryset = Major.objects.all()
+
+
 class EventViewSet(viewsets.ModelViewSet):
     """
-    Return a list of events.
+    list:
+    Return a list of events for this club.
+
+    retrieve:
+    Return a single event.
+
+    destroy:
+    Delete an event.
     """
     serializer_class = EventSerializer
     permission_classes = [EventPermission | IsSuperuser]
@@ -153,6 +230,9 @@ class EventViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def upload(self, request, *args, **kwargs):
+        """
+        Upload a picture for the event.
+        """
         return upload_endpoint_helper(request, Event, 'image', code=kwargs['code'])
 
     def get_queryset(self):
@@ -160,6 +240,13 @@ class EventViewSet(viewsets.ModelViewSet):
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of clubs that the logged in user has favorited.
+
+    create: Favorite a club.
+
+    destroy: Unfavorite a club.
+    """
     serializer_class = FavoriteSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'club__code'
@@ -170,6 +257,13 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
 
 class SubscribeViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of clubs that the logged in user has subscribed to.
+
+    create: Subscribe to a club.
+
+    destroy: Unsubscribe from a club.
+    """
     serializer_class = SubscribeSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'club__code'
@@ -180,6 +274,29 @@ class SubscribeViewSet(viewsets.ModelViewSet):
 
 
 class MemberViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of members that are in the club.
+    Returns more information about each member if the logged in user
+    is a superuser or in the club.
+
+    update:
+    Update the role/title/status for a membership.
+    You must specify all fields or use a patch request.
+
+    partial_update:
+    Update the role/title/status for a membership.
+    Specify only the fields you want to change.
+
+    retrieve:
+    Return information about a specific membership between a student and the club.
+
+    create:
+    Add a member to a club.
+
+    destroy:
+    Kick out a member from a club.
+    """
     serializer_class = MembershipSerializer
     permission_classes = [MemberPermission | IsSuperuser]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
@@ -193,11 +310,23 @@ class MemberViewSet(viewsets.ModelViewSet):
             if self.request.user.is_superuser or ('club_code' in self.kwargs and
                Membership.objects.filter(person=self.request.user, club__code=self.kwargs['club_code']).exists()):
                 return AuthenticatedMembershipSerializer
-        else:
-            return MembershipSerializer
+        return MembershipSerializer
 
 
 class AssetViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of files that belong to this club.
+
+    retrieve:
+    Retrieve information about a specific file that belongs to this club.
+
+    create:
+    Upload a new file to the club file repository.
+
+    destroy:
+    Delete a file from the club file repository.
+    """
     serializer_class = AssetSerializer
     permission_classes = [AssetPermission | IsSuperuser]
     parser_classes = [parsers.MultiPartParser]
@@ -208,6 +337,19 @@ class AssetViewSet(viewsets.ModelViewSet):
 
 
 class NoteViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of notes that this club has created for other clubs.
+
+    retrieve:
+    Return a specific note that this club has created for another club.
+
+    create:
+    Create a new note on another club.
+
+    destroy:
+    Destroy an existing note on another club.
+    """
     serializer_class = NoteSerializer
     permission_classes = [NotePermission | IsSuperuser]
     http_method_names = ['get', 'post', 'delete']
@@ -223,6 +365,7 @@ class NoteViewSet(viewsets.ModelViewSet):
 
 class TagViewSet(viewsets.ModelViewSet):
     """
+    list:
     Return a list of tags.
     """
     queryset = Tag.objects.all().annotate(clubs=Count('club')).order_by('name')
@@ -232,6 +375,16 @@ class TagViewSet(viewsets.ModelViewSet):
 
 
 class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
+    """
+    get: Return information about the logged in user, including bookmarks,
+    subscriptions, and school/major/graduation year information.
+
+    put: Update information about the logged in user.
+    All fields are required.
+
+    patch: Update information about the logged in user.
+    Only updates fields that are passed to the server.
+    """
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
@@ -240,12 +393,25 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
+    """
+    update:
+    Accept a membership invite.
+
+    partial_update:
+    Accept a membership invite.
+
+    destroy:
+    Rescind a membership invite.
+    """
     permission_classes = [InvitePermission | IsSuperuser]
     serializer_class = MembershipInviteSerializer
     http_method_names = ['get', 'put', 'patch', 'delete']
 
     @action(detail=True, methods=['put', 'patch'])
     def resend(self, request, *args, **kwargs):
+        """
+        Resend an email invitation that has already been issued.
+        """
         invite = self.get_object()
         invite.send_mail(request)
 
@@ -259,7 +425,7 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
 
 class MassInviteAPIView(APIView):
     """
-    Send out invites and add invite objects given a list of emails.
+    Send out invites and add invite objects given a list of comma or newline separated emails.
     """
     permission_classes = [IsAuthenticated]
 
@@ -307,3 +473,35 @@ class MassInviteAPIView(APIView):
         return Response({
             'detail': 'Sent invite(s) to {} email(s)!'.format(len(emails))
         })
+
+
+def email_preview(request):
+    """
+    Debug endpoint used for previewing how email templates will look.
+    """
+    email_templates = os.listdir(os.path.join(settings.BASE_DIR, 'templates', 'emails'))
+    email_templates = [e.rsplit('.', 1)[0] for e in email_templates if e.endswith('.html')]
+
+    email = None
+    text_email = None
+
+    if 'email' in request.GET:
+        email_path = os.path.basename(request.GET.get('email'))
+        context = {
+            'name': '[Club Name]',
+            'url': '[URL]',
+            'view_url': '[URL]',
+            'sender': {
+                'username': '[Sender Username]',
+                'email': '[Sender Email]'
+            },
+            'role': 0
+        }
+        email = render_to_string('emails/{}.html'.format(email_path), context)
+        text_email = render_to_string('emails/{}.txt'.format(email_path), context)
+
+    return render(request, 'preview.html', {
+        'templates': email_templates,
+        'email': email,
+        'text_email': text_email
+    })

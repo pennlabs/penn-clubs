@@ -8,7 +8,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from clubs.models import Badge, Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Badge, Club, Event, Favorite, Membership, MembershipInvite, School, Tag
 
 
 class ClubTestCase(TestCase):
@@ -113,6 +113,14 @@ class ClubTestCase(TestCase):
             club=self.club1
         )
 
+        # add some schools
+        School.objects.create(
+            name='Wharton'
+        )
+        School.objects.create(
+            name='Engineering'
+        )
+
         # retrieve user
         resp = self.client.get(reverse('users-detail'))
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -124,6 +132,29 @@ class ClubTestCase(TestCase):
 
         for field in ['username', 'email']:
             self.assertIn(field, data)
+
+        # update user with fields
+        # user field should not be updated
+        resp = self.client.patch(reverse('users-detail'), {
+            'user': self.user1.id,
+            'graduation_year': 3000,
+            'school': [
+                {
+                    'name': 'Wharton'
+                },
+                {
+                    'name': 'Engineering'
+                }
+            ]
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure fields have been updated
+        resp = self.client.get(reverse('users-detail'))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = json.loads(resp.content.decode('utf-8'))
+        self.assertEqual(data['graduation_year'], 3000)
+        self.assertEqual(set([s['name'] for s in data['school']]), {'Wharton', 'Engineering'})
 
     def test_superuser_views(self):
         """
@@ -512,6 +543,7 @@ class ClubTestCase(TestCase):
         tag2 = Tag.objects.create(name='Engineering')
 
         badge1 = Badge.objects.create(label='SAC Funded')
+        school1 = School.objects.create(name='Engineering')
 
         self.client.login(username=self.user5.username, password='test')
 
@@ -525,6 +557,11 @@ class ClubTestCase(TestCase):
                 },
                 {
                     'name': tag2.name
+                }
+            ],
+            'target_schools': [
+                {
+                    'name': school1.name
                 }
             ],
             'facebook': 'https://www.facebook.com/groups/966590693376781/?ref=nf_target&fref=nf',
@@ -541,6 +578,7 @@ class ClubTestCase(TestCase):
         self.assertTrue(club_obj)
         self.assertEqual(Membership.objects.filter(club=club_obj).count(), 1)
         self.assertEqual(club_obj.members.count(), 1)
+        self.assertEqual(club_obj.target_schools.count(), 1)
 
         # ensure lookup returns the correct information
         resp = self.client.get(reverse('clubs-detail', args=('penn-labs',)))
@@ -728,14 +766,16 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password='test')
 
         resp = self.client.patch(reverse('club-invites-detail', args=(self.club1.code, ids_and_tokens[0][0])), {
-            'token': ids_and_tokens[0][1]
+            'token': ids_and_tokens[0][1],
+            'public': True
         }, content_type='application/json')
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        self.assertTrue(Membership.objects.filter(club=self.club1, person=self.user5).exists())
+        flt = Membership.objects.filter(club=self.club1, person=self.user5)
+        self.assertTrue(flt.exists())
+        self.assertTrue(flt.first().public)
 
         # ensure invite cannot be reclaimed
-
         resp = self.client.patch(reverse('club-invites-detail', args=(self.club1.code, ids_and_tokens[0][0])), {
             'token': ids_and_tokens[0][1]
         }, content_type='application/json')
@@ -745,6 +785,19 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password='test')
         resp = self.client.delete(reverse('club-invites-detail', args=(self.club1.code, ids_and_tokens[1][0])))
         self.assertIn(resp.status_code, [200, 204], resp.content)
+
+        # ensure a second invite can be claimed without toggling on public status
+        self.client.login(username=self.user4.username, password='test')
+
+        resp = self.client.patch(reverse('club-invites-detail', args=(self.club1.code, ids_and_tokens[2][0])), {
+            'token': ids_and_tokens[2][1],
+            'public': False
+        }, content_type='application/json')
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        flt = Membership.objects.filter(club=self.club1, person=self.user4)
+        self.assertTrue(flt.exists())
+        self.assertFalse(flt.first().public)
 
     def test_club_invite_email_check(self):
         self.client.login(username=self.user5.username, password='test')

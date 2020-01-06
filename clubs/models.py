@@ -78,6 +78,9 @@ class Club(models.Model):
     parent_orgs = models.ManyToManyField('Club', related_name='children_orgs', blank=True)
     badges = models.ManyToManyField('Badge', blank=True)
 
+    target_schools = models.ManyToManyField('School', blank=True)
+    target_majors = models.ManyToManyField('Major', blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -292,7 +295,7 @@ class MembershipInvite(models.Model):
         self.active = False
         self.save()
 
-        Membership.objects.get_or_create(
+        obj, _ = Membership.objects.get_or_create(
             person=user,
             club=self.club,
             defaults={
@@ -300,6 +303,8 @@ class MembershipInvite(models.Model):
                 'title': self.title
             }
         )
+
+        return obj
 
     def send_mail(self, request=None):
         """
@@ -409,12 +414,37 @@ class Asset(models.Model):
         return self.name
 
 
+class School(models.Model):
+    """
+    Represents a school (ex: Engineering, Wharton, etc).
+    """
+    name = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
+class Major(models.Model):
+    """
+    Represents a major (ex: Computer Science, BSE).
+    """
+    name = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
 class Profile(models.Model):
     """
     Additional information attached to a user account.
     """
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, primary_key=True)
     image = models.ImageField(upload_to=get_user_file_name, null=True, blank=True)
+
+    has_been_prompted = models.BooleanField(default=False)
+    graduation_year = models.PositiveSmallIntegerField(null=True, blank=True)
+    school = models.ManyToManyField(School, blank=True)
+    major = models.ManyToManyField(Major, blank=True)
 
 
 @receiver(models.signals.post_delete, sender=Asset)
