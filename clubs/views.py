@@ -149,6 +149,9 @@ class ClubViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def qr(self, request, *args, **kwargs):
+        """
+        Return a QR code png image representhing a link to the club.
+        """
         url = f"https://pennclubs.com/club/{self.kwargs['code']}"
         response = HttpResponse(content_type='image/png')
         qr_image = qrcode.make(url, box_size=20)
