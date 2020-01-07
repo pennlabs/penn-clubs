@@ -56,6 +56,10 @@ export function getRoleDisplay(role) {
   else return 'Member'
 }
 
+export function getApiUrl(path) {
+  return API_BASE_URL + path
+}
+
 export function doApiRequest(path, data) {
   if (!data) {
     data = {}
@@ -74,7 +78,7 @@ export function doApiRequest(path, data) {
   if (data.body && !(data.body instanceof FormData)) {
     data.body = JSON.stringify(data.body)
   }
-  return fetch(API_BASE_URL + path, data)
+  return fetch(getApiUrl(path), data)
 }
 
 export function titleize(str) {

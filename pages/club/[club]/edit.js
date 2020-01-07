@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Select from 'react-select'
 
 import renderPage from '../../../renderPage.js'
-import { doApiRequest, formatResponse, getRoleDisplay } from '../../../utils'
+import { doApiRequest, getApiUrl, formatResponse, getRoleDisplay } from '../../../utils'
 import Form from '../../../components/Form'
 import TabView from '../../../components/TabView'
 import { Icon, Container, Title, InactiveTag } from '../../../components/common'
@@ -686,6 +686,7 @@ class ClubForm extends React.Component {
                     {!!this.state.subscriptions.length || <tr><td colSpan="2" className="has-text-grey">No one has subscribed to this club yet.</td></tr>}
                   </tbody>
                 </table>
+                <a href={getApiUrl(`/clubs/${club.code}/subscription/?format=xlsx`)} className="button is-link"><Icon alt="download" name="download" /> Download Subscriber List</a>
               </div>
             </div>
           </div>
