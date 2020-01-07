@@ -25,7 +25,7 @@
     "styled-components": "^4.4.1"
   },
   "scripts": {
-    "lint": "eslint \"./{pages,components}/**/*.js\" \"*.js\"",
+    "lint": "eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
     "dev": "next",
     "build": "next build",
     "start": "NODE_ENV=production node server/index.js",
