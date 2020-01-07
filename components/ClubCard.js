@@ -16,7 +16,7 @@ import {
 import { stripTags } from '../utils'
 import { InactiveTag, TagGroup } from './common'
 import ClubDetails from './ClubDetails'
-import { Link } from '../routes'
+import Link from 'next/link'
 
 const CardWrapper = s.div`
   ${mediaMaxWidth(SM)} {
@@ -106,7 +106,7 @@ const ClubCard = ({
 
   return (
     <CardWrapper className="column is-half-desktop">
-      <Link route="club-view" params={{ club: code }}>
+      <Link href="/club/[club]" as={`/club/${code}`}>
         <a target="_blank">
           <Card className="card">
             <div style={{ display: 'flex' }}>

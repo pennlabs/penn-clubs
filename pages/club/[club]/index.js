@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import s from 'styled-components'
 
-import renderPage from '../renderPage.js'
-import { doApiRequest } from '../utils'
-import Tabs from '../components/ClubPage/Tabs'
-import Header from '../components/ClubPage/Header'
-import InfoBox from '../components/ClubPage/InfoBox'
-import SocialIcons from '../components/ClubPage/SocialIcons'
+import renderPage from '../../../renderPage.js'
+import { doApiRequest } from '../../../utils'
+import Tabs from '../../../components/ClubPage/Tabs'
+import Header from '../../../components/ClubPage/Header'
+import InfoBox from '../../../components/ClubPage/InfoBox'
+import SocialIcons from '../../../components/ClubPage/SocialIcons'
 import {
   Card,
   StrongText,
@@ -15,7 +15,7 @@ import {
   Title,
   Text,
   Container,
-} from '../components/common'
+} from '../../../components/common'
 
 const Image = s.img`
   height: 86px;
@@ -80,8 +80,7 @@ const Club = ({ query, userInfo, favorites, updateFavorites, subscriptions, upda
   )
 }
 
-Club.getInitialProps = async props => {
-  const { query } = props
+Club.getInitialProps = async ({ query }) => {
   return { query }
 }
 

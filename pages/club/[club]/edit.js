@@ -1,12 +1,13 @@
 import React from 'react'
+import { withRouter } from 'next/router'
+import Link from 'next/link'
 import Select from 'react-select'
 
-import renderPage from '../renderPage.js'
-import { doApiRequest, formatResponse, getRoleDisplay } from '../utils'
-import { Link, Router } from '../routes'
-import Form from '../components/Form'
-import TabView from '../components/TabView'
-import { Icon, Container, Title, InactiveTag } from '../components/common'
+import renderPage from '../../../renderPage.js'
+import { doApiRequest, formatResponse, getRoleDisplay } from '../../../utils'
+import Form from '../../../components/Form'
+import TabView from '../../../components/TabView'
+import { Icon, Container, Title, InactiveTag } from '../../../components/common'
 
 class ClubForm extends React.Component {
   constructor(props) {
@@ -122,7 +123,7 @@ class ClubForm extends React.Component {
             this.notify(formatResponse(err))
           })
         } else {
-          Router.pushRoute('/')
+          this.props.router.push('/')
         }
       })
     }
@@ -211,9 +212,9 @@ class ClubForm extends React.Component {
       if (resp.ok) {
         resp.json().then(info => {
           if (!this.state.isEdit) {
-            Router.replaceRoute(
-              'club-edit',
-              { club: info.id },
+            this.props.router.push(
+              '/club/[club]/edit',
+              `/club/${info.id}/edit`,
               { shallow: true }
             )
           }
@@ -749,7 +750,7 @@ class ClubForm extends React.Component {
           {nameOrDefault}
           {showInactiveTag && <InactiveTag />}
           {club && (
-            <Link route="club-view" params={{ club: club.code }}>
+            <Link href="/club/[club]" as={`/club/${club.code}`}>
               <a
                 className="button is-pulled-right is-secondary is-medium"
                 style={{ fontWeight: 'normal' }}
@@ -780,4 +781,4 @@ ClubForm.getInitialProps = async ({ query }) => {
   return { clubId: query.club, tags: tagsResponse }
 }
 
-export default renderPage(ClubForm)
+export default withRouter(renderPage(ClubForm))

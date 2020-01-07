@@ -128,12 +128,12 @@ function renderPage(Page) {
         .then(data => this.setState({ clubs: data }))
       doApiRequest('/settings/?format=json').then(resp => {
         if (resp.ok) {
-          resp.json().then(data => {
+          resp.json().then(userInfo => {
             this.setState({
               authenticated: true,
-              favorites: data.favorite_set.map(a => a.club),
-              subscriptions: data.subscribe_set.map(a => a.club),
-              userInfo: data,
+              favorites: userInfo.favorite_set.map(a => a.club),
+              subscriptions: userInfo.subscribe_set.map(a => a.club),
+              userInfo,
             })
           })
         } else {
