@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import s from 'styled-components'
 
-import renderPage from '../../../renderPage.js'
+import renderPage from '../../../renderPage'
 import { doApiRequest, LOGIN_URL } from '../../../utils'
 import InfoBox from '../../../components/ClubPage/InfoBox'
 import {
