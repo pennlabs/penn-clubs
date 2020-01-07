@@ -64,7 +64,7 @@ const PrintPage = s.div`
   display: flex;
 
   @page {
-    size: landscape;
+    size: letter landscape;
   }
 `
 
@@ -109,7 +109,7 @@ const Flyer = ({ authenticated, query, userInfo, favorites, updateFavorites, sub
             <Gradient>
               <Center>
                 <Title style={{ color: WHITE }}>For more info, or to bookmark or subscribe to the {club.name} mailing list:</Title>
-                <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} style={{ width: 370, height: 370 }} />
+                <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} style={{ width: 400, height: 400 }} />
                 <Text style={{ color: WHITE }}>Or visit:<br /><i>https://pennclubs.com/club/{club.code}/fair/</i></Text>
               </Center>
             </Gradient>
