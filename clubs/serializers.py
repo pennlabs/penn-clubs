@@ -452,12 +452,16 @@ class SubscribeSerializer(serializers.ModelSerializer):
     """
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
-    name = serializers.CharField(source='person.username', read_only=True)
+    name = serializers.SerializerMethodField('get_full_name')
+    username = serializers.CharField(source='person.username', read_only=True)
     email = serializers.EmailField(source='person.email', read_only=True)
+
+    def get_full_name(self, obj):
+        return obj.person.get_full_name()
 
     class Meta:
         model = Subscribe
-        fields = ('club', 'name', 'person', 'email')
+        fields = ('club', 'name', 'username', 'person', 'email')
         validators = [validators.UniqueTogetherValidator(queryset=Subscribe.objects.all(), fields=['club', 'person'])]
 
 
