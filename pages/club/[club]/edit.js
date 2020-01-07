@@ -683,7 +683,7 @@ class ClubForm extends React.Component {
                   </thead>
                   <tbody>
                     {this.state.subscriptions.map((item, i) => <tr key={i}><td>{item.name}</td><td>{item.email}</td></tr>)}
-                    {!!this.state.subscriptions.length || <tr><td colSpan="2">No one has subscribed to this club yet.</td></tr>}
+                    {!!this.state.subscriptions.length || <tr><td colSpan="2" className="has-text-grey">No one has subscribed to this club yet.</td></tr>}
                   </tbody>
                 </table>
               </div>
