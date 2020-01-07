@@ -224,6 +224,21 @@ class ClubListSerializer(serializers.ModelSerializer):
         else:
             return self.context['request'].build_absolute_uri(obj.image.url)
 
+    def get_fields(self):
+        all_fields = super().get_fields()
+        fields_param = getattr(self.context.get('request', dict()), 'GET', {}).get('fields', '')
+        if len(fields_param) > 0:
+            fields_param = fields_param.split(',')
+        else:
+            return all_fields
+
+        fields_subset = dict()
+        for k in fields_param:
+            if k in all_fields:
+                fields_subset[k] = all_fields[k]
+
+        return fields_subset if len(fields_subset) > 0 else all_fields
+
     class Meta:
         model = Club
         fields = [
@@ -396,21 +411,6 @@ class ClubSerializer(ClubListSerializer):
             getattr(obj, m2m).set(m2m_lists[m2m])
 
         return obj
-
-    def get_fields(self):
-        all_fields = super().get_fields()
-        fields_param = getattr(self.context.get('request', dict()), 'GET', {}).get('fields', '')
-        if len(fields_param) > 0:
-            fields_param = fields_param.split(',')
-        else:
-            return all_fields
-
-        fields_subset = dict()
-        for k in fields_param:
-            if k in all_fields:
-                fields_subset[k] = all_fields[k]
-
-        return fields_subset if len(fields_subset) > 0 else all_fields
 
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
