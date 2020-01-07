@@ -4,7 +4,6 @@ import { LOGOUT_URL } from '../../utils'
 import { Icon, SmallText } from '../common'
 import { MEDIUM_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
-
 import { logEvent } from '../../utils/analytics'
 
 const Wrapper = s.div`
@@ -23,6 +22,10 @@ const LogoutLink = s.a`
   margin-bottom: 12px;
 `
 
+const Empty = s.span`
+  color: ${MEDIUM_GRAY};
+`
+
 export default ({ defaults }) => {
   const { name, username, email } = defaults
 
@@ -35,9 +38,9 @@ export default ({ defaults }) => {
           <div>Email</div>
         </div>
         <div className="column is-narrow">
-          <div>{name}</div>
-          <div>{username}</div>
-          <div>{email}</div>
+          <div>{name || <Empty>None</Empty>}</div>
+          <div>{username || <Empty>None</Empty>}</div>
+          <div>{email || <Empty>None</Empty>}</div>
         </div>
       </div>
       <div>

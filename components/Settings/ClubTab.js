@@ -1,10 +1,10 @@
 import { DARK_GRAY } from '../../constants/colors'
-import { CLUB_ROUTE } from '../../constants/routes'
 import { BODY_FONT } from '../../constants/styles'
 import s from 'styled-components'
 import Toggle from './Toggle'
 import { Icon } from '../common'
 import ReactTooltip from 'react-tooltip'
+import { Link } from '../../routes'
 
 const Table = s.table`
   font-family: ${BODY_FONT};
@@ -76,13 +76,12 @@ export default props => {
           userInfo.membership_set.map(item => (
             <tr key={item.id}>
               <td>
-                <a
-                  style={{ color: DARK_GRAY }}
-                  href={CLUB_ROUTE(item.code)}
-                  target="_BLANK"
+                <Link
+                  route="club-view"
+                  params={{ club: item.code }}
                 >
                   {item.name}
-                </a>
+                </Link>
               </td>
               <td>{item.title}</td>
               <td>{item.role_display}</td>

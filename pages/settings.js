@@ -123,6 +123,8 @@ class Settings extends React.Component {
       authenticated,
       favorites,
       updateFavorites,
+      subscriptions,
+      updateSubscriptions,
     } = this.props
     if (authenticated === null) {
       return <div></div>
@@ -152,9 +154,22 @@ class Settings extends React.Component {
         icon: 'heart',
         content: (
           <FavoritesTab
+            keyword='bookmark'
             clubs={clubs}
             favorites={favorites}
             updateFavorites={updateFavorites}
+          />
+        ),
+      },
+      {
+        name: 'Subscriptions',
+        icon: 'bookmark',
+        content: (
+          <FavoritesTab
+            keyword='subscription'
+            clubs={clubs}
+            favorites={subscriptions}
+            updateFavorites={updateSubscriptions}
           />
         ),
       },

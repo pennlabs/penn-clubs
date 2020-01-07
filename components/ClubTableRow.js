@@ -11,7 +11,7 @@ import {
 } from '../constants/measurements'
 import { TagGroup } from './common'
 import ClubDetails from './ClubDetails'
-import { CLUB_ROUTE } from '../constants/routes'
+import { Link } from '../routes'
 
 const ROW_PADDING = 0.8
 
@@ -90,37 +90,39 @@ class ClubTableRow extends React.Component {
 
     return (
       <Row>
-        <a href={CLUB_ROUTE(code)} target="_BLANK">
-          <div className="columns is-gapless is-mobile">
-            <div className="column">
-              <div className="columns is-gapless">
-                <div className="column is-4-desktop is-12-mobile">
-                  <Name>{name}</Name>
-                  <div>
-                    <TagGroup
-                      tags={tags}
-                      selectedTags={selectedTags}
-                      updateTag={updateTag}
-                    />
+        <Link route="club-view" params={{ club: code }}>
+          <a target="_blank">
+            <div className="columns is-gapless is-mobile">
+              <div className="column">
+                <div className="columns is-gapless">
+                  <div className="column is-4-desktop is-12-mobile">
+                    <Name>{name}</Name>
+                    <div>
+                      <TagGroup
+                        tags={tags}
+                        selectedTags={selectedTags}
+                        updateTag={updateTag}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="column is-8-desktop is-12-mobile">
-                  <Content>
-                    <Subtitle>{this.getSubtitle()}</Subtitle>
-                    <ClubDetails
-                      size={size}
-                      applicationRequired={applicationRequired}
-                      acceptingMembers={acceptingMembers}
-                      club={club}
-                      favorite={favorite}
-                      updateFavorites={updateFavorites}
-                    />
-                  </Content>
+                  <div className="column is-8-desktop is-12-mobile">
+                    <Content>
+                      <Subtitle>{this.getSubtitle()}</Subtitle>
+                      <ClubDetails
+                        size={size}
+                        applicationRequired={applicationRequired}
+                        acceptingMembers={acceptingMembers}
+                        club={club}
+                        favorite={favorite}
+                        updateFavorites={updateFavorites}
+                      />
+                    </Content>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </a>
+          </a>
+        </Link>
       </Row>
     )
   }

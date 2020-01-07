@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import s from 'styled-components'
 
-import { TagGroup, InactiveTag, Title, BookmarkIcon } from '../common'
+import { TagGroup, InactiveTag, Title, BookmarkIcon, SubscribeIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
 import { Link } from '../../routes'
 
@@ -12,8 +12,23 @@ const Wrapper = s.div`
   align-items: center;
 `
 
-const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
+const BookmarkWrapper = s.span`
+  display: inline-block;
+  vertical-align: middle;
+  margin-top: 0.375em;
+`
+
+const Header = ({
+  club,
+  userInfo,
+  favorites,
+  style,
+  updateFavorites,
+  subscriptions,
+  updateSubscriptions,
+}) => {
   const isFavorite = favorites.includes(club.code)
+  const isSubscription = subscriptions.includes(club.code)
 
   // inClub is set to the membership object if the user is in the club, or false
   // otherwise
@@ -39,12 +54,22 @@ const Header = ({ club, userInfo, favorites, style, updateFavorites }) => {
           {!active && <InactiveTag />}
         </Title>
         <span>
-          {favCount}{' '}
-          <BookmarkIcon
+          <BookmarkWrapper>
+            {favCount}{' '}
+            <BookmarkIcon
+              club={club}
+              favorite={isFavorite}
+              updateFavorites={(id) => {
+                const upd = updateFavorites(id)
+                setFavCount(favCount + (upd ? 1 : -1))
+              }}
+              padding="0"
+            />
+          </BookmarkWrapper>
+          <SubscribeIcon
             club={club}
-            favorite={isFavorite}
-            updateFavorites={updateFavorites}
-            padding="0"
+            subscribe={isSubscription}
+            updateSubscribes={updateSubscriptions}
           />
           {canEdit && (
             <Link route="club-edit" params={{ club: club.code }}>

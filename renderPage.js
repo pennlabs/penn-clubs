@@ -26,9 +26,11 @@ function renderPage(Page) {
         authenticated: null,
         userInfo: null,
         favorites: [],
+        subscriptions: [],
       }
 
       this.updateFavorites = this.updateFavorites.bind(this)
+      this.updateSubscriptions = this.updateSubscriptions.bind(this)
       this.updateUserInfo = this.updateUserInfo.bind(this)
     }
 
@@ -55,6 +57,7 @@ function renderPage(Page) {
                 {...this.props}
                 {...this.state}
                 updateFavorites={this.updateFavorites}
+                updateSubscriptions={this.updateSubscriptions}
                 updateUserInfo={this.updateUserInfo}
               />
             </Wrapper>
@@ -67,8 +70,8 @@ function renderPage(Page) {
     }
 
     updateFavorites(id) {
-      var newFavs = this.state.favorites
-      var i = newFavs.indexOf(id)
+      const { favorites: newFavs } = this.state
+      const i = newFavs.indexOf(id)
       if (i === -1) {
         newFavs.push(id)
         if (this.state.authenticated) {
@@ -96,6 +99,29 @@ function renderPage(Page) {
       return i === -1
     }
 
+    updateSubscriptions(id) {
+      const { subscriptions: newSubs } = this.state
+      const i = newSubs.indexOf(id)
+      if (i === -1) {
+        newSubs.push(id)
+        logEvent('subscribe', id)
+        doApiRequest('/subscribe/?format=json', {
+          method: 'POST',
+          body: {
+            club: id,
+          },
+        })
+      } else {
+        newSubs.splice(i, 1)
+        logEvent('unsubscribe', id)
+        doApiRequest(`/subscribe/${id}/?format=json`, {
+          method: 'DELETE',
+        })
+      }
+      this.setState({ subscriptions: newSubs })
+      return i === -1
+    }
+
     updateUserInfo() {
       doApiRequest('/clubs/?format=json')
         .then(resp => resp.json())
@@ -106,6 +132,7 @@ function renderPage(Page) {
             this.setState({
               authenticated: true,
               favorites: data.favorite_set.map(a => a.club),
+              subscriptions: data.subscribe_set.map(a => a.club),
               userInfo: data,
             })
           })
@@ -113,6 +140,7 @@ function renderPage(Page) {
           this.setState({
             authenticated: false,
             favorites: JSON.parse(localStorage.getItem('favorites')) || [],
+            subscriptions: [],
           })
         }
       })
