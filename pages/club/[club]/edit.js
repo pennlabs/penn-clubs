@@ -72,6 +72,7 @@ class ClubForm extends React.Component {
       editMember: null,
       schools: [],
       majors: [],
+      subscriptions: [],
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -282,6 +283,13 @@ class ClubForm extends React.Component {
         .then(data =>
           this.setState({
             invites: data,
+          })
+        )
+      doApiRequest(`/clubs/${clubId}/subscription/?format=json`)
+        .then(resp => resp.json())
+        .then(data =>
+          this.setState({
+            subscriptions: data,
           })
         )
     }
@@ -655,6 +663,33 @@ class ClubForm extends React.Component {
           </div>
         ),
         disabled: !this.state.isEdit,
+      },
+      {
+        name: 'subscriptions',
+        label: 'Subscriptions',
+        content: (
+          <div>
+            <div className="card" style={{ marginBottom: 20 }}>
+              <div className="card-header">
+                <p className="card-header-title">Subscribers</p>
+              </div>
+              <div className="card-content">
+                <table className="table is-fullwidth">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {this.state.subscriptions.map((item, i) => <tr key={i}><td>{item.name}</td><td>{item.email}</td></tr>)}
+                    {!!this.state.subscriptions.length || <tr><td colSpan="2">No one has subscribed to this club yet.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        ),
       },
       {
         name: 'settings',
