@@ -397,6 +397,21 @@ class ClubSerializer(ClubListSerializer):
 
         return obj
 
+    def get_fields(self):
+        all_fields = super().get_fields()
+        fields_param = getattr(self.context.get('request', dict()), 'GET', {}).get('fields', '')
+        if len(fields_param) > 0:
+            fields_param = fields_param.split(',')
+        else:
+            return all_fields
+
+        fields_subset = dict()
+        for k in fields_param:
+            if k in all_fields:
+                fields_subset[k] = all_fields[k]
+
+        return fields_subset if len(fields_subset) > 0 else all_fields
+
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
             'facebook', 'twitter', 'instagram', 'linkedin',
@@ -414,30 +429,6 @@ class AuthenticatedClubSerializer(ClubSerializer):
 
     class Meta(ClubSerializer.Meta):
         pass
-
-
-class ReportClubSerializer(AuthenticatedClubSerializer):
-
-    tags = serializers.SlugRelatedField(slug_field='name', read_only=True, many=True)
-
-    def get_fields(self):
-        all_fields = super().get_fields()
-        fields_param = getattr(self.context.get('request', dict()), 'GET', {}).get('fields', '')
-        if len(fields_param) > 0:
-            fields_param = fields_param.split(',')
-        else:
-            return all_fields
-
-        fields_subset = dict()
-        for k in fields_param:
-            if k in all_fields:
-                fields_subset[k] = all_fields[k]
-
-        return fields_subset if len(fields_subset) > 0 else all_fields
-
-    class Meta(AuthenticatedClubSerializer.Meta):
-        model = ClubSerializer.Meta.model
-        fields = ClubSerializer.Meta.fields
 
 
 class EventSerializer(serializers.ModelSerializer):

@@ -25,8 +25,8 @@ from clubs.permissions import (AssetPermission, ClubPermission, EventPermission,
                                IsSuperuser, MemberPermission, NotePermission, ReadOnly)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
                                ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer, MajorSerializer,
-                               MembershipInviteSerializer, MembershipSerializer, NoteSerializer, ReportClubSerializer,
-                               SchoolSerializer, SubscribeSerializer, TagSerializer, UserSerializer, YearSerializer)
+                               MembershipInviteSerializer, MembershipSerializer, NoteSerializer, SchoolSerializer,
+                               SubscribeSerializer, TagSerializer, UserSerializer, YearSerializer)
 
 
 def upload_endpoint_helper(request, cls, field, **kwargs):
@@ -86,7 +86,7 @@ def filter_note_permission(queryset, club, user):
     return queryset
 
 
-class ClubViewSet(viewsets.ModelViewSet):
+class ClubViewSet(XLSXFileMixin, viewsets.ModelViewSet):
     """
     retrieve:
     Return a single club with all information fields present.
@@ -177,6 +177,34 @@ class ClubViewSet(viewsets.ModelViewSet):
         """
         return super().list(request, *args, **kwargs)
 
+    def get_filename(self):
+        """
+        Return the name of the generated Excel file.
+        """
+        return 'report-{}.xlsx'.format(datetime.datetime.now().strftime('%Y%m%d'))
+
+    def get_column_header(self):
+        """
+        Return the style of the column header for an Excel export.
+        """
+        return {
+            'style': {
+                'font': {
+                    'bold': True
+                }
+            }
+        }
+
+    @action(detail=False, methods=['GET'])
+    def fields(self, request, *args, **kwargs):
+        """
+        Return the list of fields that can be exported in the Excel file.
+        """
+        return Response({
+            f.verbose_name.title(): f.name
+            for f in Club._meta._get_fields(reverse=False)
+        })
+
     def get_serializer_class(self):
         if self.action == 'upload':
             return AssetSerializer
@@ -246,50 +274,6 @@ class YearViewSet(viewsets.ModelViewSet):
     serializer_class = YearSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     queryset = Year.objects.all()
-
-
-class ClubReportViewSet(XLSXFileMixin, viewsets.ReadOnlyModelViewSet):
-    """
-    list: Retrieve a list of all of the clubs, optionally in Excel format.
-
-    fields: Retrieve a list of fields that can be included in the report.
-
-    retrieve: Retrieve a specific club, optionally in Excel format.
-    """
-    queryset = (Club.objects.all()
-                .prefetch_related('tags')
-                .prefetch_related('badges')
-                .annotate(favorite_count=Count('favorite'))
-                .prefetch_related(
-                    Prefetch('members', queryset=Membership.objects.order_by('role'))
-                ))
-    lookup_field = 'code'
-    serializer_class = ReportClubSerializer
-
-    def get_filename(self):
-        """
-        Return the name of the generated excel file.
-        """
-        return 'report-{}.xlsx'.format(datetime.datetime.now().strftime('%Y%m%d'))
-
-    def get_column_header(self):
-        """
-        Return the style of the column header.
-        """
-        return {
-            'style': {
-                'font': {
-                    'bold': True
-                }
-            }
-        }
-
-    @action(detail=False, methods=['GET'])
-    def fields(self, request, *args, **kwargs):
-        return Response({
-            f.verbose_name.title(): f.name
-            for f in Club._meta._get_fields(reverse=False)
-        })
 
 
 class EventViewSet(viewsets.ModelViewSet):

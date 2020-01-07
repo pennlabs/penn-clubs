@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from django.urls import path
 from rest_framework_nested import routers
 
-from clubs.views import (AssetViewSet, ClubReportViewSet, ClubViewSet, EventViewSet, FavoriteViewSet, MajorViewSet,
+from clubs.views import (AssetViewSet, ClubViewSet, EventViewSet, FavoriteViewSet, MajorViewSet,
                          MassInviteAPIView, MemberInviteViewSet, MemberViewSet, NoteViewSet, SchoolViewSet,
                          SubscribeViewSet, TagViewSet, UserUpdateAPIView, YearViewSet, email_preview)
 
@@ -14,7 +14,6 @@ router.register(r'clubs', ClubViewSet, basename='clubs')
 router.register(r'tags', TagViewSet)
 router.register(r'favorites', FavoriteViewSet, basename='favorites')
 router.register(r'subscribe', SubscribeViewSet, basename='subscribe')
-router.register(r'reports', ClubReportViewSet, basename='reports')
 
 router.register(r'schools', SchoolViewSet, basename='schools')
 router.register(r'majors', MajorViewSet, basename='majors')
