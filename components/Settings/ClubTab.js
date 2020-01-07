@@ -4,7 +4,7 @@ import s from 'styled-components'
 import Toggle from './Toggle'
 import { Icon } from '../common'
 import ReactTooltip from 'react-tooltip'
-import { Link } from '../../routes'
+import Link from 'next/link'
 
 const Table = s.table`
   font-family: ${BODY_FONT};
@@ -77,8 +77,8 @@ export default props => {
             <tr key={item.id}>
               <td>
                 <Link
-                  route="club-view"
-                  params={{ club: item.code }}
+                  href="/club/[club]"
+                  as={`/club/${item.code}`}
                 >
                   {item.name}
                 </Link>

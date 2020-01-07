@@ -11,7 +11,7 @@ import {
 } from '../constants/measurements'
 import { TagGroup } from './common'
 import ClubDetails from './ClubDetails'
-import { Link } from '../routes'
+import Link from 'next/link'
 
 const ROW_PADDING = 0.8
 
@@ -90,7 +90,7 @@ class ClubTableRow extends React.Component {
 
     return (
       <Row>
-        <Link route="club-view" params={{ club: code }}>
+        <Link href="/club/[club]" params={`/club/${code}`}>
           <a target="_blank">
             <div className="columns is-gapless is-mobile">
               <div className="column">

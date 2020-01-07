@@ -131,8 +131,8 @@ function renderPage(Page) {
           resp.json().then(userInfo => {
             this.setState({
               authenticated: true,
-              favorites: data.favorite_set.map(a => a.club),
-              subscriptions: data.subscribe_set.map(a => a.club),
+              favorites: userInfo.favorite_set.map(a => a.club),
+              subscriptions: userInfo.subscribe_set.map(a => a.club),
               userInfo,
             })
           })
