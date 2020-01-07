@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ClubTableRow from '../ClubTableRow'
 
-export default ({ clubs, favorites, keyword, updateFavorites }) => {
+export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
   const [table, setTable] = useState(() => {
     const ret = {}
     favorites.forEach(favorite => {
@@ -9,7 +9,9 @@ export default ({ clubs, favorites, keyword, updateFavorites }) => {
     })
     return ret
   })
-  const findClub = clubs ? code => clubs.find(club => club.code === code) : () => {}
+  const findClub = code => {
+    return clubs.find(club => club.code === code) || {}
+  }
   const toggleFavorite = code => {
     setTable({ ...table, [code]: !table[code] })
     updateFavorites(code)
