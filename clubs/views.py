@@ -1,10 +1,12 @@
 import os
 import re
 
+import qrcode
 from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
@@ -135,7 +137,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         return Response(child_tree)
 
     @action(detail=True, methods=['get'], url_path='notes-about')
-    def notes_about(self, request, *args, **kwards):
+    def notes_about(self, request, *args, **kwargs):
         """
         Return a list of notes about this club, used by members of parent organizations.
         """
@@ -144,6 +146,17 @@ class ClubViewSet(viewsets.ModelViewSet):
         queryset = filter_note_permission(queryset, club, self.request.user)
         serializer = NoteSerializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def qr(self, request, *args, **kwargs):
+        """
+        Return a QR code png image representing a link to the club on Penn Clubs.
+        """
+        url = f"https://pennclubs.com/club/{self.kwargs['code']}"
+        response = HttpResponse(content_type='image/png')
+        qr_image = qrcode.make(url, box_size=20)
+        qr_image.save(response, 'PNG')
+        return response
 
     @action(detail=True, methods=['get'])
     def subscription(self, request, *args, **kwargs):
