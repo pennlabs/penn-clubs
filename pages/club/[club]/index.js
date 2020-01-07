@@ -1,6 +1,7 @@
 import s from 'styled-components'
+
 import { useState, useEffect } from 'react'
-import renderPage from '../../../renderPage.js'
+import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
 import Tabs from '../../../components/ClubPage/Tabs'
 import Header from '../../../components/ClubPage/Header'

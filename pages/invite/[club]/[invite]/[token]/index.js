@@ -1,5 +1,5 @@
-import renderPage from '../../../../../renderPage.js'
-import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils.js'
+import renderPage from '../../../../../renderPage'
+import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils'
 import React from 'react'
 import { withRouter } from 'next/router'
 
