@@ -1,5 +1,5 @@
-import os
 import datetime
+import os
 import re
 
 import qrcode
@@ -249,6 +249,13 @@ class YearViewSet(viewsets.ModelViewSet):
 
 
 class ClubReportViewSet(XLSXFileMixin, viewsets.ReadOnlyModelViewSet):
+    """
+    list: Retrieve a list of all of the clubs, optionally in Excel format.
+
+    fields: Retrieve a list of fields that can be included in the report.
+
+    retrieve: Retrieve a specific club, optionally in Excel format.
+    """
     queryset = (Club.objects.all()
                 .prefetch_related('tags')
                 .prefetch_related('badges')
@@ -256,6 +263,7 @@ class ClubReportViewSet(XLSXFileMixin, viewsets.ReadOnlyModelViewSet):
                 .prefetch_related(
                     Prefetch('members', queryset=Membership.objects.order_by('role'))
                 ))
+    lookup_field = 'code'
     serializer_class = ReportClubSerializer
 
     def get_filename(self):
