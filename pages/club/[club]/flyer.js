@@ -8,7 +8,7 @@ import {
   Text,
   Container,
 } from '../../../components/common'
-import { WHITE, DARK_GRAY, LIGHT_BLUE, DARK_BLUE } from '../../../constants/colors'
+import { WHITE, FLYER_BLUE, FLYER_NAVY } from '../../../constants/colors'
 
 const Image = s.img`
   height: 86px;
@@ -23,7 +23,7 @@ const BigTitle = s.h1`
   font-weight: 600;
   margin-top: 1rem;
   margin-bottom: 1rem;
-  color: ${DARK_GRAY};
+  color: ${FLYER_NAVY};
 `
 
 const Center = s.div`
@@ -33,7 +33,7 @@ const Center = s.div`
 const Gradient = s.div`
   width: 100%;
   height: 100%;
-  background-image: linear-gradient(to bottom, ${LIGHT_BLUE}, ${DARK_BLUE});
+  background-image: linear-gradient(to bottom, ${FLYER_BLUE}, ${FLYER_NAVY});
   -webkit-print-color-adjust: exact;
   padding: 1rem;
   display: flex;

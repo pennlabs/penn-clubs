@@ -39,3 +39,6 @@ export const CLUBS_RED = '#FF776D'
 export const CLUBS_YELLOW = '#FFCF59'
 export const CLUBS_BLUE = '#60B8F2'
 export const CLUBS_DEEP_BLUE = '#5ab0e8'
+
+export const FLYER_BLUE = '#4954f4'
+export const FLYER_NAVY = '#1f2049'
