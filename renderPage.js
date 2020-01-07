@@ -3,6 +3,7 @@ import s from 'styled-components'
 
 import Header from './components/Header'
 import Footer from './components/Footer'
+import LoginModal from './components/LoginModal'
 import { Loading } from './components/common'
 
 import { WHITE } from './constants/colors'
@@ -23,12 +24,15 @@ function renderPage(Page) {
       super(props)
 
       this.state = {
+        modal: false,
         authenticated: null,
         userInfo: null,
         favorites: [],
         subscriptions: [],
       }
 
+      this.openModal = this.openModal.bind(this)
+      this.closeModal = this.closeModal.bind(this)
       this.updateFavorites = this.updateFavorites.bind(this)
       this.updateSubscriptions = this.updateSubscriptions.bind(this)
       this.updateUserInfo = this.updateUserInfo.bind(this)
@@ -40,6 +44,8 @@ function renderPage(Page) {
 
     render() {
       try {
+        const { props, state, closeModal, updateFavorites, updateUserInfo, updateSubscriptions } = this
+        const { authenticated, modal, userInfo } = state
         return (
           <div
             style={{
@@ -48,17 +54,21 @@ function renderPage(Page) {
               backgroundColor: WHITE,
             }}
           >
+            <LoginModal 
+              modal={modal}
+              closeModal={closeModal}
+            />
             <Header
-              authenticated={this.state.authenticated}
-              userInfo={this.state.userInfo}
+              authenticated={authenticated}
+              userInfo={userInfo}
             />
             <Wrapper>
               <Page
-                {...this.props}
-                {...this.state}
-                updateFavorites={this.updateFavorites}
-                updateSubscriptions={this.updateSubscriptions}
-                updateUserInfo={this.updateUserInfo}
+                {...props}
+                {...state}
+                updateFavorites={updateFavorites}
+                updateSubscriptions={updateSubscriptions}
+                updateUserInfo={updateUserInfo}
               />
             </Wrapper>
             <Footer />
@@ -67,6 +77,14 @@ function renderPage(Page) {
       } catch (ex) {
         logException(ex)
       }
+    }
+
+    openModal() {
+      this.setState({ modal: true })
+    }
+
+    closeModal() {
+      this.setState({ modal: false })
     }
 
     updateFavorites(id) {
