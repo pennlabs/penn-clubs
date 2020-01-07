@@ -10,7 +10,11 @@ const IconTag = s.img`
   margin-bottom: 0;
   transform: translateY(2.5px);
 
-  .button:not(.is-light) & {
+  .button.is-primary &,
+  .button.is-link &,
+  .button.is-info &,
+  .button.is-success &,
+  .button.is-danger & {
     filter: invert(100%);
     margin-right: 3px;
     margin-top: -5px;
