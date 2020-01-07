@@ -9,6 +9,7 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
     })
     return ret
   })
+  const rows = Object.keys(table)
   const findClub = code => {
     return clubs.find(club => club.code === code) || {}
   }
@@ -17,7 +18,7 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
     updateFavorites(code)
   }
 
-  if (!favorites || !favorites.length) {
+  if (!rows || !rows.length) {
     return (
       <p className="has-text-light-grey" style={{ paddingTop: 200, textAlign: 'center' }}>
         No {keyword}s yet! Browse clubs <a href="/">here.</a>
@@ -26,7 +27,7 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
   }
   return (
     <div>
-      {Object.keys(table).map((favorite) => (
+      {rows.map((favorite) => (
         <ClubTableRow
           club={findClub(favorite)}
           updateFavorites={toggleFavorite}
