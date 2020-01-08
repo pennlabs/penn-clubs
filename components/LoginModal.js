@@ -68,8 +68,8 @@ const ModalBackground = s.div`
   overflow: hidden;
 `
 
-export default ({ modal, closeModal }) => (
-  <ModalWrapper className={`modal ${modal ? 'is-active' : ''}`} id="modal">
+export default ({ closeModal }) => (
+  <ModalWrapper className={`modal is-active`} id="modal">
     <ModalBackground
       className='modal-background'
       onClick={closeModal}

@@ -57,10 +57,7 @@ function renderPage(Page) {
               backgroundColor: WHITE,
             }}
           >
-            <LoginModal
-              modal={modal}
-              closeModal={closeModal}
-            />
+            {modal && <LoginModal closeModal={closeModal}/>}
             <Header
               authenticated={authenticated}
               userInfo={userInfo}
