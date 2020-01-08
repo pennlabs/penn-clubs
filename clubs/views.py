@@ -173,7 +173,8 @@ class ClubViewSet(XLSXFileMixin, viewsets.ModelViewSet):
     @method_decorator(cache_page(60*5))
     def list(self, request, *args, **kwargs):
         """
-        Return a list of all clubs. Note that some fields are removed in order to improve the response time.
+        Return a list of all clubs. This endpoint updates data every 5 minutes.
+        Note that some fields are removed in order to improve the response time.
         """
         return super().list(request, *args, **kwargs)
 
@@ -181,7 +182,7 @@ class ClubViewSet(XLSXFileMixin, viewsets.ModelViewSet):
         """
         Return the name of the generated Excel file.
         """
-        return 'report-{}.xlsx'.format(datetime.datetime.now().strftime('%Y%m%d'))
+        return 'report-{}.xlsx'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M'))
 
     def get_column_header(self):
         """
