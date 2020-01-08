@@ -1,8 +1,15 @@
 import s from 'styled-components'
 
 import { Icon } from './common/Icon'
-import { ALLBIRDS_GRAY, LIGHT_GRAY, MEDIUM_GRAY } from '../constants/colors'
+import { ALLBIRDS_GRAY, LIGHT_GRAY, MEDIUM_GRAY, DARK_GRAY } from '../constants/colors'
 import { BORDER_RADIUS_LG, MD, SM, mediaMaxWidth } from '../constants/measurements'
+import { LOGIN_URL } from '../utils'
+
+const Logo = s.img`
+  width: 100px
+  transform: scale(1);
+  margin-top: 12%;
+`
 
 const ModalWrapper = s.div`
   position: fixed;
@@ -13,22 +20,7 @@ const ModalWrapper = s.div`
   overflow-x: hidden;
   overflow-y: auto;
   z-index: 1002;
-
-  padding: 1rem 12%;
-
-  ${mediaMaxWidth(MD)} {
-    padding: 1rem 6%;
-  }
-
-  ${mediaMaxWidth(SM)} {
-    padding: 1rem;
-  }
-
-  ${mediaMaxWidth(MD)} {
-    &.is-active {
-        display: block !important;
-    }
-  }
+  text-align: center;
 `
 
 const ModalCard = s.div`
@@ -36,19 +28,34 @@ const ModalCard = s.div`
   border: 0 !important;
   box-shadow: none !important;
   height: auto;
-  width: 100%;
+  width: 35%;
+
+  ${mediaMaxWidth(MD)} {
+    width: 50%;
+  }
 
   ${mediaMaxWidth(SM)} {
-    max-height: calc(100vh - 2rem);
-    overflow: hidden;
-    padding-bottom: 140px;
+    width: 95%;
   }
+`
+
+const ModalTitle = s.h1`
+  color: ${DARK_GRAY};
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.125;
+  margin: 2% 0;
+`
+
+const ModalContent = s.div`
+  margin: auto;
+  margin-bottom: 10%;
 `
 
 const CloseModalIcon = s(Icon)`
   position: absolute;
-  right: 10px;
-  top: 10px;
+  right: 20px;
+  top: 20px;
   cursor: pointer;
   color: ${LIGHT_GRAY};
 
@@ -80,10 +87,13 @@ export default ({ closeModal }) => (
         alt='x'
         onClick={closeModal}
       />
-      <h1>Uh oh!</h1>
-      This feature requires a Penn login.
-      <br />
-      Please <a>log in using your PennKey</a> to continue.
+      <ModalContent>
+        <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
+        <ModalTitle>Uh oh!</ModalTitle>
+        This feature requires a Penn login.
+        <br />
+        Please <a href={`${LOGIN_URL}?next=${window.location.href}`}>log in using your PennKey</a> to continue.
+      </ModalContent>
     </ModalCard>
   </ModalWrapper>
 )
