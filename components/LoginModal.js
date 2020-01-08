@@ -1,13 +1,12 @@
 import s from 'styled-components'
 
 import { Icon } from './common/Icon'
-import { ALLBIRDS_GRAY, LIGHT_GRAY, MEDIUM_GRAY, DARK_GRAY } from '../constants/colors'
+import { ALLBIRDS_GRAY, LIGHT_GRAY, DARK_GRAY } from '../constants/colors'
 import { BORDER_RADIUS_LG, MD, SM, mediaMaxWidth } from '../constants/measurements'
 import { LOGIN_URL } from '../utils'
 
 const Logo = s.img`
   width: 100px
-  transform: scale(1);
   margin-top: 12%;
 `
 
@@ -35,7 +34,7 @@ const ModalCard = s.div`
   }
 
   ${mediaMaxWidth(SM)} {
-    width: 95%;
+    width: 90%;
   }
 `
 
@@ -58,10 +57,6 @@ const CloseModalIcon = s(Icon)`
   top: 20px;
   cursor: pointer;
   color: ${LIGHT_GRAY};
-
-  &:hover {
-    color: ${MEDIUM_GRAY};
-  }
 `
 
 const ModalBackground = s.div`
