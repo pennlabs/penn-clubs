@@ -90,7 +90,7 @@ class ClubTableRow extends React.Component {
 
     return (
       <Row>
-        <Link href="/club/[club]" params={`/club/${code}`}>
+        <Link href="/club/[club]" as={`/club/${code}`}>
           <a target="_blank">
             <div className="columns is-gapless is-mobile">
               <div className="column">

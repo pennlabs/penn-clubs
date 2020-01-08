@@ -154,6 +154,7 @@ class Settings extends React.Component {
         icon: 'heart',
         content: (
           <FavoritesTab
+            key='bookmark'
             keyword='bookmark'
             clubs={clubs}
             favorites={favorites}
@@ -166,6 +167,7 @@ class Settings extends React.Component {
         icon: 'bookmark',
         content: (
           <FavoritesTab
+            key='subscription'
             keyword='subscription'
             clubs={clubs}
             favorites={subscriptions}
