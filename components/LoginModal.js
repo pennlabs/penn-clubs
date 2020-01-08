@@ -76,7 +76,7 @@ const ModalBackground = s.div`
 `
 
 export default ({ closeModal }) => (
-  <ModalWrapper className={`modal is-active`} id="modal">
+  <ModalWrapper className="modal is-active" id="modal">
     <ModalBackground
       className='modal-background'
       onClick={closeModal}
