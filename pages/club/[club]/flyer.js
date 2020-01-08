@@ -56,8 +56,11 @@ const CenterContainer = s.div`
 `
 
 const PrintPage = s.div`
-  margin: 0px;
-  padding: 0px;
+  margin: 3rem auto;
+  @media print {
+    margin: 0px;
+    padding: 0px;
+  }
   width: 11in;
   height: 8in;
   clear: both;
@@ -72,13 +75,24 @@ const PrintPage = s.div`
 `
 
 const Flyer = ({ authenticated, query, userInfo, favorites, updateFavorites, subscriptions, updateSubscriptions }) => {
-  const [clubs, setClubs] = useState([])
+  const [clubs, setClubs] = useState(null)
 
   useEffect(() => {
     Promise.all(query.club.split(',').map(club => {
       return doApiRequest(`/clubs/${club}/?format=json`).then(resp => resp.json())
     })).then(setClubs)
   }, [query])
+
+  if (clubs === null) {
+    return (
+      <Container>
+        <div className="has-text-centered">
+          <Title>Loading...</Title>
+          <Text>Loading club flyer(s)...</Text>
+        </div>
+      </Container>
+    )
+  }
 
   if (!clubs.length) {
     return (
@@ -112,7 +126,7 @@ const Flyer = ({ authenticated, query, userInfo, favorites, updateFavorites, sub
                 <Gradient>
                   <Center>
                     <Title style={{ color: WHITE }}>For more info, or to bookmark or subscribe to the {club.name} mailing list:</Title>
-                    <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} style={{ width: 400, height: 400 }} />
+                    <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} style={{ height: 400, marginRight: 0 }} />
                     <Text style={{ color: WHITE }}>Or visit:<br /><i>https://pennclubs.com/club/{club.code}/fair/</i></Text>
                   </Center>
                 </Gradient>
