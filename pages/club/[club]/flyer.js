@@ -8,13 +8,11 @@ import {
   Text,
   Container,
 } from '../../../components/common'
-import { WHITE, FLYER_BLUE, FLYER_NAVY } from '../../../constants/colors'
+import { FLYER_BLUE, FLYER_NAVY, FLYER_PINK } from '../../../constants/colors'
 
 const Image = s.img`
-  height: 86px;
-  width: auto;
-  max-width: 242px;
-  margin-right: 1rem;
+  padding: 0;
+  margin: 0;
   object-fit: contain;
 `
 
@@ -26,19 +24,23 @@ const BigTitle = s.h1`
   color: ${FLYER_NAVY};
 `
 
+const MediumTitle = s.h2`
+  font-size: 32px;
+  font-weight: 500;
+  color: ${FLYER_NAVY};
+`
+
 const Center = s.div`
   text-align: center;
 `
 
 const Gradient = s.div`
-  width: 100%;
-  height: 100%;
-  background-image: linear-gradient(to bottom, ${FLYER_BLUE}, ${FLYER_NAVY});
+  width: 370px;
+  height: 370px;
+  background-image: linear-gradient(to bottom, ${FLYER_BLUE}, ${FLYER_PINK});
   -webkit-print-color-adjust: exact;
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 1.5rem;
+  margin: 1rem auto;
 `
 
 const Margin = s.div`
@@ -51,8 +53,7 @@ const CenterContainer = s.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #ccc;
-  border-right: none;
+  text-align: center;
 `
 
 const PrintPage = s.div`
@@ -61,6 +62,7 @@ const PrintPage = s.div`
     margin: 0px;
     padding: 0px;
   }
+  border: 1px solid #ccc;
   width: 11in;
   height: 8in;
   clear: both;
@@ -118,18 +120,21 @@ const Flyer = ({ authenticated, query, userInfo, favorites, updateFavorites, sub
                   <Margin>
                     {image && <Image src={image} />}
                     <BigTitle>{club.name}</BigTitle>
-                    <Text>{club.description}</Text>
                   </Margin>
                 </CenterContainer>
               </div>
               <div className="column is-paddingless">
-                <Gradient>
-                  <Center>
-                    <Title style={{ color: WHITE }}>For more info, or to bookmark or subscribe to the {club.name} mailing list:</Title>
-                    <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} style={{ height: 400, marginRight: 0 }} />
-                    <Text style={{ color: WHITE }}>Or visit:<br /><i>https://pennclubs.com/club/{club.code}/fair/</i></Text>
-                  </Center>
-                </Gradient>
+                <CenterContainer>
+                  <Margin>
+                    <Center>
+                      <MediumTitle>For more info, or to bookmark or subscribe to the {club.name} mailing list:</MediumTitle>
+                      <Gradient>
+                        <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} />
+                      </Gradient>
+                      <Text style={{ color: FLYER_NAVY }}><b>Or visit:</b><br /><i>https://pennclubs.com/club/{club.code}/fair/</i></Text>
+                    </Center>
+                  </Margin>
+                </CenterContainer>
               </div>
             </div>
           </PrintPage>
