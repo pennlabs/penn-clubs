@@ -51,6 +51,8 @@ const CenterContainer = s.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid #ccc;
+  border-right: none;
 `
 
 const PrintPage = s.div`
@@ -60,8 +62,9 @@ const PrintPage = s.div`
   height: 8in;
   clear: both;
   background-color: white;
-  border: 1px solid #ccc;
   display: flex;
+
+  page-break-after: always;
 
   @page {
     size: letter landscape;
@@ -69,16 +72,15 @@ const PrintPage = s.div`
 `
 
 const Flyer = ({ authenticated, query, userInfo, favorites, updateFavorites, subscriptions, updateSubscriptions }) => {
-  const [club, setClub] = useState(null)
+  const [clubs, setClubs] = useState([])
 
   useEffect(() => {
-    doApiRequest(`/clubs/${query.club}/?format=json`)
-      .then(resp => resp.json())
-      .then(data => setClub(data))
+    Promise.all(query.club.split(',').map(club => {
+      return doApiRequest(`/clubs/${club}/?format=json`).then(resp => resp.json())
+    })).then(setClubs)
   }, [query])
 
-  if (!club) return null
-  if (!club.code) {
+  if (!clubs.length) {
     return (
       <Container>
         <div className="has-text-centered">
@@ -89,33 +91,36 @@ const Flyer = ({ authenticated, query, userInfo, favorites, updateFavorites, sub
     )
   }
 
-  const { image_url: image } = club
-
   return (
     <>
       <Head />
-      <PrintPage>
-        <div className="columns is-mobile">
-          <div className="column">
-            <CenterContainer>
-              <Margin>
-                {image && <Image src={image} />}
-                <BigTitle>{club.name}</BigTitle>
-                <Text>{club.description}</Text>
-              </Margin>
-            </CenterContainer>
-          </div>
-          <div className="column">
-            <Gradient>
-              <Center>
-                <Title style={{ color: WHITE }}>For more info, or to bookmark or subscribe to the {club.name} mailing list:</Title>
-                <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} style={{ width: 400, height: 400 }} />
-                <Text style={{ color: WHITE }}>Or visit:<br /><i>https://pennclubs.com/club/{club.code}/fair/</i></Text>
-              </Center>
-            </Gradient>
-          </div>
-        </div>
-      </PrintPage>
+      {clubs.map(club => {
+        const { image_url: image } = club
+        return (<>
+          <PrintPage>
+            <div className="columns is-mobile is-marginless">
+              <div className="column is-paddingless">
+                <CenterContainer>
+                  <Margin>
+                    {image && <Image src={image} />}
+                    <BigTitle>{club.name}</BigTitle>
+                    <Text>{club.description}</Text>
+                  </Margin>
+                </CenterContainer>
+              </div>
+              <div className="column is-paddingless">
+                <Gradient>
+                  <Center>
+                    <Title style={{ color: WHITE }}>For more info, or to bookmark or subscribe to the {club.name} mailing list:</Title>
+                    <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} style={{ width: 400, height: 400 }} />
+                    <Text style={{ color: WHITE }}>Or visit:<br /><i>https://pennclubs.com/club/{club.code}/fair/</i></Text>
+                  </Center>
+                </Gradient>
+              </div>
+            </div>
+          </PrintPage>
+        </>)
+      })}
     </>
   )
 }
