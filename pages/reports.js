@@ -1,8 +1,8 @@
 import s from 'styled-components'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import renderPage from '../renderPage.js'
 import { Icon, Flex } from '../components/common'
-import { API_BASE_URL } from '../utils'
+import { doApiRequest, API_BASE_URL } from '../utils'
 import { Sidebar } from '../components/common/Sidebar'
 import Checkbox from '../components/common/Checkbox'
 import { Container, WideContainer } from '../components/common/Container'
@@ -84,35 +84,11 @@ const Reports = () => {
     ],
   }
 
-  const nameToCode = {
-    Id: 'id',
-    Code: 'code',
-    Active: 'active',
-    Approved: 'approved',
-    Name: 'name',
-    Subtitle: 'subtitle',
-    Description: 'description',
-    'Date Founded': 'founded',
-    Size: 'size',
-    Email: 'email',
-    Facebook: 'facebook',
-    Website: 'website',
-    Twitter: 'twitter',
-    Instagram: 'instagram',
-    Linkedin: 'linkedin',
-    Github: 'github',
-    'How To Get Involved': 'how_to_get_involved',
-    'Application Required': 'application_required',
-    'Accepting Members': 'accepting_members',
-    Listserv: 'listserv',
-    Image: 'image',
-    'Created At': 'created_at',
-    'Updated At': 'updated_at',
-    Tags: 'tags',
-    Members: 'members',
-    'Parent Orgs': 'parent_orgs',
-    Badges: 'badges',
-  }
+  const [nameToCode, setNameToCode] = useState([])
+
+  useEffect(() => {
+    doApiRequest('/clubs/fields/?format=json').then(resp => resp.json()).then(setNameToCode)
+  }, [])
 
   const [includedFields, setIncludedFields] = useState(
     (() => {
@@ -136,7 +112,7 @@ const Reports = () => {
 
   const generateCheckboxGroup = (groupName, fields) => {
     return (
-      <div style={{ flexBasis: '50%', flexShrink: 0 }}>
+      <div key={groupName} style={{ flexBasis: '50%', flexShrink: 0 }}>
         <GroupLabel
           key={groupName}
           className="subtitle is-4"
@@ -145,10 +121,9 @@ const Reports = () => {
           {groupName}
         </GroupLabel>
         {fields.map((field, idx) => (
-          <div>
+          <div key={idx}>
             <Checkbox
               id={field}
-              key={idx}
               checked={includedFields[field]}
               onChange={() => {
                 setIncludedFields(prev => ({ ...prev, [field]: !prev[field] }))
@@ -170,9 +145,10 @@ const Reports = () => {
           Fields
         </h4>
         <ul>
-          {Object.keys(includedFields).map(f =>
+          {Object.keys(includedFields).map((f, idx) =>
             includedFields[f] ? (
               <SelectedManager
+                key={idx}
                 value={f}
                 onClick={() =>
                   setIncludedFields(prev => ({ ...prev, [f]: false }))
@@ -230,13 +206,16 @@ const Reports = () => {
           </div>
           <button
             className="button is-info"
+            disabled={nameToCode.length === 0}
             onClick={() => {
-              window.open(
-                `${API_BASE_URL}/clubs/?format=xlsx&fields=${query.fields.join(
-                  ','
-                )}`,
-                '_blank'
-              )
+              if (nameToCode.length > 0) {
+                window.open(
+                  `${API_BASE_URL}/clubs/?format=xlsx&fields=${query.fields.join(
+                    ','
+                  )}`,
+                  '_blank'
+                )
+              }
             }}
           >
             Generate Report
