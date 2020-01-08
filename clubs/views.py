@@ -154,7 +154,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         """
         url = f"https://pennclubs.com/club/{self.kwargs['code']}/fair"
         response = HttpResponse(content_type='image/png')
-        qr_image = qrcode.make(url, box_size=20)
+        qr_image = qrcode.make(url, box_size=20, border=0)
         qr_image.save(response, 'PNG')
         return response
 
