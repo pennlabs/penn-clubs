@@ -686,7 +686,10 @@ class ClubForm extends React.Component {
                     {!!this.state.subscriptions.length || <tr><td colSpan="2" className="has-text-grey">No one has subscribed to this club yet.</td></tr>}
                   </tbody>
                 </table>
-                <a href={getApiUrl(`/clubs/${club.code}/subscription/?format=xlsx`)} className="button is-link"><Icon alt="download" name="download" /> Download Subscriber List</a>
+                <div className="buttons">
+                  <a href={getApiUrl(`/clubs/${club.code}/subscription/?format=xlsx`)} className="button is-link"><Icon alt="download" name="download" /> Download Subscriber List</a>
+                  <Link href="/club/[club]/flyer" as={`/club/${club.code}/flyer`}><a target="_blank" className="button is-success"><Icon alt="flyer" name="external-link" /> View Flyer</a></Link>
+                </div>
               </div>
             </div>
           </div>
