@@ -109,6 +109,7 @@ class ClubViewSet(viewsets.ModelViewSet):
                                 'badges',
                                 'target_schools',
                                 'target_majors',
+                                'target_years',
                                 Prefetch('membership_set', queryset=Membership.objects.order_by(
                                     'role',
                                     'person__first_name',

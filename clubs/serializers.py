@@ -7,7 +7,7 @@ from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
 from clubs.models import (Asset, Badge, Club, Event, Favorite, Major, Membership, MembershipInvite,
-                          Note, NoteTag, Profile, School, Subscribe, Tag, Testimonial)
+                          Note, NoteTag, Profile, School, Subscribe, Tag, Testimonial, Year)
 from clubs.utils import clean
 
 
@@ -47,6 +47,14 @@ class TestimonialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Testimonial
         fields = ('id', 'text')
+
+
+class YearSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = Year
+        fields = ('id', 'name')
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
@@ -205,6 +213,7 @@ class ClubListSerializer(serializers.ModelSerializer):
 
     target_schools = SchoolSerializer(many=True, required=False)
     target_majors = MajorSerializer(many=True, required=False)
+    target_years = YearSerializer(many=True, required=False)
 
     def get_image_url(self, obj):
         if not obj.image:
@@ -219,7 +228,7 @@ class ClubListSerializer(serializers.ModelSerializer):
         fields = [
             'name', 'code', 'description', 'founded', 'size', 'email', 'tags', 'subtitle',
             'application_required', 'accepting_members', 'image_url', 'favorite_count', 'active',
-            'target_schools', 'target_majors'
+            'target_schools', 'target_majors', 'target_years'
         ]
         extra_kwargs = {
             'name': {
@@ -366,6 +375,7 @@ class ClubSerializer(ClubListSerializer):
             ('badges', Badge),
             ('target_schools', School),
             ('target_majors', Major),
+            ('target_years', Year),
         ]
 
         # remove m2m from validated data and save

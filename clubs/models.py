@@ -78,6 +78,7 @@ class Club(models.Model):
     parent_orgs = models.ManyToManyField('Club', related_name='children_orgs', blank=True)
     badges = models.ManyToManyField('Badge', blank=True)
 
+    target_years = models.ManyToManyField('Year', blank=True)
     target_schools = models.ManyToManyField('School', blank=True)
     target_majors = models.ManyToManyField('Major', blank=True)
 
@@ -420,6 +421,16 @@ class Asset(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Year(models.Model):
+    """
+    Represents a graduation class (ex: Freshman, Sophomore, Junior, Senior, Graduate Student).
+    """
+    name = models.TextField()
 
     def __str__(self):
         return self.name
