@@ -1,34 +1,34 @@
 import s from 'styled-components'
 
-import Icon from './common/Icon'
-import { ALLBIRDS_GRAY } from '../constants/colors'
-import { MD, SM } from '../constants/measurements'
+import { Icon } from './common/Icon'
+import { ALLBIRDS_GRAY, LIGHT_GRAY, MEDIUM_GRAY } from '../constants/colors'
+import { BORDER_RADIUS_LG, MD, SM, mediaMaxWidth } from '../constants/measurements'
 
 const ModalWrapper = s.div`
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    z-index: 1002;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: 1002;
 
-    padding: 1rem 12%;
+  padding: 1rem 12%;
 
-    ${mediaMaxWidth(MD)} {
-        padding: 1rem 6%;
+  ${mediaMaxWidth(MD)} {
+    padding: 1rem 6%;
+  }
+
+  ${mediaMaxWidth(SM)} {
+    padding: 1rem;
+  }
+
+  ${mediaMaxWidth(MD)} {
+    &.is-active {
+        display: block !important;
     }
-
-    ${mediaMaxWidth(SM)} {
-        padding: 1rem;
-    }
-
-    ${mediaMaxWidth(MD)} {
-        &.is-active {
-            display: block !important;
-        }
-    }
+  }
 `
 
 const ModalCard = s.div`
@@ -68,7 +68,6 @@ const ModalBackground = s.div`
   overflow: hidden;
 `
 
-
 export default ({ modal, closeModal }) => (
   <ModalWrapper className={`modal ${modal ? 'is-active' : ''}`} id="modal">
     <ModalBackground
@@ -79,12 +78,12 @@ export default ({ modal, closeModal }) => (
       <CloseModalIcon
         name='x'
         alt='x'
+        onClick={closeModal}
       />
-      Whoa there! You need to be logged in to do that. Want to log in?
+      <h1>Uh oh!</h1>
+      This feature requires a Penn login.
       <br />
-      <button className="button is-large is-success" onClick={this.accept}>
-        Let's do it!
-      </button>
+      Please <a>log in using your PennKey</a> to continue.
     </ModalCard>
   </ModalWrapper>
 )
