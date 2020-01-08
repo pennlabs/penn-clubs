@@ -102,6 +102,7 @@ const Fair = ({ authenticated, query, userInfo, favorites, updateFavorites, subs
               onClick={() => isFavorite || updateFavorites(club.code)}>
               <Icon alt='bookmark' name={isFavorite ? 'check-circle' : 'bookmark'} /> {isFavorite ? 'Bookmarked' : 'Bookmark'}
             </div>
+            <Text style={{ marginTop: '0.5rem' }}>To save for later</Text>
           </div>
           <div className="column">
             <div
@@ -110,10 +111,10 @@ const Fair = ({ authenticated, query, userInfo, favorites, updateFavorites, subs
               onClick={() => isSubscribe || updateSubscriptions(club.code)}>
               <Icon alt='subscribe' name={isSubscribe ? 'check-circle' : 'bell'} /> {isSubscribe ? 'Subscribed' : 'Subscribe'}
             </div>
+            <Text style={{ marginTop: '0.5rem' }}>To join mailing list</Text>
           </div>
         </div>
-        <Text><b>Bookmarking</b> a club will save it to your bookmarked clubs list on Penn Clubs.</Text>
-        <Text><b>Subscribing</b> to a club will add your email to the club's mailing list for updates.</Text>
+        <SmallText><i>Bookmarks and subscriptions can be managed from your Penn Clubs account at any time.</i></SmallText>
         <hr />
       </Center>
       <StrongText>Basic Info</StrongText>
