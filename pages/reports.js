@@ -232,7 +232,7 @@ const Reports = () => {
             className="button is-info"
             onClick={() => {
               window.open(
-                `${API_BASE_URL}/reports?format=xlsx&fields=${query.fields.join(
+                `${API_BASE_URL}/clubs/?format=xlsx&fields=${query.fields.join(
                   ','
                 )}`,
                 '_blank'
