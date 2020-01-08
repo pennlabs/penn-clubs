@@ -33,6 +33,9 @@ function renderPage(Page) {
 
       this.openModal = this.openModal.bind(this)
       this.closeModal = this.closeModal.bind(this)
+      this.checkAuth = this.checkAuth.bind(this)
+      this._updateFavorites = this._updateFavorites.bind(this)
+      this._updateSubscriptions = this._updateSubscriptions.bind(this)
       this.updateFavorites = this.updateFavorites.bind(this)
       this.updateSubscriptions = this.updateSubscriptions.bind(this)
       this.updateUserInfo = this.updateUserInfo.bind(this)
@@ -54,7 +57,7 @@ function renderPage(Page) {
               backgroundColor: WHITE,
             }}
           >
-            <LoginModal 
+            <LoginModal
               modal={modal}
               closeModal={closeModal}
             />
@@ -79,6 +82,15 @@ function renderPage(Page) {
       }
     }
 
+    checkAuth(func, ...args) {
+      if (this.state.authenticated) {
+        return func && func(...args)
+      } else {
+        this.openModal()
+        return false
+      }
+    }
+
     openModal() {
       this.setState({ modal: true })
     }
@@ -88,6 +100,10 @@ function renderPage(Page) {
     }
 
     updateFavorites(id) {
+      return this.checkAuth(this._updateFavorites, id)
+    }
+
+    _updateFavorites(id) {
       const { favorites: newFavs } = this.state
       const i = newFavs.indexOf(id)
       if (i === -1) {
@@ -111,13 +127,14 @@ function renderPage(Page) {
         }
       }
       this.setState({ favorites: newFavs })
-      if (!this.state.authenticated) {
-        localStorage.setItem('favorites', JSON.stringify(newFavs))
-      }
       return i === -1
     }
 
     updateSubscriptions(id) {
+      return this.checkAuth(this._updateSubscriptions, id)
+    }
+
+    _updateSubscriptions(id) {
       const { subscriptions: newSubs } = this.state
       const i = newSubs.indexOf(id)
       if (i === -1) {
@@ -157,7 +174,7 @@ function renderPage(Page) {
         } else {
           this.setState({
             authenticated: false,
-            favorites: JSON.parse(localStorage.getItem('favorites')) || [],
+            favorites: [],
             subscriptions: [],
           })
         }
