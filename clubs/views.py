@@ -169,6 +169,15 @@ class ClubViewSet(XLSXFileMixin, viewsets.ModelViewSet):
         Return a list of all students that have subscribed to the club, including their names and emails.
         """
         serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']), many=True)
+
+        # intercept excel format data and format it better
+        if request.accepted_renderer.format == 'xlsx':
+            new_data = []
+            for row in serializer.data:
+                new_data.append(OrderedDict([self._format_cell(k, v) for k, v in row.items()]))
+            new_data = ReturnList(new_data, serializer=serializer)
+            return Response(new_data)
+
         return Response(serializer.data)
 
     def _format_cell(self, key, value):
