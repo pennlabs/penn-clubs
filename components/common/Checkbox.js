@@ -1,5 +1,5 @@
 import s from 'styled-components'
-import {Icon} from './Icon'
+import { Icon } from './Icon'
 
 // Hide checkbox visually but remain accessible to screen readers.
 // Source: https://polished.js.org/docs/#hidevisually
@@ -33,7 +33,7 @@ const Checkbox = ({ className, checked, onChange, ...props }) => {
     <CheckboxContainer className={className}>
       <HiddenCheckbox checked={checked} onChange={onChange} {...props} />
       <StyledCheckbox onClick={onChange} checked={checked}>
-        <Icon name={checked ? 'check-box-red' : 'box-red'} /> 
+        <Icon name={checked ? 'check-box-red' : 'box-red'} />
       </StyledCheckbox>
     </CheckboxContainer>
   )

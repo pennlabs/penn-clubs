@@ -20,7 +20,6 @@ import {
   SEARCH_BAR_MOBILE_HEIGHT,
 } from '../../constants/measurements'
 
-
 const Wrapper = s.div`
   height: 100vh;
   width: 20vw;

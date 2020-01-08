@@ -1,13 +1,12 @@
 import s from 'styled-components'
-import {useState} from 'react'
+import { useState } from 'react'
 import renderPage from '../renderPage.js'
 import { Icon, Flex } from '../components/common'
-import {API_BASE_URL} from '../utils'
+import { API_BASE_URL } from '../utils'
 import { Sidebar } from '../components/common/Sidebar'
 import Checkbox from '../components/common/Checkbox'
 import { Container, WideContainer } from '../components/common/Container'
 import { CLUBS_GREY, RED, ALLBIRDS_GRAY, MEDIUM_GRAY } from '../constants/colors'
-
 
 const TallTextArea = s.textarea`
   height: 6em;
@@ -41,14 +40,14 @@ const HoverListElement = s.li`
 const SelectedManager = ({ value, onClick }) => (
   <HoverListElement>
     {value}
-    
-    <span style={{marginLeft: '1em'}} onClick={onClick}>X</span>
+
+    <span style={{ marginLeft: '1em' }} onClick={onClick}>X</span>
   </HoverListElement>
 )
 
 const Reports = () => {
-  const fields = {  // TODO: Get this from the server.
-    'Basics': [
+  const fields = { // TODO: Get this from the server.
+    Basics: [
       'Name',
       'Subtitle',
       'Description',
@@ -58,7 +57,7 @@ const Reports = () => {
       'Approval Status',
       'Parent Orgs',
       'How to Get Involved',
-      'Tags'
+      'Tags',
     ],
     'Additional Links': [
       'Website',
@@ -66,51 +65,51 @@ const Reports = () => {
       'Instagram',
       'Twitter',
       'Github',
-      'Linkedin'
+      'Linkedin',
     ],
     'Contact Information': [
       'Owner name(s)',
       'Owner email(s)',
       'Listserv',
       'Officer name(s)',
-      'Officer email(s)'
-    ]
+      'Officer email(s)',
+    ],
   }
 
   const nameToCode = {
-      "Id": "id",
-      "Code": "code",
-      "Active": "active",
-      "Approved": "approved",
-      "Name": "name",
-      "Subtitle": "subtitle",
-      "Description": "description",
-      "Date Founded": "founded",
-      "Size": "size",
-      "Email": "email",
-      "Facebook": "facebook",
-      "Website": "website",
-      "Twitter": "twitter",
-      "Instagram": "instagram",
-      "Linkedin": "linkedin",
-      "Github": "github",
-      "How To Get Involved": "how_to_get_involved",
-      "Application Required": "application_required",
-      "Accepting Members": "accepting_members",
-      "Listserv": "listserv",
-      "Image": "image",
-      "Created At": "created_at",
-      "Updated At": "updated_at",
-      "Tags": "tags",
-      "Members": "members",
-      "Parent Orgs": "parent_orgs",
-      "Badges": "badges"
+    Id: 'id',
+    Code: 'code',
+    Active: 'active',
+    Approved: 'approved',
+    Name: 'name',
+    Subtitle: 'subtitle',
+    Description: 'description',
+    'Date Founded': 'founded',
+    Size: 'size',
+    Email: 'email',
+    Facebook: 'facebook',
+    Website: 'website',
+    Twitter: 'twitter',
+    Instagram: 'instagram',
+    Linkedin: 'linkedin',
+    Github: 'github',
+    'How To Get Involved': 'how_to_get_involved',
+    'Application Required': 'application_required',
+    'Accepting Members': 'accepting_members',
+    Listserv: 'listserv',
+    Image: 'image',
+    'Created At': 'created_at',
+    'Updated At': 'updated_at',
+    Tags: 'tags',
+    Members: 'members',
+    'Parent Orgs': 'parent_orgs',
+    Badges: 'badges',
   }
 
   const [includedFields, setIncludedFields] = useState(
     (() => {
-      let initial = {}
-      Object.keys(fields).forEach(group => fields[group].forEach(f => initial[f] = false));
+      const initial = {}
+      Object.keys(fields).forEach(group => fields[group].forEach(f => { initial[f] = false }))
       return initial
     })()
   )
@@ -118,26 +117,26 @@ const Reports = () => {
   const query = {
     format: 'xlsx',
     fields: Object.keys(includedFields)
-                  .filter(field => includedFields[field])
-                  .map(name => nameToCode[name])
-                  .filter(e => e !== undefined)
+      .filter(field => includedFields[field])
+      .map(name => nameToCode[name])
+      .filter(e => e !== undefined),
   }
 
   console.log(query)
 
   const generateCheckboxGroup = (groupName, fields) => {
     return (
-      <div style={{flexBasis: '50%', flexShrink: 0}}>
+      <div style={{ flexBasis: '50%', flexShrink: 0 }}>
         <GroupLabel key={groupName} className="subtitle is-4" style={{ color: CLUBS_GREY }}>{groupName}</GroupLabel>
         { fields.map((field, idx) => (
           <div>
-            <Checkbox 
-              id={field} 
-              key={idx} 
-              checked={includedFields[field]} 
+            <Checkbox
+              id={field}
+              key={idx}
+              checked={includedFields[field]}
               onChange={() => {
                 setIncludedFields(prev => ({ ...prev, [field]: !prev[field] }))
-              }} 
+              }}
             />
             {'  '}
             <label htmlFor={field}>{field}</label>
@@ -146,7 +145,6 @@ const Reports = () => {
       </div>
     )
   }
-
 
   return (
     <div>
@@ -158,33 +156,33 @@ const Reports = () => {
             <SelectedManager value={f} onClick={() => setIncludedFields(prev => ({ ...prev, [f]: false }))} />
           ) : null)}
         </ul>
-      </Sidebar>        
+      </Sidebar>
       <Container>
         <WideContainer>
           <h1 className="title" style={{ color: CLUBS_GREY }}>
-            Create a new report 
+            Create a new report
           </h1>
           <div className="box">
             <h3 className="title is-4" style={{ color: CLUBS_GREY }}>
               Report Details
             </h3>
             <div>
-            <div className="field">
-              <label className="label">Name</label>
-              <div className="control">
-                <input name="name" className="input" type="text" placeholder='e.g. "Owner emails"' />
+              <div className="field">
+                <label className="label">Name</label>
+                <div className="control">
+                  <input name="name" className="input" type="text" placeholder='e.g. "Owner emails"' />
+                </div>
+              </div>
+              <div className="field">
+                <label className="label">Description</label>
+                <div className="control">
+                  <TallTextArea name="description" className="input" type="text" placeholder='e.g. "Pulls all clubs, the emails from club owners, and names of owners"' />
+                </div>
               </div>
             </div>
-            <div className="field">
-              <label className="label">Description</label>
-              <div className="control">
-                <TallTextArea name="description" className="input" type="text" placeholder='e.g. "Pulls all clubs, the emails from club owners, and names of owners"' />
-              </div>
-            </div>
-            </div>
-          </div> 
+          </div>
           <div className="box">
-            <h3 className="title is-4" style={{ color: CLUBS_GREY}} >
+            <h3 className="title is-4" style={{ color: CLUBS_GREY }} >
               Select fields to include
             </h3>
             <div>
@@ -193,7 +191,7 @@ const Reports = () => {
               </Flex>
             </div>
           </div>
-          <button 
+          <button
             className="button is-info"
             onClick={() => {
               window.open(`${API_BASE_URL}/reports?format=xlsx&fields=${query.fields.join(',')}`, '_blank')
