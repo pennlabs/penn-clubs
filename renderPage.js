@@ -88,6 +88,7 @@ function renderPage(Page) {
           })
         }
         this.setState({ favorites: newFavs })
+        return i === -1
       }
     }
 
