@@ -109,15 +109,11 @@ function renderPage(Page) {
           logEvent('favorite', id)
           doApiRequest('/favorites/?format=json', {
             method: 'POST',
-            body: {
-              club: id,
-            },
+            body: { club: id },
           })
-        }
-      } else {
-        newFavs.splice(i, 1)
-        logEvent('unfavorite', id)
-        if (this.state.authenticated) {
+        } else {
+          newFavs.splice(i, 1)
+          logEvent('unfavorite', id)
           doApiRequest(`/favorites/${id}/?format=json`, {
             method: 'DELETE',
           })
