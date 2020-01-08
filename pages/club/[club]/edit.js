@@ -7,7 +7,7 @@ import renderPage from '../../../renderPage.js'
 import { doApiRequest, getApiUrl, formatResponse, getRoleDisplay } from '../../../utils'
 import Form from '../../../components/Form'
 import TabView from '../../../components/TabView'
-import { Icon, Container, Title, InactiveTag } from '../../../components/common'
+import { Icon, Container, Title, InactiveTag, Text } from '../../../components/common'
 
 class ClubForm extends React.Component {
   constructor(props) {
@@ -474,49 +474,56 @@ class ClubForm extends React.Component {
         label: 'Membership',
         content: (
           <div>
-            <table className="table is-fullwidth">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Title (Permissions)</th>
-                  <th>Email</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {club && club.members.length ? (
-                  club.members.map(a => (
-                    <tr key={a.username}>
-                      <td>{a.name}</td>
-                      <td>
-                        {a.title} ({getRoleDisplay(a.role)})
-                      </td>
-                      <td>{a.email}</td>
-                      <td className="buttons">
-                        <button
-                          className="button is-small is-primary"
-                          onClick={() => this.setState({ editMember: a })}
-                        >
-                          <Icon name="edit" alt="edit member" /> Edit
-                        </button>
-                        <button
-                          className="button is-small is-danger"
-                          onClick={() => this.deleteMembership(a.username)}
-                        >
-                          <Icon name="x" alt="kick member" /> Kick
-                        </button>
-                      </td>
+            <div className="card" style={{ marginBottom: 20 }}>
+              <div className="card-header">
+                <p className="card-header-title">Members</p>
+              </div>
+              <div className="card-content">
+                <table className="table is-fullwidth">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Title (Permissions)</th>
+                      <th>Email</th>
+                      <th>Actions</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="has-text-grey">
-                      There are no members in this club.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {club && club.members.length ? (
+                      club.members.map(a => (
+                        <tr key={a.username}>
+                          <td>{a.name}</td>
+                          <td>
+                            {a.title} ({getRoleDisplay(a.role)})
+                          </td>
+                          <td>{a.email}</td>
+                          <td className="buttons">
+                            <button
+                              className="button is-small is-primary"
+                              onClick={() => this.setState({ editMember: a })}
+                            >
+                              <Icon name="edit" alt="edit member" /> Edit
+                            </button>
+                            <button
+                              className="button is-small is-danger"
+                              onClick={() => this.deleteMembership(a.username)}
+                            >
+                              <Icon name="x" alt="kick member" /> Kick
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="has-text-grey">
+                          There are no members in this club.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
             {editMember && (
               <div className="card" style={{ marginBottom: 20 }}>
                 <div className="card-header">
@@ -601,7 +608,7 @@ class ClubForm extends React.Component {
                 <p className="card-header-title">Invite Members</p>
               </div>
               <div className="card-content">
-                <p>
+                <Text>
                   Enter an email address or a list of email addresses separated
                   by commas or newlines in the box below. All emails listed will
                   be sent an invite to join the club. The invite process will go
@@ -609,8 +616,7 @@ class ClubForm extends React.Component {
                   email addresses will work provided that the recipient has a
                   PennKey account. We will not send an invite if the account
                   associated with an email is already in the club.
-                </p>
-                <br />
+                </Text>
                 <div className="field">
                   <textarea
                     value={this.state.inviteEmails}
@@ -708,19 +714,18 @@ class ClubForm extends React.Component {
               </div>
               <div className="card-content">
                 {club && club.active ? (
-                  <p>
+                  <Text>
                     Mark this organization as inactive. This will hide the club
                     from various listings and indicate to the public that the
                     club is no longer active.
-                  </p>
+                  </Text>
                 ) : (
-                  <p>
+                  <Text>
                     Reactivate this club, indicating to the public that this
                     club is currently active and running.
-                  </p>
+                  </Text>
                 )}
-                <p>Only owners of the organization may perform this action.</p>
-                <br />
+                <Text>Only owners of the organization may perform this action.</Text>
                 <div className="buttons">
                   <a
                     className={
@@ -747,7 +752,7 @@ class ClubForm extends React.Component {
                 <p className="card-header-title">Delete Club</p>
               </div>
               <div className="card-content">
-                <p>
+                <Text>
                   Remove this club entry from Penn Clubs.{' '}
                   <b className="has-text-danger">
                     This action is permanant and irreversible!
@@ -755,8 +760,7 @@ class ClubForm extends React.Component {
                   All club history and membership information will be
                   permanantly lost. In almost all cases, you want to deactivate
                   this club instead.
-                </p>
-                <br />
+                </Text>
                 <div className="buttons">
                   {club && !club.active ? (
                     <a
