@@ -6,7 +6,12 @@ import { API_BASE_URL } from '../utils'
 import { Sidebar } from '../components/common/Sidebar'
 import Checkbox from '../components/common/Checkbox'
 import { Container, WideContainer } from '../components/common/Container'
-import { CLUBS_GREY, RED, ALLBIRDS_GRAY, MEDIUM_GRAY } from '../constants/colors'
+import {
+  CLUBS_GREY,
+  RED,
+  ALLBIRDS_GRAY,
+  MEDIUM_GRAY,
+} from '../constants/colors'
 
 const TallTextArea = s.textarea`
   height: 6em;
@@ -41,12 +46,15 @@ const SelectedManager = ({ value, onClick }) => (
   <HoverListElement>
     {value}
 
-    <span style={{ marginLeft: '1em' }} onClick={onClick}>X</span>
+    <span style={{ marginLeft: '1em' }} onClick={onClick}>
+      X
+    </span>
   </HoverListElement>
 )
 
 const Reports = () => {
-  const fields = { // TODO: Get this from the server.
+  const fields = {
+    // TODO: Get this from the server.
     Basics: [
       'Name',
       'Subtitle',
@@ -109,7 +117,11 @@ const Reports = () => {
   const [includedFields, setIncludedFields] = useState(
     (() => {
       const initial = {}
-      Object.keys(fields).forEach(group => fields[group].forEach(f => { initial[f] = false }))
+      Object.keys(fields).forEach(group =>
+        fields[group].forEach(f => {
+          initial[f] = false
+        })
+      )
       return initial
     })()
   )
@@ -122,13 +134,17 @@ const Reports = () => {
       .filter(e => e !== undefined),
   }
 
-  console.log(query)
-
   const generateCheckboxGroup = (groupName, fields) => {
     return (
       <div style={{ flexBasis: '50%', flexShrink: 0 }}>
-        <GroupLabel key={groupName} className="subtitle is-4" style={{ color: CLUBS_GREY }}>{groupName}</GroupLabel>
-        { fields.map((field, idx) => (
+        <GroupLabel
+          key={groupName}
+          className="subtitle is-4"
+          style={{ color: CLUBS_GREY }}
+        >
+          {groupName}
+        </GroupLabel>
+        {fields.map((field, idx) => (
           <div>
             <Checkbox
               id={field}
@@ -141,7 +157,7 @@ const Reports = () => {
             {'  '}
             <label htmlFor={field}>{field}</label>
           </div>
-        )) }
+        ))}
       </div>
     )
   }
@@ -150,11 +166,20 @@ const Reports = () => {
     <div>
       <Sidebar>
         <hr />
-        <h4 className="title is-4" style={{ color: MEDIUM_GRAY }}>Fields</h4>
+        <h4 className="title is-4" style={{ color: MEDIUM_GRAY }}>
+          Fields
+        </h4>
         <ul>
-          {Object.keys(includedFields).map(f => includedFields[f] ? (
-            <SelectedManager value={f} onClick={() => setIncludedFields(prev => ({ ...prev, [f]: false }))} />
-          ) : null)}
+          {Object.keys(includedFields).map(f =>
+            includedFields[f] ? (
+              <SelectedManager
+                value={f}
+                onClick={() =>
+                  setIncludedFields(prev => ({ ...prev, [f]: false }))
+                }
+              />
+            ) : null
+          )}
         </ul>
       </Sidebar>
       <Container>
@@ -170,31 +195,48 @@ const Reports = () => {
               <div className="field">
                 <label className="label">Name</label>
                 <div className="control">
-                  <input name="name" className="input" type="text" placeholder='e.g. "Owner emails"' />
+                  <input
+                    name="name"
+                    className="input"
+                    type="text"
+                    placeholder='e.g. "Owner emails"'
+                  />
                 </div>
               </div>
               <div className="field">
                 <label className="label">Description</label>
                 <div className="control">
-                  <TallTextArea name="description" className="input" type="text" placeholder='e.g. "Pulls all clubs, the emails from club owners, and names of owners"' />
+                  <TallTextArea
+                    name="description"
+                    className="input"
+                    type="text"
+                    placeholder='e.g. "Pulls all clubs, the emails from club owners, and names of owners"'
+                  />
                 </div>
               </div>
             </div>
           </div>
           <div className="box">
-            <h3 className="title is-4" style={{ color: CLUBS_GREY }} >
+            <h3 className="title is-4" style={{ color: CLUBS_GREY }}>
               Select fields to include
             </h3>
             <div>
               <Flex>
-                { Object.keys(fields).map(group => generateCheckboxGroup(group, fields[group])) }
+                {Object.keys(fields).map(group =>
+                  generateCheckboxGroup(group, fields[group])
+                )}
               </Flex>
             </div>
           </div>
           <button
             className="button is-info"
             onClick={() => {
-              window.open(`${API_BASE_URL}/reports?format=xlsx&fields=${query.fields.join(',')}`, '_blank')
+              window.open(
+                `${API_BASE_URL}/reports?format=xlsx&fields=${query.fields.join(
+                  ','
+                )}`,
+                '_blank'
+              )
             }}
           >
             Generate Report
