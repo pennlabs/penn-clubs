@@ -1,22 +1,23 @@
 import datetime
 import os
 import re
+from collections import OrderedDict
 
 import qrcode
 from django.conf import settings
+from django.core.cache import cache
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from drf_renderer_xlsx.mixins import XLSXFileMixin
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.utils.serializer_helpers import ReturnList
 from rest_framework.views import APIView
 
 from clubs.models import (Asset, Club, Event, Favorite, Major, Membership,
@@ -170,13 +171,47 @@ class ClubViewSet(XLSXFileMixin, viewsets.ModelViewSet):
         serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']), many=True)
         return Response(serializer.data)
 
-    @method_decorator(cache_page(60*5))
+    def _format_cell(self, key, value):
+        """
+        Format a cell in the exported Excel spreadsheet, given (column name, cell value).
+        Returns (new column name, new cell value).
+        """
+        if key in set(['tags', 'target_schools', 'target_majors', 'target_years', 'badges']):
+            value = ', '.join(x.get('name', x.get('label')) for x in value)
+        elif key == 'members':
+            value = '\n'.join('{} ({})'.format(x['name'], x['title']) for x in value)
+        elif key in set(['active', 'accepting_members']):
+            value = str(bool(value))
+        elif key in set(['size', 'application_required']):
+            lookup = dict(self.get_serializer_class().Meta.model._meta.get_field(key).choices)
+            value = lookup.get(value, 'Unknown')
+        return key.title().replace('_', ' '), value
+
     def list(self, request, *args, **kwargs):
         """
-        Return a list of all clubs. This endpoint updates data every 5 minutes.
+        Return a list of all clubs. Results are cached and update every 5 minutes.
         Note that some fields are removed in order to improve the response time.
         """
-        return super().list(request, *args, **kwargs)
+        # intercept excel format data and format it better
+        if request.accepted_renderer.format == 'xlsx':
+            resp = super().list(request, *args, **kwargs)
+            new_data = []
+            for row in resp.data:
+                new_data.append(OrderedDict([self._format_cell(k, v) for k, v in row.items()]))
+            resp.data = ReturnList(new_data, serializer=resp.data.serializer)
+            return resp
+
+        # return cached if cached
+        key = 'club:list'
+        val = cache.get(key)
+        if val is not None:
+            return Response(val)
+
+        # save to cache if not
+        resp = super().list(request, *args, **kwargs)
+        if resp.status_code == 200:
+            cache.set(key, resp.data, 60 * 5)
+        return resp
 
     def get_filename(self):
         """
@@ -210,6 +245,8 @@ class ClubViewSet(XLSXFileMixin, viewsets.ModelViewSet):
         if self.action == 'upload':
             return AssetSerializer
         if self.action == 'list':
+            if self.request.accepted_renderer.format == 'xlsx':
+                return ClubSerializer
             return ClubListSerializer
         if self.request is not None and self.request.user.is_authenticated:
             if 'code' in self.kwargs and (
