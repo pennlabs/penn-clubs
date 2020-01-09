@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
 import Tabs from '../../../components/ClubPage/Tabs'
-import {Header} from '../../../components/ClubPage/Header'
-import {Actions} from '../../../components/ClubPage/Actions'
+import Header from '../../../components/ClubPage/Header'
+import Actions from '../../../components/ClubPage/Actions'
 import InfoBox from '../../../components/ClubPage/InfoBox'
 import Testimonials from '../../../components/ClubPage/Testimonials'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
@@ -59,23 +59,20 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
 
       <div className="columns">
         <div className="column">
-              
-        
-        <Card bordered style={{ marginBottom: '1rem', background: '#ffffff' }}>
-          <Flex>
-            {image && <Image src={image} />}
-            <Header
-              club={club}
-              userInfo={userInfo}
-              favorites={favorites}
-              updateFavorites={updateFavorites}
-              subscriptions={subscriptions}
-              updateSubscriptions={updateSubscriptions}
-              style={{ flex: 1 }}
-            />
-          </Flex>
-        </Card>
-      
+          <Card bordered style={{ marginBottom: '1rem', background: '#ffffff', paddingLeft: '1rem' }}>
+            <Flex>
+              {image && <Image src={image} />}
+              <Header
+                club={club}
+                userInfo={userInfo}
+                favorites={favorites}
+                updateFavorites={updateFavorites}
+                subscriptions={subscriptions}
+                updateSubscriptions={updateSubscriptions}
+                style={{ flex: 1 }}
+              />
+            </Flex>
+          </Card>
           <Card bordered style={{ marginBottom: '1rem', background: '#ffffff' }}>
             <Tabs club={club} />
           </Card>
