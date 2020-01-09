@@ -9,10 +9,7 @@ const Wrapper = s.div`
   align-items: center;
 `
 
-const Header = ({
-  club,
-  style,
-}) => {
+const Header = ({ club, style }) => {
   const { active, name, tags, badges } = club
 
   return (
@@ -22,13 +19,11 @@ const Header = ({
           {name}
           {!active && <InactiveTag />}
         </Title>
-
       </Wrapper>
       <div style={{ marginBottom: '1rem' }}>
         <TagGroup tags={tags} />
         <TagGroup tags={badges} />
       </div>
-
     </div>
   )
 }

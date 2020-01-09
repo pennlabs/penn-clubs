@@ -88,14 +88,14 @@ const Actions = ({
               <BookmarkIcon
                 club={club}
                 favorite={isFavorite}
-                updateFavorites={(id) => {
+                updateFavorites={id => {
                   const upd = updateFavorites(id)
                   setFavCount(favCount + (upd ? 1 : -1))
                 }}
                 padding="0"
               />
-            </BookmarkIconWrapper>
-            {' '}<BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
+            </BookmarkIconWrapper>{' '}
+            <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
           </IconWrapper>
           <ActionDiv>|</ActionDiv>
           <IconWrapper>
@@ -106,10 +106,13 @@ const Actions = ({
             />
           </IconWrapper>
         </ActionWrapper>
-        { canEdit && (
+        {canEdit && (
           <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
-            <a className="button is-success is-small" style={{ marginLeft: '1rem' }}>
-                    Edit Club
+            <a
+              className="button is-success is-small"
+              style={{ marginLeft: '1rem' }}
+            >
+              Edit Club
             </a>
           </Link>
         )}
