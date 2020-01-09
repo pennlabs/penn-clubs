@@ -12,6 +12,7 @@ import {
   SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import {
+  ALLBIRDS_GRAY,
   MEDIUM_GRAY,
   HOVER_GRAY,
   FOCUS_GRAY,
@@ -80,14 +81,15 @@ const Content = s.div`
 `
 
 const Input = s.input`
-  border-width: 0;
+  border: 1px solid ${ALLBIRDS_GRAY};
   outline: none;
   color: ${CLUBS_GREY};
   width: 100%;
   font-size: 1em;
   padding: 8px 10px;
-  background: ${HOVER_GRAY};
+  background: ${WHITE};
   border-radius: ${BORDER_RADIUS};
+  
 
   &:hover,
   &:active,

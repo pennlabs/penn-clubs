@@ -13,6 +13,7 @@ import {
   CLUBS_RED,
   CLUBS_YELLOW,
   FOCUS_GRAY,
+  SNOW,
 } from '../constants/colors'
 import { logEvent } from '../utils/analytics'
 import { WideContainer } from '../components/common'
@@ -178,7 +179,7 @@ class Splash extends React.Component {
     const { displayClubs, display, selectedTags, nameInput } = this.state
     const { clubs, tags, favorites, updateFavorites } = this.props
     return (
-      <div>
+      <div style={{ backgroundColor: SNOW }}>
         <SearchBar
           clubs={clubs}
           tags={tags}
@@ -189,7 +190,7 @@ class Splash extends React.Component {
         />
 
         <Container>
-          <WideContainer>
+          <WideContainer background={`${SNOW}`}>
             <div style={{ padding: '30px 0' }}>
               <DisplayButtons
                 shuffle={this.shuffle}
