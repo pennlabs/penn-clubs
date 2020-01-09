@@ -13,6 +13,7 @@ const BookmarkIconTag = s.span`
     float: none;
     position: absolute;
     right: 0;
+
   `}
 
   svg {
