@@ -15,10 +15,21 @@ const Wrapper = s.div`
   padding-bottom: 0.5rem;
 `
 
-const BookmarkWrapper = s.span`
+const IconWrapper = s.span`
   display: inline-block;
   vertical-align: middle;
+`
 
+const BookmarkIconWrapper = s.span`
+  display: inline-block;
+  margin-top: 6px;
+`
+
+const BookmarkCountWrapper = s.span`
+  display: inline-block;
+  vertical-align: text-bottom;
+  margin-top: 1px;
+  margin-bottom: -1px;
 `
 
 const ActionWrapper = s.span`
@@ -30,7 +41,6 @@ const ActionWrapper = s.span`
     border: 1px solid #EAEAEA;
     padding-left: 1rem;
     padding-right: 1rem;
-
 `
 
 const ActionDiv = s.span`
@@ -38,6 +48,7 @@ const ActionDiv = s.span`
     color: #4a4a4a;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+    vertical-align: middle;
 `
 
 const Actions = ({
@@ -70,36 +81,40 @@ const Actions = ({
 
   return (
     <div style={style}>
-        <Wrapper>
-            <ActionWrapper>
-              <BookmarkWrapper>
-                <BookmarkIcon
-                  club={club}
-                  favorite={isFavorite}
-                  updateFavorites={(id) => {
-                    const upd = updateFavorites(id)
-                    setFavCount(favCount + (upd ? 1 : -1))
-                  }}
-                  padding="0"
-                />
-                {' '}{favCount}
-              </BookmarkWrapper>
-              <ActionDiv>|</ActionDiv>
-              <SubscribeIcon
+      <Wrapper>
+        <ActionWrapper>
+          <IconWrapper>
+            <BookmarkIconWrapper>
+              <BookmarkIcon
                 club={club}
-                subscribe={isSubscription}
-                updateSubscribes={updateSubscriptions}
+                favorite={isFavorite}
+                updateFavorites={(id) => {
+                  const upd = updateFavorites(id)
+                  setFavCount(favCount + (upd ? 1 : -1))
+                }}
+                padding="0"
               />
-            </ActionWrapper>
-            { canEdit && (
-                <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
-                  <a className="button is-success is-small" style={{ marginLeft: '1rem' }}>
+            </BookmarkIconWrapper>
+            {' '}<BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
+          </IconWrapper>
+          <ActionDiv>|</ActionDiv>
+          <IconWrapper>
+            <SubscribeIcon
+              club={club}
+              subscribe={isSubscription}
+              updateSubscribes={updateSubscriptions}
+            />
+          </IconWrapper>
+        </ActionWrapper>
+        { canEdit && (
+          <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
+            <a className="button is-success is-small" style={{ marginLeft: '1rem' }}>
                     Edit Club
-                  </a>
-                </Link>
-            )}
-        </Wrapper>
-        </div>
+            </a>
+          </Link>
+        )}
+      </Wrapper>
+    </div>
   )
 }
 

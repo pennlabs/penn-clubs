@@ -56,7 +56,6 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
   return (
     <WideContainer background={SNOW} fullHeight={true}>
 
-
       <div className="columns">
         <div className="column">
           <Card bordered style={{ marginBottom: '1rem', background: '#ffffff', paddingLeft: '1rem' }}>
@@ -78,15 +77,15 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
           </Card>
         </div>
         <div className="column is-one-third">
-           <Actions
-              club={club}
-              userInfo={userInfo}
-              favorites={favorites}
-              updateFavorites={updateFavorites}
-              subscriptions={subscriptions}
-              updateSubscriptions={updateSubscriptions}
-              style={{ flex: 1 }}
-            />
+          <Actions
+            club={club}
+            userInfo={userInfo}
+            favorites={favorites}
+            updateFavorites={updateFavorites}
+            subscriptions={subscriptions}
+            updateSubscriptions={updateSubscriptions}
+            style={{ flex: 1 }}
+          />
           <Card bordered style={{ marginBottom: '1rem', background: '#ffffff' }}>
             <StrongText>Basic Info</StrongText>
             <InfoBox club={club} />

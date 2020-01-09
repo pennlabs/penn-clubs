@@ -26,7 +26,7 @@ const Header = ({
           {name}
           {!active && <InactiveTag />}
         </Title>
-        
+
       </Wrapper>
       <div style={{ marginBottom: '1rem' }}>
         <TagGroup tags={tags} />
