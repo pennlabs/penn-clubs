@@ -6,7 +6,7 @@ import { BORDER_RADIUS_LG, MD, SM, mediaMaxWidth } from '../constants/measuremen
 import { LOGIN_URL } from '../utils'
 
 const Logo = s.img`
-  width: 100px
+  width: 100px;
   margin-top: 12%;
 `
 
