@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import s from 'styled-components'
-import { ALLBIRDS_GRAY, SNOW, WHITE } from '../../constants/colors'
+import { ALLBIRDS_GRAY, WHITE } from '../../constants/colors'
 
-import { TagGroup, InactiveTag, Title, BookmarkIcon, SubscribeIcon } from '../common'
+import { BookmarkIcon, SubscribeIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
 
 const Wrapper = s.div`
@@ -36,9 +36,9 @@ const ActionWrapper = s.span`
     display: inline-block;
     flex-direction: row;
     align-items: center;
-    background-color: WHITE;
+    background-color: ${WHITE};
     border-radius: 30px;
-    border: 1px solid #EAEAEA;
+    border: 1px solid ${ALLBIRDS_GRAY};
     padding-left: 1rem;
     padding-right: 1rem;
 `
@@ -77,7 +77,7 @@ const Actions = ({
 
   const [favCount, setFavCount] = useState(club.favorite_count || 0)
 
-  const { active, code, name, tags } = club
+  const { code } = club
 
   return (
     <div style={style}>

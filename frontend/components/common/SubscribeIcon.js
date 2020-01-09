@@ -5,7 +5,7 @@ import { BLACK, MEDIUM_GRAY } from '../../constants/colors'
 
 const SubscribeIconTag = s.span`
   float: right;
-  padding: ${({ padding }) => padding || '4px 0 0 0'};
+  padding: ${({ padding }) => padding || '7px 0 0 0'};
   cursor: pointer;
 
   ${({ absolute }) =>

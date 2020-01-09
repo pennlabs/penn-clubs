@@ -1,10 +1,6 @@
-import { useState } from 'react'
-import Link from 'next/link'
 import s from 'styled-components'
-import { ALLBIRDS_GRAY, SNOW } from '../../constants/colors'
 
-import { TagGroup, InactiveTag, Title, BookmarkIcon, SubscribeIcon } from '../common'
-import { ROLE_OFFICER } from '../../utils'
+import { TagGroup, InactiveTag, Title } from '../common'
 
 const Wrapper = s.div`
   display: flex;
@@ -17,7 +13,7 @@ const Header = ({
   club,
   style,
 }) => {
-  const { active, code, name, tags, badges } = club
+  const { active, name, tags, badges } = club
 
   return (
     <div style={style}>

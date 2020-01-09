@@ -54,7 +54,7 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
   const { image_url: image } = club
 
   return (
-    <WideContainer background={SNOW} fullHeight={true}>
+    <WideContainer background={`${SNOW}`} fullHeight={true}>
 
       <div className="columns">
         <div className="column">
