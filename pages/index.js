@@ -190,7 +190,7 @@ class Splash extends React.Component {
         />
 
         <Container>
-          <WideContainer background={`${SNOW}`}>
+          <WideContainer background={SNOW}>
             <div style={{ padding: '30px 0' }}>
               <DisplayButtons
                 shuffle={this.shuffle}
