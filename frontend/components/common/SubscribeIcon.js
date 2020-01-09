@@ -5,7 +5,7 @@ import { BLACK, MEDIUM_GRAY } from '../../constants/colors'
 
 const SubscribeIconTag = s.span`
   float: right;
-  padding: ${({ padding }) => padding || '6px 0 0 0'};
+  padding: ${({ padding }) => padding || '4px 0 0 0'};
   cursor: pointer;
 
   ${({ absolute }) =>
@@ -35,9 +35,13 @@ export const SubscribeIcon = ({
   updateSubscribes,
   club,
   subscribe,
+  absolute = false,
+  padding,
 }) => (
   <SubscribeIconTag
     subscribe={subscribe}
+    absolute={absolute}
+    padding={padding}
     onClick={e => {
       e.preventDefault()
       e.stopPropagation()
