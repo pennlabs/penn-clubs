@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import s from 'styled-components'
+import { ALLBIRDS_GRAY, SNOW } from '../../constants/colors'
 
 import { TagGroup, InactiveTag, Title, BookmarkIcon, SubscribeIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
@@ -15,7 +16,24 @@ const Wrapper = s.div`
 const BookmarkWrapper = s.span`
   display: inline-block;
   vertical-align: middle;
-  margin-top: 0.375em;
+
+`
+
+const ActionWrapper = s.span`
+    display: inline-block;
+    background-color: #EAEAEA;
+    border-radius: 30px;
+    border: 1px solid #EAEAEA;
+    padding-left: 1rem;
+    padding-right: 1rem;
+
+`
+
+const ActionDiv = s.span`
+    display: inline-block;
+    color: #4a4a4a;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 `
 
 const Header = ({
@@ -54,23 +72,26 @@ const Header = ({
           {!active && <InactiveTag />}
         </Title>
         <span>
-          <BookmarkWrapper>
-            {favCount}{' '}
-            <BookmarkIcon
-              club={club}
-              favorite={isFavorite}
-              updateFavorites={(id) => {
-                const upd = updateFavorites(id)
-                setFavCount(favCount + (upd ? 1 : -1))
-              }}
-              padding="0"
-            />
-          </BookmarkWrapper>
-          <SubscribeIcon
-            club={club}
-            subscribe={isSubscription}
-            updateSubscribes={updateSubscriptions}
-          />
+            <ActionWrapper>
+              <BookmarkWrapper>
+                <BookmarkIcon
+                  club={club}
+                  favorite={isFavorite}
+                  updateFavorites={(id) => {
+                    const upd = updateFavorites(id)
+                    setFavCount(favCount + (upd ? 1 : -1))
+                  }}
+                  padding="0"
+                />
+                {' '}{favCount}
+              </BookmarkWrapper>
+              <ActionDiv>|</ActionDiv>
+              <SubscribeIcon
+                club={club}
+                subscribe={isSubscription}
+                updateSubscribes={updateSubscriptions}
+              />
+            </ActionWrapper>
           {canEdit && (
             <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
               <a className="button is-success" style={{ marginLeft: 15 }}>
