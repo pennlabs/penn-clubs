@@ -71,40 +71,13 @@ const Header = ({
           {name}
           {!active && <InactiveTag />}
         </Title>
-        <span>
-            <ActionWrapper>
-              <BookmarkWrapper>
-                <BookmarkIcon
-                  club={club}
-                  favorite={isFavorite}
-                  updateFavorites={(id) => {
-                    const upd = updateFavorites(id)
-                    setFavCount(favCount + (upd ? 1 : -1))
-                  }}
-                  padding="0"
-                />
-                {' '}{favCount}
-              </BookmarkWrapper>
-              <ActionDiv>|</ActionDiv>
-              <SubscribeIcon
-                club={club}
-                subscribe={isSubscription}
-                updateSubscribes={updateSubscriptions}
-              />
-            </ActionWrapper>
-          {canEdit && (
-            <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
-              <a className="button is-success" style={{ marginLeft: 15 }}>
-                Edit Club
-              </a>
-            </Link>
-          )}
-        </span>
+        
       </Wrapper>
       <div style={{ marginBottom: '1rem' }}>
         <TagGroup tags={tags} />
         <TagGroup tags={badges} />
       </div>
+      
     </div>
   )
 }

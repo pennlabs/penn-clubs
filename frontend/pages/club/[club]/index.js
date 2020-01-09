@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
 import Tabs from '../../../components/ClubPage/Tabs'
-import Header from '../../../components/ClubPage/Header'
+import {Header} from '../../../components/ClubPage/Header'
+import {Actions} from '../../../components/ClubPage/Actions'
 import InfoBox from '../../../components/ClubPage/InfoBox'
 import Testimonials from '../../../components/ClubPage/Testimonials'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
@@ -17,6 +18,7 @@ import {
   Text,
   Container,
 } from '../../../components/common'
+import { SNOW } from '../../../constants/colors'
 
 const Image = s.img`
   height: 86px;
@@ -52,28 +54,46 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
   const { image_url: image } = club
 
   return (
-    <WideContainer>
-      <Flex>
-        {image && <Image src={image} />}
-        <Header
-          club={club}
-          userInfo={userInfo}
-          favorites={favorites}
-          updateFavorites={updateFavorites}
-          subscriptions={subscriptions}
-          updateSubscriptions={updateSubscriptions}
-          style={{ flex: 1 }}
-        />
-      </Flex>
+    <WideContainer background={SNOW} fullHeight={true}>
+
 
       <div className="columns">
         <div className="column">
-          <Tabs club={club} />
+              
+        
+        <Card bordered style={{ marginBottom: '1rem', background: '#ffffff' }}>
+          <Flex>
+            {image && <Image src={image} />}
+            <Header
+              club={club}
+              userInfo={userInfo}
+              favorites={favorites}
+              updateFavorites={updateFavorites}
+              subscriptions={subscriptions}
+              updateSubscriptions={updateSubscriptions}
+              style={{ flex: 1 }}
+            />
+          </Flex>
+        </Card>
+      
+          <Card bordered style={{ marginBottom: '1rem', background: '#ffffff' }}>
+            <Tabs club={club} />
+          </Card>
         </div>
         <div className="column is-one-third">
-          <Card bordered style={{ marginBottom: '1rem' }}>
+           <Actions
+              club={club}
+              userInfo={userInfo}
+              favorites={favorites}
+              updateFavorites={updateFavorites}
+              subscriptions={subscriptions}
+              updateSubscriptions={updateSubscriptions}
+              style={{ flex: 1 }}
+            />
+          <Card bordered style={{ marginBottom: '1rem', background: '#ffffff' }}>
             <StrongText>Basic Info</StrongText>
             <InfoBox club={club} />
+            <br />
             <StrongText>Social</StrongText>
             <SocialIcons club={club} />
           </Card>
