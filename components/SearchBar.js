@@ -14,7 +14,6 @@ import {
 import {
   ALLBIRDS_GRAY,
   MEDIUM_GRAY,
-  HOVER_GRAY,
   FOCUS_GRAY,
   CLUBS_GREY,
   BORDER,
