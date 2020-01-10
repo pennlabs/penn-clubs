@@ -474,12 +474,16 @@ class SubscribeSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='person.username', read_only=True)
     email = serializers.EmailField(source='person.email', read_only=True)
 
+    school = SchoolSerializer(many=True, source='person.profile.school', read_only=True)
+    major = MajorSerializer(many=True, source='person.profile.major', read_only=True)
+    graduation_year = serializers.IntegerField(source='person.profile.graduation_year', read_only=True)
+
     def get_full_name(self, obj):
         return obj.person.get_full_name()
 
     class Meta:
         model = Subscribe
-        fields = ('club', 'name', 'username', 'person', 'email')
+        fields = ('club', 'name', 'username', 'person', 'email', 'school', 'major', 'graduation_year')
         validators = [validators.UniqueTogetherValidator(queryset=Subscribe.objects.all(), fields=['club', 'person'])]
 
 
