@@ -24,7 +24,7 @@ class Command(BaseCommand):
                     # save testimonials
                     count = 0
                     testimonials = bleach.clean(testimonials, strip=True, tags=[])
-                    for testimonial in re.findall(r'"(.*?)"\r?\n', testimonials, re.M | re.I | re.S):
+                    for testimonial in re.findall(r'"(.*?)"(?:\r?\n|$)', testimonials, re.M | re.I | re.S):
                         text = testimonial.strip()
                         Testimonial.objects.create(club=club, text=text)
                         count += 1
