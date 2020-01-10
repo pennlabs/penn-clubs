@@ -98,6 +98,15 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse('clubs-subscription', args=(self.club1.code,)))
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+    def test_clubs_notes_about(self):
+        """
+        Test retrieving the list of notes about a club.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        resp = self.client.get(reverse('clubs-notes-about', args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
     def test_event_upload(self):
         """
         Test uploading an event image.
