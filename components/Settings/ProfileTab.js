@@ -45,7 +45,14 @@ export default ({ defaults }) => {
         </div>
       </div>
       <ProfileForm settings={defaults} />
-      <div className="is-pulled-right">
+      <br /><br />
+      <SmallText>
+        If your information is incorrect, please send an email to{' '}
+        <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>{' '}
+        detailing your issue.
+      </SmallText>
+      <hr />
+      <div>
         <LogoutLink
           className="button"
           href={`${LOGOUT_URL}?next=${window.location.origin}`}
@@ -58,12 +65,6 @@ export default ({ defaults }) => {
           Logout
         </LogoutLink>
       </div>
-      <br /><br />
-      <SmallText>
-        If your information is incorrect, please send an email to{' '}
-        <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>{' '}
-        detailing your issue.
-      </SmallText>
     </Wrapper>
   )
 }
