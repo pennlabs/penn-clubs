@@ -78,7 +78,7 @@ class ProfileForm extends React.Component {
         onSubmit={this.submit}
         onChange={() => this.setState({ saved: false })}
         submitButton={
-          <a className="button is-link" disabled={saved}><Icon alt="save" name="edit" /> {saved ? 'Saved!' : 'Save'}</a>
+          <a className="button is-success" disabled={saved}><Icon alt="save" name="edit" /> {saved ? 'Saved!' : 'Save'}</a>
         }
       />
     )
