@@ -91,6 +91,14 @@ class Club(models.Model):
         ordering = ['name']
 
 
+class Testimonial(models.Model):
+    """
+    Represents a testimonial for a club.
+    """
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='testimonials')
+    text = models.TextField()
+
+
 class Event(models.Model):
     """
     Represents an event hosted by a club.

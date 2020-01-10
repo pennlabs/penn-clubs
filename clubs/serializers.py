@@ -6,8 +6,8 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
-from clubs.models import (Asset, Badge, Club, Event, Favorite, Major, Membership,
-                          MembershipInvite, Note, NoteTag, Profile, School, Subscribe, Tag)
+from clubs.models import (Asset, Badge, Club, Event, Favorite, Major, Membership, MembershipInvite,
+                          Note, NoteTag, Profile, School, Subscribe, Tag, Testimonial)
 from clubs.utils import clean
 
 
@@ -39,6 +39,14 @@ class MajorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Major
         fields = ('id', 'name')
+
+
+class TestimonialSerializer(serializers.ModelSerializer):
+    text = serializers.CharField()
+
+    class Meta:
+        model = Testimonial
+        fields = ('id', 'text')
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
@@ -241,6 +249,7 @@ class ClubSerializer(ClubListSerializer):
     image = serializers.ImageField(write_only=True, required=False)
     parent_orgs = serializers.SerializerMethodField('get_parent_orgs')
     badges = BadgeSerializer(many=True, required=False)
+    testimonials = TestimonialSerializer(many=True, read_only=True)
 
     def get_parent_orgs(self, obj):
         return []
@@ -356,7 +365,7 @@ class ClubSerializer(ClubListSerializer):
             ('tags', Tag),
             ('badges', Badge),
             ('target_schools', School),
-            ('target_majors', Major)
+            ('target_majors', Major),
         ]
 
         # remove m2m from validated data and save
@@ -382,7 +391,7 @@ class ClubSerializer(ClubListSerializer):
             'facebook', 'twitter', 'instagram', 'linkedin',
             'github', 'website', 'how_to_get_involved',
             'listserv', 'members', 'parent_orgs',
-            'badges', 'image'
+            'badges', 'image', 'testimonials'
         ]
 
 
@@ -393,8 +402,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
     members = AuthenticatedMembershipSerializer(many=True, source='membership_set', read_only=True)
 
     class Meta(ClubSerializer.Meta):
-        model = ClubSerializer.Meta.model
-        fields = ClubSerializer.Meta.fields
+        pass
 
 
 class EventSerializer(serializers.ModelSerializer):
