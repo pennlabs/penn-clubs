@@ -98,6 +98,9 @@ class Testimonial(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='testimonials')
     text = models.TextField()
 
+    def __str__(self):
+        return self.text
+
 
 class Event(models.Model):
     """

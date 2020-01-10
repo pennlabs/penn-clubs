@@ -5,7 +5,7 @@ from django.db.models import Count, Exists, OuterRef
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
 from clubs.models import (Advisor, Asset, Badge, Club, Event, Favorite, Major, Membership,
-                          MembershipInvite, Note, NoteTag, Profile, School, Subscribe, Tag)
+                          MembershipInvite, Note, NoteTag, Profile, School, Subscribe, Tag, Testimonial)
 
 
 class HasOwnerListFilter(admin.SimpleListFilter):
@@ -197,5 +197,6 @@ admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)
 admin.site.register(Profile)
 admin.site.register(Tag, TagAdmin)
+admin.site.register(Testimonial)
 admin.site.register(Note)
 admin.site.register(NoteTag)
