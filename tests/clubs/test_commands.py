@@ -53,6 +53,38 @@ class SendInvitesTestCase(TestCase):
             self.assertTrue('one' in msg.body or 'two' in msg.body)
 
 
+class SendReminderTestCase(TestCase):
+    def setUp(self):
+        self.club1 = Club.objects.create(
+            code='one',
+            name='Club One',
+            email='one@example.com'
+        )
+        self.club2 = Club.objects.create(
+            code='two',
+            name='Club Two',
+            email='two@example.com'
+        )
+
+        self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
+
+        Membership.objects.create(
+            club=self.club1,
+            person=self.user1,
+            role=Membership.ROLE_OWNER
+        )
+
+    def test_send_reminders(self):
+        call_command('remind')
+
+        # ensure one update email is sent out and one owner invite is created
+        self.assertEqual(MembershipInvite.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 2)
+
+        for msg in mail.outbox:
+            self.assertIn('Penn Clubs', msg.body)
+
+
 class MergeDuplicatesTestCase(TestCase):
     def setUp(self):
         self.tag1 = Tag.objects.create(name='One')
