@@ -17,8 +17,17 @@ class Command(BaseCommand):
             type=str,
             help='The CSV file with club name to email mapping. First column is club name and second column is emails.'
         )
+        parser.add_argument(
+            '--dry-run',
+            dest='dry_run',
+            action='store_true',
+            help='Do not actually send out emails.'
+        )
+        parser.set_defaults(dry_run=False)
 
     def handle(self, *args, **kwargs):
+        dry_run = kwargs['dry_run']
+
         clubs = Club.objects.annotate(
             owner_count=Count('membership', filter=Q(membership__role__lte=Membership.ROLE_OWNER)),
             invite_count=Count('membershipinvite', filter=Q(membershipinvite__role__lte=Membership.ROLE_OWNER))
@@ -40,9 +49,15 @@ class Command(BaseCommand):
                 if count == 1:
                     emails[club.first().id] = [x.strip() for x in line[1].split(',')]
                 elif count == 0:
-                    self.stdout.write(self.style.WARNING('Could not find {}!'.format(name)))
+                    self.stdout.write(
+                        self.style.WARNING('Could not find club matching {}!'.format(name))
+                    )
                 else:
-                    self.stdout.write(self.style.WARNING('Too many entries ({}) for {}!'.format(count, name)))
+                    self.stdout.write(
+                        self.style.WARNING('Too many club entries ({}) for {}!'.format(
+                            ', '.join(club.values_list('name', flat=True)), name)
+                        )
+                    )
 
         for club in clubs:
             if club.email:
@@ -52,12 +67,13 @@ class Command(BaseCommand):
                 receivers = list(set(receivers))
                 self.stdout.write(self.style.SUCCESS('Sending {} to {}'.format(club.name, ', '.join(receivers))))
                 for receiver in receivers:
-                    invite = MembershipInvite.objects.create(
-                        club=club,
-                        email=receiver,
-                        creator=None,
-                        role=Membership.ROLE_OWNER,
-                        title='Owner',
-                        auto=True
-                    )
-                    invite.send_owner_invite()
+                    if not dry_run:
+                        invite = MembershipInvite.objects.create(
+                            club=club,
+                            email=receiver,
+                            creator=None,
+                            role=Membership.ROLE_OWNER,
+                            title='Owner',
+                            auto=True
+                        )
+                        invite.send_owner_invite()
