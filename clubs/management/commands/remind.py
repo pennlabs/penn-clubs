@@ -3,7 +3,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 
-from clubs.models import Club, Membership
+from clubs.models import Club, Membership, MembershipInvite
 
 
 def send_reminder_to_club(club):
@@ -15,16 +15,41 @@ def send_reminder_to_club(club):
 
     # calculate email recipients
     if staff.exists():
+        # if there are staff members that can edit the page, send the update email to them
         receivers = list(staff.values_list('email', flat=True))
     elif club.email:
-        receivers = [club.email]
+        invites = club.membershipinvite_set.filter(active=True, role__lte=Membership.ROLE_OFFICER)
+        if invites.exists():
+            # if there are existing invites, resend the invite emails
+            for invite in invites:
+                if invite.role <= Membership.ROLE_OWNER:
+                    invite.send_owner_invite()
+                else:
+                    invite.send_mail()
+            return True
+        else:
+            # if there are no owner-level invites or members, create and send an owner invite
+            if club.email:
+                invite = MembershipInvite.objects.create(
+                    club=club,
+                    email=club.email,
+                    creator=None,
+                    role=Membership.ROLE_OWNER,
+                    title='Owner',
+                    auto=True
+                )
+                invite.send_owner_invite()
+                return True
+            else:
+                return False
 
     # send email if recipients exist
     if receivers is not None:
         domain = 'pennclubs.com'
         context = {
             'name': club.name,
-            'url': settings.EDIT_URL.format(domain=domain, club=club.code)
+            'url': settings.EDIT_URL.format(domain=domain, club=club.code),
+            'view_url': settings.VIEW_URL.format(domain=domain, club=club.code)
         }
 
         text_content = render_to_string('emails/remind.txt', context)
