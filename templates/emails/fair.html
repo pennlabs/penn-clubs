@@ -1,0 +1,30 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>Winter SAC Fair - {{ name }}</h2>
+    <p style="font-size: 1.2em">
+        We're reaching out from Penn Clubs. We're working on integrating Penn Clubs into the spring SAC Fair experience! Here's how it will benefit you and your club.
+    </p>
+    <p style="font-size: 1.2em">
+    {{ name }} has a page <a href="{{ url }}">here</a>. Check it out if you haven't already! If you'd like to edit your page and you do not currently have access while logged in to the site, please respond to this email.
+    </p>
+    <p style="font-size: 1.2em">
+        We've generated a unique QR code for your page. During the SAC Fair, there will be a QR code printout on your SAC Fair table for you to display. When students scan the QR code, they'll be taken to your club's page (mobile-friendly, of course). There, they can either:
+        <ul style="font-size: 1.2em">
+            <li><b>Bookmark</b> - saves club for later</li>
+            <li><b>Subscribe</b> - adds their email address to a list, which will be shared with you</li>
+        </ul>
+    </p>
+    <p style="font-size: 1.2em">
+        If you're curious about the technicals: anyone with a PennKey has a Penn Clubs account, which stores their name and email. So signing up only takes a click (no need to type anything!)
+    </p>
+    <p style="font-size: 1.2em">
+        This is meant to make it easier for students to keep track of clubs they're interested in and sign up for listservs. We're rolling this out to gather feedback, but don't feel like you have to switch away from how your club usually collects contact info! We'll make sure you can always access the list of anyone who signs up using Penn Clubs.
+    </p>
+    <p style="font-size: 1.2em">
+        Finally, we'd love to hear from you about how we can do better. For example, do you prefer to use your own form/spreadsheet because you collect additional information like class year, major, or areas of interest in your club?
+    </p>
+    <p style="font-size: 1.2em">
+        Thanks for reading! Please let us know if you have any questions.
+    </p>
+{% endblock %}
