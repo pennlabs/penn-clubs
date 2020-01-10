@@ -5,7 +5,7 @@ from clubs.models import Club
 
 
 class Command(BaseCommand):
-    help = 'List clubs with broken images.'
+    help = 'List clubs with broken images and delete the image link.'
 
     def handle(self, *args, **kwargs):
         broken_list = []
