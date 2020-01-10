@@ -7,7 +7,7 @@ import renderPage from '../../../renderPage.js'
 import { doApiRequest, getApiUrl, formatResponse, getRoleDisplay } from '../../../utils'
 import Form from '../../../components/Form'
 import TabView from '../../../components/TabView'
-import { Icon, Container, Title, InactiveTag, Text } from '../../../components/common'
+import { Icon, Container, Title, InactiveTag, Text, Empty } from '../../../components/common'
 
 class ClubForm extends React.Component {
   constructor(props) {
@@ -71,6 +71,7 @@ class ClubForm extends React.Component {
       inviteTitle: 'Member',
       editMember: null,
       schools: [],
+      years: [],
       majors: [],
       subscriptions: [],
     }
@@ -309,11 +310,19 @@ class ClubForm extends React.Component {
           majors: data,
         })
       )
+
+    doApiRequest('/years/?format=json')
+      .then(resp => resp.json())
+      .then(data =>
+        this.setState({
+          years: data,
+        })
+      )
   }
 
   render() {
     const { tags } = this.props
-    const { club, schools, majors, invites, editMember } = this.state
+    const { club, schools, majors, years, invites, editMember } = this.state
 
     if (this.state.isEdit && club === null) {
       return <div />
@@ -438,6 +447,14 @@ class ClubForm extends React.Component {
           {
             name: 'how_to_get_involved',
             type: 'textarea',
+          },
+          {
+            name: 'target_years',
+            type: 'multiselect',
+            placeholder: 'Select graduation years relevant to your club!',
+            choices: years,
+            converter: a => ({ value: a.id, label: a.name }),
+            reverser: a => ({ id: a.value, name: a.label }),
           },
           {
             name: 'target_schools',
@@ -685,11 +702,20 @@ class ClubForm extends React.Component {
                     <tr>
                       <th>Name</th>
                       <th>Email</th>
+                      <th>Grad Year</th>
+                      <th>School</th>
+                      <th>Major</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {this.state.subscriptions.map((item, i) => <tr key={i}><td>{item.name}</td><td>{item.email}</td></tr>)}
-                    {!!this.state.subscriptions.length || <tr><td colSpan="2" className="has-text-grey">No one has subscribed to this club yet.</td></tr>}
+                    {this.state.subscriptions.map((item, i) => <tr key={i}>
+                      <td>{item.name || <Empty>None</Empty>}</td>
+                      <td>{item.email || <Empty>None</Empty>}</td>
+                      <td>{item.graduation_year || <Empty>None</Empty>}</td>
+                      <td>{ item.school && item.school.length ? item.school.map(a => a.name).join(', ') : <Empty>None</Empty> }</td>
+                      <td>{ item.major && item.major.length ? item.major.map(a => a.name).join(', ') : <Empty>None</Empty> }</td>
+                    </tr>)}
+                    {!!this.state.subscriptions.length || <tr><td colSpan="5" className="has-text-grey">No one has subscribed to this club yet.</td></tr>}
                   </tbody>
                 </table>
                 <div className="buttons">
