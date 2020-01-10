@@ -185,10 +185,10 @@ class ClubViewSet(XLSXFileMixin, viewsets.ModelViewSet):
         Format a cell in the exported Excel spreadsheet, given (column name, cell value).
         Returns (new column name, new cell value).
         """
-        if key in set(['tags', 'target_schools', 'target_majors', 'target_years', 'badges']):
-            value = ', '.join(x.get('name', x.get('label')) for x in value)
+        if key in set(['tags', 'target_schools', 'target_majors', 'target_years', 'badges', 'school', 'major']):
+            value = ', '.join(sorted(x.get('name', x.get('label')) for x in value))
         elif key == 'members':
-            value = '\n'.join('{} ({})'.format(x['name'], x['title']) for x in value)
+            value = '\n'.join(sorted('{} ({})'.format(x['name'], x['title']) for x in value))
         elif key in set(['active', 'accepting_members']):
             value = str(bool(value))
         elif key in set(['size', 'application_required']):
