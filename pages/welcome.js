@@ -33,6 +33,11 @@ const Margin = s.div`
   margin: 1rem;
 `
 
+const Subtitle = s(Title)`
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+`
+
 const TitleHeader = s.div`
   margin-top: 1rem;
   text-align: center;
@@ -78,32 +83,39 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
   return (
     <PhoneContainer>
       <TitleHeader>
+        <Image src="/static/img/peoplelogo.png" />
         <Title>Welcome to Penn Clubs!</Title>
       </TitleHeader>
       <hr />
       <Center>
         <Text>
-          Penn Clubs is meant to be your central source of information about student organizations at the University of Pennsylvania. Keep discovering new clubs throughout the year, not just at the SAC Fair.
+          Penn Clubs is your central source of information about student organizations at Penn.
         </Text>
       </Center>
       <hr />
       <Center>
+        <Subtitle>
+          1. Tell us about yourself
+        </Subtitle>
         <Text>
-          Providing basic academic information below will tailor your Penn Clubs experience to help you find the clubs that you are interested in.
-          This information will also be shared with clubs that you choose to subscribe to.
-          If you would not like to provide any particular detail, leave that field blank.
+          The info below helps us tailor your Penn Clubs experience to find clubs that you're likely to be interested in.
+          It will also be shared with clubs that you choose to subscribe to.
+          Feel free to leave fields blank if you'd prefer not the share this info.
         </Text>
       </Center>
       <ProfileForm settings={userInfo} />
       <hr />
       <Center>
+        <Subtitle>
+          2. Getting started
+        </Subtitle>
         <Text>
-          Here are two common buttons that you'll see and descriptions about what they do.
+          Here are two common buttons that you'll see around the site.
+          Bookmarks and subscriptions can be managed from your Penn Clubs account at any time.
         </Text>
         <div className="columns is-mobile">
           <div className="column">
             <div
-              disabled={true}
               className="button is-link is-large">
               <Icon alt='bookmark' name='bookmark' /> Bookmark
             </div>
@@ -111,27 +123,25 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
           </div>
           <div className="column">
             <div
-              disabled={true}
               className="button is-danger is-large">
               <Icon alt='subscribe' name='bell' /> Subscribe
             </div>
             <Text style={{ marginTop: '0.5rem' }}>To join the mailing list</Text>
           </div>
         </div>
-        <SmallText><i>Bookmarks and subscriptions can be managed from your Penn Clubs account at any time.</i></SmallText>
       </Center>
       <hr />
       <Center>
-        <Text>Start exploring Penn Clubs!</Text>
+        <Subtitle>3. Start exploring Penn Clubs!</Subtitle>
         <Link href={next && next.startsWith('/') ? next : '/'}>
-          <a className="button is-danger is-large" onClick={(e) => {
+          <a className="button is-success is-large" onClick={(e) => {
             doApiRequest('/settings/?format=json', {
               method: 'PATCH',
               body: {
                 has_been_prompted: true, // eslint-disable-line camelcase
               },
             })
-          }}>{next ? 'Continue' : 'Browse clubs'}</a>
+          }}>Browse clubs</a>
         </Link>
       </Center>
     </PhoneContainer>
