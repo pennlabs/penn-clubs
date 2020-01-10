@@ -468,6 +468,9 @@ class Profile(models.Model):
     school = models.ManyToManyField(School, blank=True)
     major = models.ManyToManyField(Major, blank=True)
 
+    def __str__(self):
+        return self.user.username
+
 
 @receiver(models.signals.post_delete, sender=Asset)
 def asset_delete_cleanup(sender, instance, **kwargs):

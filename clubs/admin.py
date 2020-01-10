@@ -146,6 +146,20 @@ class MembershipAdmin(admin.ModelAdmin):
         return obj.club.name
 
 
+class ProfileAdmin(admin.ModelAdmin):
+    search_fields = ('user__username', 'user__email')
+    list_display = ('user', 'email', 'graduation_year', 'studies')
+    list_filter = ('graduation_year', 'school', 'major')
+
+    def email(self, obj):
+        return str(obj.user.email or None)
+
+    def studies(self, obj):
+        major = ', '.join(obj.major.values_list('name', flat=True))
+        school = ', '.join(obj.school.values_list('name', flat=True))
+        return '{} - {}'.format(school or None, major or None)
+
+
 class MembershipInviteAdmin(admin.ModelAdmin):
     search_fields = ('email', 'club__name', 'club__pk')
     list_display = ('email', 'club', 'role', 'title', 'active')
@@ -213,7 +227,7 @@ admin.site.register(Subscribe, SubscribeAdmin)
 admin.site.register(Major)
 admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)
-admin.site.register(Profile)
+admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Testimonial)
 admin.site.register(Note)
