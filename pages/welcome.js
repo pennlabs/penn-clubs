@@ -1,7 +1,7 @@
 import s from 'styled-components'
 
 import renderPage from '../renderPage'
-import { LOGIN_URL } from '../utils'
+import { doApiRequest, LOGIN_URL } from '../utils'
 import ProfileForm from '../components/Settings/ProfileForm'
 import {
   Title,
@@ -42,7 +42,9 @@ const TitleHeader = s.div`
   }
 `
 
-const Welcome = ({ authenticated, query, userInfo }) => {
+const Welcome = ({ authenticated, query, userInfo, url }) => {
+  const { next } = url.query
+
   if (authenticated === false) {
     return (
       <PhoneContainer>
@@ -101,6 +103,7 @@ const Welcome = ({ authenticated, query, userInfo }) => {
         <div className="columns is-mobile">
           <div className="column">
             <div
+              disabled={true}
               className="button is-link is-large">
               <Icon alt='bookmark' name='bookmark' /> Bookmark
             </div>
@@ -108,6 +111,7 @@ const Welcome = ({ authenticated, query, userInfo }) => {
           </div>
           <div className="column">
             <div
+              disabled={true}
               className="button is-danger is-large">
               <Icon alt='subscribe' name='bell' /> Subscribe
             </div>
@@ -119,8 +123,15 @@ const Welcome = ({ authenticated, query, userInfo }) => {
       <hr />
       <Center>
         <Text>Start exploring Penn Clubs!</Text>
-        <Link href="/">
-          <a className="button is-danger is-large">Browse clubs</a>
+        <Link href={next && next.startswith('/') ? next : '/'}>
+          <a className="button is-danger is-large" onClick={(e) => {
+            doApiRequest('/settings/?format=json', {
+              method: 'PATCH',
+              body: {
+                has_been_prompted: true, // eslint-disable-line camelcase
+              },
+            })
+          }}>{next ? 'Continue' : 'Browse clubs'}</a>
         </Link>
       </Center>
     </PhoneContainer>
