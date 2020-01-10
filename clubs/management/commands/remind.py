@@ -3,12 +3,24 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 
-from clubs.models import Club
+from clubs.models import Club, Membership
 
 
 def send_reminder_to_club(club):
-    if club.email:
+    """
+    Sends an email reminder to clubs to update their information.
+    """
+    receivers = None
+    staff = club.members.filter(membership__role__lte=Membership.ROLE_OFFICER)
+
+    # calculate email recipients
+    if staff.exists():
+        receivers = list(staff.values_list('email', flat=True))
+    elif club.email:
         receivers = [club.email]
+
+    # send email if recipients exist
+    if receivers is not None:
         domain = 'pennclubs.com'
         context = {
             'name': club.name,
