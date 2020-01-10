@@ -123,7 +123,7 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
       <hr />
       <Center>
         <Text>Start exploring Penn Clubs!</Text>
-        <Link href={next && next.startswith('/') ? next : '/'}>
+        <Link href={next && next.startsWith('/') ? next : '/'}>
           <a className="button is-danger is-large" onClick={(e) => {
             doApiRequest('/settings/?format=json', {
               method: 'PATCH',
