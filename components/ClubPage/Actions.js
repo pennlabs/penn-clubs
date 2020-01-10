@@ -33,22 +33,22 @@ const BookmarkCountWrapper = s.span`
 `
 
 const ActionWrapper = s.span`
-    display: inline-block;
-    flex-direction: row;
-    align-items: center;
-    background-color: ${WHITE};
-    border-radius: 30px;
-    border: 1px solid ${ALLBIRDS_GRAY};
-    padding-left: 1rem;
-    padding-right: 1rem;
+  display: inline-block;
+  flex-direction: row;
+  align-items: center;
+  background-color: ${WHITE};
+  border-radius: 30px;
+  border: 1px solid ${ALLBIRDS_GRAY};
+  padding-left: 1rem;
+  padding-right: 1rem;
 `
 
 const ActionDiv = s.span`
-    display: inline-block;
-    color: #4a4a4a;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    vertical-align: middle;
+  display: inline-block;
+  color: #4a4a4a;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  vertical-align: middle;
 `
 
 const Actions = ({

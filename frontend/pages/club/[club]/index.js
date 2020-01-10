@@ -18,7 +18,7 @@ import {
   Text,
   Container,
 } from '../../../components/common'
-import { SNOW } from '../../../constants/colors'
+import { SNOW, WHITE } from '../../../constants/colors'
 
 const Image = s.img`
   height: 86px;
@@ -54,7 +54,7 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
   const { image_url: image } = club
 
   return (
-    <WideContainer background={`${SNOW}`} fullHeight={true}>
+    <WideContainer background={SNOW} fullHeight>
 
       <div className="columns">
         <div className="column">
@@ -72,7 +72,7 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
               />
             </Flex>
           </Card>
-          <Card bordered style={{ marginBottom: '1rem', background: '#ffffff' }}>
+          <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
             <Tabs club={club} />
           </Card>
         </div>
@@ -86,7 +86,7 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
             updateSubscriptions={updateSubscriptions}
             style={{ flex: 1 }}
           />
-          <Card bordered style={{ marginBottom: '1rem', background: '#ffffff' }}>
+          <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
             <StrongText>Basic Info</StrongText>
             <InfoBox club={club} />
             <br />
