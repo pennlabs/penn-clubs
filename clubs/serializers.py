@@ -510,7 +510,7 @@ class UserSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField('get_image_url')
 
     has_been_prompted = serializers.BooleanField(source='profile.has_been_prompted')
-    graduation_year = serializers.IntegerField(source='profile.graduation_year')
+    graduation_year = serializers.IntegerField(source='profile.graduation_year', allow_null=True)
     school = SchoolSerializer(many=True, source='profile.school')
     major = MajorSerializer(many=True, source='profile.major')
 
