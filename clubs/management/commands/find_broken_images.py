@@ -10,7 +10,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         broken_list = []
         working_list = []
-        for club in Club.objects.all():
+        for club in Club.objects.filter(image__isnull=False):
             if club.image:
                 resp = requests.head(club.image.url)
                 if not resp.ok:
