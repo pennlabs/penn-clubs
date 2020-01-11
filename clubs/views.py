@@ -504,6 +504,7 @@ def email_preview(request):
             'name': '[Club Name]',
             'url': '[URL]',
             'view_url': '[View URL]',
+            'flyer_url': '[Flyer URL]',
             'sender': {
                 'username': '[Sender Username]',
                 'email': '[Sender Email]'

@@ -147,6 +147,7 @@ EMAIL_SUBJECT_PREFIX = '[Penn Clubs] '
 INVITE_URL = 'https://{domain}/invite/{club}/{id}/{token}'
 VIEW_URL = 'https://{domain}/club/{club}'
 EDIT_URL = 'https://{domain}/club/{club}/edit'
+FLYER_URL = 'https://{domain}/club/{club}/flyer'
 
 # File upload settings
 
