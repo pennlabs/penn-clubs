@@ -38,9 +38,13 @@ class Command(BaseCommand):
         if only_sheet:
             clubs = Club.objects.all()
         else:
+            # find all clubs without owners or owner invitations
             clubs = Club.objects.annotate(
                 owner_count=Count('membership', filter=Q(membership__role__lte=Membership.ROLE_OWNER)),
-                invite_count=Count('membershipinvite', filter=Q(membershipinvite__role__lte=Membership.ROLE_OWNER))
+                invite_count=Count(
+                    'membershipinvite',
+                    filter=Q(membershipinvite__role__lte=Membership.ROLE_OWNER, active=True)
+                )
             ).filter(owner_count=0, invite_count=0)
             self.stdout.write('Found {} club(s) without owners.'.format(clubs.count()))
 
@@ -108,18 +112,22 @@ class Command(BaseCommand):
                     continue
                 receivers = list(set(receivers))
                 self.stdout.write(
-                    self.style.SUCCESS('Sending invite for {} to {}'.format(club.name, ', '.join(receivers)))
+                    self.style.SUCCESS('Sending email for {} to {}'.format(club.name, ', '.join(receivers)))
                 )
                 for receiver in receivers:
                     if not dry_run:
-                        invite = MembershipInvite.objects.create(
-                            club=club,
-                            email=receiver,
-                            creator=None,
-                            role=Membership.ROLE_OWNER,
-                            title='Owner',
-                            auto=True
-                        )
+                        existing_invite = MembershipInvite.objects.filter(club=club, email=receiver, active=True)
+                        if not existing_invite.exists():
+                            invite = MembershipInvite.objects.create(
+                                club=club,
+                                email=receiver,
+                                creator=None,
+                                role=Membership.ROLE_OWNER,
+                                title='Owner',
+                                auto=True
+                            )
+                        else:
+                            invite = existing_invite.first()
                         invite.send_owner_invite()
 
         self.stdout.write(
