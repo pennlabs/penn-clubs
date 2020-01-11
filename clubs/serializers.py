@@ -6,6 +6,7 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
+from clubs.mixins import ManyToManySaveMixin
 from clubs.models import (Asset, Badge, Club, Event, Favorite, Major, Membership, MembershipInvite,
                           Note, NoteTag, Profile, School, Subscribe, Tag, Testimonial, Year)
 from clubs.utils import clean
@@ -269,7 +270,7 @@ class ClubListSerializer(serializers.ModelSerializer):
         }
 
 
-class ClubSerializer(ClubListSerializer):
+class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source='membership_set', read_only=True)
     image = serializers.ImageField(write_only=True, required=False)
     parent_orgs = serializers.SerializerMethodField('get_parent_orgs')
@@ -379,8 +380,7 @@ class ClubSerializer(ClubListSerializer):
 
     def save(self):
         """
-        Override save in order to replace ID with slugified name if not specified.
-        Also make updating ManyToMany fields work.
+        Override save in order to replace code with slugified name if not specified.
         """
         if 'name' in self.validated_data:
             self.validated_data['name'] = self.validated_data['name'].strip()
@@ -391,39 +391,15 @@ class ClubSerializer(ClubListSerializer):
         elif 'code' in self.validated_data:
             del self.validated_data['code']
 
-        # save many to many fields
-        m2m_to_save = [
-            ('tags', Tag),
-            ('badges', Badge),
-            ('target_schools', School),
-            ('target_majors', Major),
-            ('target_years', Year),
-        ]
-
-        # remove m2m from validated data and save
-        m2m_lists = {}
-        for m2m, model in m2m_to_save:
-            m2m_lists[m2m] = []
-            items = self.validated_data.pop(m2m, None)
-            if items is None:
-                continue
-            for item in items:
-                m2m_lists[m2m].append(model.objects.get(**item))
-
-        obj = super().save()
-
-        # link models to this model
-        for m2m, _ in m2m_to_save:
-            getattr(obj, m2m).set(m2m_lists[m2m])
-
-        return obj
-
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
             'facebook', 'twitter', 'instagram', 'linkedin',
             'github', 'website', 'how_to_get_involved',
             'listserv', 'members', 'parent_orgs',
             'badges', 'image', 'testimonials'
+        ]
+        save_related_fields = [
+            'tags', 'badges', 'target_schools', 'target_majors', 'target_years'
         ]
 
 
@@ -608,7 +584,7 @@ class NoteTagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class NoteSerializer(serializers.ModelSerializer):
+class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
     creating_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
     subject_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
@@ -616,29 +592,13 @@ class NoteSerializer(serializers.ModelSerializer):
     content = serializers.CharField(required=False)
     note_tags = NoteTagSerializer(many=True, required=False)
 
-    def create(self, validated_data):
-        """
-        Manual create method because DRF does not support writable nested fields by default.
-        """
-        # assign tags to new club
-        note_tags = None
-
-        if 'note_tags' in validated_data:
-            note_tags = []
-            for note_tag in validated_data.pop('note_tags'):
-                (note_tag_object, _) = NoteTag.objects.get_or_create(**note_tag)
-                note_tags.append(note_tag_object)
-
-        # Note: it's important that all nested fields are POPPED from the validated data at this point. Otherwise,
-        # DRF will throw an error calling create on the superclass.
-        obj = super().create(validated_data)
-
-        if note_tags is not None:
-            obj.note_tags.set(note_tags)
-
-        return obj
-
     class Meta:
         model = Note
         fields = ('id', 'creator', 'creating_club', 'subject_club', 'title', 'content', 'note_tags',
                   'creating_club_permission', 'outside_club_permission')
+        save_related_fields = [
+            {
+                'field': 'note_tags',
+                'create': True
+            }
+        ]

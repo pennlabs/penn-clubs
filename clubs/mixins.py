@@ -5,13 +5,68 @@ from django.db.models import BooleanField, ManyToManyField
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import BooleanField as SerializerBooleanField
-from rest_framework.serializers import SerializerMetaclass, SerializerMethodField
+from rest_framework.serializers import ListSerializer, SerializerMetaclass, SerializerMethodField
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
+
+
+class ManyToManySaveMixin(object):
+    """
+    Mixin for serializers that saves ManyToMany fields by looking up related models.
+
+    In the Meta class, create a new attribute called "save_related_fields" in the Meta
+    class that represents the ManyToMany fields that should have save behavior.
+
+    You can also specify a dictionary instead of a string, with the following fields:
+        - field (string, required): The field to implement saving behavior on.
+        - create (bool): If true, create the related model if it does not exist.
+    """
+    def save(self):
+        m2m_to_save = getattr(self.Meta, 'save_related_fields', [])
+
+        # remove m2m from validated data and save
+        m2m_lists = {}
+        for m2m in m2m_to_save:
+            create = False
+            if isinstance(m2m, dict):
+                create = m2m.get('create', False)
+                m2m = m2m['field']
+
+            field = self.fields[m2m]
+            if isinstance(field, ListSerializer):
+                model = field.child.Meta.model
+                m2m_lists[m2m] = []
+                items = self.validated_data.pop(m2m, None)
+                if items is None:
+                    continue
+                for item in items:
+                    if create:
+                        obj, _ = model.objects.get_or_create(**item)
+                        m2m_lists[m2m].append(obj)
+                    else:
+                        m2m_lists[m2m].append(model.objects.get(**item))
+            else:
+                model = field.Meta.model
+                item = self.validated_data.pop(m2m, None)
+                if create:
+                    obj, _ = model.objects.get_or_create(**item)
+                    m2m_lists[m2m] = obj
+                else:
+                    m2m_lists[m2m] = model.objects.get(**item)
+
+        obj = super(ManyToManySaveMixin, self).save()
+
+        # link models to this model
+        for m2m in m2m_to_save:
+            if isinstance(m2m, dict):
+                m2m = m2m['field']
+            getattr(obj, m2m).set(m2m_lists[m2m])
+
+        return obj
 
 
 class XLSXFormatterMixin(object):
     """
-    Mixin that formats xlsx output to a more readable format.
+    Mixin for views that formats xlsx output to a more readable format.
     Will only apply to views that implement a get_serializer_class method.
 
     You can insert "format_{field}_for_spreadsheet" methods in your serializer class
