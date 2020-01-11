@@ -18,6 +18,12 @@ class Command(BaseCommand):
             help='The CSV file with club name to email mapping. First column is club name and second column is emails.'
         )
         parser.add_argument(
+            'type',
+            type=str,
+            help='The type of email to send.',
+            choices=('invite', 'fair')
+        )
+        parser.add_argument(
             '--dry-run',
             dest='dry_run',
             action='store_true',
@@ -34,6 +40,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         dry_run = kwargs['dry_run']
         only_sheet = kwargs['only_sheet']
+        action = kwargs['type']
 
         if only_sheet:
             clubs = Club.objects.all()
@@ -112,23 +119,26 @@ class Command(BaseCommand):
                     continue
                 receivers = list(set(receivers))
                 self.stdout.write(
-                    self.style.SUCCESS('Sending email for {} to {}'.format(club.name, ', '.join(receivers)))
+                    self.style.SUCCESS('Sending {} email for {} to {}'.format(action, club.name, ', '.join(receivers)))
                 )
                 for receiver in receivers:
                     if not dry_run:
-                        existing_invite = MembershipInvite.objects.filter(club=club, email=receiver, active=True)
-                        if not existing_invite.exists():
-                            invite = MembershipInvite.objects.create(
-                                club=club,
-                                email=receiver,
-                                creator=None,
-                                role=Membership.ROLE_OWNER,
-                                title='Owner',
-                                auto=True
-                            )
-                        else:
-                            invite = existing_invite.first()
-                        invite.send_owner_invite()
+                        if action == 'invite':
+                            existing_invite = MembershipInvite.objects.filter(club=club, email=receiver, active=True)
+                            if not existing_invite.exists():
+                                invite = MembershipInvite.objects.create(
+                                    club=club,
+                                    email=receiver,
+                                    creator=None,
+                                    role=Membership.ROLE_OWNER,
+                                    title='Owner',
+                                    auto=True
+                                )
+                            else:
+                                invite = existing_invite.first()
+                            invite.send_owner_invite()
+                        elif action == 'fair':
+                            raise NotImplementedError
 
         self.stdout.write(
             'Sent {} email(s), {} missing club(s), {} ambiguous club(s)'.format(clubs_sent, clubs_missing, clubs_many)

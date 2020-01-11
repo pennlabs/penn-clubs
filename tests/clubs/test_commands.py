@@ -42,7 +42,7 @@ class SendInvitesTestCase(TestCase):
 
     def test_send_invites(self):
         with tempfile.NamedTemporaryFile() as tmp:
-            call_command('send_invites', tmp.name)
+            call_command('send_emails', tmp.name, 'invite')
 
         self.assertEqual(MembershipInvite.objects.count(), 2)
         self.assertEqual(list(MembershipInvite.objects.values_list('role', flat=True)), [Membership.ROLE_OWNER] * 2)
