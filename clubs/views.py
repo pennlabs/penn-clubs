@@ -1,7 +1,6 @@
 import datetime
 import os
 import re
-from collections import OrderedDict
 
 import qrcode
 from django.conf import settings
@@ -17,9 +16,9 @@ from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.utils.serializer_helpers import ReturnList
 from rest_framework.views import APIView
 
+from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (Asset, Club, Event, Favorite, Major, Membership,
                           MembershipInvite, Note, School, Subscribe, Tag, Year)
 from clubs.permissions import (AssetPermission, ClubPermission, EventPermission, InvitePermission,
@@ -87,7 +86,7 @@ def filter_note_permission(queryset, club, user):
     return queryset
 
 
-class ClubViewSet(XLSXFileMixin, viewsets.ModelViewSet):
+class ClubViewSet(XLSXFormatterMixin, XLSXFileMixin, viewsets.ModelViewSet):
     """
     retrieve:
     Return a single club with all information fields present.
@@ -169,32 +168,7 @@ class ClubViewSet(XLSXFileMixin, viewsets.ModelViewSet):
         Return a list of all students that have subscribed to the club, including their names and emails.
         """
         serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']), many=True)
-
-        # intercept excel format data and format it better
-        if request.accepted_renderer.format == 'xlsx':
-            new_data = []
-            for row in serializer.data:
-                new_data.append(OrderedDict([self._format_cell(k, v) for k, v in row.items()]))
-            new_data = ReturnList(new_data, serializer=serializer)
-            return Response(new_data)
-
         return Response(serializer.data)
-
-    def _format_cell(self, key, value):
-        """
-        Format a cell in the exported Excel spreadsheet, given (column name, cell value).
-        Returns (new column name, new cell value).
-        """
-        if key in {'tags', 'target_schools', 'target_majors', 'target_years', 'badges', 'school', 'major'}:
-            value = ', '.join(sorted(x.get('name', x.get('label')) for x in value))
-        elif key == 'members':
-            value = '\n'.join(sorted('{} ({})'.format(x['name'], x['title']) for x in value))
-        elif key in {'active', 'accepting_members'}:
-            value = str(bool(value))
-        elif key in {'size', 'application_required'}:
-            lookup = dict(self.get_serializer_class().Meta.model._meta.get_field(key).choices)
-            value = lookup.get(value, 'Unknown')
-        return key.title().replace('_', ' '), value
 
     def list(self, request, *args, **kwargs):
         """
@@ -204,10 +178,6 @@ class ClubViewSet(XLSXFileMixin, viewsets.ModelViewSet):
         # intercept excel format data and format it better
         if request.accepted_renderer.format == 'xlsx':
             resp = super().list(request, *args, **kwargs)
-            new_data = []
-            for row in resp.data:
-                new_data.append(OrderedDict([self._format_cell(k, v) for k, v in row.items()]))
-            resp.data = ReturnList(new_data, serializer=resp.data.serializer)
             return resp
 
         # return cached if cached

@@ -371,6 +371,12 @@ class ClubSerializer(ClubListSerializer):
             return value
         raise serializers.ValidationError('You do not have permissions to change the active status of the club.')
 
+    def format_members_for_spreadsheet(self, value):
+        """
+        Specify the spreadsheet format for the membership ManyToMany field.
+        """
+        return '\n'.join('{} - {}'.format(v.get('name'), v.get('email')) for v in value)
+
     def save(self):
         """
         Override save in order to replace ID with slugified name if not specified.
