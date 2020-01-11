@@ -30,7 +30,9 @@ class Command(BaseCommand):
                 final, rest = clubs[0], clubs[1:]
                 for item in rest:
                     final = merge_clubs(final, item)
-                self.stdout.write('Merged {} ({})'.format(duplicate, num_clubs))
+                self.stdout.write(
+                    self.style.SUCCESS('Merged {} ({})'.format(duplicate, num_clubs))
+                )
         else:
             items = kwargs['items']
             if kwargs['tag']:
@@ -42,7 +44,9 @@ class Command(BaseCommand):
                 for item in rest:
                     final = merge_tags(final, item)
 
-                self.stdout.write('Merged {}'.format(final.name))
+                self.stdout.write(
+                    self.style.SUCCESS('Merged {}'.format(final.name))
+                )
             else:
                 clubs = Club.objects.filter(Q(code__in=items) | Q(name__in=items))
                 if clubs.count() < 2:
@@ -50,7 +54,9 @@ class Command(BaseCommand):
                 final, rest = clubs[0], clubs[1:]
                 for item in rest:
                     final = merge_clubs(final, item)
-                self.stdout.write('Merged {}'.format(final.name))
+                self.stdout.write(
+                    self.style.SUCCESS('Merged {}'.format(final.name))
+                )
 
 
 def merge_tags(one, two):
