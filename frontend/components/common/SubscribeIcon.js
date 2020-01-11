@@ -16,7 +16,7 @@ const SubscribeIconTag = s.span`
     right: 0;
   `}
 
-    svg {
+  svg {
     height: 1rem;
     width: 1rem;
     fill: ${({ subscribe }) => (subscribe ? BLACK : 'none')};
