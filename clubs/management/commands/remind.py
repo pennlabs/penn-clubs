@@ -45,7 +45,7 @@ def send_reminder_to_club(club):
 
     # send email if recipients exist
     if receivers is not None:
-        domain = 'pennclubs.com'
+        domain = settings.DEFAULT_DOMAIN
         context = {
             'name': club.name,
             'url': settings.EDIT_URL.format(domain=domain, club=club.code),
