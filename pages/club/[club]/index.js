@@ -6,6 +6,7 @@ import { doApiRequest } from '../../../utils'
 import Tabs from '../../../components/ClubPage/Tabs'
 import Header from '../../../components/ClubPage/Header'
 import InfoBox from '../../../components/ClubPage/InfoBox'
+import Testimonials from '../../../components/ClubPage/Testimonials'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
 import {
   Card,
@@ -76,6 +77,7 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
             <StrongText>Social</StrongText>
             <SocialIcons club={club} />
           </Card>
+          <Testimonials data={club.testimonials} />
         </div>
       </div>
     </WideContainer>
