@@ -55,15 +55,14 @@ def send_reminder_to_club(club):
         text_content = render_to_string('emails/remind.txt', context)
         html_content = render_to_string('emails/remind.html', context)
 
-        for receiver in receivers:
-            msg = EmailMultiAlternatives(
-                "Reminder to Update Your Club's Page",
-                text_content,
-                settings.FROM_EMAIL,
-                receivers
-            )
-            msg.attach_alternative(html_content, 'text/html')
-            msg.send(fail_silently=False)
+        msg = EmailMultiAlternatives(
+            "Reminder to Update Your Club's Page",
+            text_content,
+            settings.FROM_EMAIL,
+            receivers
+        )
+        msg.attach_alternative(html_content, 'text/html')
+        msg.send(fail_silently=False)
         return True
     return False
 

@@ -2,10 +2,37 @@ import csv
 import os
 import re
 
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import CharField, Count, F, Q, Value
+from django.template.loader import render_to_string
 
 from clubs.models import Club, Membership, MembershipInvite
+
+
+def send_fair_email(club, email):
+    """
+    Sends the SAC fair email for a club to the given email.
+    """
+    domain = settings.DEFAULT_DOMAIN
+    context = {
+        'name': club.name,
+        'url': settings.VIEW_URL.format(domain=domain, club=club.code),
+        'flyer_url': settings.FLYER_URL.format(domain=domain, club=club.code)
+    }
+
+    text_content = render_to_string('emails/fair.txt', context)
+    html_content = render_to_string('emails/fair.html', context)
+
+    msg = EmailMultiAlternatives(
+        'Making the SAC Fair Easier for You',
+        text_content,
+        settings.FROM_EMAIL,
+        [email]
+    )
+    msg.attach_alternative(html_content, 'text/html')
+    msg.send(fail_silently=False)
 
 
 class Command(BaseCommand):
@@ -52,8 +79,8 @@ class Command(BaseCommand):
                     'membershipinvite',
                     filter=Q(membershipinvite__role__lte=Membership.ROLE_OWNER, active=True)
                 )
-            ).filter(owner_count=0, invite_count=0)
-            self.stdout.write('Found {} club(s) without owners.'.format(clubs.count()))
+            ).filter(owner_count=0, invite_count=0, active=True)
+            self.stdout.write('Found {} active club(s) without owners.'.format(clubs.count()))
 
         clubs_missing = 0
         clubs_sent = 0
@@ -138,7 +165,7 @@ class Command(BaseCommand):
                                 invite = existing_invite.first()
                             invite.send_owner_invite()
                         elif action == 'fair':
-                            raise NotImplementedError
+                            send_fair_email(club, receiver)
 
         self.stdout.write(
             'Sent {} email(s), {} missing club(s), {} ambiguous club(s)'.format(clubs_sent, clubs_missing, clubs_many)
