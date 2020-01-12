@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from django.core.exceptions import FieldDoesNotExist, MultipleObjectsReturned, ObjectDoesNotExist
 from django.db.models import BooleanField, ManyToManyField
+from django.db.models.fields.reverse_related import ManyToOneRel
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -169,7 +170,7 @@ class XLSXFormatterMixin(object):
             return lambda x: x
 
         # format based on field type
-        if isinstance(field_object, ManyToManyField):
+        if isinstance(field_object, (ManyToManyField, ManyToOneRel)):
             return self._many_to_many_formatter
         elif isinstance(field_object, BooleanField):
             return lambda x: str(bool(x))
