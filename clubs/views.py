@@ -17,13 +17,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from clubs.models import Asset, Club, Event, Favorite, Major, Membership, MembershipInvite, Note, School, Subscribe, Tag
+from clubs.models import (Asset, Club, Event, Favorite, Major, Membership,
+                          MembershipInvite, Note, School, Subscribe, Tag, Year)
 from clubs.permissions import (AssetPermission, ClubPermission, EventPermission, InvitePermission,
                                IsSuperuser, MemberPermission, NotePermission, ReadOnly)
 from clubs.serializers import (AssetSerializer, AuthenticatedClubSerializer, AuthenticatedMembershipSerializer,
-                               ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer,
-                               MajorSerializer, MembershipInviteSerializer, MembershipSerializer, NoteSerializer,
-                               SchoolSerializer, SubscribeSerializer, TagSerializer, UserSerializer)
+                               ClubListSerializer, ClubSerializer, EventSerializer, FavoriteSerializer, MajorSerializer,
+                               MembershipInviteSerializer, MembershipSerializer, NoteSerializer, SchoolSerializer,
+                               SubscribeSerializer, TagSerializer, UserSerializer, YearSerializer)
 
 
 def upload_endpoint_helper(request, cls, field, **kwargs):
@@ -109,6 +110,7 @@ class ClubViewSet(viewsets.ModelViewSet):
                                 'badges',
                                 'target_schools',
                                 'target_majors',
+                                'target_years',
                                 Prefetch('membership_set', queryset=Membership.objects.order_by(
                                     'role',
                                     'person__first_name',
@@ -223,6 +225,25 @@ class MajorViewSet(viewsets.ModelViewSet):
     serializer_class = MajorSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     queryset = Major.objects.all()
+
+
+class YearViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Retrieve a list of all of the graduation years (ex: Freshman, Sophomore, Junior, Senior).
+
+    retrieve:
+    Retrieve a single graduation year by ID.
+
+    create:
+    Add a new graduation year to the list of graduation years.
+
+    destroy:
+    Remove a graduation year from the list of graduation years.
+    """
+    serializer_class = YearSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    queryset = Year.objects.all()
 
 
 class EventViewSet(viewsets.ModelViewSet):

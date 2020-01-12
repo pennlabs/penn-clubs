@@ -5,8 +5,8 @@ from django.urls import path
 from rest_framework_nested import routers
 
 from clubs.views import (AssetViewSet, ClubViewSet, EventViewSet, FavoriteViewSet, MajorViewSet,
-                         MassInviteAPIView, MemberInviteViewSet, MemberViewSet, NoteViewSet,
-                         SchoolViewSet, SubscribeViewSet, TagViewSet, UserUpdateAPIView, email_preview)
+                         MassInviteAPIView, MemberInviteViewSet, MemberViewSet, NoteViewSet, SchoolViewSet,
+                         SubscribeViewSet, TagViewSet, UserUpdateAPIView, YearViewSet, email_preview)
 
 
 router = routers.SimpleRouter()
@@ -17,6 +17,7 @@ router.register(r'subscribe', SubscribeViewSet, basename='subscribe')
 
 router.register(r'schools', SchoolViewSet, basename='schools')
 router.register(r'majors', MajorViewSet, basename='majors')
+router.register(r'years', YearViewSet, basename='years')
 
 clubs_router = routers.NestedSimpleRouter(router, r'clubs', lookup='club')
 clubs_router.register(r'members', MemberViewSet, basename='club-members')

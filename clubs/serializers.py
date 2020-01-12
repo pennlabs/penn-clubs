@@ -7,7 +7,7 @@ from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
 from clubs.models import (Asset, Badge, Club, Event, Favorite, Major, Membership, MembershipInvite,
-                          Note, NoteTag, Profile, School, Subscribe, Tag, Testimonial)
+                          Note, NoteTag, Profile, School, Subscribe, Tag, Testimonial, Year)
 from clubs.utils import clean
 
 
@@ -47,6 +47,15 @@ class TestimonialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Testimonial
         fields = ('id', 'text')
+
+
+class YearSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+    year = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Year
+        fields = ('id', 'name', 'year')
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
@@ -205,6 +214,7 @@ class ClubListSerializer(serializers.ModelSerializer):
 
     target_schools = SchoolSerializer(many=True, required=False)
     target_majors = MajorSerializer(many=True, required=False)
+    target_years = YearSerializer(many=True, required=False)
 
     def get_image_url(self, obj):
         if not obj.image:
@@ -219,7 +229,7 @@ class ClubListSerializer(serializers.ModelSerializer):
         fields = [
             'name', 'code', 'description', 'founded', 'size', 'email', 'tags', 'subtitle',
             'application_required', 'accepting_members', 'image_url', 'favorite_count', 'active',
-            'target_schools', 'target_majors'
+            'target_schools', 'target_majors', 'target_years'
         ]
         extra_kwargs = {
             'name': {
@@ -366,6 +376,7 @@ class ClubSerializer(ClubListSerializer):
             ('badges', Badge),
             ('target_schools', School),
             ('target_majors', Major),
+            ('target_years', Year),
         ]
 
         # remove m2m from validated data and save
@@ -464,12 +475,16 @@ class SubscribeSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='person.username', read_only=True)
     email = serializers.EmailField(source='person.email', read_only=True)
 
+    school = SchoolSerializer(many=True, source='person.profile.school', read_only=True)
+    major = MajorSerializer(many=True, source='person.profile.major', read_only=True)
+    graduation_year = serializers.IntegerField(source='person.profile.graduation_year', read_only=True)
+
     def get_full_name(self, obj):
         return obj.person.get_full_name()
 
     class Meta:
         model = Subscribe
-        fields = ('club', 'name', 'username', 'person', 'email')
+        fields = ('club', 'name', 'username', 'person', 'email', 'school', 'major', 'graduation_year')
         validators = [validators.UniqueTogetherValidator(queryset=Subscribe.objects.all(), fields=['club', 'person'])]
 
 
@@ -496,7 +511,7 @@ class UserSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField('get_image_url')
 
     has_been_prompted = serializers.BooleanField(source='profile.has_been_prompted')
-    graduation_year = serializers.IntegerField(source='profile.graduation_year')
+    graduation_year = serializers.IntegerField(source='profile.graduation_year', allow_null=True)
     school = SchoolSerializer(many=True, source='profile.school')
     major = MajorSerializer(many=True, source='profile.major')
 

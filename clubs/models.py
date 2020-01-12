@@ -1,3 +1,4 @@
+import datetime
 import os
 import uuid
 from urllib.parse import urlparse
@@ -78,6 +79,7 @@ class Club(models.Model):
     parent_orgs = models.ManyToManyField('Club', related_name='children_orgs', blank=True)
     badges = models.ManyToManyField('Badge', blank=True)
 
+    target_years = models.ManyToManyField('Year', blank=True)
     target_schools = models.ManyToManyField('School', blank=True)
     target_majors = models.ManyToManyField('Major', blank=True)
 
@@ -425,6 +427,33 @@ class Asset(models.Model):
         return self.name
 
 
+class Year(models.Model):
+    """
+    Represents a graduation class (ex: Freshman, Sophomore, Junior, Senior, Graduate Student).
+    """
+    name = models.TextField()
+
+    @property
+    def year(self):
+        """
+        Convert from graduation class name to graduation year.
+        """
+        now = datetime.datetime.now()
+        year = now.year
+        if now.month > 6:
+            year += 1
+        offset = {
+            'freshman': 3,
+            'sophomore': 2,
+            'junior': 1,
+            'senior': 0
+        }.get(self.name.lower(), 0)
+        return year + offset
+
+    def __str__(self):
+        return self.name
+
+
 class School(models.Model):
     """
     Represents a school (ex: Engineering, Wharton, etc).
@@ -456,6 +485,9 @@ class Profile(models.Model):
     graduation_year = models.PositiveSmallIntegerField(null=True, blank=True)
     school = models.ManyToManyField(School, blank=True)
     major = models.ManyToManyField(Major, blank=True)
+
+    def __str__(self):
+        return self.user.username
 
 
 @receiver(models.signals.post_delete, sender=Asset)

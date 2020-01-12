@@ -5,8 +5,8 @@ from django.db.models import Count, Exists, OuterRef
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
 from clubs.management.commands.remind import send_reminder_to_club
-from clubs.models import (Advisor, Asset, Badge, Club, Event, Favorite, Major, Membership,
-                          MembershipInvite, Note, NoteTag, Profile, School, Subscribe, Tag, Testimonial)
+from clubs.models import (Advisor, Asset, Badge, Club, Event, Favorite, Major, Membership, MembershipInvite,
+                          Note, NoteTag, Profile, School, Subscribe, Tag, Testimonial, Year)
 
 
 class HasOwnerListFilter(admin.SimpleListFilter):
@@ -146,6 +146,20 @@ class MembershipAdmin(admin.ModelAdmin):
         return obj.club.name
 
 
+class ProfileAdmin(admin.ModelAdmin):
+    search_fields = ('user__username', 'user__email')
+    list_display = ('user', 'email', 'graduation_year', 'studies')
+    list_filter = ('graduation_year', 'school', 'major')
+
+    def email(self, obj):
+        return str(obj.user.email or None)
+
+    def studies(self, obj):
+        major = ', '.join(obj.major.values_list('name', flat=True))
+        school = ', '.join(obj.school.values_list('name', flat=True))
+        return '{} - {}'.format(school or None, major or None)
+
+
 class MembershipInviteAdmin(admin.ModelAdmin):
     search_fields = ('email', 'club__name', 'club__pk')
     list_display = ('email', 'club', 'role', 'title', 'active')
@@ -199,6 +213,11 @@ class BadgeAdmin(admin.ModelAdmin):
     actions = [do_merge_tags]
 
 
+class YearAdmin(admin.ModelAdmin):
+    search_fields = ('name',)
+    list_display = ('name', 'year')
+
+
 admin.site.unregister(Group)
 
 
@@ -213,8 +232,9 @@ admin.site.register(Subscribe, SubscribeAdmin)
 admin.site.register(Major)
 admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)
-admin.site.register(Profile)
+admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Testimonial)
 admin.site.register(Note)
 admin.site.register(NoteTag)
+admin.site.register(Year, YearAdmin)
