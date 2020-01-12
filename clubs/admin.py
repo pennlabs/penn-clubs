@@ -213,6 +213,11 @@ class BadgeAdmin(admin.ModelAdmin):
     actions = [do_merge_tags]
 
 
+class YearAdmin(admin.ModelAdmin):
+    search_fields = ('name',)
+    list_display = ('name', 'year')
+
+
 admin.site.unregister(Group)
 
 
@@ -232,4 +237,4 @@ admin.site.register(Tag, TagAdmin)
 admin.site.register(Testimonial)
 admin.site.register(Note)
 admin.site.register(NoteTag)
-admin.site.register(Year)
+admin.site.register(Year, YearAdmin)

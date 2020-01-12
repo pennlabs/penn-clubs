@@ -1,3 +1,4 @@
+import datetime
 import os
 import uuid
 from urllib.parse import urlparse
@@ -431,6 +432,23 @@ class Year(models.Model):
     Represents a graduation class (ex: Freshman, Sophomore, Junior, Senior, Graduate Student).
     """
     name = models.TextField()
+
+    @property
+    def year(self):
+        """
+        Convert from graduation class name to graduation year.
+        """
+        now = datetime.datetime.now()
+        year = now.year
+        if now.month > 6:
+            year += 1
+        offset = {
+            'freshman': 3,
+            'sophomore': 2,
+            'junior': 1,
+            'senior': 0
+        }.get(self.name.lower(), 0)
+        return year + offset
 
     def __str__(self):
         return self.name

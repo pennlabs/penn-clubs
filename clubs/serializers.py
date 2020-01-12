@@ -51,10 +51,11 @@ class TestimonialSerializer(serializers.ModelSerializer):
 
 class YearSerializer(serializers.ModelSerializer):
     name = serializers.CharField()
+    year = serializers.ReadOnlyField()
 
     class Meta:
         model = Year
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'year')
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
