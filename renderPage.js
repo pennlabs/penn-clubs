@@ -145,11 +145,10 @@ function renderPage(Page) {
     }
   }
 
-  RenderPage.getInitialProps = async info => {
-    if (Page.getInitialProps) {
+  if (Page.getInitialProps) {
+    RenderPage.getInitialProps = async info => {
       return Page.getInitialProps(info)
     }
-    return {}
   }
 
   return RenderPage
@@ -161,7 +160,6 @@ export function renderListPage(Page) {
       super(props)
       this.state = {
         clubs: props.clubs,
-        tags: props.tags,
       }
     }
 
@@ -169,16 +167,13 @@ export function renderListPage(Page) {
       doApiRequest('/clubs/?format=json')
         .then(resp => resp.json())
         .then(data => this.setState({ clubs: data }))
-      doApiRequest('/tags/?format=json')
-        .then(resp => resp.json())
-        .then(data => this.setState({ tags: data }))
     }
 
     render() {
-      const { favorites, updateUserInfo, updateFavorites } = this.props
-      const { clubs, tags } = this.state
+      const { tags, favorites, updateUserInfo, updateFavorites } = this.props
+      const { clubs } = this.state
 
-      if (!clubs || !tags) {
+      if (!clubs) {
         return <Loading />
       }
 
@@ -195,7 +190,10 @@ export function renderListPage(Page) {
   }
 
   RenderListPage.getInitialProps = async () => {
-    return { clubs: null, tags: null }
+    const tagsRequest = await doApiRequest('/tags/?format=json')
+    const tagsResponse = await tagsRequest.json()
+
+    return { tags: tagsResponse }
   }
 
   return renderPage(RenderListPage)
