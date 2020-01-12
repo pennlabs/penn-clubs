@@ -26,6 +26,7 @@ class Form extends React.Component {
       this.setDefaults(this.props.fields)
     }
 
+    this.onChange = this.onChange.bind(this)
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
   }
@@ -85,7 +86,7 @@ class Form extends React.Component {
   }
 
   getData() {
-    return this.getAllFields().reduce((out, { type, name, reverser }) => {
+    return this.getAllFields().reduce((out, { type, name, reverser, converter }) => {
       const val = this.state[`field-${name}`]
       switch (type) {
         case 'multiselect': {
@@ -111,7 +112,11 @@ class Form extends React.Component {
           break
         }
         default: {
-          out[name] = val
+          if (converter) {
+            out[name] = converter(val)
+          } else {
+            out[name] = val
+          }
         }
       }
       return out
@@ -136,13 +141,16 @@ class Form extends React.Component {
 
     let inpt = null
 
-    if (['text', 'url', 'email', 'date'].includes(type)) {
+    if (['text', 'url', 'email', 'date', 'number'].includes(type)) {
       inpt = (
         <input
           className="input"
           disabled={readonly}
           value={this.state['field-' + name]}
-          onChange={e => this.setState({ ['field-' + name]: e.target.value })}
+          onChange={e => {
+            this.onChange(e)
+            this.setState({ ['field-' + name]: e.target.value })
+          }}
           key={name}
           type={type}
           name={name}
@@ -199,7 +207,10 @@ class Form extends React.Component {
         <textarea
           className="textarea"
           value={this.state[`field-${name}`]}
-          onChange={e => this.setState({ [`field-${name}`]: e.target.value })}
+          onChange={e => {
+            this.onChange(e)
+            this.setState({ [`field-${name}`]: e.target.value })
+          }}
         />
       )
     } else if (type === 'group') {
@@ -244,7 +255,10 @@ class Form extends React.Component {
             isMulti={true}
             value={this.state[`field-${name}`] || []}
             options={choices.map(converter)}
-            onChange={opt => this.setState({ [`field-${name}`]: opt })}
+            onChange={opt => {
+              this.onChange(opt)
+              this.setState({ [`field-${name}`]: opt })
+            }}
             styles={{
               container: style => ({
                 ...style,
@@ -262,7 +276,10 @@ class Form extends React.Component {
           key={name}
           value={this.state[`field-${name}`]}
           options={choices}
-          onChange={opt => this.setState({ [`field-${name}`]: opt })}
+          onChange={opt => {
+            this.onChange(opt)
+            this.setState({ [`field-${name}`]: opt })
+          }}
         />
       )
     } else if (type === 'checkbox') {
@@ -271,9 +288,10 @@ class Form extends React.Component {
           <input
             type="checkbox"
             checked={this.state[`field-${name}`]}
-            onChange={e =>
+            onChange={e => {
+              this.onChange(e)
               this.setState({ [`field-${name}`]: e.target.checked })
-            }
+            }}
           />
           &nbsp;
           {label}
@@ -315,10 +333,17 @@ class Form extends React.Component {
     return fields.map(this.generateField)
   }
 
+  onChange(e) {
+    const { onChange } = this.props
+    if (onChange) {
+      onChange(e)
+    }
+  }
+
   render() {
     const { submitButton, onSubmit, fields } = this.props
     return (
-      <span>
+      <>
         {this.generateFields(fields)}
         {typeof submitButton !== 'undefined' ? (
           <span onClick={() => onSubmit(this.getData())}>{submitButton}</span>
@@ -330,7 +355,7 @@ class Form extends React.Component {
             Submit
           </a>
         )}
-      </span>
+      </>
     )
   }
 }

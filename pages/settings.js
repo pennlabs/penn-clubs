@@ -94,8 +94,9 @@ class Settings extends React.Component {
   leaveClub(club) {
     const {
       userInfo: { username },
+      authenticated,
     } = this.props
-    if (!username) this.notify('You must be logged in to perform this action.')
+    if (!authenticated) this.notify('You must be logged in to perform this action.')
     else if (
       confirm(
         `Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`
@@ -154,6 +155,7 @@ class Settings extends React.Component {
         icon: 'heart',
         content: (
           <FavoritesTab
+            key='bookmark'
             keyword='bookmark'
             clubs={clubs}
             favorites={favorites}
@@ -166,6 +168,7 @@ class Settings extends React.Component {
         icon: 'bookmark',
         content: (
           <FavoritesTab
+            key='subscription'
             keyword='subscription'
             clubs={clubs}
             favorites={subscriptions}

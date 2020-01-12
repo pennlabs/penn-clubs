@@ -74,13 +74,13 @@ export default props => {
           </tr>
         ) : (
           userInfo.membership_set.map(item => (
-            <tr key={item.id}>
+            <tr key={item.code}>
               <td>
                 <Link
                   href="/club/[club]"
                   as={`/club/${item.code}`}
                 >
-                  {item.name}
+                  <a>{item.name}</a>
                 </Link>
               </td>
               <td>{item.title}</td>

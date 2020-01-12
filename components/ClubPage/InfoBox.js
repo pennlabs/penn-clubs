@@ -1,5 +1,5 @@
 import { getSizeDisplay } from '../../utils'
-import { Icon } from '../common'
+import { Icon, Text } from '../common'
 
 const iconStyles = {
   opacity: 0.5,
@@ -39,10 +39,10 @@ const InfoBox = props => {
   ]
 
   return data.map(({ icon, text }) => (
-    <p style={infoStyles} key={text}>
+    <Text style={infoStyles} key={text}>
       <Icon name={icon} style={iconStyles} alt={text} />
       {text}
-    </p>
+    </Text>
   ))
 }
 

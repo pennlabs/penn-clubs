@@ -1,5 +1,5 @@
 import s from 'styled-components'
-import { DARK_GRAY } from '../../constants/colors'
+import { DARK_GRAY, MEDIUM_GRAY } from '../../constants/colors'
 
 export const Text = s.p`
   font-size: 1rem;
@@ -20,4 +20,8 @@ export const StrongText = s(Text)`
 export const Title = s.h1`
   font-size: 2rem;
   font-weight: bold;
+`
+
+export const Empty = s(Text)`
+  color: ${MEDIUM_GRAY};
 `

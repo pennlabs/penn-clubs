@@ -19,6 +19,15 @@ const IconTag = s.img`
     margin-right: 3px;
     margin-top: -5px;
   }
+
+  .button.is-large & {
+    ${({ size }) => `
+      height: ${size || '1.5rem'};
+      width: ${size || '1.5rem'};
+      margin-right: 7px;
+      margin-top: -7px;
+    `}
+  }
 `
 
 export const Icon = ({ name, alt, size, style, ...props }) => (

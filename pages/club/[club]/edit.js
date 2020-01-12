@@ -4,10 +4,10 @@ import Link from 'next/link'
 import Select from 'react-select'
 
 import renderPage from '../../../renderPage.js'
-import { doApiRequest, formatResponse, getRoleDisplay } from '../../../utils'
+import { doApiRequest, getApiUrl, formatResponse, getRoleDisplay } from '../../../utils'
 import Form from '../../../components/Form'
 import TabView from '../../../components/TabView'
-import { Icon, Container, Title, InactiveTag } from '../../../components/common'
+import { Icon, Container, Title, InactiveTag, Text, Empty } from '../../../components/common'
 
 class ClubForm extends React.Component {
   constructor(props) {
@@ -70,8 +70,7 @@ class ClubForm extends React.Component {
       inviteRole: this.roles[0],
       inviteTitle: 'Member',
       editMember: null,
-      schools: [],
-      majors: [],
+      subscriptions: [],
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -284,28 +283,19 @@ class ClubForm extends React.Component {
             invites: data,
           })
         )
+      doApiRequest(`/clubs/${clubId}/subscription/?format=json`)
+        .then(resp => resp.json())
+        .then(data =>
+          this.setState({
+            subscriptions: data,
+          })
+        )
     }
-
-    doApiRequest('/schools/?format=json')
-      .then(resp => resp.json())
-      .then(data =>
-        this.setState({
-          schools: data,
-        })
-      )
-
-    doApiRequest('/majors/?format=json')
-      .then(resp => resp.json())
-      .then(data =>
-        this.setState({
-          majors: data,
-        })
-      )
   }
 
   render() {
-    const { tags } = this.props
-    const { club, schools, majors, invites, editMember } = this.state
+    const { schools, majors, years, tags } = this.props
+    const { club, invites, editMember } = this.state
 
     if (this.state.isEdit && club === null) {
       return <div />
@@ -432,6 +422,14 @@ class ClubForm extends React.Component {
             type: 'textarea',
           },
           {
+            name: 'target_years',
+            type: 'multiselect',
+            placeholder: 'Select graduation years relevant to your club!',
+            choices: years,
+            converter: a => ({ value: a.id, label: a.name }),
+            reverser: a => ({ id: a.value, name: a.label }),
+          },
+          {
             name: 'target_schools',
             type: 'multiselect',
             placeholder: 'Select schools relevant to your club!',
@@ -466,49 +464,57 @@ class ClubForm extends React.Component {
         label: 'Membership',
         content: (
           <div>
-            <table className="table is-fullwidth">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Title (Permissions)</th>
-                  <th>Email</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {club && club.members.length ? (
-                  club.members.map(a => (
-                    <tr key={a.username}>
-                      <td>{a.name}</td>
-                      <td>
-                        {a.title} ({getRoleDisplay(a.role)})
-                      </td>
-                      <td>{a.email}</td>
-                      <td className="buttons">
-                        <button
-                          className="button is-small is-primary"
-                          onClick={() => this.setState({ editMember: a })}
-                        >
-                          <Icon name="edit" alt="edit member" /> Edit
-                        </button>
-                        <button
-                          className="button is-small is-danger"
-                          onClick={() => this.deleteMembership(a.username)}
-                        >
-                          <Icon name="x" alt="kick member" /> Kick
-                        </button>
-                      </td>
+            <div className="card" style={{ marginBottom: 20 }}>
+              <div className="card-header">
+                <p className="card-header-title">Members</p>
+              </div>
+              <div className="card-content">
+                <table className="table is-fullwidth">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Title (Permissions)</th>
+                      <th>Email</th>
+                      <th>Actions</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="has-text-grey">
-                      There are no members in this club.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {club && club.members.length ? (
+                      club.members.map(a => (
+                        <tr key={a.username}>
+                          <td>{a.name}</td>
+                          <td>
+                            {a.title} ({getRoleDisplay(a.role)})
+                          </td>
+                          <td>{a.email}</td>
+                          <td className="buttons">
+                            <button
+                              className="button is-small is-primary"
+                              onClick={() => this.setState({ editMember: a })}
+                            >
+                              <Icon name="edit" alt="edit member" /> Edit
+                            </button>
+                            <button
+                              className="button is-small is-danger"
+                              onClick={() => this.deleteMembership(a.username)}
+                            >
+                              <Icon name="x" alt="kick member" /> Kick
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="has-text-grey">
+                          There are no members in this club.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                <a href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)} className="button is-link"><Icon alt="download" name="download" /> Download Member List</a>
+              </div>
+            </div>
             {editMember && (
               <div className="card" style={{ marginBottom: 20 }}>
                 <div className="card-header">
@@ -593,7 +599,7 @@ class ClubForm extends React.Component {
                 <p className="card-header-title">Invite Members</p>
               </div>
               <div className="card-content">
-                <p>
+                <Text>
                   Enter an email address or a list of email addresses separated
                   by commas or newlines in the box below. All emails listed will
                   be sent an invite to join the club. The invite process will go
@@ -601,8 +607,7 @@ class ClubForm extends React.Component {
                   email addresses will work provided that the recipient has a
                   PennKey account. We will not send an invite if the account
                   associated with an email is already in the club.
-                </p>
-                <br />
+                </Text>
                 <div className="field">
                   <textarea
                     value={this.state.inviteEmails}
@@ -657,6 +662,46 @@ class ClubForm extends React.Component {
         disabled: !this.state.isEdit,
       },
       {
+        name: 'subscriptions',
+        label: 'Subscriptions',
+        content: (
+          <div>
+            <div className="card" style={{ marginBottom: 20 }}>
+              <div className="card-header">
+                <p className="card-header-title">Subscribers</p>
+              </div>
+              <div className="card-content">
+                <table className="table is-fullwidth">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Grad Year</th>
+                      <th>School</th>
+                      <th>Major</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {this.state.subscriptions.map((item, i) => <tr key={i}>
+                      <td>{item.name || <Empty>None</Empty>}</td>
+                      <td>{item.email || <Empty>None</Empty>}</td>
+                      <td>{item.graduation_year || <Empty>None</Empty>}</td>
+                      <td>{ item.school && item.school.length ? item.school.map(a => a.name).join(', ') : <Empty>None</Empty> }</td>
+                      <td>{ item.major && item.major.length ? item.major.map(a => a.name).join(', ') : <Empty>None</Empty> }</td>
+                    </tr>)}
+                    {!!this.state.subscriptions.length || <tr><td colSpan="5" className="has-text-grey">No one has subscribed to this club yet.</td></tr>}
+                  </tbody>
+                </table>
+                <div className="buttons">
+                  <a href={getApiUrl(`/clubs/${club.code}/subscription/?format=xlsx`)} className="button is-link"><Icon alt="download" name="download" /> Download Subscriber List</a>
+                  <Link href="/club/[club]/flyer" as={`/club/${club.code}/flyer`}><a target="_blank" className="button is-success"><Icon alt="flyer" name="external-link" /> View Flyer</a></Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
         name: 'settings',
         label: 'Settings',
         content: (
@@ -669,19 +714,18 @@ class ClubForm extends React.Component {
               </div>
               <div className="card-content">
                 {club && club.active ? (
-                  <p>
+                  <Text>
                     Mark this organization as inactive. This will hide the club
                     from various listings and indicate to the public that the
                     club is no longer active.
-                  </p>
+                  </Text>
                 ) : (
-                  <p>
+                  <Text>
                     Reactivate this club, indicating to the public that this
                     club is currently active and running.
-                  </p>
+                  </Text>
                 )}
-                <p>Only owners of the organization may perform this action.</p>
-                <br />
+                <Text>Only owners of the organization may perform this action.</Text>
                 <div className="buttons">
                   <a
                     className={
@@ -708,7 +752,7 @@ class ClubForm extends React.Component {
                 <p className="card-header-title">Delete Club</p>
               </div>
               <div className="card-content">
-                <p>
+                <Text>
                   Remove this club entry from Penn Clubs.{' '}
                   <b className="has-text-danger">
                     This action is permanant and irreversible!
@@ -716,8 +760,7 @@ class ClubForm extends React.Component {
                   All club history and membership information will be
                   permanantly lost. In almost all cases, you want to deactivate
                   this club instead.
-                </p>
-                <br />
+                </Text>
                 <div className="buttons">
                   {club && !club.active ? (
                     <a
@@ -776,9 +819,18 @@ class ClubForm extends React.Component {
 }
 
 ClubForm.getInitialProps = async ({ query }) => {
-  const tagsRequest = await doApiRequest('/tags/?format=json')
-  const tagsResponse = await tagsRequest.json()
-  return { clubId: query.club, tags: tagsResponse }
+  const endpoints = ['tags', 'schools', 'majors', 'years']
+  return Promise.all(endpoints.map(async item => {
+    const request = await doApiRequest(`/${item}/?format=json`)
+    const response = await request.json()
+    return [item, response]
+  })).then(values => {
+    const output = { clubId: query.club }
+    values.forEach(item => {
+      output[item[0]] = item[1]
+    })
+    return output
+  })
 }
 
 export default withRouter(renderPage(ClubForm))

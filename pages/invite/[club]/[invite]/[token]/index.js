@@ -1,7 +1,8 @@
-import renderPage from '../../../../../renderPage.js'
-import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils.js'
+import renderPage from '../../../../../renderPage'
+import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils'
 import React from 'react'
 import { withRouter } from 'next/router'
+import Link from 'next/link'
 
 class Invite extends React.Component {
   constructor(props) {
@@ -9,7 +10,6 @@ class Invite extends React.Component {
     this.state = {
       invite: null,
       error: null,
-      club: null,
       isPublic: true,
     }
 
@@ -22,8 +22,8 @@ class Invite extends React.Component {
       this.setState({
         invite: {
           id: -1,
-          name: 'Example name',
-          email: 'Example email',
+          name: '[Example name]',
+          email: '[Example email]',
         },
       })
     } else {
@@ -44,11 +44,6 @@ class Invite extends React.Component {
         })
       })
     }
-    doApiRequest(`/clubs/${query.club}/?format=json`)
-      .then(resp => resp.json())
-      .then(data => {
-        this.setState({ club: data })
-      })
   }
 
   accept(isPublic) {
@@ -74,10 +69,11 @@ class Invite extends React.Component {
   }
 
   render() {
-    const { invite, error, club } = this.state
+    const { club } = this.props
+    const { invite, error } = this.state
 
-    if (!invite || !invite.id || !club) {
-      if (error) {
+    if (!invite || !invite.id || !club.code) {
+      if (error || club.detail === 'Not found.') {
         return (
           <div
             className="has-text-centered"
@@ -113,7 +109,7 @@ class Invite extends React.Component {
         {/* &#x1F389; is the confetti emoji. */}
         <h2 className="title is-2">&#x1F389; Invitation for {club.name} &#x1F389;</h2>
         <div className="title is-4" style={{ fontWeight: 'normal' }}>
-          <b>{invite.name}</b> has invited you, <b>{invite.email}</b>, to join <Link route="club-view" params={{ club: club.code }}>{club.name}</Link>.
+          <b>{invite.name}</b> has invited you, <b>{invite.email}</b>, to join <Link href="/club/[club]" as={`/club/${club.code}`} ><a>{club.name}</a></Link>.
         </div>
         {club.image_url && <img src={club.image_url} alt={club.name} style={{ maxHeight: 100, marginBottom: 15 }} />}
         <p style={{ marginBottom: 15 }}>
@@ -135,8 +131,11 @@ class Invite extends React.Component {
   }
 }
 
-Invite.getInitialProps = async props => {
-  return { query: props.query }
+Invite.getInitialProps = async ({ query }) => {
+  const clubRequest = await doApiRequest(`/clubs/${query.club}/?format=json`)
+  const clubResponse = await clubRequest.json()
+
+  return { query: query, club: clubResponse }
 }
 
 export default withRouter(renderPage(Invite))

@@ -97,9 +97,7 @@ class Splash extends React.Component {
   }
 
   componentDidMount() {
-    this.setState(state => ({
-      displayClubs: state.displayClubs.sort(() => Math.random() - 0.5),
-    }))
+    this.shuffle()
   }
 
   resetDisplay(nameInput, selectedTags) {
@@ -169,9 +167,42 @@ class Splash extends React.Component {
   }
 
   shuffle() {
+    const { userInfo } = this.props
     const { displayClubs } = this.state
+
+    let userSchools = new Set()
+    let userMajors = new Set()
+
+    if (userInfo) {
+      userSchools = new Set(userInfo.school.map(a => a.name))
+      userMajors = new Set(userInfo.major.map(a => a.name))
+    }
+    displayClubs.forEach(club => {
+      club.rank = 0
+      const hasSchool = club.target_schools.some(({ name }) => userSchools.has(name))
+      const hasMajor = club.target_majors.some(({ name }) => userMajors.has(name))
+      const hasYear = club.target_years.some(({ year }) => userInfo.graduation_year === year)
+      if (hasSchool) {
+        club.rank += Math.max(0, 1 - club.target_schools.length / 4)
+      }
+      if (hasYear) {
+        club.rank += Math.max(0, 1 - club.target_years.length / 4)
+      }
+      if (hasMajor) {
+        club.rank += 5 * Math.max(0, 1 - club.target_majors.length / 10)
+      }
+      club.rank += 2 * Math.random()
+    })
     this.setState({
-      displayClubs: displayClubs.sort(() => Math.random() - 0.5),
+      displayClubs: displayClubs.sort((a, b) => {
+        if (a.rank > b.rank) {
+          return -1
+        }
+        if (b.rank > a.rank) {
+          return 1
+        }
+        return 0
+      }),
     })
   }
 

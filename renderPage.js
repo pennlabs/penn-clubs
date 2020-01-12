@@ -27,6 +27,7 @@ function renderPage(Page) {
         userInfo: null,
         favorites: [],
         subscriptions: [],
+        clubs: null,
       }
 
       this.updateFavorites = this.updateFavorites.bind(this)
@@ -35,6 +36,10 @@ function renderPage(Page) {
     }
 
     componentDidMount() {
+      doApiRequest('/clubs/?format=json')
+        .then(resp => resp.json())
+        .then(data => this.setState({ clubs: data }))
+
       this.updateUserInfo()
     }
 
@@ -88,6 +93,7 @@ function renderPage(Page) {
           })
         }
         this.setState({ favorites: newFavs })
+        return i === -1
       }
     }
 
@@ -115,12 +121,14 @@ function renderPage(Page) {
     }
 
     updateUserInfo() {
-      doApiRequest('/clubs/?format=json')
-        .then(resp => resp.json())
-        .then(data => this.setState({ clubs: data }))
       doApiRequest('/settings/?format=json').then(resp => {
         if (resp.ok) {
           resp.json().then(userInfo => {
+            // redirect to welcome page if user hasn't seen it before
+            if (userInfo.has_been_prompted === false && window.location.pathname !== '/welcome') {
+              window.location.href = '/welcome?next=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)
+            }
+
             this.setState({
               authenticated: true,
               favorites: userInfo.favorite_set.map(a => a.club),
@@ -139,11 +147,10 @@ function renderPage(Page) {
     }
   }
 
-  RenderPage.getInitialProps = async info => {
-    if (Page.getInitialProps) {
+  if (Page.getInitialProps) {
+    RenderPage.getInitialProps = async info => {
       return Page.getInitialProps(info)
     }
-    return {}
   }
 
   return RenderPage
@@ -151,28 +158,10 @@ function renderPage(Page) {
 
 export function renderListPage(Page) {
   class RenderListPage extends React.Component {
-    constructor(props) {
-      super(props)
-      this.state = {
-        clubs: props.clubs,
-        tags: props.tags,
-      }
-    }
-
-    componentDidMount() {
-      doApiRequest('/clubs/?format=json')
-        .then(resp => resp.json())
-        .then(data => this.setState({ clubs: data }))
-      doApiRequest('/tags/?format=json')
-        .then(resp => resp.json())
-        .then(data => this.setState({ tags: data }))
-    }
-
     render() {
-      const { favorites, updateUserInfo, updateFavorites } = this.props
-      const { clubs, tags } = this.state
+      const { clubs, tags, favorites, authenticated, userInfo, updateUserInfo, updateFavorites } = this.props
 
-      if (!clubs || !tags) {
+      if (!clubs || authenticated === null) {
         return <Loading />
       }
 
@@ -182,6 +171,7 @@ export function renderListPage(Page) {
           tags={tags}
           favorites={favorites}
           updateFavorites={updateFavorites}
+          userInfo={userInfo}
           updateUserInfo={updateUserInfo}
         />
       )
@@ -189,7 +179,10 @@ export function renderListPage(Page) {
   }
 
   RenderListPage.getInitialProps = async () => {
-    return { clubs: null, tags: null }
+    const tagsRequest = await doApiRequest('/tags/?format=json')
+    const tagsResponse = await tagsRequest.json()
+
+    return { tags: tagsResponse }
   }
 
   return renderPage(RenderListPage)

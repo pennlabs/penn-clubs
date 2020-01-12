@@ -1,5 +1,6 @@
 import s from 'styled-components'
 
+import ProfileForm from './ProfileForm'
 import { LOGOUT_URL } from '../../utils'
 import { Icon, SmallText } from '../common'
 import { MEDIUM_GRAY } from '../../constants/colors'
@@ -43,6 +44,14 @@ export default ({ defaults }) => {
           <div>{email || <Empty>None</Empty>}</div>
         </div>
       </div>
+      <ProfileForm settings={defaults} />
+      <br /><br />
+      <SmallText>
+        If your information is incorrect, please send an email to{' '}
+        <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>{' '}
+        detailing your issue.
+      </SmallText>
+      <hr />
       <div>
         <LogoutLink
           className="button"
@@ -55,11 +64,6 @@ export default ({ defaults }) => {
           />
           Logout
         </LogoutLink>
-        <SmallText>
-          If your information is incorrect, please send an email to{' '}
-          <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>{' '}
-          detailing your issue.
-        </SmallText>
       </div>
     </Wrapper>
   )
