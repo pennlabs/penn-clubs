@@ -1000,3 +1000,7 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse('club-members-list', args=('test-club',)), {'format': 'xlsx'})
         self.assertEqual(200, resp.status_code)
         self.assertEqual(1, len(resp.data))
+
+    def test_club_subscriptions_report(self):
+        resp = self.client.get(reverse('clubs-subscription', args=('test-club',)), {'format': 'xlsx'})
+        self.assertEqual(200, resp.status_code)
