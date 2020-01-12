@@ -70,9 +70,6 @@ class ClubForm extends React.Component {
       inviteRole: this.roles[0],
       inviteTitle: 'Member',
       editMember: null,
-      schools: [],
-      years: [],
-      majors: [],
       subscriptions: [],
     }
     this.submit = this.submit.bind(this)
@@ -294,35 +291,11 @@ class ClubForm extends React.Component {
           })
         )
     }
-
-    doApiRequest('/schools/?format=json')
-      .then(resp => resp.json())
-      .then(data =>
-        this.setState({
-          schools: data,
-        })
-      )
-
-    doApiRequest('/majors/?format=json')
-      .then(resp => resp.json())
-      .then(data =>
-        this.setState({
-          majors: data,
-        })
-      )
-
-    doApiRequest('/years/?format=json')
-      .then(resp => resp.json())
-      .then(data =>
-        this.setState({
-          years: data,
-        })
-      )
   }
 
   render() {
-    const { tags } = this.props
-    const { club, schools, majors, years, invites, editMember } = this.state
+    const { schools, majors, years, tags } = this.props
+    const { club, invites, editMember } = this.state
 
     if (this.state.isEdit && club === null) {
       return <div />
@@ -845,9 +818,18 @@ class ClubForm extends React.Component {
 }
 
 ClubForm.getInitialProps = async ({ query }) => {
-  const tagsRequest = await doApiRequest('/tags/?format=json')
-  const tagsResponse = await tagsRequest.json()
-  return { clubId: query.club, tags: tagsResponse }
+  const endpoints = ['tags', 'schools', 'majors', 'years']
+  return Promise.all(endpoints.map(async item => {
+    const request = await doApiRequest(`/${item}/?format=json`)
+    const response = await request.json()
+    return [item, response]
+  })).then(values => {
+    const output = { clubId: query.club }
+    values.forEach(item => {
+      output[item[0]] = item[1]
+    })
+    return output
+  })
 }
 
 export default withRouter(renderPage(ClubForm))
