@@ -80,7 +80,7 @@ export default props => {
                   href="/club/[club]"
                   as={`/club/${item.code}`}
                 >
-                  {item.name}
+                  <a>{item.name}</a>
                 </Link>
               </td>
               <td>{item.title}</td>
