@@ -11,7 +11,6 @@ from django.db.models import Count, Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
-from drf_renderer_xlsx.mixins import XLSXFileMixin
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -86,7 +85,7 @@ def filter_note_permission(queryset, club, user):
     return queryset
 
 
-class ClubViewSet(XLSXFormatterMixin, XLSXFileMixin, viewsets.ModelViewSet):
+class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     retrieve:
     Return a single club with all information fields present.

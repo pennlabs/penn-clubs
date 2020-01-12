@@ -20,6 +20,9 @@ class ManyToManySaveMixin(object):
         - field (string, required): The field to implement saving behavior on.
         - create (bool): If true, create the related model if it does not exist.
     """
+
+    filename = 'export.xlsx'
+
     def save(self):
         m2m_to_save = getattr(self.Meta, 'save_related_fields', [])
 
@@ -156,7 +159,17 @@ class XLSXFormatterMixin(object):
             self._field_dict[key] = self._lookup_field_formatter(key)
         return (new_key, self._field_dict[key](value))
 
+    def get_filename(self):
+        """
+        Returns a custom filename for the spreadsheet.
+        """
+        return self.filename
+
     def finalize_response(self, request, response, *args, **kwargs):
+        """
+        If the requested format is a spreadsheet, format the cell values before
+        rendering the spreadsheet. Also perform the functionality of XLSXFileMixin.
+        """
         response = super(XLSXFormatterMixin, self).finalize_response(
             request, response, *args, **kwargs
         )
@@ -165,9 +178,9 @@ class XLSXFormatterMixin(object):
         if isinstance(response, Response) and response.accepted_renderer.format == 'xlsx':
             self._field_dict = {}
             if isinstance(response.data, ReturnList):
-                new_data = []
-                for row in response.data:
-                    new_data.append(OrderedDict([self._format_cell(k, v) for k, v in row.items()]))
+                new_data = [
+                    OrderedDict([self._format_cell(k, v) for k, v in row.items()]) for row in response.data
+                ]
                 response.data = ReturnList(new_data, serializer=response.data.serializer)
             elif isinstance(response.data, ReturnDict):
                 new_data = OrderedDict([self._format_cell(k, v) for k, v in response.data.items()])
@@ -179,5 +192,10 @@ class XLSXFormatterMixin(object):
                 response.accepted_renderer = JSONRenderer()
                 response.accepted_media_type = 'application/json'
                 response.renderer_context = {}
+                return response
+
+            response['Content-Disposition'] = 'attachment; filename={}'.format(
+                self.get_filename()
+            )
 
         return response
