@@ -185,8 +185,9 @@ class Splash extends React.Component {
         club.rank += Math.max(0, 1 - club.target_schools.length / 4)
       }
       if (hasMajor) {
-        club.rank += Math.max(0, 1 - club.target_majors.length / 10)
+        club.rank += 5 * Math.max(0, 1 - club.target_majors.length / 10)
       }
+      club.rank += 2 * Math.random()
     })
     this.setState({
       displayClubs: displayClubs.sort((a, b) => {
@@ -196,7 +197,7 @@ class Splash extends React.Component {
         if (b.rank > a.rank) {
           return 1
         }
-        return Math.random() - 0.5
+        return 0
       }),
     })
   }
