@@ -1,6 +1,7 @@
+import datetime
 from collections import OrderedDict
 
-from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.exceptions import FieldDoesNotExist, MultipleObjectsReturned, ObjectDoesNotExist
 from django.db.models import BooleanField, ManyToManyField
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
@@ -20,8 +21,6 @@ class ManyToManySaveMixin(object):
         - create (bool): If true, create the related model if it does not exist.
           Otherwise, raise an exception if the user links to a nonexistent object.
     """
-
-    filename = 'export.xlsx'
 
     def _lookup_item(self, model, field_name, item, create=False):
         if create:
@@ -98,7 +97,11 @@ class XLSXFormatterMixin(object):
 
     You can insert "format_{field}_for_spreadsheet" methods in your serializer class
     that accept a single argument (the cell value) and returns the formatted value.
+
+    Changes the default filename to include the date and time of creation.
+    Changes the default column header to be bolded.
     """
+
     def _format_header_value(self, key):
         """
         Format the text displayed in the column header.
@@ -187,7 +190,20 @@ class XLSXFormatterMixin(object):
         """
         Returns a custom filename for the spreadsheet.
         """
-        return self.filename
+        return 'report-{}.xlsx'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M'))
+
+    def get_column_header(self):
+        """
+        Return the style of the column header for an Excel export.
+        By default, bold the column header.
+        """
+        return {
+            'style': {
+                'font': {
+                    'bold': True
+                }
+            }
+        }
 
     def finalize_response(self, request, response, *args, **kwargs):
         """

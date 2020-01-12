@@ -1,4 +1,3 @@
-import datetime
 import os
 import re
 
@@ -191,24 +190,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             cache.set(key, resp.data, 60 * 5)
         return resp
 
-    def get_filename(self):
-        """
-        Return the name of the generated Excel file.
-        """
-        return 'report-{}.xlsx'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M'))
-
-    def get_column_header(self):
-        """
-        Return the style of the column header for an Excel export.
-        """
-        return {
-            'style': {
-                'font': {
-                    'bold': True
-                }
-            }
-        }
-
     @action(detail=False, methods=['GET'])
     def fields(self, request, *args, **kwargs):
         """
@@ -353,7 +334,7 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         return Subscribe.objects.filter(person=self.request.user)
 
 
-class MemberViewSet(viewsets.ModelViewSet):
+class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     list:
     Return a list of members that are in the club.
