@@ -203,6 +203,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'upload':
             return AssetSerializer
+        if self.action == 'subscription':
+            return SubscribeSerializer
         if self.action == 'list':
             if self.request.accepted_renderer.format == 'xlsx':
                 return ClubSerializer

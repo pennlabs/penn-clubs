@@ -156,18 +156,34 @@ class XLSXFormatterMixin(object):
             serializer_field_object = serializer._declared_fields[field]
             if isinstance(serializer_field_object, serializers.SerializerMethodField):
                 return lambda x: x
+
+            # handle edge case with source
+            if serializer_field_object not in (None, '*', ''):
+                source_lookup = serializer_field_object.source
+            else:
+                source_lookup = None
         else:
             serializer_field_object = None
+            source_lookup = None
 
         # lookup column type from model
         model = serializer.Meta.model
-        try:
-            field_object = model._meta.get_field(field)
-        except FieldDoesNotExist:
-            # if model field lookup fails, rely on serializer field
-            if serializer_field_object is not None and isinstance(serializer_field_object, serializers.BooleanField):
-                return lambda x: str(bool(x))
-            return lambda x: x
+        if source_lookup is None:
+            try:
+                field_object = model._meta.get_field(field)
+            except FieldDoesNotExist:
+                # if model field lookup fails, rely on serializer field
+                if serializer_field_object is not None \
+                   and isinstance(serializer_field_object, serializers.BooleanField):
+                    return lambda x: str(bool(x))
+                return lambda x: x
+        else:
+            # we need to do a recursive lookup for source fields
+            source_lookup = source_lookup.strip().split('.')
+            for lookup in source_lookup[:-1]:
+                field_object = model._meta.get_field(lookup)
+                model = field_object.related_model
+            field_object = model._meta.get_field(source_lookup[-1])
 
         # format based on field type
         if isinstance(field_object, (ManyToManyField, ManyToOneRel)):
