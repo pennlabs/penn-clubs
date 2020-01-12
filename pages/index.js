@@ -179,20 +179,14 @@ class Splash extends React.Component {
     }
     displayClubs.forEach(club => {
       club.rank = 0
-      club.target_schools.forEach(({ name }) => {
-        if (userSchools.has(name)) {
-          club.rank += 1
-        } else {
-          club.rank -= 1
-        }
-      })
-      club.target_majors.forEach(({ name }) => {
-        if (userMajors.has(name)) {
-          club.rank += 5
-        } else {
-          club.rank -= 1
-        }
-      })
+      const hasSchool = club.target_schools.some(({ name }) => userSchools.has(name))
+      const hasMajor = club.target_majors.some(({ name }) => userMajors.has(name))
+      if (hasSchool) {
+        club.rank += Math.max(0, 1 - club.target_schools.length / 4)
+      }
+      if (hasMajor) {
+        club.rank += Math.max(0, 1 - club.target_majors.length / 10)
+      }
     })
     this.setState({
       displayClubs: displayClubs.sort((a, b) => {
