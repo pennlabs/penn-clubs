@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
 import s from 'styled-components'
-
+import { useState, useEffect } from 'react'
 import renderPage from '../../../renderPage.js'
 import { doApiRequest } from '../../../utils'
 import Tabs from '../../../components/ClubPage/Tabs'
@@ -25,17 +24,19 @@ const Image = s.img`
   object-fit: contain;
 `
 
-const Club = ({ query, userInfo, favorites, updateFavorites, subscriptions, updateSubscriptions }) => {
-  const [club, setClub] = useState(null)
+const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscriptions, updateSubscriptions }) => {
+  const [club, setClub] = useState(initialClub)
 
   useEffect(() => {
-    doApiRequest(`/clubs/${query.club}/?format=json`)
+    doApiRequest(`/clubs/${club.code}/?format=json`)
       .then(resp => resp.json())
       .then(data => setClub(data))
-  }, [query])
+  }, [initialClub])
 
   if (!club) return null
-  if (!club.code) {
+
+  const { code } = club
+  if (!code) {
     return (
       <Container>
         <div className="has-text-centered">
@@ -80,8 +81,11 @@ const Club = ({ query, userInfo, favorites, updateFavorites, subscriptions, upda
   )
 }
 
-Club.getInitialProps = async ({ query }) => {
-  return { query }
+Club.getInitialProps = async props => {
+  const { query } = props
+  const resp = await doApiRequest(`/clubs/${query.club}/?format=json`)
+  const club = await resp.json()
+  return { club }
 }
 
 export default renderPage(Club)
