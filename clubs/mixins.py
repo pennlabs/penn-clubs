@@ -13,8 +13,8 @@ class ManyToManySaveMixin(object):
     """
     Mixin for serializers that saves ManyToMany fields by looking up related models.
 
-    In the Meta class, create a new attribute called "save_related_fields" in the Meta
-    class that represents the ManyToMany fields that should have save behavior.
+    Create a new attribute called "save_related_fields" in the Meta class that
+    represents the ManyToMany fields that should have save behavior.
 
     You can also specify a dictionary instead of a string, with the following fields:
         - field (string, required): The field to implement saving behavior on.
@@ -132,6 +132,9 @@ class XLSXFormatterMixin(object):
     def _lookup_field_formatter(self, field):
         """
         Return a method that can format the field given the name of the field.
+        Since the formatting of each cell in a column should be uniform, we can
+        reuse the function for every cell in a column. Therefore, this function
+        returns a function that can be cached for use with other cells.
         """
         # if there is no model serializer, don't format
         try:
