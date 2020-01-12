@@ -27,6 +27,7 @@ function renderPage(Page) {
         userInfo: null,
         favorites: [],
         subscriptions: [],
+        clubs: null,
       }
 
       this.updateFavorites = this.updateFavorites.bind(this)
@@ -35,6 +36,10 @@ function renderPage(Page) {
     }
 
     componentDidMount() {
+      doApiRequest('/clubs/?format=json')
+        .then(resp => resp.json())
+        .then(data => this.setState({ clubs: data }))
+
       this.updateUserInfo()
     }
 
@@ -116,9 +121,6 @@ function renderPage(Page) {
     }
 
     updateUserInfo() {
-      doApiRequest('/clubs/?format=json')
-        .then(resp => resp.json())
-        .then(data => this.setState({ clubs: data }))
       doApiRequest('/settings/?format=json').then(resp => {
         if (resp.ok) {
           resp.json().then(userInfo => {
@@ -156,22 +158,8 @@ function renderPage(Page) {
 
 export function renderListPage(Page) {
   class RenderListPage extends React.Component {
-    constructor(props) {
-      super(props)
-      this.state = {
-        clubs: props.clubs,
-      }
-    }
-
-    componentDidMount() {
-      doApiRequest('/clubs/?format=json')
-        .then(resp => resp.json())
-        .then(data => this.setState({ clubs: data }))
-    }
-
     render() {
-      const { tags, favorites, authenticated, userInfo, updateUserInfo, updateFavorites } = this.props
-      const { clubs } = this.state
+      const { clubs, tags, favorites, authenticated, userInfo, updateUserInfo, updateFavorites } = this.props
 
       if (!clubs || authenticated === null) {
         return <Loading />
