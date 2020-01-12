@@ -393,6 +393,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         elif 'code' in self.validated_data:
             del self.validated_data['code']
 
+        return super().save()
+
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
             'facebook', 'twitter', 'instagram', 'linkedin',

@@ -173,7 +173,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a list of all clubs. Results are cached and update every 5 minutes.
         Note that some fields are removed in order to improve the response time.
         """
-        # intercept excel format data and format it better
+        # don't cache requests for spreadsheet format
         if request.accepted_renderer.format == 'xlsx':
             resp = super().list(request, *args, **kwargs)
             return resp
