@@ -512,6 +512,7 @@ class ClubForm extends React.Component {
                     )}
                   </tbody>
                 </table>
+                <a href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)} className="button is-link"><Icon alt="download" name="download" /> Download Member List</a>
               </div>
             </div>
             {editMember && (
