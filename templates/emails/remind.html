@@ -1,0 +1,11 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>Reminder to Update Your Club's Page</h2>
+    <p style="font-size: 1.2em">Hi there,</p>
+    <p style="font-size: 1.2em">Welcome to a new semester!</p>
+    <p style="font-size: 1.2em">Keep the {{ name }} page up to date to help students learn more about the club. Admission information, such as whether you're accepting new members and how to get involved, can be updated at the bottom of the edit page.</p>
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 20px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ url }}">Edit {{ name }} Page</a>
+    <p style="font-size: 1.2em">Thanks for using Penn Clubs! Let us know how we're doing by leaving some feedback <a href="https://airtable.com/shrCsYFWxCwfwE7cf">here</a>.</p>
+    <p style="font-size: 1.2em">- Penn Clubs Team</p>
+{% endblock %}

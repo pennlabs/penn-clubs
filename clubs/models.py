@@ -322,7 +322,7 @@ class MembershipInvite(models.Model):
         Send the email associated with this invitation to the user.
         """
         # make the beta/testing sites work
-        domain = 'pennclubs.com'
+        domain = settings.DEFAULT_DOMAIN
         if request is not None:
             referer = request.META.get('HTTP_REFERER')
             if referer:
@@ -359,7 +359,7 @@ class MembershipInvite(models.Model):
         if self.role > Membership.ROLE_OWNER:
             raise ValueError('This invite should grant owner permissions if sending out the owner email!')
 
-        domain = 'pennclubs.com'
+        domain = settings.DEFAULT_DOMAIN
         if request is not None:
             referer = request.META.get('HTTP_REFERER')
             if referer:

@@ -1,3 +1,4 @@
+import csv
 import tempfile
 
 from django.contrib.auth import get_user_model
@@ -32,6 +33,13 @@ class SendInvitesTestCase(TestCase):
             email='test3@example.com'
         )
 
+        self.club4 = Club.objects.create(
+            code='four',
+            name='Club Four',
+            active=False,
+            email='test4@example.com'
+        )
+
         self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
 
         Membership.objects.create(
@@ -42,7 +50,7 @@ class SendInvitesTestCase(TestCase):
 
     def test_send_invites(self):
         with tempfile.NamedTemporaryFile() as tmp:
-            call_command('send_invites', tmp.name)
+            call_command('send_emails', tmp.name, 'invite')
 
         self.assertEqual(MembershipInvite.objects.count(), 2)
         self.assertEqual(list(MembershipInvite.objects.values_list('role', flat=True)), [Membership.ROLE_OWNER] * 2)
@@ -51,6 +59,55 @@ class SendInvitesTestCase(TestCase):
         for msg in mail.outbox:
             self.assertIn('Penn Clubs', msg.body)
             self.assertTrue('one' in msg.body or 'two' in msg.body)
+
+    def test_send_fair(self):
+        data = [
+            ['Club One', 'sheet1@example.com'],
+            ['Club Two', 'sheet2@example.com'],
+            ['Club Three', 'sheet3@example.com']
+        ]
+
+        with tempfile.NamedTemporaryFile() as tmp:
+            with open(tmp.name, 'w') as f:
+                writer = csv.writer(f)
+                for row in data:
+                    writer.writerow(row)
+
+            call_command('send_emails', tmp.name, 'fair', '--only-sheet')
+
+        self.assertEqual(len(mail.outbox), 3)
+
+
+class SendReminderTestCase(TestCase):
+    def setUp(self):
+        self.club1 = Club.objects.create(
+            code='one',
+            name='Club One',
+            email='one@example.com'
+        )
+        self.club2 = Club.objects.create(
+            code='two',
+            name='Club Two',
+            email='two@example.com'
+        )
+
+        self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
+
+        Membership.objects.create(
+            club=self.club1,
+            person=self.user1,
+            role=Membership.ROLE_OWNER
+        )
+
+    def test_send_reminders(self):
+        call_command('remind')
+
+        # ensure one update email is sent out and one owner invite is created
+        self.assertEqual(MembershipInvite.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 2)
+
+        for msg in mail.outbox:
+            self.assertIn('Penn Clubs', msg.body)
 
 
 class MergeDuplicatesTestCase(TestCase):

@@ -80,6 +80,33 @@ class ClubTestCase(TestCase):
         # ensure cleanup doesn't throw error
         self.club1.delete()
 
+    def test_club_qr(self):
+        """
+        Test generating a club fair QR code image.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        resp = self.client.get(reverse('clubs-qr', args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+    def test_club_subscription(self):
+        """
+        Test retrieving the list of club subscribers.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        resp = self.client.get(reverse('clubs-subscription', args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+    def test_clubs_notes_about(self):
+        """
+        Test retrieving the list of notes about a club.
+        """
+        self.client.login(username=self.user5.username, password='test')
+
+        resp = self.client.get(reverse('clubs-notes-about', args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
     def test_event_upload(self):
         """
         Test uploading an event image.

@@ -152,7 +152,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         """
         Return a QR code png image representing a link to the club on Penn Clubs.
         """
-        url = f"https://pennclubs.com/club/{self.kwargs['code']}/fair"
+        url = f"https://{settings.DEFAULT_DOMAIN}/club/{self.kwargs['code']}/fair"
         response = HttpResponse(content_type='image/png')
         qr_image = qrcode.make(url, box_size=20, border=0)
         qr_image.save(response, 'PNG')
@@ -503,7 +503,8 @@ def email_preview(request):
         context = {
             'name': '[Club Name]',
             'url': '[URL]',
-            'view_url': '[URL]',
+            'view_url': '[View URL]',
+            'flyer_url': '[Flyer URL]',
             'sender': {
                 'username': '[Sender Username]',
                 'email': '[Sender Email]'

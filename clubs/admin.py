@@ -4,6 +4,7 @@ from django.contrib.auth.models import Group
 from django.db.models import Count, Exists, OuterRef
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
+from clubs.management.commands.remind import send_reminder_to_club
 from clubs.models import (Advisor, Asset, Badge, Club, Event, Favorite, Major, Membership,
                           MembershipInvite, Note, NoteTag, Profile, School, Subscribe, Tag, Testimonial)
 
@@ -56,6 +57,23 @@ def do_merge_clubs(modeladmin, request, queryset):
 do_merge_clubs.short_description = 'Merge selected clubs'
 
 
+def send_edit_reminder(modeladmin, request, queryset):
+    success_count = 0
+    total_count = 0
+    for club in queryset.order_by('code'):
+        if send_reminder_to_club(club):
+            success_count += 1
+        total_count += 1
+    modeladmin.message_user(
+        request,
+        'Sent edit page reminder emails to {}/{} club(s).'.format(success_count, total_count),
+        level=messages.SUCCESS
+    )
+
+
+send_edit_reminder.short_description = 'Send edit page reminder'
+
+
 class ClubAdminForm(forms.ModelForm):
     parent_orgs = forms.ModelMultipleChoiceField(
         queryset=Club.objects.annotate(num_children=Count('children_orgs')).order_by('-num_children'),
@@ -68,7 +86,7 @@ class ClubAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'has_owner', 'has_invite', 'active', 'approved')
     list_filter = ('size', 'application_required', 'accepting_members', 'active', 'approved',
                    HasOwnerListFilter, HasInviteListFilter)
-    actions = [do_merge_clubs]
+    actions = [do_merge_clubs, send_edit_reminder]
     form = ClubAdminForm
 
     def get_queryset(self, request):
