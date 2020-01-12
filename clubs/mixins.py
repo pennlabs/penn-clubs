@@ -155,6 +155,8 @@ class XLSXFormatterMixin(object):
             serializer_field_object = serializer._declared_fields[field]
             if isinstance(serializer_field_object, serializers.SerializerMethodField):
                 return lambda x: x
+        else:
+            serializer_field_object = None
 
         # lookup column type from model
         model = serializer.Meta.model
@@ -162,7 +164,7 @@ class XLSXFormatterMixin(object):
             field_object = model._meta.get_field(field)
         except FieldDoesNotExist:
             # if model field lookup fails, rely on serializer field
-            if isinstance(serializer_field_object, serializers.BooleanField):
+            if serializer_field_object is not None and isinstance(serializer_field_object, serializers.BooleanField):
                 return lambda x: str(bool(x))
             return lambda x: x
 
