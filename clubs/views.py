@@ -3,20 +3,20 @@ import re
 
 import qrcode
 from django.conf import settings
+from django.core.cache import cache
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (Asset, Club, Event, Favorite, Major, Membership,
                           MembershipInvite, Note, School, Subscribe, Tag, Year)
 from clubs.permissions import (AssetPermission, ClubPermission, EventPermission, InvitePermission,
@@ -84,7 +84,7 @@ def filter_note_permission(queryset, club, user):
     return queryset
 
 
-class ClubViewSet(viewsets.ModelViewSet):
+class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     retrieve:
     Return a single club with all information fields present.
@@ -168,17 +168,44 @@ class ClubViewSet(viewsets.ModelViewSet):
         serializer = SubscribeSerializer(Subscribe.objects.filter(club__code=self.kwargs['code']), many=True)
         return Response(serializer.data)
 
-    @method_decorator(cache_page(60*5))
     def list(self, request, *args, **kwargs):
         """
-        Return a list of all clubs. Note that some fields are removed in order to improve the response time.
+        Return a list of all clubs. Results are cached and update every 5 minutes.
+        Note that some fields are removed in order to improve the response time.
         """
-        return super().list(request, *args, **kwargs)
+        # don't cache requests for spreadsheet format
+        if request.accepted_renderer.format == 'xlsx':
+            resp = super().list(request, *args, **kwargs)
+            return resp
+
+        # return cached if cached
+        key = 'club:list'
+        val = cache.get(key)
+        if val is not None:
+            return Response(val)
+
+        # save to cache if not
+        resp = super().list(request, *args, **kwargs)
+        if resp.status_code == 200:
+            cache.set(key, resp.data, 60 * 5)
+        return resp
+
+    @action(detail=False, methods=['GET'])
+    def fields(self, request, *args, **kwargs):
+        """
+        Return the list of fields that can be exported in the Excel file.
+        """
+        return Response({
+            f.verbose_name.title(): f.name
+            for f in Club._meta._get_fields(reverse=False)
+        })
 
     def get_serializer_class(self):
         if self.action == 'upload':
             return AssetSerializer
         if self.action == 'list':
+            if self.request.accepted_renderer.format == 'xlsx':
+                return ClubSerializer
             return ClubListSerializer
         if self.request is not None and self.request.user.is_authenticated:
             if 'code' in self.kwargs and (
@@ -307,7 +334,7 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         return Subscribe.objects.filter(person=self.request.user)
 
 
-class MemberViewSet(viewsets.ModelViewSet):
+class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     list:
     Return a list of members that are in the club.

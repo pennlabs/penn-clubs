@@ -6,6 +6,7 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from rest_framework import serializers, validators
 
+from clubs.mixins import ManyToManySaveMixin
 from clubs.models import (Asset, Badge, Club, Event, Favorite, Major, Membership, MembershipInvite,
                           Note, NoteTag, Profile, School, Subscribe, Tag, Testimonial, Year)
 from clubs.utils import clean
@@ -172,11 +173,13 @@ class MembershipSerializer(serializers.ModelSerializer):
         return data
 
     def save(self):
-        if 'club' not in self.validated_data:
-            club_code = self.context['view'].kwargs.get('club_code')
-            if club_code is None:
-                club_code = self.context['view'].kwargs.get('pk')
-            self.validated_data['club'] = Club.objects.get(code=club_code)
+        """
+        Fill in club field from URL instead of from request data.
+        """
+        club_code = self.context['view'].kwargs.get('club_code')
+        if club_code is None:
+            club_code = self.context['view'].kwargs.get('pk')
+        self.validated_data['club'] = Club.objects.get(code=club_code)
 
         return super().save()
 
@@ -224,6 +227,21 @@ class ClubListSerializer(serializers.ModelSerializer):
         else:
             return self.context['request'].build_absolute_uri(obj.image.url)
 
+    def get_fields(self):
+        all_fields = super().get_fields()
+        fields_param = getattr(self.context.get('request', dict()), 'GET', {}).get('fields', '')
+        if len(fields_param) > 0:
+            fields_param = fields_param.split(',')
+        else:
+            return all_fields
+
+        fields_subset = dict()
+        for k in fields_param:
+            if k in all_fields:
+                fields_subset[k] = all_fields[k]
+
+        return fields_subset if len(fields_subset) > 0 else all_fields
+
     class Meta:
         model = Club
         fields = [
@@ -254,7 +272,7 @@ class ClubListSerializer(serializers.ModelSerializer):
         }
 
 
-class ClubSerializer(ClubListSerializer):
+class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source='membership_set', read_only=True)
     image = serializers.ImageField(write_only=True, required=False)
     parent_orgs = serializers.SerializerMethodField('get_parent_orgs')
@@ -267,7 +285,7 @@ class ClubSerializer(ClubListSerializer):
 
     def create(self, validated_data):
         """
-        Manual create method because DRF does not support writable nested fields by default.
+        Assign ownership of club to the creator.
         """
 
         obj = super().create(validated_data)
@@ -356,10 +374,15 @@ class ClubSerializer(ClubListSerializer):
             return value
         raise serializers.ValidationError('You do not have permissions to change the active status of the club.')
 
+    def format_members_for_spreadsheet(self, value):
+        """
+        Specify the spreadsheet format for the membership ManyToMany field.
+        """
+        return '\n'.join('{} - {}'.format(v.get('name'), v.get('email')) for v in value)
+
     def save(self):
         """
-        Override save in order to replace ID with slugified name if not specified.
-        Also make updating ManyToMany fields work.
+        Override save in order to replace code with slugified name if not specified.
         """
         if 'name' in self.validated_data:
             self.validated_data['name'] = self.validated_data['name'].strip()
@@ -370,32 +393,7 @@ class ClubSerializer(ClubListSerializer):
         elif 'code' in self.validated_data:
             del self.validated_data['code']
 
-        # save many to many fields
-        m2m_to_save = [
-            ('tags', Tag),
-            ('badges', Badge),
-            ('target_schools', School),
-            ('target_majors', Major),
-            ('target_years', Year),
-        ]
-
-        # remove m2m from validated data and save
-        m2m_lists = {}
-        for m2m, model in m2m_to_save:
-            m2m_lists[m2m] = []
-            items = self.validated_data.pop(m2m, None)
-            if items is None:
-                continue
-            for item in items:
-                m2m_lists[m2m].append(model.objects.get(**item))
-
-        obj = super().save()
-
-        # link models to this model
-        for m2m, _ in m2m_to_save:
-            getattr(obj, m2m).set(m2m_lists[m2m])
-
-        return obj
+        return super().save()
 
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
@@ -403,6 +401,9 @@ class ClubSerializer(ClubListSerializer):
             'github', 'website', 'how_to_get_involved',
             'listserv', 'members', 'parent_orgs',
             'badges', 'image', 'testimonials'
+        ]
+        save_related_fields = [
+            'tags', 'badges', 'target_schools', 'target_majors', 'target_years'
         ]
 
 
@@ -587,7 +588,7 @@ class NoteTagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class NoteSerializer(serializers.ModelSerializer):
+class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
     creating_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
     subject_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field='code')
@@ -595,29 +596,13 @@ class NoteSerializer(serializers.ModelSerializer):
     content = serializers.CharField(required=False)
     note_tags = NoteTagSerializer(many=True, required=False)
 
-    def create(self, validated_data):
-        """
-        Manual create method because DRF does not support writable nested fields by default.
-        """
-        # assign tags to new club
-        note_tags = None
-
-        if 'note_tags' in validated_data:
-            note_tags = []
-            for note_tag in validated_data.pop('note_tags'):
-                (note_tag_object, _) = NoteTag.objects.get_or_create(**note_tag)
-                note_tags.append(note_tag_object)
-
-        # Note: it's important that all nested fields are POPPED from the validated data at this point. Otherwise,
-        # DRF will throw an error calling create on the superclass.
-        obj = super().create(validated_data)
-
-        if note_tags is not None:
-            obj.note_tags.set(note_tags)
-
-        return obj
-
     class Meta:
         model = Note
         fields = ('id', 'creator', 'creating_club', 'subject_club', 'title', 'content', 'note_tags',
                   'creating_club_permission', 'outside_club_permission')
+        save_related_fields = [
+            {
+                'field': 'note_tags',
+                'create': True
+            }
+        ]
