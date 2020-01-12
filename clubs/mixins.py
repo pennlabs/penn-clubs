@@ -1,11 +1,10 @@
 from collections import OrderedDict
 
-from django.core.exceptions import FieldDoesNotExist
+from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models import BooleanField, ManyToManyField
+from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from rest_framework.serializers import BooleanField as SerializerBooleanField
-from rest_framework.serializers import ListSerializer, SerializerMetaclass, SerializerMethodField
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 
 
@@ -19,9 +18,26 @@ class ManyToManySaveMixin(object):
     You can also specify a dictionary instead of a string, with the following fields:
         - field (string, required): The field to implement saving behavior on.
         - create (bool): If true, create the related model if it does not exist.
+          Otherwise, raise an exception if the user links to a nonexistent object.
     """
 
     filename = 'export.xlsx'
+
+    def _lookup_item(self, model, field_name, item, create=False):
+        if create:
+            obj, _ = model.objects.get_or_create(**item)
+            return obj
+        else:
+            try:
+                return model.objects.get(**item)
+            except ObjectDoesNotExist:
+                raise serializers.ValidationError({
+                    field_name: ['The object with these values does not exist: {}'.format(item)]
+                }, code='invalid')
+            except MultipleObjectsReturned:
+                raise serializers.ValidationError({
+                    field_name: ['Multiple objects exist with these values: {}'.format(item)]
+                })
 
     def save(self):
         m2m_to_save = getattr(self.Meta, 'save_related_fields', [])
@@ -41,7 +57,7 @@ class ManyToManySaveMixin(object):
             field_name = m2m['field']
 
             field = self.fields[field_name]
-            if isinstance(field, ListSerializer):
+            if isinstance(field, serializers.ListSerializer):
                 m2m['many'] = True
                 model = field.child.Meta.model
                 m2m_lists[field_name] = []
@@ -49,20 +65,12 @@ class ManyToManySaveMixin(object):
                 if items is None:
                     continue
                 for item in items:
-                    if create:
-                        obj, _ = model.objects.get_or_create(**item)
-                        m2m_lists[field_name].append(obj)
-                    else:
-                        m2m_lists[field_name].append(model.objects.get(**item))
+                    m2m_lists[field_name].append(self._lookup_item(model, field_name, item, create))
             else:
                 m2m['many'] = False
                 model = field.Meta.model
                 item = self.validated_data.pop(field_name, None)
-                if create:
-                    obj, _ = model.objects.get_or_create(**item)
-                    m2m_lists[field_name] = obj
-                else:
-                    m2m_lists[field_name] = model.objects.get(**item)
+                m2m_lists[field_name] = self._lookup_item(model, field_name, item, create)
 
         obj = super(ManyToManySaveMixin, self).save()
 
@@ -128,7 +136,7 @@ class XLSXFormatterMixin(object):
         except AttributeError:
             return lambda x: x
 
-        if not isinstance(serializer, SerializerMetaclass):
+        if not isinstance(serializer, serializers.SerializerMetaclass):
             return lambda x: x
 
         # allow serializer to override field formatting
@@ -139,7 +147,7 @@ class XLSXFormatterMixin(object):
         # lookup column type from serializer
         if field in serializer._declared_fields:
             serializer_field_object = serializer._declared_fields[field]
-            if isinstance(serializer_field_object, SerializerMethodField):
+            if isinstance(serializer_field_object, serializers.SerializerMethodField):
                 return lambda x: x
 
         # lookup column type from model
@@ -148,7 +156,7 @@ class XLSXFormatterMixin(object):
             field_object = model._meta.get_field(field)
         except FieldDoesNotExist:
             # if model field lookup fails, rely on serializer field
-            if isinstance(serializer_field_object, SerializerBooleanField):
+            if isinstance(serializer_field_object, serializers.BooleanField):
                 return lambda x: str(bool(x))
             return lambda x: x
 
