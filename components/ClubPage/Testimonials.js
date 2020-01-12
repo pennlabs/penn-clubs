@@ -60,9 +60,11 @@ const Testimonials = props => {
   const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
-    const newData = [...originalData]
-    shuffleArray(newData)
-    setData(newData)
+    if (originalData) {
+      const newData = [...originalData]
+      shuffleArray(newData)
+      setData(newData)
+    }
   }, [originalData])
 
   if (!data || !data.length) {
