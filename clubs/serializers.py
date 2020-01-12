@@ -173,11 +173,13 @@ class MembershipSerializer(serializers.ModelSerializer):
         return data
 
     def save(self):
-        if 'club' not in self.validated_data:
-            club_code = self.context['view'].kwargs.get('club_code')
-            if club_code is None:
-                club_code = self.context['view'].kwargs.get('pk')
-            self.validated_data['club'] = Club.objects.get(code=club_code)
+        """
+        Fill in club field from URL instead of from request data.
+        """
+        club_code = self.context['view'].kwargs.get('club_code')
+        if club_code is None:
+            club_code = self.context['view'].kwargs.get('pk')
+        self.validated_data['club'] = Club.objects.get(code=club_code)
 
         return super().save()
 
@@ -283,7 +285,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def create(self, validated_data):
         """
-        Manual create method because DRF does not support writable nested fields by default.
+        Assign ownership of club to the creator.
         """
 
         obj = super().create(validated_data)
