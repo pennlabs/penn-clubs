@@ -26,43 +26,59 @@ class ManyToManySaveMixin(object):
     def save(self):
         m2m_to_save = getattr(self.Meta, 'save_related_fields', [])
 
+        # turn all entries into dict configs
+        for i, m2m in enumerate(m2m_to_save):
+            if not isinstance(m2m, dict):
+                m2m_to_save[i] = {
+                    'field': m2m,
+                    'create': False
+                }
+
         # remove m2m from validated data and save
         m2m_lists = {}
         for m2m in m2m_to_save:
-            create = False
-            if isinstance(m2m, dict):
-                create = m2m.get('create', False)
-                m2m = m2m['field']
+            create = m2m.get('create', False)
+            field_name = m2m['field']
 
-            field = self.fields[m2m]
+            field = self.fields[field_name]
             if isinstance(field, ListSerializer):
+                m2m['many'] = True
                 model = field.child.Meta.model
-                m2m_lists[m2m] = []
-                items = self.validated_data.pop(m2m, None)
+                m2m_lists[field_name] = []
+                items = self.validated_data.pop(field_name, None)
                 if items is None:
                     continue
                 for item in items:
                     if create:
                         obj, _ = model.objects.get_or_create(**item)
-                        m2m_lists[m2m].append(obj)
+                        m2m_lists[field_name].append(obj)
                     else:
-                        m2m_lists[m2m].append(model.objects.get(**item))
+                        m2m_lists[field_name].append(model.objects.get(**item))
             else:
+                m2m['many'] = False
                 model = field.Meta.model
-                item = self.validated_data.pop(m2m, None)
+                item = self.validated_data.pop(field_name, None)
                 if create:
                     obj, _ = model.objects.get_or_create(**item)
-                    m2m_lists[m2m] = obj
+                    m2m_lists[field_name] = obj
                 else:
-                    m2m_lists[m2m] = model.objects.get(**item)
+                    m2m_lists[field_name] = model.objects.get(**item)
 
         obj = super(ManyToManySaveMixin, self).save()
 
         # link models to this model
+        updates = []
         for m2m in m2m_to_save:
-            if isinstance(m2m, dict):
-                m2m = m2m['field']
-            getattr(obj, m2m).set(m2m_lists[m2m])
+            field = m2m['field']
+            value = m2m_lists[field]
+            if m2m['many']:
+                getattr(obj, field).set(value)
+            else:
+                setattr(obj, field, value)
+                updates.append(field)
+
+        if updates:
+            obj.save(update_fields=updates)
 
         return obj
 
