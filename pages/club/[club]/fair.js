@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import s from 'styled-components'
 
 import renderPage from '../../../renderPage'
@@ -40,15 +39,7 @@ const ClubHeader = s.div`
   }
 `
 
-const Fair = ({ authenticated, query, userInfo, favorites, updateFavorites, subscriptions, updateSubscriptions }) => {
-  const [club, setClub] = useState(null)
-
-  useEffect(() => {
-    doApiRequest(`/clubs/${query.club}/?format=json`)
-      .then(resp => resp.json())
-      .then(data => setClub(data))
-  }, [query])
-
+const Fair = ({ authenticated, query, club, userInfo, favorites, updateFavorites, subscriptions, updateSubscriptions }) => {
   if (!club) return null
   if (!club.code) {
     return (
@@ -66,7 +57,7 @@ const Fair = ({ authenticated, query, userInfo, favorites, updateFavorites, subs
   const isFavorite = favorites.includes(club.code)
   const isSubscribe = subscriptions.includes(club.code)
 
-  if (!authenticated) {
+  if (authenticated === false) {
     return (
       <WideContainer>
         <Center>
@@ -78,7 +69,7 @@ const Fair = ({ authenticated, query, userInfo, favorites, updateFavorites, subs
             <Text>To make the most of Penn Clubs features, like bookmarking and subscribing to clubs, please login using your PennKey.</Text>
           </Margin>
           <Margin>
-            <a href={`${LOGIN_URL}?next=${window.location.href}`} className="button is-link is-large"><Icon alt="login" name="key" /> Continue to login</a>
+            <a href={`${LOGIN_URL}?next=${typeof window !== 'undefined' ? window.location.href : '/'}`} className="button is-link is-large"><Icon alt="login" name="key" /> Continue to login</a>
           </Margin>
           <SmallText><i>(We're sorry, we hate two-step too.)</i></SmallText>
         </Center>
@@ -133,7 +124,9 @@ const Fair = ({ authenticated, query, userInfo, favorites, updateFavorites, subs
 }
 
 Fair.getInitialProps = async ({ query }) => {
-  return { query }
+  const resp = await doApiRequest(`/clubs/${query.club}/?format=json`)
+  const club = await resp.json()
+  return { query, club }
 }
 
 export default renderPage(Fair)
