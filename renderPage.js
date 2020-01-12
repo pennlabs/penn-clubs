@@ -170,10 +170,10 @@ export function renderListPage(Page) {
     }
 
     render() {
-      const { tags, favorites, updateUserInfo, updateFavorites } = this.props
+      const { tags, favorites, authenticated, userInfo, updateUserInfo, updateFavorites } = this.props
       const { clubs } = this.state
 
-      if (!clubs) {
+      if (!clubs || authenticated === null) {
         return <Loading />
       }
 
@@ -183,6 +183,7 @@ export function renderListPage(Page) {
           tags={tags}
           favorites={favorites}
           updateFavorites={updateFavorites}
+          userInfo={userInfo}
           updateUserInfo={updateUserInfo}
         />
       )
