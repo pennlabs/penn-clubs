@@ -985,3 +985,18 @@ class ClubTestCase(TestCase):
         self.assertEqual(1, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
         self.assertTrue(len(res.data[0]) > 2)
+
+    def test_club_members_report(self):
+        # login for extended member information
+        self.client.login(username=self.user5.username, password='test')
+
+        # add a membership
+        Membership.objects.create(
+            person=self.user5,
+            club=self.club1
+        )
+
+        # generate the report
+        resp = self.client.get(reverse('club-members-list', args=('test-club',)), {'format': 'xlsx'})
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(1, len(resp.data))
