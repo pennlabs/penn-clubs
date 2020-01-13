@@ -95,6 +95,23 @@ class SendInvitesTestCase(TestCase):
         Club.objects.create(code="pasa", name="Penn African Student Association")
         self.assertEqual(fuzzy_lookup_club("PASA - Penn African Students Association").code, "pasa")
 
+        # don't overmatch on suffix
+        Club.objects.create(code="dental-1", name="Indian Students Dental Association")
+        self.assertFalse(fuzzy_lookup_club("Korean Students Dental Association"))
+
+        # don't overmatch on keywords
+        Club.objects.create(code="dental-2", name="Arab Student Society")
+        self.assertFalse(fuzzy_lookup_club("Arab Student Dental Society"))
+
+        # don't overmatch on prefix
+        Club.objects.create(code="dental-3", name="Chinese Students Association")
+        self.assertFalse(fuzzy_lookup_club("Chinese Christian Fellowship"))
+
+        # ensure subtitle matching works
+        subtitle = "Penn Asian American Graduate Student Association"
+        Club.objects.create(code="dental-4", name="PAAGSA", subtitle=subtitle)
+        self.assertEqual(fuzzy_lookup_club(subtitle).code, "dental-4")
+
 
 class SendReminderTestCase(TestCase):
     def setUp(self):
