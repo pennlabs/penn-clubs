@@ -78,6 +78,21 @@ def fuzzy_lookup_club(name):
         else:
             return club.first()
 
+    # lookup club by subtitle
+    club = Club.objects.filter(subtitle__iexact=name)
+    if club.exists():
+        return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
+
+    # lookup club by subtitle contains
+    club = Club.objects.filter(subtitle__icontains=name)
+    if club.count() == 1:
+        return club.first()
+
+    # lookup club without dashes
+    club = Club.objects.filter(name__iexact=name.replace("-", " ").strip())
+    if club.exists():
+        return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
+
     # strip out parentheses
     name = re.sub(r"\(.+?\)$", "", name).strip()
     club = Club.objects.filter(name__icontains=name)
@@ -100,6 +115,14 @@ def fuzzy_lookup_club(name):
     if club.exists():
         return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
 
+    # do a reverse contains lookup and see if we get matches
+    club = Club.objects.annotate(query=Value(modified_name, output_field=CharField())).filter(
+        query__icontains=F("name")
+    )
+
+    if club.count() == 1:
+        return club.first()
+
     # try to get somewhat related club names and perform a distance comparison
     query = Q(pk__in=[])
 
@@ -110,7 +133,15 @@ def fuzzy_lookup_club(name):
     close_clubs = Club.objects.filter(query)
 
     if close_clubs.exists():
+        # try distance match unmodified
         clubs = [(min_edit(c.name.lower(), name.lower()), c) for c in close_clubs]
+        distance, club = min(clubs, key=lambda x: x[0])
+        if distance <= 2:
+            return club
+
+        # try distance match with removing prefix
+        no_prefix_name = re.sub(r"^\w+\s?-", "", name, flags=re.I).strip().lower()
+        clubs = [(min_edit(c.name.lower(), no_prefix_name), c) for c in close_clubs]
         distance, club = min(clubs, key=lambda x: x[0])
         if distance <= 2:
             return club
