@@ -1,5 +1,7 @@
 # Penn Clubs
 
+[![CircleCI](https://circleci.com/gh/pennlabs/clubs.svg?style=svg)](https://circleci.com/gh/pennlabs/clubs)
+
 Official React-based website for Penn Labs' club directory and events listings.
 The REST API written in Django for Penn Clubs infrastructure.
 
