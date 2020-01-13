@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import s from 'styled-components'
 
-import { Modal } from './common'
+import { Modal, Loading } from './common'
 import { LOGIN_URL } from '../utils'
 import { DARK_GRAY } from '../constants/colors'
 import { LONG_ANIMATION_DURATION } from '../constants/measurements'
@@ -30,7 +30,7 @@ export default props => {
   return <Modal {...props} >
     {
       newlyMounted ? (
-        <div className="loader is-loading"></div>
+        <Loading />
       ) : (
         <>
           <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
