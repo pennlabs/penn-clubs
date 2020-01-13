@@ -85,14 +85,18 @@ const Modal = ({ show, children, closeModal }) => {
   }, [show])
 
   return (
-    <ModalWrapper className={show ? 'modal is-active' : 'modal'} id="modal">
+    <ModalWrapper
+      ref={focusRef}
+      className={show ? 'modal is-active' : 'modal'} id="modal"
+      onKeyPress={handleKeyPress}
+      onKeyDown={handleKeyPress}
+      tabIndex="0"
+    >
       <Shade
         className='modal-background'
         onClick={closeModal}
         show={show}
-        onKeyPress={handleKeyPress}
-        onKeyDown={handleKeyPress}
-        tabIndex="0"
+        
       />
       <ModalCard
         className='card'
