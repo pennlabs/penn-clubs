@@ -31,7 +31,7 @@ function removeEndingSlash(val) {
 
 export const API_BASE_URL =
   removeEndingSlash(getConfig().publicRuntimeConfig.API_BASE_URL) ||
-  'http://localhost:3000/api'
+  'https://pennclubs.com/api'
 export const ROLE_OWNER = 0
 export const ROLE_OFFICER = 10
 export const ROLE_MEMBER = 20
@@ -78,8 +78,7 @@ export function doApiRequest(path, data) {
   if (data.body && !(data.body instanceof FormData)) {
     data.body = JSON.stringify(data.body)
   }
-  const url = getApiUrl(path)
-  return fetch(url, data)
+  return fetch(getApiUrl(path), data)
 }
 
 export function titleize(str) {
