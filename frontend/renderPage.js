@@ -110,19 +110,17 @@ function renderPage(Page) {
       const i = newFavs.indexOf(id)
       if (i === -1) {
         newFavs.push(id)
-        if (this.state.authenticated) {
-          logEvent('favorite', id)
-          doApiRequest('/favorites/?format=json', {
-            method: 'POST',
-            body: { club: id },
-          })
-        } else {
-          newFavs.splice(i, 1)
-          logEvent('unfavorite', id)
-          doApiRequest(`/favorites/${id}/?format=json`, {
-            method: 'DELETE',
-          })
-        }
+        logEvent('favorite', id)
+        doApiRequest('/favorites/?format=json', {
+          method: 'POST',
+          body: { club: id },
+        })
+      } else {
+        newFavs.splice(i, 1)
+        logEvent('unfavorite', id)
+        doApiRequest(`/favorites/${id}/?format=json`, {
+          method: 'DELETE',
+        })
       }
       this.setState({ favorites: newFavs })
       return i === -1
