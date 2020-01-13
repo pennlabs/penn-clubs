@@ -134,7 +134,7 @@ class Command(BaseCommand):
                         resp.raise_for_status()
                         club.image.save(os.path.basename(image_url), ContentFile(resp.content))
                 else:
-                    use_image = bool(club.image)
+                    use_image = not bool(club.image)
 
             # update email if there is no email
             if not club.email:

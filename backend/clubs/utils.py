@@ -92,16 +92,25 @@ def fuzzy_lookup_club(name):
     if club.exists():
         return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
 
+    # strip out common words to see if we can get match
+    modified_name = re.sub(r"university of pennsylvania", "", name, flags=re.I).strip()
+    modified_name = re.sub(r"the|club|penn", "", modified_name, flags=re.I).strip()
+    club = Club.objects.filter(name__icontains=modified_name)
+
+    if club.exists():
+        return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
+
     # try to get somewhat related club names and perform a distance comparison
     query = Q(pk__in=[])
 
     for word in name.split(" "):
-        query |= Q(name__icontains=word.strip())
+        if word not in {"the", "of", "penn", "club"}:
+            query |= Q(name__icontains=word.strip())
 
-    club = Club.objects.filter(query)
+    close_clubs = Club.objects.filter(query)
 
-    if club.exists():
-        clubs = [(min_edit(c.name.lower(), name.lower()), c) for c in club]
+    if close_clubs.exists():
+        clubs = [(min_edit(c.name.lower(), name.lower()), c) for c in close_clubs]
         distance, club = min(clubs, key=lambda x: x[0])
         if distance <= 2:
             return club
