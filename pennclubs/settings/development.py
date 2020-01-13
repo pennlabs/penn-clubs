@@ -1,24 +1,14 @@
-from pennclubs.settings.base import *
+import os
+
+from pennclubs.settings.base import *  # noqa: F401, F403
+from pennclubs.settings.base import INSTALLED_APPS, MIDDLEWARE
 
 
-INSTALLED_APPS += [
-    "django_extensions",
-]
+# Development extensions
+INSTALLED_APPS += ["django_extensions", "debug_toolbar"]
 
-# Django CORS Settings
-CORS_ORIGIN_REGEX_WHITELIST = [
-    r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
-]
+MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware"] + MIDDLEWARE
+INTERNAL_IPS = ["127.0.0.1"]
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-PLATFORM_ACCOUNTS.update(
-    {
-        'REDIRECT_URI': os.environ.get('LABS_REDIRECT_URI', 'http://localhost:8000/accounts/callback/'),
-        'CLIENT_ID': 'clientid',
-        'CLIENT_SECRET': 'supersecretclientsecret',
-        'PLATFORM_URL': 'https://platform-dev.pennlabs.org',
-        'CUSTOM_ADMIN': False,
-    }
-)
+# Allow http callback for DLA
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"

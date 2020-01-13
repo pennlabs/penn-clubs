@@ -4,20 +4,21 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-coveralls = "*"
-django-extensions = "*"
+codecov = "*"
+black = "==19.10b0"
+unittest-xml-reporting = "*"
 flake8 = "*"
 flake8-isort = "*"
 flake8-quotes = "*"
-unittest-xml-reporting = "*"
+django-debug-toolbar = "*"
+django-extensions = "*"
+
 
 [packages]
 dj-database-url = "*"
 djangorestframework = "*"
-gunicorn = "*"
 mysqlclient = "*"
 sentry-sdk = "*"
-whitenoise = "*"
 django = "*"
 django-labs-accounts = "*"
 drf-nested-routers = "*"
@@ -33,6 +34,7 @@ django-phonenumber-field = "*"
 phonenumbers = "*"
 qrcode = "*"
 drf-renderer-xlsx = "*"
+uwsgi = "*"
 
 [requires]
 python_version = "3"

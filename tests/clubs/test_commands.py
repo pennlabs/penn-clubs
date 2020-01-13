@@ -13,138 +13,107 @@ from clubs.models import Club, Favorite, Membership, MembershipInvite, Tag
 class SendInvitesTestCase(TestCase):
     def setUp(self):
         self.club1 = Club.objects.create(
-            code='one',
-            name='Club One',
-            active=True,
-            email='test@example.com'
+            code="one", name="Club One", active=True, email="test@example.com"
         )
 
         self.club2 = Club.objects.create(
-            code='two',
-            name='Club Two',
-            active=True,
-            email='test2@example.com'
+            code="two", name="Club Two", active=True, email="test2@example.com"
         )
 
         self.club3 = Club.objects.create(
-            code='three',
-            name='Club Three',
-            active=True,
-            email='test3@example.com'
+            code="three", name="Club Three", active=True, email="test3@example.com"
         )
 
         self.club4 = Club.objects.create(
-            code='four',
-            name='Club Four',
-            active=False,
-            email='test4@example.com'
+            code="four", name="Club Four", active=False, email="test4@example.com"
         )
 
-        self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
-
-        Membership.objects.create(
-            club=self.club3,
-            person=self.user1,
-            role=Membership.ROLE_OWNER
+        self.user1 = get_user_model().objects.create_user(
+            "bfranklin", "bfranklin@seas.upenn.edu", "test"
         )
+
+        Membership.objects.create(club=self.club3, person=self.user1, role=Membership.ROLE_OWNER)
 
     def test_send_invites(self):
         with tempfile.NamedTemporaryFile() as tmp:
-            call_command('send_emails', tmp.name, 'invite')
+            call_command("send_emails", tmp.name, "invite")
 
         self.assertEqual(MembershipInvite.objects.count(), 2)
-        self.assertEqual(list(MembershipInvite.objects.values_list('role', flat=True)), [Membership.ROLE_OWNER] * 2)
+        self.assertEqual(
+            list(MembershipInvite.objects.values_list("role", flat=True)),
+            [Membership.ROLE_OWNER] * 2,
+        )
         self.assertEqual(len(mail.outbox), 2)
 
         for msg in mail.outbox:
-            self.assertIn('Penn Clubs', msg.body)
-            self.assertTrue('one' in msg.body or 'two' in msg.body)
+            self.assertIn("Penn Clubs", msg.body)
+            self.assertTrue("one" in msg.body or "two" in msg.body)
 
     def test_send_fair(self):
         data = [
-            ['Club One', 'sheet1@example.com'],
-            ['Club Two', 'sheet2@example.com'],
-            ['Club Three', 'sheet3@example.com']
+            ["Club One", "sheet1@example.com"],
+            ["Club Two", "sheet2@example.com"],
+            ["Club Three", "sheet3@example.com"],
         ]
 
         with tempfile.NamedTemporaryFile() as tmp:
-            with open(tmp.name, 'w') as f:
+            with open(tmp.name, "w") as f:
                 writer = csv.writer(f)
                 for row in data:
                     writer.writerow(row)
 
-            call_command('send_emails', tmp.name, 'fair', '--only-sheet')
+            call_command("send_emails", tmp.name, "fair", "--only-sheet")
 
         self.assertEqual(len(mail.outbox), 3)
 
 
 class SendReminderTestCase(TestCase):
     def setUp(self):
-        self.club1 = Club.objects.create(
-            code='one',
-            name='Club One',
-            email='one@example.com'
-        )
-        self.club2 = Club.objects.create(
-            code='two',
-            name='Club Two',
-            email='two@example.com'
+        self.club1 = Club.objects.create(code="one", name="Club One", email="one@example.com")
+        self.club2 = Club.objects.create(code="two", name="Club Two", email="two@example.com")
+
+        self.user1 = get_user_model().objects.create_user(
+            "bfranklin", "bfranklin@seas.upenn.edu", "test"
         )
 
-        self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
-
-        Membership.objects.create(
-            club=self.club1,
-            person=self.user1,
-            role=Membership.ROLE_OWNER
-        )
+        Membership.objects.create(club=self.club1, person=self.user1, role=Membership.ROLE_OWNER)
 
     def test_send_reminders(self):
-        call_command('remind')
+        call_command("remind")
 
         # ensure one update email is sent out and one owner invite is created
         self.assertEqual(MembershipInvite.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 2)
 
         for msg in mail.outbox:
-            self.assertIn('Penn Clubs', msg.body)
+            self.assertIn("Penn Clubs", msg.body)
 
 
 class MergeDuplicatesTestCase(TestCase):
     def setUp(self):
-        self.tag1 = Tag.objects.create(name='One')
-        self.tag2 = Tag.objects.create(name='Two')
+        self.tag1 = Tag.objects.create(name="One")
+        self.tag2 = Tag.objects.create(name="Two")
 
-        self.club1 = Club.objects.create(
-            code='one',
-            name='Same Name',
-            active=False
-        )
+        self.club1 = Club.objects.create(code="one", name="Same Name", active=False)
         self.club1.tags.add(self.tag1)
         self.club2 = Club.objects.create(
-            code='two',
-            name='Same Name',
-            github='https://github.com/pennlabs/'
+            code="two", name="Same Name", github="https://github.com/pennlabs/"
         )
         self.club2.tags.add(self.tag2)
 
-        self.user1 = get_user_model().objects.create_user('bfranklin', 'bfranklin@seas.upenn.edu', 'test')
-
-        Favorite.objects.create(
-            person=self.user1,
-            club=self.club1
+        self.user1 = get_user_model().objects.create_user(
+            "bfranklin", "bfranklin@seas.upenn.edu", "test"
         )
 
-        Favorite.objects.create(
-            person=self.user1,
-            club=self.club2
-        )
+        Favorite.objects.create(person=self.user1, club=self.club1)
+
+        Favorite.objects.create(person=self.user1, club=self.club2)
 
     def test_merge_duplicates_auto(self):
         """
         Test merging duplicates in automatic mode.
         """
-        call_command('merge_duplicates', '--auto')
+        call_command("merge_duplicates", "--auto")
 
         self.assertEqual(Club.objects.count(), 1)
         self.assertEqual(Club.objects.first().tags.count(), 2)
@@ -154,7 +123,7 @@ class MergeDuplicatesTestCase(TestCase):
         """
         Test merging duplicate clubs.
         """
-        call_command('merge_duplicates', 'one', 'two')
+        call_command("merge_duplicates", "one", "two")
 
         self.assertEqual(Club.objects.count(), 1)
         self.assertEqual(Club.objects.first().tags.count(), 2)
@@ -166,7 +135,7 @@ class MergeDuplicatesTestCase(TestCase):
         """
         Test merging duplicate tags.
         """
-        call_command('merge_duplicates', '--tag', 'One', 'Two')
+        call_command("merge_duplicates", "--tag", "One", "Two")
 
         self.assertEqual(Tag.objects.count(), 1)
 
@@ -176,7 +145,7 @@ class MergeDuplicatesTestCase(TestCase):
         """
 
         with self.assertRaises(CommandError):
-            call_command('merge_duplicates')
+            call_command("merge_duplicates")
 
         with self.assertRaises(CommandError):
-            call_command('merge_duplicates', '--tag')
+            call_command("merge_duplicates", "--tag")

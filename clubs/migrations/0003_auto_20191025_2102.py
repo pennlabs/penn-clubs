@@ -5,19 +5,17 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('clubs', '0002_auto_20190926_1641'),
-    ]
+    dependencies = [("clubs", "0002_auto_20190926_1641")]
 
     operations = [
         migrations.AlterField(
-            model_name='club',
-            name='badges',
-            field=models.ManyToManyField(blank=True, to='clubs.Badge'),
+            model_name="club",
+            name="badges",
+            field=models.ManyToManyField(blank=True, to="clubs.Badge"),
         ),
         migrations.AlterField(
-            model_name='club',
-            name='parent_orgs',
-            field=models.ManyToManyField(blank=True, to='clubs.Club'),
+            model_name="club",
+            name="parent_orgs",
+            field=models.ManyToManyField(blank=True, to="clubs.Club"),
         ),
     ]

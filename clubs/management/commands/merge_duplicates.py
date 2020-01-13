@@ -5,24 +5,32 @@ from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Ta
 
 
 class Command(BaseCommand):
-    help = 'Helper to merge duplicate clubs and tags.'
+    help = "Helper to merge duplicate clubs and tags."
 
     def add_arguments(self, parser):
-        parser.add_argument('items', nargs='*', type=str, help='The ID or name of the clubs/tags to merge.')
-        parser.add_argument('--tag', dest='tag', action='store_true', help='Merge tags instead of clubs.')
         parser.add_argument(
-            '--auto',
-            dest='auto',
-            action='store_true',
-            help='Automatically detect and merge clubs by name.'
+            "items", nargs="*", type=str, help="The ID or name of the clubs/tags to merge."
+        )
+        parser.add_argument(
+            "--tag", dest="tag", action="store_true", help="Merge tags instead of clubs."
+        )
+        parser.add_argument(
+            "--auto",
+            dest="auto",
+            action="store_true",
+            help="Automatically detect and merge clubs by name.",
         )
         parser.set_defaults(auto=False, tag=False)
 
     def handle(self, *args, **kwargs):
-        if kwargs['auto']:
-            self.stdout.write('Automatically merging duplicate clubs...')
-            duplicates = Club.objects.values('name').annotate(name_count=Count('name')).filter(name_count__gt=1)
-            duplicates = [x['name'] for x in duplicates]
+        if kwargs["auto"]:
+            self.stdout.write("Automatically merging duplicate clubs...")
+            duplicates = (
+                Club.objects.values("name")
+                .annotate(name_count=Count("name"))
+                .filter(name_count__gt=1)
+            )
+            duplicates = [x["name"] for x in duplicates]
 
             for duplicate in duplicates:
                 clubs = Club.objects.filter(name=duplicate)
@@ -30,33 +38,27 @@ class Command(BaseCommand):
                 final, rest = clubs[0], clubs[1:]
                 for item in rest:
                     final = merge_clubs(final, item)
-                self.stdout.write(
-                    self.style.SUCCESS('Merged {} ({})'.format(duplicate, num_clubs))
-                )
+                self.stdout.write(self.style.SUCCESS("Merged {} ({})".format(duplicate, num_clubs)))
         else:
-            items = kwargs['items']
-            if kwargs['tag']:
+            items = kwargs["items"]
+            if kwargs["tag"]:
                 tags = Tag.objects.filter(name__in=items)
                 if tags.count() < 2:
-                    raise CommandError('You must specify at least two tags to merge!')
+                    raise CommandError("You must specify at least two tags to merge!")
 
                 final, rest = tags[0], tags[1:]
                 for item in rest:
                     final = merge_tags(final, item)
 
-                self.stdout.write(
-                    self.style.SUCCESS('Merged {}'.format(final.name))
-                )
+                self.stdout.write(self.style.SUCCESS("Merged {}".format(final.name)))
             else:
                 clubs = Club.objects.filter(Q(code__in=items) | Q(name__in=items))
                 if clubs.count() < 2:
-                    raise CommandError('You must specify at least two clubs to merge!')
+                    raise CommandError("You must specify at least two clubs to merge!")
                 final, rest = clubs[0], clubs[1:]
                 for item in rest:
                     final = merge_clubs(final, item)
-                self.stdout.write(
-                    self.style.SUCCESS('Merged {}'.format(final.name))
-                )
+                self.stdout.write(self.style.SUCCESS("Merged {}".format(final.name)))
 
 
 def merge_tags(one, two):
@@ -88,8 +90,19 @@ def merge_clubs(one, two):
     primary.active = one.active or two.active
 
     # Choose longest string or string that exists
-    for field in ['name', 'subtitle', 'description', 'email', 'facebook', 'website', 'twitter',
-                  'instagram', 'github', 'how_to_get_involved', 'listserv']:
+    for field in [
+        "name",
+        "subtitle",
+        "description",
+        "email",
+        "facebook",
+        "website",
+        "twitter",
+        "instagram",
+        "github",
+        "how_to_get_involved",
+        "listserv",
+    ]:
         value = getattr(secondary, field)
         old_value = getattr(primary, field)
         if old_value is None or (value is not None and len(value) > len(old_value)):

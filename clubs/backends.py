@@ -15,17 +15,20 @@ class LabsUserBackend(RemoteUserBackend):
         if not remote_user:
             return
         User = get_user_model()
-        pennkey_user_query = User.objects.filter(username=remote_user['username'])
+        pennkey_user_query = User.objects.filter(username=remote_user["username"])
         if len(pennkey_user_query) == 0:
             # User hasn't logged into Clubs before
-            user, created = User.objects.get_or_create(id=remote_user['pennid'])
+            user, created = User.objects.get_or_create(id=remote_user["pennid"])
         else:
             pennkey_user = pennkey_user_query[0]
             # Create new user with correct id
-            if pennkey_user.id != remote_user['pennid']:
+            if pennkey_user.id != remote_user["pennid"]:
                 pennkey_user.username = uuid.uuid4()
                 pennkey_user.save()
-                user, created = User.objects.create(id=remote_user['pennid'], username=remote_user['username']), True
+                user, created = (
+                    User.objects.create(id=remote_user["pennid"], username=remote_user["username"]),
+                    True,
+                )
 
                 # Update all many-to-many relationships
                 for favorite in pennkey_user.favorite_set.all():
@@ -56,11 +59,11 @@ class LabsUserBackend(RemoteUserBackend):
                 user = self.configure_user(user)
 
         # Update user fields if changed
-        for field in ['first_name', 'last_name', 'username', 'email']:
+        for field in ["first_name", "last_name", "username", "email"]:
             if getattr(user, field) is not remote_user[field]:
                 setattr(user, field, remote_user[field])
 
-        if accounts_settings.ADMIN_PERMISSION in remote_user['product_permission']:
+        if accounts_settings.ADMIN_PERMISSION in remote_user["product_permission"]:
             user.is_staff = True
             user.is_superuser = True
 

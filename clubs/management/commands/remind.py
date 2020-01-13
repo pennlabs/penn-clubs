@@ -16,7 +16,7 @@ def send_reminder_to_club(club):
     # calculate email recipients
     if staff.exists():
         # if there are staff members that can edit the page, send the update email to them
-        receivers = list(staff.values_list('email', flat=True))
+        receivers = list(staff.values_list("email", flat=True))
     elif club.email:
         invites = club.membershipinvite_set.filter(active=True, role__lte=Membership.ROLE_OFFICER)
         if invites.exists():
@@ -35,8 +35,8 @@ def send_reminder_to_club(club):
                     email=club.email,
                     creator=None,
                     role=Membership.ROLE_OWNER,
-                    title='Owner',
-                    auto=True
+                    title="Owner",
+                    auto=True,
                 )
                 invite.send_owner_invite()
                 return True
@@ -47,39 +47,36 @@ def send_reminder_to_club(club):
     if receivers is not None:
         domain = settings.DEFAULT_DOMAIN
         context = {
-            'name': club.name,
-            'url': settings.EDIT_URL.format(domain=domain, club=club.code),
-            'view_url': settings.VIEW_URL.format(domain=domain, club=club.code)
+            "name": club.name,
+            "url": settings.EDIT_URL.format(domain=domain, club=club.code),
+            "view_url": settings.VIEW_URL.format(domain=domain, club=club.code),
         }
 
-        text_content = render_to_string('emails/remind.txt', context)
-        html_content = render_to_string('emails/remind.html', context)
+        text_content = render_to_string("emails/remind.txt", context)
+        html_content = render_to_string("emails/remind.html", context)
 
         msg = EmailMultiAlternatives(
-            "Reminder to Update Your Club's Page",
-            text_content,
-            settings.FROM_EMAIL,
-            receivers
+            "Reminder to Update Your Club's Page", text_content, settings.FROM_EMAIL, receivers
         )
-        msg.attach_alternative(html_content, 'text/html')
+        msg.attach_alternative(html_content, "text/html")
         msg.send(fail_silently=False)
         return True
     return False
 
 
 class Command(BaseCommand):
-    help = 'Remind clubs to update their information on Penn Clubs.'
+    help = "Remind clubs to update their information on Penn Clubs."
 
     def handle(self, *args, **kwargs):
-        clubs = Club.objects.exclude(email__isnull=True).filter(active=True).order_by('code')
-        self.stdout.write('Found {} active club(s) to send out email invites.'.format(clubs.count()))
+        clubs = Club.objects.exclude(email__isnull=True).filter(active=True).order_by("code")
+        self.stdout.write(
+            "Found {} active club(s) to send out email invites.".format(clubs.count())
+        )
 
         for club in clubs:
             if send_reminder_to_club(club):
                 self.stdout.write(
-                    self.style.SUCCESS('Sent {} reminder to {}'.format(club.name, club.email))
+                    self.style.SUCCESS("Sent {} reminder to {}".format(club.name, club.email))
                 )
             else:
-                self.stdout.write(
-                    'Skipping {} reminder, no contact email set'.format(club.name)
-                )
+                self.stdout.write("Skipping {} reminder, no contact email set".format(club.name))

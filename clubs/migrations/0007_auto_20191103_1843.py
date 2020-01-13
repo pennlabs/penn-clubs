@@ -5,28 +5,21 @@ from django.db import migrations
 
 
 def forwards_func(apps, schema_editor):
-    User = apps.get_model(*settings.AUTH_USER_MODEL.split('.'))
-    Profile = apps.get_model('clubs', 'Profile')
+    User = apps.get_model(*settings.AUTH_USER_MODEL.split("."))
+    Profile = apps.get_model("clubs", "Profile")
     db_alias = schema_editor.connection.alias
     for user in User.objects.using(db_alias).filter(profile__isnull=True):
         Profile.objects.create(user=user)
 
 
 def reverse_func(apps, schema_editor):
-    Profile = apps.get_model('clubs', 'Profile')
+    Profile = apps.get_model("clubs", "Profile")
     db_alias = schema_editor.connection.alias
     Profile.objects.using(db_alias).delete()
 
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('clubs', '0006_profile'),
-    ]
+    dependencies = [("clubs", "0006_profile")]
 
-    operations = [
-        migrations.RunPython(
-            forwards_func,
-            reverse_func
-        )
-    ]
+    operations = [migrations.RunPython(forwards_func, reverse_func)]

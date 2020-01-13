@@ -7,6 +7,7 @@ class ReadOnly(permissions.BasePermission):
     """
     Only allow read access. Deny write access to everyone.
     """
+
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -20,8 +21,9 @@ class ClubPermission(permissions.BasePermission):
     Club owners and officers should be able to update.
     Anyone with permission should be able to create.
     """
+
     def has_object_permission(self, request, view, obj):
-        if view.action in ['retrieve', 'children']:
+        if view.action in ["retrieve", "children"]:
             return True
 
         if not request.user.is_authenticated:
@@ -31,15 +33,15 @@ class ClubPermission(permissions.BasePermission):
         if membership is None:
             return False
 
-        if view.action in ['destroy']:
+        if view.action in ["destroy"]:
             return membership.role <= Membership.ROLE_OWNER
         else:
             return membership.role <= Membership.ROLE_OFFICER
 
     def has_permission(self, request, view):
-        if view.action in ['update', 'upload', 'children', 'partial_update', 'destroy']:
+        if view.action in ["update", "upload", "children", "partial_update", "destroy"]:
             return request.user.is_authenticated
-        elif view.action in ['create']:
+        elif view.action in ["create"]:
             return request.user.is_authenticated and request.user.is_superuser
         else:
             return True
@@ -50,13 +52,16 @@ class EventPermission(permissions.BasePermission):
     Officers and above can create/update/delete events.
     Everyone else can view and list events.
     """
+
     def has_permission(self, request, view):
-        if view.action in ['create', 'update', 'partial_update', 'destroy']:
-            if 'club_code' not in view.kwargs:
+        if view.action in ["create", "update", "partial_update", "destroy"]:
+            if "club_code" not in view.kwargs:
                 return False
             if not request.user.is_authenticated:
                 return False
-            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
+            membership = Membership.objects.filter(
+                person=request.user, club__code=view.kwargs["club_code"]
+            ).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
             return True
@@ -66,6 +71,7 @@ class IsSuperuser(permissions.BasePermission):
     """
     Grants permission if the current user is a superuser.
     """
+
     def has_object_permission(self, request, view, obj):
         return request.user.is_authenticated and request.user.is_superuser
 
@@ -75,24 +81,28 @@ class IsSuperuser(permissions.BasePermission):
 
 class MemberPermission(permissions.BasePermission):
     """
-    Members of a higher role can update/delete members of equal or lower roles, except ordinary members.
+    Members of a higher role can update/delete members of equal or lower roles, except ordinary
+    members.
     Members can edit themselves, with additional restrictions on the serializer level.
     Officers and above can add new members.
     Anyone can view membership.
     """
+
     def has_object_permission(self, request, view, obj):
-        membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
+        membership = Membership.objects.filter(
+            person=request.user, club__code=view.kwargs["club_code"]
+        ).first()
         if membership is None:
             return False
 
         # any member can retrieve a membership
-        if view.action in ['retrieve']:
+        if view.action in ["retrieve"]:
             return membership.role <= Membership.ROLE_MEMBER
 
         # can modify own membership, with restrictions
-        if obj == membership and view.action in ['update', 'partial_update', 'destroy']:
+        if obj == membership and view.action in ["update", "partial_update", "destroy"]:
             # owners cannot delete themselves without passing on ownership
-            if view.action in ['destroy'] and membership.role <= Membership.ROLE_OWNER:
+            if view.action in ["destroy"] and membership.role <= Membership.ROLE_OWNER:
                 return False
             return True
 
@@ -104,14 +114,16 @@ class MemberPermission(permissions.BasePermission):
         return membership.role <= obj.role
 
     def has_permission(self, request, view):
-        if view.action in ['update', 'partial_update', 'destroy']:
+        if view.action in ["update", "partial_update", "destroy"]:
             return request.user.is_authenticated
-        elif view.action in ['create']:
+        elif view.action in ["create"]:
             if not request.user.is_authenticated:
                 return False
-            if 'club_code' not in view.kwargs:
+            if "club_code" not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
+            membership = Membership.objects.filter(
+                person=request.user, club__code=view.kwargs["club_code"]
+            ).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
             return True
@@ -124,14 +136,16 @@ class InvitePermission(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        if view.action in ['retrieve', 'update', 'partial_update']:
+        if view.action in ["retrieve", "update", "partial_update"]:
             return request.user.is_authenticated
         else:
             if not request.user.is_authenticated:
                 return False
-            if 'club_code' not in view.kwargs:
+            if "club_code" not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
+            membership = Membership.objects.filter(
+                person=request.user, club__code=view.kwargs["club_code"]
+            ).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
 
@@ -142,14 +156,16 @@ class AssetPermission(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        if view.action in ['list', 'retrieve']:
+        if view.action in ["list", "retrieve"]:
             return request.user.is_authenticated
         else:
             if not request.user.is_authenticated:
                 return False
-            if 'club_code' not in view.kwargs:
+            if "club_code" not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
+            membership = Membership.objects.filter(
+                person=request.user, club__code=view.kwargs["club_code"]
+            ).first()
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
 
@@ -175,17 +191,19 @@ class NotePermission(permissions.BasePermission):
     def has_permission(self, request, view):
         # Only users who are in clubs can creating notes for those clubs
         # and they cannot create notes that are above their permission level
-        if view.action in ['list', 'retrieve']:
+        if view.action in ["list", "retrieve"]:
             return request.user.is_authenticated
-        elif view.action in ['create']:
-            creating_club_permission = request.data.get('creating_club_permission')
+        elif view.action in ["create"]:
+            creating_club_permission = request.data.get("creating_club_permission")
 
             # Running create without actually passing any data
             # causes problems
             if creating_club_permission is None:
                 return False
 
-            membership = Membership.objects.filter(person=request.user, club__code=view.kwargs['club_code']).first()
+            membership = Membership.objects.filter(
+                person=request.user, club__code=view.kwargs["club_code"]
+            ).first()
 
             if membership is None or membership.role > creating_club_permission:
                 return False

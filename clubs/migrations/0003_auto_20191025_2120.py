@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('clubs', '0002_auto_20190926_1641'),
-    ]
+    dependencies = [("clubs", "0002_auto_20190926_1641")]
 
     operations = [
         migrations.AlterField(
-            model_name='club',
-            name='parent_orgs',
-            field=models.ManyToManyField(related_name='children_orgs', to='clubs.Club'),
-        ),
+            model_name="club",
+            name="parent_orgs",
+            field=models.ManyToManyField(related_name="children_orgs", to="clubs.Club"),
+        )
     ]
