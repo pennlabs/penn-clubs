@@ -10,6 +10,7 @@ import {
   WHITE,
 } from '../constants/colors'
 import {
+  mediaMinWidth,
   mediaMaxWidth,
   MD,
   SEARCH_BAR_MOBILE_HEIGHT,
@@ -85,8 +86,8 @@ const TableWrapper = s.div`
     background: ${WHITE};
     height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
     ${({ active }) =>
-      active &&
-      `
+    active &&
+    `
       overflow-y: auto;
       max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});`}
   }
@@ -98,7 +99,7 @@ const TableContainer = s.div`
   }
 `
 
-const ChevronIcon = s.span`
+const DropdownHeaderIcon = s.span`
   cursor: pointer;
   color: ${CLUBS_GREY};
   transform: rotate(0deg) translateY(0);
@@ -122,10 +123,30 @@ const DropdownHeaderText = s.p`
   }
 `
 
+const CloseWrapper = s.div`
+  float: right;
+  ${mediaMinWidth(MD)} {
+    display: none !important;
+  }
+`
+
+export const CloseButton = ({ onClick }) => (
+  <CloseWrapper>
+    <DropdownHeader
+      onClick={onClick}
+      color={LIGHT_GRAY}
+    >
+      <DropdownHeaderText>
+        <Icon name="x" alt="&#215;" />
+      </DropdownHeaderText>
+    </DropdownHeader>
+  </CloseWrapper>
+)
+
 const Chevron = ({ active }) => (
-  <ChevronIcon className="icon" active={active}>
+  <DropdownHeaderIcon className="icon" active={active}>
     <Icon name="chevron-down" alt="toggle dropdown" />
-  </ChevronIcon>
+  </DropdownHeaderIcon>
 )
 
 const DropdownFilter = ({
