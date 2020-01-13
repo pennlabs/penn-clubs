@@ -4,4 +4,4 @@ from pennclubs.settings.base import DOMAIN, PLATFORM_ACCOUNTS
 
 DEBUG = True
 
-PLATFORM_ACCOUNTS.update({"REDIRECT_URI": f"https://{DOMAIN}/accounts/callback/"})
+PLATFORM_ACCOUNTS.update({"REDIRECT_URI": f"https://{DOMAIN}/api/accounts/callback/"})

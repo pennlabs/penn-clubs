@@ -27,7 +27,7 @@ sentry_sdk.init(dsn=SENTRY_URL, integrations=[DjangoIntegration()])
 
 # DLA settings
 PLATFORM_ACCOUNTS = {
-    "REDIRECT_URI": f"https://{DOMAIN}/accounts/callback/",
+    "REDIRECT_URI": f"https://{DOMAIN}/api/accounts/callback/",
     "ADMIN_PERMISSION": "clubs_admin",
 }
 

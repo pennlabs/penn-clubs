@@ -130,7 +130,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 # DLA Settings
 
 PLATFORM_ACCOUNTS = {
-    "REDIRECT_URI": os.environ.get("LABS_REDIRECT_URI", "http://localhost:8000/accounts/callback/"),
+    "REDIRECT_URI": os.environ.get(
+        "LABS_REDIRECT_URI", "http://localhost:8000/api/accounts/callback/"
+    ),
     "CLIENT_ID": "clientid",
     "CLIENT_SECRET": "supersecretclientsecret",
     "PLATFORM_URL": "https://platform-dev.pennlabs.org",
