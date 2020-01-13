@@ -33,22 +33,22 @@ const BookmarkCountWrapper = s.span`
 `
 
 const ActionWrapper = s.span`
-    display: inline-block;
-    flex-direction: row;
-    align-items: center;
-    background-color: ${WHITE};
-    border-radius: 30px;
-    border: 1px solid ${ALLBIRDS_GRAY};
-    padding-left: 1rem;
-    padding-right: 1rem;
+  display: inline-block;
+  flex-direction: row;
+  align-items: center;
+  background-color: ${WHITE};
+  border-radius: 30px;
+  border: 1px solid ${ALLBIRDS_GRAY};
+  padding-left: 1rem;
+  padding-right: 1rem;
 `
 
 const ActionDiv = s.span`
-    display: inline-block;
-    color: #4a4a4a;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    vertical-align: middle;
+  display: inline-block;
+  color: #4a4a4a;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  vertical-align: middle;
 `
 
 const Actions = ({
@@ -88,14 +88,14 @@ const Actions = ({
               <BookmarkIcon
                 club={club}
                 favorite={isFavorite}
-                updateFavorites={(id) => {
+                updateFavorites={id => {
                   const upd = updateFavorites(id)
                   setFavCount(favCount + (upd ? 1 : -1))
                 }}
                 padding="0"
               />
-            </BookmarkIconWrapper>
-            {' '}<BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
+            </BookmarkIconWrapper>{' '}
+            <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
           </IconWrapper>
           <ActionDiv>|</ActionDiv>
           <IconWrapper>
@@ -106,10 +106,13 @@ const Actions = ({
             />
           </IconWrapper>
         </ActionWrapper>
-        { canEdit && (
+        {canEdit && (
           <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
-            <a className="button is-success is-small" style={{ marginLeft: '1rem' }}>
-                    Edit Club
+            <a
+              className="button is-success is-small"
+              style={{ marginLeft: '1rem' }}
+            >
+              Edit Club
             </a>
           </Link>
         )}
