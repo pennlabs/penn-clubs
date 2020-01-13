@@ -1,4 +1,4 @@
-import React from 'react'
+import { Component } from 'react'
 import { withRouter } from 'next/router'
 import Link from 'next/link'
 import Select from 'react-select'
@@ -22,7 +22,7 @@ import {
   Empty,
 } from '../../../components/common'
 
-class ClubForm extends React.Component {
+class ClubForm extends Component {
   constructor(props) {
     super(props)
 
@@ -479,17 +479,13 @@ class ClubForm extends React.Component {
       {
         name: 'info',
         label: 'Information',
-        content: (
-          <div>
-            <Form fields={fields} defaults={club} onSubmit={this.submit} />
-          </div>
-        ),
+        content: <Form fields={fields} defaults={club} onSubmit={this.submit} />,
       },
       {
         name: 'member',
         label: 'Membership',
         content: (
-          <div>
+          <>
             <div className="card" style={{ marginBottom: 20 }}>
               <div className="card-header">
                 <p className="card-header-title">Members</p>
@@ -689,7 +685,7 @@ class ClubForm extends React.Component {
                 </button>
               </div>
             </div>
-          </div>
+          </>
         ),
         disabled: !this.state.isEdit,
       },
@@ -697,7 +693,7 @@ class ClubForm extends React.Component {
         name: 'subscriptions',
         label: 'Subscriptions',
         content: (
-          <div>
+          <>
             <div className="card" style={{ marginBottom: 20 }}>
               <div className="card-header">
                 <p className="card-header-title">Subscribers</p>
@@ -765,14 +761,14 @@ class ClubForm extends React.Component {
                 </div>
               </div>
             </div>
-          </div>
+          </>
         ),
       },
       {
         name: 'settings',
         label: 'Settings',
         content: (
-          <div>
+          <>
             <div className="card" style={{ marginBottom: 20 }}>
               <div className="card-header">
                 <p className="card-header-title">
@@ -846,7 +842,7 @@ class ClubForm extends React.Component {
                 </div>
               </div>
             </div>
-          </div>
+          </>
         ),
         disabled: !this.state.isEdit,
       },
