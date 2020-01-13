@@ -238,7 +238,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if self.action == "subscription":
             return SubscribeSerializer
         if self.action == "list":
-            if self.request.accepted_renderer.format == "xlsx":
+            if self.request is not None and self.request.accepted_renderer.format == "xlsx":
                 return ClubSerializer
             return ClubListSerializer
         if self.request is not None and self.request.user.is_authenticated:

@@ -22,3 +22,6 @@ db.sqlite3
 
 # Mac
 .DS_Store
+
+# Development Uploads
+uploads/
