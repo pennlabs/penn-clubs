@@ -19,7 +19,6 @@
     "express": "^4.17.1",
     "fuse.js": "^3.4.5",
     "html-to-draftjs": "^1.4.0",
-    "http-proxy-middleware": "^0.20.0",
     "isomorphic-unfetch": "^3.0.0",
     "next": "^9.1.6",
     "prop-types": "^15.7.2",
@@ -55,6 +54,7 @@
     "eslint-plugin-node": "^9.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-react": "^7.14.3",
-    "eslint-plugin-standard": "^4.0.1"
+    "eslint-plugin-standard": "^4.0.1",
+    "http-proxy-middleware": "^0.20.0"
   }
 }
