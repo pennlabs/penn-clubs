@@ -38,8 +38,8 @@ PLATFORM_ACCOUNTS = {
 # Django CORS Settings
 CORS_ORIGIN_WHITELIST = [f"https://www.{FRONTEND_DOMAIN}", f"https://{FRONTEND_DOMAIN}"]
 
+CSRF_COOKIE_SAMESITE = None
 CSRF_TRUSTED_ORIGINS = [f"www.{FRONTEND_DOMAIN}", FRONTEND_DOMAIN]
-
 
 # Email client information
 EMAIL_HOST = os.getenv("EMAIL_HOST")
