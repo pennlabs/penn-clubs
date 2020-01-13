@@ -25,3 +25,7 @@ export const Title = s.h1`
 export const Empty = s(Text)`
   color: ${MEDIUM_GRAY};
 `
+
+export const Center = s.div`
+  text-align: center;
+`

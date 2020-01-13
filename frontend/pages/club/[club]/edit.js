@@ -4,10 +4,23 @@ import Link from 'next/link'
 import Select from 'react-select'
 
 import renderPage from '../../../renderPage.js'
-import { doApiRequest, getApiUrl, formatResponse, getRoleDisplay } from '../../../utils'
+import {
+  doApiRequest,
+  getApiUrl,
+  formatResponse,
+  getRoleDisplay,
+} from '../../../utils'
 import Form from '../../../components/Form'
 import TabView from '../../../components/TabView'
-import { Icon, Container, Title, InactiveTag, Text, Empty } from '../../../components/common'
+import AuthPrompt from '../../../components/common/AuthPrompt'
+import {
+  Icon,
+  Container,
+  Title,
+  InactiveTag,
+  Text,
+  Empty,
+} from '../../../components/common'
 
 class ClubForm extends React.Component {
   constructor(props) {
@@ -168,11 +181,16 @@ class ClubForm extends React.Component {
   }
 
   resendInvite(id) {
-    doApiRequest(`/clubs/${this.state.club.code}/invites/${id}/resend/?format=json`, {
-      method: 'PUT',
-    }).then(resp => resp.json()).then(resp => {
-      this.notify(resp.detail)
-    })
+    doApiRequest(
+      `/clubs/${this.state.club.code}/invites/${id}/resend/?format=json`,
+      {
+        method: 'PUT',
+      }
+    )
+      .then(resp => resp.json())
+      .then(resp => {
+        this.notify(resp.detail)
+      })
   }
 
   sendInvites() {
@@ -294,8 +312,12 @@ class ClubForm extends React.Component {
   }
 
   render() {
-    const { schools, majors, years, tags } = this.props
+    const { authenticated, schools, majors, years, tags } = this.props
     const { club, invites, editMember } = this.state
+
+    if (authenticated === false) {
+      return <AuthPrompt />
+    }
 
     if (this.state.isEdit && club === null) {
       return <div />
@@ -512,7 +534,12 @@ class ClubForm extends React.Component {
                     )}
                   </tbody>
                 </table>
-                <a href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)} className="button is-link"><Icon alt="download" name="download" /> Download Member List</a>
+                <a
+                  href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)}
+                  className="button is-link"
+                >
+                  <Icon alt="download" name="download" /> Download Member List
+                </a>
               </div>
             </div>
             {editMember && (
@@ -577,7 +604,8 @@ class ClubForm extends React.Component {
                           <td>
                             <button
                               className="button is-small is-link"
-                              onClick={() => this.resendInvite(item.id)}>
+                              onClick={() => this.resendInvite(item.id)}
+                            >
                               <Icon name="mail" alt="resend invite" /> Resend
                             </button>{' '}
                             <button
@@ -682,19 +710,54 @@ class ClubForm extends React.Component {
                     </tr>
                   </thead>
                   <tbody>
-                    {this.state.subscriptions.map((item, i) => <tr key={i}>
-                      <td>{item.name || <Empty>None</Empty>}</td>
-                      <td>{item.email || <Empty>None</Empty>}</td>
-                      <td>{item.graduation_year || <Empty>None</Empty>}</td>
-                      <td>{ item.school && item.school.length ? item.school.map(a => a.name).join(', ') : <Empty>None</Empty> }</td>
-                      <td>{ item.major && item.major.length ? item.major.map(a => a.name).join(', ') : <Empty>None</Empty> }</td>
-                    </tr>)}
-                    {!!this.state.subscriptions.length || <tr><td colSpan="5" className="has-text-grey">No one has subscribed to this club yet.</td></tr>}
+                    {this.state.subscriptions.map((item, i) => (
+                      <tr key={i}>
+                        <td>{item.name || <Empty>None</Empty>}</td>
+                        <td>{item.email || <Empty>None</Empty>}</td>
+                        <td>{item.graduation_year || <Empty>None</Empty>}</td>
+                        <td>
+                          {item.school && item.school.length ? (
+                            item.school.map(a => a.name).join(', ')
+                          ) : (
+                            <Empty>None</Empty>
+                          )}
+                        </td>
+                        <td>
+                          {item.major && item.major.length ? (
+                            item.major.map(a => a.name).join(', ')
+                          ) : (
+                            <Empty>None</Empty>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {!!this.state.subscriptions.length || (
+                      <tr>
+                        <td colSpan="5" className="has-text-grey">
+                          No one has subscribed to this club yet.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
                 <div className="buttons">
-                  <a href={getApiUrl(`/clubs/${club.code}/subscription/?format=xlsx`)} className="button is-link"><Icon alt="download" name="download" /> Download Subscriber List</a>
-                  <Link href="/club/[club]/flyer" as={`/club/${club.code}/flyer`}><a target="_blank" className="button is-success"><Icon alt="flyer" name="external-link" /> View Flyer</a></Link>
+                  <a
+                    href={getApiUrl(
+                      `/clubs/${club.code}/subscription/?format=xlsx`
+                    )}
+                    className="button is-link"
+                  >
+                    <Icon alt="download" name="download" /> Download Subscriber
+                    List
+                  </a>
+                  <Link
+                    href="/club/[club]/flyer"
+                    as={`/club/${club.code}/flyer`}
+                  >
+                    <a target="_blank" className="button is-success">
+                      <Icon alt="flyer" name="external-link" /> View Flyer
+                    </a>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -725,7 +788,9 @@ class ClubForm extends React.Component {
                     club is currently active and running.
                   </Text>
                 )}
-                <Text>Only owners of the organization may perform this action.</Text>
+                <Text>
+                  Only owners of the organization may perform this action.
+                </Text>
                 <div className="buttons">
                   <a
                     className={
@@ -820,11 +885,13 @@ class ClubForm extends React.Component {
 
 ClubForm.getInitialProps = async ({ query }) => {
   const endpoints = ['tags', 'schools', 'majors', 'years']
-  return Promise.all(endpoints.map(async item => {
-    const request = await doApiRequest(`/${item}/?format=json`)
-    const response = await request.json()
-    return [item, response]
-  })).then(values => {
+  return Promise.all(
+    endpoints.map(async item => {
+      const request = await doApiRequest(`/${item}/?format=json`)
+      const response = await request.json()
+      return [item, response]
+    })
+  ).then(values => {
     const output = { clubId: query.club }
     values.forEach(item => {
       output[item[0]] = item[1]

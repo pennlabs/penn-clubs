@@ -84,3 +84,9 @@ export const WideContainer = ({ background = WHITE, fullHeight, children }) => (
     <WideWrapper fullHeight={fullHeight}>{children}</WideWrapper>
   </div>
 )
+
+export const PhoneContainer = s.div`
+  margin: 15px auto;
+  padding: 15px;
+  max-width: 420px;
+`

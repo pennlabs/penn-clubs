@@ -1,17 +1,19 @@
 import s from 'styled-components'
 
 import renderPage from '../../../renderPage'
-import { doApiRequest, LOGIN_URL } from '../../../utils'
+import { doApiRequest } from '../../../utils'
 import InfoBox from '../../../components/ClubPage/InfoBox'
+import AuthPrompt from '../../../components/common/AuthPrompt'
 import {
   StrongText,
-  WideContainer,
+  PhoneContainer,
   Title,
   Text,
   Container,
   Icon,
   TagGroup,
   SmallText,
+  Center,
 } from '../../../components/common'
 import Link from 'next/link'
 
@@ -21,10 +23,6 @@ const Image = s.img`
   max-width: 242px;
   margin-right: 1rem;
   object-fit: contain;
-`
-
-const Center = s.div`
-  text-align: center;
 `
 
 const Margin = s.div`
@@ -39,7 +37,16 @@ const ClubHeader = s.div`
   }
 `
 
-const Fair = ({ authenticated, query, club, userInfo, favorites, updateFavorites, subscriptions, updateSubscriptions }) => {
+const Fair = ({
+  authenticated,
+  query,
+  club,
+  userInfo,
+  favorites,
+  updateFavorites,
+  subscriptions,
+  updateSubscriptions,
+}) => {
   if (!club) return null
   if (!club.code) {
     return (
@@ -57,28 +64,16 @@ const Fair = ({ authenticated, query, club, userInfo, favorites, updateFavorites
   const isFavorite = favorites.includes(club.code)
   const isSubscribe = subscriptions.includes(club.code)
 
+  if (authenticated === null) {
+    return <></>
+  }
+
   if (authenticated === false) {
-    return (
-      <WideContainer>
-        <Center>
-          <ClubHeader>
-            <Image src="/static/img/peoplelogo.png" />
-            <Title>One last step...</Title>
-          </ClubHeader>
-          <Margin>
-            <Text>To make the most of Penn Clubs features, like bookmarking and subscribing to clubs, please login using your PennKey.</Text>
-          </Margin>
-          <Margin>
-            <a href={`${LOGIN_URL}?next=${typeof window !== 'undefined' ? window.location.href : '/'}`} className="button is-link is-large"><Icon alt="login" name="key" /> Continue to login</a>
-          </Margin>
-          <SmallText><i>(We're sorry, we hate two-step too.)</i></SmallText>
-        </Center>
-      </WideContainer>
-    )
+    return <AuthPrompt />
   }
 
   return (
-    <WideContainer>
+    <PhoneContainer>
       <Center>
         <ClubHeader>
           {image && <Image src={image} />}
@@ -90,8 +85,13 @@ const Fair = ({ authenticated, query, club, userInfo, favorites, updateFavorites
             <div
               className="button is-link is-large"
               disabled={isFavorite}
-              onClick={() => isFavorite || updateFavorites(club.code)}>
-              <Icon alt='bookmark' name={isFavorite ? 'check-circle' : 'bookmark'} /> {isFavorite ? 'Bookmarked' : 'Bookmark'}
+              onClick={() => isFavorite || updateFavorites(club.code)}
+            >
+              <Icon
+                alt="bookmark"
+                name={isFavorite ? 'check-circle' : 'bookmark'}
+              />{' '}
+              {isFavorite ? 'Bookmarked' : 'Bookmark'}
             </div>
             <Text style={{ marginTop: '0.5rem' }}>To save for later</Text>
           </div>
@@ -99,13 +99,23 @@ const Fair = ({ authenticated, query, club, userInfo, favorites, updateFavorites
             <div
               className="button is-danger is-large"
               disabled={isSubscribe}
-              onClick={() => isSubscribe || updateSubscriptions(club.code)}>
-              <Icon alt='subscribe' name={isSubscribe ? 'check-circle' : 'bell'} /> {isSubscribe ? 'Subscribed' : 'Subscribe'}
+              onClick={() => isSubscribe || updateSubscriptions(club.code)}
+            >
+              <Icon
+                alt="subscribe"
+                name={isSubscribe ? 'check-circle' : 'bell'}
+              />{' '}
+              {isSubscribe ? 'Subscribed' : 'Subscribe'}
             </div>
             <Text style={{ marginTop: '0.5rem' }}>To join mailing list</Text>
           </div>
         </div>
-        <SmallText><i>Bookmarks and subscriptions can be managed from your Penn Clubs account at any time.</i></SmallText>
+        <SmallText>
+          <i>
+            Bookmarks and subscriptions can be managed from your Penn Clubs
+            account at any time.
+          </i>
+        </SmallText>
         <hr />
       </Center>
       <StrongText>Basic Info</StrongText>
@@ -119,7 +129,7 @@ const Fair = ({ authenticated, query, club, userInfo, favorites, updateFavorites
           <a className="button is-danger is-large">See more details</a>
         </Link>
       </Center>
-    </WideContainer>
+    </PhoneContainer>
   )
 }
 

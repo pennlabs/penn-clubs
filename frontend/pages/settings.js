@@ -9,6 +9,7 @@ import TabView from '../components/TabView'
 import ClubTab from '../components/Settings/ClubTab'
 import FavoritesTab from '../components/Settings/FavoritesTab'
 import ProfileTab from '../components/Settings/ProfileTab'
+import AuthPrompt from '../components/common/AuthPrompt'
 import { Title, Container } from '../components/common'
 
 const Notification = s.span`
@@ -96,8 +97,9 @@ class Settings extends React.Component {
       userInfo: { username },
       authenticated,
     } = this.props
-    if (!authenticated) this.notify('You must be logged in to perform this action.')
-    else if (
+    if (!authenticated) {
+      this.notify('You must be logged in to perform this action.')
+    } else if (
       confirm(
         `Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`
       )
@@ -132,7 +134,7 @@ class Settings extends React.Component {
     }
 
     if (!userInfo) {
-      return <div>You must be authenticated in order to use this page.</div>
+      return <AuthPrompt />
     }
 
     const { message } = this.state
@@ -155,8 +157,8 @@ class Settings extends React.Component {
         icon: 'heart',
         content: (
           <FavoritesTab
-            key='bookmark'
-            keyword='bookmark'
+            key="bookmark"
+            keyword="bookmark"
             clubs={clubs}
             favorites={favorites}
             updateFavorites={updateFavorites}
@@ -168,8 +170,8 @@ class Settings extends React.Component {
         icon: 'bookmark',
         content: (
           <FavoritesTab
-            key='subscription'
-            keyword='subscription'
+            key="subscription"
+            keyword="subscription"
             clubs={clubs}
             favorites={subscriptions}
             updateFavorites={updateSubscriptions}

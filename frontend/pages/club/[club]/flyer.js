@@ -3,11 +3,7 @@ import s from 'styled-components'
 
 import { doApiRequest, getApiUrl } from '../../../utils'
 import Head from '../../../components/Header/Head'
-import {
-  Title,
-  Text,
-  Container,
-} from '../../../components/common'
+import { Title, Text, Container, Center } from '../../../components/common'
 import { FLYER_BLUE, FLYER_NAVY, FLYER_PINK } from '../../../constants/colors'
 
 const Image = s.img`
@@ -28,10 +24,6 @@ const MediumTitle = s.h2`
   font-size: 32px;
   font-weight: 500;
   color: ${FLYER_NAVY};
-`
-
-const Center = s.div`
-  text-align: center;
 `
 
 const Gradient = s.div`
@@ -76,13 +68,25 @@ const PrintPage = s.div`
   }
 `
 
-const Flyer = ({ authenticated, query, userInfo, favorites, updateFavorites, subscriptions, updateSubscriptions }) => {
+const Flyer = ({
+  authenticated,
+  query,
+  userInfo,
+  favorites,
+  updateFavorites,
+  subscriptions,
+  updateSubscriptions,
+}) => {
   const [clubs, setClubs] = useState(null)
 
   useEffect(() => {
-    Promise.all(query.club.split(',').map(club => {
-      return doApiRequest(`/clubs/${club}/?format=json`).then(resp => resp.json())
-    })).then(setClubs)
+    Promise.all(
+      query.club.split(',').map(club => {
+        return doApiRequest(`/clubs/${club}/?format=json`).then(resp =>
+          resp.json()
+        )
+      })
+    ).then(setClubs)
   }, [query])
 
   if (clubs === null) {
@@ -112,33 +116,42 @@ const Flyer = ({ authenticated, query, userInfo, favorites, updateFavorites, sub
       <Head />
       {clubs.map(club => {
         const { image_url: image } = club
-        return (<>
-          <PrintPage>
-            <div className="columns is-mobile is-marginless">
-              <div className="column is-paddingless">
-                <CenterContainer>
-                  <Margin>
-                    {image && <Image src={image} />}
-                    <BigTitle>{club.name}</BigTitle>
-                  </Margin>
-                </CenterContainer>
+        return (
+          <>
+            <PrintPage>
+              <div className="columns is-mobile is-marginless">
+                <div className="column is-paddingless">
+                  <CenterContainer>
+                    <Margin>
+                      {image && <Image src={image} />}
+                      <BigTitle>{club.name}</BigTitle>
+                    </Margin>
+                  </CenterContainer>
+                </div>
+                <div className="column is-paddingless">
+                  <CenterContainer>
+                    <Margin>
+                      <Center>
+                        <MediumTitle>
+                          For more info, or to bookmark or subscribe to the{' '}
+                          {club.name} mailing list:
+                        </MediumTitle>
+                        <Gradient>
+                          <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} />
+                        </Gradient>
+                        <Text style={{ color: FLYER_NAVY }}>
+                          <b>Or visit:</b>
+                          <br />
+                          <i>https://pennclubs.com/club/{club.code}/fair/</i>
+                        </Text>
+                      </Center>
+                    </Margin>
+                  </CenterContainer>
+                </div>
               </div>
-              <div className="column is-paddingless">
-                <CenterContainer>
-                  <Margin>
-                    <Center>
-                      <MediumTitle>For more info, or to bookmark or subscribe to the {club.name} mailing list:</MediumTitle>
-                      <Gradient>
-                        <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} />
-                      </Gradient>
-                      <Text style={{ color: FLYER_NAVY }}><b>Or visit:</b><br /><i>https://pennclubs.com/club/{club.code}/fair/</i></Text>
-                    </Center>
-                  </Margin>
-                </CenterContainer>
-              </div>
-            </div>
-          </PrintPage>
-        </>)
+            </PrintPage>
+          </>
+        )
       })}
     </>
   )
