@@ -96,14 +96,20 @@ def merge_clubs(one, two):
 
     membership_diff = one.membership_set.count() - two.membership_set.count()
 
+    # Keep the club object with the most members
+    if membership_diff < 0:
+        secondary = one
+        primary = two
+        membership_diff = -membership_diff
+
     # Keep the club code with the most members
     if membership_diff < 0:
         primary.code = secondary.code
     elif membership_diff == 0:
         # Keep the club code that breaks the least invites
         invite_diff = (
-            one.membershipinvite_set.filter(active=True).count()
-            - two.membershipinvite_set.filter(active=True).count()
+            primary.membershipinvite_set.filter(active=True).count()
+            - secondary.membershipinvite_set.filter(active=True).count()
         )
         if invite_diff < 0:
             primary.code = secondary.code
@@ -112,7 +118,7 @@ def merge_clubs(one, two):
             primary.code = min(primary.code, secondary.code)
 
     # If either club is active, set the resulting club as active
-    primary.active = one.active or two.active
+    primary.active = primary.active or secondary.active
 
     # Choose longest string or string that exists
     for field in [
