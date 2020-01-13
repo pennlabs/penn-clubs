@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from django.core.management.base import BaseCommand, CommandError
-from django.template.defaultfilters import slugify
+from django.core.management.base import BaseCommand
 
 from clubs.models import Club
 from clubs.utils import clean

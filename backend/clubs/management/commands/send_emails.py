@@ -11,6 +11,61 @@ from django.template.loader import render_to_string
 from clubs.models import Club, Membership, MembershipInvite
 
 
+def min_edit(s1, s2):
+    """
+    Return the Levenshtein distance between two strings.
+    """
+    if len(s1) > len(s2):
+        s1, s2 = s2, s1
+    distances = range(len(s1) + 1)
+    for index2, char2 in enumerate(s2):
+        newDistances = [index2 + 1]
+        for index1, char1 in enumerate(s1):
+            if char1 == char2:
+                newDistances.append(distances[index1])
+            else:
+                newDistances.append(
+                    1 + min((distances[index1], distances[index1 + 1], newDistances[-1]))
+                )
+        distances = newDistances
+    return distances[-1]
+
+
+def fuzzy_lookup_club(name):
+    """
+    Aggressively attempt to find a club matching the provided name.
+    Returns None if the club with that name could not be found.
+    """
+    name = name.strip()
+
+    # lookup club by case insensitive name
+    club = Club.objects.filter(name__iexact=name)
+    if club.exists():
+        # lookup club by case sensitive name
+        if club.count() > 1:
+            club = Club.objects.filter(name=name)
+            if club:
+                return club.first()
+        else:
+            return club.first()
+
+    # strip out parentheses
+    name = re.sub(r"\(.+?\)$", "", name).strip()
+    club = Club.objects.filter(name__icontains=name)
+    if club.exists():
+        return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
+
+    # look up clubs with names inside the passed name
+    club = Club.objects.annotate(query=Value(name, output_field=CharField())).filter(
+        query__icontains=F("name")
+    )
+
+    if club.exists():
+        return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
+
+    return None
+
+
 def send_fair_email(club, email):
     """
     Sends the SAC fair email for a club to the given email.
@@ -63,6 +118,7 @@ class Command(BaseCommand):
         dry_run = kwargs["dry_run"]
         only_sheet = kwargs["only_sheet"]
         action = kwargs["type"]
+        verbosity = kwargs["verbosity"]
 
         if only_sheet:
             clubs = Club.objects.all()
@@ -81,7 +137,6 @@ class Command(BaseCommand):
 
         clubs_missing = 0
         clubs_sent = 0
-        clubs_many = 0
 
         # parse CSV file
         emails = {}
@@ -94,42 +149,17 @@ class Command(BaseCommand):
         with open(email_file, "r") as f:
             for line in csv.reader(f):
                 raw_name = line[0].strip()
-                name = re.sub(r"\(.+?\)$", "", raw_name).strip()
-                club = Club.objects.filter(name__icontains=name)
-                count = club.count()
+                club = fuzzy_lookup_club(raw_name)
 
-                # try more exact match if multiple results
-                if count > 1:
-                    alt_club = Club.objects.filter(name=name)
-                    if alt_club.count() == 1:
-                        club = alt_club
-                        count = club.count()
-
-                # try looking up a club name inside the spreadsheet value
-                if count == 0:
-                    alt_club = Club.objects.annotate(
-                        query=Value(raw_name, output_field=CharField())
-                    ).filter(query__icontains=F("name"))
-                    if alt_club.count() >= 1:
-                        club = alt_club
-                        count = club.count()
-
-                if count == 1:
+                if club is not None:
+                    if verbosity >= 2:
+                        self.stdout.write(f"Mapped {raw_name} -> {club.name} ({club.code})")
                     clubs_sent += 1
-                    emails[club.first().id] = [x.strip() for x in line[1].split(",")]
-                elif count == 0:
+                    emails[club.id] = [x.strip() for x in line[1].split(",")]
+                else:
                     clubs_missing += 1
                     self.stdout.write(
-                        self.style.WARNING("Could not find club matching {}!".format(name))
-                    )
-                else:
-                    clubs_many += 1
-                    self.stdout.write(
-                        self.style.WARNING(
-                            "Too many club entries ({}) for {}!".format(
-                                ", ".join(club.values_list("name", flat=True)), name
-                            )
-                        )
+                        self.style.WARNING(f"Could not find club matching {raw_name}!")
                     )
 
         # send out emails
@@ -172,8 +202,4 @@ class Command(BaseCommand):
                         elif action == "fair":
                             send_fair_email(club, receiver)
 
-        self.stdout.write(
-            "Sent {} email(s), {} missing club(s), {} ambiguous club(s)".format(
-                clubs_sent, clubs_missing, clubs_many
-            )
-        )
+        self.stdout.write("Sent {} email(s), {} missing club(s)".format(clubs_sent, clubs_missing))
