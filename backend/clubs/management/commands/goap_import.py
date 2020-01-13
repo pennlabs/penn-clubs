@@ -26,7 +26,13 @@ class Command(BaseCommand):
         parser.add_argument(
             "--skip-tags", dest="skip_tags", action="store_true", help="Skip importing tags."
         )
-        parser.set_defaults(dry_run=False, skip_tags=False)
+        parser.add_argument(
+            "--create-only",
+            dest="create_only",
+            action="store_true",
+            help="Do not update any existing clubs.",
+        )
+        parser.set_defaults(dry_run=False, skip_tags=False, create_only=False)
 
     def handle(self, *args, **kwargs):
         self.count = 1
@@ -35,6 +41,7 @@ class Command(BaseCommand):
         self.update_count = 0
         self.dry_run = kwargs["dry_run"]
         self.skip_tags = kwargs["skip_tags"]
+        self.create_only = kwargs["create_only"]
         self.session = requests.Session()
         self.agent = (
             "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
@@ -108,6 +115,10 @@ class Command(BaseCommand):
             else:
                 club = Club(code=code)
                 flag = True
+
+            if not flag and self.create_only:
+                self.stdout.write(f"Ignoring {name}, club already exists")
+                continue
 
             # only overwrite blank fields
             if not club.name:
