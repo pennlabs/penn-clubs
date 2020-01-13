@@ -2,8 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from django.core.management.base import BaseCommand
 
-from clubs.models import Club
-from clubs.utils import clean
+from clubs.utils import clean, fuzzy_lookup_club
 
 
 class Command(BaseCommand):
@@ -72,16 +71,7 @@ class Command(BaseCommand):
         grps, next_tag = soup.select(".grpl .grpl-grp"), soup.find(text="Next >")
         for grp in grps:
             name = grp.select_one("h3 a").text.strip()
-            try:
-                club = Club.objects.get(name__iexact=name)
-            except Club.DoesNotExist:
-                self.stdout.write(self.style.WARNING(f"Club with name '{name}' does not exist!"))
-                continue
-            except Club.MultipleObjectsReturned:
-                self.stdout.write(
-                    self.style.WARNING(f"Club with name '{name}' exists more than once!")
-                )
-                continue
+            club = fuzzy_lookup_club(name)
 
             # If the club exists in the db and the description has been shortened, add it to list
             if club is not None and club.description.endswith("…"):
@@ -90,6 +80,8 @@ class Command(BaseCommand):
                     continue
                 self.stdout.write(f"Adding club {club.name} to list.")
                 self.clubs_to_scrape.append((club, f"{base_url}{path}&tab=profile"))
+            else:
+                self.stdout.write(self.style.WARNING(f"Club with name '{name}' does not exist!"))
 
         if next_tag is not None:
             resp = self.session.get(url)
