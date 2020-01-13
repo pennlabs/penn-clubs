@@ -4,8 +4,6 @@ import s from 'styled-components'
 import { Modal, Loading } from './common'
 import { LOGIN_URL } from '../utils'
 import { DARK_GRAY } from '../constants/colors'
-import { LONG_ANIMATION_DURATION } from '../constants/measurements'
-import { fadeIn, fadeOut } from '../constants/animations'
 
 const Logo = s.img`
   width: 100px;
