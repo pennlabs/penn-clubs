@@ -112,7 +112,7 @@ class Form extends React.Component {
           break
         }
         default: {
-          if (converter) {
+          if (typeof converter === 'function') {
             out[name] = converter(val)
           } else {
             out[name] = val
