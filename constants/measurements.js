@@ -13,3 +13,4 @@ export const NAV_HEIGHT = '3.25rem'
 export const SEARCH_BAR_MOBILE_HEIGHT = '91.33px'
 
 export const ANIMATION_DURATION = 200
+export const LONG_ANIMATION_DURATION = 400
