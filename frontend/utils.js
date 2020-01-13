@@ -30,8 +30,8 @@ function removeEndingSlash(val) {
 }
 
 export const API_BASE_URL =
-  removeEndingSlash(getConfig().publicRuntimeConfig.API_BASE_URL) ||
-  'https://api.pennclubs.com'
+  // removeEndingSlash(getConfig().publicRuntimeConfig.API_BASE_URL) ||
+  '/api'
 export const ROLE_OWNER = 0
 export const ROLE_OFFICER = 10
 export const ROLE_MEMBER = 20
@@ -64,21 +64,22 @@ export function doApiRequest(path, data) {
   if (!data) {
     data = {}
   }
-  data.credentials = 'include'
-  if (typeof document !== 'undefined') {
-    data.headers = data.headers || {}
-    if (!(data.body instanceof FormData)) {
-      data.headers['Content-Type'] = 'application/json'
-    }
-    data.headers['X-CSRFToken'] = (/csrftoken=(\w+)/.exec(document.cookie) || [
-      null,
-      null,
-    ])[1]
-  }
+  // data.credentials = 'include'
+  // if (typeof document !== 'undefined') {
+  //   data.headers = data.headers || {}
+  //   if (!(data.body instanceof FormData)) {
+  //     data.headers['Content-Type'] = 'application/json'
+  //   }
+  //   data.headers['X-CSRFToken'] = (/csrftoken=(\w+)/.exec(document.cookie) || [
+  //     null,
+  //     null,
+  //   ])[1]
+  // }
   if (data.body && !(data.body instanceof FormData)) {
     data.body = JSON.stringify(data.body)
   }
-  return fetch(getApiUrl(path), data)
+  console.log(path, data)
+  return fetch(path, data)
 }
 
 export function titleize(str) {

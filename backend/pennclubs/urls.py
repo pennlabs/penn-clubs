@@ -26,6 +26,8 @@ urlpatterns = [
     ),
 ]
 
+urlpatterns = [path("api/", include(urlpatterns))]
+
 if settings.DEBUG:
     import debug_toolbar
 
