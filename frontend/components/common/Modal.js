@@ -65,7 +65,7 @@ const CloseModalIcon = s(Icon)`
 // This would otherwise cause the modal to close on any click
 const noop = event => event.stopPropagation()
 
-const Modal = ({ show, children, closeModal }) => {
+export const Modal = ({ show, children, closeModal }) => {
   const [newlyMounted, setNewlyMounted] = useState(true)
   const focusRef = useRef()
 

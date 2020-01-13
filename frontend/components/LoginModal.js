@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import s from 'styled-components'
 
-import Modal from './common/Modal'
+import { Modal } from './common'
 import { LOGIN_URL } from '../utils'
 import { DARK_GRAY } from '../constants/colors'
 import { LONG_ANIMATION_DURATION } from '../constants/measurements'

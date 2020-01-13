@@ -4,7 +4,7 @@ import { ALLBIRDS_GRAY } from '../../constants/colors'
 import { LONG_ANIMATION_DURATION } from '../../constants/measurements'
 import { fadeIn, fadeOut } from '../../constants/animations'
 
-export default styled.div`
+export const Shade = styled.div`
   position: fixed;
   width: 100vw;
   height: 100vh;
@@ -24,3 +24,5 @@ export default styled.div`
   animation-duration: ${LONG_ANIMATION_DURATION};
   opacity: ${({ show }) => (show ? '.75' : '0')};
 `
+
+export default Shade
