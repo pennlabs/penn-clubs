@@ -1,0 +1,15 @@
+# Docker
+Dockerfile
+.dockerignore
+
+# git
+.circleci
+.git
+.gitignore
+.gitmodules
+**/*.md
+LICENSE
+
+# Misc
+.node_modules/
+.next/
