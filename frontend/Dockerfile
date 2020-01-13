@@ -8,7 +8,7 @@ WORKDIR /app/
 COPY package*.json /app/
 
 # Install project dependencies
-RUN npm install --production=true
+RUN npm install --production
 
 # Copy project files
 COPY . /app/
