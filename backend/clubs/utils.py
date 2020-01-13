@@ -93,7 +93,8 @@ def fuzzy_lookup_club(name):
         return club.first()
 
     # lookup club without dashes
-    club = Club.objects.filter(name__iexact=name.replace("-", " ").strip())
+    regex = "^{}$".format(re.escape(name.replace("-", " ").strip()).replace("\\ ", r"[\s-]"))
+    club = Club.objects.filter(name__iregex=regex)
     if club.exists():
         return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
 

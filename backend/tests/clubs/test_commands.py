@@ -112,6 +112,14 @@ class SendInvitesTestCase(TestCase):
         Club.objects.create(code="dental-4", name="PAAGSA", subtitle=subtitle)
         self.assertEqual(fuzzy_lookup_club(subtitle).code, "dental-4")
 
+        # ensure dashes don't matter
+        Club.objects.create(code="dental-5", name="Penn In Hand")
+        self.assertEqual(fuzzy_lookup_club("Penn-In-Hand").code, "dental-5")
+
+        # more advanced tests for dashes
+        Club.objects.create(code="dental-6", name="Penn-In Face")
+        self.assertEqual(fuzzy_lookup_club("Penn In-Face").code, "dental-6")
+
 
 class SendReminderTestCase(TestCase):
     def setUp(self):
