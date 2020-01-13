@@ -63,7 +63,9 @@ def do_merge_clubs(modeladmin, request, queryset):
         )
     if queryset.count() > 10:
         modeladmin.message_user(
-            request, "You have selected more than 10 clubs, you probably do not want to do this.", level=messages.ERROR
+            request,
+            "You have selected more than 10 clubs, you probably do not want to do this.",
+            level=messages.ERROR,
         )
     club_names = list(queryset.order_by("name").values_list("name", flat=True))
     tags = list(queryset)
