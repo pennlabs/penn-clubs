@@ -18,28 +18,35 @@ const ModalTitle = s.h1`
   font-weight: 600;
   line-height: 1.125;
   margin: 2% 0;
-  animation-name: ${({ show }) => (show ? fadeIn : fadeOut)};
-  animation-duration: ${LONG_ANIMATION_DURATION};
 `
 
-export default props => {
+export default ({ show, ...props }) => {
   const [newlyMounted, setNewlyMounted] = useState(true)
   useEffect(() => {
     newlyMounted && setNewlyMounted(false)
   })
-  return <Modal {...props} >
-    {
-      newlyMounted ? (
-        <Loading />
-      ) : (
-        <>
-          <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
-          <ModalTitle>Uh oh!</ModalTitle>
-          This feature requires a Penn login.
-          <br />
-          Please <a href={`${LOGIN_URL}?next=${window.location.href}`}>log in using your PennKey</a> to continue.
-        </>
-      )
-    }
-  </Modal>
+  return (
+    <Modal
+      show={show}
+      {...props}
+    >
+      {
+        newlyMounted ? (
+          <Loading />
+        ) : (
+          <>
+            <Logo
+              show={show}
+              src="/static/img/peoplelogo.png"
+              alt="Penn Clubs Logo"
+            />
+            <ModalTitle show={show}>Uh oh!</ModalTitle>
+            This feature requires a Penn login.
+            <br />
+            Please <a href={`${LOGIN_URL}?next=${window.location.href}`}>log in using your PennKey</a> to continue.
+          </>
+        )
+      }
+    </Modal>
+  )
 }

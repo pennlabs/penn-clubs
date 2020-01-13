@@ -34,8 +34,6 @@ const ModalCard = s.div`
   box-shadow: none !important;
   height: auto;
   width: 35%;
-  animation-name: ${({ show }) => (show ? fadeIn : fadeOut)};
-  animation-duration: ${LONG_ANIMATION_DURATION};
 
   ${mediaMaxWidth(MD)} {
     width: 50%;
@@ -57,8 +55,6 @@ const CloseModalIcon = s(Icon)`
   top: 20px;
   cursor: pointer;
   color: ${LIGHT_GRAY};
-  animation-name: ${({ show }) => (show ? fadeIn : fadeOut)};
-  animation-duration: ${LONG_ANIMATION_DURATION};
 `
 
 // Do not propagate events on the modal content to the modal background
@@ -66,7 +62,6 @@ const CloseModalIcon = s(Icon)`
 const noop = event => event.stopPropagation()
 
 export const Modal = ({ show, children, closeModal }) => {
-  const [newlyMounted, setNewlyMounted] = useState(true)
   const focusRef = useRef()
 
   const handleKeyPress = ({ key, keyCode }) => {
@@ -77,9 +72,7 @@ export const Modal = ({ show, children, closeModal }) => {
   }
 
   useEffect(() => {
-    if (newlyMounted) {
-      setNewlyMounted(false)
-    } else if (show && focusRef.current) {
+    if (show && focusRef.current) {
       focusRef.current.focus()
     }
   }, [show])
@@ -87,10 +80,12 @@ export const Modal = ({ show, children, closeModal }) => {
   return (
     <ModalWrapper
       ref={focusRef}
-      className={show ? 'modal is-active' : 'modal'} id="modal"
+      className={show ? 'modal is-active' : 'modal'}
+      id="modal"
       onKeyPress={handleKeyPress}
       onKeyDown={handleKeyPress}
       tabIndex="0"
+      show={show}
     >
       <Shade
         className='modal-background'
