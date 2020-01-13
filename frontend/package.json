@@ -34,9 +34,9 @@
   },
   "scripts": {
     "lint": "eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
-    "dev": "NODE_ENV=development PORT=3000 node server.js",
+    "dev": "node server.js",
     "build": "next build",
-    "start": "NODE_ENV=production PORT=3000 node server.js",
+    "start": "NODE_ENV=production node server.js",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
