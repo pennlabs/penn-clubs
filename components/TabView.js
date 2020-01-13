@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import s from 'styled-components'
 
 import { titleize } from '../utils'
@@ -44,16 +44,18 @@ const Tabs = s.div``
 
 const TabView = ({ tabs, tabClassName, background }) => {
   // the server side rendering does not have a window object
-  const hashString =
-    typeof window !== 'undefined' ? window.location.hash.substring(1) : null
-  const [currentTab, setCurrentTab] = useState(hashString || tabs[0].name)
+  const [currentTab, setCurrentTab] = useState(tabs[0].name)
+
+  useEffect(() => {
+    setCurrentTab(window.location.hash.substring(1))
+  }, [])
 
   const getTabContent = () =>
-    (
+    <div key={currentTab}>{(
       tabs.filter(a => a.name === currentTab)[0] || {
-        content: <div>Invalid tab selected.</div>,
+        content: <>Invalid tab selected.</>,
       }
-    ).content
+    ).content}</div>
 
   const enabledTabs = tabs.filter(tab => !tab.disabled)
 
