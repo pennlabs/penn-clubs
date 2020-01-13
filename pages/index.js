@@ -181,7 +181,7 @@ class Splash extends React.Component {
       club.rank = 0
       const hasSchool = club.target_schools.some(({ name }) => userSchools.has(name))
       const hasMajor = club.target_majors.some(({ name }) => userMajors.has(name))
-      const hasYear = club.target_years.some(({ year }) => userInfo.graduation_year === year)
+      const hasYear = userInfo && club.target_years.some(({ year }) => userInfo.graduation_year === year)
       if (hasSchool) {
         club.rank += Math.max(0, 1 - club.target_schools.length / 4)
       }
