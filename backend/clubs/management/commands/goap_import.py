@@ -54,13 +54,11 @@ class Command(BaseCommand):
             self.stdout.write("Skipping tag imports...")
         self.process_url(self.START_URL)
         self.stdout.write(
-            "Imported {} clubs! {} created, {} updated".format(
-                self.club_count, self.create_count, self.update_count
-            )
+            f"Imported {self.club_count} clubs! {self.create_count} created, {self.update_count} updated"
         )
 
     def process_url(self, url):
-        self.stdout.write("Processing Page {}".format(self.count))
+        self.stdout.write(f"Processing Page {self.count}")
         self.count += 1
         resp = self.session.get(url)
         resp.raise_for_status()
@@ -161,9 +159,8 @@ class Command(BaseCommand):
                     club.tags.set([tag])
 
             self.club_count += 1
-            out_string = "{} '{}' (image: {})".format(
-                "Created" if flag else "Updated", name, use_image
-            )
+            action_verb = "Created" if flag else "Updated"
+            out_string = f"{action_verb} '{name}' (image: {use_image})"
             if flag:
                 self.stdout.write(self.style.SUCCESS(out_string))
                 self.create_count += 1

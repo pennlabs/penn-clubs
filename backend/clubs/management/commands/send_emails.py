@@ -78,7 +78,7 @@ class Command(BaseCommand):
                     filter=Q(membershipinvite__role__lte=Membership.ROLE_OWNER, active=True),
                 ),
             ).filter(owner_count=0, invite_count=0, active=True)
-            self.stdout.write("Found {} active club(s) without owners.".format(clubs.count()))
+            self.stdout.write(f"Found {clubs.count()} active club(s) without owners.")
 
         clubs_missing = 0
         clubs_sent = 0
@@ -89,7 +89,7 @@ class Command(BaseCommand):
         email_file = kwargs["emails"]
 
         if not os.path.isfile(email_file):
-            raise CommandError('Email file "{}" does not exist!'.format(email_file))
+            raise CommandError(f'Email file "{email_file}" does not exist!')
 
         with open(email_file, "r") as f:
             for line in csv.reader(f):
@@ -119,12 +119,9 @@ class Command(BaseCommand):
                 elif only_sheet:
                     continue
                 receivers = list(set(receivers))
+                receivers_str = ", ".join(receivers)
                 self.stdout.write(
-                    self.style.SUCCESS(
-                        "Sending {} email for {} to {}".format(
-                            action, club.name, ", ".join(receivers)
-                        )
-                    )
+                    self.style.SUCCESS(f"Sending {action} email for {club.name} to {receivers_str}")
                 )
                 for receiver in receivers:
                     if not dry_run:
@@ -147,4 +144,4 @@ class Command(BaseCommand):
                         elif action == "fair":
                             send_fair_email(club, receiver)
 
-        self.stdout.write("Sent {} email(s), {} missing club(s)".format(clubs_sent, clubs_missing))
+        self.stdout.write(f"Sent {clubs_sent} email(s), {clubs_missing} missing club(s)")
