@@ -44,7 +44,7 @@ const Header = ({
 
   const [favCount, setFavCount] = useState(club.favorite_count || 0)
 
-  const { active, code, name, tags } = club
+  const { active, code, name, tags, badges } = club
 
   return (
     <div style={style}>
@@ -82,6 +82,7 @@ const Header = ({
       </Wrapper>
       <div style={{ marginBottom: '1rem' }}>
         <TagGroup tags={tags} />
+        <TagGroup tags={badges} />
       </div>
     </div>
   )

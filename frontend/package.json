@@ -13,6 +13,7 @@
     "body-scroll-lock": "^2.6.1",
     "bulma": "^0.7.4",
     "client-oauth2": "^4.2.3",
+    "color": "^3.1.2",
     "create-react-class": "^15.6.3",
     "draft-js": "^0.11.0",
     "draftjs-to-html": "^0.8.4",
