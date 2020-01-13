@@ -27,5 +27,8 @@ db.sqlite3
 node_modules/
 .next/
 
+# Development Enviroment
+env.sh
+
 # Development images folder
 uploads/
