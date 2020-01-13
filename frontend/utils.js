@@ -1,4 +1,3 @@
-import getConfig from 'next/config'
 import fetch from 'isomorphic-unfetch'
 
 export function stripTags(val) {
@@ -19,18 +18,7 @@ export function getDefaultClubImageURL() {
   return '/static/img/hatlogo.png'
 }
 
-function removeEndingSlash(val) {
-  if (typeof val !== 'string') {
-    return val
-  }
-  if (val.endsWith('/')) {
-    return val.substring(0, val.length - 1)
-  }
-  return val
-}
-
-export const DEFAULT_SITE_ORIGIN = process.env.NODE_ENV === 'production' ? 'https://pennclubs.com' : `http://localhost:${process.env.PORT || 3000}`
-export const SITE_ORIGIN = removeEndingSlash(getConfig().publicRuntimeConfig.API_BASE_URL) || DEFAULT_SITE_ORIGIN
+export const SITE_ORIGIN = process.env.NODE_ENV === 'production' ? `https://${process.env.DOMAIN || 'pennclubs.com'}` : `http://localhost:${process.env.PORT || 3000}`
 export const API_BASE_URL = `${SITE_ORIGIN}/api`
 export const ROLE_OWNER = 0
 export const ROLE_OFFICER = 10
