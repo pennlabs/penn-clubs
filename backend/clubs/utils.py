@@ -67,6 +67,10 @@ def fuzzy_lookup_club(name):
     """
     name = name.strip()
 
+    # empty string should match no club
+    if not name:
+        return None
+
     # lookup club by case insensitive name
     club = Club.objects.filter(name__iexact=name)
     if club.exists():
@@ -114,14 +118,6 @@ def fuzzy_lookup_club(name):
 
     if club.exists():
         return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
-
-    # do a reverse contains lookup and see if we get matches
-    club = Club.objects.annotate(query=Value(modified_name, output_field=CharField())).filter(
-        query__icontains=F("name")
-    )
-
-    if club.count() == 1:
-        return club.first()
 
     # try to get somewhat related club names and perform a distance comparison
     query = Q(pk__in=[])
