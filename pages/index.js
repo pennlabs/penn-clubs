@@ -182,6 +182,7 @@ class Splash extends React.Component {
       const hasSchool = club.target_schools.some(({ name }) => userSchools.has(name))
       const hasMajor = club.target_majors.some(({ name }) => userMajors.has(name))
       const hasYear = userInfo && club.target_years.some(({ year }) => userInfo.graduation_year === year)
+      const hasDescription = club.description.length > 8
       if (hasSchool) {
         club.rank += Math.max(0, 1 - club.target_schools.length / 4)
       }
@@ -190,6 +191,12 @@ class Splash extends React.Component {
       }
       if (hasMajor) {
         club.rank += 3 * Math.max(0, 1 - club.target_majors.length / 10)
+      }
+      if (!hasDescription) {
+        club.rank -= 1
+      }
+      if (!club.active) {
+        club.rank -= 5
       }
       club.rank += 2 * Math.random()
     })
