@@ -100,6 +100,7 @@ def merge_clubs(one, two):
         "twitter",
         "instagram",
         "github",
+        "youtube",
         "how_to_get_involved",
         "listserv",
     ]:

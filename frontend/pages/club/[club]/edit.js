@@ -417,6 +417,10 @@ class ClubForm extends React.Component {
             type: 'url',
           },
           {
+            name: 'youtube',
+            type: 'url',
+          },
+          {
             name: 'listserv',
             type: 'text',
           },
