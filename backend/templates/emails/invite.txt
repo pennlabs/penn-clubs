@@ -1,0 +1,8 @@
+{% extends 'emails/base.txt' %}
+
+{% block content %}
+You have been invited by {{ sender.username }} ({{ sender.email }}) to join {{ name }}!
+{% if role <= 10 %}You have administrator permissions, which means you can edit the {{ name }} page.{% endif %}
+
+Go to {{ url }} to join the club. You will need a valid PennKey to complete the process.
+{% endblock %}
