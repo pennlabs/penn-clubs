@@ -1,5 +1,31 @@
+# IDE files
+.vscode/
+.idea/
+
+# Python files
+__pycache__/
+*.pyc
+
+# Distribution
+build/
+dist/
+*.egg-info/
+
+# Code testing/coverage
+.tox
+test-results/
+.coverage
+htmlcov/
+
+# Test database
+db.sqlite3
+
+# Mac
+.DS_Store
+
+# React
 node_modules/
 .next/
-env.sh
-yarn-error.log
-.DS_STORE
+
+# Development images folder
+uploads/

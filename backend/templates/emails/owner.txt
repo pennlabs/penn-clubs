@@ -1,0 +1,13 @@
+{% extends 'emails/base.txt' %}
+
+{% block content %}
+Welcome to Penn Clubs!
+
+Penn Clubs is the central source of information about student organizations at Penn. We hope students will use Penn Clubs to find communities that matter to them.
+
+You've been invited to join the {{ name }} page! You are an Owner of the {{ name }} page, which means you have administrative access to edit the page. This lets you update the information that will be displayed at {{ view_url }}. You can also invite others to join as Owners, Officers, or Members.
+
+Go to {{ url }} to join. You will need to sign in with your PennKey in order to complete the process. We hope you'll help us keep the platform updated for students to explore all the clubs at Penn!
+
+If you have any questions, feel free to respond to this email.
+{% endblock %}
