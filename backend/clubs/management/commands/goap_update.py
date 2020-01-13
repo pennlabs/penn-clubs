@@ -73,17 +73,16 @@ class Command(BaseCommand):
         grps, next_tag = soup.select(".grpl .grpl-grp"), soup.find(text="Next >")
         for grp in grps:
             name = grp.select_one("h3 a").text.strip()
-            clubs = Club.objects.filter(name__iexact=name)
-            if clubs.exists() and clubs.count() > 1:
-                raise CommandError(f"Club with name '{name}' exists twice!")
-                club = clubs.first()
-            else:
-                code = slugify(name)
-                try:
-                    club = Club.objects.get(code=code)
-                except Club.DoesNotExist:
-                    self.stdout.write(f"Club with code '{code}' does not exist!")
-                    continue
+            try:
+                club = Club.objects.get(name__iexact=name)
+            except Club.DoesNotExist:
+                self.stdout.write(self.style.WARNING(f"Club with name '{name}' does not exist!"))
+                continue
+            except Club.MultipleObjectsReturned:
+                self.stdout.write(
+                    self.style.WARNING(f"Club with name '{name}' exists more than once!")
+                )
+                continue
 
             # If the club exists in the db and the description has been shortened, add it to list
             if club is not None and club.description.endswith("…"):
