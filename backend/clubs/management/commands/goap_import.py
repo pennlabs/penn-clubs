@@ -39,6 +39,7 @@ class Command(BaseCommand):
         self.club_count = 0
         self.create_count = 0
         self.update_count = 0
+        self.ignore_count = 0
         self.dry_run = kwargs["dry_run"]
         self.skip_tags = kwargs["skip_tags"]
         self.create_only = kwargs["create_only"]
@@ -53,8 +54,9 @@ class Command(BaseCommand):
         if self.skip_tags:
             self.stdout.write("Skipping tag imports...")
         self.process_url(self.START_URL)
+        self.stdout.write(f"Imported {self.club_count} clubs!")
         self.stdout.write(
-            f"Imported {self.club_count} clubs! {self.create_count} created, {self.update_count} updated"
+            f"{self.create_count} created, {self.update_count} updated, {self.ignore_count} ignored"
         )
 
     def process_url(self, url):
@@ -115,6 +117,7 @@ class Command(BaseCommand):
                 flag = True
 
             if not flag and self.create_only:
+                self.ignore_count += 1
                 self.stdout.write(f"Ignoring {name}, club already exists")
                 continue
 
