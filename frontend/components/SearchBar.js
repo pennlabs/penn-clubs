@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import s from 'styled-components'
 
 import { Icon } from './common'
-import DropdownFilter from './DropdownFilter'
+import DropdownFilter, { CloseButton } from './DropdownFilter'
 import {
   BORDER_RADIUS,
   mediaMaxWidth,
@@ -124,6 +124,7 @@ const SearchBar = ({ tags, updateTag, selectedTags: propTags, resetDisplay }) =>
   }, [nameInput])
 
   const toggleActiveDropdownFilter = name => setActiveDropdownFilter(activeDropdownFilter === name ? null : name)
+  const closeDropdownFilter = () => setActiveDropdownFilter(null)
   const focus = () => inputRef.current.focus()
 
   const isTextInSearchBar = Boolean(nameInput)
@@ -186,6 +187,7 @@ const SearchBar = ({ tags, updateTag, selectedTags: propTags, resetDisplay }) =>
               updateTag={updateTag}
             />
           ))}
+          <CloseButton onClick={closeDropdownFilter} />
         </Content>
       </Wrapper>
 
