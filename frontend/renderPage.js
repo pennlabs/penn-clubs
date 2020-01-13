@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import { Component } from 'react'
 import s from 'styled-components'
 
 import Header from './components/Header'
@@ -49,7 +49,7 @@ function renderPage(Page) {
 
       this.updateUserInfo()
     }
-    
+
     render() {
       try {
         const { props, state, closeModal, updateFavorites, updateUserInfo, updateSubscriptions } = this

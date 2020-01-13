@@ -96,7 +96,7 @@ const Modal = ({ show, children, closeModal }) => {
         className='modal-background'
         onClick={closeModal}
         show={show}
-        
+
       />
       <ModalCard
         className='card'
