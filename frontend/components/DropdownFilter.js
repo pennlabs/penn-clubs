@@ -133,6 +133,7 @@ const CloseWrapper = s.div`
 export const CloseButton = ({ onClick }) => (
   <CloseWrapper>
     <DropdownHeader
+      style={{ marginRight: 0 }}
       onClick={onClick}
       color={LIGHT_GRAY}
     >
