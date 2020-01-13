@@ -8,6 +8,7 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 
 from clubs.models import Club, Favorite, Membership, MembershipInvite, Tag
+from clubs.utils import fuzzy_lookup_club
 
 
 class SendInvitesTestCase(TestCase):
@@ -65,6 +66,59 @@ class SendInvitesTestCase(TestCase):
             call_command("send_emails", tmp.name, "fair", "--only-sheet")
 
         self.assertEqual(len(mail.outbox), 3)
+
+    def test_fuzzy_lookup(self):
+        # test failed matches
+        self.assertFalse(fuzzy_lookup_club("Club Thirteen"))
+        self.assertFalse(fuzzy_lookup_club(""))
+
+        Club.objects.create(code="italian-1", name="Italians at Penn")
+        Club.objects.create(code="italian-2", name="Penn Italian Community")
+        Club.objects.create(code="italian-3", name="Penn Italian Club")
+
+        # test exact club name
+        for name, code in Club.objects.all().values_list("name", "code"):
+            self.assertEqual(fuzzy_lookup_club(name).code, code)
+
+        # closest match should be one of three
+        self.assertIn(fuzzy_lookup_club("italian").code, ["italian-1", "italian-2", "italian-3"])
+
+        # test partial club name
+        Club.objects.create(code="league", name="University of Pennsylvania League of Legends Club")
+        self.assertEqual(fuzzy_lookup_club("league of legends").code, "league")
+
+        # test partial match both strings
+        Club.objects.create(code="counterparts", name="Counterparts A Cappella")
+        self.assertEqual(fuzzy_lookup_club("Penn Counterparts").code, "counterparts")
+
+        # test remove prefix
+        Club.objects.create(code="pasa", name="Penn African Student Association")
+        self.assertEqual(fuzzy_lookup_club("PASA - Penn African Students Association").code, "pasa")
+
+        # don't overmatch on suffix
+        Club.objects.create(code="dental-1", name="Indian Students Dental Association")
+        self.assertFalse(fuzzy_lookup_club("Korean Students Dental Association"))
+
+        # don't overmatch on keywords
+        Club.objects.create(code="dental-2", name="Arab Student Society")
+        self.assertFalse(fuzzy_lookup_club("Arab Student Dental Society"))
+
+        # don't overmatch on prefix
+        Club.objects.create(code="dental-3", name="Chinese Students Association")
+        self.assertFalse(fuzzy_lookup_club("Chinese Christian Fellowship"))
+
+        # ensure subtitle matching works
+        subtitle = "Penn Asian American Graduate Student Association"
+        Club.objects.create(code="dental-4", name="PAAGSA", subtitle=subtitle)
+        self.assertEqual(fuzzy_lookup_club(subtitle).code, "dental-4")
+
+        # ensure dashes don't matter
+        Club.objects.create(code="dental-5", name="Penn In Hand")
+        self.assertEqual(fuzzy_lookup_club("Penn-In-Hand").code, "dental-5")
+
+        # more advanced tests for dashes
+        Club.objects.create(code="dental-6", name="Penn-In Face")
+        self.assertEqual(fuzzy_lookup_club("Penn In-Face").code, "dental-6")
 
 
 class SendReminderTestCase(TestCase):
