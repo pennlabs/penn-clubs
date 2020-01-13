@@ -4,7 +4,7 @@ import { ALLBIRDS_GRAY } from '../../constants/colors'
 import { LONG_ANIMATION_DURATION } from '../../constants/measurements'
 import { fadeIn, fadeOut } from './Animations'
 
-export const Shade = styled.div`
+export default styled.div`
   position: fixed;
   width: 100vw;
   height: 100vh;

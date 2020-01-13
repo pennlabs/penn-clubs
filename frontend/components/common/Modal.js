@@ -12,7 +12,7 @@ import {
   mediaMaxWidth,
   LONG_ANIMATION_DURATION,
 } from '../constants/measurements'
-import { fadeIn, fadeOut } from '../../constants/animations'
+import { fadeIn, fadeOut } from '../constants/animations'
 
 const ModalWrapper = s.div`
   position: fixed;
