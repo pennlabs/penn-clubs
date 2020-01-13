@@ -315,7 +315,8 @@ class ClubListSerializer(serializers.ModelSerializer):
             "code": {
                 "required": False,
                 "validators": [validators.UniqueValidator(queryset=Club.objects.all())],
-                "help_text": "An alphanumeric string shown in the URL and used to identify this club.",
+                "help_text": "An alphanumeric string shown in the URL"
+                + "and used to identify this club.",
             },
             "description": {
                 "help_text": "A long description for the club. Certain HTML tags are allowed."
@@ -323,7 +324,8 @@ class ClubListSerializer(serializers.ModelSerializer):
             "email": {"help_text": "The primary contact email for the club."},
             "subtitle": {
                 "required": False,
-                "help_text": "The text shown to the user in a preview card. Short description of the club.",
+                "help_text": "The text shown to the user in a preview card."
+                + "Short description of the club.",
             },
         }
 

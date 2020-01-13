@@ -520,7 +520,8 @@ class ClubTestCase(TestCase):
         """
         Ensure that descriptions are properly sanitized.
         """
-        test_good_string = """<p>Here\'s some <b>bold</b>, <i>italic</i>, <u>underline</u>, and a <a href=\"http://example.com\">link</a>.<br></p>
+        test_good_string = """<p>Here\'s some <b>bold</b>, <i>italic</i>, <u>underline</u>,
+        and a <a href=\"http://example.com\">link</a>.<br></p>
 <ul>
     <li>One</li>
     <li>Two</li>
@@ -631,7 +632,8 @@ class ClubTestCase(TestCase):
                 "badges": [{"label": "SAC Funded"}],
                 "tags": [{"name": tag1.name}, {"name": tag2.name}],
                 "target_schools": [{"name": school1.name}],
-                "facebook": "https://www.facebook.com/groups/966590693376781/?ref=nf_target&fref=nf",
+                "facebook": "https://www.facebook.com/groups/966590693376781/"
+                + "?ref=nf_target&fref=nf",
                 "twitter": "https://twitter.com/Penn",
                 "instagram": "https://www.instagram.com/uofpenn/?hl=en",
                 "website": "https://pennlabs.org",
