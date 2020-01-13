@@ -47,7 +47,7 @@ const TabView = ({ tabs, tabClassName, background }) => {
   const [currentTab, setCurrentTab] = useState(tabs[0].name)
 
   useEffect(() => {
-    setCurrentTab(window.location.hash.substring(1))
+    setCurrentTab(window.location.hash.substring(1) || currentTab)
   }, [])
 
   const getTabContent = () =>
