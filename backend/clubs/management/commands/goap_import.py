@@ -4,11 +4,11 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 from django.core.files.base import ContentFile
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.template.defaultfilters import slugify
 
 from clubs.models import Club, Tag
-from clubs.utils import clean
+from clubs.utils import clean, fuzzy_lookup_club
 
 
 class Command(BaseCommand):
@@ -96,22 +96,14 @@ class Command(BaseCommand):
                 tag = None
 
             # create or update club
-            clubs = Club.objects.filter(name__iexact=name)
-            if clubs.exists():
-                if clubs.count() > 1:
-                    raise CommandError("Club with name '{}' exists twice!".format(name))
-                club = clubs.first()
+            code = slugify(name)
+            club = fuzzy_lookup_club(name)
+            if club is not None:
+                code = club.code
                 flag = False
             else:
-                code = slugify(name)
-                if not self.dry_run:
-                    club, flag = Club.objects.get_or_create(code=code)
-                elif Club.objects.filter(code=code).exists():
-                    club = Club.objects.get(code=code)
-                    flag = False
-                else:
-                    club = Club(code=code)
-                    flag = True
+                club = Club(code=code)
+                flag = True
 
             # only overwrite blank fields
             if not club.name:
@@ -137,6 +129,8 @@ class Command(BaseCommand):
                         resp = requests.get(image_url, allow_redirects=True)
                         resp.raise_for_status()
                         club.image.save(os.path.basename(image_url), ContentFile(resp.content))
+                else:
+                    use_image = bool(club.image)
 
             # update email if there is no email
             if not club.email:
@@ -152,12 +146,14 @@ class Command(BaseCommand):
                     club.tags.set([tag])
 
             self.club_count += 1
-            self.stdout.write(
-                "{} '{}' (image: {})".format("Created" if flag else "Updated", name, use_image)
+            out_string = "{} '{}' (image: {})".format(
+                "Created" if flag else "Updated", name, use_image
             )
             if flag:
+                self.stdout.write(self.style.SUCCESS(out_string))
                 self.create_count += 1
             else:
+                self.stdout.write(out_string)
                 self.update_count += 1
 
         next_tag = soup.find(text="Next >")

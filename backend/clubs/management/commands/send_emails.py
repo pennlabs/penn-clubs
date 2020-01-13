@@ -1,69 +1,14 @@
 import csv
 import os
-import re
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand, CommandError
-from django.db.models import CharField, Count, F, Q, Value
+from django.db.models import Count, Q
 from django.template.loader import render_to_string
 
 from clubs.models import Club, Membership, MembershipInvite
-
-
-def min_edit(s1, s2):
-    """
-    Return the Levenshtein distance between two strings.
-    """
-    if len(s1) > len(s2):
-        s1, s2 = s2, s1
-    distances = range(len(s1) + 1)
-    for index2, char2 in enumerate(s2):
-        newDistances = [index2 + 1]
-        for index1, char1 in enumerate(s1):
-            if char1 == char2:
-                newDistances.append(distances[index1])
-            else:
-                newDistances.append(
-                    1 + min((distances[index1], distances[index1 + 1], newDistances[-1]))
-                )
-        distances = newDistances
-    return distances[-1]
-
-
-def fuzzy_lookup_club(name):
-    """
-    Aggressively attempt to find a club matching the provided name.
-    Returns None if the club with that name could not be found.
-    """
-    name = name.strip()
-
-    # lookup club by case insensitive name
-    club = Club.objects.filter(name__iexact=name)
-    if club.exists():
-        # lookup club by case sensitive name
-        if club.count() > 1:
-            club = Club.objects.filter(name=name)
-            if club:
-                return club.first()
-        else:
-            return club.first()
-
-    # strip out parentheses
-    name = re.sub(r"\(.+?\)$", "", name).strip()
-    club = Club.objects.filter(name__icontains=name)
-    if club.exists():
-        return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
-
-    # look up clubs with names inside the passed name
-    club = Club.objects.annotate(query=Value(name, output_field=CharField())).filter(
-        query__icontains=F("name")
-    )
-
-    if club.exists():
-        return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
-
-    return None
+from clubs.utils import fuzzy_lookup_club
 
 
 def send_fair_email(club, email):
