@@ -1,4 +1,4 @@
-import React from 'react'
+import { Component } from 'react'
 import Select from 'react-select'
 import { EditorState, ContentState, convertToRaw } from 'draft-js'
 import draftToHtml from 'draftjs-to-html'
@@ -9,12 +9,13 @@ import { titleize } from '../utils'
 
 let htmlToDraft, Editor
 
-class Form extends React.Component {
+class Form extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
       mounted: false,
+      edited: false,
     }
 
     this.files = {}
@@ -27,6 +28,7 @@ class Form extends React.Component {
     }
 
     this.onChange = this.onChange.bind(this)
+    this.checkChange = this.checkChange.bind(this)
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
   }
@@ -39,7 +41,7 @@ class Form extends React.Component {
           if (defaults && defaults[name]) {
             this.state['editorState-' + name] = EditorState.createWithContent(
               ContentState.createFromBlockArray(
-                htmlToDraft(this.props.defaults[name]).contentBlocks
+                htmlToDraft(defaults[name]).contentBlocks
               )
             )
           } else {
@@ -171,6 +173,7 @@ class Form extends React.Component {
               editorState={this.state[`editorState-${name}`]}
               placeholder={placeholder}
               onEditorStateChange={state => {
+                this.checkChange()
                 this.setState({
                   [`editorState-${name}`]: state,
                   [`field-${name}`]: draftToHtml(
@@ -233,6 +236,7 @@ class Form extends React.Component {
               ref={c => {
                 this.files[name] = c
               }}
+              onChange={this.checkChange}
               accept={accept}
               type="file"
               name={name}
@@ -338,10 +342,16 @@ class Form extends React.Component {
     if (onChange) {
       onChange(e)
     }
+    this.checkChange()
+  }
+
+  checkChange() {
+    this.state.edited || this.setState({ edited: true })
   }
 
   render() {
     const { submitButton, onSubmit, fields } = this.props
+    const { edited } = this.state
     return (
       <>
         {this.generateFields(fields)}
@@ -350,7 +360,9 @@ class Form extends React.Component {
         ) : (
           <a
             className="button is-primary is-medium"
-            onClick={() => onSubmit && onSubmit(this.getData())}
+            title={edited ? '' : 'You must make changes before submitting.'}
+            disabled={!edited}
+            onClick={() => edited && onSubmit && onSubmit(this.getData())}
           >
             Submit
           </a>
