@@ -57,6 +57,5 @@ Running the frontend requires [Node.js](https://nodejs.org/en/).
 
 1. Enter the `frontend` directory.
 2. Install dependencies using `npm install --dev` in the project directory.
-3. Set the `API_BASE_URL` environment variable to your local backend server (most likely `http://localhost:8000/`).
-4. Run application using `npm run dev`.
-5. Access application at [http://localhost:3000](http://localhost:3000).
+3. Run application using `npm run dev`.
+4. Access application at [http://localhost:3000](http://localhost:3000).

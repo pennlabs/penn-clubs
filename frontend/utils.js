@@ -29,9 +29,9 @@ function removeEndingSlash(val) {
   return val
 }
 
-export const API_BASE_URL =
-  removeEndingSlash(getConfig().publicRuntimeConfig.API_BASE_URL) ||
-  'https://pennclubs.com/api'
+export const DEFAULT_SITE_ORIGIN = process.env.NODE_ENV === 'production' ? 'https://pennclubs.com' : `http://localhost:${process.env.PORT || 3000}`
+export const SITE_ORIGIN = removeEndingSlash(getConfig().publicRuntimeConfig.API_BASE_URL) || DEFAULT_SITE_ORIGIN
+export const API_BASE_URL = `${SITE_ORIGIN}/api`
 export const ROLE_OWNER = 0
 export const ROLE_OFFICER = 10
 export const ROLE_MEMBER = 20
