@@ -189,7 +189,7 @@ class Splash extends React.Component {
         club.rank += Math.max(0, 1 - club.target_years.length / 4)
       }
       if (hasMajor) {
-        club.rank += 5 * Math.max(0, 1 - club.target_majors.length / 10)
+        club.rank += 4 * Math.max(0, 1 - club.target_majors.length / 10)
       }
       club.rank += 2 * Math.random()
     })
