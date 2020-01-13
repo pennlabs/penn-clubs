@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import s from 'styled-components'
 
 import Modal from './common/Modal'
@@ -5,6 +6,7 @@ import { LOGIN_URL } from '../utils'
 import { DARK_GRAY } from '../constants/colors'
 import { LONG_ANIMATION_DURATION } from '../constants/measurements'
 import { fadeIn, fadeOut } from '../constants/animations'
+import { useEffect } from 'react'
 
 const Logo = s.img`
   width: 100px;
@@ -21,12 +23,24 @@ const ModalTitle = s.h1`
   animation-duration: ${LONG_ANIMATION_DURATION};
 `
 
-export default props => (
-  <Modal {...props} >
-    <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
-    <ModalTitle>Uh oh!</ModalTitle>
-    This feature requires a Penn login.
-    <br />
-    Please <a href={`${LOGIN_URL}?next=${window.location.href}`}>log in using your PennKey</a> to continue.
+export default props => {
+  const [newlyMounted, setNewlyMounted] = useState(true)
+  useEffect(() => {
+    newlyMounted && setNewlyMounted(false)
+  })
+  return <Modal {...props} >
+    {
+      newlyMounted ? (
+        <div className="loader is-loading"></div>
+      ) : (
+        <>
+          <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
+          <ModalTitle>Uh oh!</ModalTitle>
+          This feature requires a Penn login.
+          <br />
+          Please <a href={`${LOGIN_URL}?next=${window.location.href}`}>log in using your PennKey</a> to continue.
+        </>
+      )
+    }
   </Modal>
-)
+}

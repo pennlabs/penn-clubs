@@ -46,6 +46,11 @@ const ModalCard = s.div`
   }
 `
 
+const ModalContent = s.div`
+  margin: auto;
+  margin-bottom: 10%;
+`
+
 const CloseModalIcon = s(Icon)`
   position: absolute;
   right: 20px;
@@ -61,7 +66,7 @@ const CloseModalIcon = s(Icon)`
 const noop = event => event.stopPropagation()
 
 const Modal = ({ show, children, closeModal }) => {
-  const [isNewlyMounted, setNewlyMounted] = useState(true)
+  const [newlyMounted, setNewlyMounted] = useState(true)
   const focusRef = useRef()
 
   const handleKeyPress = ({ key, keyCode }) => {
@@ -72,8 +77,11 @@ const Modal = ({ show, children, closeModal }) => {
   }
 
   useEffect(() => {
-    isNewlyMounted && setNewlyMounted(false)
-    show && focusRef.current.focus()
+    if (newlyMounted) {
+      setNewlyMounted(false)
+    } else if (show && focusRef.current) {
+      focusRef.current.focus()
+    }
   }, [show])
 
   return (
@@ -84,14 +92,22 @@ const Modal = ({ show, children, closeModal }) => {
         show={show}
         onKeyPress={handleKeyPress}
         onKeyDown={handleKeyPress}
+        tabIndex="0"
       />
-      <CloseModalIcon show={show} />
       <ModalCard
         className='card'
         onClick={noop}
         show={show}
       >
-        {children}
+        <CloseModalIcon
+          show={show}
+          name="x"
+          alt="&#215;"
+          onClick={closeModal}
+        />
+        <ModalContent>
+          {children}
+        </ModalContent>
       </ModalCard>
     </ModalWrapper>
   )

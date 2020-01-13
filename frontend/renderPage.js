@@ -49,7 +49,7 @@ function renderPage(Page) {
 
       this.updateUserInfo()
     }
-
+    
     render() {
       try {
         const { props, state, closeModal, updateFavorites, updateUserInfo, updateSubscriptions } = this
@@ -62,7 +62,7 @@ function renderPage(Page) {
               backgroundColor: WHITE,
             }}
           >
-            {modal && <LoginModal closeModal={closeModal}/>}
+            <LoginModal show={modal} closeModal={closeModal}/>
             <Header
               authenticated={authenticated}
               userInfo={userInfo}

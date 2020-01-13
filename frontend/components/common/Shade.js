@@ -14,7 +14,6 @@ export default styled.div`
   bottom: 0;
   overflow: hidden;
   background: ${ALLBIRDS_GRAY};
-  z-index: 1007;
   text-align: center;
   animation-name: ${({ isNewlyMounted, show }) => {
     if (isNewlyMounted) {
