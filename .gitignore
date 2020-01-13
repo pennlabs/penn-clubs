@@ -1,10 +1,27 @@
-.env
-.idea/
-venv/
-__pycache__/
-db.sqlite3
+# IDE files
 .vscode/
+.idea/
+
+# Python files
+__pycache__/
+*.pyc
+
+# Distribution
+build/
+dist/
+*.egg-info/
+
+# Code testing/coverage
+.tox
 test-results/
-uploads/
 .coverage
+htmlcov/
+
+# Test database
+db.sqlite3
+
+# Mac
 .DS_Store
+
+# Development Uploads
+uploads/
