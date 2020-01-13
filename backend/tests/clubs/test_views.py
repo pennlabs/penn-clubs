@@ -638,6 +638,7 @@ class ClubTestCase(TestCase):
                 "instagram": "https://www.instagram.com/uofpenn/?hl=en",
                 "website": "https://pennlabs.org",
                 "linkedin": "https://www.linkedin.com/school/university-of-pennsylvania/",
+                "youtube": "https://youtu.be/dQw4w9WgXcQ",
                 "github": "https://github.com/pennlabs",
             },
             content_type="application/json",
@@ -662,7 +663,7 @@ class ClubTestCase(TestCase):
         self.assertTrue(data["tags"], data)
         self.assertEqual(data["members"][0]["name"], self.user5.get_full_name())
 
-        for link in ["facebook", "twitter", "instagram", "website", "github"]:
+        for link in ["facebook", "twitter", "instagram", "website", "github", "youtube"]:
             self.assertIn(link, data)
 
         self.assertEqual(club_obj.badges.count(), 1)

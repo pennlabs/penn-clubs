@@ -420,6 +420,21 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             )
         return value
 
+    def validate_youtube(self, value):
+        """
+        Ensure that URL is actually a YouTube URL.
+        """
+        if value:
+            parsed = urlparse(value)
+            path = parsed.path if parsed.path.startswith("/") else "/{}".format(parsed.path)
+            if parsed.query:
+                path = "{}?{}".format(path, parsed.query)
+            if parsed.netloc == "youtu.be":
+                return "https://youtu.be{}".format(path)
+            else:
+                return "https://youtube.com{}".format(path)
+        return value
+
     def validate_active(self, value):
         """
         Only owners and superusers may change the active status of a club.
@@ -462,6 +477,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "linkedin",
             "github",
             "website",
+            "youtube",
             "how_to_get_involved",
             "listserv",
             "members",
@@ -470,7 +486,13 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "image",
             "testimonials",
         ]
-        save_related_fields = ["tags", "badges", "target_schools", "target_majors", "target_years"]
+        save_related_fields = [
+            "tags",
+            "badges",
+            "target_schools",
+            "target_majors",
+            "target_years",
+        ]
 
 
 class AuthenticatedClubSerializer(ClubSerializer):
