@@ -1,4 +1,5 @@
 import os
+import re
 from urllib.parse import urljoin
 
 import requests
@@ -95,8 +96,11 @@ class Command(BaseCommand):
             else:
                 tag = None
 
+            # don't include parentheses content in code
+            slug_name = re.sub(r"\(.+?\)$", "", name).strip()
+
             # create or update club
-            code = slugify(name)
+            code = slugify(slug_name)
             club = fuzzy_lookup_club(name)
             if club is not None:
                 code = club.code
