@@ -3,16 +3,16 @@ import PropTypes from 'prop-types'
 import s from 'styled-components'
 
 import Shade from './Shade'
-import { Icon } from './common/Icon'
-import { LIGHT_GRAY } from '../constants/colors'
+import { Icon } from './Icon'
+import { LIGHT_GRAY } from '../../constants/colors'
 import {
   BORDER_RADIUS_LG,
   MD,
   SM,
   mediaMaxWidth,
   LONG_ANIMATION_DURATION,
-} from '../constants/measurements'
-import { fadeIn, fadeOut } from '../constants/animations'
+} from '../../constants/measurements'
+import { fadeIn, fadeOut } from '../../constants/animations'
 
 const ModalWrapper = s.div`
   position: fixed;

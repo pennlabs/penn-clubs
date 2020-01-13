@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 import { ALLBIRDS_GRAY } from '../../constants/colors'
 import { LONG_ANIMATION_DURATION } from '../../constants/measurements'
-import { fadeIn, fadeOut } from './Animations'
+import { fadeIn, fadeOut } from '../../constants/animations'
 
 export default styled.div`
   position: fixed;
