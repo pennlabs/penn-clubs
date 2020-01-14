@@ -23,6 +23,12 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
       toggleActive={toggleActive}
       leaveClub={leaveClub}
     />
-    <ClubCards {...props} />
+    <ClubCards
+      className={className}
+      userInfo={userInfo}
+      togglePublic={togglePublic}
+      toggleActive={toggleActive}
+      leaveClub={leaveClub}
+    />
   </>
 )
