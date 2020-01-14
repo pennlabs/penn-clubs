@@ -131,7 +131,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 PLATFORM_ACCOUNTS = {
     "REDIRECT_URI": os.environ.get(
-        "LABS_REDIRECT_URI", "http://localhost:8000/api/accounts/callback/"
+        "LABS_REDIRECT_URI", "http://localhost:3000/api/accounts/callback/"
     ),
     "CLIENT_ID": "clientid",
     "CLIENT_SECRET": "supersecretclientsecret",
