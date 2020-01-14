@@ -76,8 +76,6 @@ class ClubTableRow extends React.Component {
       club,
       updateFavorites,
       favorite,
-      selectedTags,
-      updateTag,
     } = this.props
     const {
       name,
@@ -98,11 +96,7 @@ class ClubTableRow extends React.Component {
                   <div className="column is-4-desktop is-12-mobile">
                     <Name>{name}</Name>
                     <div>
-                      <TagGroup
-                        tags={tags}
-                        selectedTags={selectedTags}
-                        updateTag={updateTag}
-                      />
+                      <TagGroup tags={tags} />
                     </div>
                   </div>
                   <div className="column is-8-desktop is-12-mobile">
