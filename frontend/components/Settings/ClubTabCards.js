@@ -5,7 +5,8 @@ import Link from 'next/link'
 const ClubTabCard = ({
   club,
   toggleActive,
-  togglePublic
+  togglePublic,
+  leaveClub
 }) => {
   const {
     code,
@@ -37,7 +38,7 @@ const ClubTabCard = ({
         ) : (
             <button
               className="button is-small"
-              onClick={() => leaveClub(item)}
+              onClick={() => leaveClub(club)}
             >
               <Icon name="log-out" />
               Leave
@@ -96,6 +97,7 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
               club={club}
               togglePublic={togglePublic}
               toggleActive={toggleActive}
+              leaveClub={leaveClub}
             />
           )
         )}
