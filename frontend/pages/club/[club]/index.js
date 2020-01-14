@@ -5,7 +5,7 @@ import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
 import Tabs from '../../../components/ClubPage/Tabs'
 import Header from '../../../components/ClubPage/Header'
-import Actions from '../../../components/ClubPage/Actions'
+import { DesktopActions, MobileActions } from '../../../components/ClubPage/Actions'
 import InfoBox from '../../../components/ClubPage/InfoBox'
 import Testimonials from '../../../components/ClubPage/Testimonials'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
@@ -72,19 +72,26 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
               />
             </Flex>
           </Card>
-          <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
-            <Tabs club={club} />
-          </Card>
-        </div>
-        <div className="column is-one-third">
-          <Actions
+          <MobileActions
             club={club}
             userInfo={userInfo}
             favorites={favorites}
             updateFavorites={updateFavorites}
             subscriptions={subscriptions}
             updateSubscriptions={updateSubscriptions}
-            style={{ flex: 1 }}
+          />
+          <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
+            <Tabs club={club} />
+          </Card>
+        </div>
+        <div className="column is-one-third">
+          <DesktopActions
+            club={club}
+            userInfo={userInfo}
+            favorites={favorites}
+            updateFavorites={updateFavorites}
+            subscriptions={subscriptions}
+            updateSubscriptions={updateSubscriptions}
           />
           <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
             <StrongText>Basic Info</StrongText>

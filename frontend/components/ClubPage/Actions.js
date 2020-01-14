@@ -59,6 +59,7 @@ const Actions = ({
   updateFavorites,
   subscriptions,
   updateSubscriptions,
+  className,
 }) => {
   const isFavorite = favorites.includes(club.code)
   const isSubscription = subscriptions.includes(club.code)
@@ -80,7 +81,7 @@ const Actions = ({
   const { code } = club
 
   return (
-    <div style={style}>
+    <div className={className} style={style}>
       <Wrapper>
         <ActionWrapper>
           <IconWrapper>
@@ -109,7 +110,7 @@ const Actions = ({
         {canEdit && (
           <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
             <a
-              className="button is-success is-small"
+              className="button is-success is-normal"
               style={{ marginLeft: '1rem' }}
             >
               Edit Club
@@ -121,4 +122,14 @@ const Actions = ({
   )
 }
 
-export default Actions
+export const DesktopActions = s(Actions)`
+  @media (max-width: 768px) {
+    display: none !important;
+  }
+`
+
+export const MobileActions = s(Actions)`
+  @media (min-width: 769px) {
+    display: none !important;
+  }
+`
