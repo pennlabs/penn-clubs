@@ -4,7 +4,7 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from pennclubs.settings.base import *  # noqa: F401, F403
-from pennclubs.settings.base import BACKEND_DOMAIN, DATABASES, FRONTEND_DOMAIN
+from pennclubs.settings.base import DATABASES, DOMAIN
 
 
 DEBUG = False
@@ -16,7 +16,7 @@ DATABASES["default"]["OPTIONS"] = {"charset": "utf8mb4"}
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Allow production host headers
-ALLOWED_HOSTS = [BACKEND_DOMAIN]
+ALLOWED_HOSTS = [DOMAIN]
 
 # Make sure SECRET_KEY is set to a secret in production
 SECRET_KEY = os.environ.get("SECRET_KEY", None)
@@ -27,22 +27,9 @@ sentry_sdk.init(dsn=SENTRY_URL, integrations=[DjangoIntegration()])
 
 # DLA settings
 PLATFORM_ACCOUNTS = {
-    "REDIRECT_URI": f"https://{BACKEND_DOMAIN}/accounts/callback/",
+    "REDIRECT_URI": f"https://{DOMAIN}/api/accounts/callback/",
     "ADMIN_PERMISSION": "clubs_admin",
 }
-
-###############################################################
-# SETTINGS TO ALLOW FRONTEND TO MAKE AJAX REQUESTS TO BACKEND #
-###############################################################
-# DO NOT USE IF DJANGO APP IS STANDALONE
-# Django CORS Settings
-CORS_ORIGIN_WHITELIST = [f"https://www.{FRONTEND_DOMAIN}", f"https://{FRONTEND_DOMAIN}"]
-
-CSRF_COOKIE_SAMESITE = None
-CSRF_TRUSTED_ORIGINS = [f"www.{FRONTEND_DOMAIN}", FRONTEND_DOMAIN]
-
-SESSION_COOKIE_DOMAIN = f".{FRONTEND_DOMAIN}"
-CSRF_COOKIE_DOMAIN = f".{FRONTEND_DOMAIN}"
 
 # Email client information
 EMAIL_HOST = os.getenv("EMAIL_HOST")

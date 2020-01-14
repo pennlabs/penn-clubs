@@ -457,15 +457,15 @@ class ClubTestCase(TestCase):
 
     def test_tag_views(self):
         # everyone can view the list of tags
-        resp = self.client.get("/tags/")
+        resp = self.client.get(reverse("tags-list"))
         self.assertIn(resp.status_code, [200], resp.content)
 
         # ensure that unauthenticated users cannot create tags
-        resp = self.client.post("/tags/", {"name": "Some Tag"}, content_type="application/json")
+        resp = self.client.post(reverse("tags-list"), {"name": "Some Tag"})
         self.assertIn(resp.status_code, [400, 403, 405], resp.content)
 
         # ensure that unauthenticated users cannot delete tags
-        resp = self.client.delete("/tags/some-tag/")
+        resp = self.client.delete(reverse("tags-detail", args=(1,)))
         self.assertIn(resp.status_code, [400, 403, 405], resp.content)
 
     def test_club_create_empty(self):
@@ -960,7 +960,7 @@ class ClubTestCase(TestCase):
 
         # Try to create note without permissions
         resp = self.client.post(
-            "/clubs/{}/notes/".format(self.club1.code),
+            reverse("clubs-detail", args=(self.club1.code,)) + "notes/",
             {
                 "creator": self.user2.username,
                 "creating_club": self.club1.code,
@@ -979,7 +979,7 @@ class ClubTestCase(TestCase):
 
         # Creating note after given permissions
         resp = self.client.post(
-            "/clubs/{}/notes/".format(self.club1.code),
+            reverse("clubs-detail", args=(self.club1.code,)) + "notes/",
             {
                 "creator": self.user2.username,
                 "creating_club": self.club1.code,
@@ -996,7 +996,7 @@ class ClubTestCase(TestCase):
 
         # Still cannot create note above permission level
         resp = self.client.post(
-            "/clubs/{}/notes/".format(self.club1.code),
+            reverse("clubs-detail", args=(self.club1.code,)) + "notes/",
             {
                 "creator": self.user2.username,
                 "creating_club": self.club1.code,

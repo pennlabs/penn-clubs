@@ -24,7 +24,7 @@ from clubs.views import (
 
 router = routers.SimpleRouter()
 router.register(r"clubs", ClubViewSet, basename="clubs")
-router.register(r"tags", TagViewSet)
+router.register(r"tags", TagViewSet, basename="tags")
 router.register(r"favorites", FavoriteViewSet, basename="favorites")
 router.register(r"subscribe", SubscribeViewSet, basename="subscribe")
 
