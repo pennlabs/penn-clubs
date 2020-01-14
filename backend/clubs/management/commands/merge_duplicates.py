@@ -76,6 +76,13 @@ def merge_tags(one, two):
     """
     Merges two tags and returns the combined tag.
     """
+    # keep tag with the non-uppercase name
+    if one.name.isupper():
+        one, two = two, one
+    elif not two.name.isupper():
+        if len(one.name) < len(two.name):
+            one, two = two, one
+
     one.club_set.add(*two.club_set.all())
     two.delete()
     return one
