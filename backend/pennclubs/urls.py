@@ -14,7 +14,7 @@ urlpatterns = [
     path("accounts/", include("accounts.urls", namespace="accounts")),
     path(
         "openapi/",
-        get_schema_view(title="{{ project_name }} Documentation", public=True),
+        get_schema_view(title="Penn Clubs Documentation", public=True),
         name="openapi-schema",
     ),
     path(
