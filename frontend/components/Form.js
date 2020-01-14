@@ -1,4 +1,4 @@
-import React from 'react'
+import { Component } from 'react'
 import Select from 'react-select'
 import { EditorState, ContentState, convertToRaw } from 'draft-js'
 import draftToHtml from 'draftjs-to-html'
@@ -9,12 +9,13 @@ import { titleize } from '../utils'
 
 let htmlToDraft, Editor
 
-class Form extends React.Component {
+class Form extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
       mounted: false,
+      edited: false,
     }
 
     this.files = {}
@@ -27,8 +28,10 @@ class Form extends React.Component {
     }
 
     this.onChange = this.onChange.bind(this)
+    this.checkChange = this.checkChange.bind(this)
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
+    this.handleSubmit = this.handleSubmit.bind(this)
   }
 
   setDefaults(fields) {
@@ -39,7 +42,7 @@ class Form extends React.Component {
           if (defaults && defaults[name]) {
             this.state['editorState-' + name] = EditorState.createWithContent(
               ContentState.createFromBlockArray(
-                htmlToDraft(this.props.defaults[name]).contentBlocks
+                htmlToDraft(defaults[name]).contentBlocks
               )
             )
           } else {
@@ -170,6 +173,7 @@ class Form extends React.Component {
             <Editor
               editorState={this.state[`editorState-${name}`]}
               placeholder={placeholder}
+              onChange={this.onChange}
               onEditorStateChange={state => {
                 this.setState({
                   [`editorState-${name}`]: state,
@@ -198,8 +202,8 @@ class Form extends React.Component {
               }}
             />
           ) : (
-            <div />
-          )}
+              <div />
+            )}
         </div>
       )
     } else if (type === 'textarea') {
@@ -233,6 +237,7 @@ class Form extends React.Component {
               ref={c => {
                 this.files[name] = c
               }}
+              onChange={this.onChange}
               accept={accept}
               type="file"
               name={name}
@@ -338,23 +343,61 @@ class Form extends React.Component {
     if (onChange) {
       onChange(e)
     }
+    this.checkChange()
+  }
+
+  checkChange() {
+    this.state.edited || this.setState({ edited: true })
+  }
+
+  handleSubmit() {
+    // Allow onSubmit to be a Promise or async function. If Promise.resolve is passed some
+    // other value, it resolves with that value.
+    const { onSubmit } = this.props
+    onSubmit && Promise.resolve(onSubmit(this.getData())).then(() => {
+      this.setState({ edited: false })
+    })
   }
 
   render() {
-    const { submitButton, onSubmit, fields } = this.props
+    const { submitButton, disabledSubmitButton, fields } = this.props
+    const { edited } = this.state
+
+    // If both submitButton and disabledSubmitButton are provided or not provided, then
+    // we can disable or enable the button. Otherwise, we show the submitButton by default
+    // and form validation must be implemented in the parent component.
+    let button
+    if (edited) {
+      if (submitButton) {
+        button = <span onClick={this.handleSubmit}>{submitButton}</span>
+      } else {
+        button = <a
+          className="button is-primary is-medium"
+          onClick={this.handleSubmit}
+        >
+          Submit
+        </a>
+      }
+    } else {
+      if (disabledSubmitButton) {
+        button = <span>{disabledSubmitButton}</span>
+      } else if (submitButton) {
+        button = <span onClick={this.handleSubmit}>{submitButton}</span>
+      } else {
+        button = <a
+          className="button is-primary is-medium"
+          title="You must make changes before submitting."
+          disabled
+        >
+          Submit
+        </a>
+      }
+    }
+
     return (
       <>
         {this.generateFields(fields)}
-        {typeof submitButton !== 'undefined' ? (
-          <span onClick={() => onSubmit(this.getData())}>{submitButton}</span>
-        ) : (
-          <a
-            className="button is-primary is-medium"
-            onClick={() => onSubmit && onSubmit(this.getData())}
-          >
-            Submit
-          </a>
-        )}
+        {button}
       </>
     )
   }

@@ -10,7 +10,6 @@ class ProfileForm extends React.Component {
     this.state = {
       schools: [],
       majors: [],
-      saved: false,
     }
 
     this.submit = this.submit.bind(this)
@@ -35,19 +34,15 @@ class ProfileForm extends React.Component {
   }
 
   submit(data) {
-    doApiRequest('/settings/?format=json', {
+    return doApiRequest('/settings/?format=json', {
       method: 'PATCH',
       body: data,
-    })
-      .then(resp => resp.json())
-      .then(resp => {
-        this.setState({ saved: true })
-      })
+    }).then(resp => resp.json())
   }
 
   render() {
     const { settings } = this.props
-    const { schools, majors, saved } = this.state
+    const { schools, majors } = this.state
 
     const fields = [
       {
@@ -76,10 +71,8 @@ class ProfileForm extends React.Component {
         fields={fields}
         defaults={settings}
         onSubmit={this.submit}
-        onChange={() => this.setState({ saved: false })}
-        submitButton={
-          <a className="button is-success" disabled={saved}><Icon alt="save" name="edit" /> {saved ? 'Saved!' : 'Save'}</a>
-        }
+        submitButton={<a className="button is-success"><Icon alt="save" name="edit" />Save</a>}
+        disabledSubmitButton={<a className="button is-success" disabled><Icon alt="save" name="edit" />Saved!</a>}
       />
     )
   }
