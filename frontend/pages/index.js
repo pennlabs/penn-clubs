@@ -288,8 +288,6 @@ class Splash extends React.Component {
               tags={tags}
               favorites={favorites}
               updateFavorites={updateFavorites}
-              selectedTags={selectedTags}
-              updateTag={this.updateTag.bind(this)}
             />
           </WideContainer>
         </Container>
