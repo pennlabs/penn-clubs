@@ -43,11 +43,12 @@ export const Icon = ({ name, alt, size, style, ...props }) => (
 Icon.defaultProps = {
   style: {},
   size: undefined,
+  alt: ''
 }
 
 Icon.propTypes = {
   name: PropTypes.string.isRequired,
-  alt: PropTypes.string.isRequired,
+  alt: PropTypes.string,
   size: PropTypes.string,
   style: PropTypes.object,
 }
