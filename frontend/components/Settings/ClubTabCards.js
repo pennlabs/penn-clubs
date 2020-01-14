@@ -14,7 +14,7 @@ const ClubTabCard = ({
     role_display: role,
     title,
     active,
-    public,
+    public: isPublic,
   } = club
   return (
     <>
@@ -70,7 +70,7 @@ const ClubTabCard = ({
         Public:
         <Toggle
           club={club}
-          active={public}
+          active={isPublic}
           toggle={togglePublic}
         />
       </span>
