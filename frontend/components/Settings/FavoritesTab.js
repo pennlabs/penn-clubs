@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Link from 'next/link'
 import ClubTableRow from '../ClubTableRow'
 
 export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
@@ -21,7 +22,7 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
   if (!rows || !rows.length) {
     return (
       <p className="has-text-light-grey" style={{ paddingTop: 200, textAlign: 'center' }}>
-        No {keyword}s yet! Browse clubs <a href="/">here.</a>
+        No {keyword}s yet! Browse clubs <Link href="/">here.</Link>
       </p>
     )
   }
