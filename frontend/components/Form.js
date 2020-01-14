@@ -173,8 +173,8 @@ class Form extends Component {
             <Editor
               editorState={this.state[`editorState-${name}`]}
               placeholder={placeholder}
+              onChange={this.onChange}
               onEditorStateChange={state => {
-                this.checkChange()
                 this.setState({
                   [`editorState-${name}`]: state,
                   [`field-${name}`]: draftToHtml(
@@ -237,7 +237,7 @@ class Form extends Component {
               ref={c => {
                 this.files[name] = c
               }}
-              onChange={this.checkChange}
+              onChange={this.onChange}
               accept={accept}
               type="file"
               name={name}
@@ -351,8 +351,8 @@ class Form extends Component {
   }
 
   handleSubmit() {
-    // Allow onSubmit to be a Promise or async function. If resolve is passed some other value,
-    // it resolves with that value.
+    // Allow onSubmit to be a Promise or async function. If Promise.resolve is passed some
+    // other value, it resolves with that value.
     const { onSubmit } = this.props
     onSubmit && Promise.resolve(onSubmit(this.getData())).then(() => {
       this.setState({ edited: false })
