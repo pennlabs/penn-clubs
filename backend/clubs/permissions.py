@@ -47,10 +47,10 @@ class ClubPermission(permissions.BasePermission):
             return True
 
 
-class EventPermission(permissions.BasePermission):
+class ClubItemPermission(permissions.BasePermission):
     """
-    Officers and above can create/update/delete events.
-    Everyone else can view and list events.
+    Officers and above can create/update/delete events or testimonials.
+    Everyone else can view and list events or testimonials.
     """
 
     def has_permission(self, request, view):

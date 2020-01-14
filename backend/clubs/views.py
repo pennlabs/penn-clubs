@@ -34,8 +34,8 @@ from clubs.models import (
 )
 from clubs.permissions import (
     AssetPermission,
+    ClubItemPermission,
     ClubPermission,
-    EventPermission,
     InvitePermission,
     IsSuperuser,
     MemberPermission,
@@ -327,7 +327,7 @@ class EventViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = EventSerializer
-    permission_classes = [EventPermission | IsSuperuser]
+    permission_classes = [ClubItemPermission | IsSuperuser]
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
@@ -366,7 +366,7 @@ class TestimonialViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = TestimonialSerializer
-    permission_classes = [IsSuperuser]
+    permission_classes = [ClubItemPermission | IsSuperuser]
 
     def get_queryset(self):
         return Testimonial.objects.filter(club__code=self.kwargs["club_code"])
