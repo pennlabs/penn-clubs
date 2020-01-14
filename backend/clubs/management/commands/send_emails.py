@@ -1,14 +1,14 @@
 import csv
 import os
-import re
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand, CommandError
-from django.db.models import CharField, Count, F, Q, Value
+from django.db.models import Count, Q
 from django.template.loader import render_to_string
 
 from clubs.models import Club, Membership, MembershipInvite
+from clubs.utils import fuzzy_lookup_club
 
 
 def send_fair_email(club, email):
@@ -63,6 +63,7 @@ class Command(BaseCommand):
         dry_run = kwargs["dry_run"]
         only_sheet = kwargs["only_sheet"]
         action = kwargs["type"]
+        verbosity = kwargs["verbosity"]
 
         if only_sheet:
             clubs = Club.objects.all()
@@ -77,11 +78,10 @@ class Command(BaseCommand):
                     filter=Q(membershipinvite__role__lte=Membership.ROLE_OWNER, active=True),
                 ),
             ).filter(owner_count=0, invite_count=0, active=True)
-            self.stdout.write("Found {} active club(s) without owners.".format(clubs.count()))
+            self.stdout.write(f"Found {clubs.count()} active club(s) without owners.")
 
         clubs_missing = 0
         clubs_sent = 0
-        clubs_many = 0
 
         # parse CSV file
         emails = {}
@@ -89,47 +89,22 @@ class Command(BaseCommand):
         email_file = kwargs["emails"]
 
         if not os.path.isfile(email_file):
-            raise CommandError('Email file "{}" does not exist!'.format(email_file))
+            raise CommandError(f'Email file "{email_file}" does not exist!')
 
         with open(email_file, "r") as f:
             for line in csv.reader(f):
                 raw_name = line[0].strip()
-                name = re.sub(r"\(.+?\)$", "", raw_name).strip()
-                club = Club.objects.filter(name__icontains=name)
-                count = club.count()
+                club = fuzzy_lookup_club(raw_name)
 
-                # try more exact match if multiple results
-                if count > 1:
-                    alt_club = Club.objects.filter(name=name)
-                    if alt_club.count() == 1:
-                        club = alt_club
-                        count = club.count()
-
-                # try looking up a club name inside the spreadsheet value
-                if count == 0:
-                    alt_club = Club.objects.annotate(
-                        query=Value(raw_name, output_field=CharField())
-                    ).filter(query__icontains=F("name"))
-                    if alt_club.count() >= 1:
-                        club = alt_club
-                        count = club.count()
-
-                if count == 1:
+                if club is not None:
+                    if verbosity >= 2:
+                        self.stdout.write(f"Mapped {raw_name} -> {club.name} ({club.code})")
                     clubs_sent += 1
-                    emails[club.first().id] = [x.strip() for x in line[1].split(",")]
-                elif count == 0:
+                    emails[club.id] = [x.strip() for x in line[1].split(",")]
+                else:
                     clubs_missing += 1
                     self.stdout.write(
-                        self.style.WARNING("Could not find club matching {}!".format(name))
-                    )
-                else:
-                    clubs_many += 1
-                    self.stdout.write(
-                        self.style.WARNING(
-                            "Too many club entries ({}) for {}!".format(
-                                ", ".join(club.values_list("name", flat=True)), name
-                            )
-                        )
+                        self.style.WARNING(f"Could not find club matching {raw_name}!")
                     )
 
         # send out emails
@@ -144,12 +119,9 @@ class Command(BaseCommand):
                 elif only_sheet:
                     continue
                 receivers = list(set(receivers))
+                receivers_str = ", ".join(receivers)
                 self.stdout.write(
-                    self.style.SUCCESS(
-                        "Sending {} email for {} to {}".format(
-                            action, club.name, ", ".join(receivers)
-                        )
-                    )
+                    self.style.SUCCESS(f"Sending {action} email for {club.name} to {receivers_str}")
                 )
                 for receiver in receivers:
                     if not dry_run:
@@ -172,8 +144,4 @@ class Command(BaseCommand):
                         elif action == "fair":
                             send_fair_email(club, receiver)
 
-        self.stdout.write(
-            "Sent {} email(s), {} missing club(s), {} ambiguous club(s)".format(
-                clubs_sent, clubs_missing, clubs_many
-            )
-        )
+        self.stdout.write(f"Sent {clubs_sent} email(s), {clubs_missing} missing club(s)")

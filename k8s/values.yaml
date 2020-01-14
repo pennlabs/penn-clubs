@@ -7,12 +7,10 @@ applications:
     secret: pennclubs
     ingress:
       hosts:
-        - host: api.pennclubs.com
-          paths: ["/"]
+        - host: pennclubs.com
+          paths: ["/api"]
     extraEnv:
-      - name: BACKEND_DOMAIN
-        value: api.pennclubs.com
-      - name: FRONTEND_DOMAIN
+      - name: DOMAIN
         value: pennclubs.com
       - name: DJANGO_SETTINGS_MODULE
         value: pennclubs.settings.production
@@ -26,3 +24,5 @@ applications:
     extraEnv:
       - name: PORT
         value: 80
+      - name: DOMAIN
+        value: pennclubs.com

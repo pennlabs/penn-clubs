@@ -38,6 +38,11 @@ const socials = [
     label: 'Twitter',
     icon: 'twitter',
   },
+  {
+    name: 'youtube',
+    label: 'YouTube',
+    icon: 'youtube',
+  },
 ]
 
 const iconStyles = {

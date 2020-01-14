@@ -212,7 +212,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return resp
 
         # return cached if cached
-        key = "club:list"
+        key = settings.CLUB_LIST_CACHE_KEY
         val = cache.get(key)
         if val is not None:
             return Response(val)

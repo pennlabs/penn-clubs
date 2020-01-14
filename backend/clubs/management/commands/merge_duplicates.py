@@ -1,7 +1,17 @@
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from django.db.models import Count, Q
 
-from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import (
+    Club,
+    Event,
+    Favorite,
+    Membership,
+    MembershipInvite,
+    Subscribe,
+    Tag,
+    Testimonial,
+)
 
 
 class Command(BaseCommand):
@@ -61,6 +71,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS("Merged {}".format(final.name)))
 
 
+@transaction.atomic
 def merge_tags(one, two):
     """
     Merges two tags and returns the combined tag.
@@ -70,6 +81,7 @@ def merge_tags(one, two):
     return one
 
 
+@transaction.atomic
 def merge_clubs(one, two):
     """
     Merges two clubs and returns the combined club.
@@ -82,12 +94,31 @@ def merge_clubs(one, two):
         secondary = one
         primary = two
 
-    # Keep the club code that breaks the least invites
-    if one.membershipinvite_set.count() < two.membershipinvite_set.count():
+    membership_diff = one.membership_set.count() - two.membership_set.count()
+
+    # Keep the club object with the most members
+    if membership_diff < 0:
+        secondary = one
+        primary = two
+        membership_diff = -membership_diff
+
+    # Keep the club code with the most members
+    if membership_diff < 0:
         primary.code = secondary.code
+    elif membership_diff == 0:
+        # Keep the club code that breaks the least invites
+        invite_diff = (
+            primary.membershipinvite_set.filter(active=True).count()
+            - secondary.membershipinvite_set.filter(active=True).count()
+        )
+        if invite_diff < 0:
+            primary.code = secondary.code
+        elif invite_diff == 0:
+            # Keep the shorter club code
+            primary.code = min(primary.code, secondary.code)
 
     # If either club is active, set the resulting club as active
-    primary.active = one.active or two.active
+    primary.active = primary.active or secondary.active
 
     # Choose longest string or string that exists
     for field in [
@@ -100,6 +131,7 @@ def merge_clubs(one, two):
         "twitter",
         "instagram",
         "github",
+        "youtube",
         "how_to_get_involved",
         "listserv",
     ]:
@@ -126,18 +158,22 @@ def merge_clubs(one, two):
     # Take all membership invites
     MembershipInvite.objects.filter(club=secondary).update(club=primary)
 
-    # Take all favorites
-    for fav in Favorite.objects.filter(club=secondary):
-        if Favorite.objects.filter(person=fav.person, club=primary).exists():
-            fav.delete()
-        else:
-            fav.club = primary
-            fav.save()
+    # Take all testimonials
+    Testimonial.objects.filter(club=secondary).update(club=primary)
+
+    # Take all bookmarks and subscriptions
+    for model in (Favorite, Subscribe):
+        for fav in model.objects.filter(club=secondary):
+            if model.objects.filter(person=fav.person, club=primary).exists():
+                fav.delete()
+            else:
+                fav.club = primary
+                fav.save()
 
     # Take all events
     Event.objects.filter(club=secondary).update(club=primary)
 
-    primary.save()
     secondary.delete()
+    primary.save()
 
     return primary

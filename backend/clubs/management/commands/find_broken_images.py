@@ -10,7 +10,18 @@ from clubs.models import Club
 class Command(BaseCommand):
     help = "List clubs with broken images and delete the image link."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--dry-run",
+            dest="dry_run",
+            action="store_true",
+            help="Do not actually modify anything.",
+        )
+        parser.set_defaults(dry_run=False)
+
     def handle(self, *args, **kwargs):
+        self.dry_run = kwargs["dry_run"]
+
         broken_list = []
         working_list = []
         for club in Club.objects.filter(image__isnull=False):
@@ -25,8 +36,9 @@ class Command(BaseCommand):
                     self.stdout.write(
                         self.style.ERROR("{} has broken image {}".format(club.code, club.image.url))
                     )
+                    if not self.dry_run:
+                        club.image.delete(save=True)
                     broken_list.append({"id": club.id, "name": club.name, "url": club.image.url})
-                    club.image.delete(save=True)
                 else:
                     self.stdout.write(
                         self.style.SUCCESS(
