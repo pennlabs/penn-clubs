@@ -751,4 +751,4 @@ class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
             "creating_club_permission",
             "outside_club_permission",
         )
-        save_related_fields = [{"field": "note_tags", "create": True}]
+        save_related_fields = [{"field": "note_tags", "mode": "create"}]
