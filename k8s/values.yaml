@@ -24,3 +24,5 @@ applications:
     extraEnv:
       - name: PORT
         value: 80
+      - name: DOMAIN
+        value: pennclubs.com
