@@ -14,7 +14,13 @@ const ClubCards = s(ClubTabCards)`
   }
 `
 
-export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) => (
+export default ({
+  className,
+  userInfo,
+  togglePublic,
+  toggleActive,
+  leaveClub,
+}) => (
   <>
     <ClubTable
       className={className}
