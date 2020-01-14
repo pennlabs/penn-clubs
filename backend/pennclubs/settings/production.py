@@ -26,10 +26,7 @@ SENTRY_URL = os.environ.get("SENTRY_URL", "")
 sentry_sdk.init(dsn=SENTRY_URL, integrations=[DjangoIntegration()])
 
 # DLA settings
-PLATFORM_ACCOUNTS = {
-    "REDIRECT_URI": f"https://{DOMAIN}/api/accounts/callback/",
-    "ADMIN_PERMISSION": "clubs_admin",
-}
+PLATFORM_ACCOUNTS = {"ADMIN_PERMISSION": "clubs_admin"}
 
 # Email client information
 EMAIL_HOST = os.getenv("EMAIL_HOST")
