@@ -220,7 +220,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # save to cache if not
         resp = super().list(request, *args, **kwargs)
         if resp.status_code == 200:
-            cache.set(key, resp.data, 60 * 5)
+            cache.set(key, resp.data, settings.CLUB_LIST_CACHE_TIME)
         return resp
 
     @action(detail=False, methods=["GET"])
