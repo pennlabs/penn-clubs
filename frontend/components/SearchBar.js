@@ -187,7 +187,7 @@ const SearchBar = ({ tags, updateTag, selectedTags: propTags, resetDisplay }) =>
               updateTag={updateTag}
             />
           ))}
-          <CloseButton onClick={closeDropdownFilter} />
+          {activeDropdownFilter && <CloseButton onClick={closeDropdownFilter} />}
         </Content>
       </Wrapper>
 
