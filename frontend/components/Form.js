@@ -31,6 +31,7 @@ class Form extends Component {
     this.checkChange = this.checkChange.bind(this)
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
+    this.handleSubmit = this.handleSubmit.bind(this)
   }
 
   setDefaults(fields) {
@@ -201,8 +202,8 @@ class Form extends Component {
               }}
             />
           ) : (
-            <div />
-          )}
+              <div />
+            )}
         </div>
       )
     } else if (type === 'textarea') {
@@ -384,12 +385,12 @@ class Form extends Component {
         button = <span onClick={this.handleSubmit}>{submitButton}</span>
       } else {
         button = <a
-            className="button is-primary is-medium"
+          className="button is-primary is-medium"
           title="You must make changes before submitting."
           disabled
-          >
-            Submit
-          </a>
+        >
+          Submit
+        </a>
       }
     }
 
