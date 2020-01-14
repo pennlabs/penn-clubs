@@ -2,6 +2,7 @@ import re
 
 import bleach
 from django.db.models import CharField, F, Q, Value
+from django.template.defaultfilters import slugify
 
 from clubs.models import Club
 
@@ -81,6 +82,13 @@ def fuzzy_lookup_club(name):
                 return club.first()
         else:
             return club.first()
+
+    # lookup club by slug
+    code = slugify(re.sub(r"\(.+?\)$", "", name).strip())
+    club = Club.objects.filter(code=code)
+
+    if club.count() == 1:
+        return club.first()
 
     # lookup club by subtitle
     club = Club.objects.filter(subtitle__iexact=name)

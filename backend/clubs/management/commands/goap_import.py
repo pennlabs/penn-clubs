@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from django.template.defaultfilters import slugify
 
 from clubs.models import Club, Tag
@@ -157,9 +158,10 @@ class Command(BaseCommand):
                 club.active = False
 
             if not self.dry_run:
-                club.save()
-                if tag is not None and not club.tags.count():
-                    club.tags.set([tag])
+                with transaction.atomic():
+                    club.save()
+                    if tag is not None and not club.tags.count():
+                        club.tags.set([tag])
 
             self.club_count += 1
             action_verb = "Created" if flag else "Updated"
