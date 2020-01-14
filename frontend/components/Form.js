@@ -350,23 +350,44 @@ class Form extends Component {
   }
 
   render() {
-    const { submitButton, onSubmit, fields } = this.props
+    const { submitButton, disabledSubmitButton, fields } = this.props
     const { edited } = this.state
-    return (
-      <>
-        {this.generateFields(fields)}
-        {typeof submitButton !== 'undefined' ? (
-          <span onClick={() => onSubmit(this.getData())}>{submitButton}</span>
-        ) : (
-          <a
+
+    // If both submitButton and disabledSubmitButton are provided or not provided, then
+    // we can disable or enable the button. Otherwise, we show the submitButton by default
+    // and form validation must be implemented in the parent component.
+    let button
+    if (edited) {
+      if (submitButton) {
+        button = <span onClick={this.handleSubmit}>{submitButton}</span>
+      } else {
+        button = <a
+          className="button is-primary is-medium"
+          onClick={this.handleSubmit}
+        >
+          Submit
+        </a>
+      }
+    } else {
+      if (disabledSubmitButton) {
+        button = <span>{disabledSubmitButton}</span>
+      } else if (submitButton) {
+        button = <span onClick={this.handleSubmit}>{submitButton}</span>
+      } else {
+        button = <a
             className="button is-primary is-medium"
-            title={edited ? '' : 'You must make changes before submitting.'}
-            disabled={!edited}
-            onClick={() => edited && onSubmit && onSubmit(this.getData())}
+          title="You must make changes before submitting."
+          disabled
           >
             Submit
           </a>
-        )}
+      }
+    }
+
+    return (
+      <>
+        {this.generateFields(fields)}
+        {button}
       </>
     )
   }
