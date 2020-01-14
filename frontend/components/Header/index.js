@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Link from 'next/link'
 import s from 'styled-components'
 import Heading from './Head'
 import Burger from './Burger'
@@ -75,12 +76,14 @@ const Header = ({ authenticated, userInfo }) => {
 
       <Nav className="navbar" role="navigation" aria-label="main navigation">
         <div className="navbar-brand">
-          <a className="navbar-item" style={{ padding: 0 }} href="/">
-            <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
+          <Link href="/">
+            <a className="navbar-item" style={{ padding: 0 }}>
+              <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
 
-            <Title className="title is-size-4">Penn Clubs</Title>
-            <BetaTag className="tag is-rounded">Beta</BetaTag>
-          </a>
+              <Title className="title is-size-4">Penn Clubs</Title>
+              <BetaTag className="tag is-rounded">Beta</BetaTag>
+            </a>
+          </Link>
 
           <Burger toggle={toggle} />
         </div>
