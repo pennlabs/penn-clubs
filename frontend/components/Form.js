@@ -1,12 +1,15 @@
 import s from 'styled-components'
 import { Component } from 'react'
 import Select from 'react-select'
+import Router from 'next/router'
 import { EditorState, ContentState, convertToRaw } from 'draft-js'
 import draftToHtml from 'draftjs-to-html'
 import Head from 'next/head'
 
 import { Icon } from './common'
 import { doApiRequest, titleize } from '../utils'
+
+const UNSAVED_MESSAGE = 'You have unsaved changes. Are you sure you want to leave?'
 
 let htmlToDraft, Editor
 
@@ -35,6 +38,8 @@ class Form extends Component {
 
     this.onChange = this.onChange.bind(this)
     this.checkChange = this.checkChange.bind(this)
+    this.confirmExit = this.confirmExit.bind(this)
+    this.confirmRouteChange = this.confirmRouteChange.bind(this)
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
@@ -74,10 +79,35 @@ class Form extends Component {
     })
   }
 
+  confirmRouteChange() {
+    const { edited } = this.state
+    const { router } = Router
+    if (edited && !confirm(UNSAVED_MESSAGE)) {
+      router.abortComponentLoad()
+      router.events.emit('routeChangeError')
+      throw 'Abort link navigation - ignore this error.'
+    }
+  }
+
+  confirmExit(e) {
+    if (this.state.edited) {
+      e.preventDefault()
+      e.returnValue = UNSAVED_MESSAGE
+      return UNSAVED_MESSAGE
+    }
+  }
+
   componentDidMount() {
+    window.addEventListener('beforeunload', this.confirmExit)
+    Router.router.events.on('routeChangeStart', this.confirmRouteChange)
     this.setState({
       mounted: true,
     })
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('beforeunload', this.confirmExit)
+    Router.router.events.off('routeChangeStart', this.confirmRouteChange)
   }
 
   getAllFields(fields) {
