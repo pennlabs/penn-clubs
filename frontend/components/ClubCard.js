@@ -85,8 +85,6 @@ const ClubCard = ({
   club,
   updateFavorites,
   favorite,
-  selectedTags,
-  updateTag,
 }) => {
   const {
     name,
@@ -119,11 +117,7 @@ const ClubCard = ({
                 {!active && (
                   <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
                 )}
-                <TagGroup
-                  tags={tags}
-                  selectedTags={selectedTags}
-                  updateTag={updateTag}
-                />
+                <TagGroup tags={tags} />
               </div>
               {img && (
                 <LazyLoad height={62} offset={800}>

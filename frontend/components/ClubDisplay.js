@@ -55,8 +55,6 @@ class ClubDisplay extends React.Component {
       favorites,
       updateFavorites,
       display,
-      updateTag,
-      selectedTags,
     } = this.props
     const clubsToShow = displayClubs.slice(0, this.state.end)
 
@@ -68,8 +66,6 @@ class ClubDisplay extends React.Component {
               key={club.code}
               club={club}
               tags={tags}
-              selectedTags={selectedTags}
-              updateTag={updateTag}
               updateFavorites={updateFavorites}
               favorite={favorites.includes(club.code)}
             />
@@ -85,8 +81,6 @@ class ClubDisplay extends React.Component {
             club={club}
             key={club.code}
             tags={tags}
-            selectedTags={selectedTags}
-            updateTag={updateTag}
             updateFavorites={updateFavorites}
             favorite={favorites.includes(club.code)}
           />
