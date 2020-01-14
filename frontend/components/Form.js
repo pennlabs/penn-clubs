@@ -349,6 +349,15 @@ class Form extends Component {
     this.state.edited || this.setState({ edited: true })
   }
 
+  handleSubmit() {
+    // Allow onSubmit to be a Promise or async function. If resolve is passed some other value,
+    // it resolves with that value.
+    const { onSubmit } = this.props
+    onSubmit && Promise.resolve(onSubmit(this.getData())).then(() => {
+      this.setState({ edited: false })
+    })
+  }
+
   render() {
     const { submitButton, disabledSubmitButton, fields } = this.props
     const { edited } = this.state
