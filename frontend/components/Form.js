@@ -9,6 +9,11 @@ import { titleize } from '../utils'
 
 let htmlToDraft, Editor
 
+/*
+ * Represents a form with fields and a submit button.
+ * Does not actually perform an ajax request, returns
+ * the data in JSON format in the onSubmit event.
+ */
 class Form extends Component {
   constructor(props) {
     super(props)
@@ -89,41 +94,44 @@ class Form extends Component {
   }
 
   getData() {
-    return this.getAllFields().reduce((out, { type, name, reverser, converter }) => {
-      const val = this.state[`field-${name}`]
-      switch (type) {
-        case 'multiselect': {
-          out[name] = (val || []).map(reverser)
-          break
-        }
-        case 'select': {
-          out[name] = val ? reverser(val) : val
-          break
-        }
-        case 'checkbox': {
-          out[name] = Boolean(val)
-          break
-        }
-        case 'date': {
-          out[name] = val || null
-          break
-        }
-        case 'file': {
-          const data = new FormData()
-          data.append('file', this.files[name].files[0])
-          out[name] = data
-          break
-        }
-        default: {
-          if (typeof converter === 'function') {
-            out[name] = converter(val)
-          } else {
-            out[name] = val
+    return this.getAllFields().reduce(
+      (out, { type, name, reverser, converter }) => {
+        const val = this.state[`field-${name}`]
+        switch (type) {
+          case 'multiselect': {
+            out[name] = (val || []).map(reverser)
+            break
+          }
+          case 'select': {
+            out[name] = val ? reverser(val) : val
+            break
+          }
+          case 'checkbox': {
+            out[name] = Boolean(val)
+            break
+          }
+          case 'date': {
+            out[name] = val || null
+            break
+          }
+          case 'file': {
+            const data = new FormData()
+            data.append('file', this.files[name].files[0])
+            out[name] = data
+            break
+          }
+          default: {
+            if (typeof converter === 'function') {
+              out[name] = converter(val)
+            } else {
+              out[name] = val
+            }
           }
         }
-      }
-      return out
-    }, {})
+        return out
+      },
+      {}
+    )
   }
 
   generateField(field) {
@@ -352,9 +360,10 @@ class Form extends Component {
     // Allow onSubmit to be a Promise or async function. If Promise.resolve is passed some
     // other value, it resolves with that value.
     const { onSubmit } = this.props
-    onSubmit && Promise.resolve(onSubmit(this.getData())).then(() => {
-      this.setState({ edited: false })
-    })
+    onSubmit &&
+      Promise.resolve(onSubmit(this.getData())).then(() => {
+        this.setState({ edited: false })
+      })
   }
 
   render() {
@@ -369,12 +378,14 @@ class Form extends Component {
       if (submitButton) {
         button = <span onClick={this.handleSubmit}>{submitButton}</span>
       } else {
-        button = <a
-          className="button is-primary is-medium"
-          onClick={this.handleSubmit}
-        >
-          Submit
-        </a>
+        button = (
+          <a
+            className="button is-primary is-medium"
+            onClick={this.handleSubmit}
+          >
+            Submit
+          </a>
+        )
       }
     } else {
       if (disabledSubmitButton) {
@@ -382,13 +393,15 @@ class Form extends Component {
       } else if (submitButton) {
         button = <span onClick={this.handleSubmit}>{submitButton}</span>
       } else {
-        button = <a
-          className="button is-primary is-medium"
-          title="You must make changes before submitting."
-          disabled
-        >
-          Submit
-        </a>
+        button = (
+          <a
+            className="button is-primary is-medium"
+            title="You must make changes before submitting."
+            disabled
+          >
+            Submit
+          </a>
+        )
       }
     }
 
