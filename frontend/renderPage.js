@@ -1,8 +1,9 @@
-import React from 'react'
+import { Component } from 'react'
 import s from 'styled-components'
 
 import Header from './components/Header'
 import Footer from './components/Footer'
+import LoginModal from './components/LoginModal'
 import { Loading } from './components/common'
 
 import { WHITE } from './constants/colors'
@@ -18,11 +19,12 @@ const Wrapper = s.div`
 `
 
 function renderPage(Page) {
-  class RenderPage extends React.Component {
+  class RenderPage extends Component {
     constructor(props) {
       super(props)
 
       this.state = {
+        modal: false,
         authenticated: null,
         userInfo: null,
         favorites: [],
@@ -30,6 +32,11 @@ function renderPage(Page) {
         clubs: null,
       }
 
+      this.openModal = this.openModal.bind(this)
+      this.closeModal = this.closeModal.bind(this)
+      this.checkAuth = this.checkAuth.bind(this)
+      this._updateFavorites = this._updateFavorites.bind(this)
+      this._updateSubscriptions = this._updateSubscriptions.bind(this)
       this.updateFavorites = this.updateFavorites.bind(this)
       this.updateSubscriptions = this.updateSubscriptions.bind(this)
       this.updateUserInfo = this.updateUserInfo.bind(this)
@@ -45,6 +52,8 @@ function renderPage(Page) {
 
     render() {
       try {
+        const { props, state, closeModal, updateFavorites, updateUserInfo, updateSubscriptions } = this
+        const { authenticated, modal, userInfo } = state
         return (
           <div
             style={{
@@ -53,17 +62,18 @@ function renderPage(Page) {
               backgroundColor: WHITE,
             }}
           >
+            <LoginModal show={modal} closeModal={closeModal}/>
             <Header
-              authenticated={this.state.authenticated}
-              userInfo={this.state.userInfo}
+              authenticated={authenticated}
+              userInfo={userInfo}
             />
             <Wrapper>
               <Page
-                {...this.props}
-                {...this.state}
-                updateFavorites={this.updateFavorites}
-                updateSubscriptions={this.updateSubscriptions}
-                updateUserInfo={this.updateUserInfo}
+                {...props}
+                {...state}
+                updateFavorites={updateFavorites}
+                updateSubscriptions={updateSubscriptions}
+                updateUserInfo={updateUserInfo}
               />
             </Wrapper>
             <Footer />
@@ -74,30 +84,53 @@ function renderPage(Page) {
       }
     }
 
-    updateFavorites(id) {
+    checkAuth(func, ...args) {
       if (this.state.authenticated) {
-        const { favorites: newFavs } = this.state
-        const i = newFavs.indexOf(id)
-        if (i === -1) {
-          newFavs.push(id)
-          logEvent('favorite', id)
-          doApiRequest('/favorites/?format=json', {
-            method: 'POST',
-            body: { club: id },
-          })
-        } else {
-          newFavs.splice(i, 1)
-          logEvent('unfavorite', id)
-          doApiRequest(`/favorites/${id}/?format=json`, {
-            method: 'DELETE',
-          })
-        }
-        this.setState({ favorites: newFavs })
-        return i === -1
+        return func && func(...args)
+      } else {
+        this.openModal()
+        return false
       }
     }
 
+    openModal() {
+      this.setState({ modal: true })
+    }
+
+    closeModal() {
+      this.setState({ modal: false })
+    }
+
+    updateFavorites(id) {
+      return this.checkAuth(this._updateFavorites, id)
+    }
+
+    _updateFavorites(id) {
+      const { favorites: newFavs } = this.state
+      const i = newFavs.indexOf(id)
+      if (i === -1) {
+        newFavs.push(id)
+        logEvent('favorite', id)
+        doApiRequest('/favorites/?format=json', {
+          method: 'POST',
+          body: { club: id },
+        })
+      } else {
+        newFavs.splice(i, 1)
+        logEvent('unfavorite', id)
+        doApiRequest(`/favorites/${id}/?format=json`, {
+          method: 'DELETE',
+        })
+      }
+      this.setState({ favorites: newFavs })
+      return i === -1
+    }
+
     updateSubscriptions(id) {
+      return this.checkAuth(this._updateSubscriptions, id)
+    }
+
+    _updateSubscriptions(id) {
       const { subscriptions: newSubs } = this.state
       const i = newSubs.indexOf(id)
       if (i === -1) {
@@ -157,7 +190,7 @@ function renderPage(Page) {
 }
 
 export function renderListPage(Page) {
-  class RenderListPage extends React.Component {
+  class RenderListPage extends Component {
     render() {
       const { clubs, tags, favorites, authenticated, userInfo, updateUserInfo, updateFavorites } = this.props
 
