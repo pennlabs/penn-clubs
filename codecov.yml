@@ -3,3 +3,5 @@ coverage:
     project:
       default:
         threshold: 5
+fixes:
+  - "::backend/"
