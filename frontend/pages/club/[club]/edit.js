@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Select from 'react-select'
 
 import renderPage from '../../../renderPage.js'
+import { CLUB_ROUTE } from '../../../constants/routes'
 import {
   doApiRequest,
   getApiUrl,
@@ -884,7 +885,7 @@ class ClubForm extends Component {
           {nameOrDefault}
           {showInactiveTag && <InactiveTag />}
           {club && (
-            <Link href="/club/[club]" as={`/club/${club.code}`}>
+            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
               <a
                 className="button is-pulled-right is-secondary is-medium"
                 style={{ fontWeight: 'normal' }}

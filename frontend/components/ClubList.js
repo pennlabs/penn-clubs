@@ -4,6 +4,7 @@ import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
 import { Card, BlueTag, InactiveTag } from './common'
 
 import { BORDER_RADIUS } from '../constants/measurements'
+import { CLUB_ROUTE } from '../constants/routes'
 import { getDefaultClubImageURL } from '../utils'
 import Link from 'next/link'
 
@@ -27,7 +28,7 @@ const ClubList = ({ club, updateFavorites, favorite }) => {
   const img = club.image_url || getDefaultClubImageURL()
 
   return (
-    <Link href="/club/[club]" as={`/club/${code}`}>
+    <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
       <Card>
         <div className="columns is-vcentered is-gapless is-mobile">
           <div className="column">

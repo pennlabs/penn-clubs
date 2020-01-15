@@ -1,5 +1,6 @@
 import { DARK_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
+import { CLUB_ROUTE } from '../../constants/routes'
 import s from 'styled-components'
 import Toggle from './Toggle'
 import { Icon } from '../common'
@@ -77,8 +78,8 @@ export default props => {
             <tr key={item.code}>
               <td>
                 <Link
-                  href="/club/[club]"
-                  as={`/club/${item.code}`}
+                  href={CLUB_ROUTE()}
+                  as={CLUB_ROUTE(item.code)}
                 >
                   <a>{item.name}</a>
                 </Link>
