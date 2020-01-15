@@ -95,38 +95,40 @@ class Form extends Component {
   }
 
   getData() {
-    return this.getAllFields().reduce(
-      (out, { type, name, reverser, converter }) => {
-        const val = this.state[`field-${name}`]
-        switch (type) {
-          case 'multiselect': {
-            out[name] = (val || []).map(reverser)
-            break
-          }
-          case 'select': {
-            out[name] = val ? reverser(val) : val
-            break
-          }
-          case 'checkbox': {
-            out[name] = Boolean(val)
-            break
-          }
-          case 'date': {
-            out[name] = val || null
-            break
-          }
-          case 'file': {
-            const data = new FormData()
-            data.append('file', this.files[name].files[0])
-            out[name] = data
-            break
-          }
-          default: {
-            if (typeof converter === 'function') {
-              out[name] = converter(val)
-            } else {
-              out[name] = val
-            }
+    return this.getAllFields().reduce((out, { type, name, reverser, converter }) => {
+      const val = this.state[`field-${name}`]
+      switch (type) {
+        case 'multiselect': {
+          out[name] = (val || []).map(reverser)
+          break
+        }
+        case 'select': {
+          out[name] = val ? reverser(val) : val
+          break
+        }
+        case 'checkbox': {
+          out[name] = Boolean(val)
+          break
+        }
+        case 'date': {
+          out[name] = val || null
+          break
+        }
+        case 'datetime-local': {
+          out[name] = val || null
+          break
+        }
+        case 'file': {
+          const data = new FormData()
+          data.append('file', this.files[name].files[0])
+          out[name] = data
+          break
+        }
+        default: {
+          if (typeof converter === 'function') {
+            out[name] = converter(val)
+          } else {
+            out[name] = val
           }
         }
         return out
@@ -154,7 +156,7 @@ class Form extends Component {
 
     let inpt = null
 
-    if (['text', 'url', 'email', 'date', 'number'].includes(type)) {
+    if (['text', 'url', 'email', 'date', 'datetime-local', 'number'].includes(type)) {
       inpt = (
         <input
           className="input"

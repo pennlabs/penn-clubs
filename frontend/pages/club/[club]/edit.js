@@ -75,6 +75,13 @@ class ClubForm extends Component {
       },
     ]
 
+    this.types = [
+      {
+        value: 1,
+        label: 'Recruitment'
+      }
+    ]
+
     this.state = {
       club: null,
       invites: [],
@@ -86,6 +93,7 @@ class ClubForm extends Component {
       subscriptions: [],
     }
     this.submit = this.submit.bind(this)
+    this.submitEvent = this.submitEvent.bind(this)
     this.notify = this.notify.bind(this)
     this.sendInvites = this.sendInvites.bind(this)
   }
@@ -254,6 +262,22 @@ class ClubForm extends Component {
             this.notify('Club has been successfully saved.')
           }
         })
+      } else {
+        resp.json().then(err => {
+          this.notify(formatResponse(err))
+        })
+      }
+    })
+  }
+
+  submitEvent(data) {
+    doApiRequest(`/clubs/${this.state.club.code}/events/?format=json`, {
+      method: 'POST',
+      body: data
+    }).then(resp => {
+      if (resp.ok) {
+        this.notify(`Event has been created!`)
+        this.componentDidMount()
       } else {
         resp.json().then(err => {
           this.notify(formatResponse(err))
@@ -475,6 +499,54 @@ class ClubForm extends Component {
       },
     ]
 
+    const event_fields = [
+      {
+        name: 'New Event',
+        type: 'group',
+        fields: [
+          {
+            name: 'name',
+            type: 'text',
+            required: true,
+            help:
+              !this.state.isEdit &&
+              'Provide a descriptive name for the planned event.',
+          },
+          {
+            name: 'location',
+            required: true,
+            placeholder: 'Provide the event location',
+            type: 'text',
+          },
+          {
+            name: 'start_time',
+            required: true,
+            placeholder: 'Provide a start time for the event',
+            type: 'datetime-local',
+          },
+          {
+            name: 'end_time',
+            required: true,
+            placeholder: 'Provide an end time for the event',
+            type: 'datetime-local',
+          },
+          {
+            name: 'type',
+            type: 'select',
+            required: true,
+            choices: this.types,
+            converter: a => this.types.find(x => x.value === a),
+            reverser: a => a.value,
+          },
+          {
+            name: 'description',
+            placeholder: 'Type your event description here!',
+            type: 'html',
+          }
+        ],
+      }
+    ]
+
     const tabs = [
       {
         name: 'info',
@@ -624,6 +696,19 @@ class ClubForm extends Component {
                 </div>
               </div>
             )}
+            <div className="card" style={{ marginBottom: 20 }}>
+              <div className="card-header">
+                <p className="card-header-title">
+                  Events
+                </p>
+              </div>
+              <div className="card-content">
+                <Text>
+                  Create a new event for this club.
+                </Text>
+                <Form fields={event_fields} onSubmit={this.submitEvent}/>
+              </div>
+            </div>
             <div className="card">
               <div className="card-header">
                 <p className="card-header-title">Invite Members</p>

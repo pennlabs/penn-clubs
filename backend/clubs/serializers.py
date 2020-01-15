@@ -89,6 +89,58 @@ class YearSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "year")
 
 
+class EventSerializer(serializers.ModelSerializer):
+    id = serializers.SlugField(required=False)
+    club = serializers.SlugRelatedField(
+        queryset=Club.objects.all(), required=False, slug_field="code"
+    )
+    image = serializers.ImageField(write_only=True, required=False)
+    image_url = serializers.SerializerMethodField("get_image_url")
+    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    def get_image_url(self, obj):
+        if not obj.image:
+            return None
+        if obj.image.url.startswith("http"):
+            return obj.image.url
+        else:
+            return self.context["request"].build_absolute_uri(obj.image.url)
+
+    def validate_description(self, value):
+        """
+        Allow the description to have HTML tags that come from a whitelist.
+        """
+        return clean(value)
+
+    def save(self):
+        if "club" not in self.validated_data:
+            self.validated_data["club"] = Club.objects.get(
+                code=self.context["view"].kwargs.get("club_code")
+            )
+
+        if not self.validated_data.get("code") and self.validated_data.get("name"):
+            self.validated_data["code"] = slugify(self.validated_data["name"])
+
+        return super().save()
+
+    class Meta:
+        model = Event
+        fields = (
+            "id",
+            "name",
+            "club",
+            "creator",
+            "start_time",
+            "end_time",
+            "location",
+            "url",
+            "type",
+            "image_url",
+            "description",
+            "image",
+        )
+
+
 class MembershipInviteSerializer(serializers.ModelSerializer):
     id = serializers.CharField(max_length=8, read_only=True)
     email = serializers.EmailField(read_only=True)
@@ -339,6 +391,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     parent_orgs = serializers.SerializerMethodField("get_parent_orgs")
     badges = BadgeSerializer(many=True, required=False)
     testimonials = TestimonialSerializer(many=True, read_only=True)
+    events = EventSerializer(many=True, read_only=True)
 
     def get_parent_orgs(self, obj):
         return []
@@ -488,6 +541,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "badges",
             "image",
             "testimonials",
+            "events"
         ]
         save_related_fields = [
             "tags",
@@ -507,55 +561,6 @@ class AuthenticatedClubSerializer(ClubSerializer):
 
     class Meta(ClubSerializer.Meta):
         pass
-
-
-class EventSerializer(ClubRouteMixin, serializers.ModelSerializer):
-    id = serializers.SlugField(required=False)
-    club = serializers.SlugRelatedField(
-        queryset=Club.objects.all(), required=False, slug_field="code"
-    )
-    image = serializers.ImageField(write_only=True, required=False)
-    image_url = serializers.SerializerMethodField("get_image_url")
-    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
-    def get_image_url(self, obj):
-        if not obj.image:
-            return None
-        if obj.image.url.startswith("http"):
-            return obj.image.url
-        else:
-            return self.context["request"].build_absolute_uri(obj.image.url)
-
-    def validate_description(self, value):
-        """
-        Allow the description to have HTML tags that come from a whitelist.
-        """
-        return clean(value)
-
-    def save(self):
-        """
-        Save the code automatically if the code is not specified in the post.
-        """
-        if not self.validated_data.get("code") and self.validated_data.get("name"):
-            self.validated_data["code"] = slugify(self.validated_data["name"])
-
-        return super().save()
-
-    class Meta:
-        model = Event
-        fields = (
-            "id",
-            "name",
-            "club",
-            "creator",
-            "start_time",
-            "end_time",
-            "location",
-            "url",
-            "image_url",
-            "description",
-            "image",
-        )
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
