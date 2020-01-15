@@ -1,3 +1,4 @@
+import s from 'styled-components'
 import { Component } from 'react'
 import Select from 'react-select'
 import { EditorState, ContentState, convertToRaw } from 'draft-js'
@@ -5,7 +6,8 @@ import draftToHtml from 'draftjs-to-html'
 import Head from 'next/head'
 
 import { Icon } from './common'
-import { titleize } from '../utils'
+import { doApiRequest, titleize } from '../utils'
+import { LIGHT_GRAY } from '../constants/colors'
 
 let htmlToDraft, Editor
 
@@ -409,6 +411,107 @@ class Form extends Component {
       <>
         {this.generateFields(fields)}
         {button}
+      </>
+    )
+  }
+}
+
+const ModelItem = s.div`
+  padding: 15px;
+  border: 1px solid ${LIGHT_GRAY};
+  border-radius: 3px;
+  margin-bottom: 1em;
+`
+
+export class ModelForm extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      objects: null,
+      createCounter: 0,
+    }
+  }
+
+  componentDidMount() {
+    doApiRequest(`${this.props.baseUrl}?format=json`)
+      .then(resp => resp.json())
+      .then(resp => {
+        this.setState({ objects: resp })
+      })
+  }
+
+  render() {
+    const { objects, createCounter } = this.state
+    const { fields, baseUrl } = this.props
+
+    if (!objects) {
+      return <></>
+    }
+
+    return (
+      <>
+        {objects.map(object => (
+          <ModelItem key={object.id}>
+            <Form
+              fields={fields}
+              defaults={object}
+              submitButton={
+                <span className="button is-primary">
+                  <Icon name="edit" alt="save" /> Save
+                </span>
+              }
+              onSubmit={data => {
+                doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+                  method: 'PATCH',
+                  body: data,
+                })
+              }}
+            />
+            <span
+              className="button is-danger"
+              style={{ marginLeft: '0.5em' }}
+              onClick={() => {
+                doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+                  method: 'DELETE',
+                }).then(resp => {
+                  if (resp.ok) {
+                    this.setState(({ objects }) => {
+                      objects.splice(objects.indexOf(object), 1)
+                      return { objects }
+                    })
+                  }
+                })
+              }}
+            >
+              <Icon name="trash" alt="trash" /> Delete
+            </span>
+          </ModelItem>
+        ))}
+        <ModelItem>
+          <Form
+            key={`create-${createCounter}`}
+            fields={fields}
+            submitButton={
+              <span className="button is-primary">
+                <Icon name="plus" alt="create" /> Create
+              </span>
+            }
+            onSubmit={data => {
+              doApiRequest(`${baseUrl}?format=json`, {
+                method: 'POST',
+                body: data,
+              })
+                .then(resp => resp.json())
+                .then(resp => {
+                  this.setState(({ objects, createCounter }) => {
+                    objects.push(resp)
+                    return { objects, createCounter: createCounter + 1 }
+                  })
+                })
+            }}
+          />
+        </ModelItem>
       </>
     )
   }
