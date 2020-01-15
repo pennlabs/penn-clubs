@@ -502,12 +502,15 @@ export class ModelForm extends Component {
                 method: 'POST',
                 body: data,
               })
-                .then(resp => resp.json())
                 .then(resp => {
-                  this.setState(({ objects, createCounter }) => {
-                    objects.push(resp)
-                    return { objects, createCounter: createCounter + 1 }
-                  })
+                  if (resp.ok) {
+                    resp.json().then(resp => {
+                      this.setState(({ objects, createCounter }) => {
+                        objects.push(resp)
+                        return { objects, createCounter: createCounter + 1 }
+                      })
+                    })
+                  }
                 })
             }}
           />
