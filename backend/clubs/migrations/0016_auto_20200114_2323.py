@@ -7,15 +7,13 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("clubs", "0015_merge_20200114_2151"),
+        ('clubs', '0015_merge_20200114_2151'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="event",
-            name="club",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, related_name="events", to="clubs.Club"
-            ),
+            model_name='event',
+            name='club',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='events', to='clubs.Club'),
         ),
     ]

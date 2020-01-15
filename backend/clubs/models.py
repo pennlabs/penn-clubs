@@ -128,9 +128,13 @@ class Event(models.Model):
     description = models.TextField()
 
     RECRUITMENT = 1
-    TYPES = ((RECRUITMENT, "Recruitment"),)
+    TYPES = (
+        (RECRUITMENT, "Recruitment"),
+    )
 
-    type = models.IntegerField(choices=TYPES, default=RECRUITMENT)
+    type = models.IntegerField(
+        choices=TYPES, default=RECRUITMENT
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
