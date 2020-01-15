@@ -37,16 +37,16 @@ workflows:
           requires:
             - django-tools/check
           path: backend
-          cache_from: "pennlabs/pennclubs-backend:latest"
-          image: "pennlabs/pennclubs-backend"
+          cache_from: "pennlabs/penn-clubs-backend:latest"
+          image: "pennlabs/penn-clubs-backend"
           tag: "${CIRCLE_SHA1},latest"
           context: docker-publish
           <<: *branch-filters
       - docker/publish:
           name: publish-frontend
           path: frontend
-          cache_from: "pennlabs/pennclubs-frontend:latest"
-          image: "pennlabs/pennclubs-frontend"
+          cache_from: "pennlabs/penn-clubs-frontend:latest"
+          image: "pennlabs/penn-clubs-frontend"
           tag: "${CIRCLE_SHA1},latest"
           context: docker-publish
           <<: *branch-filters

@@ -1,7 +1,7 @@
 # Penn Clubs
 
-[![CircleCI](https://circleci.com/gh/pennlabs/pennclubs.svg?style=shield)](https://circleci.com/gh/pennlabs/pennclubs)
-[![Coverage Status](https://codecov.io/gh/pennlabs/pennclubs/branch/master/graph/badge.svg)](https://codecov.io/gh/pennlabs/pennclubs)
+[![CircleCI](https://circleci.com/gh/pennlabs/penn-clubs.svg?style=shield)](https://circleci.com/gh/pennlabs/penn-clubs)
+[![Coverage Status](https://codecov.io/gh/pennlabs/penn-clubs/branch/master/graph/badge.svg)](https://codecov.io/gh/pennlabs/penn-clubs)
 
 Official React-based website for Penn Labs' club directory and events listings.
 The REST API written in Django for Penn Clubs infrastructure.

@@ -3,8 +3,8 @@ image_tag: latest
 
 applications:
   - name: django
-    image: pennlabs/pennclubs-backend
-    secret: pennclubs
+    image: pennlabs/penn-clubs-backend
+    secret: penn-clubs
     ingress:
       hosts:
         - host: pennclubs.com
@@ -15,8 +15,8 @@ applications:
       - name: DJANGO_SETTINGS_MODULE
         value: pennclubs.settings.production
   - name: react
-    image: pennlabs/pennclubs-frontend
-    secret: pennclubs
+    image: pennlabs/penn-clubs-frontend
+    secret: penn-clubs
     ingress:
       hosts:
         - host: pennclubs.com
