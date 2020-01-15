@@ -95,6 +95,7 @@ class ClubForm extends Component {
       subscriptions: [],
     }
     this.submit = this.submit.bind(this)
+    this.submitEvent = this.submitEvent.bind(this)
     this.notify = this.notify.bind(this)
     this.sendInvites = this.sendInvites.bind(this)
   }
@@ -244,24 +245,6 @@ class ClubForm extends Component {
             this.notify('Club has been successfully saved.')
           }
         })
-      } else {
-        resp.json().then(err => {
-          this.notify(formatResponse(err))
-        })
-      }
-    })
-  }
-
-
-  deleteEvent(id) {
-    console.log(this.state.club.code)
-    console.log(`/clubs/${this.state.club.code}/events/${id}`)
-    doApiRequest(`/clubs/${this.state.club.code}/events/${id}`, {
-      method: 'DELETE',
-    }).then(resp => {
-      if (resp.ok) {
-        this.notify(`Event deleted successfully!`)
-        this.componentDidMount()
       } else {
         resp.json().then(err => {
           this.notify(formatResponse(err))
