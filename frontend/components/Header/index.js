@@ -12,6 +12,7 @@ import {
   MD,
   ANIMATION_DURATION,
 } from '../../constants/measurements'
+import { HOME_ROUTE } from '../constants/routes'
 
 const Nav = s.nav`
   height: ${NAV_HEIGHT};
@@ -76,7 +77,7 @@ const Header = ({ authenticated, userInfo }) => {
 
       <Nav className="navbar" role="navigation" aria-label="main navigation">
         <div className="navbar-brand">
-          <Link href="/">
+          <Link href={HOME_ROUTE}>
             <a className="navbar-item" style={{ padding: 0 }}>
               <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
 

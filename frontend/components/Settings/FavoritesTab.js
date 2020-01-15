@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ClubTableRow from '../ClubTableRow'
+import { HOME_ROUTE } from '../constants/routes'
 
 export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
   const [table, setTable] = useState(() => {
@@ -22,7 +23,7 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
   if (!rows || !rows.length) {
     return (
       <p className="has-text-light-grey" style={{ paddingTop: 200, textAlign: 'center' }}>
-        No {keyword}s yet! Browse clubs <Link href="/">here.</Link>
+        No {keyword}s yet! Browse clubs <Link href={HOME_ROUTE}>here.</Link>
       </p>
     )
   }
