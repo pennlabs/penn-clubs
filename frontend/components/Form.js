@@ -423,6 +423,10 @@ const ModelItem = s.div`
   margin-bottom: 1em;
 `
 
+/*
+ * Creates a form with CRUD (create, read, update, delete)
+ * capabilities for a Django model using a provided endpoint.
+ */
 export class ModelForm extends Component {
   constructor(props) {
     super(props)
