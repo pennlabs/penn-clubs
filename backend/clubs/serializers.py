@@ -541,7 +541,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "badges",
             "image",
             "testimonials",
-            "events",
+            "events"
         ]
         save_related_fields = [
             "tags",
