@@ -770,15 +770,23 @@ class ClubForm extends Component {
         name: 'testimonials',
         label: 'Testimonials',
         content: (
-          <ModelForm
-            baseUrl={`/clubs/${club.code}/testimonials/`}
-            fields={[
-              {
-                name: 'text',
-                type: 'textarea',
-              },
-            ]}
-          />
+          <div className="card">
+            <div className="card-header">
+              <p className="card-header-title">Member Experiences</p>
+            </div>
+            <div className="card-content">
+              <Text>Provde more information on what being in your organization is like from a member's point of view.</Text>
+              <ModelForm
+                baseUrl={`/clubs/${club.code}/testimonials/`}
+                fields={[
+                  {
+                    name: 'text',
+                    type: 'textarea',
+                  },
+                ]}
+              />
+            </div>
+          </div>
         ),
       },
       {
