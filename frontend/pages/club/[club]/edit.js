@@ -94,6 +94,7 @@ class ClubForm extends Component {
     }
     this.submit = this.submit.bind(this)
     this.submitEvent = this.submitEvent.bind(this)
+    this.deleteEvent = this.deleteEvent.bind(this)
     this.notify = this.notify.bind(this)
     this.sendInvites = this.sendInvites.bind(this)
   }
@@ -277,6 +278,23 @@ class ClubForm extends Component {
     }).then(resp => {
       if (resp.ok) {
         this.notify(`Event has been created!`)
+        this.componentDidMount()
+      } else {
+        resp.json().then(err => {
+          this.notify(formatResponse(err))
+        })
+      }
+    })
+  }
+
+  deleteEvent(id) {
+    console.log(this.state.club.code)
+    console.log(`/clubs/${this.state.club.code}/events/${id}`)
+    doApiRequest(`/clubs/${this.state.club.code}/events/${id}`, {
+      method: 'DELETE',
+    }).then(resp => {
+      if (resp.ok) {
+        this.notify(`Event deleted successfully!`)
         this.componentDidMount()
       } else {
         resp.json().then(err => {
@@ -704,8 +722,20 @@ class ClubForm extends Component {
               </div>
               <div className="card-content">
                 <Text>
-                  Create a new event for this club.
+                   Manage events for this club.
                 </Text>
+                {club.events.map((entry, index) => {
+                  return (
+                    <div key={index}>
+                      <EventTableRow
+                        club={club}
+                        event={entry}
+                        deleteEvent={this.deleteEvent}
+                      />
+                    </div>
+                  )
+                })}
+                <br></br>
                 <Form fields={event_fields} onSubmit={this.submitEvent}/>
               </div>
             </div>

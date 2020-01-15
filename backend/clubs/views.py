@@ -327,8 +327,8 @@ class EventViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = EventSerializer
-    permission_classes = [ClubItemPermission | IsSuperuser]
-    lookup_field = "code"
+    permission_classes = [EventPermission | IsSuperuser]
+    lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
     @action(detail=True, methods=["post"])
