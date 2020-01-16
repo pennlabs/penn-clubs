@@ -286,7 +286,7 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
-        id = json.loads(resp.content)['id']
+        id = json.loads(resp.content)["id"]
 
         # ensure event exists
         self.assertEqual(Event.objects.filter(name="Interest Meeting").count(), 1)
