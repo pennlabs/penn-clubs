@@ -292,7 +292,7 @@ class ClubTestCase(TestCase):
         self.assertEqual(Event.objects.get(name="Interest Meeting").creator, self.user5)
 
         # delete event
-        resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, "1")))
+        resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, 1)))
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
     def test_testimonials(self):
