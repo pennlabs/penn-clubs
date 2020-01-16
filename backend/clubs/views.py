@@ -336,7 +336,7 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Upload a picture for the event.
         """
-        return upload_endpoint_helper(request, Event, "image", code=kwargs["code"])
+        return upload_endpoint_helper(request, Event, "image", code=kwargs["id"])
 
     def get_queryset(self):
         return Event.objects.filter(club__code=self.kwargs["club_code"])
