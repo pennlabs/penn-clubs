@@ -293,6 +293,7 @@ class ClubTestCase(TestCase):
 
         # delete event
         resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, 1)))
+        print(resp.content)
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
     def test_testimonials(self):
