@@ -48,20 +48,18 @@ class Form extends Component {
   setDefaults(fields) {
     const { defaults } = this.props
     fields.forEach(({ name, type, converter, fields }) => {
-      if (type === 'html') {
-        if (process.browser) {
-          if (defaults && defaults[name]) {
-            this.state['editorState-' + name] = EditorState.createWithContent(
-              ContentState.createFromBlockArray(
+      if (type === 'html' && process.browser) {
+        this.state[`editorState-${name}`] = defaults && defaults[name]
+          ? EditorState.createWithContent(
+              ContentState.createWithContent(
                 htmlToDraft(defaults[name]).contentBlocks
               )
             )
-          } else {
-            this.state['editorState-' + name] = EditorState.createEmpty()
-          }
-        }
+          : EditorState.createEmpty()
       }
-      if (type !== 'group') {
+      if (type === 'group') {
+        this.setDefaults(fields)
+      } else {
         if (type === 'multiselect') {
           this.state[`field-${name}`] = defaults
             ? (defaults[name] || []).map(converter)
@@ -71,10 +69,10 @@ class Form extends Component {
             ? converter(defaults[name])
             : null
         } else {
-          this.state[`field-${name}`] = defaults ? defaults[name] || '' : ''
+          this.state[`field-${name}`] = defaults
+            ? defaults[name] || ''
+            : ''
         }
-      } else {
-        this.setDefaults(fields)
       }
     })
   }
