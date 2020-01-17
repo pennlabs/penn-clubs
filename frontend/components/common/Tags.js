@@ -10,6 +10,16 @@ import {
   FOCUS_GRAY,
 } from '../../constants/colors'
 
+const calculateForegroundColor = color => {
+  let obj = Color(`#${color}`)
+  if (obj.isDark()) {
+    obj = obj.lighten(0.8)
+  } else {
+    obj = obj.darken(0.5)
+  }
+  return obj.hex()
+}
+
 export const Tag = s.span`
   margin: 0 4px 4px 0;
   font-weight: 600;
@@ -17,9 +27,7 @@ export const Tag = s.span`
     color &&
     `
     background-color: #${color} !important;
-    color: ${Color(`#${color}`)
-      .negate()
-      .hex()} !important;
+    color: ${calculateForegroundColor(color)} !important;
   `}
 `
 
