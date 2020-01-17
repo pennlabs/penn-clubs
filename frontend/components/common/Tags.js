@@ -1,3 +1,4 @@
+import Color from 'color'
 import s from 'styled-components'
 
 import {
@@ -11,8 +12,15 @@ import {
 
 export const Tag = s.span`
   margin: 0 4px 4px 0;
-  fontSize: .7em;
   font-weight: 600;
+  ${({ color }) =>
+    color &&
+    `
+    background-color: #${color} !important;
+    color: ${Color(`#${color}`)
+      .negate()
+      .hex()} !important;
+  `}
 `
 
 export const BlueTag = s(Tag)`

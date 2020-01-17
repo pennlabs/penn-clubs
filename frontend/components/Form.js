@@ -201,9 +201,7 @@ class Form extends Component {
                 padding: '0 1em',
               }}
             />
-          ) : (
-              <div />
-            )}
+          ) : <div />}
         </div>
       )
     } else if (type === 'textarea') {
