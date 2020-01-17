@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import s from 'styled-components'
-import { WHITE, BORDER, MEDIUM_GRAY, BLACK_ALPHA } from '../../constants/colors'
+import {
+  WHITE,
+  BORDER,
+  MEDIUM_GRAY,
+  BLACK_ALPHA,
+  ALLBIRDS_GRAY,
+} from '../../constants/colors'
+import { CLUB_EDIT_ROUTE } from '../../constants/routes'
 
 import { BookmarkIcon, SubscribeIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
@@ -106,9 +113,9 @@ const Actions = ({
           />
         </ActionWrapper>
         {canEdit && (
-          <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
+          <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
             <a
-              className="button is-success is-normal"
+              className="button is-success is-small"
               style={{ marginLeft: '1rem' }}
             >
               Edit Club
