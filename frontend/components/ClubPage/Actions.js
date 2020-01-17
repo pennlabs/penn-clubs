@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import s from 'styled-components'
-import { ALLBIRDS_GRAY, WHITE } from '../../constants/colors'
+import { WHITE, BORDER, MEDIUM_GRAY, BLACK_ALPHA } from '../../constants/colors'
 
 import { BookmarkIcon, SubscribeIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
@@ -15,40 +15,41 @@ const Wrapper = s.div`
   padding-bottom: 0.5rem;
 `
 
-const IconWrapper = s.span`
-  display: inline-block;
-  vertical-align: middle;
-`
-
 const BookmarkIconWrapper = s.span`
-  display: inline-block;
-  margin-top: 6px;
 `
 
 const BookmarkCountWrapper = s.span`
-  display: inline-block;
-  vertical-align: text-bottom;
-  margin-top: 1px;
-  margin-bottom: -1px;
+  margin-left: 2px;
+  color: ${MEDIUM_GRAY};
 `
 
 const ActionWrapper = s.span`
-  display: inline-block;
+  display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 5px;
   background-color: ${WHITE};
   border-radius: 30px;
-  border: 1px solid ${ALLBIRDS_GRAY};
-  padding-left: 1rem;
-  padding-right: 1rem;
+  border: 1px solid ${BORDER};
+  padding-left: 0.8rem;
+  padding-right: 0.8rem;
+  margin-bottom: 0.8rem;
+  line-height: 1;
+  height: 30px;
+  box-shadow: 0 1px 4px ${BLACK_ALPHA(0.2)};
+
+  span {
+    line-height: 1;
+  }
 `
 
 const ActionDiv = s.span`
   display: inline-block;
-  color: #4a4a4a;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  vertical-align: middle;
+  opacity: 0.1;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  line-height: 1;
+  margin-top: -1px;
 `
 
 const Actions = ({
@@ -84,28 +85,25 @@ const Actions = ({
     <div className={className} style={style}>
       <Wrapper>
         <ActionWrapper>
-          <IconWrapper>
-            <BookmarkIconWrapper>
-              <BookmarkIcon
-                club={club}
-                favorite={isFavorite}
-                updateFavorites={id => {
-                  const upd = updateFavorites(id)
-                  setFavCount(favCount + (upd ? 1 : -1))
-                }}
-                padding="0"
-              />
-            </BookmarkIconWrapper>{' '}
-            <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
-          </IconWrapper>
-          <ActionDiv>|</ActionDiv>
-          <IconWrapper>
-            <SubscribeIcon
+          <BookmarkIconWrapper>
+            <BookmarkIcon
               club={club}
-              subscribe={isSubscription}
-              updateSubscribes={updateSubscriptions}
+              favorite={isFavorite}
+              updateFavorites={id => {
+                const upd = updateFavorites(id)
+                setFavCount(favCount + (upd ? 1 : -1))
+              }}
+              padding="0"
             />
-          </IconWrapper>
+          </BookmarkIconWrapper>{' '}
+          <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
+          <ActionDiv>|</ActionDiv>
+          <SubscribeIcon
+            padding="0"
+            club={club}
+            subscribe={isSubscription}
+            updateSubscribes={updateSubscriptions}
+          />
         </ActionWrapper>
         {canEdit && (
           <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
