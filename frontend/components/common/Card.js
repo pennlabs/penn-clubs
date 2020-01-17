@@ -6,6 +6,7 @@ export const Card = s.div`
   padding: 0.5rem;
   width: 100%;
   box-shadow: 0 0 0 transparent;
+  border-radius: 4px;
   transition: all ${ANIMATION_DURATION}ms ease;
 
   ${({ bordered }) => bordered && `border: 1px solid ${BORDER};`}

@@ -4,8 +4,7 @@ import s from 'styled-components'
 import { BLACK, MEDIUM_GRAY } from '../../constants/colors'
 
 const BookmarkIconTag = s.span`
-  float: right;
-  padding: ${({ padding }) => padding || '10px 10px 0 0'};
+  padding: ${({ padding }) => padding || '15px 10px 0 0'};
   cursor: pointer;
 
   ${({ absolute }) =>
@@ -14,6 +13,7 @@ const BookmarkIconTag = s.span`
     float: none;
     position: absolute;
     right: 0;
+
   `}
 
   svg {
