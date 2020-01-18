@@ -33,7 +33,30 @@ class Form extends Component {
     if (process.browser) {
       htmlToDraft = require('html-to-draftjs').default
       Editor = require('react-draft-wysiwyg').Editor
-      this.setDefaults(fields)
+      const setDefaults = fields => {
+        const { defaults = {} } = this.props
+        fields.forEach(({ name, type, converter, fields }) => {
+          const value = defaults[name]
+          if (type === 'group') {
+            setDefaults(fields)
+          } else if (type === 'html') {
+            this.state[`editorState-${name}`] = value
+              ? EditorState.createWithContent(
+                ContentState.createFromBlockArray(
+                  htmlToDraft(value).contentBlocks
+                )
+              )
+              : EditorState.createEmpty()
+          } else if (type === 'multiselect') {
+            this.state[`field-${name}`] = (value || []).map(converter)
+          } else if (type === 'select') {
+            this.state[`field-${name}`] = value ? converter(value) : null
+          } else {
+            this.state[`field-${name}`] = value || ''
+          }
+        })
+      }
+      setDefaults(fields)
     }
 
     this.onChange = this.onChange.bind(this)
@@ -43,30 +66,6 @@ class Form extends Component {
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
-  }
-
-  setDefaults(fields) {
-    const { defaults = {} } = this.props
-    fields.forEach(({ name, type, converter, fields }) => {
-      const value = defaults[name]
-      if (type === 'group') {
-        this.setDefaults(fields)
-      } else if (type === 'html') {
-        this.state[`editorState-${name}`] = value
-          ? EditorState.createWithContent(
-              ContentState.createFromBlockArray(
-                htmlToDraft(value).contentBlocks
-              )
-            )
-          : EditorState.createEmpty()
-      } else if (type === 'multiselect') {
-        this.state[`field-${name}`] = (value || []).map(converter)
-      } else if (type === 'select') {
-        this.state[`field-${name}`] = value ? converter(value) : null
-      } else {
-        this.state[`field-${name}`] = value || ''
-      }
-    })
   }
 
   confirmRouteChange() {
