@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ClubTableRow from '../ClubTableRow'
-import { HOME_ROUTE } from '../constants/routes'
+import { HOME_ROUTE } from '../../constants/routes'
 
 export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
   const [table, setTable] = useState(() => {

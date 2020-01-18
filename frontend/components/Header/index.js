@@ -12,7 +12,7 @@ import {
   MD,
   ANIMATION_DURATION,
 } from '../../constants/measurements'
-import { HOME_ROUTE } from '../constants/routes'
+import { HOME_ROUTE } from '../../constants/routes'
 
 const Nav = s.nav`
   height: ${NAV_HEIGHT};
