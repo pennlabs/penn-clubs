@@ -105,7 +105,7 @@ class Invite extends React.Component {
       }
     }
 
-    const { name, code, image_url } = club
+    const { name, code, image_url: image } = club
     const { name: member, email } = invite
     return (
       <div style={{ padding: '30px 50px' }} className="has-text-centered">
@@ -114,7 +114,7 @@ class Invite extends React.Component {
         <div className="title is-4" style={{ fontWeight: 'normal' }}>
           <b>{member}</b> has invited you, <b>{email}</b>, to join <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} ><a>{name}</a></Link>.
         </div>
-        {image_url && <img src={image_url} alt={name} style={{ maxHeight: 100, marginBottom: 15 }} />}
+        {image && <img src={image} alt={name} style={{ maxHeight: 100, marginBottom: 15 }} />}
         <p style={{ marginBottom: 15 }}>
           By accepting this invitation, you will be able to view the contact
           information of other members and internal club documents.
