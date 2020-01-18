@@ -113,54 +113,37 @@ class Form extends Component {
     return out
   }
 
-  getData() {
-  return this.getAllFields().reduce(
-    (out, { type, name, reverser, converter }) => {
-      const val = this.state[`field-${name}`]
-      switch (type) {
-        case 'multiselect': {
-          out[name] = (val || []).map(reverser)
-          break
-        }
-        case 'select': {
-          out[name] = val ? reverser(val) : val
-          break
-        }
-        case 'checkbox': {
-          out[name] = Boolean(val)
-          break
-        }
-        case 'date': {
-          out[name] = val || null
-          break
-        }
-        case 'datetime-local': {
-          if (val != null) {
-            out[name] = new Date(val)
-          } else {
-            out[name] = null
-          }
-          break
-        }
-        case 'file': {
-          const data = new FormData()
-          data.append('file', this.files[name].files[0])
-          out[name] = data
-          break
-        }
-        default: {
-          if (typeof converter === 'function') {
-            out[name] = converter(val)
-          } else {
-            out[name] = val
-          }
-        }
-      }
-      return out
-    },
-    {}
-  )
-}
+  getFieldData(source, { type, reverser, converter }) {
+    const val = source[`field-${name}`]
+    switch (type) {
+      case 'multiselect':
+        return (val || []).map(reverser)
+      case 'select':
+        return (out[name] = val ? reverser(val) : val)
+      case 'checkbox':
+        return Boolean(val)
+      case 'date':
+        return (out[name] = val || null)
+      case 'file':
+        const data = new FormData()
+        data.append('file', this.files[name].files[0])
+        return data
+      default:
+        return typeof converter === 'function' ? converter(val) : val
+    }
+  }
+
+  getData(source) {
+    const data = {}
+    this.getAllFields(this.props.fields).forEach(({ name, ...field }) => {
+      data[name] = this.getFieldData(source, field)
+    })
+    return data
+  }
+
+  getSubmitData() {
+    return this.getData(this.state)
+  }
 
   generateField(field) {
     const {
