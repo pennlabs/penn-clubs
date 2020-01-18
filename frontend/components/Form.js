@@ -9,7 +9,8 @@ import Head from 'next/head'
 import { Icon } from './common'
 import { doApiRequest, titleize } from '../utils'
 
-const UNSAVED_MESSAGE = 'You have unsaved changes. Are you sure you want to leave?'
+const UNSAVED_MESSAGE =
+  'You have unsaved changes. Are you sure you want to leave?'
 
 let htmlToDraft, Editor
 
@@ -53,10 +54,10 @@ class Form extends Component {
       } else if (type === 'html') {
         this.state[`editorState-${name}`] = value
           ? EditorState.createWithContent(
-            ContentState.createFromBlockArray(
-              htmlToDraft(value).contentBlocks
+              ContentState.createFromBlockArray(
+                htmlToDraft(value).contentBlocks
+              )
             )
-          )
           : EditorState.createEmpty()
       } else if (type === 'multiselect') {
         this.state[`field-${name}`] = (value || []).map(converter)
@@ -100,21 +101,19 @@ class Form extends Component {
   }
 
   getAllFields(fields) {
-    return (typeof fields === 'undefined' ? this.props.fields : fields).reduce(
-      (out, item) => {
-        if (item.type === 'group') {
-          out = out.concat(this.getAllFields(item.fields))
-        } else {
-          out.push(item)
-        }
-        return out
-      },
-      []
-    )
+    return fields.reduce((out, item) => {
+      if (item.type === 'group') {
+        out = out.concat(this.getAllFields(item.fields))
+      } else {
+        out.push(item)
+      }
+      return out
+    }, [])
   }
 
   getData() {
-    return this.getAllFields().reduce(
+    const { fields } = this.props
+    return this.getAllFields(fields).reduce(
       (out, { type, name, reverser, converter }) => {
         const val = this.state[`field-${name}`]
         switch (type) {
@@ -140,17 +139,17 @@ class Form extends Component {
             out[name] = data
             break
           }
-          default: {
-            if (typeof converter === 'function') {
-              out[name] = converter(val)
-            } else {
-              out[name] = val
+          default:
+            {
+              if (typeof converter === 'function') {
+                out[name] = converter(val)
+              } else {
+                out[name] = val
+              }
             }
-          }
+            return out
         }
-        return out
-      },
-      {}
+      }
     )
   }
 
@@ -173,12 +172,13 @@ class Form extends Component {
 
     const {
       [`field-${name}`]: value,
-      [`editorState-${name}`]: editorState
+      [`editorState-${name}`]: editorState,
     } = this.state
 
-    const isHorizontal = typeof this.props.isHorizontal !== 'undefined'
-      ? this.props.isHorizontal
-      : true
+    const isHorizontal =
+      typeof this.props.isHorizontal !== 'undefined'
+        ? this.props.isHorizontal
+        : true
 
     let inpt = null
 
@@ -239,7 +239,9 @@ class Form extends Component {
                 padding: '0 1em',
               }}
             />
-          ) : <div />}
+          ) : (
+            <div />
+          )}
         </div>
       )
     } else if (type === 'textarea') {
@@ -356,8 +358,7 @@ class Form extends Component {
               {required && <span style={{ color: 'red' }}>*</span>}
             </label>
           </div>
-        )
-        }
+        )}
         <div className="field-body">
           <div className="field">
             <div className="control">{inpt}</div>
@@ -539,10 +540,15 @@ export class ModelForm extends Component {
             </span>
           </ModelItem>
         ))}
-        <span onClick={() => this.setState(({ objects }) => {
-          objects.push({})
-          return { objects }
-        })} className="button is-primary">
+        <span
+          onClick={() =>
+            this.setState(({ objects }) => {
+              objects.push({})
+              return { objects }
+            })
+          }
+          className="button is-primary"
+        >
           <Icon name="plus" alt="create" /> Create
         </span>
       </>
