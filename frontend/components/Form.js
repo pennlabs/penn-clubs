@@ -34,7 +34,7 @@ class Form extends Component {
       htmlToDraft = require('html-to-draftjs').default
       Editor = require('react-draft-wysiwyg').Editor
       const { fields, defaults = {} } = props
-      
+
       const setDefaults = fields => {
         fields.forEach(({ name, type, converter, fields }) => {
           const value = defaults[name]
@@ -43,10 +43,10 @@ class Form extends Component {
           } else if (type === 'html') {
             this.state[`editorState-${name}`] = value
               ? EditorState.createWithContent(
-                ContentState.createFromBlockArray(
-                  htmlToDraft(value).contentBlocks
+                  ContentState.createFromBlockArray(
+                    htmlToDraft(value).contentBlocks
+                  )
                 )
-              )
               : EditorState.createEmpty()
           } else if (type === 'multiselect') {
             this.state[`field-${name}`] = (value || []).map(converter)
@@ -102,14 +102,15 @@ class Form extends Component {
   }
 
   getAllFields(fields) {
-    return fields.reduce((out, item) => {
+    const out = []
+    fields.forEach(item => {
       if (item.type === 'group') {
-        out = out.concat(this.getAllFields(item.fields))
+        out.concat(this.getAllFields(item.fields))
       } else {
         out.push(item)
       }
-      return out
-    }, [])
+    })
+    return out
   }
 
   getData() {
