@@ -62,7 +62,7 @@ class Form extends Component {
     }
 
     this.onChange = this.onChange.bind(this)
-    this.checkChange = this.checkChange.bind(this)
+    this.checkIfEdited = this.checkIfEdited.bind(this)
     this.confirmExit = this.confirmExit.bind(this)
     this.confirmRouteChange = this.confirmRouteChange.bind(this)
     this.generateField = this.generateField.bind(this)
@@ -379,10 +379,10 @@ class Form extends Component {
     if (onChange) {
       onChange(e)
     }
-    this.checkChange()
+    this.checkIfEdited()
   }
 
-  checkChange() {
+  checkIfEdited() {
     this.state.edited || this.setState({ edited: true })
   }
 
