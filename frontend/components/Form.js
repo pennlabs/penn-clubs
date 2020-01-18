@@ -493,16 +493,23 @@ export class ModelForm extends Component {
               className="button is-danger"
               style={{ marginLeft: '0.5em' }}
               onClick={() => {
-                doApiRequest(`${baseUrl}${object.id}/?format=json`, {
-                  method: 'DELETE',
-                }).then(resp => {
-                  if (resp.ok) {
-                    this.setState(({ objects }) => {
-                      objects.splice(objects.indexOf(object), 1)
-                      return { objects }
-                    })
-                  }
-                })
+                if (typeof object.id !== 'undefined') {
+                  doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+                    method: 'DELETE',
+                  }).then(resp => {
+                    if (resp.ok) {
+                      this.setState(({ objects }) => {
+                        objects.splice(objects.indexOf(object), 1)
+                        return { objects }
+                      })
+                    }
+                  })
+                } else {
+                  this.setState(({ objects }) => {
+                    objects.splice(objects.indexOf(object), 1)
+                    return { objects }
+                  })
+                }
               }}
             >
               <Icon name="trash" alt="trash" /> Delete
@@ -511,7 +518,7 @@ export class ModelForm extends Component {
         ))}
         <span onClick={() => this.setState(({ objects }) => {
           objects.push({})
-          return objects
+          return { objects }
         })} className="button is-primary">
           <Icon name="plus" alt="create" /> Create
         </span>
