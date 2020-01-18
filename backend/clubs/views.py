@@ -29,12 +29,13 @@ from clubs.models import (
     School,
     Subscribe,
     Tag,
+    Testimonial,
     Year,
 )
 from clubs.permissions import (
     AssetPermission,
+    ClubItemPermission,
     ClubPermission,
-    EventPermission,
     InvitePermission,
     IsSuperuser,
     MemberPermission,
@@ -56,6 +57,7 @@ from clubs.serializers import (
     SchoolSerializer,
     SubscribeSerializer,
     TagSerializer,
+    TestimonialSerializer,
     UserSerializer,
     YearSerializer,
 )
@@ -325,7 +327,7 @@ class EventViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = EventSerializer
-    permission_classes = [EventPermission | IsSuperuser]
+    permission_classes = [ClubItemPermission | IsSuperuser]
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
@@ -338,6 +340,36 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Event.objects.filter(club__code=self.kwargs["club_code"])
+
+
+class TestimonialViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of testimonials for this club.
+
+    create:
+    Create a new testimonial for this club.
+
+    update:
+    Update a testimonial for this club.
+    All fields must be specified.
+
+    partial_update:
+    Update a testimonial for this club.
+    Specify only the fields you want to update.
+
+    retrieve:
+    Retrieve a single testimonial.
+
+    destroy:
+    Delete a testimonial.
+    """
+
+    serializer_class = TestimonialSerializer
+    permission_classes = [ClubItemPermission | IsSuperuser]
+
+    def get_queryset(self):
+        return Testimonial.objects.filter(club__code=self.kwargs["club_code"])
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):

@@ -16,6 +16,7 @@ from clubs.views import (
     SchoolViewSet,
     SubscribeViewSet,
     TagViewSet,
+    TestimonialViewSet,
     UserUpdateAPIView,
     YearViewSet,
     email_preview,
@@ -38,6 +39,7 @@ clubs_router.register(r"events", EventViewSet, basename="club-events")
 clubs_router.register(r"invites", MemberInviteViewSet, basename="club-invites")
 clubs_router.register(r"assets", AssetViewSet, basename="club-assets")
 clubs_router.register(r"notes", NoteViewSet, basename="club-notes")
+clubs_router.register(r"testimonials", TestimonialViewSet, basename="club-testimonials")
 
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="users-detail"),

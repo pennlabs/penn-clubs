@@ -1,3 +1,4 @@
+import s from 'styled-components'
 import { Component } from 'react'
 import Select from 'react-select'
 import { EditorState, ContentState, convertToRaw } from 'draft-js'
@@ -5,10 +6,15 @@ import draftToHtml from 'draftjs-to-html'
 import Head from 'next/head'
 
 import { Icon } from './common'
-import { titleize } from '../utils'
+import { doApiRequest, titleize } from '../utils'
 
 let htmlToDraft, Editor
 
+/*
+ * Represents a form with fields and a submit button.
+ * Does not actually perform an ajax request, returns
+ * the data in JSON format in the onSubmit event.
+ */
 class Form extends Component {
   constructor(props) {
     super(props)
@@ -89,41 +95,44 @@ class Form extends Component {
   }
 
   getData() {
-    return this.getAllFields().reduce((out, { type, name, reverser, converter }) => {
-      const val = this.state[`field-${name}`]
-      switch (type) {
-        case 'multiselect': {
-          out[name] = (val || []).map(reverser)
-          break
-        }
-        case 'select': {
-          out[name] = val ? reverser(val) : val
-          break
-        }
-        case 'checkbox': {
-          out[name] = Boolean(val)
-          break
-        }
-        case 'date': {
-          out[name] = val || null
-          break
-        }
-        case 'file': {
-          const data = new FormData()
-          data.append('file', this.files[name].files[0])
-          out[name] = data
-          break
-        }
-        default: {
-          if (typeof converter === 'function') {
-            out[name] = converter(val)
-          } else {
-            out[name] = val
+    return this.getAllFields().reduce(
+      (out, { type, name, reverser, converter }) => {
+        const val = this.state[`field-${name}`]
+        switch (type) {
+          case 'multiselect': {
+            out[name] = (val || []).map(reverser)
+            break
+          }
+          case 'select': {
+            out[name] = val ? reverser(val) : val
+            break
+          }
+          case 'checkbox': {
+            out[name] = Boolean(val)
+            break
+          }
+          case 'date': {
+            out[name] = val || null
+            break
+          }
+          case 'file': {
+            const data = new FormData()
+            data.append('file', this.files[name].files[0])
+            out[name] = data
+            break
+          }
+          default: {
+            if (typeof converter === 'function') {
+              out[name] = converter(val)
+            } else {
+              out[name] = val
+            }
           }
         }
-      }
-      return out
-    }, {})
+        return out
+      },
+      {}
+    )
   }
 
   generateField(field) {
@@ -138,6 +147,7 @@ class Form extends Component {
       choices,
       converter,
       label,
+      hasLabel = true,
       required,
       help,
     } = field
@@ -316,12 +326,15 @@ class Form extends Component {
         key={name}
         className={'field' + (isHorizontal ? ' is-horizontal' : '')}
       >
-        <div className="field-label is-normal">
-          <label className="label">
-            {type === 'checkbox' ? titleize(name) : label || titleize(name)}
-            {required && <span style={{ color: 'red' }}>*</span>}
-          </label>
-        </div>
+        {hasLabel && (
+          <div className="field-label is-normal">
+            <label className="label">
+              {type === 'checkbox' ? titleize(name) : label || titleize(name)}
+              {required && <span style={{ color: 'red' }}>*</span>}
+            </label>
+          </div>
+        )
+        }
         <div className="field-body">
           <div className="field">
             <div className="control">{inpt}</div>
@@ -352,9 +365,10 @@ class Form extends Component {
     // Allow onSubmit to be a Promise or async function. If Promise.resolve is passed some
     // other value, it resolves with that value.
     const { onSubmit } = this.props
-    onSubmit && Promise.resolve(onSubmit(this.getData())).then(() => {
-      this.setState({ edited: false })
-    })
+    onSubmit &&
+      Promise.resolve(onSubmit(this.getData())).then(() => {
+        this.setState({ edited: false })
+      })
   }
 
   render() {
@@ -369,12 +383,14 @@ class Form extends Component {
       if (submitButton) {
         button = <span onClick={this.handleSubmit}>{submitButton}</span>
       } else {
-        button = <a
-          className="button is-primary is-medium"
-          onClick={this.handleSubmit}
-        >
-          Submit
-        </a>
+        button = (
+          <a
+            className="button is-primary is-medium"
+            onClick={this.handleSubmit}
+          >
+            Submit
+          </a>
+        )
       }
     } else {
       if (disabledSubmitButton) {
@@ -382,13 +398,15 @@ class Form extends Component {
       } else if (submitButton) {
         button = <span onClick={this.handleSubmit}>{submitButton}</span>
       } else {
-        button = <a
-          className="button is-primary is-medium"
-          title="You must make changes before submitting."
-          disabled
-        >
-          Submit
-        </a>
+        button = (
+          <a
+            className="button is-primary is-medium"
+            title="You must make changes before submitting."
+            disabled
+          >
+            Submit
+          </a>
+        )
       }
     }
 
@@ -396,6 +414,114 @@ class Form extends Component {
       <>
         {this.generateFields(fields)}
         {button}
+      </>
+    )
+  }
+}
+
+const ModelItem = s.div`
+  padding: 15px;
+  border: 1px solid #dbdbdb;
+  border-radius: 3px;
+  margin-bottom: 1em;
+`
+
+/*
+ * Creates a form with CRUD (create, read, update, delete)
+ * capabilities for a Django model using a provided endpoint.
+ */
+export class ModelForm extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      objects: null,
+    }
+  }
+
+  componentDidMount() {
+    doApiRequest(`${this.props.baseUrl}?format=json`)
+      .then(resp => resp.json())
+      .then(resp => {
+        this.setState({ objects: resp })
+      })
+  }
+
+  render() {
+    const { objects } = this.state
+    const { fields, baseUrl } = this.props
+
+    if (!objects) {
+      return <></>
+    }
+
+    return (
+      <>
+        {objects.map(object => (
+          <ModelItem key={object.id}>
+            <Form
+              fields={fields}
+              defaults={object}
+              submitButton={
+                <span className="button is-primary">
+                  <Icon name="edit" alt="save" /> Save
+                </span>
+              }
+              onSubmit={data => {
+                if (typeof object.id === 'undefined') {
+                  doApiRequest(`${baseUrl}?format=json`, {
+                    method: 'POST',
+                    body: data,
+                  }).then(resp => {
+                    if (resp.ok) {
+                      resp.json().then(resp => {
+                        Object.keys(resp).forEach(key => {
+                          object[key] = resp[key]
+                        })
+                      })
+                    }
+                  })
+                } else {
+                  doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+                    method: 'PATCH',
+                    body: data,
+                  })
+                }
+              }}
+            />
+            <span
+              className="button is-danger"
+              style={{ marginLeft: '0.5em' }}
+              onClick={() => {
+                if (typeof object.id !== 'undefined') {
+                  doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+                    method: 'DELETE',
+                  }).then(resp => {
+                    if (resp.ok) {
+                      this.setState(({ objects }) => {
+                        objects.splice(objects.indexOf(object), 1)
+                        return { objects }
+                      })
+                    }
+                  })
+                } else {
+                  this.setState(({ objects }) => {
+                    objects.splice(objects.indexOf(object), 1)
+                    return { objects }
+                  })
+                }
+              }}
+            >
+              <Icon name="trash" alt="trash" /> Delete
+            </span>
+          </ModelItem>
+        ))}
+        <span onClick={() => this.setState(({ objects }) => {
+          objects.push({})
+          return { objects }
+        })} className="button is-primary">
+          <Icon name="plus" alt="create" /> Create
+        </span>
       </>
     )
   }

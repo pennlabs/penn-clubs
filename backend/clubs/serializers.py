@@ -28,6 +28,20 @@ from clubs.models import (
 from clubs.utils import clean
 
 
+class ClubRouteMixin(object):
+    """
+    Mixin for serializers that overrides the save method to
+    properly handle the URL parameter for club.
+    """
+
+    def save(self):
+        self.validated_data["club"] = Club.objects.get(
+            code=self.context["view"].kwargs.get("club_code")
+        )
+
+        return super().save()
+
+
 class TagSerializer(serializers.ModelSerializer):
     clubs = serializers.IntegerField(read_only=True)
 
@@ -58,7 +72,7 @@ class MajorSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
-class TestimonialSerializer(serializers.ModelSerializer):
+class TestimonialSerializer(ClubRouteMixin, serializers.ModelSerializer):
     text = serializers.CharField()
 
     class Meta:
@@ -135,7 +149,7 @@ class UserMembershipSerializer(serializers.ModelSerializer):
         fields = ("code", "name", "title", "role", "role_display", "active", "public")
 
 
-class MembershipSerializer(serializers.ModelSerializer):
+class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
     """
     Used for listing which users are in a club for members who are not in the club.
     """
@@ -210,17 +224,6 @@ class MembershipSerializer(serializers.ModelSerializer):
                         'Normal members are not allowed to change "{}"!'.format(field)
                     )
         return data
-
-    def save(self):
-        """
-        Fill in club field from URL instead of from request data.
-        """
-        club_code = self.context["view"].kwargs.get("club_code")
-        if club_code is None:
-            club_code = self.context["view"].kwargs.get("pk")
-        self.validated_data["club"] = Club.objects.get(code=club_code)
-
-        return super().save()
 
     class Meta:
         model = Membership
@@ -506,7 +509,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
         pass
 
 
-class EventSerializer(serializers.ModelSerializer):
+class EventSerializer(ClubRouteMixin, serializers.ModelSerializer):
     id = serializers.SlugField(required=False)
     club = serializers.SlugRelatedField(
         queryset=Club.objects.all(), required=False, slug_field="code"
@@ -530,11 +533,9 @@ class EventSerializer(serializers.ModelSerializer):
         return clean(value)
 
     def save(self):
-        if "club" not in self.validated_data:
-            self.validated_data["club"] = Club.objects.get(
-                code=self.context["view"].kwargs.get("club_code")
-            )
-
+        """
+        Save the code automatically if the code is not specified in the post.
+        """
         if not self.validated_data.get("code") and self.validated_data.get("name"):
             self.validated_data["code"] = slugify(self.validated_data["name"])
 
@@ -751,4 +752,4 @@ class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
             "creating_club_permission",
             "outside_club_permission",
         )
-        save_related_fields = [{"field": "note_tags", "create": True}]
+        save_related_fields = [{"field": "note_tags", "mode": "create"}]

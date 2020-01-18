@@ -10,7 +10,7 @@ import {
   formatResponse,
   getRoleDisplay,
 } from '../../../utils'
-import Form from '../../../components/Form'
+import Form, { ModelForm } from '../../../components/Form'
 import TabView from '../../../components/TabView'
 import AuthPrompt from '../../../components/common/AuthPrompt'
 import {
@@ -479,7 +479,9 @@ class ClubForm extends Component {
       {
         name: 'info',
         label: 'Information',
-        content: <Form fields={fields} defaults={club} onSubmit={this.submit} />,
+        content: (
+          <Form fields={fields} defaults={club} onSubmit={this.submit} />
+        ),
       },
       {
         name: 'member',
@@ -762,6 +764,30 @@ class ClubForm extends Component {
               </div>
             </div>
           </>
+        ),
+      },
+      {
+        name: 'testimonials',
+        label: 'Testimonials',
+        content: (
+          <div className="card">
+            <div className="card-header">
+              <p className="card-header-title">Member Experiences</p>
+            </div>
+            <div className="card-content">
+              <Text>Provde more information on what being in your organization is like from a member's point of view.</Text>
+              <ModelForm
+                baseUrl={`/clubs/${club.code}/testimonials/`}
+                fields={[
+                  {
+                    name: 'text',
+                    type: 'textarea',
+                    hasLabel: false,
+                  },
+                ]}
+              />
+            </div>
+          </div>
         ),
       },
       {
