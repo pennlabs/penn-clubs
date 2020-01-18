@@ -390,7 +390,7 @@ class Form extends Component {
     // other value, it resolves with that value.
     const { onSubmit } = this.props
     onSubmit &&
-      Promise.resolve(onSubmit(this.getData())).then(() => {
+      Promise.resolve(onSubmit(this.getSubmitData())).then(() => {
         this.setState({ edited: false })
       })
   }
