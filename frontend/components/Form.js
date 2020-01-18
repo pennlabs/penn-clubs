@@ -76,7 +76,7 @@ class Form extends Component {
     if (edited && !confirm(UNSAVED_MESSAGE)) {
       router.abortComponentLoad()
       router.events.emit('routeChangeError')
-      throw 'Abort link navigation - ignore this error.'
+      throw 'Abort link navigation - ignore this error.' // eslint-disable-line
     }
   }
 
@@ -119,15 +119,13 @@ class Form extends Component {
       case 'multiselect':
         return (val || []).map(reverser)
       case 'select':
-        return (out[name] = val ? reverser(val) : val)
+        return val ? reverser(val) : val
       case 'checkbox':
         return Boolean(val)
       case 'date':
-        return (out[name] = val || null)
+        return val || null
       case 'file':
-        const data = new FormData()
-        data.append('file', this.files[name].files[0])
-        return data
+        return (new FormData()).append('file', this.files[name].files[0])
       default:
         return typeof converter === 'function' ? converter(val) : val
     }
