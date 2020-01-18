@@ -7,7 +7,6 @@ import Head from 'next/head'
 
 import { Icon } from './common'
 import { doApiRequest, titleize } from '../utils'
-import { LIGHT_GRAY } from '../constants/colors'
 
 let htmlToDraft, Editor
 
@@ -334,7 +333,7 @@ class Form extends Component {
               {required && <span style={{ color: 'red' }}>*</span>}
             </label>
           </div>
-          )
+        )
         }
         <div className="field-body">
           <div className="field">
@@ -437,7 +436,6 @@ export class ModelForm extends Component {
 
     this.state = {
       objects: null,
-      createCounter: 0,
     }
   }
 
@@ -450,7 +448,7 @@ export class ModelForm extends Component {
   }
 
   render() {
-    const { objects, createCounter } = this.state
+    const { objects } = this.state
     const { fields, baseUrl } = this.props
 
     if (!objects) {
@@ -470,10 +468,25 @@ export class ModelForm extends Component {
                 </span>
               }
               onSubmit={data => {
-                doApiRequest(`${baseUrl}${object.id}/?format=json`, {
-                  method: 'PATCH',
-                  body: data,
-                })
+                if (typeof object.id === 'undefined') {
+                  doApiRequest(`${baseUrl}?format=json`, {
+                    method: 'POST',
+                    body: data,
+                  }).then(resp => {
+                    if (resp.ok) {
+                      resp.json().then(resp => {
+                        Object.keys(resp).forEach(key => {
+                          object[key] = resp[key]
+                        })
+                      })
+                    }
+                  })
+                } else {
+                  doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+                    method: 'PATCH',
+                    body: data,
+                  })
+                }
               }}
             />
             <span
@@ -496,33 +509,12 @@ export class ModelForm extends Component {
             </span>
           </ModelItem>
         ))}
-        <ModelItem>
-          <Form
-            key={`create-${createCounter}`}
-            fields={fields}
-            submitButton={
-              <span className="button is-primary">
-                <Icon name="plus" alt="create" /> Create
-              </span>
-            }
-            onSubmit={data => {
-              doApiRequest(`${baseUrl}?format=json`, {
-                method: 'POST',
-                body: data,
-              })
-                .then(resp => {
-                  if (resp.ok) {
-                    resp.json().then(resp => {
-                      this.setState(({ objects, createCounter }) => {
-                        objects.push(resp)
-                        return { objects, createCounter: createCounter + 1 }
-                      })
-                    })
-                  }
-                })
-            }}
-          />
-        </ModelItem>
+        <span onClick={() => this.setState(({ objects }) => {
+          objects.push({})
+          return objects
+        })} className="button is-primary">
+          <Icon name="plus" alt="create" /> Create
+        </span>
       </>
     )
   }
