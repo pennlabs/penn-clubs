@@ -20,7 +20,7 @@ let htmlToDraft, Editor
  * the data in JSON format in the onSubmit event.
  */
 class Form extends Component {
-  constructor({ fields, ...props }) {
+  constructor(props) {
     super(props)
 
     this.state = {
@@ -33,8 +33,9 @@ class Form extends Component {
     if (process.browser) {
       htmlToDraft = require('html-to-draftjs').default
       Editor = require('react-draft-wysiwyg').Editor
+      const { fields, defaults = {} } = props
+      
       const setDefaults = fields => {
-        const { defaults = {} } = this.props
         fields.forEach(({ name, type, converter, fields }) => {
           const value = defaults[name]
           if (type === 'group') {
@@ -56,6 +57,7 @@ class Form extends Component {
           }
         })
       }
+
       setDefaults(fields)
     }
 
