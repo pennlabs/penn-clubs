@@ -782,6 +782,7 @@ class ClubForm extends Component {
                   {
                     name: 'text',
                     type: 'textarea',
+                    hasLabel: false,
                   },
                 ]}
               />

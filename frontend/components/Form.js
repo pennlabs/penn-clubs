@@ -148,6 +148,7 @@ class Form extends Component {
       choices,
       converter,
       label,
+      hasLabel = true,
       required,
       help,
     } = field
@@ -326,12 +327,15 @@ class Form extends Component {
         key={name}
         className={'field' + (isHorizontal ? ' is-horizontal' : '')}
       >
-        <div className="field-label is-normal">
-          <label className="label">
-            {type === 'checkbox' ? titleize(name) : label || titleize(name)}
-            {required && <span style={{ color: 'red' }}>*</span>}
-          </label>
-        </div>
+        {hasLabel && (
+          <div className="field-label is-normal">
+            <label className="label">
+              {type === 'checkbox' ? titleize(name) : label || titleize(name)}
+              {required && <span style={{ color: 'red' }}>*</span>}
+            </label>
+          </div>
+          )
+        }
         <div className="field-body">
           <div className="field">
             <div className="control">{inpt}</div>
@@ -418,7 +422,7 @@ class Form extends Component {
 
 const ModelItem = s.div`
   padding: 15px;
-  border: 1px solid ${LIGHT_GRAY};
+  border: 1px solid #dbdbdb;
   border-radius: 3px;
   margin-bottom: 1em;
 `
