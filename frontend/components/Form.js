@@ -19,7 +19,7 @@ let htmlToDraft, Editor
  * the data in JSON format in the onSubmit event.
  */
 class Form extends Component {
-  constructor(props) {
+  constructor({ fields, ...props }) {
     super(props)
 
     this.state = {
@@ -32,8 +32,7 @@ class Form extends Component {
     if (process.browser) {
       htmlToDraft = require('html-to-draftjs').default
       Editor = require('react-draft-wysiwyg').Editor
-
-      this.setDefaults(this.props.fields)
+      this.setDefaults(fields)
     }
 
     this.onChange = this.onChange.bind(this)
@@ -46,33 +45,25 @@ class Form extends Component {
   }
 
   setDefaults(fields) {
-    const { defaults } = this.props
+    const { defaults = {} } = this.props
     fields.forEach(({ name, type, converter, fields }) => {
-      if (type === 'html' && process.browser) {
-        this.state[`editorState-${name}`] = defaults && defaults[name]
-          ? EditorState.createWithContent(
-              ContentState.createWithContent(
-                htmlToDraft(defaults[name]).contentBlocks
-              )
-            )
-          : EditorState.createEmpty()
-      }
+      const value = defaults[name]
       if (type === 'group') {
         this.setDefaults(fields)
+      } else if (type === 'html') {
+        this.state[`editorState-${name}`] = value
+          ? EditorState.createWithContent(
+            ContentState.createFromBlockArray(
+              htmlToDraft(value).contentBlocks
+            )
+          )
+          : EditorState.createEmpty()
+      } else if (type === 'multiselect') {
+        this.state[`field-${name}`] = (value || []).map(converter)
+      } else if (type === 'select') {
+        this.state[`field-${name}`] = value ? converter(value) : null
       } else {
-        if (type === 'multiselect') {
-          this.state[`field-${name}`] = defaults
-            ? (defaults[name] || []).map(converter)
-            : []
-        } else if (type === 'select') {
-          this.state[`field-${name}`] = defaults
-            ? converter(defaults[name])
-            : null
-        } else {
-          this.state[`field-${name}`] = defaults
-            ? defaults[name] || ''
-            : ''
-        }
+        this.state[`field-${name}`] = value || ''
       }
     })
   }
@@ -188,6 +179,15 @@ class Form extends Component {
       help,
     } = field
 
+    const {
+      [`field-${name}`]: value,
+      [`editorState-${name}`]: editorState
+    } = this.state
+
+    const isHorizontal = typeof this.props.isHorizontal !== 'undefined'
+      ? this.props.isHorizontal
+      : true
+
     let inpt = null
 
     if (['text', 'url', 'email', 'date', 'datetime-local', 'number'].includes(type)) {
@@ -203,7 +203,7 @@ class Form extends Component {
         <input
           className="input"
           disabled={readonly}
-          value={this.state['field-' + name]}
+          value={value}
           onChange={e => {
             this.onChange(e)
             this.setState({ ['field-' + name]: e.target.value })
@@ -225,7 +225,7 @@ class Form extends Component {
           </Head>
           {this.state.mounted ? (
             <Editor
-              editorState={this.state[`editorState-${name}`]}
+              editorState={editorState}
               placeholder={placeholder}
               onChange={this.onChange}
               onEditorStateChange={state => {
@@ -262,7 +262,7 @@ class Form extends Component {
       inpt = (
         <textarea
           className="textarea"
-          value={this.state[`field-${name}`]}
+          value={value}
           onChange={e => {
             this.onChange(e)
             this.setState({ [`field-${name}`]: e.target.value })
@@ -310,7 +310,7 @@ class Form extends Component {
             key={name}
             placeholder={placeholder}
             isMulti={true}
-            value={this.state[`field-${name}`] || []}
+            value={value || []}
             options={choices.map(converter)}
             onChange={opt => {
               this.onChange(opt)
@@ -331,7 +331,7 @@ class Form extends Component {
       inpt = (
         <Select
           key={name}
-          value={this.state[`field-${name}`]}
+          value={value}
           options={choices}
           onChange={opt => {
             this.onChange(opt)
@@ -344,7 +344,7 @@ class Form extends Component {
         <label className="checkbox">
           <input
             type="checkbox"
-            checked={this.state[`field-${name}`]}
+            checked={value}
             onChange={e => {
               this.onChange(e)
               this.setState({ [`field-${name}`]: e.target.checked })
@@ -360,15 +360,10 @@ class Form extends Component {
       )
     }
 
-    const isHorizontal =
-      typeof this.props.isHorizontal !== 'undefined'
-        ? this.props.isHorizontal
-        : true
-
     return (
       <div
         key={name}
-        className={'field' + (isHorizontal ? ' is-horizontal' : '')}
+        className={isHorizontal ? 'field is-horizontal' : 'field'}
       >
         {hasLabel && (
           <div className="field-label is-normal">
