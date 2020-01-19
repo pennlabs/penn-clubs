@@ -23,6 +23,21 @@ const CardRow = s.span`
 const CardDivider = s.hr`
   margin: 6px;
 `
+
+const ManageButton = s.a`
+  border-radius: ${BORDER_RADIUS};
+  background-color: ${CLUBS_BLUE};
+  color: ${SNOW};
+  justify-content: flex-start;
+`
+
+const LeaveButton = s.button`
+  border-radius: ${BORDER_RADIUS};
+  background-color: ${CLUBS_RED};
+  color: ${SNOW};
+  justify-content: flex-start;
+`
+
 const ButtonIcon = s(Icon)`
   margin-left: 0;
   margin-right: 5px;
