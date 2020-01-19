@@ -23,6 +23,11 @@ const CardRow = s.span`
 const CardDivider = s.hr`
   margin: 6px;
 `
+const ButtonIcon = s(Icon)`
+  margin-left: 0;
+  margin-right: 5px;
+  margin-bottom: .4rem;
+`
   club,
   toggleActive,
   togglePublic,
@@ -54,6 +59,9 @@ const CardDivider = s.hr`
           >
             <ManageButton className="button is-small">
               <ButtonIcon
+                name="edit-white"
+                size="1rem"
+              />
               Manage
             </ManageButton>
           </Link>
@@ -62,7 +70,10 @@ const CardDivider = s.hr`
               className="button is-small"
               onClick={() => leaveClub(club)}
             >
-              <Icon name="log-out" />
+              <ButtonIcon
+                name="log-out-white"
+                size="1rem"
+              />
               Leave
             </LeaveButton>
           )
