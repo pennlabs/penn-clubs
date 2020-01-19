@@ -12,6 +12,17 @@ const Card = s.div`
   padding: 5%;
   padding-top: 3%;
 `
+
+const CardRow = s.span`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  margin-bottom: 6px;
+`
+
+const CardDivider = s.hr`
+  margin: 6px;
+`
   club,
   toggleActive,
   togglePublic,
@@ -34,7 +45,7 @@ const Card = s.div`
           href="/club/[club]"
           as={`/club/${code}`}
         >
-          <a>{name}</a>
+          <CardTitle>{name}</CardTitle>
         </Link>
         {canManage ? (
           <Link
@@ -53,37 +64,30 @@ const Card = s.div`
             >
               <Icon name="log-out" />
               Leave
-            </button>
-          )}
-      </span>
-      <span>
-        <Icon name="award" />
+      </CardRow>
+      <CardRow>
         Position:
-        {title}
-      </span>
-      <span>
-        <Icon name="key" />
+      </CardRow>
+      <CardRow>
         Permission:
-        {role}
-      </span>
-      <hr />
-      <span>
-        <Icon name="activity" />
+      </CardRow>
+      <CardDivider />
+      <CardRow>
         Active:
         <Toggle
           club={club}
           active={active}
           toggle={toggleActive}
         />
-      </span>
-      <span>
-        <Icon name="unlock" />
+      </CardRow>
+      <CardRow>
         Public:
         <Toggle
           club={club}
           active={isPublic}
           toggle={togglePublic}
         />
+      </CardRow>
     </Card>
   )
 }
