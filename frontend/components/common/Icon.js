@@ -44,7 +44,7 @@ export const Icon = ({ name, alt, size, style, className, ...props }) => (
 Icon.defaultProps = {
   style: {},
   size: undefined,
-  alt: ''
+  alt: '',
 }
 
 Icon.propTypes = {
