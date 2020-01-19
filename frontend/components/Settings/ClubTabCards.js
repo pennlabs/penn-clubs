@@ -1,8 +1,17 @@
+import s from 'styled-components'
 import Toggle from './Toggle'
 import { Icon } from '../common'
 import Link from 'next/link'
+import { BORDER_RADIUS } from '../../constants/measurements'
 
-const ClubTabCard = ({
+const Card = s.div`
+  border-radius: ${BORDER_RADIUS};
+  box-shadow: 0 2px 19px 0 rgba(165, 165, 165, 0.5);
+  margin: 2.5%;
+  margin-bottom: 10%;
+  padding: 5%;
+  padding-top: 3%;
+`
   club,
   toggleActive,
   togglePublic,
@@ -17,8 +26,8 @@ const ClubTabCard = ({
     public: isPublic,
   } = club
   return (
-    <>
-      <span>
+    <Card className="card">
+      <CardRow>
         <Link
           href="/club/[club]"
           as={`/club/${code}`}
@@ -73,8 +82,7 @@ const ClubTabCard = ({
           active={isPublic}
           toggle={togglePublic}
         />
-      </span>
-    </>
+    </Card>
   )
 }
 
