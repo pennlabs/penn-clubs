@@ -95,8 +95,6 @@ class ClubForm extends Component {
       subscriptions: [],
     }
     this.submit = this.submit.bind(this)
-    this.submitEvent = this.submitEvent.bind(this)
-    this.deleteEvent = this.deleteEvent.bind(this)
     this.notify = this.notify.bind(this)
     this.sendInvites = this.sendInvites.bind(this)
   }

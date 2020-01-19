@@ -194,6 +194,14 @@ class Form extends Component {
     let inpt = null
 
     if (['text', 'url', 'email', 'date', 'datetime-local', 'number'].includes(type)) {
+      if (type == 'datetime-local') {
+        // This is a pretty gross hack to reformat the datetime-local by
+        // manipulating the string -- come back to this and try and use
+        // the available datetime functions (or import a package that will)
+        this.state['field-' + name] = new Date(this.state['field-' + name]).toISOString()
+        this.state['field-' + name] = this.state['field-' + name].replace('Z','')
+      }
+
       inpt = (
         <input
           className="input"
