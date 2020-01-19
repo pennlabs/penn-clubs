@@ -30,10 +30,11 @@ const IconTag = s.img`
   }
 `
 
-export const Icon = ({ name, alt, size, style, ...props }) => (
+export const Icon = ({ name, alt, size, style, className, ...props }) => (
   <IconTag
     src={`/static/img/icons/${name}.svg`}
     alt={alt}
+    className={className}
     style={style}
     size={size}
     {...props}
