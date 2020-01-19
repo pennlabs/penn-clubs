@@ -101,8 +101,8 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
               <td>
                 {item.role_display === 'Admin' ? (
                   <Link
-                  href="/club/[club]/edit"
-                  as={`/club/${code}/edit`}
+                    href="/club/[club]/edit"
+                    as={`/club/${item.code}/edit`}
                   >
                     <a className="button is-small">
                       Manage

@@ -72,7 +72,7 @@ const ClubCard = ({
   club,
   toggleActive,
   togglePublic,
-  leaveClub
+  leaveClub,
 }) => {
   const {
     code,
@@ -107,17 +107,17 @@ const ClubCard = ({
             </ManageButton>
           </Link>
         ) : (
-            <LeaveButton
-              className="button is-small"
-              onClick={() => leaveClub(club)}
-            >
-              <ButtonIcon
-                name="log-out-white"
-                size="1rem"
-              />
+          <LeaveButton
+            className="button is-small"
+            onClick={() => leaveClub(club)}
+          >
+            <ButtonIcon
+              name="log-out-white"
+              size="1rem"
+            />
               Leave
-            </LeaveButton>
-          )
+          </LeaveButton>
+        )
         }
       </CardRow>
       <CardRow>
@@ -171,16 +171,16 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
           You're not a member of any clubs yet! Browse clubs <Link href="/">here.</Link>
         </p>
       ) : (
-          userInfo.membership_set.map(club =>
-            <ClubCard
-              key={club.code}
-              club={club}
-              togglePublic={togglePublic}
-              toggleActive={toggleActive}
-              leaveClub={leaveClub}
-            />
-          )
-        )}
+        userInfo.membership_set.map(club =>
+          <ClubCard
+            key={club.code}
+            club={club}
+            togglePublic={togglePublic}
+            toggleActive={toggleActive}
+            leaveClub={leaveClub}
+          />
+        )
+      )}
     </div>
   )
 }
