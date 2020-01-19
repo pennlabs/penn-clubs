@@ -24,26 +24,28 @@ const Events = props => {
 
   return (
     <Card bordered style={{ marginBottom: '1rem' }}>
-      <StrongText>Events</StrongText>
-      {data.map((entry, index) => {
-        return (
-          <div key={index} style={{ marginBottom: '0.5rem' }}>
-            <Icon name='calendar' style={iconStyles} size="32px" alt='Calendar icon' />
-            <p style={bigStyles}>
-              {new Intl.DateTimeFormat("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "2-digit",
-                hour: "numeric",
-                minute: "numeric"
-              }).format(new Date(entry.start_time))} | {entry.location}
-            </p>
-            <p style={smallStyles}>
-              {entry.name}
-            </p>
-          </div>
-        )
-      })}
+      <div style={{marginLeft: '7px'}}>
+        <StrongText>Events</StrongText>
+        {data.map((entry, index) => {
+          return (
+            <div key={index} style={{ marginBottom: '0.5rem' }}>
+              <Icon name='calendar' style={iconStyles} size="32px" alt='Calendar icon' />
+              <p style={bigStyles}>
+                {new Intl.DateTimeFormat("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "2-digit",
+                  hour: "numeric",
+                  minute: "numeric"
+                }).format(new Date(entry.start_time))} | {entry.location}
+              </p>
+              <p style={smallStyles}>
+                {entry.name}
+              </p>
+            </div>
+          )
+        })}
+      </div>
     </Card>
   )
 }
