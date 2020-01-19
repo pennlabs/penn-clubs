@@ -30,6 +30,13 @@ const CardDivider = s.hr`
   margin: 6px;
 `
 
+const CardTitle = s.p`
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-right: auto;
+  width: 70%;
+`
+
 const ManageButton = s.a`
   border-radius: ${BORDER_RADIUS};
   background-color: ${CLUBS_BLUE};
