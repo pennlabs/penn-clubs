@@ -35,7 +35,6 @@ from clubs.models import (
 from clubs.permissions import (
     AssetPermission,
     ClubItemPermission,
-    EventPermission,
     ClubPermission,
     EventPermission,
     InvitePermission,
