@@ -101,6 +101,16 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
             <StrongText>Social</StrongText>
             <SocialIcons club={club} />
           </Card>
+          {club.how_to_get_involved != "" ? (
+            <Card bordered style={{ marginBottom: '1rem' }}>
+              <div style={{marginLeft: '6px'}}>
+                <StrongText>How To Get Involved</StrongText>
+                <Text> {club.how_to_get_involved} </Text>
+              </div>
+            </Card>
+          ) : (
+            <div></div>
+          )}
           <Events data={club.events} />
           <Testimonials data={club.testimonials} />
         </div>
