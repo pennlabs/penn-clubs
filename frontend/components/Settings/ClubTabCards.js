@@ -93,7 +93,8 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
         </p>
       ) : (
           userInfo.membership_set.map(club =>
-            <ClubTabCard
+            <ClubCard
+              key={club.code}
               club={club}
               togglePublic={togglePublic}
               toggleActive={toggleActive}
