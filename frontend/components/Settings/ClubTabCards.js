@@ -52,18 +52,21 @@ const CardDivider = s.hr`
             href="/club/[club]/edit"
             as={`/club/${code}/edit`}
           >
-            <a className="button is-small">
-              <Icon name="edit" />
+            <ManageButton className="button is-small">
+              <ButtonIcon
               Manage
-              </a>
+            </ManageButton>
           </Link>
         ) : (
-            <button
+            <LeaveButton
               className="button is-small"
               onClick={() => leaveClub(club)}
             >
               <Icon name="log-out" />
               Leave
+            </LeaveButton>
+          )
+        }
       </CardRow>
       <CardRow>
         Position:
