@@ -56,6 +56,18 @@ const ButtonIcon = s(Icon)`
   margin-right: 5px;
   margin-bottom: .4rem;
 `
+
+const RowIcon = s(Icon)`
+  margin-right: 5px;
+`
+
+const RightWrapper = s.div`
+  color: ${LIGHT_GRAY}
+  margin-left: auto;
+  text-align: right;
+  justify-content: flex-start;
+`
+
 const ClubCard = ({
   club,
   toggleActive,
@@ -109,27 +121,37 @@ const ClubCard = ({
         }
       </CardRow>
       <CardRow>
+        <RowIcon name="award" />
         Position:
+        <RightWrapper>{title}</RightWrapper>
       </CardRow>
       <CardRow>
+        <RowIcon name="key" />
         Permission:
+        <RightWrapper>{role}</RightWrapper>
       </CardRow>
       <CardDivider />
       <CardRow>
+        <RowIcon name="activity" />
         Active:
-        <Toggle
-          club={club}
-          active={active}
-          toggle={toggleActive}
-        />
+        <RightWrapper>
+          <Toggle
+            club={club}
+            active={active}
+            toggle={toggleActive}
+          />
+        </RightWrapper>
       </CardRow>
       <CardRow>
+        <RowIcon name="unlock" />
         Public:
-        <Toggle
-          club={club}
-          active={isPublic}
-          toggle={togglePublic}
-        />
+        <RightWrapper>
+          <Toggle
+            club={club}
+            active={isPublic}
+            toggle={togglePublic}
+          />
+        </RightWrapper>
       </CardRow>
     </Card>
   )
