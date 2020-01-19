@@ -25,6 +25,8 @@ const Card = s.div`
     active,
     public: isPublic,
   } = club
+  const canManage = role === 'Owner' || role === 'Officer'
+
   return (
     <Card className="card">
       <CardRow>
@@ -34,7 +36,7 @@ const Card = s.div`
         >
           <a>{name}</a>
         </Link>
-        {role === 'Admin' ? (
+        {canManage ? (
           <Link
             href="/club/[club]/edit"
             as={`/club/${code}/edit`}
