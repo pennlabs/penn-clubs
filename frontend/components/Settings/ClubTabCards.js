@@ -44,7 +44,7 @@ const ManageButton = s.a`
   justify-content: flex-start;
 `
 
-const LeaveButton = s.button`
+const LeaveButton = s.a`
   border-radius: ${BORDER_RADIUS};
   background-color: ${CLUBS_RED};
   color: ${SNOW};
@@ -107,17 +107,18 @@ const ClubCard = ({
             </ManageButton>
           </Link>
         ) : (
-          <LeaveButton
-            className="button is-small"
-            onClick={() => leaveClub(club)}
-          >
-            <ButtonIcon
-              name="log-out-white"
-              size="1rem"
-            />
+            <LeaveButton
+              className="button is-small"
+              onClick={() => leaveClub(club)}
+            >
+
+              <ButtonIcon
+                name="log-out-white"
+                size="1rem"
+              />
               Leave
           </LeaveButton>
-        )
+          )
         }
       </CardRow>
       <CardRow>
@@ -171,16 +172,16 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
           You're not a member of any clubs yet! Browse clubs <Link href="/">here.</Link>
         </p>
       ) : (
-        userInfo.membership_set.map(club =>
-          <ClubCard
-            key={club.code}
-            club={club}
-            togglePublic={togglePublic}
-            toggleActive={toggleActive}
-            leaveClub={leaveClub}
-          />
-        )
-      )}
+          userInfo.membership_set.map(club =>
+            <ClubCard
+              key={club.code}
+              club={club}
+              togglePublic={togglePublic}
+              toggleActive={toggleActive}
+              leaveClub={leaveClub}
+            />
+          )
+        )}
     </div>
   )
 }
