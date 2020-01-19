@@ -90,7 +90,7 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
                   active={item.active}
                   toggle={club => toggleActive(club)}
                 />
-              </td>switchDisplay
+              </td>
               <td>
                 <Toggle
                   club={item}
