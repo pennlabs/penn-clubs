@@ -47,6 +47,26 @@ class ClubPermission(permissions.BasePermission):
             return True
 
 
+class EventPermission(permissions.BasePermission):
+    """
+    Officers and above can create/update/delete events.
+    Everyone else can view and list events.
+    """
+
+    def has_permission(self, request, view):
+        if view.action in ["create", "update", "partial_update", "destroy"]:
+            if "club_code" not in view.kwargs:
+                return False
+            if not request.user.is_authenticated:
+                return False
+            membership = Membership.objects.filter(
+                person=request.user, club__code=view.kwargs["club_code"]
+            ).first()
+            return membership is not None and membership.role <= Membership.ROLE_OFFICER
+        else:
+            return True
+
+
 class ClubItemPermission(permissions.BasePermission):
     """
     Officers and above can create/update/delete events or testimonials.

@@ -95,7 +95,8 @@ class Form extends Component {
   }
 
   getData() {
-    return this.getAllFields().reduce((out, { type, name, reverser, converter }) => {
+  return this.getAllFields().reduce(
+    (out, { type, name, reverser, converter }) => {
       const val = this.state[`field-${name}`]
       switch (type) {
         case 'multiselect': {
@@ -115,7 +116,11 @@ class Form extends Component {
           break
         }
         case 'datetime-local': {
-          out[name] = val || null
+          if (val != null) {
+            out[name] = new Date(val)
+          } else {
+            out[name] = null
+          }
           break
         }
         case 'file': {
@@ -131,11 +136,12 @@ class Form extends Component {
             out[name] = val
           }
         }
-        return out
-      },
-      {}
-    )
-  }
+      }
+      return out
+    },
+    {}
+  )
+}
 
   generateField(field) {
     const {
@@ -157,6 +163,14 @@ class Form extends Component {
     let inpt = null
 
     if (['text', 'url', 'email', 'date', 'datetime-local', 'number'].includes(type)) {
+      if (type == 'datetime-local') {
+        // This is a pretty gross hack to reformat the datetime-local by
+        // manipulating the string -- come back to this and try and use
+        // the available datetime functions (or import a package that will)
+        this.state['field-' + name] = new Date(this.state['field-' + name]).toISOString()
+        this.state['field-' + name] = this.state['field-' + name].replace('Z','')
+      }
+
       inpt = (
         <input
           className="input"
@@ -452,7 +466,6 @@ export class ModelForm extends Component {
   render() {
     const { objects } = this.state
     const { fields, baseUrl } = this.props
-
     if (!objects) {
       return <></>
     }

@@ -10,7 +10,7 @@ import {
   formatResponse,
   getRoleDisplay,
 } from '../../../utils'
-import Form from '../../../components/Form'
+import Form, { ModelForm } from '../../../components/Form'
 import EventTableRow from '../../../components/EventTableRow'
 import TabView from '../../../components/TabView'
 import AuthPrompt from '../../../components/common/AuthPrompt'
@@ -94,8 +94,6 @@ class ClubForm extends Component {
       subscriptions: [],
     }
     this.submit = this.submit.bind(this)
-    this.submitEvent = this.submitEvent.bind(this)
-    this.deleteEvent = this.deleteEvent.bind(this)
     this.notify = this.notify.bind(this)
     this.sendInvites = this.sendInvites.bind(this)
   }
@@ -131,25 +129,6 @@ class ClubForm extends Component {
     })
   }
 
-  deleteClub() {
-    if (
-      confirm(
-        `Are you absolutely sure you want to delete ${this.state.club.name}?`
-      )
-    ) {
-      doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
-        method: 'DELETE',
-      }).then(resp => {
-        if (!resp.ok) {
-          resp.json().then(err => {
-            this.notify(formatResponse(err))
-          })
-        } else {
-          this.props.router.push('/')
-        }
-      })
-    }
-  }
 
   deleteMembership(member) {
     if (
@@ -272,21 +251,6 @@ class ClubForm extends Component {
     })
   }
 
-  submitEvent(data) {
-    doApiRequest(`/clubs/${this.state.club.code}/events/?format=json`, {
-      method: 'POST',
-      body: data
-    }).then(resp => {
-      if (resp.ok) {
-        this.notify(`Event has been created!`)
-        this.componentDidMount()
-      } else {
-        resp.json().then(err => {
-          this.notify(formatResponse(err))
-        })
-      }
-    })
-  }
 
   deleteEvent(id) {
     console.log(this.state.club.code)
@@ -520,49 +484,43 @@ class ClubForm extends Component {
 
     const event_fields = [
       {
-        name: 'New Event',
-        type: 'group',
-        fields: [
-          {
-            name: 'name',
-            type: 'text',
-            required: true,
-            help:
-              !this.state.isEdit &&
-              'Provide a descriptive name for the planned event.',
-          },
-          {
-            name: 'location',
-            required: true,
-            placeholder: 'Provide the event location',
-            type: 'text',
-          },
-          {
-            name: 'start_time',
-            required: true,
-            placeholder: 'Provide a start time for the event',
-            type: 'datetime-local',
-          },
-          {
-            name: 'end_time',
-            required: true,
-            placeholder: 'Provide an end time for the event',
-            type: 'datetime-local',
-          },
-          {
-            name: 'type',
-            type: 'select',
-            required: true,
-            choices: this.types,
-            converter: a => this.types.find(x => x.value === a),
-            reverser: a => a.value,
-          },
-          {
-            name: 'description',
-            placeholder: 'Type your event description here!',
-            type: 'html',
-          }
-        ],
+        name: 'name',
+        type: 'text',
+        required: true,
+        help:
+          !this.state.isEdit &&
+          'Provide a descriptive name for the planned event.',
+      },
+      {
+        name: 'location',
+        required: true,
+        placeholder: 'Provide the event location',
+        type: 'text',
+      },
+      {
+        name: 'start_time',
+        required: true,
+        placeholder: 'Provide a start time for the event',
+        type: 'datetime-local',
+      },
+      {
+        name: 'end_time',
+        required: true,
+        placeholder: 'Provide an end time for the event',
+        type: 'datetime-local',
+      },
+      {
+        name: 'type',
+        type: 'select',
+        required: true,
+        choices: this.types,
+        converter: a => this.types.find(x => x.value === a),
+        reverser: a => a.value,
+      },
+      {
+        name: 'description',
+        placeholder: 'Type your event description here!',
+        type: 'html',
       }
     ]
 
@@ -725,19 +683,10 @@ class ClubForm extends Component {
                 <Text>
                    Manage events for this club.
                 </Text>
-                {club.events.map((entry, index) => {
-                  return (
-                    <div key={index}>
-                      <EventTableRow
-                        club={club}
-                        event={entry}
-                        deleteEvent={this.deleteEvent}
-                      />
-                    </div>
-                  )
-                })}
-                <br></br>
-                <Form fields={event_fields} onSubmit={this.submitEvent}/>
+                <ModelForm
+                  baseUrl={`/clubs/${club.code}/events/`}
+                  fields={event_fields}
+                />
               </div>
             </div>
             <div className="card">
