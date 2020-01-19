@@ -8,7 +8,7 @@ import {
   CLUBS_RED,
   SNOW,
 } from '../../constants/colors'
-import { BORDER_RADIUS } from '../../constants/measurements'
+import { BORDER_RADIUS, BORDER_RADIUS_LG } from '../../constants/measurements'
 
 const Card = s.div`
   border-radius: ${BORDER_RADIUS};
@@ -38,14 +38,16 @@ const CardTitle = s.p`
 `
 
 const ManageButton = s.a`
-  border-radius: ${BORDER_RADIUS};
+  border: none;
+  border-radius: ${BORDER_RADIUS_LG};
   background-color: ${CLUBS_BLUE};
   color: ${SNOW};
   justify-content: flex-start;
 `
 
 const LeaveButton = s.a`
-  border-radius: ${BORDER_RADIUS};
+  border: none;
+  border-radius: ${BORDER_RADIUS_LG};
   background-color: ${CLUBS_RED};
   color: ${SNOW};
   justify-content: flex-start;
