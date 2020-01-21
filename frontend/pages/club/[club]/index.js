@@ -3,7 +3,7 @@ import s from 'styled-components'
 import { useState, useEffect } from 'react'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
-import Tabs from '../../../components/ClubPage/Tabs'
+import Tabs from '../../../components/ClubPage/Description'
 import Header from '../../../components/ClubPage/Header'
 <<<<<<< HEAD
 import { DesktopActions, MobileActions } from '../../../components/ClubPage/Actions'
