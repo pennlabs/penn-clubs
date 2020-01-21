@@ -4,12 +4,34 @@ import s from 'styled-components'
 import { Icon } from '../common'
 import { LOGIN_URL } from '../../utils'
 import { mediaMaxWidth, MD } from '../../constants/measurements'
-import { MEDIUM_GRAY, DARK_GRAY, BORDER } from '../../constants/colors'
+import {
+  SNOW,
+  SNOW_ALPHA,
+  CLUBS_RED,
+  MEDIUM_GRAY,
+  DARK_GRAY,
+  BORDER,
+} from '../../constants/colors'
 import { logEvent } from '../../utils/analytics'
 
 const StyledIcon = s(Icon)`
   opacity: 0.5;
   margin-right: 4px;
+`
+
+const LoginButton = s.a`
+  background-color: ${CLUBS_RED};
+  padding: 14px 20px;
+  margin: auto;
+  color: ${SNOW} !important;
+
+  &:hover {
+    color: ${SNOW_ALPHA} !important;
+  }
+
+  ${mediaMaxWidth(MD)} {
+    padding: 8px 0;
+  }
 `
 
 const StyledLink = s.a`
@@ -23,6 +45,7 @@ const StyledLink = s.a`
   }
 
   ${mediaMaxWidth(MD)} {
+    text-align: center;
     padding: 8px 0;
   }
 `
@@ -48,12 +71,13 @@ export default ({ userInfo, authenticated, show }) => (
         FAQ
       </StyledLink>
       {authenticated === false && (
-        <StyledLink
+        <LoginButton
+          className="button"
           href={`${LOGIN_URL}?next=${window.location.href}`}
           onClick={() => logEvent('login', 'click')}
         >
           Login
-        </StyledLink>
+        </LoginButton>
       )}
       {userInfo && (
         <Link href="/settings">
