@@ -47,8 +47,8 @@ export default ({ club }) => (
                           )
                         </span>
                       ) : (
-                          a.title
-                        )}
+                        a.title
+                      )}
                     </p>
                   </div>
                 </div>

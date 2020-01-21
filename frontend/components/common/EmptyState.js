@@ -9,7 +9,7 @@ const Image = s.img`
 `
 
 export const EmptyState = ({ name, alt, size, style, ...props }) => (
-  <Image 
+  <Image
     src={`/static/img/${name}.svg`}
     alt={alt}
     style={style}

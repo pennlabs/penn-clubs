@@ -92,13 +92,13 @@ export default props => {
               {item.role_display === 'Admin' ? (
                 <button className="button is-small">Manage</button>
               ) : (
-                  <button
-                    className="button is-small"
-                    onClick={() => leaveClub(item)}
-                  >
+                <button
+                  className="button is-small"
+                  onClick={() => leaveClub(item)}
+                >
                     Leave
-                  </button>
-                )}
+                </button>
+              )}
             </td>
           </tr>
         ))}
@@ -111,5 +111,5 @@ export default props => {
           You are not a member of any clubs yet.
         </p>
       </>
-    )
+  )
 }
