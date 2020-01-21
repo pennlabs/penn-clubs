@@ -9,8 +9,8 @@ const Card = s.div`
   margin-right: 1%;
   margin-bottom: 20px;
   padding: 20px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  float: left;
+  border: 1px solid ${BORDER};
+  display: inline-block
 `
 
 const Label = s.div`
@@ -23,15 +23,15 @@ const Avatar = s.div`
   border-radius: 9999px;
 `
 
-const MemberCard = ({ a, i }) => (
-  <Card key={i}>
+const MemberCard = ({ a }) => (
+  <Card>
     <div>
       <Avatar
         style={{ margin: '0 auto' }}
         className="has-background-light image is-64x64"
-      ></Avatar>
+      />
     </div>
-    <br></br>
+    <br />
     <Label className="title is-5">{a.name || 'No Name'}</Label>
     <Label className="subtitle is-6">{a.title}</Label>
     <Label className="subtitle is-6">
