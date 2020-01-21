@@ -88,12 +88,15 @@ function renderPage(Page) {
       }
     }
 
+    // Higher order function to wrap operations which require auth.
+    // Usage: console.log("Hello World") becomes checkAuth(console.log, "Hello World")
+    // This function returns null when no user is found, which may be useful.
     checkAuth(func, ...args) {
       if (this.state.authenticated) {
-        return func && func(...args)
+        return typeof func === 'function' && func(...args)
       } else {
         this.openModal()
-        return false
+        return null
       }
     }
 
