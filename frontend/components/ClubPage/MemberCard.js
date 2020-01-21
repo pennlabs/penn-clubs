@@ -4,8 +4,8 @@ import { BORDER } from '../../constants/colors'
 
 const Card = s.div`
   text-align: center;
-  width: 24%;
   box-sizing: border-box;
+  width: 100%;
   margin-right: 1%;
   margin-bottom: 20px;
   padding: 20px 10px;
