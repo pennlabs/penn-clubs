@@ -20,6 +20,7 @@ const StyledIcon = s(Icon)`
 `
 
 const LoginButton = s.a`
+  border: 0;
   background-color: ${CLUBS_RED};
   padding: 14px 20px;
   margin: auto;
@@ -31,6 +32,8 @@ const LoginButton = s.a`
 
   ${mediaMaxWidth(MD)} {
     padding: 8px 0;
+    padding-top: .4rem;
+    width: 5rem !important;
   }
 `
 
