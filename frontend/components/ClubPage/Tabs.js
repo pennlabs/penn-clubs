@@ -1,9 +1,13 @@
+<<<<<<< HEAD
 import { EMPTY_DESCRIPTION } from '../../utils'
 import { EmptyState, Center } from '../common'
 import TabView from '../TabView'
 import MemberCard from './MemberCard'
+=======
+>>>>>>> code cleanup
 import s from 'styled-components'
 import { StrongText } from '../common'
+import { EMPTY_DESCRIPTION } from '../../utils'
 
 const Wrapper = s.div`
   display: flex;
@@ -45,13 +49,8 @@ export default ({
             )}
 =======
 export default props => (
-  /*<TabView
-    tabs={[
-      {
-        name: 'description',
-        content: (*/
   <Wrapper>
-    <div>
+    <div style={{ padding: '10px' }}>
       <StrongText>Description</StrongText>
       <div
         style={{ whiteSpace: 'pre-wrap' }}
@@ -71,6 +70,7 @@ export default props => (
         </div>
       )}
     </div>{' '}
+<<<<<<< HEAD
   </Wrapper> /*
         ),
       },
@@ -97,4 +97,7 @@ export default props => (
       },
     ]}
   />*/
+=======
+  </Wrapper>
+>>>>>>> code cleanup
 )
