@@ -103,7 +103,7 @@ const ClubCards = s(ClubTabCards)`
     </Table>
   ) : (
       <>
-        <EmptyState name="button" size="75%" />
+        <EmptyState name="button" />
         <p className="has-text-grey" style={{ textAlign: 'center' }}>
           You are not a member of any clubs yet.
         </p>
