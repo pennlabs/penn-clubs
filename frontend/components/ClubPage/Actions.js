@@ -106,7 +106,11 @@ const Actions = ({
             updateSubscribes={updateSubscriptions}
           />
         </ActionWrapper>
-        <Icon name={'more-horizontal'} style={{ margin: '5px 0px 0px 20px' }} />
+        <Icon
+          name={'more-horizontal'}
+          style={{ margin: '5px 0px 0px 20px' }}
+          alt="see more"
+        />
       </Wrapper>
     </div>
   )
