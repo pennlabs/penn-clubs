@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ClubTableRow from '../ClubTableRow'
-import { HOME_ROUTE } from '../../constants/routes'
+import { EmptyState } from '../common'
 
 export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
   const [table, setTable] = useState(() => {
@@ -12,6 +12,7 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
     return ret
   })
   const rows = Object.keys(table)
+  const isBookmarks = keyword === "bookmark"
   const findClub = code => {
     return clubs.find(club => club.code === code) || {}
   }
@@ -22,9 +23,12 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
 
   if (!rows || !rows.length) {
     return (
-      <p className="has-text-light-grey" style={{ paddingTop: 200, textAlign: 'center' }}>
-        No {keyword}s yet! Browse clubs <Link href={HOME_ROUTE}>here.</Link>
-      </p>
+      <>
+        <EmptyState name={isBookmarks ? 'bookmarks' : 'subscriptions'} />
+        <p className="has-text-light-grey" style={{ textAlign: 'center' }}>
+          No {keyword}s yet! Browse clubs <a href="/">here.</a>
+        </p>
+      </>
     )
   }
   return (
