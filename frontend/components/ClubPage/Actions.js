@@ -62,8 +62,9 @@ const Actions = ({
   updateSubscriptions,
   className,
 }) => {
-  const isFavorite = favorites.includes(club.code)
-  const isSubscription = subscriptions.includes(club.code)
+  const { code, favorite_count: favoriteCount } = club
+  const isFavorite = favorites.includes(code)
+  const isSubscription = subscriptions.includes(code)
 
   // inClub is set to the membership object if the user is in the club, or false
   // otherwise
@@ -77,9 +78,7 @@ const Actions = ({
     (inClub && inClub.role <= ROLE_OFFICER) ||
     (userInfo && userInfo.is_superuser)
 
-  const [favCount, setFavCount] = useState(club.favorite_count || 0)
-
-  const { code } = club
+  const [favCount, setFavCount] = useState(favoriteCount || 0)
 
   return (
     <div className={className} style={style}>
