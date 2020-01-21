@@ -90,7 +90,8 @@ const Actions = ({
               favorite={isFavorite}
               updateFavorites={id => {
                 const upd = updateFavorites(id)
-                setFavCount(favCount + (upd ? 1 : -1))
+                // If upd is null, checkAuth in renderPage failed, so we do not update the count.
+                if (upd !== null) setFavCount(favCount + (upd ? 1 : -1))
               }}
               padding="0"
             />
