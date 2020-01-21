@@ -32,7 +32,7 @@ const LoginButton = s.a`
 
   ${mediaMaxWidth(MD)} {
     padding: 8px 0;
-    padding-top: .4rem;
+    padding-top: 0.4rem;
     width: 5rem !important;
   }
 `
