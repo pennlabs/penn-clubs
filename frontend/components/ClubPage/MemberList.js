@@ -15,18 +15,18 @@ const MemberList = ({ club }) => {
     <div>
       {expanded ? (
         <Row>
-          {club.members.map((a, i) => (
-            <Col sm={12} md={6} lg={3} margin="5px" flex>
-              <MemberCard a={a} key={i} />
+          {club.members.map(a => (
+            <Col key={a.username} sm={12} md={6} lg={3} margin="5px" flex>
+              <MemberCard a={a} />
             </Col>
           ))}
         </Row>
       ) : (
         <Row>
           {club.members.length ? (
-            club.members.slice(0, 4).map((a, i) => (
-              <Col sm={12} md={6} lg={3} margin="5px" flex>
-                <MemberCard a={a} key={i} />
+            club.members.slice(0, 4).map(a => (
+              <Col key={a.username} sm={12} md={6} lg={3} margin="5px" flex>
+                <MemberCard a={a} />
               </Col>
             ))
           ) : (

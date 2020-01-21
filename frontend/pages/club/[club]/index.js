@@ -21,8 +21,6 @@ import {
   Title,
   Text,
   Container,
-  Row,
-  Col,
 } from '../../../components/common'
 import { SNOW, WHITE, DARK_GRAY } from '../../../constants/colors'
 
