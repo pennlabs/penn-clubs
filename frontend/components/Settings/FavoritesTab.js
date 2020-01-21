@@ -12,7 +12,7 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
     return ret
   })
   const rows = Object.keys(table)
-  const isBookmarks = keyword === "bookmark"
+  const isBookmarks = keyword === 'bookmark'
   const findClub = code => {
     return clubs.find(club => club.code === code) || {}
   }
