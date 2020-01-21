@@ -15,3 +15,8 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 # Use console email backend during development
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# Django Extensions Shell Plus
+SHELL_PLUS_PRE_IMPORTS = [
+    ("clubs.utils", "fuzzy_lookup_club"),
+]
