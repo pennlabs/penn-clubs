@@ -10,7 +10,8 @@ const Card = s.div`
   margin-bottom: 20px;
   padding: 20px 10px;
   border: 1px solid ${BORDER};
-  display: inline-block
+  display: inline-block;
+  background-color: white;
 `
 
 const Label = s.div`
