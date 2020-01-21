@@ -1,54 +1,48 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import s from 'styled-components'
-import { ALLBIRDS_GRAY, WHITE } from '../../constants/colors'
+import { WHITE, BORDER, MEDIUM_GRAY } from '../../constants/colors'
 
-import { BookmarkIcon, SubscribeIcon } from '../common'
+import { Icon, BookmarkIcon, SubscribeIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
 
-const Wrapper = s.div`
-  display: inline-block;
-  justify-content: space-between;
+const Wrapper = s.span`
+  display: flex;
   flex-direction: row;
-  width: inherit;
   align-items: right;
-  padding-bottom: 0.5rem;
+  justify-content: flex-end;
+  margin-bottom: 0.8rem;
+  line-height: 1;
+  height: 30px;
 `
 
-const IconWrapper = s.span`
+const BookmarkCountWrapper = s.div`
+  margin-left: 2px;
+  color: ${MEDIUM_GRAY};
+`
+
+const ActionWrapper = s.div`
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding-top: 5px;
+  background-color: ${WHITE};
+  border-radius: 9999px;
+  border: 1px solid ${BORDER};
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  margin-bottom: 0.8rem;
+  line-height: 1;
+  height: 30px;
+`
+
+const ActionDiv = s.div`
   display: inline-block;
-  vertical-align: middle;
-`
-
-const BookmarkIconWrapper = s.span`
-  display: inline-block;
-  margin-top: 6px;
-`
-
-const BookmarkCountWrapper = s.span`
-  display: inline-block;
-  vertical-align: text-bottom;
-  margin-top: 1px;
-  margin-bottom: -1px;
-`
-
-const ActionWrapper = s.span`
-    display: inline-block;
-    flex-direction: row;
-    align-items: center;
-    background-color: ${WHITE};
-    border-radius: 30px;
-    border: 1px solid ${ALLBIRDS_GRAY};
-    padding-left: 1rem;
-    padding-right: 1rem;
-`
-
-const ActionDiv = s.span`
-    display: inline-block;
-    color: #4a4a4a;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    vertical-align: middle;
+  opacity: 0.1;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  line-height: 1;
+  margin-top: -1px;
 `
 
 const Actions = ({
@@ -82,37 +76,37 @@ const Actions = ({
   return (
     <div style={style}>
       <Wrapper>
-        <ActionWrapper>
-          <IconWrapper>
-            <BookmarkIconWrapper>
-              <BookmarkIcon
-                club={club}
-                favorite={isFavorite}
-                updateFavorites={(id) => {
-                  const upd = updateFavorites(id)
-                  setFavCount(favCount + (upd ? 1 : -1))
-                }}
-                padding="0"
-              />
-            </BookmarkIconWrapper>
-            {' '}<BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
-          </IconWrapper>
-          <ActionDiv>|</ActionDiv>
-          <IconWrapper>
-            <SubscribeIcon
-              club={club}
-              subscribe={isSubscription}
-              updateSubscribes={updateSubscriptions}
-            />
-          </IconWrapper>
-        </ActionWrapper>
-        { canEdit && (
+        {canEdit && (
           <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
-            <a className="button is-success is-small" style={{ marginLeft: '1rem' }}>
-                    Edit Club
+            <a
+              className="button is-success"
+              style={{ height: '30px', fontSize: '0.8em', marginRight: '20px' }}
+            >
+              Edit Club
             </a>
           </Link>
         )}
+
+        <ActionWrapper>
+          <BookmarkIcon
+            club={club}
+            favorite={isFavorite}
+            updateFavorites={id => {
+              const upd = updateFavorites(id)
+              setFavCount(favCount + (upd ? 1 : -1))
+            }}
+            padding="0"
+          />
+          <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
+          <ActionDiv>|</ActionDiv>
+          <SubscribeIcon
+            padding="0"
+            club={club}
+            subscribe={isSubscription}
+            updateSubscribes={updateSubscriptions}
+          />
+        </ActionWrapper>
+        <Icon name={'more-horizontal'} style={{ margin: '5px 0px 0px 20px' }} />
       </Wrapper>
     </div>
   )
