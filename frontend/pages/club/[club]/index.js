@@ -23,6 +23,8 @@ import {
   Container,
 } from '../../../components/common'
 
+import { mediaMaxWidth, MD } from '../../../constants/measurements'
+
 const Image = s.img`
   height: 86px;
   width: auto;
@@ -99,25 +101,24 @@ const Club = ({
           <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
             <Tabs club={club} />
           </Card>
-          <Card>
-            <StrongText>Members</StrongText>
-            <div>
-              {club.members.length ? (
-                club.members.map((a, i) => <MemberCard a={a} key={i} />)
-              ) : (
-                <p>
-                  No club members have linked their accounts on Penn Clubs yet.
-                  Check back later for a list of club members!
-                </p>
-              )}
-            </div>
-          </Card>
+          <StrongText>Members</StrongText>
+          <div>
+            {club.members.length ? (
+              club.members.map((a, i) => <MemberCard a={a} key={i} />)
+            ) : (
+              <p>
+                No club members have linked their accounts on Penn Clubs yet.
+                Check back later for a list of club members!
+              </p>
+            )}
+          </div>
         </div>
         <div className="column is-one-third">
           <Card bordered style={{ marginBottom: '1rem' }}>
             <StrongText>Basic Info</StrongText>
             <InfoBox club={club} />
-            <StrongText>Social</StrongText>
+            <br />
+            <StrongText>Contact</StrongText>
             <SocialIcons club={club} />
           </Card>
           <Testimonials data={club.testimonials} />

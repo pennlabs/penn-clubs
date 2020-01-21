@@ -1,8 +1,6 @@
-import { EMPTY_DESCRIPTION } from '../../utils'
-import TabView from '../TabView'
-import MemberCard from './MemberCard'
 import s from 'styled-components'
 import { StrongText } from '../common'
+import { EMPTY_DESCRIPTION } from '../../utils'
 
 const Wrapper = s.div`
   display: flex;
@@ -13,13 +11,8 @@ const Wrapper = s.div`
 `
 
 export default props => (
-  /*<TabView
-    tabs={[
-      {
-        name: 'description',
-        content: (*/
   <Wrapper>
-    <div>
+    <div style={{ padding: '10px' }}>
       <StrongText>Description</StrongText>
       <div
         style={{ whiteSpace: 'pre-wrap' }}
@@ -38,24 +31,5 @@ export default props => (
         </div>
       )}
     </div>{' '}
-  </Wrapper> /*
-        ),
-      },
-      {
-        name: 'members',
-        content: (
-          <div>
-            {props.club.members.length ? (
-              props.club.members.map((a, i) => <MemberCard a={a} key={i} />)
-            ) : (
-              <p>
-                No club members have linked their accounts on Penn Clubs yet.
-                Check back later for a list of club members!
-              </p>
-            )}
-          </div>
-        ),
-      },
-    ]}
-  />*/
+  </Wrapper>
 )
