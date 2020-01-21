@@ -33,7 +33,7 @@ export default props => (
         content: (
           <div>
             {props.club.members.length ? (
-              props.club.members.map((a, i) => <MemberCard a={a} i={i} />)
+              props.club.members.map((a, i) => <MemberCard a={a} key={i} />)
             ) : (
               <p>
                 No club members have linked their accounts on Penn Clubs yet.
