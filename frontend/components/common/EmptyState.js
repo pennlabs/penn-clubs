@@ -1,7 +1,7 @@
 import s from 'styled-components'
 
 const Image = s.img`
-  ${({ size }) => `width: ${size || '50%'}`}
+  ${({ size }) => `width: ${size || '25%'}`}
   display: block;
   margin: 7.5%;
   margin-left: auto;
