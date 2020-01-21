@@ -38,18 +38,20 @@ const Toggle = s.div`
   cursor: pointer;
 `
 
-const FeatherTriangle = () =>
+const FeatherTriangle = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
-    class="feather feather-triangle">
+    className="feather feather-triangle"
+  >
     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
   </svg>
+)
 
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]]
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[array[i], array[j]] = [array[j], array[i]]
   }
 }
 
@@ -74,22 +76,31 @@ const Testimonials = props => {
   return (
     <>
       <StrongText>Member Experiences</StrongText>
-      {expanded ? data.map(({ text }, i) => (
+      {expanded ? (
+        data.map(({ text }, i) => (
+          <Wrapper>
+            <Quote key={i}>{text}</Quote>
+            <FeatherTriangle />
+          </Wrapper>
+        ))
+      ) : (
         <Wrapper>
-          <Quote key={i}>{text}</Quote>
+          <Quote>{data[0].text}</Quote>
           <FeatherTriangle />
         </Wrapper>
-      )) : <Wrapper>
-        <Quote>{data[0].text}</Quote>
-        <FeatherTriangle />
-      </Wrapper>}
-      {data.length >= 2 && <Toggle className="is-pulled-right" onClick={() => setExpanded(!expanded)}>
-        See {expanded ? 'less' : 'more'}{' '}
-        <Icon
-          alt={expanded ? 'less' : 'more'}
-          name={expanded ? 'chevron-up' : 'chevron-down'}
-        />
-      </Toggle>}
+      )}
+      {data.length >= 2 && (
+        <Toggle
+          className="is-pulled-right"
+          onClick={() => setExpanded(!expanded)}
+        >
+          See {expanded ? 'less' : 'more'}{' '}
+          <Icon
+            alt={expanded ? 'less' : 'more'}
+            name={expanded ? 'chevron-up' : 'chevron-down'}
+          />
+        </Toggle>
+      )}
     </>
   )
 }

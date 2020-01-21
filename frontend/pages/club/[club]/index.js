@@ -3,7 +3,7 @@ import s from 'styled-components'
 import { useState, useEffect } from 'react'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
-import Tabs from '../../../components/ClubPage/Description'
+import Description from '../../../components/ClubPage/Description'
 import Header from '../../../components/ClubPage/Header'
 import {
   DesktopActions,
@@ -12,7 +12,7 @@ import {
 import InfoBox from '../../../components/ClubPage/InfoBox'
 import Testimonials from '../../../components/ClubPage/Testimonials'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
-import MemberCard from '../../../components/ClubPage/MemberCard'
+import MemberList from '../../../components/ClubPage/MemberList'
 import {
   Card,
   StrongText,
@@ -21,9 +21,10 @@ import {
   Title,
   Text,
   Container,
+  Row,
+  Col,
 } from '../../../components/common'
-
-import { mediaMaxWidth, MD } from '../../../constants/measurements'
+import { SNOW, WHITE, DARK_GRAY } from '../../../constants/colors'
 
 const Image = s.img`
   height: 86px;
@@ -31,6 +32,11 @@ const Image = s.img`
   max-width: 242px;
   margin-right: 1rem;
   object-fit: contain;
+`
+
+const Toggle = s.div`
+  color: ${DARK_GRAY};
+  cursor: pointer;
 `
 
 const Club = ({
@@ -99,19 +105,10 @@ const Club = ({
             updateSubscriptions={updateSubscriptions}
           />
           <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
-            <Tabs club={club} />
+            <Description club={club} />
           </Card>
           <StrongText>Members</StrongText>
-          <div>
-            {club.members.length ? (
-              club.members.map((a, i) => <MemberCard a={a} key={i} />)
-            ) : (
-              <p>
-                No club members have linked their accounts on Penn Clubs yet.
-                Check back later for a list of club members!
-              </p>
-            )}
-          </div>
+          <MemberList club={club} />
         </div>
         <div className="column is-one-third">
           <Card bordered style={{ marginBottom: '1rem' }}>
