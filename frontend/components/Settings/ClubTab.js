@@ -2,7 +2,7 @@ import { DARK_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
 import s from 'styled-components'
 import Toggle from './Toggle'
-import { EmptyState, Icon } from '../common'
+import { EmptyState, Icon, Center, Text } from '../common'
 import ReactTooltip from 'react-tooltip'
 import Link from 'next/link'
 
@@ -107,9 +107,11 @@ export default props => {
   ) : (
       <>
         <EmptyState name="button" />
-        <p className="has-text-grey" style={{ textAlign: 'center' }}>
-          You are not a member of any clubs yet.
-        </p>
+        <Center>
+          <Text isGray>
+            You are not a member of any clubs yet.
+          </Text>
+        </Center>
       </>
   )
 }
