@@ -13,7 +13,7 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
     return ret
   })
   const rows = Object.keys(table)
-  const isBookmarks = keyword === 'bookmark'
+  const isBookmarksTab = keyword === 'bookmark'
   const findClub = code => {
     return clubs.find(club => club.code === code) || {}
   }
@@ -25,7 +25,7 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
   if (!rows || !rows.length) {
     return (
       <>
-        <EmptyState name={isBookmarks ? 'bookmarks' : 'subscriptions'} />
+        <EmptyState name={isBookmarksTab ? 'bookmarks' : 'subscriptions'} />
         <Center>
           <Text color={CLUBS_GREY_LIGHT}>
             No {keyword}s yet! Browse clubs <Link href="/">here.</Link>
