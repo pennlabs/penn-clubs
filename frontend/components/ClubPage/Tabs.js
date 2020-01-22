@@ -2,7 +2,13 @@ import { EMPTY_DESCRIPTION } from '../../utils'
 import { EmptyState, Center } from '../common'
 import TabView from '../TabView'
 
-export default ({ club }) => (
+export default ({
+  club: {
+    description,
+    how_to_get_involved: involvedText,
+    members,
+  },
+}) => (
   <TabView
     tabs={[
       {
@@ -12,16 +18,16 @@ export default ({ club }) => (
             <div
               style={{ whiteSpace: 'pre-wrap' }}
               dangerouslySetInnerHTML={{
-                __html: club.description || EMPTY_DESCRIPTION,
+                __html: description || EMPTY_DESCRIPTION,
               }}
             />
-            {club.how_to_get_involved && (
+            {involvedText && (
               <div>
                 <div style={{ marginTop: 20 }}>
                   <b>Getting Involved</b>
                 </div>
                 <div style={{ whiteSpace: 'pre-wrap' }}>
-                  {club.how_to_get_involved}
+                  {involvedText}
                 </div>
               </div>
             )}
@@ -32,8 +38,8 @@ export default ({ club }) => (
         name: 'members',
         content: (
           <div>
-            {club.members.length ? (
-              club.members.map((a, i) => (
+            {members.length ? (
+              members.map((a, i) => (
                 <div className="media" key={i}>
                   <div className="media-left">
                     <figure className="has-background-light image is-48x48"></figure>
