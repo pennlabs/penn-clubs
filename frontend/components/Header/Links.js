@@ -5,8 +5,8 @@ import { Icon } from '../common'
 import { LOGIN_URL } from '../../utils'
 import { mediaMaxWidth, MD } from '../../constants/measurements'
 import {
-  SNOW,
-  SNOW_ALPHA,
+  WHITE,
+  WHITE_ALPHA,
   CLUBS_RED,
   MEDIUM_GRAY,
   DARK_GRAY,
@@ -24,10 +24,10 @@ const LoginButton = s.a`
   background-color: ${CLUBS_RED};
   padding: 14px 20px;
   margin: auto;
-  color: ${SNOW} !important;
+  color: ${WHITE_ALPHA(0.8)} !important;
 
   &:hover {
-    color: ${SNOW_ALPHA} !important;
+    color: ${WHITE} !important;
   }
 
   ${mediaMaxWidth(MD)} {
