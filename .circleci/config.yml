@@ -1,4 +1,15 @@
-version: 2
+version: 2.1
+orbs:
+  docker: circleci/docker@0.5.19
+  django-tools: pennlabs/django-tools@0.0.1
+  helm-tools: pennlabs/helm-tools@0.1.7
+
+branch-filters: &branch-filters
+  filters:
+    branches:
+      only:
+        - master
+
 jobs:
   build:
     docker:
@@ -8,8 +19,40 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            yarn install
+            npm install
       - run:
           command: |
-            yarn run lint
-            yarn run build
+            npm run lint
+            npm run build
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - django-tools/check:
+          project-name: pennclubs
+          project-location: backend
+      - docker/publish:
+          name: publish-backend
+          requires:
+            - django-tools/check
+          path: backend
+          cache_from: "pennlabs/penn-clubs-backend:latest"
+          image: "pennlabs/penn-clubs-backend"
+          tag: "${CIRCLE_SHA1},latest"
+          context: docker-publish
+          <<: *branch-filters
+      - docker/publish:
+          name: publish-frontend
+          path: frontend
+          cache_from: "pennlabs/penn-clubs-frontend:latest"
+          image: "pennlabs/penn-clubs-frontend"
+          tag: "${CIRCLE_SHA1},latest"
+          context: docker-publish
+          <<: *branch-filters
+      - helm-tools/deploy:
+          requires:
+            - publish-backend
+            - publish-frontend
+          context: k8s-deploy
+          <<: *branch-filters

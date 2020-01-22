@@ -1,0 +1,28 @@
+deploy_version: 0.1.11
+image_tag: latest
+
+applications:
+  - name: django
+    image: pennlabs/penn-clubs-backend
+    secret: penn-clubs
+    ingress:
+      hosts:
+        - host: pennclubs.com
+          paths: ["/api"]
+    extraEnv:
+      - name: DOMAIN
+        value: pennclubs.com
+      - name: DJANGO_SETTINGS_MODULE
+        value: pennclubs.settings.production
+  - name: react
+    image: pennlabs/penn-clubs-frontend
+    secret: penn-clubs
+    ingress:
+      hosts:
+        - host: pennclubs.com
+          paths: ["/"]
+    extraEnv:
+      - name: PORT
+        value: 80
+      - name: DOMAIN
+        value: pennclubs.com

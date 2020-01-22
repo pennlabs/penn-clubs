@@ -1,0 +1,7 @@
+repos:
+  - repo: https://github.com/pennlabs/pre-commit-hooks
+    rev: stable
+    hooks:
+        - id: black
+        - id: isort
+        - id: flake8
