@@ -1,10 +1,12 @@
 import s from 'styled-components'
-import { DARK_GRAY, MEDIUM_GRAY } from '../../constants/colors'
+import { CLUBS_GREY, DARK_GRAY, MEDIUM_GRAY } from '../../constants/colors'
 
 export const Text = s.p`
   font-size: 1rem;
   margin-bottom: 1rem;
   line-height: 1.5;
+  ${({ isGray }) => isGray ? `color: ${CLUBS_GREY};` : ''}
+  ${({ color }) => color ? `color: ${color};` : ''}
 `
 
 export const SmallText = s(Text)`
