@@ -26,7 +26,9 @@ const LoginButton = s.a`
   margin: auto;
   color: ${WHITE_ALPHA(0.8)} !important;
 
-  &:hover {
+  &:hover,
+  &:focus,
+  &:active {
     color: ${WHITE} !important;
   }
 
@@ -43,7 +45,9 @@ const StyledLink = s.a`
   display: inline-block;
   cursor: pointer;
 
-  &:hover {
+  &:hover,
+  &:focus,
+  &:active {
     color: ${DARK_GRAY} !important;
   }
 
