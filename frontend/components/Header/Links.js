@@ -8,6 +8,7 @@ import {
   WHITE,
   WHITE_ALPHA,
   CLUBS_RED,
+  CLUBS_RED_DARK,
   MEDIUM_GRAY,
   DARK_GRAY,
   BORDER,
@@ -29,6 +30,7 @@ const LoginButton = s.a`
   &:hover,
   &:focus,
   &:active {
+    background-color: ${CLUBS_RED_DARK};
     color: ${WHITE} !important;
   }
 
