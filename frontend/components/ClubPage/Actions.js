@@ -69,7 +69,7 @@ const Actions = ({
   // otherwise
   const inClub =
     userInfo &&
-    (userInfo.membership_set.filter(a => a.id === club.code) || [false])[0]
+    (userInfo.membership_set.filter(a => a.code === club.code) || [false])[0]
 
   // a user can edit a club if they are either a superuser or in the club and
   // at least an officer
