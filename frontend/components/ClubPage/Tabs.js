@@ -1,5 +1,5 @@
 import { EMPTY_DESCRIPTION } from '../../utils'
-import { EmptyState } from '../common'
+import { EmptyState, Center } from '../common'
 import TabView from '../TabView'
 import MemberCard from './MemberCard'
 
@@ -56,12 +56,14 @@ export default ({ club }) => (
               ))
             ) : (
                 <>
-                  <EmptyState name="hiring" size="25%" style={{ marginTop: 0, marginBottom: 0 }} />
-                  <p style={{ textAlign: 'center' }}>
-                    No club members have linked their accounts on Penn Clubs yet.
-                    <br />
-                    Check back later for a list of club members!
-                  </p>
+                  <Center>
+                    <EmptyState name="hiring" size="25%" style={{ marginTop: 0, marginBottom: 0 }} />
+                    <p>
+                      No club members have linked their accounts on Penn Clubs yet.
+                      <br />
+                      Check back later for a list of club members!
+                    </p>
+                  </Center>
                 </>
             )}
           </div>

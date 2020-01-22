@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ClubTableRow from '../ClubTableRow'
-import { EmptyState } from '../common'
+import { Center, EmptyState, Text } from '../common'
+import { CLUBS_GREY_LIGHT } from '../../constants/colors'
 
 export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
   const [table, setTable] = useState(() => {
@@ -25,9 +26,11 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
     return (
       <>
         <EmptyState name={isBookmarks ? 'bookmarks' : 'subscriptions'} />
-        <p className="has-text-light-grey" style={{ textAlign: 'center' }}>
-          No {keyword}s yet! Browse clubs <a href="/">here.</a>
-        </p>
+        <Center>
+          <Text color={CLUBS_GREY_LIGHT}>
+            No {keyword}s yet! Browse clubs <Link href="/">here.</Link>
+          </Text>
+        </Center>
       </>
     )
   }

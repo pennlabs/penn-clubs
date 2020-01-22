@@ -1,6 +1,8 @@
 import s from 'styled-components'
-import ClubTabTable from './ClubTabTable'
-import ClubTabCards from './ClubTabCards'
+import Toggle from './Toggle'
+import { EmptyState, Icon, Center, Text } from '../common'
+import ReactTooltip from 'react-tooltip'
+import Link from 'next/link'
 
 const ClubTable = s(ClubTabTable)`
   @media (max-width: 768px) {
@@ -104,9 +106,11 @@ const ClubCards = s(ClubTabCards)`
   ) : (
       <>
         <EmptyState name="button" />
-        <p className="has-text-grey" style={{ textAlign: 'center' }}>
-          You are not a member of any clubs yet.
-        </p>
+        <Center>
+          <Text isGray>
+            You are not a member of any clubs yet.
+          </Text>
+        </Center>
       </>
   )
 }
