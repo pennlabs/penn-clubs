@@ -1,5 +1,7 @@
 import { keyframes } from 'styled-components'
 
+export const SHORT_ANIMATION_DURATION = 200
+
 export const fadeIn = keyframes`
   0% {
     opacity: 0;

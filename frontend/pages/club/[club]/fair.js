@@ -124,7 +124,9 @@ const Fair = ({
         <Margin>
           <TagGroup tags={club.tags} />
         </Margin>
-        <Text>{club.description}</Text>
+        <Text>
+          <div dangerouslySetInnerHTML={{ __html: club.description }} />
+        </Text>
         <Link href="/club/[club]" as={`/club/${club.code}`}>
           <a className="button is-danger is-large">See more details</a>
         </Link>
