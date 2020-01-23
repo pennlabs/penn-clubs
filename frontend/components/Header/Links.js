@@ -26,6 +26,8 @@ const LoginButton = s.a`
   padding: 14px 20px;
   margin: auto;
   color: ${WHITE_ALPHA(0.8)} !important;
+  transition: color ${SHORT_ANIMATION_DURATION}ms ease,
+              background ${SHORT_ANIMATION_DURATION}ms ease;
 
   &:hover,
   &:focus,
