@@ -13,6 +13,7 @@ import {
   DARK_GRAY,
   BORDER,
 } from '../../constants/colors'
+import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
 import { logEvent } from '../../utils/analytics'
 
 const StyledIcon = s(Icon)`
