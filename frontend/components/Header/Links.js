@@ -4,12 +4,43 @@ import s from 'styled-components'
 import { Icon } from '../common'
 import { LOGIN_URL } from '../../utils'
 import { mediaMaxWidth, MD } from '../../constants/measurements'
-import { MEDIUM_GRAY, DARK_GRAY, BORDER } from '../../constants/colors'
+import {
+  WHITE,
+  WHITE_ALPHA,
+  CLUBS_RED,
+  CLUBS_RED_DARK,
+  MEDIUM_GRAY,
+  DARK_GRAY,
+  BORDER,
+} from '../../constants/colors'
 import { logEvent } from '../../utils/analytics'
 
 const StyledIcon = s(Icon)`
   opacity: 0.5;
   margin-right: 4px;
+`
+
+const LoginButton = s.a`
+  border: 0;
+  background-color: ${CLUBS_RED};
+  padding: 14px 20px;
+  margin: auto;
+  color: ${WHITE_ALPHA(0.8)} !important;
+  transition: color ${SHORT_ANIMATION_DURATION}ms ease,
+              background ${SHORT_ANIMATION_DURATION}ms ease;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: ${CLUBS_RED_DARK};
+    color: ${WHITE} !important;
+  }
+
+  ${mediaMaxWidth(MD)} {
+    padding: 8px 0;
+    padding-top: 0.4rem;
+    width: 5rem !important;
+  }
 `
 
 const StyledLink = s.a`
@@ -18,11 +49,14 @@ const StyledLink = s.a`
   display: inline-block;
   cursor: pointer;
 
-  &:hover {
+  &:hover,
+  &:focus,
+  &:active {
     color: ${DARK_GRAY} !important;
   }
 
   ${mediaMaxWidth(MD)} {
+    text-align: center;
     padding: 8px 0;
   }
 `
@@ -48,12 +82,13 @@ export default ({ userInfo, authenticated, show }) => (
         FAQ
       </StyledLink>
       {authenticated === false && (
-        <StyledLink
+        <LoginButton
+          className="button"
           href={`${LOGIN_URL}?next=${window.location.href}`}
           onClick={() => logEvent('login', 'click')}
         >
           Login
-        </StyledLink>
+        </LoginButton>
       )}
       {userInfo && (
         <Link href="/settings">
