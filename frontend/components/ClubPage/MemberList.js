@@ -9,24 +9,24 @@ const Toggle = s.div`
   cursor: pointer;
 `
 
-const MemberList = ({ club }) => {
+const MemberList = ({ club: { members } }) => {
   const [expanded, setExpanded] = useState(false)
   return (
     <div>
       {expanded ? (
         <Row>
-          {club.members.map(a => (
+          {members.map(a => (
             <Col key={a.username} sm={12} md={6} lg={3} margin="5px" flex>
-              <MemberCard a={a} />
+              <MemberCard account={a} />
             </Col>
           ))}
         </Row>
       ) : (
         <Row>
-          {club.members.length ? (
-            club.members.slice(0, 4).map(a => (
+          {members.length ? (
+            members.slice(0, 4).map(a => (
               <Col key={a.username} sm={12} md={6} lg={3} margin="5px" flex>
-                <MemberCard a={a} />
+                <MemberCard account={a} />
               </Col>
             ))
           ) : (
@@ -38,7 +38,7 @@ const MemberList = ({ club }) => {
         </Row>
       )}
 
-      {club.members.length >= 5 && (
+      {members.length >= 5 && (
         <Toggle
           className="is-pulled-right"
           onClick={() => setExpanded(!expanded)}
