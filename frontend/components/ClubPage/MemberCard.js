@@ -1,17 +1,29 @@
 import s from 'styled-components'
-import { ProfilePic } from '../common'
+import { ProfilePic, StrongText } from '../common'
 import { BORDER } from '../../constants/colors'
 
+import {
+  mediaMinWidth,
+  mediaMaxWidth,
+  TABLET,
+  PHONE,
+} from '../../constants/measurements'
+
 const Card = s.div`
-  text-align: center;
+  text-align: left;
   box-sizing: border-box;
   width: 100%;
   margin-right: 1%;
   margin-bottom: 20px;
   padding: 20px 10px;
   border: 1px solid ${BORDER};
-  display: inline-block;
+  display: flex;
+  flex-direction: row;
   background-color: white;
+  ${mediaMinWidth(PHONE)} {
+    text-align: center;
+    display: inline-block;
+  }
 `
 
 const Label = s.div`
@@ -20,9 +32,19 @@ const Label = s.div`
   text-overflow: ellipsis;
 `
 
+const MemberInfo = s.div`
+  margin-left: 15px;
+  ${mediaMinWidth(PHONE)} {
+    margin-left: 0px;
+  }
+`
+
 const Avatar = s.div`
   border-radius: 9999px;
-  margin: 0 auto;
+  margin: 5px 15px;
+  ${mediaMinWidth(PHONE)} {
+    margin: 0 auto;
+  }
 `
 
 const MemberCard = ({ account }) => {
@@ -33,18 +55,21 @@ const MemberCard = ({ account }) => {
         <ProfilePic user={account} fontSize="24px" isRound />
       </Avatar>
       <br />
-      <Label className="title is-5">{name || 'No Name'}</Label>
-      <Label className="subtitle is-6">{title}</Label>
-      <Label className="subtitle is-6">
-        {email
-          ? (
+      <MemberInfo>
+        <Label style={{ fontSize: '1.1em' }}>
+          <b>{name || 'No Name'}</b>
+        </Label>
+        <Label style={{ fontSize: '0.9em' }}>{title}</Label>
+        <Label style={{ fontSize: '0.9em' }}>
+          {email ? (
             <span>
               <a href={`mailto:${email}`}>{email}</a>
             </span>
-          )
-          : 'No Email'
-        }
-      </Label>
+          ) : (
+            'No Email'
+          )}
+        </Label>
+      </MemberInfo>
     </Card>
   )
 }
