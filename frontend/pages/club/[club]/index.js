@@ -33,11 +33,6 @@ const Image = s.img`
   object-fit: contain;
 `
 
-const Toggle = s.div`
-  color: ${DARK_GRAY};
-  cursor: pointer;
-`
-
 const Club = ({
   club: initialClub,
   userInfo,
