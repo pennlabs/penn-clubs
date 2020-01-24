@@ -41,6 +41,23 @@ export const CLUBS_YELLOW = '#FFCF59'
 export const CLUBS_BLUE = '#60B8F2'
 export const CLUBS_DEEP_BLUE = '#5ab0e8'
 
+export const PROPIC_BACKGROUND = [
+    '#D0F0FD',
+    '#C2F5E9',
+    '#D1F7C4',
+    '#FFEAB6',
+    '#FFDDE5',
+    '#EDE2FE',
+]
+export const PROPIC_TEXT = [
+    '#03293F',
+    '#022524',
+    '#0B1F06',
+    '#503914',
+    '#541625',
+    '#280A42',
+] 
+
 export const FLYER_BLUE = '#4954f4'
 export const FLYER_NAVY = '#1f2049'
 export const FLYER_PINK = '#ef4c5f'
