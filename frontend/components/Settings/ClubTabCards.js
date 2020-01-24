@@ -2,12 +2,7 @@ import s from 'styled-components'
 import Toggle from './Toggle'
 import { Icon } from '../common'
 import Link from 'next/link'
-import {
-  LIGHT_GRAY,
-  CLUBS_BLUE,
-  CLUBS_RED,
-  SNOW,
-} from '../../constants/colors'
+import { LIGHT_GRAY, CLUBS_BLUE, CLUBS_RED, SNOW } from '../../constants/colors'
 import { BORDER_RADIUS } from '../../constants/measurements'
 
 const Card = s.div`
@@ -70,12 +65,7 @@ const RightWrapper = s.div`
   justify-content: flex-start;
 `
 
-const ClubCard = ({
-  club,
-  toggleActive,
-  togglePublic,
-  leaveClub,
-}) => {
+const ClubCard = ({ club, toggleActive, togglePublic, leaveClub }) => {
   const {
     code,
     name,
@@ -89,39 +79,25 @@ const ClubCard = ({
   return (
     <Card className="card">
       <CardRow>
-        <Link
-          href="/club/[club]"
-          as={`/club/${code}`}
-        >
+        <Link href="/club/[club]" as={`/club/${code}`}>
           <CardTitle>{name}</CardTitle>
         </Link>
         {canManage ? (
-          <Link
-            href="/club/[club]/edit"
-            as={`/club/${code}/edit`}
-          >
+          <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
             <ManageButton className="button is-small">
-              <ButtonIcon
-                name="edit-white"
-                size="1rem"
-              />
+              <ButtonIcon name="edit-white" size="1rem" />
               Manage
             </ManageButton>
           </Link>
         ) : (
-            <LeaveButton
-              className="button is-small"
-              onClick={() => leaveClub(club)}
-            >
-
-              <ButtonIcon
-                name="log-out-white"
-                size="1rem"
-              />
-              Leave
+          <LeaveButton
+            className="button is-small"
+            onClick={() => leaveClub(club)}
+          >
+            <ButtonIcon name="log-out-white" size="1rem" />
+            Leave
           </LeaveButton>
-          )
-        }
+        )}
       </CardRow>
       <CardRow>
         <RowIcon name="award" />
@@ -138,29 +114,27 @@ const ClubCard = ({
         <RowIcon name="activity" />
         Active:
         <RightWrapper>
-          <Toggle
-            club={club}
-            active={active}
-            toggle={toggleActive}
-          />
+          <Toggle club={club} active={active} toggle={toggleActive} />
         </RightWrapper>
       </CardRow>
       <CardRow>
         <RowIcon name="unlock" />
         Public:
         <RightWrapper>
-          <Toggle
-            club={club}
-            active={isPublic}
-            toggle={togglePublic}
-          />
+          <Toggle club={club} active={isPublic} toggle={togglePublic} />
         </RightWrapper>
       </CardRow>
     </Card>
   )
 }
 
-export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) => {
+export default ({
+  className,
+  userInfo,
+  togglePublic,
+  toggleActive,
+  leaveClub,
+}) => {
   const isMemberOfAnyClubs = !(
     userInfo &&
     userInfo.membership_set &&
@@ -170,20 +144,24 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
   return (
     <div className={className}>
       {isMemberOfAnyClubs ? (
-        <p className="has-text-light-grey" style={{ paddingTop: 200, textAlign: 'center' }}>
-          You're not a member of any clubs yet! Browse clubs <Link href="/">here.</Link>
+        <p
+          className="has-text-light-grey"
+          style={{ paddingTop: 200, textAlign: 'center' }}
+        >
+          You're not a member of any clubs yet! Browse clubs{' '}
+          <Link href="/">here.</Link>
         </p>
       ) : (
-          userInfo.membership_set.map(club =>
-            <ClubCard
-              key={club.code}
-              club={club}
-              togglePublic={togglePublic}
-              toggleActive={toggleActive}
-              leaveClub={leaveClub}
-            />
-          )
-        )}
+        userInfo.membership_set.map(club => (
+          <ClubCard
+            key={club.code}
+            club={club}
+            togglePublic={togglePublic}
+            toggleActive={toggleActive}
+            leaveClub={leaveClub}
+          />
+        ))
+      )}
     </div>
   )
 }
