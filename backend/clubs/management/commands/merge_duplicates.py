@@ -160,6 +160,10 @@ def merge_clubs(one, two):
     primary.tags.add(*secondary.tags.all())
 
     # Take all members
+    Membership.objects.filter(
+        club=secondary,
+        person__in=Membership.objects.filter(club=primary).values_list("person__id", flat=True),
+    ).delete()
     Membership.objects.filter(club=secondary).update(club=primary)
 
     # Take all membership invites
