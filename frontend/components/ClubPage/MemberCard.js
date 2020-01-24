@@ -1,5 +1,5 @@
-import React from 'react'
 import s from 'styled-components'
+import { ProfilePic } from '../common'
 import { BORDER } from '../../constants/colors'
 
 const Card = s.div`
@@ -22,29 +22,31 @@ const Label = s.div`
 
 const Avatar = s.div`
   border-radius: 9999px;
+  margin: 0 auto;
 `
 
-const MemberCard = ({ a }) => (
-  <Card>
-    <div>
-      <Avatar
-        style={{ margin: '0 auto' }}
-        className="has-background-light image is-64x64"
-      />
-    </div>
-    <br />
-    <Label className="title is-5">{a.name || 'No Name'}</Label>
-    <Label className="subtitle is-6">{a.title}</Label>
-    <Label className="subtitle is-6">
-      {a.email ? (
-        <span>
-          <a href={'mailto:' + a.email}>{a.email}</a>
-        </span>
-      ) : (
-        'No Email'
-      )}
-    </Label>
-  </Card>
-)
+const MemberCard = ({ account }) => {
+  const { email, name, title } = account
+  return (
+    <Card>
+      <Avatar className="has-background-light image is-64x64">
+        <ProfilePic user={account} fontSize="24px" isRound />
+      </Avatar>
+      <br />
+      <Label className="title is-5">{name || 'No Name'}</Label>
+      <Label className="subtitle is-6">{title}</Label>
+      <Label className="subtitle is-6">
+        {email
+          ? (
+            <span>
+              <a href={`mailto:${email}`}>{email}</a>
+            </span>
+          )
+          : 'No Email'
+        }
+      </Label>
+    </Card>
+  )
+}
 
 export default MemberCard
