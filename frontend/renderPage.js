@@ -48,6 +48,9 @@ function renderPage(Page) {
         .then(data => this.setState({ clubs: data }))
 
       this.updateUserInfo()
+
+      // Delete old csrf token cookie
+      document.cookie = 'csrftoken=; domain=.pennclubs.com; expires = Thu, 01 Jan 1970 00:00:00 GMT'
     }
 
     render() {
