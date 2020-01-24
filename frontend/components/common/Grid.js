@@ -1,4 +1,3 @@
-import React from 'react'
 import s from 'styled-components'
 
 import {
@@ -48,14 +47,14 @@ const ColWrapper = s.div`
     ${({ lg }) => lg && `width: ${percent(lg)}; flex: none;`}
     ${({ offsetLg }) => offsetLg && `margin-left: ${percent(offsetLg)};`}
   }
-  ${({ flex }) => flex && `display: flex;`}
+  ${({ flex }) => flex && 'display: flex;'}
 `
 
 const ColContainer = s.div`
   background: ${({ background }) => background || 'transparent'};
   overflow-x: visible;
   position: relative;
-  ${({ flex }) => flex && `display: flex; flex: 1;`}
+  ${({ flex }) => flex && 'display: flex; flex: 1;'}
   ${({ margin }) =>
     margin && `margin-left: ${margin}; margin-right: ${margin};`}
 `
