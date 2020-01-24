@@ -319,11 +319,26 @@ class ClubForm extends Component {
   }
 
   render() {
-    const { authenticated, schools, majors, years, tags } = this.props
+    const { authenticated, userInfo, schools, majors, years, tags } = this.props
     const { club, invites, editMember } = this.state
 
     if (authenticated === false) {
       return <AuthPrompt />
+    }
+
+    if (
+      authenticated &&
+      club &&
+      !userInfo.is_superuser &&
+      !userInfo.membership_set.some(m => m.code === club.code && m.role <= 10)
+    ) {
+      return (
+        <AuthPrompt title="Oh no!" hasLogin={false}>
+          You do not have permission to edit the page for {club.name}. To get
+          access, contact{' '}
+          <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>.
+        </AuthPrompt>
+      )
     }
 
     if (this.state.isEdit && club === null) {
@@ -840,7 +855,10 @@ class ClubForm extends Component {
               <p className="card-header-title">Member Experiences</p>
             </div>
             <div className="card-content">
-              <Text>Provde more information on what being in your organization is like from a member's point of view.</Text>
+              <Text>
+                Provde more information on what being in your organization is
+                like from a member's point of view.
+              </Text>
               <ModelForm
                 baseUrl={`/clubs/${club.code}/testimonials/`}
                 fields={[
