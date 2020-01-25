@@ -104,6 +104,28 @@ const truncate = (str, len = 52) => {
       return smallParenString
     }
   }
+<<<<<<< HEAD
+=======
+
+  // remove prefix if exists and string too long
+  const prefixMatch = /^University of Pennsylvania\s*(.*)\s*$/i.exec(str)
+  if (prefixMatch) {
+    const smallString = prefixMatch[1]
+    if (smallString.length <= len + 3) {
+      return smallString
+    }
+  }
+
+  // remove suffix if it exists and string is too long
+  const suffixMatch = /^(.*)\s*at the University of Pennsylvania\s*$/i.exec(str)
+  if (suffixMatch) {
+    const smallString = suffixMatch[1]
+    if (smallString.length <= len + 3) {
+      return smallString
+    }
+  }
+
+>>>>>>> flyer fix
   return `${str.substring(0, len)}...`
 }
 
