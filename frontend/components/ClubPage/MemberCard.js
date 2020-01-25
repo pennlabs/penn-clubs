@@ -20,6 +20,7 @@ const Card = s.div`
   display: flex;
   flex-direction: row;
   background-color: white;
+
   ${mediaMinWidth(PHONE)} {
     text-align: center;
     display: inline-block;
