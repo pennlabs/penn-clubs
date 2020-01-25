@@ -2,7 +2,7 @@ import PropTypes from 'prop-types'
 import s from 'styled-components'
 
 import renderPage from '../renderPage'
-import { Container } from '../components/common'
+import { Center, Container } from '../components/common'
 import { SNOW } from '../constants/colors'
 import { HOME_ROUTE } from '../constants/routes'
 
@@ -15,7 +15,7 @@ const Image = s.img`
 
 const Error = ({ statusCode = 500, message = 'Something went wrong' }) => (
   <Container background={SNOW} fullHeight>
-    <div style={{ textAlign: 'center' }}>
+    <Center>
       <Image src="/static/img/button.svg" alt="something went wrong" />
       <h1
         className="is-size-1"
@@ -29,7 +29,7 @@ const Error = ({ statusCode = 500, message = 'Something went wrong' }) => (
       <a className="button is-medium is-primary" href={HOME_ROUTE}>
         Back to home
       </a>
-    </div>
+    </Center>
   </Container>
 )
 
