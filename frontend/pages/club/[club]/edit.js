@@ -313,7 +313,7 @@ class ClubForm extends Component {
 
   render() {
     const { authenticated, userInfo, schools, majors, years, tags } = this.props
-    const { club, invites, isEdit, editMember } = this.state
+    const { club, invites, isEdit, message, editMember } = this.state
 
     if (authenticated === false) {
       return <AuthPrompt />
@@ -892,7 +892,6 @@ class ClubForm extends Component {
       },
     ]
 
-    const { message, isEdit } = this.state
     const nameOrDefault = (club && club.name) || 'New Club'
     const showInactiveTag = !(club && club.active) && isEdit
 
