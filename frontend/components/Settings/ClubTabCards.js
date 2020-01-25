@@ -3,12 +3,12 @@ import Link from 'next/link'
 
 import Toggle from './Toggle'
 import { Icon } from '../common'
-import { LIGHT_GRAY, CLUBS_BLUE, CLUBS_RED, SNOW } from '../../constants/colors'
+import { LIGHT_GRAY, CLUBS_BLUE, CLUBS_RED, SNOW, BLACK_ALPHA } from '../../constants/colors'
 import { BORDER_RADIUS } from '../../constants/measurements'
 
 const Card = s.div`
   border-radius: ${BORDER_RADIUS};
-  box-shadow: 0 2px 19px 0 rgba(165, 165, 165, 0.5);
+  box-shadow: 0 2px 19px 0 ${BLACK_ALPHA(0.25)};
   margin: 2.5%;
   margin-bottom: 10%;
   padding: 5%;
