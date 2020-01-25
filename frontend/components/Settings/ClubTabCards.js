@@ -3,7 +3,16 @@ import Link from 'next/link'
 
 import Toggle from './Toggle'
 import { Icon } from '../common'
-import { LIGHT_GRAY, CLUBS_BLUE, CLUBS_RED, SNOW, BLACK_ALPHA } from '../../constants/colors'
+import {
+  CLUBS_RED,
+  CLUBS_RED_DARK,
+  CLUBS_BLUE,
+  CLUBS_DEEP_BLUE,
+  WHITE,
+  WHITE_ALPHA,
+  LIGHT_GRAY,
+  BLACK_ALPHA,
+} from '../../constants/colors'
 import { BORDER_RADIUS } from '../../constants/measurements'
 
 const Card = s.div`
@@ -34,19 +43,33 @@ const CardTitle = s.p`
 `
 
 const ManageButton = s.a`
-  border: none;
+  border: 0;
   border-radius: ${BORDER_RADIUS};
   background-color: ${CLUBS_BLUE};
-  color: ${SNOW};
+  color: ${WHITE_ALPHA(0.8)};
   justify-content: flex-start;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: ${CLUBS_DEEP_BLUE};
+    color: ${WHITE} !important;
+  }
 `
 
 const LeaveButton = s.a`
-  border: none;
+  border: 0;
   border-radius: ${BORDER_RADIUS};
   background-color: ${CLUBS_RED};
-  color: ${SNOW};
+  color: ${WHITE_ALPHA(0.8)};
   justify-content: flex-start;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: ${CLUBS_RED_DARK};
+    color: ${WHITE} !important;
+  }
 `
 
 const ButtonIcon = s(Icon)`
