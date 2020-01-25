@@ -1,14 +1,24 @@
+import s from 'styled-components'
 import { Component } from 'react'
 import Select from 'react-select'
+import Router from 'next/router'
 import { EditorState, ContentState, convertToRaw } from 'draft-js'
 import draftToHtml from 'draftjs-to-html'
 import Head from 'next/head'
 
 import { Icon } from './common'
-import { titleize } from '../utils'
+import { doApiRequest, titleize } from '../utils'
+
+const UNSAVED_MESSAGE =
+  'You have unsaved changes. Are you sure you want to leave?'
 
 let htmlToDraft, Editor
 
+/*
+ * Represents a form with fields and a submit button.
+ * Does not actually perform an ajax request, returns
+ * the data in JSON format in the onSubmit event.
+ */
 class Form extends Component {
   constructor(props) {
     super(props)
@@ -23,107 +33,115 @@ class Form extends Component {
     if (process.browser) {
       htmlToDraft = require('html-to-draftjs').default
       Editor = require('react-draft-wysiwyg').Editor
+      const { fields, defaults = {} } = props
 
-      this.setDefaults(this.props.fields)
+      const setDefaults = fields => {
+        fields.forEach(({ name, type, converter, fields }) => {
+          const value = defaults[name]
+          if (type === 'group') {
+            setDefaults(fields)
+          } else if (type === 'html') {
+            this.state[`editorState-${name}`] = value
+              ? EditorState.createWithContent(
+                ContentState.createFromBlockArray(
+                  htmlToDraft(value).contentBlocks
+                )
+              )
+              : EditorState.createEmpty()
+          } else if (type === 'multiselect') {
+            this.state[`field-${name}`] = (value || []).map(converter)
+          } else if (type === 'select') {
+            this.state[`field-${name}`] = value ? converter(value) : null
+          } else {
+            this.state[`field-${name}`] = value || ''
+          }
+        })
+      }
+
+      setDefaults(fields)
     }
 
     this.onChange = this.onChange.bind(this)
-    this.checkChange = this.checkChange.bind(this)
+    this.checkIfEdited = this.checkIfEdited.bind(this)
+    this.confirmExit = this.confirmExit.bind(this)
+    this.confirmRouteChange = this.confirmRouteChange.bind(this)
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
   }
 
-  setDefaults(fields) {
-    const { defaults } = this.props
-    fields.forEach(({ name, type, converter, fields }) => {
-      if (type === 'html') {
-        if (process.browser) {
-          if (defaults && defaults[name]) {
-            this.state['editorState-' + name] = EditorState.createWithContent(
-              ContentState.createFromBlockArray(
-                htmlToDraft(defaults[name]).contentBlocks
-              )
-            )
-          } else {
-            this.state['editorState-' + name] = EditorState.createEmpty()
-          }
-        }
-      }
-      if (type !== 'group') {
-        if (type === 'multiselect') {
-          this.state[`field-${name}`] = defaults
-            ? (defaults[name] || []).map(converter)
-            : []
-        } else if (type === 'select') {
-          this.state[`field-${name}`] = defaults
-            ? converter(defaults[name])
-            : null
-        } else {
-          this.state[`field-${name}`] = defaults ? defaults[name] || '' : ''
-        }
-      } else {
-        this.setDefaults(fields)
-      }
-    })
+  confirmRouteChange() {
+    const { edited } = this.state
+    const { router } = Router
+    if (edited && !confirm(UNSAVED_MESSAGE)) {
+      router.abortComponentLoad()
+      router.events.emit('routeChangeError')
+      throw 'Abort link navigation - ignore this error.' // eslint-disable-line
+    }
+  }
+
+  confirmExit(e) {
+    const { edited } = this.state
+    if (edited) {
+      e.preventDefault()
+      e.returnValue = UNSAVED_MESSAGE
+      return UNSAVED_MESSAGE
+    }
   }
 
   componentDidMount() {
+    window.addEventListener('beforeunload', this.confirmExit)
+    Router.router.events.on('routeChangeStart', this.confirmRouteChange)
     this.setState({
       mounted: true,
     })
   }
 
-  getAllFields(fields) {
-    return (typeof fields === 'undefined' ? this.props.fields : fields).reduce(
-      (out, item) => {
-        if (item.type === 'group') {
-          out = out.concat(this.getAllFields(item.fields))
-        } else {
-          out.push(item)
-        }
-        return out
-      },
-      []
-    )
+  componentWillUnmount() {
+    window.removeEventListener('beforeunload', this.confirmExit)
+    Router.router.events.off('routeChangeStart', this.confirmRouteChange)
   }
 
-  getData() {
-    return this.getAllFields().reduce((out, { type, name, reverser, converter }) => {
-      const val = this.state[`field-${name}`]
-      switch (type) {
-        case 'multiselect': {
-          out[name] = (val || []).map(reverser)
-          break
-        }
-        case 'select': {
-          out[name] = val ? reverser(val) : val
-          break
-        }
-        case 'checkbox': {
-          out[name] = Boolean(val)
-          break
-        }
-        case 'date': {
-          out[name] = val || null
-          break
-        }
-        case 'file': {
-          const data = new FormData()
-          data.append('file', this.files[name].files[0])
-          out[name] = data
-          break
-        }
-        default: {
-          if (typeof converter === 'function') {
-            out[name] = converter(val)
-          } else {
-            out[name] = val
-          }
-        }
+  getAllFields(fields) {
+    const out = []
+    fields.forEach(item => {
+      if (item.type === 'group') {
+        out.concat(this.getAllFields(item.fields))
+      } else {
+        out.push(item)
       }
-      return out
-    }, {})
+    })
+    return out
+  }
+
+  getFieldData(source, { type, reverser, converter }) {
+    const val = source[`field-${name}`]
+    switch (type) {
+      case 'multiselect':
+        return (val || []).map(reverser)
+      case 'select':
+        return val ? reverser(val) : val
+      case 'checkbox':
+        return Boolean(val)
+      case 'date':
+        return val || null
+      case 'file':
+        return (new FormData()).append('file', this.files[name].files[0])
+      default:
+        return typeof converter === 'function' ? converter(val) : val
+    }
+  }
+
+  getData(source) {
+    const data = {}
+    this.getAllFields(this.props.fields).forEach(({ name, ...field }) => {
+      data[name] = this.getFieldData(source, field)
+    })
+    return data
+  }
+
+  getSubmitData() {
+    return this.getData(this.state)
   }
 
   generateField(field) {
@@ -138,9 +156,17 @@ class Form extends Component {
       choices,
       converter,
       label,
+      hasLabel = true,
       required,
       help,
     } = field
+
+    const {
+      [`field-${name}`]: value,
+      [`editorState-${name}`]: editorState,
+    } = this.state
+
+    const { isHorizontal = true } = this.props
 
     let inpt = null
 
@@ -149,7 +175,7 @@ class Form extends Component {
         <input
           className="input"
           disabled={readonly}
-          value={this.state['field-' + name]}
+          value={value}
           onChange={e => {
             this.onChange(e)
             this.setState({ ['field-' + name]: e.target.value })
@@ -171,7 +197,7 @@ class Form extends Component {
           </Head>
           {this.state.mounted ? (
             <Editor
-              editorState={this.state[`editorState-${name}`]}
+              editorState={editorState}
               placeholder={placeholder}
               onChange={this.onChange}
               onEditorStateChange={state => {
@@ -202,15 +228,15 @@ class Form extends Component {
               }}
             />
           ) : (
-              <div />
-            )}
+            <div />
+          )}
         </div>
       )
     } else if (type === 'textarea') {
       inpt = (
         <textarea
           className="textarea"
-          value={this.state[`field-${name}`]}
+          value={value}
           onChange={e => {
             this.onChange(e)
             this.setState({ [`field-${name}`]: e.target.value })
@@ -258,7 +284,7 @@ class Form extends Component {
             key={name}
             placeholder={placeholder}
             isMulti={true}
-            value={this.state[`field-${name}`] || []}
+            value={value || []}
             options={choices.map(converter)}
             onChange={opt => {
               this.onChange(opt)
@@ -279,7 +305,7 @@ class Form extends Component {
       inpt = (
         <Select
           key={name}
-          value={this.state[`field-${name}`]}
+          value={value}
           options={choices}
           onChange={opt => {
             this.onChange(opt)
@@ -292,7 +318,7 @@ class Form extends Component {
         <label className="checkbox">
           <input
             type="checkbox"
-            checked={this.state[`field-${name}`]}
+            checked={value}
             onChange={e => {
               this.onChange(e)
               this.setState({ [`field-${name}`]: e.target.checked })
@@ -308,22 +334,19 @@ class Form extends Component {
       )
     }
 
-    const isHorizontal =
-      typeof this.props.isHorizontal !== 'undefined'
-        ? this.props.isHorizontal
-        : true
-
     return (
       <div
         key={name}
-        className={'field' + (isHorizontal ? ' is-horizontal' : '')}
+        className={isHorizontal ? 'field is-horizontal' : 'field'}
       >
-        <div className="field-label is-normal">
-          <label className="label">
-            {type === 'checkbox' ? titleize(name) : label || titleize(name)}
-            {required && <span style={{ color: 'red' }}>*</span>}
-          </label>
-        </div>
+        {hasLabel && (
+          <div className="field-label is-normal">
+            <label className="label">
+              {type === 'checkbox' ? titleize(name) : label || titleize(name)}
+              {required && <span style={{ color: 'red' }}>*</span>}
+            </label>
+          </div>
+        )}
         <div className="field-body">
           <div className="field">
             <div className="control">{inpt}</div>
@@ -343,10 +366,10 @@ class Form extends Component {
     if (onChange) {
       onChange(e)
     }
-    this.checkChange()
+    this.checkIfEdited()
   }
 
-  checkChange() {
+  checkIfEdited() {
     this.state.edited || this.setState({ edited: true })
   }
 
@@ -354,7 +377,8 @@ class Form extends Component {
     // Allow onSubmit to be a Promise or async function. If Promise.resolve is passed some
     // other value, it resolves with that value.
     const { onSubmit } = this.props
-    onSubmit && Promise.resolve(onSubmit(this.getData())).then(() => {
+    if (!onSubmit) return
+    Promise.resolve(onSubmit(this.getSubmitData())).then(() => {
       this.setState({ edited: false })
     })
   }
@@ -371,12 +395,14 @@ class Form extends Component {
       if (submitButton) {
         button = <span onClick={this.handleSubmit}>{submitButton}</span>
       } else {
-        button = <a
-          className="button is-primary is-medium"
-          onClick={this.handleSubmit}
-        >
-          Submit
-        </a>
+        button = (
+          <a
+            className="button is-primary is-medium"
+            onClick={this.handleSubmit}
+          >
+            Submit
+          </a>
+        )
       }
     } else {
       if (disabledSubmitButton) {
@@ -384,13 +410,15 @@ class Form extends Component {
       } else if (submitButton) {
         button = <span onClick={this.handleSubmit}>{submitButton}</span>
       } else {
-        button = <a
-          className="button is-primary is-medium"
-          title="You must make changes before submitting."
-          disabled
-        >
-          Submit
-        </a>
+        button = (
+          <a
+            className="button is-primary is-medium"
+            title="You must make changes before submitting."
+            disabled
+          >
+            Submit
+          </a>
+        )
       }
     }
 
@@ -398,6 +426,119 @@ class Form extends Component {
       <>
         {this.generateFields(fields)}
         {button}
+      </>
+    )
+  }
+}
+
+const ModelItem = s.div`
+  padding: 15px;
+  border: 1px solid #dbdbdb;
+  border-radius: 3px;
+  margin-bottom: 1em;
+`
+
+/*
+ * Creates a form with CRUD (create, read, update, delete)
+ * capabilities for a Django model using a provided endpoint.
+ */
+export class ModelForm extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      objects: null,
+    }
+  }
+
+  componentDidMount() {
+    doApiRequest(`${this.props.baseUrl}?format=json`)
+      .then(resp => resp.json())
+      .then(resp => {
+        this.setState({ objects: resp })
+      })
+  }
+
+  render() {
+    const { objects } = this.state
+    const { fields, baseUrl } = this.props
+
+    if (!objects) {
+      return <></>
+    }
+
+    return (
+      <>
+        {objects.map(object => (
+          <ModelItem key={object.id}>
+            <Form
+              fields={fields}
+              defaults={object}
+              submitButton={
+                <span className="button is-primary">
+                  <Icon name="edit" alt="save" /> Save
+                </span>
+              }
+              onSubmit={data => {
+                if (typeof object.id === 'undefined') {
+                  doApiRequest(`${baseUrl}?format=json`, {
+                    method: 'POST',
+                    body: data,
+                  }).then(resp => {
+                    if (resp.ok) {
+                      resp.json().then(resp => {
+                        Object.keys(resp).forEach(key => {
+                          object[key] = resp[key]
+                        })
+                      })
+                    }
+                  })
+                } else {
+                  doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+                    method: 'PATCH',
+                    body: data,
+                  })
+                }
+              }}
+            />
+            <span
+              className="button is-danger"
+              style={{ marginLeft: '0.5em' }}
+              onClick={() => {
+                if (typeof object.id !== 'undefined') {
+                  doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+                    method: 'DELETE',
+                  }).then(resp => {
+                    if (resp.ok) {
+                      this.setState(({ objects }) => {
+                        objects.splice(objects.indexOf(object), 1)
+                        return { objects }
+                      })
+                    }
+                  })
+                } else {
+                  this.setState(({ objects }) => {
+                    objects.splice(objects.indexOf(object), 1)
+                    return { objects }
+                  })
+                }
+              }}
+            >
+              <Icon name="trash" alt="trash" /> Delete
+            </span>
+          </ModelItem>
+        ))}
+        <span
+          onClick={() =>
+            this.setState(({ objects }) => {
+              objects.push({})
+              return { objects }
+            })
+          }
+          className="button is-primary"
+        >
+          <Icon name="plus" alt="create" /> Create
+        </span>
       </>
     )
   }

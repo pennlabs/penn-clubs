@@ -1,5 +1,6 @@
 import s from 'styled-components'
 
+import { CLUB_ROUTE } from '../constants/routes'
 import renderPage from '../renderPage'
 import { doApiRequest } from '../utils'
 import ProfileForm from '../components/Settings/ProfileForm'
@@ -100,7 +101,7 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
       <hr />
       <Center>
         <Subtitle>3. Start exploring Penn Clubs!</Subtitle>
-        <Link href={next && next.startsWith('/') ? next : '/'}>
+        <Link href={next && next.startsWith('/') ? next : CLUB_ROUTE()}>
           <a
             className="button is-success is-large"
             onClick={e => {

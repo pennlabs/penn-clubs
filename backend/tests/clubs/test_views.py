@@ -8,7 +8,17 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from clubs.models import Badge, Club, Event, Favorite, Membership, MembershipInvite, School, Tag
+from clubs.models import (
+    Badge,
+    Club,
+    Event,
+    Favorite,
+    Membership,
+    MembershipInvite,
+    School,
+    Tag,
+    Testimonial,
+)
 
 
 class ClubTestCase(TestCase):
@@ -286,6 +296,36 @@ class ClubTestCase(TestCase):
             reverse("club-events-detail", args=(self.club1.code, "interest-meeting"))
         )
         self.assertIn(resp.status_code, [200, 204], resp.content)
+
+    def test_testimonials(self):
+        """
+        Test creating, listing, and deleting testimonials.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        # add some testimonials
+        for i in range(3):
+            resp = self.client.post(
+                reverse("club-testimonials-list", args=(self.club1.code,)),
+                {"text": f"This is testimonial #{i}!"},
+                content_type="application/json",
+            )
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure testimonials exist
+        testimonials = Testimonial.objects.filter(club__code=self.club1.code)
+        self.assertEqual(testimonials.count(), 3)
+
+        # list testimonials
+        resp = self.client.get(reverse("club-testimonials-list", args=(self.club1.code,)))
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        # delete testimonials
+        for testimonial in testimonials:
+            resp = self.client.delete(
+                reverse("club-testimonials-detail", args=(self.club1.code, testimonial.id))
+            )
+            self.assertIn(resp.status_code, [200, 204], resp.content)
 
     def test_member_views(self):
         """

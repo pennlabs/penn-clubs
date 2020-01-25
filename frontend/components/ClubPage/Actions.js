@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import s from 'styled-components'
+import { WHITE, BORDER, MEDIUM_GRAY } from '../../constants/colors'
+import { CLUB_EDIT_ROUTE } from '../../constants/routes'
 
 import { Icon, BookmarkIcon, SubscribeIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
-import { WHITE, BORDER, MEDIUM_GRAY } from '../../constants/colors'
 
 const Wrapper = s.span`
   display: flex;
@@ -59,14 +60,16 @@ const Actions = ({
   updateFavorites,
   subscriptions,
   updateSubscriptions,
+  className,
 }) => {
-  const isFavorite = favorites.includes(club.code)
-  const isSubscription = subscriptions.includes(club.code)
+  const { code, favorite_count: favoriteCount } = club
+  const isFavorite = favorites.includes(code)
+  const isSubscription = subscriptions.includes(code)
 
   // inClub is set to the membership object if the user is in the club, otherwise false
   const inClub =
     userInfo &&
-    (userInfo.membership_set.filter(a => a.id === club.code) || [false])[0]
+    (userInfo.membership_set.filter(a => a.code === club.code) || [false])[0]
 
   // a user can edit a club if they are either a superuser or in the club and
   // at least an officer
@@ -74,15 +77,13 @@ const Actions = ({
     (inClub && inClub.role <= ROLE_OFFICER) ||
     (userInfo && userInfo.is_superuser)
 
-  const [favCount, setFavCount] = useState(club.favorite_count || 0)
-
-  const { code } = club
+  const [favCount, setFavCount] = useState(favoriteCount || 0)
 
   return (
-    <div style={style}>
+    <div className={className} style={style}>
       <Wrapper>
         {canEdit && (
-          <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
+          <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
             <EditButton className="button is-success">
               Edit Club
             </EditButton>
@@ -95,7 +96,8 @@ const Actions = ({
             favorite={isFavorite}
             updateFavorites={id => {
               const upd = updateFavorites(id)
-              setFavCount(favCount + (upd ? 1 : -1))
+              // If upd is null, checkAuth in renderPage failed, so we do not update the count.
+              if (upd !== null) setFavCount(favCount + (upd ? 1 : -1))
             }}
             padding="0"
           />
@@ -118,4 +120,14 @@ const Actions = ({
   )
 }
 
-export default Actions
+export const DesktopActions = s(Actions)`
+  @media (max-width: 768px) {
+    display: none !important;
+  }
+`
+
+export const MobileActions = s(Actions)`
+  @media (min-width: 769px) {
+    display: none !important;
+  }
+`

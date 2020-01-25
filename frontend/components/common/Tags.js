@@ -1,3 +1,4 @@
+import Color from 'color'
 import s from 'styled-components'
 
 import {
@@ -9,10 +10,25 @@ import {
   FOCUS_GRAY,
 } from '../../constants/colors'
 
+const calculateForegroundColor = color => {
+  let obj = Color(`#${color}`)
+  if (obj.isDark()) {
+    obj = obj.lighten(0.8)
+  } else {
+    obj = obj.darken(0.5)
+  }
+  return obj.hex()
+}
+
 export const Tag = s.span`
   margin: 0 4px 4px 0;
-  fontSize: .7em;
   font-weight: 600;
+  ${({ color }) =>
+    color &&
+    `
+    background-color: #${color} !important;
+    color: ${calculateForegroundColor(color)} !important;
+  `}
 `
 
 export const BlueTag = s(Tag)`

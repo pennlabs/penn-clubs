@@ -57,7 +57,13 @@ class Command(BaseCommand):
             action="store_true",
             help="Only send out emails to the clubs and emails that are listed in the CSV file.",
         )
-        parser.set_defaults(dry_run=False, only_sheet=False)
+        parser.add_argument(
+            "--only-active",
+            dest="only_active",
+            action="store_true",
+            help="Only send emails to clubs that are marked as active.",
+        )
+        parser.set_defaults(dry_run=False, only_sheet=False, only_active=True)
 
     def handle(self, *args, **kwargs):
         dry_run = kwargs["dry_run"]
@@ -77,8 +83,11 @@ class Command(BaseCommand):
                     "membershipinvite",
                     filter=Q(membershipinvite__role__lte=Membership.ROLE_OWNER, active=True),
                 ),
-            ).filter(owner_count=0, invite_count=0, active=True)
+            ).filter(owner_count=0, invite_count=0)
             self.stdout.write(f"Found {clubs.count()} active club(s) without owners.")
+
+        if kwargs["only_active"]:
+            clubs = clubs.filter(active=True)
 
         clubs_missing = 0
         clubs_sent = 0

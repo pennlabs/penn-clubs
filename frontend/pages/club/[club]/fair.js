@@ -1,5 +1,6 @@
 import s from 'styled-components'
 
+import { CLUB_ROUTE } from '../../../constants/routes'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
 import InfoBox from '../../../components/ClubPage/InfoBox'
@@ -124,8 +125,10 @@ const Fair = ({
         <Margin>
           <TagGroup tags={club.tags} />
         </Margin>
-        <Text>{club.description}</Text>
-        <Link href="/club/[club]" as={`/club/${club.code}`}>
+        <Text>
+          <div dangerouslySetInnerHTML={{ __html: club.description }} />
+        </Text>
+        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
           <a className="button is-danger is-large">See more details</a>
         </Link>
       </Center>

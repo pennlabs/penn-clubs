@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import PropTypes from 'prop-types'
 import s from 'styled-components'
 
@@ -26,9 +27,11 @@ const Error = ({ statusCode = 500, message = 'Something went wrong' }) => (
       <p className="is-size-5" style={{ marginBottom: '1rem' }}>
         {message}
       </p>
-      <a className="button is-medium is-primary" href={HOME_ROUTE}>
-        Back to home
-      </a>
+      <Link href={HOME_ROUTE}>
+        <a className="button is-medium is-primary">
+          Back to home
+        </a>
+      </Link>
     </Center>
   </Container>
 )

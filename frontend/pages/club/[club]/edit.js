@@ -4,13 +4,14 @@ import Link from 'next/link'
 import Select from 'react-select'
 
 import renderPage from '../../../renderPage.js'
+import { CLUB_ROUTE, CLUB_FLYER_ROUTE } from '../../../constants/routes'
 import {
   doApiRequest,
   getApiUrl,
   formatResponse,
   getRoleDisplay,
 } from '../../../utils'
-import Form from '../../../components/Form'
+import Form, { ModelForm } from '../../../components/Form'
 import TabView from '../../../components/TabView'
 import AuthPrompt from '../../../components/common/AuthPrompt'
 import {
@@ -494,7 +495,9 @@ class ClubForm extends Component {
       {
         name: 'info',
         label: 'Information',
-        content: <Form fields={fields} defaults={club} onSubmit={this.submit} />,
+        content: (
+          <Form fields={fields} defaults={club} onSubmit={this.submit} />
+        ),
       },
       {
         name: 'member',
@@ -766,8 +769,8 @@ class ClubForm extends Component {
                     List
                   </a>
                   <Link
-                    href="/club/[club]/flyer"
-                    as={`/club/${club.code}/flyer`}
+                    href={CLUB_FLYER_ROUTE()}
+                    as={CLUB_FLYER_ROUTE(club.code)}
                   >
                     <a target="_blank" className="button is-success">
                       <Icon alt="flyer" name="external-link" /> View Flyer
@@ -899,7 +902,7 @@ class ClubForm extends Component {
           {nameOrDefault}
           {showInactiveTag && <InactiveTag />}
           {club && (
-            <Link href="/club/[club]" as={`/club/${club.code}`}>
+            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
               <a
                 className="button is-pulled-right is-secondary is-medium"
                 style={{ fontWeight: 'normal' }}

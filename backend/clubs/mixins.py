@@ -19,12 +19,13 @@ class ManyToManySaveMixin(object):
 
     You can also specify a dictionary instead of a string, with the following fields:
         - field (string, required): The field to implement saving behavior on.
-        - create (bool): If true, create the related model if it does not exist.
-          Otherwise, raise an exception if the user links to a nonexistent object.
+        - mode (bool):
+            - If set to create, create the related model if it does not exist.
+            - Otherwise, raise an exception if the user links to a nonexistent object.
     """
 
-    def _lookup_item(self, model, field_name, item, create=False):
-        if create:
+    def _lookup_item(self, model, field_name, item, mode=None):
+        if mode == "create":
             obj, _ = model.objects.get_or_create(**item)
             return obj
         else:
@@ -46,12 +47,12 @@ class ManyToManySaveMixin(object):
         # turn all entries into dict configs
         for i, m2m in enumerate(m2m_to_save):
             if not isinstance(m2m, dict):
-                m2m_to_save[i] = {"field": m2m, "create": False}
+                m2m_to_save[i] = {"field": m2m, "mode": None}
 
         # remove m2m from validated data and save
         m2m_lists = {}
         for m2m in m2m_to_save:
-            create = m2m.get("create", False)
+            mode = m2m.get("mode", None)
             field_name = m2m["field"]
 
             field = self.fields[field_name]
@@ -63,12 +64,12 @@ class ManyToManySaveMixin(object):
                 if items is None:
                     continue
                 for item in items:
-                    m2m_lists[field_name].append(self._lookup_item(model, field_name, item, create))
+                    m2m_lists[field_name].append(self._lookup_item(model, field_name, item, mode))
             else:
                 m2m["many"] = False
                 model = field.Meta.model
                 item = self.validated_data.pop(field_name, None)
-                m2m_lists[field_name] = self._lookup_item(model, field_name, item, create)
+                m2m_lists[field_name] = self._lookup_item(model, field_name, item, mode)
 
         obj = super(ManyToManySaveMixin, self).save()
 
