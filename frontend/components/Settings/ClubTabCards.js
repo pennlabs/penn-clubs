@@ -51,7 +51,7 @@ const LeaveButton = s.a`
 const ButtonIcon = s(Icon)`
   margin-left: 0;
   margin-right: 5px;
-  margin-bottom: .4rem;
+  margin-bottom: 0.4rem;
 `
 
 const RowIcon = s(Icon)`
