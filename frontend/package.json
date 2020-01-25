@@ -35,7 +35,7 @@
     "styled-components": "^4.4.1"
   },
   "scripts": {
-    "lint": "eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
+    "lint": "prettier --check \"./{pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
     "dev": "node server.js",
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
