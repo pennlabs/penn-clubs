@@ -8,13 +8,8 @@ const Wrapper = s.span`
   position: relative;
   width: 100%;
 
-  svg {
+  img {
     width: 25px;
-    fill: #E1E2FF;
-    stroke: #E1E2FF;
-    stroke-width: none;
-    stroke-linecap: square;
-    stroke-linejoin: square;
     transform: rotate(90deg);
     position: absolute;
     bottom: 2.5rem;
@@ -37,16 +32,6 @@ const Toggle = s.div`
   color: ${DARK_GRAY};
   cursor: pointer;
 `
-
-const FeatherTriangle = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    className="feather feather-triangle"
-  >
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-  </svg>
-)
 
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -80,13 +65,13 @@ const Testimonials = props => {
         data.map(({ text }, i) => (
           <Wrapper key={i}>
             <Quote>{text}</Quote>
-            <FeatherTriangle />
+            <Icon name="triangle-testimonial" />
           </Wrapper>
         ))
       ) : (
         <Wrapper>
           <Quote>{data[0].text}</Quote>
-          <FeatherTriangle />
+          <Icon name="triangle-testimonial" />
         </Wrapper>
       )}
       {data.length >= 2 && (
