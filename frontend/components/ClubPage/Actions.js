@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import s from 'styled-components'
-import { WHITE, BORDER, MEDIUM_GRAY } from '../../constants/colors'
 
 import { Icon, BookmarkIcon, SubscribeIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
+import { WHITE, BORDER, MEDIUM_GRAY } from '../../constants/colors'
 
 const Wrapper = s.span`
   display: flex;
@@ -25,13 +25,15 @@ const ActionWrapper = s.div`
   display: flex;
   flex-direction: row;
   align-items: flex-start;
+
   padding-top: 5px;
-  background-color: ${WHITE};
-  border-radius: 50%;
-  border: 1px solid ${BORDER};
   padding-left: 0.75rem;
   padding-right: 0.75rem;
   margin-bottom: 0.8rem;
+
+  background-color: ${WHITE};
+  border-radius: 9999px;
+  border: 1px solid ${BORDER};
   line-height: 1;
   height: 30px;
 `
