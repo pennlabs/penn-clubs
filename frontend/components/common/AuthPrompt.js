@@ -23,32 +23,36 @@ const TitleHeader = s.div`
   }
 `
 
-const AuthPrompt = () => (
+const AuthPrompt = ({ title, children, hasLogin = true }) => (
   <PhoneContainer>
     <Center>
       <TitleHeader>
         <Image src="/static/img/peoplelogo.png" />
-        <Title>One last step...</Title>
+        <Title>{title || 'One last step...'}</Title>
       </TitleHeader>
       <Margin>
         <Text>
-          To make the most of Penn Clubs features, like bookmarking and
-          subscribing to clubs, please login using your PennKey.
+          {children ||
+            'To make the most of Penn Clubs features, like bookmarking and subscribing to clubs, please login using your PennKey.'}
         </Text>
       </Margin>
-      <Margin>
-        <a
-          href={`${LOGIN_URL}?next=${
-            typeof window !== 'undefined' ? window.location.href : '/'
-          }`}
-          className="button is-link is-large"
-        >
-          <Icon alt="login" name="key" /> Continue to login
-        </a>
-      </Margin>
-      <SmallText>
-        <i>(We're sorry, we hate two-step too.)</i>
-      </SmallText>
+      {hasLogin && (
+        <>
+          <Margin>
+            <a
+              href={`${LOGIN_URL}?next=${
+                typeof window !== 'undefined' ? window.location.href : '/'
+              }`}
+              className="button is-link is-large"
+            >
+              <Icon alt="login" name="key" /> Continue to login
+            </a>
+          </Margin>
+          <SmallText>
+            <i>(We're sorry, we hate two-step too.)</i>
+          </SmallText>
+        </>
+      )}
     </Center>
   </PhoneContainer>
 )

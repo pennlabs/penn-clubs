@@ -60,6 +60,7 @@ const PrintPage = s.div`
   clear: both;
   background-color: white;
   display: flex;
+  overflow: hidden;
 
   page-break-after: always;
 
@@ -67,6 +68,24 @@ const PrintPage = s.div`
     size: letter landscape;
   }
 `
+
+const truncate = (str, len = 52) => {
+  if (str.length <= len) {
+    return str
+  }
+  const parenMatch = /^(.*)\s*\((.*)\)\s*$/.exec(str)
+  if (parenMatch) {
+    const smallString = parenMatch[1]
+    if (smallString.length <= len) {
+      return smallString
+    }
+    const smallParenString = parenMatch[2]
+    if (smallParenString <= len) {
+      return smallParenString
+    }
+  }
+  return `${str.substring(0, len)}...`
+}
 
 const Flyer = ({
   authenticated,
@@ -78,23 +97,38 @@ const Flyer = ({
   updateSubscriptions,
 }) => {
   const [clubs, setClubs] = useState(null)
+  const [count, setCount] = useState(0)
 
   useEffect(() => {
     Promise.all(
       query.club.split(',').map(club => {
-        return doApiRequest(`/clubs/${club}/?format=json`).then(resp =>
-          resp.json()
-        )
+        return doApiRequest(`/clubs/${club}/?format=json`).then(resp => {
+          setCount(prevCount => prevCount + 1)
+          return resp.ok ? resp.json() : null
+        })
       })
     ).then(setClubs)
   }, [query])
+
+  const totalClubCount = query.club.split(',').length
 
   if (clubs === null) {
     return (
       <Container>
         <div className="has-text-centered">
           <Title>Loading...</Title>
-          <Text>Loading club flyer(s)...</Text>
+          <Text>
+            Loading club flyer(s){' '}
+            <i>
+              ({count}/{totalClubCount})
+            </i>
+            ...
+          </Text>
+          <progress
+            className="progress"
+            value={count}
+            max={totalClubCount}
+          ></progress>
         </div>
       </Container>
     )
@@ -115,6 +149,9 @@ const Flyer = ({
     <>
       <Head />
       {clubs.map(club => {
+        if (club === null) {
+          return null
+        }
         const { image_url: image } = club
         return (
           <>
@@ -124,7 +161,9 @@ const Flyer = ({
                   <CenterContainer>
                     <Margin>
                       {image && <Image src={image} />}
-                      <BigTitle>{club.name}</BigTitle>
+                      <BigTitle>
+                        {truncate(club.name, image ? 52 : 100)}
+                      </BigTitle>
                     </Margin>
                   </CenterContainer>
                 </div>
@@ -134,7 +173,7 @@ const Flyer = ({
                       <Center>
                         <MediumTitle>
                           For more info, or to bookmark or subscribe to the{' '}
-                          {club.name} mailing list:
+                          {truncate(club.name)} mailing list:
                         </MediumTitle>
                         <Gradient>
                           <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} />

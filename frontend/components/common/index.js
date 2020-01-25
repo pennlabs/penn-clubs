@@ -1,5 +1,6 @@
 export * from './Card'
 export * from './Container'
+export * from './EmptyState'
 export * from './Grid'
 export * from './Icon'
 export * from './Line'
