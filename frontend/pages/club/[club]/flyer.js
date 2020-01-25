@@ -96,6 +96,7 @@ const AboutText = s.div`
   right: 7px;
   font-size: 0.7em;
   color: #aaa;
+  -webkit-print-color-adjust: exact;
 `
 
 const truncate = (str, len = 54) => {
