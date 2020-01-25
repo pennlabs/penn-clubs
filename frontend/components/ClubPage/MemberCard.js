@@ -42,7 +42,7 @@ const MemberInfo = s.div`
 `
 
 const Avatar = s.div`
-  border-radius: 9999px;
+  border-radius: 50%;
   margin: 5px 15px;
   ${mediaMinWidth(PHONE)} {
     margin: 0 auto;
