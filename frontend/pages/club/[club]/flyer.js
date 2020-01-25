@@ -12,6 +12,25 @@ const Image = s.img`
   object-fit: contain;
 `
 
+const LogoImage = s(Image)`
+  max-height: 500px;
+`
+
+const ErrorPane = s.div`
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  padding: 15px;
+  background-color: rgba(255, 132, 153, 0.95);
+  @media print {
+    visibility: hidden;
+  }
+  & ul {
+    list-style-type: circle;
+    padding-left: 30px;
+  }
+`
+
 const BigTitle = s.h1`
   font-size: 50px;
   font-weight: 600;
@@ -109,34 +128,29 @@ const Flyer = ({
 }) => {
   const [clubs, setClubs] = useState(null)
   const [count, setCount] = useState(0)
+  const [failedClubs, setFailedClubs] = useState([])
 
   useEffect(() => {
-    Promise.all(
-      query.club.split(',').map(club => {
-        const url = `/clubs/${club}/?format=json`
-        return doApiRequest(url).then(resp => {
-          if (resp.ok) {
-            setCount(prevCount => prevCount + 1)
-            return resp.json()
-          }
-          if (resp.status === 502) {
-            // If we get a Gateway Timeout, wait a while and try one more time
-            return new Promise(resolve => {
-              setTimeout(resolve, 5000 * Math.random())
-            }).then(() => {
-              return doApiRequest(url).then(resp => {
-                setCount(prevCount => prevCount + 1)
-                if (resp.ok) {
-                  return resp.json()
-                }
-                return null
-              })
-            })
-          }
-          return null
-        })
+    const fetchClub = (club, tries = 3) => {
+      const url = `/clubs/${club}/?format=json`
+      return doApiRequest(url).then(resp => {
+        if (resp.ok) {
+          setCount(prevCount => prevCount + 1)
+          return resp.json()
+        }
+        if (resp.status === 502 && tries > 0) {
+          // If we get a Gateway Timeout, wait a while and try one more time
+          return new Promise(resolve => {
+            setTimeout(resolve, 5000 * Math.random())
+          }).then(() => fetchClub(club, tries - 1))
+        }
+        setCount(prevCount => prevCount + 1)
+        setFailedClubs(prevFailed => prevFailed.concat(club))
+        return null
       })
-    ).then(setClubs)
+    }
+
+    Promise.all(query.club.split(',').map(fetchClub)).then(setClubs)
   }, [query])
 
   const totalClubCount = query.club.split(',').length
@@ -177,6 +191,16 @@ const Flyer = ({
   return (
     <>
       <Head />
+      {failedClubs.length && (
+        <ErrorPane>
+          <b>Failed to load clubs:</b>
+          <ul>
+            {failedClubs.map((c, i) => (
+              <li key={i}>{c}</li>
+            ))}
+          </ul>
+        </ErrorPane>
+      )}
       {clubs.map(club => {
         if (club === null) {
           return null
@@ -189,7 +213,7 @@ const Flyer = ({
                 <div className="column is-paddingless">
                   <CenterContainer>
                     <Margin>
-                      {image && <Image src={image} />}
+                      {image && <LogoImage src={image} />}
                       <BigTitle>
                         {truncate(club.name, image ? 52 : 100)}
                       </BigTitle>
