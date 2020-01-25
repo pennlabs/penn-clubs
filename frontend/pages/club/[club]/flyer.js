@@ -119,7 +119,7 @@ const Flyer = ({
             setCount(prevCount => prevCount + 1)
             return resp.json()
           }
-          if (resp.status == 502) {
+          if (resp.status === 502) {
             // If we get a Gateway Timeout, wait a while and try one more time
             return new Promise(resolve => {
               setTimeout(resolve, 5000 * Math.random())
