@@ -89,8 +89,22 @@ const PrintPage = s.div`
   }
 `
 
+<<<<<<< HEAD
 const truncate = (str, len = 52) => {
   if (str.length <= len) {
+=======
+const AboutText = s.div`
+  position: absolute;
+  bottom: 7px;
+  right: 7px;
+  font-size: 0.7em;
+  color: #aaa;
+  -webkit-print-color-adjust: exact;
+`
+
+const truncate = (str, len = 54) => {
+  if (str.length <= len + 3) {
+>>>>>>> fix print color adjust
     return str
   }
   const parenMatch = /^(.*)\s*\((.*)\)\s*$/.exec(str)
