@@ -33,7 +33,7 @@ const Avatar = s.img`
   width: 100%;
   height: 100%;
 
-  ${({ isRound }) => isRound ? 'border-radius: 9999px;' : ''}
+  ${({ isRound }) => isRound && 'border-radius: 50%;'}
 `
 
 export const ProfilePic = ({ className, user, isRound, style, fontSize }) => {
