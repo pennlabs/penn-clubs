@@ -24,8 +24,8 @@ const Placeholder = s.div`
 
   font-size: ${({ fontSize }) => fontSize || '1.5em'};
   ${({ isRound }) => isRound ? 'border-radius: 9999px;' : ''}
-  ${({ backgroundColor }) => backgroundColor || DEFAULT_BG_COLOR}
-  ${({ textColor }) => textColor || DEFAULT_TXT_COLOR}
+  background-color: ${({ backgroundColor }) => backgroundColor || DEFAULT_BG_COLOR}
+  color: ${({ textColor }) => textColor || DEFAULT_TXT_COLOR}
 `
 
 const Avatar = s.img`
@@ -38,7 +38,6 @@ const Avatar = s.img`
 export const ProfilePic = ({ className, user, isRound, style, fontSize }) => {
   const { name, image } = user
   if (image) return <Avatar src={image} isRound={isRound} />
-
   const nonce = hashCode(name) % PROPIC_TEXT.length
   const backgroundColor = PROPIC_BACKGROUND[nonce]
   const textColor = PROPIC_TEXT[nonce]
