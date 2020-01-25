@@ -48,8 +48,6 @@ const MediumTitle = s.h2`
 const Gradient = s.div`
   width: 370px;
   height: 370px;
-  background-image: linear-gradient(to bottom, ${FLYER_BLUE}, ${FLYER_PINK});
-  -webkit-print-color-adjust: exact;
   padding: 1.5rem;
   margin: 1rem auto;
 `
@@ -118,7 +116,7 @@ const truncate = (str, len = 54) => {
   // remove suffix if it exists and string is too long
   const suffixMatch = /^(.*)\s*at the University of Pennsylvania$/i.exec(str)
   if (suffixMatch) {
-    const smallString = prefixMatch[1]
+    const smallString = suffixMatch[1]
     if (smallString.length <= len + 3) {
       return smallString
     }
