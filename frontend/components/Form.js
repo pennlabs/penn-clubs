@@ -165,10 +165,7 @@ class Form extends Component {
       [`editorState-${name}`]: editorState,
     } = this.state
 
-    const isHorizontal =
-      typeof this.props.isHorizontal === 'undefined'
-        ? true
-        : this.props.isHorizontal
+    const { isHorizontal = true } = this.props
 
     let inpt = null
 
