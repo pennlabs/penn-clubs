@@ -19,7 +19,7 @@ const MemberList = ({ club: { members } }) => {
           ? (
             <Row>
               {members.map(a => (
-                <Col key={a.username} sm={12} md={6} lg={3} margin="5px" flex>
+                <Col key={a.username || a.name} sm={12} md={6} lg={3} margin="5px" flex>
                   <MemberCard account={a} />
                 </Col>
               ))}
@@ -28,7 +28,7 @@ const MemberList = ({ club: { members } }) => {
           : (
             <Row>
               {members.slice(0, 4).map(a => (
-                <Col key={a.username} sm={12} md={6} lg={3} margin="5px" flex>
+                <Col key={a.username || a.name} sm={12} md={6} lg={3} margin="5px" flex>
                   <MemberCard account={a} />
                 </Col>
               ))}
