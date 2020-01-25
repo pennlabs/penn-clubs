@@ -10,26 +10,26 @@ const Wrapper = s.div`
   flex: 1;
 `
 
-export default props => (
+export default ({ club }) => (
   <Wrapper>
     <div style={{ padding: '10px' }}>
       <StrongText>Description</StrongText>
       <div
         style={{ whiteSpace: 'pre-wrap' }}
         dangerouslySetInnerHTML={{
-          __html: props.club.description || EMPTY_DESCRIPTION,
+          __html: club.description || EMPTY_DESCRIPTION,
         }}
       />
-      {props.club.how_to_get_involved && (
+      {club.how_to_get_involved && (
         <div>
           <div style={{ marginTop: 20 }}>
             <b>Getting Involved</b>
           </div>
           <div style={{ whiteSpace: 'pre-wrap' }}>
-            {props.club.how_to_get_involved}
+            {club.how_to_get_involved}
           </div>
         </div>
       )}
-    </div>{' '}
+    </div>
   </Wrapper>
 )
