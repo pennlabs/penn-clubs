@@ -227,8 +227,8 @@ class Form extends Component {
               }}
             />
           ) : (
-              <div />
-            )}
+            <div />
+          )}
         </div>
       )
     } else if (type === 'textarea') {
