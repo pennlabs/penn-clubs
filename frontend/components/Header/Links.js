@@ -14,7 +14,6 @@ import {
   BORDER,
 } from '../../constants/colors'
 import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
-import { MEDIUM_GRAY, DARK_GRAY, BORDER } from '../../constants/colors'
 import { SETTINGS_ROUTE } from '../../constants/routes'
 import { logEvent } from '../../utils/analytics'
 
