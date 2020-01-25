@@ -6,6 +6,7 @@ import Toggle from './Toggle'
 import { Icon } from '../common'
 import { DARK_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
+import { CLUB_ROUTE, CLUB_EDIT_ROUTE } from '../../constants/routes'
 
 const Table = s.table`
   font-family: ${BODY_FONT};
@@ -63,8 +64,8 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
         <tr key={item.code}>
           <td>
             <Link
-              href="/club/[club]"
-              as={`/club/${item.code}`}
+              href={CLUB_ROUTE()}
+              as={CLUB_ROUTE(item.code)}
             >
               <a>{item.name}</a>
             </Link>
@@ -88,8 +89,8 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
           <td>
             {item.role_display === 'Admin' ? (
               <Link
-                href="/club/[club]/edit"
-                as={`/club/${item.code}/edit`}
+                href={CLUB_EDIT_ROUTE()}
+                as={CLUB_EDIT_ROUTE(item.code)}
               >
                 <a className="button is-small">
                   Manage

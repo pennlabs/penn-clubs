@@ -9,6 +9,7 @@ import {
   LG,
   ANIMATION_DURATION,
 } from '../constants/measurements'
+import { CLUB_ROUTE } from '../constants/routes'
 import { TagGroup } from './common'
 import ClubDetails from './ClubDetails'
 import Link from 'next/link'
@@ -88,7 +89,7 @@ class ClubTableRow extends React.Component {
 
     return (
       <Row>
-        <Link href="/club/[club]" as={`/club/${code}`}>
+        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
           <a target="_blank">
             <div className="columns is-gapless is-mobile">
               <div className="column">

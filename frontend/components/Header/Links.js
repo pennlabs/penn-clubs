@@ -14,6 +14,7 @@ import {
   BORDER,
 } from '../../constants/colors'
 import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
+import { SETTINGS_ROUTE } from '../../constants/routes'
 import { logEvent } from '../../utils/analytics'
 
 const StyledIcon = s(Icon)`
@@ -92,7 +93,7 @@ export default ({ userInfo, authenticated, show }) => (
         </LoginButton>
       )}
       {userInfo && (
-        <Link href="/settings">
+        <Link href={SETTINGS_ROUTE}>
           <StyledLink>
             <StyledIcon
               name="user"

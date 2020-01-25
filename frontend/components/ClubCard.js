@@ -13,6 +13,7 @@ import {
   SM,
   ANIMATION_DURATION,
 } from '../constants/measurements'
+import { CLUB_ROUTE } from '../constants/routes'
 import { stripTags } from '../utils'
 import { InactiveTag, TagGroup } from './common'
 import ClubDetails from './ClubDetails'
@@ -104,7 +105,7 @@ const ClubCard = ({
 
   return (
     <CardWrapper className="column is-half-desktop">
-      <Link href="/club/[club]" as={`/club/${code}`}>
+      <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
         <a target="_blank">
           <Card className="card">
             <div style={{ display: 'flex' }}>

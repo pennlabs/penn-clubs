@@ -14,6 +14,7 @@ import {
   BLACK_ALPHA,
 } from '../../constants/colors'
 import { BORDER_RADIUS } from '../../constants/measurements'
+import { CLUB_ROUTE, CLUB_EDIT_ROUTE } from '../../constants/routes'
 
 const Card = s.div`
   border-radius: ${BORDER_RADIUS};
@@ -103,11 +104,11 @@ export default ({ club, toggleActive, togglePublic, leaveClub }) => {
   return (
     <Card className="card">
       <CardRow>
-        <Link href="/club/[club]" as={`/club/${code}`}>
+        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
           <CardTitle>{name}</CardTitle>
         </Link>
         {canManage ? (
-          <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
+          <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
             <ManageButton className="button is-small">
               <ButtonIcon name="edit-white" size="1rem" />
               Manage
