@@ -1,17 +1,16 @@
 import s from 'styled-components'
-import Toggle from './Toggle'
-import { EmptyState, Icon, Center, Text } from '../common'
-import ReactTooltip from 'react-tooltip'
-import Link from 'next/link'
+import ClubTabTable from './ClubTabTable'
+import ClubTabCards from './ClubTabCards'
+import { mediaMinWidth, mediaMaxWidth, SM } from '../../constants/measurements'
 
 const ClubTable = s(ClubTabTable)`
-  @media (max-width: 768px) {
+  ${mediaMaxWidth(SM)} {
     display: none !important;
   }
 `
 
 const ClubCards = s(ClubTabCards)`
-  @media (min-width: 769px) {
+  ${mediaMinWidth(SM)} {
     display: none !important;
   }
 `
