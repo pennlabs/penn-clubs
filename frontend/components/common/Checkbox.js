@@ -21,11 +21,16 @@ const StyledCheckbox = s.div`
   width: 16px;
   height: 16px;
   transition: all 150ms;
+  cursor: pointer;
 `
 
 const CheckboxContainer = s.div`
   display: inline-block;
   vertical-align: middle;
+`
+
+export const CheckboxLabel = s.label`
+  cursor: pointer;
 `
 
 const Checkbox = ({ className, checked, onChange, ...props }) => {

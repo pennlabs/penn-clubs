@@ -4,7 +4,7 @@ import renderPage from '../renderPage.js'
 import { Icon, Flex } from '../components/common'
 import { doApiRequest, API_BASE_URL } from '../utils'
 import { Sidebar } from '../components/common/Sidebar'
-import Checkbox from '../components/common/Checkbox'
+import Checkbox, { CheckboxLabel } from '../components/common/Checkbox'
 import { Container, WideContainer } from '../components/common/Container'
 import {
   CLUBS_GREY,
@@ -124,7 +124,7 @@ const Reports = ({ nameToCode }) => {
               }}
             />
             {'  '}
-            <label htmlFor={field}>{field}</label>
+            <CheckboxLabel htmlFor={field}>{field}</CheckboxLabel>
           </div>
         ))}
       </div>
