@@ -1,10 +1,11 @@
-import { DARK_GRAY } from '../../constants/colors'
-import { BODY_FONT } from '../../constants/styles'
 import s from 'styled-components'
-import Toggle from './Toggle'
-import { Icon } from '../common'
 import ReactTooltip from 'react-tooltip'
 import Link from 'next/link'
+
+import Toggle from './Toggle'
+import { Icon } from '../common'
+import { DARK_GRAY } from '../../constants/colors'
+import { BODY_FONT } from '../../constants/styles'
 
 const Table = s.table`
   font-family: ${BODY_FONT};

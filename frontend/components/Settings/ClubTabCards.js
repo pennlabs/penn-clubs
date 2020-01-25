@@ -1,7 +1,8 @@
 import s from 'styled-components'
+import Link from 'next/link'
+
 import Toggle from './Toggle'
 import { Icon } from '../common'
-import Link from 'next/link'
 import { LIGHT_GRAY, CLUBS_BLUE, CLUBS_RED, SNOW } from '../../constants/colors'
 import { BORDER_RADIUS } from '../../constants/measurements'
 
