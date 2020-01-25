@@ -13,7 +13,6 @@ const Wrapper = s.span`
   justify-content: flex-end;
   margin-bottom: 0.8rem;
   line-height: 1;
-  height: 30px;
 `
 
 const BookmarkCountWrapper = s.div`
@@ -47,6 +46,11 @@ const ActionDiv = s.div`
   margin-top: -1px;
 `
 
+const EditButton = s.button`
+  font-size: 0.8em;
+  margin-right: 20px;
+`
+
 const Actions = ({
   club,
   userInfo,
@@ -61,8 +65,7 @@ const Actions = ({
   const isFavorite = favorites.includes(code)
   const isSubscription = subscriptions.includes(code)
 
-  // inClub is set to the membership object if the user is in the club, or false
-  // otherwise
+  // inClub is set to the membership object if the user is in the club, otherwise false
   const inClub =
     userInfo &&
     (userInfo.membership_set.filter(a => a.code === club.code) || [false])[0]
@@ -80,12 +83,9 @@ const Actions = ({
       <Wrapper>
         {canEdit && (
           <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
-            <a
-              className="button is-success"
-              style={{ height: '30px', fontSize: '0.8em', marginRight: '20px' }}
-            >
+            <EditButton className="button is-success">
               Edit Club
-            </a>
+            </EditButton>
           </Link>
         )}
 
