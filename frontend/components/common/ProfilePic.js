@@ -43,6 +43,7 @@ export const ProfilePic = ({ className, user, isRound, style, fontSize }) => {
   const nonce = hashCode(name) % PROPIC_TEXT.length
   const backgroundColor = PROPIC_BACKGROUND[nonce]
   const textColor = PROPIC_TEXT[nonce]
+
   // Assuming the name is properly capitalized, this extracts the name's initials.
   const initials = name.replace(/[a-z]|\s/g, '')
   return (
