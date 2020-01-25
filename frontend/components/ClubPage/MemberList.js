@@ -11,51 +11,54 @@ const Toggle = s.div`
 
 const MemberList = ({ club: { members } }) => {
   const [expanded, setExpanded] = useState(false)
-  return (
-    <div>
-      {expanded ? (
-        <Row>
-          {members.map(a => (
-            <Col key={a.username} sm={12} md={6} lg={3} margin="5px" flex>
-              <MemberCard account={a} />
-            </Col>
-          ))}
-        </Row>
-      ) : (
-          <Row>
-            {members.length ? (
-              members.slice(0, 4).map(a => (
+  const hasMembers = members.length > 0
+  return hasMembers
+    ? (
+      <div>
+        {expanded
+          ? (
+            <Row>
+              {members.map(a => (
                 <Col key={a.username} sm={12} md={6} lg={3} margin="5px" flex>
                   <MemberCard account={a} />
                 </Col>
-              ))
-            ) : (
-              <Center>
-                <EmptyState name="hiring" size="25%" style={{ marginTop: 0, marginBottom: 0 }} />
-                <p>
-                  No club members have linked their accounts on Penn Clubs yet.
-                  <br />
-                  Check back later for a list of club members!
-                </p>
-              </Center>
-            )}
-          </Row>
+              ))}
+            </Row>
+          )
+          : (
+            <Row>
+              {members.slice(0, 4).map(a => (
+                <Col key={a.username} sm={12} md={6} lg={3} margin="5px" flex>
+                  <MemberCard account={a} />
+                </Col>
+              ))}
+            </Row>
+          )
+        }
+        {members.length >= 5 && (
+          <Toggle
+            className="is-pulled-right"
+            onClick={() => setExpanded(!expanded)}
+          >
+            See {expanded ? 'less' : 'more'}{' '}
+            <Icon
+              alt={expanded ? 'less' : 'more'}
+              name={expanded ? 'chevron-up' : 'chevron-down'}
+            />
+          </Toggle>
         )}
-
-      {members.length >= 5 && (
-        <Toggle
-          className="is-pulled-right"
-          onClick={() => setExpanded(!expanded)}
-        >
-          See {expanded ? 'less' : 'more'}{' '}
-          <Icon
-            alt={expanded ? 'less' : 'more'}
-            name={expanded ? 'chevron-up' : 'chevron-down'}
-          />
-        </Toggle>
-      )}
-    </div>
-  )
+      </div>
+    )
+    : (
+      <Center>
+        <EmptyState name="hiring" size="25%" style={{ marginTop: 0, marginBottom: 0 }} />
+        <p>
+          No club members have linked their accounts on Penn Clubs yet.
+          <br />
+          Check back later for a list of club members!
+        </p>
+      </Center>
+    )
 }
 
 export default MemberList
