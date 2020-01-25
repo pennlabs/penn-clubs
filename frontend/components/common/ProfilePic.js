@@ -12,21 +12,20 @@ const hashCode = s => {
   return h
 }
 
+// TODO: Move these defaults into prop-types when prop-types are added fully
+const [DEFAULT_BG_COLOR] = PROPIC_BACKGROUND
+const [DEFAULT_TXT_COLOR] = PROPIC_TEXT
 const Placeholder = s.div`
   width: 100%;
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+
   font-size: ${({ fontSize }) => fontSize || '1.5em'};
   ${({ isRound }) => isRound ? 'border-radius: 9999px;' : ''}
-
-  ${({ backgroundColor }) => backgroundColor
-    ? `background-color: ${backgroundColor};`
-    : ''}
-  ${({ textColor }) => textColor
-    ? `color: ${textColor};`
-    : ''}
+  ${({ backgroundColor }) => backgroundColor || DEFAULT_BG_COLOR}
+  ${({ textColor }) => textColor || DEFAULT_TXT_COLOR}
 `
 
 const Avatar = s.img`
