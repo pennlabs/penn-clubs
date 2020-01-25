@@ -43,10 +43,10 @@ class Form extends Component {
           } else if (type === 'html') {
             this.state[`editorState-${name}`] = value
               ? EditorState.createWithContent(
-                  ContentState.createFromBlockArray(
-                    htmlToDraft(value).contentBlocks
-                  )
+                ContentState.createFromBlockArray(
+                  htmlToDraft(value).contentBlocks
                 )
+              )
               : EditorState.createEmpty()
           } else if (type === 'multiselect') {
             this.state[`field-${name}`] = (value || []).map(converter)
@@ -166,9 +166,9 @@ class Form extends Component {
     } = this.state
 
     const isHorizontal =
-      typeof this.props.isHorizontal !== 'undefined'
-        ? this.props.isHorizontal
-        : true
+      typeof this.props.isHorizontal === 'undefined'
+        ? true
+        : this.props.isHorizontal
 
     let inpt = null
 
@@ -238,8 +238,8 @@ class Form extends Component {
               }}
             />
           ) : (
-            <div />
-          )}
+              <div />
+            )}
         </div>
       )
     } else if (type === 'textarea') {
@@ -387,10 +387,10 @@ class Form extends Component {
     // Allow onSubmit to be a Promise or async function. If Promise.resolve is passed some
     // other value, it resolves with that value.
     const { onSubmit } = this.props
-    onSubmit &&
-      Promise.resolve(onSubmit(this.getSubmitData())).then(() => {
-        this.setState({ edited: false })
-      })
+    if (!onSubmit) return
+    Promise.resolve(onSubmit(this.getSubmitData())).then(() => {
+      this.setState({ edited: false })
+    })
   }
 
   render() {
