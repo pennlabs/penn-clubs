@@ -1,118 +1,58 @@
-import { DARK_GRAY } from '../../constants/colors'
-import { BODY_FONT } from '../../constants/styles'
-import { CLUB_ROUTE } from '../../constants/routes'
 import s from 'styled-components'
-import Toggle from './Toggle'
-import { EmptyState, Icon, Center, Text } from '../common'
-import ReactTooltip from 'react-tooltip'
 import Link from 'next/link'
 
-const Table = s.table`
-  font-family: ${BODY_FONT};
-  font-size: 16px;
-  overflow: scroll;
-  color: ${DARK_GRAY} !important;
+import ClubTabTable from './ClubTabTable'
+import ClubTabCards from './ClubTabCards'
+import { EmptyState, Center, Text } from '../common'
+import { mediaMinWidth, mediaMaxWidth, SM } from '../../constants/measurements'
+
+const ClubTable = s(ClubTabTable)`
+  ${mediaMaxWidth(SM)} {
+    display: none !important;
+  }
 `
 
-export default props => {
-  const { userInfo, togglePublic, toggleActive, leaveClub } = props
+const ClubCards = s(ClubTabCards)`
+  ${mediaMinWidth(SM)} {
+    display: none !important;
+  }
+`
+
+export default ({
+  className,
+  userInfo,
+  togglePublic,
+  toggleActive,
+  leaveClub,
+}) => {
   const isMemberOfAnyClubs = userInfo && userInfo.membership_set && userInfo.membership_set.length
 
   return isMemberOfAnyClubs ? (
-    <Table className="table is-fullwidth">
-      <thead>
-        <tr>
-          <th>Club</th>
-          <th>Position</th>
-          <th>
-            Permissions
-            <Icon
-              data-tip="Shows your level of access to club management tools. Can be a Member, Officer, or Owner."
-              data-effect="solid"
-              data-multiline="true"
-              name="info"
-              alt="?"
-              style={{ paddingLeft: 4 }}
-            />
-            <ReactTooltip style={{ width: 50 }} />
-          </th>
-          <th>
-            Active
-            <Icon
-              data-tip="Toggle whether you’re currently an active member of the club"
-              data-effect="solid"
-              data-multiline="true"
-              name="info"
-              alt="?"
-              style={{ paddingLeft: 4 }}
-            />
-            <ReactTooltip style={{ width: 50 }} />
-          </th>
-          <th>
-            Public
-            <Icon
-              data-tip="Toggle if you would like to be listed as a member on the club’s page"
-              data-effect="solid"
-              name="info"
-              alt="?"
-              style={{ paddingLeft: 4 }}
-            />
-            <ReactTooltip width="50px" />
-          </th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {userInfo.membership_set.map(item => (
-          <tr key={item.code}>
-            <td>
-              <Link
-                href={CLUB_ROUTE()}
-                as={CLUB_ROUTE(item.code)}
-              >
-                <a>{item.name}</a>
-              </Link>
-            </td>
-            <td>{item.title}</td>
-            <td>{item.role_display}</td>
-            <td>
-              <Toggle
-                club={item}
-                active={item.active}
-                toggle={club => toggleActive(club)}
-              />
-            </td>
-            <td>
-              <Toggle
-                club={item}
-                active={item.public}
-                toggle={club => togglePublic(club)}
-              />
-            </td>
-            <td>
-              {item.role_display === 'Admin' ? (
-                <button className="button is-small">Manage</button>
-              ) : (
-                <button
-                  className="button is-small"
-                  onClick={() => leaveClub(item)}
-                >
-                  Leave
-                </button>
-              )}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </Table>
+    <>
+      <ClubTable
+        className={className}
+        userInfo={userInfo}
+        togglePublic={togglePublic}
+        toggleActive={toggleActive}
+        leaveClub={leaveClub}
+      />
+      <ClubCards
+        className={className}
+        userInfo={userInfo}
+        togglePublic={togglePublic}
+        toggleActive={toggleActive}
+        leaveClub={leaveClub}
+      />
+    </>
   ) : (
-      <>
-        <EmptyState name="button" />
-        <Center>
-          <Text isGray>
-            You are not a member of any clubs yet.
-          </Text>
-        </Center>
-      </>
+    <>
+      <EmptyState name="button" />
+      <Center>
+        <Text isGray>
+          No memberships yet! Browse clubs{' '}
+          <Link href="/">here.</Link>
+        </Text>
+      </Center>
+    </>
   )
 }
