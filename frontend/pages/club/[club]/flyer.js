@@ -114,7 +114,11 @@ const truncate = (str, len = 54) => {
       return smallString
     }
     const smallParenString = parenMatch[2]
+<<<<<<< HEAD
     if (smallParenString <= len) {
+=======
+    if (smallParenString.length <= len + 3) {
+>>>>>>> fix typo
       return smallParenString
     }
   }
