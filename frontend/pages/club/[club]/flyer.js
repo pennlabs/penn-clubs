@@ -131,26 +131,26 @@ const Flyer = ({
   const [failedClubs, setFailedClubs] = useState([])
 
   useEffect(() => {
-    const fetchClub = (club, tries = 3) => {
+    const fetchClub = (club, tries) => {
       const url = `/clubs/${club}/?format=json`
       return doApiRequest(url).then(resp => {
         if (resp.ok) {
           setCount(prevCount => prevCount + 1)
           return resp.json()
-        }
-        if (resp.status === 502 && tries > 0) {
+        } else if (resp.status === 502 && tries > 0) {
           // If we get a Gateway Timeout, wait a while and try one more time
           return new Promise(resolve => {
             setTimeout(resolve.bind(null), 5000 * Math.random())
           }).then(() => fetchClub(club, tries - 1))
+        } else {
+          setCount(prevCount => prevCount + 1)
+          setFailedClubs(prevFailed => prevFailed.concat(club))
+          return null
         }
-        setCount(prevCount => prevCount + 1)
-        setFailedClubs(prevFailed => prevFailed.concat(club))
-        return null
       })
     }
 
-    Promise.all(query.club.split(',').map(fetchClub)).then(setClubs)
+    Promise.all(query.club.split(',').map(c => fetchClub(c, 3))).then(setClubs)
   }, [query])
 
   const totalClubCount = query.club.split(',').length
