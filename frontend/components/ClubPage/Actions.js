@@ -27,7 +27,7 @@ const ActionWrapper = s.div`
   align-items: flex-start;
   padding-top: 5px;
   background-color: ${WHITE};
-  border-radius: 9999px;
+  border-radius: 50%;
   border: 1px solid ${BORDER};
   padding-left: 0.75rem;
   padding-right: 0.75rem;
