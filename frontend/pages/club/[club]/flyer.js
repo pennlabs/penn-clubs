@@ -161,7 +161,7 @@ const Flyer = ({
         } else if (resp.status === 502 && tries > 0) {
           // If we get a Gateway Timeout, wait a while and try one more time
           return new Promise(resolve => {
-            setTimeout(resolve.bind(null), 5000 * Math.random())
+            setTimeout(resolve.bind(null), 10000 * Math.random())
           }).then(() => fetchClub(club, tries - 1))
         } else {
           setCount(prevCount => prevCount + 1)
@@ -184,7 +184,7 @@ const Flyer = ({
           <Text>
             Loading club flyer(s){' '}
             <i>
-              ({count}/{totalClubCount})
+              ({count}/{totalClubCount}, {failedClubs.length} failed)
             </i>
             ...
           </Text>
