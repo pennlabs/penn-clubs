@@ -12,6 +12,25 @@ const Image = s.img`
   object-fit: contain;
 `
 
+const LogoImage = s(Image)`
+  max-height: 500px;
+`
+
+const ErrorPane = s.div`
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  padding: 15px;
+  background-color: rgba(255, 132, 153, 0.95);
+  @media print {
+    visibility: hidden;
+  }
+  & ul {
+    list-style-type: circle;
+    padding-left: 30px;
+  }
+`
+
 const BigTitle = s.h1`
   font-size: 50px;
   font-weight: 600;
@@ -60,6 +79,7 @@ const PrintPage = s.div`
   clear: both;
   background-color: white;
   display: flex;
+  overflow: hidden;
 
   page-break-after: always;
 
@@ -67,6 +87,35 @@ const PrintPage = s.div`
     size: letter landscape;
   }
 `
+
+const truncate = (str, len = 54) => {
+  if (str.length <= len + 3) {
+    return str
+  }
+
+  // take words before or in parentheses if too long
+  const parenMatch = /^(.*)\s*\((.*)\)\s*$/.exec(str)
+  if (parenMatch) {
+    const smallString = parenMatch[1]
+    if (smallString.length <= len + 3) {
+      return smallString
+    }
+    const smallParenString = parenMatch[2]
+    if (smallParenString <= len + 3) {
+      return smallParenString
+    }
+  }
+
+  // remove prefix if exists and string too long
+  const prefixMatch = /^University of Pennsylvania\s*(.*)\s*$/i.exec(str)
+  if (prefixMatch) {
+    const smallString = prefixMatch[1]
+    if (smallString.length <= len + 3) {
+      return smallString
+    }
+  }
+  return `${str.substring(0, len)}...`
+}
 
 const Flyer = ({
   authenticated,
@@ -78,23 +127,51 @@ const Flyer = ({
   updateSubscriptions,
 }) => {
   const [clubs, setClubs] = useState(null)
+  const [count, setCount] = useState(0)
+  const [failedClubs, setFailedClubs] = useState([])
 
   useEffect(() => {
-    Promise.all(
-      query.club.split(',').map(club => {
-        return doApiRequest(`/clubs/${club}/?format=json`).then(resp =>
-          resp.json()
-        )
+    const fetchClub = (club, tries = 3) => {
+      const url = `/clubs/${club}/?format=json`
+      return doApiRequest(url).then(resp => {
+        if (resp.ok) {
+          setCount(prevCount => prevCount + 1)
+          return resp.json()
+        }
+        if (resp.status === 502 && tries > 0) {
+          // If we get a Gateway Timeout, wait a while and try one more time
+          return new Promise(resolve => {
+            setTimeout(resolve, 5000 * Math.random())
+          }).then(() => fetchClub(club, tries - 1))
+        }
+        setCount(prevCount => prevCount + 1)
+        setFailedClubs(prevFailed => prevFailed.concat(club))
+        return null
       })
-    ).then(setClubs)
+    }
+
+    Promise.all(query.club.split(',').map(fetchClub)).then(setClubs)
   }, [query])
+
+  const totalClubCount = query.club.split(',').length
 
   if (clubs === null) {
     return (
       <Container>
         <div className="has-text-centered">
           <Title>Loading...</Title>
-          <Text>Loading club flyer(s)...</Text>
+          <Text>
+            Loading club flyer(s){' '}
+            <i>
+              ({count}/{totalClubCount})
+            </i>
+            ...
+          </Text>
+          <progress
+            className="progress"
+            value={count}
+            max={totalClubCount}
+          ></progress>
         </div>
       </Container>
     )
@@ -114,7 +191,20 @@ const Flyer = ({
   return (
     <>
       <Head />
+      {failedClubs.length && (
+        <ErrorPane>
+          <b>Failed to load clubs:</b>
+          <ul>
+            {failedClubs.map((c, i) => (
+              <li key={i}>{c}</li>
+            ))}
+          </ul>
+        </ErrorPane>
+      )}
       {clubs.map(club => {
+        if (club === null) {
+          return null
+        }
         const { image_url: image } = club
         return (
           <>
@@ -123,8 +213,10 @@ const Flyer = ({
                 <div className="column is-paddingless">
                   <CenterContainer>
                     <Margin>
-                      {image && <Image src={image} />}
-                      <BigTitle>{club.name}</BigTitle>
+                      {image && <LogoImage src={image} />}
+                      <BigTitle>
+                        {truncate(club.name, image ? 52 : 100)}
+                      </BigTitle>
                     </Margin>
                   </CenterContainer>
                 </div>
@@ -134,7 +226,7 @@ const Flyer = ({
                       <Center>
                         <MediumTitle>
                           For more info, or to bookmark or subscribe to the{' '}
-                          {club.name} mailing list:
+                          {truncate(club.name)} mailing list:
                         </MediumTitle>
                         <Gradient>
                           <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} />
