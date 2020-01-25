@@ -52,7 +52,7 @@ const SelectedManager = ({ value, onClick }) => (
   </HoverListElement>
 )
 
-const Reports = () => {
+const Reports = ({ nameToCode }) => {
   const fields = {
     // TODO: Get this from the server.
     Basics: [
@@ -83,12 +83,6 @@ const Reports = () => {
       'Officer email(s)',
     ],
   }
-
-  const [nameToCode, setNameToCode] = useState([])
-
-  useEffect(() => {
-    doApiRequest('/clubs/fields/?format=json').then(resp => resp.json()).then(setNameToCode)
-  }, [])
 
   const [includedFields, setIncludedFields] = useState(
     (() => {
@@ -224,6 +218,13 @@ const Reports = () => {
       </Container>
     </div>
   )
+}
+
+Reports.getInitialProps = async props => {
+  const fieldsReq = await doApiRequest('/clubs/fields/?format=json')
+  const fieldsRes = await fieldsReq.json()
+
+  return { nameToCode: fieldsRes }
 }
 
 export default renderPage(Reports)
