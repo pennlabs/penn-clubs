@@ -201,7 +201,7 @@ const Flyer = ({
   return (
     <>
       <Head />
-      {failedClubs.length && (
+      {!!failedClubs.length && (
         <ErrorPane>
           <b>Failed to load clubs:</b>
           <ul>
