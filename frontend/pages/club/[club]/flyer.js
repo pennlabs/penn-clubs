@@ -69,15 +69,19 @@ const PrintPage = s.div`
   }
 `
 
-const truncate = (str, len = 51) => {
+const truncate = (str, len = 52) => {
   if (str.length <= len) {
     return str
   }
-  const parenMatch = /^(.*)\s*\(.*\)$/.exec(str)
+  const parenMatch = /^(.*)\s*\((.*)\)\s*$/.exec(str)
   if (parenMatch) {
     const smallString = parenMatch[1]
     if (smallString.length <= len) {
       return smallString
+    }
+    const smallParenString = parenMatch[2]
+    if (smallParenString <= len) {
+      return smallParenString
     }
   }
   return `${str.substring(0, len)}...`
@@ -158,7 +162,7 @@ const Flyer = ({
                     <Margin>
                       {image && <Image src={image} />}
                       <BigTitle>
-                        {truncate(club.name, image ? 51 : 100)}
+                        {truncate(club.name, image ? 52 : 100)}
                       </BigTitle>
                     </Margin>
                   </CenterContainer>
