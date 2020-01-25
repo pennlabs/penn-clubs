@@ -1,11 +1,9 @@
 import s from 'styled-components'
-import { ProfilePic, StrongText } from '../common'
+import { ProfilePic } from '../common'
 import { BORDER } from '../../constants/colors'
 
 import {
   mediaMinWidth,
-  mediaMaxWidth,
-  TABLET,
   PHONE,
 } from '../../constants/measurements'
 
