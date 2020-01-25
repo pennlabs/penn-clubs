@@ -81,7 +81,6 @@ const PrintPage = s.div`
   background-color: white;
   display: flex;
   overflow: hidden;
-  position: relative;
 
   page-break-after: always;
 
@@ -90,50 +89,21 @@ const PrintPage = s.div`
   }
 `
 
-const AboutText = s.div`
-  position: absolute;
-  bottom: 7px;
-  right: 7px;
-  font-size: 0.7em;
-  color: #aaa;
-`
-
-const truncate = (str, len = 54) => {
-  if (str.length <= len + 3) {
+const truncate = (str, len = 52) => {
+  if (str.length <= len) {
     return str
   }
-
-  // take words before or in parentheses if too long
   const parenMatch = /^(.*)\s*\((.*)\)\s*$/.exec(str)
   if (parenMatch) {
     const smallString = parenMatch[1]
-    if (smallString.length <= len + 3) {
+    if (smallString.length <= len) {
       return smallString
     }
     const smallParenString = parenMatch[2]
-    if (smallParenString <= len + 3) {
+    if (smallParenString <= len) {
       return smallParenString
     }
   }
-
-  // remove prefix if exists and string too long
-  const prefixMatch = /^University of Pennsylvania\s*(.*)\s*$/i.exec(str)
-  if (prefixMatch) {
-    const smallString = prefixMatch[1]
-    if (smallString.length <= len + 3) {
-      return smallString
-    }
-  }
-
-  // remove suffix if it exists and string is too long
-  const suffixMatch = /^(.*)\s*at the University of Pennsylvania$/i.exec(str)
-  if (suffixMatch) {
-    const smallString = suffixMatch[1]
-    if (smallString.length <= len + 3) {
-      return smallString
-    }
-  }
-
   return `${str.substring(0, len)}...`
 }
 
@@ -148,26 +118,14 @@ const Flyer = ({
 }) => {
   const [clubs, setClubs] = useState(null)
   const [count, setCount] = useState(0)
-  const [failedClubs, setFailedClubs] = useState([])
-  const [showErrorPane, setShowErrorPane] = useState(false)
 
   useEffect(() => {
-    const fetchClub = (club, tries) => {
-      const url = `/clubs/${club}/?format=json`
-      return doApiRequest(url).then(resp => {
-        if (resp.ok) {
+    Promise.all(
+      query.club.split(',').map(club => {
+        return doApiRequest(`/clubs/${club}/?format=json`).then(resp => {
           setCount(prevCount => prevCount + 1)
-          return resp.json()
-        } else if (resp.status === 502 && tries > 0) {
-          // If we get a Gateway Timeout, wait a while and try one more time
-          return new Promise(resolve => {
-            setTimeout(resolve.bind(null), 5000 * Math.random())
-          }).then(() => fetchClub(club, tries - 1))
-        } else {
-          setCount(prevCount => prevCount + 1)
-          setFailedClubs(prevFailed => prevFailed.concat(club))
-          return null
-        }
+          return resp.ok ? resp.json() : null
+        })
       })
     }
 
@@ -240,7 +198,7 @@ const Flyer = ({
                 <div className="column is-paddingless">
                   <CenterContainer>
                     <Margin>
-                      {image && <LogoImage src={image} />}
+                      {image && <Image src={image} />}
                       <BigTitle>
                         {truncate(club.name, image ? 52 : 100)}
                       </BigTitle>

@@ -1,7 +1,8 @@
 import s from 'styled-components'
-import ClubTabTable from './ClubTabTable'
-import ClubTabCards from './ClubTabCards'
-import { mediaMinWidth, mediaMaxWidth, SM } from '../../constants/measurements'
+import Toggle from './Toggle'
+import { EmptyState, Icon, Center, Text } from '../common'
+import ReactTooltip from 'react-tooltip'
+import Link from 'next/link'
 
 const ClubTable = s(ClubTabTable)`
   ${mediaMaxWidth(SM)} {
@@ -9,11 +10,9 @@ const ClubTable = s(ClubTabTable)`
   }
 `
 
-const ClubCards = s(ClubTabCards)`
-  ${mediaMinWidth(SM)} {
-    display: none !important;
-  }
-`
+export default props => {
+  const { userInfo, togglePublic, toggleActive, leaveClub } = props
+  const isMemberOfAnyClubs = userInfo && userInfo.membership_set && userInfo.membership_set.length
 
   return isMemberOfAnyClubs ? (
     <Table className="table is-fullwidth">
