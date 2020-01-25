@@ -51,7 +51,7 @@ const FeatherTriangle = () => (
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[array[i], array[j]] = [array[j], array[i]]
+    [array[i], array[j]] = [array[j], array[i]]
   }
 }
 
@@ -70,7 +70,7 @@ const Testimonials = props => {
   }, [originalData])
 
   if (!data || !data.length) {
-    return <></>
+    return null
   }
 
   return (
@@ -78,8 +78,8 @@ const Testimonials = props => {
       <StrongText>Member Experiences</StrongText>
       {expanded ? (
         data.map(({ text }, i) => (
-          <Wrapper>
-            <Quote key={i}>{text}</Quote>
+          <Wrapper key={i}>
+            <Quote>{text}</Quote>
             <FeatherTriangle />
           </Wrapper>
         ))
