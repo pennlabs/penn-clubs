@@ -102,9 +102,27 @@ const Flyer = ({
   useEffect(() => {
     Promise.all(
       query.club.split(',').map(club => {
-        return doApiRequest(`/clubs/${club}/?format=json`).then(resp => {
-          setCount(prevCount => prevCount + 1)
-          return resp.ok ? resp.json() : null
+        const url = `/clubs/${club}/?format=json`
+        return doApiRequest(url).then(resp => {
+          if (resp.ok) {
+            setCount(prevCount => prevCount + 1)
+            return resp.json()
+          }
+          if (resp.status == 502) {
+            // If we get a Gateway Timeout, wait a while and try one more time
+            return new Promise(resolve => {
+              setTimeout(resolve, 5000 * Math.random())
+            }).then(() => {
+              return doApiRequest(url).then(resp => {
+                setCount(prevCount => prevCount + 1)
+                if (resp.ok) {
+                  return resp.json()
+                }
+                return null
+              })
+            })
+          }
+          return null
         })
       })
     ).then(setClubs)
