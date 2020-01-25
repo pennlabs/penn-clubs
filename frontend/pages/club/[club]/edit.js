@@ -341,7 +341,7 @@ class ClubForm extends Component {
       )
     }
 
-    if (this.state.isEdit && club === null) {
+    if (isEdit && club === null) {
       return <div />
     }
 
