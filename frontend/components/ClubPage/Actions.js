@@ -107,7 +107,7 @@ const Actions = ({
           />
         </ActionWrapper>
         <Icon
-          name={'more-horizontal'}
+          name="more-horizontal"
           style={{ margin: '5px 0px 0px 20px' }}
           alt="see more"
         />
