@@ -6,7 +6,6 @@ import {
   BORDER,
   MEDIUM_GRAY,
   BLACK_ALPHA,
-  ALLBIRDS_GRAY,
 } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
 
