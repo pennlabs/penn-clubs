@@ -81,7 +81,8 @@ class Form extends Component {
   }
 
   confirmExit(e) {
-    if (this.state.edited) {
+    const { edited } = this.state
+    if (edited) {
       e.preventDefault()
       e.returnValue = UNSAVED_MESSAGE
       return UNSAVED_MESSAGE
