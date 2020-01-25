@@ -22,7 +22,7 @@ import {
   Text,
   Container,
 } from '../../../components/common'
-import { SNOW, WHITE, DARK_GRAY } from '../../../constants/colors'
+import { SNOW, WHITE } from '../../../constants/colors'
 
 const Image = s.img`
   height: 86px;
