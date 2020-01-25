@@ -3,7 +3,7 @@ import { BODY_FONT } from '../../constants/styles'
 import { CLUB_ROUTE } from '../../constants/routes'
 import s from 'styled-components'
 import Toggle from './Toggle'
-import { Icon } from '../common'
+import { EmptyState, Icon, Center, Text } from '../common'
 import ReactTooltip from 'react-tooltip'
 import Link from 'next/link'
 
@@ -16,13 +16,9 @@ const Table = s.table`
 
 export default props => {
   const { userInfo, togglePublic, toggleActive, leaveClub } = props
-  const isMemberOfAnyClubs = !(
-    userInfo &&
-    userInfo.membership_set &&
-    userInfo.membership_set.length
-  )
+  const isMemberOfAnyClubs = userInfo && userInfo.membership_set && userInfo.membership_set.length
 
-  return (
+  return isMemberOfAnyClubs ? (
     <Table className="table is-fullwidth">
       <thead>
         <tr>
@@ -67,55 +63,56 @@ export default props => {
         </tr>
       </thead>
       <tbody>
-        {isMemberOfAnyClubs ? (
-          <tr>
-            <td className="has-text-grey" colSpan="4">
-              You are not a member of any clubs yet.
+        {userInfo.membership_set.map(item => (
+          <tr key={item.code}>
+            <td>
+              <Link
+                href={CLUB_ROUTE()}
+                as={CLUB_ROUTE(item.code)}
+              >
+                <a>{item.name}</a>
+              </Link>
+            </td>
+            <td>{item.title}</td>
+            <td>{item.role_display}</td>
+            <td>
+              <Toggle
+                club={item}
+                active={item.active}
+                toggle={club => toggleActive(club)}
+              />
+            </td>
+            <td>
+              <Toggle
+                club={item}
+                active={item.public}
+                toggle={club => togglePublic(club)}
+              />
+            </td>
+            <td>
+              {item.role_display === 'Admin' ? (
+                <button className="button is-small">Manage</button>
+              ) : (
+                <button
+                  className="button is-small"
+                  onClick={() => leaveClub(item)}
+                >
+                  Leave
+                </button>
+              )}
             </td>
           </tr>
-        ) : (
-          userInfo.membership_set.map(item => (
-            <tr key={item.code}>
-              <td>
-                <Link
-                  href={CLUB_ROUTE()}
-                  as={CLUB_ROUTE(item.code)}
-                >
-                  <a>{item.name}</a>
-                </Link>
-              </td>
-              <td>{item.title}</td>
-              <td>{item.role_display}</td>
-              <td>
-                <Toggle
-                  club={item}
-                  active={item.active}
-                  toggle={club => toggleActive(club)}
-                />
-              </td>
-              <td>
-                <Toggle
-                  club={item}
-                  active={item.public}
-                  toggle={club => togglePublic(club)}
-                />
-              </td>
-              <td>
-                {item.role_display === 'Admin' ? (
-                  <button className="button is-small">Manage</button>
-                ) : (
-                  <button
-                    className="button is-small"
-                    onClick={() => leaveClub(item)}
-                  >
-                    Leave
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))
-        )}
+        ))}
       </tbody>
     </Table>
+  ) : (
+      <>
+        <EmptyState name="button" />
+        <Center>
+          <Text isGray>
+            You are not a member of any clubs yet.
+          </Text>
+        </Center>
+      </>
   )
 }

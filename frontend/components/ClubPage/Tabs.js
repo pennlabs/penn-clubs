@@ -1,7 +1,14 @@
 import { EMPTY_DESCRIPTION } from '../../utils'
+import { EmptyState, Center } from '../common'
 import TabView from '../TabView'
 
-export default props => (
+export default ({
+  club: {
+    description,
+    how_to_get_involved: involvedText,
+    members,
+  },
+}) => (
   <TabView
     tabs={[
       {
@@ -11,16 +18,16 @@ export default props => (
             <div
               style={{ whiteSpace: 'pre-wrap' }}
               dangerouslySetInnerHTML={{
-                __html: props.club.description || EMPTY_DESCRIPTION,
+                __html: description || EMPTY_DESCRIPTION,
               }}
             />
-            {props.club.how_to_get_involved && (
+            {involvedText && (
               <div>
                 <div style={{ marginTop: 20 }}>
                   <b>Getting Involved</b>
                 </div>
                 <div style={{ whiteSpace: 'pre-wrap' }}>
-                  {props.club.how_to_get_involved}
+                  {involvedText}
                 </div>
               </div>
             )}
@@ -31,8 +38,8 @@ export default props => (
         name: 'members',
         content: (
           <div>
-            {props.club.members.length ? (
-              props.club.members.map((a, i) => (
+            {members.length ? (
+              members.map((a, i) => (
                 <div className="media" key={i}>
                   <div className="media-left">
                     <figure className="has-background-light image is-48x48"></figure>
@@ -53,10 +60,16 @@ export default props => (
                 </div>
               ))
             ) : (
-              <p>
-                No club members have linked their accounts on Penn Clubs yet.
-                Check back later for a list of club members!
-              </p>
+                <>
+                  <Center>
+                    <EmptyState name="hiring" size="25%" style={{ marginTop: 0, marginBottom: 0 }} />
+                    <p>
+                      No club members have linked their accounts on Penn Clubs yet.
+                      <br />
+                      Check back later for a list of club members!
+                    </p>
+                  </Center>
+                </>
             )}
           </div>
         ),
