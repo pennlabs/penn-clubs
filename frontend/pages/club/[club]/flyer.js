@@ -112,7 +112,7 @@ const truncate = (str, len = 54) => {
       return smallString
     }
     const smallParenString = parenMatch[2]
-    if (smallParenString <= len + 3) {
+    if (smallParenString.length <= len + 3) {
       return smallParenString
     }
   }
