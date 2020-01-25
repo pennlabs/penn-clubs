@@ -124,8 +124,17 @@ const Flyer = ({
       query.club.split(',').map(club => {
         return doApiRequest(`/clubs/${club}/?format=json`).then(resp => {
           setCount(prevCount => prevCount + 1)
-          return resp.ok ? resp.json() : null
-        })
+          return resp.json()
+        } else if (resp.status === 502 && tries > 0) {
+          // If we get a Gateway Timeout, wait a while and try one more time
+          return new Promise(resolve => {
+            setTimeout(resolve.bind(null), 10000 * Math.random())
+          }).then(() => fetchClub(club, tries - 1))
+        } else {
+          setCount(prevCount => prevCount + 1)
+          setFailedClubs(prevFailed => prevFailed.concat(club))
+          return null
+        }
       })
     }
 
@@ -142,7 +151,7 @@ const Flyer = ({
           <Text>
             Loading club flyer(s){' '}
             <i>
-              ({count}/{totalClubCount})
+              ({count}/{totalClubCount}, {failedClubs.length} failed)
             </i>
             ...
           </Text>
