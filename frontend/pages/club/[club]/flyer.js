@@ -126,7 +126,7 @@ const truncate = (str, len = 54) => {
   }
 
   // remove suffix if it exists and string is too long
-  const suffixMatch = /^(.*)\s*at the University of Pennsylvania$/i.exec(str)
+  const suffixMatch = /^(.*)\s*at the University of Pennsylvania\s*$/i.exec(str)
   if (suffixMatch) {
     const smallString = suffixMatch[1]
     if (smallString.length <= len + 3) {
