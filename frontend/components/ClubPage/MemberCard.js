@@ -35,6 +35,7 @@ const Label = s.div`
 
 const MemberInfo = s.div`
   margin-left: 15px;
+
   ${mediaMinWidth(PHONE)} {
     margin-left: 0px;
   }
