@@ -69,8 +69,18 @@ const PrintPage = s.div`
   }
 `
 
-const truncate = (str, len = 50) => {
-  return str.length > len ? `${str.substring(0, len)}...` : str
+const truncate = (str, len = 51) => {
+  if (str.length <= len) {
+    return str
+  }
+  const parenMatch = /^(.*)\s*\(.*\)$/.exec(str)
+  if (parenMatch) {
+    const smallString = parenMatch[1]
+    if (smallString.length <= len) {
+      return smallString
+    }
+  }
+  return `${str.substring(0, len)}...`
 }
 
 const Flyer = ({
@@ -110,7 +120,11 @@ const Flyer = ({
             </i>
             ...
           </Text>
-          <progress className="progress" value={count} max={totalClubCount}></progress>
+          <progress
+            className="progress"
+            value={count}
+            max={totalClubCount}
+          ></progress>
         </div>
       </Container>
     )
@@ -143,7 +157,9 @@ const Flyer = ({
                   <CenterContainer>
                     <Margin>
                       {image && <Image src={image} />}
-                      <BigTitle>{truncate(club.name, image ? 50 : 100)}</BigTitle>
+                      <BigTitle>
+                        {truncate(club.name, image ? 51 : 100)}
+                      </BigTitle>
                     </Margin>
                   </CenterContainer>
                 </div>
