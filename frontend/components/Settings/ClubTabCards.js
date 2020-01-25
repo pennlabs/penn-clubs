@@ -23,7 +23,7 @@ const CardRow = s.span`
 `
 
 const CardDivider = s.hr`
-  margin: 6px;
+  margin: 0.4rem;
 `
 
 const CardTitle = s.p`
