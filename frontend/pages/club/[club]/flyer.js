@@ -69,19 +69,30 @@ const PrintPage = s.div`
   }
 `
 
-const truncate = (str, len = 52) => {
-  if (str.length <= len) {
+const truncate = (str, len = 54) => {
+  if (str.length <= len + 3) {
     return str
   }
+
+  // take words before or in parentheses if too long
   const parenMatch = /^(.*)\s*\((.*)\)\s*$/.exec(str)
   if (parenMatch) {
     const smallString = parenMatch[1]
-    if (smallString.length <= len) {
+    if (smallString.length <= len + 3) {
       return smallString
     }
     const smallParenString = parenMatch[2]
-    if (smallParenString <= len) {
+    if (smallParenString <= len + 3) {
       return smallParenString
+    }
+  }
+
+  // remove prefix if exists and string too long
+  const prefixMatch = /^University of Pennsylvania\s*(.*)\s*$/i.exec(str)
+  if (prefixMatch) {
+    const smallString = prefixMatch[1]
+    if (smallString.length <= len + 3) {
+      return smallString
     }
   }
   return `${str.substring(0, len)}...`
