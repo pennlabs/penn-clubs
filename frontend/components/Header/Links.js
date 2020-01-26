@@ -9,8 +9,7 @@ import {
   WHITE_ALPHA,
   CLUBS_RED,
   CLUBS_RED_DARK,
-  MEDIUM_GRAY,
-  DARK_GRAY,
+  CLUBS_NAVY,
   BORDER,
 } from '../../constants/colors'
 import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
@@ -47,15 +46,9 @@ const LoginButton = s.a`
 
 const StyledLink = s.a`
   padding: 14px 20px;
-  color: ${MEDIUM_GRAY} !important;
+  color: ${CLUBS_NAVY} !important;
   display: inline-block;
   cursor: pointer;
-
-  &:hover,
-  &:focus,
-  &:active {
-    color: ${DARK_GRAY} !important;
-  }
 
   ${mediaMaxWidth(MD)} {
     text-align: center;

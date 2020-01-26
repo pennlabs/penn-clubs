@@ -5,7 +5,7 @@ import Heading from './Head'
 import Burger from './Burger'
 import Feedback from './Feedback'
 import Links from './Links'
-import { WHITE, CLUBS_BLUE, DARK_GRAY, BORDER } from '../../constants/colors'
+import { WHITE, CLUBS_NAVY, BORDER } from '../../constants/colors'
 import {
   NAV_HEIGHT,
   mediaMaxWidth,
@@ -49,17 +49,8 @@ const Logo = s.img`
   }
 `
 
-const BetaTag = s.span`
-  margin-left: 10px;
-  border-radius: 25px;
-  background-color: ${CLUBS_BLUE} !important;
-  color: ${WHITE} !important;
-  margin-top: 2px;
-  box-shadow: 0 0px 8px rgba(25, 89, 130, .4);
-`
-
 const Title = s.h1`
-  color: ${DARK_GRAY};
+  color: ${CLUBS_NAVY};
   padding-left: 15px;
   margin-bottom: 0 !important;
 `
@@ -80,9 +71,7 @@ const Header = ({ authenticated, userInfo }) => {
           <Link href={HOME_ROUTE}>
             <a className="navbar-item" style={{ padding: 0 }}>
               <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
-
               <Title className="title is-size-4">Penn Clubs</Title>
-              <BetaTag className="tag is-rounded">Beta</BetaTag>
             </a>
           </Link>
 
