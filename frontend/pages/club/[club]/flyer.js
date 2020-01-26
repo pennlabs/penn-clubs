@@ -4,7 +4,7 @@ import s from 'styled-components'
 import { doApiRequest, getApiUrl } from '../../../utils'
 import Head from '../../../components/Header/Head'
 import { Title, Text, Container, Center } from '../../../components/common'
-import { FLYER_BLUE, FLYER_NAVY, FLYER_PINK } from '../../../constants/colors'
+import { FLYER_NAVY } from '../../../constants/colors'
 
 const Image = s.img`
   padding: 0;

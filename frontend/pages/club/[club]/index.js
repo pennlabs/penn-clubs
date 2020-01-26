@@ -3,12 +3,13 @@ import s from 'styled-components'
 import { useState, useEffect } from 'react'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
-import Tabs from '../../../components/ClubPage/Tabs'
+import Description from '../../../components/ClubPage/Description'
 import Header from '../../../components/ClubPage/Header'
 import { DesktopActions, MobileActions } from '../../../components/ClubPage/Actions'
 import InfoBox from '../../../components/ClubPage/InfoBox'
 import Testimonials from '../../../components/ClubPage/Testimonials'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
+import MemberList from '../../../components/ClubPage/MemberList'
 import {
   Card,
   StrongText,
@@ -28,7 +29,14 @@ const Image = s.img`
   object-fit: contain;
 `
 
-const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscriptions, updateSubscriptions }) => {
+const Club = ({
+  club: initialClub,
+  userInfo,
+  favorites,
+  updateFavorites,
+  subscriptions,
+  updateSubscriptions,
+}) => {
   const [club, setClub] = useState(initialClub)
 
   useEffect(() => {
@@ -55,7 +63,6 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
 
   return (
     <WideContainer background={SNOW} fullHeight>
-
       <div className="columns">
         <div className="column">
           <Card bordered style={{ marginBottom: '1rem', background: '#ffffff', paddingLeft: '1rem' }}>
@@ -81,8 +88,10 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
             updateSubscriptions={updateSubscriptions}
           />
           <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
-            <Tabs club={club} />
+            <Description club={club} />
           </Card>
+          <StrongText>Members</StrongText>
+          <MemberList club={club} />
         </div>
         <div className="column is-one-third">
           <DesktopActions
@@ -97,7 +106,7 @@ const Club = ({ club: initialClub, userInfo, favorites, updateFavorites, subscri
             <StrongText>Basic Info</StrongText>
             <InfoBox club={club} />
             <br />
-            <StrongText>Social</StrongText>
+            <StrongText>Contact</StrongText>
             <SocialIcons club={club} />
           </Card>
           <Testimonials data={club.testimonials} />
