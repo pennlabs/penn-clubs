@@ -43,10 +43,10 @@ class Form extends Component {
           } else if (type === 'html') {
             this.state[`editorState-${name}`] = value
               ? EditorState.createWithContent(
-                ContentState.createFromBlockArray(
-                  htmlToDraft(value).contentBlocks
+                  ContentState.createFromBlockArray(
+                    htmlToDraft(value).contentBlocks
+                  )
                 )
-              )
               : EditorState.createEmpty()
           } else if (type === 'multiselect') {
             this.state[`field-${name}`] = (value || []).map(converter)
@@ -64,6 +64,7 @@ class Form extends Component {
     this.onChange = this.onChange.bind(this)
     this.checkIfEdited = this.checkIfEdited.bind(this)
     this.confirmExit = this.confirmExit.bind(this)
+    this.getFieldData = this.getFieldData.bind(this)
     this.confirmRouteChange = this.confirmRouteChange.bind(this)
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
@@ -103,10 +104,10 @@ class Form extends Component {
   }
 
   getAllFields(fields) {
-    const out = []
+    var out = []
     fields.forEach(item => {
       if (item.type === 'group') {
-        out.concat(this.getAllFields(item.fields))
+        out = out.concat(this.getAllFields(item.fields))
       } else {
         out.push(item)
       }
@@ -114,7 +115,7 @@ class Form extends Component {
     return out
   }
 
-  getFieldData(source, { type, reverser, converter }) {
+  getFieldData(name, source, { type, reverser, converter }) {
     const val = source[`field-${name}`]
     switch (type) {
       case 'multiselect':
@@ -126,7 +127,7 @@ class Form extends Component {
       case 'date':
         return val || null
       case 'file':
-        return (new FormData()).append('file', this.files[name].files[0])
+        return new FormData().append('file', this.files[name].files[0])
       default:
         return typeof converter === 'function' ? converter(val) : val
     }
@@ -135,7 +136,7 @@ class Form extends Component {
   getData(source) {
     const data = {}
     this.getAllFields(this.props.fields).forEach(({ name, ...field }) => {
-      data[name] = this.getFieldData(source, field)
+      data[name] = this.getFieldData(name, source, field)
     })
     return data
   }
