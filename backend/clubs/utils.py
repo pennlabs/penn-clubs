@@ -13,6 +13,8 @@ def html_to_text(html):
 
     Used for the text-only version of emails.
     """
+    if html is None:
+        return None
 
     def traverse(children):
         output = ""
