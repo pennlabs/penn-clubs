@@ -17,7 +17,7 @@ const Card = s.div`
   border: 1px solid ${BORDER};
   display: flex;
   flex-direction: row;
-  background-color: white;
+  background-color: ${WHITE};
 
   ${mediaMinWidth(PHONE)} {
     text-align: center;
