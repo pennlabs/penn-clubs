@@ -8,7 +8,7 @@ export const BLACK = '#000'
 export const BLACK_ALPHA = alpha => `rgba(0, 0, 0, ${alpha})`
 export const DARK_GRAY = '#4A4A4A'
 export const MEDIUM_GRAY = '#737373'
-export const LIGHT_GRAY = '#B2B2B2'
+export const LIGHT_GRAY = '#979797'
 export const FOCUS_GRAY = '#F0F0F0'
 export const HOVER_GRAY = '#F8F8F8'
 export const BORDER = 'rgba(0, 0, 0, 0.1)'
@@ -34,12 +34,14 @@ export const LIGHTER_RED = '#f7e6e6'
 
 export const CLUBS_PURPLE = '#66C1FF'
 export const CLUBS_GREY = '#414654'
-export const CLUBS_GREY_LIGHT = '#636773'
-export const CLUBS_RED = '#FF776D'
-export const CLUBS_RED_DARK = '#e86258'
+export const CLUBS_GREY_LIGHT = '#979797'
+export const CLUBS_NAVY = '#1f2049'
+export const CLUBS_RED = '#ef4c5f'
+export const CLUBS_RED_DARK = '#e03a4e'
 export const CLUBS_YELLOW = '#FFCF59'
-export const CLUBS_BLUE = '#60B8F2'
-export const CLUBS_DEEP_BLUE = '#5ab0e8'
+export const CLUBS_BLUE = '#4954f4'
+export const CLUBS_LIGHT_BLUE = '#e1e3ff'
+export const CLUBS_DEEP_BLUE = '#2c37d1'
 
 export const PROPIC_BACKGROUND = [
   '#D0F0FD',
