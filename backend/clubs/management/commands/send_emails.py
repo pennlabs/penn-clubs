@@ -41,9 +41,11 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "emails",
+            nargs="?",
             type=str,
             help="The CSV file with club name to email mapping. First column is club name"
             + "and second column is emails.",
+            default=None,
         )
         parser.add_argument(
             "--dry-run",
@@ -97,24 +99,36 @@ class Command(BaseCommand):
 
         email_file = kwargs["emails"]
 
-        if not os.path.isfile(email_file):
-            raise CommandError(f'Email file "{email_file}" does not exist!')
+        # verify email file
+        if email_file is not None:
+            if not os.path.isfile(email_file):
+                raise CommandError(f'Email file "{email_file}" does not exist!')
+        elif only_sheet:
+            raise CommandError("Cannot specify only sheet option without an email file!")
+        else:
+            self.stdout.write(
+                self.style.WARNING(
+                    "No email spreadsheet file specified! Only using database information to send emails."
+                )
+            )
 
-        with open(email_file, "r") as f:
-            for line in csv.reader(f):
-                raw_name = line[0].strip()
-                club = fuzzy_lookup_club(raw_name)
+        # load email file
+        if email_file is not None:
+            with open(email_file, "r") as f:
+                for line in csv.reader(f):
+                    raw_name = line[0].strip()
+                    club = fuzzy_lookup_club(raw_name)
 
-                if club is not None:
-                    if verbosity >= 2:
-                        self.stdout.write(f"Mapped {raw_name} -> {club.name} ({club.code})")
-                    clubs_sent += 1
-                    emails[club.id] = [x.strip() for x in line[1].split(",")]
-                else:
-                    clubs_missing += 1
-                    self.stdout.write(
-                        self.style.WARNING(f"Could not find club matching {raw_name}!")
-                    )
+                    if club is not None:
+                        if verbosity >= 2:
+                            self.stdout.write(f"Mapped {raw_name} -> {club.name} ({club.code})")
+                        clubs_sent += 1
+                        emails[club.id] = [x.strip() for x in line[1].split(",")]
+                    else:
+                        clubs_missing += 1
+                        self.stdout.write(
+                            self.style.WARNING(f"Could not find club matching {raw_name}!")
+                        )
 
         # send out emails
         for club in clubs:
