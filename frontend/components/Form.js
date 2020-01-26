@@ -70,23 +70,46 @@ class Form extends Component {
     this.handleSubmit = this.handleSubmit.bind(this)
   }
 
-  confirmRouteChange() {
-    const { edited } = this.state
-    const { router } = Router
-    if (edited && !confirm(UNSAVED_MESSAGE)) {
-      router.abortComponentLoad()
-      router.events.emit('routeChangeError')
-      throw 'Abort link navigation - ignore this error.' // eslint-disable-line
-    }
-  }
-
-  confirmExit(e) {
-    const { edited } = this.state
-    if (edited) {
-      e.preventDefault()
-      e.returnValue = UNSAVED_MESSAGE
-      return UNSAVED_MESSAGE
-    }
+  setDefaults(fields) {
+    const { defaults } = this.props
+    fields.forEach(({ name, type, converter, fields }) => {
+      if (type === 'html') {
+        if (process.browser) {
+          if (defaults && defaults[name]) {
+            this.state['editorState-' + name] = EditorState.createWithContent(
+              ContentState.createFromBlockArray(
+                htmlToDraft(defaults[name]).contentBlocks
+              )
+            )
+          } else {
+            this.state['editorState-' + name] = EditorState.createEmpty()
+          }
+        }
+      }
+      if (type !== 'group') {
+        if (type === 'multiselect') {
+          this.state[`field-${name}`] = defaults
+            ? (defaults[name] || []).map(converter)
+            : []
+        } else if (type === 'select') {
+          this.state[`field-${name}`] = defaults
+            ? converter(defaults[name])
+            : null
+        } else {
+          this.state[`field-${name}`] = defaults ? defaults[name] || '' : ''
+        }
+      } else {
+        this.setDefaults(fields)
+      }
+      if (type == "datetime-local") {
+        if (type == 'datetime-local' && this.state['field-' + name]) {
+          // This is a pretty gross hack to reformat the datetime-local by
+          // manipulating the string -- come back to this and try and use
+          // the available datetime functions (or import a package that will)
+          this.state['field-' + name] = this.state['field-' + name].substring(0, this.state['field-' + name].length - 6)
+        }
+      }
+    })
   }
 
   componentDidMount() {
@@ -171,14 +194,6 @@ class Form extends Component {
     let inpt = null
 
     if (['text', 'url', 'email', 'date', 'datetime-local', 'number'].includes(type)) {
-      if (type == 'datetime-local') {
-        // This is a pretty gross hack to reformat the datetime-local by
-        // manipulating the string -- come back to this and try and use
-        // the available datetime functions (or import a package that will)
-        this.state['field-' + name] = new Date(this.state['field-' + name]).toISOString()
-        this.state['field-' + name] = this.state['field-' + name].replace('Z','')
-      }
-
       inpt = (
         <input
           className="input"
