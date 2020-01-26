@@ -2,6 +2,7 @@ import { Component } from 'react'
 import { withRouter } from 'next/router'
 import Link from 'next/link'
 import Select from 'react-select'
+import TimeAgo from 'react-timeago'
 
 import renderPage from '../../../renderPage.js'
 import { CLUB_ROUTE, CLUB_FLYER_ROUTE } from '../../../constants/routes'
@@ -754,6 +755,7 @@ class ClubForm extends Component {
                       <th>Grad Year</th>
                       <th>School</th>
                       <th>Major</th>
+                      <th>Subscribed</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -775,6 +777,9 @@ class ClubForm extends Component {
                           ) : (
                             <Empty>None</Empty>
                           )}
+                        </td>
+                        <td>
+                          <TimeAgo date={item.created_at} />
                         </td>
                       </tr>
                     ))}

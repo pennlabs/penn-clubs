@@ -29,6 +29,7 @@
     "react-ga": "^2.6.0",
     "react-lazy-load": "^3.0.13",
     "react-select": "^3.0.4",
+    "react-timeago": "^4.4.0",
     "react-tooltip": "^3.11.1",
     "styled-components": "^4.4.1"
   },

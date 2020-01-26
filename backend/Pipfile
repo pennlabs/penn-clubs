@@ -13,7 +13,6 @@ flake8-quotes = "*"
 django-debug-toolbar = "*"
 django-extensions = "*"
 
-
 [packages]
 dj-database-url = "*"
 djangorestframework = "*"
@@ -35,6 +34,7 @@ phonenumbers = "*"
 qrcode = "*"
 drf-renderer-xlsx = "*"
 uwsgi = "*"
+python-dateutil = "*"
 
 [requires]
 python_version = "3"
