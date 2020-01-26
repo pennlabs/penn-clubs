@@ -33,6 +33,12 @@ def html_to_text(html):
                         else:
                             output += traverse([item])
                     continue
+                elif child.name == "img":
+                    if "alt" in child:
+                        output += f"[{child['alt']}]"
+                    else:
+                        output += "[Image]"
+                    continue
             if isinstance(child, NavigableString):
                 output += re.sub(r"([\t ])[\t ]*", r"\1", str(child))
             elif child.children:
