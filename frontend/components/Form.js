@@ -52,6 +52,10 @@ class Form extends Component {
             this.state[`field-${name}`] = (value || []).map(converter)
           } else if (type === 'select') {
             this.state[`field-${name}`] = value ? converter(value) : null
+          } else if (type === 'datetime-local') {
+            if (value) {
+              this.state[`field-${name}`] = value.substring(0, value.length - 6)
+            }
           } else {
             this.state[`field-${name}`] = value || ''
           }
@@ -171,7 +175,7 @@ class Form extends Component {
 
     let inpt = null
 
-    if (['text', 'url', 'email', 'date', 'number'].includes(type)) {
+    if (['text', 'url', 'email', 'date', 'datetime-local', 'number'].includes(type)) {
       inpt = (
         <input
           className="input"
