@@ -286,15 +286,14 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
+        id = json.loads(resp.content)["id"]
 
         # ensure event exists
         self.assertEqual(Event.objects.filter(name="Interest Meeting").count(), 1)
         self.assertEqual(Event.objects.get(name="Interest Meeting").creator, self.user5)
 
         # delete event
-        resp = self.client.delete(
-            reverse("club-events-detail", args=(self.club1.code, "interest-meeting"))
-        )
+        resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, id)))
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
     def test_testimonials(self):

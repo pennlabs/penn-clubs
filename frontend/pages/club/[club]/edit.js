@@ -76,6 +76,13 @@ class ClubForm extends Component {
       },
     ]
 
+    this.types = [
+      {
+        value: 1,
+        label: 'Recruitment',
+      },
+    ]
+
     this.state = {
       club: null,
       invites: [],
@@ -120,26 +127,6 @@ class ClubForm extends Component {
         })
       }
     })
-  }
-
-  deleteClub() {
-    if (
-      confirm(
-        `Are you absolutely sure you want to delete ${this.state.club.name}?`
-      )
-    ) {
-      doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
-        method: 'DELETE',
-      }).then(resp => {
-        if (!resp.ok) {
-          resp.json().then(err => {
-            this.notify(formatResponse(err))
-          })
-        } else {
-          this.props.router.push('/')
-        }
-      })
-    }
   }
 
   deleteMembership(member) {
@@ -491,6 +478,48 @@ class ClubForm extends Component {
       },
     ]
 
+    const event_fields = [
+      {
+        name: 'name',
+        type: 'text',
+        required: true,
+        help:
+          !this.state.isEdit &&
+          'Provide a descriptive name for the planned event.',
+      },
+      {
+        name: 'location',
+        required: true,
+        placeholder: 'Provide the event location',
+        type: 'text',
+      },
+      {
+        name: 'start_time',
+        required: true,
+        placeholder: 'Provide a start time for the event',
+        type: 'datetime-local',
+      },
+      {
+        name: 'end_time',
+        required: true,
+        placeholder: 'Provide an end time for the event',
+        type: 'datetime-local',
+      },
+      {
+        name: 'type',
+        type: 'select',
+        required: true,
+        choices: this.types,
+        converter: a => this.types.find(x => x.value === a),
+        reverser: a => a.value,
+      },
+      {
+        name: 'description',
+        placeholder: 'Type your event description here!',
+        type: 'html',
+      },
+    ]
+
     const tabs = [
       {
         name: 'info',
@@ -783,30 +812,44 @@ class ClubForm extends Component {
         ),
       },
       {
-        name: 'testimonials',
-        label: 'Testimonials',
+        name: 'resources',
+        label: 'Resources',
         content: (
-          <div className="card">
-            <div className="card-header">
-              <p className="card-header-title">Member Experiences</p>
+          <>
+            <div className="card" style={{ marginBottom: 20 }}>
+              <div className="card-header">
+                <p className="card-header-title">Member Experiences</p>
+              </div>
+              <div className="card-content">
+                <Text>
+                  Provde more information on what being in your organization is
+                  like from a member's point of view.
+                </Text>
+                <ModelForm
+                  baseUrl={`/clubs/${club.code}/testimonials/`}
+                  fields={[
+                    {
+                      name: 'text',
+                      type: 'textarea',
+                      hasLabel: false,
+                    },
+                  ]}
+                />
+              </div>
             </div>
-            <div className="card-content">
-              <Text>
-                Provde more information on what being in your organization is
-                like from a member's point of view.
-              </Text>
-              <ModelForm
-                baseUrl={`/clubs/${club.code}/testimonials/`}
-                fields={[
-                  {
-                    name: 'text',
-                    type: 'textarea',
-                    hasLabel: false,
-                  },
-                ]}
-              />
+            <div className="card">
+              <div className="card-header">
+                <p className="card-header-title">Events</p>
+              </div>
+              <div className="card-content">
+                <Text>Manage events for this club.</Text>
+                <ModelForm
+                  baseUrl={`/clubs/${club.code}/events/`}
+                  fields={event_fields}
+                />
+              </div>
             </div>
-          </div>
+          </>
         ),
       },
       {

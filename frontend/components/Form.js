@@ -52,6 +52,10 @@ class Form extends Component {
             this.state[`field-${name}`] = (value || []).map(converter)
           } else if (type === 'select') {
             this.state[`field-${name}`] = value ? converter(value) : null
+          } else if (type === 'datetime-local') {
+            if (value) {
+              this.state[`field-${name}`] = value.substring(0, value.length - 6)
+            }
           } else {
             this.state[`field-${name}`] = value || ''
           }
@@ -171,7 +175,11 @@ class Form extends Component {
 
     let inpt = null
 
-    if (['text', 'url', 'email', 'date', 'number'].includes(type)) {
+    if (
+      ['text', 'url', 'email', 'date', 'datetime-local', 'number'].includes(
+        type
+      )
+    ) {
       inpt = (
         <input
           className="input"
@@ -449,6 +457,7 @@ export class ModelForm extends Component {
 
     this.state = {
       objects: null,
+      newCount: 0,
     }
   }
 
@@ -471,7 +480,13 @@ export class ModelForm extends Component {
     return (
       <>
         {objects.map(object => (
-          <ModelItem key={object.id}>
+          <ModelItem
+            key={
+              typeof object.id === 'undefined'
+                ? `new-${object.tempId}`
+                : object.id
+            }
+          >
             <Form
               fields={fields}
               defaults={object}
@@ -531,9 +546,11 @@ export class ModelForm extends Component {
         ))}
         <span
           onClick={() =>
-            this.setState(({ objects }) => {
-              objects.push({})
-              return { objects }
+            this.setState(({ objects, newCount }) => {
+              objects.push({
+                tempId: newCount,
+              })
+              return { objects, newCount: newCount + 1 }
             })
           }
           className="button is-primary"

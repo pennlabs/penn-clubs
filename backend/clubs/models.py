@@ -119,13 +119,18 @@ class Event(models.Model):
     code = models.SlugField(max_length=255, unique=True, db_index=True)
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=255)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="events")
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     location = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
     description = models.TextField()
+
+    RECRUITMENT = 1
+    TYPES = ((RECRUITMENT, "Recruitment"),)
+
+    type = models.IntegerField(choices=TYPES, default=RECRUITMENT)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -5,9 +5,13 @@ import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
 import Description from '../../../components/ClubPage/Description'
 import Header from '../../../components/ClubPage/Header'
-import { DesktopActions, MobileActions } from '../../../components/ClubPage/Actions'
+import {
+  DesktopActions,
+  MobileActions,
+} from '../../../components/ClubPage/Actions'
 import InfoBox from '../../../components/ClubPage/InfoBox'
 import Testimonials from '../../../components/ClubPage/Testimonials'
+import Events from '../../../components/ClubPage/Events'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
 import MemberList from '../../../components/ClubPage/MemberList'
 import {
@@ -65,7 +69,14 @@ const Club = ({
     <WideContainer background={SNOW} fullHeight>
       <div className="columns">
         <div className="column">
-          <Card bordered style={{ marginBottom: '1rem', background: '#ffffff', paddingLeft: '1rem' }}>
+          <Card
+            bordered
+            style={{
+              marginBottom: '1rem',
+              background: '#ffffff',
+              paddingLeft: '1rem',
+            }}
+          >
             <Flex>
               {image && <Image src={image} />}
               <Header
@@ -109,6 +120,15 @@ const Club = ({
             <StrongText>Contact</StrongText>
             <SocialIcons club={club} />
           </Card>
+          {club.how_to_get_involved ? (
+            <Card bordered style={{ marginBottom: '1rem' }}>
+              <StrongText>How To Get Involved</StrongText>
+              <Text> {club.how_to_get_involved} </Text>
+            </Card>
+          ) : (
+            <div></div>
+          )}
+          <Events data={club.events} />
           <Testimonials data={club.testimonials} />
         </div>
       </div>
