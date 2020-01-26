@@ -59,7 +59,3 @@ export const PROPIC_TEXT = [
   '#541625',
   '#280A42',
 ]
-
-export const FLYER_BLUE = '#4954f4'
-export const FLYER_NAVY = '#1f2049'
-export const FLYER_PINK = '#ef4c5f'

@@ -4,7 +4,7 @@ import s from 'styled-components'
 import { doApiRequest, getApiUrl } from '../../../utils'
 import Head from '../../../components/Header/Head'
 import { Title, Text, Container, Center } from '../../../components/common'
-import { FLYER_NAVY } from '../../../constants/colors'
+import { CLUBS_BLUE, CLUBS_NAVY, CLUBS_RED } from '../../../constants/colors'
 
 const Image = s.img`
   padding: 0;
@@ -39,13 +39,13 @@ const BigTitle = s.h1`
   font-weight: 600;
   margin-top: 1rem;
   margin-bottom: 1rem;
-  color: ${FLYER_NAVY};
+  color: ${CLUBS_NAVY};
 `
 
 const MediumTitle = s.h2`
   font-size: 32px;
   font-weight: 500;
-  color: ${FLYER_NAVY};
+  color: ${CLUBS_NAVY};
 `
 
 const Gradient = s.div`
@@ -265,7 +265,7 @@ const Flyer = ({
                         <Gradient>
                           <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} />
                         </Gradient>
-                        <Text style={{ color: FLYER_NAVY }}>
+                        <Text style={{ color: CLUBS_NAVY }}>
                           <b>Or visit:</b>
                           <br />
                           <i>https://pennclubs.com/club/{club.code}/fair/</i>
