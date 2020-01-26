@@ -1,8 +1,9 @@
 import datetime
 from collections import OrderedDict
 
+import dateutil.parser
 from django.core.exceptions import FieldDoesNotExist, MultipleObjectsReturned, ObjectDoesNotExist
-from django.db.models import BooleanField, ManyToManyField
+from django.db.models import BooleanField, DateTimeField, ManyToManyField
 from django.db.models.fields.reverse_related import ManyToOneRel
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
@@ -190,6 +191,8 @@ class XLSXFormatterMixin(object):
             return self._many_to_many_formatter
         elif isinstance(field_object, BooleanField):
             return lambda x: str(bool(x))
+        elif isinstance(field_object, DateTimeField):
+            return lambda x: dateutil.parser.parse(x).strftime("%m/%d/%Y %H:%M:%S %p")
         elif hasattr(field_object, "choices") and field_object.choices is not None:
             choices = dict(field_object.choices)
             return lambda x: choices.get(x, "Unknown")

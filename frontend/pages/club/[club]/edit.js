@@ -778,7 +778,9 @@ class ClubForm extends Component {
                             <Empty>None</Empty>
                           )}
                         </td>
-                        <td><TimeAgo date={item.updated_at} /></td>
+                        <td>
+                          <TimeAgo date={item.created_at} />
+                        </td>
                       </tr>
                     ))}
                     {!!this.state.subscriptions.length || (
