@@ -7,20 +7,18 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("clubs", "0014_club_youtube"),
+        ('clubs', '0014_club_youtube'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="event",
-            name="type",
-            field=models.IntegerField(choices=[(1, "Recruitment")], default=1),
+            model_name='event',
+            name='type',
+            field=models.IntegerField(choices=[(1, 'Recruitment')], default=1),
         ),
         migrations.AlterField(
-            model_name="event",
-            name="club",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, related_name="events", to="clubs.Club"
-            ),
+            model_name='event',
+            name='club',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='events', to='clubs.Club'),
         ),
     ]
