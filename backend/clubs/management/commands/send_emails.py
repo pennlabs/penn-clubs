@@ -172,7 +172,10 @@ class Command(BaseCommand):
                                     )
                                 else:
                                     invite = existing_invite.first()
-                                invite.send_owner_invite()
+                                if invite.role <= Membership.ROLE_OWNER:
+                                    invite.send_owner_invite()
+                                else:
+                                    invite.send_mail()
                         elif action == "fair":
                             send_fair_email(club, receiver)
 
