@@ -84,9 +84,7 @@ const Actions = ({
       <Wrapper>
         {canEdit && (
           <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
-            <EditButton className="button is-success">
-              Edit Club
-            </EditButton>
+            <EditButton className="button is-success">Edit Club</EditButton>
           </Link>
         )}
 

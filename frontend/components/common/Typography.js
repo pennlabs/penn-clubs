@@ -5,8 +5,8 @@ export const Text = s.p`
   font-size: 1rem;
   margin-bottom: 1rem;
   line-height: 1.5;
-  ${({ isGray }) => isGray ? `color: ${CLUBS_GREY};` : ''}
-  ${({ color }) => color ? `color: ${color};` : ''}
+  ${({ isGray }) => (isGray ? `color: ${CLUBS_GREY};` : '')}
+  ${({ color }) => (color ? `color: ${color};` : '')}
 `
 
 export const SmallText = s(Text)`

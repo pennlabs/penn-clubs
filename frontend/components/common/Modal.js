@@ -66,7 +66,10 @@ export const Modal = ({ show, children, closeModal }) => {
 
   const handleKeyPress = ({ key, keyCode }) => {
     const ESCAPE_KEY_CODE = 27
-    if ((keyCode === ESCAPE_KEY_CODE || key.toLowerCase() === 'escape') && show) {
+    if (
+      (keyCode === ESCAPE_KEY_CODE || key.toLowerCase() === 'escape') &&
+      show
+    ) {
       closeModal()
     }
   }
@@ -87,26 +90,15 @@ export const Modal = ({ show, children, closeModal }) => {
       tabIndex="0"
       show={show}
     >
-      <Shade
-        className='modal-background'
-        onClick={closeModal}
-        show={show}
-
-      />
-      <ModalCard
-        className='card'
-        onClick={noop}
-        show={show}
-      >
+      <Shade className="modal-background" onClick={closeModal} show={show} />
+      <ModalCard className="card" onClick={noop} show={show}>
         <CloseModalIcon
           show={show}
           name="x"
           alt="&#215;"
           onClick={closeModal}
         />
-        <ModalContent>
-          {children}
-        </ModalContent>
+        <ModalContent>{children}</ModalContent>
       </ModalCard>
     </ModalWrapper>
   )

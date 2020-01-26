@@ -95,10 +95,7 @@ export default ({ userInfo, authenticated, show }) => (
       {userInfo && (
         <Link href={SETTINGS_ROUTE}>
           <StyledLink>
-            <StyledIcon
-              name="user"
-              alt="settings"
-            />
+            <StyledIcon name="user" alt="settings" />
             {userInfo.name || userInfo.username}
           </StyledLink>
         </Link>

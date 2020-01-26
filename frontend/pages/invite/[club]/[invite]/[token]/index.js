@@ -110,23 +110,43 @@ class Invite extends React.Component {
     return (
       <div style={{ padding: '30px 50px' }} className="has-text-centered">
         {/* &#x1F389; is the confetti emoji. */}
-        <h2 className="title is-2">&#x1F389; Invitation for {name} &#x1F389;</h2>
+        <h2 className="title is-2">
+          &#x1F389; Invitation for {name} &#x1F389;
+        </h2>
         <div className="title is-4" style={{ fontWeight: 'normal' }}>
-          <b>{member}</b> has invited you, <b>{email}</b>, to join <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} ><a>{name}</a></Link>.
+          <b>{member}</b> has invited you, <b>{email}</b>, to join{' '}
+          <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
+            <a>{name}</a>
+          </Link>
+          .
         </div>
-        {image && <img src={image} alt={name} style={{ maxHeight: 100, marginBottom: 15 }} />}
+        {image && (
+          <img
+            src={image}
+            alt={name}
+            style={{ maxHeight: 100, marginBottom: 15 }}
+          />
+        )}
         <p style={{ marginBottom: 15 }}>
           By accepting this invitation, you will be able to view the contact
           information of other members and internal club documents.
         </p>
         <p>
           <label>
-            <input type="checkbox" checked={isPublic} onChange={() => this.setState({ isPublic: !isPublic })} />
-            {' '} Make my membership to this club public. Outsiders will be able to see my name and role in {name}.
+            <input
+              type="checkbox"
+              checked={isPublic}
+              onChange={() => this.setState({ isPublic: !isPublic })}
+            />{' '}
+            Make my membership to this club public. Outsiders will be able to
+            see my name and role in {name}.
           </label>
         </p>
         <br />
-        <button className="button is-large is-success" onClick={() => this.accept(isPublic)}>
+        <button
+          className="button is-large is-success"
+          onClick={() => this.accept(isPublic)}
+        >
           Accept Invitation
         </button>
       </div>

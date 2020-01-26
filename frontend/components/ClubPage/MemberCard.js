@@ -2,10 +2,7 @@ import s from 'styled-components'
 import { ProfilePic } from '../common'
 import { BORDER, WHITE } from '../../constants/colors'
 
-import {
-  mediaMinWidth,
-  PHONE,
-} from '../../constants/measurements'
+import { mediaMinWidth, PHONE } from '../../constants/measurements'
 
 const Card = s.div`
   text-align: left;

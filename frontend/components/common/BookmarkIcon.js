@@ -19,14 +19,14 @@ const BookmarkIconTag = s.span`
   svg {
     height: 1rem;
     width: 1rem;
-    fill: ${({ favorite }) => favorite ? BLACK : 'none'};
-    stroke: ${({ favorite }) => favorite ? BLACK : MEDIUM_GRAY};
+    fill: ${({ favorite }) => (favorite ? BLACK : 'none')};
+    stroke: ${({ favorite }) => (favorite ? BLACK : MEDIUM_GRAY)};
     stroke-width: 2px;
     stroke-linecap: round;
     stroke-linejoin: round;
 
     &:hover {
-      fill: ${({ favorite }) => favorite ? BLACK : MEDIUM_GRAY};
+      fill: ${({ favorite }) => (favorite ? BLACK : MEDIUM_GRAY)};
     }
   }
 `
@@ -51,7 +51,8 @@ export const BookmarkIcon = ({
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
-      className="feather feather-bookmark">
+      className="feather feather-bookmark"
+    >
       <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
     </svg>
   </BookmarkIconTag>

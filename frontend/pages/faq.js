@@ -50,10 +50,9 @@ const FAQ = () => (
         Logging in allows us to create an account for you on Penn Clubs. This
         gives you access to many useful and upcoming features! When you bookmark
         a club, it will be saved to your bookmarked list. You can use this to
-        keep track of clubs you’re interested in, or a part of.
-        You can also be invited to join club Member lists. Finally, you'll need
-        to log in if you want to use your administrator permissions to edit a
-        club page.
+        keep track of clubs you’re interested in, or a part of. You can also be
+        invited to join club Member lists. Finally, you'll need to log in if you
+        want to use your administrator permissions to edit a club page.
       </Question>
       <Question title="How do I use this site?">
         The #1 way to use this site is to browse clubs at Penn! You can:

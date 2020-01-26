@@ -25,7 +25,8 @@ export default ({
   toggleActive,
   leaveClub,
 }) => {
-  const isMemberOfAnyClubs = userInfo && userInfo.membership_set && userInfo.membership_set.length
+  const isMemberOfAnyClubs =
+    userInfo && userInfo.membership_set && userInfo.membership_set.length
 
   return isMemberOfAnyClubs ? (
     <>
@@ -49,8 +50,7 @@ export default ({
       <EmptyState name="button" />
       <Center>
         <Text isGray>
-          No memberships yet! Browse clubs{' '}
-          <Link href="/">here.</Link>
+          No memberships yet! Browse clubs <Link href="/">here.</Link>
         </Text>
       </Center>
     </>

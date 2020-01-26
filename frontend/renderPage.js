@@ -50,13 +50,22 @@ function renderPage(Page) {
       this.updateUserInfo()
 
       // Delete old csrf token cookie
-      document.cookie = 'csrftoken=; domain=.pennclubs.com; expires = Thu, 01 Jan 1970 00:00:00 GMT'
-      document.cookie = 'sessionid=; domain=.pennclubs.com; expires = Thu, 01 Jan 1970 00:00:00 GMT'
+      document.cookie =
+        'csrftoken=; domain=.pennclubs.com; expires = Thu, 01 Jan 1970 00:00:00 GMT'
+      document.cookie =
+        'sessionid=; domain=.pennclubs.com; expires = Thu, 01 Jan 1970 00:00:00 GMT'
     }
 
     render() {
       try {
-        const { props, state, closeModal, updateFavorites, updateUserInfo, updateSubscriptions } = this
+        const {
+          props,
+          state,
+          closeModal,
+          updateFavorites,
+          updateUserInfo,
+          updateSubscriptions,
+        } = this
         const { authenticated, modal, userInfo } = state
         return (
           <div
@@ -66,11 +75,8 @@ function renderPage(Page) {
               backgroundColor: WHITE,
             }}
           >
-            <LoginModal show={modal} closeModal={closeModal}/>
-            <Header
-              authenticated={authenticated}
-              userInfo={userInfo}
-            />
+            <LoginModal show={modal} closeModal={closeModal} />
+            <Header authenticated={authenticated} userInfo={userInfo} />
             <Wrapper>
               <Page
                 {...props}
@@ -194,7 +200,15 @@ function renderPage(Page) {
 export function renderListPage(Page) {
   class RenderListPage extends Component {
     render() {
-      const { clubs, tags, favorites, authenticated, userInfo, updateUserInfo, updateFavorites } = this.props
+      const {
+        clubs,
+        tags,
+        favorites,
+        authenticated,
+        userInfo,
+        updateUserInfo,
+        updateFavorites,
+      } = this.props
 
       if (!clubs || authenticated === null) {
         return <Loading />

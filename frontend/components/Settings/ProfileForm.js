@@ -48,7 +48,12 @@ class ProfileForm extends React.Component {
       {
         name: 'graduation_year',
         type: 'number',
-        converter: a => typeof a === 'number' ? a : (a && a.length ? a.replace(/\D/g, '') : null),
+        converter: a =>
+          typeof a === 'number'
+            ? a
+            : a && a.length
+            ? a.replace(/\D/g, '')
+            : null,
       },
       {
         name: 'school',
@@ -71,8 +76,18 @@ class ProfileForm extends React.Component {
         fields={fields}
         defaults={settings}
         onSubmit={this.submit}
-        submitButton={<a className="button is-success"><Icon alt="save" name="edit" />Save</a>}
-        disabledSubmitButton={<a className="button is-success" disabled><Icon alt="save" name="edit" />Saved!</a>}
+        submitButton={
+          <a className="button is-success">
+            <Icon alt="save" name="edit" />
+            Save
+          </a>
+        }
+        disabledSubmitButton={
+          <a className="button is-success" disabled>
+            <Icon alt="save" name="edit" />
+            Saved!
+          </a>
+        }
       />
     )
   }

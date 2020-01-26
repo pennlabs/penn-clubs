@@ -82,8 +82,16 @@ class Toggle extends Component {
           {filterOffText}
         </Label>
         <ToggleWrapper>
-          <Circle style={{ background: active ? CLUBS_BLUE : MEDIUM_GRAY }} onClick={this.handleClick} active={active} />
-          <Bar style={{ background: active ? '#D3EBF3' : LIGHT_GRAY }} onClick={this.handleClick} active={active} />
+          <Circle
+            style={{ background: active ? CLUBS_BLUE : MEDIUM_GRAY }}
+            onClick={this.handleClick}
+            active={active}
+          />
+          <Bar
+            style={{ background: active ? '#D3EBF3' : LIGHT_GRAY }}
+            onClick={this.handleClick}
+            active={active}
+          />
         </ToggleWrapper>
         <Label onClick={this.handleClick} active>
           {filterOnText}

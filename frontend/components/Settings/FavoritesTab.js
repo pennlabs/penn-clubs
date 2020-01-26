@@ -37,7 +37,7 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
   }
   return (
     <div>
-      {rows.map((favorite) => (
+      {rows.map(favorite => (
         <ClubTableRow
           club={findClub(favorite)}
           updateFavorites={toggleFavorite}

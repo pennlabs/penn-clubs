@@ -18,7 +18,10 @@ export function getDefaultClubImageURL() {
   return '/static/img/hatlogo.png'
 }
 
-export const SITE_ORIGIN = process.env.NODE_ENV === 'production' ? `https://${process.env.DOMAIN || 'pennclubs.com'}` : `http://localhost:${process.env.PORT || 3000}`
+export const SITE_ORIGIN =
+  process.env.NODE_ENV === 'production'
+    ? `https://${process.env.DOMAIN || 'pennclubs.com'}`
+    : `http://localhost:${process.env.PORT || 3000}`
 export const API_BASE_URL = `${SITE_ORIGIN}/api`
 export const ROLE_OWNER = 0
 export const ROLE_OFFICER = 10

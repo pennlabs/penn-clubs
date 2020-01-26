@@ -3,7 +3,6 @@ import { Icon, Text, StrongText, Card } from '../common'
 import { useState, useEffect } from 'react'
 
 const Events = ({ data }) => {
-
   const BigParagraph = s.p`
     font-size: 0.8rem;
     font-weight: bold;
@@ -28,20 +27,24 @@ const Events = ({ data }) => {
       {data.map((entry, index) => {
         return (
           <Wrapper key={index}>
-            <Icon name='calendar' style={{ marginRight: "7px" }} size="32px" alt='Calendar icon' />
+            <Icon
+              name="calendar"
+              style={{ marginRight: '7px' }}
+              size="32px"
+              alt="Calendar icon"
+            />
             <div>
               <BigParagraph>
-                {new Intl.DateTimeFormat("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "2-digit",
-                  hour: "numeric",
-                  minute: "numeric"
-                }).format(new Date(entry.start_time))} | {entry.location}
+                {new Intl.DateTimeFormat('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: '2-digit',
+                  hour: 'numeric',
+                  minute: 'numeric',
+                }).format(new Date(entry.start_time))}{' '}
+                | {entry.location}
               </BigParagraph>
-              <SmallParagraph>
-                {entry.name}
-              </SmallParagraph>
+              <SmallParagraph>{entry.name}</SmallParagraph>
             </div>
           </Wrapper>
         )

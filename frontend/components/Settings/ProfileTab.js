@@ -45,7 +45,8 @@ export default ({ defaults }) => {
         </div>
       </div>
       <ProfileForm settings={defaults} />
-      <br /><br />
+      <br />
+      <br />
       <SmallText>
         If your information is incorrect, please send an email to{' '}
         <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>{' '}
@@ -58,10 +59,7 @@ export default ({ defaults }) => {
           href={`${LOGOUT_URL}?next=${window.location.origin}`}
           onClick={() => logEvent('logout', 'click')}
         >
-          <LogoutIcon
-            name="log-out"
-            alt="logout"
-          />
+          <LogoutIcon name="log-out" alt="logout" />
           Logout
         </LogoutLink>
       </div>

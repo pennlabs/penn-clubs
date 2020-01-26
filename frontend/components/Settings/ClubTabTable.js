@@ -15,7 +15,13 @@ const Table = s.table`
   color: ${DARK_GRAY} !important;
 `
 
-export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) => (
+export default ({
+  className,
+  userInfo,
+  togglePublic,
+  toggleActive,
+  leaveClub,
+}) => (
   <Table className={`table is-fullwidth ${className}`}>
     <thead>
       <tr>
@@ -63,10 +69,7 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
       {userInfo.membership_set.map(item => (
         <tr key={item.code}>
           <td>
-            <Link
-              href={CLUB_ROUTE()}
-              as={CLUB_ROUTE(item.code)}
-            >
+            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(item.code)}>
               <a>{item.name}</a>
             </Link>
           </td>
@@ -88,13 +91,8 @@ export default ({ className, userInfo, togglePublic, toggleActive, leaveClub }) 
           </td>
           <td>
             {item.role_display === 'Admin' ? (
-              <Link
-                href={CLUB_EDIT_ROUTE()}
-                as={CLUB_EDIT_ROUTE(item.code)}
-              >
-                <a className="button is-small">
-                  Manage
-                </a>
+              <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(item.code)}>
+                <a className="button is-small">Manage</a>
               </Link>
             ) : (
               <button

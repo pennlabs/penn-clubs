@@ -6,7 +6,7 @@ const hashCode = s => {
   let i = 0
   if (s.length > 0) {
     while (i < 1) {
-      h = (h << 5) - h + s.charCodeAt(i++) | 0
+      h = ((h << 5) - h + s.charCodeAt(i++)) | 0
     }
   }
   return h
@@ -23,8 +23,9 @@ const Placeholder = s.div`
   align-items: center;
 
   font-size: ${({ fontSize }) => fontSize || '1.5em'};
-  ${({ isRound }) => isRound ? 'border-radius: 9999px;' : ''}
-  background-color: ${({ backgroundColor }) => backgroundColor || DEFAULT_BG_COLOR}
+  ${({ isRound }) => (isRound ? 'border-radius: 9999px;' : '')}
+  background-color: ${({ backgroundColor }) =>
+    backgroundColor || DEFAULT_BG_COLOR}
   color: ${({ textColor }) => textColor || DEFAULT_TXT_COLOR}
 `
 

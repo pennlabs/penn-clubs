@@ -28,9 +28,7 @@ const Error = ({ statusCode = 500, message = 'Something went wrong' }) => (
         {message}
       </p>
       <Link href={HOME_ROUTE}>
-        <a className="button is-medium is-primary">
-          Back to home
-        </a>
+        <a className="button is-medium is-primary">Back to home</a>
       </Link>
     </Center>
   </Container>
