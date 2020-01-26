@@ -32,7 +32,7 @@ const ActionWrapper = s.div`
   margin-bottom: 0.8rem;
 
   background-color: ${WHITE};
-  border-radius: 50%;
+  border-radius: 5%;
   border: 1px solid ${BORDER};
   line-height: 1;
   height: 30px;
