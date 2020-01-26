@@ -81,6 +81,7 @@ const PrintPage = s.div`
   background-color: white;
   display: flex;
   overflow: hidden;
+  position: relative;
 
   page-break-after: always;
 
@@ -89,10 +90,6 @@ const PrintPage = s.div`
   }
 `
 
-<<<<<<< HEAD
-const truncate = (str, len = 52) => {
-  if (str.length <= len) {
-=======
 const AboutText = s.div`
   position: absolute;
   bottom: 7px;
@@ -104,26 +101,21 @@ const AboutText = s.div`
 
 const truncate = (str, len = 54) => {
   if (str.length <= len + 3) {
->>>>>>> fix print color adjust
     return str
   }
+
+  // take words before or in parentheses if too long
   const parenMatch = /^(.*)\s*\((.*)\)\s*$/.exec(str)
   if (parenMatch) {
     const smallString = parenMatch[1]
-    if (smallString.length <= len) {
+    if (smallString.length <= len + 3) {
       return smallString
     }
     const smallParenString = parenMatch[2]
-<<<<<<< HEAD
-    if (smallParenString <= len) {
-=======
     if (smallParenString.length <= len + 3) {
->>>>>>> fix typo
       return smallParenString
     }
   }
-<<<<<<< HEAD
-=======
 
   // remove prefix if exists and string too long
   const prefixMatch = /^University of Pennsylvania\s*(.*)\s*$/i.exec(str)
@@ -143,7 +135,6 @@ const truncate = (str, len = 54) => {
     }
   }
 
->>>>>>> flyer fix
   return `${str.substring(0, len)}...`
 }
 
@@ -158,6 +149,8 @@ const Flyer = ({
 }) => {
   const [clubs, setClubs] = useState(null)
   const [count, setCount] = useState(0)
+  const [failedClubs, setFailedClubs] = useState([])
+  const [showErrorPane, setShowErrorPane] = useState(false)
 
   useEffect(() => {
     const fetchClub = (club, tries) => {
@@ -180,7 +173,7 @@ const Flyer = ({
         },
         {
           referrerPolicy: 'no-referrer',
-          cache: tries == 1 ? 'reload' : 'default',
+          cache: tries === 1 ? 'reload' : 'default',
         }
       )
     }
@@ -254,7 +247,7 @@ const Flyer = ({
                 <div className="column is-paddingless">
                   <CenterContainer>
                     <Margin>
-                      {image && <Image src={image} />}
+                      {image && <LogoImage src={image} />}
                       <BigTitle>
                         {truncate(club.name, image ? 52 : 100)}
                       </BigTitle>

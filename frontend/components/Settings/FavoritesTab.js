@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import ClubTableRow from '../ClubTableRow'
 import { Center, EmptyState, Text } from '../common'
+import { HOME_ROUTE } from '../../constants/routes'
 import { CLUBS_GREY_LIGHT } from '../../constants/colors'
 
 export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
@@ -28,7 +29,7 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
         <EmptyState name={isBookmarksTab ? 'bookmarks' : 'subscriptions'} />
         <Center>
           <Text color={CLUBS_GREY_LIGHT}>
-            No {keyword}s yet! Browse clubs <Link href="/">here.</Link>
+            No {keyword}s yet! Browse clubs <Link href={HOME_ROUTE}>here.</Link>
           </Text>
         </Center>
       </>

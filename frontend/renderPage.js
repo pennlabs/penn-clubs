@@ -164,11 +164,6 @@ function renderPage(Page) {
       doApiRequest('/settings/?format=json').then(resp => {
         if (resp.ok) {
           resp.json().then(userInfo => {
-            // redirect to welcome page if user hasn't seen it before
-            if (userInfo.has_been_prompted === false && window.location.pathname !== '/welcome') {
-              window.location.href = '/welcome?next=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)
-            }
-
             this.setState({
               authenticated: true,
               favorites: userInfo.favorite_set.map(a => a.club),

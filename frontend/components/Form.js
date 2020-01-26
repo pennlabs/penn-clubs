@@ -43,22 +43,15 @@ class Form extends Component {
           } else if (type === 'html') {
             this.state[`editorState-${name}`] = value
               ? EditorState.createWithContent(
-                ContentState.createFromBlockArray(
-                  htmlToDraft(value).contentBlocks
+                  ContentState.createFromBlockArray(
+                    htmlToDraft(value).contentBlocks
+                  )
                 )
-              )
               : EditorState.createEmpty()
           } else if (type === 'multiselect') {
             this.state[`field-${name}`] = (value || []).map(converter)
           } else if (type === 'select') {
             this.state[`field-${name}`] = value ? converter(value) : null
-          } else if (type == "datetime-local") {
-            if (value) {
-              // This is a pretty gross hack to reformat the datetime-local by
-              // manipulating the string -- come back to this and try and use
-              // the available datetime functions (or import a package that will)
-              this.state[`field-${name}`] = value.substring(0, value.length - 6)
-            }
           } else {
             this.state[`field-${name}`] = value || ''
           }
@@ -71,54 +64,13 @@ class Form extends Component {
     this.onChange = this.onChange.bind(this)
     this.checkIfEdited = this.checkIfEdited.bind(this)
     this.confirmExit = this.confirmExit.bind(this)
+    this.getFieldData = this.getFieldData.bind(this)
     this.confirmRouteChange = this.confirmRouteChange.bind(this)
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
   }
 
-  setDefaults(fields) {
-    const { defaults } = this.props
-    fields.forEach(({ name, type, converter, fields }) => {
-      if (type === 'html') {
-        if (process.browser) {
-          if (defaults && defaults[name]) {
-            this.state['editorState-' + name] = EditorState.createWithContent(
-              ContentState.createFromBlockArray(
-                htmlToDraft(defaults[name]).contentBlocks
-              )
-            )
-          } else {
-            this.state['editorState-' + name] = EditorState.createEmpty()
-          }
-        }
-      }
-      if (type !== 'group') {
-        if (type === 'multiselect') {
-          this.state[`field-${name}`] = defaults
-            ? (defaults[name] || []).map(converter)
-            : []
-        } else if (type === 'select') {
-          this.state[`field-${name}`] = defaults
-            ? converter(defaults[name])
-            : null
-        } else {
-          this.state[`field-${name}`] = defaults ? defaults[name] || '' : ''
-        }
-      } else {
-        this.setDefaults(fields)
-      }
-      if (type == "datetime-local") {
-        if (type == 'datetime-local' && this.state['field-' + name]) {
-          // This is a pretty gross hack to reformat the datetime-local by
-          // manipulating the string -- come back to this and try and use
-          // the available datetime functions (or import a package that will)
-          this.state['field-' + name] = this.state['field-' + name].substring(0, this.state['field-' + name].length - 6)
-        }
-      }
-    })
-  }
-    
   confirmRouteChange() {
     const { edited } = this.state
     const { router } = Router
@@ -152,10 +104,10 @@ class Form extends Component {
   }
 
   getAllFields(fields) {
-    const out = []
+    var out = []
     fields.forEach(item => {
       if (item.type === 'group') {
-        out.concat(this.getAllFields(item.fields))
+        out = out.concat(this.getAllFields(item.fields))
       } else {
         out.push(item)
       }
@@ -163,7 +115,7 @@ class Form extends Component {
     return out
   }
 
-  getFieldData(source, { type, reverser, converter }, name) {
+  getFieldData(name, source, { type, reverser, converter }) {
     const val = source[`field-${name}`]
     switch (type) {
       case 'multiselect':
@@ -175,9 +127,7 @@ class Form extends Component {
       case 'date':
         return val || null
       case 'file':
-        return (new FormData()).append('file', this.files[name].files[0])
-      case 'datetime-local':
-        return val || null
+        return new FormData().append('file', this.files[name].files[0])
       default:
         return typeof converter === 'function' ? converter(val) : val
     }
@@ -186,7 +136,7 @@ class Form extends Component {
   getData(source) {
     const data = {}
     this.getAllFields(this.props.fields).forEach(({ name, ...field }) => {
-      data[name] = this.getFieldData(source, field, name)
+      data[name] = this.getFieldData(name, source, field)
     })
     return data
   }
@@ -221,7 +171,7 @@ class Form extends Component {
 
     let inpt = null
 
-    if (['text', 'url', 'email', 'date', 'datetime-local', 'number'].includes(type)) {
+    if (['text', 'url', 'email', 'date', 'number'].includes(type)) {
       inpt = (
         <input
           className="input"
@@ -513,6 +463,7 @@ export class ModelForm extends Component {
   render() {
     const { objects } = this.state
     const { fields, baseUrl } = this.props
+
     if (!objects) {
       return <></>
     }

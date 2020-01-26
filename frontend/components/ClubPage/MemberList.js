@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import s from 'styled-components'
-import { Row, Col, Icon } from '../common'
+import { Row, Col, Icon, Center, EmptyState } from '../common'
 import { DARK_GRAY } from '../../constants/colors'
 import MemberCard from './MemberCard'
 

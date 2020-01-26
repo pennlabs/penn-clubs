@@ -90,6 +90,27 @@ def fuzzy_lookup_club(name):
     if club.count() == 1:
         return club.first()
 
+    # lookup club by ampersand
+    if "and" in name:
+        mod_name = name.replace("and", "&")
+        club = Club.objects.filter(name__icontains=mod_name)
+        if club.exists():
+            if club.count() == 1:
+                return club.first()
+            club = Club.objects.filter(name__iexact=mod_name)
+            if club.exists():
+                return club.first()
+
+    if "&" in name:
+        mod_name = name.replace("&", "and")
+        club = Club.objects.filter(name__icontains=mod_name)
+        if club.exists():
+            if club.count() == 1:
+                return club.first()
+            club = Club.objects.filter(name__iexact=mod_name)
+            if club.exists():
+                return club.first()
+
     # lookup club by subtitle
     club = Club.objects.filter(subtitle__iexact=name)
     if club.exists():
@@ -100,8 +121,23 @@ def fuzzy_lookup_club(name):
     if club.count() == 1:
         return club.first()
 
+    # lookup by reverse subtitle contains
+    club = (
+        Club.objects.annotate(query=Value(name, output_field=CharField()))
+        .filter(subtitle__iregex=".......")
+        .filter(query__icontains=F("subtitle"))
+    )
+    if club.count() == 1:
+        return club.first()
+
     # lookup club without dashes
     regex = "^{}$".format(re.escape(name.replace("-", " ").strip()).replace("\\ ", r"[\s-]"))
+    club = Club.objects.filter(name__iregex=regex)
+    if club.exists():
+        return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
+
+    # lookup clubs without space considerations
+    regex = r" ?".join(re.sub(r"\W+", "", name))
     club = Club.objects.filter(name__iregex=regex)
     if club.exists():
         return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
@@ -122,7 +158,7 @@ def fuzzy_lookup_club(name):
 
     # strip out common words to see if we can get match
     modified_name = re.sub(r"university of pennsylvania", "", name, flags=re.I).strip()
-    modified_name = re.sub(r"the|club|penn", "", modified_name, flags=re.I).strip()
+    modified_name = re.sub(r"upenn|the|club|penn", "", modified_name, flags=re.I).strip()
     club = Club.objects.filter(name__icontains=modified_name)
 
     if club.exists():

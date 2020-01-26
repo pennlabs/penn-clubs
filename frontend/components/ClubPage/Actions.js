@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import s from 'styled-components'
+import { WHITE, BORDER, MEDIUM_GRAY } from '../../constants/colors'
+import { CLUB_EDIT_ROUTE } from '../../constants/routes'
 
 import { Icon, BookmarkIcon, SubscribeIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
-import { WHITE, BORDER, MEDIUM_GRAY } from '../../constants/colors'
 
 const Wrapper = s.span`
   display: flex;
@@ -82,7 +83,7 @@ const Actions = ({
     <div className={className} style={style}>
       <Wrapper>
         {canEdit && (
-          <Link href="/club/[club]/edit" as={`/club/${code}/edit`}>
+          <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
             <EditButton className="button is-success">
               Edit Club
             </EditButton>
@@ -95,7 +96,8 @@ const Actions = ({
             favorite={isFavorite}
             updateFavorites={id => {
               const upd = updateFavorites(id)
-              setFavCount(favCount + (upd ? 1 : -1))
+              // If upd is null, checkAuth in renderPage failed, so we do not update the count.
+              if (upd !== null) setFavCount(favCount + (upd ? 1 : -1))
             }}
             padding="0"
           />
