@@ -8,6 +8,7 @@ import {
   CLUBS_RED_DARK,
   CLUBS_BLUE,
   CLUBS_DEEP_BLUE,
+  CLUBS_NAVY,
   WHITE,
   WHITE_ALPHA,
   LIGHT_GRAY,
@@ -17,6 +18,7 @@ import { BORDER_RADIUS } from '../../constants/measurements'
 import { CLUB_ROUTE, CLUB_EDIT_ROUTE } from '../../constants/routes'
 
 const Card = s.div`
+  color: ${CLUBS_NAVY}
   border-radius: ${BORDER_RADIUS};
   box-shadow: 0 2px 19px 0 ${BLACK_ALPHA(0.25)};
   margin: 2.5%;
