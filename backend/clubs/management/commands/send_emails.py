@@ -135,21 +135,25 @@ class Command(BaseCommand):
                 for receiver in receivers:
                     if not dry_run:
                         if action == "invite":
-                            existing_invite = MembershipInvite.objects.filter(
-                                club=club, email=receiver, active=True
+                            existing_membership = Membership.objects.filter(
+                                person__email=receiver, club=club
                             )
-                            if not existing_invite.exists():
-                                invite = MembershipInvite.objects.create(
-                                    club=club,
-                                    email=receiver,
-                                    creator=None,
-                                    role=Membership.ROLE_OWNER,
-                                    title="Owner",
-                                    auto=True,
+                            if not existing_membership.exists():
+                                existing_invite = MembershipInvite.objects.filter(
+                                    club=club, email=receiver, active=True
                                 )
-                            else:
-                                invite = existing_invite.first()
-                            invite.send_owner_invite()
+                                if not existing_invite.exists():
+                                    invite = MembershipInvite.objects.create(
+                                        club=club,
+                                        email=receiver,
+                                        creator=None,
+                                        role=Membership.ROLE_OWNER,
+                                        title="Owner",
+                                        auto=True,
+                                    )
+                                else:
+                                    invite = existing_invite.first()
+                                invite.send_owner_invite()
                         elif action == "fair":
                             send_fair_email(club, receiver)
 
