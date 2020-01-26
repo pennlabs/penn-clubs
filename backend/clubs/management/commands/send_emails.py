@@ -11,7 +11,7 @@ from clubs.models import Club, Membership, MembershipInvite
 from clubs.utils import fuzzy_lookup_club, html_to_text
 
 
-def send_fair_email(club, email):
+def send_fair_email(club, email, template="fair"):
     """
     Sends the SAC fair email for a club to the given email.
     """
@@ -22,7 +22,7 @@ def send_fair_email(club, email):
         "flyer_url": settings.FLYER_URL.format(domain=domain, club=club.code),
     }
 
-    html_content = render_to_string("emails/fair.html", context)
+    html_content = render_to_string("emails/{}.html".format(template), context)
     text_content = html_to_text(html_content)
 
     msg = EmailMultiAlternatives(
@@ -37,7 +37,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "type", type=str, help="The type of email to send.", choices=("invite", "fair")
+            "type",
+            type=str,
+            help="The type of email to send.",
+            choices=("invite", "fair", "postfair"),
         )
         parser.add_argument(
             "emails",
@@ -178,5 +181,7 @@ class Command(BaseCommand):
                                     invite.send_mail()
                         elif action == "fair":
                             send_fair_email(club, receiver)
+                        elif action == "postfair":
+                            send_fair_email(club, receiver, template="postfair")
 
         self.stdout.write(f"Sent {clubs_sent} email(s), {clubs_missing} missing club(s)")
