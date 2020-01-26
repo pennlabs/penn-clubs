@@ -613,6 +613,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
             "school",
             "major",
             "graduation_year",
+            "updated_at",
         )
         validators = [
             validators.UniqueTogetherValidator(
