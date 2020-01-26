@@ -52,6 +52,13 @@ class Form extends Component {
             this.state[`field-${name}`] = (value || []).map(converter)
           } else if (type === 'select') {
             this.state[`field-${name}`] = value ? converter(value) : null
+          } else if (type == "datetime-local") {
+            if (value) {
+              // This is a pretty gross hack to reformat the datetime-local by
+              // manipulating the string -- come back to this and try and use
+              // the available datetime functions (or import a package that will)
+              this.state[`field-${name}`] = value.substring(0, value.length - 6)
+            }
           } else {
             this.state[`field-${name}`] = value || ''
           }
@@ -111,6 +118,25 @@ class Form extends Component {
       }
     })
   }
+    
+  confirmRouteChange() {
+    const { edited } = this.state
+    const { router } = Router
+    if (edited && !confirm(UNSAVED_MESSAGE)) {
+      router.abortComponentLoad()
+      router.events.emit('routeChangeError')
+      throw 'Abort link navigation - ignore this error.' // eslint-disable-line
+    }
+  }
+
+  confirmExit(e) {
+    const { edited } = this.state
+    if (edited) {
+      e.preventDefault()
+      e.returnValue = UNSAVED_MESSAGE
+      return UNSAVED_MESSAGE
+    }
+  }
 
   componentDidMount() {
     window.addEventListener('beforeunload', this.confirmExit)
@@ -137,7 +163,7 @@ class Form extends Component {
     return out
   }
 
-  getFieldData(source, { type, reverser, converter }) {
+  getFieldData(source, { type, reverser, converter }, name) {
     const val = source[`field-${name}`]
     switch (type) {
       case 'multiselect':
@@ -150,6 +176,8 @@ class Form extends Component {
         return val || null
       case 'file':
         return (new FormData()).append('file', this.files[name].files[0])
+      case 'datetime-local':
+        return val || null
       default:
         return typeof converter === 'function' ? converter(val) : val
     }
@@ -158,7 +186,7 @@ class Form extends Component {
   getData(source) {
     const data = {}
     this.getAllFields(this.props.fields).forEach(({ name, ...field }) => {
-      data[name] = this.getFieldData(source, field)
+      data[name] = this.getFieldData(source, field, name)
     })
     return data
   }

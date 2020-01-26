@@ -120,12 +120,10 @@ const Club = ({
             <StrongText>Contact</StrongText>
             <SocialIcons club={club} />
           </Card>
-          {club.how_to_get_involved != "" ? (
+          {club.how_to_get_involved ? (
             <Card bordered style={{ marginBottom: '1rem' }}>
-              <div style={{marginLeft: '6px'}}>
-                <StrongText>How To Get Involved</StrongText>
-                <Text> {club.how_to_get_involved} </Text>
-              </div>
+              <StrongText>How To Get Involved</StrongText>
+              <Text> {club.how_to_get_involved} </Text>
             </Card>
           ) : (
             <div></div>

@@ -12,7 +12,6 @@ import {
   getRoleDisplay,
 } from '../../../utils'
 import Form, { ModelForm } from '../../../components/Form'
-import EventTableRow from '../../../components/EventTableRow'
 import TabView from '../../../components/TabView'
 import AuthPrompt from '../../../components/common/AuthPrompt'
 import {

@@ -1,36 +1,36 @@
+import s from 'styled-components'
 import { Icon, Text, StrongText, Card } from '../common'
 import { useState, useEffect } from 'react'
 
-const Events = props => {
-  const data = props.data
+const Events = ({ data }) => {
 
-  const iconStyles = {
-    float: "left",
-    marginRight: "7px"
-  }
+  const BigParagraph = s.p`
+    font-size: 0.8rem;
+    font-weight: bold;
+  `
 
-  const bigStyles = {
-    fontSize: "13px",
-    fontWeight: "bold"
-  }
+  const SmallParagraph = s.p`
+    font-size: 0.8rem;
+  `
 
-  const smallStyles = {
-    fontSize: "13px"
-  }
+  const Wrapper = s.div`
+    marginBottom: 0.5rem;
+    display: flex;
+  `
 
   if (!data || !data.length) {
-    return <></>
+    return null
   }
 
   return (
     <Card bordered style={{ marginBottom: '1rem' }}>
-      <div style={{marginLeft: '7px'}}>
-        <StrongText>Events</StrongText>
-        {data.map((entry, index) => {
-          return (
-            <div key={index} style={{ marginBottom: '0.5rem' }}>
-              <Icon name='calendar' style={iconStyles} size="32px" alt='Calendar icon' />
-              <p style={bigStyles}>
+      <StrongText>Events</StrongText>
+      {data.map((entry, index) => {
+        return (
+          <Wrapper key={index}>
+            <Icon name='calendar' style={{ marginRight: "7px" }} size="32px" alt='Calendar icon' />
+            <div>
+              <BigParagraph>
                 {new Intl.DateTimeFormat("en-US", {
                   year: "numeric",
                   month: "long",
@@ -38,14 +38,14 @@ const Events = props => {
                   hour: "numeric",
                   minute: "numeric"
                 }).format(new Date(entry.start_time))} | {entry.location}
-              </p>
-              <p style={smallStyles}>
+              </BigParagraph>
+              <SmallParagraph>
                 {entry.name}
-              </p>
+              </SmallParagraph>
             </div>
-          )
-        })}
-      </div>
+          </Wrapper>
+        )
+      })}
     </Card>
   )
 }
