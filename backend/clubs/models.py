@@ -352,7 +352,7 @@ class MembershipInvite(models.Model):
             "club_id": self.club.code,
             "sender": request.user
             if request is not None
-            else {"username": "Penn Clubs", "email": "contact@pennclubs.com",},
+            else {"username": "Penn Clubs", "email": "contact@pennclubs.com"},
             "role": self.role,
             "title": self.title,
             "url": settings.INVITE_URL.format(
