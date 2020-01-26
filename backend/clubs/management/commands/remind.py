@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 
 from clubs.models import Club, Membership, MembershipInvite
+from clubs.utils import html_to_text
 
 
 def send_reminder_to_club(club):
@@ -52,8 +53,8 @@ def send_reminder_to_club(club):
             "view_url": settings.VIEW_URL.format(domain=domain, club=club.code),
         }
 
-        text_content = render_to_string("emails/remind.txt", context)
         html_content = render_to_string("emails/remind.html", context)
+        text_content = html_to_text(html_content)
 
         msg = EmailMultiAlternatives(
             "Reminder to Update Your Club's Page", text_content, settings.FROM_EMAIL, receivers

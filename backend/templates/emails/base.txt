@@ -1,7 +1,0 @@
-Hello,
-
-{% block content %}{% endblock %}
-
-Best,
-
-Penn Clubs

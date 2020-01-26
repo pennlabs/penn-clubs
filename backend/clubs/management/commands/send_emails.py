@@ -8,10 +8,10 @@ from django.db.models import Count, Q
 from django.template.loader import render_to_string
 
 from clubs.models import Club, Membership, MembershipInvite
-from clubs.utils import fuzzy_lookup_club
+from clubs.utils import fuzzy_lookup_club, html_to_text
 
 
-def send_fair_email(club, email):
+def send_fair_email(club, email, template="fair"):
     """
     Sends the SAC fair email for a club to the given email.
     """
@@ -22,8 +22,8 @@ def send_fair_email(club, email):
         "flyer_url": settings.FLYER_URL.format(domain=domain, club=club.code),
     }
 
-    text_content = render_to_string("emails/fair.txt", context)
-    html_content = render_to_string("emails/fair.html", context)
+    html_content = render_to_string("emails/{}.html".format(template), context)
+    text_content = html_to_text(html_content)
 
     msg = EmailMultiAlternatives(
         "Making the SAC Fair Easier for You", text_content, settings.FROM_EMAIL, [email]
@@ -37,13 +37,18 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "type", type=str, help="The type of email to send.", choices=("invite", "fair")
+            "type",
+            type=str,
+            help="The type of email to send.",
+            choices=("invite", "fair", "postfair"),
         )
         parser.add_argument(
             "emails",
+            nargs="?",
             type=str,
             help="The CSV file with club name to email mapping. First column is club name"
             + "and second column is emails.",
+            default=None,
         )
         parser.add_argument(
             "--dry-run",
@@ -63,6 +68,13 @@ class Command(BaseCommand):
             action="store_true",
             help="Only send emails to clubs that are marked as active.",
         )
+        parser.add_argument(
+            "--role",
+            type=int,
+            default=Membership.ROLE_OWNER,
+            choices=[r[0] for r in Membership.ROLE_CHOICES],
+            help="The permission level to grant for new invitations.",
+        )
         parser.set_defaults(dry_run=False, only_sheet=False, only_active=True)
 
     def handle(self, *args, **kwargs):
@@ -70,6 +82,8 @@ class Command(BaseCommand):
         only_sheet = kwargs["only_sheet"]
         action = kwargs["type"]
         verbosity = kwargs["verbosity"]
+        role = kwargs["role"]
+        role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
 
         if only_sheet:
             clubs = Club.objects.all()
@@ -97,24 +111,32 @@ class Command(BaseCommand):
 
         email_file = kwargs["emails"]
 
-        if not os.path.isfile(email_file):
-            raise CommandError(f'Email file "{email_file}" does not exist!')
+        # verify email file
+        if email_file is not None:
+            if not os.path.isfile(email_file):
+                raise CommandError(f'Email file "{email_file}" does not exist!')
+        elif only_sheet:
+            raise CommandError("Cannot specify only sheet option without an email file!")
+        else:
+            self.stdout.write(self.style.WARNING("No email spreadsheet file specified!"))
 
-        with open(email_file, "r") as f:
-            for line in csv.reader(f):
-                raw_name = line[0].strip()
-                club = fuzzy_lookup_club(raw_name)
+        # load email file
+        if email_file is not None:
+            with open(email_file, "r") as f:
+                for line in csv.reader(f):
+                    raw_name = line[0].strip()
+                    club = fuzzy_lookup_club(raw_name)
 
-                if club is not None:
-                    if verbosity >= 2:
-                        self.stdout.write(f"Mapped {raw_name} -> {club.name} ({club.code})")
-                    clubs_sent += 1
-                    emails[club.id] = [x.strip() for x in line[1].split(",")]
-                else:
-                    clubs_missing += 1
-                    self.stdout.write(
-                        self.style.WARNING(f"Could not find club matching {raw_name}!")
-                    )
+                    if club is not None:
+                        if verbosity >= 2:
+                            self.stdout.write(f"Mapped {raw_name} -> {club.name} ({club.code})")
+                        clubs_sent += 1
+                        emails[club.id] = [x.strip() for x in line[1].split(",")]
+                    else:
+                        clubs_missing += 1
+                        self.stdout.write(
+                            self.style.WARNING(f"Could not find club matching {raw_name}!")
+                        )
 
         # send out emails
         for club in clubs:
@@ -135,22 +157,31 @@ class Command(BaseCommand):
                 for receiver in receivers:
                     if not dry_run:
                         if action == "invite":
-                            existing_invite = MembershipInvite.objects.filter(
-                                club=club, email=receiver, active=True
+                            existing_membership = Membership.objects.filter(
+                                person__email=receiver, club=club
                             )
-                            if not existing_invite.exists():
-                                invite = MembershipInvite.objects.create(
-                                    club=club,
-                                    email=receiver,
-                                    creator=None,
-                                    role=Membership.ROLE_OWNER,
-                                    title="Owner",
-                                    auto=True,
+                            if not existing_membership.exists():
+                                existing_invite = MembershipInvite.objects.filter(
+                                    club=club, email=receiver, active=True
                                 )
-                            else:
-                                invite = existing_invite.first()
-                            invite.send_owner_invite()
+                                if not existing_invite.exists():
+                                    invite = MembershipInvite.objects.create(
+                                        club=club,
+                                        email=receiver,
+                                        creator=None,
+                                        role=role,
+                                        title=role_mapping[role],
+                                        auto=True,
+                                    )
+                                else:
+                                    invite = existing_invite.first()
+                                if invite.role <= Membership.ROLE_OWNER:
+                                    invite.send_owner_invite()
+                                else:
+                                    invite.send_mail()
                         elif action == "fair":
                             send_fair_email(club, receiver)
+                        elif action == "postfair":
+                            send_fair_email(club, receiver, template="postfair")
 
         self.stdout.write(f"Sent {clubs_sent} email(s), {clubs_missing} missing club(s)")

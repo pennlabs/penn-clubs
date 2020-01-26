@@ -62,6 +62,7 @@ from clubs.serializers import (
     UserSerializer,
     YearSerializer,
 )
+from clubs.utils import html_to_text
 
 
 def upload_endpoint_helper(request, cls, field, **kwargs):
@@ -639,7 +640,7 @@ def email_preview(request):
             "role": 0,
         }
         email = render_to_string("emails/{}.html".format(email_path), context)
-        text_email = render_to_string("emails/{}.txt".format(email_path), context)
+        text_email = html_to_text(email)
 
     return render(
         request,

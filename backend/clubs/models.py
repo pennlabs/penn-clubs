@@ -14,6 +14,8 @@ from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from phonenumber_field.modelfields import PhoneNumberField
 
+from clubs.utils import html_to_text
+
 
 def get_asset_file_name(instance, fname):
     return os.path.join("assets", uuid.uuid4().hex, fname)
@@ -355,8 +357,8 @@ class MembershipInvite(models.Model):
                 domain=domain, id=self.id, token=self.token, club=self.club.code
             ),
         }
-        text_content = render_to_string("emails/invite.txt", context)
         html_content = render_to_string("emails/invite.html", context)
+        text_content = html_to_text(html_content)
 
         msg = EmailMultiAlternatives(
             "Invitation to {}".format(self.club.name),
@@ -391,8 +393,8 @@ class MembershipInvite(models.Model):
                 domain=domain, id=self.id, token=self.token, club=self.club.code
             ),
         }
-        text_content = render_to_string("emails/owner.txt", context)
         html_content = render_to_string("emails/owner.html", context)
+        text_content = html_to_text(html_content)
 
         msg = EmailMultiAlternatives(
             "Welcome to Penn Clubs!", text_content, settings.FROM_EMAIL, [self.email]
