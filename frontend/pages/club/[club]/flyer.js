@@ -173,7 +173,7 @@ const Flyer = ({
         },
         {
           referrerPolicy: 'no-referrer',
-          cache: tries == 1 ? 'reload' : 'default',
+          cache: tries === 1 ? 'reload' : 'default',
         }
       )
     }
