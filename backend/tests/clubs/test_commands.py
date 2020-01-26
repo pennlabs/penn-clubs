@@ -37,7 +37,7 @@ class SendInvitesTestCase(TestCase):
 
     def test_send_invites(self):
         with tempfile.NamedTemporaryFile() as tmp:
-            call_command("send_emails", tmp.name, "invite")
+            call_command("send_emails", "invite", tmp.name)
 
         self.assertEqual(MembershipInvite.objects.count(), 2)
         self.assertEqual(
@@ -63,7 +63,7 @@ class SendInvitesTestCase(TestCase):
                 for row in data:
                     writer.writerow(row)
 
-            call_command("send_emails", tmp.name, "fair", "--only-sheet")
+            call_command("send_emails", "fair", tmp.name, "--only-sheet")
 
         self.assertEqual(len(mail.outbox), 3)
 

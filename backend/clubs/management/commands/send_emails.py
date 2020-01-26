@@ -37,13 +37,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
+            "type", type=str, help="The type of email to send.", choices=("invite", "fair")
+        )
+        parser.add_argument(
             "emails",
             type=str,
             help="The CSV file with club name to email mapping. First column is club name"
             + "and second column is emails.",
-        )
-        parser.add_argument(
-            "type", type=str, help="The type of email to send.", choices=("invite", "fair")
         )
         parser.add_argument(
             "--dry-run",
