@@ -1,10 +1,50 @@
 import re
 
 import bleach
+from bs4 import BeautifulSoup, NavigableString
 from django.db.models import CharField, F, Q, Value
 from django.template.defaultfilters import slugify
 
-from clubs.models import Club
+
+def html_to_text(html):
+    """
+    Cleans up HTML and converts into a text-only format,
+    trying to preserve links and other objects.
+
+    Used for the text-only version of emails.
+    """
+
+    def traverse(children):
+        output = ""
+        for child in children:
+            if child.name:
+                if child.name.startswith("h"):
+                    continue
+                elif child.name == "a":
+                    if child.text.lower() == "here":
+                        output += f"at {child['href']}"
+                    else:
+                        output += f"{child.text} ({child['href']})"
+                    continue
+                elif child.name == "ul":
+                    for item in child.children:
+                        if item.name == "li":
+                            output += f"- {traverse([item]).strip()}\n"
+                        else:
+                            output += traverse([item])
+                    continue
+            if isinstance(child, NavigableString):
+                output += re.sub(r"([\t ])[\t ]*", r"\1", str(child))
+            elif child.children:
+                output += traverse(child.children)
+            if child.name == "p":
+                output += "\n"
+            if child.name == "br":
+                output += "\n"
+        return "\n".join(l.strip() for l in output.strip().split("\n"))
+
+    soup = BeautifulSoup(html, "html.parser")
+    return traverse(soup.children).strip()
 
 
 def clean(text):
@@ -66,6 +106,8 @@ def fuzzy_lookup_club(name):
     Aggressively attempt to find a club matching the provided name.
     Returns None if the club with that name could not be found.
     """
+    from clubs.models import Club
+
     name = name.strip()
 
     # empty string should match no club

@@ -8,7 +8,7 @@ from django.db.models import Count, Q
 from django.template.loader import render_to_string
 
 from clubs.models import Club, Membership, MembershipInvite
-from clubs.utils import fuzzy_lookup_club
+from clubs.utils import fuzzy_lookup_club, html_to_text
 
 
 def send_fair_email(club, email):
@@ -22,8 +22,8 @@ def send_fair_email(club, email):
         "flyer_url": settings.FLYER_URL.format(domain=domain, club=club.code),
     }
 
-    text_content = render_to_string("emails/fair.txt", context)
     html_content = render_to_string("emails/fair.html", context)
+    text_content = html_to_text(html_content)
 
     msg = EmailMultiAlternatives(
         "Making the SAC Fair Easier for You", text_content, settings.FROM_EMAIL, [email]
