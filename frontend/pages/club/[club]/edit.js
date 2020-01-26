@@ -240,7 +240,7 @@ class ClubForm extends Component {
             isEdit: true,
             club: info,
           })
-          if (photo.get('file') instanceof File) {
+          if (photo && photo.get('file') instanceof File) {
             doApiRequest(`/clubs/${this.state.club.code}/upload/?format=json`, {
               method: 'POST',
               body: photo,
