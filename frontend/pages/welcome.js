@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 import s from 'styled-components'
 
 import { CLUB_ROUTE } from '../constants/routes'
@@ -30,6 +32,15 @@ const TitleHeader = s.div`
   }
 `
 
+const markWelcome = () => {
+  doApiRequest('/settings/?format=json', {
+    method: 'PATCH',
+    body: {
+      has_been_prompted: true, // eslint-disable-line camelcase
+    },
+  })
+}
+
 const Welcome = ({ authenticated, query, userInfo, url }) => {
   const { next } = url.query
 
@@ -46,6 +57,8 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
       </PhoneContainer>
     )
   }
+
+  useEffect(markWelcome, [])
 
   return (
     <PhoneContainer>
@@ -102,17 +115,7 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
       <Center>
         <Subtitle>3. Start exploring Penn Clubs!</Subtitle>
         <Link href={next && next.startsWith('/') ? next : CLUB_ROUTE()}>
-          <a
-            className="button is-success is-large"
-            onClick={e => {
-              doApiRequest('/settings/?format=json', {
-                method: 'PATCH',
-                body: {
-                  has_been_prompted: true, // eslint-disable-line camelcase
-                },
-              })
-            }}
-          >
+          <a className="button is-success is-large" onClick={markWelcome}>
             Browse clubs
           </a>
         </Link>
