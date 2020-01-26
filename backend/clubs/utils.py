@@ -26,7 +26,7 @@ def html_to_text(html):
                     else:
                         output += f"{child.text} ({child['href']})"
                     continue
-                elif child.name == "ul":
+                elif child.name in ["ol", "ul"]:
                     for item in child.children:
                         if item.name == "li":
                             output += f"- {traverse([item]).strip()}\n"

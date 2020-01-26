@@ -1,0 +1,25 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>New Subscribers - {{ name }}</h2>
+    <p style="font-size: 1.2em">
+        Hi there,
+    </p>
+    <p style="font-size: 1.2em">
+        Hope you had a great SAC Fair! Here's how to access the list of any new subscribers from the SAC Fair:
+    </p>
+    <ol style="font-size: 1.2em">
+        <li>
+            Log in to Penn Clubs, go to the <a href="{{ url }}">{{ name }} page</a>, and hit the "Edit Club" button.
+            <img style="width: 100%; max-width: 600px;" src="https://i.imgur.com/SBGU7Gy.png" />
+        </li>
+        <li>
+            Go to the "Subscribers" tab.
+            <img style="width: 100%; max-width: 600px;" src="https://i.imgur.com/r4j6DmZ.png" />
+        </li>
+        <li>You'll be able to see the list of subscribers, with a button to download the list (as an Excel spreadsheet) at the bottom.</li>
+    </ol>
+    <p style="font-size: 1.2em">
+        Thanks for helping us test this feature during the SAC Fair! We appreciate your patience while we were working out bugs earlier this morning. Please let us know if you have any questions or feedback.
+    </p>
+{% endblock %}
