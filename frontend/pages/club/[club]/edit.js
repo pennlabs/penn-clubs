@@ -79,8 +79,8 @@ class ClubForm extends Component {
     this.types = [
       {
         value: 1,
-        label: 'Recruitment'
-      }
+        label: 'Recruitment',
+      },
     ]
 
     this.state = {
@@ -128,7 +128,6 @@ class ClubForm extends Component {
       }
     })
   }
-
 
   deleteMembership(member) {
     if (
@@ -518,7 +517,7 @@ class ClubForm extends Component {
         name: 'description',
         placeholder: 'Type your event description here!',
         type: 'html',
-      }
+      },
     ]
 
     const tabs = [
@@ -670,22 +669,6 @@ class ClubForm extends Component {
                 </div>
               </div>
             )}
-            <div className="card" style={{ marginBottom: 20 }}>
-              <div className="card-header">
-                <p className="card-header-title">
-                  Events
-                </p>
-              </div>
-              <div className="card-content">
-                <Text>
-                   Manage events for this club.
-                </Text>
-                <ModelForm
-                  baseUrl={`/clubs/${club.code}/events/`}
-                  fields={event_fields}
-                />
-              </div>
-            </div>
             <div className="card">
               <div className="card-header">
                 <p className="card-header-title">Invite Members</p>
@@ -829,30 +812,44 @@ class ClubForm extends Component {
         ),
       },
       {
-        name: 'testimonials',
-        label: 'Testimonials',
+        name: 'resources',
+        label: 'Resources',
         content: (
-          <div className="card">
-            <div className="card-header">
-              <p className="card-header-title">Member Experiences</p>
+          <>
+            <div className="card" style={{ marginBottom: 20 }}>
+              <div className="card-header">
+                <p className="card-header-title">Member Experiences</p>
+              </div>
+              <div className="card-content">
+                <Text>
+                  Provde more information on what being in your organization is
+                  like from a member's point of view.
+                </Text>
+                <ModelForm
+                  baseUrl={`/clubs/${club.code}/testimonials/`}
+                  fields={[
+                    {
+                      name: 'text',
+                      type: 'textarea',
+                      hasLabel: false,
+                    },
+                  ]}
+                />
+              </div>
             </div>
-            <div className="card-content">
-              <Text>
-                Provde more information on what being in your organization is
-                like from a member's point of view.
-              </Text>
-              <ModelForm
-                baseUrl={`/clubs/${club.code}/testimonials/`}
-                fields={[
-                  {
-                    name: 'text',
-                    type: 'textarea',
-                    hasLabel: false,
-                  },
-                ]}
-              />
+            <div className="card">
+              <div className="card-header">
+                <p className="card-header-title">Events</p>
+              </div>
+              <div className="card-content">
+                <Text>Manage events for this club.</Text>
+                <ModelForm
+                  baseUrl={`/clubs/${club.code}/events/`}
+                  fields={event_fields}
+                />
+              </div>
             </div>
-          </div>
+          </>
         ),
       },
       {
