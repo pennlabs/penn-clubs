@@ -65,6 +65,13 @@ class Command(BaseCommand):
             action="store_true",
             help="Only send emails to clubs that are marked as active.",
         )
+        parser.add_argument(
+            "--role",
+            type=int,
+            default=Membership.ROLE_OWNER,
+            choices=[r[0] for r in Membership.ROLE_CHOICES],
+            help="The permission level to grant for new invitations.",
+        )
         parser.set_defaults(dry_run=False, only_sheet=False, only_active=True)
 
     def handle(self, *args, **kwargs):
@@ -72,6 +79,8 @@ class Command(BaseCommand):
         only_sheet = kwargs["only_sheet"]
         action = kwargs["type"]
         verbosity = kwargs["verbosity"]
+        role = kwargs["role"]
+        role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
 
         if only_sheet:
             clubs = Club.objects.all()
@@ -106,11 +115,7 @@ class Command(BaseCommand):
         elif only_sheet:
             raise CommandError("Cannot specify only sheet option without an email file!")
         else:
-            self.stdout.write(
-                self.style.WARNING(
-                    "No email spreadsheet file specified! Only using database information to send emails."
-                )
-            )
+            self.stdout.write(self.style.WARNING("No email spreadsheet file specified!"))
 
         # load email file
         if email_file is not None:
@@ -161,8 +166,8 @@ class Command(BaseCommand):
                                         club=club,
                                         email=receiver,
                                         creator=None,
-                                        role=Membership.ROLE_OWNER,
-                                        title="Owner",
+                                        role=role,
+                                        title=role_mapping[role],
                                         auto=True,
                                     )
                                 else:
