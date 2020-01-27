@@ -5,6 +5,7 @@ import Router from 'next/router'
 import { EditorState, ContentState, convertToRaw } from 'draft-js'
 import draftToHtml from 'draftjs-to-html'
 import Head from 'next/head'
+import DatePicker from 'react-datepicker'
 
 import { Icon } from './common'
 import { doApiRequest, titleize } from '../utils'
@@ -52,10 +53,6 @@ class Form extends Component {
             this.state[`field-${name}`] = (value || []).map(converter)
           } else if (type === 'select') {
             this.state[`field-${name}`] = value ? converter(value) : null
-          } else if (type === 'datetime-local') {
-            if (value) {
-              this.state[`field-${name}`] = value.substring(0, value.length - 6)
-            }
           } else {
             this.state[`field-${name}`] = value || ''
           }
@@ -175,11 +172,7 @@ class Form extends Component {
 
     let inpt = null
 
-    if (
-      ['text', 'url', 'email', 'date', 'datetime-local', 'number'].includes(
-        type
-      )
-    ) {
+    if (['text', 'url', 'email', 'date', 'number'].includes(type)) {
       inpt = (
         <input
           className="input"
@@ -194,6 +187,21 @@ class Form extends Component {
           name={name}
         />
       )
+    } else if (type === 'datetime-local') {
+      inpt = (
+        <DatePickerWrapper>
+          <DatePicker
+            className="input"
+            showTimeSelect
+            dateFormat="MMMM d, yyyy h:mm aa"
+            selected={Date.parse(value) || value}
+            onChange={val => {
+              this.onChange(val)
+              this.setState({ ['field-' + name]: val })
+            }}
+          />
+        </DatePickerWrapper>
+      )
     } else if (type === 'html') {
       inpt = (
         <div>
@@ -202,6 +210,11 @@ class Form extends Component {
               href="/static/css/react-draft-wysiwyg.css"
               rel="stylesheet"
               key="editor-css"
+            />
+            <link
+              href="/static/css/react-datepicker.css"
+              rel="stylesheet"
+              key="datepicker-css"
             />
           </Head>
           {this.state.mounted ? (
@@ -445,6 +458,12 @@ const ModelItem = s.div`
   border: 1px solid #dbdbdb;
   border-radius: 3px;
   margin-bottom: 1em;
+`
+
+const DatePickerWrapper = s.span`
+  & .react-datepicker-wrapper {
+    width: 100%;
+  }
 `
 
 /*
