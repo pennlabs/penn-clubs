@@ -158,9 +158,11 @@ class Command(BaseCommand):
                     continue
                 if include_staff:
                     receivers += list(
-                        club.membership_set.filter(role__lte=Membership.ROLE_OFFICER).values_list(
-                            "person__email", flat=True
+                        club.membership_set.filter(
+                            role__lte=Membership.ROLE_OFFICER, person__email__isnull=False
                         )
+                        .exclude(person__email="")
+                        .values_list("person__email", flat=True)
                     )
                 receivers = list(set(receivers))
                 receivers_str = ", ".join(receivers)
