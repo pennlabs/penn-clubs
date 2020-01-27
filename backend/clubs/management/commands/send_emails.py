@@ -75,13 +75,20 @@ class Command(BaseCommand):
             choices=[r[0] for r in Membership.ROLE_CHOICES],
             help="The permission level to grant for new invitations.",
         )
-        parser.set_defaults(dry_run=False, only_sheet=False, only_active=True)
+        parser.add_argument(
+            "--include-staff",
+            dest="include_staff",
+            action="store_true",
+            help="Include staff members of a club in the email being sent out.",
+        )
+        parser.set_defaults(include_staff=False, dry_run=False, only_sheet=False, only_active=True)
 
     def handle(self, *args, **kwargs):
         dry_run = kwargs["dry_run"]
         only_sheet = kwargs["only_sheet"]
         action = kwargs["type"]
         verbosity = kwargs["verbosity"]
+        include_staff = kwargs["include_staff"]
         role = kwargs["role"]
         role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
 
@@ -149,6 +156,12 @@ class Command(BaseCommand):
                         receivers += emails[club.id]
                 elif only_sheet:
                     continue
+                if include_staff:
+                    receivers += list(
+                        club.membership_set.filter(role__lte=Membership.ROLE_OFFICER).values_list(
+                            "person__email", flat=True
+                        )
+                    )
                 receivers = list(set(receivers))
                 receivers_str = ", ".join(receivers)
                 self.stdout.write(
