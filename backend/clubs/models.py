@@ -538,11 +538,3 @@ def user_create(sender, instance, created, **kwargs):
 def profile_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
-
-
-@receiver(models.signals.post_save, sender=Club)
-def club_modify_handler(sender, instance, **kwargs):
-    """
-    Delete the club list cache when a club is modified.
-    """
-    cache.delete(settings.CLUB_LIST_CACHE_KEY)
