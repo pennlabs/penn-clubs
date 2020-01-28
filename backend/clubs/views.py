@@ -158,18 +158,20 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
+    def generate_club_list(self, request):
+        """
+        Helper function to build the club list and cache it.
+        """
+        key = settings.CLUB_LIST_CACHE_KEY
+        resp = super().list(request)
+        if resp.status_code == 200:
+            cache.set(key, resp.data, settings.CLUB_LIST_CACHE_TIME)
+
     def regenerate_cache(self, request):
         """
-        Helper function to regenerate the club list when a club is edited.
+        Helper function to regenerate the club list in a background thread.
         """
-        
-        def generate_club_list():
-            key = settings.CLUB_LIST_CACHE_KEY
-            resp = super().list(request)
-            if resp.status_code == 200:
-                cache.set(key, resp.data, settings.CLUB_LIST_CACHE_TIME)
-
-        t = threading.Thread(target=generate_club_list)
+        t = threading.Thread(target=self.generate_club_list, args=(request,))
         t.setDaemon(True)
         t.start()
 
@@ -222,23 +224,23 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
         return Response(serializer.data)
 
-    def create(self, request):
-        ret = super().create(request)
+    def create(self, request, *args, **kwargs):
+        ret = super().create(request, *args, **kwargs)
         self.regenerate_cache(request)
         return ret
 
-    def update(self, request, pk=None):
-        ret = super().update(request, pk=pk)
+    def update(self, request, *args, **kwargs):
+        ret = super().update(request,  *args, **kwargs)
         self.regenerate_cache(request)
         return ret
 
-    def partial_update(self, request, pk=None):
-        ret = super().partial_update(request, pk=pk)
+    def partial_update(self, request, *args, **kwargs):
+        ret = super().partial_update(request, *args, **kwargs)
         self.regenerate_cache(request)
         return ret
 
-    def destroy(self, request, pk=None):
-        ret = super().destroy(request, pk=pk)
+    def destroy(self, request, *args, **kwargs):
+        ret = super().destroy(request, *args, **kwargs)
         self.regenerate_cache(request)
         return ret
 
