@@ -230,7 +230,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return ret
 
     def update(self, request, *args, **kwargs):
-        ret = super().update(request,  *args, **kwargs)
+        ret = super().update(request, *args, **kwargs)
         self.regenerate_cache(request)
         return ret
 
