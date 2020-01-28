@@ -157,6 +157,21 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
+    def regenerate_cache(self, request):
+        """
+        Helper function to regenerate the club list when a club is edited.
+        """
+        
+        def generate_club_list():
+            key = settings.CLUB_LIST_CACHE_KEY
+            resp = super().list(request)
+            if resp.status_code == 200:
+                cache.set(key, resp.data, settings.CLUB_LIST_CACHE_TIME)
+
+        t = threading.Thread(target=generate_club_list)
+        t.setDaemon(True)
+        t.start()
+
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
