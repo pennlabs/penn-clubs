@@ -1,5 +1,6 @@
 import os
 import re
+import threading
 
 import qrcode
 from django.conf import settings
@@ -177,6 +178,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Upload the club logo.
         """
+        self.regenerate_cache(request)
         return upload_endpoint_helper(request, Club, "image", code=kwargs["code"])
 
     @action(detail=True, methods=["get"])
@@ -220,9 +222,29 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
         return Response(serializer.data)
 
+    def create(self, request):
+        ret = super().create(request)
+        self.regenerate_cache(request)
+        return ret
+
+    def update(self, request, pk=None):
+        ret = super().update(request, pk=pk)
+        self.regenerate_cache(request)
+        return ret
+
+    def partial_update(self, request, pk=None):
+        ret = super().partial_update(request, pk=pk)
+        self.regenerate_cache(request)
+        return ret
+
+    def destroy(self, request, pk=None):
+        ret = super().destroy(request, pk=pk)
+        self.regenerate_cache(request)
+        return ret
+
     def list(self, request, *args, **kwargs):
         """
-        Return a list of all clubs. Results are cached and update every 5 minutes.
+        Return a list of all clubs. Results are cached, and the cache is regenerated when a club is edited.
         Note that some fields are removed in order to improve the response time.
         """
         # don't cache requests for spreadsheet format
