@@ -29,6 +29,7 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
+      - build
       - django-tools/check:
           project-name: pennclubs
           project-location: backend
