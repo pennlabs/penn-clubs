@@ -11,7 +11,7 @@ branch-filters: &branch-filters
         - master
 
 jobs:
-  build:
+  lint-frontend:
     docker:
       - image: circleci/node:latest
     steps:
@@ -19,9 +19,11 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            cd frontend
             npm install
       - run:
           command: |
+            cd frontend
             npm run lint
             npm run build
 
@@ -29,7 +31,7 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - build
+      - lint-frontend
       - django-tools/check:
           project-name: pennclubs
           project-location: backend
@@ -45,6 +47,8 @@ workflows:
           <<: *branch-filters
       - docker/publish:
           name: publish-frontend
+          requires:
+            - lint-frontend
           path: frontend
           cache_from: "pennlabs/penn-clubs-frontend:latest"
           image: "pennlabs/penn-clubs-frontend"
