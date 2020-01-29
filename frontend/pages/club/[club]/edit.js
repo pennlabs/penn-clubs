@@ -24,6 +24,15 @@ import {
   Empty,
 } from '../../../components/common'
 
+const Card = ({ children, title }) => (
+  <div className="card" style={{ marginBottom: 20 }}>
+    <div className="card-header">
+      <p className="card-header-title">{title}</p>
+    </div>
+    <div className="card-content">{children}</div>
+  </div>
+)
+
 class ClubForm extends Component {
   constructor(props) {
     super(props)
@@ -479,7 +488,7 @@ class ClubForm extends Component {
       },
     ]
 
-    const event_fields = [
+    const eventFields = [
       {
         name: 'name',
         type: 'text',
@@ -534,62 +543,57 @@ class ClubForm extends Component {
         label: 'Membership',
         content: (
           <>
-            <div className="card" style={{ marginBottom: 20 }}>
-              <div className="card-header">
-                <p className="card-header-title">Members</p>
-              </div>
-              <div className="card-content">
-                <table className="table is-fullwidth">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Title (Permissions)</th>
-                      <th>Email</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {club && club.members.length ? (
-                      club.members.map(a => (
-                        <tr key={a.username}>
-                          <td>{a.name}</td>
-                          <td>
-                            {a.title} ({getRoleDisplay(a.role)})
-                          </td>
-                          <td>{a.email}</td>
-                          <td className="buttons">
-                            <button
-                              className="button is-small is-primary"
-                              onClick={() => this.setState({ editMember: a })}
-                            >
-                              <Icon name="edit" alt="edit member" /> Edit
-                            </button>
-                            <button
-                              className="button is-small is-danger"
-                              onClick={() => this.deleteMembership(a.username)}
-                            >
-                              <Icon name="x" alt="kick member" /> Kick
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="4" className="has-text-grey">
-                          There are no members in this club.
+            <Card title="Members">
+              <table className="table is-fullwidth">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Title (Permissions)</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {club && club.members.length ? (
+                    club.members.map(a => (
+                      <tr key={a.username}>
+                        <td>{a.name}</td>
+                        <td>
+                          {a.title} ({getRoleDisplay(a.role)})
+                        </td>
+                        <td>{a.email}</td>
+                        <td className="buttons">
+                          <button
+                            className="button is-small is-primary"
+                            onClick={() => this.setState({ editMember: a })}
+                          >
+                            <Icon name="edit" alt="edit member" /> Edit
+                          </button>
+                          <button
+                            className="button is-small is-danger"
+                            onClick={() => this.deleteMembership(a.username)}
+                          >
+                            <Icon name="x" alt="kick member" /> Kick
+                          </button>
                         </td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-                <a
-                  href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)}
-                  className="button is-link"
-                >
-                  <Icon alt="download" name="download" /> Download Member List
-                </a>
-              </div>
-            </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="has-text-grey">
+                        There are no members in this club.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              <a
+                href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)}
+                className="button is-link"
+              >
+                <Icon alt="download" name="download" /> Download Member List
+              </a>
+            </Card>
             {editMember && (
               <div className="card" style={{ marginBottom: 20 }}>
                 <div className="card-header">
@@ -742,77 +746,72 @@ class ClubForm extends Component {
         label: 'Subscriptions',
         content: (
           <>
-            <div className="card" style={{ marginBottom: 20 }}>
-              <div className="card-header">
-                <p className="card-header-title">Subscribers</p>
-              </div>
-              <div className="card-content">
-                <table className="table is-fullwidth">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Grad Year</th>
-                      <th>School</th>
-                      <th>Major</th>
-                      <th>Subscribed</th>
+            <Card title="Subscribers">
+              <table className="table is-fullwidth">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Grad Year</th>
+                    <th>School</th>
+                    <th>Major</th>
+                    <th>Subscribed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {this.state.subscriptions.map((item, i) => (
+                    <tr key={i}>
+                      <td>{item.name || <Empty>None</Empty>}</td>
+                      <td>{item.email || <Empty>None</Empty>}</td>
+                      <td>{item.graduation_year || <Empty>None</Empty>}</td>
+                      <td>
+                        {item.school && item.school.length ? (
+                          item.school.map(a => a.name).join(', ')
+                        ) : (
+                          <Empty>None</Empty>
+                        )}
+                      </td>
+                      <td>
+                        {item.major && item.major.length ? (
+                          item.major.map(a => a.name).join(', ')
+                        ) : (
+                          <Empty>None</Empty>
+                        )}
+                      </td>
+                      <td>
+                        <TimeAgo date={item.created_at} />
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {this.state.subscriptions.map((item, i) => (
-                      <tr key={i}>
-                        <td>{item.name || <Empty>None</Empty>}</td>
-                        <td>{item.email || <Empty>None</Empty>}</td>
-                        <td>{item.graduation_year || <Empty>None</Empty>}</td>
-                        <td>
-                          {item.school && item.school.length ? (
-                            item.school.map(a => a.name).join(', ')
-                          ) : (
-                            <Empty>None</Empty>
-                          )}
-                        </td>
-                        <td>
-                          {item.major && item.major.length ? (
-                            item.major.map(a => a.name).join(', ')
-                          ) : (
-                            <Empty>None</Empty>
-                          )}
-                        </td>
-                        <td>
-                          <TimeAgo date={item.created_at} />
-                        </td>
-                      </tr>
-                    ))}
-                    {!!this.state.subscriptions.length || (
-                      <tr>
-                        <td colSpan="5" className="has-text-grey">
-                          No one has subscribed to this club yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                <div className="buttons">
-                  <a
-                    href={getApiUrl(
-                      `/clubs/${club.code}/subscription/?format=xlsx`
-                    )}
-                    className="button is-link"
-                  >
-                    <Icon alt="download" name="download" /> Download Subscriber
-                    List
+                  ))}
+                  {!!this.state.subscriptions.length || (
+                    <tr>
+                      <td colSpan="5" className="has-text-grey">
+                        No one has subscribed to this club yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              <div className="buttons">
+                <a
+                  href={getApiUrl(
+                    `/clubs/${club.code}/subscription/?format=xlsx`
+                  )}
+                  className="button is-link"
+                >
+                  <Icon alt="download" name="download" /> Download Subscriber
+                  List
+                </a>
+                <Link
+                  href={CLUB_FLYER_ROUTE()}
+                  as={CLUB_FLYER_ROUTE(club.code)}
+                >
+                  <a target="_blank" className="button is-success">
+                    <Icon alt="flyer" name="external-link" /> View Flyer
                   </a>
-                  <Link
-                    href={CLUB_FLYER_ROUTE()}
-                    as={CLUB_FLYER_ROUTE(club.code)}
-                  >
-                    <a target="_blank" className="button is-success">
-                      <Icon alt="flyer" name="external-link" /> View Flyer
-                    </a>
-                  </Link>
-                </div>
+                </Link>
               </div>
-            </div>
+            </Card>
           </>
         ),
       },
@@ -821,78 +820,63 @@ class ClubForm extends Component {
         label: 'Resources',
         content: (
           <>
-            <div className="card" style={{ marginBottom: 20 }}>
-              <div className="card-header">
-                <p className="card-header-title">Member Experiences</p>
-              </div>
-              <div className="card-content">
-                <Text>
-                  Provde more information on what being in your organization is
-                  like from a member's point of view.
-                </Text>
-                <ModelForm
-                  baseUrl={`/clubs/${club.code}/testimonials/`}
-                  fields={[
-                    {
-                      name: 'text',
-                      type: 'textarea',
-                      hasLabel: false,
-                    },
-                  ]}
-                />
-              </div>
-            </div>
-            <div className="card" style={{ marginBottom: 20 }}>
-              <div className="card-header">
-                <p className="card-header-title">Events</p>
-              </div>
-              <div className="card-content">
-                <Text>Manage events for this club.</Text>
-                <ModelForm
-                  baseUrl={`/clubs/${club.code}/events/`}
-                  fields={event_fields}
-                />
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-header">
-                <p className="card-header-title">Files</p>
-              </div>
-              <div className="card-content">
-                <table className="table is-fullwidth">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {club && club.files && club.files.length ? (
-                      club.files.map(a => (
-                        <tr key={a.name}>
-                          <td>{a.name}</td>
-                          <td className="buttons">
-                            <button className="button is-small is-danger">
-                              <Icon name="times" alt="delete file" /> Delete
-                            </button>
-                            <button className="button is-small is-primary">
-                              <Icon name="download" alt="download file" />{' '}
-                              Download
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="2" className="has-text-grey">
-                          There are no uploaded files for this club.
+            <Card title="Member Experiences">
+              <Text>
+                Provde more information on what being in your organization is
+                like from a member's point of view.
+              </Text>
+              <ModelForm
+                baseUrl={`/clubs/${club.code}/testimonials/`}
+                fields={[
+                  {
+                    name: 'text',
+                    type: 'textarea',
+                    hasLabel: false,
+                  },
+                ]}
+              />
+            </Card>
+            <Card title="Events">
+              <Text>Manage events for this club.</Text>
+              <ModelForm
+                baseUrl={`/clubs/${club.code}/events/`}
+                fields={eventFields}
+              />
+            </Card>
+            <Card title="Files">
+              <table className="table is-fullwidth">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {club && club.files && club.files.length ? (
+                    club.files.map(a => (
+                      <tr key={a.name}>
+                        <td>{a.name}</td>
+                        <td className="buttons">
+                          <button className="button is-small is-danger">
+                            <Icon name="times" alt="delete file" /> Delete
+                          </button>
+                          <button className="button is-small is-primary">
+                            <Icon name="download" alt="download file" />{' '}
+                            Download
+                          </button>
                         </td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="2" className="has-text-grey">
+                        There are no uploaded files for this club.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </Card>
           </>
         ),
       },

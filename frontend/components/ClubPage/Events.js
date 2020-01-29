@@ -1,6 +1,5 @@
 import s from 'styled-components'
-import { Icon, Text, StrongText, Card } from '../common'
-import { useState, useEffect } from 'react'
+import { Icon, StrongText, Card } from '../common'
 
 const Events = ({ data }) => {
   const BigParagraph = s.p`
