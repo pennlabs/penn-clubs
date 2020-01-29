@@ -24,27 +24,26 @@ export default ({ show, ...props }) => {
     newlyMounted && setNewlyMounted(false)
   })
   return (
-    <Modal
-      show={show}
-      {...props}
-    >
-      {
-        newlyMounted ? (
-          <Loading />
-        ) : (
-          <>
-            <Logo
-              show={show}
-              src="/static/img/peoplelogo.png"
-              alt="Penn Clubs Logo"
-            />
-            <ModalTitle show={show}>Uh oh!</ModalTitle>
-            This feature requires a Penn login.
-            <br />
-            Please <a href={`${LOGIN_URL}?next=${window.location.href}`}>log in using your PennKey</a> to continue.
-          </>
-        )
-      }
+    <Modal show={show} {...props}>
+      {newlyMounted ? (
+        <Loading />
+      ) : (
+        <>
+          <Logo
+            show={show}
+            src="/static/img/peoplelogo.png"
+            alt="Penn Clubs Logo"
+          />
+          <ModalTitle show={show}>Uh oh!</ModalTitle>
+          This feature requires a Penn login.
+          <br />
+          Please{' '}
+          <a href={`${LOGIN_URL}?next=${window.location.href}`}>
+            log in using your PennKey
+          </a>{' '}
+          to continue.
+        </>
+      )}
     </Modal>
   )
 }

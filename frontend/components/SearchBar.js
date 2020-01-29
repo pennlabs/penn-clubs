@@ -110,7 +110,12 @@ const SearchIcon = s.span`
   }
 `
 
-const SearchBar = ({ tags, updateTag, selectedTags: propTags, resetDisplay }) => {
+const SearchBar = ({
+  tags,
+  updateTag,
+  selectedTags: propTags,
+  resetDisplay,
+}) => {
   const [nameInput, setNameInput] = useState('')
   const [activeDropdownFilter, setActiveDropdownFilter] = useState(null)
   const [selectedTags, setSelectedTags] = useState(propTags)
@@ -123,7 +128,8 @@ const SearchBar = ({ tags, updateTag, selectedTags: propTags, resetDisplay }) =>
     storeTimeout(setTimeout(() => resetDisplay(nameInput, selectedTags), 200))
   }, [nameInput])
 
-  const toggleActiveDropdownFilter = name => setActiveDropdownFilter(activeDropdownFilter === name ? null : name)
+  const toggleActiveDropdownFilter = name =>
+    setActiveDropdownFilter(activeDropdownFilter === name ? null : name)
   const closeDropdownFilter = () => setActiveDropdownFilter(null)
   const focus = () => inputRef.current.focus()
 
@@ -187,7 +193,9 @@ const SearchBar = ({ tags, updateTag, selectedTags: propTags, resetDisplay }) =>
               updateTag={updateTag}
             />
           ))}
-          {activeDropdownFilter && <CloseButton onClick={closeDropdownFilter} />}
+          {activeDropdownFilter && (
+            <CloseButton onClick={closeDropdownFilter} />
+          )}
         </Content>
       </Wrapper>
 
