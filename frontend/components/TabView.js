@@ -50,12 +50,17 @@ const TabView = ({ tabs, tabClassName, background }) => {
     setCurrentTab(window.location.hash.substring(1) || currentTab)
   }, [])
 
-  const getTabContent = () =>
-    <div key={currentTab}>{(
-      tabs.filter(a => a.name === currentTab)[0] || {
-        content: <>Invalid tab selected.</>,
+  const getTabContent = () => (
+    <div key={currentTab}>
+      {
+        (
+          tabs.filter(a => a.name === currentTab)[0] || {
+            content: <>Invalid tab selected.</>,
+          }
+        ).content
       }
-    ).content}</div>
+    </div>
+  )
 
   const enabledTabs = tabs.filter(tab => !tab.disabled)
 

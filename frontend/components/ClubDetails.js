@@ -20,7 +20,14 @@ const iconStyles = {
   transform: 'translateY(3px)',
 }
 
-const Details = ({ size, applicationRequired, acceptingMembers, club, favorite, updateFavorites }) => (
+const Details = ({
+  size,
+  applicationRequired,
+  acceptingMembers,
+  club,
+  favorite,
+  updateFavorites,
+}) => (
   <Wrapper>
     <p style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8 }}>
       <Icon name="user" alt="members" style={iconStyles} />

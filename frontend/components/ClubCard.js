@@ -82,11 +82,7 @@ const shorten = desc => {
   return desc.slice(0, 250) + '...'
 }
 
-const ClubCard = ({
-  club,
-  updateFavorites,
-  favorite,
-}) => {
+const ClubCard = ({ club, updateFavorites, favorite }) => {
   const {
     name,
     active,

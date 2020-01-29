@@ -73,11 +73,7 @@ class ClubTableRow extends React.Component {
   }
 
   render() {
-    const {
-      club,
-      updateFavorites,
-      favorite,
-    } = this.props
+    const { club, updateFavorites, favorite } = this.props
     const {
       name,
       tags,

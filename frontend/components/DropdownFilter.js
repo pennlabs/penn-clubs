@@ -86,8 +86,8 @@ const TableWrapper = s.div`
     background: ${WHITE};
     height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
     ${({ active }) =>
-    active &&
-    `
+      active &&
+      `
       overflow-y: auto;
       max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});`}
   }
