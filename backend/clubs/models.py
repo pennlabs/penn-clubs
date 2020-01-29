@@ -127,7 +127,7 @@ class Event(models.Model):
     location = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
-    description = models.TextField()
+    description = models.TextField(blank=True)
 
     RECRUITMENT = 1
     TYPES = ((RECRUITMENT, "Recruitment"),)

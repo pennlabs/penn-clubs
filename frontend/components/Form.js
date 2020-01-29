@@ -466,6 +466,11 @@ const DatePickerWrapper = s.span`
   }
 `
 
+const ModelStatus = s.span`
+  display: inline-block;
+  margin: 0.375em 0.75em;
+`
+
 /*
  * Creates a form with CRUD (create, read, update, delete)
  * capabilities for a Django model using a provided endpoint.
@@ -526,12 +531,23 @@ export class ModelForm extends Component {
                           object[key] = resp[key]
                         })
                       })
+                      object._status = true
+                    } else {
+                      object._status = false
                     }
+                    this.setState(({ objects }) => ({
+                      objects: [...objects],
+                    }))
                   })
                 } else {
                   doApiRequest(`${baseUrl}${object.id}/?format=json`, {
                     method: 'PATCH',
                     body: data,
+                  }).then(resp => {
+                    object._status = resp.ok
+                    this.setState(({ objects }) => ({
+                      objects: [...objects],
+                    }))
                   })
                 }
               }}
@@ -561,6 +577,18 @@ export class ModelForm extends Component {
             >
               <Icon name="trash" alt="trash" /> Delete
             </span>
+            <ModelStatus>
+              {typeof object._status !== 'undefined' &&
+                (object._status === true ? (
+                  <>
+                    <Icon name="check-circle-green" alt="success" /> Saved!
+                  </>
+                ) : (
+                  <>
+                    <Icon name="x-circle-red" alt="failure" /> Failed to save!
+                  </>
+                ))}
+            </ModelStatus>
           </ModelItem>
         ))}
         <span
