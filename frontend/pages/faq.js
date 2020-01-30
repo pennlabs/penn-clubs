@@ -126,7 +126,7 @@ const FAQ = () => (
         <Link href="/rank">
           <a>here</a>
         </Link>{' '}
-        for details about our ranking algorithm.
+        for details about our club recommendation algorithm.
       </Question>
       <Question title="I have another question!">
         <a href="https://airtable.com/shrCsYFWxCwfwE7cf">

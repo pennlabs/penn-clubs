@@ -23,18 +23,18 @@ const LargeIcon = s(Icon)`
 const Rank = () => (
   <Container background={SNOW}>
     <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
-      Club Rank Algorithm
+      Club Recommendation Algorithm
     </Title>
-    <StrongText>How are clubs ranked?</StrongText>
+    <StrongText>How are clubs ordered?</StrongText>
     <Text>
       The order that clubs appear on the home page is controlled by several
-      criteria. A ranking algorithm exists to ensure that students receive the
-      best experience when browsing for new clubs and so that clubs can best
+      criteria. A recommendation algorithm exists to ensure that students receive the
+      best experience when browsing for new clubs and that clubs can best
       reach the members that they want to recruit.
     </Text>
-    <StrongText>How does the ranking algorithm work?</StrongText>
+    <StrongText>How does the club recommendation algorithm work?</StrongText>
     <Text>
-      The ranking algorithm uses the following criteria to determine how to
+      The reccomendation algorithm uses the following criteria to determine how to
       order the club list. The criteria are as follows:
       {[
         {
