@@ -1,10 +1,12 @@
 import datetime
 import os
 import uuid
+import threading
 from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.db import models
@@ -537,3 +539,38 @@ def user_create(sender, instance, created, **kwargs):
 def profile_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
+
+
+@receiver(models.signals.post_save, sender=Club)
+def club_modify_handler(sender, instance, **kwargs):
+    """
+    Regenerate the club list cache when a club is modified.
+    """
+
+    def regenerate_club_list_cache():
+        from clubs.models import Club, Membership
+        from clubs.serializers import ClubListSerializer
+        queryset = (
+            Club.objects.all()
+            .annotate(favorite_count=models.Count("favorite"))
+            .prefetch_related(
+                "tags",
+                "badges",
+                "target_schools",
+                "target_majors",
+                "target_years",
+                models.Prefetch(
+                    "membership_set",
+                    queryset=Membership.objects.order_by(
+                        "role", "person__first_name", "person__last_name"
+                    ),
+                ),
+            )
+        )
+        serializer = ClubListSerializer(queryset, many=True)
+        key, cache_time = settings.CLUB_LIST_CACHE_KEY, settings.CLUB_LIST_CACHE_TIME
+        cache.set(key, serializer.data, cache_time)
+
+    t = threading.Thread(target=regenerate_club_list_cache)
+    t.setDaemon(True)
+    t.start()
