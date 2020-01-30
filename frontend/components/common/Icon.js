@@ -9,7 +9,7 @@ export const Icon = ({ name, size = '1rem', ...props }) => {
     return null
   }
   return svg.default({
-    preserveAspectRatio: "true",
+    preserveAspectRatio: 'true',
     width: size,
     height: size,
     viewBox: '0 0 24 24',
