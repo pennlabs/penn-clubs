@@ -550,28 +550,15 @@ def club_modify_handler(sender, instance, **kwargs):
     def regenerate_club_list_cache():
         from clubs.models import Club, Membership
         from clubs.serializers import ClubListSerializer
+        from clubs.views import ClubViewSet
 
-        queryset = (
-            Club.objects.all()
-            .annotate(favorite_count=models.Count("favorite"))
-            .prefetch_related(
-                "tags",
-                "badges",
-                "target_schools",
-                "target_majors",
-                "target_years",
-                models.Prefetch(
-                    "membership_set",
-                    queryset=Membership.objects.order_by(
-                        "role", "person__first_name", "person__last_name"
-                    ),
-                ),
-            )
-        )
-        serializer = ClubListSerializer(queryset, many=True)
+        serializer = ClubListSerializer(ClubViewSet.queryset, many=True)
         key, cache_time = settings.CLUB_LIST_CACHE_KEY, settings.CLUB_LIST_CACHE_TIME
         cache.set(key, serializer.data, cache_time)
 
-    t = threading.Thread(target=regenerate_club_list_cache)
-    t.setDaemon(True)
-    t.start()
+    if settings.DEBUG:
+        regenerate_club_list_cache()
+    else:
+        t = threading.Thread(target=regenerate_club_list_cache)
+        t.setDaemon(True)
+        t.start()
