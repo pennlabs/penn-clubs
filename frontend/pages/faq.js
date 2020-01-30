@@ -122,7 +122,11 @@ const FAQ = () => (
         you.
       </Question>
       <Question title="How are clubs ordered on Penn Clubs?">
-        Click <Link href="/rank"><a>here</a></Link> for details about our ranking algorithm.
+        Click{' '}
+        <Link href="/rank">
+          <a>here</a>
+        </Link>{' '}
+        for details about our ranking algorithm.
       </Question>
       <Question title="I have another question!">
         <a href="https://airtable.com/shrCsYFWxCwfwE7cf">
