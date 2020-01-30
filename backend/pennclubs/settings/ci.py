@@ -6,8 +6,4 @@ TEST_OUTPUT_VERBOSE = 2
 TEST_OUTPUT_DIR = "test-results"
 
 # Use dummy cache for testing
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-    }
-}
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
