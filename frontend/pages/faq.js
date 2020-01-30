@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types'
+import Link from 'next/link'
 
 import renderPage from '../renderPage.js'
 import { Container, Line, Title, StrongText, Text } from '../components/common'
@@ -119,6 +120,9 @@ const FAQ = () => (
         charge of this club, please enter your email so that we can give you
         administrator permission to edit the club page that we’ll create for
         you.
+      </Question>
+      <Question title="How are clubs ordered on Penn Clubs?">
+        Click <Link href="/rank"><a>here</a></Link> for details about our ranking algorithm.
       </Question>
       <Question title="I have another question!">
         <a href="https://airtable.com/shrCsYFWxCwfwE7cf">
