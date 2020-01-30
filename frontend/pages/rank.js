@@ -28,14 +28,14 @@ const Rank = () => (
     <StrongText>How are clubs ordered?</StrongText>
     <Text>
       The order that clubs appear on the home page is determined by several
-      criteria. A recommendation algorithm exists to ensure that students receive the
-      best experience when browsing for new clubs and that clubs can effectively
-      reach their target demographic.
+      criteria. A recommendation algorithm exists to ensure that students
+      receive the best experience when browsing for new clubs and that clubs can
+      effectively reach their target demographic.
     </Text>
     <StrongText>How does the club recommendation algorithm work?</StrongText>
     <Text>
-      The reccomendation algorithm uses the following criteria to determine how to
-      order clubs on the home page. The criteria are:
+      The reccomendation algorithm uses the following criteria to determine how
+      to order clubs on the home page. The criteria are:
       {[
         {
           name: 'Matches Target Schools',
