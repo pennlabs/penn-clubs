@@ -556,9 +556,6 @@ def club_modify_handler(sender, instance, **kwargs):
         key, cache_time = settings.CLUB_LIST_CACHE_KEY, settings.CLUB_LIST_CACHE_TIME
         cache.set(key, serializer.data, cache_time)
 
-    if settings.DEBUG:
-        regenerate_club_list_cache()
-    else:
-        t = threading.Thread(target=regenerate_club_list_cache)
-        t.setDaemon(True)
-        t.start()
+    t = threading.Thread(target=regenerate_club_list_cache)
+    t.setDaemon(True)
+    t.start()
