@@ -1,7 +1,7 @@
 import datetime
 import os
-import uuid
 import threading
+import uuid
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -550,6 +550,7 @@ def club_modify_handler(sender, instance, **kwargs):
     def regenerate_club_list_cache():
         from clubs.models import Club, Membership
         from clubs.serializers import ClubListSerializer
+
         queryset = (
             Club.objects.all()
             .annotate(favorite_count=models.Count("favorite"))
