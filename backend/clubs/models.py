@@ -542,6 +542,7 @@ def profile_delete_cleanup(sender, instance, **kwargs):
 
 
 @receiver(models.signals.post_save, sender=Club)
+@receiver(models.signals.post_delete, sender=Club)
 def club_modify_handler(sender, instance, **kwargs):
     """
     Regenerate the club list cache when a club is modified.
