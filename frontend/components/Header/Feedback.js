@@ -37,10 +37,10 @@ export default () => (
     onClick={() => logEvent('feedback', 'clicked')}
   >
     <Icon
-      name="message-circle-white"
+      name="message-circle"
       alt="Feedback"
       size={ICON_SIZE}
-      style={{ marginTop: '0.5rem' }}
+      style={{ marginTop: '0.5rem', color: 'white' }}
     />
   </FeedbackLink>
 )
