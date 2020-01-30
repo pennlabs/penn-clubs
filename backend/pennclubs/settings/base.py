@@ -163,7 +163,7 @@ FLYER_URL = "https://{domain}/club/{club}/flyer"
 
 # Cache settings
 CLUB_LIST_CACHE_KEY = "club:list"
-CLUB_LIST_CACHE_TIME = 10 * 60
+CLUB_LIST_CACHE_TIME = None
 
 # File upload settings
 

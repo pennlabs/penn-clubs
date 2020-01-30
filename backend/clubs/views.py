@@ -207,7 +207,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-        Return a list of all clubs. Results are cached and update every 5 minutes.
+        Return a list of all clubs.
+        Results are cached, and the cache is regenerated when a club is edited.
         Note that some fields are removed in order to improve the response time.
         """
         # don't cache requests for spreadsheet format

@@ -1,5 +1,6 @@
 import datetime
 import os
+import threading
 import uuid
 from urllib.parse import urlparse
 
@@ -541,8 +542,20 @@ def profile_delete_cleanup(sender, instance, **kwargs):
 
 
 @receiver(models.signals.post_save, sender=Club)
+@receiver(models.signals.post_delete, sender=Club)
 def club_modify_handler(sender, instance, **kwargs):
     """
-    Delete the club list cache when a club is modified.
+    Regenerate the club list cache when a club is modified.
     """
-    cache.delete(settings.CLUB_LIST_CACHE_KEY)
+
+    def regenerate_club_list_cache():
+        from clubs.serializers import ClubListSerializer
+        from clubs.views import ClubViewSet
+
+        serializer = ClubListSerializer(ClubViewSet.queryset, many=True)
+        key, cache_time = settings.CLUB_LIST_CACHE_KEY, settings.CLUB_LIST_CACHE_TIME
+        cache.set(key, serializer.data, cache_time)
+
+    t = threading.Thread(target=regenerate_club_list_cache)
+    t.setDaemon(True)
+    t.start()
