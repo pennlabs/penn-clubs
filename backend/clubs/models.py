@@ -548,7 +548,6 @@ def club_modify_handler(sender, instance, **kwargs):
     """
 
     def regenerate_club_list_cache():
-        from clubs.models import Club, Membership
         from clubs.serializers import ClubListSerializer
         from clubs.views import ClubViewSet
 
