@@ -106,7 +106,7 @@ class EventSerializer(serializers.ModelSerializer):
         elif "request" in self.context:
             return self.context["request"].build_absolute_uri(obj.image.url)
         else:
-            return None
+            return obj.image.url
 
     def validate_description(self, value):
         """
@@ -231,7 +231,7 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
         elif "request" in self.context:
             return self.context["request"].build_absolute_uri(image_url)
         else:
-            return None
+            return image_url
 
     def validate_role(self, value):
         """
@@ -331,7 +331,7 @@ class ClubListSerializer(serializers.ModelSerializer):
         elif "request" in self.context:
             return self.context["request"].build_absolute_uri(obj.image.url)
         else:
-            return None
+            return obj.image.url
 
     def get_fields(self):
         all_fields = super().get_fields()
@@ -664,7 +664,7 @@ class UserSerializer(serializers.ModelSerializer):
         elif "request" in self.context:
             return self.context["request"].build_absolute_uri(obj.profile.image.url)
         else:
-            return None
+            return obj.profile.image.url
 
     def get_full_name(self, obj):
         return obj.get_full_name()
@@ -722,7 +722,7 @@ class AssetSerializer(serializers.ModelSerializer):
         elif "request" in self.context:
             return self.context["request"].build_absolute_uri(obj.file.url)
         else:
-            return None
+            return obj.file.url
 
     # Cannot exceed maximum upload size
     def validate_file(self, data):
