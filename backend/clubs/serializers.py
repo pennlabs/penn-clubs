@@ -103,8 +103,10 @@ class EventSerializer(serializers.ModelSerializer):
             return None
         if obj.image.url.startswith("http"):
             return obj.image.url
-        else:
+        elif "request" in self.context:
             return self.context["request"].build_absolute_uri(obj.image.url)
+        else:
+            return None
 
     def validate_description(self, value):
         """
@@ -226,8 +228,10 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
         image_url = obj.person.profile.image.url
         if image_url.startswith("http"):
             return image_url
-        else:
+        elif "request" in self.context:
             return self.context["request"].build_absolute_uri(image_url)
+        else:
+            return None
 
     def validate_role(self, value):
         """
@@ -324,8 +328,10 @@ class ClubListSerializer(serializers.ModelSerializer):
             return None
         if obj.image.url.startswith("http"):
             return obj.image.url
-        else:
+        elif "request" in self.context:
             return self.context["request"].build_absolute_uri(obj.image.url)
+        else:
+            return None
 
     def get_fields(self):
         all_fields = super().get_fields()
@@ -655,8 +661,10 @@ class UserSerializer(serializers.ModelSerializer):
             return None
         if obj.profile.image.url.startswith("http"):
             return obj.profile.image.url
-        else:
+        elif "request" in self.context:
             return self.context["request"].build_absolute_uri(obj.profile.image.url)
+        else:
+            return None
 
     def get_full_name(self, obj):
         return obj.get_full_name()
@@ -711,8 +719,10 @@ class AssetSerializer(serializers.ModelSerializer):
             return None
         if obj.file.url.startswith("http"):
             return obj.file.url
-        else:
+        elif "request" in self.context:
             return self.context["request"].build_absolute_uri(obj.file.url)
+        else:
+            return None
 
     # Cannot exceed maximum upload size
     def validate_file(self, data):
