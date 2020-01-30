@@ -110,7 +110,7 @@ export default ({ club, toggleActive, togglePublic, leaveClub }) => {
         {canManage ? (
           <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
             <ManageButton className="button is-small">
-              <ButtonIcon name="edit-white" size="1rem" />
+              <ButtonIcon name="edit" size="1rem" />
               Manage
             </ManageButton>
           </Link>
@@ -119,7 +119,7 @@ export default ({ club, toggleActive, togglePublic, leaveClub }) => {
             className="button is-small"
             onClick={() => leaveClub(club)}
           >
-            <ButtonIcon name="log-out-white" size="1rem" />
+            <ButtonIcon name="log-out" size="1rem" />
             Leave
           </LeaveButton>
         )}
