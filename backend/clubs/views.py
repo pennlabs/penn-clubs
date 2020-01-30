@@ -1,6 +1,5 @@
 import os
 import re
-import threading
 
 import qrcode
 from django.conf import settings
@@ -158,29 +157,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
-    def generate_club_list(self, request):
-        """
-        Helper function to build the club list and cache it.
-        """
-        key = settings.CLUB_LIST_CACHE_KEY
-        resp = super().list(request)
-        if resp.status_code == 200:
-            cache.set(key, resp.data, settings.CLUB_LIST_CACHE_TIME)
-
-    def regenerate_cache(self, request):
-        """
-        Helper function to regenerate the club list in a background thread.
-        """
-        t = threading.Thread(target=self.generate_club_list, args=(request,))
-        t.setDaemon(True)
-        t.start()
-
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
         Upload the club logo.
         """
-        self.regenerate_cache(request)
         return upload_endpoint_helper(request, Club, "image", code=kwargs["code"])
 
     @action(detail=True, methods=["get"])
@@ -223,26 +204,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             Subscribe.objects.filter(club__code=self.kwargs["code"]), many=True
         )
         return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        ret = super().create(request, *args, **kwargs)
-        self.regenerate_cache(request)
-        return ret
-
-    def update(self, request, *args, **kwargs):
-        ret = super().update(request, *args, **kwargs)
-        self.regenerate_cache(request)
-        return ret
-
-    def partial_update(self, request, *args, **kwargs):
-        ret = super().partial_update(request, *args, **kwargs)
-        self.regenerate_cache(request)
-        return ret
-
-    def destroy(self, request, *args, **kwargs):
-        ret = super().destroy(request, *args, **kwargs)
-        self.regenerate_cache(request)
-        return ret
 
     def list(self, request, *args, **kwargs):
         """
