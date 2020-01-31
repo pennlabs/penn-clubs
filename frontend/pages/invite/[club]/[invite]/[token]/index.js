@@ -1,11 +1,12 @@
+import { Component } from 'react'
+import Link from 'next/link'
+import { withRouter } from 'next/router'
+
 import { CLUB_ROUTE } from '../../../../../constants/routes'
 import renderPage from '../../../../../renderPage'
 import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils'
-import React from 'react'
-import { withRouter } from 'next/router'
-import Link from 'next/link'
 
-class Invite extends React.Component {
+class Invite extends Component {
   constructor(props) {
     super(props)
     this.state = {
