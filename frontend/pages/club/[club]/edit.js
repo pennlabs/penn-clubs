@@ -316,11 +316,9 @@ class ClubForm extends Component {
 
     if (authenticated === false) {
       return (
-        <>
-          <AuthPrompt>
-            <ClubMetadata club={club} />
-          </AuthPrompt>
-        </>
+        <AuthPrompt>
+          <ClubMetadata club={club} />
+        </AuthPrompt>
       )
     }
 
