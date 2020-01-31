@@ -20,13 +20,6 @@ import {
 import { logEvent } from '../utils/analytics'
 import { Icon } from './common'
 
-// Helper map for getting icon posftix from icon name
-const colorToColorNameMap = {
-  [CLUBS_BLUE]: '-blue',
-  [CLUBS_RED]: '-red',
-  [CLUBS_YELLOW]: '-yellow',
-}
-
 const checkboxColorMap = {
   Type: CLUBS_BLUE,
   Size: CLUBS_RED,
@@ -169,7 +162,6 @@ const DropdownFilter = ({
   }
 
   const color = checkboxColorMap[name]
-  const iconPostfix = colorToColorNameMap[color] || ''
 
   return (
     <>
@@ -201,12 +193,8 @@ const DropdownFilter = ({
                     }}
                   >
                     <Icon
-                      style={{ transform: 'none' }}
-                      name={
-                        isSelected(tag)
-                          ? `check-box${iconPostfix}`
-                          : `box${iconPostfix}`
-                      }
+                      style={{ transform: 'none', fill: color }}
+                      name={isSelected(tag) ? 'check-box' : 'box'}
                       alt={isSelected(tag) ? 'selected' : 'not selected'}
                     />
                     &nbsp;

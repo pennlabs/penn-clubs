@@ -21,9 +21,13 @@ const Footer = () => (
     <SmallText>
       Made with{' '}
       <Icon
-        name="heart-red"
+        name="heart"
         alt="love"
-        style={{ transform: 'translateY(2.5px)' }}
+        style={{
+          transform: 'translateY(2.5px)',
+          color: '#e25152',
+          fill: 'currentColor',
+        }}
       />{' '}
       by <a href="https://pennlabs.org/">Penn Labs</a>
     </SmallText>

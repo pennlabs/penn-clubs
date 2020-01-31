@@ -580,13 +580,13 @@ export class ModelForm extends Component {
             <ModelStatus>
               {typeof object._status !== 'undefined' &&
                 (object._status === true ? (
-                  <>
-                    <Icon name="check-circle-green" alt="success" /> Saved!
-                  </>
+                  <span style={{ color: 'green' }}>
+                    <Icon name="check-circle" alt="success" /> Saved!
+                  </span>
                 ) : (
-                  <>
-                    <Icon name="x-circle-red" alt="failure" /> Failed to save!
-                  </>
+                  <span style={{ color: 'red' }}>
+                    <Icon name="x-circle" alt="failure" /> Failed to save!
+                  </span>
                 ))}
             </ModelStatus>
           </ModelItem>
