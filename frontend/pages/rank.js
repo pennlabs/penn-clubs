@@ -1,7 +1,7 @@
 import s from 'styled-components'
 import renderPage from '../renderPage.js'
 import { Container, Title, StrongText, Text, Icon } from '../components/common'
-import { SNOW } from '../constants/colors.js'
+import { SNOW, GREEN } from '../constants/colors.js'
 
 const RankItem = s.div`
   padding: 0.75em;
@@ -77,7 +77,7 @@ const Rank = () => (
           <LargeIcon
             name="check-circle"
             alt="check"
-            style={{ color: 'green' }}
+            style={{ color: GREEN }}
           />
         </LargeIconWrapper>
         <b>{name}</b>
