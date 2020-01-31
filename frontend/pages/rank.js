@@ -21,6 +21,13 @@ const LargeIcon = s(Icon)`
   width: 75px;
   height: 75px;
   padding: 5px;
+
+  @media (max-width: 769px) {
+    & {
+      width: 45px;
+      height: 45px;
+    }
+  }
 `
 
 const Rank = () => (
