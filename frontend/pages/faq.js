@@ -2,7 +2,7 @@ import PropTypes from 'prop-types'
 import Link from 'next/link'
 
 import renderPage from '../renderPage.js'
-import { Container, Line, Title, StrongText, Text } from '../components/common'
+import { Container, Line, Title, StrongText, Text, Metadata } from '../components/common'
 import { SNOW } from '../constants/colors.js'
 
 const Question = ({ title, children }) => (
@@ -23,6 +23,7 @@ Question.propTypes = {
 
 const FAQ = () => (
   <Container background={SNOW}>
+    <Metadata title="FAQ" />
     <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
       Frequently Asked Questions
     </Title>

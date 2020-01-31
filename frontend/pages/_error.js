@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import s from 'styled-components'
 
 import renderPage from '../renderPage'
-import { Center, Container } from '../components/common'
+import { Center, Container, Metadata } from '../components/common'
 import { SNOW } from '../constants/colors'
 import { HOME_ROUTE } from '../constants/routes'
 
@@ -16,6 +16,7 @@ const Image = s.img`
 
 const Error = ({ statusCode = 500, message = 'Something went wrong' }) => (
   <Container background={SNOW} fullHeight>
+    <Metadata />
     <Center>
       <Image src="/static/img/button.svg" alt="something went wrong" />
       <h1
