@@ -37,6 +37,7 @@
   },
   "scripts": {
     "lint": "prettier --check \"./{pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
+    "clean": "prettier --write \"./{pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\" --fix",
     "dev": "node server.js",
     "build": "next build",
     "start": "NODE_ENV=production node server.js",

@@ -74,11 +74,7 @@ const Rank = () => (
     ].map(({ name, description }) => (
       <RankItem key={name}>
         <LargeIconWrapper>
-          <LargeIcon
-            name="check-circle"
-            alt="check"
-            style={{ color: GREEN }}
-          />
+          <LargeIcon name="check-circle" alt="check" style={{ color: GREEN }} />
         </LargeIconWrapper>
         <b>{name}</b>
         <Text>{description}</Text>
