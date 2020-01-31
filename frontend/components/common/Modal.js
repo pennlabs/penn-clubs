@@ -93,7 +93,6 @@ export const Modal = ({ show, children, closeModal }) => {
       <Shade className="modal-background" onClick={closeModal} show={show} />
       <ModalCard className="card" onClick={noop} show={show}>
         <CloseModalIcon
-          show={show}
           name="x"
           alt="&#215;"
           onClick={closeModal}

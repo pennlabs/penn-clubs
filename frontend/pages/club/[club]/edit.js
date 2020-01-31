@@ -12,6 +12,7 @@ import {
   formatResponse,
   getRoleDisplay,
 } from '../../../utils'
+import ClubMetadata from '../../../components/ClubMetadata'
 import Form, { ModelForm } from '../../../components/Form'
 import TabView from '../../../components/TabView'
 import AuthPrompt from '../../../components/common/AuthPrompt'
@@ -314,7 +315,11 @@ class ClubForm extends Component {
     const { club, invites, isEdit, message, editMember } = this.state
 
     if (authenticated === false) {
-      return <AuthPrompt />
+      return (
+        <AuthPrompt>
+          <ClubMetadata club={club} />
+        </AuthPrompt>
+      )
     }
 
     if (
@@ -325,6 +330,7 @@ class ClubForm extends Component {
     ) {
       return (
         <AuthPrompt title="Oh no!" hasLogin={false}>
+          <ClubMetadata club={club} />
           You do not have permission to edit the page for {club.name}. To get
           access, contact{' '}
           <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>.
@@ -979,6 +985,7 @@ class ClubForm extends Component {
 
     return (
       <Container>
+        <ClubMetadata club={club} />
         <Title>
           {nameOrDefault}
           {showInactiveTag && <InactiveTag />}
