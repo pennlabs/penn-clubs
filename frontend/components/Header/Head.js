@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import Head from 'next/head'
+import PropTypes from 'prop-types'
 
 import { initGA, logPageView } from '../../utils/analytics'
 
@@ -34,7 +35,18 @@ const type = 'website'
 const twitterUsername = '@pennlabs'
 const twitterCardType = 'summary'
 
-const Heading = () => {
+const Heading = ({
+  title,
+  keywords,
+  author,
+  description,
+  url,
+  image,
+  imageAlt,
+  type,
+  twitterUsername,
+  twitterCardType,
+}) => {
   useEffect(() => {
     if (!window.GA_INITIALIZED) {
       initGA()
@@ -84,6 +96,32 @@ const Heading = () => {
       />
     </Head>
   )
+}
+
+Heading.defaultProps = {
+  title,
+  keywords,
+  author,
+  description,
+  url,
+  image,
+  imageAlt,
+  type,
+  twitterUsername,
+  twitterCardType,
+}
+
+Heading.propTypes = {
+  title: PropTypes.string,
+  keywords: PropTypes.string,
+  author: PropTypes.string,
+  description: PropTypes.string,
+  url: PropTypes.string,
+  image: PropTypes.string,
+  imageAlt: PropTypes.string,
+  type: PropTypes.string,
+  twitterUsername: PropTypes.string,
+  twitterCardType: PropTypes.string,
 }
 
 export default Heading
