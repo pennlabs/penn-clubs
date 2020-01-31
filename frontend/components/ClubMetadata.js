@@ -20,11 +20,11 @@ export default ({
   },
 }) => {
   const twitter = getTwitterUsername(twitterUrl)
-  const [baseUrl, setBaseUrl] = useState("")
+  const [baseUrl, setBaseUrl] = useState('')
   useEffect(() => {
     setBaseUrl(window.location.origin)
   }, [])
-  
+
   return (
     <Metadata
       title={name}
