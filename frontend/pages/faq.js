@@ -2,7 +2,14 @@ import PropTypes from 'prop-types'
 import Link from 'next/link'
 
 import renderPage from '../renderPage.js'
-import { Container, Line, Title, StrongText, Text, Metadata } from '../components/common'
+import {
+  Container,
+  Line,
+  Title,
+  StrongText,
+  Text,
+  Metadata,
+} from '../components/common'
 import { SNOW } from '../constants/colors.js'
 
 const Question = ({ title, children }) => (

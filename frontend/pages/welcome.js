@@ -7,7 +7,14 @@ import renderPage from '../renderPage'
 import { doApiRequest } from '../utils'
 import ProfileForm from '../components/Settings/ProfileForm'
 import AuthPrompt from '../components/common/AuthPrompt'
-import { Title, Text, Icon, Center, PhoneContainer, Metadata } from '../components/common'
+import {
+  Title,
+  Text,
+  Icon,
+  Center,
+  PhoneContainer,
+  Metadata,
+} from '../components/common'
 import Link from 'next/link'
 
 const Image = s.img`
@@ -81,8 +88,8 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
           <Text>
             The info below helps us tailor your Penn Clubs experience to find
             clubs that you're likely to be interested in. It will also be shared
-            with clubs that you choose to subscribe to. Feel free to leave fields
-            blank if you'd prefer not the share this info.
+            with clubs that you choose to subscribe to. Feel free to leave
+            fields blank if you'd prefer not the share this info.
           </Text>
         </Center>
         <ProfileForm settings={userInfo} />
@@ -90,9 +97,9 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
         <Center>
           <Subtitle>2. Getting started</Subtitle>
           <Text>
-            Here are two common buttons that you'll see around the site. Bookmarks
-            and subscriptions can be managed from your Penn Clubs account at any
-            time.
+            Here are two common buttons that you'll see around the site.
+            Bookmarks and subscriptions can be managed from your Penn Clubs
+            account at any time.
           </Text>
           <div className="columns is-mobile">
             <div className="column">

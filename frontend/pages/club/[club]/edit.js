@@ -315,11 +315,13 @@ class ClubForm extends Component {
     const { club, invites, isEdit, message, editMember } = this.state
 
     if (authenticated === false) {
-      return <>
-        <AuthPrompt>
-          <ClubMetadata club={club} />
-        </AuthPrompt>
-      </>
+      return (
+        <>
+          <AuthPrompt>
+            <ClubMetadata club={club} />
+          </AuthPrompt>
+        </>
+      )
     }
 
     if (
