@@ -194,7 +194,7 @@ const DropdownFilter = ({
                   >
                     <Icon
                       style={{ transform: 'none', fill: color }}
-                      name={isSelected(tag) ? `check-box` : `box`}
+                      name={isSelected(tag) ? 'check-box' : 'box'}
                       alt={isSelected(tag) ? 'selected' : 'not selected'}
                     />
                     &nbsp;
