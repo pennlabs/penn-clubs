@@ -12,12 +12,15 @@ const RankItem = s.div`
   }
 `
 
+const LargeIconWrapper = s.div`
+  float: left;
+  margin-right: 10px;
+`
+
 const LargeIcon = s(Icon)`
   width: 75px;
   height: 75px;
   padding: 5px;
-  margin-right: 10px;
-  float: left;
 `
 
 const Rank = () => (
@@ -70,7 +73,13 @@ const Rank = () => (
       },
     ].map(({ name, description }) => (
       <RankItem key={name}>
-        <LargeIcon name="check-circle-green" alt="check" />
+        <LargeIconWrapper>
+          <LargeIcon
+            name="check-circle"
+            alt="check"
+            style={{ color: 'green' }}
+          />
+        </LargeIconWrapper>
         <b>{name}</b>
         <Text>{description}</Text>
       </RankItem>
