@@ -1,5 +1,6 @@
 import { Metadata } from './common'
 import { CLUB_ROUTE } from '../constants/routes'
+import { useState, useEffect } from 'react'
 
 const getTwitterUsername = url => {
   if (typeof url === 'string') {
@@ -19,12 +20,16 @@ export default ({
   },
 }) => {
   const twitter = getTwitterUsername(twitterUrl)
-
+  const [baseUrl, setBaseUrl] = useState("")
+  useEffect(() => {
+    setBaseUrl(window.location.origin)
+  }, [])
+  
   return (
     <Metadata
       title={name}
       description={description}
-      url={`${CLUB_ROUTE(code)}`}
+      url={`${baseUrl}${CLUB_ROUTE(code)}`}
       image={image}
       imageAlt={name}
       twitterUsername={twitter}
