@@ -22,8 +22,10 @@ import {
   Title,
   Text,
   Container,
+  Metadata
 } from '../../../components/common'
 import { SNOW, WHITE } from '../../../constants/colors'
+import ClubMetadata from '../../../components/ClubMetadata'
 
 const Image = s.img`
   height: 86px;
@@ -55,6 +57,7 @@ const Club = ({
   if (!code) {
     return (
       <Container>
+        <Metadata />
         <div className="has-text-centered">
           <Title>404 Not Found</Title>
           <Text>The club you are looking for does not exist.</Text>
@@ -67,6 +70,7 @@ const Club = ({
 
   return (
     <WideContainer background={SNOW} fullHeight>
+      <ClubMetadata club={club} />
       <div className="columns">
         <div className="column">
           <Card

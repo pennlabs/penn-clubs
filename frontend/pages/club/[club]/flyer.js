@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import s from 'styled-components'
 
 import { doApiRequest, getApiUrl } from '../../../utils'
-import Head from '../../../components/Header/Head'
 import { Title, Text, Container, Center } from '../../../components/common'
 import { CLUBS_BLUE, CLUBS_NAVY, CLUBS_RED } from '../../../constants/colors'
+import ClubMetadata from '../../../components/ClubMetadata'
 
 const Image = s.img`
   padding: 0;
@@ -138,15 +138,7 @@ const truncate = (str, len = 54) => {
   return `${str.substring(0, len)}...`
 }
 
-const Flyer = ({
-  authenticated,
-  query,
-  userInfo,
-  favorites,
-  updateFavorites,
-  subscriptions,
-  updateSubscriptions,
-}) => {
+const Flyer = ({ query }) => {
   const [clubs, setClubs] = useState(null)
   const [count, setCount] = useState(0)
   const [failedClubs, setFailedClubs] = useState([])
@@ -218,7 +210,7 @@ const Flyer = ({
 
   return (
     <>
-      <Head />
+      <ClubMetadata club={club} />
       {!!failedClubs.length && (
         <ErrorPane onClick={() => setShowErrorPane(val => !val)}>
           {showErrorPane ? (
