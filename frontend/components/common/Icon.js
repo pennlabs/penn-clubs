@@ -17,9 +17,9 @@ const IconWrapper = s.span`
   }
 `
 
-export const Icon = ({ name, size = '1rem', ...props }) => {
+export const Icon = ({ name, show = true, size = '1rem', ...props }) => {
   const svg = reqSvgs(`./${name}.svg`)
-  if (!svg || !svg.default) {
+  if (!show || !svg || !svg.default) {
     return null
   }
   const iconInfo = svg.default().props
