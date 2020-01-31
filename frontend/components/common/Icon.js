@@ -8,11 +8,12 @@ export const Icon = ({ name, size = '1rem', ...props }) => {
   if (!svg || !svg.default) {
     return null
   }
+  const iconInfo = svg.default().props
   return svg.default({
     preserveAspectRatio: 'true',
     width: size,
     height: size,
-    viewBox: '0 0 24 24',
+    viewBox: `0 0 ${iconInfo.width} ${iconInfo.height}`,
     ...props,
   })
 }
