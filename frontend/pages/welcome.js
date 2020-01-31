@@ -73,7 +73,7 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
           <Text>
             Penn Clubs is your central source of information about student
             organizations at Penn.
-        </Text>
+          </Text>
         </Center>
         <hr />
         <Center>
@@ -83,7 +83,7 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
             clubs that you're likely to be interested in. It will also be shared
             with clubs that you choose to subscribe to. Feel free to leave fields
             blank if you'd prefer not the share this info.
-        </Text>
+          </Text>
         </Center>
         <ProfileForm settings={userInfo} />
         <hr />
@@ -93,23 +93,23 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
             Here are two common buttons that you'll see around the site. Bookmarks
             and subscriptions can be managed from your Penn Clubs account at any
             time.
-        </Text>
+          </Text>
           <div className="columns is-mobile">
             <div className="column">
               <div className="button is-link is-large">
                 <Icon alt="bookmark" name="bookmark" /> Bookmark
-            </div>
+              </div>
               <Text style={{ marginTop: '0.5rem' }}>
                 To save a club for later
-            </Text>
+              </Text>
             </div>
             <div className="column">
               <div className="button is-danger is-large">
                 <Icon alt="subscribe" name="bell" /> Subscribe
-            </div>
+              </div>
               <Text style={{ marginTop: '0.5rem' }}>
                 To join the mailing list
-            </Text>
+              </Text>
             </div>
           </div>
         </Center>
@@ -119,7 +119,7 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
           <Link href={next && next.startsWith('/') ? next : CLUB_ROUTE()}>
             <a className="button is-success is-large" onClick={markWelcome}>
               Browse clubs
-          </a>
+            </a>
           </Link>
         </Center>
       </PhoneContainer>

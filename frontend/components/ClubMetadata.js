@@ -9,21 +9,25 @@ const getTwitterUsername = url => {
   return url
 }
 
-export default ({ club: {
-  name,
-  code,
-  description,
-  image,
-  twitter: twitterUrl,
-}}) => {
+export default ({
+  club: {
+    name,
+    code,
+    description,
+    image,
+    twitter: twitterUrl,
+  },
+}) => {
   const twitter = getTwitterUsername(twitterUrl)
 
-  return <Metadata
-    title={name}
-    description={description}
-    url={`${CLUB_ROUTE(code)}`}
-    image={image}
-    imageAlt={name}
-    twitterUsername={twitter}
-  />
+  return (
+    <Metadata
+      title={name}
+      description={description}
+      url={`${CLUB_ROUTE(code)}`}
+      image={image}
+      imageAlt={name}
+      twitterUsername={twitter}
+    />
+  )
 }

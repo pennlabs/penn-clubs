@@ -22,7 +22,7 @@ import {
   Title,
   Text,
   Container,
-  Metadata
+  Metadata,
 } from '../../../components/common'
 import { SNOW, WHITE } from '../../../constants/colors'
 import ClubMetadata from '../../../components/ClubMetadata'

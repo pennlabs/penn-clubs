@@ -245,13 +245,13 @@ class Splash extends React.Component {
 
                 <p className="title" style={{ color: CLUBS_GREY }}>
                   Browse Clubs
-              </p>
+                </p>
                 <p
                   className="subtitle is-size-5"
                   style={{ color: CLUBS_GREY_LIGHT }}
                 >
                   Find your people!
-              </p>
+                </p>
               </div>
               <ResultsText> {displayClubs.length} results </ResultsText>
 
@@ -284,11 +284,11 @@ class Splash extends React.Component {
                     }
                   >
                     Clear All
-                </ClearAllLink>
+                  </ClearAllLink>
                 </div>
               ) : (
-                  ''
-                )}
+                ''
+              )}
 
               <ClubDisplay
                 displayClubs={displayClubs}
