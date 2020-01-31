@@ -1,5 +1,6 @@
 import s from 'styled-components'
 import { LOGIN_URL } from '../../utils'
+import { CLUBS_BLUE } from '../../constants/colors'
 import { Title, SmallText, Icon, Text, Center, PhoneContainer } from '.'
 
 const Image = s.img`
@@ -43,7 +44,8 @@ const AuthPrompt = ({ title, children, hasLogin = true }) => (
               href={`${LOGIN_URL}?next=${
                 typeof window !== 'undefined' ? window.location.href : '/'
               }`}
-              className="button is-link is-large"
+              className="button is-large is-link"
+              style={{ backgroundColor: CLUBS_BLUE }}
             >
               <Icon alt="login" name="key" /> Continue to login
             </a>

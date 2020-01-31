@@ -11,17 +11,17 @@ import {
   CLUBS_GREY_LIGHT,
   CLUBS_BLUE,
   CLUBS_RED,
-  CLUBS_YELLOW,
   FOCUS_GRAY,
   SNOW,
+  CLUBS_NAVY,
 } from '../constants/colors'
 import { logEvent } from '../utils/analytics'
 import { WideContainer } from '../components/common'
 
 const colorMap = {
-  Type: CLUBS_BLUE,
-  Size: CLUBS_RED,
-  Application: CLUBS_YELLOW,
+  Type: CLUBS_RED,
+  Size: CLUBS_BLUE,
+  Application: CLUBS_NAVY,
 }
 
 const ClearAllLink = s.span`

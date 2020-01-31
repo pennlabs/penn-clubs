@@ -8,6 +8,7 @@ import {
   BORDER,
   LIGHT_GRAY,
   WHITE,
+  CLUBS_NAVY,
 } from '../constants/colors'
 import {
   mediaMinWidth,
@@ -21,9 +22,9 @@ import { logEvent } from '../utils/analytics'
 import { Icon } from './common'
 
 const checkboxColorMap = {
-  Type: CLUBS_BLUE,
-  Size: CLUBS_RED,
-  Application: CLUBS_YELLOW,
+  Type: CLUBS_RED,
+  Size: CLUBS_BLUE,
+  Application: CLUBS_NAVY,
 }
 
 const Line = s.hr`
@@ -54,7 +55,7 @@ const DropdownHeader = s.div`
     font-size: 80%;
     color: ${LIGHT_GRAY};
 
-    ${({ active, color }) => active && `background: ${color || CLUBS_YELLOW};`}
+    ${({ active, color }) => active && `background: ${color || CLUBS_RED};`}
   }
 `
 
@@ -111,7 +112,7 @@ const DropdownHeaderText = s.p`
   margin-bottom: 0;
 
   ${mediaMaxWidth(MD)} {
-    color: rgba(0, 0, 0, 0.5);
+    color: ${({ active }) => active ? WHITE : 'rgba(0, 0, 0, 0.5)'}
     opacity: 1;
   }
 `
@@ -171,7 +172,7 @@ const DropdownFilter = ({
         active={active}
         color={color}
       >
-        <DropdownHeaderText>{name}</DropdownHeaderText>
+        <DropdownHeaderText active={active}>{name}</DropdownHeaderText>
         <Chevron active={active} />
       </DropdownHeader>
       <TableWrapper active={active}>

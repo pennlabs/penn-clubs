@@ -1,5 +1,5 @@
 import s from 'styled-components'
-import { CLUBS_GREY, DARK_GRAY, MEDIUM_GRAY } from '../../constants/colors'
+import { CLUBS_GREY, CLUBS_NAVY, MEDIUM_GRAY } from '../../constants/colors'
 
 export const Text = s.p`
   font-size: 1rem;
@@ -15,7 +15,7 @@ export const SmallText = s(Text)`
 
 export const StrongText = s(Text)`
   margin-bottom: 0.5rem;
-  color: ${DARK_GRAY};
+  color: ${CLUBS_NAVY};
   font-weight: bold;
 `
 

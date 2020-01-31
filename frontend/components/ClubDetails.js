@@ -15,6 +15,7 @@ const Wrapper = s.div`
 `
 
 const iconStyles = {
+  marginTop: '-5px',
   marginRight: '5px',
   opacity: 0.5,
   transform: 'translateY(3px)',
@@ -30,12 +31,12 @@ const Details = ({
 }) => (
   <Wrapper>
     <p style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8 }}>
-      <Icon name="user" alt="members" style={iconStyles} />
+      <Icon name="user" alt="members" size="0.8rem" style={iconStyles} />
       {getSizeDisplay(size, false)}
       &nbsp;
       {' • '}
       &nbsp;
-      <Icon name="edit" alt="applications" style={iconStyles} />
+      <Icon name="edit" alt="applications" size="0.8rem" style={iconStyles} />
       {'Apps for '}
       {{
         1: 'No',
@@ -47,9 +48,19 @@ const Details = ({
       {' • '}
       &nbsp;
       {acceptingMembers ? (
-        <Icon name="check-circle" alt="accepting members" style={iconStyles} />
+        <Icon
+          name="check-circle"
+          alt="accepting members"
+          size="0.8rem"
+          style={iconStyles}
+        />
       ) : (
-        <Icon name="x-circle" alt="accepting members" style={iconStyles} />
+        <Icon
+          name="x-circle"
+          alt="accepting members"
+          size="0.8rem"
+          style={iconStyles}
+        />
       )}
       {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
     </p>
