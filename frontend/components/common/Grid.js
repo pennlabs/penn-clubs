@@ -54,6 +54,7 @@ const ColContainer = s.div`
   background: ${({ background }) => background || 'transparent'};
   overflow-x: visible;
   position: relative;
+  min-width: 0;
   ${({ flex }) => flex && 'display: flex; flex: 1;'}
   ${({ margin }) =>
     margin && `margin-left: ${margin}; margin-right: ${margin};`}
