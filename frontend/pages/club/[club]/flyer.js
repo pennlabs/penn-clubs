@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import s from 'styled-components'
 
 import { doApiRequest, getApiUrl } from '../../../utils'
-import { Title, Text, Container, Center } from '../../../components/common'
+import { Title, Text, Container, Center, Metadata } from '../../../components/common'
 import { CLUBS_BLUE, CLUBS_NAVY, CLUBS_RED } from '../../../constants/colors'
 import ClubMetadata from '../../../components/ClubMetadata'
 
@@ -210,7 +210,7 @@ const Flyer = ({ query }) => {
 
   return (
     <>
-      <ClubMetadata club={club} />
+      <Metadata />
       {!!failedClubs.length && (
         <ErrorPane onClick={() => setShowErrorPane(val => !val)}>
           {showErrorPane ? (
