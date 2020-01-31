@@ -442,6 +442,16 @@ class ClubForm extends Component {
       {
         name: 'Admission',
         type: 'group',
+        description: (
+          <Text>
+            Some of these fields will be used to adjust club ordering on the
+            home page. Click{' '}
+            <Link href="/rank">
+              <a>here</a>
+            </Link>{' '}
+            for more details.
+          </Text>
+        ),
         fields: [
           {
             name: 'application_required',

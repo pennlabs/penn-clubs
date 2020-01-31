@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types'
+import Link from 'next/link'
 
 import renderPage from '../renderPage.js'
 import { Container, Line, Title, StrongText, Text } from '../components/common'
@@ -31,13 +32,7 @@ const FAQ = () => (
         student organizations at the University of Pennsylvania. Keep
         discovering new clubs throughout the year, not just at the SAC Fair.
       </Question>
-      <Question title="Why is this a beta?">
-        This is the public beta version of Penn Clubs, which means we're still
-        working out some kinks and (more importantly) adding useful features.
-        Please be patient as we improve the site! The reason we decided to roll
-        out a beta is so that you can use Penn Clubs to find and join clubs this
-        fall.
-        <br />
+      <Question title="How can I provide feedback?">
         We’re so excited to let everyone at Penn contribute to the development
         of Penn Clubs! Your feedback is incredibly important to us. Have any
         questions or comments? Find any bugs?{' '}
@@ -119,6 +114,13 @@ const FAQ = () => (
         charge of this club, please enter your email so that we can give you
         administrator permission to edit the club page that we’ll create for
         you.
+      </Question>
+      <Question title="How are clubs ordered on Penn Clubs?">
+        Click{' '}
+        <Link href="/rank">
+          <a>here</a>
+        </Link>{' '}
+        for details about our club recommendation algorithm.
       </Question>
       <Question title="I have another question!">
         <a href="https://airtable.com/shrCsYFWxCwfwE7cf">

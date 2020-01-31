@@ -44,10 +44,10 @@ class Form extends Component {
           } else if (type === 'html') {
             this.state[`editorState-${name}`] = value
               ? EditorState.createWithContent(
-                  ContentState.createFromBlockArray(
-                    htmlToDraft(value).contentBlocks
-                  )
+                ContentState.createFromBlockArray(
+                  htmlToDraft(value).contentBlocks
                 )
+              )
               : EditorState.createEmpty()
           } else if (type === 'multiselect') {
             this.state[`field-${name}`] = (value || []).map(converter)
@@ -151,6 +151,7 @@ class Form extends Component {
       name,
       fields,
       type,
+      description,
       readonly,
       placeholder = '',
       content,
@@ -271,7 +272,10 @@ class Form extends Component {
           <div className="card-header">
             <div className="card-header-title">{name}</div>
           </div>
-          <div className="card-content">{this.generateFields(fields)}</div>
+          <div className="card-content">
+            {description}
+            {this.generateFields(fields)}
+          </div>
         </div>
       )
     } else if (type === 'component') {
