@@ -50,7 +50,7 @@ export const Metadata = ({
     <meta charSet="utf-8" />
     <meta name="viewport" content="initial-scale=1.0" />
     <meta name="theme-color" content="#ffffff" />
-    <meta name="description" content={description} />
+    <meta name="description" content={description.replace(/<\/?[^>]+(>|$)/g, '').trim()} />
     <meta name="keywords" content={keywords} />
     <meta name="author" content={author} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
