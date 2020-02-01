@@ -36,8 +36,8 @@
     "styled-components": "^4.4.1"
   },
   "scripts": {
-    "lint": "prettier --check \"./{pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
-    "clean": "prettier --write \"./{pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\" --fix",
+    "lint": "prettier --check \"./{cypress,pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
+    "clean": "prettier --write \"./{cypress,pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\" --fix",
     "test": "node server.js & wait-on http://localhost:3000; cypress run; RET=$?; pkill -n node; exit $RET",
     "dev": "node server.js",
     "build": "next build",
