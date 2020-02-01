@@ -18,7 +18,6 @@ jobs:
     steps:
       - checkout
       - cypress/install:
-          name: Install Cypress dependencies
           working_directory: frontend
           cache-key: >-
             cache-{{ arch }}-{{ .Branch }}-{{ checksum "frontend/package.json" }}
