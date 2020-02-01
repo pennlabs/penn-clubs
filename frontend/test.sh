@@ -8,7 +8,7 @@ export LANG=C.UTF-8
 pushd ../backend
 pipenv install --dev
 pipenv run ./manage.py migrate
-pipenv run ./manage.py runserver & npx wait-on -s 3 -d 500 -t 30000 http://localhost:8000/api || (kill $(jobs -p); exit 1)
+pipenv run ./manage.py runserver & npx wait-on -s 3 -d 500 -t 30000 http://localhost:8000/api || exit 1
 popd
 
 # Setup frontend server
