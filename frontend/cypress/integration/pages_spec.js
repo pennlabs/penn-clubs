@@ -18,8 +18,10 @@ describe('Page load tests', () => {
     cy.visit('/settings')
     cy.contains('Penn Clubs')
   })
+})
 
-  it('Logs in successfully', () => {
+describe('Authenticated user tests', () => {
+  before(() => {
     cy.visit('/')
     cy.contains('Login')
       .invoke('attr', 'href')
@@ -46,12 +48,24 @@ describe('Page load tests', () => {
                 Referer: url,
               },
               body: formattedData,
-            }).then(() => {
-              cy.visit('/')
-              cy.contains('Test User')
             })
           })
         })
       })
+  })
+
+  beforeEach(() => {
+    Cypress.Cookies.preserveOnce('sessionid', 'csrftoken')
+  })
+
+  it('Logs in successfully', () => {
+    cy.visit('/')
+    cy.contains('Test User')
+  })
+
+  it('Vists the settings page', () => {
+    cy.visit('/settings')
+    cy.contains('Penn Clubs')
+    cy.contains('Test User')
   })
 })
