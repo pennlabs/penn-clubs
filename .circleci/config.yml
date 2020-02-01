@@ -23,11 +23,13 @@ jobs:
             cd frontend
             npm install
       - run:
+          name: Lint and build frontend
           command: |
             cd frontend
             npm run lint
             npm run build
-      - cypress/install
+      - cypress/install:
+          working_directory: frontend
       - run:
           name: Run tests
           requires:
