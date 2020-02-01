@@ -16,7 +16,7 @@ import {
   CLUBS_NAVY,
 } from '../constants/colors'
 import { logEvent } from '../utils/analytics'
-import { WideContainer } from '../components/common'
+import { WideContainer, Metadata } from '../components/common'
 
 const colorMap = {
   Type: CLUBS_RED,
@@ -223,81 +223,84 @@ class Splash extends React.Component {
     const { displayClubs, display, selectedTags, nameInput } = this.state
     const { clubs, tags, favorites, updateFavorites } = this.props
     return (
-      <div style={{ backgroundColor: SNOW }}>
-        <SearchBar
-          clubs={clubs}
-          tags={tags}
-          resetDisplay={this.resetDisplay.bind(this)}
-          switchDisplay={this.switchDisplay.bind(this)}
-          selectedTags={selectedTags}
-          updateTag={this.updateTag.bind(this)}
-        />
+      <>
+        <Metadata />
+        <div style={{ backgroundColor: SNOW }}>
+          <SearchBar
+            clubs={clubs}
+            tags={tags}
+            resetDisplay={this.resetDisplay.bind(this)}
+            switchDisplay={this.switchDisplay.bind(this)}
+            selectedTags={selectedTags}
+            updateTag={this.updateTag.bind(this)}
+          />
 
-        <Container>
-          <WideContainer background={SNOW}>
-            <div style={{ padding: '30px 0' }}>
-              <DisplayButtons
-                shuffle={this.shuffle}
-                switchDisplay={this.switchDisplay}
-              />
+          <Container>
+            <WideContainer background={SNOW}>
+              <div style={{ padding: '30px 0' }}>
+                <DisplayButtons
+                  shuffle={this.shuffle}
+                  switchDisplay={this.switchDisplay}
+                />
 
-              <p className="title" style={{ color: CLUBS_GREY }}>
-                Browse Clubs
-              </p>
-              <p
-                className="subtitle is-size-5"
-                style={{ color: CLUBS_GREY_LIGHT }}
-              >
-                Find your people!
-              </p>
-            </div>
-            <ResultsText> {displayClubs.length} results </ResultsText>
-
-            {selectedTags.length ? (
-              <div style={{ padding: '0 30px 30px 0' }}>
-                {selectedTags.map(tag => (
-                  <span
-                    key={tag.label}
-                    className="tag is-rounded has-text-white"
-                    style={{
-                      backgroundColor: colorMap[tag.name],
-                      fontWeight: 600,
-                      margin: 3,
-                    }}
-                  >
-                    {tag.label}
-                    <button
-                      className="delete is-small"
-                      onClick={e => this.updateTag(tag, tag.name)}
-                    />
-                  </span>
-                ))}
-                <ClearAllLink
-                  className="tag is-rounded"
-                  onClick={e =>
-                    this.setState(
-                      { selectedTags: [] },
-                      this.resetDisplay(nameInput, [])
-                    )
-                  }
+                <p className="title" style={{ color: CLUBS_GREY }}>
+                  Browse Clubs
+                </p>
+                <p
+                  className="subtitle is-size-5"
+                  style={{ color: CLUBS_GREY_LIGHT }}
                 >
-                  Clear All
-                </ClearAllLink>
+                  Find your people!
+                </p>
               </div>
-            ) : (
-              ''
-            )}
+              <ResultsText> {displayClubs.length} results </ResultsText>
 
-            <ClubDisplay
-              displayClubs={displayClubs}
-              display={display}
-              tags={tags}
-              favorites={favorites}
-              updateFavorites={updateFavorites}
-            />
-          </WideContainer>
-        </Container>
-      </div>
+              {selectedTags.length ? (
+                <div style={{ padding: '0 30px 30px 0' }}>
+                  {selectedTags.map(tag => (
+                    <span
+                      key={tag.label}
+                      className="tag is-rounded has-text-white"
+                      style={{
+                        backgroundColor: colorMap[tag.name],
+                        fontWeight: 600,
+                        margin: 3,
+                      }}
+                    >
+                      {tag.label}
+                      <button
+                        className="delete is-small"
+                        onClick={e => this.updateTag(tag, tag.name)}
+                      />
+                    </span>
+                  ))}
+                  <ClearAllLink
+                    className="tag is-rounded"
+                    onClick={e =>
+                      this.setState(
+                        { selectedTags: [] },
+                        this.resetDisplay(nameInput, [])
+                      )
+                    }
+                  >
+                    Clear All
+                  </ClearAllLink>
+                </div>
+              ) : (
+                ''
+              )}
+
+              <ClubDisplay
+                displayClubs={displayClubs}
+                display={display}
+                tags={tags}
+                favorites={favorites}
+                updateFavorites={updateFavorites}
+              />
+            </WideContainer>
+          </Container>
+        </div>
+      </>
     )
   }
 }

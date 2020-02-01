@@ -17,6 +17,7 @@ import {
   Center,
 } from '../../../components/common'
 import Link from 'next/link'
+import ClubMetadata from '../../../components/ClubMetadata'
 
 const Image = s.img`
   height: 86px;
@@ -75,6 +76,7 @@ const Fair = ({
 
   return (
     <PhoneContainer>
+      <ClubMetadata club={club} />
       <Center>
         <ClubHeader>
           {image && <Image src={image} />}

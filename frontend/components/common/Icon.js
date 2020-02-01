@@ -26,7 +26,7 @@ export const Icon = ({ name, show = true, size = '1rem', ...props }) => {
   return (
     <IconWrapper>
       {svg.default({
-        preserveAspectRatio: 'true',
+        preserveAspectRatio: 'xMidYMid meet',
         width: size,
         height: size,
         viewBox: `0 0 ${iconInfo.width} ${iconInfo.height}`,

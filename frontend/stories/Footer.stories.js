@@ -5,4 +5,3 @@ storiesOf('Footer', module)
   .add('Example', () => (
     <Footer />
   ))
-
