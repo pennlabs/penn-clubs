@@ -8,4 +8,14 @@ describe('Page load tests', () => {
     cy.visit('/faq')
     cy.contains('Penn Clubs')
   })
+
+  it('Vists the rank page', () => {
+    cy.visit('/rank')
+    cy.contains('Penn Clubs')
+  })
+
+  it ('Visits the settings page', () => {
+    cy.visit('/settings')
+    cy.contains('Penn Clubs')
+  })
 })

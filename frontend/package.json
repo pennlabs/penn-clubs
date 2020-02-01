@@ -38,7 +38,7 @@
   "scripts": {
     "lint": "prettier --check \"./{cypress,pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
     "clean": "prettier --write \"./{cypress,pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\" --fix",
-    "test": "node server.js & wait-on http://localhost:3000; cypress run; RET=$?; pkill -n node; exit $RET",
+    "test": "./test.sh",
     "dev": "node server.js",
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
