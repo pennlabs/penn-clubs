@@ -14,7 +14,7 @@ describe('Page load tests', () => {
     cy.contains('Penn Clubs')
   })
 
-  it ('Visits the settings page', () => {
+  it('Visits the settings page', () => {
     cy.visit('/settings')
     cy.contains('Penn Clubs')
   })
