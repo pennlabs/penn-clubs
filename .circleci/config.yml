@@ -30,11 +30,14 @@ jobs:
             npm run build
       - cypress/install:
           working_directory: frontend
+          cache-key: >-
+            cache-{{ arch }}-{{ .Branch }}-{{ checksum "frontend/package.json" }}
       - run:
           name: Run tests
           requires:
             - cypress/install
           command: |
+            cd frontend
             npm run test
 
 workflows:
