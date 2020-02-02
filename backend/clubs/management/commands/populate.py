@@ -59,7 +59,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         for info in clubs:
             partial = dict(info)
-            custom_fields = ["code", "image", "tags"]
+            custom_fields = ["code", "image", "tags", "badges"]
             for field in custom_fields:
                 if field in partial:
                     del partial[field]
