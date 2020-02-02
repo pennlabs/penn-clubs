@@ -1,5 +1,4 @@
 import requests
-from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 
@@ -58,7 +57,7 @@ class Command(BaseCommand):
     help = "Populates the development environment with dummy data."
 
     def handle(self, *args, **kwargs):
-        if not settings.DEBUG:
+        if Club.objects.filter(name="Penn Labs").exists():
             raise CommandError("You probably do not want to run this script in production!")
 
         for info in clubs:
