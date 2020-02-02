@@ -1,14 +1,17 @@
-import renderPage from '../renderPage.js'
-import { getDefaultClubImageURL, doApiRequest } from '../utils'
+import renderPage from '../../../renderPage'
+import {
+  getDefaultClubImageURL,
+  doApiRequest,
+  EMPTY_DESCRIPTION,
+} from '../../../utils'
 import React, { Component } from 'react'
 import s from 'styled-components'
-import Header from '../components/ClubPage/Header.js'
-import InfoBox from '../components/ClubPage/InfoBox.js'
-import SocialIcons from '../components/ClubPage/SocialIcons.js'
-import clubEx from './club_tree_example.json'
-import OrgChildren from '../components/OrgPage/OrgChildren.js'
-import OrgTabs from '../components/OrgPage/OrgsTabs.js'
-import { EMPTY_DESCRIPTION } from '../utils'
+import Header from '../../../components/ClubPage/Header'
+import InfoBox from '../../../components/ClubPage/InfoBox.js'
+// import SocialIcons from '../components/ClubPage/SocialIcons.js'
+// import clubEx from './club_tree_example.json'
+import OrgChildren from '../../../components/OrgPage/OrgChildren.js'
+import OrgTabs from '../../../components/OrgPage/OrgsTabs.js'
 
 class Org extends Component {
   constructor(props) {
