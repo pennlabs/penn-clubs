@@ -34,10 +34,15 @@ describe('Authenticated user tests', () => {
     cy.contains('Test User')
   })
 
-  it('Vists the settings page', () => {
+  it('Visits the settings page', () => {
     cy.visit('/settings')
     cy.contains('Penn Clubs')
     cy.contains('Test User')
+  })
+
+  it('Visits club page', () => {
+    cy.visit('/club/pppjo')
+    cy.contains('Penn Pre-Professional Juggling Organization')
   })
 })
 
