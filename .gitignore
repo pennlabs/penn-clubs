@@ -32,3 +32,10 @@ env.sh
 
 # Development images folder
 uploads/
+
+# Virtualenv
+backend/.venv
+
+# Cypress
+frontend/cypress/videos
+frontend/cypress/screenshots

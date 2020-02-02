@@ -36,8 +36,9 @@
     "styled-components": "^4.4.1"
   },
   "scripts": {
-    "lint": "prettier --check \"./{pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
-    "clean": "prettier --write \"./{pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\" --fix",
+    "lint": "prettier --check \"./{cypress,pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
+    "clean": "prettier --write \"./{cypress,pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\" --fix",
+    "test": "./test.sh",
     "dev": "node server.js",
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
@@ -51,6 +52,7 @@
     "@storybook/addons": "^5.0.2",
     "@storybook/react": "^5.0.2",
     "babel-eslint": "^10.0.2",
+    "cypress": "^3.8.3",
     "eslint": "^5.13.0",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-config-standard": "^14.0.0",
@@ -61,6 +63,7 @@
     "eslint-plugin-react": "^7.14.3",
     "eslint-plugin-standard": "^4.0.1",
     "http-proxy-middleware": "^0.20.0",
-    "prettier": "^1.19.1"
+    "prettier": "^1.19.1",
+    "wait-on": "^4.0.0"
   }
 }
