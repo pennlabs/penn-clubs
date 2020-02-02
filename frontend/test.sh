@@ -8,8 +8,9 @@ export LANG=C.UTF-8
 
 # Setup Python backend server
 pushd ../backend
-pipenv install --dev
+time pipenv install --dev
 pipenv run ./manage.py migrate
+pipenv run ./manage.py populate
 pipenv run ./manage.py runserver & npx wait-on -s 3 -d 500 -t 30000 http://localhost:8000/api
 popd
 

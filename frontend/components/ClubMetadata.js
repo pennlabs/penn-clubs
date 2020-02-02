@@ -10,15 +10,11 @@ const getTwitterUsername = url => {
   return url
 }
 
-export default ({
-  club: {
-    name,
-    code,
-    description,
-    image,
-    twitter: twitterUrl,
-  },
-}) => {
+export default ({ club }) => {
+  if (!club) {
+    return null
+  }
+  const { name, code, description, image, twitter: twitterUrl } = club
   const twitter = getTwitterUsername(twitterUrl)
   const [baseUrl, setBaseUrl] = useState('')
   useEffect(() => {
