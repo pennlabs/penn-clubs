@@ -5,15 +5,16 @@ LABEL maintainer="Penn Labs"
 WORKDIR /app/
 
 # Copy project dependencies
-COPY package*.json /app/
+COPY package.json /app/
+COPY yarn.lock /app/
 
 # Install project dependencies
-RUN npm install --production
+RUN yarn install --frozen-lockfile --production
 
 # Copy project files
 COPY . /app/
 
 # Build project
-RUN npm run build
+RUN yarn build
 
-CMD ["npm", "start"]
+CMD ["yarn", "start"]
