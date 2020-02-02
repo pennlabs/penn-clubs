@@ -50,7 +50,8 @@ workflows:
       - django-tools/check:
           project-name: pennclubs
           project-location: backend
-      - react-tools/check
+      - react-tools/check:
+          project-location: frontend
       - test-frontend:
           requires:
             - react-tools/check
