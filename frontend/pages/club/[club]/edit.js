@@ -1,3 +1,4 @@
+import s from 'styled-components'
 import { Component } from 'react'
 import { withRouter } from 'next/router'
 import Link from 'next/link'
@@ -33,6 +34,13 @@ const Card = ({ children, title }) => (
     <div className="card-content">{children}</div>
   </div>
 )
+
+const QRCode = s.img`
+  display: block;
+  width: 150px;
+  padding: 15px;
+  margin-bottom: 15px;
+`
 
 class ClubForm extends Component {
   constructor(props) {
@@ -818,14 +826,6 @@ class ClubForm extends Component {
                   <Icon alt="download" name="download" /> Download Subscriber
                   List
                 </a>
-                <Link
-                  href={CLUB_FLYER_ROUTE()}
-                  as={CLUB_FLYER_ROUTE(club.code)}
-                >
-                  <a target="_blank" className="button is-success">
-                    <Icon alt="flyer" name="external-link" /> View Flyer
-                  </a>
-                </Link>
               </div>
             </Card>
           </>
@@ -836,9 +836,34 @@ class ClubForm extends Component {
         label: 'Resources',
         content: (
           <>
+            <Card title="QR Code">
+              <Text>
+                When scanned, gives mobile-friendly access to your club page and
+                bookmark/subscribe actions.
+              </Text>
+              <QRCode src={`/api/clubs/${club.code}/qr`} alt="qr code" />
+              <div className="buttons">
+                <a
+                  href={`/api/clubs/${club.code}/qr`}
+                  download
+                  className="button is-success"
+                >
+                  <Icon alt="qr" name="download" />
+                  Download QR Code
+                </a>
+                <Link
+                  href={CLUB_FLYER_ROUTE()}
+                  as={CLUB_FLYER_ROUTE(club.code)}
+                >
+                  <a target="_blank" className="button is-success">
+                    <Icon alt="flyer" name="external-link" /> View Flyer
+                  </a>
+                </Link>
+              </div>
+            </Card>
             <Card title="Member Experiences">
               <Text>
-                Provde more information on what being in your organization is
+                Provide more information on what being in your organization is
                 like from a member's point of view.
               </Text>
               <ModelForm
