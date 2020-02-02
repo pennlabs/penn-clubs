@@ -1,6 +1,7 @@
 import requests
 from django.core.files.base import ContentFile
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+from django.conf import settings
 
 from clubs.models import Badge, Club, Tag
 
@@ -57,6 +58,9 @@ class Command(BaseCommand):
     help = "Populates the development environment with dummy data."
 
     def handle(self, *args, **kwargs):
+        if not settings.DEBUG:
+            raise CommandError("You probably do not want to run this script in production!")
+
         for info in clubs:
             partial = dict(info)
             custom_fields = ["code", "image", "tags", "badges"]
