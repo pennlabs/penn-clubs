@@ -40,3 +40,23 @@ describe('Authenticated user tests', () => {
     cy.contains('Test User')
   })
 })
+
+describe('Individual club page tests', () => {
+  it('Visits club page', () => {
+    cy.visit('/club/pppjo')
+    cy.contains('Penn Pre-Professional Juggling Organization')
+  })
+
+  it('Visits club edit page', () => {
+    cy.visit('/club/pppjo/edit')
+    cy.contains('Continue to login')
+  })
+
+  it('Vists club flyer/fair page', () => {
+    cy.visit('/club/pppjo/fair')
+    cy.contains('Penn Pre-Professional Juggling Organization')
+
+    cy.visit('/club/pppjo/flyer')
+    cy.contains('Penn Pre-Professional Juggling Organization')
+  })
+})
