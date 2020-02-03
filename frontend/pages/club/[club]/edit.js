@@ -841,11 +841,11 @@ class ClubForm extends Component {
                 When scanned, gives mobile-friendly access to your club page and
                 bookmark/subscribe actions.
               </Text>
-              <QRCode src={`/api/clubs/${club.code}/qr`} alt="qr code" />
+              <QRCode src={getApiUrl(`/clubs/${club.code}/qr`)} alt="qr code" />
               <div className="buttons">
                 <a
-                  href={`/api/clubs/${club.code}/qr`}
-                  download
+                  href={getApiUrl(`/clubs/${club.code}/qr`)}
+                  download={`${club.code}.png`}
                   className="button is-success"
                 >
                   <Icon alt="qr" name="download" />
