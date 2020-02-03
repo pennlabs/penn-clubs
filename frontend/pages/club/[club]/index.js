@@ -35,6 +35,11 @@ const Image = s.img`
   object-fit: contain;
 `
 
+const StyledCard = s(Card)`
+  background-color: WHITE;
+  margin-bottom: 1rem;
+`
+
 const Club = ({
   club: initialClub,
   userInfo,
@@ -73,11 +78,9 @@ const Club = ({
       <ClubMetadata club={club} />
       <div className="columns">
         <div className="column">
-          <Card
+          <StyledCard
             bordered
             style={{
-              marginBottom: '1rem',
-              background: '#ffffff',
               paddingLeft: '1rem',
             }}
           >
@@ -93,7 +96,7 @@ const Club = ({
                 style={{ flex: 1 }}
               />
             </Flex>
-          </Card>
+          </StyledCard>
           <MobileActions
             club={club}
             userInfo={userInfo}
@@ -102,9 +105,9 @@ const Club = ({
             subscriptions={subscriptions}
             updateSubscriptions={updateSubscriptions}
           />
-          <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
+          <StyledCard bordered>
             <Description club={club} />
-          </Card>
+          </StyledCard>
           <StrongText>Members</StrongText>
           <MemberList club={club} />
         </div>
@@ -117,18 +120,18 @@ const Club = ({
             subscriptions={subscriptions}
             updateSubscriptions={updateSubscriptions}
           />
-          <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
+          <StyledCard bordered>
             <StrongText>Basic Info</StrongText>
             <InfoBox club={club} />
             <br />
             <StrongText>Contact</StrongText>
             <SocialIcons club={club} />
-          </Card>
+          </StyledCard>
           {club.how_to_get_involved ? (
-            <Card bordered style={{ marginBottom: '1rem' }}>
+            <StyledCard bordered style={{ paddingBottom: '0.01rem' }}>
               <StrongText>How To Get Involved</StrongText>
               <Text> {club.how_to_get_involved} </Text>
-            </Card>
+            </StyledCard>
           ) : (
             <div></div>
           )}

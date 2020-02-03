@@ -1,5 +1,6 @@
 import s from 'styled-components'
 import { Icon, StrongText, Card } from '../common'
+import { WHITE } from '../../constants/colors'
 
 const Events = ({ data }) => {
   const BigParagraph = s.p`
@@ -21,7 +22,7 @@ const Events = ({ data }) => {
   }
 
   return (
-    <Card bordered style={{ marginBottom: '1rem' }}>
+    <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
       <StrongText>Events</StrongText>
       {data.map((entry, index) => {
         return (

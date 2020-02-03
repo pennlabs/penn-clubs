@@ -12,7 +12,7 @@ const Wrapper = s.div`
 
 export default ({ club }) => (
   <Wrapper>
-    <div style={{ padding: '10px' }}>
+    <div style={{ padding: '1rem' }}>
       <StrongText>Description</StrongText>
       <div
         style={{ whiteSpace: 'pre-wrap' }}
@@ -20,16 +20,6 @@ export default ({ club }) => (
           __html: club.description || EMPTY_DESCRIPTION,
         }}
       />
-      {club.how_to_get_involved && (
-        <div>
-          <div style={{ marginTop: 20 }}>
-            <b>Getting Involved</b>
-          </div>
-          <div style={{ whiteSpace: 'pre-wrap' }}>
-            {club.how_to_get_involved}
-          </div>
-        </div>
-      )}
     </div>
   </Wrapper>
 )
