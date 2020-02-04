@@ -22,8 +22,8 @@ const MemberList = ({ club: { members } }) => {
               sm={12}
               md={6}
               lg={3}
-              margin="5px"
               flex
+              margin="0.2rem"
             >
               <MemberCard account={a} />
             </Col>
@@ -37,8 +37,8 @@ const MemberList = ({ club: { members } }) => {
               sm={12}
               md={6}
               lg={3}
-              margin="5px"
               flex
+              margin="0.2rem"
             >
               <MemberCard account={a} />
             </Col>

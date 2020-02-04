@@ -36,7 +36,7 @@ const Image = s.img`
 `
 
 const StyledCard = s(Card)`
-  background-color: WHITE;
+  background-color: ${WHITE};
   margin-bottom: 1rem;
 `
 
