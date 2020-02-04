@@ -2,15 +2,14 @@ import s from 'styled-components'
 import { ProfilePic, Card } from '../common'
 import { BORDER, WHITE } from '../../constants/colors'
 
-import { mediaMinWidth, PHONE } from '../../constants/measurements'
+import { mediaMinWidth, PHONE, M2, M3 } from '../../constants/measurements'
 
 const StyledCard = s(Card)`
   text-align: left;
   box-sizing: border-box;
   width: 100%;
-  margin-right: 1%;
-  margin-bottom: 20px;
-  padding: 20px 10px;
+  margin-bottom: ${M2};
+  padding: ${M3} ${M2};
   display: flex;
   flex-direction: row;
   background-color: ${WHITE};
