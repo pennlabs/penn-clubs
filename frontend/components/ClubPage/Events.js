@@ -1,8 +1,14 @@
 import s from 'styled-components'
 import { Icon, StrongText, Card } from '../common'
 import { WHITE } from '../../constants/colors'
+import { M2, M3 } from '../../constants/measurements'
 
 const Events = ({ data }) => {
+  const StyledCard = s(Card)`
+    background-color: ${WHITE};
+    margin-bottom: ${M3};
+    padding-left: ${M2};
+  `
   const BigParagraph = s.p`
     font-size: 0.8rem;
     font-weight: bold;
@@ -22,7 +28,7 @@ const Events = ({ data }) => {
   }
 
   return (
-    <Card bordered style={{ marginBottom: '1rem', background: WHITE }}>
+    <StyledCard bordered>
       <StrongText>Events</StrongText>
       {data.map((entry, index) => {
         return (
@@ -49,7 +55,7 @@ const Events = ({ data }) => {
           </Wrapper>
         )
       })}
-    </Card>
+    </StyledCard>
   )
 }
 

@@ -25,6 +25,7 @@ import {
   Metadata,
 } from '../../../components/common'
 import { SNOW, WHITE } from '../../../constants/colors'
+import { M0, M2, M3 } from '../../../constants/measurements'
 import ClubMetadata from '../../../components/ClubMetadata'
 
 const Image = s.img`
@@ -37,7 +38,8 @@ const Image = s.img`
 
 const StyledCard = s(Card)`
   background-color: ${WHITE};
-  margin-bottom: 1rem;
+  margin-bottom: ${M3};
+  padding-left: ${M2};
 `
 
 const Club = ({
@@ -128,9 +130,9 @@ const Club = ({
             <SocialIcons club={club} />
           </StyledCard>
           {club.how_to_get_involved ? (
-            <StyledCard bordered style={{ paddingBottom: '0.01rem' }}>
+            <StyledCard bordered >
               <StrongText>How To Get Involved</StrongText>
-              <Text> {club.how_to_get_involved} </Text>
+              <Text style={{ marginBottom: M0 }}> {club.how_to_get_involved} </Text>
             </StyledCard>
           ) : (
             <div></div>

@@ -12,7 +12,7 @@ const Wrapper = s.div`
 
 export default ({ club }) => (
   <Wrapper>
-    <div style={{ padding: '1rem' }}>
+    <div>
       <StrongText>Description</StrongText>
       <div
         style={{ whiteSpace: 'pre-wrap' }}
