@@ -1,6 +1,6 @@
 import s from 'styled-components'
 import { ProfilePic, Card } from '../common'
-import { BORDER, WHITE } from '../../constants/colors'
+import { WHITE } from '../../constants/colors'
 
 import { mediaMinWidth, PHONE, M2, M3 } from '../../constants/measurements'
 
