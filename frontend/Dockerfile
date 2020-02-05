@@ -14,6 +14,9 @@ RUN yarn install --frozen-lockfile --production
 # Copy project files
 COPY . /app/
 
+# Disable telemetry back to zeit
+ENV NEXT_TELEMETRY_DISABLED=1
+
 # Build project
 RUN yarn build
 
