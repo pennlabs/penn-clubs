@@ -94,6 +94,15 @@ describe('Permissioned user tests', () => {
       .type('Penn Pre-Professional Juggling Organization')
     cy.contains('Submit').click()
   })
+
+  it('Vists edit page tabs', () => {
+    cy.visit('/club/pppjo/edit')
+    [
+      ('Information', 'Membership', 'Subscriptions', 'Resources', 'Settings')
+    ].forEach(tab => {
+      cy.contains(tab).click()
+    })
+  })
 })
 
 describe('Individual club page tests', () => {
