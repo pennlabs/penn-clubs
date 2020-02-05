@@ -98,6 +98,7 @@ describe('Permissioned user tests', () => {
   it('Vists edit page tabs', () => {
     cy.visit('/club/pppjo/edit')
     [
+      // visit all tabs
       ('Information', 'Membership', 'Subscriptions', 'Resources', 'Settings')
     ].forEach(tab => {
       cy.contains(tab).click()
