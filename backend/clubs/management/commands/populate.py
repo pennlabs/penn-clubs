@@ -1,8 +1,9 @@
 import requests
+from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 
-from clubs.models import Badge, Club, Tag
+from clubs.models import Badge, Club, Membership, Profile, Tag
 
 
 clubs = [
@@ -60,6 +61,7 @@ class Command(BaseCommand):
         if Club.objects.filter(name="Penn Labs").exists():
             raise CommandError("You probably do not want to run this script in production!")
 
+        # create clubs
         for info in clubs:
             partial = dict(info)
             custom_fields = ["code", "image", "tags", "badges"]
@@ -78,3 +80,48 @@ class Command(BaseCommand):
                     for new_obj in info[name]:
                         new_obj, _ = obj.objects.get_or_create(**new_obj)
                         getattr(club, name).add(new_obj)
+
+        # create users
+        count = 0
+        schools = ["seas", "nursing", "wharton", "sas"]
+        users = [
+            "Benjamin Franklin",
+            "George Washington",
+            "John Adams",
+            "Thomas Jefferson",
+            "James Madison",
+            "James Monroe",
+            "John Quincy Adams",
+            "Andrew Jackson",
+        ]
+        user_objs = []
+        for user in users:
+            first, last = user.split(" ", 1)
+            username = "{}{}".format(first[0], last).lower()
+            email = "{}@{}.upenn.edu".format(username, schools[count % len(schools)])
+            count += 1
+            User = get_user_model()
+            if User.objects.filter(username=username).exists():
+                user_objs.append(User.objects.get(username=username))
+            else:
+                obj = User.objects.create_user(username, email, "test")
+                obj.first_name = first
+                obj.last_name = last
+                obj.save()
+                user_objs.append(obj)
+
+        # make ben franklin a superuser
+        ben = user_objs[0]
+        ben.is_superuser = True
+        ben.is_staff = True
+        ben.save()
+
+        # dismiss welcome prompt
+        Profile.objects.all().update(has_been_prompted=True)
+
+        # add memberships
+        count = 0
+        for club in Club.objects.all():
+            for obj in user_objs[:count]:
+                Membership.objects.get_or_create(club=club, person=obj)
+            count += 1

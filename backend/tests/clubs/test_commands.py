@@ -145,6 +145,10 @@ class SendReminderTestCase(TestCase):
 
 class PopulateTestCase(TestCase):
     def test_populate(self):
+        # populate database with test data
+        call_command("populate")
+
+        # make sure script can handle duplicate runs
         call_command("populate")
 
         self.assertNotEqual(Club.objects.all().count(), 0)
