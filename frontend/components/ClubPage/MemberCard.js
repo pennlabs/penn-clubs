@@ -1,17 +1,15 @@
 import s from 'styled-components'
-import { ProfilePic } from '../common'
-import { BORDER, WHITE } from '../../constants/colors'
+import { ProfilePic, Card } from '../common'
+import { WHITE } from '../../constants/colors'
 
-import { mediaMinWidth, PHONE } from '../../constants/measurements'
+import { mediaMinWidth, PHONE, M2, M3 } from '../../constants/measurements'
 
-const Card = s.div`
+const StyledCard = s(Card)`
   text-align: left;
   box-sizing: border-box;
   width: 100%;
-  margin-right: 1%;
-  margin-bottom: 20px;
-  padding: 20px 10px;
-  border: 1px solid ${BORDER};
+  margin-bottom: ${M2};
+  padding: ${M3} ${M2};
   display: flex;
   flex-direction: row;
   background-color: ${WHITE};
@@ -47,7 +45,7 @@ const Avatar = s.div`
 const MemberCard = ({ account }) => {
   const { email, name, title } = account
   return (
-    <Card>
+    <StyledCard bordered>
       <Avatar className="has-background-light image is-64x64">
         <ProfilePic user={account} fontSize="24px" isRound />
       </Avatar>
@@ -67,7 +65,7 @@ const MemberCard = ({ account }) => {
           )}
         </Label>
       </MemberInfo>
-    </Card>
+    </StyledCard>
   )
 }
 

@@ -9,8 +9,7 @@ import {
   Center,
   Metadata,
 } from '../../../components/common'
-import { CLUBS_BLUE, CLUBS_NAVY, CLUBS_RED } from '../../../constants/colors'
-import ClubMetadata from '../../../components/ClubMetadata'
+import { CLUBS_NAVY } from '../../../constants/colors'
 
 const Image = s.img`
   padding: 0;
