@@ -51,6 +51,18 @@ Whatever your path to Wharton-hood is, we want you (if you make it to round thre
         "active": False,
         "tags": [{"name": "Social"}],
     },
+    {
+        "code": "pppp",
+        "name": "Penn Program for Potential Procrastinators",
+        "description": """Ever considered yourself a possible procrastinator,
+but never actually were able to get the motivation to determine for sure?
+Then join PPPP, Penn's premier potential procrastinating society! We are seeking
+unmotivated individuals who, in theory, are interested in joining our group, but can't
+quite get themselves to start working on our application. Start applying today so that
+you can procrastinate on the application and ultimately miss the deadline!""",
+        "active": True,
+        "tags": [{"name": "Social"}],
+    },
 ]
 
 
