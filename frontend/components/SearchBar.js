@@ -3,6 +3,7 @@ import s from 'styled-components'
 
 import { Icon } from './common'
 import DropdownFilter, { CloseButton } from './DropdownFilter'
+import FilterSearch from './FilterSearch'
 import {
   BORDER_RADIUS,
   mediaMaxWidth,
@@ -134,12 +135,12 @@ const SearchBar = ({
   const focus = () => inputRef.current.focus()
 
   const isTextInSearchBar = Boolean(nameInput)
+  tags = tags.map(({ id, name, clubs }) => ({
+    value: id,
+    label: name,
+    count: clubs,
+  }))
   const dropdowns = {
-    Tags: tags.map(tag => ({
-      value: tag.id,
-      label: tag.name,
-      count: tag.clubs,
-    })),
     Size: [
       { value: 1, label: 'less than 20 members' },
       { value: 2, label: '20 to 50 members' },
@@ -182,6 +183,11 @@ const SearchBar = ({
               onChange={e => setNameInput(e.target.value)}
             />
           </SearchWrapper>
+          <FilterSearch
+            active={activeDropdownFilter === 'Tags'}
+            toggleActive={() => toggleActiveDropdownFilter('Tags')}
+            tags={tags}
+          />
           {Object.keys(dropdowns).map(key => (
             <DropdownFilter
               active={activeDropdownFilter === key}
