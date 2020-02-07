@@ -21,7 +21,7 @@ import { logEvent } from '../utils/analytics'
 import { Icon } from './common'
 
 const checkboxColorMap = {
-  Type: CLUBS_RED,
+  Tags: CLUBS_RED,
   Size: CLUBS_BLUE,
   Application: CLUBS_NAVY,
 }

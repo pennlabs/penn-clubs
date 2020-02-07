@@ -19,7 +19,7 @@ import { logEvent } from '../utils/analytics'
 import { WideContainer, Metadata } from '../components/common'
 
 const colorMap = {
-  Type: CLUBS_RED,
+  Tags: CLUBS_RED,
   Size: CLUBS_BLUE,
   Application: CLUBS_NAVY,
 }

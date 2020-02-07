@@ -135,7 +135,7 @@ const SearchBar = ({
 
   const isTextInSearchBar = Boolean(nameInput)
   const dropdowns = {
-    Type: tags.map(tag => ({
+    Tags: tags.map(tag => ({
       value: tag.id,
       label: tag.name,
       count: tag.clubs,
