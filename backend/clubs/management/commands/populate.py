@@ -81,9 +81,11 @@ class Command(BaseCommand):
                 if field in partial:
                     del partial[field]
             club, _ = Club.objects.get_or_create(code=info["code"], defaults=partial)
-            contents = requests.get(info["image"]).content
-            club.image.save("image.png", ContentFile(contents))
-            club.save()
+
+            if "image" in info:
+                contents = requests.get(info["image"]).content
+                club.image.save("image.png", ContentFile(contents))
+                club.save()
 
             m2m_fields = [(Tag, "tags"), (Badge, "badges")]
 
