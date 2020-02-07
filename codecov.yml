@@ -4,5 +4,5 @@ coverage:
       default:
         threshold: 5
 fixes:
-  - "*.py/::backend/"
-  - "*.js/::frontend/"
+  - "*.py$::backend/"
+  - "*.js$::frontend/"
