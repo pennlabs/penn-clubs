@@ -270,13 +270,13 @@ class Splash extends React.Component {
                       {tag.label}
                       <button
                         className="delete is-small"
-                        onClick={e => this.updateTag(tag, tag.name)}
+                        onClick={() => this.updateTag(tag, tag.name)}
                       />
                     </span>
                   ))}
                   <ClearAllLink
                     className="tag is-rounded"
-                    onClick={e =>
+                    onClick={() =>
                       this.setState(
                         { selectedTags: [] },
                         this.resetDisplay(nameInput, [])
