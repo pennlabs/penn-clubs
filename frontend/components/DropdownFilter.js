@@ -143,6 +143,21 @@ const Chevron = ({ active }) => (
   </DropdownHeaderIcon>
 )
 
+// TODO: export out into seperate component?
+export const FilterHeader = ({ active, color, name, toggleActive }) => (
+  <>
+    <Line />
+    <DropdownHeader
+      onClick={() => toggleActive()}
+      active={active}
+      color={color}
+    >
+      <DropdownHeaderText active={active}>{name}</DropdownHeaderText>
+      <Chevron active={active} />
+    </DropdownHeader>
+  </>
+)
+
 const DropdownFilter = ({
   selected,
   name,
@@ -165,15 +180,12 @@ const DropdownFilter = ({
 
   return (
     <>
-      <Line />
-      <DropdownHeader
-        onClick={() => toggleActive()}
+      <FilterHeader
         active={active}
         color={color}
-      >
-        <DropdownHeaderText active={active}>{name}</DropdownHeaderText>
-        <Chevron active={active} />
-      </DropdownHeader>
+        name={name}
+        toggleActive={toggleActive}
+      />
       <TableWrapper active={active}>
         <TableContainer>
           <table>
