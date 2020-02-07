@@ -6,6 +6,9 @@ export PIPENV_VENV_IN_PROJECT=1
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
+# Kill background servers
+trap 'kill $(jobs -p)' EXIT
+
 # Setup Python backend server
 pushd ../backend
 time pipenv install --dev
@@ -19,8 +22,3 @@ node server.js & npx wait-on -s 3 -d 500 -t 30000 http://localhost:3000
 
 # Run tests
 npx cypress run
-RET=$?
-
-# Kill background servers
-kill $(jobs -p)
-exit $RET
