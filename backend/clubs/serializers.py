@@ -24,7 +24,7 @@ from clubs.models import (
     Tag,
     Testimonial,
     Year,
-    JoinRequest
+    MembershipRequest
 )
 from clubs.utils import clean
 
@@ -640,7 +640,7 @@ class UserSubscribeSerializer(serializers.ModelSerializer):
         fields = ("club",)
 
 
-class JoinRequestSerializer(serializers.ModelSerializer):
+class MembershipRequestSerializer(serializers.ModelSerializer):
     """
     Used by club owners/officers to see who has requested to join the club.
     """
@@ -660,7 +660,7 @@ class JoinRequestSerializer(serializers.ModelSerializer):
         return obj.person.get_full_name()
 
     class Meta:
-        model = JoinRequest
+        model = MembershipRequest
         fields = (
             "club",
             "name",
@@ -674,11 +674,11 @@ class JoinRequestSerializer(serializers.ModelSerializer):
         )
         validators = [
             validators.UniqueTogetherValidator(
-                queryset=JoinRequest.objects.all(), fields=["club", "person"]
+                queryset=MembershipRequest.objects.all(), fields=["club", "person"]
             )
         ]
 
-class UserJoinRequestSerializer (serializers.ModelSerializer):
+class UserMembershipRequestSerializer (serializers.ModelSerializer):
     """
     Used by the UserSerializer to return the clubs that the user has sent request to.
     """
@@ -686,7 +686,7 @@ class UserJoinRequestSerializer (serializers.ModelSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
 
     class Meta:
-        model = JoinRequest
+        model = MembershipRequest
         fields = ("club",)
 
 class UserSerializer(serializers.ModelSerializer):
@@ -696,7 +696,7 @@ class UserSerializer(serializers.ModelSerializer):
     membership_set = UserMembershipSerializer(many=True, read_only=True)
     favorite_set = FavoriteSerializer(many=True, read_only=True)
     subscribe_set = UserSubscribeSerializer(many=True, read_only=True)
-    join_request_set = UserJoinRequestSerializer(many=True, read_only = True)
+    join_request_set = MembershipRequestSerializer(many=True, read_only = True)
     is_superuser = serializers.BooleanField(read_only=True)
     image = serializers.ImageField(source="profile.image", write_only=True)
     image_url = serializers.SerializerMethodField("get_image_url")

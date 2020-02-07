@@ -20,7 +20,7 @@ from clubs.views import (
     UserUpdateAPIView,
     YearViewSet,
     email_preview,
-    JoinRequestViewSet,
+    MembershipRequestViewSet,
 )
 
 
@@ -29,7 +29,7 @@ router.register(r"clubs", ClubViewSet, basename="clubs")
 router.register(r"tags", TagViewSet, basename="tags")
 router.register(r"favorites", FavoriteViewSet, basename="favorites")
 router.register(r"subscribe", SubscribeViewSet, basename="subscribe")
-router.register(r"joinRequest", JoinRequestViewSet, basename = "join")
+router.register(r"request", MembershipRequestViewSet, basename = "request")
 
 router.register(r"schools", SchoolViewSet, basename="schools")
 router.register(r"majors", MajorViewSet, basename="majors")

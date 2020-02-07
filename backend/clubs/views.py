@@ -31,7 +31,7 @@ from clubs.models import (
     Tag,
     Testimonial,
     Year,
-    JoinRequest,
+    MembershipRequest,
 )
 from clubs.permissions import (
     AssetPermission,
@@ -62,7 +62,7 @@ from clubs.serializers import (
     TestimonialSerializer,
     UserSerializer,
     YearSerializer,
-    JoinRequestSerializer,
+    MembershipRequestSerializer,
 )
 from clubs.utils import html_to_text
 
@@ -206,7 +206,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             Subscribe.objects.filter(club__code=self.kwargs["code"]), many=True
         )
         return Response(serializer.data)
-    
+
+    @action(detail=True, methods=["get"])
+    def membership_request(self, request, *args, **kwargs):
+        """
+        Return a list of all students that have sent memebership request to the club,
+        including their names and emails.
+        """
+        serializer = MembershipRequestSerializer(
+            MembershipRequest.objects.filter(club__code=self.kwargs["code"]), many=True
+        )
+        return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
         """
@@ -413,22 +423,22 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Subscribe.objects.filter(person=self.request.user)
 
-class JoinRequestViewSet(viewsets.ModelViewSet):
+class MembershipRequestViewSet(viewsets.ModelViewSet):
     """
     list: Return a list of clubs that the logged in user has sent membership request to.
 
-    create: Sent join request to a club.
+    create: Sent membership request to a club.
 
-    destroy: Deleted a join request from a club.
+    destroy: Deleted a membership request from a club.
     """
 
-    serializer_class = JoinRequestSerializer
+    serializer_class = MembershipRequestSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "club__code"
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        return JoinRequest.objects.filter(person=self.request.user)
+        return MembershipRequest.objects.filter(person=self.request.user)
 
 
 class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):

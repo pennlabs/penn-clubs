@@ -179,7 +179,7 @@ class Subscribe(models.Model):
     class Meta:
         unique_together = (("person", "club"),)
 
-class JoinRequest(models.Model):
+class MembershipRequest(models.Model):
     """
     Used when users are not in the club but request membership from the owner
     """
@@ -189,7 +189,7 @@ class JoinRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "<JoinRequest: {} for {}, with email {}>".format(
+        return "<MembershipRequest: {} for {}, with email {}>".format(
             self.person.username, self.club.pk, self.person.email
         )
 
