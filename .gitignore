@@ -39,3 +39,7 @@ backend/.venv
 # Cypress
 frontend/cypress/videos
 frontend/cypress/screenshots
+
+# Frontend code coverage
+frontend/.nyc_output
+frontend/coverage
