@@ -195,7 +195,7 @@ class JoinRequest(models.Model):
 
     class Meta:
         unique_together = (("person", "club"),)
-        
+
 
 class Advisor(models.Model):
     """

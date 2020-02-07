@@ -31,6 +31,7 @@ from clubs.models import (
     Tag,
     Testimonial,
     Year,
+    JoinRequest,
 )
 from clubs.permissions import (
     AssetPermission,
@@ -61,6 +62,7 @@ from clubs.serializers import (
     TestimonialSerializer,
     UserSerializer,
     YearSerializer,
+    JoinRequestSerializer,
 )
 from clubs.utils import html_to_text
 
@@ -204,6 +206,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             Subscribe.objects.filter(club__code=self.kwargs["code"]), many=True
         )
         return Response(serializer.data)
+    
 
     def list(self, request, *args, **kwargs):
         """
@@ -409,6 +412,23 @@ class SubscribeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Subscribe.objects.filter(person=self.request.user)
+
+class JoinRequestViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of clubs that the logged in user has sent membership request to.
+
+    create: Sent join request to a club.
+
+    destroy: Deleted a join request from a club.
+    """
+
+    serializer_class = JoinRequestSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "club__code"
+    http_method_names = ["get", "post", "delete"]
+
+    def get_queryset(self):
+        return JoinRequest.objects.filter(person=self.request.user)
 
 
 class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
