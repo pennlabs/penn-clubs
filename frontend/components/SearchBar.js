@@ -187,6 +187,7 @@ const SearchBar = ({
             active={activeDropdownFilter === 'Tags'}
             toggleActive={() => toggleActiveDropdownFilter('Tags')}
             tags={tags}
+            updateTag={updateTag}
           />
           {Object.keys(dropdowns).map(key => (
             <DropdownFilter
