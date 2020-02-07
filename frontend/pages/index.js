@@ -101,7 +101,7 @@ class Splash extends React.Component {
   }
 
   resetDisplay(nameInput, selectedTags) {
-    const tagSelected = selectedTags.filter(tag => tag.name === 'Type')
+    const tagSelected = selectedTags.filter(tag => tag.name === 'Tags')
     const sizeSelected = selectedTags.filter(tag => tag.name === 'Size')
     const applicationSelected = selectedTags.filter(
       tag => tag.name === 'Application'
