@@ -76,6 +76,9 @@ export default ({ userInfo, authenticated, show }) => (
       <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
         FAQ
       </StyledLink>
+      <StyledLink href="/changelog" onClick={() => logEvent('changelog', 'click')}>
+        Changelog
+      </StyledLink>
       {authenticated === false && (
         <LoginButton
           className="button"
