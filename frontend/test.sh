@@ -18,7 +18,7 @@ pipenv run ./manage.py runserver & npx wait-on -s 3 -d 500 -t 30000 http://local
 popd
 
 # Setup frontend server
-node server.js & npx wait-on -s 3 -d 500 -t 30000 http://localhost:3000
+node server.js & yarn run wait-on -s 3 -d 500 -t 30000 http://localhost:3000
 
 # Run tests
-npx cypress run
+yarn run cypress run
