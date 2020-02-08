@@ -125,6 +125,7 @@ class ReportViewSet(viewsets.ModelViewSet):
     """
 
     queryset = Report.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = ReportSerializer
     http_method_names = ["get", "delete"]
 
