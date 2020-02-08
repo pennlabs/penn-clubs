@@ -59,7 +59,13 @@ const Reports = ({ nameToCode }) => {
 
   useEffect(() => {
     doApiRequest('/reports/?format=json')
-      .then(resp => resp.json())
+      .then(resp => {
+        if (resp.ok) {
+          return resp.json()
+        } else {
+          return []
+        }
+      })
       .then(data => setReports(data))
   }, [reportFlag])
 
