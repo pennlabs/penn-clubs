@@ -1,7 +1,7 @@
 import s from 'styled-components'
 import { useEffect, useState } from 'react'
 import renderPage from '../renderPage.js'
-import { Icon, Flex } from '../components/common'
+import { Icon, Flex, Empty } from '../components/common'
 import { doApiRequest, API_BASE_URL } from '../utils'
 import { Sidebar } from '../components/common/Sidebar'
 import Checkbox, { CheckboxLabel } from '../components/common/Checkbox'
@@ -54,6 +54,15 @@ const Reports = ({ nameToCode }) => {
   const [nameInput, setNameInput] = useState('')
   const [descInput, setDescInput] = useState('')
 
+  const [reports, setReports] = useState([])
+  const [reportFlag, updateReportFlag] = useState(false)
+
+  useEffect(() => {
+    doApiRequest('/reports/?format=json')
+      .then(resp => resp.json())
+      .then(data => setReports(data))
+  }, [reportFlag])
+
   const [includedFields, setIncludedFields] = useState(
     (() => {
       const initial = {}
@@ -105,6 +114,69 @@ const Reports = ({ nameToCode }) => {
     <Container>
       <WideContainer>
         <h1 className="title" style={{ color: CLUBS_GREY }}>
+          Run existing report
+        </h1>
+        <div className="box">
+          <table className="table" style={{ width: '100%' }}>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reports.map((report, i) => (
+                <tr key={i}>
+                  <td>{report.name || <Empty>None</Empty>}</td>
+                  <td>{report.description || <Empty>None</Empty>}</td>
+                  <td>
+                    <div className="buttons">
+                      <a
+                        href={(() => {
+                          const params = JSON.parse(report.parameters)
+                          const paramString = Object.keys(params).reduce(
+                            (acc, cur) =>
+                              `${acc}&${encodeURIComponent(
+                                cur
+                              )}=${encodeURIComponent(params[cur])}`,
+                            ''
+                          )
+                          return `${API_BASE_URL}/clubs/?existing=true${paramString}`
+                        })()}
+                        target="_blank"
+                        className="button is-small is-success"
+                      >
+                        <Icon name="download" alt="download" />
+                        Download
+                      </a>
+                      <button
+                        onClick={() => {
+                          doApiRequest(`/reports/${report.id}/?format=json`, {
+                            method: 'DELETE',
+                          }).then(() => {
+                            updateReportFlag(!reportFlag)
+                          })
+                        }}
+                        className="button is-danger is-small"
+                      >
+                        <Icon name="trash" alt="delete" />
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!reports.length && (
+                <tr>
+                  <td colSpan="3">There are no existing reports.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <br />
+        <h1 className="title" style={{ color: CLUBS_GREY }}>
           Create a new report
         </h1>
         <div className="box">
@@ -155,7 +227,7 @@ const Reports = ({ nameToCode }) => {
         <button
           className="button is-info"
           onClick={() => {
-            window.open(
+            const w = window.open(
               `${API_BASE_URL}/clubs/?format=xlsx&name=${encodeURIComponent(
                 nameInput
               )}&desc=${encodeURIComponent(
@@ -163,6 +235,7 @@ const Reports = ({ nameToCode }) => {
               )}&fields=${encodeURIComponent(query.fields.join(','))}`,
               '_blank'
             )
+            updateReportFlag(!reportFlag)
           }}
         >
           <Icon name="paperclip" alt="report" />

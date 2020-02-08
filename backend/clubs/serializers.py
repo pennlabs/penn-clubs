@@ -84,7 +84,7 @@ class TestimonialSerializer(ClubRouteMixin, serializers.ModelSerializer):
 class ReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
-        fields = ("name", "description", "parameters")
+        fields = ("id", "name", "description", "parameters")
 
 
 class YearSerializer(serializers.ModelSerializer):

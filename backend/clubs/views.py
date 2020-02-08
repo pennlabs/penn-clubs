@@ -126,7 +126,7 @@ class ReportViewSet(viewsets.ModelViewSet):
 
     queryset = Report.objects.all()
     serializer_class = ReportSerializer
-    http_method_names = ["get"]
+    http_method_names = ["get", "delete"]
 
 
 class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
@@ -239,7 +239,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # don't cache requests for spreadsheet format
         if request.accepted_renderer.format == "xlsx":
             # save request as new report if name is set
-            if request.user.is_authenticated and request.query_params.get("name"):
+            if (
+                request.user.is_authenticated
+                and request.query_params.get("name")
+                and not request.query_params.get("existing")
+            ):
                 name = request.query_params.get("name")
                 desc = request.query_params.get("desc")
                 parameters = json.dumps(dict(request.query_params))
