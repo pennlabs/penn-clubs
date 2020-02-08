@@ -55,7 +55,9 @@ describe('Authenticated user tests', () => {
 
     const tabs = ['Clubs', 'Bookmarks', 'Subscriptions', 'Profile']
     tabs.forEach(tab => {
-      cy.contains(tab).click()
+      cy.get('.tabs')
+        .contains(tab)
+        .click()
     })
   })
 
