@@ -52,6 +52,11 @@ describe('Authenticated user tests', () => {
     cy.visit('/settings')
     cy.contains('Penn Clubs')
     cy.contains('Test User')
+
+    const tabs = ['Clubs', 'Bookmarks', 'Subscriptions', 'Profile']
+    tabs.forEach(tab => {
+      cy.contains(tab).click()
+    })
   })
 
   it('Visits club page', () => {
