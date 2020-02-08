@@ -157,6 +157,7 @@ const Reports = ({ nameToCode }) => {
             )
           }}
         >
+          <Icon name="paperclip" alt="report" />
           Generate Report
         </button>
       </WideContainer>
