@@ -38,7 +38,7 @@ const Checkbox = ({ className, checked, onChange, ...props }) => {
     <CheckboxContainer className={className}>
       <HiddenCheckbox checked={checked} onChange={onChange} {...props} />
       <StyledCheckbox onClick={onChange} checked={checked}>
-        <Icon alt={checked ? 'checked' : 'unchecked'} name={checked ? 'check-box-red' : 'box-red'} />
+        <Icon alt={checked ? 'checked' : 'unchecked'} name={checked ? 'check-box' : 'box'} />
       </StyledCheckbox>
     </CheckboxContainer>
   )
