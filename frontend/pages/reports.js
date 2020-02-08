@@ -18,7 +18,6 @@ const TallTextArea = s.textarea`
 `
 
 const GroupLabel = s.h4`
-  margin-top: 1em;
   margin-bottom: 0em !important;
   font-size: 32px;
   color: #626572;
@@ -150,8 +149,8 @@ const Reports = ({ nameToCode }) => {
           className="button is-info"
           onClick={() => {
             window.open(
-              `${API_BASE_URL}/clubs/?format=xlsx&fields=${query.fields.join(
-                ','
+              `${API_BASE_URL}/clubs/?format=xlsx&fields=${encodeURIComponent(
+                query.fields.join(',')
               )}`,
               '_blank'
             )

@@ -233,8 +233,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return the list of fields that can be exported in the Excel file.
         """
+        name_to_title = {
+            f.name: f.verbose_name.title() for f in Club._meta._get_fields(reverse=False)
+        }
         return Response(
-            {f.verbose_name.title(): f.name for f in Club._meta._get_fields(reverse=False)}
+            {
+                name_to_title.get(f, f.replace("_", " ").title()): f
+                for f in ClubSerializer.Meta.fields
+            }
         )
 
     def get_serializer_class(self):
