@@ -11,6 +11,7 @@ from django.db.models import Count, Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
+from django.utils.text import slugify
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -57,6 +58,7 @@ from clubs.serializers import (
     MembershipInviteSerializer,
     MembershipSerializer,
     NoteSerializer,
+    ReportSerializer,
     SchoolSerializer,
     SubscribeSerializer,
     TagSerializer,
@@ -114,6 +116,17 @@ def filter_note_permission(queryset, club, user):
     ) | queryset.filter(outside_club_permission__gte=subject_club_membership)
 
     return queryset
+
+
+class ReportViewSet(viewsets.ModelViewSet):
+    """
+    retrieve:
+    Return a list of reports that can be generated.
+    """
+
+    queryset = Report.objects.all()
+    serializer_class = ReportSerializer
+    http_method_names = ["get"]
 
 
 class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
@@ -206,6 +219,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             Subscribe.objects.filter(club__code=self.kwargs["code"]), many=True
         )
         return Response(serializer.data)
+
+    def get_filename(self):
+        """
+        For excel spreadsheets, return the user-specified filename if it exists
+        or the default filename otherwise.
+        """
+        name = self.request.query_params.get("name")
+        if name:
+            return "{}.xlsx".format(slugify(name))
+        return super().get_filename()
 
     def list(self, request, *args, **kwargs):
         """

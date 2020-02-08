@@ -11,6 +11,7 @@ from clubs.views import (
     MemberInviteViewSet,
     MemberViewSet,
     NoteViewSet,
+    ReportViewSet,
     SchoolViewSet,
     SubscribeViewSet,
     TagViewSet,
@@ -29,6 +30,7 @@ router.register(r"subscribe", SubscribeViewSet, basename="subscribe")
 
 router.register(r"schools", SchoolViewSet, basename="schools")
 router.register(r"majors", MajorViewSet, basename="majors")
+router.register(r"reports", ReportViewSet, basename="reports")
 router.register(r"years", YearViewSet, basename="years")
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")

@@ -19,6 +19,7 @@ from clubs.models import (
     Note,
     NoteTag,
     Profile,
+    Report,
     School,
     Subscribe,
     Tag,
@@ -78,6 +79,12 @@ class TestimonialSerializer(ClubRouteMixin, serializers.ModelSerializer):
     class Meta:
         model = Testimonial
         fields = ("id", "text")
+
+
+class ReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Report
+        fields = ("name", "description", "parameters")
 
 
 class YearSerializer(serializers.ModelSerializer):
