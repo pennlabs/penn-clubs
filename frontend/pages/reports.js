@@ -118,136 +118,134 @@ const Reports = ({ nameToCode }) => {
 
   return (
     <Container>
-      <WideContainer>
-        <h1 className="title" style={{ color: CLUBS_GREY }}>
-          Run existing report
-        </h1>
-        <div className="box">
-          <table className="table" style={{ width: '100%' }}>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Actions</th>
+      <h1 className="title" style={{ color: CLUBS_GREY }}>
+        Run existing report
+      </h1>
+      <div className="box">
+        <table className="table" style={{ width: '100%' }}>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reports.map((report, i) => (
+              <tr key={i}>
+                <td>{report.name || <Empty>None</Empty>}</td>
+                <td>{report.description || <Empty>None</Empty>}</td>
+                <td>
+                  <div className="buttons">
+                    <a
+                      href={(() => {
+                        const params = JSON.parse(report.parameters)
+                        const paramString = Object.keys(params).reduce(
+                          (acc, cur) =>
+                            `${acc}&${encodeURIComponent(
+                              cur
+                            )}=${encodeURIComponent(params[cur])}`,
+                          ''
+                        )
+                        return `${API_BASE_URL}/clubs/?existing=true${paramString}`
+                      })()}
+                      target="_blank"
+                      className="button is-small is-success"
+                    >
+                      <Icon name="download" alt="download" />
+                      Download
+                    </a>
+                    <button
+                      onClick={() => {
+                        doApiRequest(`/reports/${report.id}/?format=json`, {
+                          method: 'DELETE',
+                        }).then(() => {
+                          updateReportFlag(!reportFlag)
+                        })
+                      }}
+                      className="button is-danger is-small"
+                    >
+                      <Icon name="trash" alt="delete" />
+                      Delete
+                    </button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {reports.map((report, i) => (
-                <tr key={i}>
-                  <td>{report.name || <Empty>None</Empty>}</td>
-                  <td>{report.description || <Empty>None</Empty>}</td>
-                  <td>
-                    <div className="buttons">
-                      <a
-                        href={(() => {
-                          const params = JSON.parse(report.parameters)
-                          const paramString = Object.keys(params).reduce(
-                            (acc, cur) =>
-                              `${acc}&${encodeURIComponent(
-                                cur
-                              )}=${encodeURIComponent(params[cur])}`,
-                            ''
-                          )
-                          return `${API_BASE_URL}/clubs/?existing=true${paramString}`
-                        })()}
-                        target="_blank"
-                        className="button is-small is-success"
-                      >
-                        <Icon name="download" alt="download" />
-                        Download
-                      </a>
-                      <button
-                        onClick={() => {
-                          doApiRequest(`/reports/${report.id}/?format=json`, {
-                            method: 'DELETE',
-                          }).then(() => {
-                            updateReportFlag(!reportFlag)
-                          })
-                        }}
-                        className="button is-danger is-small"
-                      >
-                        <Icon name="trash" alt="delete" />
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {!reports.length && (
-                <tr>
-                  <td colSpan="3">There are no existing reports.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        <br />
-        <h1 className="title" style={{ color: CLUBS_GREY }}>
-          Create a new report
-        </h1>
-        <div className="box">
-          <h3 className="title is-4" style={{ color: CLUBS_GREY }}>
-            Report Details
-          </h3>
-          <div>
-            <div className="field">
-              <label className="label">Name</label>
-              <div className="control">
-                <input
-                  name="name"
-                  className="input"
-                  type="text"
-                  placeholder='e.g. "Owner emails"'
-                  value={nameInput}
-                  onChange={e => setNameInput(e.target.value)}
-                />
-              </div>
+            ))}
+            {!reports.length && (
+              <tr>
+                <td colSpan="3">There are no existing reports.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <br />
+      <h1 className="title" style={{ color: CLUBS_GREY }}>
+        Create a new report
+      </h1>
+      <div className="box">
+        <h3 className="title is-4" style={{ color: CLUBS_GREY }}>
+          Report Details
+        </h3>
+        <div>
+          <div className="field">
+            <label className="label">Name</label>
+            <div className="control">
+              <input
+                name="name"
+                className="input"
+                type="text"
+                placeholder='e.g. "Owner emails"'
+                value={nameInput}
+                onChange={e => setNameInput(e.target.value)}
+              />
             </div>
-            <div className="field">
-              <label className="label">Description</label>
-              <div className="control">
-                <TallTextArea
-                  name="description"
-                  className="input"
-                  type="text"
-                  placeholder='e.g. "Pulls all clubs, the emails from club owners, and names of owners"'
-                  value={descInput}
-                  onChange={e => setDescInput(e.target.value)}
-                />
-              </div>
+          </div>
+          <div className="field">
+            <label className="label">Description</label>
+            <div className="control">
+              <TallTextArea
+                name="description"
+                className="input"
+                type="text"
+                placeholder='e.g. "Pulls all clubs, the emails from club owners, and names of owners"'
+                value={descInput}
+                onChange={e => setDescInput(e.target.value)}
+              />
             </div>
           </div>
         </div>
-        <div className="box">
-          <h3 className="title is-4" style={{ color: CLUBS_GREY }}>
-            Select fields to include
-          </h3>
-          <div>
-            <Flex>
-              {Object.keys(fields).map(group =>
-                generateCheckboxGroup(group, fields[group])
-              )}
-            </Flex>
-          </div>
+      </div>
+      <div className="box">
+        <h3 className="title is-4" style={{ color: CLUBS_GREY }}>
+          Select fields to include
+        </h3>
+        <div>
+          <Flex>
+            {Object.keys(fields).map(group =>
+              generateCheckboxGroup(group, fields[group])
+            )}
+          </Flex>
         </div>
-        <button
-          className="button is-info"
-          onClick={() => {
-            const w = window.open(
-              `${API_BASE_URL}/clubs/?format=xlsx&name=${encodeURIComponent(
-                nameInput
-              )}&desc=${encodeURIComponent(
-                descInput
-              )}&fields=${encodeURIComponent(query.fields.join(','))}`,
-              '_blank'
-            )
-            updateReportFlag(!reportFlag)
-          }}
-        >
-          <Icon name="paperclip" alt="report" />
-          Generate Report
-        </button>
-      </WideContainer>
+      </div>
+      <button
+        className="button is-info"
+        onClick={() => {
+          const w = window.open(
+            `${API_BASE_URL}/clubs/?format=xlsx&name=${encodeURIComponent(
+              nameInput
+            )}&desc=${encodeURIComponent(
+              descInput
+            )}&fields=${encodeURIComponent(query.fields.join(','))}`,
+            '_blank'
+          )
+          updateReportFlag(!reportFlag)
+        }}
+      >
+        <Icon name="paperclip" alt="report" />
+        Generate Report
+      </button>
     </Container>
   )
 }
