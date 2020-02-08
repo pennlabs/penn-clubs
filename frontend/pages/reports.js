@@ -51,6 +51,9 @@ const Reports = ({ nameToCode }) => {
     Fields: Object.keys(nameToCode),
   }
 
+  const [nameInput, setNameInput] = useState('')
+  const [descInput, setDescInput] = useState('')
+
   const [includedFields, setIncludedFields] = useState(
     (() => {
       const initial = {}
@@ -117,6 +120,8 @@ const Reports = ({ nameToCode }) => {
                   className="input"
                   type="text"
                   placeholder='e.g. "Owner emails"'
+                  value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
                 />
               </div>
             </div>
@@ -128,6 +133,8 @@ const Reports = ({ nameToCode }) => {
                   className="input"
                   type="text"
                   placeholder='e.g. "Pulls all clubs, the emails from club owners, and names of owners"'
+                  value={descInput}
+                  onChange={e => setDescInput(e.target.value)}
                 />
               </div>
             </div>
@@ -149,9 +156,11 @@ const Reports = ({ nameToCode }) => {
           className="button is-info"
           onClick={() => {
             window.open(
-              `${API_BASE_URL}/clubs/?format=xlsx&fields=${encodeURIComponent(
-                query.fields.join(',')
-              )}`,
+              `${API_BASE_URL}/clubs/?format=xlsx&name=${encodeURIComponent(
+                nameInput
+              )}&desc=${encodeURIComponent(
+                descInput
+              )}&fields=${encodeURIComponent(query.fields.join(','))}`,
               '_blank'
             )
           }}

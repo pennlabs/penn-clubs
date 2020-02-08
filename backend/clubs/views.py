@@ -1,3 +1,4 @@
+import json
 import os
 import re
 
@@ -26,6 +27,7 @@ from clubs.models import (
     Membership,
     MembershipInvite,
     Note,
+    Report,
     School,
     Subscribe,
     Tag,
@@ -213,6 +215,15 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         # don't cache requests for spreadsheet format
         if request.accepted_renderer.format == "xlsx":
+            # save request as new report if name is set
+            if request.user.is_authenticated and request.query_params.get("name"):
+                name = request.query_params.get("name")
+                desc = request.query_params.get("desc")
+                parameters = json.dumps(dict(request.query_params))
+                Report.objects.create(
+                    name=name, description=desc, parameters=parameters, creator=request.user
+                )
+
             resp = super().list(request, *args, **kwargs)
             return resp
 
