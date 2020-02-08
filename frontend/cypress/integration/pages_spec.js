@@ -18,6 +18,16 @@ describe('Page load tests', () => {
     cy.visit('/settings')
     cy.contains('Penn Clubs')
   })
+
+  it('Visits the welcome page', () => {
+    cy.visit('/welcome')
+    cy.contains('Penn Clubs')
+  })
+
+  it('Visits the reports page', () => {
+    cy.visit('/reports')
+    cy.contains('Penn Clubs')
+  })
 })
 
 describe('Authenticated user tests', () => {
