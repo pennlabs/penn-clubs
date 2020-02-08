@@ -124,10 +124,12 @@ class ReportViewSet(viewsets.ModelViewSet):
     Return a list of reports that can be generated.
     """
 
-    queryset = Report.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = ReportSerializer
     http_method_names = ["get", "delete"]
+
+    def get_queryset(self):
+        return Report.objects.filter(creator=self.request.user)
 
 
 class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
