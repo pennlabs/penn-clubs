@@ -46,6 +46,12 @@ const SelectedManager = ({ value, onClick }) => (
   </HoverListElement>
 )
 
+const serializeParams = params => {
+  return Object.keys(params)
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+    .join('&')
+}
+
 const Reports = ({ nameToCode }) => {
   const fields = {
     Fields: Object.keys(nameToCode),
@@ -138,17 +144,9 @@ const Reports = ({ nameToCode }) => {
                 <td>
                   <div className="buttons">
                     <a
-                      href={(() => {
-                        const params = JSON.parse(report.parameters)
-                        const paramString = Object.keys(params).reduce(
-                          (acc, cur) =>
-                            `${acc}&${encodeURIComponent(
-                              cur
-                            )}=${encodeURIComponent(params[cur])}`,
-                          ''
-                        )
-                        return `${API_BASE_URL}/clubs/?existing=true${paramString}`
-                      })()}
+                      href={`${API_BASE_URL}/clubs/?existing=true&${serializeParams(
+                        JSON.parse(report.parameters)
+                      )}`}
                       target="_blank"
                       className="button is-small is-success"
                     >
