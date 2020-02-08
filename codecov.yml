@@ -3,8 +3,3 @@ coverage:
     project:
       default:
         threshold: 5
-fixes:
-  - "**/*.py$::backend/"
-  - "*.py$::backend/"
-  - "**/*.js$::frontend/"
-  - "*.js$::frontend/"
