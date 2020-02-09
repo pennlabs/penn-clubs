@@ -111,7 +111,7 @@ const DropdownHeaderText = s.p`
   margin-bottom: 0;
 
   ${mediaMaxWidth(MD)} {
-    color: ${({ active }) => active ? WHITE : 'rgba(0, 0, 0, 0.5)'}
+    color: ${({ active }) => (active ? WHITE : 'rgba(0, 0, 0, 0.5)')}
     opacity: 1;
   }
 `

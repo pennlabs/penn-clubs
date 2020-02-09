@@ -82,33 +82,41 @@ const Search = ({ searchTags, recommendedTags, updateTag }) => {
   // Overriding specific components of the react-select
   const components = {
     IndicatorSeparator: () => null,
-    DropdownIndicator: () => <SearchIcon><Icon name="tag" alt="" /></SearchIcon>,
+    DropdownIndicator: () => (
+      <SearchIcon>
+        <Icon name="tag" alt="" />
+      </SearchIcon>
+    ),
   }
 
-  return <Select
-    isMulti
-    styles={styles}
-    components={components}
-    loadOptions={searchTags}
-    defaultOptions={recommendedTags}
-    cacheOptions
-    onChange={(_, selectEvent) => {
-      const { action, option } = selectEvent
-      action === 'select-option' && updateTag(option, 'Tags')
-    }}
-    placeholder="Search for tags"
-    value={null}
-  />
+  return (
+    <Select
+      isMulti
+      styles={styles}
+      components={components}
+      loadOptions={searchTags}
+      defaultOptions={recommendedTags}
+      cacheOptions
+      onChange={(_, selectEvent) => {
+        const { action, option } = selectEvent
+        action === 'select-option' && updateTag(option, 'Tags')
+      }}
+      placeholder="Search for tags"
+      value={null}
+    />
+  )
 }
 
 const selectRecommended = (tags = []) => {
   const options = tags
     .sort(() => 0.5 - Math.random())
     .slice(0, Math.min(tags.length, 3))
-  return [{
-    label: 'Suggested for you',
-    options,
-  }]
+  return [
+    {
+      label: 'Suggested for you',
+      options,
+    },
+  ]
 }
 
 const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
@@ -116,7 +124,9 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
   selected.forEach(({ value }) => filter.add(value))
   tags = tags.filter(({ value }) => !filter.has(value))
 
-  const [recommendedTags, setRecommendedTags] = useState(selectRecommended(tags))
+  const [recommendedTags, setRecommendedTags] = useState(
+    selectRecommended(tags)
+  )
   const searchTags = async query => {
     const results = await fuzzysort.go(query, tags, {
       key: 'label',
@@ -132,19 +142,19 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
 
   return (
     <>
-    <FilterHeader
-      active={active}
-      color={CLUBS_RED}
-      name="Tags"
-      toggleActive={toggleActive}
-    />
-    <SearchWrapper active={active}>
-      <Search
-        searchTags={searchTags}
-        recommendedTags={recommendedTags}
-        updateTag={updateTag}
+      <FilterHeader
+        active={active}
+        color={CLUBS_RED}
+        name="Tags"
+        toggleActive={toggleActive}
       />
-    </SearchWrapper>
+      <SearchWrapper active={active}>
+        <Search
+          searchTags={searchTags}
+          recommendedTags={recommendedTags}
+          updateTag={updateTag}
+        />
+      </SearchWrapper>
     </>
   )
 }
