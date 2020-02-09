@@ -43,8 +43,8 @@ When installing locally for development, run:
 Running the frontend requires [Node.js](https://nodejs.org/en/).
 
 1. Enter the `frontend` directory with a new terminal window.
-2. Install dependencies using `npm install --dev` in the project directory.
-3. Run application using `npm run dev`.
+2. Install dependencies using `yarn lock` in the project directory.
+3. Run application using `yarn dev`.
 4. Access application at [http://localhost:3000](http://localhost:3000).
 
 ### Development
