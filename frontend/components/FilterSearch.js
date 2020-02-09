@@ -43,11 +43,11 @@ const SearchWrapper = s.div`
   }
 `
 
-const SearchIcon = s.span`
+const SearchIcon = s(Icon)`
   cursor: pointer;
   color: ${MEDIUM_GRAY};
   opacity: 0.5;
-  margin-right: 6px;
+  margin-right: 6px !important;
 
   ${mediaMaxWidth(MD)} {
     right: 24px;
@@ -82,11 +82,7 @@ const Search = ({ searchTags, recommendedTags, updateTag }) => {
   // Overriding specific components of the react-select
   const components = {
     IndicatorSeparator: () => null,
-    DropdownIndicator: () => (
-      <SearchIcon>
-        <Icon name="tag" alt="" />
-      </SearchIcon>
-    ),
+    DropdownIndicator: () => <SearchIcon name="tag" alt="" />,
   }
 
   return (
