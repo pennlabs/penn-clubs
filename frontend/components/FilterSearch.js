@@ -11,7 +11,6 @@ import {
   ANIMATION_DURATION,
 } from '../constants/measurements'
 import {
-  ALLBIRDS_GRAY,
   MEDIUM_GRAY,
   CLUBS_RED,
   CLUBS_GREY,
