@@ -1,9 +1,14 @@
 import s from 'styled-components'
 import { useEffect, useState } from 'react'
 import renderPage from '../renderPage.js'
-import { Icon, Flex, Empty } from '../components/common'
+import {
+  Icon,
+  Flex,
+  Empty,
+  Checkbox,
+  CheckboxLabel,
+} from '../components/common'
 import { doApiRequest, API_BASE_URL } from '../utils'
-import Checkbox, { CheckboxLabel } from '../components/common/Checkbox'
 import { Container, WideContainer } from '../components/common/Container'
 import {
   CLUBS_GREY,

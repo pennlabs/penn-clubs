@@ -33,7 +33,7 @@ export const CheckboxLabel = s.label`
   cursor: pointer;
 `
 
-const Checkbox = ({ className, checked, onChange, ...props }) => {
+export const Checkbox = ({ className, checked, onChange, ...props }) => {
   return (
     <CheckboxContainer className={className}>
       <HiddenCheckbox checked={checked} onChange={onChange} {...props} />
@@ -43,5 +43,3 @@ const Checkbox = ({ className, checked, onChange, ...props }) => {
     </CheckboxContainer>
   )
 }
-
-export default Checkbox
