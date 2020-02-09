@@ -66,7 +66,6 @@ const Content = s.div`
   }
 
   ${mediaMaxWidth(MD)} {
-    position: relative;
     height: auto;
     overflow: visible;
     width: 100%;
