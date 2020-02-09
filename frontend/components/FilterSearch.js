@@ -12,7 +12,7 @@ import {
 } from '../constants/measurements'
 import {
   MEDIUM_GRAY,
-  CLUBS_RED,
+  CLUBS_BLUE,
   CLUBS_GREY,
   FOCUS_GRAY,
   BORDER,
@@ -23,10 +23,15 @@ const SearchWrapper = s.div`
   margin-bottom: 30px;
   max-height: 0;
   opacity: 0;
+  display: none;
   overflow: visible;
   transition: all ${ANIMATION_DURATION}ms ease;
 
-  ${({ active }) => active && 'max-height: 100%; opacity: 1;'}
+  ${({ active }) => active && `
+    max-height: 100%;
+    opacity: 1;
+    display: block;
+  `}
 
   ${mediaMaxWidth(MD)} {
     height: auto;
@@ -120,7 +125,7 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
   const filter = new Set()
   selected.forEach(({ value }) => filter.add(value))
   tags = tags.filter(({ value }) => !filter.has(value))
-
+  
   const [recommendedTags, setRecommendedTags] = useState(
     selectRecommended(tags)
   )
@@ -141,7 +146,7 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
     <>
       <FilterHeader
         active={active}
-        color={CLUBS_RED}
+        color={CLUBS_BLUE}
         name="Tags"
         toggleActive={toggleActive}
       />
