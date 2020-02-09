@@ -1,3 +1,4 @@
+import json
 import os
 import re
 
@@ -10,6 +11,7 @@ from django.db.models import Count, Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
+from django.utils.text import slugify
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -26,6 +28,7 @@ from clubs.models import (
     Membership,
     MembershipInvite,
     Note,
+    Report,
     School,
     Subscribe,
     Tag,
@@ -55,6 +58,7 @@ from clubs.serializers import (
     MembershipInviteSerializer,
     MembershipSerializer,
     NoteSerializer,
+    ReportSerializer,
     SchoolSerializer,
     SubscribeSerializer,
     TagSerializer,
@@ -112,6 +116,20 @@ def filter_note_permission(queryset, club, user):
     ) | queryset.filter(outside_club_permission__gte=subject_club_membership)
 
     return queryset
+
+
+class ReportViewSet(viewsets.ModelViewSet):
+    """
+    retrieve:
+    Return a list of reports that can be generated.
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = ReportSerializer
+    http_method_names = ["get", "delete"]
+
+    def get_queryset(self):
+        return Report.objects.filter(creator=self.request.user)
 
 
 class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
@@ -205,6 +223,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
         return Response(serializer.data)
 
+    def get_filename(self):
+        """
+        For excel spreadsheets, return the user-specified filename if it exists
+        or the default filename otherwise.
+        """
+        name = self.request.query_params.get("name")
+        if name:
+            return "{}.xlsx".format(slugify(name))
+        return super().get_filename()
+
     def list(self, request, *args, **kwargs):
         """
         Return a list of all clubs.
@@ -213,6 +241,19 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         # don't cache requests for spreadsheet format
         if request.accepted_renderer.format == "xlsx":
+            # save request as new report if name is set
+            if (
+                request.user.is_authenticated
+                and request.query_params.get("name")
+                and not request.query_params.get("existing")
+            ):
+                name = request.query_params.get("name")
+                desc = request.query_params.get("desc")
+                parameters = json.dumps(dict(request.query_params))
+                Report.objects.create(
+                    name=name, description=desc, parameters=parameters, creator=request.user
+                )
+
             resp = super().list(request, *args, **kwargs)
             return resp
 
@@ -233,8 +274,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return the list of fields that can be exported in the Excel file.
         """
+        name_to_title = {
+            f.name: f.verbose_name.title() for f in Club._meta._get_fields(reverse=False)
+        }
         return Response(
-            {f.verbose_name.title(): f.name for f in Club._meta._get_fields(reverse=False)}
+            {
+                name_to_title.get(f, f.replace("_", " ").title()): f
+                for f in ClubSerializer.Meta.fields
+            }
         )
 
     def get_serializer_class(self):

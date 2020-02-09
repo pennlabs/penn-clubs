@@ -18,6 +18,7 @@ from clubs.models import (
     Note,
     NoteTag,
     Profile,
+    Report,
     School,
     Subscribe,
     Tag,
@@ -255,6 +256,12 @@ class BadgeAdmin(admin.ModelAdmin):
     actions = [do_merge_tags]
 
 
+class ReportAdmin(admin.ModelAdmin):
+    search_fields = ("name", "description")
+    list_display = ("name", "creator")
+    list_filter = ("created_at",)
+
+
 class YearAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     list_display = ("name", "year")
@@ -275,6 +282,7 @@ admin.site.register(Major)
 admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)
 admin.site.register(Profile, ProfileAdmin)
+admin.site.register(Report, ReportAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Testimonial)
 admin.site.register(Note)

@@ -24,6 +24,7 @@ In production, you will need to set the following environment variables:
 - `LABS_CLIENT_SECRET` (from Platform)
 
 To run the server, `cd` to the folder where you cloned `penn-clubs`. Then run:
+- `cd backend`
 - `$ pipenv install` to install Python dependencies. This may take a few minutes.
 - `$ pipenv shell`
 - `$ ./manage.py migrate`
@@ -42,8 +43,8 @@ When installing locally for development, run:
 Running the frontend requires [Node.js](https://nodejs.org/en/).
 
 1. Enter the `frontend` directory with a new terminal window.
-2. Install dependencies using `npm install --dev` in the project directory.
-3. Run application using `npm run dev`.
+2. Install dependencies using `yarn lock` in the project directory.
+3. Run application using `yarn dev`.
 4. Access application at [http://localhost:3000](http://localhost:3000).
 
 ### Development
