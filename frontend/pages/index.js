@@ -19,9 +19,9 @@ import { logEvent } from '../utils/analytics'
 import { WideContainer, Metadata } from '../components/common'
 
 const colorMap = {
-  Tags: CLUBS_RED,
-  Size: CLUBS_BLUE,
-  Application: CLUBS_NAVY,
+  Tags: CLUBS_BLUE,
+  Size: CLUBS_NAVY,
+  Application: CLUBS_RED,
 }
 
 const ClearAllLink = s.span`
