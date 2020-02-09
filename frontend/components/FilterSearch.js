@@ -62,7 +62,7 @@ const Search = ({ searchTags, recommendedTags, updateTag }) => {
       const isEmphasized = isFocused || isSelected
       return {
         ...base,
-        border: `1px solid ${ALLBIRDS_GRAY}`,
+        border: `1px solid ${BORDER}`,
         background: isEmphasized ? FOCUS_GRAY : background,
         boxShadow: 'none',
         '&:hover': {
