@@ -586,19 +586,21 @@ class ClubForm extends Component {
                           {a.title} ({getRoleDisplay(a.role)})
                         </td>
                         <td>{a.email}</td>
-                        <td className="buttons">
-                          <button
-                            className="button is-small is-primary"
-                            onClick={() => this.setState({ editMember: a })}
-                          >
-                            <Icon name="edit" alt="edit member" /> Edit
-                          </button>
-                          <button
-                            className="button is-small is-danger"
-                            onClick={() => this.deleteMembership(a.username)}
-                          >
-                            <Icon name="x" alt="kick member" /> Kick
-                          </button>
+                        <td>
+                          <div className="buttons">
+                            <button
+                              className="button is-small is-primary"
+                              onClick={() => this.setState({ editMember: a })}
+                            >
+                              <Icon name="edit" alt="edit member" /> Edit
+                            </button>
+                            <button
+                              className="button is-small is-danger"
+                              onClick={() => this.deleteMembership(a.username)}
+                            >
+                              <Icon name="x" alt="kick member" /> Kick
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
