@@ -171,7 +171,7 @@ const Reports = ({ nameToCode }) => {
             ))}
             {!reports.length && (
               <tr>
-                <td colSpan="3">There are no existing reports.</td>
+                <td colSpan="3"><Empty>There are no existing reports.</Empty></td>
               </tr>
             )}
           </tbody>
