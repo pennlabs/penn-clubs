@@ -1,26 +1,21 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import s from 'styled-components'
 import Select from 'react-select/async'
+import fuzzysort from 'fuzzysort'
 
 import { Icon } from './common'
 import { FilterHeader } from './DropdownFilter'
 import {
-  BORDER_RADIUS,
   mediaMaxWidth,
   MD,
-  NAV_HEIGHT,
-  mediaMinWidth,
-  SEARCH_BAR_MOBILE_HEIGHT,
   ANIMATION_DURATION,
 } from '../constants/measurements'
 import {
   ALLBIRDS_GRAY,
   MEDIUM_GRAY,
-  FOCUS_GRAY,
-  CLUBS_GREY,
-  BORDER,
-  WHITE,
   CLUBS_RED,
+  CLUBS_GREY,
+  FOCUS_GRAY,
 } from '../constants/colors'
 
 const SearchWrapper = s.div`
@@ -94,31 +89,52 @@ const Search = ({ searchTags, recommendedTags, updateTag }) => {
     value={null}
   />
 }
-        return [{
-            label: "Suggested for you",
-            options: shuffled.slice(0, Math.min(shuffled.length, 3))
-        }]
+
+const selectRecommended = (tags = []) => {
+  const options = tags
+    .sort(() => 0.5 - Math.random())
+    .slice(0, Math.min(tags.length, 3))
+  return [{
+    label: 'Suggested for you',
+    options,
+  }]
+}
+
+const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
+  const filter = new Set()
+  selected.forEach(({ value }) => filter.add(value))
+  tags = tags.filter(({ value }) => !filter.has(value))
+
+  const [recommendedTags, setRecommendedTags] = useState(selectRecommended(tags))
+  const searchTags = async query => {
+    const results = await fuzzysort.go(query, tags, {
+      key: 'label',
+      limit: 20,
+      threshold: -10000,
     })
-    const searchTags = async query => {
-        // TODO: actually search tags
-        return tags;
-    }
+    return results.map(({ obj }) => obj)
+  }
+
+  useEffect(() => {
+    setRecommendedTags(selectRecommended(tags))
+  }, [selected])
+
   return (
-        <>
-            <FilterHeader
-              active={active}
-              color={CLUBS_RED}
-              name="Tags"
-              toggleActive={toggleActive}
-            />
-            <SearchWrapper active={active}>
+    <>
+      <FilterHeader
+        active={active}
+        color={CLUBS_RED}
+        name="Tags"
+        toggleActive={toggleActive}
+      />
+      <SearchWrapper active={active}>
         <Search
           searchTags={searchTags}
           recommendedTags={recommendedTags}
           updateTag={updateTag}
-              />
-            </SearchWrapper>
-        </>
+        />
+      </SearchWrapper>
+    </>
   )
 }
 
