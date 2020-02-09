@@ -40,7 +40,7 @@ const SelectedManager = ({ value, onClick }) => (
     {value}
 
     <span style={{ marginLeft: '1em' }} onClick={onClick}>
-      X
+      &times;
     </span>
   </HoverListElement>
 )
