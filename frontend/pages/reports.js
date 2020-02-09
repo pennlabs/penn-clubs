@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import renderPage from '../renderPage.js'
 import { Icon, Flex, Empty } from '../components/common'
 import { doApiRequest, API_BASE_URL } from '../utils'
-import { Sidebar } from '../components/common/Sidebar'
 import Checkbox, { CheckboxLabel } from '../components/common/Checkbox'
 import { Container, WideContainer } from '../components/common/Container'
 import {
