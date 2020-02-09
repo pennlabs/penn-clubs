@@ -31,6 +31,14 @@ tempor incididunt ut labore et dolore magna aliqua.</i>""",
         "image": "https://i.imgur.com/TOj74YQ.png",
     },
     {
+        "code": "penn-memes",
+        "name": "Penn Memes Club",
+        "description": """We are exclusive to M&T students.""",
+        "active": True,
+        "image": "https://i.imgur.com/BkNWXlo.png",
+        "tags": [{"name": "Greek Life"}],
+    },
+    {
         "code": "harvard-rejects",
         "name": "Harvard Rejects Club",
         "description": """We’re Penn’s largest club with over 20,000 active members!
