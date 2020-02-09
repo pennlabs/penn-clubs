@@ -16,6 +16,8 @@ import {
   CLUBS_RED,
   CLUBS_GREY,
   FOCUS_GRAY,
+  BORDER,
+  WHITE,
 } from '../constants/colors'
 
 const SearchWrapper = s.div`
@@ -28,7 +30,17 @@ const SearchWrapper = s.div`
   ${({ active }) => active && 'max-height: 150vh; opacity: 1;'}
 
   ${mediaMaxWidth(MD)} {
-    margin-bottom: 8px;
+    height: auto;
+    overflow: visible;
+    width: 100%;
+    margin: 0;
+    padding: 8px 1rem;
+    border-bottom: 1px solid ${BORDER};
+    position: fixed;
+    left: 0;
+    z-index: 1000;
+    background: ${WHITE};
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.075);
   }
 `
 
@@ -121,19 +133,19 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
 
   return (
     <>
-      <FilterHeader
-        active={active}
-        color={CLUBS_RED}
-        name="Tags"
-        toggleActive={toggleActive}
+    <FilterHeader
+      active={active}
+      color={CLUBS_RED}
+      name="Tags"
+      toggleActive={toggleActive}
+    />
+    <SearchWrapper active={active}>
+      <Search
+        searchTags={searchTags}
+        recommendedTags={recommendedTags}
+        updateTag={updateTag}
       />
-      <SearchWrapper active={active}>
-        <Search
-          searchTags={searchTags}
-          recommendedTags={recommendedTags}
-          updateTag={updateTag}
-        />
-      </SearchWrapper>
+    </SearchWrapper>
     </>
   )
 }
