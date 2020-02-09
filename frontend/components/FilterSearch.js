@@ -108,6 +108,7 @@ const Search = ({ searchTags, recommendedTags, updateTag }) => {
 }
 
 const selectRecommended = (tags = []) => {
+  // Return 3 randomly selected tags by shuffling tags and then taking the first 3 tags
   const options = tags
     .sort(() => 0.5 - Math.random())
     .slice(0, Math.min(tags.length, 3))
