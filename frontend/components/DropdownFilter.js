@@ -10,7 +10,6 @@ import {
   CLUBS_NAVY,
 } from '../constants/colors'
 import {
-  mediaMinWidth,
   mediaMaxWidth,
   MD,
   SEARCH_BAR_MOBILE_HEIGHT,
@@ -115,27 +114,6 @@ const DropdownHeaderText = s.p`
     opacity: 1;
   }
 `
-
-const CloseWrapper = s.div`
-  float: right;
-  ${mediaMinWidth(MD)} {
-    display: none !important;
-  }
-`
-
-export const CloseButton = ({ onClick }) => (
-  <CloseWrapper>
-    <DropdownHeader
-      style={{ marginRight: 0 }}
-      onClick={onClick}
-      color={LIGHT_GRAY}
-    >
-      <DropdownHeaderText>
-        <Icon name="x" alt="&#215;" />
-      </DropdownHeaderText>
-    </DropdownHeader>
-  </CloseWrapper>
-)
 
 const Chevron = ({ active }) => (
   <DropdownHeaderIcon className="icon" active={active}>
