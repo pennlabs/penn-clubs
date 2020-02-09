@@ -27,7 +27,9 @@ const SearchWrapper = s.div`
   overflow: visible;
   transition: all ${ANIMATION_DURATION}ms ease;
 
-  ${({ active }) => active && `
+  ${({ active }) =>
+    active &&
+    `
     max-height: 100%;
     opacity: 1;
     display: block;
@@ -125,7 +127,7 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
   const filter = new Set()
   selected.forEach(({ value }) => filter.add(value))
   tags = tags.filter(({ value }) => !filter.has(value))
-  
+
   const [recommendedTags, setRecommendedTags] = useState(
     selectRecommended(tags)
   )
