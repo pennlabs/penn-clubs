@@ -24,6 +24,7 @@ In production, you will need to set the following environment variables:
 - `LABS_CLIENT_SECRET` (from Platform)
 
 To run the server, `cd` to the folder where you cloned `penn-clubs`. Then run:
+- `cd backend`
 - `$ pipenv install` to install Python dependencies. This may take a few minutes.
 - `$ pipenv shell`
 - `$ ./manage.py migrate`
