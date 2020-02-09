@@ -48,9 +48,52 @@ const SearchIcon = s.span`
   }
 `
 
-const Filter = ({ active, toggleActive, tags, updateTag }) => {
-    const [defaultTags] = useState(() => {
-        const shuffled = tags.sort(() => 0.5 - Math.random());
+const Search = ({ searchTags, recommendedTags, updateTag }) => {
+  // Custom styles for the react-select
+  const styles = {
+    control: ({ background, ...base }, { isFocused, isSelected }) => {
+      const isEmphasized = isFocused || isSelected
+      return {
+        ...base,
+        border: `1px solid ${ALLBIRDS_GRAY}`,
+        background: isEmphasized ? FOCUS_GRAY : background,
+        boxShadow: 'none',
+        '&:hover': {
+          background: FOCUS_GRAY,
+        },
+      }
+    },
+    option: ({ background, ...base }, { isFocused, isSelected }) => {
+      const isEmphasized = isFocused || isSelected
+      return {
+        ...base,
+        background: isEmphasized ? FOCUS_GRAY : background,
+        color: CLUBS_GREY,
+      }
+    },
+  }
+
+  // Overriding specific components of the react-select
+  const components = {
+    IndicatorSeparator: () => null,
+    DropdownIndicator: () => <SearchIcon><Icon name="tag" alt="" /></SearchIcon>,
+  }
+
+  return <Select
+    isMulti
+    styles={styles}
+    components={components}
+    loadOptions={searchTags}
+    defaultOptions={recommendedTags}
+    cacheOptions
+    onChange={(_, selectEvent) => {
+      const { action, option } = selectEvent
+      action === 'select-option' && updateTag(option, 'Tags')
+    }}
+    placeholder="Search for tags"
+    value={null}
+  />
+}
         return [{
             label: "Suggested for you",
             options: shuffled.slice(0, Math.min(shuffled.length, 3))
@@ -69,20 +112,10 @@ const Filter = ({ active, toggleActive, tags, updateTag }) => {
               toggleActive={toggleActive}
             />
             <SearchWrapper active={active}>
-              <Select
-                isMulti
-                cacheOptions
-                loadOptions={searchTags}
-                components={{
-                  IndicatorSeparator: () => null,
-                  DropdownIndicator: () => <SearchIcon><Icon name="tag" alt=""/></SearchIcon>,
-                }}
-                defaultOptions={defaultTags}
-                onChange={(_, action) => {
-                    action.option && updateTag(action.option, "Tags")
-                }}
-                value={[]}
-                placeholder="Search for tags"
+        <Search
+          searchTags={searchTags}
+          recommendedTags={recommendedTags}
+          updateTag={updateTag}
               />
             </SearchWrapper>
         </>
