@@ -67,8 +67,8 @@ const FAQ = () => (
           }}
         >
           <li>
-            Search for clubs by name, and use filters like Type (tags that
-            describe the club), Size (number of members), and Applications (if
+            Search for clubs by name, and use filters like Tags (tags that
+            describe the club), Size (number of members), and Application (if
             applications are required to join)
           </li>
           <li>Bookmark clubs to keep track of them</li>

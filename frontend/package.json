@@ -31,14 +31,14 @@
     "react-draft-wysiwyg": "^1.14.4",
     "react-ga": "^2.6.0",
     "react-lazy-load": "^3.0.13",
-    "react-select": "^3.0.4",
+    "react-select": "^3.0.8",
     "react-timeago": "^4.4.0",
     "react-tooltip": "^3.11.1",
     "styled-components": "^4.4.1"
   },
   "scripts": {
-    "lint": "prettier --check \"./{cypress,pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
-    "clean": "prettier --write \"./{cypress,pages,components/constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\" --fix",
+    "lint": "prettier --check \"./{cypress,pages,components,constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\"",
+    "clean": "prettier --write \"./{cypress,pages,components,constants}/**/*.js\" \"*.js\" && eslint \"./{pages,components,constants}/**/*.js\" \"*.js\" --fix",
     "test": "./test.sh",
     "dev": "node server.js",
     "build": "next build",

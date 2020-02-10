@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import s from 'styled-components'
 
 import { Icon } from './common'
-import DropdownFilter, { CloseButton } from './DropdownFilter'
+import DropdownFilter from './DropdownFilter'
+import FilterSearch from './FilterSearch'
 import {
   BORDER_RADIUS,
   mediaMaxWidth,
@@ -65,7 +66,6 @@ const Content = s.div`
   }
 
   ${mediaMaxWidth(MD)} {
-    position: relative;
     height: auto;
     overflow: visible;
     width: 100%;
@@ -110,6 +110,15 @@ const SearchIcon = s.span`
   }
 `
 
+const MobileLine = s.hr`
+  display: none;  
+  ${mediaMaxWidth(MD)} {
+    display: block;
+    margin: 1.0em 0 0 0;
+    border-color: ${CLUBS_GREY};
+  }
+`
+
 const SearchBar = ({
   tags,
   updateTag,
@@ -130,16 +139,15 @@ const SearchBar = ({
 
   const toggleActiveDropdownFilter = name =>
     setActiveDropdownFilter(activeDropdownFilter === name ? null : name)
-  const closeDropdownFilter = () => setActiveDropdownFilter(null)
   const focus = () => inputRef.current.focus()
 
   const isTextInSearchBar = Boolean(nameInput)
+  tags = tags.map(({ id, name, clubs }) => ({
+    value: id,
+    label: name,
+    count: clubs,
+  }))
   const dropdowns = {
-    Type: tags.map(tag => ({
-      value: tag.id,
-      label: tag.name,
-      count: tag.clubs,
-    })),
     Size: [
       { value: 1, label: 'less than 20 members' },
       { value: 2, label: '20 to 50 members' },
@@ -182,6 +190,14 @@ const SearchBar = ({
               onChange={e => setNameInput(e.target.value)}
             />
           </SearchWrapper>
+          <MobileLine />
+          <FilterSearch
+            active={activeDropdownFilter === 'Tags'}
+            toggleActive={() => toggleActiveDropdownFilter('Tags')}
+            tags={tags}
+            updateTag={updateTag}
+            selected={selectedTags.filter(tag => tag.name === 'Tags')}
+          />
           {Object.keys(dropdowns).map(key => (
             <DropdownFilter
               active={activeDropdownFilter === key}
@@ -193,9 +209,6 @@ const SearchBar = ({
               updateTag={updateTag}
             />
           ))}
-          {activeDropdownFilter && (
-            <CloseButton onClick={closeDropdownFilter} />
-          )}
         </Content>
       </Wrapper>
 

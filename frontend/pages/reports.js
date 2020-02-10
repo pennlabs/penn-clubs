@@ -9,13 +9,8 @@ import {
   CheckboxLabel,
 } from '../components/common'
 import { doApiRequest, API_BASE_URL } from '../utils'
-import { Container, WideContainer } from '../components/common/Container'
-import {
-  CLUBS_GREY,
-  RED,
-  ALLBIRDS_GRAY,
-  MEDIUM_GRAY,
-} from '../constants/colors'
+import { Container } from '../components/common/Container'
+import { CLUBS_GREY } from '../constants/colors'
 
 const TallTextArea = s.textarea`
   height: 6em;
@@ -26,29 +21,6 @@ const GroupLabel = s.h4`
   font-size: 32px;
   color: #626572;
 `
-
-const HoverListElement = s.li`
-
-  span {
-    display: none;
-  }
-
-  &:hover span {
-    display: inline;
-    cursor: pointer;
-  }
-
-`
-
-const SelectedManager = ({ value, onClick }) => (
-  <HoverListElement>
-    {value}
-
-    <span style={{ marginLeft: '1em' }} onClick={onClick}>
-      &times;
-    </span>
-  </HoverListElement>
-)
 
 const serializeParams = params => {
   return Object.keys(params)
@@ -236,7 +208,7 @@ const Reports = ({ nameToCode }) => {
       <button
         className="button is-info"
         onClick={() => {
-          const w = window.open(
+          window.open(
             `${API_BASE_URL}/clubs/?format=xlsx&name=${encodeURIComponent(
               nameInput
             )}&desc=${encodeURIComponent(
