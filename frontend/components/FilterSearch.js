@@ -122,6 +122,10 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
   selected.forEach(({ value }) => filter.add(value))
   tags = tags
     .filter(({ value }) => !filter.has(value))
+    .map(({ label, count, ...tag }) => ({
+      ...tag,
+      label: `${label} (${count})`,
+    }))
   const fuseOptions = {
     keys: ['label'],
     tokenize: true,
