@@ -3,7 +3,7 @@ import s from 'styled-components'
 import Select from 'react-select/async'
 import Fuse from 'fuse.js'
 
-import { Icon } from './common'
+import { Icon, SelectedTag } from './common'
 import { FilterHeader } from './DropdownFilter'
 import {
   mediaMaxWidth,
@@ -84,6 +84,33 @@ const Search = ({ selected, searchTags, recommendedTags, updateTag }) => {
   const components = {
     IndicatorSeparator: () => null,
     DropdownIndicator: () => <SearchIcon name="tag" alt="" />,
+    MultiValueContainer: ({ innerProps, children }) => {
+      return (
+        <SelectedTag {...innerProps} className="tag is-rounded has-text-white">
+          {children}
+        </SelectedTag>
+      )
+    },
+    MultiValueLabel: ({ data: { label } }) => label,
+    MultiValueRemove: ({
+      data,
+      innerProps: { onClick, onTouchEnd, onMouseDown },
+    }) => {
+      const removeGenerator = func => {
+        return e => {
+          func(e)
+          updateTag(data, 'Tags')
+        }
+      }
+      return (
+        <button
+          className="delete is-small"
+          onClick={removeGenerator(onClick)}
+          onTouchEnd={removeGenerator(onTouchEnd)}
+          onMouseDown={removeGenerator(onMouseDown)}
+        />
+      )
+    },
   }
 
   return (
