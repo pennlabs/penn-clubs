@@ -110,6 +110,15 @@ const SearchIcon = s.span`
   }
 `
 
+const MobileLine = s.hr`
+  display: none;  
+  ${mediaMaxWidth(MD)} {
+    display: block;
+    margin: 1.0em 0 0 0;
+    border-color: ${CLUBS_GREY};
+  }
+`
+
 const SearchBar = ({
   tags,
   updateTag,
@@ -181,6 +190,7 @@ const SearchBar = ({
               onChange={e => setNameInput(e.target.value)}
             />
           </SearchWrapper>
+          <MobileLine />
           <FilterSearch
             active={activeDropdownFilter === 'Tags'}
             toggleActive={() => toggleActiveDropdownFilter('Tags')}
