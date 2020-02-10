@@ -55,7 +55,7 @@ const SearchIcon = s(Icon)`
   }
 `
 
-const Search = ({ searchTags, recommendedTags, updateTag }) => {
+const Search = ({ selected, searchTags, recommendedTags, updateTag }) => {
   // Custom styles for the react-select
   const styles = {
     control: ({ background, ...base }, { isFocused, isSelected }) => {
@@ -99,7 +99,7 @@ const Search = ({ searchTags, recommendedTags, updateTag }) => {
         action === 'select-option' && updateTag(option, 'Tags')
       }}
       placeholder="Search for tags"
-      value={null}
+      value={selected}
     />
   )
 }
@@ -155,6 +155,7 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
       />
       <SearchWrapper active={active}>
         <Search
+          selected={selected}
           searchTags={searchTags}
           recommendedTags={recommendedTags}
           updateTag={updateTag}
