@@ -27,13 +27,7 @@ const SearchWrapper = s.div`
   overflow: visible;
   transition: all ${ANIMATION_DURATION}ms ease;
 
-  ${({ active }) =>
-    active &&
-    `
-    max-height: 100%;
-    opacity: 1;
-    display: block;
-  `}
+  ${({ active }) => active && 'max-height: 100%; opacity: 1; display: block;'}
 
   ${mediaMaxWidth(MD)} {
     height: auto;
