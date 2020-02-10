@@ -44,16 +44,12 @@ const DropdownHeader = s.div`
   cursor: pointer;
 
   ${mediaMaxWidth(MD)} {
-    display: inline-block;
-    width: auto;
-    border: 2px solid ${BORDER};
+    display: inline-flex;
     padding: 4px 8px;
     margin-right: 6px;
     border-radius: 16px;
     font-size: 80%;
     color: ${LIGHT_GRAY};
-
-    ${({ active, color }) => active && `background: ${color || CLUBS_RED};`}
   }
 `
 
@@ -91,16 +87,18 @@ const TableContainer = s.div`
   }
 `
 
-const DropdownHeaderIcon = s.span`
+const Chevron = s(Icon)`
   cursor: pointer;
   color: ${CLUBS_GREY};
   transform: rotate(0deg) translateY(0);
   transition: transform ${ANIMATION_DURATION}ms ease;
-
-  ${({ active }) => active && 'transform: rotate(180deg) translateY(-4px);'}
+  ${({ open }) => open && 'transform: rotate(180deg) translateY(-4px);'}
 
   ${mediaMaxWidth(MD)} {
-    display: none !important;
+    margin-top: .1em !important;
+    margin-left: .1em !important;
+    color: ${LIGHT_GRAY};
+    ${({ open }) => open && 'transform: rotate(180deg)'}
   }
 `
 
@@ -108,30 +106,20 @@ const DropdownHeaderText = s.p`
   opacity: 0.8;
   font-weight: 600;
   margin-bottom: 0;
-
-  ${mediaMaxWidth(MD)} {
-    color: ${({ active }) => (active ? WHITE : 'rgba(0, 0, 0, 0.5)')}
-    opacity: 1;
-  }
 `
 
-const Chevron = ({ active }) => (
-  <DropdownHeaderIcon className="icon" active={active}>
-    <Icon name="chevron-down" alt="toggle dropdown" />
-  </DropdownHeaderIcon>
-)
-
 // TODO: export out into seperate component?
-export const FilterHeader = ({ active, color, name, toggleActive }) => (
+export const FilterHeader = ({ active, name, toggleActive }) => (
   <>
     <Line />
-    <DropdownHeader
-      onClick={() => toggleActive()}
-      active={active}
-      color={color}
-    >
+    <DropdownHeader onClick={() => toggleActive()}>
       <DropdownHeaderText active={active}>{name}</DropdownHeaderText>
-      <Chevron active={active} />
+      <Chevron
+        name="chevron-down"
+        alt="toggle dropdown"
+        open={active}
+        size="1rem"
+      />
     </DropdownHeader>
   </>
 )
@@ -158,12 +146,7 @@ const DropdownFilter = ({
 
   return (
     <>
-      <FilterHeader
-        active={active}
-        color={color}
-        name={name}
-        toggleActive={toggleActive}
-      />
+      <FilterHeader active={active} name={name} toggleActive={toggleActive} />
       <TableWrapper active={active}>
         <TableContainer>
           <table>
