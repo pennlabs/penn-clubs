@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import s from 'styled-components'
 import Select from 'react-select/async'
-import fuzzysort from 'fuzzysort'
+import Fuse from 'fuse.js'
 
 import { Icon } from './common'
 import { FilterHeader } from './DropdownFilter'
@@ -120,19 +120,22 @@ const selectRecommended = (tags = []) => {
 const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
   const filter = new Set()
   selected.forEach(({ value }) => filter.add(value))
-  tags = tags.filter(({ value }) => !filter.has(value))
+  tags = tags
+    .filter(({ value }) => !filter.has(value))
+  const fuseOptions = {
+    keys: ['label'],
+    tokenize: true,
+    findAllMatches: true,
+    shouldSort: true,
+    minMatchCharLength: 2,
+    threshold: 0.2,
+  }
+  const fuse = new Fuse(tags, fuseOptions)
 
   const [recommendedTags, setRecommendedTags] = useState(
     selectRecommended(tags)
   )
-  const searchTags = async query => {
-    const results = await fuzzysort.go(query, tags, {
-      key: 'label',
-      limit: 20,
-      threshold: -10000,
-    })
-    return results.map(({ obj }) => obj)
-  }
+  const searchTags = async query => fuse.search(query)
 
   useEffect(() => {
     setRecommendedTags(selectRecommended(tags))
