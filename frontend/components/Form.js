@@ -44,10 +44,10 @@ class Form extends Component {
           } else if (type === 'html') {
             this.state[`editorState-${name}`] = value
               ? EditorState.createWithContent(
-                  ContentState.createFromBlockArray(
-                    htmlToDraft(value).contentBlocks
-                  )
+                ContentState.createFromBlockArray(
+                  htmlToDraft(value).contentBlocks
                 )
+              )
               : EditorState.createEmpty()
           } else if (type === 'multiselect') {
             this.state[`field-${name}`] = (value || []).map(converter)

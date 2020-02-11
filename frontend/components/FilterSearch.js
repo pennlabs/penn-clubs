@@ -131,15 +131,11 @@ const Search = ({ selected, searchTags, recommendedTags, updateTag }) => {
   )
 }
 
-const selectRecommended = (tags = []) => {
-  // Return 3 randomly selected tags by shuffling tags and then taking the first 3 tags
-  const options = tags
-    .sort(() => 0.5 - Math.random())
-    .slice(0, Math.min(tags.length, 3))
+const selectInitial = (tags = []) => {
   return [
     {
-      label: 'Suggested for you',
-      options,
+      label: 'All tags',
+      options: tags,
     },
   ]
 }
@@ -163,13 +159,11 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
   }
   const fuse = new Fuse(tags, fuseOptions)
 
-  const [recommendedTags, setRecommendedTags] = useState(
-    selectRecommended(tags)
-  )
+  const [recommendedTags, setRecommendedTags] = useState(selectInitial(tags))
   const searchTags = async query => fuse.search(query)
 
   useEffect(() => {
-    setRecommendedTags(selectRecommended(tags))
+    setRecommendedTags(selectInitial(tags))
   }, [selected])
 
   return (
