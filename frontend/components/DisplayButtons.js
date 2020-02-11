@@ -3,9 +3,11 @@ import PropTypes from 'prop-types'
 
 import { Icon } from './common'
 import { DARK_GRAY, ALLBIRDS_GRAY, WHITE } from '../constants/colors'
+import { BODY_FONT } from '../constants/styles'
 
 const DisplayButtonsTag = s.div`
   float: right;
+  font-family: ${BODY_FONT};
 
   button {
     margin-left: 8px;
@@ -20,6 +22,7 @@ const iconStyles = {
 const buttonStyles = {
   backgroundColor: `${WHITE}`,
   border: `1px solid ${ALLBIRDS_GRAY}`,
+  fontFamily: `${BODY_FONT}`,
 }
 
 const DisplayButtons = ({ switchDisplay, shuffle }) => (
