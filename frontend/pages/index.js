@@ -16,7 +16,7 @@ import {
   CLUBS_NAVY,
 } from '../constants/colors'
 import { logEvent } from '../utils/analytics'
-import { WideContainer, Metadata, Title, Text } from '../components/common'
+import { WideContainer, Metadata, Title } from '../components/common'
 
 const colorMap = {
   Tags: CLUBS_BLUE,

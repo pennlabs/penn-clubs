@@ -17,7 +17,7 @@ const Foot = s.footer`
 
 const Footer = () => (
   <Foot className="footer">
-    <SmallText style={{marginBottom: '0rem'}}>
+    <SmallText style={{ marginBottom: '0rem' }}>
       Made with{' '}
       <Icon
         name="heart"
