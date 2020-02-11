@@ -56,7 +56,7 @@ export default ({ defaults }) => {
       <div>
         <LogoutLink
           className="button"
-          href={`${LOGOUT_URL}?next=${window.location.origin}`}
+          href={`${LOGOUT_URL}?next=${window.location.pathname}`}
           onClick={() => logEvent('logout', 'click')}
         >
           <LogoutIcon name="log-out" alt="logout" />

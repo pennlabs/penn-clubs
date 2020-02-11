@@ -38,7 +38,7 @@ export default ({ show, ...props }) => {
           This feature requires a Penn login.
           <br />
           Please{' '}
-          <a href={`${LOGIN_URL}?next=${window.location.href}`}>
+          <a href={`${LOGIN_URL}?next=${window.location.pathname}`}>
             log in using your PennKey
           </a>{' '}
           to continue.

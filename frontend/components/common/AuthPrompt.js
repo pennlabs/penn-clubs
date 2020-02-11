@@ -42,7 +42,7 @@ const AuthPrompt = ({ title, children, hasLogin = true }) => (
           <Margin>
             <a
               href={`${LOGIN_URL}?next=${
-                typeof window !== 'undefined' ? window.location.href : '/'
+                typeof window !== 'undefined' ? window.location.pathname : '/'
               }`}
               className="button is-large is-link"
               style={{ backgroundColor: CLUBS_BLUE }}

@@ -79,7 +79,7 @@ export default ({ userInfo, authenticated, show }) => (
       {authenticated === false && (
         <LoginButton
           className="button"
-          href={`${LOGIN_URL}?next=${window.location.href}`}
+          href={`${LOGIN_URL}?next=${window.location.pathname}`}
           onClick={() => logEvent('login', 'click')}
         >
           Login
