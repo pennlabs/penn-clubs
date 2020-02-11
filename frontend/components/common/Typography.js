@@ -2,7 +2,7 @@ import s from 'styled-components'
 import { CLUBS_GREY, CLUBS_NAVY, MEDIUM_GRAY } from '../../constants/colors'
 
 export const Text = s.p`
-  font-size: 1rem;
+  font-size: 1rem; 
   margin-bottom: 1rem;
   line-height: 1.5;
   ${({ isGray }) => (isGray ? `color: ${CLUBS_GREY};` : '')}
