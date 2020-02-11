@@ -15,7 +15,6 @@ import { BODY_FONT } from './constants/styles'
 
 const Wrapper = s.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
-  font-family: ${BODY_FONT};
 `
 
 function renderPage(Page) {
@@ -73,6 +72,7 @@ function renderPage(Page) {
               display: 'flex',
               flexDirection: 'column',
               backgroundColor: WHITE,
+              fontFamily: BODY_FONT,
             }}
           >
             <LoginModal show={modal} closeModal={closeModal} />

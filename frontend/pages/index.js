@@ -16,7 +16,7 @@ import {
   CLUBS_NAVY,
 } from '../constants/colors'
 import { logEvent } from '../utils/analytics'
-import { WideContainer, Metadata } from '../components/common'
+import { WideContainer, Metadata, Title, Text } from '../components/common'
 
 const colorMap = {
   Tags: CLUBS_BLUE,
@@ -243,9 +243,9 @@ class Splash extends React.Component {
                   switchDisplay={this.switchDisplay}
                 />
 
-                <p className="title" style={{ color: CLUBS_GREY }}>
+                <Title className="title" style={{ color: CLUBS_GREY }}>
                   Browse Clubs
-                </p>
+                </Title>
                 <p
                   className="subtitle is-size-5"
                   style={{ color: CLUBS_GREY_LIGHT }}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import s from 'styled-components'
-import { Row, Col, Icon, Center, EmptyState } from '../common'
+import { Row, Col, Icon, Center, EmptyState, Text } from '../common'
 import { DARK_GRAY } from '../../constants/colors'
 import { M1 } from '../../constants/measurements'
 import MemberCard from './MemberCard'
@@ -66,11 +66,11 @@ const MemberList = ({ club: { members } }) => {
         size="25%"
         style={{ marginTop: 0, marginBottom: 0 }}
       />
-      <p>
+      <Text>
         No club members have linked their accounts on Penn Clubs yet.
         <br />
         Check back later for a list of club members!
-      </p>
+      </Text>
     </Center>
   )
 }
