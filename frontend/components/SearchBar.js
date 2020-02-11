@@ -20,6 +20,7 @@ import {
   BORDER,
   WHITE,
 } from '../constants/colors'
+import { BODY_FONT } from '../constants/styles'
 
 const MobileSearchBarSpacer = s.div`
   display: block;
@@ -88,7 +89,7 @@ const Input = s.input`
   padding: 8px 10px;
   background: ${WHITE};
   border-radius: ${BORDER_RADIUS};
-  
+  font-family: ${BODY_FONT};
 
   &:hover,
   &:active,
