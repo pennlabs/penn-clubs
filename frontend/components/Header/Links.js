@@ -18,7 +18,7 @@ import { logEvent } from '../../utils/analytics'
 
 const StyledIcon = s(Icon)`
   opacity: 0.5;
-  margin-right: 4px;
+  transform: translateY(-2px); 
 `
 
 const LoginButton = s.a`
