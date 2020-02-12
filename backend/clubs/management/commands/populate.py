@@ -71,6 +71,13 @@ you can procrastinate on the application and ultimately miss the deadline!""",
         "active": True,
         "tags": [{"name": "Social"}],
     },
+    {
+        "code": "long-club-with-a-very-long-club-name-that-goes-on-and-on-and-on",
+        "name": "Club with a {}long club name".format("very " * 15),
+        "description": "This is a very long description! " * 100,
+        "active": True,
+        "tags": [{"name": ("long " * 15) + "tag"}],
+    },
 ]
 
 
