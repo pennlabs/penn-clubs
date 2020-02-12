@@ -1,5 +1,5 @@
 import s from 'styled-components'
-import { LOGIN_URL } from '../../utils'
+import { LOGIN_URL, getCurrentRelativePath } from '../../utils'
 import { CLUBS_BLUE } from '../../constants/colors'
 import { Title, SmallText, Icon, Text, Center, PhoneContainer } from '.'
 
@@ -42,7 +42,7 @@ const AuthPrompt = ({ title, children, hasLogin = true }) => (
           <Margin>
             <a
               href={`${LOGIN_URL}?next=${
-                typeof window !== 'undefined' ? window.location.pathname : '/'
+                typeof window !== 'undefined' ? getCurrentRelativePath() : '/'
               }`}
               className="button is-large is-link"
               style={{ backgroundColor: CLUBS_BLUE }}
