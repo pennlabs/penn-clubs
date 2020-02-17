@@ -8,6 +8,7 @@ import {
   Checkbox,
   CheckboxLabel,
 } from '../components/common'
+import { mediaMinWidth, mediaMaxWidth, MD, LG } from '../constants/measurements'
 import { doApiRequest, API_BASE_URL } from '../utils'
 import { Container } from '../components/common/Container'
 import { CLUBS_GREY } from '../constants/colors'
@@ -49,6 +50,10 @@ const SelectedManager = ({ value, onClick }) => (
 const Sidebar = s.div`
   position: fixed;
   margin-left: 1rem;
+
+  ${mediaMaxWidth(LG)} {
+    display: none;
+  }
 `
 
 const Reports = ({ nameToCode }) => {
