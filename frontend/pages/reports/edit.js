@@ -1,15 +1,7 @@
 import s from 'styled-components'
-import Router from 'next/router'
-import { useEffect, useState } from 'react'
-import renderPage from '../../renderPage.js'
-import {
-  Icon,
-  Flex,
-  Empty,
-  Checkbox,
-  CheckboxLabel,
-} from '../../components/common'
-import { doApiRequest, API_BASE_URL } from '../../utils'
+import { useState } from 'react'
+import { Icon, Flex } from '../../components/common'
+import { API_BASE_URL } from '../../utils'
 import { Container } from '../../components/common/Container'
 import { CLUBS_GREY } from '../../constants/colors'
 
