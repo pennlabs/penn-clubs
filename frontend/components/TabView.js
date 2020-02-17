@@ -84,7 +84,6 @@ const TabView = ({ tabs, tabClassName, background }) => {
                   style={{ borderBottomWidth: '2px', marginBottom: '-2px' }}
                   onClick={() => {
                     setCurrentTab(name)
-                    window.location.hash = `#${name}`
                   }}
                 >
                   {label || titleize(name)}

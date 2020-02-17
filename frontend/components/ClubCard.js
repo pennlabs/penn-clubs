@@ -102,7 +102,7 @@ const ClubCard = ({ club, updateFavorites, favorite }) => {
   return (
     <CardWrapper className="column is-half-desktop">
       <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
-        <a target="_blank">
+        <a>
           <Card className="card">
             <div style={{ display: 'flex' }}>
               <div style={{ flex: 1 }}>
