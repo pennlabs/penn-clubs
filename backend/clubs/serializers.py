@@ -413,8 +413,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def create(self, validated_data):
         """
-        Assign ownership of club to the creator.
+        Ensure new clubs follow certain invariants.
         """
+        # New clubs created through the API must always be approved.
+        validated_data["approved"] = False
 
         obj = super().create(validated_data)
 

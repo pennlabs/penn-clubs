@@ -8,7 +8,7 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils.text import slugify
@@ -234,6 +234,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if name:
             return "{}.xlsx".format(slugify(name))
         return super().get_filename()
+
+    def partial_update(self, request, *args, **kwargs):
+        if request.data.get("accepted", False) is True and not request.user.is_superuser:
+            return HttpResponseForbidden()
+        return super().partial_update(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if request.data.get("accepted", False) is True and not request.user.is_superuser:
+            return HttpResponseForbidden()
+        return super().update(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
         """
