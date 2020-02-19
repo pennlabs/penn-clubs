@@ -25,7 +25,7 @@ class ClubTestCase(TestCase):
     def setUp(self):
         self.client = Client()
 
-        self.club1 = Club.objects.create(code="test-club", name="Test Club")
+        self.club1 = Club.objects.create(code="test-club", name="Test Club", approved=True)
 
         self.event1 = Event.objects.create(
             code="test-event",

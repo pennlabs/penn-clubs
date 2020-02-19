@@ -181,9 +181,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         queryset = super().get_queryset()
         if self.request.user.has_perm("clubs.see_pending_clubs"):
             return queryset
-        else:
+        elif self.request.user.is_authenticated:
             # Show approved clubs along with clubs that the logged-in user is a member of.
             return queryset.filter(Q(approved=True) | Q(members=self.request.user))
+        else:
+            return queryset.filter(approved=True)
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
