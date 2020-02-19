@@ -547,9 +547,9 @@ class ClubForm extends Component {
         type: 'html',
       },
     ]
-
+    let tabs = []
     if (club.code) {
-      const tabs = [
+      tabs = [
         {
           name: 'info',
           label: 'Information',
