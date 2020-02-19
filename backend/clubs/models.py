@@ -117,6 +117,10 @@ class Club(models.Model):
 
     class Meta:
         ordering = ["name"]
+        permissions = [
+            ("approve_club", "Can approve pending clubs"),
+            ("see_pending_clubs", "View pending clubs that are not one's own"),
+        ]
 
 
 class Testimonial(models.Model):

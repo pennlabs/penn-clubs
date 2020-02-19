@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
-from django.db.models import Count, Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
@@ -177,6 +177,13 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.has_perm("clubs.see_pending_clubs"):
+            return queryset
+        else:
+            return queryset.filter(Q(approved=True) | Q(owner=self.request.user))
+
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
@@ -236,12 +243,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return super().get_filename()
 
     def partial_update(self, request, *args, **kwargs):
-        if request.data.get("accepted", False) is True and not request.user.is_superuser:
+        if request.data.get("accepted", False) is True and not request.user.has_perm(
+            "approve_club"
+        ):
             return HttpResponseForbidden()
         return super().partial_update(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        if request.data.get("accepted", False) is True and not request.user.is_superuser:
+        if request.data.get("accepted", False) is True and not request.user.has_perm(
+            "approve_club"
+        ):
             return HttpResponseForbidden()
         return super().update(request, *args, **kwargs)
 
