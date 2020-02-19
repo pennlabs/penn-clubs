@@ -6,12 +6,18 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0017_report'),
+        ("clubs", "0017_report"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='club',
-            options={'ordering': ['name'], 'permissions': [('approve_club', 'Can approve pending clubs'), ('see_pending_clubs', "View pending clubs that are not one's own")]},
+            name="club",
+            options={
+                "ordering": ["name"],
+                "permissions": [
+                    ("approve_club", "Can approve pending clubs"),
+                    ("see_pending_clubs", "View pending clubs that are not one's own"),
+                ],
+            },
         ),
     ]
