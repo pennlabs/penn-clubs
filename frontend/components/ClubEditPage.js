@@ -1019,7 +1019,7 @@ class ClubForm extends Component {
         <Title>
           {nameOrDefault}
           {showInactiveTag && <InactiveTag />}
-          {club && (
+          {club && isEdit && (
             <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
               <a
                 className="button is-pulled-right is-secondary is-medium"
@@ -1039,7 +1039,7 @@ class ClubForm extends Component {
             {message}
           </div>
         )}
-        {club.code ? (
+        {this.isEdit ? (
           <TabView tabs={tabs} />
         ) : (
           <Form fields={fields} defaults={club} onSubmit={this.submit} />
