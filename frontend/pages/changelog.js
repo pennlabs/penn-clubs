@@ -21,7 +21,7 @@ const StyledCard = s(Card)`
   padding-bottom: ${M0};
 `
 
-//const ChangelogData = require('../changelog/changelog.json')
+
 
 const LogItem = ({ title, children }) => (
   <StyledCard bordered>
