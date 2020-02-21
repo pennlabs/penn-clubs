@@ -1,11 +1,19 @@
 import s from 'styled-components'
 import Router from 'next/router'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import renderPage from '../../renderPage.js'
 import { Icon, Empty, Checkbox, CheckboxLabel } from '../../components/common'
 import { doApiRequest, API_BASE_URL } from '../../utils'
-import { Container } from '../../components/common/Container'
-import { CLUBS_GREY } from '../../constants/colors'
+import {
+  CLUBS_GREY,
+  CLUBS_BLUE,
+  CLUBS_RED,
+  CLUBS_NAVY,
+  CLUBS_GREY_LIGHT,
+  FOCUS_GRAY,
+  WHITE,
+} from '../../constants/colors'
 import Edit from './edit'
 
 const GroupLabel = s.h4`
@@ -17,24 +25,67 @@ const GroupLabel = s.h4`
 const ColoredHeader = s.div`
   background: linear-gradient(to right, #ef4c5f, #4954f4);
   height: 7em;
+  line-height: normal;
+  vertical-align: middle;
+  padding: 2em;
+  display: flex;
+  justify-content: space-between;
 `
 
-const TransparentButton = s.button`
-  width: 190px;
-  height: 35px;
+const TransparentTitle = s.span`
+  width: 9em;
+  height: 2em;
+  line-height: 2em;
   border-radius: 17px;
   border: 0;
   background: rgba(255,255,255,0.32);
-  float: right;
   font-size: 15px;
-  font-family: Lato;
-  font-weight: 500;
-  font-stretch: normal;
-  font-style: normal;
-  line-height: normal;
-  letter-spacing: normal;
+  text-align: center; 
+  color: rgba(255,255,255,1);
+  vertical-align: middle;
+  margin-left: 2em;
+  margin-bottom: 1em;
+  display: inline-block;
+`
+
+const TransparentButton = s.button`
+  width: 12.5em;
+  height: 2.5em;
+  border-radius: 17px;
+  border: 0;
+  background: rgba(255,255,255,0.32);
+  font-size: 15px;
+  font-weight: 600;
   text-align: center;
-  color: rgba(255,255,255,1)
+  color: ${WHITE};
+`
+
+const ActionButton = s.button`
+  width: 4.5em;
+  height: 2em;
+  border-radius: 0.2em;
+  border: 0;
+  box-shadow: 0 2px 4px 0 rgba(161, 161, 161, 0.5);
+  line-height: 0.6em;
+  vertical-align: middle;
+  color: ${WHITE};
+  margin-left: 0.4em;
+  margin-right: 0.4em;
+  font-weight: 500;
+`
+
+const TableHeader = s.th`
+  font-weight: 550;
+  color: ${CLUBS_GREY};
+`
+
+const TableData = s.td`
+  color: ${CLUBS_GREY_LIGHT};
+`
+
+const TableHeadDivider = s.thead`
+  width: 1px;
+  border-bottom: 1px solid #979797;
 `
 
 const serializeParams = params => {
@@ -117,19 +168,23 @@ const Reports = ({ nameToCode }) => {
     Router.push('/reports')
   }
 
+  const handleDownload = report => {
+    window.location.href = `${API_BASE_URL}/clubs/?existing=true&${serializeParams(
+      JSON.parse(report.parameters)
+    )}`
+  }
+
   return (
     <div>
       {isEdit ? (
         <div>
           <ColoredHeader>
-            <div style={{ padding: '2em' }}>
-              <span className="title is-3" style={{ color: 'white' }}>
-                Create a new report
-              </span>
-              <TransparentButton onClick={() => handleBack()}>
-                Back to all reports
-              </TransparentButton>
-            </div>
+            <span className="title is-2" style={{ color: 'white' }}>
+              Create a new report
+            </span>
+            <TransparentButton onClick={() => handleBack()}>
+              Back to all reports
+            </TransparentButton>
           </ColoredHeader>
           <Edit
             fields={fields}
@@ -143,74 +198,82 @@ const Reports = ({ nameToCode }) => {
       ) : (
         <div>
           <ColoredHeader>
-            <div style={{ padding: '2em' }}>
-              <span className="title is-3" style={{ color: 'white' }}>
+            <div>
+              <span className="title is-2" style={{ color: 'white' }}>
                 Reports
               </span>
-              <TransparentButton onClick={() => setIsEdit(true)}>
-                Create New Report
-              </TransparentButton>
+              <TransparentTitle>OSA Dashboard</TransparentTitle>
             </div>
+            <TransparentButton onClick={() => setIsEdit(true)}>
+              Create New Report <Icon name="plus" alt="plus" />
+            </TransparentButton>
           </ColoredHeader>
-          <Container>
-            <div className="box">
-              <table className="table" style={{ width: '100%' }}>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Actions</th>
+          <div style={{ padding: '2em' }}>
+            <table className="table" style={{ width: '100%' }}>
+              <TableHeadDivider>
+                <tr>
+                  <TableHeader>Report Name</TableHeader>
+                  <TableHeader>Created By</TableHeader>
+                  <TableHeader>Description</TableHeader>
+                  <TableHeader>Date Created</TableHeader>
+                  <TableHeader>Last Report</TableHeader>
+                  <TableHeader>Perform Actions</TableHeader>
+                </tr>
+              </TableHeadDivider>
+              <tbody>
+                {reports.map((report, i) => (
+                  <tr key={i}>
+                    <TableData>{report.name || <Empty>None</Empty>}</TableData>
+                    <TableData>
+                      {report.creator || <Empty>None</Empty>}
+                    </TableData>
+                    <TableData>
+                      {report.description || <Empty>None</Empty>}
+                    </TableData>
+                    <TableData>
+                      {report.dateCreated || <Empty>None</Empty>}
+                    </TableData>
+                    <TableData>
+                      {report.lastReport || <Empty>None</Empty>}
+                    </TableData>
+                    <TableData>
+                      <div className="buttons">
+                        <ActionButton
+                          onClick={() => handleDownload(report)}
+                          style={{ backgroundColor: CLUBS_BLUE }}
+                        >
+                          Run
+                        </ActionButton>
+                        <ActionButton style={{ backgroundColor: CLUBS_NAVY }}>
+                          Edit
+                        </ActionButton>
+                        <ActionButton
+                          onClick={() => {
+                            doApiRequest(`/reports/${report.id}/?format=json`, {
+                              method: 'DELETE',
+                            }).then(() => {
+                              updateReportFlag(!reportFlag)
+                            })
+                          }}
+                          style={{ backgroundColor: CLUBS_RED }}
+                        >
+                          Delete
+                        </ActionButton>
+                      </div>
+                    </TableData>
                   </tr>
-                </thead>
-                <tbody>
-                  {reports.map((report, i) => (
-                    <tr key={i}>
-                      <td>{report.name || <Empty>None</Empty>}</td>
-                      <td>{report.description || <Empty>None</Empty>}</td>
-                      <td>
-                        <div className="buttons">
-                          <a
-                            href={`${API_BASE_URL}/clubs/?existing=true&${serializeParams(
-                              JSON.parse(report.parameters)
-                            )}`}
-                            target="_blank"
-                            className="button is-small is-success"
-                          >
-                            <Icon name="download" alt="download" />
-                            Download
-                          </a>
-                          <button
-                            onClick={() => {
-                              doApiRequest(
-                                `/reports/${report.id}/?format=json`,
-                                {
-                                  method: 'DELETE',
-                                }
-                              ).then(() => {
-                                updateReportFlag(!reportFlag)
-                              })
-                            }}
-                            className="button is-danger is-small"
-                          >
-                            <Icon name="trash" alt="delete" />
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {!reports.length && (
-                    <tr>
-                      <td colSpan="3">
-                        <Empty>There are no existing reports.</Empty>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <br />
-          </Container>
+                ))}
+                {!reports.length && (
+                  <tr>
+                    <TableData colSpan="3">
+                      <Empty>There are no existing reports.</Empty>
+                    </TableData>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <br />
         </div>
       )}
     </div>

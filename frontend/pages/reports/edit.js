@@ -21,6 +21,19 @@ const Edit = ({
   const [nameInput, setNameInput] = useState('')
   const [descInput, setDescInput] = useState('')
 
+  const handleGenerateReport = () => {
+    window.open(
+      `${API_BASE_URL}/clubs/?format=xlsx&name=${encodeURIComponent(
+        nameInput
+      )}&desc=${encodeURIComponent(descInput)}&fields=${encodeURIComponent(
+        query.fields.join(',')
+      )}`,
+      '_blank'
+    )
+    updateReportFlag(!reportFlag)
+    handleBack()
+  }
+
   return (
     <div>
       <Container>
@@ -74,18 +87,7 @@ const Edit = ({
         </div>
         <button
           className="button is-info"
-          onClick={() => {
-            window.open(
-              `${API_BASE_URL}/clubs/?format=xlsx&name=${encodeURIComponent(
-                nameInput
-              )}&desc=${encodeURIComponent(
-                descInput
-              )}&fields=${encodeURIComponent(query.fields.join(','))}`,
-              '_blank'
-            )
-            updateReportFlag(!reportFlag)
-            handleBack()
-          }}
+          onClick={() => handleGenerateReport()}
         >
           <Icon name="paperclip" alt="report" />
           Generate Report
