@@ -102,7 +102,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Authentication Backends
 
 AUTHENTICATION_BACKENDS = (
-    "clubs.backends.LabsUserBackend",
+    "accounts.backends.LabsUserBackend",
     "django.contrib.auth.backends.ModelBackend",
 )
 
