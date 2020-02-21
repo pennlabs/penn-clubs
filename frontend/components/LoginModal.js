@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import s from 'styled-components'
 
 import { Modal, Loading } from './common'
-import { LOGIN_URL } from '../utils'
+import { LOGIN_URL, getCurrentRelativePath } from '../utils'
 import { DARK_GRAY } from '../constants/colors'
 
 const Logo = s.img`
@@ -38,7 +38,7 @@ export default ({ show, ...props }) => {
           This feature requires a Penn login.
           <br />
           Please{' '}
-          <a href={`${LOGIN_URL}?next=${window.location.href}`}>
+          <a href={`${LOGIN_URL}?next=${getCurrentRelativePath()}`}>
             log in using your PennKey
           </a>{' '}
           to continue.

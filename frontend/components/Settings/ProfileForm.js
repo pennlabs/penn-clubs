@@ -48,12 +48,11 @@ class ProfileForm extends React.Component {
       {
         name: 'graduation_year',
         type: 'number',
-        converter: a =>
-          typeof a === 'number'
-            ? a
-            : a && a.length
-              ? a.replace(/\D/g, '')
-              : null,
+        converter: a => {
+          if (typeof a === 'number') return a
+          if (typeof a === 'string' && a.length) return a.replace(/\D/g, '')
+          return null
+        },
       },
       {
         name: 'school',

@@ -14,6 +14,12 @@ export function stripTags(val) {
     .trim()
 }
 
+export function getCurrentRelativePath() {
+  return (
+    window.location.pathname + window.location.search + window.location.hash
+  )
+}
+
 export function getDefaultClubImageURL() {
   return '/static/img/hatlogo.png'
 }

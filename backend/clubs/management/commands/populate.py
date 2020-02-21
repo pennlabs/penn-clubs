@@ -31,6 +31,14 @@ tempor incididunt ut labore et dolore magna aliqua.</i>""",
         "image": "https://i.imgur.com/TOj74YQ.png",
     },
     {
+        "code": "penn-memes",
+        "name": "Penn Memes Club",
+        "description": """We are exclusive to M&T students.""",
+        "active": True,
+        "image": "https://i.imgur.com/BkNWXlo.png",
+        "tags": [{"name": "Greek Life"}],
+    },
+    {
         "code": "harvard-rejects",
         "name": "Harvard Rejects Club",
         "description": """We’re Penn’s largest club with over 20,000 active members!
@@ -63,6 +71,13 @@ you can procrastinate on the application and ultimately miss the deadline!""",
         "active": True,
         "tags": [{"name": "Social"}],
     },
+    {
+        "code": "long-club-with-a-very-long-club-name-that-goes-on-and-on-and-on",
+        "name": "Club with a {}long club name".format("very " * 15),
+        "description": "This is a very long description! " * 100,
+        "active": True,
+        "tags": [{"name": ("long " * 15) + "tag"}],
+    },
 ]
 
 
@@ -81,9 +96,11 @@ class Command(BaseCommand):
                 if field in partial:
                     del partial[field]
             club, _ = Club.objects.get_or_create(code=info["code"], defaults=partial)
-            contents = requests.get(info["image"]).content
-            club.image.save("image.png", ContentFile(contents))
-            club.save()
+
+            if "image" in info:
+                contents = requests.get(info["image"]).content
+                club.image.save("image.png", ContentFile(contents))
+                club.save()
 
             m2m_fields = [(Tag, "tags"), (Badge, "badges")]
 

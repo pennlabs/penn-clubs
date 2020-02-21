@@ -16,12 +16,12 @@ import {
   CLUBS_NAVY,
 } from '../constants/colors'
 import { logEvent } from '../utils/analytics'
-import { WideContainer, Metadata } from '../components/common'
+import { WideContainer, Metadata, Title } from '../components/common'
 
 const colorMap = {
-  Type: CLUBS_RED,
-  Size: CLUBS_BLUE,
-  Application: CLUBS_NAVY,
+  Tags: CLUBS_BLUE,
+  Size: CLUBS_NAVY,
+  Application: CLUBS_RED,
 }
 
 const ClearAllLink = s.span`
@@ -101,7 +101,7 @@ class Splash extends React.Component {
   }
 
   resetDisplay(nameInput, selectedTags) {
-    const tagSelected = selectedTags.filter(tag => tag.name === 'Type')
+    const tagSelected = selectedTags.filter(tag => tag.name === 'Tags')
     const sizeSelected = selectedTags.filter(tag => tag.name === 'Size')
     const applicationSelected = selectedTags.filter(
       tag => tag.name === 'Application'
@@ -243,9 +243,9 @@ class Splash extends React.Component {
                   switchDisplay={this.switchDisplay}
                 />
 
-                <p className="title" style={{ color: CLUBS_GREY }}>
+                <Title className="title" style={{ color: CLUBS_GREY }}>
                   Browse Clubs
-                </p>
+                </Title>
                 <p
                   className="subtitle is-size-5"
                   style={{ color: CLUBS_GREY_LIGHT }}
@@ -270,13 +270,13 @@ class Splash extends React.Component {
                       {tag.label}
                       <button
                         className="delete is-small"
-                        onClick={e => this.updateTag(tag, tag.name)}
+                        onClick={() => this.updateTag(tag, tag.name)}
                       />
                     </span>
                   ))}
                   <ClearAllLink
                     className="tag is-rounded"
-                    onClick={e =>
+                    onClick={() =>
                       this.setState(
                         { selectedTags: [] },
                         this.resetDisplay(nameInput, [])

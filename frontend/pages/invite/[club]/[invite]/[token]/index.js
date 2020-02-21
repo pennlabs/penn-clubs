@@ -39,7 +39,7 @@ class Invite extends Component {
             resp.status === 403 &&
             data.detail === 'Authentication credentials were not provided.'
           ) {
-            window.location.href = `${LOGIN_URL}?next=${window.location.href}`
+            window.location.href = `${LOGIN_URL}?next=${window.location.pathname}`
           } else {
             this.setState({ error: data })
           }
