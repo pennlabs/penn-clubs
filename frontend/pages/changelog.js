@@ -14,6 +14,8 @@ import {
 } from '../components/common'
 import { M0, M2 } from '../constants/measurements.js'
 import { WHITE, SNOW } from '../constants/colors.js'
+import * as data from './changelog/changelog.json'
+const { changelogData } = data
 
 const StyledCard = s(Card)`
   background: ${WHITE};
@@ -21,16 +23,7 @@ const StyledCard = s(Card)`
   padding-bottom: ${M0};
 `
 
-
-
-const LogItem = ({ title, children }) => (
-  <StyledCard bordered>
-    <StrongText style={{ marginBottom: '0.5rem' }}>{title}</StrongText>
-    <Text>
-      {children}
-    </Text>
-  </StyledCard>
-)
+//const changelogData = require('./changelog/changelog.json');
 
 const changelogItems = [
   {
@@ -50,18 +43,18 @@ const changelogItems = [
 const FAQ = () => (
   <Container background={SNOW}>
     <Metadata title="Changelog" />
-    <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
+    <Title style={{ paddingTop: '2.5rem', paddingBottom: '2rem' }}>
       Changelog
     </Title>
     <Text>
       We're constantly improving the Penn Clubs experience. If you’re curious about what’s new in Penn Clubs—and what’s changed—you’re in the right place.
     </Text>
     
-    {changelogItems.map(a => (
+    {changelogData.map(({ title, description, tags, date }) => (
       <StyledCard bordered>
-        <StrongText style={{ marginBottom: '0.5rem' }}>{a.title}</StrongText>
+        <StrongText style={{ marginBottom: '0.5rem' }}>{title}</StrongText>
         <Text>
-          {a.description}
+          {description}
         </Text>
       </StyledCard>
     ))}
