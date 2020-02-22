@@ -15,6 +15,7 @@ Come with your juggling equipment (and business formal attire) to
 hone your skills in time for recruiting season!""",
         "image": "https://i.imgur.com/WwUKiHP.png",
         "active": True,
+        "approved": True,
         "tags": [{"name": "Professional"}, {"name": "Athletics"}],
         "badges": [
             {"label": "Red Badge", "color": "ff0000"},
@@ -28,6 +29,7 @@ hone your skills in time for recruiting season!""",
         "description": """<i>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
 tempor incididunt ut labore et dolore magna aliqua.</i>""",
         "active": True,
+        "approved": True,
         "image": "https://i.imgur.com/TOj74YQ.png",
     },
     {
@@ -35,6 +37,7 @@ tempor incididunt ut labore et dolore magna aliqua.</i>""",
         "name": "Penn Memes Club",
         "description": """We are exclusive to M&T students.""",
         "active": True,
+        "approved": True,
         "image": "https://i.imgur.com/BkNWXlo.png",
         "tags": [{"name": "Greek Life"}],
     },
@@ -46,6 +49,7 @@ We’re always looking for enthusiastic students to join our organization,
 so please feel free to reach out to us at upenn.edu/harvard to join!""",
         "image": "https://i.imgur.com/IxgjBmA.png",
         "active": True,
+        "approved": True,
         "tags": [{"name": "Professional"}, {"name": "Community Service"}],
     },
     {
@@ -57,6 +61,7 @@ Drop out and re-apply as an MBA?
 Whatever your path to Wharton-hood is, we want you (if you make it to round three)!""",
         "image": "https://i.imgur.com/nADYD8u.png",
         "active": False,
+        "approved": True,
         "tags": [{"name": "Social"}],
     },
     {
@@ -69,13 +74,15 @@ unmotivated individuals who, in theory, are interested in joining our group, but
 quite get themselves to start working on our application. Start applying today so that
 you can procrastinate on the application and ultimately miss the deadline!""",
         "active": True,
+        "approved": True,
         "tags": [{"name": "Social"}],
     },
     {
         "code": "long-club-with-a-very-long-club-name-that-goes-on-and-on-and-on",
         "name": "Club with a {}long club name".format("very " * 15),
-        "description": "This is a very long description! " * 100,
+        "description": "<p>{}</p><p> </p>".format("This is a very long description! " * 25) * 4,
         "active": True,
+        "approved": True,
         "tags": [{"name": ("long " * 15) + "tag"}],
     },
 ]
