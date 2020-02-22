@@ -84,6 +84,11 @@ const TabView = ({ tabs, tabClassName, background }) => {
                   style={{ borderBottomWidth: '2px', marginBottom: '-2px' }}
                   onClick={() => {
                     setCurrentTab(name)
+                    window.history.replaceState(
+                      undefined,
+                      undefined,
+                      `#${name}`
+                    )
                   }}
                 >
                   {label || titleize(name)}
