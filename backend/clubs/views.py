@@ -8,12 +8,13 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch, Q
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils.text import slugify
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -249,14 +250,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if request.data.get("accepted", False) is True and not request.user.has_perm(
             "approve_club"
         ):
-            return HttpResponseForbidden()
+            raise PermissionDenied
         return super().partial_update(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         if request.data.get("accepted", False) is True and not request.user.has_perm(
             "approve_club"
         ):
-            return HttpResponseForbidden()
+            raise PermissionDenied
         return super().update(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
