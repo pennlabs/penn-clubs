@@ -70,6 +70,11 @@ describe('Authenticated user tests', () => {
     cy.visit('/welcome')
     cy.contains('Penn Clubs')
   })
+
+  it('Visits the club creation page', () => {
+    cy.visit('/create')
+    cy.contains('Penn Clubs')
+  })
 })
 
 describe('Permissioned user tests', () => {

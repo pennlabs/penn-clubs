@@ -342,7 +342,7 @@ class ClubForm extends Component {
       )
     }
 
-    if (isEdit && club === null) {
+    if (authenticated === null || (isEdit && club === null)) {
       return <div />
     }
 
