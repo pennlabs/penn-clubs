@@ -540,20 +540,20 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         elif "code" in self.validated_data:
             del self.validated_data["code"]
 
+        # if approved, update who and when club was approved
         if (
             self.instance
             and not self.instance.approved
             and self.validated_data.get("approved") is True
         ):
-            request = getattr(self.context, "request", None)
-            if request:
-                self.validated_data["approved_by"] = request.user
+            self.validated_data["approved_by"] = self.context["request"].user
             self.validated_data["approved_on"] = timezone.now()
 
         return super().save()
 
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
+            "approved",
             "facebook",
             "twitter",
             "instagram",

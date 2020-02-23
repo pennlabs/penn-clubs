@@ -22,21 +22,8 @@ from clubs.models import (
 
 
 class ClubTestCase(TestCase):
-    def setUp(self):
-        self.client = Client()
-
     @classmethod
     def setUpTestData(cls):
-        cls.club1 = Club.objects.create(code="test-club", name="Test Club", approved=True)
-
-        cls.event1 = Event.objects.create(
-            code="test-event",
-            club=cls.club1,
-            name="Test Event",
-            start_time=timezone.now(),
-            end_time=timezone.now(),
-        )
-
         cls.user1 = get_user_model().objects.create_user(
             "bfranklin", "bfranklin@seas.upenn.edu", "test"
         )
@@ -71,6 +58,19 @@ class ClubTestCase(TestCase):
         cls.user5.is_staff = True
         cls.user5.is_superuser = True
         cls.user5.save()
+
+    def setUp(self):
+        self.client = Client()
+
+        self.club1 = Club.objects.create(code="test-club", name="Test Club", approved=True)
+
+        self.event1 = Event.objects.create(
+            code="test-event",
+            club=self.club1,
+            name="Test Event",
+            start_time=timezone.now(),
+            end_time=timezone.now(),
+        )
 
     def test_club_upload(self):
         """
@@ -544,7 +544,7 @@ class ClubTestCase(TestCase):
         self.club1.save(update_fields=["approved"])
 
         # approve club
-        resp = self.client.post(
+        resp = self.client.patch(
             reverse("clubs-detail", args=(self.club1.code,)),
             {"approved": True},
             content_type="application/json",
@@ -554,8 +554,8 @@ class ClubTestCase(TestCase):
         # ensure database correctly updated
         self.club1.refresh_from_db()
         self.assertTrue(self.club1.approved)
-        self.assertIsNotNone(self.club1.approved_by)
         self.assertIsNotNone(self.club1.approved_on)
+        self.assertIsNotNone(self.club1.approved_by)
 
     def test_club_create_url_sanitize(self):
         """
@@ -874,7 +874,7 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
-        resp = self.client.patch(
+        resp = self.client.post(
             reverse("club-invite", args=(self.club1.code,)),
             {
                 "emails": "one@pennlabs.org, two@pennlabs.org, three@pennlabs.org",

@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
-from django.db import models
+from django.db import connection, models
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
@@ -602,6 +602,10 @@ def club_modify_handler(sender, instance, **kwargs):
         key, cache_time = settings.CLUB_LIST_CACHE_KEY, settings.CLUB_LIST_CACHE_TIME
         cache.set(key, serializer.data, cache_time)
 
-    t = threading.Thread(target=regenerate_club_list_cache)
-    t.setDaemon(True)
-    t.start()
+    # sqlite3 in development has issues with threading
+    if connection.vendor == "sqlite":
+        regenerate_club_list_cache()
+    else:
+        t = threading.Thread(target=regenerate_club_list_cache)
+        t.setDaemon(True)
+        t.start()
