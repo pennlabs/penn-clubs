@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Select from 'react-select'
 import TimeAgo from 'react-timeago'
 
-import { CLUB_ROUTE, CLUB_FLYER_ROUTE } from '../constants/routes'
+import { HOME_ROUTE, CLUB_ROUTE, CLUB_FLYER_ROUTE } from '../constants/routes'
 import {
   doApiRequest,
   getApiUrl,
@@ -1015,22 +1015,27 @@ class ClubForm extends Component {
     const nameOrDefault = (club && club.name) || 'New Club'
     const showInactiveTag = !(club && club.active) && isEdit
 
+    const isViewButton = isEdit && club
+
     return (
       <Container>
         <ClubMetadata club={club} />
         <Title>
           {nameOrDefault}
           {showInactiveTag && <InactiveTag />}
-          {club && isEdit && (
-            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+          {
+            <Link
+              href={isViewButton ? CLUB_ROUTE() : HOME_ROUTE}
+              as={isViewButton ? CLUB_ROUTE(club.code) : HOME_ROUTE}
+            >
               <a
                 className="button is-pulled-right is-secondary is-medium"
                 style={{ fontWeight: 'normal' }}
               >
-                View Club
+                {isViewButton ? 'View Club' : 'Back'}
               </a>
             </Link>
-          )}
+          }
         </Title>
         {message && (
           <div className="notification is-primary">
@@ -1044,7 +1049,9 @@ class ClubForm extends Component {
         {isEdit ? (
           <TabView tabs={tabs} />
         ) : (
-          <Form fields={fields} defaults={club} onSubmit={this.submit} />
+          <div style={{ marginTop: '1em' }}>
+            <Form fields={fields} defaults={club} onSubmit={this.submit} />
+          </div>
         )}
       </Container>
     )
