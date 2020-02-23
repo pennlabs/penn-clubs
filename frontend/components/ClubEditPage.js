@@ -344,7 +344,7 @@ class ClubForm extends Component {
       return <div />
     }
 
-    if (this.state.isEdit && !club.code) {
+    if (isEdit && !club.code) {
       return (
         <div className="has-text-centered" style={{ margin: 30 }}>
           <div className="title is-h1">404 Not Found</div>
@@ -763,7 +763,7 @@ class ClubForm extends Component {
               </div>
             </>
           ),
-          disabled: !this.state.isEdit,
+          disabled: !isEdit,
         },
         {
           name: 'subscriptions',
@@ -1005,7 +1005,7 @@ class ClubForm extends Component {
               </div>
             </>
           ),
-          disabled: !this.state.isEdit,
+          disabled: !isEdit,
         },
       ]
     }
@@ -1039,7 +1039,7 @@ class ClubForm extends Component {
             {message}
           </div>
         )}
-        {this.isEdit ? (
+        {isEdit ? (
           <TabView tabs={tabs} />
         ) : (
           <Form fields={fields} defaults={club} onSubmit={this.submit} />

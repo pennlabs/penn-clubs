@@ -1,14 +1,14 @@
 import { withRouter } from 'next/router'
 
-import ClubEditPage from '../../components/ClubEditPage'
-import renderPage from '../../renderPage.js'
+import ClubEditPage from '../components/ClubEditPage'
+import renderPage from '../renderPage.js'
 
 import {
   doApiRequest,
   getApiUrl,
   formatResponse,
   getRoleDisplay,
-} from '../../utils'
+} from '../utils'
 
 const Create = props => <ClubEditPage {...props} />
 

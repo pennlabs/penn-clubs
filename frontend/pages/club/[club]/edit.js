@@ -19,11 +19,8 @@ Edit.getInitialProps = async ({ query }) => {
       return [item, response]
     })
   ).then(values => {
-    const output = { clubId: query.club }
-    values.forEach(item => {
-      output[item[0]] = item[1]
-    })
-    return output
+    values.clubId = query.club
+    return values
   })
 }
 
