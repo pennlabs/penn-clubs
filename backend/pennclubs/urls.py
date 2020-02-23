@@ -25,6 +25,7 @@ urlpatterns = [
         ),
         name="documentation",
     ),
+    path("commands/", include("admin_commands.urls", namespace="commands")),
 ]
 
 urlpatterns = [path("api/", include(urlpatterns))]

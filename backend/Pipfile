@@ -35,6 +35,7 @@ qrcode = "*"
 drf-renderer-xlsx = "*"
 uwsgi = "*"
 python-dateutil = "*"
+django-admin-commands = {editable = true,path = "./../../django-admin-commands"}
 
 [requires]
 python_version = "3"

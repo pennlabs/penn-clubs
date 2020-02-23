@@ -20,6 +20,8 @@ DOMAIN = os.environ.get("DOMAIN", "example.com")
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+DJANGO_PROJECT_ROOT = BASE_DIR
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
@@ -45,6 +47,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "accounts.apps.AccountsConfig",
     "clubs.apps.ClubsConfig",
+    "admin_commands",
 ]
 
 MIDDLEWARE = [
@@ -171,3 +174,8 @@ MEDIA_URL = "/api/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "uploads")
 MAX_FILE_SIZE = 1073741824  # Max file size
 FILE_SIZE_ONE_GB = 1073741824  # 1GB
+
+
+ADMIN_COMMANDS_DISPLAYED_APPS = ['clubs']
+ADMIN_COMMANDS_DISPLAYED_COMMANDS = []
+ADMIN_COMMANDS_LOG_FILES = os.path.join(DJANGO_PROJECT_ROOT, 'logs')
