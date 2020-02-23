@@ -93,10 +93,12 @@ class ClubForm extends Component {
       },
     ]
 
+    const isEdit = typeof this.props.clubId !== 'undefined'
+
     this.state = {
-      club: {},
+      club: isEdit ? null : {},
       invites: [],
-      isEdit: typeof this.props.clubId !== 'undefined',
+      isEdit: isEdit,
       inviteEmails: '',
       inviteRole: this.roles[0],
       inviteTitle: 'Member',
