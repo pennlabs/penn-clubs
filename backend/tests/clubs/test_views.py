@@ -531,6 +531,30 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+    def test_club_approve(self):
+        """
+        Test approving an existing unapproved club.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        # mark club as unapproved
+        self.club1.approved = False
+        self.club1.save(update_fields=["approved"])
+
+        # approve club
+        resp = self.client.post(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": True},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure database correctly updated
+        self.club1.refresh_from_db()
+        self.assertTrue(self.club1.approved)
+        self.assertIsNotNone(self.club1.approved_by)
+        self.assertIsNotNone(self.club1.approved_on)
+
     def test_club_create_url_sanitize(self):
         """
         Test creating clubs with malicious URLs.

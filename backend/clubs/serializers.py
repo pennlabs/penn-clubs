@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.template.defaultfilters import slugify
+from django.utils import timezone
 from rest_framework import serializers, validators
 
 from clubs.mixins import ManyToManySaveMixin
@@ -538,6 +539,16 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                 self.validated_data["code"] = slugify(self.validated_data["name"])
         elif "code" in self.validated_data:
             del self.validated_data["code"]
+
+        if (
+            self.instance
+            and not self.instance.approved
+            and self.validated_data.get("approved") is True
+        ):
+            request = getattr(self.context, "request", None)
+            if request:
+                self.validated_data["approved_by"] = request.user
+            self.validated_data["approved_on"] = timezone.now()
 
         return super().save()
 

@@ -74,9 +74,15 @@ class Club(models.Model):
         (APPLICATION_REQUIRED_SOME, "Application Required For Some Positions"),
         (APPLICATION_REQUIRED_ALL, "Application Required For All Positions"),
     )
+
+    approved = models.BooleanField(default=False)
+    approved_by = models.ForeignKey(
+        get_user_model(), null=True, on_delete=models.SET_NULL, related_name="approved_clubs"
+    )
+    approved_on = models.DateTimeField(null=True)
+
     code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=True)
-    approved = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
     description = models.TextField(blank=True)
