@@ -1,4 +1,5 @@
 import ClubEditPage from '../../../components/ClubEditPage'
+import { withRouter } from 'next/router'
 import renderPage from '../../../renderPage.js'
 import {
   doApiRequest,
@@ -26,4 +27,4 @@ Edit.getInitialProps = async ({ query }) => {
   })
 }
 
-export default renderPage(Edit)
+export default withRouter(renderPage(Edit))

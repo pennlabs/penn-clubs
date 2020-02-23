@@ -1,4 +1,5 @@
 import ClubEditPage from '../components/ClubEditPage'
+import { withRouter } from 'next/router'
 import renderPage from '../renderPage.js'
 
 import {
@@ -27,4 +28,4 @@ Create.getInitialProps = async ({ query }) => {
   })
 }
 
-export default renderPage(Create)
+export default withRouter(renderPage(Create))
