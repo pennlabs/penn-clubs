@@ -143,6 +143,18 @@ class SendReminderTestCase(TestCase):
             self.assertIn("Penn Clubs", msg.body)
 
 
+class PopulateTestCase(TestCase):
+    def test_populate(self):
+        # populate database with test data
+        call_command("populate")
+
+        # make sure script can handle duplicate runs
+        call_command("populate")
+
+        self.assertNotEqual(Club.objects.all().count(), 0)
+        self.assertNotEqual(Tag.objects.all().count(), 0)
+
+
 class MergeDuplicatesTestCase(TestCase):
     def setUp(self):
         self.tag1 = Tag.objects.create(name="One")

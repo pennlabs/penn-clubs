@@ -40,7 +40,7 @@ export default () => (
       name="message-circle"
       alt="Feedback"
       size={ICON_SIZE}
-      style={{ marginTop: '0.5rem', color: 'white' }}
+      style={{ marginTop: '0.75rem', color: 'white' }}
     />
   </FeedbackLink>
 )

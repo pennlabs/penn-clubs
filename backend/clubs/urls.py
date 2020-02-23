@@ -1,5 +1,3 @@
-from django.conf import settings
-from django.conf.urls.static import static
 from django.urls import path
 from rest_framework_nested import routers
 
@@ -13,6 +11,7 @@ from clubs.views import (
     MemberInviteViewSet,
     MemberViewSet,
     NoteViewSet,
+    ReportViewSet,
     SchoolViewSet,
     SubscribeViewSet,
     TagViewSet,
@@ -34,6 +33,7 @@ router.register(r"request", MembershipRequestViewSet, basename="request")
 
 router.register(r"schools", SchoolViewSet, basename="schools")
 router.register(r"majors", MajorViewSet, basename="majors")
+router.register(r"reports", ReportViewSet, basename="reports")
 router.register(r"years", YearViewSet, basename="years")
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
@@ -55,6 +55,3 @@ urlpatterns = [
 
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -4,14 +4,12 @@ import {
   CLUBS_GREY_LIGHT,
   CLUBS_BLUE,
   CLUBS_RED,
-  CLUBS_YELLOW,
   BORDER,
   LIGHT_GRAY,
   WHITE,
   CLUBS_NAVY,
 } from '../constants/colors'
 import {
-  mediaMinWidth,
   mediaMaxWidth,
   MD,
   SEARCH_BAR_MOBILE_HEIGHT,
@@ -22,9 +20,9 @@ import { logEvent } from '../utils/analytics'
 import { Icon } from './common'
 
 const checkboxColorMap = {
-  Type: CLUBS_RED,
-  Size: CLUBS_BLUE,
-  Application: CLUBS_NAVY,
+  Tags: CLUBS_BLUE,
+  Size: CLUBS_NAVY,
+  Application: CLUBS_RED,
 }
 
 const Line = s.hr`
@@ -46,16 +44,12 @@ const DropdownHeader = s.div`
   cursor: pointer;
 
   ${mediaMaxWidth(MD)} {
-    display: inline-block;
-    width: auto;
-    border: 2px solid ${BORDER};
+    display: inline-flex;
     padding: 4px 8px;
     margin-right: 6px;
     border-radius: 16px;
     font-size: 80%;
     color: ${LIGHT_GRAY};
-
-    ${({ active, color }) => active && `background: ${color || CLUBS_RED};`}
   }
 `
 
@@ -93,16 +87,18 @@ const TableContainer = s.div`
   }
 `
 
-const DropdownHeaderIcon = s.span`
+const Chevron = s(Icon)`
   cursor: pointer;
   color: ${CLUBS_GREY};
   transform: rotate(0deg) translateY(0);
   transition: transform ${ANIMATION_DURATION}ms ease;
-
-  ${({ active }) => active && 'transform: rotate(180deg) translateY(-4px);'}
+  ${({ open }) => open && 'transform: rotate(180deg) translateY(-4px);'}
 
   ${mediaMaxWidth(MD)} {
-    display: none !important;
+    margin-top: .1em !important;
+    margin-left: .1em !important;
+    color: ${LIGHT_GRAY};
+    ${({ open }) => open && 'transform: rotate(180deg)'}
   }
 `
 
@@ -110,38 +106,22 @@ const DropdownHeaderText = s.p`
   opacity: 0.8;
   font-weight: 600;
   margin-bottom: 0;
-
-  ${mediaMaxWidth(MD)} {
-    color: ${({ active }) => active ? WHITE : 'rgba(0, 0, 0, 0.5)'}
-    opacity: 1;
-  }
 `
 
-const CloseWrapper = s.div`
-  float: right;
-  ${mediaMinWidth(MD)} {
-    display: none !important;
-  }
-`
-
-export const CloseButton = ({ onClick }) => (
-  <CloseWrapper>
-    <DropdownHeader
-      style={{ marginRight: 0 }}
-      onClick={onClick}
-      color={LIGHT_GRAY}
-    >
-      <DropdownHeaderText>
-        <Icon name="x" alt="&#215;" />
-      </DropdownHeaderText>
+// TODO: export out into seperate component?
+export const FilterHeader = ({ active, name, toggleActive }) => (
+  <>
+    <Line />
+    <DropdownHeader onClick={() => toggleActive()}>
+      <DropdownHeaderText active={active}>{name}</DropdownHeaderText>
+      <Chevron
+        name="chevron-down"
+        alt="toggle dropdown"
+        open={active}
+        size="1rem"
+      />
     </DropdownHeader>
-  </CloseWrapper>
-)
-
-const Chevron = ({ active }) => (
-  <DropdownHeaderIcon className="icon" active={active}>
-    <Icon name="chevron-down" alt="toggle dropdown" />
-  </DropdownHeaderIcon>
+  </>
 )
 
 const DropdownFilter = ({
@@ -166,15 +146,7 @@ const DropdownFilter = ({
 
   return (
     <>
-      <Line />
-      <DropdownHeader
-        onClick={() => toggleActive()}
-        active={active}
-        color={color}
-      >
-        <DropdownHeaderText active={active}>{name}</DropdownHeaderText>
-        <Chevron active={active} />
-      </DropdownHeader>
+      <FilterHeader active={active} name={name} toggleActive={toggleActive} />
       <TableWrapper active={active}>
         <TableContainer>
           <table>

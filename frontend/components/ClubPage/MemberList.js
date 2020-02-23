@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import s from 'styled-components'
-import { Row, Col, Icon, Center, EmptyState } from '../common'
+import { Row, Col, Icon, Center, EmptyState, Text } from '../common'
 import { DARK_GRAY } from '../../constants/colors'
+import { M1 } from '../../constants/measurements'
 import MemberCard from './MemberCard'
 
 const Toggle = s.div`
@@ -15,30 +16,30 @@ const MemberList = ({ club: { members } }) => {
   return hasMembers ? (
     <div>
       {expanded ? (
-        <Row>
+        <Row margin={M1}>
           {members.map(a => (
             <Col
               key={a.username || a.name}
               sm={12}
               md={6}
               lg={3}
-              margin="5px"
               flex
+              margin={M1}
             >
               <MemberCard account={a} />
             </Col>
           ))}
         </Row>
       ) : (
-        <Row>
+        <Row margin={M1}>
           {members.slice(0, 4).map(a => (
             <Col
               key={a.username || a.name}
               sm={12}
               md={6}
               lg={3}
-              margin="5px"
               flex
+              margin={M1}
             >
               <MemberCard account={a} />
             </Col>
@@ -65,11 +66,11 @@ const MemberList = ({ club: { members } }) => {
         size="25%"
         style={{ marginTop: 0, marginBottom: 0 }}
       />
-      <p>
+      <Text>
         No club members have linked their accounts on Penn Clubs yet.
         <br />
         Check back later for a list of club members!
-      </p>
+      </Text>
     </Center>
   )
 }

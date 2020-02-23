@@ -151,6 +151,7 @@ class Form extends Component {
       name,
       fields,
       type,
+      description,
       readonly,
       placeholder = '',
       content,
@@ -271,7 +272,10 @@ class Form extends Component {
           <div className="card-header">
             <div className="card-header-title">{name}</div>
           </div>
-          <div className="card-content">{this.generateFields(fields)}</div>
+          <div className="card-content">
+            {description}
+            {this.generateFields(fields)}
+          </div>
         </div>
       )
     } else if (type === 'component') {

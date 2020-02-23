@@ -5,7 +5,7 @@ const reqSvgs = require.context('../../public/static/img/icons', true, /\.svg$/)
 
 const IconWrapper = s.span`
   display: inline-block;
-  vertical-align: middle;
+  vertical-align: ${props => (props.noalign ? 'baseline' : 'middle')};
 
   .button & {
     margin-right: 0.25rem;
@@ -24,9 +24,9 @@ export const Icon = ({ name, show = true, size = '1rem', ...props }) => {
   }
   const iconInfo = svg.default().props
   return (
-    <IconWrapper>
+    <IconWrapper noalign={props.noalign}>
       {svg.default({
-        preserveAspectRatio: 'true',
+        preserveAspectRatio: 'xMidYMid meet',
         width: size,
         height: size,
         viewBox: `0 0 ${iconInfo.width} ${iconInfo.height}`,

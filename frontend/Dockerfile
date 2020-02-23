@@ -5,15 +5,19 @@ LABEL maintainer="Penn Labs"
 WORKDIR /app/
 
 # Copy project dependencies
-COPY package*.json /app/
+COPY package.json /app/
+COPY yarn.lock /app/
 
 # Install project dependencies
-RUN npm install --production
+RUN yarn install --frozen-lockfile --production
 
 # Copy project files
 COPY . /app/
 
-# Build project
-RUN npm run build
+# Disable telemetry back to zeit
+ENV NEXT_TELEMETRY_DISABLED=1
 
-CMD ["npm", "start"]
+# Build project
+RUN yarn build
+
+CMD ["yarn", "start"]

@@ -19,6 +19,7 @@ from clubs.models import (
     Note,
     NoteTag,
     Profile,
+    Report,
     School,
     Subscribe,
     Tag,
@@ -79,6 +80,12 @@ class TestimonialSerializer(ClubRouteMixin, serializers.ModelSerializer):
     class Meta:
         model = Testimonial
         fields = ("id", "text")
+
+
+class ReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Report
+        fields = ("id", "name", "description", "parameters")
 
 
 class YearSerializer(serializers.ModelSerializer):
@@ -337,7 +344,7 @@ class ClubListSerializer(serializers.ModelSerializer):
     def get_fields(self):
         all_fields = super().get_fields()
         fields_param = getattr(self.context.get("request", dict()), "GET", {}).get("fields", "")
-        if len(fields_param) > 0:
+        if fields_param:
             fields_param = fields_param.split(",")
         else:
             return all_fields

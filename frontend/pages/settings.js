@@ -10,7 +10,7 @@ import ClubTab from '../components/Settings/ClubTab'
 import FavoritesTab from '../components/Settings/FavoritesTab'
 import ProfileTab from '../components/Settings/ProfileTab'
 import AuthPrompt from '../components/common/AuthPrompt'
-import { Title, Container } from '../components/common'
+import { Title, Container, Metadata } from '../components/common'
 
 const Notification = s.span`
   border-radius: ${BORDER_RADIUS};
@@ -191,6 +191,7 @@ class Settings extends React.Component {
 
     return (
       <>
+        <Metadata title="Your Profile" />
         <Container background={gradient}>
           <Title style={{ marginTop: '2.5vw', color: WHITE, opacity: 0.95 }}>
             Welcome, {name}

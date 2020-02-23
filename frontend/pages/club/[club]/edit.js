@@ -1,3 +1,4 @@
+import s from 'styled-components'
 import { Component } from 'react'
 import { withRouter } from 'next/router'
 import Link from 'next/link'
@@ -12,6 +13,7 @@ import {
   formatResponse,
   getRoleDisplay,
 } from '../../../utils'
+import ClubMetadata from '../../../components/ClubMetadata'
 import Form, { ModelForm } from '../../../components/Form'
 import TabView from '../../../components/TabView'
 import AuthPrompt from '../../../components/common/AuthPrompt'
@@ -32,6 +34,13 @@ const Card = ({ children, title }) => (
     <div className="card-content">{children}</div>
   </div>
 )
+
+const QRCode = s.img`
+  display: block;
+  width: 150px;
+  padding: 15px;
+  margin-bottom: 15px;
+`
 
 class ClubForm extends Component {
   constructor(props) {
@@ -314,7 +323,11 @@ class ClubForm extends Component {
     const { club, invites, isEdit, message, editMember } = this.state
 
     if (authenticated === false) {
-      return <AuthPrompt />
+      return (
+        <AuthPrompt>
+          <ClubMetadata club={club} />
+        </AuthPrompt>
+      )
     }
 
     if (
@@ -325,6 +338,7 @@ class ClubForm extends Component {
     ) {
       return (
         <AuthPrompt title="Oh no!" hasLogin={false}>
+          <ClubMetadata club={club} />
           You do not have permission to edit the page for {club.name}. To get
           access, contact{' '}
           <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>.
@@ -442,6 +456,16 @@ class ClubForm extends Component {
       {
         name: 'Admission',
         type: 'group',
+        description: (
+          <Text>
+            Some of these fields will be used to adjust club ordering on the
+            home page. Click{' '}
+            <Link href="/rank">
+              <a>here</a>
+            </Link>{' '}
+            for more details.
+          </Text>
+        ),
         fields: [
           {
             name: 'application_required',
@@ -562,19 +586,21 @@ class ClubForm extends Component {
                           {a.title} ({getRoleDisplay(a.role)})
                         </td>
                         <td>{a.email}</td>
-                        <td className="buttons">
-                          <button
-                            className="button is-small is-primary"
-                            onClick={() => this.setState({ editMember: a })}
-                          >
-                            <Icon name="edit" alt="edit member" /> Edit
-                          </button>
-                          <button
-                            className="button is-small is-danger"
-                            onClick={() => this.deleteMembership(a.username)}
-                          >
-                            <Icon name="x" alt="kick member" /> Kick
-                          </button>
+                        <td>
+                          <div className="buttons">
+                            <button
+                              className="button is-small is-primary"
+                              onClick={() => this.setState({ editMember: a })}
+                            >
+                              <Icon name="edit" alt="edit member" /> Edit
+                            </button>
+                            <button
+                              className="button is-small is-danger"
+                              onClick={() => this.deleteMembership(a.username)}
+                            >
+                              <Icon name="x" alt="kick member" /> Kick
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -802,14 +828,6 @@ class ClubForm extends Component {
                   <Icon alt="download" name="download" /> Download Subscriber
                   List
                 </a>
-                <Link
-                  href={CLUB_FLYER_ROUTE()}
-                  as={CLUB_FLYER_ROUTE(club.code)}
-                >
-                  <a target="_blank" className="button is-success">
-                    <Icon alt="flyer" name="external-link" /> View Flyer
-                  </a>
-                </Link>
               </div>
             </Card>
           </>
@@ -820,9 +838,34 @@ class ClubForm extends Component {
         label: 'Resources',
         content: (
           <>
+            <Card title="QR Code">
+              <Text>
+                When scanned, gives mobile-friendly access to your club page and
+                bookmark/subscribe actions.
+              </Text>
+              <QRCode src={getApiUrl(`/clubs/${club.code}/qr`)} alt="qr code" />
+              <div className="buttons">
+                <a
+                  href={getApiUrl(`/clubs/${club.code}/qr`)}
+                  download={`${club.code}.png`}
+                  className="button is-success"
+                >
+                  <Icon alt="qr" name="download" />
+                  Download QR Code
+                </a>
+                <Link
+                  href={CLUB_FLYER_ROUTE()}
+                  as={CLUB_FLYER_ROUTE(club.code)}
+                >
+                  <a target="_blank" className="button is-success">
+                    <Icon alt="flyer" name="external-link" /> View Flyer
+                  </a>
+                </Link>
+              </div>
+            </Card>
             <Card title="Member Experiences">
               <Text>
-                Provde more information on what being in your organization is
+                Provide more information on what being in your organization is
                 like from a member's point of view.
               </Text>
               <ModelForm
@@ -969,6 +1012,7 @@ class ClubForm extends Component {
 
     return (
       <Container>
+        <ClubMetadata club={club} />
         <Title>
           {nameOrDefault}
           {showInactiveTag && <InactiveTag />}

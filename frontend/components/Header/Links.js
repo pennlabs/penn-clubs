@@ -2,7 +2,7 @@ import Link from 'next/link'
 import s from 'styled-components'
 
 import { Icon } from '../common'
-import { LOGIN_URL } from '../../utils'
+import { LOGIN_URL, getCurrentRelativePath } from '../../utils'
 import { mediaMaxWidth, MD } from '../../constants/measurements'
 import {
   WHITE,
@@ -79,7 +79,7 @@ export default ({ userInfo, authenticated, show }) => (
       {authenticated === false && (
         <LoginButton
           className="button"
-          href={`${LOGIN_URL}?next=${window.location.href}`}
+          href={`${LOGIN_URL}?next=${getCurrentRelativePath()}`}
           onClick={() => logEvent('login', 'click')}
         >
           Login
