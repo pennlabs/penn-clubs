@@ -179,10 +179,12 @@ class Subscribe(models.Model):
     class Meta:
         unique_together = (("person", "club"),)
 
+
 class MembershipRequest(models.Model):
     """
     Used when users are not in the club but request membership from the owner
     """
+
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
 

@@ -8,12 +8,9 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('clubs', '0017_joinrequest'),
+        ("clubs", "0017_joinrequest"),
     ]
 
     operations = [
-        migrations.RenameModel(
-            old_name='JoinRequest',
-            new_name='MembershipRequest',
-        ),
+        migrations.RenameModel(old_name="JoinRequest", new_name="MembershipRequest",),
     ]

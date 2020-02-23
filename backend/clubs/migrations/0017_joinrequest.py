@@ -9,20 +9,31 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('clubs', '0016_auto_20200128_2024'),
+        ("clubs", "0016_auto_20200128_2024"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='JoinRequest',
+            name="JoinRequest",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('club', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='clubs.Club')),
-                ('person', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "club",
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="clubs.Club"),
+                ),
+                (
+                    "person",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+                    ),
+                ),
             ],
-            options={
-                'unique_together': {('person', 'club')},
-            },
+            options={"unique_together": {("person", "club")},},
         ),
     ]

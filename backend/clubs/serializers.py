@@ -24,7 +24,7 @@ from clubs.models import (
     Tag,
     Testimonial,
     Year,
-    MembershipRequest
+    MembershipRequest,
 )
 from clubs.utils import clean
 
@@ -628,6 +628,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
             )
         ]
 
+
 class UserSubscribeSerializer(serializers.ModelSerializer):
     """
     Used by the UserSerializer to return the clubs that the user has favorited.
@@ -644,6 +645,7 @@ class MembershipRequestSerializer(serializers.ModelSerializer):
     """
     Used by club owners/officers to see who has requested to join the club.
     """
+
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     name = serializers.SerializerMethodField("get_full_name")
@@ -678,7 +680,8 @@ class MembershipRequestSerializer(serializers.ModelSerializer):
             )
         ]
 
-class UserMembershipRequestSerializer (serializers.ModelSerializer):
+
+class UserMembershipRequestSerializer(serializers.ModelSerializer):
     """
     Used by the UserSerializer to return the clubs that the user has sent request to.
     """
@@ -689,6 +692,7 @@ class UserMembershipRequestSerializer (serializers.ModelSerializer):
         model = MembershipRequest
         fields = ("club",)
 
+
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
     email = serializers.EmailField(read_only=True)
@@ -696,7 +700,7 @@ class UserSerializer(serializers.ModelSerializer):
     membership_set = UserMembershipSerializer(many=True, read_only=True)
     favorite_set = FavoriteSerializer(many=True, read_only=True)
     subscribe_set = UserSubscribeSerializer(many=True, read_only=True)
-    join_request_set = MembershipRequestSerializer(many=True, read_only = True)
+    join_request_set = MembershipRequestSerializer(many=True, read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     image = serializers.ImageField(source="profile.image", write_only=True)
     image_url = serializers.SerializerMethodField("get_image_url")

@@ -174,6 +174,7 @@ class SubscribeAdmin(admin.ModelAdmin):
     def email(self, obj):
         return obj.person.email
 
+
 class MembershipRequestAdmin(admin.ModelAdmin):
     search_fields = ("person__username", "person__email", "club__name", "club__pk")
     list_display = ("person", "club", "email")
@@ -187,6 +188,7 @@ class MembershipRequestAdmin(admin.ModelAdmin):
     def email(self, obj):
         return obj.person.email
 
+
 class MembershipAdmin(admin.ModelAdmin):
     search_fields = ("person__username", "person__email", "club__name", "club__pk", "title")
     list_display = ("person", "club", "role", "title")
@@ -197,6 +199,7 @@ class MembershipAdmin(admin.ModelAdmin):
 
     def club(self, obj):
         return obj.club.name
+
 
 class ProfileAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "user__email")
@@ -293,4 +296,3 @@ admin.site.register(Testimonial)
 admin.site.register(Note)
 admin.site.register(NoteTag)
 admin.site.register(Year, YearAdmin)
-
