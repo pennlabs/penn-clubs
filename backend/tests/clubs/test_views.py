@@ -25,50 +25,52 @@ class ClubTestCase(TestCase):
     def setUp(self):
         self.client = Client()
 
-        self.club1 = Club.objects.create(code="test-club", name="Test Club", approved=True)
+    @classmethod
+    def setUpTestData(cls):
+        cls.club1 = Club.objects.create(code="test-club", name="Test Club", approved=True)
 
-        self.event1 = Event.objects.create(
+        cls.event1 = Event.objects.create(
             code="test-event",
-            club=self.club1,
+            club=cls.club1,
             name="Test Event",
             start_time=timezone.now(),
             end_time=timezone.now(),
         )
 
-        self.user1 = get_user_model().objects.create_user(
+        cls.user1 = get_user_model().objects.create_user(
             "bfranklin", "bfranklin@seas.upenn.edu", "test"
         )
-        self.user1.first_name = "Benjamin"
-        self.user1.last_name = "Franklin"
-        self.user1.save()
+        cls.user1.first_name = "Benjamin"
+        cls.user1.last_name = "Franklin"
+        cls.user1.save()
 
-        self.user2 = get_user_model().objects.create_user(
+        cls.user2 = get_user_model().objects.create_user(
             "tjefferson", "tjefferson@seas.upenn.edu", "test"
         )
-        self.user2.first_name = "Thomas"
-        self.user2.last_name = "Jefferson"
-        self.user2.save()
+        cls.user2.first_name = "Thomas"
+        cls.user2.last_name = "Jefferson"
+        cls.user2.save()
 
-        self.user3 = get_user_model().objects.create_user(
+        cls.user3 = get_user_model().objects.create_user(
             "gwashington", "gwashington@wharton.upenn.edu", "test"
         )
-        self.user3.first_name = "George"
-        self.user3.last_name = "Washington"
-        self.user3.save()
+        cls.user3.first_name = "George"
+        cls.user3.last_name = "Washington"
+        cls.user3.save()
 
-        self.user4 = get_user_model().objects.create_user(
+        cls.user4 = get_user_model().objects.create_user(
             "barnold", "barnold@wharton.upenn.edu", "test"
         )
-        self.user4.first_name = "Benedict"
-        self.user4.last_name = "Arnold"
-        self.user4.save()
+        cls.user4.first_name = "Benedict"
+        cls.user4.last_name = "Arnold"
+        cls.user4.save()
 
-        self.user5 = get_user_model().objects.create_user("jadams", "jadams@sas.upenn.edu", "test")
-        self.user5.first_name = "John"
-        self.user5.last_name = "Adams"
-        self.user5.is_staff = True
-        self.user5.is_superuser = True
-        self.user5.save()
+        cls.user5 = get_user_model().objects.create_user("jadams", "jadams@sas.upenn.edu", "test")
+        cls.user5.first_name = "John"
+        cls.user5.last_name = "Adams"
+        cls.user5.is_staff = True
+        cls.user5.is_superuser = True
+        cls.user5.save()
 
     def test_club_upload(self):
         """
@@ -872,7 +874,7 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
-        resp = self.client.post(
+        resp = self.client.patch(
             reverse("club-invite", args=(self.club1.code,)),
             {
                 "emails": "one@pennlabs.org, two@pennlabs.org, three@pennlabs.org",
