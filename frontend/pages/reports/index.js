@@ -81,6 +81,9 @@ const TableHeader = s.th`
 
 const TableData = s.td`
   color: ${CLUBS_GREY_LIGHT};
+  line-height: 1.4em;
+  vertical-align: middle;
+  padding: 0;
 `
 
 const TableHeadDivider = s.thead`
@@ -182,9 +185,6 @@ const Reports = ({ nameToCode }) => {
             <span className="title is-2" style={{ color: 'white' }}>
               Create a new report
             </span>
-            <TransparentButton onClick={() => handleBack()}>
-              Back to all reports
-            </TransparentButton>
           </ColoredHeader>
           <Edit
             fields={fields}
@@ -212,29 +212,42 @@ const Reports = ({ nameToCode }) => {
             <table className="table" style={{ width: '100%' }}>
               <TableHeadDivider>
                 <tr>
-                  <TableHeader>Report Name</TableHeader>
-                  <TableHeader>Created By</TableHeader>
-                  <TableHeader>Description</TableHeader>
-                  <TableHeader>Date Created</TableHeader>
-                  <TableHeader>Last Report</TableHeader>
+                  <TableHeader>
+                    Report Name{' '}
+                    <Icon name="chevron-down" alt="filter-reports-by-name" />
+                  </TableHeader>
+                  <TableHeader>
+                    Created By{' '}
+                    <Icon name="chevron-down" alt="filter-reports-by-name" />
+                  </TableHeader>
+                  <TableHeader>
+                    Description{' '}
+                    <Icon name="chevron-down" alt="filter-reports-by-desc" />
+                  </TableHeader>
+                  <TableHeader>
+                    Date Created{' '}
+                    <Icon name="chevron-down" alt="filter-reports-by-date" />
+                  </TableHeader>
+                  <TableHeader>
+                    Last Report{' '}
+                    <Icon name="chevron-down" alt="filter-reports-by-last" />
+                  </TableHeader>
                   <TableHeader>Perform Actions</TableHeader>
                 </tr>
               </TableHeadDivider>
               <tbody>
                 {reports.map((report, i) => (
                   <tr key={i}>
-                    <TableData>{report.name || <Empty>None</Empty>}</TableData>
+                    <TableData>{report.name || <span>None</span>}</TableData>
+                    <TableData>{report.creator || <span>None</span>}</TableData>
                     <TableData>
-                      {report.creator || <Empty>None</Empty>}
+                      {report.description || <span>None</span>}
                     </TableData>
                     <TableData>
-                      {report.description || <Empty>None</Empty>}
+                      {report.dateCreated || <span>None</span>}
                     </TableData>
                     <TableData>
-                      {report.dateCreated || <Empty>None</Empty>}
-                    </TableData>
-                    <TableData>
-                      {report.lastReport || <Empty>None</Empty>}
+                      {report.lastReport || <span>None</span>}
                     </TableData>
                     <TableData>
                       <div className="buttons">

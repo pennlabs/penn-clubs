@@ -3,11 +3,34 @@ import { useState } from 'react'
 import { Icon, Flex } from '../../components/common'
 import { API_BASE_URL } from '../../utils'
 import { Container } from '../../components/common/Container'
-import { CLUBS_GREY } from '../../constants/colors'
+import { CLUBS_GREY, LIGHT_GRAY } from '../../constants/colors'
 
 const TallTextArea = s.textarea`
   height: 6em;
   background-color: #f4f4f4;
+  box-shadow: none;
+`
+const TransparentButton = s.button`
+  width: 12.5em;
+  height: 2.5em;
+  border-radius: 17px;
+  border: 0;
+  background: #f2f2f2;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  color: ${LIGHT_GRAY};
+  margin: 2em;
+`
+
+const MainContainer = s.div`
+  display: flex;
+  flex-wrap: nowrap;
+`
+
+const ReportsContainer = s.div`
+  flex: 2 0 75%;
+  margin: 2em;
 `
 
 const Edit = ({
@@ -35,8 +58,13 @@ const Edit = ({
   }
 
   return (
-    <div>
-      <Container>
+    <MainContainer>
+      <div>
+        <TransparentButton onClick={() => handleBack()}>
+          Back to all reports
+        </TransparentButton>
+      </div>
+      <ReportsContainer>
         <div className="box">
           <h3 className="title is-4" style={{ color: CLUBS_GREY }}>
             Report Details
@@ -52,7 +80,7 @@ const Edit = ({
                   placeholder='e.g. "Owner emails"'
                   value={nameInput}
                   onChange={e => setNameInput(e.target.value)}
-                  style={{ backgroundColor: '#f4f4f4' }}
+                  style={{ backgroundColor: '#f4f4f4', boxShadow: 'none' }}
                 />
               </div>
             </div>
@@ -92,8 +120,8 @@ const Edit = ({
           <Icon name="paperclip" alt="report" />
           Generate Report
         </button>
-      </Container>
-    </div>
+      </ReportsContainer>
+    </MainContainer>
   )
 }
 
