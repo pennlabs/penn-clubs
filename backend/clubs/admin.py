@@ -15,6 +15,7 @@ from clubs.models import (
     Major,
     Membership,
     MembershipInvite,
+    MembershipRequest,
     Note,
     NoteTag,
     Profile,
@@ -175,6 +176,20 @@ class SubscribeAdmin(admin.ModelAdmin):
         return obj.person.email
 
 
+class MembershipRequestAdmin(admin.ModelAdmin):
+    search_fields = ("person__username", "person__email", "club__name", "club__pk")
+    list_display = ("person", "club", "email")
+
+    def person(self, obj):
+        return obj.person.username
+
+    def club(self, obj):
+        return obj.club.name
+
+    def email(self, obj):
+        return obj.person.email
+
+
 class MembershipAdmin(admin.ModelAdmin):
     search_fields = ("person__username", "person__email", "club__name", "club__pk", "title")
     list_display = ("person", "club", "role", "title")
@@ -278,6 +293,7 @@ admin.site.register(Event, EventAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(School)
 admin.site.register(Subscribe, SubscribeAdmin)
+admin.site.register(MembershipRequest, MembershipRequestAdmin)
 admin.site.register(Major)
 admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)

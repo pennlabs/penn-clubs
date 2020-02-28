@@ -16,6 +16,7 @@ from clubs.models import (
     Major,
     Membership,
     MembershipInvite,
+    MembershipRequest,
     Note,
     NoteTag,
     Profile,
@@ -647,6 +648,58 @@ class UserSubscribeSerializer(serializers.ModelSerializer):
         fields = ("club",)
 
 
+class MembershipRequestSerializer(serializers.ModelSerializer):
+    """
+    Used by club owners/officers to see who has requested to join the club.
+    """
+
+    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    name = serializers.SerializerMethodField("get_full_name")
+    username = serializers.CharField(source="person.username", read_only=True)
+    email = serializers.EmailField(source="person.email", read_only=True)
+
+    school = SchoolSerializer(many=True, source="person.profile.school", read_only=True)
+    major = MajorSerializer(many=True, source="person.profile.major", read_only=True)
+    graduation_year = serializers.IntegerField(
+        source="person.profile.graduation_year", read_only=True
+    )
+
+    def get_full_name(self, obj):
+        return obj.person.get_full_name()
+
+    class Meta:
+        model = MembershipRequest
+        fields = (
+            "club",
+            "name",
+            "username",
+            "person",
+            "email",
+            "school",
+            "major",
+            "graduation_year",
+            "created_at",
+        )
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=MembershipRequest.objects.all(), fields=["club", "person"]
+            )
+        ]
+
+
+class UserMembershipRequestSerializer(serializers.ModelSerializer):
+    """
+    Used by the UserSerializer to return the clubs that the user has sent request to.
+    """
+
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+
+    class Meta:
+        model = MembershipRequest
+        fields = ("club",)
+
+
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
     email = serializers.EmailField(read_only=True)
@@ -654,6 +707,7 @@ class UserSerializer(serializers.ModelSerializer):
     membership_set = UserMembershipSerializer(many=True, read_only=True)
     favorite_set = FavoriteSerializer(many=True, read_only=True)
     subscribe_set = UserSubscribeSerializer(many=True, read_only=True)
+    join_request_set = MembershipRequestSerializer(many=True, read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     image = serializers.ImageField(source="profile.image", write_only=True)
     image_url = serializers.SerializerMethodField("get_image_url")
@@ -704,6 +758,7 @@ class UserSerializer(serializers.ModelSerializer):
             "membership_set",
             "favorite_set",
             "subscribe_set",
+            "join_request_set",
             "is_superuser",
             "image_url",
             "image",

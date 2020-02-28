@@ -27,6 +27,7 @@ from clubs.models import (
     Major,
     Membership,
     MembershipInvite,
+    MembershipRequest,
     Note,
     Report,
     School,
@@ -56,6 +57,7 @@ from clubs.serializers import (
     FavoriteSerializer,
     MajorSerializer,
     MembershipInviteSerializer,
+    MembershipRequestSerializer,
     MembershipSerializer,
     NoteSerializer,
     ReportSerializer,
@@ -456,6 +458,44 @@ class SubscribeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Subscribe.objects.filter(person=self.request.user)
+
+
+class MembershipRequestViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of clubs that the logged in user has sent membership request to.
+
+    create: Sent membership request to a club.
+
+    destroy: Deleted a membership request from a club.
+    """
+
+    serializer_class = MembershipRequestSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "club__code"
+    http_method_names = ["get", "post", "delete"]
+
+    def get_queryset(self):
+        return MembershipRequest.objects.filter(person=self.request.user)
+
+
+class MembershipRequestOwnerViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of users who have sent membership request to the club
+    """
+
+    serializer_class = MembershipRequestSerializer
+    permission_field = [MemberPermission | IsSuperuser]
+    http_method_names = ["get", "post", "delete"]
+    lookup_field = "person__username"
+
+    def get_queryset(self):
+        return MembershipRequest.objects.filter(club__code=self.kwargs["club_code"])
+
+    @action(detail=True, methods=["post"])
+    def accept_membership(self, request, *ages, **kwargs):
+        Membership.objects.create(person=self.get_object().person, club=self.get_object().club)
+        self.get_object().delete()
 
 
 class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
