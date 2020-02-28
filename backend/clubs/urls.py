@@ -9,6 +9,8 @@ from clubs.views import (
     MajorViewSet,
     MassInviteAPIView,
     MemberInviteViewSet,
+    MembershipRequestOwnerViewSet,
+    MembershipRequestViewSet,
     MemberViewSet,
     NoteViewSet,
     ReportViewSet,
@@ -19,8 +21,6 @@ from clubs.views import (
     UserUpdateAPIView,
     YearViewSet,
     email_preview,
-    MembershipRequestViewSet,
-    MembershipRequestOwnerViewSet,
 )
 
 

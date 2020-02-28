@@ -16,6 +16,7 @@ from clubs.models import (
     Major,
     Membership,
     MembershipInvite,
+    MembershipRequest,
     Note,
     NoteTag,
     Profile,
@@ -25,7 +26,6 @@ from clubs.models import (
     Tag,
     Testimonial,
     Year,
-    MembershipRequest,
 )
 from clubs.utils import clean
 

@@ -27,6 +27,7 @@ from clubs.models import (
     Major,
     Membership,
     MembershipInvite,
+    MembershipRequest,
     Note,
     Report,
     School,
@@ -34,7 +35,6 @@ from clubs.models import (
     Tag,
     Testimonial,
     Year,
-    MembershipRequest,
 )
 from clubs.permissions import (
     AssetPermission,
@@ -57,6 +57,7 @@ from clubs.serializers import (
     FavoriteSerializer,
     MajorSerializer,
     MembershipInviteSerializer,
+    MembershipRequestSerializer,
     MembershipSerializer,
     NoteSerializer,
     ReportSerializer,
@@ -66,7 +67,6 @@ from clubs.serializers import (
     TestimonialSerializer,
     UserSerializer,
     YearSerializer,
-    MembershipRequestSerializer,
 )
 from clubs.utils import html_to_text
 
