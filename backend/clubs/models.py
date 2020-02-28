@@ -181,7 +181,7 @@ class Favorite(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return "<Favorite: {} for {}>".format(self.person.username, self.club.pk)
+        return "<Favorite: {} for {}>".format(self.person.username, self.club.code)
 
     class Meta:
         unique_together = (("person", "club"),)
@@ -200,7 +200,7 @@ class Subscribe(models.Model):
 
     def __str__(self):
         return "<Subscribe: {} for {}, with email {}>".format(
-            self.person.username, self.club.pk, self.person.email
+            self.person.username, self.club.code, self.person.email
         )
 
     class Meta:
@@ -216,10 +216,11 @@ class MembershipRequest(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
 
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return "<MembershipRequest: {} for {}, with email {}>".format(
-            self.person.username, self.club.pk, self.person.email
+            self.person.username, self.club.code, self.person.email
         )
 
     class Meta:
