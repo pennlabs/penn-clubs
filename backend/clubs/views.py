@@ -494,8 +494,9 @@ class MembershipRequestOwnerViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def accept_membership(self, request, *ages, **kwargs):
-        Membership.objects.create(person=self.get_object().person, club=self.get_object().club)
-        self.get_object().delete()
+        request_object = self.get_object()
+        Membership.objects.create(person=request_object.person, club=request_object.club)
+        request_object.delete()
 
 
 class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
