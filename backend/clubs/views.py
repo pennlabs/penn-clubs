@@ -493,7 +493,7 @@ class MembershipRequestOwnerViewSet(viewsets.ModelViewSet):
         return MembershipRequest.objects.filter(club__code=self.kwargs["club_code"])
 
     @action(detail=True, methods=["post"])
-    def accept_membership(self, request, *ages, **kwargs):
+    def accept(self, request, *ages, **kwargs):
         request_object = self.get_object()
         Membership.objects.create(person=request_object.person, club=request_object.club)
         request_object.delete()
