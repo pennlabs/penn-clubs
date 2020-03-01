@@ -1,15 +1,13 @@
 import datetime
 import os
-import threading
 import uuid
 from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
-from django.db import connection, models
+from django.db import models
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string

@@ -4,7 +4,6 @@ import re
 
 import qrcode
 from django.conf import settings
-from django.core.cache import cache
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch, Q
