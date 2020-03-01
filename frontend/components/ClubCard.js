@@ -120,7 +120,7 @@ const ClubCard = ({ club, updateFavorites, favorite }) => {
                     Pending Approval
                   </InactiveTag>
                 )}
-                {!approved && (
+                {approved === false && (
                   <InactiveTag className="tag is-rounded">Rejected</InactiveTag>
                 )}
                 <TagGroup tags={tags} />

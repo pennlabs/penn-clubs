@@ -23,7 +23,7 @@ class ClubDisplay extends React.Component {
       sizeSelected: [],
       applicationSelected: [],
       nameInput: '',
-      end: 8,
+      end: 10,
     }
   }
 

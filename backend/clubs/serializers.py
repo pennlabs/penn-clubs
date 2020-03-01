@@ -362,6 +362,7 @@ class ClubListSerializer(serializers.ModelSerializer):
         fields = [
             "name",
             "code",
+            "approved",
             "description",
             "founded",
             "size",
@@ -554,7 +555,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
-            "approved",
             "facebook",
             "twitter",
             "instagram",

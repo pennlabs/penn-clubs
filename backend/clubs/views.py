@@ -140,7 +140,8 @@ class ClubPagination(PageNumberPagination):
     Custom pagination for club list view.
     """
 
-    page_size = 25
+    page_size = 100
+    page_size_query_param = "page_size"
 
     def paginate_queryset(self, queryset, request, view=None):
         if self.page_query_param not in request.query_params:
@@ -185,6 +186,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 ),
             ),
         )
+        .order_by("-favorite_count", "name")
     )
     permission_classes = [ClubPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter]

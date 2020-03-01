@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import ClubTableRow from '../ClubTableRow'
 import { Center, EmptyState, Text } from '../common'
 import { HOME_ROUTE } from '../../constants/routes'
 import { CLUBS_GREY_LIGHT } from '../../constants/colors'
+import { doApiRequest } from '../../utils'
 
-export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
+export default ({ favorites, keyword, updateFavorites }) => {
   const [table, setTable] = useState(() => {
     const ret = {}
     favorites.forEach(favorite => {
@@ -13,11 +14,23 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
     })
     return ret
   })
+
+  // load clubs
+  const [clubs, setClubs] = useState({})
+  useEffect(() => {
+    Promise.all(
+      favorites.map(club =>
+        doApiRequest(`/clubs/${club}/?format=json`).then(res => res.json())
+      )
+    ).then(values => {
+      const newClubs = {}
+      values.forEach(item => (newClubs[item.code] = item))
+      setClubs(newClubs)
+    })
+  }, [favorites])
+
   const rows = Object.keys(table)
   const isBookmarksTab = keyword === 'bookmark'
-  const findClub = code => {
-    return clubs.find(club => club.code === code) || {}
-  }
   const toggleFavorite = code => {
     setTable({ ...table, [code]: !table[code] })
     updateFavorites(code)
@@ -37,14 +50,16 @@ export default ({ clubs = [], favorites, keyword, updateFavorites }) => {
   }
   return (
     <div>
-      {rows.map(favorite => (
-        <ClubTableRow
-          club={findClub(favorite)}
-          updateFavorites={toggleFavorite}
-          favorite={table[favorite]}
-          key={favorite}
-        />
-      ))}
+      {rows
+        .filter(fav => fav in clubs)
+        .map(favorite => (
+          <ClubTableRow
+            club={clubs[favorite]}
+            updateFavorites={toggleFavorite}
+            favorite={table[favorite]}
+            key={favorite}
+          />
+        ))}
     </div>
   )
 }
