@@ -417,7 +417,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         Ensure new clubs follow certain invariants.
         """
         # New clubs created through the API must always be approved.
-        validated_data["approved"] = False
+        validated_data["approved"] = None
 
         obj = super().create(validated_data)
 

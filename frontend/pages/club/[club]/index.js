@@ -85,25 +85,51 @@ const Club = ({
       <ClubMetadata club={club} />
       {club.approved || (
         <WarningCard>
-          <p>
-            This club has not been approved yet and is only visible to
-            administrators of Penn Clubs.
-          </p>
-          <button
-            className="button is-warning"
-            onClick={() => {
-              doApiRequest(`/clubs/${clubCode}/?format=json`, {
-                method: 'PATCH',
-                body: {
-                  approved: true,
-                },
-              })
-                .then(resp => resp.json())
-                .then(data => setClub(data))
-            }}
-          >
-            Approve
-          </button>
+          <Text>
+            {club.approved === false ? (
+              <span>
+                This club has been marked as <b>rejected</b> and is only visible
+                to administrators of Penn Clubs.
+              </span>
+            ) : (
+              <span>
+                This club has <b>not been approved yet</b> and is only visible
+                to administrators of Penn Clubs.
+              </span>
+            )}
+          </Text>
+          <div className="buttons">
+            <button
+              className="button is-warning"
+              onClick={() => {
+                doApiRequest(`/clubs/${clubCode}/?format=json`, {
+                  method: 'PATCH',
+                  body: {
+                    approved: true,
+                  },
+                })
+                  .then(resp => resp.json())
+                  .then(data => setClub(data))
+              }}
+            >
+              Approve
+            </button>
+            <button
+              className="button is-warning"
+              onClick={() => {
+                doApiRequest(`/clubs/${clubCode}/?format=json`, {
+                  method: 'PATCH',
+                  body: {
+                    approved: false,
+                  },
+                })
+                  .then(resp => resp.json())
+                  .then(data => setClub(data))
+              }}
+            >
+              Reject
+            </button>
+          </div>
         </WarningCard>
       )}
       <div className="columns">
