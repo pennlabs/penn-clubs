@@ -410,6 +410,7 @@ class ClubForm extends Component {
       {
         name: 'Contact',
         type: 'group',
+        description: <Text>Contact information entered here will be shown on your club page.</Text>,
         fields: [
           {
             name: 'email',
@@ -1037,6 +1038,12 @@ class ClubForm extends Component {
             </Link>
           }
         </Title>
+        {!isEdit && (
+          <p>
+            Clubs that you create from this form will enter an approval process
+            before being displayed to the public.
+          </p>
+        )}
         {message && (
           <div className="notification is-primary">
             <button

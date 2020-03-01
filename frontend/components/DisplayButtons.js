@@ -1,5 +1,6 @@
 import s from 'styled-components'
 import PropTypes from 'prop-types'
+import Link from 'next/link'
 
 import { Icon } from './common'
 import { DARK_GRAY, ALLBIRDS_GRAY, WHITE } from '../constants/colors'
@@ -9,7 +10,7 @@ const DisplayButtonsTag = s.div`
   float: right;
   font-family: ${BODY_FONT};
 
-  button {
+  .button {
     margin-left: 8px;
   }
 `
@@ -50,6 +51,12 @@ const DisplayButtons = ({ switchDisplay, shuffle }) => (
       <Icon name="shuffle" alt="shuffle club order" style={iconStyles} />
       &nbsp;&nbsp; Shuffle
     </button>
+    <Link href="/create">
+      <a className="button is-small is-success">
+        <Icon name="plus" alt="create club" style={iconStyles} />
+        Add Club
+      </a>
+    </Link>
   </DisplayButtonsTag>
 )
 
