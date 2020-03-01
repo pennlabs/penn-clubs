@@ -48,6 +48,7 @@ const WarningCard = s(StyledCard)`
 
 const Club = ({
   club: initialClub,
+  clubCode,
   userInfo,
   favorites,
   updateFavorites,
@@ -57,7 +58,7 @@ const Club = ({
   const [club, setClub] = useState(initialClub)
 
   useEffect(() => {
-    doApiRequest(`/clubs/${club.code}/?format=json`)
+    doApiRequest(`/clubs/${clubCode}/?format=json`)
       .then(resp => resp.json())
       .then(data => setClub(data))
   }, [initialClub])
@@ -84,8 +85,25 @@ const Club = ({
       <ClubMetadata club={club} />
       {club.approved || (
         <WarningCard>
-          This club has not been approved yet and is only visible to
-          administrators of Penn Clubs.
+          <p>
+            This club has not been approved yet and is only visible to
+            administrators of Penn Clubs.
+          </p>
+          <button
+            className="button is-warning"
+            onClick={() => {
+              doApiRequest(`/clubs/${clubCode}/?format=json`, {
+                method: 'PATCH',
+                body: {
+                  approved: true,
+                },
+              })
+                .then(resp => resp.json())
+                .then(data => setClub(data))
+            }}
+          >
+            Approve
+          </button>
         </WarningCard>
       )}
       <div className="columns">
@@ -162,7 +180,7 @@ Club.getInitialProps = async props => {
   const { query } = props
   const resp = await doApiRequest(`/clubs/${query.club}/?format=json`)
   const club = await resp.json()
-  return { club }
+  return { club, clubCode: query.club }
 }
 
 export default renderPage(Club)
