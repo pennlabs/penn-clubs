@@ -287,12 +287,12 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # return cached if cached
         key = settings.CLUB_LIST_CACHE_KEY
         val = cache.get(key)
-        if val is not None:
+        if val is not None and not request.user.is_authenticated:
             return Response(val)
 
         # save to cache if not
         resp = super().list(request, *args, **kwargs)
-        if resp.status_code == 200:
+        if resp.status_code == 200 and not request.user.is_authenticated:
             cache.set(key, resp.data, settings.CLUB_LIST_CACHE_TIME)
         return resp
 

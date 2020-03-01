@@ -513,8 +513,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         Only owners and superusers may change the active status of a club.
         """
         user = self.context["request"].user
-        club_code = self.context["view"].kwargs.get("pk")
-        membership = Membership.objects.filter(person=user, club__code=club_code).first()
+        club_code = self.context["view"].kwargs.get("code")
+        club = Club.objects.get(code=club_code)
+        membership = Membership.objects.filter(person=user, club=club).first()
         if (membership and membership.role <= Membership.ROLE_OWNER) or user.is_superuser:
             return value
         raise serializers.ValidationError(

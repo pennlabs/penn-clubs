@@ -108,6 +108,7 @@ class ClubForm extends Component {
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
     this.sendInvites = this.sendInvites.bind(this)
+    this.deleteClub = this.deleteClub.bind(this)
   }
 
   notify(msg) {
@@ -132,6 +133,21 @@ class ClubForm extends Component {
             this.state.club.active ? 'deactivated' : 'activated'
           } this club.`
         )
+        this.componentDidMount()
+      } else {
+        resp.json().then(err => {
+          this.notify(formatResponse(err))
+        })
+      }
+    })
+  }
+
+  deleteClub() {
+    doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
+      method: 'DELETE',
+    }).then(resp => {
+      if (resp.ok) {
+        this.notify('Successfully deleted club.')
         this.componentDidMount()
       } else {
         resp.json().then(err => {
@@ -329,14 +345,16 @@ class ClubForm extends Component {
     if (
       authenticated &&
       club &&
+      club.code &&
+      isEdit &&
       !userInfo.is_superuser &&
       !userInfo.membership_set.some(m => m.code === club.code && m.role <= 10)
     ) {
       return (
         <AuthPrompt title="Oh no!" hasLogin={false}>
           <ClubMetadata club={club} />
-          You do not have permission to edit the page for {club.name}. To get
-          access, contact{' '}
+          You do not have permission to edit the page for{' '}
+          {club.name || 'this club'}. To get access, contact{' '}
           <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>.
         </AuthPrompt>
       )
@@ -396,6 +414,7 @@ class ClubForm extends Component {
           {
             name: 'size',
             type: 'select',
+            required: true,
             choices: this.sizes,
             converter: a => this.sizes.find(x => x.value === a),
             reverser: a => a.value,
@@ -410,7 +429,11 @@ class ClubForm extends Component {
       {
         name: 'Contact',
         type: 'group',
-        description: <Text>Contact information entered here will be shown on your club page.</Text>,
+        description: (
+          <Text>
+            Contact information entered here will be shown on your club page.
+          </Text>
+        ),
         fields: [
           {
             name: 'email',
@@ -467,6 +490,7 @@ class ClubForm extends Component {
           {
             name: 'application_required',
             label: 'Is an application required to join your organization?',
+            required: true,
             type: 'select',
             choices: this.applications,
             converter: a => this.applications.find(x => x.value === a),

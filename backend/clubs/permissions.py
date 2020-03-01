@@ -42,7 +42,7 @@ class ClubPermission(permissions.BasePermission):
         if view.action in ["update", "upload", "children", "partial_update", "destroy"]:
             return request.user.is_authenticated
         elif view.action in ["create"]:
-            return request.user.is_authenticated and request.user.is_superuser
+            return request.user.is_authenticated
         else:
             return True
 
