@@ -42,6 +42,10 @@ const StyledCard = s(Card)`
   padding-left: ${M2};
 `
 
+const WarningCard = s(StyledCard)`
+  background-color: yellow;
+`
+
 const Club = ({
   club: initialClub,
   userInfo,
@@ -78,6 +82,12 @@ const Club = ({
   return (
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
+      {club.approved || (
+        <WarningCard>
+          This club has not been approved yet and is only visible to
+          administrators of Penn Clubs.
+        </WarningCard>
+      )}
       <div className="columns">
         <div className="column">
           <StyledCard
