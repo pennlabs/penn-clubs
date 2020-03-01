@@ -14,6 +14,7 @@ from django.utils.text import slugify
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -134,6 +135,20 @@ class ReportViewSet(viewsets.ModelViewSet):
         return Report.objects.filter(creator=self.request.user)
 
 
+class ClubPagination(PageNumberPagination):
+    """
+    Custom pagination for club list view.
+    """
+
+    page_size = 25
+
+    def paginate_queryset(self, queryset, request, view=None):
+        if self.page_query_param not in request.query_params:
+            return None
+
+        return super().paginate_queryset(queryset, request, view)
+
+
 class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     retrieve:
@@ -176,6 +191,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     search_fields = ["name", "subtitle"]
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
+    pagination_class = ClubPagination
 
     def get_queryset(self):
         queryset = super().get_queryset()
