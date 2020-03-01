@@ -75,7 +75,7 @@ class Club(models.Model):
         (APPLICATION_REQUIRED_ALL, "Application Required For All Positions"),
     )
 
-    approved = models.BooleanField(default=False)
+    approved = models.BooleanField(null=True, default=None)
     approved_by = models.ForeignKey(
         get_user_model(), null=True, on_delete=models.SET_NULL, related_name="approved_clubs"
     )
