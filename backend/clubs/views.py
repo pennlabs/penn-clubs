@@ -263,10 +263,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         """
         Return a list of all clubs.
-        Results are cached, and the cache is regenerated when a club is edited.
-        Note that some fields are removed in order to improve the response time.
+        Note that some fields are removed in order to improve response time.
         """
-        # don't cache requests for spreadsheet format
+        # custom handling for spreadsheet format
         if request.accepted_renderer.format == "xlsx":
             # save request as new report if name is set
             if (
@@ -281,20 +280,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     name=name, description=desc, parameters=parameters, creator=request.user
                 )
 
-            resp = super().list(request, *args, **kwargs)
-            return resp
-
-        # return cached if cached
-        key = settings.CLUB_LIST_CACHE_KEY
-        val = cache.get(key)
-        if val is not None and not request.user.is_authenticated:
-            return Response(val)
-
-        # save to cache if not
-        resp = super().list(request, *args, **kwargs)
-        if resp.status_code == 200 and not request.user.is_authenticated:
-            cache.set(key, resp.data, settings.CLUB_LIST_CACHE_TIME)
-        return resp
+        return super().list(request, *args, **kwargs)
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):

@@ -586,27 +586,3 @@ def user_create(sender, instance, created, **kwargs):
 def profile_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
-
-
-@receiver(models.signals.post_save, sender=Club)
-@receiver(models.signals.post_delete, sender=Club)
-def club_modify_handler(sender, instance, **kwargs):
-    """
-    Regenerate the club list cache when a club is modified.
-    """
-
-    def regenerate_club_list_cache():
-        from clubs.serializers import ClubListSerializer
-        from clubs.views import ClubViewSet
-
-        serializer = ClubListSerializer(ClubViewSet.queryset, many=True)
-        key, cache_time = settings.CLUB_LIST_CACHE_KEY, settings.CLUB_LIST_CACHE_TIME
-        cache.set(key, serializer.data, cache_time)
-
-    # sqlite3 in development has issues with threading
-    if connection.vendor == "sqlite":
-        regenerate_club_list_cache()
-    else:
-        t = threading.Thread(target=regenerate_club_list_cache)
-        t.setDaemon(True)
-        t.start()
