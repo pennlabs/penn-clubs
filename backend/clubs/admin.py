@@ -1,3 +1,5 @@
+import datetime
+
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth.models import Group
@@ -63,12 +65,14 @@ def do_merge_clubs(modeladmin, request, queryset):
         modeladmin.message_user(
             request, "You must select at least two clubs to merge!", level=messages.ERROR
         )
+        return
     if queryset.count() > 10:
         modeladmin.message_user(
             request,
             "You have selected more than 10 clubs, you probably do not want to do this.",
             level=messages.ERROR,
         )
+        return
     club_names = list(queryset.order_by("name").values_list("name", flat=True))
     tags = list(queryset)
     first, rest = tags[0], tags[1:]
@@ -122,7 +126,7 @@ class ClubAdmin(admin.ModelAdmin):
         HasOwnerListFilter,
         HasInviteListFilter,
     )
-    actions = [do_merge_clubs, send_edit_reminder]
+    actions = [do_merge_clubs, send_edit_reminder, mark_approved]
     form = ClubAdminForm
 
     def get_queryset(self, request):
@@ -238,6 +242,7 @@ def do_merge_tags(modeladmin, request, queryset):
         modeladmin.message_user(
             request, "You must select at least two tags to merge!", level=messages.ERROR
         )
+        return
     tag_names = list(queryset.order_by("name").values_list("name", flat=True))
     tags = list(queryset)
     first, rest = tags[0], tags[1:]
@@ -251,6 +256,24 @@ def do_merge_tags(modeladmin, request, queryset):
 
 
 do_merge_tags.short_description = "Merge selected tags"
+
+
+def mark_approved(modeladmin, request, queryset):
+    if not request.user.has_perm("approve_club"):
+        modeladmin.message_user(
+            request, "You do not have permission to approve clubs!", level=messages.ERROR
+        )
+        return
+
+    num_updated = queryset.filter(approved=False).update(
+        approved=True, approved_by=request.user, approved_on=datetime.datetime.now()
+    )
+    modeladmin.message_user(
+        request, "Marked {} club(s) as approved!".format(num_updated), level=messages.SUCCESS
+    )
+
+
+mark_approved.short_description = "Approve clubs"
 
 
 class TagAdmin(admin.ModelAdmin):
