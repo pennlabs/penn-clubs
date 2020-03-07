@@ -153,11 +153,21 @@ const FAQ = () => (
               name: 'Undergraduate Assembly',
               image: '/static/img/collaborators/ua.png',
               url: 'https://pennua.org/',
+              height: 80,
             },
-          ].map(({ name, url, image }) => (
+            {
+              name: 'Office of Student Affairs',
+              image: '/static/img/collaborators/osa.png',
+              url: 'https://www.vpul.upenn.edu/osa/',
+            },
+          ].map(({ name, url, image, height }) => (
             <a href={url} target="_blank" key={name}>
               <img
-                style={{ maxWidth: 100, verticalAlign: 'middle', margin: 10 }}
+                style={{
+                  maxHeight: height || 100,
+                  verticalAlign: 'middle',
+                  margin: 10,
+                }}
                 src={image}
                 alt={name}
                 title={name}
