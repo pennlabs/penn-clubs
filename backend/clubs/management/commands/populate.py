@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 
-from clubs.models import Badge, Club, Membership, Profile, Tag
+from clubs.models import Badge, Club, Major, Membership, Profile, School, Tag, Year
 
 
 clubs = [
@@ -94,6 +94,34 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         if Club.objects.filter(name="Penn Labs").exists():
             raise CommandError("You probably do not want to run this script in production!")
+
+        # create years
+        [
+            Year.objects.get_or_create(name=year)
+            for year in ["Freshman", "Sophomore", "Junior", "Senior"]
+        ]
+
+        # create schools
+        [
+            School.objects.get_or_create(name=school)
+            for school in [
+                "The Wharton School",
+                "School of Engineering and Applied Science",
+                "School of Nursing",
+                "School of Arts & Sciences",
+            ]
+        ]
+
+        # create majors
+        [
+            Major.objects.get_or_create(name=major)
+            for major in [
+                "Computer Science",
+                "Computer Engineering",
+                "Digital Media Design",
+                "Computer Engineering",
+            ]
+        ]
 
         # create clubs
         for info in clubs:
