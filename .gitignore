@@ -43,3 +43,9 @@ frontend/cypress/screenshots
 # Frontend code coverage
 frontend/.nyc_output
 frontend/coverage
+
+# Windows
+.DS_STORE
+
+# Logs
+yarn-error.log
