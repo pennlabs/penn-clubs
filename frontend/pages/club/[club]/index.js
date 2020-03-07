@@ -42,8 +42,13 @@ const StyledCard = s(Card)`
   padding-left: ${M2};
 `
 
+const WarningCard = s(StyledCard)`
+  background-color: yellow;
+`
+
 const Club = ({
   club: initialClub,
+  clubCode,
   userInfo,
   favorites,
   updateFavorites,
@@ -53,7 +58,7 @@ const Club = ({
   const [club, setClub] = useState(initialClub)
 
   useEffect(() => {
-    doApiRequest(`/clubs/${club.code}/?format=json`)
+    doApiRequest(`/clubs/${clubCode}/?format=json`)
       .then(resp => resp.json())
       .then(data => setClub(data))
   }, [initialClub])
@@ -78,6 +83,55 @@ const Club = ({
   return (
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
+      {club.approved || (
+        <WarningCard>
+          <Text>
+            {club.approved === false ? (
+              <span>
+                This club has been marked as <b>rejected</b> and is only visible
+                to administrators of Penn Clubs.
+              </span>
+            ) : (
+              <span>
+                This club has <b>not been approved yet</b> and is only visible
+                to administrators of Penn Clubs.
+              </span>
+            )}
+          </Text>
+          <div className="buttons">
+            <button
+              className="button is-warning"
+              onClick={() => {
+                doApiRequest(`/clubs/${clubCode}/?format=json`, {
+                  method: 'PATCH',
+                  body: {
+                    approved: true,
+                  },
+                })
+                  .then(resp => resp.json())
+                  .then(data => setClub(data))
+              }}
+            >
+              Approve
+            </button>
+            <button
+              className="button is-warning"
+              onClick={() => {
+                doApiRequest(`/clubs/${clubCode}/?format=json`, {
+                  method: 'PATCH',
+                  body: {
+                    approved: false,
+                  },
+                })
+                  .then(resp => resp.json())
+                  .then(data => setClub(data))
+              }}
+            >
+              Reject
+            </button>
+          </div>
+        </WarningCard>
+      )}
       <div className="columns">
         <div className="column">
           <StyledCard
@@ -152,7 +206,7 @@ Club.getInitialProps = async props => {
   const { query } = props
   const resp = await doApiRequest(`/clubs/${query.club}/?format=json`)
   const club = await resp.json()
-  return { club }
+  return { club, clubCode: query.club }
 }
 
 export default renderPage(Club)

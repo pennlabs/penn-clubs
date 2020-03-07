@@ -54,6 +54,10 @@ export function getRoleDisplay(role) {
 }
 
 export function getApiUrl(path) {
+  if (/^https?:\/\//.test(path)) {
+    const url = new URL(path)
+    return url.pathname + url.search
+  }
   return API_BASE_URL + path
 }
 

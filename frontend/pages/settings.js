@@ -121,7 +121,6 @@ class Settings extends React.Component {
 
   render() {
     const {
-      clubs,
       userInfo,
       authenticated,
       favorites,
@@ -159,7 +158,6 @@ class Settings extends React.Component {
           <FavoritesTab
             key="bookmark"
             keyword="bookmark"
-            clubs={clubs}
             favorites={favorites}
             updateFavorites={updateFavorites}
           />
@@ -172,7 +170,6 @@ class Settings extends React.Component {
           <FavoritesTab
             key="subscription"
             keyword="subscription"
-            clubs={clubs}
             favorites={subscriptions}
             updateFavorites={updateSubscriptions}
           />

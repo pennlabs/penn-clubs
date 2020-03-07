@@ -17,6 +17,7 @@ import {
 } from '../constants/colors'
 import { logEvent } from '../utils/analytics'
 import { WideContainer, Metadata, Title } from '../components/common'
+import { doApiRequest } from '../utils'
 
 const colorMap = {
   Tags: CLUBS_BLUE,
@@ -60,6 +61,9 @@ class Splash extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      clubs: props.clubs,
+      clubCount: null,
+      clubLoaded: false,
       displayClubs: props.clubs,
       selectedTags: [],
       nameInput: '',
@@ -90,14 +94,37 @@ class Splash extends React.Component {
       minMatchCharLength: 2,
       threshold: 0.2,
     }
-    this.fuse = new Fuse(this.props.clubs, this.fuseOptions)
 
     this.shuffle = this.shuffle.bind(this)
     this.switchDisplay = this.switchDisplay.bind(this)
   }
 
   componentDidMount() {
-    this.shuffle()
+    const loadedClubs = new Set()
+
+    const paginationDownload = (url, count) => {
+      doApiRequest(url)
+        .then(res => res.json())
+        .then(res => {
+          this.setState(state => ({
+            clubs: state.clubs.concat(
+              res.results.filter(c => !loadedClubs.has(c.code))
+            ),
+            clubCount: res.count,
+          }))
+          res.results.forEach(c => loadedClubs.add(c.code))
+          if (!res.next || count === 0) {
+            this.setState(state => ({ displayClubs: state.clubs }))
+            this.fuse = new Fuse(this.state.clubs, this.fuseOptions)
+          }
+          if (res.next) {
+            paginationDownload(res.next, count + 1)
+          } else {
+            this.setState({ clubLoaded: true })
+          }
+        })
+    }
+    paginationDownload('/clubs/?page=1&format=json', 0)
   }
 
   resetDisplay(nameInput, selectedTags) {
@@ -106,10 +133,10 @@ class Splash extends React.Component {
     const applicationSelected = selectedTags.filter(
       tag => tag.name === 'Application'
     )
-    let { clubs } = this.props
+    let { clubs } = this.state
 
     // fuzzy search
-    if (nameInput.length) {
+    if (this.fuse && nameInput.length) {
       clubs = this.fuse.search(nameInput)
     }
 
@@ -220,8 +247,16 @@ class Splash extends React.Component {
   }
 
   render() {
-    const { displayClubs, display, selectedTags, nameInput } = this.state
-    const { clubs, tags, favorites, updateFavorites } = this.props
+    const {
+      clubs,
+      clubLoaded,
+      clubCount,
+      displayClubs,
+      display,
+      selectedTags,
+      nameInput,
+    } = this.state
+    const { tags, favorites, updateFavorites } = this.props
     return (
       <>
         <Metadata />
@@ -253,7 +288,13 @@ class Splash extends React.Component {
                   Find your people!
                 </p>
               </div>
-              <ResultsText> {displayClubs.length} results </ResultsText>
+              {clubLoaded ||
+                (clubCount !== null && (
+                  <ResultsText>
+                    {' '}
+                    {clubLoaded ? displayClubs.length : clubCount} results
+                  </ResultsText>
+                ))}
 
               {selectedTags.length ? (
                 <div style={{ padding: '0 30px 30px 0' }}>

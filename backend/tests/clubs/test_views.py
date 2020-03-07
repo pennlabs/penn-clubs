@@ -22,10 +22,47 @@ from clubs.models import (
 
 
 class ClubTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user1 = get_user_model().objects.create_user(
+            "bfranklin", "bfranklin@seas.upenn.edu", "test"
+        )
+        cls.user1.first_name = "Benjamin"
+        cls.user1.last_name = "Franklin"
+        cls.user1.save()
+
+        cls.user2 = get_user_model().objects.create_user(
+            "tjefferson", "tjefferson@seas.upenn.edu", "test"
+        )
+        cls.user2.first_name = "Thomas"
+        cls.user2.last_name = "Jefferson"
+        cls.user2.save()
+
+        cls.user3 = get_user_model().objects.create_user(
+            "gwashington", "gwashington@wharton.upenn.edu", "test"
+        )
+        cls.user3.first_name = "George"
+        cls.user3.last_name = "Washington"
+        cls.user3.save()
+
+        cls.user4 = get_user_model().objects.create_user(
+            "barnold", "barnold@wharton.upenn.edu", "test"
+        )
+        cls.user4.first_name = "Benedict"
+        cls.user4.last_name = "Arnold"
+        cls.user4.save()
+
+        cls.user5 = get_user_model().objects.create_user("jadams", "jadams@sas.upenn.edu", "test")
+        cls.user5.first_name = "John"
+        cls.user5.last_name = "Adams"
+        cls.user5.is_staff = True
+        cls.user5.is_superuser = True
+        cls.user5.save()
+
     def setUp(self):
         self.client = Client()
 
-        self.club1 = Club.objects.create(code="test-club", name="Test Club")
+        self.club1 = Club.objects.create(code="test-club", name="Test Club", approved=True)
 
         self.event1 = Event.objects.create(
             code="test-event",
@@ -34,41 +71,6 @@ class ClubTestCase(TestCase):
             start_time=timezone.now(),
             end_time=timezone.now(),
         )
-
-        self.user1 = get_user_model().objects.create_user(
-            "bfranklin", "bfranklin@seas.upenn.edu", "test"
-        )
-        self.user1.first_name = "Benjamin"
-        self.user1.last_name = "Franklin"
-        self.user1.save()
-
-        self.user2 = get_user_model().objects.create_user(
-            "tjefferson", "tjefferson@seas.upenn.edu", "test"
-        )
-        self.user2.first_name = "Thomas"
-        self.user2.last_name = "Jefferson"
-        self.user2.save()
-
-        self.user3 = get_user_model().objects.create_user(
-            "gwashington", "gwashington@wharton.upenn.edu", "test"
-        )
-        self.user3.first_name = "George"
-        self.user3.last_name = "Washington"
-        self.user3.save()
-
-        self.user4 = get_user_model().objects.create_user(
-            "barnold", "barnold@wharton.upenn.edu", "test"
-        )
-        self.user4.first_name = "Benedict"
-        self.user4.last_name = "Arnold"
-        self.user4.save()
-
-        self.user5 = get_user_model().objects.create_user("jadams", "jadams@sas.upenn.edu", "test")
-        self.user5.first_name = "John"
-        self.user5.last_name = "Adams"
-        self.user5.is_staff = True
-        self.user5.is_superuser = True
-        self.user5.save()
 
     def test_club_upload(self):
         """
@@ -530,6 +532,30 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
+
+    def test_club_approve(self):
+        """
+        Test approving an existing unapproved club.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        # mark club as unapproved
+        self.club1.approved = False
+        self.club1.save(update_fields=["approved"])
+
+        # approve club
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": True},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure database correctly updated
+        self.club1.refresh_from_db()
+        self.assertTrue(self.club1.approved)
+        self.assertIsNotNone(self.club1.approved_on)
+        self.assertIsNotNone(self.club1.approved_by)
 
     def test_club_create_url_sanitize(self):
         """

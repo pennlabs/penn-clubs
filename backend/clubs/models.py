@@ -1,12 +1,10 @@
 import datetime
 import os
-import threading
 import uuid
 from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.db import models
@@ -74,9 +72,15 @@ class Club(models.Model):
         (APPLICATION_REQUIRED_SOME, "Application Required For Some Positions"),
         (APPLICATION_REQUIRED_ALL, "Application Required For All Positions"),
     )
+
+    approved = models.BooleanField(null=True, default=None)
+    approved_by = models.ForeignKey(
+        get_user_model(), null=True, on_delete=models.SET_NULL, related_name="approved_clubs"
+    )
+    approved_on = models.DateTimeField(null=True)
+
     code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=True)
-    approved = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
     description = models.TextField(blank=True)
@@ -117,6 +121,10 @@ class Club(models.Model):
 
     class Meta:
         ordering = ["name"]
+        permissions = [
+            ("approve_club", "Can approve pending clubs"),
+            ("see_pending_clubs", "View pending clubs that are not one's own"),
+        ]
 
 
 class Testimonial(models.Model):
@@ -171,7 +179,7 @@ class Favorite(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return "<Favorite: {} for {}>".format(self.person.username, self.club.pk)
+        return "<Favorite: {} for {}>".format(self.person.username, self.club.code)
 
     class Meta:
         unique_together = (("person", "club"),)
@@ -190,7 +198,7 @@ class Subscribe(models.Model):
 
     def __str__(self):
         return "<Subscribe: {} for {}, with email {}>".format(
-            self.person.username, self.club.pk, self.person.email
+            self.person.username, self.club.code, self.person.email
         )
 
     class Meta:
@@ -206,10 +214,11 @@ class MembershipRequest(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
 
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return "<MembershipRequest: {} for {}, with email {}>".format(
-            self.person.username, self.club.pk, self.person.email
+            self.person.username, self.club.code, self.person.email
         )
 
     class Meta:
@@ -575,23 +584,3 @@ def user_create(sender, instance, created, **kwargs):
 def profile_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
-
-
-@receiver(models.signals.post_save, sender=Club)
-@receiver(models.signals.post_delete, sender=Club)
-def club_modify_handler(sender, instance, **kwargs):
-    """
-    Regenerate the club list cache when a club is modified.
-    """
-
-    def regenerate_club_list_cache():
-        from clubs.serializers import ClubListSerializer
-        from clubs.views import ClubViewSet
-
-        serializer = ClubListSerializer(ClubViewSet.queryset, many=True)
-        key, cache_time = settings.CLUB_LIST_CACHE_KEY, settings.CLUB_LIST_CACHE_TIME
-        cache.set(key, serializer.data, cache_time)
-
-    t = threading.Thread(target=regenerate_club_list_cache)
-    t.setDaemon(True)
-    t.start()

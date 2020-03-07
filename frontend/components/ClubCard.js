@@ -86,6 +86,7 @@ const ClubCard = ({ club, updateFavorites, favorite }) => {
   const {
     name,
     active,
+    approved,
     description,
     subtitle,
     tags,
@@ -113,6 +114,14 @@ const ClubCard = ({ club, updateFavorites, favorite }) => {
                 </div>
                 {!active && (
                   <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
+                )}
+                {approved === null && (
+                  <InactiveTag className="tag is-rounded">
+                    Pending Approval
+                  </InactiveTag>
+                )}
+                {approved === false && (
+                  <InactiveTag className="tag is-rounded">Rejected</InactiveTag>
                 )}
                 <TagGroup tags={tags} />
               </div>

@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.template.defaultfilters import slugify
+from django.utils import timezone
 from rest_framework import serializers, validators
 
 from clubs.mixins import ManyToManySaveMixin
@@ -361,6 +362,7 @@ class ClubListSerializer(serializers.ModelSerializer):
         fields = [
             "name",
             "code",
+            "approved",
             "description",
             "founded",
             "size",
@@ -413,8 +415,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def create(self, validated_data):
         """
-        Assign ownership of club to the creator.
+        Ensure new clubs follow certain invariants.
         """
+        # New clubs created through the API must always be approved.
+        validated_data["approved"] = None
 
         obj = super().create(validated_data)
 
@@ -510,8 +514,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         Only owners and superusers may change the active status of a club.
         """
         user = self.context["request"].user
-        club_code = self.context["view"].kwargs.get("pk")
-        membership = Membership.objects.filter(person=user, club__code=club_code).first()
+        club_code = self.context["view"].kwargs.get("code")
+        club = Club.objects.get(code=club_code)
+        membership = Membership.objects.filter(person=user, club=club).first()
         if (membership and membership.role <= Membership.ROLE_OWNER) or user.is_superuser:
             return value
         raise serializers.ValidationError(
@@ -536,6 +541,15 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                 self.validated_data["code"] = slugify(self.validated_data["name"])
         elif "code" in self.validated_data:
             del self.validated_data["code"]
+
+        # if approved, update who and when club was approved
+        if (
+            self.instance
+            and not self.instance.approved
+            and self.validated_data.get("approved") is True
+        ):
+            self.validated_data["approved_by"] = self.context["request"].user
+            self.validated_data["approved_on"] = timezone.now()
 
         return super().save()
 

@@ -161,9 +161,6 @@ VIEW_URL = "https://{domain}/club/{club}"
 EDIT_URL = "https://{domain}/club/{club}/edit"
 FLYER_URL = "https://{domain}/club/{club}/flyer"
 
-# Cache settings
-CLUB_LIST_CACHE_KEY = "club:list"
-CLUB_LIST_CACHE_TIME = None
 
 # File upload settings
 

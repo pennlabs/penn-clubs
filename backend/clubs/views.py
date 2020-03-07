@@ -4,16 +4,17 @@ import re
 
 import qrcode
 from django.conf import settings
-from django.core.cache import cache
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
-from django.db.models import Count, Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils.text import slugify
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -134,6 +135,21 @@ class ReportViewSet(viewsets.ModelViewSet):
         return Report.objects.filter(creator=self.request.user)
 
 
+class ClubPagination(PageNumberPagination):
+    """
+    Custom pagination for club list view.
+    """
+
+    page_size = 100
+    page_size_query_param = "page_size"
+
+    def paginate_queryset(self, queryset, request, view=None):
+        if self.page_query_param not in request.query_params:
+            return None
+
+        return super().paginate_queryset(queryset, request, view)
+
+
 class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     retrieve:
@@ -170,12 +186,24 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 ),
             ),
         )
+        .order_by("-favorite_count", "name")
     )
     permission_classes = [ClubPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "subtitle"]
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
+    pagination_class = ClubPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.has_perm("clubs.see_pending_clubs"):
+            return queryset
+        elif self.request.user.is_authenticated:
+            # Show approved clubs along with clubs that the logged-in user is a member of.
+            return queryset.filter(Q(approved=True) | Q(members=self.request.user))
+        else:
+            return queryset.filter(approved=True)
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
@@ -235,13 +263,26 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return "{}.xlsx".format(slugify(name))
         return super().get_filename()
 
+    def partial_update(self, request, *args, **kwargs):
+        if request.data.get("accepted", False) is True and not request.user.has_perm(
+            "approve_club"
+        ):
+            raise PermissionDenied
+        return super().partial_update(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if request.data.get("accepted", False) is True and not request.user.has_perm(
+            "approve_club"
+        ):
+            raise PermissionDenied
+        return super().update(request, *args, **kwargs)
+
     def list(self, request, *args, **kwargs):
         """
         Return a list of all clubs.
-        Results are cached, and the cache is regenerated when a club is edited.
-        Note that some fields are removed in order to improve the response time.
+        Note that some fields are removed in order to improve response time.
         """
-        # don't cache requests for spreadsheet format
+        # custom handling for spreadsheet format
         if request.accepted_renderer.format == "xlsx":
             # save request as new report if name is set
             if (
@@ -256,20 +297,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     name=name, description=desc, parameters=parameters, creator=request.user
                 )
 
-            resp = super().list(request, *args, **kwargs)
-            return resp
-
-        # return cached if cached
-        key = settings.CLUB_LIST_CACHE_KEY
-        val = cache.get(key)
-        if val is not None:
-            return Response(val)
-
-        # save to cache if not
-        resp = super().list(request, *args, **kwargs)
-        if resp.status_code == 200:
-            cache.set(key, resp.data, settings.CLUB_LIST_CACHE_TIME)
-        return resp
+        return super().list(request, *args, **kwargs)
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):

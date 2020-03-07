@@ -1,16 +1,17 @@
-import ClubEditPage from '../../../components/ClubEditPage'
+import ClubEditPage from '../components/ClubEditPage'
 import { withRouter } from 'next/router'
-import renderPage from '../../../renderPage.js'
+import renderPage from '../renderPage.js'
+
 import {
   doApiRequest,
   getApiUrl,
   formatResponse,
   getRoleDisplay,
-} from '../../../utils'
+} from '../utils'
 
-const Edit = props => <ClubEditPage {...props} />
+const Create = props => <ClubEditPage {...props} />
 
-Edit.getInitialProps = async ({ query }) => {
+Create.getInitialProps = async ({ query }) => {
   const endpoints = ['tags', 'schools', 'majors', 'years']
   return Promise.all(
     endpoints.map(async item => {
@@ -19,7 +20,7 @@ Edit.getInitialProps = async ({ query }) => {
       return [item, response]
     })
   ).then(values => {
-    const output = { clubId: query.club }
+    const output = {}
     values.forEach(item => {
       output[item[0]] = item[1]
     })
@@ -27,4 +28,4 @@ Edit.getInitialProps = async ({ query }) => {
   })
 }
 
-export default withRouter(renderPage(Edit))
+export default withRouter(renderPage(Create))

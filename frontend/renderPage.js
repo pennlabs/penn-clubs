@@ -28,7 +28,6 @@ function renderPage(Page) {
         userInfo: null,
         favorites: [],
         subscriptions: [],
-        clubs: null,
       }
 
       this.openModal = this.openModal.bind(this)
@@ -42,10 +41,6 @@ function renderPage(Page) {
     }
 
     componentDidMount() {
-      doApiRequest('/clubs/?format=json')
-        .then(resp => resp.json())
-        .then(data => this.setState({ clubs: data }))
-
       this.updateUserInfo()
 
       // Delete old csrf token cookie
@@ -224,7 +219,7 @@ export function renderListPage(Page) {
         updateFavorites,
       } = this.props
 
-      if (!clubs || authenticated === null) {
+      if (authenticated === null) {
         return <Loading />
       }
 
@@ -242,10 +237,13 @@ export function renderListPage(Page) {
   }
 
   RenderListPage.getInitialProps = async () => {
+    const clubsRequest = await doApiRequest('/clubs/?page=1&format=json')
+    const clubsResponse = await clubsRequest.json()
+
     const tagsRequest = await doApiRequest('/tags/?format=json')
     const tagsResponse = await tagsRequest.json()
 
-    return { tags: tagsResponse }
+    return { tags: tagsResponse, clubs: clubsResponse.results }
   }
 
   return renderPage(RenderListPage)
