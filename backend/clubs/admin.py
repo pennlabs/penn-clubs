@@ -294,6 +294,10 @@ class BadgeAdmin(admin.ModelAdmin):
     actions = [do_merge_tags]
 
 
+class MajorAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+
+
 class ReportAdmin(admin.ModelAdmin):
     search_fields = ("name", "description")
     list_display = ("name", "creator")
@@ -317,7 +321,7 @@ admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(School)
 admin.site.register(Subscribe, SubscribeAdmin)
 admin.site.register(MembershipRequest, MembershipRequestAdmin)
-admin.site.register(Major)
+admin.site.register(Major, MajorAdmin)
 admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)
 admin.site.register(Profile, ProfileAdmin)
