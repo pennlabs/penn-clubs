@@ -27,6 +27,7 @@ class Form extends Component {
     this.state = {
       mounted: false,
       edited: false,
+      uploadStatus: {},
     }
 
     this.files = {}
@@ -69,7 +70,35 @@ class Form extends Component {
     this.confirmRouteChange = this.confirmRouteChange.bind(this)
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
-    this.handleSubmit = this.handleSubmit.bind(this)
+    this.handleUpload = this.handleUpload.bind(this)
+    this.handleUploadClick = this.handleUploadClick.bind(this)
+    this.formSubmit = this.formSubmit.bind(this)
+  }
+
+  handleUpload(e, name) {
+    if (e.target.files[0]) {
+      const newDict = Object.assign({}, this.state.uploadStatus)
+      newDict[name] = e.target.files[0].name
+      this.setState({
+        uploadStatus: newDict,
+        edited: true,
+      })
+    }
+  }
+
+  handleUploadClick(e, name) {
+    const newDict = Object.assign({}, this.state.uploadStatus)
+    delete newDict[name]
+    this.setState({
+      uploadStatus: newDict,
+    })
+  }
+
+  formSubmit(data) {
+    this.setState({
+      uploadStatus: {},
+    })
+    return this.props.onSubmit && this.props.onSubmit(data)
   }
 
   confirmRouteChange() {
@@ -289,10 +318,11 @@ class Form extends Component {
               ref={c => {
                 this.files[name] = c
               }}
-              onChange={this.onChange}
               accept={accept}
               type="file"
               name={name}
+              onChange={e => this.handleUpload(e, name)}
+              onClick={e => this.handleUploadClick(e, name)}
             />
             <span className="file-cta">
               <span className="file-icon">
@@ -301,6 +331,18 @@ class Form extends Component {
               <span className="file-label">Choose a file...</span>
             </span>
           </label>
+          {this.state.uploadStatus[name] ? (
+            <span style={{ paddingTop: 3, paddingLeft: 8 }}>
+              {' '}
+              <Icon
+                name="check-circle"
+                size="1.2rem"
+                alt="checkbox"
+                style={{ color: 'green' }}
+              ></Icon>{' '}
+              {this.state.uploadStatus[name]}
+            </span>
+          ) : null}
         </div>
       )
     } else if (type === 'multiselect') {
