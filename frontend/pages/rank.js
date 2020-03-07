@@ -35,6 +35,16 @@ const Rank = () => (
     <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
       Club Recommendation Algorithm
     </Title>
+    <div className="notification is-warning">
+      <Icon
+        name="alert-triangle"
+        alt="warning"
+        style={{ marginRight: '5px' }}
+      />
+      We're currently in the process of redesigning our club recommendation
+      algorithms. In the meantime, clubs are ordered by the number of times that
+      other people have bookmarked them.
+    </div>
     <StrongText>How are clubs ordered?</StrongText>
     <Text>
       The order that clubs appear on the home page is determined by several

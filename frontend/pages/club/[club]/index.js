@@ -42,10 +42,6 @@ const StyledCard = s(Card)`
   padding-left: ${M2};
 `
 
-const WarningCard = s(StyledCard)`
-  background-color: yellow;
-`
-
 const Club = ({
   club: initialClub,
   clubCode,
@@ -84,7 +80,7 @@ const Club = ({
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
       {club.approved || (
-        <WarningCard>
+        <div className="notification is-warning">
           <Text>
             {club.approved === false ? (
               <span>
@@ -100,7 +96,7 @@ const Club = ({
           </Text>
           <div className="buttons">
             <button
-              className="button is-warning"
+              className="button is-success"
               onClick={() => {
                 doApiRequest(`/clubs/${clubCode}/?format=json`, {
                   method: 'PATCH',
@@ -114,23 +110,25 @@ const Club = ({
             >
               Approve
             </button>
-            <button
-              className="button is-warning"
-              onClick={() => {
-                doApiRequest(`/clubs/${clubCode}/?format=json`, {
-                  method: 'PATCH',
-                  body: {
-                    approved: false,
-                  },
-                })
-                  .then(resp => resp.json())
-                  .then(data => setClub(data))
-              }}
-            >
-              Reject
-            </button>
+            {club.approved !== false && (
+              <button
+                className="button is-danger"
+                onClick={() => {
+                  doApiRequest(`/clubs/${clubCode}/?format=json`, {
+                    method: 'PATCH',
+                    body: {
+                      approved: false,
+                    },
+                  })
+                    .then(resp => resp.json())
+                    .then(data => setClub(data))
+                }}
+              >
+                Reject
+              </button>
+            )}
           </div>
-        </WarningCard>
+        </div>
       )}
       <div className="columns">
         <div className="column">
