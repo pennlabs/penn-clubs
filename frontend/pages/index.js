@@ -288,13 +288,12 @@ class Splash extends React.Component {
                   Find your people!
                 </p>
               </div>
-              {clubLoaded ||
-                (clubCount !== null && (
-                  <ResultsText>
-                    {' '}
-                    {clubLoaded ? displayClubs.length : clubCount} results
-                  </ResultsText>
-                ))}
+              {(clubLoaded || clubCount !== null) && (
+                <ResultsText>
+                  {' '}
+                  {clubLoaded ? displayClubs.length : clubCount} results
+                </ResultsText>
+              )}
 
               {selectedTags.length ? (
                 <div style={{ padding: '0 30px 30px 0' }}>
