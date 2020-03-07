@@ -72,7 +72,7 @@ class Form extends Component {
     this.generateFields = this.generateFields.bind(this)
     this.handleUpload = this.handleUpload.bind(this)
     this.handleUploadClick = this.handleUploadClick.bind(this)
-    this.formSubmit = this.formSubmit.bind(this)
+    this.handleSubmit = this.handleSubmit.bind(this)
   }
 
   handleUpload(e, name) {
@@ -92,13 +92,6 @@ class Form extends Component {
     this.setState({
       uploadStatus: newDict,
     })
-  }
-
-  formSubmit(data) {
-    this.setState({
-      uploadStatus: {},
-    })
-    return this.props.onSubmit && this.props.onSubmit(data)
   }
 
   confirmRouteChange() {
@@ -442,6 +435,11 @@ class Form extends Component {
   }
 
   handleSubmit() {
+    // Clear upload file indicators on submit
+    this.setState({
+      uploadStatus: {},
+    })
+
     // Allow onSubmit to be a Promise or async function. If Promise.resolve is passed some
     // other value, it resolves with that value.
     const { onSubmit } = this.props
