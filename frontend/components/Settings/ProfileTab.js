@@ -28,6 +28,11 @@ const Empty = s.span`
   color: ${MEDIUM_GRAY};
 `
 
+const ProfilePicWrapper = s.div`
+  margin-top: 0.5em;
+  margin-left: 0.5em;
+`
+
 export default ({ defaults }) => {
   const [profile, setProfile] = useState(defaults)
 
@@ -37,7 +42,9 @@ export default ({ defaults }) => {
     <Wrapper>
       <div className="columns is-mobile">
         <div className="column is-narrow">
-          <ProfilePic user={{ name, image: image_url }} />
+          <ProfilePicWrapper>
+            <ProfilePic user={{ name, image: image_url }} />
+          </ProfilePicWrapper>
         </div>
         <div className="column is-narrow" style={{ fontWeight: 600 }}>
           <div>Name</div>
