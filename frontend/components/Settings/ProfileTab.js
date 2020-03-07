@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import s from 'styled-components'
 
 import ProfileForm from './ProfileForm'
 import { LOGOUT_URL } from '../../utils'
-import { Icon, SmallText } from '../common'
+import { Icon, SmallText, ProfilePic } from '../common'
 import { MEDIUM_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
 import { logEvent } from '../../utils/analytics'
@@ -28,11 +29,16 @@ const Empty = s.span`
 `
 
 export default ({ defaults }) => {
-  const { name, username, email } = defaults
+  const [profile, setProfile] = useState(defaults)
+
+  const { name, username, email, image_url } = profile
 
   return (
     <Wrapper>
       <div className="columns is-mobile">
+        <div className="column is-narrow">
+          <ProfilePic user={{ name, image: image_url }} />
+        </div>
         <div className="column is-narrow" style={{ fontWeight: 600 }}>
           <div>Name</div>
           <div>Username</div>
@@ -44,7 +50,7 @@ export default ({ defaults }) => {
           <div>{email || <Empty>None</Empty>}</div>
         </div>
       </div>
-      <ProfileForm settings={defaults} />
+      <ProfileForm settings={profile} onUpdate={setProfile} />
       <br />
       <br />
       <SmallText>

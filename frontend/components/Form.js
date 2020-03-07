@@ -138,7 +138,7 @@ class Form extends Component {
     return out
   }
 
-  getFieldData(name, source, { type, reverser, converter }) {
+  getFieldData(name, source, { type, reverser, converter, apiName }) {
     const val = source[`field-${name}`]
     switch (type) {
       case 'multiselect':
@@ -149,8 +149,11 @@ class Form extends Component {
         return Boolean(val)
       case 'date':
         return val || null
-      case 'file':
-        return new FormData().append('file', this.files[name].files[0])
+      case 'file': {
+        const data = new FormData()
+        data.append(apiName || name, this.files[name].files[0])
+        return data
+      }
       default:
         return typeof converter === 'function' ? converter(val) : val
     }

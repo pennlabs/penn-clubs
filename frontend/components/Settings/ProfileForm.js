@@ -13,6 +13,8 @@ class ProfileForm extends React.Component {
     }
 
     this.submit = this.submit.bind(this)
+    this.update = this.update.bind(this)
+    this.deleteProfilePic = this.deleteProfilePic.bind(this)
   }
 
   componentDidMount() {
@@ -33,11 +35,40 @@ class ProfileForm extends React.Component {
       )
   }
 
+  update(data) {
+    if (this.props.onUpdate) {
+      this.props.onUpdate(data)
+    }
+  }
+
   submit(data) {
-    return doApiRequest('/settings/?format=json', {
+    const infoSubmit = () => {
+      delete data.image
+      doApiRequest('/settings/?format=json', {
+        method: 'PATCH',
+        body: data,
+      })
+        .then(resp => resp.json())
+        .then(this.update)
+    }
+
+    if (data.image && data.image.get('image') instanceof File) {
+      doApiRequest('/settings/?format=json', {
+        method: 'PATCH',
+        body: data.image,
+      }).then(infoSubmit)
+    } else {
+      infoSubmit()
+    }
+  }
+
+  deleteProfilePic() {
+    doApiRequest('/settings/?format=json', {
       method: 'PATCH',
-      body: data,
-    }).then(resp => resp.json())
+      body: { image: null },
+    })
+      .then(resp => resp.json())
+      .then(this.update)
   }
 
   render() {
@@ -45,6 +76,10 @@ class ProfileForm extends React.Component {
     const { schools, majors } = this.state
 
     const fields = [
+      {
+        name: 'image',
+        type: 'file',
+      },
       {
         name: 'graduation_year',
         type: 'number',
@@ -71,23 +106,33 @@ class ProfileForm extends React.Component {
     ]
 
     return (
-      <Form
-        fields={fields}
-        defaults={settings}
-        onSubmit={this.submit}
-        submitButton={
-          <a className="button is-success">
-            <Icon alt="save" name="edit" />
-            Save
-          </a>
-        }
-        disabledSubmitButton={
-          <a className="button is-success" disabled>
-            <Icon alt="save" name="edit" />
-            Saved!
-          </a>
-        }
-      />
+      <>
+        <Form
+          fields={fields}
+          defaults={settings}
+          onSubmit={this.submit}
+          submitButton={
+            <a className="button is-success">
+              <Icon alt="save" name="edit" />
+              Save
+            </a>
+          }
+          disabledSubmitButton={
+            <a className="button is-success" disabled>
+              <Icon alt="save" name="check-circle" />
+              Saved!
+            </a>
+          }
+        />
+        {settings.image_url && (
+          <button
+            onClick={this.deleteProfilePic}
+            className="button is-danger is-pulled-right"
+          >
+            <Icon name="trash" /> Delete Profile Picture
+          </button>
+        )}
+      </>
     )
   }
 }

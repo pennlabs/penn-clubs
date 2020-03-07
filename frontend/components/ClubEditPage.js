@@ -254,8 +254,6 @@ class ClubForm extends Component {
               isEdit: true,
               club: info,
             })
-          } else {
-            this.props.router.push('/settings')
           }
 
           if (photo && photo.get('file') instanceof File) {
@@ -407,6 +405,7 @@ class ClubForm extends Component {
           },
           {
             name: 'image',
+            apiName: 'file',
             accept: 'image/*',
             type: 'file',
             label: 'Club Logo',
