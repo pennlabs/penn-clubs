@@ -518,9 +518,30 @@ const DatePickerWrapper = s.span`
   }
 `
 
-const ModelStatus = s.span`
+const ModelStatusWrapper = s.span`
   display: inline-block;
   margin: 0.375em 0.75em;
+`
+
+const ModelStatus = ({ status }) => (
+  <ModelStatusWrapper>
+    {typeof status !== 'undefined' &&
+      (status === true ? (
+        <span style={{ color: 'green' }}>
+          <Icon name="check-circle" alt="success" /> Saved!
+        </span>
+      ) : (
+        <span style={{ color: 'red' }}>
+          <Icon name="x-circle" alt="failure" /> Failed to save!
+        </span>
+      ))}
+  </ModelStatusWrapper>
+)
+
+const Subtitle = s.div`
+  font-weight: bold;
+  font-size: 1.2em;
+  margin-bottom: 0.75em;
 `
 
 /*
@@ -533,12 +554,51 @@ export class ModelForm extends Component {
 
     this.state = {
       objects: null,
+      currentlyEditing: null,
+      createObject: {},
       newCount: 0,
     }
 
     this.onSubmit = this.onSubmit.bind(this)
+    this.onDelete = this.onDelete.bind(this)
+    this.onCreate = this.onCreate.bind(this)
   }
 
+  onCreate() {
+    this.setState(({ objects, newCount }) => {
+      objects.push({
+        tempId: newCount,
+      })
+      return { objects, newCount: newCount + 1 }
+    })
+  }
+
+  onDelete(object) {
+    const { baseUrl } = this.props
+
+    if (typeof object.id !== 'undefined') {
+      doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+        method: 'DELETE',
+      }).then(resp => {
+        if (resp.ok) {
+          this.setState(({ objects }) => {
+            objects.splice(objects.indexOf(object), 1)
+            return { objects }
+          })
+        }
+      })
+    } else {
+      this.setState(({ objects }) => {
+        objects.splice(objects.indexOf(object), 1)
+        return { objects }
+      })
+    }
+  }
+
+  /**
+   * Called when the form is submitted to save an individual object.
+   * @returns a promise with the first argument as the new object values.
+   */
   onSubmit(object, data) {
     const { baseUrl, fields } = this.props
 
@@ -593,17 +653,26 @@ export class ModelForm extends Component {
             })
 
     // upload all files in the form
-    savePromise.then(() => {
-      fileFields.forEach(({ name, apiName }) => {
-        const fieldData = fileData[name]
-        if (fieldData && fieldData.get(apiName || name) instanceof File) {
-          doApiRequest(`${baseUrl}${object.id}/?format=json`, {
-            method: 'PATCH',
-            body: fieldData,
-          })
-        }
+    return savePromise
+      .then(() => {
+        return Promise.all(
+          fileFields
+            .map(({ name, apiName }) => {
+              const fieldData = fileData[name]
+              if (fieldData && fieldData.get(apiName || name) instanceof File) {
+                return doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+                  method: 'PATCH',
+                  body: fieldData,
+                })
+              }
+              return null
+            })
+            .filter(a => a !== null)
+        )
       })
-    })
+      .then(() => {
+        return object
+      })
   }
 
   componentDidMount() {
@@ -616,10 +685,110 @@ export class ModelForm extends Component {
 
   render() {
     const { objects } = this.state
-    const { fields, baseUrl } = this.props
+    const { fields, tableFields, noun } = this.props
 
     if (!objects) {
       return <></>
+    }
+
+    if (tableFields) {
+      const { currentlyEditing, createObject } = this.state
+      const currentObject =
+        currentlyEditing === null
+          ? createObject
+          : objects.find(a => a.id === currentlyEditing)
+
+      return (
+        <>
+          <table className="table is-fullwidth">
+            <thead>
+              <tr>
+                {tableFields.map((a, i) => (
+                  <th key={i}>{a.label || a.name}</th>
+                ))}
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {objects.map((object, i) => (
+                <tr key={i}>
+                  {tableFields.map((a, i) => (
+                    <td key={i}>
+                      {a.converter
+                        ? a.converter(object[a.name])
+                        : object[a.name]}
+                    </td>
+                  ))}
+                  <td>
+                    <div className="buttons">
+                      <button
+                        onClick={() =>
+                          this.setState({ currentlyEditing: object.id })
+                        }
+                        className="button is-primary is-small"
+                      >
+                        <Icon name="edit" alt="edit" /> Edit
+                      </button>
+                      <button
+                        onClick={() => this.onDelete(object)}
+                        className="button is-danger is-small"
+                      >
+                        <Icon name="trash" alt="delete" /> Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <Subtitle>
+            {currentlyEditing !== null ? 'Editing' : 'Creating'}{' '}
+            {noun || 'Object'}
+          </Subtitle>
+          <Form
+            key={currentlyEditing}
+            fields={fields}
+            defaults={currentObject}
+            errors={
+              currentObject._status === false && currentObject._error_message
+            }
+            onSubmit={data =>
+              this.onSubmit(currentObject, data).then(obj =>
+                this.setState({ createObject: obj })
+              )
+            }
+            submitButton={
+              <>
+                <span className="button is-primary">
+                  {currentlyEditing !== null ? (
+                    <>
+                      <Icon name="edit" alt="save" /> Save
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="plus" alt="create" /> Create
+                    </>
+                  )}
+                </span>
+              </>
+            }
+          />
+          {currentlyEditing !== null && (
+            <span
+              onClick={() =>
+                this.setState({
+                  currentlyEditing: null,
+                  createObject: {},
+                })
+              }
+              className="button is-primary is-pulled-right"
+            >
+              <Icon name="plus" alt="create" /> Create New
+            </span>
+          )}
+          <ModelStatus status={currentObject._status} />
+        </>
+      )
     }
 
     return (
@@ -646,53 +815,14 @@ export class ModelForm extends Component {
             <span
               className="button is-danger"
               style={{ marginLeft: '0.5em' }}
-              onClick={() => {
-                if (typeof object.id !== 'undefined') {
-                  doApiRequest(`${baseUrl}${object.id}/?format=json`, {
-                    method: 'DELETE',
-                  }).then(resp => {
-                    if (resp.ok) {
-                      this.setState(({ objects }) => {
-                        objects.splice(objects.indexOf(object), 1)
-                        return { objects }
-                      })
-                    }
-                  })
-                } else {
-                  this.setState(({ objects }) => {
-                    objects.splice(objects.indexOf(object), 1)
-                    return { objects }
-                  })
-                }
-              }}
+              onClick={() => this.onDelete(object)}
             >
               <Icon name="trash" alt="trash" /> Delete
             </span>
-            <ModelStatus>
-              {typeof object._status !== 'undefined' &&
-                (object._status === true ? (
-                  <span style={{ color: 'green' }}>
-                    <Icon name="check-circle" alt="success" /> Saved!
-                  </span>
-                ) : (
-                  <span style={{ color: 'red' }}>
-                    <Icon name="x-circle" alt="failure" /> Failed to save!
-                  </span>
-                ))}
-            </ModelStatus>
+            <ModelStatus status={object._status} />
           </ModelItem>
         ))}
-        <span
-          onClick={() =>
-            this.setState(({ objects, newCount }) => {
-              objects.push({
-                tempId: newCount,
-              })
-              return { objects, newCount: newCount + 1 }
-            })
-          }
-          className="button is-primary"
-        >
+        <span onClick={this.onCreate} className="button is-primary">
           <Icon name="plus" alt="create" /> Create
         </span>
       </>

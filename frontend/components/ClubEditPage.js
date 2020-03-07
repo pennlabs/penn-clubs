@@ -532,6 +532,23 @@ class ClubForm extends Component {
       },
     ]
 
+    const eventTableFields = [
+      {
+        name: 'name',
+        label: 'Name',
+      },
+      {
+        name: 'start_time',
+        label: 'Start Time',
+        converter: a => <TimeAgo date={a} />,
+      },
+      {
+        name: 'type',
+        label: 'Type',
+        converter: a => this.types.find(v => v.value === a).label,
+      },
+    ]
+
     const eventFields = [
       {
         name: 'name',
@@ -918,6 +935,8 @@ class ClubForm extends Component {
                 <ModelForm
                   baseUrl={`/clubs/${club.code}/events/`}
                   fields={eventFields}
+                  tableFields={eventTableFields}
+                  noun="Event"
                 />
               </Card>
               <Card title="Files">
