@@ -105,6 +105,24 @@ def send_edit_reminder(modeladmin, request, queryset):
 send_edit_reminder.short_description = "Send edit page reminder"
 
 
+def mark_approved(modeladmin, request, queryset):
+    if not request.user.has_perm("approve_club"):
+        modeladmin.message_user(
+            request, "You do not have permission to approve clubs!", level=messages.ERROR
+        )
+        return
+
+    num_updated = queryset.filter(approved=False).update(
+        approved=True, approved_by=request.user, approved_on=datetime.datetime.now()
+    )
+    modeladmin.message_user(
+        request, "Marked {} club(s) as approved!".format(num_updated), level=messages.SUCCESS
+    )
+
+
+mark_approved.short_description = "Approve clubs"
+
+
 class ClubAdminForm(forms.ModelForm):
     parent_orgs = forms.ModelMultipleChoiceField(
         queryset=Club.objects.annotate(num_children=Count("children_orgs")).order_by(
@@ -256,24 +274,6 @@ def do_merge_tags(modeladmin, request, queryset):
 
 
 do_merge_tags.short_description = "Merge selected tags"
-
-
-def mark_approved(modeladmin, request, queryset):
-    if not request.user.has_perm("approve_club"):
-        modeladmin.message_user(
-            request, "You do not have permission to approve clubs!", level=messages.ERROR
-        )
-        return
-
-    num_updated = queryset.filter(approved=False).update(
-        approved=True, approved_by=request.user, approved_on=datetime.datetime.now()
-    )
-    modeladmin.message_user(
-        request, "Marked {} club(s) as approved!".format(num_updated), level=messages.SUCCESS
-    )
-
-
-mark_approved.short_description = "Approve clubs"
 
 
 class TagAdmin(admin.ModelAdmin):
