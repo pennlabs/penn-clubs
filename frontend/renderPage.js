@@ -211,6 +211,7 @@ export function renderListPage(Page) {
     render() {
       const {
         clubs,
+        clubCount,
         tags,
         favorites,
         authenticated,
@@ -226,6 +227,7 @@ export function renderListPage(Page) {
       return (
         <Page
           clubs={clubs}
+          clubCount={clubCount}
           tags={tags}
           favorites={favorites}
           updateFavorites={updateFavorites}
@@ -243,7 +245,11 @@ export function renderListPage(Page) {
     const tagsRequest = await doApiRequest('/tags/?format=json')
     const tagsResponse = await tagsRequest.json()
 
-    return { tags: tagsResponse, clubs: clubsResponse.results }
+    return {
+      tags: tagsResponse,
+      clubs: clubsResponse.results,
+      clubCount: clubsResponse.count,
+    }
   }
 
   return renderPage(RenderListPage)

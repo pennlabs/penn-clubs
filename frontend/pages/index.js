@@ -62,7 +62,7 @@ class Splash extends React.Component {
     super(props)
     this.state = {
       clubs: props.clubs,
-      clubCount: null,
+      clubCount: props.clubCount,
       clubLoaded: false,
       displayClubs: props.clubs,
       selectedTags: [],
@@ -101,18 +101,20 @@ class Splash extends React.Component {
 
   componentDidMount() {
     const loadedClubs = new Set()
+    this.state.clubs.forEach(c => loadedClubs.add(c.code))
 
     const paginationDownload = (url, count) => {
       doApiRequest(url)
         .then(res => res.json())
         .then(res => {
-          this.setState(state => ({
-            clubs: state.clubs.concat(
-              res.results.filter(c => !loadedClubs.has(c.code))
-            ),
-            clubCount: res.count,
-          }))
-          res.results.forEach(c => loadedClubs.add(c.code))
+          this.setState(state => {
+            const newClubs = res.results.filter(c => !loadedClubs.has(c.code))
+            res.results.forEach(c => loadedClubs.add(c.code))
+            return {
+              clubs: state.clubs.concat(newClubs),
+              clubCount: res.count,
+            }
+          })
           if (!res.next || count === 0) {
             this.setState(state => ({ displayClubs: state.clubs }))
             this.fuse = new Fuse(this.state.clubs, this.fuseOptions)
@@ -195,7 +197,7 @@ class Splash extends React.Component {
 
   shuffle() {
     const { userInfo } = this.props
-    const { displayClubs } = this.state
+    const { clubs } = this.state
 
     let userSchools = new Set()
     let userMajors = new Set()
@@ -204,7 +206,7 @@ class Splash extends React.Component {
       userSchools = new Set(userInfo.school.map(a => a.name))
       userMajors = new Set(userInfo.major.map(a => a.name))
     }
-    displayClubs.forEach(club => {
+    clubs.forEach(club => {
       club.rank = 0
       const hasSchool = club.target_schools.some(({ name }) =>
         userSchools.has(name)
@@ -234,7 +236,7 @@ class Splash extends React.Component {
       club.rank += 2 * Math.random()
     })
     this.setState({
-      displayClubs: displayClubs.sort((a, b) => {
+      displayClubs: clubs.sort((a, b) => {
         if (a.rank > b.rank) {
           return -1
         }
@@ -288,12 +290,10 @@ class Splash extends React.Component {
                   Find your people!
                 </p>
               </div>
-              {(clubLoaded || clubCount !== null) && (
-                <ResultsText>
-                  {' '}
-                  {clubLoaded ? displayClubs.length : clubCount} results
-                </ResultsText>
-              )}
+              <ResultsText>
+                {' '}
+                {clubLoaded ? displayClubs.length : clubCount} results
+              </ResultsText>
 
               {selectedTags.length ? (
                 <div style={{ padding: '0 30px 30px 0' }}>
