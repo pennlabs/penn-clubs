@@ -543,9 +543,16 @@ class ClubForm extends Component {
       },
       {
         name: 'location',
-        required: true,
         placeholder: 'Provide the event location',
         type: 'text',
+      },
+      {
+        name: 'url',
+        type: 'url',
+      },
+      {
+        name: 'image',
+        type: 'file',
       },
       {
         name: 'start_time',

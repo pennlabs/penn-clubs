@@ -194,7 +194,7 @@ class Form extends Component {
       [`editorState-${name}`]: editorState,
     } = this.state
 
-    const { isHorizontal = true } = this.props
+    const { isHorizontal = true, errors } = this.props
 
     let inpt = null
 
@@ -211,6 +211,7 @@ class Form extends Component {
           key={name}
           type={type}
           name={name}
+          placeholder={placeholder}
         />
       )
     } else if (type === 'datetime-local') {
@@ -225,6 +226,7 @@ class Form extends Component {
               this.onChange(val)
               this.setState({ ['field-' + name]: val })
             }}
+            placeholderText={placeholder}
           />
         </DatePickerWrapper>
       )
@@ -414,7 +416,10 @@ class Form extends Component {
         <div className="field-body">
           <div className="field">
             <div className="control">{inpt}</div>
-            {help && <p className="help">{help}</p>}
+            {(errors && errors[name] && (
+              <p className="help is-danger">{errors[name]}</p>
+            )) ||
+              (help && <p className="help">{help}</p>)}
           </div>
         </div>
       </div>
@@ -530,6 +535,75 @@ export class ModelForm extends Component {
       objects: null,
       newCount: 0,
     }
+
+    this.onSubmit = this.onSubmit.bind(this)
+  }
+
+  onSubmit(object, data) {
+    const { baseUrl, fields } = this.props
+
+    // remove file fields
+    const fileFields = fields.filter(f => f.type === 'file')
+    const fileData = {}
+    fileFields.forEach(({ name }) => {
+      fileData[name] = data[name]
+      delete data[name]
+    })
+
+    // create or edit the object, uploading all non-file fields
+    const savePromise =
+      typeof object.id === 'undefined'
+        ? doApiRequest(`${baseUrl}?format=json`, {
+            method: 'POST',
+            body: data,
+          })
+            .then(resp => {
+              if (resp.ok) {
+                object._status = true
+                return resp.json().then(resp => {
+                  Object.keys(resp).forEach(key => {
+                    object[key] = resp[key]
+                  })
+                })
+              } else {
+                object._status = false
+                return resp.json().then(resp => {
+                  object._error_message = resp
+                })
+              }
+            })
+            .then(() => {
+              this.setState(({ objects }) => ({
+                objects: [...objects],
+              }))
+            })
+        : doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+            method: 'PATCH',
+            body: data,
+          })
+            .then(resp => {
+              object._status = resp.ok
+              return resp.json()
+            })
+            .then(resp => {
+              object._error_message = resp
+              this.setState(({ objects }) => ({
+                objects: [...objects],
+              }))
+            })
+
+    // upload all files in the form
+    savePromise.then(() => {
+      fileFields.forEach(({ name, apiName }) => {
+        const fieldData = fileData[name]
+        if (fieldData && fieldData.get(apiName || name) instanceof File) {
+          doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+            method: 'PATCH',
+            body: fieldData,
+          })
+        }
+      })
+    })
   }
 
   componentDidMount() {
@@ -561,43 +635,13 @@ export class ModelForm extends Component {
             <Form
               fields={fields}
               defaults={object}
+              errors={object._status === false && object._error_message}
               submitButton={
                 <span className="button is-primary">
                   <Icon name="edit" alt="save" /> Save
                 </span>
               }
-              onSubmit={data => {
-                if (typeof object.id === 'undefined') {
-                  doApiRequest(`${baseUrl}?format=json`, {
-                    method: 'POST',
-                    body: data,
-                  }).then(resp => {
-                    if (resp.ok) {
-                      resp.json().then(resp => {
-                        Object.keys(resp).forEach(key => {
-                          object[key] = resp[key]
-                        })
-                      })
-                      object._status = true
-                    } else {
-                      object._status = false
-                    }
-                    this.setState(({ objects }) => ({
-                      objects: [...objects],
-                    }))
-                  })
-                } else {
-                  doApiRequest(`${baseUrl}${object.id}/?format=json`, {
-                    method: 'PATCH',
-                    body: data,
-                  }).then(resp => {
-                    object._status = resp.ok
-                    this.setState(({ objects }) => ({
-                      objects: [...objects],
-                    }))
-                  })
-                }
-              }}
+              onSubmit={data => this.onSubmit(object, data)}
             />
             <span
               className="button is-danger"
