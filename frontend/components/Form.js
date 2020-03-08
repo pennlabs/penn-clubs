@@ -574,10 +574,10 @@ export class ModelForm extends Component {
   }
 
   onDelete(object) {
-    const { baseUrl } = this.props
+    const { baseUrl, keyField = 'id' } = this.props
 
-    if (typeof object.id !== 'undefined') {
-      doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+    if (typeof object[keyField] !== 'undefined') {
+      doApiRequest(`${baseUrl}${object[keyField]}/?format=json`, {
         method: 'DELETE',
       }).then(resp => {
         if (resp.ok) {
@@ -600,7 +600,7 @@ export class ModelForm extends Component {
    * @returns a promise with the first argument as the new object values.
    */
   onSubmit(object, data) {
-    const { baseUrl, fields } = this.props
+    const { baseUrl, fields, keyField = 'id' } = this.props
 
     // remove file fields
     const fileFields = fields.filter(f => f.type === 'file')
@@ -612,7 +612,7 @@ export class ModelForm extends Component {
 
     // create or edit the object, uploading all non-file fields
     const savePromise =
-      typeof object.id === 'undefined'
+      typeof object[keyField] === 'undefined'
         ? doApiRequest(`${baseUrl}?format=json`, {
             method: 'POST',
             body: data,
@@ -637,7 +637,7 @@ export class ModelForm extends Component {
                 objects: [...objects],
               }))
             })
-        : doApiRequest(`${baseUrl}${object.id}/?format=json`, {
+        : doApiRequest(`${baseUrl}${object[keyField]}/?format=json`, {
             method: 'PATCH',
             body: data,
           })
@@ -646,7 +646,13 @@ export class ModelForm extends Component {
               return resp.json()
             })
             .then(resp => {
-              object._error_message = resp
+              if (object._status) {
+                Object.keys(resp).forEach(key => {
+                  object[key] = resp[key]
+                })
+              } else {
+                object._error_message = resp
+              }
               this.setState(({ objects }) => ({
                 objects: [...objects],
               }))
@@ -660,10 +666,13 @@ export class ModelForm extends Component {
             .map(({ name, apiName }) => {
               const fieldData = fileData[name]
               if (fieldData && fieldData.get(apiName || name) instanceof File) {
-                return doApiRequest(`${baseUrl}${object.id}/?format=json`, {
-                  method: 'PATCH',
-                  body: fieldData,
-                })
+                return doApiRequest(
+                  `${baseUrl}${object[keyField]}/?format=json`,
+                  {
+                    method: 'PATCH',
+                    body: fieldData,
+                  }
+                )
               }
               return null
             })
@@ -685,7 +694,16 @@ export class ModelForm extends Component {
 
   render() {
     const { objects } = this.state
-    const { fields, tableFields, noun } = this.props
+    const {
+      fields,
+      tableFields,
+      currentTitle,
+      noun = 'Object',
+      deleteVerb = 'Delete',
+      allowCreation = true,
+      confirmDeletion = false,
+      keyField = 'id',
+    } = this.props
 
     if (!objects) {
       return <></>
@@ -693,10 +711,12 @@ export class ModelForm extends Component {
 
     if (tableFields) {
       const { currentlyEditing, createObject } = this.state
-      const currentObject =
+      const currentObjectIndex =
         currentlyEditing === null
-          ? createObject
-          : objects.find(a => a.id === currentlyEditing)
+          ? -1
+          : objects.findIndex(a => a[keyField] === currentlyEditing)
+      const currentObject =
+        currentlyEditing === null ? createObject : objects[currentObjectIndex]
 
       return (
         <>
@@ -704,7 +724,7 @@ export class ModelForm extends Component {
             <thead>
               <tr>
                 {tableFields.map((a, i) => (
-                  <th key={i}>{a.label || a.name}</th>
+                  <th key={i}>{a.label || titleize(a.name)}</th>
                 ))}
                 <th>Actions</th>
               </tr>
@@ -715,7 +735,7 @@ export class ModelForm extends Component {
                   {tableFields.map((a, i) => (
                     <td key={i}>
                       {a.converter
-                        ? a.converter(object[a.name])
+                        ? a.converter(object[a.name], object)
                         : object[a.name]}
                     </td>
                   ))}
@@ -723,17 +743,29 @@ export class ModelForm extends Component {
                     <div className="buttons">
                       <button
                         onClick={() =>
-                          this.setState({ currentlyEditing: object.id })
+                          this.setState({ currentlyEditing: object[keyField] })
                         }
                         className="button is-primary is-small"
                       >
                         <Icon name="edit" alt="edit" /> Edit
                       </button>
                       <button
-                        onClick={() => this.onDelete(object)}
+                        onClick={() => {
+                          if (confirmDeletion) {
+                            if (
+                              confirm(
+                                `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`
+                              )
+                            ) {
+                              this.onDelete(object)
+                            }
+                          } else {
+                            this.onDelete(object)
+                          }
+                        }}
                         className="button is-danger is-small"
                       >
-                        <Icon name="trash" alt="delete" /> Delete
+                        <Icon name="trash" alt="delete" /> {deleteVerb}
                       </button>
                     </div>
                   </td>
@@ -741,38 +773,61 @@ export class ModelForm extends Component {
               ))}
             </tbody>
           </table>
-          <Subtitle>
-            {currentlyEditing !== null ? 'Editing' : 'Creating'}{' '}
-            {noun || 'Object'}
-          </Subtitle>
-          <Form
-            key={currentlyEditing}
-            fields={fields}
-            defaults={currentObject}
-            errors={
-              currentObject._status === false && currentObject._error_message
-            }
-            onSubmit={data =>
-              this.onSubmit(currentObject, data).then(obj =>
-                this.setState({ createObject: obj })
-              )
-            }
-            submitButton={
-              <>
-                <span className="button is-primary">
-                  {currentlyEditing !== null ? (
-                    <>
-                      <Icon name="edit" alt="save" /> Save
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="plus" alt="create" /> Create
-                    </>
-                  )}
-                </span>
-              </>
-            }
-          />
+          {(allowCreation || currentlyEditing !== null) && (
+            <>
+              <Subtitle>
+                {currentlyEditing !== null ? 'Editing' : 'Creating'} {noun}{' '}
+                {currentTitle && currentlyEditing !== null && (
+                  <span style={{ color: '#888', fontSize: '0.8em' }}>
+                    {currentTitle(currentObject)}
+                  </span>
+                )}
+              </Subtitle>
+              <Form
+                key={currentlyEditing}
+                fields={fields}
+                defaults={currentObject}
+                errors={
+                  currentObject._status === false &&
+                  currentObject._error_message
+                }
+                onSubmit={data => {
+                  if (currentObjectIndex !== -1) {
+                    objects[currentObjectIndex] = currentObject
+                  }
+                  this.onSubmit(currentObject, data).then(obj => {
+                    if (obj._status) {
+                      objects.push(obj)
+                      this.setState({
+                        objects: [...objects],
+                        currentlyEditing: obj[keyField],
+                        createObject: {},
+                      })
+                    } else {
+                      this.setState({
+                        createObject: obj,
+                      })
+                    }
+                  })
+                }}
+                submitButton={
+                  <>
+                    <span className="button is-primary">
+                      {currentlyEditing !== null ? (
+                        <>
+                          <Icon name="edit" alt="save" /> Save
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="plus" alt="create" /> Create
+                        </>
+                      )}
+                    </span>
+                  </>
+                }
+              />
+            </>
+          )}
           {currentlyEditing !== null && (
             <span
               onClick={() =>
@@ -783,7 +838,15 @@ export class ModelForm extends Component {
               }
               className="button is-primary is-pulled-right"
             >
-              <Icon name="plus" alt="create" /> Create New
+              {allowCreation ? (
+                <>
+                  <Icon name="plus" alt="create" /> Create New
+                </>
+              ) : (
+                <>
+                  <Icon name="x" alt="close" /> Close
+                </>
+              )}
             </span>
           )}
           <ModelStatus status={currentObject._status} />
