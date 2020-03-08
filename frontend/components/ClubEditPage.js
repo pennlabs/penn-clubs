@@ -94,9 +94,10 @@ const EventBox = s.div`
 `
 
 const DeviceEventPreview = ({ deviceContents }) => {
-  const time = deviceContents.start_time
-    ? moment(deviceContents.start_time)
-    : moment()
+  const time =
+    deviceContents && deviceContents.start_time
+      ? moment(deviceContents.start_time)
+      : moment()
 
   const img = deviceContents.image && deviceContents.image.get('image')
 
@@ -105,7 +106,16 @@ const DeviceEventPreview = ({ deviceContents }) => {
       <img src="/static/img/phone_header.png" style={{ width: '100%' }} />
       <EventBox>
         <div className="img-wrapper">
-          <img src={img instanceof File ? URL.createObjectURL(img) : null} />
+          <img
+            src={
+              img instanceof File
+                ? URL.createObjectURL(img)
+                : (deviceContents._original &&
+                    deviceContents._original.image_url) ||
+                  deviceContents.image_url ||
+                  null
+            }
+          />
         </div>
         <div className="text">
           <b className="title">{deviceContents.name || 'Your Title'}</b>

@@ -10,26 +10,26 @@ export const Device = ({ children, style, type = 'iphone' }) => (
       />
     </Head>
     {type === 'iphone' ? (
-      <div class="marvel-device iphone8 silver" style={style}>
-        <div class="top-bar"></div>
-        <div class="sleep"></div>
-        <div class="volume"></div>
-        <div class="camera"></div>
-        <div class="sensor"></div>
-        <div class="speaker"></div>
-        <div class="screen">{children}</div>
-        <div class="home"></div>
-        <div class="bottom-bar"></div>
+      <div className="marvel-device iphone8 silver" style={style}>
+        <div className="top-bar"></div>
+        <div className="sleep"></div>
+        <div className="volume"></div>
+        <div className="camera"></div>
+        <div className="sensor"></div>
+        <div className="speaker"></div>
+        <div className="screen">{children}</div>
+        <div className="home"></div>
+        <div className="bottom-bar"></div>
       </div>
     ) : (
-      <div class="marvel-device s5 white" style={style}>
-        <div class="top-bar"></div>
-        <div class="sleep"></div>
-        <div class="camera"></div>
-        <div class="sensor"></div>
-        <div class="speaker"></div>
-        <div class="screen">{children}</div>
-        <div class="home"></div>
+      <div className="marvel-device s5 white" style={style}>
+        <div className="top-bar"></div>
+        <div className="sleep"></div>
+        <div className="camera"></div>
+        <div className="sensor"></div>
+        <div className="speaker"></div>
+        <div className="screen">{children}</div>
+        <div className="home"></div>
       </div>
     )}
   </>

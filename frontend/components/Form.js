@@ -827,9 +827,11 @@ export class ModelForm extends Component {
                 key={currentlyEditing}
                 fields={fields}
                 defaults={currentObject}
-                onChange={() =>
-                  this.onChange(this.refs.currentForm.getSubmitData())
-                }
+                onChange={() => {
+                  const data = this.refs.currentForm.getSubmitData()
+                  data._original = currentObject
+                  this.onChange(data)
+                }}
                 errors={
                   currentObject._status === false &&
                   currentObject._error_message
