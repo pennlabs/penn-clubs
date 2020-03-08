@@ -724,6 +724,8 @@ export class ModelForm extends Component {
       noun = 'Object',
       deleteVerb = 'Delete',
       allowCreation = true,
+      allowEditing = true,
+      allowDeletion = true,
       confirmDeletion = false,
       keyField = 'id',
     } = this.props
@@ -771,33 +773,39 @@ export class ModelForm extends Component {
                   ))}
                   <td>
                     <div className="buttons">
-                      <button
-                        onClick={() => {
-                          this.setState({ currentlyEditing: object[keyField] })
-                          this.onChange(object)
-                        }}
-                        className="button is-primary is-small"
-                      >
-                        <Icon name="edit" alt="edit" /> Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirmDeletion) {
-                            if (
-                              confirm(
-                                `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`
-                              )
-                            ) {
+                      {allowEditing && (
+                        <button
+                          onClick={() => {
+                            this.setState({
+                              currentlyEditing: object[keyField],
+                            })
+                            this.onChange(object)
+                          }}
+                          className="button is-primary is-small"
+                        >
+                          <Icon name="edit" alt="edit" /> Edit
+                        </button>
+                      )}
+                      {allowDeletion && (
+                        <button
+                          onClick={() => {
+                            if (confirmDeletion) {
+                              if (
+                                confirm(
+                                  `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`
+                                )
+                              ) {
+                                this.onDelete(object)
+                              }
+                            } else {
                               this.onDelete(object)
                             }
-                          } else {
-                            this.onDelete(object)
-                          }
-                        }}
-                        className="button is-danger is-small"
-                      >
-                        <Icon name="trash" alt="delete" /> {deleteVerb}
-                      </button>
+                          }}
+                          className="button is-danger is-small"
+                        >
+                          <Icon name="trash" alt="delete" /> {deleteVerb}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
