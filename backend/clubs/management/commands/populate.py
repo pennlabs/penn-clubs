@@ -22,7 +22,12 @@ hone your skills in time for recruiting season!""",
             {"label": "Green Badge", "color": "00ff00"},
             {"label": "Blue Badge", "color": "0000ff"},
         ],
-        "testimonials": [{"text": "Great club!"}, {"text": "Fantastic club!"},],
+        "testimonials": [
+            {"text": "Great club!"},
+            {"text": "Fantastic club!"},
+            {"text": "Best club ever!"},
+            {"text": "Don't start with the chainsaws!"},
+        ],
     },
     {
         "code": "lorem-ipsum",
