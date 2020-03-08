@@ -89,6 +89,7 @@ class Form extends Component {
         uploadStatus: newDict,
         edited: true,
       })
+      this.onChange(e)
     }
   }
 

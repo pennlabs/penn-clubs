@@ -23,6 +23,7 @@
     "fuse.js": "^3.4.5",
     "html-to-draftjs": "^1.4.0",
     "isomorphic-unfetch": "^3.0.0",
+    "moment": "^2.24.0",
     "next": "^9.1.6",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",

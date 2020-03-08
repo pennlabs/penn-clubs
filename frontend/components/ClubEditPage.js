@@ -3,6 +3,7 @@ import { Component } from 'react'
 import Link from 'next/link'
 import Select from 'react-select'
 import TimeAgo from 'react-timeago'
+import moment from 'moment'
 
 import { HOME_ROUTE, CLUB_ROUTE, CLUB_FLYER_ROUTE } from '../constants/routes'
 import {
@@ -91,6 +92,34 @@ const EventBox = s.div`
     width: 100%;
   }
 `
+
+const DeviceEventPreview = ({ deviceContents }) => {
+  const time = deviceContents.start_time
+    ? moment(deviceContents.start_time)
+    : moment()
+
+  const img = deviceContents.image && deviceContents.image.get('image')
+
+  return (
+    <>
+      <img src="/static/img/phone_header.png" style={{ width: '100%' }} />
+      <EventBox>
+        <div className="img-wrapper">
+          <img src={img instanceof File ? URL.createObjectURL(img) : null} />
+        </div>
+        <div className="text">
+          <b className="title">{deviceContents.name || 'Your Title'}</b>
+          <span className="desc">
+            {deviceContents.description
+              ? stripTags(deviceContents.description) || 'Your Description'
+              : 'Your Description'}
+          </span>
+          <span className="date">Today at {time.format('k:mma')}</span>
+        </div>
+      </EventBox>
+    </>
+  )
+}
 
 class ClubForm extends Component {
   constructor(props) {
@@ -911,29 +940,11 @@ class ClubForm extends Component {
                 />
                 <div style={{ marginTop: '1em' }}>
                   <Device style={{ zoom: 0.8 }} type="iphone">
-                    <img
-                      src="/static/img/phone_header.png"
-                      style={{ width: '100%' }}
-                    />
-                    <EventBox>
-                      <div className="img-wrapper">
-                        <img />
-                      </div>
-                      <div className="text">
-                        <b className="title">
-                          {deviceContents.name || 'Your Title'}
-                        </b>
-                        <span className="desc">
-                          {deviceContents.description
-                            ? stripTags(deviceContents.description) ||
-                              'Your Description'
-                            : 'Your Description'}
-                        </span>
-                        <span className="date">Today at 7:20pm</span>
-                      </div>
-                    </EventBox>
+                    <DeviceEventPreview deviceContents={deviceContents} />
                   </Device>
-                  <Device type="android"></Device>
+                  <Device type="android">
+                    <DeviceEventPreview deviceContents={deviceContents} />
+                  </Device>
                 </div>
               </Card>
               <Card title="Files">
