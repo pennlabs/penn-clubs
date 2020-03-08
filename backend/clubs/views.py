@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch, Q
+from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
@@ -639,7 +640,7 @@ class TagViewSet(viewsets.ModelViewSet):
 class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     """
     get: Return information about the logged in user, including bookmarks,
-    subscriptions, and school/major/graduation year information.
+    subscriptions, memberships, and school/major/graduation year information.
 
     put: Update information about the logged in user.
     All fields are required.
@@ -652,7 +653,17 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
 
     def get_object(self):
-        return self.request.user
+        user = self.request.user
+        prefetch_related_objects(
+            [user],
+            "favorite_set",
+            "subscribe_set",
+            "profile__school",
+            "membership_set",
+            "membership_set__club",
+            "profile__major",
+        )
+        return user
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
