@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 
-from clubs.models import Badge, Club, Major, Membership, Profile, School, Tag, Year
+from clubs.models import Badge, Club, Major, Membership, Profile, School, Tag, Testimonial, Year
 
 
 clubs = [
@@ -22,6 +22,7 @@ hone your skills in time for recruiting season!""",
             {"label": "Green Badge", "color": "00ff00"},
             {"label": "Blue Badge", "color": "0000ff"},
         ],
+        "testimonials": [{"text": "Great club!"}, {"text": "Fantastic club!"},],
     },
     {
         "code": "lorem-ipsum",
@@ -126,7 +127,7 @@ class Command(BaseCommand):
         # create clubs
         for info in clubs:
             partial = dict(info)
-            custom_fields = ["code", "image", "tags", "badges"]
+            custom_fields = ["code", "image", "tags", "badges", "testimonials"]
             for field in custom_fields:
                 if field in partial:
                     del partial[field]
@@ -145,6 +146,12 @@ class Command(BaseCommand):
                         new_obj, _ = obj.objects.get_or_create(**new_obj)
                         getattr(club, name).add(new_obj)
 
+            foreign_key_fields = [(Testimonial, "testimonials")]
+            for obj, name in foreign_key_fields:
+                if name in info:
+                    for new_obj in info[name]:
+                        new_obj, _ = obj.objects.get_or_create(club=club, **new_obj)
+
         # create users
         count = 0
         schools = ["seas", "nursing", "wharton", "sas"]
@@ -161,6 +168,7 @@ class Command(BaseCommand):
         user_objs = []
         for user in users:
             first, last = user.split(" ", 1)
+            last = last.replace(" ", "")
             username = "{}{}".format(first[0], last).lower()
             email = "{}@{}.upenn.edu".format(username, schools[count % len(schools)])
             count += 1
@@ -180,12 +188,12 @@ class Command(BaseCommand):
         ben.is_staff = True
         ben.save()
 
-        # dismiss welcome prompt
+        # dismiss welcome prompt for all users
         Profile.objects.all().update(has_been_prompted=True)
 
         # add memberships
         count = 0
-        for club in Club.objects.all():
+        for club in Club.objects.all()[:50]:
             for obj in user_objs[:count]:
                 Membership.objects.get_or_create(club=club, person=obj)
             count += 1
