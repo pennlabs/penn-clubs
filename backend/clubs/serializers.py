@@ -124,12 +124,10 @@ class EventSerializer(serializers.ModelSerializer):
         return clean(value)
 
     def save(self):
-        """
-        Set the event club and code before saving.
-        """
-        self.validated_data["club"] = Club.objects.get(
-            code=self.context["view"].kwargs.get("club_code")
-        )
+        if "club" not in self.validated_data:
+            self.validated_data["club"] = Club.objects.get(
+                code=self.context["view"].kwargs.get("club_code")
+            )
 
         if not self.validated_data.get("code") and self.validated_data.get("name"):
             self.validated_data["code"] = slugify(self.validated_data["name"])
@@ -284,7 +282,9 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         membership = Membership.objects.filter(person=user, club__code=club_code).first()
 
-        if membership is None or membership.role > Membership.ROLE_OFFICER:
+        if not user.is_superuser and (
+            membership is None or membership.role > Membership.ROLE_OFFICER
+        ):
             for field in data:
                 if field not in ["public", "active"]:
                     raise serializers.ValidationError(

@@ -7,7 +7,7 @@ import draftToHtml from 'draftjs-to-html'
 import Head from 'next/head'
 import DatePicker from 'react-datepicker'
 
-import { Icon } from './common'
+import { Icon, Loading } from './common'
 import { doApiRequest, titleize } from '../utils'
 
 const UNSAVED_MESSAGE =
@@ -706,7 +706,7 @@ export class ModelForm extends Component {
     } = this.props
 
     if (!objects) {
-      return <></>
+      return <Loading />
     }
 
     if (tableFields) {
@@ -730,6 +730,13 @@ export class ModelForm extends Component {
               </tr>
             </thead>
             <tbody>
+              {objects.length === 0 && (
+                <tr>
+                  <td colSpan={tableFields.length + 1}>
+                    There are no {noun.toLowerCase()}s to display.
+                  </td>
+                </tr>
+              )}
               {objects.map((object, i) => (
                 <tr key={i}>
                   {tableFields.map((a, i) => (
@@ -776,7 +783,7 @@ export class ModelForm extends Component {
           {(allowCreation || currentlyEditing !== null) && (
             <>
               <Subtitle>
-                {currentlyEditing !== null ? 'Editing' : 'Creating'} {noun}{' '}
+                {currentlyEditing !== null ? 'Edit' : 'Create'} {noun}{' '}
                 {currentTitle && currentlyEditing !== null && (
                   <span style={{ color: '#888', fontSize: '0.8em' }}>
                     {currentTitle(currentObject)}
@@ -797,7 +804,9 @@ export class ModelForm extends Component {
                   }
                   this.onSubmit(currentObject, data).then(obj => {
                     if (obj._status) {
-                      objects.push(obj)
+                      if (currentlyEditing === null) {
+                        objects.push(obj)
+                      }
                       this.setState({
                         objects: [...objects],
                         currentlyEditing: obj[keyField],
