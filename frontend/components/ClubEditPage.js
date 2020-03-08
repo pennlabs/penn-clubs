@@ -157,30 +157,6 @@ class ClubForm extends Component {
     })
   }
 
-  deleteMembership(member) {
-    if (
-      confirm(
-        `Are you sure you want to kick ${member} from ${this.state.club.name}?`
-      )
-    ) {
-      doApiRequest(
-        `/clubs/${this.state.club.code}/members/${member}/?format=json`,
-        {
-          method: 'DELETE',
-        }
-      ).then(resp => {
-        if (resp.ok) {
-          this.notify(`${member} has been kicked out!`)
-          this.componentDidMount()
-        } else {
-          resp.json().then(err => {
-            this.notify(formatResponse(err))
-          })
-        }
-      })
-    }
-  }
-
   deleteInvite(id) {
     doApiRequest(`/clubs/${this.state.club.code}/invites/${id}/?format=json`, {
       method: 'DELETE',
@@ -254,8 +230,6 @@ class ClubForm extends Component {
               isEdit: true,
               club: info,
             })
-          } else {
-            this.props.router.push('/settings')
           }
 
           if (photo && photo.get('file') instanceof File) {
@@ -273,25 +247,6 @@ class ClubForm extends Component {
             this.notify('Club has been successfully saved.')
           }
         })
-      } else {
-        resp.json().then(err => {
-          this.notify(formatResponse(err))
-        })
-      }
-    })
-  }
-
-  saveMember(username, data) {
-    doApiRequest(
-      `/clubs/${this.state.club.code}/members/${username}/?format=json`,
-      {
-        method: 'PATCH',
-        body: data,
-      }
-    ).then(resp => {
-      if (resp.ok) {
-        this.notify(`Member ${username} has been updated!`)
-        this.componentDidMount()
       } else {
         resp.json().then(err => {
           this.notify(formatResponse(err))
@@ -407,6 +362,7 @@ class ClubForm extends Component {
           },
           {
             name: 'image',
+            apiName: 'file',
             accept: 'image/*',
             type: 'file',
             label: 'Club Logo',
@@ -533,6 +489,24 @@ class ClubForm extends Component {
       },
     ]
 
+    const eventTableFields = [
+      {
+        name: 'name',
+        label: 'Name',
+      },
+      {
+        name: 'start_time',
+        label: 'Start Time',
+        converter: a => <TimeAgo date={a} />,
+      },
+      {
+        name: 'type',
+        label: 'Type',
+        converter: a =>
+          (this.types.find(v => v.value === a) || { label: 'Unknown' }).label,
+      },
+    ]
+
     const eventFields = [
       {
         name: 'name',
@@ -544,9 +518,16 @@ class ClubForm extends Component {
       },
       {
         name: 'location',
-        required: true,
         placeholder: 'Provide the event location',
         type: 'text',
+      },
+      {
+        name: 'url',
+        type: 'url',
+      },
+      {
+        name: 'image',
+        type: 'file',
       },
       {
         name: 'start_time',
@@ -590,100 +571,51 @@ class ClubForm extends Component {
           content: (
             <>
               <Card title="Members">
-                <table className="table is-fullwidth">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Title (Permissions)</th>
-                      <th>Email</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {club && club.members.length ? (
-                      club.members.map(a => (
-                        <tr key={a.username}>
-                          <td>{a.name}</td>
-                          <td>
-                            {a.title} ({getRoleDisplay(a.role)})
-                          </td>
-                          <td>{a.email}</td>
-                          <td>
-                            <div className="buttons">
-                              <button
-                                className="button is-small is-primary"
-                                onClick={() => this.setState({ editMember: a })}
-                              >
-                                <Icon name="edit" alt="edit member" /> Edit
-                              </button>
-                              <button
-                                className="button is-small is-danger"
-                                onClick={() =>
-                                  this.deleteMembership(a.username)
-                                }
-                              >
-                                <Icon name="x" alt="kick member" /> Kick
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="4" className="has-text-grey">
-                          There are no members in this club.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                <a
-                  href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)}
-                  className="button is-link"
-                >
-                  <Icon alt="download" name="download" /> Download Member List
-                </a>
-              </Card>
-              {editMember && (
-                <div className="card" style={{ marginBottom: 20 }}>
-                  <div className="card-header">
-                    <p className="card-header-title">
-                      Edit Member:&nbsp;
-                      <span className="has-text-grey">
-                        {editMember.name} (<i>{editMember.email}</i>)
-                      </span>
-                    </p>
-                  </div>
-                  <div className="card-content">
-                    <Form
-                      fields={[
-                        {
-                          name: 'title',
-                          type: 'text',
-                        },
-                        {
-                          name: 'role',
-                          type: 'select',
-                          choices: this.roles,
-                          converter: a => this.roles.find(x => x.value === a),
-                          reverser: a => a.value,
-                        },
-                      ]}
-                      defaults={editMember}
-                      submitButton={
-                        <button className="button is-primary">
-                          <Icon name="edit" alt="save member" /> &nbsp; Save
-                          Member
-                        </button>
-                      }
-                      onSubmit={data => {
-                        this.saveMember(editMember.username, data)
-                        this.setState({ editMember: null })
-                      }}
-                    />
-                  </div>
+                <ModelForm
+                  keyField="username"
+                  deleteVerb="Kick"
+                  noun="Member"
+                  allowCreation={false}
+                  confirmDeletion={true}
+                  baseUrl={`/clubs/${this.state.club.code}/members/`}
+                  fields={[
+                    {
+                      name: 'title',
+                      type: 'text',
+                    },
+                    {
+                      name: 'role',
+                      type: 'select',
+                      choices: this.roles,
+                      converter: a => this.roles.find(x => x.value === a),
+                      reverser: a => a.value,
+                    },
+                  ]}
+                  tableFields={[
+                    {
+                      name: 'name',
+                    },
+                    {
+                      name: 'title',
+                      label: 'Title (Permissions)',
+                      converter: (a, all) =>
+                        `${a} (${getRoleDisplay(all.role)})`,
+                    },
+                    {
+                      name: 'email',
+                    },
+                  ]}
+                  currentTitle={obj => `${obj.name} (${obj.email})`}
+                />
+                <div style={{ marginTop: '1em' }}>
+                  <a
+                    href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)}
+                    className="button is-link"
+                  >
+                    <Icon alt="download" name="download" /> Download Member List
+                  </a>
                 </div>
-              )}
+              </Card>
               {invites && !!invites.length && (
                 <div className="card" style={{ marginBottom: 20 }}>
                   <div className="card-header">
@@ -912,6 +844,9 @@ class ClubForm extends Component {
                 <ModelForm
                   baseUrl={`/clubs/${club.code}/events/`}
                   fields={eventFields}
+                  tableFields={eventTableFields}
+                  noun="Event"
+                  currentTitle={obj => obj.name}
                 />
               </Card>
               <Card title="Files">

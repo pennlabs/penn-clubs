@@ -144,7 +144,7 @@ class Event(models.Model):
     Represents an event hosted by a club.
     """
 
-    code = models.SlugField(max_length=255, unique=True, db_index=True)
+    code = models.SlugField(max_length=255, db_index=True)
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=255)
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="events")

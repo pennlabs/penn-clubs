@@ -7,7 +7,7 @@ import draftToHtml from 'draftjs-to-html'
 import Head from 'next/head'
 import DatePicker from 'react-datepicker'
 
-import { Icon } from './common'
+import { Icon, Loading } from './common'
 import { doApiRequest, titleize } from '../utils'
 
 const UNSAVED_MESSAGE =
@@ -138,7 +138,7 @@ class Form extends Component {
     return out
   }
 
-  getFieldData(name, source, { type, reverser, converter }) {
+  getFieldData(name, source, { type, reverser, converter, apiName }) {
     const val = source[`field-${name}`]
     switch (type) {
       case 'multiselect':
@@ -149,8 +149,11 @@ class Form extends Component {
         return Boolean(val)
       case 'date':
         return val || null
-      case 'file':
-        return new FormData().append('file', this.files[name].files[0])
+      case 'file': {
+        const data = new FormData()
+        data.append(apiName || name, this.files[name].files[0])
+        return data
+      }
       default:
         return typeof converter === 'function' ? converter(val) : val
     }
@@ -191,7 +194,7 @@ class Form extends Component {
       [`editorState-${name}`]: editorState,
     } = this.state
 
-    const { isHorizontal = true } = this.props
+    const { isHorizontal = true, errors } = this.props
 
     let inpt = null
 
@@ -208,6 +211,7 @@ class Form extends Component {
           key={name}
           type={type}
           name={name}
+          placeholder={placeholder}
         />
       )
     } else if (type === 'datetime-local') {
@@ -222,6 +226,7 @@ class Form extends Component {
               this.onChange(val)
               this.setState({ ['field-' + name]: val })
             }}
+            placeholderText={placeholder}
           />
         </DatePickerWrapper>
       )
@@ -411,7 +416,10 @@ class Form extends Component {
         <div className="field-body">
           <div className="field">
             <div className="control">{inpt}</div>
-            {help && <p className="help">{help}</p>}
+            {(errors && errors[name] && (
+              <p className="help is-danger">{errors[name]}</p>
+            )) ||
+              (help && <p className="help">{help}</p>)}
           </div>
         </div>
       </div>
@@ -510,9 +518,30 @@ const DatePickerWrapper = s.span`
   }
 `
 
-const ModelStatus = s.span`
+const ModelStatusWrapper = s.span`
   display: inline-block;
   margin: 0.375em 0.75em;
+`
+
+const ModelStatus = ({ status }) => (
+  <ModelStatusWrapper>
+    {typeof status !== 'undefined' &&
+      (status === true ? (
+        <span style={{ color: 'green' }}>
+          <Icon name="check-circle" alt="success" /> Saved!
+        </span>
+      ) : (
+        <span style={{ color: 'red' }}>
+          <Icon name="x-circle" alt="failure" /> Failed to save!
+        </span>
+      ))}
+  </ModelStatusWrapper>
+)
+
+const Subtitle = s.div`
+  font-weight: bold;
+  font-size: 1.2em;
+  margin-bottom: 0.75em;
 `
 
 /*
@@ -525,8 +554,134 @@ export class ModelForm extends Component {
 
     this.state = {
       objects: null,
+      currentlyEditing: null,
+      createObject: {},
       newCount: 0,
     }
+
+    this.onSubmit = this.onSubmit.bind(this)
+    this.onDelete = this.onDelete.bind(this)
+    this.onCreate = this.onCreate.bind(this)
+  }
+
+  onCreate() {
+    this.setState(({ objects, newCount }) => {
+      objects.push({
+        tempId: newCount,
+      })
+      return { objects, newCount: newCount + 1 }
+    })
+  }
+
+  onDelete(object) {
+    const { baseUrl, keyField = 'id' } = this.props
+
+    if (typeof object[keyField] !== 'undefined') {
+      doApiRequest(`${baseUrl}${object[keyField]}/?format=json`, {
+        method: 'DELETE',
+      }).then(resp => {
+        if (resp.ok) {
+          this.setState(({ objects }) => {
+            objects.splice(objects.indexOf(object), 1)
+            return { objects }
+          })
+        }
+      })
+    } else {
+      this.setState(({ objects }) => {
+        objects.splice(objects.indexOf(object), 1)
+        return { objects }
+      })
+    }
+  }
+
+  /**
+   * Called when the form is submitted to save an individual object.
+   * @returns a promise with the first argument as the new object values.
+   */
+  onSubmit(object, data) {
+    const { baseUrl, fields, keyField = 'id' } = this.props
+
+    // remove file fields
+    const fileFields = fields.filter(f => f.type === 'file')
+    const fileData = {}
+    fileFields.forEach(({ name }) => {
+      fileData[name] = data[name]
+      delete data[name]
+    })
+
+    // create or edit the object, uploading all non-file fields
+    const savePromise =
+      typeof object[keyField] === 'undefined'
+        ? doApiRequest(`${baseUrl}?format=json`, {
+            method: 'POST',
+            body: data,
+          })
+            .then(resp => {
+              if (resp.ok) {
+                object._status = true
+                return resp.json().then(resp => {
+                  Object.keys(resp).forEach(key => {
+                    object[key] = resp[key]
+                  })
+                })
+              } else {
+                object._status = false
+                return resp.json().then(resp => {
+                  object._error_message = resp
+                })
+              }
+            })
+            .then(() => {
+              this.setState(({ objects }) => ({
+                objects: [...objects],
+              }))
+            })
+        : doApiRequest(`${baseUrl}${object[keyField]}/?format=json`, {
+            method: 'PATCH',
+            body: data,
+          })
+            .then(resp => {
+              object._status = resp.ok
+              return resp.json()
+            })
+            .then(resp => {
+              if (object._status) {
+                Object.keys(resp).forEach(key => {
+                  object[key] = resp[key]
+                })
+              } else {
+                object._error_message = resp
+              }
+              this.setState(({ objects }) => ({
+                objects: [...objects],
+              }))
+            })
+
+    // upload all files in the form
+    return savePromise
+      .then(() => {
+        return Promise.all(
+          fileFields
+            .map(({ name, apiName }) => {
+              const fieldData = fileData[name]
+              if (fieldData && fieldData.get(apiName || name) instanceof File) {
+                return doApiRequest(
+                  `${baseUrl}${object[keyField]}/?format=json`,
+                  {
+                    method: 'PATCH',
+                    body: fieldData,
+                  }
+                )
+              }
+              return null
+            })
+            .filter(a => a !== null)
+        )
+      })
+      .then(() => {
+        return object
+      })
   }
 
   componentDidMount() {
@@ -539,10 +694,173 @@ export class ModelForm extends Component {
 
   render() {
     const { objects } = this.state
-    const { fields, baseUrl } = this.props
+    const {
+      fields,
+      tableFields,
+      currentTitle,
+      noun = 'Object',
+      deleteVerb = 'Delete',
+      allowCreation = true,
+      confirmDeletion = false,
+      keyField = 'id',
+    } = this.props
 
     if (!objects) {
-      return <></>
+      return <Loading />
+    }
+
+    if (tableFields) {
+      const { currentlyEditing, createObject } = this.state
+      const currentObjectIndex =
+        currentlyEditing === null
+          ? -1
+          : objects.findIndex(a => a[keyField] === currentlyEditing)
+      const currentObject =
+        currentlyEditing === null ? createObject : objects[currentObjectIndex]
+
+      return (
+        <>
+          <table className="table is-fullwidth">
+            <thead>
+              <tr>
+                {tableFields.map((a, i) => (
+                  <th key={i}>{a.label || titleize(a.name)}</th>
+                ))}
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {objects.length === 0 && (
+                <tr>
+                  <td colSpan={tableFields.length + 1}>
+                    There are no {noun.toLowerCase()}s to display.
+                  </td>
+                </tr>
+              )}
+              {objects.map((object, i) => (
+                <tr key={i}>
+                  {tableFields.map((a, i) => (
+                    <td key={i}>
+                      {a.converter
+                        ? a.converter(object[a.name], object)
+                        : object[a.name]}
+                    </td>
+                  ))}
+                  <td>
+                    <div className="buttons">
+                      <button
+                        onClick={() =>
+                          this.setState({ currentlyEditing: object[keyField] })
+                        }
+                        className="button is-primary is-small"
+                      >
+                        <Icon name="edit" alt="edit" /> Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirmDeletion) {
+                            if (
+                              confirm(
+                                `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`
+                              )
+                            ) {
+                              this.onDelete(object)
+                            }
+                          } else {
+                            this.onDelete(object)
+                          }
+                        }}
+                        className="button is-danger is-small"
+                      >
+                        <Icon name="trash" alt="delete" /> {deleteVerb}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {(allowCreation || currentlyEditing !== null) && (
+            <>
+              <Subtitle>
+                {currentlyEditing !== null ? 'Edit' : 'Create'} {noun}{' '}
+                {currentTitle && currentlyEditing !== null && (
+                  <span style={{ color: '#888', fontSize: '0.8em' }}>
+                    {currentTitle(currentObject)}
+                  </span>
+                )}
+              </Subtitle>
+              <Form
+                key={currentlyEditing}
+                fields={fields}
+                defaults={currentObject}
+                errors={
+                  currentObject._status === false &&
+                  currentObject._error_message
+                }
+                onSubmit={data => {
+                  if (currentObjectIndex !== -1) {
+                    objects[currentObjectIndex] = currentObject
+                  }
+                  this.onSubmit(currentObject, data).then(obj => {
+                    if (obj._status) {
+                      if (currentlyEditing === null) {
+                        objects.push(obj)
+                      }
+                      this.setState({
+                        objects: [...objects],
+                        currentlyEditing: obj[keyField],
+                        createObject: {},
+                      })
+                    } else {
+                      this.setState({
+                        createObject: obj,
+                      })
+                    }
+                  })
+                }}
+                submitButton={
+                  <>
+                    <span className="button is-primary">
+                      {currentlyEditing !== null ? (
+                        <>
+                          <Icon name="edit" alt="save" /> Save
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="plus" alt="create" /> Create
+                        </>
+                      )}
+                    </span>
+                  </>
+                }
+              />
+            </>
+          )}
+          {currentlyEditing !== null && (
+            <span
+              onClick={() =>
+                this.setState({
+                  currentlyEditing: null,
+                  createObject: {},
+                })
+              }
+              className="button is-primary is-pulled-right"
+            >
+              {allowCreation ? (
+                <>
+                  <Icon name="plus" alt="create" /> Create New
+                </>
+              ) : (
+                <>
+                  <Icon name="x" alt="close" /> Close
+                </>
+              )}
+            </span>
+          )}
+          <ModelStatus status={currentObject._status} />
+        </>
+      )
     }
 
     return (
@@ -558,94 +876,25 @@ export class ModelForm extends Component {
             <Form
               fields={fields}
               defaults={object}
+              errors={object._status === false && object._error_message}
               submitButton={
                 <span className="button is-primary">
                   <Icon name="edit" alt="save" /> Save
                 </span>
               }
-              onSubmit={data => {
-                if (typeof object.id === 'undefined') {
-                  doApiRequest(`${baseUrl}?format=json`, {
-                    method: 'POST',
-                    body: data,
-                  }).then(resp => {
-                    if (resp.ok) {
-                      resp.json().then(resp => {
-                        Object.keys(resp).forEach(key => {
-                          object[key] = resp[key]
-                        })
-                      })
-                      object._status = true
-                    } else {
-                      object._status = false
-                    }
-                    this.setState(({ objects }) => ({
-                      objects: [...objects],
-                    }))
-                  })
-                } else {
-                  doApiRequest(`${baseUrl}${object.id}/?format=json`, {
-                    method: 'PATCH',
-                    body: data,
-                  }).then(resp => {
-                    object._status = resp.ok
-                    this.setState(({ objects }) => ({
-                      objects: [...objects],
-                    }))
-                  })
-                }
-              }}
+              onSubmit={data => this.onSubmit(object, data)}
             />
             <span
               className="button is-danger"
               style={{ marginLeft: '0.5em' }}
-              onClick={() => {
-                if (typeof object.id !== 'undefined') {
-                  doApiRequest(`${baseUrl}${object.id}/?format=json`, {
-                    method: 'DELETE',
-                  }).then(resp => {
-                    if (resp.ok) {
-                      this.setState(({ objects }) => {
-                        objects.splice(objects.indexOf(object), 1)
-                        return { objects }
-                      })
-                    }
-                  })
-                } else {
-                  this.setState(({ objects }) => {
-                    objects.splice(objects.indexOf(object), 1)
-                    return { objects }
-                  })
-                }
-              }}
+              onClick={() => this.onDelete(object)}
             >
               <Icon name="trash" alt="trash" /> Delete
             </span>
-            <ModelStatus>
-              {typeof object._status !== 'undefined' &&
-                (object._status === true ? (
-                  <span style={{ color: 'green' }}>
-                    <Icon name="check-circle" alt="success" /> Saved!
-                  </span>
-                ) : (
-                  <span style={{ color: 'red' }}>
-                    <Icon name="x-circle" alt="failure" /> Failed to save!
-                  </span>
-                ))}
-            </ModelStatus>
+            <ModelStatus status={object._status} />
           </ModelItem>
         ))}
-        <span
-          onClick={() =>
-            this.setState(({ objects, newCount }) => {
-              objects.push({
-                tempId: newCount,
-              })
-              return { objects, newCount: newCount + 1 }
-            })
-          }
-          className="button is-primary"
-        >
+        <span onClick={this.onCreate} className="button is-primary">
           <Icon name="plus" alt="create" /> Create
         </span>
       </>

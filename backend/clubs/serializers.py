@@ -282,7 +282,9 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         membership = Membership.objects.filter(person=user, club__code=club_code).first()
 
-        if membership is None or membership.role > Membership.ROLE_OFFICER:
+        if not user.is_superuser and (
+            membership is None or membership.role > Membership.ROLE_OFFICER
+        ):
             for field in data:
                 if field not in ["public", "active"]:
                     raise serializers.ValidationError(
@@ -723,7 +725,7 @@ class UserSerializer(serializers.ModelSerializer):
     subscribe_set = UserSubscribeSerializer(many=True, read_only=True)
     join_request_set = MembershipRequestSerializer(many=True, read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
-    image = serializers.ImageField(source="profile.image", write_only=True)
+    image = serializers.ImageField(source="profile.image", write_only=True, allow_null=True)
     image_url = serializers.SerializerMethodField("get_image_url")
 
     has_been_prompted = serializers.BooleanField(source="profile.has_been_prompted")

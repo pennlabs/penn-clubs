@@ -1,5 +1,6 @@
 import s from 'styled-components'
 import { PROPIC_BACKGROUND, PROPIC_TEXT } from '../../constants/colors'
+import { mediaMinWidth, PHONE } from '../../constants/measurements'
 
 const hashCode = s => {
   let h = 0
@@ -30,15 +31,38 @@ const Placeholder = s.div`
 `
 
 const Avatar = s.img`
-  width: 100%;
-  height: 100%;
+  object-fit: cover;
+
+  .image & {
+    width: 100%;
+    height: 100%;
+  }
 
   ${({ isRound }) => isRound && 'border-radius: 50%;'}
 `
 
-export const ProfilePic = ({ className, user, isRound, style, fontSize }) => {
+const AvatarWrapper = s.div`
+  border-radius: 50%;
+  margin: 5px 15px;
+  ${mediaMinWidth(PHONE)} {
+    margin: 0 auto;
+  }
+`
+
+export const ProfilePic = ({
+  className,
+  user,
+  isRound = true,
+  style,
+  fontSize,
+}) => {
   const { name, image } = user
-  if (image) return <Avatar src={image} isRound={isRound} />
+  if (image)
+    return (
+      <AvatarWrapper className="has-background-light image is-64x64">
+        <Avatar src={image} isRound={isRound} />
+      </AvatarWrapper>
+    )
   const nonce = hashCode(name) % PROPIC_TEXT.length
   const backgroundColor = PROPIC_BACKGROUND[nonce]
   const textColor = PROPIC_TEXT[nonce]
@@ -46,15 +70,17 @@ export const ProfilePic = ({ className, user, isRound, style, fontSize }) => {
   // Assuming the name is properly capitalized, this extracts the name's initials.
   const initials = name.replace(/[a-z]|\s/g, '')
   return (
-    <Placeholder
-      style={style}
-      className={className}
-      isRound={isRound}
-      fontSize={fontSize}
-      backgroundColor={backgroundColor}
-      textColor={textColor}
-    >
-      {initials}
-    </Placeholder>
+    <AvatarWrapper className="has-background-light image is-64x64">
+      <Placeholder
+        style={style}
+        className={className}
+        isRound={isRound}
+        fontSize={fontSize}
+        backgroundColor={backgroundColor}
+        textColor={textColor}
+      >
+        {initials}
+      </Placeholder>
+    </AvatarWrapper>
   )
 }
