@@ -84,16 +84,16 @@ def upload_endpoint_helper(request, cls, field, **kwargs):
     return Response({"detail": "Club image uploaded!"})
 
 
-def find_children_helper(club_object, found):
+def find_relationship_helper(relationship, club_object, found):
     """
-    Format and retrieve all children of a club into tree
+    Format and retrieve all parents or children of a club into tree.
     """
-    children = club_object.children_orgs.all().prefetch_related("children_orgs")
+    children = getattr(club_object, relationship).all().prefetch_related(relationship)
     children_recurse = []
     for child in children:
         if child.code not in found:
             found.add(child.code)
-            children_recurse.append(find_children_helper(child, found))
+            children_recurse.append(find_relationship_helper(relationship, child, found))
         else:
             children_recurse.append({"name": child.name, "code": child.code})
 
@@ -223,8 +223,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a recursive list of all children that this club is a parent of.
         """
         club = self.get_object()
-        child_tree = find_children_helper(club, {club.code})
+        child_tree = find_relationship_helper("children_orgs", club, {club.code})
         return Response(child_tree)
+
+    @action(detail=True, methods=["get"])
+    def parents(self, request, *args, **kwargs):
+        """
+        Return a recursive list of all parents that this club is a child to.
+        """
+        club = self.get_object()
+        parent_tree = find_relationship_helper("parent_orgs", club, {club.code})
+        return Response(parent_tree)
 
     @action(detail=True, methods=["get"], url_path="notes-about")
     def notes_about(self, request, *args, **kwargs):
