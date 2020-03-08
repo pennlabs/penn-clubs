@@ -94,6 +94,7 @@ def find_relationship_helper(relationship, club_object, found):
         if child.code not in found:
             found.add(child.code)
             children_recurse.append(find_relationship_helper(relationship, child, found))
+            found.remove(child.code)
         else:
             children_recurse.append({"name": child.name, "code": child.code})
 
