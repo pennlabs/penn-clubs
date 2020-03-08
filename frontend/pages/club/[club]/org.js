@@ -32,7 +32,15 @@ const OrgChildWrapper = s.div`
   }
 `
 
-const OrgChild = ({ name, code, children, isParent }) => {
+const ErrorText = s.p`
+  color: red;
+`
+
+const OrgChild = ({ name, code, children, isParent, detail }) => {
+  if (detail) {
+    return <ErrorText>{detail}</ErrorText>
+  }
+
   return (
     <OrgChildWrapper>
       <div className="entry">
