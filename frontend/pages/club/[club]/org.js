@@ -3,6 +3,7 @@ import { doApiRequest } from '../../../utils'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Title, Loading, WideContainer, Icon } from '../../../components/common'
+import ClubMetadata from '../../../components/ClubMetadata'
 import s from 'styled-components'
 
 const Subtitle = s(Title)`
@@ -86,14 +87,24 @@ const Organization = ({ query, club }) => {
   }, [query])
 
   return (
-    <WideContainer>
-      <Title>{club.name}</Title>
-      <hr />
-      <Subtitle>Children of {club.name}</Subtitle>
-      {children ? <OrgChild isParent={true} {...children} /> : <Loading />}
-      <Subtitle>Parents of {club.name}</Subtitle>
-      {parents ? <OrgChild isParent={true} {...parents} /> : <Loading />}
-    </WideContainer>
+    <>
+      <ClubMetadata club={club} />
+      <WideContainer>
+        <div className="is-clearfix">
+          <Title className="is-pulled-left">{club.name}</Title>
+          <Link href="/club/[club]" as={`/club/${club.code}`}>
+            <a className="button is-pulled-right is-secondary is-medium">
+              Back
+            </a>
+          </Link>
+        </div>
+        <hr />
+        <Subtitle>Children of {club.name}</Subtitle>
+        {children ? <OrgChild isParent={true} {...children} /> : <Loading />}
+        <Subtitle>Parents of {club.name}</Subtitle>
+        {parents ? <OrgChild isParent={true} {...parents} /> : <Loading />}
+      </WideContainer>
+    </>
   )
 }
 
