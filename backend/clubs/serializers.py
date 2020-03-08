@@ -124,10 +124,12 @@ class EventSerializer(serializers.ModelSerializer):
         return clean(value)
 
     def save(self):
-        if "club" not in self.validated_data:
-            self.validated_data["club"] = Club.objects.get(
-                code=self.context["view"].kwargs.get("club_code")
-            )
+        """
+        Set the event club and code before saving.
+        """
+        self.validated_data["club"] = Club.objects.get(
+            code=self.context["view"].kwargs.get("club_code")
+        )
 
         if not self.validated_data.get("code") and self.validated_data.get("name"):
             self.validated_data["code"] = slugify(self.validated_data["name"])
