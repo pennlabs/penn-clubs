@@ -75,9 +75,13 @@ class Club(models.Model):
 
     approved = models.BooleanField(null=True, default=None)
     approved_by = models.ForeignKey(
-        get_user_model(), null=True, on_delete=models.SET_NULL, related_name="approved_clubs"
+        get_user_model(),
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="approved_clubs",
+        blank=True,
     )
-    approved_on = models.DateTimeField(null=True)
+    approved_on = models.DateTimeField(null=True, blank=True)
 
     code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=True)

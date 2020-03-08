@@ -133,7 +133,7 @@ class ClubAdminForm(forms.ModelForm):
 
 
 class ClubAdmin(admin.ModelAdmin):
-    search_fields = ("name", "subtitle", "email")
+    search_fields = ("name", "subtitle", "email", "code")
     list_display = ("name", "email", "has_owner", "has_invite", "active", "approved")
     list_filter = (
         "size",

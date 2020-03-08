@@ -84,14 +84,18 @@ def upload_endpoint_helper(request, cls, field, **kwargs):
     return Response({"detail": "Club image uploaded!"})
 
 
-def find_children_helper(club_object):
+def find_children_helper(club_object, found):
     """
     Format and retrieve all children of a club into tree
     """
     children = club_object.children_orgs.all().prefetch_related("children_orgs")
     children_recurse = []
     for child in children:
-        children_recurse.append(find_children_helper(child))
+        if child.code not in found:
+            found.add(child.code)
+            children_recurse.append(find_children_helper(child, found))
+        else:
+            children_recurse.append({"name": child.name, "code": child.code})
 
     return {"name": club_object.name, "code": club_object.code, "children": children_recurse}
 
@@ -218,7 +222,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return a recursive list of all children that this club is a parent of.
         """
-        child_tree = find_children_helper(self.get_object())
+        club = self.get_object()
+        child_tree = find_children_helper(club, {club.code})
         return Response(child_tree)
 
     @action(detail=True, methods=["get"], url_path="notes-about")
