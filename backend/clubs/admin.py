@@ -3,6 +3,7 @@ import datetime
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth.models import Group
+from django.contrib.admin import TabularInline
 from django.db.models import Count, Exists, OuterRef
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
@@ -132,6 +133,14 @@ class ClubAdminForm(forms.ModelForm):
     )
 
 
+class ClubChildrenInline(TabularInline):
+    model = Club.children_orgs.through
+    fk_name = "to_club"
+    extra = 0
+    verbose_name = "Children org"
+    verbose_name_plural = "Children orgs"
+
+
 class ClubAdmin(admin.ModelAdmin):
     search_fields = ("name", "subtitle", "email", "code")
     list_display = ("name", "email", "has_owner", "has_invite", "active", "approved")
@@ -144,6 +153,7 @@ class ClubAdmin(admin.ModelAdmin):
         HasOwnerListFilter,
         HasInviteListFilter,
     )
+    inlines = [ClubChildrenInline]
     actions = [do_merge_clubs, send_edit_reminder, mark_approved]
     form = ClubAdminForm
 
