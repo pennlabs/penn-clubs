@@ -10,12 +10,21 @@ import {
   getApiUrl,
   formatResponse,
   getRoleDisplay,
+  stripTags,
 } from '../utils'
 import ClubMetadata from './ClubMetadata'
 import Form, { ModelForm } from './Form'
 import TabView from './TabView'
 import AuthPrompt from './common/AuthPrompt'
-import { Icon, Container, Title, InactiveTag, Text, Empty } from './common'
+import {
+  Icon,
+  Container,
+  Title,
+  InactiveTag,
+  Text,
+  Empty,
+  Device,
+} from './common'
 
 const Card = ({ children, title }) => (
   <div className="card" style={{ marginBottom: 20 }}>
@@ -31,6 +40,56 @@ const QRCode = s.img`
   width: 150px;
   padding: 15px;
   margin-bottom: 15px;
+`
+
+const EventBox = s.div`
+  text-align: left;
+  font-family: 'HelveticaNeue', 'Helvetica';
+  user-select: none;
+  pointer-events: none;
+
+  margin: 15px;
+  background-color: white;
+  box-shadow: 1px 1px 10px #ccc;
+  border-radius: 15px;
+  font-size: 1.5em;
+
+  & .text {
+    padding: 15px;
+    padding-top: 5px;
+  }
+
+  & .title {
+    font-size: 18px;
+    word-wrap: break-word;
+  }
+
+  & .desc, & .date {
+    color: #888;
+    font-size: 14px;
+    display: block;
+    word-wrap: break-word;
+  }
+
+  & .date {
+    margin-top: 5px;    
+  }
+
+  & .img-wrapper {
+    background-color: #eee;
+    border-radius: 15px 15px 0 0;
+    overflow: hidden;
+  }
+
+  & .img-wrapper img {
+    display: block;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 175px;
+    border: 1px solid white;
+    width: 100%;
+  }
 `
 
 class ClubForm extends Component {
@@ -104,6 +163,7 @@ class ClubForm extends Component {
       inviteTitle: 'Member',
       editMember: null,
       subscriptions: [],
+      deviceContents: {},
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -287,7 +347,7 @@ class ClubForm extends Component {
 
   render() {
     const { authenticated, userInfo, schools, majors, years, tags } = this.props
-    const { club, invites, isEdit, message } = this.state
+    const { club, invites, isEdit, message, deviceContents } = this.state
 
     if (authenticated === false) {
       return (
@@ -847,7 +907,34 @@ class ClubForm extends Component {
                   tableFields={eventTableFields}
                   noun="Event"
                   currentTitle={obj => obj.name}
+                  onChange={obj => this.setState({ deviceContents: obj })}
                 />
+                <div style={{ marginTop: '1em' }}>
+                  <Device style={{ zoom: 0.8 }} type="iphone">
+                    <img
+                      src="/static/img/phone_header.png"
+                      style={{ width: '100%' }}
+                    />
+                    <EventBox>
+                      <div className="img-wrapper">
+                        <img />
+                      </div>
+                      <div className="text">
+                        <b className="title">
+                          {deviceContents.name || 'Your Title'}
+                        </b>
+                        <span className="desc">
+                          {deviceContents.description
+                            ? stripTags(deviceContents.description) ||
+                              'Your Description'
+                            : 'Your Description'}
+                        </span>
+                        <span className="date">Today at 7:20pm</span>
+                      </div>
+                    </EventBox>
+                  </Device>
+                  <Device type="android"></Device>
+                </div>
               </Card>
               <Card title="Files">
                 <table className="table is-fullwidth">

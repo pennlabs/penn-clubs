@@ -211,8 +211,9 @@ class Form extends Component {
           disabled={readonly}
           value={value}
           onChange={e => {
-            this.onChange(e)
-            this.setState({ ['field-' + name]: e.target.value })
+            this.setState({ ['field-' + name]: e.target.value }, () =>
+              this.onChange(e)
+            )
           }}
           key={name}
           type={type}
@@ -229,8 +230,9 @@ class Form extends Component {
             dateFormat="MMMM d, yyyy h:mm aa"
             selected={Date.parse(value) || value}
             onChange={val => {
-              this.onChange(val)
-              this.setState({ ['field-' + name]: val })
+              this.setState({ ['field-' + name]: val }, () =>
+                this.onChange(val)
+              )
             }}
             placeholderText={placeholder}
           />
@@ -294,8 +296,9 @@ class Form extends Component {
           className="textarea"
           value={value}
           onChange={e => {
-            this.onChange(e)
-            this.setState({ [`field-${name}`]: e.target.value })
+            this.setState({ [`field-${name}`]: e.target.value }, () =>
+              this.onChange(e)
+            )
           }}
         />
       )
@@ -359,8 +362,9 @@ class Form extends Component {
             value={value || []}
             options={choices.map(converter)}
             onChange={opt => {
-              this.onChange(opt)
-              this.setState({ [`field-${name}`]: opt })
+              this.setState({ [`field-${name}`]: opt }, () =>
+                this.onChange(opt)
+              )
             }}
             styles={{
               container: style => ({
@@ -380,8 +384,7 @@ class Form extends Component {
           value={value}
           options={choices}
           onChange={opt => {
-            this.onChange(opt)
-            this.setState({ [`field-${name}`]: opt })
+            this.setState({ [`field-${name}`]: opt }, () => this.onChange(opt))
           }}
         />
       )
@@ -392,8 +395,9 @@ class Form extends Component {
             type="checkbox"
             checked={value}
             onChange={e => {
-              this.onChange(e)
-              this.setState({ [`field-${name}`]: e.target.checked })
+              this.setState({ [`field-${name}`]: e.target.checked }, () =>
+                this.onChange(e)
+              )
             }}
           />
           &nbsp;
@@ -568,6 +572,16 @@ export class ModelForm extends Component {
     this.onSubmit = this.onSubmit.bind(this)
     this.onDelete = this.onDelete.bind(this)
     this.onCreate = this.onCreate.bind(this)
+    this.onChange = this.onChange.bind(this)
+  }
+
+  /**
+   * This is called when the create/edit form has its contents changed.
+   */
+  onChange(obj) {
+    if (this.props.onChange) {
+      this.props.onChange(obj)
+    }
   }
 
   onCreate() {
@@ -757,9 +771,10 @@ export class ModelForm extends Component {
                   <td>
                     <div className="buttons">
                       <button
-                        onClick={() =>
+                        onClick={() => {
                           this.setState({ currentlyEditing: object[keyField] })
-                        }
+                          this.onChange(object)
+                        }}
                         className="button is-primary is-small"
                       >
                         <Icon name="edit" alt="edit" /> Edit
@@ -799,9 +814,13 @@ export class ModelForm extends Component {
                 )}
               </Subtitle>
               <Form
+                ref="currentForm"
                 key={currentlyEditing}
                 fields={fields}
                 defaults={currentObject}
+                onChange={() =>
+                  this.onChange(this.refs.currentForm.getSubmitData())
+                }
                 errors={
                   currentObject._status === false &&
                   currentObject._error_message
@@ -847,7 +866,7 @@ export class ModelForm extends Component {
           )}
           {currentlyEditing !== null && (
             <span
-              onClick={() =>
+              onClick={() => {
                 this.setState({
                   currentlyEditing: null,
                   getApiUrl,
@@ -855,7 +874,8 @@ export class ModelForm extends Component {
                   getRoleDisplay,
                   createObject: {},
                 })
-              }
+                this.onChange({})
+              }}
               className="button is-primary is-pulled-right"
             >
               {allowCreation ? (
