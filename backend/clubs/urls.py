@@ -28,8 +28,8 @@ router = routers.SimpleRouter()
 router.register(r"clubs", ClubViewSet, basename="clubs")
 router.register(r"tags", TagViewSet, basename="tags")
 router.register(r"favorites", FavoriteViewSet, basename="favorites")
-router.register(r"subscribe", SubscribeViewSet, basename="subscribe")
-router.register(r"request", MembershipRequestViewSet, basename="request")
+router.register(r"subscribe", SubscribeViewSet, basename="subscribes")
+router.register(r"requests", MembershipRequestViewSet, basename="requests")
 
 router.register(r"schools", SchoolViewSet, basename="schools")
 router.register(r"majors", MajorViewSet, basename="majors")
@@ -44,7 +44,7 @@ clubs_router.register(r"assets", AssetViewSet, basename="club-assets")
 clubs_router.register(r"notes", NoteViewSet, basename="club-notes")
 clubs_router.register(r"testimonials", TestimonialViewSet, basename="club-testimonials")
 clubs_router.register(
-    r"membership_request", MembershipRequestOwnerViewSet, basename="club-membership-request"
+    r"membershiprequests", MembershipRequestOwnerViewSet, basename="club-membership-requests"
 )
 
 urlpatterns = [
