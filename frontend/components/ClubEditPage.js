@@ -49,25 +49,108 @@ const EventBox = s.div`
   user-select: none;
   pointer-events: none;
 
-  margin: 15px;
   background-color: white;
-  box-shadow: 1px 1px 10px #ccc;
-  border-radius: 15px;
-  font-size: 1.5em;
+  ${({ type }) =>
+    type === 'android'
+      ? `
+    box-shadow: 1px 1px 3px #ccc;
+    border-radius: 5px;
+    font-size: 0.9em;
+    margin: 5px;
+    margin-top: 0px;
 
-  & .text {
-    padding: 15px;
-    padding-top: 5px;
-  }
+    padding: 5px;
 
-  & .title {
-    font-size: 18px;
-    word-wrap: break-word;
-  }
+    display: flex;
+    flex-direction: row;
+    font-family: Roboto;
+    color: black;
+
+    & .img-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      float: left;
+    }
+
+    & .text {
+      flex: 1;
+      display: flex;
+      text-align: center;
+      align-items: center;
+      justify-content: space-between;
+      flex-direction: column;
+      font-size: inherit;
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+
+    & .title {
+      width: 100%;
+      font-weight: bold;
+      font-size: inherit;
+      align-self: flex-start;
+      margin-bottom: 0;
+    }
+
+    & .date {
+      padding-top: 5px;
+      width: 100%;
+      align-self: flex-end;
+    }
+
+    & .desc {
+      width: 100%;
+      font-size: inherit;
+    }
+
+    & .img-wrapper img {
+      width: 100%;
+      display: block;
+      height: 100px;
+      background-color: #eee;
+    }
+  `
+      : `
+    margin: 15px;
+    box-shadow: 1px 1px 10px #ccc;
+    border-radius: 15px;
+    font-size: 1.5em;
+  
+    & .img-wrapper {
+      background-color: #eee;
+      border-radius: 15px 15px 0 0;
+      overflow: hidden;
+    }
+
+    & .img-wrapper img {
+      border: 1px solid white;
+      height: 175px;
+      display: block;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      width: 100%;
+    }
+
+    & .text {
+      padding: 15px;
+      padding-top: 5px;
+    }
+
+    & .title {
+      font-size: 18px;
+      word-wrap: break-word;
+    }
+
+    & .desc, & .date {
+      color: #888;
+      font-size: 14px;
+    }
+  `}
 
   & .desc, & .date {
-    color: #888;
-    font-size: 14px;
     display: block;
     word-wrap: break-word;
   }
@@ -75,36 +158,33 @@ const EventBox = s.div`
   & .date {
     margin-top: 5px;    
   }
-
-  & .img-wrapper {
-    background-color: #eee;
-    border-radius: 15px 15px 0 0;
-    overflow: hidden;
-  }
-
-  & .img-wrapper img {
-    display: block;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    height: 175px;
-    border: 1px solid white;
-    width: 100%;
-  }
 `
 
-const DeviceEventPreview = ({ deviceContents }) => {
+const DeviceEventPreview = ({ deviceContents, type }) => {
   const time =
     deviceContents && deviceContents.start_time
       ? moment(deviceContents.start_time)
       : moment()
 
+  const endTime =
+    deviceContents && deviceContents.end_time
+      ? moment(deviceContents.end_time)
+      : moment().add(moment.duration({ hours: 1, minutes: 20 }))
+
   const img = deviceContents.image && deviceContents.image.get('image')
 
   return (
-    <>
-      <img src="/static/img/phone_header.png" style={{ width: '100%' }} />
-      <EventBox>
+    <div
+      style={{
+        backgroundColor: type === 'android' ? '#fafafa' : 'white',
+        height: '100%',
+      }}
+    >
+      <img
+        src={`/static/img/phone_header_${type}.png`}
+        style={{ width: '100%' }}
+      />
+      <EventBox className="is-clearfix" type={type}>
         <div className="img-wrapper">
           <img
             src={
@@ -124,10 +204,18 @@ const DeviceEventPreview = ({ deviceContents }) => {
               ? stripTags(deviceContents.description) || 'Your Description'
               : 'Your Description'}
           </span>
-          <span className="date">Today at {time.format('k:mma')}</span>
+          <span className="date">
+            {type === 'android' ? (
+              <>
+                {time.format('h:mm A')} - {endTime.format('h:mm A')}
+              </>
+            ) : (
+              <>Today at {time.format('h:mma')}</>
+            )}
+          </span>
         </div>
       </EventBox>
-    </>
+    </div>
   )
 }
 
@@ -950,10 +1038,16 @@ class ClubForm extends Component {
                 />
                 <div style={{ marginTop: '1em' }}>
                   <Device style={{ zoom: 0.8 }} type="iphone">
-                    <DeviceEventPreview deviceContents={deviceContents} />
+                    <DeviceEventPreview
+                      type="ios"
+                      deviceContents={deviceContents}
+                    />
                   </Device>
                   <Device type="android">
-                    <DeviceEventPreview deviceContents={deviceContents} />
+                    <DeviceEventPreview
+                      type="android"
+                      deviceContents={deviceContents}
+                    />
                   </Device>
                 </div>
               </Card>
