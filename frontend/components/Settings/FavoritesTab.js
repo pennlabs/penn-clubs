@@ -18,15 +18,15 @@ export default ({ favorites, keyword, updateFavorites }) => {
   // load clubs
   const [clubs, setClubs] = useState({})
   useEffect(() => {
-    Promise.all(
-      favorites.map(club =>
-        doApiRequest(`/clubs/${club}/?format=json`).then(res => res.json())
-      )
-    ).then(values => {
-      const newClubs = {}
-      values.forEach(item => (newClubs[item.code] = item))
-      setClubs(newClubs)
-    })
+    doApiRequest(
+      `/clubs/?in=${encodeURIComponent(favorites.join(','))}&format=json`
+    )
+      .then(res => res.json())
+      .then(values => {
+        const newClubs = {}
+        values.forEach(item => (newClubs[item.code] = item))
+        setClubs(newClubs)
+      })
   }, [favorites])
 
   const rows = Object.keys(table)
