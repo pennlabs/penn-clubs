@@ -55,7 +55,18 @@ const SearchIcon = s(Icon)`
   }
 `
 
-const Search = ({ selected, searchTags, recommendedTags, updateTag }) => {
+const Search = ({ selected = [], searchTags, recommendedTags, updateTag }) => {
+  // Key handler for deleting a tag when backspace is pressed
+  const handleKeyPress = ({ key, keyCode }) => {
+    const BACKSPACE_KEY_CODE = 8
+    if (
+      (keyCode === BACKSPACE_KEY_CODE || key.toLowerCase() === 'backspace') &&
+      selected.length
+    ) {
+      updateTag(selected[selected.length - 1])
+    }
+  }
+
   // Custom styles for the react-select
   const styles = {
     control: ({ background, ...base }, { isFocused, isSelected }) => {
@@ -112,21 +123,23 @@ const Search = ({ selected, searchTags, recommendedTags, updateTag }) => {
       )
     },
   }
-
   return (
     <Select
       isMulti
+      cacheOptions
       styles={styles}
       components={components}
       loadOptions={searchTags}
       defaultOptions={recommendedTags}
-      cacheOptions
+      value={selected}
+      tabIndex="0"
+      onKeyPress={handleKeyPress}
+      onKeyDown={handleKeyPress}
       onChange={(_, selectEvent) => {
         const { action, option } = selectEvent
         action === 'select-option' && updateTag(option, 'Tags')
       }}
       placeholder="Search for tags"
-      value={selected}
     />
   )
 }
