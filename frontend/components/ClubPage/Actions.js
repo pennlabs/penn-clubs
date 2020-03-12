@@ -4,7 +4,7 @@ import s from 'styled-components'
 import { WHITE, BORDER, MEDIUM_GRAY } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
 
-import { Icon, BookmarkIcon, SubscribeIcon } from '../common'
+import { BookmarkIcon, SubscribeIcon } from '../common'
 import { ROLE_OFFICER } from '../../utils'
 
 const Wrapper = s.span`

@@ -8,7 +8,13 @@ import Head from 'next/head'
 import DatePicker from 'react-datepicker'
 
 import { Icon, Loading } from './common'
-import { doApiRequest, titleize } from '../utils'
+import {
+  getApiUrl,
+  formatResponse,
+  getRoleDisplay,
+  doApiRequest,
+  titleize,
+} from '../utils'
 
 const UNSAVED_MESSAGE =
   'You have unsaved changes. Are you sure you want to leave?'
@@ -628,6 +634,7 @@ export class ModelForm extends Component {
               } else {
                 object._status = false
                 return resp.json().then(resp => {
+                  // eslint-disable-next-line camelcase
                   object._error_message = resp
                 })
               }
@@ -651,6 +658,7 @@ export class ModelForm extends Component {
                   object[key] = resp[key]
                 })
               } else {
+                // eslint-disable-next-line camelcase
                 object._error_message = resp
               }
               this.setState(({ objects }) => ({
@@ -842,6 +850,9 @@ export class ModelForm extends Component {
               onClick={() =>
                 this.setState({
                   currentlyEditing: null,
+                  getApiUrl,
+                  formatResponse,
+                  getRoleDisplay,
                   createObject: {},
                 })
               }
