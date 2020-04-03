@@ -126,7 +126,7 @@ const Search = ({ selected = [], searchTags, recommendedTags, updateTag }) => {
         const { action, option, removedValue } = selectEvent
         if (action === 'select-option') {
           updateTag(option, 'Tags')
-        } else if (action === "pop-value") {
+        } else if (action === 'pop-value') {
           updateTag(removedValue, 'Tags')
         }
       }}
