@@ -36,14 +36,14 @@ const ProfilePicWrapper = s.div`
 export default ({ defaults }) => {
   const [profile, setProfile] = useState(defaults)
 
-  const { name, username, email, image_url } = profile
+  const { name, username, email, imageUrl } = profile
 
   return (
     <Wrapper>
       <div className="columns is-mobile">
         <div className="column is-narrow">
           <ProfilePicWrapper>
-            <ProfilePic user={{ name, image: image_url }} />
+            <ProfilePic user={{ name, image: imageUrl }} />
           </ProfilePicWrapper>
         </div>
         <div className="column is-narrow" style={{ fontWeight: 600 }}>

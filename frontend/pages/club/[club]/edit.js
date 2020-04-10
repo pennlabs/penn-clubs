@@ -1,12 +1,7 @@
 import ClubEditPage from '../../../components/ClubEditPage'
 import { withRouter } from 'next/router'
 import renderPage from '../../../renderPage.js'
-import {
-  doApiRequest,
-  getApiUrl,
-  formatResponse,
-  getRoleDisplay,
-} from '../../../utils'
+import { doApiRequest } from '../../../utils'
 
 const Edit = props => <ClubEditPage {...props} />
 

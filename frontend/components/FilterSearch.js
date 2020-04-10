@@ -55,7 +55,7 @@ const SearchIcon = s(Icon)`
   }
 `
 
-const Search = ({ selected, searchTags, recommendedTags, updateTag }) => {
+const Search = ({ selected = [], searchTags, recommendedTags, updateTag }) => {
   // Custom styles for the react-select
   const styles = {
     control: ({ background, ...base }, { isFocused, isSelected }) => {
@@ -112,21 +112,25 @@ const Search = ({ selected, searchTags, recommendedTags, updateTag }) => {
       )
     },
   }
-
   return (
     <Select
       isMulti
+      cacheOptions
       styles={styles}
       components={components}
       loadOptions={searchTags}
       defaultOptions={recommendedTags}
-      cacheOptions
+      value={selected}
+      backspaceRemovesValue
       onChange={(_, selectEvent) => {
-        const { action, option } = selectEvent
-        action === 'select-option' && updateTag(option, 'Tags')
+        const { action, option, removedValue } = selectEvent
+        if (action === 'select-option') {
+          updateTag(option, 'Tags')
+        } else if (action === 'pop-value') {
+          updateTag(removedValue, 'Tags')
+        }
       }}
       placeholder="Search for tags"
-      value={selected}
     />
   )
 }

@@ -287,7 +287,7 @@ class ClubForm extends Component {
 
   render() {
     const { authenticated, userInfo, schools, majors, years, tags } = this.props
-    const { club, invites, isEdit, message, editMember } = this.state
+    const { club, invites, isEdit, message } = this.state
 
     if (authenticated === false) {
       return (

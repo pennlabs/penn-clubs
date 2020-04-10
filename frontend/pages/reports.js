@@ -8,7 +8,7 @@ import {
   Checkbox,
   CheckboxLabel,
 } from '../components/common'
-import { mediaMinWidth, mediaMaxWidth, MD, LG } from '../constants/measurements'
+import { mediaMaxWidth, LG } from '../constants/measurements'
 import { doApiRequest, API_BASE_URL } from '../utils'
 import { Container } from '../components/common/Container'
 import { CLUBS_GREY } from '../constants/colors'
