@@ -20,6 +20,7 @@
     "draft-js": "^0.11.0",
     "draftjs-to-html": "^0.8.4",
     "express": "^4.17.1",
+    "find-cache-dir": "^3.3.1",
     "fuse.js": "^3.4.5",
     "html-to-draftjs": "^1.4.0",
     "isomorphic-unfetch": "^3.0.0",
