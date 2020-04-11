@@ -1,8 +1,9 @@
 import s from 'styled-components'
-import { Component } from 'react'
+import { Component, useState } from 'react'
 import Link from 'next/link'
 import Select from 'react-select'
 import TimeAgo from 'react-timeago'
+import moment from 'moment'
 
 import { HOME_ROUTE, CLUB_ROUTE, CLUB_FLYER_ROUTE } from '../constants/routes'
 import {
@@ -10,12 +11,21 @@ import {
   getApiUrl,
   formatResponse,
   getRoleDisplay,
+  stripTags,
 } from '../utils'
 import ClubMetadata from './ClubMetadata'
 import Form, { ModelForm } from './Form'
 import TabView from './TabView'
 import AuthPrompt from './common/AuthPrompt'
-import { Icon, Container, Title, InactiveTag, Text, Empty } from './common'
+import {
+  Icon,
+  Container,
+  Title,
+  InactiveTag,
+  Text,
+  Empty,
+  Device,
+} from './common'
 
 const Card = ({ children, title }) => (
   <div className="card" style={{ marginBottom: 20 }}>
@@ -32,6 +42,224 @@ const QRCode = s.img`
   padding: 15px;
   margin-bottom: 15px;
 `
+
+const EventBox = s.div`
+  text-align: left;
+  font-family: 'HelveticaNeue', 'Helvetica';
+  user-select: none;
+  pointer-events: none;
+
+  background-color: white;
+  ${({ type }) =>
+    type === 'android'
+      ? `
+    box-shadow: 1px 1px 3px #ccc;
+    border-radius: 5px;
+    font-size: 0.9em;
+    margin: 5px;
+    margin-top: 0px;
+
+    padding: 5px;
+
+    display: flex;
+    flex-direction: row;
+    font-family: Roboto;
+    color: black;
+
+    & .img-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      float: left;
+    }
+
+    & .text {
+      flex: 1;
+      display: flex;
+      text-align: center;
+      align-items: center;
+      justify-content: space-between;
+      flex-direction: column;
+      font-size: inherit;
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+
+    & .title {
+      width: 100%;
+      font-weight: bold;
+      font-size: inherit;
+      align-self: flex-start;
+      margin-bottom: 0;
+    }
+
+    & .date {
+      padding-top: 5px;
+      width: 100%;
+      align-self: flex-end;
+    }
+
+    & .desc {
+      width: 100%;
+      font-size: inherit;
+    }
+
+    & .img-wrapper img {
+      width: 100%;
+      display: block;
+      height: 100px;
+      background-color: #eee;
+    }
+  `
+      : `
+    margin: 15px;
+    box-shadow: 1px 1px 10px #ccc;
+    border-radius: 15px;
+    font-size: 1.5em;
+  
+    & .img-wrapper {
+      background-color: #eee;
+      border-radius: 15px 15px 0 0;
+      overflow: hidden;
+    }
+
+    & .img-wrapper img {
+      border: 1px solid white;
+      height: 175px;
+      display: block;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      width: 100%;
+    }
+
+    & .text {
+      padding: 15px;
+      padding-top: 5px;
+    }
+
+    & .title {
+      font-size: 18px;
+      word-wrap: break-word;
+    }
+
+    & .desc, & .date {
+      color: #888;
+      font-size: 14px;
+    }
+  `}
+
+  & .desc, & .date {
+    display: block;
+    word-wrap: break-word;
+  }
+
+  & .date {
+    margin-top: 5px;    
+  }
+`
+
+const DevicesWrapper = s.div`
+  margin-top: 1em;
+  & .marvel-device {
+    margin: 0 auto;
+    display: block;
+  }
+`
+
+const Devices = ({ contents }) => {
+  const [deviceType, setDeviceType] = useState('none')
+
+  return (
+    <>
+      <span className="field has-addons is-pulled-right">
+        {['None', 'iOS', 'Android'].map(type => (
+          <p key={type} className="control">
+            <button
+              onClick={() => setDeviceType(type.toLowerCase())}
+              className={`button ${
+                deviceType === type.toLowerCase() ? 'is-link' : ''
+              }`}
+            >
+              <span>{type}</span>
+            </button>
+          </p>
+        ))}
+      </span>
+      <DevicesWrapper className="is-clearfix">
+        {deviceType === 'ios' ? (
+          <Device style={{ zoom: 0.8 }} type="iphone">
+            <DeviceEventPreview type="ios" deviceContents={contents} />
+          </Device>
+        ) : deviceType === 'android' ? (
+          <Device type="android">
+            <DeviceEventPreview type="android" deviceContents={contents} />
+          </Device>
+        ) : null}
+      </DevicesWrapper>
+    </>
+  )
+}
+
+const DeviceEventPreview = ({ deviceContents, type }) => {
+  const time =
+    deviceContents && deviceContents.start_time
+      ? moment(deviceContents.start_time)
+      : moment()
+
+  const endTime =
+    deviceContents && deviceContents.end_time
+      ? moment(deviceContents.end_time)
+      : moment().add(moment.duration({ hours: 1, minutes: 20 }))
+
+  const img = deviceContents.image && deviceContents.image.get('image')
+
+  return (
+    <div
+      style={{
+        backgroundColor: type === 'android' ? '#fafafa' : 'white',
+        height: '100%',
+      }}
+    >
+      <img
+        src={`/static/img/phone_header_${type}.png`}
+        style={{ width: '100%' }}
+      />
+      <EventBox className="is-clearfix" type={type}>
+        <div className="img-wrapper">
+          <img
+            src={
+              img instanceof File
+                ? URL.createObjectURL(img)
+                : (deviceContents._original &&
+                    deviceContents._original.image_url) ||
+                  deviceContents.image_url ||
+                  null
+            }
+          />
+        </div>
+        <div className="text">
+          <b className="title">{deviceContents.name || 'Your Title'}</b>
+          <span className="desc">
+            {deviceContents.description
+              ? stripTags(deviceContents.description) || 'Your Description'
+              : 'Your Description'}
+          </span>
+          <span className="date">
+            {type === 'android' ? (
+              <>
+                {time.format('h:mm A')} - {endTime.format('h:mm A')}
+              </>
+            ) : (
+              <>Today at {time.format('h:mma')}</>
+            )}
+          </span>
+        </div>
+      </EventBox>
+    </div>
+  )
+}
 
 class ClubForm extends Component {
   constructor(props) {
@@ -104,6 +332,7 @@ class ClubForm extends Component {
       inviteTitle: 'Member',
       editMember: null,
       subscriptions: [],
+      deviceContents: {},
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -287,7 +516,7 @@ class ClubForm extends Component {
 
   render() {
     const { authenticated, userInfo, schools, majors, years, tags } = this.props
-    const { club, invites, isEdit, message } = this.state
+    const { club, invites, isEdit, message, deviceContents } = this.state
 
     if (authenticated === false) {
       return (
@@ -847,7 +1076,9 @@ class ClubForm extends Component {
                   tableFields={eventTableFields}
                   noun="Event"
                   currentTitle={obj => obj.name}
+                  onChange={obj => this.setState({ deviceContents: obj })}
                 />
+                <Devices contents={deviceContents} />
               </Card>
               <Card title="Files">
                 <table className="table is-fullwidth">

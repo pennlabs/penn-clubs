@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import ClubTableRow from '../ClubTableRow'
-import { Center, EmptyState, Text } from '../common'
+import { Center, EmptyState, Text, Loading } from '../common'
 import { HOME_ROUTE } from '../../constants/routes'
 import { CLUBS_GREY_LIGHT } from '../../constants/colors'
 import { doApiRequest } from '../../utils'
@@ -18,15 +18,15 @@ export default ({ favorites, keyword, updateFavorites }) => {
   // load clubs
   const [clubs, setClubs] = useState({})
   useEffect(() => {
-    Promise.all(
-      favorites.map(club =>
-        doApiRequest(`/clubs/${club}/?format=json`).then(res => res.json())
-      )
-    ).then(values => {
-      const newClubs = {}
-      values.forEach(item => (newClubs[item.code] = item))
-      setClubs(newClubs)
-    })
+    doApiRequest(
+      `/clubs/?in=${encodeURIComponent(favorites.join(','))}&format=json`
+    )
+      .then(res => res.json())
+      .then(values => {
+        const newClubs = {}
+        values.forEach(item => (newClubs[item.code] = item))
+        setClubs(newClubs)
+      })
   }, [favorites])
 
   const rows = Object.keys(table)
@@ -48,18 +48,23 @@ export default ({ favorites, keyword, updateFavorites }) => {
       </>
     )
   }
+
+  const loadedRows = rows.filter(fav => fav in clubs)
+
+  if (!loadedRows.length) {
+    return <Loading />
+  }
+
   return (
     <div>
-      {rows
-        .filter(fav => fav in clubs)
-        .map(favorite => (
-          <ClubTableRow
-            club={clubs[favorite]}
-            updateFavorites={toggleFavorite}
-            favorite={table[favorite]}
-            key={favorite}
-          />
-        ))}
+      {loadedRows.map(favorite => (
+        <ClubTableRow
+          club={clubs[favorite]}
+          updateFavorites={toggleFavorite}
+          favorite={table[favorite]}
+          key={favorite}
+        />
+      ))}
     </div>
   )
 }

@@ -11,6 +11,7 @@ export function stripTags(val) {
     .replace('&gt;', '>')
     .replace('&ndash;', '-')
     .replace('&mdash;', '-')
+    .replace('&nbsp;', ' ')
     .trim()
 }
 

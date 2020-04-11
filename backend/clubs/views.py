@@ -203,6 +203,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        # select subset of clubs if requested
+        subset = self.request.query_params.get("in", None)
+        if subset:
+            subset = [x.strip() for x in subset.strip().split(",")]
+            queryset = queryset.filter(code__in=subset)
+
+        # filter by approved clubs
         if self.request.user.has_perm("clubs.see_pending_clubs"):
             return queryset
         elif self.request.user.is_authenticated:

@@ -89,6 +89,7 @@ class Form extends Component {
         uploadStatus: newDict,
         edited: true,
       })
+      this.onChange(e)
     }
   }
 
@@ -211,8 +212,9 @@ class Form extends Component {
           disabled={readonly}
           value={value}
           onChange={e => {
-            this.onChange(e)
-            this.setState({ ['field-' + name]: e.target.value })
+            this.setState({ ['field-' + name]: e.target.value }, () =>
+              this.onChange(e)
+            )
           }}
           key={name}
           type={type}
@@ -229,8 +231,9 @@ class Form extends Component {
             dateFormat="MMMM d, yyyy h:mm aa"
             selected={Date.parse(value) || value}
             onChange={val => {
-              this.onChange(val)
-              this.setState({ ['field-' + name]: val })
+              this.setState({ ['field-' + name]: val }, () =>
+                this.onChange(val)
+              )
             }}
             placeholderText={placeholder}
           />
@@ -294,8 +297,9 @@ class Form extends Component {
           className="textarea"
           value={value}
           onChange={e => {
-            this.onChange(e)
-            this.setState({ [`field-${name}`]: e.target.value })
+            this.setState({ [`field-${name}`]: e.target.value }, () =>
+              this.onChange(e)
+            )
           }}
         />
       )
@@ -359,8 +363,9 @@ class Form extends Component {
             value={value || []}
             options={choices.map(converter)}
             onChange={opt => {
-              this.onChange(opt)
-              this.setState({ [`field-${name}`]: opt })
+              this.setState({ [`field-${name}`]: opt }, () =>
+                this.onChange(opt)
+              )
             }}
             styles={{
               container: style => ({
@@ -380,8 +385,7 @@ class Form extends Component {
           value={value}
           options={choices}
           onChange={opt => {
-            this.onChange(opt)
-            this.setState({ [`field-${name}`]: opt })
+            this.setState({ [`field-${name}`]: opt }, () => this.onChange(opt))
           }}
         />
       )
@@ -392,8 +396,9 @@ class Form extends Component {
             type="checkbox"
             checked={value}
             onChange={e => {
-              this.onChange(e)
-              this.setState({ [`field-${name}`]: e.target.checked })
+              this.setState({ [`field-${name}`]: e.target.checked }, () =>
+                this.onChange(e)
+              )
             }}
           />
           &nbsp;
@@ -568,6 +573,16 @@ export class ModelForm extends Component {
     this.onSubmit = this.onSubmit.bind(this)
     this.onDelete = this.onDelete.bind(this)
     this.onCreate = this.onCreate.bind(this)
+    this.onChange = this.onChange.bind(this)
+  }
+
+  /**
+   * This is called when the create/edit form has its contents changed.
+   */
+  onChange(obj) {
+    if (this.props.onChange) {
+      this.props.onChange(obj)
+    }
   }
 
   onCreate() {
@@ -709,6 +724,8 @@ export class ModelForm extends Component {
       noun = 'Object',
       deleteVerb = 'Delete',
       allowCreation = true,
+      allowEditing = true,
+      allowDeletion = true,
       confirmDeletion = false,
       keyField = 'id',
     } = this.props
@@ -756,32 +773,39 @@ export class ModelForm extends Component {
                   ))}
                   <td>
                     <div className="buttons">
-                      <button
-                        onClick={() =>
-                          this.setState({ currentlyEditing: object[keyField] })
-                        }
-                        className="button is-primary is-small"
-                      >
-                        <Icon name="edit" alt="edit" /> Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirmDeletion) {
-                            if (
-                              confirm(
-                                `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`
-                              )
-                            ) {
+                      {allowEditing && (
+                        <button
+                          onClick={() => {
+                            this.setState({
+                              currentlyEditing: object[keyField],
+                            })
+                            this.onChange(object)
+                          }}
+                          className="button is-primary is-small"
+                        >
+                          <Icon name="edit" alt="edit" /> Edit
+                        </button>
+                      )}
+                      {allowDeletion && (
+                        <button
+                          onClick={() => {
+                            if (confirmDeletion) {
+                              if (
+                                confirm(
+                                  `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`
+                                )
+                              ) {
+                                this.onDelete(object)
+                              }
+                            } else {
                               this.onDelete(object)
                             }
-                          } else {
-                            this.onDelete(object)
-                          }
-                        }}
-                        className="button is-danger is-small"
-                      >
-                        <Icon name="trash" alt="delete" /> {deleteVerb}
-                      </button>
+                          }}
+                          className="button is-danger is-small"
+                        >
+                          <Icon name="trash" alt="delete" /> {deleteVerb}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -799,9 +823,15 @@ export class ModelForm extends Component {
                 )}
               </Subtitle>
               <Form
+                ref="currentForm"
                 key={currentlyEditing}
                 fields={fields}
                 defaults={currentObject}
+                onChange={() => {
+                  const data = this.refs.currentForm.getSubmitData()
+                  data._original = currentObject
+                  this.onChange(data)
+                }}
                 errors={
                   currentObject._status === false &&
                   currentObject._error_message
@@ -847,7 +877,7 @@ export class ModelForm extends Component {
           )}
           {currentlyEditing !== null && (
             <span
-              onClick={() =>
+              onClick={() => {
                 this.setState({
                   currentlyEditing: null,
                   getApiUrl,
@@ -855,7 +885,8 @@ export class ModelForm extends Component {
                   getRoleDisplay,
                   createObject: {},
                 })
-              }
+                this.onChange({})
+              }}
               className="button is-primary is-pulled-right"
             >
               {allowCreation ? (
