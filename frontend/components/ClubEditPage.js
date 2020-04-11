@@ -1,5 +1,5 @@
 import s from 'styled-components'
-import { Component } from 'react'
+import { Component, useState } from 'react'
 import Link from 'next/link'
 import Select from 'react-select'
 import TimeAgo from 'react-timeago'
@@ -159,6 +159,48 @@ const EventBox = s.div`
     margin-top: 5px;    
   }
 `
+
+const DevicesWrapper = s.div`
+  margin-top: 1em;
+  & .marvel-device {
+    margin: 0 auto;
+    display: block;
+  }
+`
+
+const Devices = ({ contents }) => {
+  const [deviceType, setDeviceType] = useState('none')
+
+  return (
+    <>
+      <span className="field has-addons is-pulled-right">
+        {['None', 'iOS', 'Android'].map(type => (
+          <p key={type} className="control">
+            <button
+              onClick={() => setDeviceType(type.toLowerCase())}
+              className={`button ${
+                deviceType === type.toLowerCase() ? 'is-link' : ''
+              }`}
+            >
+              <span>{type}</span>
+            </button>
+          </p>
+        ))}
+      </span>
+      <DevicesWrapper className="is-clearfix">
+        {deviceType === 'ios' ? (
+          <Device style={{ zoom: 0.8 }} type="iphone">
+            <DeviceEventPreview type="ios" deviceContents={contents} />
+          </Device>
+        ) : deviceType === 'android' ? (
+          <Device type="android">
+            <DeviceEventPreview type="android" deviceContents={contents} />
+          </Device>
+        ) : null}
+      </DevicesWrapper>
+    </>
+  )
+}
 
 const DeviceEventPreview = ({ deviceContents, type }) => {
   const time =
@@ -1036,20 +1078,7 @@ class ClubForm extends Component {
                   currentTitle={obj => obj.name}
                   onChange={obj => this.setState({ deviceContents: obj })}
                 />
-                <div style={{ marginTop: '1em' }}>
-                  <Device style={{ zoom: 0.8 }} type="iphone">
-                    <DeviceEventPreview
-                      type="ios"
-                      deviceContents={deviceContents}
-                    />
-                  </Device>
-                  <Device type="android">
-                    <DeviceEventPreview
-                      type="android"
-                      deviceContents={deviceContents}
-                    />
-                  </Device>
-                </div>
+                <Devices contents={deviceContents} />
               </Card>
               <Card title="Files">
                 <table className="table is-fullwidth">
