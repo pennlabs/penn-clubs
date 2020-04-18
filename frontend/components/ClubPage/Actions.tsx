@@ -48,7 +48,7 @@ const ActionDiv = s.div`
   margin-top: -1px;
 `
 
-const EditButton = s.button`
+const ActionButton = s.button`
   font-size: 0.8em;
   margin-right: 20px;
 `
@@ -85,15 +85,25 @@ const Actions = ({
 
   const [favCount, setFavCount] = useState(favoriteCount || 0)
 
+  const requestMembership = () =>
+    doApiRequest('/requests/?format=json', {
+      method: 'POST',
+      body: {
+        club: code,
+      },
+    })
+
   return (
     <div className={className} style={style}>
       <Wrapper>
         {!inClub && (
-          <EditButton className="button is-success">Apply to Join</EditButton>
+          <ActionButton className="button is-success" onClick={requestMembership}>
+            Apply to Join
+          </ActionButton>
         )}
         {canEdit && (
           <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
-            <EditButton className="button is-success">Edit Club</EditButton>
+            <ActionButton className="button is-success">Edit Club</ActionButton>
           </Link>
         )}
 
