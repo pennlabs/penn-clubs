@@ -51,6 +51,8 @@ const Club = ({
   updateFavorites,
   subscriptions,
   updateSubscriptions,
+  requests,
+  updateRequests,
 }) => {
   const router = useRouter()
   const { code } = club
@@ -150,6 +152,8 @@ const Club = ({
             updateFavorites={updateFavorites}
             subscriptions={subscriptions}
             updateSubscriptions={updateSubscriptions}
+            requests={requests}
+            updateRequests={updateRequests}
           />
           <StyledCard bordered>
             <Description club={club} />
@@ -167,6 +171,8 @@ const Club = ({
             updateFavorites={updateFavorites}
             subscriptions={subscriptions}
             updateSubscriptions={updateSubscriptions}
+            requests={requests}
+            updateRequests={updateRequests}
           />
           <StyledCard bordered>
             <StrongText>Basic Info</StrongText>

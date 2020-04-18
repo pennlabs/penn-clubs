@@ -97,7 +97,10 @@ const Actions = ({
     <div className={className} style={style}>
       <Wrapper>
         {!inClub && (
-          <ActionButton className="button is-success" onClick={requestMembership}>
+          <ActionButton
+            className="button is-success"
+            onClick={requestMembership}
+          >
             Apply to Join
           </ActionButton>
         )}
