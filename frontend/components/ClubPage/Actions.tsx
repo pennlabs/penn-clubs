@@ -88,6 +88,9 @@ const Actions = ({
   return (
     <div className={className} style={style}>
       <Wrapper>
+        {!inClub && (
+          <EditButton className="button is-success">Apply to Join</EditButton>
+        )}
         {canEdit && (
           <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
             <EditButton className="button is-success">Edit Club</EditButton>
