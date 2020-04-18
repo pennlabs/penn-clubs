@@ -68,11 +68,14 @@ const Actions = ({
   style,
   updateFavorites,
   updateSubscriptions,
+  requests,
+  updateRequests,
   className,
 }: ActionsProps): JSX.Element => {
   const { code, favorite_count: favoriteCount } = club
   const isFavorite = club.is_favorite
   const isSubscription = club.is_subscribe
+  const isRequested = requests.includes(code)
 
   // inClub is set to the membership object if the user is in the club, otherwise false
   const inClub = club.is_member !== false ? { role: club.is_member } : false
@@ -84,14 +87,7 @@ const Actions = ({
     (userInfo && userInfo.is_superuser)
 
   const [favCount, setFavCount] = useState(favoriteCount || 0)
-
-  const requestMembership = () =>
-    doApiRequest('/requests/?format=json', {
-      method: 'POST',
-      body: {
-        club: code,
-      },
-    })
+  const requestMembership = () => updateRequests(code)
 
   return (
     <div className={className} style={style}>
@@ -101,7 +97,7 @@ const Actions = ({
             className="button is-success"
             onClick={requestMembership}
           >
-            Apply to Join
+            {isRequested ? 'Withdraw Application' : 'Apply to Join'}
           </ActionButton>
         )}
         {canEdit && (
