@@ -49,9 +49,11 @@ Running the frontend requires [Node.js](https://nodejs.org/en/).
 
 ### Development
 
-This repository contains several symlinks. To ensure they are properly reproduced in your development environment, you may have to enable symlinks globally by editing your git config file, or enable symlinks only for this repo by cloning with the `-c core.symlinks=true` flag, like so:
+This repository contains several symlinks.
+If you are using Windows, you will need to perform additional steps to ensure they are properly reproduced in your development environment. No action is necessary for MacOS and Linux.
+You may have to enable symlinks globally by editing your git config file, or enable symlinks only for this repo by cloning with the `-c core.symlinks=true` flag, like so:
 ```bash
-git clone -c core.symlinks=true https://github.com/pennlabs/penn-clubs
+git clone -c core.symlinks=true git@github.com:pennlabs/penn-clubs.git
 ```
 
 Click `Login` to log in as a test user.
