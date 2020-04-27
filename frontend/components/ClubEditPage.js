@@ -1173,10 +1173,10 @@ class ClubForm extends Component {
                   <Text>
                     Remove this club entry from Penn Clubs.{' '}
                     <b className="has-text-danger">
-                      This action is permanant and irreversible!
+                      This action is permanent and irreversible!
                     </b>{' '}
                     All club history and membership information will be
-                    permanantly lost. In almost all cases, you want to
+                    permanently lost. In almost all cases, you want to
                     deactivate this club instead.
                   </Text>
                   <div className="buttons">
