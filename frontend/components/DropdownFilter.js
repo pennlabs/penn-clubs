@@ -108,7 +108,7 @@ const DropdownHeaderText = s.p`
   margin-bottom: 0;
 `
 
-// TODO: export out into seperate component?
+// TODO: export out into separate component?
 export const FilterHeader = ({ active, name, toggleActive }) => (
   <>
     <Line />
