@@ -5,7 +5,7 @@ verify_ssl = true
 [dev-packages]
 codecov = "*"
 black = "==19.10b0"
-unittest-xml-reporting = "*"
+unittest-xml-reporting = ">=3.0.2"
 flake8 = "*"
 flake8-isort = "*"
 flake8-quotes = "*"
@@ -34,7 +34,6 @@ qrcode = "*"
 drf-renderer-xlsx = "*"
 uwsgi = "*"
 python-dateutil = "*"
-unittest-xml-reporting = "==3.0.2"
 
 [requires]
 python_version = "3"
