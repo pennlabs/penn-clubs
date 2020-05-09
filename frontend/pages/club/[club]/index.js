@@ -1,6 +1,6 @@
 import s from 'styled-components'
+import { useRouter } from 'next/router'
 
-import { useState, useEffect } from 'react'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
 import Description from '../../../components/ClubPage/Description'
@@ -43,7 +43,7 @@ const StyledCard = s(Card)`
 `
 
 const Club = ({
-  club: initialClub,
+  club,
   clubCode,
   userInfo,
   favorites,
@@ -51,16 +51,7 @@ const Club = ({
   subscriptions,
   updateSubscriptions,
 }) => {
-  const [club, setClub] = useState(initialClub)
-
-  useEffect(() => {
-    doApiRequest(`/clubs/${clubCode}/?format=json`)
-      .then(resp => resp.json())
-      .then(data => setClub(data))
-  }, [initialClub])
-
-  if (!club) return null
-
+  const router = useRouter()
   const { code } = club
   if (!code) {
     return (
@@ -105,7 +96,7 @@ const Club = ({
                   },
                 })
                   .then(resp => resp.json())
-                  .then(data => setClub(data))
+                  .then(() => router.reload())
               }}
             >
               Approve
@@ -121,7 +112,7 @@ const Club = ({
                     },
                   })
                     .then(resp => resp.json())
-                    .then(data => setClub(data))
+                    .then(() => router.reload())
                 }}
               >
                 Reject
@@ -200,9 +191,12 @@ const Club = ({
   )
 }
 
-Club.getInitialProps = async props => {
-  const { query } = props
-  const resp = await doApiRequest(`/clubs/${query.club}/?format=json`)
+Club.getInitialProps = async ctx => {
+  const { query, req } = ctx
+  const data = {
+    headers: req ? { cookie: req.headers.cookie } : undefined,
+  }
+  const resp = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const club = await resp.json()
   return { club, clubCode: query.club }
 }
