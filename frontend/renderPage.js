@@ -165,6 +165,7 @@ function renderPage(Page) {
           resp.json().then(userInfo => {
             // redirect to welcome page if user hasn't seen it before
             if (
+              window &&
               userInfo.has_been_prompted === false &&
               window.location.pathname !== '/welcome'
             ) {
