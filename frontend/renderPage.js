@@ -24,8 +24,6 @@ function renderPage(Page) {
 
       this.state = {
         modal: false,
-        authenticated: null,
-        userInfo: null,
         favorites: [],
         subscriptions: [],
       }
@@ -42,7 +40,6 @@ function renderPage(Page) {
 
     componentDidMount() {
       this.updateUserInfo()
-
       // Delete old csrf token cookie
       document.cookie =
         'csrftoken=; domain=.pennclubs.com; expires = Thu, 01 Jan 1970 00:00:00 GMT'
@@ -60,7 +57,8 @@ function renderPage(Page) {
           updateUserInfo,
           updateSubscriptions,
         } = this
-        const { authenticated, modal, userInfo } = state
+        const { modal } = state
+        const { authenticated, userInfo } = props
         return (
           <div
             style={{
@@ -167,6 +165,7 @@ function renderPage(Page) {
           resp.json().then(userInfo => {
             // redirect to welcome page if user hasn't seen it before
             if (
+              window &&
               userInfo.has_been_prompted === false &&
               window.location.pathname !== '/welcome'
             ) {
@@ -180,15 +179,12 @@ function renderPage(Page) {
             }
 
             this.setState({
-              authenticated: true,
               favorites: userInfo.favorite_set.map(a => a.club),
               subscriptions: userInfo.subscribe_set.map(a => a.club),
-              userInfo,
             })
           })
         } else {
           this.setState({
-            authenticated: false,
             favorites: [],
             subscriptions: [],
           })
@@ -196,11 +192,20 @@ function renderPage(Page) {
       })
     }
   }
-
-  if (Page.getInitialProps) {
-    RenderPage.getInitialProps = async info => {
-      return Page.getInitialProps(info)
+  RenderPage.getInitialProps = async ctx => {
+    let pageProps = {}
+    if (Page.getInitialProps) {
+      pageProps = await Page.getInitialProps(ctx)
     }
+    const res = await doApiRequest('/settings/?format=json', {
+      headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
+    })
+    const auth = { authenticated: false, userInfo: undefined }
+    if (res.ok) {
+      auth.userInfo = await res.json()
+      auth.authenticated = true
+    }
+    return { ...auth, ...pageProps }
   }
 
   return RenderPage
