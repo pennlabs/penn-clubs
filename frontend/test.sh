@@ -21,7 +21,7 @@ popd
 yarn build
 
 # Setup frontend server
-yarn start & yarn run wait-on -s 3 -d 500 -t 30000 http://localhost:3000
+node server.js & yarn run wait-on -s 3 -d 500 -t 30000 http://localhost:3000
 
 # Run tests
 yarn run cypress run

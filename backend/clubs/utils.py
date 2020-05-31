@@ -49,7 +49,7 @@ def html_to_text(html):
                 output += "\n"
             if child.name == "br":
                 output += "\n"
-        return "\n".join(l.strip() for l in output.strip().split("\n"))
+        return "\n".join(line.strip() for line in output.strip().split("\n"))
 
     soup = BeautifulSoup(html, "html.parser")
     return traverse(soup.children).strip()
