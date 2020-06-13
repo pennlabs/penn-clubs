@@ -2,7 +2,7 @@ version: 2.1
 orbs:
   docker: circleci/docker@0.5.19
   django-tools: pennlabs/django-tools@0.0.3
-  helm-tools: pennlabs/helm-tools@0.1.9
+  helm-tools: pennlabs/helm-tools@0.1.10
   react-tools: pennlabs/react-tools@0.0.5
 
 branch-filters: &branch-filters

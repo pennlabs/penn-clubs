@@ -1,4 +1,4 @@
-deploy_version: 0.1.11
+deploy_version: 0.1.20
 image_tag: latest
 
 applications:
