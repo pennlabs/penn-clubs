@@ -21,7 +21,7 @@ describe('Permissioned user tests', () => {
     cy.contains('Benjamin Franklin').should('be.visible')
 
     cy.contains('button', 'Edit Club').click({ force: true })
-    cy.wait(2000)
+    cy.wait(3000)
 
     cy.url().should('contain', 'edit')
     cy.contains('.field', 'Name')

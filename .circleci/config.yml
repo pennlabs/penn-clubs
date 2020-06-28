@@ -18,6 +18,7 @@ workflows:
       - django-tools/check:
           project-name: pennclubs
           project-location: backend
+          python-version: "3.8"
       - react-tools/check:
           project-location: frontend
           image: pennlabs/frontend-test:latest
