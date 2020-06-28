@@ -14,6 +14,7 @@ import Testimonials from '../../../components/ClubPage/Testimonials'
 import Events from '../../../components/ClubPage/Events'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
 import MemberList from '../../../components/ClubPage/MemberList'
+import QuestionList from '../../../components/ClubPage/QuestionList'
 import {
   Card,
   StrongText,
@@ -155,6 +156,8 @@ const Club = ({
           </StyledCard>
           <StrongText>Members</StrongText>
           <MemberList club={club} />
+          <StrongText>FAQ</StrongText>
+          <QuestionList club={club} />
         </div>
         <div className="column is-one-third">
           <DesktopActions
