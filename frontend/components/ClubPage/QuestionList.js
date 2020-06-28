@@ -22,7 +22,7 @@ const QuoteAuthor = s.i`
   font-size: 0.8em;
 `
 
-const QuestionList = ({ club: { code, questions } }) => {
+const QuestionList = ({ club: { name, code, questions } }) => {
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [formErrors, setFormErrors] = useState(null)
 
@@ -87,7 +87,7 @@ const QuestionList = ({ club: { code, questions } }) => {
         </div>
       ) : (
         <>
-          <b>Have a question?</b>
+          <b>Have a question about {name}?</b>
           <Form
             submitButtonAttributes="button is-primary is-small"
             errors={formErrors}

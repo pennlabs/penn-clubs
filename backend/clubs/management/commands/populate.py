@@ -44,11 +44,13 @@ hone your skills in time for recruiting season!""",
                 "question": "What kind of objects do you juggle?",
                 "answer": "Anything ranging from bowling pins to Husqvarna 455 Rancher chain saws!",
                 "is_anonymous": True,
+                "approved": True,
             },
             {
                 "question": "What kind of legal liability does your club have for injuries?",
                 "answer": None,
                 "is_anonymous": False,
+                "approved": False,
             },
         ],
     },
@@ -60,6 +62,14 @@ tempor incididunt ut labore et dolore magna aliqua.</i>""",
         "active": True,
         "approved": True,
         "image": "https://i.imgur.com/TOj74YQ.png",
+        "questions": [
+            {
+                "question": "Lorem ipsum dolor sit amet?",
+                "answer": "Consectetur adipiscing elit!",
+                "is_anonymous": False,
+                "approved": True,
+            }
+        ],
     },
     {
         "code": "penn-memes",
@@ -155,7 +165,14 @@ class Command(BaseCommand):
         # create clubs
         for info in clubs:
             partial = dict(info)
-            custom_fields = ["code", "image", "tags", "badges", "testimonials"]
+            custom_fields = [
+                "code",
+                "image",
+                "tags",
+                "badges",
+                "testimonials",
+                "questions",
+            ]
             for field in custom_fields:
                 if field in partial:
                     del partial[field]

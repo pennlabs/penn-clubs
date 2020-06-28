@@ -399,6 +399,7 @@ class Form extends Component {
         <label className="checkbox">
           <input
             type="checkbox"
+            disabled={disabled}
             checked={value}
             onChange={(e) => {
               this.setState({ [`field-${name}`]: e.target.checked }, () =>
@@ -943,9 +944,11 @@ export class ModelForm extends Component {
             <ModelStatus status={object._status} />
           </ModelItem>
         ))}
-        <span onClick={this.onCreate} className="button is-primary">
-          <Icon name="plus" alt="create" /> Create
-        </span>
+        {allowCreation && (
+          <span onClick={this.onCreate} className="button is-primary">
+            <Icon name="plus" alt="create" /> Create
+          </span>
+        )}
       </>
     )
   }

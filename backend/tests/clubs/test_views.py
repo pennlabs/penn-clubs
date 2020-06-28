@@ -15,6 +15,7 @@ from clubs.models import (
     Favorite,
     Membership,
     MembershipInvite,
+    QuestionAnswer,
     School,
     Tag,
     Testimonial,
@@ -70,6 +71,23 @@ class ClubTestCase(TestCase):
             name="Test Event",
             start_time=timezone.now(),
             end_time=timezone.now(),
+        )
+
+        self.question1 = QuestionAnswer.objects.create(
+            club=self.club1,
+            question="What is your name?",
+            answer=None,
+            approved=False,
+            author=self.user1,
+        )
+
+        self.question2 = QuestionAnswer.objects.create(
+            club=self.club1,
+            question="What is your favorite color?",
+            answer="Blue",
+            approved=True,
+            author=self.user2,
+            responder=self.user1,
         )
 
     def test_club_upload(self):
@@ -262,7 +280,7 @@ class ClubTestCase(TestCase):
 
         # list events
         resp = self.client.get(
-            reverse("club-events-list", args=(self.club1.code,)), content_type="application/json"
+            reverse("club-events-list", args=(self.club1.code,)), content_type="application/json",
         )
         self.assertIn(resp.status_code, [200], resp.content)
 
@@ -440,7 +458,7 @@ class ClubTestCase(TestCase):
         )
 
         self.assertEqual(
-            Membership.objects.get(person=self.user3, club__code="penn-labs").title, "Treasurer"
+            Membership.objects.get(person=self.user3, club__code="penn-labs").title, "Treasurer",
         )
 
         # delete member
@@ -482,7 +500,12 @@ class ClubTestCase(TestCase):
             )
             self.assertIn(resp.status_code, [400, 403], resp.content)
 
-        good_tries = [{"public": True}, {"public": False}, {"active": True}, {"active": False}]
+        good_tries = [
+            {"public": True},
+            {"public": False},
+            {"active": True},
+            {"active": False},
+        ]
         for good in good_tries:
             resp = self.client.patch(
                 reverse("club-members-detail", args=(self.club1.code, self.user1.username)),
@@ -728,7 +751,14 @@ class ClubTestCase(TestCase):
         self.assertTrue(data["tags"], data)
         self.assertEqual(data["members"][0]["name"], self.user5.get_full_name())
 
-        for link in ["facebook", "twitter", "instagram", "website", "github", "youtube"]:
+        for link in [
+            "facebook",
+            "twitter",
+            "instagram",
+            "website",
+            "github",
+            "youtube",
+        ]:
             self.assertIn(link, data)
 
         self.assertEqual(club_obj.badges.count(), 1)
@@ -889,7 +919,7 @@ class ClubTestCase(TestCase):
         invites = MembershipInvite.objects.filter(club__code=self.club1.code)
         self.assertEqual(invites.count(), 3, data)
         self.assertEqual(
-            list(invites.values_list("role", flat=True)), [Membership.ROLE_OFFICER] * 3, data
+            list(invites.values_list("role", flat=True)), [Membership.ROLE_OFFICER] * 3, data,
         )
         self.assertEqual(len(mail.outbox), 3, mail.outbox)
 
@@ -1116,3 +1146,9 @@ class ClubTestCase(TestCase):
             reverse("clubs-subscription", args=("test-club",)), {"format": "xlsx"}
         )
         self.assertEqual(200, resp.status_code)
+
+    def test_club_questions(self):
+        resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
+        self.assertEqual(200, resp.status_code)
+
+        self.assertEqual(1, len(resp.data))

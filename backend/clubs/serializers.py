@@ -91,6 +91,9 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
     approved = serializers.BooleanField(read_only=True)
 
     def get_author_name(self, obj):
+        user = self.context["request"].user
+        if obj.author == user:
+            return "{} (Anonymous)".format(obj.author.get_full_name())
         if obj.is_anonymous or obj.author is None:
             return "Anonymous"
         return obj.author.get_full_name()

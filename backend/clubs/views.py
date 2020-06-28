@@ -507,6 +507,10 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         club_code = self.kwargs["club_code"]
         questions = QuestionAnswer.objects.filter(club__code=club_code)
+
+        if not self.request.user.is_authenticated:
+            return questions.filter(approved=True)
+
         membership = Membership.objects.filter(club__code=club_code, person=self.request.user)
 
         if self.request.user.is_superuser or (

@@ -196,6 +196,10 @@ class QuestionAnswerPermission(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         if view.action in ["update", "partial_update", "destroy"]:
+            # must be logged in to modify questions and answers
+            if not request.user.is_authenticated:
+                return False
+
             # only allow original user to edit and delete if the question has not been answered
             if obj.author == request.user and obj.answer is None:
                 return True
