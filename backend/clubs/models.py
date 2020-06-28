@@ -131,6 +131,28 @@ class Club(models.Model):
         ]
 
 
+class QuestionAnswer(models.Model):
+    """
+    Represents a question asked by a prospective member to a club and the club's corresponding answer.
+    """
+
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="questions")
+    author = models.ForeignKey(
+        get_user_model(), on_delete=models.SET_NULL, null=True, related_name="questions"
+    )
+    responder = models.ForeignKey(
+        get_user_model(), on_delete=models.SET_NULL, null=True, related_name="answers"
+    )
+
+    is_anonymous = models.BooleanField()
+
+    question = models.TextField()
+    answer = models.TextField(null=True)
+
+    def __str__(self):
+        return "{}: {}".format(self.club.name, self.text)
+
+
 class Testimonial(models.Model):
     """
     Represents a testimonial for a club.
