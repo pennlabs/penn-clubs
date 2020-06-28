@@ -1133,6 +1133,7 @@ class ClubForm extends Component {
                   </p>
                   <ModelForm
                     baseUrl={`/clubs/${club.code}/questions/`}
+                    allowCreation={false}
                     fields={[
                       {
                         name: 'question',
