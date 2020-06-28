@@ -101,7 +101,11 @@ def find_relationship_helper(relationship, club_object, found):
         else:
             children_recurse.append({"name": child.name, "code": child.code})
 
-    return {"name": club_object.name, "code": club_object.code, "children": children_recurse}
+    return {
+        "name": club_object.name,
+        "code": club_object.code,
+        "children": children_recurse,
+    }
 
 
 def filter_note_permission(queryset, club, user):
@@ -321,7 +325,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 desc = request.query_params.get("desc")
                 parameters = json.dumps(dict(request.query_params))
                 Report.objects.create(
-                    name=name, description=desc, parameters=parameters, creator=request.user
+                    name=name, description=desc, parameters=parameters, creator=request.user,
                 )
 
         return super().list(request, *args, **kwargs)
@@ -501,7 +505,16 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
     permission_classes = [QuestionAnswerPermission | IsSuperuser]
 
     def get_queryset(self):
-        return QuestionAnswer.objects.filter(club__code=self.kwargs["club_code"])
+        club_code = self.kwargs["club_code"]
+        questions = QuestionAnswer.objects.filter(club__code=club_code)
+        membership = Membership.objects.filter(club__code=club_code, person=self.request.user)
+
+        if self.request.user.is_superuser or (
+            membership is not None and membership.role <= Membership.ROLE_OFFICER
+        ):
+            return questions
+
+        return questions.filter(Q(approved=True) | Q(author=self.request.user))
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):

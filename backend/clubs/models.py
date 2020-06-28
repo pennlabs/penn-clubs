@@ -144,7 +144,8 @@ class QuestionAnswer(models.Model):
         get_user_model(), on_delete=models.SET_NULL, null=True, related_name="answers"
     )
 
-    is_anonymous = models.BooleanField()
+    approved = models.BooleanField(default=False)
+    is_anonymous = models.BooleanField(default=False)
 
     question = models.TextField()
     answer = models.TextField(null=True)

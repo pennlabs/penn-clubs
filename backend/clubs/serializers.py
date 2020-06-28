@@ -88,6 +88,7 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
     author = serializers.SerializerMethodField("get_author_name")
     responder = serializers.SerializerMethodField("get_responder_name")
     is_anonymous = serializers.BooleanField(write_only=True)
+    approved = serializers.BooleanField(read_only=True)
 
     def get_author_name(self, obj):
         if obj.is_anonymous or obj.author is None:
@@ -169,6 +170,7 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         if "answer" in validated_data and not validated_data["answer"] == instance.answer:
             validated_data["responder"] = user
+            validated_data["approved"] = True
 
         return super().update(instance, validated_data)
 
@@ -182,7 +184,7 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
     class Meta:
         model = QuestionAnswer
-        fields = ("id", "question", "answer", "author", "responder", "is_anonymous")
+        fields = ("id", "question", "answer", "author", "responder", "is_anonymous", "approved")
 
 
 class ReportSerializer(serializers.ModelSerializer):

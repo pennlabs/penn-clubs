@@ -21,6 +21,14 @@ const QuoteAuthor = s.i`
   font-size: 0.8em;
 `
 
+const NotApprovedText = s.span`
+  font-size: 0.8em;
+  color: white;
+  background-color: #aaa;
+  padding: 3px 5px;
+  border-radius: 3px;
+`
+
 const QuestionList = ({ club: { code, questions } }) => {
   const handleSubmit = data => {
     doApiRequest(`/clubs/${code}/questions/?format=json`, {
@@ -33,6 +41,11 @@ const QuestionList = ({ club: { code, questions } }) => {
     <>
       {questions.map(question => (
         <Question key={question.id}>
+          {!question.approved && (
+            <NotApprovedText>
+              Unapproved
+            </NotApprovedText>
+          )}{' '}
           <b>Question:</b> {question.question}{' '}
           <QuoteAuthor>- {question.author}</QuoteAuthor>
           <AnswerText>
