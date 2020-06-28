@@ -25,7 +25,6 @@ describe('Authenticated user tests', () => {
     tabs.forEach(tab => {
       cy.get('.tabs')
         .contains(tab)
-        .wait(500)
         .click()
     })
   })
