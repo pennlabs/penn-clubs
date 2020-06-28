@@ -31,6 +31,7 @@ from clubs.models import (
     MembershipInvite,
     MembershipRequest,
     Note,
+    QuestionAnswer,
     Report,
     School,
     Subscribe,
@@ -62,6 +63,7 @@ from clubs.serializers import (
     MembershipRequestSerializer,
     MembershipSerializer,
     NoteSerializer,
+    QuestionAnswerSerializer,
     ReportSerializer,
     SchoolSerializer,
     SubscribeSerializer,
@@ -474,6 +476,31 @@ class TestimonialViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Testimonial.objects.filter(club__code=self.kwargs["club_code"])
+
+
+class QuestionAnswerViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of questions and answers for this club.
+
+    create:
+    Create a new question for this club.
+
+    update:
+    Change the question or the answer for this club.
+
+    retrieve:
+    Return a single testimonial.
+
+    destroy:
+    Delete a testimonial.
+    """
+
+    serializer_class = QuestionAnswerSerializer
+    permission_classes = [IsSuperuser]
+
+    def get_queryset(self):
+        return QuestionAnswer.objects.filter(club__code=self.kwargs["club_code"])
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):

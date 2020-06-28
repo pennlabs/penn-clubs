@@ -155,6 +155,8 @@ const Club = ({
           </StyledCard>
           <StrongText>Members</StrongText>
           <MemberList club={club} />
+          <StrongText>FAQ</StrongText>
+          <QuestionList club={club} />
         </div>
         <div className="column is-one-third">
           <DesktopActions

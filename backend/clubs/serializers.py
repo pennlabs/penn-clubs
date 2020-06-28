@@ -21,6 +21,7 @@ from clubs.models import (
     Note,
     NoteTag,
     Profile,
+    QuestionAnswer,
     Report,
     School,
     Subscribe,
@@ -81,6 +82,26 @@ class TestimonialSerializer(ClubRouteMixin, serializers.ModelSerializer):
     class Meta:
         model = Testimonial
         fields = ("id", "text")
+
+
+class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
+    author = serializers.SerializerMethodField("get_author_name")
+    responder = serializers.SerializerMethodField("get_responder_name")
+    is_anonymous = serializers.BooleanField(write_only=True)
+
+    def get_author_name(self, obj):
+        if obj.is_anonymous or obj.author is None:
+            return "Anonymous"
+        return obj.author.get_full_name()
+
+    def get_responder_name(self, obj):
+        if obj.responder is None:
+            return obj.club.name
+        return obj.responder.get_full_name()
+
+    class Meta:
+        model = QuestionAnswer
+        fields = ("id", "question", "answer", "author", "responder", "is_anonymous")
 
 
 class ReportSerializer(serializers.ModelSerializer):
@@ -409,6 +430,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     parent_orgs = serializers.SerializerMethodField("get_parent_orgs")
     badges = BadgeSerializer(many=True, required=False)
     testimonials = TestimonialSerializer(many=True, read_only=True)
+    questions = QuestionAnswerSerializer(many=True, read_only=True)
     events = EventSerializer(many=True, read_only=True)
 
     def get_parent_orgs(self, obj):
@@ -571,6 +593,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "badges",
             "image",
             "testimonials",
+            "questions",
             "events",
         ]
         save_related_fields = [

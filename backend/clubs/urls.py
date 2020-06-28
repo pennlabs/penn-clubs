@@ -13,6 +13,7 @@ from clubs.views import (
     MembershipRequestViewSet,
     MemberViewSet,
     NoteViewSet,
+    QuestionAnswerViewSet,
     ReportViewSet,
     SchoolViewSet,
     SubscribeViewSet,
@@ -43,6 +44,7 @@ clubs_router.register(r"invites", MemberInviteViewSet, basename="club-invites")
 clubs_router.register(r"assets", AssetViewSet, basename="club-assets")
 clubs_router.register(r"notes", NoteViewSet, basename="club-notes")
 clubs_router.register(r"testimonials", TestimonialViewSet, basename="club-testimonials")
+clubs_router.register(r"questions", QuestionAnswerViewSet, basename="club-questions")
 clubs_router.register(
     r"membershiprequests", MembershipRequestOwnerViewSet, basename="club-membership-requests"
 )
