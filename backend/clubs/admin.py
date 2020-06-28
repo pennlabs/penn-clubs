@@ -323,7 +323,7 @@ class YearAdmin(admin.ModelAdmin):
 class QuestionAnswerAdmin(admin.ModelAdmin):
     search_fields = ("question", "answer")
     list_display = ("club", "question", "answer", "approved")
-    list_filter = ("approved",)
+    list_filter = ("approved", "updated_at")
 
 
 admin.site.unregister(Group)
