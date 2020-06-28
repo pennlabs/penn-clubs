@@ -48,6 +48,7 @@ from clubs.permissions import (
     IsSuperuser,
     MemberPermission,
     NotePermission,
+    QuestionAnswerPermission,
     ReadOnly,
 )
 from clubs.serializers import (
@@ -497,7 +498,7 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = QuestionAnswerSerializer
-    permission_classes = [IsSuperuser]
+    permission_classes = [QuestionAnswerPermission | IsSuperuser]
 
     def get_queryset(self):
         return QuestionAnswer.objects.filter(club__code=self.kwargs["club_code"])

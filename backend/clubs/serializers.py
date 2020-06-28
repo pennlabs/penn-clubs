@@ -99,6 +99,87 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
             return obj.club.name
         return obj.responder.get_full_name()
 
+    def validate_question(self, value):
+        """
+        The club owner is not allowed to edit the user's question.
+        Users are not allowed to edit their question after it has
+        been responded to.
+        """
+        if not self.instance:
+            return value
+
+        if not value == self.instance.question:
+            user = self.context["request"].user
+            if not user == self.instance.author:
+                raise serializers.ValidationError(
+                    "You are not allowed to edit the author's question!"
+                )
+
+            if self.instance.answer:
+                raise serializers.ValidationError(
+                    "You are not allowed to edit the question after an answer has been given!"
+                )
+
+        return value
+
+    def validate_is_anonymous(self, value):
+        """
+        Only the author should be able to change the status of their post's anonymity.
+        """
+        if not self.instance:
+            return value
+
+        if not value == self.instance.is_anonymous:
+            user = self.context["request"].user
+            if not user == self.instance.author:
+                raise serializers.ValidationError(
+                    "You are not allowed to change the anonymity status of this post!"
+                )
+
+        return value
+
+    def validate_answer(self, value):
+        """
+        Only a club officer may respond to a question.
+        An answer may not be set to null after it has been answered.
+        """
+        if value is None:
+            if self.instance and self.instance.answer is not None:
+                raise serializers.ValidationError(
+                    "You are not allowed to unanswer a question! You can change the answer text instead."
+                )
+            return value
+
+        club = Club.objects.get(code=self.context["view"].kwargs.get("club_code"))
+        user = self.context["request"].user
+        membership = Membership.objects.filter(person=user, club=club).first()
+        if membership is not None and membership.role <= Membership.ROLE_OFFICER:
+            return value
+
+        raise serializers.ValidationError("You are not allowed to answer this question!")
+
+    def update(self, instance, validated_data):
+        """
+        If the question or answer has changed, set the new author appropriately.
+        """
+        user = self.context["request"].user
+
+        if "question" in validated_data and not validated_data["question"] == instance.question:
+            validated_data["author"] = user
+
+        if "answer" in validated_data and not validated_data["answer"] == instance.answer:
+            validated_data["responder"] = user
+
+        return super().update(instance, validated_data)
+
+    def create(self, validated_data):
+        """
+        Set the author of the question to the current user.
+        """
+        validated_data["author"] = self.context["request"].user
+
+        return super().create(validated_data)
+
     class Meta:
         model = QuestionAnswer
         fields = ("id", "question", "answer", "author", "responder", "is_anonymous")

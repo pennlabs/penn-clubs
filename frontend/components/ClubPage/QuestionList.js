@@ -32,7 +32,7 @@ const QuestionList = ({ club: { code, questions } }) => {
   return (
     <>
       {questions.map(question => (
-        <Question>
+        <Question key={question.id}>
           <b>Question:</b> {question.question}{' '}
           <QuoteAuthor>- {question.author}</QuoteAuthor>
           <AnswerText>
