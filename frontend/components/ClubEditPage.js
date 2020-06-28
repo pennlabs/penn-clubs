@@ -1118,6 +1118,39 @@ class ClubForm extends Component {
           ),
         },
         {
+          name: 'questions',
+          label: 'Questions',
+          content: (
+            <>
+              <div className="card" style={{ marginBottom: 20 }}>
+                <div className="card-header">
+                  <p className="card-header-title">Student Questions</p>
+                </div>
+                <div className="card-content">
+                  <p>
+                    You can see a list of questions that prospective club
+                    members have asked below.
+                  </p>
+                  <ModelForm
+                    baseUrl={`/clubs/${club.code}/questions/`}
+                    fields={[
+                      {
+                        name: 'question',
+                        type: 'textarea',
+                        disabled: true,
+                      },
+                      {
+                        name: 'answer',
+                        type: 'textarea',
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
+            </>
+          ),
+        },
+        {
           name: 'settings',
           label: 'Settings',
           content: (

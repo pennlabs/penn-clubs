@@ -194,6 +194,7 @@ class Form extends Component {
       converter,
       label,
       hasLabel = true,
+      disabled = false,
       required,
       help,
     } = field
@@ -221,6 +222,7 @@ class Form extends Component {
           key={name}
           type={type}
           name={name}
+          disabled={disabled}
           placeholder={placeholder}
         />
       )
@@ -237,6 +239,7 @@ class Form extends Component {
                 this.onChange(val),
               )
             }}
+            disabled={disabled}
             placeholderText={placeholder}
           />
         </DatePickerWrapper>

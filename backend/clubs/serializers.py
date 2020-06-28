@@ -153,6 +153,10 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         club = Club.objects.get(code=self.context["view"].kwargs.get("club_code"))
         user = self.context["request"].user
+
+        if user.is_superuser:
+            return value
+
         membership = Membership.objects.filter(person=user, club=club).first()
         if membership is not None and membership.role <= Membership.ROLE_OFFICER:
             return value
@@ -170,7 +174,8 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         if "answer" in validated_data and not validated_data["answer"] == instance.answer:
             validated_data["responder"] = user
-            validated_data["approved"] = True
+            if "approved" not in validated_data:
+                validated_data["approved"] = True
 
         return super().update(instance, validated_data)
 
