@@ -416,7 +416,7 @@ class Form extends Component {
         key={name}
         className={isHorizontal ? 'field is-horizontal' : 'field'}
       >
-        {hasLabel && !(type === 'checkbox' && !isHorizontal) && (
+        {hasLabel && (
           <div className="field-label is-normal">
             <label className="label">
               {type === 'checkbox' ? titleize(name) : label || titleize(name)}

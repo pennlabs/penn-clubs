@@ -3,18 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 
-from clubs.models import (
-    Badge,
-    Club,
-    Major,
-    Membership,
-    Profile,
-    QuestionAnswer,
-    School,
-    Tag,
-    Testimonial,
-    Year,
-)
+from clubs.models import Badge, Club, Major, Membership, Profile, School, Tag, Testimonial, Year
 
 
 clubs = [
@@ -38,18 +27,6 @@ hone your skills in time for recruiting season!""",
             {"text": "Fantastic club!"},
             {"text": "Best club ever!"},
             {"text": "Don't start with the chainsaws!"},
-        ],
-        "questions": [
-            {
-                "question": "What kind of objects do you juggle?",
-                "answer": "Anything ranging from bowling pins to Husqvarna 455 Rancher chain saws!",
-                "is_anonymous": True,
-            },
-            {
-                "question": "What kind of legal liability does your club have for injuries?",
-                "answer": None,
-                "is_anonymous": False,
-            },
         ],
     },
     {
@@ -174,10 +151,7 @@ class Command(BaseCommand):
                         new_obj, _ = obj.objects.get_or_create(**new_obj)
                         getattr(club, name).add(new_obj)
 
-            foreign_key_fields = [
-                (Testimonial, "testimonials"),
-                (QuestionAnswer, "questions"),
-            ]
+            foreign_key_fields = [(Testimonial, "testimonials")]
             for obj, name in foreign_key_fields:
                 if name in info:
                     for new_obj in info[name]:
