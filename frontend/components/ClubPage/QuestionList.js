@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import s from 'styled-components'
 import Form from '../Form'
 import { doApiRequest } from '../../utils'
@@ -21,20 +22,24 @@ const QuoteAuthor = s.i`
   font-size: 0.8em;
 `
 
-const NotApprovedText = s.span`
-  font-size: 0.8em;
-  color: white;
-  background-color: #aaa;
-  padding: 3px 5px;
-  border-radius: 3px;
-`
-
 const QuestionList = ({ club: { code, questions } }) => {
+  const [formSubmitted, setFormSubmitted] = useState(false)
+  const [formErrors, setFormErrors] = useState(null)
+
   const handleSubmit = data => {
+    setFormErrors(null)
     doApiRequest(`/clubs/${code}/questions/?format=json`, {
       method: 'POST',
       body: data,
     })
+      .then(resp => resp.json())
+      .then(data => {
+        if ('id' in data) {
+          setFormSubmitted(true)
+        } else {
+          setFormErrors(data)
+        }
+      })
   }
 
   return (
@@ -42,9 +47,7 @@ const QuestionList = ({ club: { code, questions } }) => {
       {questions.map(question => (
         <Question key={question.id}>
           {!question.approved && (
-            <NotApprovedText>
-              Unapproved
-            </NotApprovedText>
+            <span className="tag is-light">Unapproved</span>
           )}{' '}
           <b>Question:</b> {question.question}{' '}
           <QuoteAuthor>- {question.author}</QuoteAuthor>
@@ -64,19 +67,43 @@ const QuestionList = ({ club: { code, questions } }) => {
           </AnswerText>
         </Question>
       ))}
-      <b>Have a question?</b>
-      <Form
-        isHorizontal={false}
-        fields={[
-          { name: 'question', type: 'textarea', hasLabel: false },
-          {
-            name: 'is_anonymous',
-            type: 'checkbox',
-            label: 'Post this question anonymously.',
-          },
-        ]}
-        onSubmit={handleSubmit}
-      />
+      {formSubmitted ? (
+        <div className="notification is-primary">
+          <b>Your question has been submitted!</b>
+          <p>
+            It will be posted publically once it has been approved and answered
+            by club members.
+          </p>
+          <p className="mb-3">Thank you for contributing to Penn Clubs!</p>
+          <button
+            className="button is-link is-small"
+            onClick={e => {
+              e.preventDefault()
+              setFormSubmitted(false)
+            }}
+          >
+            Post another question
+          </button>
+        </div>
+      ) : (
+        <>
+          <b>Have a question?</b>
+          <Form
+            submitButtonAttributes="button is-primary is-small"
+            errors={formErrors}
+            isHorizontal={false}
+            fields={[
+              { name: 'question', type: 'textarea', hasLabel: false },
+              {
+                name: 'is_anonymous',
+                type: 'checkbox',
+                label: 'Post this question anonymously.',
+              },
+            ]}
+            onSubmit={handleSubmit}
+          />
+        </>
+      )}
     </>
   )
 }

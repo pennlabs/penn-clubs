@@ -471,7 +471,12 @@ class Form extends Component {
   }
 
   render() {
-    const { submitButton, disabledSubmitButton, fields } = this.props
+    const {
+      submitButton,
+      disabledSubmitButton,
+      fields,
+      submitButtonAttributes = 'button is-primary is-medium',
+    } = this.props
     const { edited } = this.state
 
     // If both submitButton and disabledSubmitButton are provided or not provided, then
@@ -483,10 +488,7 @@ class Form extends Component {
         button = <span onClick={this.handleSubmit}>{submitButton}</span>
       } else {
         button = (
-          <a
-            className="button is-primary is-medium"
-            onClick={this.handleSubmit}
-          >
+          <a className={submitButtonAttributes} onClick={this.handleSubmit}>
             Submit
           </a>
         )
@@ -499,7 +501,7 @@ class Form extends Component {
       } else {
         button = (
           <a
-            className="button is-primary is-medium"
+            className={submitButtonAttributes}
             title="You must make changes before submitting."
             disabled
           >
