@@ -26,6 +26,7 @@ describe('Authenticated user tests', () => {
       cy.get('.tabs')
         .contains(tab)
         .click()
+      cy.url().should('contain', `#${tab}`)
     })
   })
 
