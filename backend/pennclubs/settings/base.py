@@ -160,6 +160,7 @@ DEFAULT_DOMAIN = "pennclubs.com"
 VIEW_URL = "https://{domain}/club/{club}"
 EDIT_URL = "https://{domain}/club/{club}/edit"
 FLYER_URL = "https://{domain}/club/{club}/flyer"
+QUESTION_URL = "https://{domain}/club/{club}/edit#questions"
 
 
 # File upload settings

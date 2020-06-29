@@ -7,7 +7,7 @@
         {
             background-color: #ccc;
         }
-        #email, #text-email
+        #email, #text-email, #variables
         {
             max-width: 800px;
             background-color: white;
@@ -61,5 +61,13 @@
             {{email}}
         </div>
         <div id="text-email">{{text_email}}</div>
+        <div id="variables">
+            <b>Used Variables</b>
+            <ul>
+                {% for var in variables %}
+                    <li><kbd>{{var.0}}</kbd> - {{var.1}}</li>
+                {% endfor %}
+            </ul>
+        </div>
     </body>
 </html>

@@ -815,6 +815,34 @@ class MassInviteAPIView(APIView):
         return Response({"detail": "Sent invite(s) to {} email(s)!".format(len(emails))})
 
 
+class EmailPreviewContext(dict):
+    """
+    A dict class to keep track of which variables were actually used by the template.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self._called = set()
+        super().__init__(*args, **kwargs)
+
+    def __getitem__(self, k):
+        try:
+            preview = super().__getitem__(k)
+        except KeyError:
+            preview = None
+
+        if preview is None:
+            preview = "[{}]".format(k.replace("_", " ").title())
+
+        self._called.add((k, preview))
+        return preview
+
+    def __contains__(self, k):
+        return True
+
+    def get_used_variables(self):
+        return sorted(self._called)
+
+
 def email_preview(request):
     """
     Debug endpoint used for previewing how email templates will look.
@@ -824,22 +852,27 @@ def email_preview(request):
 
     email = None
     text_email = None
+    context = None
 
     if "email" in request.GET:
         email_path = os.path.basename(request.GET.get("email"))
-        context = {
-            "name": "[Club Name]",
-            "url": "[URL]",
-            "view_url": "[View URL]",
-            "flyer_url": "[Flyer URL]",
-            "sender": {"username": "[Sender Username]", "email": "[Sender Email]"},
-            "role": 0,
-        }
+        context = EmailPreviewContext(
+            {
+                "name": "[Club Name]",
+                "sender": {"username": "[Sender Username]", "email": "[Sender Email]"},
+                "role": 0,
+            }
+        )
         email = render_to_string("emails/{}.html".format(email_path), context)
         text_email = html_to_text(email)
 
     return render(
         request,
         "preview.html",
-        {"templates": email_templates, "email": email, "text_email": text_email},
+        {
+            "templates": email_templates,
+            "email": email,
+            "text_email": text_email,
+            "variables": context.get_used_variables() if context is not None else [],
+        },
     )

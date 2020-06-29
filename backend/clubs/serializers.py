@@ -185,10 +185,15 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         """
         Set the author of the question to the current user.
+        Send out an email to officers and above notifying them of this question.
         """
         validated_data["author"] = self.context["request"].user
 
-        return super().create(validated_data)
+        obj = super().create(validated_data)
+
+        obj.send_question_mail(self.context["request"])
+
+        return obj
 
     class Meta:
         model = QuestionAnswer
