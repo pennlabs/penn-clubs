@@ -34,6 +34,7 @@ qrcode = "*"
 drf-renderer-xlsx = "*"
 uwsgi = "*"
 python-dateutil = "*"
+psycopg2 = "*"
 
 [requires]
 python_version = "3"
