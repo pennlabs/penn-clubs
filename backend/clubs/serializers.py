@@ -871,7 +871,7 @@ class UserSerializer(serializers.ModelSerializer):
     membership_set = UserMembershipSerializer(many=True, read_only=True)
     favorite_set = FavoriteSerializer(many=True, read_only=True)
     subscribe_set = UserSubscribeSerializer(many=True, read_only=True)
-    join_request_set = MembershipRequestSerializer(many=True, read_only=True)
+    membershiprequest_set = MembershipRequestSerializer(many=True, read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     image = serializers.ImageField(source="profile.image", write_only=True, allow_null=True)
     image_url = serializers.SerializerMethodField("get_image_url")
@@ -922,7 +922,7 @@ class UserSerializer(serializers.ModelSerializer):
             "membership_set",
             "favorite_set",
             "subscribe_set",
-            "join_request_set",
+            "membershiprequest_set",
             "is_superuser",
             "image_url",
             "image",
