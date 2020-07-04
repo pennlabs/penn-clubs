@@ -124,6 +124,14 @@ you can procrastinate on the application and ultimately miss the deadline!""",
         "approved": True,
         "tags": [{"name": ("long " * 15) + "tag"}],
     },
+    {
+        "code": "empty-club",
+        "name": "Empty Club",
+        "description": "A club without any members.",
+        "active": True,
+        "approved": True,
+        "tags": [{"name": "Professional"}],
+    },
 ]
 
 
@@ -241,7 +249,7 @@ class Command(BaseCommand):
 
         # add memberships
         count = 0
-        for club in Club.objects.all()[:50]:
+        for club in Club.objects.exclude(code="empty-club")[:50]:
             for obj in user_objs[:count]:
                 Membership.objects.get_or_create(club=club, person=obj)
             count += 1
