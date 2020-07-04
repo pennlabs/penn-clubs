@@ -452,6 +452,28 @@ class ClubListSerializer(serializers.ModelSerializer):
     target_majors = MajorSerializer(many=True, required=False)
     target_years = YearSerializer(many=True, required=False)
 
+    is_favorite = serializers.SerializerMethodField("get_is_favorite")
+    is_subscribe = serializers.SerializerMethodField("get_is_subscribe")
+    is_member = serializers.SerializerMethodField("get_is_member")
+
+    def get_is_favorite(self, obj):
+        user = self.context["request"].user
+        if not user.is_authenticated:
+            return False
+        return obj.favorite_set.filter(person=user).exists()
+
+    def get_is_subscribe(self, obj):
+        user = self.context["request"].user
+        if not user.is_authenticated:
+            return False
+        return obj.subscribe_set.filter(person=user).exists()
+
+    def get_is_member(self, obj):
+        user = self.context["request"].user
+        if not user.is_authenticated:
+            return False
+        return obj.membership_set.filter(person=user).exists()
+
     def get_image_url(self, obj):
         if not obj.image:
             return None
@@ -497,6 +519,9 @@ class ClubListSerializer(serializers.ModelSerializer):
             "target_schools",
             "target_majors",
             "target_years",
+            "is_favorite",
+            "is_subscribe",
+            "is_member",
         ]
         extra_kwargs = {
             "name": {
