@@ -34,4 +34,13 @@ export interface Club {
     subtitle: string,
     tags: [Tag],
     size: ClubSize,
+    email: string,
+    facebook: string,
+    website: string,
+    twitter: string,
+    instagram: string,
+    linkedin: string,
+    github: string,
+    listserv: string,
+    how_to_get_involved: string,
 }
