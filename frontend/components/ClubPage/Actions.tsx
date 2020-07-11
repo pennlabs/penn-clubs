@@ -6,7 +6,7 @@ import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
 import { Club, UserInfo } from '../../types'
 import { ROLE_OFFICER } from '../../utils'
-import { BookmarkIcon, SubscribeIcon } from '../common'
+import { BookmarkIcon, Modal, SubscribeIcon } from '../common'
 
 const Wrapper = s.span`
   display: flex;
@@ -143,7 +143,7 @@ const Actions = ({
             <BookmarkIcon
               club={club}
               favorite={isFavorite}
-              updateFavorites={id => {
+              updateFavorites={(id) => {
                 const upd = updateFavorites(id)
                 // If upd is null, checkAuth in renderPage failed, so we do not update the count.
                 if (upd !== null) setFavCount(favCount + (upd ? 1 : -1))
@@ -183,25 +183,9 @@ const Actions = ({
           </p>
           <div
             className="button is-success"
-            onClick={requestMembership}
-          >
-            {isRequested ? 'Withdraw Application' : 'Apply to Join'}
-          </ActionButton>
-        )}
-        {canEdit && (
-          <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
-            <ActionButton className="button is-success">Edit Club</ActionButton>
-          </Link>
-        )}
-
-        <ActionWrapper>
-          <BookmarkIcon
-            club={club}
-            favorite={isFavorite}
-            updateFavorites={(id) => {
-              const upd = updateFavorites(id)
-              // If upd is null, checkAuth in renderPage failed, so we do not update the count.
-              if (upd !== null) setFavCount(favCount + (upd ? 1 : -1))
+            onClick={() => {
+              updateRequests(code)
+              setShowModal(false)
             }}
           >
             Confirm

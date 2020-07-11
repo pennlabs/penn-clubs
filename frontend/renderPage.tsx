@@ -209,7 +209,7 @@ function renderPage(Page) {
             // redirect to welcome page if user hasn't seen it before
             if (
               window &&
-              hasBeenPrompted === false &&
+              userInfo.has_been_prompted === false &&
               window.location.pathname !== '/welcome'
             ) {
               window.location.href =
