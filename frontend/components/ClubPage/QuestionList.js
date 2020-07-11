@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import s from 'styled-components'
-import Form from '../Form'
+
 import { doApiRequest } from '../../utils'
+import Form from '../Form'
 
 const Question = s.div`
   margin-bottom: 15px;
@@ -26,14 +27,14 @@ const QuestionList = ({ club: { name, code, questions } }) => {
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [formErrors, setFormErrors] = useState(null)
 
-  const handleSubmit = data => {
+  const handleSubmit = (data) => {
     setFormErrors(null)
     doApiRequest(`/clubs/${code}/questions/?format=json`, {
       method: 'POST',
       body: data,
     })
-      .then(resp => resp.json())
-      .then(data => {
+      .then((resp) => resp.json())
+      .then((data) => {
         if ('id' in data) {
           setFormSubmitted(true)
         } else {
@@ -44,7 +45,7 @@ const QuestionList = ({ club: { name, code, questions } }) => {
 
   return (
     <>
-      {questions.map(question => (
+      {questions.map((question) => (
         <Question key={question.id}>
           {!question.approved && (
             <span className="tag is-light">Unapproved</span>
@@ -77,7 +78,7 @@ const QuestionList = ({ club: { name, code, questions } }) => {
           <p className="mb-3">Thank you for contributing to Penn Clubs!</p>
           <button
             className="button is-link is-small"
-            onClick={e => {
+            onClick={(e) => {
               e.preventDefault()
               setFormSubmitted(false)
             }}
