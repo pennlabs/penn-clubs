@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import s from 'styled-components'
 
-import { mediaMaxWidth, mediaMinWidth,SM } from '../../constants/measurements'
+import { mediaMaxWidth, mediaMinWidth, SM } from '../../constants/measurements'
 import { Center, EmptyState, Text } from '../common'
 import ClubTabCards from './ClubTabCards'
 import ClubTabTable from './ClubTabTable'

@@ -62,7 +62,7 @@ export function getApiUrl(path: string): string {
   return API_BASE_URL + path
 }
 
-export function doApiRequest(path, data) {
+export function doApiRequest(path: string, data) {
   if (!data) {
     data = {}
   }
@@ -88,12 +88,12 @@ export function titleize(str: string): string {
   return str
     .replace(/_/g, ' ')
     .split(' ')
-    .map(a => a[0].toUpperCase() + a.substr(1).toLowerCase())
+    .map((a) => a[0].toUpperCase() + a.substr(1).toLowerCase())
     .join(' ')
 }
 
-export function formatResponse(err) {
-  return Object.keys(err).map(a => (
+export function formatResponse(err: { [key: string]: string }): JSX.Element[] {
+  return Object.keys(err).map((a) => (
     <div key={a}>
       <b>{titleize(a)}:</b> {err[a]}
     </div>

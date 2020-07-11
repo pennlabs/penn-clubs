@@ -138,7 +138,7 @@ const SearchBar = ({
     storeTimeout(setTimeout(() => resetDisplay(nameInput, selectedTags), 200))
   }, [nameInput])
 
-  const toggleActiveDropdownFilter = name =>
+  const toggleActiveDropdownFilter = (name) =>
     setActiveDropdownFilter(activeDropdownFilter === name ? null : name)
   const focus = () => inputRef.current.focus()
 
@@ -188,7 +188,7 @@ const SearchBar = ({
               aria-label="Search"
               ref={inputRef}
               value={nameInput}
-              onChange={e => setNameInput(e.target.value)}
+              onChange={(e) => setNameInput(e.target.value)}
             />
           </SearchWrapper>
           <MobileLine />
@@ -197,16 +197,16 @@ const SearchBar = ({
             toggleActive={() => toggleActiveDropdownFilter('Tags')}
             tags={tags}
             updateTag={updateTag}
-            selected={selectedTags.filter(tag => tag.name === 'Tags')}
+            selected={selectedTags.filter((tag) => tag.name === 'Tags')}
           />
-          {Object.keys(dropdowns).map(key => (
+          {Object.keys(dropdowns).map((key) => (
             <DropdownFilter
               active={activeDropdownFilter === key}
               toggleActive={() => toggleActiveDropdownFilter(key)}
               name={key}
               key={key}
               options={dropdowns[key]}
-              selected={selectedTags.filter(tag => tag.name === key)}
+              selected={selectedTags.filter((tag) => tag.name === key)}
               updateTag={updateTag}
             />
           ))}

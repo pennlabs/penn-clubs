@@ -22,44 +22,45 @@ const iconStyles = {
 }
 
 type DetailsProps = {
-  club: Club,
-  favorite: boolean,
-  updateFavorites: (code: string) => void,
+  club: Club
+  favorite: boolean
+  updateFavorites: (code: string) => void
 }
 
-const Details = ({
-  club,
-  favorite,
-  updateFavorites,
-}: DetailsProps) => {
-  const { size, application_required: applicationRequired, accepting_members: acceptingMembers } = club
+const Details = ({ club, favorite, updateFavorites }: DetailsProps) => {
+  const {
+    size,
+    application_required: applicationRequired,
+    accepting_members: acceptingMembers,
+  } = club
 
-  return <Wrapper>
-    <p style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8 }}>
-      <Icon name="user" alt="members" size="0.8rem" style={iconStyles} />
-      {getSizeDisplay(size, false)}
-      &nbsp;
-      {' • '}
-      &nbsp;
-      <Icon name="edit" alt="applications" size="0.8rem" style={iconStyles} />
-      {'Apps for '}
-      {{
-        1: 'No',
-        2: 'Some',
-        3: 'All',
-      }[applicationRequired] || 'Unknown If'}
-      {' Roles'}
-      &nbsp;
-      {' • '}
-      &nbsp;
-      {acceptingMembers ? (
-        <Icon
-          name="check-circle"
-          alt="accepting members"
-          size="0.8rem"
-          style={iconStyles}
-        />
-      ) : (
+  return (
+    <Wrapper>
+      <p style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8 }}>
+        <Icon name="user" alt="members" size="0.8rem" style={iconStyles} />
+        {getSizeDisplay(size, false)}
+        &nbsp;
+        {' • '}
+        &nbsp;
+        <Icon name="edit" alt="applications" size="0.8rem" style={iconStyles} />
+        {'Apps for '}
+        {{
+          1: 'No',
+          2: 'Some',
+          3: 'All',
+        }[applicationRequired] || 'Unknown If'}
+        {' Roles'}
+        &nbsp;
+        {' • '}
+        &nbsp;
+        {acceptingMembers ? (
+          <Icon
+            name="check-circle"
+            alt="accepting members"
+            size="0.8rem"
+            style={iconStyles}
+          />
+        ) : (
           <Icon
             name="x-circle"
             alt="accepting members"
@@ -67,15 +68,16 @@ const Details = ({
             style={iconStyles}
           />
         )}
-      {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
-    </p>
-    <BookmarkIcon
-      club={club}
-      favorite={favorite}
-      updateFavorites={updateFavorites}
-      padding="0"
-    />
-  </Wrapper>
+        {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
+      </p>
+      <BookmarkIcon
+        club={club}
+        favorite={favorite}
+        updateFavorites={updateFavorites}
+        padding="0"
+      />
+    </Wrapper>
+  )
 }
 
 export default Details

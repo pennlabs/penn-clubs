@@ -23,6 +23,7 @@
     "find-cache-dir": "^3.3.1",
     "fuse.js": "^3.4.5",
     "html-to-draftjs": "^1.4.0",
+    "http-proxy-middleware": "^0.20.0",
     "isomorphic-unfetch": "^3.0.0",
     "moment": "^2.24.0",
     "next": "^9.1.6",
@@ -39,8 +40,8 @@
     "styled-components": "^4.4.1"
   },
   "scripts": {
-    "lint": "eslint \"./{pages,components,constants}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\"",
-    "clean": "eslint \"./{pages,components,constants}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\" --fix",
+    "lint": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\"",
+    "clean": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\" --fix",
     "test": "./test.sh",
     "dev": "node server.js",
     "build": "next build",
@@ -72,7 +73,6 @@
     "eslint-plugin-react": "^7.14.3",
     "eslint-plugin-simple-import-sort": "^5.0.3",
     "eslint-plugin-standard": "^4.0.1",
-    "http-proxy-middleware": "^0.20.0",
     "istanbul-lib-coverage": "^3.0.0",
     "nyc": "^15.0.0",
     "prettier": "^2.0.5",

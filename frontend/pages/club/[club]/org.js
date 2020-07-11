@@ -75,14 +75,14 @@ const Organization = ({ query, club }) => {
 
   useEffect(() => {
     doApiRequest(`/clubs/${query.club}/children/?format=json`)
-      .then(res => res.json())
-      .then(res => {
+      .then((res) => res.json())
+      .then((res) => {
         setChildren(res)
       })
 
     doApiRequest(`/clubs/${query.club}/parents/?format=json`)
-      .then(res => res.json())
-      .then(res => {
+      .then((res) => res.json())
+      .then((res) => {
         setParents(res)
       })
   }, [query])

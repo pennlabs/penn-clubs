@@ -52,8 +52,8 @@ const iconStyles = {
 
 const SocialIcons = ({ club }) =>
   socials
-    .filter(item => club[item.name])
-    .map(item => (
+    .filter((item) => club[item.name])
+    .map((item) => (
       <div key={item.name}>
         <Icon style={iconStyles} name={item.icon} alt={item.icon} />{' '}
         <SocialLink club={club} item={item} type={item.name} />

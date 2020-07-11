@@ -10,7 +10,7 @@ import {
   WHITE,
 } from '../../constants/colors'
 
-const calculateForegroundColor = color => {
+const calculateForegroundColor = (color) => {
   let obj = Color(`#${color}`)
   if (obj.isDark()) {
     obj = obj.lighten(0.8)

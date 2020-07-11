@@ -1,4 +1,4 @@
-const stripUrl = url => {
+const stripUrl = (url) => {
   return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').replace(/\/$/, '')
 }
 

@@ -7,7 +7,7 @@ import {
   TABLET,
 } from '../../constants/measurements'
 
-const percent = numCols => (numCols / 12) * 100 + '%'
+const percent = (numCols) => (numCols / 12) * 100 + '%'
 
 export const Flex = s.div`
   width: 100%;

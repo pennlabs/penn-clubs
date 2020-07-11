@@ -54,7 +54,7 @@ const TabView = ({ tabs, tabClassName, background }) => {
     <div key={currentTab}>
       {
         (
-          tabs.filter(a => a.name === currentTab)[0] || {
+          tabs.filter((a) => a.name === currentTab)[0] || {
             content: <>Invalid tab selected.</>,
           }
         ).content
@@ -62,7 +62,7 @@ const TabView = ({ tabs, tabClassName, background }) => {
     </div>
   )
 
-  const enabledTabs = tabs.filter(tab => !tab.disabled)
+  const enabledTabs = tabs.filter((tab) => !tab.disabled)
 
   const TabComponent = background ? BackgroundTabs : Tabs
   const ContainerComponent = background ? Container : Div

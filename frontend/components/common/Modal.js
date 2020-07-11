@@ -59,7 +59,7 @@ const CloseModalIcon = s(Icon)`
 
 // Do not propagate events on the modal content to the modal background
 // This would otherwise cause the modal to close on any click
-const noop = event => event.stopPropagation()
+const noop = (event) => event.stopPropagation()
 
 export const Modal = ({ show, children, closeModal }) => {
   const focusRef = useRef()

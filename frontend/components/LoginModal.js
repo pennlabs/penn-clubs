@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import { DARK_GRAY } from '../constants/colors'
-import { getCurrentRelativePath,LOGIN_URL } from '../utils'
+import { getCurrentRelativePath, LOGIN_URL } from '../utils'
 import { Loading, Modal } from './common'
 
 const Logo = s.img`

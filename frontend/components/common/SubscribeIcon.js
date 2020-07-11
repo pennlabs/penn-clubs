@@ -42,7 +42,7 @@ export const SubscribeIcon = ({
     subscribe={subscribe}
     absolute={absolute}
     padding={padding}
-    onClick={e => {
+    onClick={(e) => {
       e.preventDefault()
       e.stopPropagation()
       updateSubscribes(club.code)

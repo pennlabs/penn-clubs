@@ -17,7 +17,7 @@ const applicationTextMap = {
 }
 const defaultApplicationText = 'No Application Required'
 
-const InfoBox = props => {
+const InfoBox = (props) => {
   const data = [
     {
       icon: 'user',

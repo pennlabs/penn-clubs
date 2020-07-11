@@ -138,9 +138,9 @@ const DropdownFilter = ({
    *
    * @param {{value: string}} tag
    */
-  const isSelected = tag => {
+  const isSelected = (tag) => {
     const { value } = tag
-    return Boolean(selected.find(tag => tag.value === value))
+    return Boolean(selected.find((tag) => tag.value === value))
   }
 
   const color = checkboxColorMap[name]
@@ -152,7 +152,7 @@ const DropdownFilter = ({
         <TableContainer>
           <table>
             <tbody>
-              {options.map(tag => (
+              {options.map((tag) => (
                 <TableRow
                   key={tag.label}
                   onClick={() => {

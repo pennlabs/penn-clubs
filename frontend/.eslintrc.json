@@ -1,11 +1,11 @@
 {
-  "parser": "babel-eslint",
+  "parser": "@typescript-eslint/parser",
   "env": {
     "browser": true,
     "es6": true,
     "node": true
   },
-  "extends": ["standard", "prettier"],
+  "extends": ["standard", "prettier", "plugin:@typescript-eslint/recommended"],
   "globals": {
     "Atomics": "readonly",
     "SharedArrayBuffer": "readonly"
@@ -15,16 +15,16 @@
       "jsx": true,
       "modules": true
     },
-    "ecmaVersion": 2018,
+    "ecmaVersion": 2020,
     "sourceType": "module"
   },
-  "plugins": ["react", "simple-import-sort"],
+  "plugins": ["react", "simple-import-sort", "prettier"],
   "rules": {
     "comma-dangle": ["error", "always-multiline"],
     "space-before-function-paren": [
       "error",
       {
-        "anonymous": "never",
+        "anonymous": "ignore",
         "named": "never",
         "asyncArrow": "always"
       }
@@ -33,6 +33,7 @@
     "camelcase": ["warn", { "ignoreDestructuring": true }],
     "react/jsx-uses-vars": [2],
     "no-console": ["warn"],
-    "simple-import-sort/sort": ["warn"]
+    "simple-import-sort/sort": ["warn"],
+    "prettier/prettier": ["error"]
   }
 }

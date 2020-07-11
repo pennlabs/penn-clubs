@@ -66,7 +66,7 @@ export default ({
       </tr>
     </thead>
     <tbody>
-      {userInfo.membership_set.map(item => (
+      {userInfo.membership_set.map((item) => (
         <tr key={item.code}>
           <td>
             <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(item.code)}>
@@ -79,14 +79,14 @@ export default ({
             <Toggle
               club={item}
               active={item.active}
-              toggle={club => toggleActive(club)}
+              toggle={(club) => toggleActive(club)}
             />
           </td>
           <td>
             <Toggle
               club={item}
               active={item.public}
-              toggle={club => togglePublic(club)}
+              toggle={(club) => togglePublic(club)}
             />
           </td>
           <td>

@@ -153,18 +153,18 @@ const Flyer = ({ query }) => {
     const fetchClub = (club, tries) => {
       const url = `/clubs/${club}/?format=json`
       return doApiRequest(url).then(
-        resp => {
+        (resp) => {
           if (resp.ok) {
-            setCount(prevCount => prevCount + 1)
+            setCount((prevCount) => prevCount + 1)
             return resp.json()
           } else if (resp.status === 502 && tries > 0) {
             // If we get a Gateway Timeout, wait a while and try one more time
-            return new Promise(resolve => {
+            return new Promise((resolve) => {
               setTimeout(resolve.bind(null), 5000 * Math.random())
             }).then(() => fetchClub(club, tries - 1))
           } else {
-            setCount(prevCount => prevCount + 1)
-            setFailedClubs(prevFailed => prevFailed.concat(club))
+            setCount((prevCount) => prevCount + 1)
+            setFailedClubs((prevFailed) => prevFailed.concat(club))
             return null
           }
         },
@@ -175,7 +175,9 @@ const Flyer = ({ query }) => {
       )
     }
 
-    Promise.all(query.club.split(',').map(c => fetchClub(c, 3))).then(setClubs)
+    Promise.all(query.club.split(',').map((c) => fetchClub(c, 3))).then(
+      setClubs,
+    )
   }, [query])
 
   const totalClubCount = query.club.split(',').length
@@ -217,7 +219,7 @@ const Flyer = ({ query }) => {
     <>
       <Metadata />
       {!!failedClubs.length && (
-        <ErrorPane onClick={() => setShowErrorPane(val => !val)}>
+        <ErrorPane onClick={() => setShowErrorPane((val) => !val)}>
           {showErrorPane ? (
             <>
               <b>Failed to load clubs:</b>
@@ -232,7 +234,7 @@ const Flyer = ({ query }) => {
           )}
         </ErrorPane>
       )}
-      {clubs.map(club => {
+      {clubs.map((club) => {
         if (club === null) {
           return null
         }

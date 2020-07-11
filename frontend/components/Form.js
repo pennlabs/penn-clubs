@@ -1,4 +1,4 @@
-import { ContentState, convertToRaw,EditorState } from 'draft-js'
+import { ContentState, convertToRaw, EditorState } from 'draft-js'
 import draftToHtml from 'draftjs-to-html'
 import Head from 'next/head'
 import Router from 'next/router'
@@ -39,11 +39,13 @@ class Form extends Component {
     this.files = {}
 
     if (process.browser) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       htmlToDraft = require('html-to-draftjs').default
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       Editor = require('react-draft-wysiwyg').Editor
       const { fields, defaults = {} } = props
 
-      const setDefaults = fields => {
+      const setDefaults = (fields) => {
         fields.forEach(({ name, type, converter, fields }) => {
           const value = defaults[name]
           if (type === 'group') {
@@ -135,7 +137,7 @@ class Form extends Component {
 
   getAllFields(fields) {
     var out = []
-    fields.forEach(item => {
+    fields.forEach((item) => {
       if (item.type === 'group') {
         out = out.concat(this.getAllFields(item.fields))
       } else {
@@ -211,7 +213,7 @@ class Form extends Component {
           className="input"
           disabled={readonly}
           value={value}
-          onChange={e => {
+          onChange={(e) => {
             this.setState({ ['field-' + name]: e.target.value }, () =>
               this.onChange(e),
             )
@@ -230,7 +232,7 @@ class Form extends Component {
             showTimeSelect
             dateFormat="MMMM d, yyyy h:mm aa"
             selected={Date.parse(value) || value}
-            onChange={val => {
+            onChange={(val) => {
               this.setState({ ['field-' + name]: val }, () =>
                 this.onChange(val),
               )
@@ -259,7 +261,7 @@ class Form extends Component {
               editorState={editorState}
               placeholder={placeholder}
               onChange={this.onChange}
-              onEditorStateChange={state => {
+              onEditorStateChange={(state) => {
                 this.setState({
                   [`editorState-${name}`]: state,
                   [`field-${name}`]: draftToHtml(
@@ -296,7 +298,7 @@ class Form extends Component {
         <textarea
           className="textarea"
           value={value}
-          onChange={e => {
+          onChange={(e) => {
             this.setState({ [`field-${name}`]: e.target.value }, () =>
               this.onChange(e),
             )
@@ -323,14 +325,14 @@ class Form extends Component {
           <label className="file-label">
             <input
               className="file-input"
-              ref={c => {
+              ref={(c) => {
                 this.files[name] = c
               }}
               accept={accept}
               type="file"
               name={name}
-              onChange={e => this.handleUpload(e, name)}
-              onClick={e => this.handleUploadClick(e, name)}
+              onChange={(e) => this.handleUpload(e, name)}
+              onClick={(e) => this.handleUploadClick(e, name)}
             />
             <span className="file-cta">
               <span className="file-icon">
@@ -362,13 +364,13 @@ class Form extends Component {
             isMulti={true}
             value={value || []}
             options={choices.map(converter)}
-            onChange={opt => {
+            onChange={(opt) => {
               this.setState({ [`field-${name}`]: opt }, () =>
                 this.onChange(opt),
               )
             }}
             styles={{
-              container: style => ({
+              container: (style) => ({
                 ...style,
                 width: '100%',
               }),
@@ -384,7 +386,7 @@ class Form extends Component {
           key={name}
           value={value}
           options={choices}
-          onChange={opt => {
+          onChange={(opt) => {
             this.setState({ [`field-${name}`]: opt }, () => this.onChange(opt))
           }}
         />
@@ -395,7 +397,7 @@ class Form extends Component {
           <input
             type="checkbox"
             checked={value}
-            onChange={e => {
+            onChange={(e) => {
               this.setState({ [`field-${name}`]: e.target.checked }, () =>
                 this.onChange(e),
               )
@@ -600,7 +602,7 @@ export class ModelForm extends Component {
     if (typeof object[keyField] !== 'undefined') {
       doApiRequest(`${baseUrl}${object[keyField]}/?format=json`, {
         method: 'DELETE',
-      }).then(resp => {
+      }).then((resp) => {
         if (resp.ok) {
           this.setState(({ objects }) => {
             objects.splice(objects.indexOf(object), 1)
@@ -624,7 +626,7 @@ export class ModelForm extends Component {
     const { baseUrl, fields, keyField = 'id' } = this.props
 
     // remove file fields
-    const fileFields = fields.filter(f => f.type === 'file')
+    const fileFields = fields.filter((f) => f.type === 'file')
     const fileData = {}
     fileFields.forEach(({ name }) => {
       fileData[name] = data[name]
@@ -638,17 +640,17 @@ export class ModelForm extends Component {
             method: 'POST',
             body: data,
           })
-            .then(resp => {
+            .then((resp) => {
               if (resp.ok) {
                 object._status = true
-                return resp.json().then(resp => {
-                  Object.keys(resp).forEach(key => {
+                return resp.json().then((resp) => {
+                  Object.keys(resp).forEach((key) => {
                     object[key] = resp[key]
                   })
                 })
               } else {
                 object._status = false
-                return resp.json().then(resp => {
+                return resp.json().then((resp) => {
                   // eslint-disable-next-line camelcase
                   object._error_message = resp
                 })
@@ -663,13 +665,13 @@ export class ModelForm extends Component {
             method: 'PATCH',
             body: data,
           })
-            .then(resp => {
+            .then((resp) => {
               object._status = resp.ok
               return resp.json()
             })
-            .then(resp => {
+            .then((resp) => {
               if (object._status) {
-                Object.keys(resp).forEach(key => {
+                Object.keys(resp).forEach((key) => {
                   object[key] = resp[key]
                 })
               } else {
@@ -699,7 +701,7 @@ export class ModelForm extends Component {
               }
               return null
             })
-            .filter(a => a !== null),
+            .filter((a) => a !== null),
         )
       })
       .then(() => {
@@ -709,8 +711,8 @@ export class ModelForm extends Component {
 
   componentDidMount() {
     doApiRequest(`${this.props.baseUrl}?format=json`)
-      .then(resp => resp.json())
-      .then(resp => {
+      .then((resp) => resp.json())
+      .then((resp) => {
         this.setState({ objects: resp })
       })
   }
@@ -739,7 +741,7 @@ export class ModelForm extends Component {
       const currentObjectIndex =
         currentlyEditing === null
           ? -1
-          : objects.findIndex(a => a[keyField] === currentlyEditing)
+          : objects.findIndex((a) => a[keyField] === currentlyEditing)
       const currentObject =
         currentlyEditing === null ? createObject : objects[currentObjectIndex]
 
@@ -836,11 +838,11 @@ export class ModelForm extends Component {
                   currentObject._status === false &&
                   currentObject._error_message
                 }
-                onSubmit={data => {
+                onSubmit={(data) => {
                   if (currentObjectIndex !== -1) {
                     objects[currentObjectIndex] = currentObject
                   }
-                  this.onSubmit(currentObject, data).then(obj => {
+                  this.onSubmit(currentObject, data).then((obj) => {
                     if (obj._status) {
                       if (currentlyEditing === null) {
                         objects.push(obj)
@@ -907,7 +909,7 @@ export class ModelForm extends Component {
 
     return (
       <>
-        {objects.map(object => (
+        {objects.map((object) => (
           <ModelItem
             key={
               typeof object.id === 'undefined'
@@ -924,7 +926,7 @@ export class ModelForm extends Component {
                   <Icon name="edit" alt="save" /> Save
                 </span>
               }
-              onSubmit={data => this.onSubmit(object, data)}
+              onSubmit={(data) => this.onSubmit(object, data)}
             />
             <span
               className="button is-danger"

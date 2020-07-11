@@ -17,7 +17,7 @@
 	},
 	"extensions": {
 		"recommendations": [
-			"esbenp.prettier-vscode",
+			"dbaeumer.vscode-eslint",
 			"ms-python.python",
 			"ms-vscode.vscode-typescript-tslint-plugin"
 		]

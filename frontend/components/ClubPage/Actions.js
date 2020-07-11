@@ -69,7 +69,7 @@ const Actions = ({
   // inClub is set to the membership object if the user is in the club, otherwise false
   const inClub =
     userInfo &&
-    (userInfo.membership_set.filter(a => a.code === club.code) || [false])[0]
+    (userInfo.membership_set.filter((a) => a.code === club.code) || [false])[0]
 
   // a user can edit a club if they are either a superuser or in the club and
   // at least an officer
@@ -92,7 +92,7 @@ const Actions = ({
           <BookmarkIcon
             club={club}
             favorite={isFavorite}
-            updateFavorites={id => {
+            updateFavorites={(id) => {
               const upd = updateFavorites(id)
               // If upd is null, checkAuth in renderPage failed, so we do not update the count.
               if (upd !== null) setFavCount(favCount + (upd ? 1 : -1))

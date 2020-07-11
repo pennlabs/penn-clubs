@@ -5,7 +5,7 @@ const reqSvgs = require.context('../../public/static/img/icons', true, /\.svg$/)
 
 const IconWrapper = s.span`
   display: inline-block;
-  vertical-align: ${props => (props.noAlign ? 'baseline' : 'middle')};
+  vertical-align: ${(props) => (props.noAlign ? 'baseline' : 'middle')};
 
   .button & {
     margin-right: 0.25rem;

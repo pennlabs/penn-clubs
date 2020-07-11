@@ -10,7 +10,7 @@ import { Center, EmptyState, Loading, Text } from '../common'
 export default ({ favorites, keyword, updateFavorites }) => {
   const [table, setTable] = useState(() => {
     const ret = {}
-    favorites.forEach(favorite => {
+    favorites.forEach((favorite) => {
       ret[favorite] = true
     })
     return ret
@@ -22,17 +22,17 @@ export default ({ favorites, keyword, updateFavorites }) => {
     doApiRequest(
       `/clubs/?in=${encodeURIComponent(favorites.join(','))}&format=json`,
     )
-      .then(res => res.json())
-      .then(values => {
+      .then((res) => res.json())
+      .then((values) => {
         const newClubs = {}
-        values.forEach(item => (newClubs[item.code] = item))
+        values.forEach((item) => (newClubs[item.code] = item))
         setClubs(newClubs)
       })
   }, [favorites])
 
   const rows = Object.keys(table)
   const isBookmarksTab = keyword === 'bookmark'
-  const toggleFavorite = code => {
+  const toggleFavorite = (code) => {
     setTable({ ...table, [code]: !table[code] })
     updateFavorites(code)
   }
@@ -50,7 +50,7 @@ export default ({ favorites, keyword, updateFavorites }) => {
     )
   }
 
-  const loadedRows = rows.filter(fav => fav in clubs)
+  const loadedRows = rows.filter((fav) => fav in clubs)
 
   if (!loadedRows.length) {
     return <Loading />
@@ -58,7 +58,7 @@ export default ({ favorites, keyword, updateFavorites }) => {
 
   return (
     <div>
-      {loadedRows.map(favorite => (
+      {loadedRows.map((favorite) => (
         <ClubTableRow
           club={clubs[favorite]}
           updateFavorites={toggleFavorite}

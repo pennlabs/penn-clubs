@@ -85,21 +85,13 @@ const shorten = (desc: string): string => {
 }
 
 type ClubCardProps = {
-  club: Club,
-  updateFavorites: (code: string) => void,
-  favorite: boolean,
+  club: Club
+  updateFavorites: (code: string) => void
+  favorite: boolean
 }
 
 const ClubCard = ({ club, updateFavorites, favorite }: ClubCardProps) => {
-  const {
-    name,
-    active,
-    approved,
-    description,
-    subtitle,
-    tags,
-    code,
-  } = club
+  const { name, active, approved, description, subtitle, tags, code } = club
   const img = club.image_url
   const textDescription = shorten(
     subtitle || stripTags(description) || 'This club has no description.',

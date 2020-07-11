@@ -45,7 +45,6 @@ export const Loading = ({ title = 'Loading...', delay }) => {
       }, delay)
       return () => clearTimeout(timer)
     }
-    return () => {}
   })
 
   return (

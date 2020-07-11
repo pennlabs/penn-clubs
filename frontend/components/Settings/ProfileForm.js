@@ -20,16 +20,16 @@ class ProfileForm extends React.Component {
 
   componentDidMount() {
     doApiRequest('/schools/?format=json')
-      .then(resp => resp.json())
-      .then(data =>
+      .then((resp) => resp.json())
+      .then((data) =>
         this.setState({
           schools: data,
         }),
       )
 
     doApiRequest('/majors/?format=json')
-      .then(resp => resp.json())
-      .then(data =>
+      .then((resp) => resp.json())
+      .then((data) =>
         this.setState({
           majors: data,
         }),
@@ -49,7 +49,7 @@ class ProfileForm extends React.Component {
         method: 'PATCH',
         body: data,
       })
-        .then(resp => resp.json())
+        .then((resp) => resp.json())
         .then(this.update)
     }
 
@@ -68,7 +68,7 @@ class ProfileForm extends React.Component {
       method: 'PATCH',
       body: { image: null },
     })
-      .then(resp => resp.json())
+      .then((resp) => resp.json())
       .then(this.update)
   }
 
@@ -84,7 +84,7 @@ class ProfileForm extends React.Component {
       {
         name: 'graduation_year',
         type: 'number',
-        converter: a => {
+        converter: (a) => {
           if (typeof a === 'number') return a
           if (typeof a === 'string' && a.length) return a.replace(/\D/g, '')
           return null
@@ -94,15 +94,15 @@ class ProfileForm extends React.Component {
         name: 'school',
         type: 'multiselect',
         choices: schools,
-        converter: a => ({ value: a.id, label: a.name }),
-        reverser: a => ({ id: a.value, name: a.label }),
+        converter: (a) => ({ value: a.id, label: a.name }),
+        reverser: (a) => ({ id: a.value, name: a.label }),
       },
       {
         name: 'major',
         type: 'multiselect',
         choices: majors,
-        converter: a => ({ value: a.id, label: a.name }),
-        reverser: a => ({ id: a.value, name: a.label }),
+        converter: (a) => ({ value: a.id, label: a.name }),
+        reverser: (a) => ({ id: a.value, name: a.label }),
       },
     ]
 

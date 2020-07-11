@@ -7,7 +7,7 @@ export const TagGroup = ({ tags = [] }) => {
 
   return (
     <>
-      {tags.map(tag => {
+      {tags.map((tag) => {
         if (tag.color) {
           return (
             <Tag

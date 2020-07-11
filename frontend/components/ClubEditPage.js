@@ -174,7 +174,7 @@ const Devices = ({ contents }) => {
   return (
     <>
       <span className="field has-addons is-pulled-right">
-        {['None', 'iOS', 'Android'].map(type => (
+        {['None', 'iOS', 'Android'].map((type) => (
           <p key={type} className="control">
             <button
               onClick={() => setDeviceType(type.toLowerCase())}
@@ -355,7 +355,7 @@ class ClubForm extends Component {
       body: {
         active: !this.state.club.active,
       },
-    }).then(resp => {
+    }).then((resp) => {
       if (resp.ok) {
         this.notify(
           `Successfully ${
@@ -364,7 +364,7 @@ class ClubForm extends Component {
         )
         this.componentDidMount()
       } else {
-        resp.json().then(err => {
+        resp.json().then((err) => {
           this.notify(formatResponse(err))
         })
       }
@@ -374,12 +374,12 @@ class ClubForm extends Component {
   deleteClub() {
     doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
       method: 'DELETE',
-    }).then(resp => {
+    }).then((resp) => {
       if (resp.ok) {
         this.notify('Successfully deleted club.')
         this.componentDidMount()
       } else {
-        resp.json().then(err => {
+        resp.json().then((err) => {
           this.notify(formatResponse(err))
         })
       }
@@ -389,12 +389,12 @@ class ClubForm extends Component {
   deleteInvite(id) {
     doApiRequest(`/clubs/${this.state.club.code}/invites/${id}/?format=json`, {
       method: 'DELETE',
-    }).then(resp => {
+    }).then((resp) => {
       if (resp.ok) {
         this.notify('Invitation has been removed!')
         this.componentDidMount()
       } else {
-        resp.json().then(err => {
+        resp.json().then((err) => {
           this.notify(formatResponse(err))
         })
       }
@@ -408,8 +408,8 @@ class ClubForm extends Component {
         method: 'PUT',
       },
     )
-      .then(resp => resp.json())
-      .then(resp => {
+      .then((resp) => resp.json())
+      .then((resp) => {
         this.notify(resp.detail)
       })
   }
@@ -423,8 +423,8 @@ class ClubForm extends Component {
         title: this.state.inviteTitle,
       },
     })
-      .then(resp => resp.json())
-      .then(data => {
+      .then((resp) => resp.json())
+      .then((data) => {
         this.notify(formatResponse(data))
         this.componentDidMount()
       })
@@ -446,9 +446,9 @@ class ClubForm extends Component {
         body: data,
       })
     }
-    req.then(resp => {
+    req.then((resp) => {
       if (resp.ok) {
-        resp.json().then(info => {
+        resp.json().then((info) => {
           if (!this.state.isEdit) {
             this.props.router.push(
               '/club/[club]/edit',
@@ -465,7 +465,7 @@ class ClubForm extends Component {
             doApiRequest(`/clubs/${this.state.club.code}/upload/?format=json`, {
               method: 'POST',
               body: photo,
-            }).then(resp => {
+            }).then((resp) => {
               if (resp.ok) {
                 this.notify('Club and images have been successfully saved.')
               } else {
@@ -477,7 +477,7 @@ class ClubForm extends Component {
           }
         })
       } else {
-        resp.json().then(err => {
+        resp.json().then((err) => {
           this.notify(formatResponse(err))
         })
       }
@@ -491,22 +491,22 @@ class ClubForm extends Component {
           ? this.state.club.code
           : this.props.clubId
       doApiRequest(`/clubs/${clubId}/?format=json`)
-        .then(resp => resp.json())
-        .then(data =>
+        .then((resp) => resp.json())
+        .then((data) =>
           this.setState({
             club: data,
           }),
         )
       doApiRequest(`/clubs/${clubId}/invites/?format=json`)
-        .then(resp => resp.json())
-        .then(data =>
+        .then((resp) => resp.json())
+        .then((data) =>
           this.setState({
             invites: data,
           }),
         )
       doApiRequest(`/clubs/${clubId}/subscription/?format=json`)
-        .then(resp => resp.json())
-        .then(data =>
+        .then((resp) => resp.json())
+        .then((data) =>
           this.setState({
             subscriptions: data,
           }),
@@ -532,7 +532,7 @@ class ClubForm extends Component {
       club.code &&
       isEdit &&
       !userInfo.is_superuser &&
-      !userInfo.membership_set.some(m => m.code === club.code && m.role <= 10)
+      !userInfo.membership_set.some((m) => m.code === club.code && m.role <= 10)
     ) {
       return (
         <AuthPrompt title="Oh no!" hasLogin={false}>
@@ -586,8 +586,8 @@ class ClubForm extends Component {
             type: 'multiselect',
             placeholder: 'Select tags relevant to your club!',
             choices: tags,
-            converter: a => ({ value: a.id, label: a.name }),
-            reverser: a => ({ id: a.value, name: a.label }),
+            converter: (a) => ({ value: a.id, label: a.name }),
+            reverser: (a) => ({ id: a.value, name: a.label }),
           },
           {
             name: 'image',
@@ -601,8 +601,8 @@ class ClubForm extends Component {
             type: 'select',
             required: true,
             choices: this.sizes,
-            converter: a => this.sizes.find(x => x.value === a),
-            reverser: a => a.value,
+            converter: (a) => this.sizes.find((x) => x.value === a),
+            reverser: (a) => a.value,
           },
           {
             name: 'founded',
@@ -678,8 +678,8 @@ class ClubForm extends Component {
             required: true,
             type: 'select',
             choices: this.applications,
-            converter: a => this.applications.find(x => x.value === a),
-            reverser: a => a.value,
+            converter: (a) => this.applications.find((x) => x.value === a),
+            reverser: (a) => a.value,
           },
           {
             name: 'accepting_members',
@@ -695,24 +695,24 @@ class ClubForm extends Component {
             type: 'multiselect',
             placeholder: 'Select graduation years relevant to your club!',
             choices: years,
-            converter: a => ({ value: a.id, label: a.name }),
-            reverser: a => ({ id: a.value, name: a.label }),
+            converter: (a) => ({ value: a.id, label: a.name }),
+            reverser: (a) => ({ id: a.value, name: a.label }),
           },
           {
             name: 'target_schools',
             type: 'multiselect',
             placeholder: 'Select schools relevant to your club!',
             choices: schools,
-            converter: a => ({ value: a.id, label: a.name }),
-            reverser: a => ({ id: a.value, name: a.label }),
+            converter: (a) => ({ value: a.id, label: a.name }),
+            reverser: (a) => ({ id: a.value, name: a.label }),
           },
           {
             name: 'target_majors',
             type: 'multiselect',
             placeholder: 'Select majors relevant to your club!',
             choices: majors,
-            converter: a => ({ value: a.id, label: a.name }),
-            reverser: a => ({ id: a.value, name: a.label }),
+            converter: (a) => ({ value: a.id, label: a.name }),
+            reverser: (a) => ({ id: a.value, name: a.label }),
           },
         ],
       },
@@ -726,13 +726,13 @@ class ClubForm extends Component {
       {
         name: 'start_time',
         label: 'Start Time',
-        converter: a => <TimeAgo date={a} />,
+        converter: (a) => <TimeAgo date={a} />,
       },
       {
         name: 'type',
         label: 'Type',
-        converter: a =>
-          (this.types.find(v => v.value === a) || { label: 'Unknown' }).label,
+        converter: (a) =>
+          (this.types.find((v) => v.value === a) || { label: 'Unknown' }).label,
       },
     ]
 
@@ -775,8 +775,8 @@ class ClubForm extends Component {
         type: 'select',
         required: true,
         choices: this.types,
-        converter: a => this.types.find(x => x.value === a),
-        reverser: a => a.value,
+        converter: (a) => this.types.find((x) => x.value === a),
+        reverser: (a) => a.value,
       },
       {
         name: 'description',
@@ -816,8 +816,8 @@ class ClubForm extends Component {
                       name: 'role',
                       type: 'select',
                       choices: this.roles,
-                      converter: a => this.roles.find(x => x.value === a),
-                      reverser: a => a.value,
+                      converter: (a) => this.roles.find((x) => x.value === a),
+                      reverser: (a) => a.value,
                     },
                   ]}
                   tableFields={[
@@ -834,7 +834,7 @@ class ClubForm extends Component {
                       name: 'email',
                     },
                   ]}
-                  currentTitle={obj => `${obj.name} (${obj.email})`}
+                  currentTitle={(obj) => `${obj.name} (${obj.email})`}
                 />
                 <div style={{ marginTop: '1em' }}>
                   <a
@@ -861,7 +861,7 @@ class ClubForm extends Component {
                         </tr>
                       </thead>
                       <tbody>
-                        {invites.map(item => (
+                        {invites.map((item) => (
                           <tr key={item.email}>
                             <td>{item.email}</td>
                             <td>
@@ -903,7 +903,7 @@ class ClubForm extends Component {
                   <div className="field">
                     <textarea
                       value={this.state.inviteEmails}
-                      onChange={e =>
+                      onChange={(e) =>
                         this.setState({ inviteEmails: e.target.value })
                       }
                       className="textarea"
@@ -916,7 +916,7 @@ class ClubForm extends Component {
                       <Select
                         options={this.roles}
                         value={this.state.inviteRole}
-                        onChange={opt => this.setState({ inviteRole: opt })}
+                        onChange={(opt) => this.setState({ inviteRole: opt })}
                       />
                     </div>
                     <p className="help">
@@ -930,7 +930,7 @@ class ClubForm extends Component {
                       <input
                         className="input"
                         value={this.state.inviteTitle}
-                        onChange={e =>
+                        onChange={(e) =>
                           this.setState({ inviteTitle: e.target.value })
                         }
                       />
@@ -978,14 +978,14 @@ class ClubForm extends Component {
                         <td>{item.graduation_year || <Empty>None</Empty>}</td>
                         <td>
                           {item.school && item.school.length ? (
-                            item.school.map(a => a.name).join(', ')
+                            item.school.map((a) => a.name).join(', ')
                           ) : (
                             <Empty>None</Empty>
                           )}
                         </td>
                         <td>
                           {item.major && item.major.length ? (
-                            item.major.map(a => a.name).join(', ')
+                            item.major.map((a) => a.name).join(', ')
                           ) : (
                             <Empty>None</Empty>
                           )}
@@ -1075,8 +1075,8 @@ class ClubForm extends Component {
                   fields={eventFields}
                   tableFields={eventTableFields}
                   noun="Event"
-                  currentTitle={obj => obj.name}
-                  onChange={obj => this.setState({ deviceContents: obj })}
+                  currentTitle={(obj) => obj.name}
+                  onChange={(obj) => this.setState({ deviceContents: obj })}
                 />
                 <Devices contents={deviceContents} />
               </Card>
@@ -1090,7 +1090,7 @@ class ClubForm extends Component {
                   </thead>
                   <tbody>
                     {club && club.files && club.files.length ? (
-                      club.files.map(a => (
+                      club.files.map((a) => (
                         <tr key={a.name}>
                           <td>{a.name}</td>
                           <td className="buttons">

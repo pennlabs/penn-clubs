@@ -45,7 +45,7 @@ const ClubList = ({ club, updateFavorites, favorite }) => {
                       Inactive
                     </InactiveTag>
                   )}
-                  {tags.map(tag => (
+                  {tags.map((tag) => (
                     <BlueTag
                       key={tag.id}
                       className="tag is-rounded has-text-white"

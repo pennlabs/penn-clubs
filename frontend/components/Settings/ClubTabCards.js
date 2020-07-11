@@ -8,7 +8,7 @@ export default ({
   leaveClub,
 }) => (
   <div className={className}>
-    {userInfo.membership_set.map(club => (
+    {userInfo.membership_set.map((club) => (
       <ClubTabCard
         key={club.code}
         club={club}

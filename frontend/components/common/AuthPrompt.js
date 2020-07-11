@@ -1,7 +1,7 @@
 import s from 'styled-components'
 
 import { CLUBS_BLUE } from '../../constants/colors'
-import { getCurrentRelativePath,LOGIN_URL } from '../../utils'
+import { getCurrentRelativePath, LOGIN_URL } from '../../utils'
 import { Center, Icon, PhoneContainer, SmallText, Text, Title } from '.'
 
 const Image = s.img`

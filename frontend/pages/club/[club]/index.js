@@ -95,7 +95,7 @@ const Club = ({
                     approved: true,
                   },
                 })
-                  .then(resp => resp.json())
+                  .then((resp) => resp.json())
                   .then(() => router.reload())
               }}
             >
@@ -111,7 +111,7 @@ const Club = ({
                       approved: false,
                     },
                   })
-                    .then(resp => resp.json())
+                    .then((resp) => resp.json())
                     .then(() => router.reload())
                 }}
               >
@@ -191,7 +191,7 @@ const Club = ({
   )
 }
 
-Club.getInitialProps = async ctx => {
+Club.getInitialProps = async (ctx) => {
   const { query, req } = ctx
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,

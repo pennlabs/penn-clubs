@@ -59,12 +59,12 @@ class Settings extends React.Component {
       body: {
         public: !club.public,
       },
-    }).then(resp => {
+    }).then((resp) => {
       if (resp.ok) {
         this.notify(`Your privacy setting for ${club.name} has been changed.`)
         this.props.updateUserInfo()
       } else {
-        resp.json().then(err => {
+        resp.json().then((err) => {
           this.notify(formatResponse(err))
         })
       }
@@ -80,12 +80,12 @@ class Settings extends React.Component {
       body: {
         active: !club.active,
       },
-    }).then(resp => {
+    }).then((resp) => {
       if (resp.ok) {
         this.notify(`Your activity setting for ${club.name} has been changed.`)
         this.props.updateUserInfo()
       } else {
-        resp.json().then(err => {
+        resp.json().then((err) => {
           this.notify(formatResponse(err))
         })
       }
@@ -106,9 +106,9 @@ class Settings extends React.Component {
     ) {
       doApiRequest(`/clubs/${club.code}/members/${username}`, {
         method: 'DELETE',
-      }).then(resp => {
+      }).then((resp) => {
         if (!resp.ok) {
-          resp.json().then(err => {
+          resp.json().then((err) => {
             this.notify(formatResponse(err))
           })
         } else {

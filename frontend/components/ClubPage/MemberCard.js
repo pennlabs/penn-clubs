@@ -1,7 +1,7 @@
 import s from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
-import { M2, M3, mediaMinWidth,PHONE } from '../../constants/measurements'
+import { M2, M3, mediaMinWidth, PHONE } from '../../constants/measurements'
 import { Card, ProfilePic } from '../common'
 
 const StyledCard = s(Card)`

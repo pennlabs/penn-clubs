@@ -159,9 +159,9 @@ function renderPage(Page) {
     }
 
     updateUserInfo() {
-      doApiRequest('/settings/?format=json').then(resp => {
+      doApiRequest('/settings/?format=json').then((resp) => {
         if (resp.ok) {
-          resp.json().then(userInfo => {
+          resp.json().then((userInfo) => {
             // redirect to welcome page if user hasn't seen it before
             if (
               window &&
@@ -178,8 +178,8 @@ function renderPage(Page) {
             }
 
             this.setState({
-              favorites: userInfo.favorite_set.map(a => a.club),
-              subscriptions: userInfo.subscribe_set.map(a => a.club),
+              favorites: userInfo.favorite_set.map((a) => a.club),
+              subscriptions: userInfo.subscribe_set.map((a) => a.club),
             })
           })
         } else {
@@ -191,7 +191,7 @@ function renderPage(Page) {
       })
     }
   }
-  RenderPage.getInitialProps = async ctx => {
+  RenderPage.getInitialProps = async (ctx) => {
     let pageProps = {}
     if (Page.getInitialProps) {
       pageProps = await Page.getInitialProps(ctx)

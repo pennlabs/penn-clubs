@@ -10,7 +10,7 @@ import {
   XL,
 } from '../../constants/measurements'
 
-const getPadding = percent => {
+const getPadding = (percent) => {
   if (!percent) return 'padding-left: 1rem; padding-right: 1rem;'
   return `padding-left: calc(1rem + ${percent}%); padding-right: calc(1rem + ${percent}%);`
 }

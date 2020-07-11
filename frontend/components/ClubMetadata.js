@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { CLUB_ROUTE } from '../constants/routes'
 import { Metadata } from './common'
 
-const getTwitterUsername = url => {
+const getTwitterUsername = (url) => {
   if (typeof url === 'string') {
     const captured = url.match(/https:\/\/twitter\.com\/([a-zA-Z0-9_]+)\/?/)
     if (Array.isArray(captured) && captured.length > 0) return captured[0]

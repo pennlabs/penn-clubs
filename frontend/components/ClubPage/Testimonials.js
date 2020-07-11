@@ -41,7 +41,7 @@ function shuffleArray(array) {
   }
 }
 
-const Testimonials = props => {
+const Testimonials = (props) => {
   const { data: originalData } = props
 
   const [data, setData] = useState(null)

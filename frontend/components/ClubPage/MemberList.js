@@ -18,7 +18,7 @@ const MemberList = ({ club: { members } }) => {
     <div>
       {expanded ? (
         <Row margin={M1}>
-          {members.map(a => (
+          {members.map((a) => (
             <Col
               key={a.username || a.name}
               sm={12}
@@ -33,7 +33,7 @@ const MemberList = ({ club: { members } }) => {
         </Row>
       ) : (
         <Row margin={M1}>
-          {members.slice(0, 4).map(a => (
+          {members.slice(0, 4).map((a) => (
             <Col
               key={a.username || a.name}
               sm={12}

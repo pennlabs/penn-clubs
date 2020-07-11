@@ -102,22 +102,22 @@ class Splash extends React.Component {
 
   componentDidMount() {
     const loadedClubs = new Set()
-    this.state.clubs.forEach(c => loadedClubs.add(c.code))
+    this.state.clubs.forEach((c) => loadedClubs.add(c.code))
 
     const paginationDownload = (url, count) => {
       doApiRequest(url)
-        .then(res => res.json())
-        .then(res => {
-          this.setState(state => {
-            const newClubs = res.results.filter(c => !loadedClubs.has(c.code))
-            res.results.forEach(c => loadedClubs.add(c.code))
+        .then((res) => res.json())
+        .then((res) => {
+          this.setState((state) => {
+            const newClubs = res.results.filter((c) => !loadedClubs.has(c.code))
+            res.results.forEach((c) => loadedClubs.add(c.code))
             return {
               clubs: state.clubs.concat(newClubs),
               clubCount: res.count,
             }
           })
           if (!res.next || count === 0) {
-            this.setState(state => ({ displayClubs: state.clubs }))
+            this.setState((state) => ({ displayClubs: state.clubs }))
             this.fuse = new Fuse(this.state.clubs, this.fuseOptions)
           }
           if (res.next) {
@@ -131,10 +131,10 @@ class Splash extends React.Component {
   }
 
   resetDisplay(nameInput, selectedTags) {
-    const tagSelected = selectedTags.filter(tag => tag.name === 'Tags')
-    const sizeSelected = selectedTags.filter(tag => tag.name === 'Size')
+    const tagSelected = selectedTags.filter((tag) => tag.name === 'Tags')
+    const sizeSelected = selectedTags.filter((tag) => tag.name === 'Size')
     const applicationSelected = selectedTags.filter(
-      tag => tag.name === 'Application',
+      (tag) => tag.name === 'Application',
     )
     let { clubs } = this.state
 
@@ -144,23 +144,23 @@ class Splash extends React.Component {
     }
 
     // checkbox filters
-    clubs = clubs.filter(club => {
+    clubs = clubs.filter((club) => {
       const clubRightSize =
         !sizeSelected.length ||
-        sizeSelected.findIndex(sizeTag => sizeTag.value === club.size) !== -1
+        sizeSelected.findIndex((sizeTag) => sizeTag.value === club.size) !== -1
       const appRequired =
         !applicationSelected.length ||
-        (applicationSelected.findIndex(appTag => appTag.value === 1) !== -1 &&
+        (applicationSelected.findIndex((appTag) => appTag.value === 1) !== -1 &&
           club.application_required !== 1) ||
-        (applicationSelected.findIndex(appTag => appTag.value === 2) !== -1 &&
+        (applicationSelected.findIndex((appTag) => appTag.value === 2) !== -1 &&
           club.application_required === 1) ||
-        (applicationSelected.findIndex(appTag => appTag.value === 3) !== -1 &&
+        (applicationSelected.findIndex((appTag) => appTag.value === 3) !== -1 &&
           club.accepting_members)
       const rightTags =
         !tagSelected.length ||
         club.tags.some(
-          clubTag =>
-            tagSelected.findIndex(tag => tag.value === clubTag.id) !== -1,
+          (clubTag) =>
+            tagSelected.findIndex((tag) => tag.value === clubTag.id) !== -1,
         )
 
       return clubRightSize && appRequired && rightTags
@@ -180,7 +180,7 @@ class Splash extends React.Component {
     const { selectedTags } = this.state
     const { value } = tag
     const i = selectedTags.findIndex(
-      tag => tag.value === value && tag.name === name,
+      (tag) => tag.value === value && tag.name === name,
     )
 
     if (i === -1) {
@@ -204,10 +204,10 @@ class Splash extends React.Component {
     let userMajors = new Set()
 
     if (userInfo) {
-      userSchools = new Set(userInfo.school.map(a => a.name))
-      userMajors = new Set(userInfo.major.map(a => a.name))
+      userSchools = new Set(userInfo.school.map((a) => a.name))
+      userMajors = new Set(userInfo.major.map((a) => a.name))
     }
-    clubs.forEach(club => {
+    clubs.forEach((club) => {
       club.rank = 0
       const hasSchool = club.target_schools.some(({ name }) =>
         userSchools.has(name),
@@ -298,7 +298,7 @@ class Splash extends React.Component {
 
               {selectedTags.length ? (
                 <div style={{ padding: '0 30px 30px 0' }}>
-                  {selectedTags.map(tag => (
+                  {selectedTags.map((tag) => (
                     <span
                       key={tag.label}
                       className="tag is-rounded has-text-white"

@@ -24,9 +24,11 @@ const GroupLabel = s.h4`
   color: #626572;
 `
 
-const serializeParams = params => {
+const serializeParams = (params) => {
   return Object.keys(params)
-    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+    .map(
+      (key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`,
+    )
     .join('&')
 }
 
@@ -70,21 +72,21 @@ const Reports = ({ nameToCode }) => {
 
   useEffect(() => {
     doApiRequest('/reports/?format=json')
-      .then(resp => {
+      .then((resp) => {
         if (resp.ok) {
           return resp.json()
         } else {
           return []
         }
       })
-      .then(data => setReports(data))
+      .then((data) => setReports(data))
   }, [reportFlag])
 
   const [includedFields, setIncludedFields] = useState(
     (() => {
       const initial = {}
-      Object.keys(fields).forEach(group =>
-        fields[group].forEach(f => {
+      Object.keys(fields).forEach((group) =>
+        fields[group].forEach((f) => {
           initial[f] = false
         }),
       )
@@ -95,9 +97,9 @@ const Reports = ({ nameToCode }) => {
   const query = {
     format: 'xlsx',
     fields: Object.keys(includedFields)
-      .filter(field => includedFields[field])
-      .map(name => nameToCode[name])
-      .filter(e => e !== undefined),
+      .filter((field) => includedFields[field])
+      .map((name) => nameToCode[name])
+      .filter((e) => e !== undefined),
   }
 
   const generateCheckboxGroup = (groupName, fields) => {
@@ -116,7 +118,10 @@ const Reports = ({ nameToCode }) => {
               id={field}
               checked={includedFields[field]}
               onChange={() => {
-                setIncludedFields(prev => ({ ...prev, [field]: !prev[field] }))
+                setIncludedFields((prev) => ({
+                  ...prev,
+                  [field]: !prev[field],
+                }))
               }}
             />
             {'  '}
@@ -139,7 +144,7 @@ const Reports = ({ nameToCode }) => {
                 key={idx}
                 value={f}
                 onClick={() =>
-                  setIncludedFields(prev => ({ ...prev, [f]: false }))
+                  setIncludedFields((prev) => ({ ...prev, [f]: false }))
                 }
               />
             ) : null,
@@ -221,7 +226,7 @@ const Reports = ({ nameToCode }) => {
                   type="text"
                   placeholder='e.g. "Owner emails"'
                   value={nameInput}
-                  onChange={e => setNameInput(e.target.value)}
+                  onChange={(e) => setNameInput(e.target.value)}
                 />
               </div>
             </div>
@@ -234,7 +239,7 @@ const Reports = ({ nameToCode }) => {
                   type="text"
                   placeholder='e.g. "Pulls all clubs, the emails from club owners, and names of owners"'
                   value={descInput}
-                  onChange={e => setDescInput(e.target.value)}
+                  onChange={(e) => setDescInput(e.target.value)}
                 />
               </div>
             </div>
@@ -246,7 +251,7 @@ const Reports = ({ nameToCode }) => {
           </h3>
           <div>
             <Flex>
-              {Object.keys(fields).map(group =>
+              {Object.keys(fields).map((group) =>
                 generateCheckboxGroup(group, fields[group]),
               )}
             </Flex>
@@ -274,7 +279,7 @@ const Reports = ({ nameToCode }) => {
   )
 }
 
-Reports.getInitialProps = async props => {
+Reports.getInitialProps = async (props) => {
   const fieldsReq = await doApiRequest('/clubs/fields/?format=json')
   const fieldsRes = await fieldsReq.json()
 

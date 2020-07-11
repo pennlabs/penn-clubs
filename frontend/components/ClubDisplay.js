@@ -3,7 +3,7 @@ import s from 'styled-components'
 
 import ClubCard from '../components/ClubCard'
 import ClubTableRow from '../components/ClubTableRow'
-import { mediaMaxWidth,SM } from '../constants/measurements'
+import { mediaMaxWidth, SM } from '../constants/measurements'
 
 // TODO PropTypes
 
@@ -61,7 +61,7 @@ class ClubDisplay extends React.Component {
     if (display === 'cards') {
       return (
         <div className="columns is-multiline is-desktop is-tablet">
-          {clubsToShow.map(club => (
+          {clubsToShow.map((club) => (
             <ClubCard
               key={club.code}
               club={club}
@@ -76,7 +76,7 @@ class ClubDisplay extends React.Component {
 
     return (
       <ClubTableRowWrapper>
-        {clubsToShow.map(club => (
+        {clubsToShow.map((club) => (
           <ClubTableRow
             club={club}
             key={club.code}

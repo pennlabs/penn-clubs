@@ -42,7 +42,7 @@ export const BookmarkIcon = ({
     favorite={favorite}
     absolute={absolute}
     padding={padding}
-    onClick={e => {
+    onClick={(e) => {
       e.preventDefault()
       e.stopPropagation()
       updateFavorites(club.code)

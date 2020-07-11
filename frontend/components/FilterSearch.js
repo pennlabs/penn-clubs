@@ -96,8 +96,8 @@ const Search = ({ selected = [], searchTags, recommendedTags, updateTag }) => {
       data,
       innerProps: { onClick, onTouchEnd, onMouseDown },
     }) => {
-      const removeGenerator = func => {
-        return e => {
+      const removeGenerator = (func) => {
+        return (e) => {
           func(e)
           updateTag(data, 'Tags')
         }
@@ -164,7 +164,7 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
   const fuse = new Fuse(tags, fuseOptions)
 
   const [recommendedTags, setRecommendedTags] = useState(selectInitial(tags))
-  const searchTags = async query => fuse.search(query)
+  const searchTags = async (query) => fuse.search(query)
 
   useEffect(() => {
     setRecommendedTags(selectInitial(tags))
