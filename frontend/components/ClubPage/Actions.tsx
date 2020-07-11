@@ -176,7 +176,10 @@ const Actions = ({
             If you are not a member, you can read the "how to get involved"
             section for more details!
           </p>
-          <Quote>{club.how_to_get_involved}</Quote>
+          <Quote>
+            {club.how_to_get_involved ||
+              'There is currently no information about how to get involved with this club.'}
+          </Quote>
           <p>
             If you are an existing member of this club, use the button below to
             confirm your membership request.
