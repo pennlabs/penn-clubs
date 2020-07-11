@@ -472,7 +472,10 @@ class ClubListSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         if not user.is_authenticated:
             return False
-        return obj.membership_set.filter(person=user).exists()
+        mship = obj.membership_set.filter(person=user).first()
+        if mship is None:
+            return False
+        return mship.role
 
     def get_image_url(self, obj):
         if not obj.image:

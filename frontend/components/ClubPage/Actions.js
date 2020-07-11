@@ -55,21 +55,17 @@ const EditButton = s.button`
 const Actions = ({
   club,
   userInfo,
-  favorites,
   style,
   updateFavorites,
-  subscriptions,
   updateSubscriptions,
   className,
 }) => {
   const { code, favorite_count: favoriteCount } = club
-  const isFavorite = favorites.includes(code)
-  const isSubscription = subscriptions.includes(code)
+  const isFavorite = club.is_favorite
+  const isSubscription = club.is_subscribe
 
   // inClub is set to the membership object if the user is in the club, otherwise false
-  const inClub =
-    userInfo &&
-    (userInfo.membership_set.filter((a) => a.code === club.code) || [false])[0]
+  const inClub = club.is_member !== false ? { role: club.is_member } : false
 
   // a user can edit a club if they are either a superuser or in the club and
   // at least an officer

@@ -242,8 +242,11 @@ export function renderListPage(Page) {
     }
   }
 
-  RenderListPage.getInitialProps = async () => {
-    const clubsRequest = await doApiRequest('/clubs/?page=1&format=json')
+  RenderListPage.getInitialProps = async ({ req }) => {
+    const data = {
+      headers: req ? { cookie: req.headers.cookie } : undefined,
+    }
+    const clubsRequest = await doApiRequest('/clubs/?page=1&format=json', data)
     const clubsResponse = await clubsRequest.json()
 
     const tagsRequest = await doApiRequest('/tags/?format=json')

@@ -49,13 +49,7 @@ class ClubDisplay extends React.Component {
   }
 
   render() {
-    const {
-      displayClubs,
-      tags,
-      favorites,
-      updateFavorites,
-      display,
-    } = this.props
+    const { displayClubs, tags, updateFavorites, display } = this.props
     const clubsToShow = displayClubs.slice(0, this.state.end)
 
     if (display === 'cards') {
@@ -67,7 +61,7 @@ class ClubDisplay extends React.Component {
               club={club}
               tags={tags}
               updateFavorites={updateFavorites}
-              favorite={favorites.includes(club.code)}
+              favorite={club.is_favorite}
             />
           ))}
         </div>
@@ -82,7 +76,7 @@ class ClubDisplay extends React.Component {
             key={club.code}
             tags={tags}
             updateFavorites={updateFavorites}
-            favorite={favorites.includes(club.code)}
+            favorite={club.is_favorite}
           />
         ))}
       </ClubTableRowWrapper>
