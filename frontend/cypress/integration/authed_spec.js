@@ -22,9 +22,19 @@ describe('Authenticated user tests', () => {
     cy.contains('Test User')
 
     const tabs = ['Clubs', 'Bookmarks', 'Subscriptions', 'Profile']
+    
+    // check that all tabs exist
     tabs.forEach(tab => {
       cy.get('.tabs')
         .contains(tab)
+        .should('be.visible')
+    })
+
+    // click on each tab
+    tabs.forEach(tab => {
+      cy.get('.tabs')
+        .contains(tab)
+        .should('be.visible')
         .click()
       cy.url().should('contain', `#${tab}`)
     })
