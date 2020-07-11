@@ -4,6 +4,7 @@ import s from 'styled-components'
 import { CLUBS_GREY } from '../constants/colors'
 import { getSizeDisplay } from '../utils'
 import { Icon, BookmarkIcon } from './common'
+import { Club } from '../types'
 
 const Wrapper = s.div`
   margin-top: 0.25rem;
@@ -21,15 +22,20 @@ const iconStyles = {
   transform: 'translateY(3px)',
 }
 
+type DetailsProps = {
+  club: Club,
+  favorite: boolean,
+  updateFavorites: (code: string) => void,
+}
+
 const Details = ({
-  size,
-  applicationRequired,
-  acceptingMembers,
   club,
   favorite,
   updateFavorites,
-}) => (
-  <Wrapper>
+}: DetailsProps) => {
+  const { size, application_required: applicationRequired, accepting_members: acceptingMembers } = club
+
+  return <Wrapper>
     <p style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8 }}>
       <Icon name="user" alt="members" size="0.8rem" style={iconStyles} />
       {getSizeDisplay(size, false)}
@@ -55,13 +61,13 @@ const Details = ({
           style={iconStyles}
         />
       ) : (
-        <Icon
-          name="x-circle"
-          alt="accepting members"
-          size="0.8rem"
-          style={iconStyles}
-        />
-      )}
+          <Icon
+            name="x-circle"
+            alt="accepting members"
+            size="0.8rem"
+            style={iconStyles}
+          />
+        )}
       {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
     </p>
     <BookmarkIcon
@@ -71,17 +77,6 @@ const Details = ({
       padding="0"
     />
   </Wrapper>
-)
-
-Details.defaultProps = {
-  applicationRequired: null,
-  acceptingMembers: false,
-}
-
-Details.propTypes = {
-  size: PropTypes.number.isRequired,
-  applicationRequired: PropTypes.number,
-  acceptingMembers: PropTypes.bool,
 }
 
 export default Details

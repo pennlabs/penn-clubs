@@ -15,6 +15,7 @@ import {
 } from '../constants/measurements'
 import { CLUB_ROUTE } from '../constants/routes'
 import { stripTags } from '../utils'
+import { Club } from '../types'
 import { InactiveTag, TagGroup } from './common'
 import ClubDetails from './ClubDetails'
 import Link from 'next/link'
@@ -77,12 +78,18 @@ const CardTitle = s.strong`
   margin-bottom: 0.5rem;
 `
 
-const shorten = desc => {
+const shorten = (desc: string): string => {
   if (desc.length < 250) return desc
   return desc.slice(0, 250) + '...'
 }
 
-const ClubCard = ({ club, updateFavorites, favorite }) => {
+type ClubCardProps = {
+  club: Club,
+  updateFavorites: (code: string) => void,
+  favorite: boolean,
+}
+
+const ClubCard = ({ club, updateFavorites, favorite }: ClubCardProps) => {
   const {
     name,
     active,
@@ -135,9 +142,6 @@ const ClubCard = ({ club, updateFavorites, favorite }) => {
             <Description>{textDescription}</Description>
 
             <ClubDetails
-              size={size}
-              applicationRequired={applicationRequired}
-              acceptingMembers={acceptingMembers}
               club={club}
               favorite={favorite}
               updateFavorites={updateFavorites}
