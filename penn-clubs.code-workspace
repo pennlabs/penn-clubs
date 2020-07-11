@@ -12,7 +12,8 @@
 	"settings": {
 		"files.associations": {
 			"*.js": "javascriptreact"
-		}
+		},
+		"files.eol": "\n",
 	},
 	"extensions": {
 		"recommendations": [

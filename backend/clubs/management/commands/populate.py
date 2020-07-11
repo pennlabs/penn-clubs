@@ -202,3 +202,5 @@ class Command(BaseCommand):
             for obj in user_objs[:count]:
                 Membership.objects.get_or_create(club=club, person=obj)
             count += 1
+
+        self.stdout.write("Finished populating database!")

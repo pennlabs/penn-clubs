@@ -11,14 +11,16 @@ trap 'kill $(jobs -p)' EXIT
 
 # Setup Python backend server
 pushd ../backend
-time pipenv install --dev
-pipenv run ./manage.py migrate
-pipenv run ./manage.py populate
-pipenv run ./manage.py runserver & npx wait-on -s 3 -d 500 -t 30000 http://localhost:8000/api
+time pipenv install --dev || echo "Failed to install all dependencies, continuing anyways..."
+pipenv run python manage.py migrate
+pipenv run python manage.py populate
+pipenv run python manage.py runserver &
 popd
+yarn run wait-on -s 3 -d 500 -t 30000 http://localhost:8000/api
 
 # Setup frontend server
-node server.js & yarn run wait-on -s 3 -d 500 -t 30000 http://localhost:3000
+node server.js &
+yarn run wait-on -s 3 -d 500 -t 30000 http://localhost:3000
 
 # Run tests
 yarn run cypress run
