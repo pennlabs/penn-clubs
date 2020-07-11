@@ -90,7 +90,11 @@ type ClubCardProps = {
   favorite: boolean
 }
 
-const ClubCard = ({ club, updateFavorites, favorite }: ClubCardProps) => {
+const ClubCard = ({
+  club,
+  updateFavorites,
+  favorite,
+}: ClubCardProps): JSX.Element => {
   const { name, active, approved, description, subtitle, tags, code } = club
   const img = club.image_url
   const textDescription = shorten(

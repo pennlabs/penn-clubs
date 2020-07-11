@@ -1,9 +1,9 @@
 export const BORDER_RADIUS = '4px'
 export const BORDER_RADIUS_LG = '8px'
 
-export const mediaMinWidth = (width: number): string =>
+export const mediaMinWidth = (width: string): string =>
   `@media screen and (min-width: ${width})`
-export const mediaMaxWidth = (width: number): string =>
+export const mediaMaxWidth = (width: string): string =>
   `@media screen and (max-width: ${width})`
 
 export const SM = '848px'
