@@ -34,7 +34,12 @@ const Description = s.p`
   width: 100%;
 `
 
-const Card = s.div`
+type CardProps = {
+  readonly hovering?: boolean
+  className?: string
+}
+
+const Card = s.div<CardProps>`
   padding: 10px;
   box-shadow: 0 0 0 transparent;
   transition: all ${ANIMATION_DURATION}ms ease;
