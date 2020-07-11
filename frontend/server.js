@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-console */
-import express from 'express'
-import proxyMiddleware from 'http-proxy-middleware'
-import next from 'next'
+const express = require('express')
+const next = require('next')
 
 const devProxy = {
   '/api': {
@@ -28,7 +28,8 @@ app
 
     // Set up the proxy.
     if (dev && devProxy) {
-      Object.keys(devProxy).forEach((context) => {
+      const proxyMiddleware = require('http-proxy-middleware')
+      Object.keys(devProxy).forEach(function (context) {
         server.use(proxyMiddleware(context, devProxy[context]))
       })
     }
