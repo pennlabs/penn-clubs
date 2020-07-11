@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import s from 'styled-components'
 
+import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
 import Form from '../Form'
 
@@ -23,7 +24,13 @@ const QuoteAuthor = s.i`
   font-size: 0.8em;
 `
 
-const QuestionList = ({ club: { name, code, questions } }) => {
+type QuestionListProps = {
+  club: Club
+}
+
+const QuestionList = ({
+  club: { name, code, questions },
+}: QuestionListProps): JSX.Element => {
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [formErrors, setFormErrors] = useState(null)
 

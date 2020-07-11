@@ -11,6 +11,7 @@ import Events from '../../../components/ClubPage/Events'
 import Header from '../../../components/ClubPage/Header'
 import InfoBox from '../../../components/ClubPage/InfoBox'
 import MemberList from '../../../components/ClubPage/MemberList'
+import QuestionList from '../../../components/ClubPage/QuestionList'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
 import Testimonials from '../../../components/ClubPage/Testimonials'
 import {

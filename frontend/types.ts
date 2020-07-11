@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 export enum Membership {
   Owner = 0,
   Officer = 10,
@@ -22,6 +23,15 @@ export interface Tag {
   name: string
 }
 
+export interface QuestionAnswer {
+  id: number
+  approved: boolean
+  question: string
+  answer: string
+  author: string
+  responder: string
+}
+
 export interface Club {
   name: string
   image_url: string
@@ -43,4 +53,5 @@ export interface Club {
   github: string
   listserv: string
   how_to_get_involved: string
+  questions: [QuestionAnswer]
 }
