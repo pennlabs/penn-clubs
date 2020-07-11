@@ -9,8 +9,8 @@ import {
   Text,
   Title,
 } from '../components/common'
-import { SNOW } from '../constants/colors.js'
-import renderPage from '../renderPage.js'
+import { SNOW } from '../constants/colors'
+import renderPage from '../renderPage'
 
 const Question = ({ title, children }) => (
   <>

@@ -1,8 +1,8 @@
 import s from 'styled-components'
 
 import { Container, Icon, StrongText, Text, Title } from '../components/common'
-import { GREEN, SNOW } from '../constants/colors.js'
-import renderPage from '../renderPage.js'
+import { GREEN, SNOW } from '../constants/colors'
+import renderPage from '../renderPage'
 
 const RankItem = s.div`
   padding: 0.75em;

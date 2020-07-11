@@ -16,7 +16,7 @@ import {
   SNOW,
 } from '../constants/colors'
 import { MD, mediaMaxWidth } from '../constants/measurements'
-import { renderListPage } from '../renderPage.js'
+import { renderListPage } from '../renderPage'
 import { doApiRequest } from '../utils'
 import { logEvent } from '../utils/analytics'
 

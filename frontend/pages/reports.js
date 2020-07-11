@@ -11,7 +11,7 @@ import {
 import { Container } from '../components/common/Container'
 import { CLUBS_GREY } from '../constants/colors'
 import { LG, mediaMaxWidth } from '../constants/measurements'
-import renderPage from '../renderPage.js'
+import renderPage from '../renderPage'
 import { API_BASE_URL, doApiRequest } from '../utils'
 
 const TallTextArea = s.textarea`

@@ -21,5 +21,37 @@
 			"ms-python.python",
 			"ms-vscode.vscode-typescript-tslint-plugin"
 		]
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"type": "shell",
+				"label": "Run Backend",
+				"args": [
+					"run",
+					"python",
+					"manage.py",
+					"runserver"
+				],
+				"command": "pipenv",
+				"options": {
+					"cwd": "${workspaceFolder:Backend}"
+				},
+				"problemMatcher": []
+			},
+			{
+				"type": "shell",
+				"label": "Run Frontend",
+				"args": [
+					"dev"
+				],
+				"command": "yarn",
+				"options": {
+					"cwd": "${workspaceFolder:Frontend}"
+				},
+				"problemMatcher": []
+			}
+		]
 	}
 }
