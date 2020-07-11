@@ -91,7 +91,7 @@ function renderPage(Page) {
     // Usage: console.log("Hello World") becomes checkAuth(console.log, "Hello World")
     // This function returns null when no user is found, which may be useful.
     checkAuth(func, ...args) {
-      if (this.state.authenticated) {
+      if (this.props.authenticated) {
         return typeof func === 'function' && func(...args)
       } else {
         this.openModal()
