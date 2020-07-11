@@ -3,5 +3,12 @@
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "python.formatting.provider": "black",
-    "python.formatting.blackArgs": ["--line-length", "100"]
+    "python.formatting.blackArgs": ["--line-length", "100"],
+    "python.sortImports.args": ["-rc"],
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.fixAll": true,
+            "source.organizeImports": true
+        }
+    }
 }
