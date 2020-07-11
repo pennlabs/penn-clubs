@@ -1,18 +1,18 @@
-import { useRef, useEffect } from 'react'
 import PropTypes from 'prop-types'
+import { useEffect, useRef } from 'react'
 import s from 'styled-components'
 
-import Shade from './Shade'
-import { Icon } from './Icon'
+import { fadeIn, fadeOut } from '../../constants/animations'
 import { LIGHT_GRAY } from '../../constants/colors'
 import {
   BORDER_RADIUS_LG,
-  MD,
-  SM,
-  mediaMaxWidth,
   LONG_ANIMATION_DURATION,
+  MD,
+  mediaMaxWidth,
+  SM,
 } from '../../constants/measurements'
-import { fadeIn, fadeOut } from '../../constants/animations'
+import { Icon } from './Icon'
+import Shade from './Shade'
 
 const ModalWrapper = s.div`
   position: fixed;

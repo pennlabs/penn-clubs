@@ -1,20 +1,21 @@
 import s from 'styled-components'
+
 import {
+  BORDER,
+  CLUBS_BLUE,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
-  CLUBS_BLUE,
+  CLUBS_NAVY,
   CLUBS_RED,
-  BORDER,
   LIGHT_GRAY,
   WHITE,
-  CLUBS_NAVY,
 } from '../constants/colors'
 import {
-  mediaMaxWidth,
-  MD,
-  SEARCH_BAR_MOBILE_HEIGHT,
-  NAV_HEIGHT,
   ANIMATION_DURATION,
+  MD,
+  mediaMaxWidth,
+  NAV_HEIGHT,
+  SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import { logEvent } from '../utils/analytics'
 import { Icon } from './common'

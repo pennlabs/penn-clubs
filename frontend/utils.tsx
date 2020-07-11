@@ -1,6 +1,6 @@
 import fetch from 'isomorphic-unfetch'
 
-export function stripTags(val) {
+export function stripTags(val: string): string {
   if (!val) {
     return val
   }
@@ -15,13 +15,13 @@ export function stripTags(val) {
     .trim()
 }
 
-export function getCurrentRelativePath() {
+export function getCurrentRelativePath(): string {
   return (
     window.location.pathname + window.location.search + window.location.hash
   )
 }
 
-export function getDefaultClubImageURL() {
+export function getDefaultClubImageURL(): string {
   return '/static/img/hatlogo.png'
 }
 
@@ -39,7 +39,7 @@ export const EMPTY_DESCRIPTION =
 export const LOGIN_URL = `${API_BASE_URL}/accounts/login/`
 export const LOGOUT_URL = `${API_BASE_URL}/accounts/logout/`
 
-export function getSizeDisplay(size, showMembersLabel = true) {
+export function getSizeDisplay(size: number, showMembersLabel = true): string {
   const postfix = showMembersLabel ? ' Members' : ''
   if (size === 1) return '< 20' + postfix
   else if (size === 2) return '20 - 50' + postfix
@@ -48,13 +48,13 @@ export function getSizeDisplay(size, showMembersLabel = true) {
   else return 'Unknown'
 }
 
-export function getRoleDisplay(role) {
+export function getRoleDisplay(role: number): string {
   if (role <= 0) return 'Owner'
   else if (role <= 10) return 'Officer'
   else return 'Member'
 }
 
-export function getApiUrl(path) {
+export function getApiUrl(path: string): string {
   if (/^https?:\/\//.test(path)) {
     const url = new URL(path)
     return url.pathname + url.search
@@ -83,7 +83,7 @@ export function doApiRequest(path, data) {
   return fetch(getApiUrl(path), data)
 }
 
-export function titleize(str) {
+export function titleize(str: string): string {
   if (!str) return str
   return str
     .replace(/_/g, ' ')

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import s from 'styled-components'
-import { Row, Col, Icon, Center, EmptyState, Text } from '../common'
+
 import { DARK_GRAY } from '../../constants/colors'
 import { M1 } from '../../constants/measurements'
+import { Center, Col, EmptyState, Icon, Row, Text } from '../common'
 import MemberCard from './MemberCard'
 
 const Toggle = s.div`

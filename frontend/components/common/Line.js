@@ -1,4 +1,5 @@
 import s from 'styled-components'
+
 import { BORDER } from '../../constants/colors'
 
 export const Line = s.hr`

@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"name": "Frontend",
+			"path": "frontend"
+		},
+		{
+			"name": "Backend",
+			"path": "backend"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.js": "javascriptreact"
+		}
+	},
+	"extensions": {
+		"recommendations": [
+			"esbenp.prettier-vscode",
+			"ms-python.python",
+			"ms-vscode.vscode-typescript-tslint-plugin"
+		]
+	}
+}

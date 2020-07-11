@@ -1,8 +1,8 @@
 import s from 'styled-components'
 
-import Social from './Social'
-import { SNOW, PINK } from '../../constants/colors'
+import { PINK, SNOW } from '../../constants/colors'
 import { Icon, SmallText } from '../common'
+import Social from './Social'
 
 const Foot = s.footer`
   height: 8rem;

@@ -3,7 +3,7 @@ import s from 'styled-components'
 
 import ClubCard from '../components/ClubCard'
 import ClubTableRow from '../components/ClubTableRow'
-import { mediaMaxWidth, SM } from '../constants/measurements'
+import { mediaMaxWidth,SM } from '../constants/measurements'
 
 // TODO PropTypes
 

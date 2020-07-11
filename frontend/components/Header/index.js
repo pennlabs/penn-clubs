@@ -1,18 +1,19 @@
-import { useState } from 'react'
 import Link from 'next/link'
+import { useState } from 'react'
 import s from 'styled-components'
-import Heading from './Head'
-import Burger from './Burger'
-import Feedback from './Feedback'
-import Links from './Links'
-import { WHITE, CLUBS_NAVY, BORDER } from '../../constants/colors'
+
+import { BORDER, CLUBS_NAVY, WHITE } from '../../constants/colors'
 import {
-  NAV_HEIGHT,
-  mediaMaxWidth,
-  MD,
   ANIMATION_DURATION,
+  MD,
+  mediaMaxWidth,
+  NAV_HEIGHT,
 } from '../../constants/measurements'
 import { HOME_ROUTE } from '../../constants/routes'
+import Burger from './Burger'
+import Feedback from './Feedback'
+import Heading from './Head'
+import Links from './Links'
 
 const Nav = s.nav`
   height: ${NAV_HEIGHT};

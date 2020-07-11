@@ -1,7 +1,8 @@
 import s from 'styled-components'
-import { LOGIN_URL, getCurrentRelativePath } from '../../utils'
+
 import { CLUBS_BLUE } from '../../constants/colors'
-import { Title, SmallText, Icon, Text, Center, PhoneContainer } from '.'
+import { getCurrentRelativePath,LOGIN_URL } from '../../utils'
+import { Center, Icon, PhoneContainer, SmallText, Text, Title } from '.'
 
 const Image = s.img`
   height: 86px;

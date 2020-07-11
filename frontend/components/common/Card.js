@@ -1,4 +1,5 @@
 import s from 'styled-components'
+
 import { BORDER } from '../../constants/colors'
 import { ANIMATION_DURATION } from '../../constants/measurements'
 

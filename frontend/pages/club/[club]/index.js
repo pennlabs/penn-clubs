@@ -1,32 +1,32 @@
-import s from 'styled-components'
 import { useRouter } from 'next/router'
+import s from 'styled-components'
 
-import renderPage from '../../../renderPage'
-import { doApiRequest } from '../../../utils'
-import Description from '../../../components/ClubPage/Description'
-import Header from '../../../components/ClubPage/Header'
+import ClubMetadata from '../../../components/ClubMetadata'
 import {
   DesktopActions,
   MobileActions,
 } from '../../../components/ClubPage/Actions'
-import InfoBox from '../../../components/ClubPage/InfoBox'
-import Testimonials from '../../../components/ClubPage/Testimonials'
+import Description from '../../../components/ClubPage/Description'
 import Events from '../../../components/ClubPage/Events'
-import SocialIcons from '../../../components/ClubPage/SocialIcons'
+import Header from '../../../components/ClubPage/Header'
+import InfoBox from '../../../components/ClubPage/InfoBox'
 import MemberList from '../../../components/ClubPage/MemberList'
+import SocialIcons from '../../../components/ClubPage/SocialIcons'
+import Testimonials from '../../../components/ClubPage/Testimonials'
 import {
   Card,
-  StrongText,
-  WideContainer,
-  Flex,
-  Title,
-  Text,
   Container,
+  Flex,
   Metadata,
+  StrongText,
+  Text,
+  Title,
+  WideContainer,
 } from '../../../components/common'
 import { SNOW, WHITE } from '../../../constants/colors'
 import { M0, M2, M3 } from '../../../constants/measurements'
-import ClubMetadata from '../../../components/ClubMetadata'
+import renderPage from '../../../renderPage'
+import { doApiRequest } from '../../../utils'
 
 const Image = s.img`
   height: 86px;

@@ -1,16 +1,16 @@
 import React from 'react'
-import { BORDER_RADIUS } from '../constants/measurements'
-import { CLUBS_BLUE, WHITE } from '../constants/colors'
-
-import renderPage from '../renderPage'
-import { doApiRequest, formatResponse } from '../utils'
 import s from 'styled-components'
-import TabView from '../components/TabView'
+
+import { Container, Metadata, Title } from '../components/common'
+import AuthPrompt from '../components/common/AuthPrompt'
 import ClubTab from '../components/Settings/ClubTab'
 import FavoritesTab from '../components/Settings/FavoritesTab'
 import ProfileTab from '../components/Settings/ProfileTab'
-import AuthPrompt from '../components/common/AuthPrompt'
-import { Title, Container, Metadata } from '../components/common'
+import TabView from '../components/TabView'
+import { CLUBS_BLUE, WHITE } from '../constants/colors'
+import { BORDER_RADIUS } from '../constants/measurements'
+import renderPage from '../renderPage'
+import { doApiRequest, formatResponse } from '../utils'
 
 const Notification = s.span`
   border-radius: ${BORDER_RADIUS};
@@ -46,7 +46,7 @@ class Settings extends React.Component {
       {
         message: msg,
       },
-      () => window.scrollTo(0, 0)
+      () => window.scrollTo(0, 0),
     )
   }
 
@@ -101,7 +101,7 @@ class Settings extends React.Component {
       this.notify('You must be logged in to perform this action.')
     } else if (
       confirm(
-        `Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`
+        `Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`,
       )
     ) {
       doApiRequest(`/clubs/${club.code}/members/${username}`, {

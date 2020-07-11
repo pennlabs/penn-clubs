@@ -1,21 +1,21 @@
-import s from 'styled-components'
 import Link from 'next/link'
+import s from 'styled-components'
 
-import Toggle from './Toggle'
-import { Icon } from '../common'
 import {
-  CLUBS_RED,
-  CLUBS_RED_DARK,
+  BLACK_ALPHA,
   CLUBS_BLUE,
   CLUBS_DEEP_BLUE,
   CLUBS_NAVY,
+  CLUBS_RED,
+  CLUBS_RED_DARK,
+  LIGHT_GRAY,
   WHITE,
   WHITE_ALPHA,
-  LIGHT_GRAY,
-  BLACK_ALPHA,
 } from '../../constants/colors'
 import { BORDER_RADIUS } from '../../constants/measurements'
-import { CLUB_ROUTE, CLUB_EDIT_ROUTE } from '../../constants/routes'
+import { CLUB_EDIT_ROUTE, CLUB_ROUTE } from '../../constants/routes'
+import { Icon } from '../common'
+import Toggle from './Toggle'
 
 const Card = s.div`
   color: ${CLUBS_NAVY}

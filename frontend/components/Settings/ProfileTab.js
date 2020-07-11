@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import s from 'styled-components'
 
-import ProfileForm from './ProfileForm'
-import { LOGOUT_URL } from '../../utils'
-import { Icon, SmallText, ProfilePic } from '../common'
 import { MEDIUM_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
+import { LOGOUT_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'
+import { Icon, ProfilePic, SmallText } from '../common'
+import ProfileForm from './ProfileForm'
 
 const Wrapper = s.div`
   font-family: ${BODY_FONT};

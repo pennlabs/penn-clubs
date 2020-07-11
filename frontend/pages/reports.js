@@ -1,17 +1,18 @@
-import s from 'styled-components'
 import { useEffect, useState } from 'react'
-import renderPage from '../renderPage.js'
+import s from 'styled-components'
+
 import {
-  Icon,
-  Flex,
-  Empty,
   Checkbox,
   CheckboxLabel,
+  Empty,
+  Flex,
+  Icon,
 } from '../components/common'
-import { mediaMaxWidth, LG } from '../constants/measurements'
-import { doApiRequest, API_BASE_URL } from '../utils'
 import { Container } from '../components/common/Container'
 import { CLUBS_GREY } from '../constants/colors'
+import { LG, mediaMaxWidth } from '../constants/measurements'
+import renderPage from '../renderPage.js'
+import { API_BASE_URL, doApiRequest } from '../utils'
 
 const TallTextArea = s.textarea`
   height: 6em;
@@ -85,10 +86,10 @@ const Reports = ({ nameToCode }) => {
       Object.keys(fields).forEach(group =>
         fields[group].forEach(f => {
           initial[f] = false
-        })
+        }),
       )
       return initial
-    })()
+    })(),
   )
 
   const query = {
@@ -141,7 +142,7 @@ const Reports = ({ nameToCode }) => {
                   setIncludedFields(prev => ({ ...prev, [f]: false }))
                 }
               />
-            ) : null
+            ) : null,
           )}
         </ul>
       </Sidebar>
@@ -167,7 +168,7 @@ const Reports = ({ nameToCode }) => {
                     <div className="buttons">
                       <a
                         href={`${API_BASE_URL}/clubs/?existing=true&${serializeParams(
-                          JSON.parse(report.parameters)
+                          JSON.parse(report.parameters),
                         )}`}
                         target="_blank"
                         className="button is-small is-success"
@@ -246,7 +247,7 @@ const Reports = ({ nameToCode }) => {
           <div>
             <Flex>
               {Object.keys(fields).map(group =>
-                generateCheckboxGroup(group, fields[group])
+                generateCheckboxGroup(group, fields[group]),
               )}
             </Flex>
           </div>
@@ -256,11 +257,11 @@ const Reports = ({ nameToCode }) => {
           onClick={() => {
             window.open(
               `${API_BASE_URL}/clubs/?format=xlsx&name=${encodeURIComponent(
-                nameInput
+                nameInput,
               )}&desc=${encodeURIComponent(
-                descInput
+                descInput,
               )}&fields=${encodeURIComponent(query.fields.join(','))}`,
-              '_blank'
+              '_blank',
             )
             updateReportFlag(!reportFlag)
           }}

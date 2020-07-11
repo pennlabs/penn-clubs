@@ -1,6 +1,6 @@
 import s from 'styled-components'
 
-import { TagGroup, InactiveTag, Title } from '../common'
+import { InactiveTag, TagGroup, Title } from '../common'
 
 const Wrapper = s.div`
   display: flex;

@@ -1,23 +1,24 @@
+import Fuse from 'fuse.js'
 import React from 'react'
 import s from 'styled-components'
-import Fuse from 'fuse.js'
-import SearchBar from '../components/SearchBar'
+
 import ClubDisplay from '../components/ClubDisplay'
+import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
-import { renderListPage } from '../renderPage.js'
-import { mediaMaxWidth, MD } from '../constants/measurements'
+import SearchBar from '../components/SearchBar'
 import {
+  CLUBS_BLUE,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
-  CLUBS_BLUE,
+  CLUBS_NAVY,
   CLUBS_RED,
   FOCUS_GRAY,
   SNOW,
-  CLUBS_NAVY,
 } from '../constants/colors'
-import { logEvent } from '../utils/analytics'
-import { WideContainer, Metadata, Title } from '../components/common'
+import { MD, mediaMaxWidth } from '../constants/measurements'
+import { renderListPage } from '../renderPage.js'
 import { doApiRequest } from '../utils'
+import { logEvent } from '../utils/analytics'
 
 const colorMap = {
   Tags: CLUBS_BLUE,
@@ -133,7 +134,7 @@ class Splash extends React.Component {
     const tagSelected = selectedTags.filter(tag => tag.name === 'Tags')
     const sizeSelected = selectedTags.filter(tag => tag.name === 'Size')
     const applicationSelected = selectedTags.filter(
-      tag => tag.name === 'Application'
+      tag => tag.name === 'Application',
     )
     let { clubs } = this.state
 
@@ -159,7 +160,7 @@ class Splash extends React.Component {
         !tagSelected.length ||
         club.tags.some(
           clubTag =>
-            tagSelected.findIndex(tag => tag.value === clubTag.id) !== -1
+            tagSelected.findIndex(tag => tag.value === clubTag.id) !== -1,
         )
 
       return clubRightSize && appRequired && rightTags
@@ -179,7 +180,7 @@ class Splash extends React.Component {
     const { selectedTags } = this.state
     const { value } = tag
     const i = selectedTags.findIndex(
-      tag => tag.value === value && tag.name === name
+      tag => tag.value === value && tag.name === name,
     )
 
     if (i === -1) {
@@ -191,7 +192,7 @@ class Splash extends React.Component {
 
     this.setState(
       { selectedTags },
-      this.resetDisplay(this.state.nameInput, this.state.selectedTags)
+      this.resetDisplay(this.state.nameInput, this.state.selectedTags),
     )
   }
 
@@ -209,10 +210,10 @@ class Splash extends React.Component {
     clubs.forEach(club => {
       club.rank = 0
       const hasSchool = club.target_schools.some(({ name }) =>
-        userSchools.has(name)
+        userSchools.has(name),
       )
       const hasMajor = club.target_majors.some(({ name }) =>
-        userMajors.has(name)
+        userMajors.has(name),
       )
       const hasYear =
         userInfo &&
@@ -319,7 +320,7 @@ class Splash extends React.Component {
                     onClick={() =>
                       this.setState(
                         { selectedTags: [] },
-                        this.resetDisplay(nameInput, [])
+                        this.resetDisplay(nameInput, []),
                       )
                     }
                   >

@@ -1,12 +1,12 @@
-import s from 'styled-components'
-import ReactTooltip from 'react-tooltip'
 import Link from 'next/link'
+import ReactTooltip from 'react-tooltip'
+import s from 'styled-components'
 
-import Toggle from './Toggle'
-import { Icon } from '../common'
 import { DARK_GRAY } from '../../constants/colors'
+import { CLUB_EDIT_ROUTE, CLUB_ROUTE } from '../../constants/routes'
 import { BODY_FONT } from '../../constants/styles'
-import { CLUB_ROUTE, CLUB_EDIT_ROUTE } from '../../constants/routes'
+import { Icon } from '../common'
+import Toggle from './Toggle'
 
 const Table = s.table`
   font-family: ${BODY_FONT};

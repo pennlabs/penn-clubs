@@ -1,5 +1,6 @@
 # IDE files
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/
 
 # Python files

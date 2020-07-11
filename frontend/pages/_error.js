@@ -2,10 +2,10 @@ import Link from 'next/link'
 import PropTypes from 'prop-types'
 import s from 'styled-components'
 
-import renderPage from '../renderPage'
 import { Center, Container, Metadata } from '../components/common'
 import { SNOW } from '../constants/colors'
 import { HOME_ROUTE } from '../constants/routes'
+import renderPage from '../renderPage'
 
 const Image = s.img`
   margin-top: calc(1rem + 5vh);

@@ -1,18 +1,18 @@
+import Link from 'next/link'
 import React from 'react'
 import s from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
 import {
+  ANIMATION_DURATION,
+  LG,
+  MD,
   mediaMaxWidth,
   mediaMinWidth,
-  MD,
-  LG,
-  ANIMATION_DURATION,
 } from '../constants/measurements'
 import { CLUB_ROUTE } from '../constants/routes'
-import { TagGroup } from './common'
 import ClubDetails from './ClubDetails'
-import Link from 'next/link'
+import { TagGroup } from './common'
 
 const ROW_PADDING = 0.8
 

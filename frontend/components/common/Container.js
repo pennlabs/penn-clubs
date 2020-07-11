@@ -3,11 +3,11 @@ import s from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
 import {
-  mediaMinWidth,
-  MD,
   LG,
-  XL,
+  MD,
+  mediaMinWidth,
   NAV_HEIGHT,
+  XL,
 } from '../../constants/measurements'
 
 const getPadding = percent => {

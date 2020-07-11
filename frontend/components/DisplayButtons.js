@@ -1,10 +1,10 @@
-import s from 'styled-components'
-import PropTypes from 'prop-types'
 import Link from 'next/link'
+import PropTypes from 'prop-types'
+import s from 'styled-components'
 
-import { Icon } from './common'
-import { DARK_GRAY, ALLBIRDS_GRAY, WHITE } from '../constants/colors'
+import { ALLBIRDS_GRAY, DARK_GRAY, WHITE } from '../constants/colors'
 import { BODY_FONT } from '../constants/styles'
+import { Icon } from './common'
 
 const DisplayButtonsTag = s.div`
   float: right;

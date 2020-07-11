@@ -1,10 +1,10 @@
-import { Component } from 'react'
 import Link from 'next/link'
 import { withRouter } from 'next/router'
+import { Component } from 'react'
 
 import { CLUB_ROUTE } from '../../../../../constants/routes'
 import renderPage from '../../../../../renderPage'
-import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils'
+import { doApiRequest, formatResponse,LOGIN_URL } from '../../../../../utils'
 
 class Invite extends Component {
   constructor(props) {
@@ -30,7 +30,7 @@ class Invite extends Component {
       })
     } else {
       doApiRequest(
-        `/clubs/${query.club}/invites/${query.invite}/?format=json`
+        `/clubs/${query.club}/invites/${query.invite}/?format=json`,
       ).then(resp => {
         resp.json().then(data => {
           if (resp.ok) {

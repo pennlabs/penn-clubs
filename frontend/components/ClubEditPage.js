@@ -1,31 +1,31 @@
-import s from 'styled-components'
-import { Component, useState } from 'react'
+import moment from 'moment'
 import Link from 'next/link'
+import { Component, useState } from 'react'
 import Select from 'react-select'
 import TimeAgo from 'react-timeago'
-import moment from 'moment'
+import s from 'styled-components'
 
-import { HOME_ROUTE, CLUB_ROUTE, CLUB_FLYER_ROUTE } from '../constants/routes'
+import { CLUB_FLYER_ROUTE, CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
 import {
   doApiRequest,
-  getApiUrl,
   formatResponse,
+  getApiUrl,
   getRoleDisplay,
   stripTags,
 } from '../utils'
 import ClubMetadata from './ClubMetadata'
-import Form, { ModelForm } from './Form'
-import TabView from './TabView'
-import AuthPrompt from './common/AuthPrompt'
 import {
-  Icon,
   Container,
-  Title,
+  Device,
+  Empty,
+  Icon,
   InactiveTag,
   Text,
-  Empty,
-  Device,
+  Title,
 } from './common'
+import AuthPrompt from './common/AuthPrompt'
+import Form, { ModelForm } from './Form'
+import TabView from './TabView'
 
 const Card = ({ children, title }) => (
   <div className="card" style={{ marginBottom: 20 }}>
@@ -345,7 +345,7 @@ class ClubForm extends Component {
       {
         message: msg,
       },
-      () => window.scrollTo(0, 0)
+      () => window.scrollTo(0, 0),
     )
   }
 
@@ -360,7 +360,7 @@ class ClubForm extends Component {
         this.notify(
           `Successfully ${
             this.state.club.active ? 'deactivated' : 'activated'
-          } this club.`
+          } this club.`,
         )
         this.componentDidMount()
       } else {
@@ -406,7 +406,7 @@ class ClubForm extends Component {
       `/clubs/${this.state.club.code}/invites/${id}/resend/?format=json`,
       {
         method: 'PUT',
-      }
+      },
     )
       .then(resp => resp.json())
       .then(resp => {
@@ -453,7 +453,7 @@ class ClubForm extends Component {
             this.props.router.push(
               '/club/[club]/edit',
               `/club/${info.id}/edit`,
-              { shallow: true }
+              { shallow: true },
             )
             this.setState({
               isEdit: true,
@@ -495,21 +495,21 @@ class ClubForm extends Component {
         .then(data =>
           this.setState({
             club: data,
-          })
+          }),
         )
       doApiRequest(`/clubs/${clubId}/invites/?format=json`)
         .then(resp => resp.json())
         .then(data =>
           this.setState({
             invites: data,
-          })
+          }),
         )
       doApiRequest(`/clubs/${clubId}/subscription/?format=json`)
         .then(resp => resp.json())
         .then(data =>
           this.setState({
             subscriptions: data,
-          })
+          }),
         )
     }
   }
@@ -1007,7 +1007,7 @@ class ClubForm extends Component {
                 <div className="buttons">
                   <a
                     href={getApiUrl(
-                      `/clubs/${club.code}/subscription/?format=xlsx`
+                      `/clubs/${club.code}/subscription/?format=xlsx`,
                     )}
                     className="button is-link"
                   >

@@ -1,6 +1,7 @@
-import { Metadata } from './common'
+import { useEffect, useState } from 'react'
+
 import { CLUB_ROUTE } from '../constants/routes'
-import { useState, useEffect } from 'react'
+import { Metadata } from './common'
 
 const getTwitterUsername = url => {
   if (typeof url === 'string') {

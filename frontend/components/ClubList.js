@@ -1,12 +1,11 @@
+import Link from 'next/link'
 import s from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
-import { Card, BlueTag, InactiveTag } from './common'
-
 import { BORDER_RADIUS } from '../constants/measurements'
 import { CLUB_ROUTE } from '../constants/routes'
 import { getDefaultClubImageURL } from '../utils'
-import Link from 'next/link'
+import { BlueTag, Card, InactiveTag } from './common'
 
 const Subtitle = s.p`
   color: ${CLUBS_GREY_LIGHT} !important;

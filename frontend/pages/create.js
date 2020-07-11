@@ -1,7 +1,7 @@
-import ClubEditPage from '../components/ClubEditPage'
 import { withRouter } from 'next/router'
-import renderPage from '../renderPage.js'
 
+import ClubEditPage from '../components/ClubEditPage'
+import renderPage from '../renderPage.js'
 import { doApiRequest } from '../utils'
 
 const Create = props => <ClubEditPage {...props} />
@@ -13,7 +13,7 @@ Create.getInitialProps = async ({ query }) => {
       const request = await doApiRequest(`/${item}/?format=json`)
       const response = await request.json()
       return [item, response]
-    })
+    }),
   ).then(values => {
     const output = {}
     values.forEach(item => {

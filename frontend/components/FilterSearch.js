@@ -1,23 +1,23 @@
-import { useState, useEffect } from 'react'
-import s from 'styled-components'
-import Select from 'react-select/async'
 import Fuse from 'fuse.js'
+import { useEffect, useState } from 'react'
+import Select from 'react-select/async'
+import s from 'styled-components'
 
-import { Icon, SelectedTag } from './common'
-import { FilterHeader } from './DropdownFilter'
 import {
-  mediaMaxWidth,
-  MD,
-  ANIMATION_DURATION,
-} from '../constants/measurements'
-import {
-  MEDIUM_GRAY,
+  BORDER,
   CLUBS_BLUE,
   CLUBS_GREY,
   FOCUS_GRAY,
-  BORDER,
+  MEDIUM_GRAY,
   WHITE,
 } from '../constants/colors'
+import {
+  ANIMATION_DURATION,
+  MD,
+  mediaMaxWidth,
+} from '../constants/measurements'
+import { Icon, SelectedTag } from './common'
+import { FilterHeader } from './DropdownFilter'
 
 const SearchWrapper = s.div`
   margin-bottom: 30px;
