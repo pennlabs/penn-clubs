@@ -58,9 +58,32 @@ type ActionsProps = {
   userInfo: UserInfo
   style?: CSSProperties
   className?: string
+  requests: [string]
+  updateRequests: (code: string) => void
   updateFavorites: (code: string) => boolean
   updateSubscriptions: (code: string) => void
 }
+
+const ModalContent = s.div`
+  text-align: left;
+  padding: 15px;
+
+  & h1 {
+    font-size: 1.3em;
+    font-weight: bold;
+  }
+
+  & p {
+    margin-bottom: 1em;
+  }
+`
+
+const Quote = s.p`
+  border-left: 3px solid #ccc;
+  padding: 3px 12px;
+  font-style: italic;
+  color: #888;
+`
 
 const Actions = ({
   club,
@@ -87,13 +110,78 @@ const Actions = ({
     (userInfo && userInfo.is_superuser)
 
   const [favCount, setFavCount] = useState(favoriteCount || 0)
-  const requestMembership = () => updateRequests(code)
+  const [showModal, setShowModal] = useState(false)
+  const requestMembership = () => {
+    if (!isRequested) {
+      setShowModal(true)
+    } else {
+      updateRequests(code)
+    }
+  }
 
   return (
-    <div className={className} style={style}>
-      <Wrapper>
-        {!inClub && (
-          <ActionButton
+    <>
+      <div className={className} style={style}>
+        <Wrapper>
+          {!inClub && (
+            <ActionButton
+              className="button is-success"
+              onClick={requestMembership}
+            >
+              {isRequested ? 'Withdraw Request' : 'Request Membership'}
+            </ActionButton>
+          )}
+          {canEdit && (
+            <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
+              <ActionButton className="button is-success">
+                Edit Club
+              </ActionButton>
+            </Link>
+          )}
+
+          <ActionWrapper>
+            <BookmarkIcon
+              club={club}
+              favorite={isFavorite}
+              updateFavorites={id => {
+                const upd = updateFavorites(id)
+                // If upd is null, checkAuth in renderPage failed, so we do not update the count.
+                if (upd !== null) setFavCount(favCount + (upd ? 1 : -1))
+              }}
+              padding="0"
+            />
+            <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
+            <ActionDiv>|</ActionDiv>
+            <SubscribeIcon
+              padding="0"
+              club={club}
+              subscribe={isSubscription}
+              updateSubscribes={updateSubscriptions}
+            />
+          </ActionWrapper>
+        </Wrapper>
+      </div>
+      <Modal
+        marginBottom={false}
+        show={showModal}
+        closeModal={() => setShowModal(false)}
+      >
+        <ModalContent>
+          <h1>Confirm Membership Request</h1>
+          <p>
+            This feature is intended for existing club members to quickly add
+            themselves to Penn Clubs.
+          </p>
+          <p>
+            If you are not a member, you can read the "how to get involved"
+            section for more details!
+          </p>
+          <Quote>{club.how_to_get_involved}</Quote>
+          <p>
+            If you are an existing member of this club, use the button below to
+            confirm your membership request.
+          </p>
+          <div
             className="button is-success"
             onClick={requestMembership}
           >
@@ -115,19 +203,12 @@ const Actions = ({
               // If upd is null, checkAuth in renderPage failed, so we do not update the count.
               if (upd !== null) setFavCount(favCount + (upd ? 1 : -1))
             }}
-            padding="0"
-          />
-          <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
-          <ActionDiv>|</ActionDiv>
-          <SubscribeIcon
-            padding="0"
-            club={club}
-            subscribe={isSubscription}
-            updateSubscribes={updateSubscriptions}
-          />
-        </ActionWrapper>
-      </Wrapper>
-    </div>
+          >
+            Confirm
+          </div>
+        </ModalContent>
+      </Modal>
+    </>
   )
 }
 
