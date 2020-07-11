@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from phonenumber_field.modelfields import PhoneNumberField
 
-from clubs.utils import html_to_text, get_domain
+from clubs.utils import get_domain, html_to_text
 
 
 def get_asset_file_name(instance, fname):
@@ -132,7 +132,8 @@ class Club(models.Model):
 
 class QuestionAnswer(models.Model):
     """
-    Represents a question asked by a prospective member to a club and the club's corresponding answer.
+    Represents a question asked by a prospective member to a club
+    and the club's corresponding answer.
     """
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="questions")

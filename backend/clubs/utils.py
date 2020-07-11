@@ -1,11 +1,11 @@
 import re
+from urllib.parse import urlparse
 
 import bleach
 from bs4 import BeautifulSoup, NavigableString
+from django.conf import settings
 from django.db.models import CharField, F, Q, Value
 from django.template.defaultfilters import slugify
-from django.conf import settings
-from urllib.parse import urlparse
 
 
 def get_domain(request):

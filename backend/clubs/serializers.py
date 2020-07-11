@@ -150,7 +150,8 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
         if value is None:
             if self.instance and self.instance.answer is not None:
                 raise serializers.ValidationError(
-                    "You are not allowed to unanswer a question! You can change the answer text instead."
+                    "You are not allowed to unanswer a question! "
+                    + "You can change the answer text instead."
                 )
             return value
 
