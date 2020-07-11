@@ -9,6 +9,9 @@ export LANG=C.UTF-8
 # Kill background servers
 trap 'kill $(jobs -p)' EXIT
 
+# Add artifacts folder
+mkdir -p ./test-results
+
 # Setup Python backend server
 pushd ../backend
 time pipenv install --dev || echo "Failed to install all dependencies, continuing anyways..."
@@ -23,4 +26,4 @@ node server.js &
 yarn run wait-on -s 3 -d 500 -t 30000 http://localhost:3000
 
 # Run tests
-yarn run cypress run
+yarn run cypress run || (mv cypress/screenshots/* cypress/videos/* ./test-results/; exit 1)
