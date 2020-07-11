@@ -194,6 +194,7 @@ class Form extends Component {
       converter,
       label,
       hasLabel = true,
+      disabled = false,
       required,
       help,
     } = field
@@ -221,6 +222,7 @@ class Form extends Component {
           key={name}
           type={type}
           name={name}
+          disabled={disabled}
           placeholder={placeholder}
         />
       )
@@ -237,6 +239,7 @@ class Form extends Component {
                 this.onChange(val),
               )
             }}
+            disabled={disabled}
             placeholderText={placeholder}
           />
         </DatePickerWrapper>
@@ -396,6 +399,7 @@ class Form extends Component {
         <label className="checkbox">
           <input
             type="checkbox"
+            disabled={disabled}
             checked={value}
             onChange={(e) => {
               this.setState({ [`field-${name}`]: e.target.checked }, () =>
@@ -418,7 +422,7 @@ class Form extends Component {
         key={name}
         className={isHorizontal ? 'field is-horizontal' : 'field'}
       >
-        {hasLabel && (
+        {hasLabel && !(type === 'checkbox' && !isHorizontal) && (
           <div className="field-label is-normal">
             <label className="label">
               {type === 'checkbox' ? titleize(name) : label || titleize(name)}
@@ -471,7 +475,12 @@ class Form extends Component {
   }
 
   render() {
-    const { submitButton, disabledSubmitButton, fields } = this.props
+    const {
+      submitButton,
+      disabledSubmitButton,
+      fields,
+      submitButtonAttributes = 'button is-primary is-medium',
+    } = this.props
     const { edited } = this.state
 
     // If both submitButton and disabledSubmitButton are provided or not provided, then
@@ -483,10 +492,7 @@ class Form extends Component {
         button = <span onClick={this.handleSubmit}>{submitButton}</span>
       } else {
         button = (
-          <a
-            className="button is-primary is-medium"
-            onClick={this.handleSubmit}
-          >
+          <a className={submitButtonAttributes} onClick={this.handleSubmit}>
             Submit
           </a>
         )
@@ -499,7 +505,7 @@ class Form extends Component {
       } else {
         button = (
           <a
-            className="button is-primary is-medium"
+            className={submitButtonAttributes}
             title="You must make changes before submitting."
             disabled
           >
@@ -938,9 +944,11 @@ export class ModelForm extends Component {
             <ModelStatus status={object._status} />
           </ModelItem>
         ))}
-        <span onClick={this.onCreate} className="button is-primary">
-          <Icon name="plus" alt="create" /> Create
-        </span>
+        {allowCreation && (
+          <span onClick={this.onCreate} className="button is-primary">
+            <Icon name="plus" alt="create" /> Create
+          </span>
+        )}
       </>
     )
   }

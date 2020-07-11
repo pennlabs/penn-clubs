@@ -1,7 +1,6 @@
 import datetime
 import os
 import uuid
-from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -13,7 +12,7 @@ from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from phonenumber_field.modelfields import PhoneNumberField
 
-from clubs.utils import html_to_text
+from clubs.utils import get_domain, html_to_text
 
 
 def get_asset_file_name(instance, fname):
@@ -129,6 +128,61 @@ class Club(models.Model):
             ("approve_club", "Can approve pending clubs"),
             ("see_pending_clubs", "View pending clubs that are not one's own"),
         ]
+
+
+class QuestionAnswer(models.Model):
+    """
+    Represents a question asked by a prospective member to a club
+    and the club's corresponding answer.
+    """
+
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="questions")
+    author = models.ForeignKey(
+        get_user_model(), on_delete=models.SET_NULL, null=True, related_name="questions"
+    )
+    responder = models.ForeignKey(
+        get_user_model(), on_delete=models.SET_NULL, null=True, related_name="answers"
+    )
+
+    approved = models.BooleanField(default=False)
+    is_anonymous = models.BooleanField(default=False)
+
+    question = models.TextField()
+    answer = models.TextField(null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "{}: {}".format(self.club.name, self.question)
+
+    def send_question_mail(self, request=None):
+        domain = get_domain(request)
+
+        owner_emails = list(
+            self.club.membership_set.filter(role__gte=Membership.ROLE_OFFICER).values_list(
+                "person__email"
+            )
+        )
+
+        context = {
+            "name": self.club.name,
+            "question": self.question,
+            "url": settings.QUESTION_URL.format(domain=domain, club=self.club.code),
+        }
+
+        html_content = render_to_string("emails/question.html", context)
+        text_content = html_to_text(html_content)
+
+        msg = EmailMultiAlternatives(
+            "Question for {}".format(self.club.name),
+            text_content,
+            settings.FROM_EMAIL,
+            owner_emails,
+        )
+
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
 
 
 class Testimonial(models.Model):
@@ -282,7 +336,7 @@ class Note(models.Model):
     )
 
     creating_club_permission = models.IntegerField(
-        choices=CREATING_CLUB_PERMISSION_CHOICES, default=PERMISSION_CREATING_CLUB_MEMBER
+        choices=CREATING_CLUB_PERMISSION_CHOICES, default=PERMISSION_CREATING_CLUB_MEMBER,
     )
     outside_club_permission = models.IntegerField(
         choices=OUTSIDE_CLUB_PERMISSION_CHOICES, default=PERMISSION_SUBJECT_CLUB_MEMBER
@@ -309,7 +363,11 @@ class Membership(models.Model):
     ROLE_OWNER = 0
     ROLE_OFFICER = 10
     ROLE_MEMBER = 20
-    ROLE_CHOICES = ((ROLE_OWNER, "Owner"), (ROLE_OFFICER, "Officer"), (ROLE_MEMBER, "Member"))
+    ROLE_CHOICES = (
+        (ROLE_OWNER, "Owner"),
+        (ROLE_OFFICER, "Officer"),
+        (ROLE_MEMBER, "Member"),
+    )
 
     active = models.BooleanField(default=True)
     public = models.BooleanField(default=True)
@@ -377,7 +435,7 @@ class MembershipInvite(models.Model):
         self.save()
 
         obj, _ = Membership.objects.get_or_create(
-            person=user, club=self.club, defaults={"role": self.role, "title": self.title}
+            person=user, club=self.club, defaults={"role": self.role, "title": self.title},
         )
 
         return obj
@@ -386,14 +444,7 @@ class MembershipInvite(models.Model):
         """
         Send the email associated with this invitation to the user.
         """
-        # make the beta/testing sites work
-        domain = settings.DEFAULT_DOMAIN
-        if request is not None:
-            referer = request.META.get("HTTP_REFERER")
-            if referer:
-                host = urlparse(referer).netloc
-                if host and host.endswith(domain):
-                    domain = host
+        domain = get_domain(request)
 
         context = {
             "token": self.token,
@@ -430,13 +481,7 @@ class MembershipInvite(models.Model):
                 "This invite should grant owner permissions if sending out the owner email!"
             )
 
-        domain = settings.DEFAULT_DOMAIN
-        if request is not None:
-            referer = request.META.get("HTTP_REFERER")
-            if referer:
-                host = urlparse(referer).netloc
-                if host and host.endswith(domain):
-                    domain = host
+        domain = get_domain(request)
 
         context = {
             "name": self.club.name,

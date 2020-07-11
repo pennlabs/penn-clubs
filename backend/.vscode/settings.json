@@ -18,5 +18,6 @@
         "**/CVS": true,
         "**/.DS_Store": true,
         "**/.venv": true
-    }
+    },
+    "editor.rulers": [100]
 }

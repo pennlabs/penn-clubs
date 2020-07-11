@@ -22,6 +22,7 @@ from clubs.models import (
     Note,
     NoteTag,
     Profile,
+    QuestionAnswer,
     Report,
     School,
     Subscribe,
@@ -319,6 +320,12 @@ class YearAdmin(admin.ModelAdmin):
     list_display = ("name", "year")
 
 
+class QuestionAnswerAdmin(admin.ModelAdmin):
+    search_fields = ("question", "answer")
+    list_display = ("club", "question", "answer", "approved")
+    list_filter = ("approved", "updated_at")
+
+
 admin.site.unregister(Group)
 
 
@@ -335,6 +342,7 @@ admin.site.register(Major, MajorAdmin)
 admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)
 admin.site.register(Profile, ProfileAdmin)
+admin.site.register(QuestionAnswer, QuestionAnswerAdmin)
 admin.site.register(Report, ReportAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Testimonial)

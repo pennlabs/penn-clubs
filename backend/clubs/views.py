@@ -31,6 +31,7 @@ from clubs.models import (
     MembershipInvite,
     MembershipRequest,
     Note,
+    QuestionAnswer,
     Report,
     School,
     Subscribe,
@@ -47,6 +48,7 @@ from clubs.permissions import (
     IsSuperuser,
     MemberPermission,
     NotePermission,
+    QuestionAnswerPermission,
     ReadOnly,
 )
 from clubs.serializers import (
@@ -62,6 +64,7 @@ from clubs.serializers import (
     MembershipRequestSerializer,
     MembershipSerializer,
     NoteSerializer,
+    QuestionAnswerSerializer,
     ReportSerializer,
     SchoolSerializer,
     SubscribeSerializer,
@@ -98,7 +101,11 @@ def find_relationship_helper(relationship, club_object, found):
         else:
             children_recurse.append({"name": child.name, "code": child.code})
 
-    return {"name": club_object.name, "code": club_object.code, "children": children_recurse}
+    return {
+        "name": club_object.name,
+        "code": club_object.code,
+        "children": children_recurse,
+    }
 
 
 def filter_note_permission(queryset, club, user):
@@ -318,7 +325,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 desc = request.query_params.get("desc")
                 parameters = json.dumps(dict(request.query_params))
                 Report.objects.create(
-                    name=name, description=desc, parameters=parameters, creator=request.user
+                    name=name, description=desc, parameters=parameters, creator=request.user,
                 )
 
         return super().list(request, *args, **kwargs)
@@ -474,6 +481,44 @@ class TestimonialViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Testimonial.objects.filter(club__code=self.kwargs["club_code"])
+
+
+class QuestionAnswerViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of questions and answers for this club.
+
+    create:
+    Create a new question for this club.
+
+    update:
+    Change the question or the answer for this club.
+
+    retrieve:
+    Return a single testimonial.
+
+    destroy:
+    Delete a testimonial.
+    """
+
+    serializer_class = QuestionAnswerSerializer
+    permission_classes = [QuestionAnswerPermission | IsSuperuser]
+
+    def get_queryset(self):
+        club_code = self.kwargs["club_code"]
+        questions = QuestionAnswer.objects.filter(club__code=club_code)
+
+        if not self.request.user.is_authenticated:
+            return questions.filter(approved=True)
+
+        membership = Membership.objects.filter(club__code=club_code, person=self.request.user)
+
+        if self.request.user.is_superuser or (
+            membership is not None and membership.role <= Membership.ROLE_OFFICER
+        ):
+            return questions
+
+        return questions.filter(Q(approved=True) | Q(author=self.request.user))
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
@@ -770,6 +815,34 @@ class MassInviteAPIView(APIView):
         return Response({"detail": "Sent invite(s) to {} email(s)!".format(len(emails))})
 
 
+class EmailPreviewContext(dict):
+    """
+    A dict class to keep track of which variables were actually used by the template.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self._called = set()
+        super().__init__(*args, **kwargs)
+
+    def __getitem__(self, k):
+        try:
+            preview = super().__getitem__(k)
+        except KeyError:
+            preview = None
+
+        if preview is None:
+            preview = "[{}]".format(k.replace("_", " ").title())
+
+        self._called.add((k, preview))
+        return preview
+
+    def __contains__(self, k):
+        return True
+
+    def get_used_variables(self):
+        return sorted(self._called)
+
+
 def email_preview(request):
     """
     Debug endpoint used for previewing how email templates will look.
@@ -779,22 +852,27 @@ def email_preview(request):
 
     email = None
     text_email = None
+    context = None
 
     if "email" in request.GET:
         email_path = os.path.basename(request.GET.get("email"))
-        context = {
-            "name": "[Club Name]",
-            "url": "[URL]",
-            "view_url": "[View URL]",
-            "flyer_url": "[Flyer URL]",
-            "sender": {"username": "[Sender Username]", "email": "[Sender Email]"},
-            "role": 0,
-        }
+        context = EmailPreviewContext(
+            {
+                "name": "[Club Name]",
+                "sender": {"username": "[Sender Username]", "email": "[Sender Email]"},
+                "role": 0,
+            }
+        )
         email = render_to_string("emails/{}.html".format(email_path), context)
         text_email = html_to_text(email)
 
     return render(
         request,
         "preview.html",
-        {"templates": email_templates, "email": email, "text_email": text_email},
+        {
+            "templates": email_templates,
+            "email": email,
+            "text_email": text_email,
+            "variables": context.get_used_variables() if context is not None else [],
+        },
     )

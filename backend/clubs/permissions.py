@@ -189,6 +189,37 @@ class AssetPermission(permissions.BasePermission):
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
 
+class QuestionAnswerPermission(permissions.BasePermission):
+    """
+    Controls permissions for viewing, editing, and removing club questions and answers.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        if view.action in ["update", "partial_update", "destroy"]:
+            # must be logged in to modify questions and answers
+            if not request.user.is_authenticated:
+                return False
+
+            # only allow original user to edit and delete if the question has not been answered
+            if obj.author == request.user and obj.answer is None:
+                return True
+
+            # otherwise, allow club officers to edit and delete comments
+            membership = Membership.objects.filter(
+                person=request.user, club__code=view.kwargs["club_code"]
+            ).first()
+
+            return membership is not None and membership.role <= Membership.ROLE_OFFICER
+
+        return True
+
+    def has_permission(self, request, view):
+        if view.action in ["list", "retrieve"]:
+            return True
+
+        return request.user.is_authenticated
+
+
 class NotePermission(permissions.BasePermission):
     """
     There are two permission classes for notes

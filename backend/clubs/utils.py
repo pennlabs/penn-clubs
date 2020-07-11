@@ -1,9 +1,28 @@
 import re
+from urllib.parse import urlparse
 
 import bleach
 from bs4 import BeautifulSoup, NavigableString
+from django.conf import settings
 from django.db.models import CharField, F, Q, Value
 from django.template.defaultfilters import slugify
+
+
+def get_domain(request):
+    """
+    Return the current domain that the request is coming from,
+    or the default domain specified in settings if this does not exist.
+    """
+    # make the beta/testing sites work
+    domain = settings.DEFAULT_DOMAIN
+    if request is not None:
+        referer = request.META.get("HTTP_REFERER")
+        if referer:
+            host = urlparse(referer).netloc
+            if host and host.endswith(domain):
+                domain = host
+
+    return domain
 
 
 def html_to_text(html):

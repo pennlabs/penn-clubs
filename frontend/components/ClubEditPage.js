@@ -1059,6 +1059,7 @@ class ClubForm extends Component {
                 </Text>
                 <ModelForm
                   baseUrl={`/clubs/${club.code}/testimonials/`}
+                  initialData={club.testimonials}
                   fields={[
                     {
                       name: 'text',
@@ -1114,6 +1115,50 @@ class ClubForm extends Component {
                   </tbody>
                 </table>
               </Card>
+            </>
+          ),
+        },
+        {
+          name: 'questions',
+          label: 'Questions',
+          content: (
+            <>
+              <div className="card" style={{ marginBottom: 20 }}>
+                <div className="card-header">
+                  <p className="card-header-title">Student Questions</p>
+                </div>
+                <div className="card-content">
+                  <p className="mb-3">
+                    You can see a list of questions that prospective club
+                    members have asked below. Answering any of these questions
+                    will make them publically available and show your name as
+                    the person who answered the question.
+                  </p>
+                  <ModelForm
+                    baseUrl={`/clubs/${club.code}/questions/`}
+                    allowCreation={false}
+                    initialData={club.questions}
+                    fields={[
+                      {
+                        name: 'question',
+                        type: 'textarea',
+                        disabled: true,
+                      },
+                      {
+                        name: 'answer',
+                        type: 'textarea',
+                      },
+                      {
+                        name: 'approved',
+                        type: 'checkbox',
+                        disabled: true,
+                        label:
+                          'Is this question and response shown to the public?',
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
             </>
           ),
         },

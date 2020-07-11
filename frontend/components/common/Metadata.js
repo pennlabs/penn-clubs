@@ -74,7 +74,9 @@ export const Metadata = ({
     <link rel="shortcut icon" href="/static/favicon.ico" />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.0/css/bulma.min.css"
+      integrity="sha256-aPeK/N8IHpHsvPBCf49iVKMdusfobKo2oxF8lRruWJg="
+      crossorigin="anonymous"
     />
     <link
       href="https://fonts.googleapis.com/css?family=Roboto&display=swap"

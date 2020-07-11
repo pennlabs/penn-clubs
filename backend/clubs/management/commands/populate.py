@@ -3,7 +3,18 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 
-from clubs.models import Badge, Club, Major, Membership, Profile, School, Tag, Testimonial, Year
+from clubs.models import (
+    Badge,
+    Club,
+    Major,
+    Membership,
+    Profile,
+    QuestionAnswer,
+    School,
+    Tag,
+    Testimonial,
+    Year,
+)
 
 
 clubs = [
@@ -28,6 +39,20 @@ hone your skills in time for recruiting season!""",
             {"text": "Best club ever!"},
             {"text": "Don't start with the chainsaws!"},
         ],
+        "questions": [
+            {
+                "question": "What kind of objects do you juggle?",
+                "answer": "Anything ranging from bowling pins to Husqvarna 455 Rancher chain saws!",
+                "is_anonymous": True,
+                "approved": True,
+            },
+            {
+                "question": "What kind of legal liability does your club have for injuries?",
+                "answer": None,
+                "is_anonymous": False,
+                "approved": False,
+            },
+        ],
     },
     {
         "code": "lorem-ipsum",
@@ -37,6 +62,14 @@ tempor incididunt ut labore et dolore magna aliqua.</i>""",
         "active": True,
         "approved": True,
         "image": "https://i.imgur.com/TOj74YQ.png",
+        "questions": [
+            {
+                "question": "Lorem ipsum dolor sit amet?",
+                "answer": "Consectetur adipiscing elit!",
+                "is_anonymous": False,
+                "approved": True,
+            }
+        ],
     },
     {
         "code": "penn-memes",
@@ -132,7 +165,14 @@ class Command(BaseCommand):
         # create clubs
         for info in clubs:
             partial = dict(info)
-            custom_fields = ["code", "image", "tags", "badges", "testimonials"]
+            custom_fields = [
+                "code",
+                "image",
+                "tags",
+                "badges",
+                "testimonials",
+                "questions",
+            ]
             for field in custom_fields:
                 if field in partial:
                     del partial[field]
@@ -151,7 +191,10 @@ class Command(BaseCommand):
                         new_obj, _ = obj.objects.get_or_create(**new_obj)
                         getattr(club, name).add(new_obj)
 
-            foreign_key_fields = [(Testimonial, "testimonials")]
+            foreign_key_fields = [
+                (Testimonial, "testimonials"),
+                (QuestionAnswer, "questions"),
+            ]
             for obj, name in foreign_key_fields:
                 if name in info:
                     for new_obj in info[name]:
