@@ -1,6 +1,7 @@
 import s from 'styled-components'
-import { Icon } from './Icon'
+
 import { CLUBS_RED } from '../../constants/colors'
+import { Icon } from './Icon'
 
 // Hide checkbox visually but remain accessible to screen readers.
 // Source: https://polished.js.org/docs/#hidevisually

@@ -1,7 +1,8 @@
+import { useEffect, useState } from 'react'
 import s from 'styled-components'
-import { useState, useEffect } from 'react'
-import { StrongText, Icon } from '../common'
+
 import { DARK_GRAY } from '../../constants/colors'
+import { Icon, StrongText } from '../common'
 
 const Wrapper = s.span`
   display: inline-block;

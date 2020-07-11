@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
+import { useEffect, useState } from 'react'
 import s, { keyframes } from 'styled-components'
 
-import { BORDER, BLUE, ALLBIRDS_GRAY } from '../../constants/colors'
+import { ALLBIRDS_GRAY, BLUE, BORDER } from '../../constants/colors'
 
 const SIZE = '2.5rem'
 const THICKNESS = '0.25rem'

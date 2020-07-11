@@ -2,12 +2,12 @@ import Color from 'color'
 import s from 'styled-components'
 
 import {
-  WHITE,
   CLUBS_BLUE,
-  CLUBS_LIGHT_BLUE,
   CLUBS_DEEP_BLUE,
+  CLUBS_LIGHT_BLUE,
   DARK_GRAY,
   FOCUS_GRAY,
+  WHITE,
 } from '../../constants/colors'
 
 const calculateForegroundColor = color => {

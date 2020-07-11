@@ -1,9 +1,9 @@
 import s from 'styled-components'
 
 import { CLUBS_GREY } from '../constants/colors'
-import { getSizeDisplay } from '../utils'
-import { Icon, BookmarkIcon } from './common'
 import { Club } from '../types'
+import { getSizeDisplay } from '../utils'
+import { BookmarkIcon, Icon } from './common'
 
 const Wrapper = s.div`
   margin-top: 0.25rem;

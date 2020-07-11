@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import s from 'styled-components'
 
+import { BLACK, WHITE, WHITE_ALPHA } from '../constants/colors'
 import { titleize } from '../utils'
 import { Container } from './common'
-import { BLACK, WHITE, WHITE_ALPHA } from '../constants/colors'
 
 const BackgroundTabs = s.div`
   ul {

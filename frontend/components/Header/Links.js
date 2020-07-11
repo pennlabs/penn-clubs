@@ -2,20 +2,20 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import s from 'styled-components'
 
-import { Icon } from '../common'
-import { LOGIN_URL } from '../../utils'
-import { mediaMaxWidth, MD } from '../../constants/measurements'
+import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
 import {
-  WHITE,
-  WHITE_ALPHA,
+  BORDER,
+  CLUBS_NAVY,
   CLUBS_RED,
   CLUBS_RED_DARK,
-  CLUBS_NAVY,
-  BORDER,
+  WHITE,
+  WHITE_ALPHA,
 } from '../../constants/colors'
-import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
+import { MD, mediaMaxWidth } from '../../constants/measurements'
 import { SETTINGS_ROUTE } from '../../constants/routes'
+import { LOGIN_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'
+import { Icon } from '../common'
 
 const StyledIcon = s(Icon)`
   opacity: 0.5;

@@ -1,26 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
 import s from 'styled-components'
 
+import {
+  ALLBIRDS_GRAY,
+  BORDER,
+  CLUBS_GREY,
+  FOCUS_GRAY,
+  MEDIUM_GRAY,
+  WHITE,
+} from '../constants/colors'
+import {
+  BORDER_RADIUS,
+  MD,
+  mediaMaxWidth,
+  mediaMinWidth,
+  NAV_HEIGHT,
+  SEARCH_BAR_MOBILE_HEIGHT,
+} from '../constants/measurements'
+import { BODY_FONT } from '../constants/styles'
 import { Icon } from './common'
 import DropdownFilter from './DropdownFilter'
 import FilterSearch from './FilterSearch'
-import {
-  BORDER_RADIUS,
-  mediaMaxWidth,
-  MD,
-  NAV_HEIGHT,
-  mediaMinWidth,
-  SEARCH_BAR_MOBILE_HEIGHT,
-} from '../constants/measurements'
-import {
-  ALLBIRDS_GRAY,
-  MEDIUM_GRAY,
-  FOCUS_GRAY,
-  CLUBS_GREY,
-  BORDER,
-  WHITE,
-} from '../constants/colors'
-import { BODY_FONT } from '../constants/styles'
 
 const MobileSearchBarSpacer = s.div`
   display: block;

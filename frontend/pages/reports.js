@@ -1,17 +1,18 @@
-import s from 'styled-components'
 import { useEffect, useState } from 'react'
-import renderPage from '../renderPage.js'
+import s from 'styled-components'
+
 import {
-  Icon,
-  Flex,
-  Empty,
   Checkbox,
   CheckboxLabel,
+  Empty,
+  Flex,
+  Icon,
 } from '../components/common'
-import { mediaMaxWidth, LG } from '../constants/measurements'
-import { doApiRequest, API_BASE_URL } from '../utils'
 import { Container } from '../components/common/Container'
 import { CLUBS_GREY } from '../constants/colors'
+import { LG, mediaMaxWidth } from '../constants/measurements'
+import renderPage from '../renderPage.js'
+import { API_BASE_URL, doApiRequest } from '../utils'
 
 const TallTextArea = s.textarea`
   height: 6em;

@@ -1,10 +1,10 @@
 import s from 'styled-components'
 
 import {
-  mediaMinWidth,
   mediaMaxWidth,
-  TABLET,
+  mediaMinWidth,
   PHONE,
+  TABLET,
 } from '../../constants/measurements'
 
 const percent = numCols => (numCols / 12) * 100 + '%'

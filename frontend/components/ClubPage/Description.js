@@ -1,6 +1,7 @@
 import s from 'styled-components'
-import { StrongText } from '../common'
+
 import { EMPTY_DESCRIPTION } from '../../utils'
+import { StrongText } from '../common'
 
 const Wrapper = s.div`
   display: flex;

@@ -1,7 +1,8 @@
 import s from 'styled-components'
-import { Icon, StrongText, Card } from '../common'
+
 import { WHITE } from '../../constants/colors'
 import { M2, M3 } from '../../constants/measurements'
+import { Card, Icon, StrongText } from '../common'
 
 const Events = ({ data }) => {
   const StyledCard = s(Card)`

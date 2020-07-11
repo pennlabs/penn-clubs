@@ -1,17 +1,16 @@
 import { Component } from 'react'
 import s from 'styled-components'
 
-import Header from './components/Header'
-import Footer from './components/Footer'
-import LoginModal from './components/LoginModal'
 import { Loading } from './components/common'
-
+import Footer from './components/Footer'
+import Header from './components/Header'
+import LoginModal from './components/LoginModal'
 import { WHITE } from './constants/colors'
+import { NAV_HEIGHT } from './constants/measurements'
+import { BODY_FONT } from './constants/styles'
 import { doApiRequest } from './utils'
 import { logEvent } from './utils/analytics'
 import { logException } from './utils/sentry'
-import { NAV_HEIGHT } from './constants/measurements'
-import { BODY_FONT } from './constants/styles'
 
 const Wrapper = s.div`
   min-height: calc(100vh - ${NAV_HEIGHT});

@@ -1,21 +1,20 @@
+import Link from 'next/link'
 import { useEffect } from 'react'
-
 import s from 'styled-components'
 
+import {
+  Center,
+  Icon,
+  Metadata,
+  PhoneContainer,
+  Text,
+  Title,
+} from '../components/common'
+import AuthPrompt from '../components/common/AuthPrompt'
+import ProfileForm from '../components/Settings/ProfileForm'
 import { CLUB_ROUTE } from '../constants/routes'
 import renderPage from '../renderPage'
 import { doApiRequest } from '../utils'
-import ProfileForm from '../components/Settings/ProfileForm'
-import AuthPrompt from '../components/common/AuthPrompt'
-import {
-  Title,
-  Text,
-  Icon,
-  Center,
-  PhoneContainer,
-  Metadata,
-} from '../components/common'
-import Link from 'next/link'
 
 const Image = s.img`
   height: 86px;

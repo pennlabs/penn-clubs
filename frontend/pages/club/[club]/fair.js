@@ -1,23 +1,23 @@
+import Link from 'next/link'
 import s from 'styled-components'
 
+import ClubMetadata from '../../../components/ClubMetadata'
+import InfoBox from '../../../components/ClubPage/InfoBox'
+import {
+  Center,
+  Container,
+  Icon,
+  PhoneContainer,
+  SmallText,
+  StrongText,
+  TagGroup,
+  Text,
+  Title,
+} from '../../../components/common'
+import AuthPrompt from '../../../components/common/AuthPrompt'
 import { CLUB_ROUTE } from '../../../constants/routes'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
-import InfoBox from '../../../components/ClubPage/InfoBox'
-import AuthPrompt from '../../../components/common/AuthPrompt'
-import {
-  StrongText,
-  PhoneContainer,
-  Title,
-  Text,
-  Container,
-  Icon,
-  TagGroup,
-  SmallText,
-  Center,
-} from '../../../components/common'
-import Link from 'next/link'
-import ClubMetadata from '../../../components/ClubMetadata'
 
 const Image = s.img`
   height: 86px;

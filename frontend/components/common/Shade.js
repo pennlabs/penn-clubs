@@ -1,8 +1,8 @@
 import styled from 'styled-components'
 
+import { fadeIn, fadeOut } from '../../constants/animations'
 import { BLACK_ALPHA } from '../../constants/colors'
 import { LONG_ANIMATION_DURATION } from '../../constants/measurements'
-import { fadeIn, fadeOut } from '../../constants/animations'
 
 export const Shade = styled.div`
   position: fixed;

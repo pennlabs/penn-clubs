@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import s from 'styled-components'
 
-import { doApiRequest, getApiUrl } from '../../../utils'
 import {
-  Title,
-  Text,
-  Container,
   Center,
+  Container,
   Metadata,
+  Text,
+  Title,
 } from '../../../components/common'
 import { CLUBS_NAVY } from '../../../constants/colors'
+import { doApiRequest, getApiUrl } from '../../../utils'
 
 const Image = s.img`
   padding: 0;

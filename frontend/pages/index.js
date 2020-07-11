@@ -1,23 +1,24 @@
+import Fuse from 'fuse.js'
 import React from 'react'
 import s from 'styled-components'
-import Fuse from 'fuse.js'
-import SearchBar from '../components/SearchBar'
+
 import ClubDisplay from '../components/ClubDisplay'
+import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
-import { renderListPage } from '../renderPage.js'
-import { mediaMaxWidth, MD } from '../constants/measurements'
+import SearchBar from '../components/SearchBar'
 import {
+  CLUBS_BLUE,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
-  CLUBS_BLUE,
+  CLUBS_NAVY,
   CLUBS_RED,
   FOCUS_GRAY,
   SNOW,
-  CLUBS_NAVY,
 } from '../constants/colors'
-import { logEvent } from '../utils/analytics'
-import { WideContainer, Metadata, Title } from '../components/common'
+import { MD, mediaMaxWidth } from '../constants/measurements'
+import { renderListPage } from '../renderPage.js'
 import { doApiRequest } from '../utils'
+import { logEvent } from '../utils/analytics'
 
 const colorMap = {
   Tags: CLUBS_BLUE,

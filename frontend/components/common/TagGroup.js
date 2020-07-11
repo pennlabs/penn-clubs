@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types'
+
 import { BlueTag, Tag } from './Tags'
 
 export const TagGroup = ({ tags = [] }) => {

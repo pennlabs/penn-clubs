@@ -1,10 +1,10 @@
-import s from 'styled-components'
 import Link from 'next/link'
+import s from 'styled-components'
 
-import ClubTabTable from './ClubTabTable'
+import { mediaMaxWidth, mediaMinWidth,SM } from '../../constants/measurements'
+import { Center, EmptyState, Text } from '../common'
 import ClubTabCards from './ClubTabCards'
-import { EmptyState, Center, Text } from '../common'
-import { mediaMinWidth, mediaMaxWidth, SM } from '../../constants/measurements'
+import ClubTabTable from './ClubTabTable'
 
 const ClubTable = s(ClubTabTable)`
   ${mediaMaxWidth(SM)} {

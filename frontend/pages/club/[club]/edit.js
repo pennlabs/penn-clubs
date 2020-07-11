@@ -1,5 +1,6 @@
-import ClubEditPage from '../../../components/ClubEditPage'
 import { withRouter } from 'next/router'
+
+import ClubEditPage from '../../../components/ClubEditPage'
 import renderPage from '../../../renderPage.js'
 import { doApiRequest } from '../../../utils'
 

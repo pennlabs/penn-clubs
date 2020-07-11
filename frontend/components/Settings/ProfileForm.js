@@ -1,7 +1,8 @@
 import React from 'react'
+
 import { doApiRequest } from '../../utils'
-import Form from '../Form'
 import { Icon } from '../common/Icon'
+import Form from '../Form'
 
 class ProfileForm extends React.Component {
   constructor(props) {

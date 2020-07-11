@@ -1,8 +1,8 @@
 import s from 'styled-components'
-import { ProfilePic, Card } from '../common'
-import { WHITE } from '../../constants/colors'
 
-import { mediaMinWidth, PHONE, M2, M3 } from '../../constants/measurements'
+import { WHITE } from '../../constants/colors'
+import { M2, M3, mediaMinWidth,PHONE } from '../../constants/measurements'
+import { Card, ProfilePic } from '../common'
 
 const StyledCard = s(Card)`
   text-align: left;

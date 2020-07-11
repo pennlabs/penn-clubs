@@ -1,7 +1,7 @@
 import s from 'styled-components'
 
-import { Icon } from '../common'
 import { BLACK } from '../../constants/colors'
+import { Icon } from '../common'
 
 const Icons = s.div`
   display: flex;

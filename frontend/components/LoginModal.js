@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import s from 'styled-components'
 
-import { Modal, Loading } from './common'
-import { LOGIN_URL, getCurrentRelativePath } from '../utils'
 import { DARK_GRAY } from '../constants/colors'
+import { getCurrentRelativePath,LOGIN_URL } from '../utils'
+import { Loading, Modal } from './common'
 
 const Logo = s.img`
   width: 100px;

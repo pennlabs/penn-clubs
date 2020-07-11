@@ -1,9 +1,9 @@
 import s from 'styled-components'
 
-import { Icon } from '../common'
-import { logEvent } from '../../utils/analytics'
 import { CLUBS_BLUE, CLUBS_DEEP_BLUE } from '../../constants/colors'
 import { ANIMATION_DURATION } from '../../constants/measurements'
+import { logEvent } from '../../utils/analytics'
+import { Icon } from '../common'
 
 const DIAMETER = '3rem'
 const ICON_SIZE = '1.5rem'

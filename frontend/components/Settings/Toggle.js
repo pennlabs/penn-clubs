@@ -1,9 +1,9 @@
 // Modified from basics
+import PropTypes from 'prop-types'
 import { Component } from 'react'
 import s from 'styled-components'
-import PropTypes from 'prop-types'
 
-import { LIGHT_GRAY, MEDIUM_GRAY, CLUBS_BLUE } from '../../constants/colors'
+import { CLUBS_BLUE, LIGHT_GRAY, MEDIUM_GRAY } from '../../constants/colors'
 
 const HEIGHT = 0.875
 const WIDTH = 2.25

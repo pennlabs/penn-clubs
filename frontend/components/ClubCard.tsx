@@ -1,24 +1,25 @@
-import s from 'styled-components'
+import Link from 'next/link'
 import LazyLoad from 'react-lazy-load'
+import s from 'styled-components'
+
 import {
+  ALLBIRDS_GRAY,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
-  WHITE,
   HOVER_GRAY,
-  ALLBIRDS_GRAY,
+  WHITE,
 } from '../constants/colors'
 import {
+  ANIMATION_DURATION,
   BORDER_RADIUS,
   mediaMaxWidth,
   SM,
-  ANIMATION_DURATION,
 } from '../constants/measurements'
 import { CLUB_ROUTE } from '../constants/routes'
-import { stripTags } from '../utils'
 import { Club } from '../types'
-import { InactiveTag, TagGroup } from './common'
+import { stripTags } from '../utils'
 import ClubDetails from './ClubDetails'
-import Link from 'next/link'
+import { InactiveTag, TagGroup } from './common'
 
 const CardWrapper = s.div`
   ${mediaMaxWidth(SM)} {

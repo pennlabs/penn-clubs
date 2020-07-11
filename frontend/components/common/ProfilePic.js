@@ -1,6 +1,7 @@
 import s from 'styled-components'
+
 import { PROPIC_BACKGROUND, PROPIC_TEXT } from '../../constants/colors'
-import { mediaMinWidth, PHONE } from '../../constants/measurements'
+import { mediaMinWidth,PHONE } from '../../constants/measurements'
 
 const hashCode = s => {
   let h = 0

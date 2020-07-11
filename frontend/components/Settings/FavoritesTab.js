@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import ClubTableRow from '../ClubTableRow'
-import { Center, EmptyState, Text, Loading } from '../common'
-import { HOME_ROUTE } from '../../constants/routes'
+import { useEffect, useState } from 'react'
+
 import { CLUBS_GREY_LIGHT } from '../../constants/colors'
+import { HOME_ROUTE } from '../../constants/routes'
 import { doApiRequest } from '../../utils'
+import ClubTableRow from '../ClubTableRow'
+import { Center, EmptyState, Loading, Text } from '../common'
 
 export default ({ favorites, keyword, updateFavorites }) => {
   const [table, setTable] = useState(() => {

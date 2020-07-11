@@ -1,10 +1,11 @@
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import s from 'styled-components'
+
+import ClubMetadata from '../../../components/ClubMetadata'
+import { Icon, Loading, Title, WideContainer } from '../../../components/common'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Title, Loading, WideContainer, Icon } from '../../../components/common'
-import ClubMetadata from '../../../components/ClubMetadata'
-import s from 'styled-components'
 
 const Subtitle = s(Title)`
   font-size: 1.5em;

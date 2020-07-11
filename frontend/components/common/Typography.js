@@ -1,4 +1,5 @@
 import s from 'styled-components'
+
 import { CLUBS_GREY, CLUBS_NAVY, MEDIUM_GRAY } from '../../constants/colors'
 
 export const Text = s.p`

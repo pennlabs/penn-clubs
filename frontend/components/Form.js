@@ -1,20 +1,20 @@
-import s from 'styled-components'
-import { Component } from 'react'
-import Select from 'react-select'
-import Router from 'next/router'
-import { EditorState, ContentState, convertToRaw } from 'draft-js'
+import { ContentState, convertToRaw,EditorState } from 'draft-js'
 import draftToHtml from 'draftjs-to-html'
 import Head from 'next/head'
+import Router from 'next/router'
+import { Component } from 'react'
 import DatePicker from 'react-datepicker'
+import Select from 'react-select'
+import s from 'styled-components'
 
-import { Icon, Loading } from './common'
 import {
-  getApiUrl,
-  formatResponse,
-  getRoleDisplay,
   doApiRequest,
+  formatResponse,
+  getApiUrl,
+  getRoleDisplay,
   titleize,
 } from '../utils'
+import { Icon, Loading } from './common'
 
 const UNSAVED_MESSAGE =
   'You have unsaved changes. Are you sure you want to leave?'

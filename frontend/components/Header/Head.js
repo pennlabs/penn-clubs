@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
 import Head from 'next/head'
+import { useEffect } from 'react'
+
 import { initGA, logPageView } from '../../utils/analytics'
 
 const Heading = () => {
