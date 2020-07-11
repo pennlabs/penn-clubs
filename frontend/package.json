@@ -72,6 +72,7 @@
     "istanbul-lib-coverage": "^3.0.0",
     "nyc": "^15.0.0",
     "prettier": "^1.19.1",
+    "typescript": "^3.9.6",
     "wait-on": "^4.0.0"
   }
 }
