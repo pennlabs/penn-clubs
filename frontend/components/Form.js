@@ -52,8 +52,8 @@ class Form extends Component {
             this.state[`editorState-${name}`] = value
               ? EditorState.createWithContent(
                   ContentState.createFromBlockArray(
-                    htmlToDraft(value).contentBlocks
-                  )
+                    htmlToDraft(value).contentBlocks,
+                  ),
                 )
               : EditorState.createEmpty()
           } else if (type === 'multiselect') {
@@ -213,7 +213,7 @@ class Form extends Component {
           value={value}
           onChange={e => {
             this.setState({ ['field-' + name]: e.target.value }, () =>
-              this.onChange(e)
+              this.onChange(e),
             )
           }}
           key={name}
@@ -232,7 +232,7 @@ class Form extends Component {
             selected={Date.parse(value) || value}
             onChange={val => {
               this.setState({ ['field-' + name]: val }, () =>
-                this.onChange(val)
+                this.onChange(val),
               )
             }}
             placeholderText={placeholder}
@@ -263,7 +263,7 @@ class Form extends Component {
                 this.setState({
                   [`editorState-${name}`]: state,
                   [`field-${name}`]: draftToHtml(
-                    convertToRaw(state.getCurrentContent())
+                    convertToRaw(state.getCurrentContent()),
                   ),
                 })
               }}
@@ -298,7 +298,7 @@ class Form extends Component {
           value={value}
           onChange={e => {
             this.setState({ [`field-${name}`]: e.target.value }, () =>
-              this.onChange(e)
+              this.onChange(e),
             )
           }}
         />
@@ -364,7 +364,7 @@ class Form extends Component {
             options={choices.map(converter)}
             onChange={opt => {
               this.setState({ [`field-${name}`]: opt }, () =>
-                this.onChange(opt)
+                this.onChange(opt),
               )
             }}
             styles={{
@@ -397,7 +397,7 @@ class Form extends Component {
             checked={value}
             onChange={e => {
               this.setState({ [`field-${name}`]: e.target.checked }, () =>
-                this.onChange(e)
+                this.onChange(e),
               )
             }}
           />
@@ -694,12 +694,12 @@ export class ModelForm extends Component {
                   {
                     method: 'PATCH',
                     body: fieldData,
-                  }
+                  },
                 )
               }
               return null
             })
-            .filter(a => a !== null)
+            .filter(a => a !== null),
         )
       })
       .then(() => {
@@ -792,7 +792,7 @@ export class ModelForm extends Component {
                             if (confirmDeletion) {
                               if (
                                 confirm(
-                                  `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`
+                                  `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
                                 )
                               ) {
                                 this.onDelete(object)

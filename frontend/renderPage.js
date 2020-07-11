@@ -174,7 +174,7 @@ function renderPage(Page) {
                 encodeURIComponent(
                   window.location.pathname +
                     window.location.search +
-                    window.location.hash
+                    window.location.hash,
                 )
             }
 

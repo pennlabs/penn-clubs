@@ -19,7 +19,7 @@ export default ({ favorites, keyword, updateFavorites }) => {
   const [clubs, setClubs] = useState({})
   useEffect(() => {
     doApiRequest(
-      `/clubs/?in=${encodeURIComponent(favorites.join(','))}&format=json`
+      `/clubs/?in=${encodeURIComponent(favorites.join(','))}&format=json`,
     )
       .then(res => res.json())
       .then(values => {

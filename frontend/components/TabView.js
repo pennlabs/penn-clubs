@@ -87,7 +87,7 @@ const TabView = ({ tabs, tabClassName, background }) => {
                     window.history.replaceState(
                       undefined,
                       undefined,
-                      `#${name}`
+                      `#${name}`,
                     )
                   }}
                 >

@@ -171,7 +171,7 @@ const Flyer = ({ query }) => {
         {
           referrerPolicy: 'no-referrer',
           cache: tries === 1 ? 'reload' : 'default',
-        }
+        },
       )
     }
 

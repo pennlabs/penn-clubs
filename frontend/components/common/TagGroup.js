@@ -43,6 +43,6 @@ TagGroup.propTypes = {
       label: PropTypes.string,
       color: PropTypes.string,
       id: PropTypes.number,
-    })
+    }),
   ),
 }

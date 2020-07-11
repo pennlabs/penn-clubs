@@ -46,7 +46,7 @@ class Settings extends React.Component {
       {
         message: msg,
       },
-      () => window.scrollTo(0, 0)
+      () => window.scrollTo(0, 0),
     )
   }
 
@@ -101,7 +101,7 @@ class Settings extends React.Component {
       this.notify('You must be logged in to perform this action.')
     } else if (
       confirm(
-        `Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`
+        `Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`,
       )
     ) {
       doApiRequest(`/clubs/${club.code}/members/${username}`, {

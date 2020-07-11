@@ -97,14 +97,11 @@ const ClubCard = ({ club, updateFavorites, favorite }: ClubCardProps) => {
     description,
     subtitle,
     tags,
-    accepting_members: acceptingMembers,
-    size,
     code,
-    application_required: applicationRequired,
   } = club
   const img = club.image_url
   const textDescription = shorten(
-    subtitle || stripTags(description) || 'This club has no description.'
+    subtitle || stripTags(description) || 'This club has no description.',
   )
 
   return (

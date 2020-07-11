@@ -12,7 +12,7 @@ Edit.getInitialProps = async ({ query }) => {
       const request = await doApiRequest(`/${item}/?format=json`)
       const response = await request.json()
       return [item, response]
-    })
+    }),
   ).then(values => {
     const output = { clubId: query.club }
     values.forEach(item => {

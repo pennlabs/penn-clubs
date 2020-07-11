@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types'
 import s from 'styled-components'
 
 import { CLUBS_GREY } from '../constants/colors'

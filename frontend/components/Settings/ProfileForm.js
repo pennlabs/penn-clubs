@@ -23,7 +23,7 @@ class ProfileForm extends React.Component {
       .then(data =>
         this.setState({
           schools: data,
-        })
+        }),
       )
 
     doApiRequest('/majors/?format=json')
@@ -31,7 +31,7 @@ class ProfileForm extends React.Component {
       .then(data =>
         this.setState({
           majors: data,
-        })
+        }),
       )
   }
 

@@ -30,7 +30,7 @@ class Invite extends Component {
       })
     } else {
       doApiRequest(
-        `/clubs/${query.club}/invites/${query.invite}/?format=json`
+        `/clubs/${query.club}/invites/${query.invite}/?format=json`,
       ).then(resp => {
         resp.json().then(data => {
           if (resp.ok) {
