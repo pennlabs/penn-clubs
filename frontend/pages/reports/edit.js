@@ -2,13 +2,12 @@ import { useState } from 'react'
 import s from 'styled-components'
 
 import { Flex, Icon } from '../../components/common'
-import { Container } from '../../components/common/Container'
-import { CLUBS_GREY, LIGHT_GRAY } from '../../constants/colors'
+import { BACKGROUND_GRAY, CLUBS_GREY, LIGHT_GRAY } from '../../constants/colors'
 import { API_BASE_URL } from '../../utils'
 
 const TallTextArea = s.textarea`
   height: 6em;
-  background-color: #f4f4f4;
+  background-color: ${BACKGROUND_GRAY};
   box-shadow: none;
 `
 const TransparentButton = s.button`
@@ -16,7 +15,7 @@ const TransparentButton = s.button`
   height: 2.5em;
   border-radius: 17px;
   border: 0;
-  background: #f2f2f2;
+  background: ${BACKGROUND_GRAY};
   font-size: 15px;
   font-weight: 600;
   text-align: center;
@@ -81,7 +80,10 @@ const Edit = ({
                   placeholder='e.g. "Owner emails"'
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  style={{ backgroundColor: '#f4f4f4', boxShadow: 'none' }}
+                  style={{
+                    backgroundColor: BACKGROUND_GRAY,
+                    boxShadow: 'none',
+                  }}
                 />
               </div>
             </div>

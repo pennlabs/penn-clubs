@@ -11,6 +11,7 @@ export const DARK_GRAY = '#4A4A4A'
 export const MEDIUM_GRAY = '#737373'
 export const LIGHT_GRAY = '#979797'
 export const FOCUS_GRAY = '#F0F0F0'
+export const BACKGROUND_GRAY = '#F4F4F4'
 export const HOVER_GRAY = '#F8F8F8'
 export const BORDER = 'rgba(0, 0, 0, 0.1)'
 

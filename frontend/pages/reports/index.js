@@ -17,9 +17,12 @@ import { API_BASE_URL, doApiRequest } from '../../utils'
 import Edit from './edit'
 
 const GroupLabel = s.h4`
-  margin-bottom: 0em !important;
   font-size: 32px;
   color: #626572;
+
+  &:not(:last-child) {
+    margin-bottom: 0;
+  }
 `
 
 const ColoredHeader = s.div`
@@ -116,17 +119,15 @@ const Reports = ({ nameToCode }) => {
       .then((data) => setReports(data))
   }, [reportFlag])
 
-  const [includedFields, setIncludedFields] = useState(
-    (() => {
-      const initial = {}
-      Object.keys(fields).forEach((group) =>
-        fields[group].forEach((f) => {
-          initial[f] = false
-        }),
-      )
-      return initial
-    })(),
-  )
+  const [includedFields, setIncludedFields] = useState(() => {
+    const initial = {}
+    Object.keys(fields).forEach((group) =>
+      fields[group].forEach((f) => {
+        initial[f] = false
+      }),
+    )
+    return initial
+  })
 
   const query = {
     format: 'xlsx',
