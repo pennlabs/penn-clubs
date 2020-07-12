@@ -8,7 +8,11 @@ const SIZE = '2.5rem'
 const THICKNESS = '0.25rem'
 const TIMER = '1.25s'
 
-const LoadingWrapper = s.div`
+type LoadingWrapperProps = {
+  hide: boolean
+}
+
+const LoadingWrapper = s.div<LoadingWrapperProps>`
   width: 100%;
   padding: calc(1rem + 5vh) 0;
   text-align: center;
@@ -35,7 +39,12 @@ const LoadingCircle = s.span`
   animation: ${spin} ${TIMER} infinite linear;
 `
 
-export const Loading = ({ title = 'Loading...', delay }) => {
+type LoadingProps = { title?: string; delay: number }
+
+export const Loading = ({
+  title = 'Loading...',
+  delay,
+}: LoadingProps): JSX.Element => {
   const [hidden, toggleHidden] = useState(true)
 
   useEffect(() => {

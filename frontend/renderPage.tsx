@@ -234,13 +234,41 @@ type ListPageProps = {
   updateFavorites: (code: string) => void
 }
 
+type ListPageState = {
+  clubs: Array<Club>
+}
+
 export function renderListPage(Page) {
-  class RenderListPage extends Component<ListPageProps> {
+  class RenderListPage extends Component<ListPageProps, ListPageState> {
     static getInitialProps: (
       ctx: NextPageContext,
     ) => Promise<{ tags: [Tag]; clubs: [Club]; clubCount: number }>
 
-    render() {
+    constructor(props) {
+      super(props)
+
+      this.state = {
+        clubs: this.props.clubs,
+      }
+
+      this._updateFavorites = this._updateFavorites.bind(this)
+    }
+
+    /*
+     * An inefficient shim to account for the new "is_favorite" field in clubs.
+     * When updateFavorites is called, this field should also be kept in sync.
+     * In the future, the "clubs" prop should be the source of truth and the
+     * "favorites" prop should not exist anymore.
+     */
+    _updateFavorites(code: string): void {
+      const clubsCopy = this.state.clubs.slice()
+      const clubIndex = clubsCopy.findIndex((club) => club.code === code)
+      clubsCopy[clubIndex].is_favorite = !clubsCopy[clubIndex].is_favorite
+      this.setState({ clubs: clubsCopy })
+      this.props.updateFavorites(code)
+    }
+
+    render(): JSX.Element {
       const {
         clubs,
         clubCount,
@@ -249,11 +277,10 @@ export function renderListPage(Page) {
         authenticated,
         userInfo,
         updateUserInfo,
-        updateFavorites,
       } = this.props
 
       if (authenticated === null) {
-        return <Loading />
+        return <Loading delay={200} />
       }
 
       return (
@@ -262,7 +289,7 @@ export function renderListPage(Page) {
           clubCount={clubCount}
           tags={tags}
           favorites={favorites}
-          updateFavorites={updateFavorites}
+          updateFavorites={this._updateFavorites}
           userInfo={userInfo}
           updateUserInfo={updateUserInfo}
         />

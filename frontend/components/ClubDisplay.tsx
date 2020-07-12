@@ -66,7 +66,6 @@ class ClubDisplay extends React.Component<ClubDisplayProps, ClubDisplayState> {
               key={club.code}
               club={club}
               updateFavorites={updateFavorites}
-              favorite={club.is_favorite}
             />
           ))}
         </div>
