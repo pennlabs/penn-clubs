@@ -25,8 +25,9 @@ type RenderPageProps = {
 
 type RenderPageState = {
   modal: boolean
-  favorites: Array<string>
-  subscriptions: Array<string>
+  favorites: string[]
+  subscriptions: string[]
+  requests: string[]
 }
 
 function renderPage(Page) {
