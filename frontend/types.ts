@@ -21,6 +21,7 @@ export enum ClubApplicationRequired {
 export interface Tag {
   id: number
   name: string
+  clubs?: number
 }
 
 export interface QuestionAnswer {

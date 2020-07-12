@@ -18,6 +18,7 @@ import {
   SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import { BODY_FONT } from '../constants/styles'
+import { Tag } from '../types'
 import { Icon } from './common'
 import DropdownFilter from './DropdownFilter'
 import FilterSearch from './FilterSearch'
@@ -120,30 +121,39 @@ const MobileLine = s.hr`
   }
 `
 
+type SearchBarProps = {
+  tags: Array<Tag>
+  updateTag: any
+  selectedTags: any
+  resetDisplay: any
+}
+
 const SearchBar = ({
   tags,
   updateTag,
   selectedTags: propTags,
   resetDisplay,
-}) => {
-  const [nameInput, setNameInput] = useState('')
-  const [activeDropdownFilter, setActiveDropdownFilter] = useState(null)
+}: SearchBarProps): JSX.Element => {
+  const [nameInput, setNameInput] = useState<string>('')
+  const [activeDropdownFilter, setActiveDropdownFilter] = useState<
+    string | null
+  >(null)
   const [selectedTags, setSelectedTags] = useState(propTags)
-  const [timeout, storeTimeout] = useState(null)
-  const inputRef = useRef()
+  const [timeout, storeTimeout] = useState<number | null>(null)
+  const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
 
   useEffect(() => setSelectedTags(propTags), [propTags])
   useEffect(() => {
-    clearTimeout(timeout)
+    timeout !== null && clearTimeout(timeout)
     storeTimeout(setTimeout(() => resetDisplay(nameInput, selectedTags), 200))
   }, [nameInput])
 
   const toggleActiveDropdownFilter = (name) =>
     setActiveDropdownFilter(activeDropdownFilter === name ? null : name)
-  const focus = () => inputRef.current.focus()
+  const focus = () => inputRef.current && inputRef.current.focus()
 
   const isTextInSearchBar = Boolean(nameInput)
-  tags = tags.map(({ id, name, clubs }) => ({
+  const relabeledTags = tags.map(({ id, name, clubs }) => ({
     value: id,
     label: name,
     count: clubs,
@@ -195,7 +205,7 @@ const SearchBar = ({
           <FilterSearch
             active={activeDropdownFilter === 'Tags'}
             toggleActive={() => toggleActiveDropdownFilter('Tags')}
-            tags={tags}
+            tags={relabeledTags}
             updateTag={updateTag}
             selected={selectedTags.filter((tag) => tag.name === 'Tags')}
           />

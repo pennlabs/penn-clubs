@@ -16,6 +16,12 @@ describe('Authenticated user tests', () => {
     cy.contains('Test User')
   })
 
+  it('Vists the welcome page', () => {
+    cy.visit('/welcome')
+    cy.contains('Penn Clubs')
+    cy.contains('Tell us about yourself')
+  })
+
   it('Visits the settings page', () => {
     cy.visit('/settings')
     cy.contains('Penn Clubs')
@@ -48,11 +54,6 @@ describe('Authenticated user tests', () => {
   it('Visits the organization page', () => {
     cy.visit('/club/pppjo/org')
     cy.contains('Penn Pre-Professional Juggling Organization')
-  })
-
-  it('Vists the welcome page', () => {
-    cy.visit('/welcome')
-    cy.contains('Penn Clubs')
   })
 
   it('Visits the club creation page', () => {
