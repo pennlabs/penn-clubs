@@ -202,7 +202,7 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
 
 class ReportSerializer(serializers.ModelSerializer):
-    creator = serializers.SerializerMethodField('get_creator')
+    creator = serializers.SerializerMethodField("get_creator")
 
     def get_creator(self, obj):
         return obj.creator.get_full_name()
