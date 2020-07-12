@@ -1,8 +1,31 @@
 /* eslint-disable camelcase */
-export enum Membership {
+export enum MembershipRank {
   Owner = 0,
   Officer = 10,
   Member = 20,
+}
+
+export interface Membership {
+  name: string
+  title: string
+  role: MembershipRank
+  active: boolean
+  public: boolean
+  image: string | null
+  email: string
+  username: string
+}
+
+export interface Testimonial {
+  id: number
+  text: string
+}
+
+export interface ClubEvent {
+  id: number
+  start_time: number
+  location: string
+  name: string
 }
 
 export enum ClubSize {
@@ -24,6 +47,13 @@ export interface Tag {
   clubs?: number
 }
 
+export interface Badge {
+  id: number
+  label: string
+  color: string
+  description: string
+}
+
 export interface QuestionAnswer {
   id: number
   approved: boolean
@@ -38,12 +68,16 @@ export interface Club {
   image_url: string
   code: string
   active: boolean
-  approved: boolean
+  approved: boolean | null
   accepting_members: boolean
   application_required: ClubApplicationRequired
   description: string
   subtitle: string
   tags: [Tag]
+  badges: [Badge]
+  events: [ClubEvent]
+  testimonials: [Testimonial]
+  members: [Membership]
   size: ClubSize
   email: string
   facebook: string
@@ -56,9 +90,10 @@ export interface Club {
   how_to_get_involved: string
   questions: [QuestionAnswer]
   favorite_count: number
-  is_member: Membership | false
+  is_member: MembershipRank | false
   is_favorite: boolean
   is_subscribe: boolean
+  is_request: boolean
 }
 
 export interface UserInfo {

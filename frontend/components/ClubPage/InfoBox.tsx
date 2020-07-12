@@ -1,3 +1,4 @@
+import { Club } from '../../types'
 import { getSizeDisplay } from '../../utils'
 import { Icon, Text } from '../common'
 
@@ -17,7 +18,11 @@ const applicationTextMap = {
 }
 const defaultApplicationText = 'No Application Required'
 
-const InfoBox = (props) => {
+type InfoBoxProps = {
+  club: Club
+}
+
+const InfoBox = (props: InfoBoxProps): JSX.Element => {
   const data = [
     {
       icon: 'user',
@@ -38,12 +43,16 @@ const InfoBox = (props) => {
     },
   ]
 
-  return data.map(({ icon, text }) => (
-    <Text style={infoStyles} key={text}>
-      <Icon name={icon} style={iconStyles} alt={text} />
-      {text}
-    </Text>
-  ))
+  return (
+    <>
+      {data.map(({ icon, text }) => (
+        <Text style={infoStyles} key={text}>
+          <Icon name={icon} style={iconStyles} alt={text} />
+          {text}
+        </Text>
+      ))}
+    </>
+  )
 }
 
 export default InfoBox

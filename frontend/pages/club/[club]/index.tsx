@@ -1,4 +1,6 @@
+import { NextPageContext } from 'next'
 import { useRouter } from 'next/router'
+import { useState } from 'react'
 import s from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
@@ -27,6 +29,7 @@ import {
 import { SNOW, WHITE } from '../../../constants/colors'
 import { M0, M2, M3 } from '../../../constants/measurements'
 import renderPage from '../../../renderPage'
+import { Club, UserInfo } from '../../../types'
 import { doApiRequest } from '../../../utils'
 
 const Image = s.img`
@@ -43,16 +46,45 @@ const StyledCard = s(Card)`
   padding-left: ${M2};
 `
 
-const Club = ({
-  club,
-  clubCode,
+type ClubPageProps = {
+  club: Club
+  userInfo: UserInfo
+  updateFavorites: (code: string) => boolean
+  updateSubscriptions: (code: string) => void
+  updateRequests: (code: string) => void
+}
+
+const ClubPage = ({
+  club: initialClub,
   userInfo,
-  favorites,
   updateFavorites,
-  subscriptions,
   updateSubscriptions,
-}) => {
+  updateRequests,
+}: ClubPageProps): JSX.Element => {
   const router = useRouter()
+  const [club, setClub] = useState<Club>(initialClub)
+
+  const _updateFavorites = (code: string): boolean => {
+    const newClub = Object.assign({}, club)
+    newClub.is_favorite = !newClub.is_favorite
+    setClub(newClub)
+    return updateFavorites(code)
+  }
+
+  const _updateSubscriptions = (code: string): void => {
+    const newClub = Object.assign({}, club)
+    newClub.is_subscribe = !newClub.is_subscribe
+    setClub(newClub)
+    updateSubscriptions(code)
+  }
+
+  const _updateRequests = (code: string): void => {
+    const newClub = Object.assign({}, club)
+    newClub.is_request = !newClub.is_request
+    setClub(newClub)
+    updateRequests(code)
+  }
+
   const { code } = club
   if (!code) {
     return (
@@ -71,7 +103,7 @@ const Club = ({
   return (
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
-      {club.approved || (
+      {club.approved !== true ? (
         <div className="notification is-warning">
           <Text>
             {club.approved === false ? (
@@ -90,7 +122,7 @@ const Club = ({
             <button
               className="button is-success"
               onClick={() => {
-                doApiRequest(`/clubs/${clubCode}/?format=json`, {
+                doApiRequest(`/clubs/${club.code}/?format=json`, {
                   method: 'PATCH',
                   body: {
                     approved: true,
@@ -106,7 +138,7 @@ const Club = ({
               <button
                 className="button is-danger"
                 onClick={() => {
-                  doApiRequest(`/clubs/${clubCode}/?format=json`, {
+                  doApiRequest(`/clubs/${club.code}/?format=json`, {
                     method: 'PATCH',
                     body: {
                       approved: false,
@@ -121,6 +153,8 @@ const Club = ({
             )}
           </div>
         </div>
+      ) : (
+        <div />
       )}
       <div className="columns">
         <div className="column">
@@ -132,24 +166,15 @@ const Club = ({
           >
             <Flex>
               {image && <Image src={image} />}
-              <Header
-                club={club}
-                userInfo={userInfo}
-                favorites={favorites}
-                updateFavorites={updateFavorites}
-                subscriptions={subscriptions}
-                updateSubscriptions={updateSubscriptions}
-                style={{ flex: 1 }}
-              />
+              <Header club={club} style={{ flex: 1 }} />
             </Flex>
           </StyledCard>
           <MobileActions
             club={club}
             userInfo={userInfo}
-            favorites={favorites}
-            updateFavorites={updateFavorites}
-            subscriptions={subscriptions}
-            updateSubscriptions={updateSubscriptions}
+            updateFavorites={_updateFavorites}
+            updateSubscriptions={_updateSubscriptions}
+            updateRequests={_updateRequests}
           />
           <StyledCard bordered>
             <Description club={club} />
@@ -163,10 +188,9 @@ const Club = ({
           <DesktopActions
             club={club}
             userInfo={userInfo}
-            favorites={favorites}
-            updateFavorites={updateFavorites}
-            subscriptions={subscriptions}
-            updateSubscriptions={updateSubscriptions}
+            updateFavorites={_updateFavorites}
+            updateSubscriptions={_updateSubscriptions}
+            updateRequests={_updateRequests}
           />
           <StyledCard bordered>
             <StrongText>Basic Info</StrongText>
@@ -194,14 +218,14 @@ const Club = ({
   )
 }
 
-Club.getInitialProps = async (ctx) => {
+ClubPage.getInitialProps = async (ctx: NextPageContext) => {
   const { query, req } = ctx
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
   const resp = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const club = await resp.json()
-  return { club, clubCode: query.club }
+  return { club }
 }
 
-export default renderPage(Club)
+export default renderPage(ClubPage)

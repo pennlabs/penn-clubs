@@ -726,6 +726,7 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
             [user],
             "favorite_set",
             "subscribe_set",
+            "membershiprequest_set",
             "profile__school",
             "membership_set",
             "membership_set__club",

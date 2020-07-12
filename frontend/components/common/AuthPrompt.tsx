@@ -25,12 +25,22 @@ const TitleHeader = s.div`
   }
 `
 
-const AuthPrompt = ({ title, children, hasLogin = true }) => (
+type AuthPromptProps = {
+  children?: JSX.Element
+  title?: string
+  hasLogin?: boolean
+}
+
+const AuthPrompt = ({
+  title = 'One last step...',
+  children,
+  hasLogin = true,
+}: AuthPromptProps): JSX.Element => (
   <PhoneContainer>
     <Center>
       <TitleHeader>
         <Image src="/static/img/peoplelogo.png" />
-        <Title>{title || 'One last step...'}</Title>
+        <Title>{title}</Title>
       </TitleHeader>
       <Margin>
         <Text>

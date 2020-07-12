@@ -46,7 +46,7 @@ const ModalCard = s.div`
 
 const ModalContent = s.div`
   margin: auto;
-  margin-bottom: 10%;
+  ${({ marginBottom }) => (marginBottom ? 'margin-bottom: 10%;' : '')}
 `
 
 const CloseModalIcon = s(Icon)`
@@ -61,7 +61,7 @@ const CloseModalIcon = s(Icon)`
 // This would otherwise cause the modal to close on any click
 const noop = (event) => event.stopPropagation()
 
-export const Modal = ({ show, children, closeModal }) => {
+export const Modal = ({ show, children, closeModal, marginBottom = true }) => {
   const focusRef = useRef()
 
   const handleKeyPress = ({ key, keyCode }) => {
@@ -93,7 +93,7 @@ export const Modal = ({ show, children, closeModal }) => {
       <Shade className="modal-background" onClick={closeModal} show={show} />
       <ModalCard className="card" onClick={noop} show={show}>
         <CloseModalIcon name="x" alt="&#215;" onClick={closeModal} />
-        <ModalContent>{children}</ModalContent>
+        <ModalContent marginBottom={marginBottom}>{children}</ModalContent>
       </ModalCard>
     </ModalWrapper>
   )
@@ -102,6 +102,7 @@ export const Modal = ({ show, children, closeModal }) => {
 Modal.propTypes = {
   show: PropTypes.bool.isRequired,
   children: PropTypes.any.isRequired,
+  marginBottom: PropTypes.bool,
 }
 
 export default Modal

@@ -122,7 +122,7 @@ const MobileLine = s.hr`
 `
 
 type SearchBarProps = {
-  tags: Array<Tag>
+  tags: Tag[]
   updateTag: any
   selectedTags: any
   resetDisplay: any

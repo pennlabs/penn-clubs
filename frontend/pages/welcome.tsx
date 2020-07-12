@@ -1,3 +1,4 @@
+import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { useEffect } from 'react'
 import s from 'styled-components'
@@ -14,6 +15,7 @@ import AuthPrompt from '../components/common/AuthPrompt'
 import ProfileForm from '../components/Settings/ProfileForm'
 import { CLUB_ROUTE } from '../constants/routes'
 import renderPage from '../renderPage'
+import { UserInfo } from '../types'
 import { doApiRequest } from '../utils'
 
 const Image = s.img`
@@ -47,9 +49,17 @@ const markWelcome = () => {
   })
 }
 
-const Welcome = ({ authenticated, query, userInfo, url }) => {
-  const { next } = url.query
+type WelcomeProps = {
+  authenticated: boolean
+  userInfo: UserInfo
+  nextUrl: string | undefined
+}
 
+const Welcome = ({
+  authenticated,
+  userInfo,
+  nextUrl,
+}: WelcomeProps): JSX.Element => {
   if (authenticated === false) {
     return <AuthPrompt />
   }
@@ -122,7 +132,9 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
         <hr />
         <Center>
           <Subtitle>3. Start exploring Penn Clubs!</Subtitle>
-          <Link href={next && next.startsWith('/') ? next : CLUB_ROUTE()}>
+          <Link
+            href={nextUrl && nextUrl.startsWith('/') ? nextUrl : CLUB_ROUTE()}
+          >
             <a className="button is-success is-large" onClick={markWelcome}>
               Browse clubs
             </a>
@@ -133,8 +145,8 @@ const Welcome = ({ authenticated, query, userInfo, url }) => {
   )
 }
 
-Welcome.getInitialProps = async ({ query }) => {
-  return { query }
+Welcome.getInitialProps = async ({ query }: NextPageContext) => {
+  return { nextUrl: query.next }
 }
 
 export default renderPage(Welcome)

@@ -1,3 +1,4 @@
+import { Club } from '../../types'
 import { Icon } from '../common'
 import SocialLink from './SocialLink'
 
@@ -50,14 +51,21 @@ const iconStyles = {
   marginRight: '5px',
 }
 
-const SocialIcons = ({ club }) =>
-  socials
-    .filter((item) => club[item.name])
-    .map((item) => (
-      <div key={item.name}>
-        <Icon style={iconStyles} name={item.icon} alt={item.icon} />{' '}
-        <SocialLink club={club} item={item} type={item.name} />
-      </div>
-    ))
+type SocialIconsProps = {
+  club: Club
+}
+
+const SocialIcons = ({ club }: SocialIconsProps): JSX.Element => (
+  <>
+    {socials
+      .filter((item) => club[item.name])
+      .map((item) => (
+        <div key={item.name}>
+          <Icon style={iconStyles} name={item.icon} alt={item.icon} />{' '}
+          <SocialLink club={club} item={item} type={item.name} />
+        </div>
+      ))}
+  </>
+)
 
 export default SocialIcons

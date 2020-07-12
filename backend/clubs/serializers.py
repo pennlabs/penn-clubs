@@ -557,6 +557,13 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     testimonials = TestimonialSerializer(many=True, read_only=True)
     questions = QuestionAnswerSerializer(many=True, read_only=True)
     events = EventSerializer(many=True, read_only=True)
+    is_request = serializers.SerializerMethodField("get_is_request")
+
+    def get_is_request(self, obj):
+        user = self.context["request"].user
+        if not user.is_authenticated:
+            return False
+        return obj.membershiprequest_set.filter(person=user).exists()
 
     def get_parent_orgs(self, obj):
         return []
@@ -720,6 +727,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "testimonials",
             "questions",
             "events",
+            "is_request",
         ]
         save_related_fields = [
             "tags",
@@ -871,7 +879,7 @@ class UserSerializer(serializers.ModelSerializer):
     membership_set = UserMembershipSerializer(many=True, read_only=True)
     favorite_set = FavoriteSerializer(many=True, read_only=True)
     subscribe_set = UserSubscribeSerializer(many=True, read_only=True)
-    join_request_set = MembershipRequestSerializer(many=True, read_only=True)
+    membershiprequest_set = MembershipRequestSerializer(many=True, read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     image = serializers.ImageField(source="profile.image", write_only=True, allow_null=True)
     image_url = serializers.SerializerMethodField("get_image_url")
@@ -922,7 +930,7 @@ class UserSerializer(serializers.ModelSerializer):
             "membership_set",
             "favorite_set",
             "subscribe_set",
-            "join_request_set",
+            "membershiprequest_set",
             "is_superuser",
             "image_url",
             "image",
