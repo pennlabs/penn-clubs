@@ -9,6 +9,7 @@ import {
   CLUBS_GREY_LIGHT,
   CLUBS_NAVY,
   CLUBS_RED,
+  LIGHT_GRAY,
   WHITE,
   WHITE_ALPHA,
 } from '../../constants/colors'
@@ -26,7 +27,7 @@ const GroupLabel = s.h4`
 `
 
 const ColoredHeader = s.div`
-  background: linear-gradient(to right, #ef4c5f, #4954f4);
+  background: linear-gradient(to right, ${CLUBS_RED}, ${CLUBS_BLUE});
   height: 7em;
   line-height: normal;
   vertical-align: middle;
@@ -56,7 +57,7 @@ const TransparentButton = s.button`
   height: 2.5em;
   border-radius: 17px;
   border: 0;
-  background: rgba(255,255,255,0.32);
+  background: ${WHITE_ALPHA(0.32)};
   font-size: 15px;
   font-weight: 600;
   text-align: center;
@@ -92,7 +93,7 @@ const TableData = s.td`
 
 const TableHeadDivider = s.thead`
   width: 1px;
-  border-bottom: 1px solid #979797;
+  border-bottom: 1px solid ${LIGHT_GRAY};
 `
 
 const serializeParams = (params) => {
