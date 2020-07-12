@@ -92,14 +92,9 @@ const shorten = (desc: string): string => {
 type ClubCardProps = {
   club: Club
   updateFavorites: (code: string) => void
-  favorite: boolean
 }
 
-const ClubCard = ({
-  club,
-  updateFavorites,
-  favorite,
-}: ClubCardProps): JSX.Element => {
+const ClubCard = ({ club, updateFavorites }: ClubCardProps): JSX.Element => {
   const { name, active, approved, description, subtitle, tags, code } = club
   const img = club.image_url
   const textDescription = shorten(
@@ -140,11 +135,7 @@ const ClubCard = ({
 
             <Description>{textDescription}</Description>
 
-            <ClubDetails
-              club={club}
-              favorite={favorite}
-              updateFavorites={updateFavorites}
-            />
+            <ClubDetails club={club} updateFavorites={updateFavorites} />
           </Card>
         </a>
       </Link>

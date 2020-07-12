@@ -1,3 +1,4 @@
+import { NextPageContext } from 'next'
 import { Component } from 'react'
 import s from 'styled-components'
 
@@ -8,6 +9,7 @@ import LoginModal from './components/LoginModal'
 import { WHITE } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
+import { Club, Tag, UserInfo } from './types'
 import { doApiRequest } from './utils'
 import { logEvent } from './utils/analytics'
 import { logException } from './utils/sentry'
@@ -16,8 +18,23 @@ const Wrapper = s.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
 `
 
+type RenderPageProps = {
+  authenticated: boolean | null
+  userInfo: UserInfo
+}
+
+type RenderPageState = {
+  modal: boolean
+  favorites: Array<string>
+  subscriptions: Array<string>
+}
+
 function renderPage(Page) {
-  class RenderPage extends Component {
+  class RenderPage extends Component<RenderPageProps, RenderPageState> {
+    static getInitialProps: (
+      ctx: NextPageContext,
+    ) => Promise<{ authenticated: boolean; userInfo: undefined }>
+
     constructor(props) {
       super(props)
 
@@ -39,11 +56,6 @@ function renderPage(Page) {
 
     componentDidMount() {
       this.updateUserInfo()
-      // Delete old csrf token cookie
-      document.cookie =
-        'csrftoken=; domain=.pennclubs.com; expires = Thu, 01 Jan 1970 00:00:00 GMT'
-      document.cookie =
-        'sessionid=; domain=.pennclubs.com; expires = Thu, 01 Jan 1970 00:00:00 GMT'
     }
 
     render() {
@@ -191,7 +203,8 @@ function renderPage(Page) {
       })
     }
   }
-  RenderPage.getInitialProps = async (ctx) => {
+
+  RenderPage.getInitialProps = async (ctx: NextPageContext) => {
     let pageProps = {}
     if (Page.getInitialProps) {
       pageProps = await Page.getInitialProps(ctx)
@@ -210,9 +223,52 @@ function renderPage(Page) {
   return RenderPage
 }
 
+type ListPageProps = {
+  clubs: [Club]
+  tags: [Tag]
+  clubCount: number
+  favorites: [string]
+  authenticated: boolean | null
+  userInfo: UserInfo
+  updateUserInfo: () => void
+  updateFavorites: (code: string) => void
+}
+
+type ListPageState = {
+  clubs: Array<Club>
+}
+
 export function renderListPage(Page) {
-  class RenderListPage extends Component {
-    render() {
+  class RenderListPage extends Component<ListPageProps, ListPageState> {
+    static getInitialProps: (
+      ctx: NextPageContext,
+    ) => Promise<{ tags: [Tag]; clubs: [Club]; clubCount: number }>
+
+    constructor(props) {
+      super(props)
+
+      this.state = {
+        clubs: this.props.clubs,
+      }
+
+      this._updateFavorites = this._updateFavorites.bind(this)
+    }
+
+    /*
+     * An inefficient shim to account for the new "is_favorite" field in clubs.
+     * When updateFavorites is called, this field should also be kept in sync.
+     * In the future, the "clubs" prop should be the source of truth and the
+     * "favorites" prop should not exist anymore.
+     */
+    _updateFavorites(code: string): void {
+      const clubsCopy = this.state.clubs.slice()
+      const clubIndex = clubsCopy.findIndex((club) => club.code === code)
+      clubsCopy[clubIndex].is_favorite = !clubsCopy[clubIndex].is_favorite
+      this.setState({ clubs: clubsCopy })
+      this.props.updateFavorites(code)
+    }
+
+    render(): JSX.Element {
       const {
         clubs,
         clubCount,
@@ -221,11 +277,10 @@ export function renderListPage(Page) {
         authenticated,
         userInfo,
         updateUserInfo,
-        updateFavorites,
       } = this.props
 
       if (authenticated === null) {
-        return <Loading />
+        return <Loading delay={200} />
       }
 
       return (
@@ -234,7 +289,7 @@ export function renderListPage(Page) {
           clubCount={clubCount}
           tags={tags}
           favorites={favorites}
-          updateFavorites={updateFavorites}
+          updateFavorites={this._updateFavorites}
           userInfo={userInfo}
           updateUserInfo={updateUserInfo}
         />
@@ -242,8 +297,11 @@ export function renderListPage(Page) {
     }
   }
 
-  RenderListPage.getInitialProps = async () => {
-    const clubsRequest = await doApiRequest('/clubs/?page=1&format=json')
+  RenderListPage.getInitialProps = async ({ req }) => {
+    const data = {
+      headers: req ? { cookie: req.headers.cookie } : undefined,
+    }
+    const clubsRequest = await doApiRequest('/clubs/?page=1&format=json', data)
     const clubsResponse = await clubsRequest.json()
 
     const tagsRequest = await doApiRequest('/tags/?format=json')

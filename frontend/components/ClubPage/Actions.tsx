@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import s from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
+import { Club, UserInfo } from '../../types'
 import { ROLE_OFFICER } from '../../utils'
 import { BookmarkIcon, SubscribeIcon } from '../common'
 
@@ -52,24 +53,29 @@ const EditButton = s.button`
   margin-right: 20px;
 `
 
+type ActionsProps = {
+  club: Club
+  userInfo: UserInfo
+  style?: CSSProperties
+  className?: string
+  updateFavorites: (code: string) => boolean
+  updateSubscriptions: (code: string) => void
+}
+
 const Actions = ({
   club,
   userInfo,
-  favorites,
   style,
   updateFavorites,
-  subscriptions,
   updateSubscriptions,
   className,
-}) => {
+}: ActionsProps): JSX.Element => {
   const { code, favorite_count: favoriteCount } = club
-  const isFavorite = favorites.includes(code)
-  const isSubscription = subscriptions.includes(code)
+  const isFavorite = club.is_favorite
+  const isSubscription = club.is_subscribe
 
   // inClub is set to the membership object if the user is in the club, otherwise false
-  const inClub =
-    userInfo &&
-    (userInfo.membership_set.filter((a) => a.code === club.code) || [false])[0]
+  const inClub = club.is_member !== false ? { role: club.is_member } : false
 
   // a user can edit a club if they are either a superuser or in the club and
   // at least an officer
