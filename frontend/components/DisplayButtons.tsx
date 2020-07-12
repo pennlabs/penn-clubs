@@ -1,8 +1,14 @@
 import Link from 'next/link'
-import PropTypes from 'prop-types'
 import s from 'styled-components'
 
-import { ALLBIRDS_GRAY, DARK_GRAY, WHITE } from '../constants/colors'
+import {
+  ALLBIRDS_GRAY,
+  BLACK_ALPHA,
+  CLUBS_BLUE,
+  DARK_GRAY,
+  WHITE,
+  WHITE_ALPHA,
+} from '../constants/colors'
 import { BODY_FONT } from '../constants/styles'
 import { Icon } from './common'
 
@@ -15,18 +21,33 @@ const DisplayButtonsTag = s.div`
   }
 `
 
+const AddClubButton = s.a`
+  background-color: ${CLUBS_BLUE};
+  color: ${WHITE_ALPHA(0.8)} !important;
+`
+
 const iconStyles = {
   transform: 'translateY(0px)',
   opacity: 0.6,
+  color: `${BLACK_ALPHA(0.8)} !important`,
+}
+
+const iconStylesDark = {
+  transform: 'translateY(0px)',
+  opacity: 0.6,
+  color: `${WHITE_ALPHA(0.8)} !important`,
 }
 
 const buttonStyles = {
-  backgroundColor: `${WHITE}`,
+  backgroundColor: WHITE,
   border: `1px solid ${ALLBIRDS_GRAY}`,
-  fontFamily: `${BODY_FONT}`,
+  fontFamily: BODY_FONT,
 }
 
-const DisplayButtons = ({ switchDisplay, shuffle }) => (
+const DisplayButtons = ({
+  switchDisplay,
+  shuffle,
+}: DisplayButtonsProps): JSX.Element => (
   <DisplayButtonsTag>
     <button
       onClick={() => switchDisplay('cards')}
@@ -44,25 +65,24 @@ const DisplayButtons = ({ switchDisplay, shuffle }) => (
     </button>
     <button
       onClick={shuffle}
-      style={{ color: DARK_GRAY, fontWeight: 600 }}
+      style={{ ...buttonStyles, color: DARK_GRAY, fontWeight: 600 }}
       className="button is-small"
-      style={buttonStyles}
     >
       <Icon name="shuffle" alt="shuffle club order" style={iconStyles} />
       &nbsp;&nbsp; Shuffle
     </button>
     <Link href="/create">
-      <a className="button is-small is-success">
-        <Icon name="plus" alt="create club" style={iconStyles} />
+      <AddClubButton className="button is-small">
+        <Icon name="plus" alt="create club" style={iconStylesDark} />
         Add Club
-      </a>
+      </AddClubButton>
     </Link>
   </DisplayButtonsTag>
 )
 
-DisplayButtons.propTypes = {
-  switchDisplay: PropTypes.func.isRequired,
-  shuffle: PropTypes.func.isRequired,
+type DisplayButtonsProps = {
+  switchDisplay: (disp: string) => void
+  shuffle: () => void
 }
 
 export default DisplayButtons
