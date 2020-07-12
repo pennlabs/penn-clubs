@@ -23,13 +23,13 @@ const iconStyles = {
 
 type DetailsProps = {
   club: Club
-  favorite: boolean
   updateFavorites: (code: string) => void
 }
 
-const Details = ({ club, favorite, updateFavorites }: DetailsProps) => {
+const Details = ({ club, updateFavorites }: DetailsProps): JSX.Element => {
   const {
     size,
+    is_favorite: favorite,
     application_required: applicationRequired,
     accepting_members: acceptingMembers,
   } = club

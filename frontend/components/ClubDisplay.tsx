@@ -4,8 +4,7 @@ import s from 'styled-components'
 import ClubCard from '../components/ClubCard'
 import ClubTableRow from '../components/ClubTableRow'
 import { mediaMaxWidth, SM } from '../constants/measurements'
-
-// TODO PropTypes
+import { Club, Tag } from '../types'
 
 const ClubTableRowWrapper = s.div`
   ${mediaMaxWidth(SM)} {
@@ -15,19 +14,26 @@ const ClubTableRowWrapper = s.div`
   }
 `
 
-class ClubDisplay extends React.Component {
-  constructor(props) {
+type ClubDisplayProps = {
+  displayClubs: [Club]
+  tags: [Tag]
+  display: string
+  updateFavorites: (code: string) => void
+}
+
+type ClubDisplayState = {
+  end: number
+}
+
+class ClubDisplay extends React.Component<ClubDisplayProps, ClubDisplayState> {
+  constructor(props: ClubDisplayProps) {
     super(props)
     this.state = {
-      tagSelected: [],
-      sizeSelected: [],
-      applicationSelected: [],
-      nameInput: '',
       end: 10,
     }
   }
 
-  onScroll = () => {
+  onScroll = (): void => {
     const { innerHeight = 0, scrollY = 0 } = window
     const {
       body: { offsetHeight = 0 },
@@ -39,17 +45,17 @@ class ClubDisplay extends React.Component {
     }
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     // The "false" means do not add additional event listener options
     window.addEventListener('scroll', this.onScroll, false)
   }
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     window.removeEventListener('scroll', this.onScroll, false)
   }
 
-  render() {
-    const { displayClubs, tags, updateFavorites, display } = this.props
+  render(): JSX.Element {
+    const { displayClubs, updateFavorites, display } = this.props
     const clubsToShow = displayClubs.slice(0, this.state.end)
 
     if (display === 'cards') {
@@ -59,7 +65,6 @@ class ClubDisplay extends React.Component {
             <ClubCard
               key={club.code}
               club={club}
-              tags={tags}
               updateFavorites={updateFavorites}
               favorite={club.is_favorite}
             />
@@ -74,9 +79,7 @@ class ClubDisplay extends React.Component {
           <ClubTableRow
             club={club}
             key={club.code}
-            tags={tags}
             updateFavorites={updateFavorites}
-            favorite={club.is_favorite}
           />
         ))}
       </ClubTableRowWrapper>

@@ -11,6 +11,7 @@ import {
   mediaMinWidth,
 } from '../constants/measurements'
 import { CLUB_ROUTE } from '../constants/routes'
+import { Club } from '../types'
 import ClubDetails from './ClubDetails'
 import { TagGroup } from './common'
 
@@ -60,8 +61,13 @@ const Name = ({ children }) => (
   </p>
 )
 
-class ClubTableRow extends React.Component {
-  getSubtitle() {
+type ClubTableRowProps = {
+  club: Club
+  updateFavorites: (code: string) => void
+}
+
+class ClubTableRow extends React.Component<ClubTableRowProps> {
+  getSubtitle(): string {
     const { club } = this.props
     const { subtitle, description } = club
 
@@ -72,16 +78,9 @@ class ClubTableRow extends React.Component {
     return description.substring(0, 200) + '...'
   }
 
-  render() {
-    const { club, updateFavorites, favorite } = this.props
-    const {
-      name,
-      tags,
-      accepting_members: acceptingMembers,
-      size,
-      code,
-      application_required: applicationRequired,
-    } = club
+  render(): JSX.Element {
+    const { club, updateFavorites } = this.props
+    const { name, tags, code } = club
 
     return (
       <Row>
@@ -100,11 +99,7 @@ class ClubTableRow extends React.Component {
                     <Content>
                       <Subtitle>{this.getSubtitle()}</Subtitle>
                       <ClubDetails
-                        size={size}
-                        applicationRequired={applicationRequired}
-                        acceptingMembers={acceptingMembers}
                         club={club}
-                        favorite={favorite}
                         updateFavorites={updateFavorites}
                       />
                     </Content>
