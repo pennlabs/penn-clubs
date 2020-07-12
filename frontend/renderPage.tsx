@@ -1,3 +1,4 @@
+import { NextPageContext } from 'next'
 import { Component } from 'react'
 import s from 'styled-components'
 
@@ -8,6 +9,7 @@ import LoginModal from './components/LoginModal'
 import { WHITE } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
+import { Club, Tag, UserInfo } from './types'
 import { doApiRequest } from './utils'
 import { logEvent } from './utils/analytics'
 import { logException } from './utils/sentry'
@@ -16,8 +18,23 @@ const Wrapper = s.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
 `
 
+type RenderPageProps = {
+  authenticated: boolean | null
+  userInfo: UserInfo
+}
+
+type RenderPageState = {
+  modal: boolean
+  favorites: Array<string>
+  subscriptions: Array<string>
+}
+
 function renderPage(Page) {
-  class RenderPage extends Component {
+  class RenderPage extends Component<RenderPageProps, RenderPageState> {
+    static getInitialProps: (
+      ctx: NextPageContext,
+    ) => Promise<{ authenticated: boolean; userInfo: undefined }>
+
     constructor(props) {
       super(props)
 
@@ -39,11 +56,6 @@ function renderPage(Page) {
 
     componentDidMount() {
       this.updateUserInfo()
-      // Delete old csrf token cookie
-      document.cookie =
-        'csrftoken=; domain=.pennclubs.com; expires = Thu, 01 Jan 1970 00:00:00 GMT'
-      document.cookie =
-        'sessionid=; domain=.pennclubs.com; expires = Thu, 01 Jan 1970 00:00:00 GMT'
     }
 
     render() {
@@ -191,7 +203,8 @@ function renderPage(Page) {
       })
     }
   }
-  RenderPage.getInitialProps = async (ctx) => {
+
+  RenderPage.getInitialProps = async (ctx: NextPageContext) => {
     let pageProps = {}
     if (Page.getInitialProps) {
       pageProps = await Page.getInitialProps(ctx)
@@ -210,8 +223,23 @@ function renderPage(Page) {
   return RenderPage
 }
 
+type ListPageProps = {
+  clubs: [Club]
+  tags: [Tag]
+  clubCount: number
+  favorites: [string]
+  authenticated: boolean | null
+  userInfo: UserInfo
+  updateUserInfo: () => void
+  updateFavorites: (code: string) => void
+}
+
 export function renderListPage(Page) {
-  class RenderListPage extends Component {
+  class RenderListPage extends Component<ListPageProps> {
+    static getInitialProps: (
+      ctx: NextPageContext,
+    ) => Promise<{ tags: [Tag]; clubs: [Club]; clubCount: number }>
+
     render() {
       const {
         clubs,

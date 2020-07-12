@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import s from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
+import { Club, UserInfo } from '../../types'
 import { ROLE_OFFICER } from '../../utils'
 import { BookmarkIcon, SubscribeIcon } from '../common'
 
@@ -52,6 +53,15 @@ const EditButton = s.button`
   margin-right: 20px;
 `
 
+type ActionsProps = {
+  club: Club
+  userInfo: UserInfo
+  style?: CSSProperties
+  className?: string
+  updateFavorites: (code: string) => boolean
+  updateSubscriptions: (code: string) => void
+}
+
 const Actions = ({
   club,
   userInfo,
@@ -59,7 +69,7 @@ const Actions = ({
   updateFavorites,
   updateSubscriptions,
   className,
-}) => {
+}: ActionsProps): JSX.Element => {
   const { code, favorite_count: favoriteCount } = club
   const isFavorite = club.is_favorite
   const isSubscription = club.is_subscribe

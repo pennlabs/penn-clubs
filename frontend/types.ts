@@ -54,4 +54,18 @@ export interface Club {
   listserv: string
   how_to_get_involved: string
   questions: [QuestionAnswer]
+  favorite_count: number
+  is_member: Membership | false
+  is_favorite: boolean
+  is_subscribe: boolean
+}
+
+export interface UserInfo {
+  email: string
+  graduation_year: number
+  has_been_prompted: boolean
+  name: string
+  username: string
+  is_superuser: boolean
+  image_url: string
 }

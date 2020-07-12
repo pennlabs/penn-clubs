@@ -62,7 +62,7 @@ export function getApiUrl(path: string): string {
   return API_BASE_URL + path
 }
 
-export function doApiRequest(path: string, data) {
+export function doApiRequest(path: string, data?: any): Promise<Response> {
   if (!data) {
     data = {}
   }
