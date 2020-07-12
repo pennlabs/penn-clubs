@@ -9,7 +9,8 @@
 		],
 		"types": [
 			"cypress"
-		]
+		],
+		"isolatedModules": false
 	},
 	"include": [
 		"**/*.ts"
