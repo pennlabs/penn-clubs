@@ -202,9 +202,14 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
 
 class ReportSerializer(serializers.ModelSerializer):
+    creator = serializers.SerializerMethodField("get_creator")
+
+    def get_creator(self, obj):
+        return obj.creator.get_full_name()
+
     class Meta:
         model = Report
-        fields = ("id", "name", "description", "parameters")
+        fields = ("id", "name", "creator", "description", "parameters", "created_at", "updated_at")
 
 
 class YearSerializer(serializers.ModelSerializer):

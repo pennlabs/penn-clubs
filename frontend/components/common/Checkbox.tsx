@@ -36,11 +36,22 @@ export const CheckboxLabel = s.label`
   cursor: pointer;
 `
 
-export const Checkbox = ({ className, checked, onChange, ...props }) => {
+type CheckboxProps = {
+  className?: string
+  checked: boolean
+  onChange: () => void
+}
+
+export const Checkbox = ({
+  className,
+  checked,
+  onChange,
+  ...props
+}: CheckboxProps): JSX.Element => {
   return (
     <CheckboxContainer className={className}>
       <HiddenCheckbox checked={checked} onChange={onChange} {...props} />
-      <StyledCheckbox onClick={onChange} checked={checked}>
+      <StyledCheckbox onClick={onChange}>
         <Icon
           noalign
           alt={checked ? 'checked' : 'unchecked'}
