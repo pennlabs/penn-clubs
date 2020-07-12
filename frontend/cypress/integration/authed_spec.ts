@@ -28,20 +28,15 @@ describe('Authenticated user tests', () => {
     cy.contains('Test User')
 
     const tabs = ['Clubs', 'Bookmarks', 'Subscriptions', 'Profile']
-    
+
     // check that all tabs exist
-    tabs.forEach(tab => {
-      cy.get('.tabs')
-        .contains(tab)
-        .should('be.visible')
+    tabs.forEach((tab) => {
+      cy.get('.tabs').contains(tab).should('be.visible')
     })
 
     // click on each tab
-    tabs.forEach(tab => {
-      cy.get('.tabs')
-        .contains(tab)
-        .should('be.visible')
-        .click()
+    tabs.forEach((tab) => {
+      cy.get('.tabs').contains(tab).should('be.visible').click()
       cy.url().should('contain', `#${tab}`)
     })
   })
@@ -67,22 +62,23 @@ describe('Authenticated user tests', () => {
 
     // create new club
     const fields = [
-      ['Name', 'test new club', false],
-      ['Subtitle', 'this is a test new club!', false],
-      ['Size', '< 20', true],
-      [
-        'Is an application required to join your organization?',
-        'No Application Required',
-        true,
-      ],
+      { label: 'Name', value: 'test new club', pressEnter: false },
+      {
+        label: 'Subtitle',
+        value: 'this is a test new club!',
+        pressEnter: false,
+      },
+      { label: 'Size', value: '< 20', pressEnter: true },
+      {
+        label: 'Is an application required to join your organization?',
+        value: 'No Application Required',
+        pressEnter: true,
+      },
     ]
 
-    fields.forEach(([label, value, pressEnter]) => {
+    fields.forEach(({ label, value, pressEnter }) => {
       const input = cy.contains('.field', label).find('input')
-      input
-        .focus()
-        .clear()
-        .type(value)
+      input.focus().clear().type(value)
 
       if (pressEnter) {
         input.type('{enter}')

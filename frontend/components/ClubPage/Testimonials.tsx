@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import { DARK_GRAY } from '../../constants/colors'
+import { Testimonial } from '../../types'
 import { Icon, StrongText } from '../common'
 
 const Wrapper = s.span`
@@ -34,23 +35,27 @@ const Toggle = s.div`
   cursor: pointer;
 `
 
-function shuffleArray(array) {
+function shuffleArray<T>(array: T[]): void {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
     ;[array[i], array[j]] = [array[j], array[i]]
   }
 }
 
-const Testimonials = (props) => {
+type TestimonialsProps = {
+  data: [Testimonial]
+}
+
+const Testimonials = (props: TestimonialsProps): JSX.Element | null => {
   const { data: originalData } = props
 
-  const [data, setData] = useState(null)
-  const [expanded, setExpanded] = useState(false)
+  const [data, setData] = useState<Testimonial[] | null>(null)
+  const [expanded, setExpanded] = useState<boolean>(false)
 
   useEffect(() => {
     if (originalData) {
       const newData = [...originalData]
-      shuffleArray(newData)
+      shuffleArray<Testimonial>(newData)
       setData(newData)
     }
   }, [originalData])

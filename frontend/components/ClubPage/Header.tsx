@@ -1,5 +1,7 @@
+import { CSSProperties } from 'react'
 import s from 'styled-components'
 
+import { Club } from '../../types'
 import { InactiveTag, TagGroup, Title } from '../common'
 
 const Wrapper = s.div`
@@ -9,7 +11,12 @@ const Wrapper = s.div`
   align-items: center;
 `
 
-const Header = ({ club, style }) => {
+type HeaderProps = {
+  club: Club
+  style?: CSSProperties
+}
+
+const Header = ({ club, style }: HeaderProps): JSX.Element => {
   const { active, name, tags, badges } = club
 
   return (

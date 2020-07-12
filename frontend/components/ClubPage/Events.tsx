@@ -2,28 +2,33 @@ import s from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
 import { M2, M3 } from '../../constants/measurements'
+import { ClubEvent } from '../../types'
 import { Card, Icon, StrongText } from '../common'
 
-const Events = ({ data }) => {
-  const StyledCard = s(Card)`
+type EventsProps = {
+  data: [ClubEvent]
+}
+
+const StyledCard = s(Card)`
     background-color: ${WHITE};
     margin-bottom: ${M3};
     padding-left: ${M2};
   `
-  const BigParagraph = s.p`
+const BigParagraph = s.p`
     font-size: 0.8rem;
     font-weight: bold;
   `
 
-  const SmallParagraph = s.p`
+const SmallParagraph = s.p`
     font-size: 0.8rem;
   `
 
-  const Wrapper = s.div`
+const Wrapper = s.div`
     marginBottom: 0.5rem;
     display: flex;
   `
 
+const Events = ({ data }: EventsProps): JSX.Element | null => {
   if (!data || !data.length) {
     return null
   }

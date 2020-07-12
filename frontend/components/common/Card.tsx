@@ -3,7 +3,12 @@ import s from 'styled-components'
 import { BORDER } from '../../constants/colors'
 import { ANIMATION_DURATION } from '../../constants/measurements'
 
-export const Card = s.div`
+type CardProps = {
+  bordered?: boolean
+  hoverable?: boolean
+}
+
+export const Card = s.div<CardProps>`
   padding: 0.5rem;
   width: 100%;
   box-shadow: 0 0 0 transparent;

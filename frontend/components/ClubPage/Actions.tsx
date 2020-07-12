@@ -4,8 +4,7 @@ import s from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
-import { Club, UserInfo } from '../../types'
-import { ROLE_OFFICER } from '../../utils'
+import { Club, MembershipRank, UserInfo } from '../../types'
 import { BookmarkIcon, Modal, SubscribeIcon } from '../common'
 
 const Wrapper = s.span`
@@ -58,7 +57,6 @@ type ActionsProps = {
   userInfo: UserInfo
   style?: CSSProperties
   className?: string
-  requests: [string]
   updateRequests: (code: string) => void
   updateFavorites: (code: string) => boolean
   updateSubscriptions: (code: string) => void
@@ -91,14 +89,13 @@ const Actions = ({
   style,
   updateFavorites,
   updateSubscriptions,
-  requests,
   updateRequests,
   className,
 }: ActionsProps): JSX.Element => {
   const { code, favorite_count: favoriteCount } = club
   const isFavorite = club.is_favorite
   const isSubscription = club.is_subscribe
-  const isRequested = requests.includes(code)
+  const isRequested = club.is_request
 
   // inClub is set to the membership object if the user is in the club, otherwise false
   const inClub = club.is_member !== false ? { role: club.is_member } : false
@@ -106,7 +103,7 @@ const Actions = ({
   // a user can edit a club if they are either a superuser or in the club and
   // at least an officer
   const canEdit =
-    (inClub && inClub.role <= ROLE_OFFICER) ||
+    (inClub && inClub.role <= MembershipRank.Officer) ||
     (userInfo && userInfo.is_superuser)
 
   const [favCount, setFavCount] = useState(favoriteCount || 0)

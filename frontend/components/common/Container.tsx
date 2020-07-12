@@ -1,4 +1,4 @@
-import PropTypes from 'prop-types'
+import { CSSProperties } from 'react'
 import s from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
@@ -15,7 +15,11 @@ const getPadding = (percent) => {
   return `padding-left: calc(1rem + ${percent}%); padding-right: calc(1rem + ${percent}%);`
 }
 
-const Wrapper = s.div`
+type WrapperProps = {
+  fullHeight?: boolean
+}
+
+const Wrapper = s.div<WrapperProps>`
   width: 100%;
   padding-top: 1rem;
   padding-bottom: 1rem;
@@ -43,10 +47,10 @@ const Wrapper = s.div`
 
 export const Container = ({
   background = WHITE,
-  fullHeight,
+  fullHeight = false,
   style,
   children,
-}) => (
+}: ContainerProps): JSX.Element => (
   <div style={{ background }}>
     <Wrapper fullHeight={fullHeight} style={style}>
       {children}
@@ -54,15 +58,11 @@ export const Container = ({
   </div>
 )
 
-Container.defaultProps = {
-  background: WHITE,
-  fullHeight: false,
-}
-
-Container.propTypes = {
-  background: PropTypes.string,
-  children: PropTypes.node.isRequired,
-  fullHeight: PropTypes.bool,
+type ContainerProps = {
+  background?: string
+  children: JSX.Element | JSX.Element[]
+  fullHeight?: boolean
+  style?: CSSProperties
 }
 
 const WideWrapper = s(Wrapper)`
@@ -79,7 +79,11 @@ const WideWrapper = s(Wrapper)`
   }
 `
 
-export const WideContainer = ({ background = WHITE, fullHeight, children }) => (
+export const WideContainer = ({
+  background = WHITE,
+  fullHeight,
+  children,
+}: ContainerProps): JSX.Element => (
   <div style={{ background }}>
     <WideWrapper fullHeight={fullHeight}>{children}</WideWrapper>
   </div>

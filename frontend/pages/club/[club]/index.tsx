@@ -1,3 +1,4 @@
+import { NextPageContext } from 'next'
 import { useRouter } from 'next/router'
 import s from 'styled-components'
 
@@ -27,6 +28,7 @@ import {
 import { SNOW, WHITE } from '../../../constants/colors'
 import { M0, M2, M3 } from '../../../constants/measurements'
 import renderPage from '../../../renderPage'
+import { Club, UserInfo } from '../../../types'
 import { doApiRequest } from '../../../utils'
 
 const Image = s.img`
@@ -43,17 +45,21 @@ const StyledCard = s(Card)`
   padding-left: ${M2};
 `
 
-const Club = ({
+type ClubPageProps = {
+  club: Club
+  userInfo: UserInfo
+  updateFavorites: (code: string) => boolean
+  updateSubscriptions: (code: string) => void
+  updateRequests: (code: string) => void
+}
+
+const ClubPage = ({
   club,
-  clubCode,
   userInfo,
-  favorites,
   updateFavorites,
-  subscriptions,
   updateSubscriptions,
-  requests,
   updateRequests,
-}) => {
+}: ClubPageProps): JSX.Element => {
   const router = useRouter()
   const { code } = club
   if (!code) {
@@ -73,7 +79,7 @@ const Club = ({
   return (
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
-      {club.approved || (
+      {club.approved !== true ? (
         <div className="notification is-warning">
           <Text>
             {club.approved === false ? (
@@ -92,7 +98,7 @@ const Club = ({
             <button
               className="button is-success"
               onClick={() => {
-                doApiRequest(`/clubs/${clubCode}/?format=json`, {
+                doApiRequest(`/clubs/${club.code}/?format=json`, {
                   method: 'PATCH',
                   body: {
                     approved: true,
@@ -108,7 +114,7 @@ const Club = ({
               <button
                 className="button is-danger"
                 onClick={() => {
-                  doApiRequest(`/clubs/${clubCode}/?format=json`, {
+                  doApiRequest(`/clubs/${club.code}/?format=json`, {
                     method: 'PATCH',
                     body: {
                       approved: false,
@@ -123,6 +129,8 @@ const Club = ({
             )}
           </div>
         </div>
+      ) : (
+        <div />
       )}
       <div className="columns">
         <div className="column">
@@ -134,25 +142,14 @@ const Club = ({
           >
             <Flex>
               {image && <Image src={image} />}
-              <Header
-                club={club}
-                userInfo={userInfo}
-                favorites={favorites}
-                updateFavorites={updateFavorites}
-                subscriptions={subscriptions}
-                updateSubscriptions={updateSubscriptions}
-                style={{ flex: 1 }}
-              />
+              <Header club={club} style={{ flex: 1 }} />
             </Flex>
           </StyledCard>
           <MobileActions
             club={club}
             userInfo={userInfo}
-            favorites={favorites}
             updateFavorites={updateFavorites}
-            subscriptions={subscriptions}
             updateSubscriptions={updateSubscriptions}
-            requests={requests}
             updateRequests={updateRequests}
           />
           <StyledCard bordered>
@@ -167,11 +164,8 @@ const Club = ({
           <DesktopActions
             club={club}
             userInfo={userInfo}
-            favorites={favorites}
             updateFavorites={updateFavorites}
-            subscriptions={subscriptions}
             updateSubscriptions={updateSubscriptions}
-            requests={requests}
             updateRequests={updateRequests}
           />
           <StyledCard bordered>
@@ -200,14 +194,14 @@ const Club = ({
   )
 }
 
-Club.getInitialProps = async (ctx) => {
+ClubPage.getInitialProps = async (ctx: NextPageContext) => {
   const { query, req } = ctx
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
   const resp = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const club = await resp.json()
-  return { club, clubCode: query.club }
+  return { club }
 }
 
-export default renderPage(Club)
+export default renderPage(ClubPage)

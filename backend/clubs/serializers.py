@@ -557,6 +557,13 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     testimonials = TestimonialSerializer(many=True, read_only=True)
     questions = QuestionAnswerSerializer(many=True, read_only=True)
     events = EventSerializer(many=True, read_only=True)
+    is_request = serializers.SerializerMethodField("get_is_request")
+
+    def get_is_request(self, obj):
+        user = self.context["request"].user
+        if not user.is_authenticated:
+            return False
+        return obj.membershiprequest_set.filter(person=user).exists()
 
     def get_parent_orgs(self, obj):
         return []
@@ -720,6 +727,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "testimonials",
             "questions",
             "events",
+            "is_request",
         ]
         save_related_fields = [
             "tags",
