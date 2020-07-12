@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import Router from 'next/router'
 import { useEffect, useState } from 'react'
 import s from 'styled-components'
@@ -10,10 +9,10 @@ import {
   CLUBS_GREY_LIGHT,
   CLUBS_NAVY,
   CLUBS_RED,
-  FOCUS_GRAY,
   WHITE,
+  WHITE_ALPHA,
 } from '../../constants/colors'
-import renderPage from '../../renderPage.js'
+import renderPage from '../../renderPage'
 import { API_BASE_URL, doApiRequest } from '../../utils'
 import Edit from './edit'
 
@@ -39,10 +38,10 @@ const TransparentTitle = s.span`
   line-height: 2em;
   border-radius: 17px;
   border: 0;
-  background: rgba(255,255,255,0.32);
+  background: ${WHITE_ALPHA(0.32)};
   font-size: 15px;
   text-align: center; 
-  color: rgba(255,255,255,1);
+  color: ${WHITE};
   vertical-align: middle;
   margin-left: 2em;
   margin-bottom: 1em;
@@ -59,7 +58,8 @@ const TransparentButton = s.button`
   font-weight: 600;
   text-align: center;
   color: ${WHITE};
-`
+  cursor: pointer;
+  `
 
 const ActionButton = s.button`
   width: 4.5em;
@@ -112,13 +112,7 @@ const Reports = ({ nameToCode }) => {
 
   useEffect(() => {
     doApiRequest('/reports/?format=json')
-      .then((resp) => {
-        if (resp.ok) {
-          return resp.json()
-        } else {
-          return []
-        }
-      })
+      .then((resp) => (resp.ok ? resp.json() : []))
       .then((data) => setReports(data))
   }, [reportFlag])
 
