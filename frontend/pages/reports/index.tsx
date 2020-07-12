@@ -1,5 +1,6 @@
 import Router from 'next/router'
 import { useEffect, useState } from 'react'
+import TimeAgo from 'react-timeago'
 import s from 'styled-components'
 
 import { Checkbox, CheckboxLabel, Empty, Icon } from '../../components/common'
@@ -14,6 +15,7 @@ import {
   WHITE_ALPHA,
 } from '../../constants/colors'
 import renderPage from '../../renderPage'
+import { Report } from '../../types'
 import { API_BASE_URL, doApiRequest } from '../../utils'
 import Edit from './edit'
 
@@ -104,12 +106,16 @@ const serializeParams = (params) => {
     .join('&')
 }
 
-const Reports = ({ nameToCode }) => {
+type ReportsProps = {
+  nameToCode: { [key: string]: string }
+}
+
+const Reports = ({ nameToCode }: ReportsProps): JSX.Element => {
   const fields = {
     Fields: Object.keys(nameToCode),
   }
 
-  const [reports, setReports] = useState([])
+  const [reports, setReports] = useState<Report[]>([])
   const [reportFlag, updateReportFlag] = useState(false)
 
   const [isEdit, setIsEdit] = useState(false)
@@ -151,7 +157,6 @@ const Reports = ({ nameToCode }) => {
         {fields.map((field, idx) => (
           <div key={idx}>
             <Checkbox
-              id={field}
               checked={includedFields[field]}
               onChange={() => {
                 setIncludedFields((prev) => ({
@@ -246,10 +251,18 @@ const Reports = ({ nameToCode }) => {
                       {report.description || <span>None</span>}
                     </TableData>
                     <TableData>
-                      {report.dateCreated || <span>None</span>}
+                      {report.created_at ? (
+                        <TimeAgo date={report.created_at} />
+                      ) : (
+                        <span>None</span>
+                      )}
                     </TableData>
                     <TableData>
-                      {report.lastReport || <span>None</span>}
+                      {report.updated_at ? (
+                        <TimeAgo date={report.updated_at} />
+                      ) : (
+                        <span>None</span>
+                      )}
                     </TableData>
                     <TableData>
                       <div className="buttons">
@@ -280,7 +293,7 @@ const Reports = ({ nameToCode }) => {
                 ))}
                 {!reports.length && (
                   <tr>
-                    <TableData colSpan="3">
+                    <TableData colSpan={3}>
                       <Empty>There are no existing reports.</Empty>
                     </TableData>
                   </tr>
@@ -295,7 +308,7 @@ const Reports = ({ nameToCode }) => {
   )
 }
 
-Reports.getInitialProps = async (props) => {
+Reports.getInitialProps = async () => {
   const fieldsReq = await doApiRequest('/clubs/fields/?format=json')
   const fieldsRes = await fieldsReq.json()
 

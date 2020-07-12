@@ -6,6 +6,7 @@ import TimeAgo from 'react-timeago'
 import s from 'styled-components'
 
 import { CLUB_FLYER_ROUTE, CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
+import { ClubApplicationRequired, ClubSize, MembershipRank } from '../types'
 import {
   doApiRequest,
   formatResponse,
@@ -267,49 +268,49 @@ class ClubForm extends Component {
 
     this.roles = [
       {
-        value: 20,
+        value: MembershipRank.Member,
         label: 'Member',
       },
       {
-        value: 10,
+        value: MembershipRank.Officer,
         label: 'Officer',
       },
       {
-        value: 0,
+        value: MembershipRank.Owner,
         label: 'Owner',
       },
     ]
 
     this.applications = [
       {
-        value: 1,
+        value: ClubApplicationRequired.None,
         label: 'No Application Required',
       },
       {
-        value: 2,
+        value: ClubApplicationRequired.Some,
         label: 'Application Required For Some Positions',
       },
       {
-        value: 3,
+        value: ClubApplicationRequired.All,
         label: 'Application Required For All Positions',
       },
     ]
 
     this.sizes = [
       {
-        value: 1,
+        value: ClubSize.Small,
         label: '< 20',
       },
       {
-        value: 2,
+        value: ClubSize.Medium,
         label: '21-50',
       },
       {
-        value: 3,
+        value: ClubSize.Large,
         label: '51-100',
       },
       {
-        value: 4,
+        value: ClubSize.VeryLarge,
         label: '> 100',
       },
     ]

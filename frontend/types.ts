@@ -5,6 +5,15 @@ export enum MembershipRank {
   Member = 20,
 }
 
+export interface Report {
+  id: number
+  name: string
+  creator: string
+  description: string
+  created_at: string
+  updated_at: string
+}
+
 export interface Membership {
   name: string
   title: string
