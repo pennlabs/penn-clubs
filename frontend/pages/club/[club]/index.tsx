@@ -1,5 +1,6 @@
 import { NextPageContext } from 'next'
 import { useRouter } from 'next/router'
+import { useState } from 'react'
 import s from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
@@ -54,13 +55,36 @@ type ClubPageProps = {
 }
 
 const ClubPage = ({
-  club,
+  club: initialClub,
   userInfo,
   updateFavorites,
   updateSubscriptions,
   updateRequests,
 }: ClubPageProps): JSX.Element => {
   const router = useRouter()
+  const [club, setClub] = useState<Club>(initialClub)
+
+  const _updateFavorites = (code: string): boolean => {
+    const newClub = Object.assign({}, club)
+    newClub.is_favorite = !newClub.is_favorite
+    setClub(newClub)
+    return updateFavorites(code)
+  }
+
+  const _updateSubscriptions = (code: string): void => {
+    const newClub = Object.assign({}, club)
+    newClub.is_subscribe = !newClub.is_subscribe
+    setClub(newClub)
+    updateSubscriptions(code)
+  }
+
+  const _updateRequests = (code: string): void => {
+    const newClub = Object.assign({}, club)
+    newClub.is_request = !newClub.is_request
+    setClub(newClub)
+    updateRequests(code)
+  }
+
   const { code } = club
   if (!code) {
     return (
@@ -148,9 +172,9 @@ const ClubPage = ({
           <MobileActions
             club={club}
             userInfo={userInfo}
-            updateFavorites={updateFavorites}
-            updateSubscriptions={updateSubscriptions}
-            updateRequests={updateRequests}
+            updateFavorites={_updateFavorites}
+            updateSubscriptions={_updateSubscriptions}
+            updateRequests={_updateRequests}
           />
           <StyledCard bordered>
             <Description club={club} />
@@ -164,9 +188,9 @@ const ClubPage = ({
           <DesktopActions
             club={club}
             userInfo={userInfo}
-            updateFavorites={updateFavorites}
-            updateSubscriptions={updateSubscriptions}
-            updateRequests={updateRequests}
+            updateFavorites={_updateFavorites}
+            updateSubscriptions={_updateSubscriptions}
+            updateRequests={_updateRequests}
           />
           <StyledCard bordered>
             <StrongText>Basic Info</StrongText>
