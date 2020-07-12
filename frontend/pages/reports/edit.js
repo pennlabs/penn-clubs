@@ -1,9 +1,10 @@
-import s from 'styled-components'
 import { useState } from 'react'
-import { Icon, Flex } from '../../components/common'
-import { API_BASE_URL } from '../../utils'
+import s from 'styled-components'
+
+import { Flex, Icon } from '../../components/common'
 import { Container } from '../../components/common/Container'
 import { CLUBS_GREY, LIGHT_GRAY } from '../../constants/colors'
+import { API_BASE_URL } from '../../utils'
 
 const TallTextArea = s.textarea`
   height: 6em;
@@ -47,11 +48,11 @@ const Edit = ({
   const handleGenerateReport = () => {
     window.open(
       `${API_BASE_URL}/clubs/?format=xlsx&name=${encodeURIComponent(
-        nameInput
+        nameInput,
       )}&desc=${encodeURIComponent(descInput)}&fields=${encodeURIComponent(
-        query.fields.join(',')
+        query.fields.join(','),
       )}`,
-      '_blank'
+      '_blank',
     )
     updateReportFlag(!reportFlag)
     handleBack()
@@ -79,7 +80,7 @@ const Edit = ({
                   type="text"
                   placeholder='e.g. "Owner emails"'
                   value={nameInput}
-                  onChange={e => setNameInput(e.target.value)}
+                  onChange={(e) => setNameInput(e.target.value)}
                   style={{ backgroundColor: '#f4f4f4', boxShadow: 'none' }}
                 />
               </div>
@@ -93,7 +94,7 @@ const Edit = ({
                   type="text"
                   placeholder='e.g. "Pulls all clubs, the emails from club owners, and names of owners"'
                   value={descInput}
-                  onChange={e => setDescInput(e.target.value)}
+                  onChange={(e) => setDescInput(e.target.value)}
                 />
               </div>
             </div>
@@ -106,8 +107,8 @@ const Edit = ({
           <div>
             {fields ? (
               <Flex>
-                {Object.keys(fields).map(group =>
-                  generateCheckboxGroup(group, fields[group])
+                {Object.keys(fields).map((group) =>
+                  generateCheckboxGroup(group, fields[group]),
                 )}
               </Flex>
             ) : null}

@@ -1,19 +1,20 @@
-import s from 'styled-components'
-import Router from 'next/router'
 import Link from 'next/link'
+import Router from 'next/router'
 import { useEffect, useState } from 'react'
-import renderPage from '../../renderPage.js'
-import { Icon, Empty, Checkbox, CheckboxLabel } from '../../components/common'
-import { doApiRequest, API_BASE_URL } from '../../utils'
+import s from 'styled-components'
+
+import { Checkbox, CheckboxLabel, Empty, Icon } from '../../components/common'
 import {
-  CLUBS_GREY,
   CLUBS_BLUE,
-  CLUBS_RED,
-  CLUBS_NAVY,
+  CLUBS_GREY,
   CLUBS_GREY_LIGHT,
+  CLUBS_NAVY,
+  CLUBS_RED,
   FOCUS_GRAY,
   WHITE,
 } from '../../constants/colors'
+import renderPage from '../../renderPage.js'
+import { API_BASE_URL, doApiRequest } from '../../utils'
 import Edit from './edit'
 
 const GroupLabel = s.h4`
@@ -91,9 +92,11 @@ const TableHeadDivider = s.thead`
   border-bottom: 1px solid #979797;
 `
 
-const serializeParams = params => {
+const serializeParams = (params) => {
   return Object.keys(params)
-    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+    .map(
+      (key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`,
+    )
     .join('&')
 }
 
@@ -109,34 +112,34 @@ const Reports = ({ nameToCode }) => {
 
   useEffect(() => {
     doApiRequest('/reports/?format=json')
-      .then(resp => {
+      .then((resp) => {
         if (resp.ok) {
           return resp.json()
         } else {
           return []
         }
       })
-      .then(data => setReports(data))
+      .then((data) => setReports(data))
   }, [reportFlag])
 
   const [includedFields, setIncludedFields] = useState(
     (() => {
       const initial = {}
-      Object.keys(fields).forEach(group =>
-        fields[group].forEach(f => {
+      Object.keys(fields).forEach((group) =>
+        fields[group].forEach((f) => {
           initial[f] = false
-        })
+        }),
       )
       return initial
-    })()
+    })(),
   )
 
   const query = {
     format: 'xlsx',
     fields: Object.keys(includedFields)
-      .filter(field => includedFields[field])
-      .map(name => nameToCode[name])
-      .filter(e => e !== undefined),
+      .filter((field) => includedFields[field])
+      .map((name) => nameToCode[name])
+      .filter((e) => e !== undefined),
   }
 
   const generateCheckboxGroup = (groupName, fields) => {
@@ -155,7 +158,10 @@ const Reports = ({ nameToCode }) => {
               id={field}
               checked={includedFields[field]}
               onChange={() => {
-                setIncludedFields(prev => ({ ...prev, [field]: !prev[field] }))
+                setIncludedFields((prev) => ({
+                  ...prev,
+                  [field]: !prev[field],
+                }))
               }}
             />
             {'  '}
@@ -171,9 +177,9 @@ const Reports = ({ nameToCode }) => {
     Router.push('/reports')
   }
 
-  const handleDownload = report => {
+  const handleDownload = (report) => {
     window.location.href = `${API_BASE_URL}/clubs/?existing=true&${serializeParams(
-      JSON.parse(report.parameters)
+      JSON.parse(report.parameters),
     )}`
   }
 
@@ -293,7 +299,7 @@ const Reports = ({ nameToCode }) => {
   )
 }
 
-Reports.getInitialProps = async props => {
+Reports.getInitialProps = async (props) => {
   const fieldsReq = await doApiRequest('/clubs/fields/?format=json')
   const fieldsRes = await fieldsReq.json()
 
