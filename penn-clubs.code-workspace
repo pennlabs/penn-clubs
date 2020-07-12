@@ -26,6 +26,14 @@
 		"version": "2.0.0",
 		"tasks": [
 			{
+				"label": "Run Penn Clubs",
+				"dependsOn": [
+					"Run Backend",
+					"Run Frontend"
+				],
+				"problemMatcher": []
+			},
+			{
 				"type": "shell",
 				"label": "Run Backend",
 				"args": [
