@@ -4,6 +4,7 @@ import Select from 'react-select'
 import { Club } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
 import { Icon, Text } from '../common'
+import BaseCard from './BaseCard'
 import { MEMBERSHIP_ROLES } from './MembersCard'
 
 type InviteCardProps = {
@@ -81,101 +82,88 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
         <div className="notification is-primary">{message}</div>
       )}
       {invites && !!invites.length && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <div className="card-header">
-            <p className="card-header-title">
-              Pending Invites ({invites.length})
-            </p>
-          </div>
-          <div className="card-content">
-            <table className="table is-fullwidth">
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Actions</th>
+        <BaseCard title={`Pending Invites (${invites.length})`}>
+          <table className="table is-fullwidth">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invites.map((item) => (
+                <tr key={item.email}>
+                  <td>{item.email}</td>
+                  <td>
+                    <button
+                      className="button is-small is-link"
+                      onClick={() => resendInvite(item.id)}
+                    >
+                      <Icon name="mail" alt="resend invite" /> Resend
+                    </button>{' '}
+                    <button
+                      className="button is-small is-danger"
+                      onClick={() => deleteInvite(item.id)}
+                    >
+                      <Icon name="x" alt="remove invite" /> Remove
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {invites.map((item) => (
-                  <tr key={item.email}>
-                    <td>{item.email}</td>
-                    <td>
-                      <button
-                        className="button is-small is-link"
-                        onClick={() => resendInvite(item.id)}
-                      >
-                        <Icon name="mail" alt="resend invite" /> Resend
-                      </button>{' '}
-                      <button
-                        className="button is-small is-danger"
-                        onClick={() => deleteInvite(item.id)}
-                      >
-                        <Icon name="x" alt="remove invite" /> Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              ))}
+            </tbody>
+          </table>
+        </BaseCard>
       )}
-      <div className="card">
-        <div className="card-header">
-          <p className="card-header-title">Invite Members</p>
+      <BaseCard title="Invite Members">
+        <Text>
+          Enter an email address or a list of email addresses separated by
+          commas or newlines in the box below. All emails listed will be sent an
+          invite to join the club. The invite process will go more smoothly if
+          you use Penn email addresses, but normal email addresses will work
+          provided that the recipient has a PennKey account. We will not send an
+          invite if the account associated with an email is already in the club.
+        </Text>
+        <div className="field">
+          <textarea
+            value={inviteEmails}
+            onChange={(e) => setInviteEmails(e.target.value)}
+            className="textarea"
+            placeholder="Enter email addresses here!"
+          ></textarea>
         </div>
-        <div className="card-content">
-          <Text>
-            Enter an email address or a list of email addresses separated by
-            commas or newlines in the box below. All emails listed will be sent
-            an invite to join the club. The invite process will go more smoothly
-            if you use Penn email addresses, but normal email addresses will
-            work provided that the recipient has a PennKey account. We will not
-            send an invite if the account associated with an email is already in
-            the club.
-          </Text>
-          <div className="field">
-            <textarea
-              value={inviteEmails}
-              onChange={(e) => setInviteEmails(e.target.value)}
-              className="textarea"
-              placeholder="Enter email addresses here!"
-            ></textarea>
+        <div className="field">
+          <label className="label">Permissions</label>
+          <div className="control">
+            <Select
+              options={MEMBERSHIP_ROLES}
+              value={inviteRole}
+              onChange={(opt) => setInviteRole(opt)}
+            />
           </div>
-          <div className="field">
-            <label className="label">Permissions</label>
-            <div className="control">
-              <Select
-                options={MEMBERSHIP_ROLES}
-                value={inviteRole}
-                onChange={(opt) => setInviteRole(opt)}
-              />
-            </div>
-            <p className="help">
-              Owners have full control over the club, officers can perform
-              editing, and members have read-only permissions.
-            </p>
-          </div>
-          <div className="field">
-            <label className="label">Title</label>
-            <div className="control">
-              <input
-                className="input"
-                value={inviteTitle}
-                onChange={(e) => setInviteTitle(e.target.value)}
-              />
-            </div>
-            <p className="help">
-              The title is shown on the member listing and will not affect user
-              permissions.
-            </p>
-          </div>
-          <button className="button is-primary" onClick={sendInvites}>
-            <Icon name="mail" alt="send invites" />
-            &nbsp; Send Invite(s)
-          </button>
+          <p className="help">
+            Owners have full control over the club, officers can perform
+            editing, and members have read-only permissions.
+          </p>
         </div>
-      </div>
+        <div className="field">
+          <label className="label">Title</label>
+          <div className="control">
+            <input
+              className="input"
+              value={inviteTitle}
+              onChange={(e) => setInviteTitle(e.target.value)}
+            />
+          </div>
+          <p className="help">
+            The title is shown on the member listing and will not affect user
+            permissions.
+          </p>
+        </div>
+        <button className="button is-primary" onClick={sendInvites}>
+          <Icon name="mail" alt="send invites" />
+          &nbsp; Send Invite(s)
+        </button>
+      </BaseCard>
     </>
   )
 }
