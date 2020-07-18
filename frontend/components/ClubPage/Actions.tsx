@@ -120,7 +120,7 @@ const Actions = ({
     <>
       <div className={className} style={style}>
         <Wrapper>
-          {!inClub && (
+          {!inClub && club.members.length > 0 && (
             <ActionButton
               className="button is-success"
               onClick={requestMembership}

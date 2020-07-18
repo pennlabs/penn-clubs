@@ -601,7 +601,9 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
         {!isEdit && (
           <p>
             Clubs that you create from this form will enter an approval process
-            before being displayed to the public.
+            before being displayed to the public. After your club has been
+            approved by the Office of Student Affairs, it will appear on the
+            Penn Clubs website.
           </p>
         )}
         {message && (
