@@ -27,6 +27,7 @@ type Props = {
   size?: string
   style?: CSSProperties
   show?: boolean
+  onClick?: () => void
 }
 
 export const Icon = ({

@@ -76,7 +76,7 @@ export const Metadata = ({
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.0/css/bulma.min.css"
       integrity="sha256-aPeK/N8IHpHsvPBCf49iVKMdusfobKo2oxF8lRruWJg="
-      crossorigin="anonymous"
+      crossOrigin="anonymous"
     />
     <link
       href="https://fonts.googleapis.com/css?family=Roboto&display=swap"

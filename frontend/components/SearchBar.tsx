@@ -124,8 +124,8 @@ const MobileLine = s.hr`
 type SearchBarProps = {
   tags: Tag[]
   updateTag: any
-  selectedTags: any
-  resetDisplay: any
+  selectedTags: Tag[]
+  resetDisplay: (nameInput: string, selectedTags: Tag[]) => void
 }
 
 const SearchBar = ({
