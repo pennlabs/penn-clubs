@@ -7,7 +7,8 @@ import s from 'styled-components'
 
 import BaseCard from '../components/ClubEditPage/BaseCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
-import { CLUB_FLYER_ROUTE, CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
+import QRCodeCard from '../components/ClubEditPage/QRCodeCard'
+import { CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
 import { ClubApplicationRequired, ClubSize, MembershipRank } from '../types'
 import {
   doApiRequest,
@@ -29,13 +30,6 @@ import {
 import AuthPrompt from './common/AuthPrompt'
 import Form, { ModelForm } from './Form'
 import TabView from './TabView'
-
-const QRCode = s.img`
-  display: block;
-  width: 150px;
-  padding: 15px;
-  margin-bottom: 15px;
-`
 
 const EventBox = s.div`
   text-align: left;
@@ -1018,34 +1012,7 @@ class ClubForm extends Component {
           label: 'Resources',
           content: (
             <>
-              <BaseCard title="QR Code">
-                <Text>
-                  When scanned, gives mobile-friendly access to your club page
-                  and bookmark/subscribe actions.
-                </Text>
-                <QRCode
-                  src={getApiUrl(`/clubs/${club.code}/qr`)}
-                  alt="qr code"
-                />
-                <div className="buttons">
-                  <a
-                    href={getApiUrl(`/clubs/${club.code}/qr`)}
-                    download={`${club.code}.png`}
-                    className="button is-success"
-                  >
-                    <Icon alt="qr" name="download" />
-                    Download QR Code
-                  </a>
-                  <Link
-                    href={CLUB_FLYER_ROUTE()}
-                    as={CLUB_FLYER_ROUTE(club.code)}
-                  >
-                    <a target="_blank" className="button is-success">
-                      <Icon alt="flyer" name="external-link" /> View Flyer
-                    </a>
-                  </Link>
-                </div>
-              </BaseCard>
+              <QRCodeCard club={club} />
               <BaseCard title="Member Experiences">
                 <Text>
                   Provide more information on what being in your organization is
@@ -1075,7 +1042,7 @@ class ClubForm extends Component {
                 />
                 <Devices contents={deviceContents} />
               </BaseCard>
-              <FilesCard />
+              <FilesCard club={club} />
             </>
           ),
         },
