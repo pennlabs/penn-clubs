@@ -42,7 +42,7 @@ const Div = s.div`
 `
 const Tabs = s.div``
 
-const TabView = ({ tabs, tabClassName, background }) => {
+const TabView = ({ tabs, tabClassName = '', background = false }) => {
   // the server side rendering does not have a window object
   const [currentTab, setCurrentTab] = useState(tabs[0].name)
 

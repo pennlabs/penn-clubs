@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Component } from 'react'
+import { SingletonRouter } from 'next/router'
+import { Component, ReactElement } from 'react'
 
 import EventsCard from '../components/ClubEditPage/EventsCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
@@ -9,7 +10,7 @@ import MembersCard from '../components/ClubEditPage/MembersCard'
 import QRCodeCard from '../components/ClubEditPage/QRCodeCard'
 import SubscribersCard from '../components/ClubEditPage/SubscribersCard'
 import { CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
-import { ClubApplicationRequired, ClubSize } from '../types'
+import { Club, ClubApplicationRequired, ClubSize, UserInfo } from '../types'
 import { doApiRequest, formatResponse } from '../utils'
 import ClubMetadata from './ClubMetadata'
 import { Container, Empty, Icon, InactiveTag, Text, Title } from './common'
@@ -17,56 +18,74 @@ import AuthPrompt from './common/AuthPrompt'
 import Form, { ModelForm } from './Form'
 import TabView from './TabView'
 
-class ClubForm extends Component {
-  constructor(props) {
+type ClubFormProps = {
+  clubId: string | undefined
+  authenticated: boolean | null
+  userInfo: UserInfo
+  schools: any[]
+  majors: any[]
+  years: any[]
+  tags: any[]
+  router: SingletonRouter
+}
+
+type ClubFormState = {
+  club: any
+  isEdit: boolean
+  message: ReactElement | string | null
+}
+
+const CLUB_APPLICATIONS = [
+  {
+    value: ClubApplicationRequired.None,
+    label: 'No Application Required',
+  },
+  {
+    value: ClubApplicationRequired.Some,
+    label: 'Application Required For Some Positions',
+  },
+  {
+    value: ClubApplicationRequired.All,
+    label: 'Application Required For All Positions',
+  },
+]
+
+const CLUB_SIZES = [
+  {
+    value: ClubSize.Small,
+    label: '< 20',
+  },
+  {
+    value: ClubSize.Medium,
+    label: '21-50',
+  },
+  {
+    value: ClubSize.Large,
+    label: '51-100',
+  },
+  {
+    value: ClubSize.VeryLarge,
+    label: '> 100',
+  },
+]
+
+class ClubForm extends Component<ClubFormProps, ClubFormState> {
+  constructor(props: ClubFormProps) {
     super(props)
-
-    this.applications = [
-      {
-        value: ClubApplicationRequired.None,
-        label: 'No Application Required',
-      },
-      {
-        value: ClubApplicationRequired.Some,
-        label: 'Application Required For Some Positions',
-      },
-      {
-        value: ClubApplicationRequired.All,
-        label: 'Application Required For All Positions',
-      },
-    ]
-
-    this.sizes = [
-      {
-        value: ClubSize.Small,
-        label: '< 20',
-      },
-      {
-        value: ClubSize.Medium,
-        label: '21-50',
-      },
-      {
-        value: ClubSize.Large,
-        label: '51-100',
-      },
-      {
-        value: ClubSize.VeryLarge,
-        label: '> 100',
-      },
-    ]
 
     const isEdit = typeof this.props.clubId !== 'undefined'
 
     this.state = {
       club: isEdit ? null : {},
       isEdit: isEdit,
+      message: null,
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
     this.deleteClub = this.deleteClub.bind(this)
   }
 
-  notify(msg) {
+  notify(msg): void {
     this.setState(
       {
         message: msg,
@@ -116,18 +135,16 @@ class ClubForm extends Component {
     const photo = data.image
     delete data.image
 
-    var req = null
-    if (this.state.isEdit) {
-      req = doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
-        method: 'PATCH',
-        body: data,
-      })
-    } else {
-      req = doApiRequest('/clubs/?format=json', {
-        method: 'POST',
-        body: data,
-      })
-    }
+    const req = this.state.isEdit
+      ? doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
+          method: 'PATCH',
+          body: data,
+        })
+      : doApiRequest('/clubs/?format=json', {
+          method: 'POST',
+          body: data,
+        })
+
     req.then((resp) => {
       if (resp.ok) {
         resp.json().then((info) => {
@@ -182,7 +199,7 @@ class ClubForm extends Component {
     }
   }
 
-  render() {
+  render(): ReactElement {
     const { authenticated, userInfo, schools, majors, years, tags } = this.props
     const { club, isEdit, message } = this.state
 
@@ -268,8 +285,8 @@ class ClubForm extends Component {
             name: 'size',
             type: 'select',
             required: true,
-            choices: this.sizes,
-            converter: (a) => this.sizes.find((x) => x.value === a),
+            choices: CLUB_SIZES,
+            converter: (a) => CLUB_SIZES.find((x) => x.value === a),
             reverser: (a) => a.value,
           },
           {
@@ -345,8 +362,8 @@ class ClubForm extends Component {
             label: 'Is an application required to join your organization?',
             required: true,
             type: 'select',
-            choices: this.applications,
-            converter: (a) => this.applications.find((x) => x.value === a),
+            choices: CLUB_APPLICATIONS,
+            converter: (a) => CLUB_APPLICATIONS.find((x) => x.value === a),
             reverser: (a) => a.value,
           },
           {
@@ -386,7 +403,12 @@ class ClubForm extends Component {
       },
     ]
 
-    let tabs = []
+    let tabs: {
+      name: string
+      label: string
+      content: ReactElement
+      disabled?: boolean
+    }[] = []
     if (club.code) {
       tabs = [
         {

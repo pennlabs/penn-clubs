@@ -3,7 +3,7 @@ import TimeAgo from 'react-timeago'
 
 import { Club } from '../../types'
 import { doApiRequest, getApiUrl } from '../../utils'
-import { Empty, Icon } from '../common'
+import { Empty, Icon, Loading } from '../common'
 import BaseCard from './BaseCard'
 
 type SubscribersCardProps = {
@@ -20,13 +20,15 @@ type Subscription = {
   major: {
     name: string
   }[]
-  createdAt: string
+  created_at: string
 }
 
 export default function SubscribersCard({
   club,
 }: SubscribersCardProps): ReactElement {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
+  const [subscriptions, setSubscriptions] = useState<Subscription[] | null>(
+    null,
+  )
 
   useEffect(() => {
     doApiRequest(`/clubs/${club.code}/subscription/?format=json`)
@@ -48,31 +50,35 @@ export default function SubscribersCard({
           </tr>
         </thead>
         <tbody>
-          {subscriptions.map((item, i) => (
-            <tr key={i}>
-              <td>{item.name || <Empty>None</Empty>}</td>
-              <td>{item.email || <Empty>None</Empty>}</td>
-              <td>{item.graduation_year || <Empty>None</Empty>}</td>
-              <td>
-                {item.school && item.school.length ? (
-                  item.school.map((a) => a.name).join(', ')
-                ) : (
-                  <Empty>None</Empty>
-                )}
-              </td>
-              <td>
-                {item.major && item.major.length ? (
-                  item.major.map((a) => a.name).join(', ')
-                ) : (
-                  <Empty>None</Empty>
-                )}
-              </td>
-              <td>
-                <TimeAgo date={item.created_at} />
-              </td>
-            </tr>
-          ))}
-          {!!subscriptions.length || (
+          {subscriptions !== null ? (
+            subscriptions.map((item, i) => (
+              <tr key={i}>
+                <td>{item.name || <Empty>None</Empty>}</td>
+                <td>{item.email || <Empty>None</Empty>}</td>
+                <td>{item.graduation_year || <Empty>None</Empty>}</td>
+                <td>
+                  {item.school && item.school.length ? (
+                    item.school.map((a) => a.name).join(', ')
+                  ) : (
+                    <Empty>None</Empty>
+                  )}
+                </td>
+                <td>
+                  {item.major && item.major.length ? (
+                    item.major.map((a) => a.name).join(', ')
+                  ) : (
+                    <Empty>None</Empty>
+                  )}
+                </td>
+                <td>
+                  <TimeAgo date={item.created_at} />
+                </td>
+              </tr>
+            ))
+          ) : (
+            <Loading />
+          )}
+          {(subscriptions !== null && !!subscriptions.length) || (
             <tr>
               <td colSpan={5} className="has-text-grey">
                 No one has subscribed to this club yet.

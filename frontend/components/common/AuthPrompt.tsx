@@ -26,11 +26,10 @@ const TitleHeader = s.div`
   }
 `
 
-type AuthPromptProps = {
-  children?: ReactElement
+type AuthPromptProps = React.PropsWithChildren<{
   title?: string
   hasLogin?: boolean
-}
+}>
 
 const AuthPrompt = ({
   title = 'One last step...',

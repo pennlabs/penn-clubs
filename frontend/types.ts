@@ -121,4 +121,8 @@ export interface UserInfo {
   username: string
   is_superuser: boolean
   image_url: string
+  membership_set: {
+    code: string
+    role: MembershipRank
+  }[]
 }
