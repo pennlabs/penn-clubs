@@ -314,7 +314,7 @@ export function renderListPage(Page) {
       } = this.props
 
       if (authenticated === null) {
-        return <Loading delay={200} />
+        return <Loading />
       }
 
       return (

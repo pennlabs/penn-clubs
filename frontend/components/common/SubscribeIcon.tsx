@@ -1,9 +1,14 @@
-import PropTypes from 'prop-types'
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { BLACK, MEDIUM_GRAY } from '../../constants/colors'
+import { Club } from '../../types'
 
-const SubscribeIconTag = s.span`
+const SubscribeIconTag = s.span<{
+  padding?: string
+  absolute?: boolean
+  subscribe?: boolean
+}>`
   float: right;
   padding: ${({ padding }) => padding || '7px 0 0 0'};
   cursor: pointer;
@@ -31,13 +36,21 @@ const SubscribeIconTag = s.span`
   }
 `
 
+type SubscribeIconProps = {
+  updateSubscribes: (code: string) => void
+  club: Club
+  subscribe?: boolean
+  absolute?: boolean
+  padding?: string
+}
+
 export const SubscribeIcon = ({
   updateSubscribes,
   club,
-  subscribe,
+  subscribe = false,
   absolute = false,
   padding,
-}) => (
+}: SubscribeIconProps): ReactElement => (
   <SubscribeIconTag
     subscribe={subscribe}
     absolute={absolute}
@@ -58,17 +71,3 @@ export const SubscribeIcon = ({
     </svg>
   </SubscribeIconTag>
 )
-
-SubscribeIcon.defaultProps = {
-  absolute: false,
-  subscribe: false,
-  padding: null,
-}
-
-SubscribeIcon.propTypes = {
-  updateSubscribes: PropTypes.func.isRequired,
-  club: PropTypes.shape({
-    code: PropTypes.string,
-  }).isRequired,
-  subscribe: PropTypes.bool,
-}

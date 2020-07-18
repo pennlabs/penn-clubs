@@ -1,5 +1,6 @@
+import { NextPageContext } from 'next'
 import Link from 'next/link'
-import PropTypes from 'prop-types'
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { Center, Container, Metadata } from '../components/common'
@@ -14,7 +15,10 @@ const Image = s.img`
   margin-bottom: 1.5rem;
 `
 
-const Error = ({ statusCode = 500, message = 'Something went wrong' }) => (
+const Error = ({
+  statusCode = 500,
+  message = 'Something went wrong',
+}: ErrorProps): ReactElement => (
   <Container background={SNOW} fullHeight>
     <Metadata />
     <Center>
@@ -35,9 +39,9 @@ const Error = ({ statusCode = 500, message = 'Something went wrong' }) => (
   </Container>
 )
 
-Error.getInitialProps = ({ res, err } = {}) => {
+Error.getInitialProps = ({ res, err }: NextPageContext) => {
   const statusCode = (res && res.statusCode) || (err && err.statusCode) || 404
-  let message = (err && err.message) || (res && res.message) || undefined
+  let message = (err && err.message) || undefined
 
   if (!message) {
     if (statusCode === 404) {
@@ -50,14 +54,9 @@ Error.getInitialProps = ({ res, err } = {}) => {
   return { statusCode, message }
 }
 
-Error.defaultProps = {
-  statusCode: 500,
-  message: 'Something went wrong.',
-}
-
-Error.propTypes = {
-  statusCode: PropTypes.number,
-  message: PropTypes.string,
+type ErrorProps = {
+  statusCode?: number
+  message?: string
 }
 
 export default renderPage(Error)

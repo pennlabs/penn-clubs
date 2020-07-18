@@ -51,12 +51,14 @@ export enum ClubApplicationRequired {
 }
 
 export interface Tag {
+  kind: 'tag'
   id: number
   name: string
   clubs?: number
 }
 
 export interface Badge {
+  kind: 'badge'
   id: number
   label: string
   color: string

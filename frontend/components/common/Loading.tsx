@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types'
 import { useEffect, useState } from 'react'
 import s, { keyframes } from 'styled-components'
 
@@ -39,11 +38,11 @@ const LoadingCircle = s.span`
   animation: ${spin} ${TIMER} infinite linear;
 `
 
-type LoadingProps = { title?: string; delay: number }
+type LoadingProps = { title?: string; delay?: number }
 
 export const Loading = ({
   title = 'Loading...',
-  delay,
+  delay = 200,
 }: LoadingProps): JSX.Element => {
   const [hidden, toggleHidden] = useState(true)
 
@@ -62,14 +61,4 @@ export const Loading = ({
       {title && <p style={{ color: ALLBIRDS_GRAY }}>{title}</p>}
     </LoadingWrapper>
   )
-}
-
-Loading.defaultProps = {
-  title: null,
-  delay: 200,
-}
-
-Loading.propTypes = {
-  title: PropTypes.string,
-  delay: PropTypes.number,
 }

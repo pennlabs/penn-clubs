@@ -1,9 +1,12 @@
-import PropTypes from 'prop-types'
-import s from 'styled-components'
+import s, { CSSProperties } from 'styled-components'
 
 const reqSvgs = require.context('../../public/static/img/icons', true, /\.svg$/)
 
-const IconWrapper = s.span`
+type IconWrapperProps = {
+  noAlign?: boolean
+}
+
+const IconWrapper = s.span<IconWrapperProps>`
   display: inline-block;
   vertical-align: ${(props) => (props.noAlign ? 'baseline' : 'middle')};
 
@@ -17,7 +20,20 @@ const IconWrapper = s.span`
   }
 `
 
-export const Icon = ({ name, show = true, size = '1rem', ...props }) => {
+type Props = {
+  name: string
+  alt?: string
+  size?: string
+  style?: CSSProperties
+  show?: boolean
+}
+
+export const Icon = ({
+  name,
+  show = true,
+  size = '1rem',
+  ...props
+}: Props): JSX.Element | null => {
   const svg = reqSvgs(`./${name}.svg`)
   if (!show || !svg || !svg.default) {
     return null
@@ -34,17 +50,4 @@ export const Icon = ({ name, show = true, size = '1rem', ...props }) => {
       })}
     </IconWrapper>
   )
-}
-
-Icon.defaultProps = {
-  style: {},
-  size: '1rem',
-  alt: '',
-}
-
-Icon.propTypes = {
-  name: PropTypes.string.isRequired,
-  alt: PropTypes.string,
-  size: PropTypes.string,
-  style: PropTypes.object,
 }

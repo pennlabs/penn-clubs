@@ -1,6 +1,6 @@
-import PropTypes from 'prop-types'
+import { ReactElement } from 'react'
 
-const Burger = ({ toggle }) => (
+const Burger = ({ toggle }: BurgerProps): ReactElement => (
   <a
     role="button"
     className="navbar-burger burger"
@@ -15,8 +15,8 @@ const Burger = ({ toggle }) => (
   </a>
 )
 
-Burger.propTypes = {
-  toggle: PropTypes.func.isRequired,
+type BurgerProps = {
+  toggle: () => void
 }
 
 export default Burger

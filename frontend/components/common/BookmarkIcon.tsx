@@ -1,9 +1,15 @@
-import PropTypes from 'prop-types'
 import s from 'styled-components'
 
 import { BLACK, MEDIUM_GRAY } from '../../constants/colors'
+import { Club } from '../../types'
 
-const BookmarkIconTag = s.span`
+type BookmarkIconTagProps = {
+  padding?: string
+  absolute?: boolean
+  favorite?: boolean
+}
+
+const BookmarkIconTag = s.span<BookmarkIconTagProps>`
   padding: ${({ padding }) => padding || '15px 10px 0 0'};
   cursor: pointer;
 
@@ -34,10 +40,10 @@ const BookmarkIconTag = s.span`
 export const BookmarkIcon = ({
   updateFavorites,
   club,
-  favorite,
+  favorite = false,
   absolute = false,
   padding,
-}) => (
+}: Props): JSX.Element => (
   <BookmarkIconTag
     favorite={favorite}
     absolute={absolute}
@@ -58,18 +64,10 @@ export const BookmarkIcon = ({
   </BookmarkIconTag>
 )
 
-BookmarkIcon.defaultProps = {
-  absolute: false,
-  favorite: false,
-  padding: null,
-}
-
-BookmarkIcon.propTypes = {
-  updateFavorites: PropTypes.func.isRequired,
-  absolute: PropTypes.bool,
-  club: PropTypes.shape({
-    code: PropTypes.string,
-  }).isRequired,
-  favorite: PropTypes.bool,
-  padding: PropTypes.string,
+type Props = {
+  updateFavorites: (code: string) => void
+  absolute?: boolean
+  club: Club
+  favorite?: boolean
+  padding?: string
 }

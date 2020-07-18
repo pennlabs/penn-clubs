@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import PropTypes from 'prop-types'
+import { ReactElement } from 'react'
 
 // Data to populate site metadata
 const title = 'Penn Clubs'
@@ -43,7 +43,7 @@ export const Metadata = ({
   type,
   twitterUsername,
   twitterCardType,
-}) => (
+}: MetadataProps): ReactElement => (
   <Head>
     <title>{title}</title>
 
@@ -104,15 +104,15 @@ Metadata.defaultProps = {
   twitterCardType,
 }
 
-Metadata.propTypes = {
-  title: PropTypes.string,
-  keywords: PropTypes.string,
-  author: PropTypes.string,
-  description: PropTypes.string,
-  url: PropTypes.string,
-  image: PropTypes.string,
-  imageAlt: PropTypes.string,
-  type: PropTypes.string,
-  twitterUsername: PropTypes.string,
-  twitterCardType: PropTypes.string,
+type MetadataProps = {
+  title: string
+  keywords: string
+  author: string
+  description: string
+  url: string
+  image: string
+  imageAlt: string
+  type: string
+  twitterUsername: string
+  twitterCardType: string
 }

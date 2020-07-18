@@ -4,7 +4,7 @@ import { fadeIn, fadeOut } from '../../constants/animations'
 import { BLACK_ALPHA } from '../../constants/colors'
 import { LONG_ANIMATION_DURATION } from '../../constants/measurements'
 
-export const Shade = styled.div`
+export const Shade = styled.div<{ isNewlyMounted?: boolean; show: boolean }>`
   position: fixed;
   width: 100vw;
   height: 100vh;

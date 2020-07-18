@@ -1,9 +1,10 @@
-import s from 'styled-components'
+import { ReactElement } from 'react'
+import s, { CSSProperties } from 'styled-components'
 
 import { PROPIC_BACKGROUND, PROPIC_TEXT } from '../../constants/colors'
 import { mediaMinWidth, PHONE } from '../../constants/measurements'
 
-const hashCode = (s) => {
+const hashCode = (s: string): number => {
   let h = 0
   let i = 0
   if (s.length > 0) {
@@ -14,10 +15,15 @@ const hashCode = (s) => {
   return h
 }
 
-// TODO: Move these defaults into prop-types when prop-types are added fully
 const [DEFAULT_BG_COLOR] = PROPIC_BACKGROUND
 const [DEFAULT_TXT_COLOR] = PROPIC_TEXT
-const Placeholder = s.div`
+
+const Placeholder = s.div<{
+  fontSize?: string
+  isRound?: boolean
+  backgroundColor?: string
+  textColor?: string
+}>`
   width: 100%;
   height: 100%;
   display: flex;
@@ -31,7 +37,7 @@ const Placeholder = s.div`
   color: ${({ textColor }) => textColor || DEFAULT_TXT_COLOR}
 `
 
-const Avatar = s.img`
+const Avatar = s.img<{ isRound?: boolean }>`
   object-fit: cover;
 
   .image & {
@@ -50,13 +56,21 @@ const AvatarWrapper = s.div`
   }
 `
 
+type ProfilePicProps = {
+  className?: string
+  user: { name: string; image: string }
+  isRound?: boolean
+  style?: CSSProperties
+  fontSize?: string
+}
+
 export const ProfilePic = ({
   className,
   user,
   isRound = true,
   style,
   fontSize,
-}) => {
+}: ProfilePicProps): ReactElement => {
   const { name, image } = user
   if (image)
     return (

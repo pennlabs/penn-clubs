@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import PropTypes from 'prop-types'
 
 import {
   Container,
@@ -12,7 +11,11 @@ import {
 import { SNOW } from '../constants/colors'
 import renderPage from '../renderPage'
 
-const Question = ({ title, children }) => (
+type QuestionProps = React.PropsWithChildren<{
+  title: string
+}>
+
+const Question = ({ title, children }: QuestionProps): JSX.Element => (
   <>
     <StrongText style={{ marginBottom: '0.5rem' }}>{title}</StrongText>
     <Text>
@@ -22,11 +25,6 @@ const Question = ({ title, children }) => (
     </Text>
   </>
 )
-
-Question.propTypes = {
-  title: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-}
 
 const FAQ = () => (
   <Container background={SNOW}>

@@ -1,14 +1,14 @@
 // Modified from basics
-import PropTypes from 'prop-types'
-import { Component } from 'react'
+import { Component, ReactElement } from 'react'
 import s from 'styled-components'
 
 import { CLUBS_BLUE, LIGHT_GRAY, MEDIUM_GRAY } from '../../constants/colors'
+import { Club } from '../../types'
 
 const HEIGHT = 0.875
 const WIDTH = 2.25
 
-const Label = s.span`
+const Label = s.span<{ active?: boolean }>`
   display: inline-block;
   margin-bottom: 0;
   color: ${MEDIUM_GRAY};
@@ -31,7 +31,7 @@ const ToggleWrapper = s.div`
   margin-right: 0.625em;
 `
 
-const Bar = s.div`
+const Bar = s.div<{ active?: boolean }>`
   transition: all 0.2s ease;
   width: 100%;
   height: ${HEIGHT}rem;
@@ -41,7 +41,7 @@ const Bar = s.div`
   cursor: pointer;
 `
 
-const Circle = s.div`
+const Circle = s.div<{ active?: boolean }>`
   transition: all 0.2s ease;
   height: ${HEIGHT + 0.4}rem;
   width: ${HEIGHT + 0.4}rem;
@@ -59,21 +59,21 @@ const Circle = s.div`
  * @param {string} filterOffText: text rendered when the filter is off
  * @param {string} filterOnText text rendered when filter is on
  */
-class Toggle extends Component {
-  constructor(props) {
+class Toggle extends Component<ToggleProps, ToggleState> {
+  constructor(props: ToggleProps) {
     super(props)
     this.state = {
-      active: props.active,
+      active: props.active ?? false,
     }
     this.handleClick = this.handleClick.bind(this)
   }
 
-  handleClick(e) {
+  handleClick(): void {
     this.props.toggle(this.props.club)
     this.setState({ active: !this.state.active })
   }
 
-  render() {
+  render(): ReactElement {
     const { filterOffText, filterOnText } = this.props
     const { active } = this.state
     return (
@@ -101,17 +101,17 @@ class Toggle extends Component {
   }
 }
 
-Toggle.defaultProps = {
-  filter: false,
-  filterOffText: '',
-  filterOnText: '',
+type ToggleState = {
+  active: boolean
 }
 
-Toggle.propTypes = {
-  filter: PropTypes.bool,
-  filterOffText: PropTypes.string,
-  filterOnText: PropTypes.string,
-  applyFilter: PropTypes.func,
+type ToggleProps = {
+  club: Club
+  toggle: (club: Club) => void
+  filter: boolean
+  filterOffText: string
+  filterOnText: string
+  active?: boolean
 }
 
 export default Toggle

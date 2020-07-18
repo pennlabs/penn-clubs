@@ -1,5 +1,4 @@
-import PropTypes from 'prop-types'
-import { useEffect, useRef } from 'react'
+import { ReactElement, useEffect, useRef } from 'react'
 import s from 'styled-components'
 
 import { fadeIn, fadeOut } from '../../constants/animations'
@@ -14,7 +13,11 @@ import {
 import { Icon } from './Icon'
 import Shade from './Shade'
 
-const ModalWrapper = s.div`
+type ModalWrapperProps = {
+  show?: boolean
+}
+
+const ModalWrapper = s.div<ModalWrapperProps>`
   position: fixed;
   top: 0;
   left: 0;
@@ -44,12 +47,16 @@ const ModalCard = s.div`
   }
 `
 
-const ModalContent = s.div`
+type ModalContentProps = {
+  marginBottom?: boolean
+}
+
+const ModalContent = s.div<ModalContentProps>`
   margin: auto;
   ${({ marginBottom }) => (marginBottom ? 'margin-bottom: 10%;' : '')}
 `
 
-const CloseModalIcon = s(Icon)`
+const CloseModalIcon = s(Icon)<{ onClick?: () => void }>`
   position: absolute;
   right: 20px;
   top: 20px;
@@ -61,8 +68,13 @@ const CloseModalIcon = s(Icon)`
 // This would otherwise cause the modal to close on any click
 const noop = (event) => event.stopPropagation()
 
-export const Modal = ({ show, children, closeModal, marginBottom = true }) => {
-  const focusRef = useRef()
+export const Modal = ({
+  show,
+  children,
+  closeModal,
+  marginBottom = true,
+}: ModalProps): ReactElement => {
+  const focusRef = useRef<HTMLDivElement>(null)
 
   const handleKeyPress = ({ key, keyCode }) => {
     const ESCAPE_KEY_CODE = 27
@@ -84,14 +96,13 @@ export const Modal = ({ show, children, closeModal, marginBottom = true }) => {
     <ModalWrapper
       ref={focusRef}
       className={show ? 'modal is-active' : 'modal'}
-      id="modal"
       onKeyPress={handleKeyPress}
       onKeyDown={handleKeyPress}
-      tabIndex="0"
+      tabIndex={0}
       show={show}
     >
       <Shade className="modal-background" onClick={closeModal} show={show} />
-      <ModalCard className="card" onClick={noop} show={show}>
+      <ModalCard className="card" onClick={noop}>
         <CloseModalIcon name="x" alt="&#215;" onClick={closeModal} />
         <ModalContent marginBottom={marginBottom}>{children}</ModalContent>
       </ModalCard>
@@ -99,10 +110,10 @@ export const Modal = ({ show, children, closeModal, marginBottom = true }) => {
   )
 }
 
-Modal.propTypes = {
-  show: PropTypes.bool.isRequired,
-  children: PropTypes.any.isRequired,
-  marginBottom: PropTypes.bool,
-}
+type ModalProps = React.PropsWithChildren<{
+  show: boolean
+  marginBottom?: boolean
+  closeModal: () => void
+}>
 
 export default Modal
