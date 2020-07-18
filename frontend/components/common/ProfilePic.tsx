@@ -58,7 +58,7 @@ const AvatarWrapper = s.div`
 
 type ProfilePicProps = {
   className?: string
-  user: { name: string; image: string }
+  user: { name: string; image: string | null }
   isRound?: boolean
   style?: CSSProperties
   fontSize?: string

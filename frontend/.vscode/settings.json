@@ -11,5 +11,11 @@
         "**/.DS_Store": true,
         "**/.next": true,
         "**/.nyc_output": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/*.code-search": true,
+        "**/coverage": true
     }
 }

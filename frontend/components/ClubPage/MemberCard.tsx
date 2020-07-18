@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
@@ -34,7 +35,7 @@ const MemberInfo = s.div`
   }
 `
 
-const MemberCard = ({ account }) => {
+const MemberCard = ({ account }): ReactElement => {
   const { email, name, title } = account
   return (
     <StyledCard bordered>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { ReactElement, useState } from 'react'
 import s from 'styled-components'
 
 import { MEDIUM_GRAY } from '../../constants/colors'
@@ -33,17 +33,26 @@ const ProfilePicWrapper = s.div`
   margin-left: 0.5em;
 `
 
-export default ({ defaults }) => {
+type ProfileTabProps = {
+  defaults: {
+    name: string
+    username: string
+    email: string
+    image_url: string | null
+  }
+}
+
+export default ({ defaults }: ProfileTabProps): ReactElement => {
   const [profile, setProfile] = useState(defaults)
 
-  const { name, username, email, imageUrl } = profile
+  const { name, username, email, image_url } = profile
 
   return (
     <Wrapper>
       <div className="columns is-mobile">
         <div className="column is-narrow">
           <ProfilePicWrapper>
-            <ProfilePic user={{ name, image: imageUrl }} />
+            <ProfilePic user={{ name, image: image_url }} />
           </ProfilePicWrapper>
         </div>
         <div className="column is-narrow" style={{ fontWeight: 600 }}>
