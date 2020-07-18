@@ -1,21 +1,16 @@
 import Link from 'next/link'
 import { Component } from 'react'
-import Select from 'react-select'
-import TimeAgo from 'react-timeago'
 
 import BaseCard from '../components/ClubEditPage/BaseCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
+import InviteCard from '../components/ClubEditPage/InviteCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
+import MembersCard from '../components/ClubEditPage/MembersCard'
 import QRCodeCard from '../components/ClubEditPage/QRCodeCard'
 import { CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
-import { ClubApplicationRequired, ClubSize, MembershipRank } from '../types'
-import {
-  doApiRequest,
-  formatResponse,
-  getApiUrl,
-  getRoleDisplay,
-} from '../utils'
+import { ClubApplicationRequired, ClubSize } from '../types'
+import { doApiRequest, formatResponse, getApiUrl } from '../utils'
 import ClubMetadata from './ClubMetadata'
 import { Container, Empty, Icon, InactiveTag, Text, Title } from './common'
 import AuthPrompt from './common/AuthPrompt'
@@ -25,21 +20,6 @@ import TabView from './TabView'
 class ClubForm extends Component {
   constructor(props) {
     super(props)
-
-    this.roles = [
-      {
-        value: MembershipRank.Member,
-        label: 'Member',
-      },
-      {
-        value: MembershipRank.Officer,
-        label: 'Officer',
-      },
-      {
-        value: MembershipRank.Owner,
-        label: 'Owner',
-      },
-    ]
 
     this.applications = [
       {
@@ -79,17 +59,12 @@ class ClubForm extends Component {
 
     this.state = {
       club: isEdit ? null : {},
-      invites: [],
       isEdit: isEdit,
-      inviteEmails: '',
-      inviteRole: this.roles[0],
-      inviteTitle: 'Member',
       editMember: null,
       subscriptions: [],
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
-    this.sendInvites = this.sendInvites.bind(this)
     this.deleteClub = this.deleteClub.bind(this)
   }
 
@@ -137,50 +112,6 @@ class ClubForm extends Component {
         })
       }
     })
-  }
-
-  deleteInvite(id) {
-    doApiRequest(`/clubs/${this.state.club.code}/invites/${id}/?format=json`, {
-      method: 'DELETE',
-    }).then((resp) => {
-      if (resp.ok) {
-        this.notify('Invitation has been removed!')
-        this.componentDidMount()
-      } else {
-        resp.json().then((err) => {
-          this.notify(formatResponse(err))
-        })
-      }
-    })
-  }
-
-  resendInvite(id) {
-    doApiRequest(
-      `/clubs/${this.state.club.code}/invites/${id}/resend/?format=json`,
-      {
-        method: 'PUT',
-      },
-    )
-      .then((resp) => resp.json())
-      .then((resp) => {
-        this.notify(resp.detail)
-      })
-  }
-
-  sendInvites() {
-    doApiRequest(`/clubs/${this.state.club.code}/invite/?format=json`, {
-      method: 'POST',
-      body: {
-        emails: this.state.inviteEmails,
-        role: this.state.inviteRole.value,
-        title: this.state.inviteTitle,
-      },
-    })
-      .then((resp) => resp.json())
-      .then((data) => {
-        this.notify(formatResponse(data))
-        this.componentDidMount()
-      })
   }
 
   submit(data) {
@@ -248,13 +179,6 @@ class ClubForm extends Component {
         .then((data) =>
           this.setState({
             club: data,
-          }),
-        )
-      doApiRequest(`/clubs/${clubId}/invites/?format=json`)
-        .then((resp) => resp.json())
-        .then((data) =>
-          this.setState({
-            invites: data,
           }),
         )
       doApiRequest(`/clubs/${clubId}/subscription/?format=json`)
@@ -486,156 +410,8 @@ class ClubForm extends Component {
           label: 'Membership',
           content: (
             <>
-              <BaseCard title="Members">
-                <ModelForm
-                  keyField="username"
-                  deleteVerb="Kick"
-                  noun="Member"
-                  allowCreation={false}
-                  confirmDeletion={true}
-                  baseUrl={`/clubs/${this.state.club.code}/members/`}
-                  fields={[
-                    {
-                      name: 'title',
-                      type: 'text',
-                    },
-                    {
-                      name: 'role',
-                      type: 'select',
-                      choices: this.roles,
-                      converter: (a) => this.roles.find((x) => x.value === a),
-                      reverser: (a) => a.value,
-                    },
-                  ]}
-                  tableFields={[
-                    {
-                      name: 'name',
-                    },
-                    {
-                      name: 'title',
-                      label: 'Title (Permissions)',
-                      converter: (a, all) =>
-                        `${a} (${getRoleDisplay(all.role)})`,
-                    },
-                    {
-                      name: 'email',
-                    },
-                  ]}
-                  currentTitle={(obj) => `${obj.name} (${obj.email})`}
-                />
-                <div style={{ marginTop: '1em' }}>
-                  <a
-                    href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)}
-                    className="button is-link"
-                  >
-                    <Icon alt="download" name="download" /> Download Member List
-                  </a>
-                </div>
-              </BaseCard>
-              {invites && !!invites.length && (
-                <div className="card" style={{ marginBottom: 20 }}>
-                  <div className="card-header">
-                    <p className="card-header-title">
-                      Pending Invites ({invites.length})
-                    </p>
-                  </div>
-                  <div className="card-content">
-                    <table className="table is-fullwidth">
-                      <thead>
-                        <tr>
-                          <th>Email</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {invites.map((item) => (
-                          <tr key={item.email}>
-                            <td>{item.email}</td>
-                            <td>
-                              <button
-                                className="button is-small is-link"
-                                onClick={() => this.resendInvite(item.id)}
-                              >
-                                <Icon name="mail" alt="resend invite" /> Resend
-                              </button>{' '}
-                              <button
-                                className="button is-small is-danger"
-                                onClick={() => this.deleteInvite(item.id)}
-                              >
-                                <Icon name="x" alt="remove invite" /> Remove
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-              <div className="card">
-                <div className="card-header">
-                  <p className="card-header-title">Invite Members</p>
-                </div>
-                <div className="card-content">
-                  <Text>
-                    Enter an email address or a list of email addresses
-                    separated by commas or newlines in the box below. All emails
-                    listed will be sent an invite to join the club. The invite
-                    process will go more smoothly if you use Penn email
-                    addresses, but normal email addresses will work provided
-                    that the recipient has a PennKey account. We will not send
-                    an invite if the account associated with an email is already
-                    in the club.
-                  </Text>
-                  <div className="field">
-                    <textarea
-                      value={this.state.inviteEmails}
-                      onChange={(e) =>
-                        this.setState({ inviteEmails: e.target.value })
-                      }
-                      className="textarea"
-                      placeholder="Enter email addresses here!"
-                    ></textarea>
-                  </div>
-                  <div className="field">
-                    <label className="label">Permissions</label>
-                    <div className="control">
-                      <Select
-                        options={this.roles}
-                        value={this.state.inviteRole}
-                        onChange={(opt) => this.setState({ inviteRole: opt })}
-                      />
-                    </div>
-                    <p className="help">
-                      Owners have full control over the club, officers can
-                      perform editing, and members have read-only permissions.
-                    </p>
-                  </div>
-                  <div className="field">
-                    <label className="label">Title</label>
-                    <div className="control">
-                      <input
-                        className="input"
-                        value={this.state.inviteTitle}
-                        onChange={(e) =>
-                          this.setState({ inviteTitle: e.target.value })
-                        }
-                      />
-                    </div>
-                    <p className="help">
-                      The title is shown on the member listing and will not
-                      affect user permissions.
-                    </p>
-                  </div>
-                  <button
-                    className="button is-primary"
-                    onClick={this.sendInvites}
-                  >
-                    <Icon name="mail" alt="send invites" />
-                    &nbsp; Send Invite(s)
-                  </button>
-                </div>
-              </div>
+              <MembersCard club={club} />
+              <InviteCard club={club} />
             </>
           ),
           disabled: !isEdit,

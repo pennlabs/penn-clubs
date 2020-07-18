@@ -1,4 +1,5 @@
 import fetch from 'isomorphic-unfetch'
+import { ReactElement } from 'react'
 
 export function stripTags(val: string): string {
   if (!val) {
@@ -89,10 +90,14 @@ export function titleize(str: string): string {
     .join(' ')
 }
 
-export function formatResponse(err: { [key: string]: string }): JSX.Element[] {
-  return Object.keys(err).map((a) => (
-    <div key={a}>
-      <b>{titleize(a)}:</b> {err[a]}
-    </div>
-  ))
+export function formatResponse(err: { [key: string]: string }): ReactElement {
+  return (
+    <>
+      {Object.keys(err).map((line) => (
+        <div key={line}>
+          <b>{titleize(line)}:</b> {err[line]}
+        </div>
+      ))}
+    </>
+  )
 }

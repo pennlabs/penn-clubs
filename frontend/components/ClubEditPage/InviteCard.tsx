@@ -1,0 +1,181 @@
+import { ReactElement, useEffect, useState } from 'react'
+import Select from 'react-select'
+
+import { Club } from '../../types'
+import { doApiRequest, formatResponse } from '../../utils'
+import { Icon, Text } from '../common'
+import { MEMBERSHIP_ROLES } from './MembersCard'
+
+type InviteCardProps = {
+  club: Club
+}
+
+type Invite = {
+  id: number
+  email: string
+}
+
+export default function InviteCard({ club }: InviteCardProps): ReactElement {
+  const [invites, setInvites] = useState<Invite[]>([])
+  const [inviteTitle, setInviteTitle] = useState<string>('Member')
+  const [inviteRole, setInviteRole] = useState<{
+    label: string
+    value: number
+  }>(MEMBERSHIP_ROLES[0])
+  const [inviteEmails, setInviteEmails] = useState<string>('')
+
+  const [message, notify] = useState<ReactElement | string | null>(null)
+
+  const reloadInvites = () => {
+    doApiRequest(`/clubs/${club.code}/invites/?format=json`)
+      .then((resp) => resp.json())
+      .then(setInvites)
+  }
+
+  const deleteInvite = (id) => {
+    doApiRequest(`/clubs/${club.code}/invites/${id}/?format=json`, {
+      method: 'DELETE',
+    }).then((resp) => {
+      if (resp.ok) {
+        notify('Invitation has been removed!')
+        reloadInvites()
+      } else {
+        resp.json().then((err) => {
+          notify(formatResponse(err))
+        })
+      }
+    })
+  }
+
+  const resendInvite = (id) => {
+    doApiRequest(`/clubs/${club.code}/invites/${id}/resend/?format=json`, {
+      method: 'PUT',
+    })
+      .then((resp) => resp.json())
+      .then((resp) => {
+        notify(resp.detail)
+      })
+  }
+
+  const sendInvites = () => {
+    doApiRequest(`/clubs/${club.code}/invite/?format=json`, {
+      method: 'POST',
+      body: {
+        emails: inviteEmails,
+        role: inviteRole.value,
+        title: inviteTitle,
+      },
+    })
+      .then((resp) => resp.json())
+      .then((data) => {
+        notify(formatResponse(data))
+        reloadInvites()
+      })
+  }
+
+  useEffect(reloadInvites, [])
+
+  return (
+    <>
+      {message !== null && (
+        <div className="notification is-primary">{message}</div>
+      )}
+      {invites && !!invites.length && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="card-header">
+            <p className="card-header-title">
+              Pending Invites ({invites.length})
+            </p>
+          </div>
+          <div className="card-content">
+            <table className="table is-fullwidth">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invites.map((item) => (
+                  <tr key={item.email}>
+                    <td>{item.email}</td>
+                    <td>
+                      <button
+                        className="button is-small is-link"
+                        onClick={() => resendInvite(item.id)}
+                      >
+                        <Icon name="mail" alt="resend invite" /> Resend
+                      </button>{' '}
+                      <button
+                        className="button is-small is-danger"
+                        onClick={() => deleteInvite(item.id)}
+                      >
+                        <Icon name="x" alt="remove invite" /> Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      <div className="card">
+        <div className="card-header">
+          <p className="card-header-title">Invite Members</p>
+        </div>
+        <div className="card-content">
+          <Text>
+            Enter an email address or a list of email addresses separated by
+            commas or newlines in the box below. All emails listed will be sent
+            an invite to join the club. The invite process will go more smoothly
+            if you use Penn email addresses, but normal email addresses will
+            work provided that the recipient has a PennKey account. We will not
+            send an invite if the account associated with an email is already in
+            the club.
+          </Text>
+          <div className="field">
+            <textarea
+              value={inviteEmails}
+              onChange={(e) => setInviteEmails(e.target.value)}
+              className="textarea"
+              placeholder="Enter email addresses here!"
+            ></textarea>
+          </div>
+          <div className="field">
+            <label className="label">Permissions</label>
+            <div className="control">
+              <Select
+                options={MEMBERSHIP_ROLES}
+                value={inviteRole}
+                onChange={(opt) => setInviteRole(opt)}
+              />
+            </div>
+            <p className="help">
+              Owners have full control over the club, officers can perform
+              editing, and members have read-only permissions.
+            </p>
+          </div>
+          <div className="field">
+            <label className="label">Title</label>
+            <div className="control">
+              <input
+                className="input"
+                value={inviteTitle}
+                onChange={(e) => setInviteTitle(e.target.value)}
+              />
+            </div>
+            <p className="help">
+              The title is shown on the member listing and will not affect user
+              permissions.
+            </p>
+          </div>
+          <button className="button is-primary" onClick={sendInvites}>
+            <Icon name="mail" alt="send invites" />
+            &nbsp; Send Invite(s)
+          </button>
+        </div>
+      </div>
+    </>
+  )
+}
