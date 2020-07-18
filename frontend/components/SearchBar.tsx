@@ -128,6 +128,20 @@ type SearchBarProps = {
   resetDisplay: (nameInput: string, selectedTags: SelectableTag[]) => void
 }
 
+const DROPDOWNS = {
+  Size: [
+    { value: 1, label: 'less than 20 members' },
+    { value: 2, label: '20 to 50 members' },
+    { value: 3, label: '50 to 100 members' },
+    { value: 4, label: 'more than 100' },
+  ],
+  Application: [
+    { value: 1, label: 'Requires application' },
+    { value: 2, label: 'Does not require application' },
+    { value: 3, label: 'Currently accepting applications' },
+  ],
+}
+
 const SearchBar = ({
   tags,
   updateTag,
@@ -137,7 +151,9 @@ const SearchBar = ({
   const [nameInput, setNameInput] = useState<string>('')
   const [activeDropdownFilters, setActiveDropdownFilters] = useState<
     Set<string>
-  >(new Set<string>())
+  >(
+    new Set<string>(['Tags', ...Object.keys(DROPDOWNS)]),
+  )
   const [selectedTags, setSelectedTags] = useState<SelectableTag[]>(propTags)
   const [timeout, storeTimeout] = useState<number | null>(null)
   const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
@@ -164,19 +180,6 @@ const SearchBar = ({
     label: name,
     count: clubs,
   }))
-  const dropdowns = {
-    Size: [
-      { value: 1, label: 'less than 20 members' },
-      { value: 2, label: '20 to 50 members' },
-      { value: 3, label: '50 to 100 members' },
-      { value: 4, label: 'more than 100' },
-    ],
-    Application: [
-      { value: 1, label: 'Requires application' },
-      { value: 2, label: 'Does not require application' },
-      { value: 3, label: 'Currently accepting applications' },
-    ],
-  }
 
   return (
     <>
@@ -215,13 +218,13 @@ const SearchBar = ({
             updateTag={updateTag}
             selected={selectedTags.filter((tag) => tag.name === 'Tags')}
           />
-          {Object.keys(dropdowns).map((key) => (
+          {Object.keys(DROPDOWNS).map((key) => (
             <DropdownFilter
               active={activeDropdownFilters.has(key)}
               toggleActive={() => toggleActiveDropdownFilter(key)}
               name={key}
               key={key}
-              options={dropdowns[key]}
+              options={DROPDOWNS[key]}
               selected={selectedTags.filter((tag) => tag.name === key)}
               updateTag={updateTag}
             />
