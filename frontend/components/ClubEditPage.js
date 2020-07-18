@@ -1,16 +1,16 @@
 import Link from 'next/link'
 import { Component } from 'react'
 
-import BaseCard from '../components/ClubEditPage/BaseCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
 import InviteCard from '../components/ClubEditPage/InviteCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
 import MembersCard from '../components/ClubEditPage/MembersCard'
 import QRCodeCard from '../components/ClubEditPage/QRCodeCard'
+import SubscribersCard from '../components/ClubEditPage/SubscribersCard'
 import { CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
 import { ClubApplicationRequired, ClubSize } from '../types'
-import { doApiRequest, formatResponse, getApiUrl } from '../utils'
+import { doApiRequest, formatResponse } from '../utils'
 import ClubMetadata from './ClubMetadata'
 import { Container, Empty, Icon, InactiveTag, Text, Title } from './common'
 import AuthPrompt from './common/AuthPrompt'
@@ -60,8 +60,6 @@ class ClubForm extends Component {
     this.state = {
       club: isEdit ? null : {},
       isEdit: isEdit,
-      editMember: null,
-      subscriptions: [],
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -181,19 +179,12 @@ class ClubForm extends Component {
             club: data,
           }),
         )
-      doApiRequest(`/clubs/${clubId}/subscription/?format=json`)
-        .then((resp) => resp.json())
-        .then((data) =>
-          this.setState({
-            subscriptions: data,
-          }),
-        )
     }
   }
 
   render() {
     const { authenticated, userInfo, schools, majors, years, tags } = this.props
-    const { club, invites, isEdit, message } = this.state
+    const { club, isEdit, message } = this.state
 
     if (authenticated === false) {
       return (
@@ -419,68 +410,7 @@ class ClubForm extends Component {
         {
           name: 'subscriptions',
           label: 'Subscriptions',
-          content: (
-            <>
-              <BaseCard title="Subscribers">
-                <table className="table is-fullwidth">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Grad Year</th>
-                      <th>School</th>
-                      <th>Major</th>
-                      <th>Subscribed</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {this.state.subscriptions.map((item, i) => (
-                      <tr key={i}>
-                        <td>{item.name || <Empty>None</Empty>}</td>
-                        <td>{item.email || <Empty>None</Empty>}</td>
-                        <td>{item.graduation_year || <Empty>None</Empty>}</td>
-                        <td>
-                          {item.school && item.school.length ? (
-                            item.school.map((a) => a.name).join(', ')
-                          ) : (
-                            <Empty>None</Empty>
-                          )}
-                        </td>
-                        <td>
-                          {item.major && item.major.length ? (
-                            item.major.map((a) => a.name).join(', ')
-                          ) : (
-                            <Empty>None</Empty>
-                          )}
-                        </td>
-                        <td>
-                          <TimeAgo date={item.created_at} />
-                        </td>
-                      </tr>
-                    ))}
-                    {!!this.state.subscriptions.length || (
-                      <tr>
-                        <td colSpan="5" className="has-text-grey">
-                          No one has subscribed to this club yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                <div className="buttons">
-                  <a
-                    href={getApiUrl(
-                      `/clubs/${club.code}/subscription/?format=xlsx`,
-                    )}
-                    className="button is-link"
-                  >
-                    <Icon alt="download" name="download" /> Download Subscriber
-                    List
-                  </a>
-                </div>
-              </BaseCard>
-            </>
-          ),
+          content: <SubscribersCard club={club} />,
         },
         {
           name: 'resources',

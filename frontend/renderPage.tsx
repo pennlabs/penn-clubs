@@ -159,7 +159,7 @@ function renderPage(Page) {
       if (i === -1) {
         newSubs.push(id)
         logEvent('subscribe', id)
-        doApiRequest('/subscribes/?format=json', {
+        doApiRequest('/subscribe/?format=json', {
           method: 'POST',
           body: {
             club: id,
@@ -168,7 +168,7 @@ function renderPage(Page) {
       } else {
         newSubs.splice(i, 1)
         logEvent('unsubscribe', id)
-        doApiRequest(`/subscribes/${id}/?format=json`, {
+        doApiRequest(`/subscribe/${id}/?format=json`, {
           method: 'DELETE',
         })
       }
