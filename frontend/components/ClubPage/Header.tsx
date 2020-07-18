@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react'
+import { CSSProperties, ReactElement } from 'react'
 import s from 'styled-components'
 
 import { Club } from '../../types'
@@ -16,7 +16,7 @@ type HeaderProps = {
   style?: CSSProperties
 }
 
-const Header = ({ club, style }: HeaderProps): JSX.Element => {
+const Header = ({ club, style }: HeaderProps): ReactElement => {
   const { active, name, tags, badges } = club
 
   return (

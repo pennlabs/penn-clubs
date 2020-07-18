@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CSSProperties, useState } from 'react'
+import { CSSProperties, ReactElement, useState } from 'react'
 import s from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
@@ -91,7 +91,7 @@ const Actions = ({
   updateSubscriptions,
   updateRequests,
   className,
-}: ActionsProps): JSX.Element => {
+}: ActionsProps): ReactElement => {
   const { code, favorite_count: favoriteCount } = club
   const isFavorite = club.is_favorite
   const isSubscription = club.is_subscribe

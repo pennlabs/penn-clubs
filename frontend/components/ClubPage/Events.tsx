@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
@@ -28,7 +29,7 @@ const Wrapper = s.div`
     display: flex;
   `
 
-const Events = ({ data }: EventsProps): JSX.Element | null => {
+const Events = ({ data }: EventsProps): ReactElement | null => {
   if (!data || !data.length) {
     return null
   }

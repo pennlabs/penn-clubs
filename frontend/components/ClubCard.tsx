@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ReactElement } from 'react'
 import LazyLoad from 'react-lazy-load'
 import s from 'styled-components'
 
@@ -94,7 +95,7 @@ type ClubCardProps = {
   updateFavorites: (code: string) => void
 }
 
-const ClubCard = ({ club, updateFavorites }: ClubCardProps): JSX.Element => {
+const ClubCard = ({ club, updateFavorites }: ClubCardProps): ReactElement => {
   const { name, active, approved, description, subtitle, tags, code } = club
   const img = club.image_url
   const textDescription = shorten(

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ReactElement } from 'react'
 
 import {
   Container,
@@ -15,7 +16,7 @@ type QuestionProps = React.PropsWithChildren<{
   title: string
 }>
 
-const Question = ({ title, children }: QuestionProps): JSX.Element => (
+const Question = ({ title, children }: QuestionProps): ReactElement => (
   <>
     <StrongText style={{ marginBottom: '0.5rem' }}>{title}</StrongText>
     <Text>

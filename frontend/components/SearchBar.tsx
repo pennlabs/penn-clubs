@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { ReactElement, useEffect, useRef, useState } from 'react'
 import s from 'styled-components'
 
 import {
@@ -133,7 +133,7 @@ const SearchBar = ({
   updateTag,
   selectedTags: propTags,
   resetDisplay,
-}: SearchBarProps): JSX.Element => {
+}: SearchBarProps): ReactElement => {
   const [nameInput, setNameInput] = useState<string>('')
   const [activeDropdownFilter, setActiveDropdownFilter] = useState<
     string | null

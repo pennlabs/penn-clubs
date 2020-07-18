@@ -1,6 +1,6 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { ReactElement, useEffect } from 'react'
 import s from 'styled-components'
 
 import {
@@ -59,7 +59,7 @@ const Welcome = ({
   authenticated,
   userInfo,
   nextUrl,
-}: WelcomeProps): JSX.Element => {
+}: WelcomeProps): ReactElement => {
   if (authenticated === false) {
     return <AuthPrompt />
   }

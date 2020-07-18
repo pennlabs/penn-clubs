@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { ReactElement, useState } from 'react'
 import s from 'styled-components'
 
 import { Club } from '../../types'
@@ -30,7 +30,7 @@ type QuestionListProps = {
 
 const QuestionList = ({
   club: { name, code, questions },
-}: QuestionListProps): JSX.Element => {
+}: QuestionListProps): ReactElement => {
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [formErrors, setFormErrors] = useState(null)
 

@@ -1,3 +1,5 @@
+import { ReactElement } from 'react'
+
 import { Club } from '../../types'
 import { Icon } from '../common'
 import SocialLink from './SocialLink'
@@ -55,7 +57,7 @@ type SocialIconsProps = {
   club: Club
 }
 
-const SocialIcons = ({ club }: SocialIconsProps): JSX.Element => (
+const SocialIcons = ({ club }: SocialIconsProps): ReactElement => (
   <>
     {socials
       .filter((item) => club[item.name])

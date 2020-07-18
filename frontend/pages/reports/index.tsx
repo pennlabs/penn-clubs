@@ -1,5 +1,5 @@
 import Router from 'next/router'
-import { useEffect, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import s from 'styled-components'
 
@@ -110,7 +110,7 @@ type ReportsProps = {
   nameToCode: { [key: string]: string }
 }
 
-const Reports = ({ nameToCode }: ReportsProps): JSX.Element => {
+const Reports = ({ nameToCode }: ReportsProps): ReactElement => {
   const fields = {
     Fields: Object.keys(nameToCode),
   }

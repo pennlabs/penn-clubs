@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import React from 'react'
+import React, { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
@@ -78,7 +78,7 @@ class ClubTableRow extends React.Component<ClubTableRowProps> {
     return description.substring(0, 200) + '...'
   }
 
-  render(): JSX.Element {
+  render(): ReactElement {
     const { club, updateFavorites } = this.props
     const { name, tags, code } = club
 

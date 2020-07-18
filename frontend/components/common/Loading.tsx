@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import s, { keyframes } from 'styled-components'
 
 import { ALLBIRDS_GRAY, BLUE, BORDER } from '../../constants/colors'
@@ -43,7 +43,7 @@ type LoadingProps = { title?: string; delay?: number }
 export const Loading = ({
   title = 'Loading...',
   delay = 200,
-}: LoadingProps): JSX.Element => {
+}: LoadingProps): ReactElement => {
   const [hidden, toggleHidden] = useState(true)
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s, { CSSProperties } from 'styled-components'
 
 const reqSvgs = require.context('../../public/static/img/icons', true, /\.svg$/)
@@ -33,7 +34,7 @@ export const Icon = ({
   show = true,
   size = '1rem',
   ...props
-}: Props): JSX.Element | null => {
+}: Props): ReactElement | null => {
   const svg = reqSvgs(`./${name}.svg`)
   if (!show || !svg || !svg.default) {
     return null

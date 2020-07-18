@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import s from 'styled-components'
 
 import ClubCard from '../components/ClubCard'
@@ -54,7 +54,7 @@ class ClubDisplay extends React.Component<ClubDisplayProps, ClubDisplayState> {
     window.removeEventListener('scroll', this.onScroll, false)
   }
 
-  render(): JSX.Element {
+  render(): ReactElement {
     const { displayClubs, updateFavorites, display } = this.props
     const clubsToShow = displayClubs.slice(0, this.state.end)
 

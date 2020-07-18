@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import { DARK_GRAY } from '../../constants/colors'
@@ -46,7 +46,7 @@ type TestimonialsProps = {
   data: [Testimonial]
 }
 
-const Testimonials = (props: TestimonialsProps): JSX.Element | null => {
+const Testimonials = (props: TestimonialsProps): ReactElement | null => {
   const { data: originalData } = props
 
   const [data, setData] = useState<Testimonial[] | null>(null)

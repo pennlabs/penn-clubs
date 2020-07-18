@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { BLACK, MEDIUM_GRAY } from '../../constants/colors'
@@ -43,7 +44,7 @@ export const BookmarkIcon = ({
   favorite = false,
   absolute = false,
   padding,
-}: Props): JSX.Element => (
+}: Props): ReactElement => (
   <BookmarkIconTag
     favorite={favorite}
     absolute={absolute}

@@ -1,6 +1,6 @@
 import { NextPageContext } from 'next'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
+import { ReactElement, useState } from 'react'
 import s from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
@@ -60,7 +60,7 @@ const ClubPage = ({
   updateFavorites,
   updateSubscriptions,
   updateRequests,
-}: ClubPageProps): JSX.Element => {
+}: ClubPageProps): ReactElement => {
   const router = useRouter()
   const [club, setClub] = useState<Club>(initialClub)
 

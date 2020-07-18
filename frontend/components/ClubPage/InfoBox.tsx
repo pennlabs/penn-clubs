@@ -1,3 +1,5 @@
+import { ReactElement } from 'react'
+
 import { Club } from '../../types'
 import { getSizeDisplay } from '../../utils'
 import { Icon, Text } from '../common'
@@ -22,7 +24,7 @@ type InfoBoxProps = {
   club: Club
 }
 
-const InfoBox = (props: InfoBoxProps): JSX.Element => {
+const InfoBox = (props: InfoBoxProps): ReactElement => {
   const data = [
     {
       icon: 'user',

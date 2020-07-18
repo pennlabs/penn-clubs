@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import {
@@ -47,7 +48,7 @@ const buttonStyles = {
 const DisplayButtons = ({
   switchDisplay,
   shuffle,
-}: DisplayButtonsProps): JSX.Element => (
+}: DisplayButtonsProps): ReactElement => (
   <DisplayButtonsTag>
     <button
       onClick={() => switchDisplay('cards')}

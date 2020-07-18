@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react'
+import { CSSProperties, ReactElement } from 'react'
 import s from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
@@ -50,7 +50,7 @@ export const Container = ({
   fullHeight = false,
   style,
   children,
-}: ContainerProps): JSX.Element => (
+}: ContainerProps): ReactElement => (
   <div style={{ background }}>
     <Wrapper fullHeight={fullHeight} style={style}>
       {children}
@@ -58,12 +58,11 @@ export const Container = ({
   </div>
 )
 
-type ContainerProps = {
+type ContainerProps = React.PropsWithChildren<{
   background?: string
-  children: JSX.Element | JSX.Element[]
   fullHeight?: boolean
   style?: CSSProperties
-}
+}>
 
 const WideWrapper = s(Wrapper)`
   ${mediaMinWidth(MD)} {
@@ -83,7 +82,7 @@ export const WideContainer = ({
   background = WHITE,
   fullHeight,
   children,
-}: ContainerProps): JSX.Element => (
+}: ContainerProps): ReactElement => (
   <div style={{ background }}>
     <WideWrapper fullHeight={fullHeight}>{children}</WideWrapper>
   </div>

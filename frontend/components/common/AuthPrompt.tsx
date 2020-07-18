@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { CLUBS_BLUE } from '../../constants/colors'
@@ -26,7 +27,7 @@ const TitleHeader = s.div`
 `
 
 type AuthPromptProps = {
-  children?: JSX.Element
+  children?: ReactElement
   title?: string
   hasLogin?: boolean
 }
@@ -35,7 +36,7 @@ const AuthPrompt = ({
   title = 'One last step...',
   children,
   hasLogin = true,
-}: AuthPromptProps): JSX.Element => (
+}: AuthPromptProps): ReactElement => (
   <PhoneContainer>
     <Center>
       <TitleHeader>

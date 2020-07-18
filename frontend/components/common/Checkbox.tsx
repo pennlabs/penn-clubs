@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { CLUBS_RED } from '../../constants/colors'
@@ -47,13 +48,12 @@ export const Checkbox = ({
   checked,
   onChange,
   ...props
-}: CheckboxProps): JSX.Element => {
+}: CheckboxProps): ReactElement => {
   return (
     <CheckboxContainer className={className}>
       <HiddenCheckbox checked={checked} onChange={onChange} {...props} />
       <StyledCheckbox onClick={onChange}>
         <Icon
-          noalign
           alt={checked ? 'checked' : 'unchecked'}
           name={checked ? 'check-box' : 'box'}
         />

@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { CLUBS_GREY } from '../constants/colors'
@@ -26,7 +27,7 @@ type DetailsProps = {
   updateFavorites: (code: string) => void
 }
 
-const Details = ({ club, updateFavorites }: DetailsProps): JSX.Element => {
+const Details = ({ club, updateFavorites }: DetailsProps): ReactElement => {
   const {
     size,
     is_favorite: favorite,
