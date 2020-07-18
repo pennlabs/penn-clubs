@@ -151,12 +151,18 @@ const SearchBar = ({
   const [nameInput, setNameInput] = useState<string>('')
   const [activeDropdownFilters, setActiveDropdownFilters] = useState<
     Set<string>
-  >(
-    new Set<string>(['Tags', ...Object.keys(DROPDOWNS)]),
-  )
+  >(new Set<string>())
   const [selectedTags, setSelectedTags] = useState<SelectableTag[]>(propTags)
   const [timeout, storeTimeout] = useState<number | null>(null)
   const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1000) {
+      setActiveDropdownFilters(
+        new Set<string>(['Tags', ...Object.keys(DROPDOWNS)]),
+      )
+    }
+  }, [])
 
   useEffect(() => setSelectedTags(propTags), [propTags])
   useEffect(() => {
