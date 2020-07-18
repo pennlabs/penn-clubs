@@ -135,9 +135,9 @@ const SearchBar = ({
   resetDisplay,
 }: SearchBarProps): ReactElement => {
   const [nameInput, setNameInput] = useState<string>('')
-  const [activeDropdownFilter, setActiveDropdownFilter] = useState<
-    string | null
-  >(null)
+  const [activeDropdownFilters, setActiveDropdownFilters] = useState<
+    Set<string>
+  >(new Set<string>())
   const [selectedTags, setSelectedTags] = useState<SelectableTag[]>(propTags)
   const [timeout, storeTimeout] = useState<number | null>(null)
   const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
@@ -148,8 +148,14 @@ const SearchBar = ({
     storeTimeout(setTimeout(() => resetDisplay(nameInput, selectedTags), 200))
   }, [nameInput])
 
-  const toggleActiveDropdownFilter = (name: string): void =>
-    setActiveDropdownFilter(activeDropdownFilter === name ? null : name)
+  const toggleActiveDropdownFilter = (name: string): void => {
+    if (activeDropdownFilters.has(name)) {
+      activeDropdownFilters.delete(name)
+    } else {
+      activeDropdownFilters.add(name)
+    }
+    setActiveDropdownFilters(new Set<string>(activeDropdownFilters))
+  }
   const focus = () => inputRef.current && inputRef.current.focus()
 
   const isTextInSearchBar = Boolean(nameInput)
@@ -203,7 +209,7 @@ const SearchBar = ({
           </SearchWrapper>
           <MobileLine />
           <FilterSearch
-            active={activeDropdownFilter === 'Tags'}
+            active={activeDropdownFilters.has('Tags')}
             toggleActive={() => toggleActiveDropdownFilter('Tags')}
             tags={relabeledTags}
             updateTag={updateTag}
@@ -211,7 +217,7 @@ const SearchBar = ({
           />
           {Object.keys(dropdowns).map((key) => (
             <DropdownFilter
-              active={activeDropdownFilter === key}
+              active={activeDropdownFilters.has(key)}
               toggleActive={() => toggleActiveDropdownFilter(key)}
               name={key}
               key={key}
