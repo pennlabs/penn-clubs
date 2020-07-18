@@ -48,7 +48,7 @@ describe('Permissioned user tests', () => {
     const tabs = [
       'Information',
       'Membership',
-      'Subscriptions',
+      'Recruitment',
       'Resources',
       'Questions',
       'Settings',

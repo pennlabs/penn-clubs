@@ -9,10 +9,10 @@ import InviteCard from '../components/ClubEditPage/InviteCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
 import MembersCard from '../components/ClubEditPage/MembersCard'
 import QRCodeCard from '../components/ClubEditPage/QRCodeCard'
-import SubscribersCard from '../components/ClubEditPage/SubscribersCard'
 import { CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
 import { Club, ClubApplicationRequired, ClubSize, UserInfo } from '../types'
 import { doApiRequest, formatResponse } from '../utils'
+import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import ClubMetadata from './ClubMetadata'
 import { Container, Empty, Icon, InactiveTag, Text, Title } from './common'
 import AuthPrompt from './common/AuthPrompt'
@@ -431,9 +431,14 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           disabled: !isEdit,
         },
         {
-          name: 'subscriptions',
-          label: 'Subscriptions',
-          content: <SubscribersCard club={club} />,
+          name: 'recruitment',
+          label: 'Recruitment',
+          content: (
+            <>
+              <PotentialMemberCard club={club} source="subscription" />
+              <PotentialMemberCard club={club} source="membershiprequests" />
+            </>
+          ),
         },
         {
           name: 'resources',

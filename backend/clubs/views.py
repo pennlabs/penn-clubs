@@ -627,7 +627,7 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         return MembershipRequest.objects.filter(person=self.request.user, withdrew=False)
 
 
-class MembershipRequestOwnerViewSet(viewsets.ModelViewSet):
+class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     list:
     Return a list of users who have sent membership request to the club
