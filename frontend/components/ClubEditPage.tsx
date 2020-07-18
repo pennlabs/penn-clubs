@@ -436,7 +436,21 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           content: (
             <>
               <PotentialMemberCard club={club} source="subscription" />
-              <PotentialMemberCard club={club} source="membershiprequests" />
+              <PotentialMemberCard
+                club={club}
+                source="membershiprequests"
+                actions={[
+                  {
+                    name: 'Accept',
+                    onClick: (id: string): Promise<void> => {
+                      return doApiRequest(
+                        `/clubs/${club.code}/membershiprequests/${id}/accept/?format=json`,
+                        { method: 'POST' },
+                      ).then(() => undefined)
+                    },
+                  },
+                ]}
+              />
             </>
           ),
         },

@@ -716,23 +716,23 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
+            "badges",
+            "events",
             "facebook",
-            "twitter",
-            "instagram",
-            "linkedin",
             "github",
-            "website",
-            "youtube",
             "how_to_get_involved",
+            "image",
+            "instagram",
+            "is_request",
+            "linkedin",
             "listserv",
             "members",
             "parent_orgs",
-            "badges",
-            "image",
-            "testimonials",
             "questions",
-            "events",
-            "is_request",
+            "testimonials",
+            "twitter",
+            "website",
+            "youtube",
         ]
         save_related_fields = [
             "tags",
@@ -786,14 +786,14 @@ class SubscribeSerializer(serializers.ModelSerializer):
         model = Subscribe
         fields = (
             "club",
-            "name",
-            "username",
-            "person",
-            "email",
-            "school",
-            "major",
-            "graduation_year",
             "created_at",
+            "email",
+            "graduation_year",
+            "major",
+            "name",
+            "person",
+            "school",
+            "username",
         )
         validators = [
             validators.UniqueTogetherValidator(
@@ -848,14 +848,14 @@ class MembershipRequestSerializer(serializers.ModelSerializer):
         model = MembershipRequest
         fields = (
             "club",
-            "name",
-            "username",
-            "person",
-            "email",
-            "school",
-            "major",
-            "graduation_year",
             "created_at",
+            "email",
+            "graduation_year",
+            "major",
+            "name",
+            "person",
+            "school",
+            "username",
         )
         validators = [
             validators.UniqueTogetherValidator(
@@ -869,11 +869,15 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
     Used by the UserSerializer to return the clubs that the user has sent request to.
     """
 
+    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
 
     class Meta:
         model = MembershipRequest
-        fields = ("club",)
+        fields = (
+            "club",
+            "person",
+        )
 
 
 class UserSerializer(serializers.ModelSerializer):

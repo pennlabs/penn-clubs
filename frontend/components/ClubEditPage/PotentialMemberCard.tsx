@@ -9,9 +9,14 @@ import BaseCard from './BaseCard'
 type PotentialMemberCard = {
   club: Club
   source?: 'subscription' | 'membershiprequests'
+  actions?: {
+    name: string
+    onClick: (id: string) => Promise<void>
+  }[]
 }
 
-type Subscription = {
+type Student = {
+  username: string
   name: string
   email: string
   graduation_year: number
@@ -27,14 +32,17 @@ type Subscription = {
 export default function PotentialMemberCard({
   club,
   source = 'subscription',
+  actions,
 }: PotentialMemberCard): ReactElement {
-  const [students, setStudents] = useState<Subscription[] | null>(null)
+  const [students, setStudents] = useState<Student[] | null>(null)
 
-  useEffect(() => {
+  const reloadList = () => {
     doApiRequest(`/clubs/${club.code}/${source}/?format=json`)
       .then((resp) => resp.json())
       .then(setStudents)
-  }, [])
+  }
+
+  useEffect(reloadList, [])
 
   if (students === null) {
     return <Loading />
@@ -58,6 +66,7 @@ export default function PotentialMemberCard({
             <th>School</th>
             <th>Major</th>
             <th>Subscribed</th>
+            {actions && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -83,11 +92,30 @@ export default function PotentialMemberCard({
               <td>
                 <TimeAgo date={item.created_at} />
               </td>
+              {actions && (
+                <td>
+                  <div className="buttons">
+                    {actions.map(({ name, onClick }) => (
+                      <div
+                        key={name}
+                        className="button is-primary is-small"
+                        onClick={() => {
+                          onClick(item.username).then(() => {
+                            reloadList()
+                          })
+                        }}
+                      >
+                        {name}
+                      </div>
+                    ))}
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
           {(students !== null && !!students.length) || (
             <tr>
-              <td colSpan={5} className="has-text-grey">
+              <td colSpan={actions ? 6 : 5} className="has-text-grey">
                 No one has {pastVerb} to this club yet.
               </td>
             </tr>

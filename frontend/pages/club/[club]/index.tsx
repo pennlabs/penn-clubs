@@ -79,22 +79,22 @@ const ClubPage = ({
 
   const updateRequests = (code: string): void => {
     const newClub = Object.assign({}, club)
-    if (!newClub.is_request) {
-      logEvent('request', code)
-      doApiRequest('/requests/?format=json', {
-        method: 'POST',
-        body: {
-          club: code,
-        },
-      })
-    } else {
-      logEvent('unrequest', code)
-      doApiRequest(`/requests/${code}/?format=json`, {
-        method: 'DELETE',
-      })
-    }
-    newClub.is_request = !newClub.is_request
-    setClub(newClub)
+    logEvent(!newClub.is_request ? 'request' : 'unrequest', code)
+    const req = !newClub.is_request
+      ? doApiRequest('/requests/?format=json', {
+          method: 'POST',
+          body: {
+            club: code,
+          },
+        })
+      : doApiRequest(`/requests/${code}/?format=json`, {
+          method: 'DELETE',
+        })
+
+    req.then(() => {
+      newClub.is_request = !newClub.is_request
+      setClub(newClub)
+    })
   }
 
   const { code } = club

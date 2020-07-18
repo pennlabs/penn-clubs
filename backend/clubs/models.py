@@ -293,7 +293,9 @@ class MembershipRequest(models.Model):
 
         context = {
             "club_name": self.club.name,
-            "edit_url": settings.EDIT_URL.format(domain=domain, club=self.club.code),
+            "edit_url": "{}#recruitment".format(
+                settings.EDIT_URL.format(domain=domain, club=self.club.code)
+            ),
             "full_name": self.person.get_full_name(),
         }
 
