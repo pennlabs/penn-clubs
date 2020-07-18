@@ -834,6 +834,16 @@ class MembershipRequestSerializer(serializers.ModelSerializer):
     def get_full_name(self, obj):
         return obj.person.get_full_name()
 
+    def create(self, validated_data):
+        """
+        Send an email when a membership request is created.
+        """
+        obj = super().create(validated_data)
+
+        obj.send_request(self.context["request"])
+
+        return obj
+
     class Meta:
         model = MembershipRequest
         fields = (

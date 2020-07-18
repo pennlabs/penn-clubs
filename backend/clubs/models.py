@@ -286,6 +286,30 @@ class MembershipRequest(models.Model):
             self.person.username, self.club.code, self.person.email
         )
 
+    def send_request(self, request=None):
+        domain = get_domain(request)
+
+        context = {
+            "club_name": self.club.name,
+            "edit_url": settings.EDIT_URL.format(domain=domain, club=self.club.code),
+            "full_name": self.person.get_full_name(),
+        }
+
+        owner_emails = list(
+            self.club.membership_set.filter(role__gte=Membership.ROLE_OFFICER).values_list(
+                "person__email"
+            )
+        )
+
+        send_mail_helper(
+            name="request",
+            subject="Membership Request from {} for {}".format(
+                self.person.get_full_name(), self.club.name
+            ),
+            emails=[owner_emails],
+            context=context,
+        )
+
     class Meta:
         unique_together = (("person", "club"),)
 
