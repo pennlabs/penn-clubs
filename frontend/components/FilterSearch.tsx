@@ -1,5 +1,5 @@
 import Fuse from 'fuse.js'
-import { useEffect, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import Select from 'react-select/async'
 import s from 'styled-components'
 
@@ -16,10 +16,11 @@ import {
   MD,
   mediaMaxWidth,
 } from '../constants/measurements'
+import { Tag } from '../types'
 import { Icon, SelectedTag } from './common'
 import { FilterHeader } from './DropdownFilter'
 
-const SearchWrapper = s.div`
+const SearchWrapper = s.div<{ active?: boolean }>`
   margin-bottom: 30px;
   max-height: 0;
   opacity: 0;
@@ -114,6 +115,7 @@ const Search = ({ selected = [], searchTags, recommendedTags, updateTag }) => {
   }
   return (
     <Select
+      instanceId="club-search"
       isMulti
       cacheOptions
       styles={styles}
@@ -135,7 +137,7 @@ const Search = ({ selected = [], searchTags, recommendedTags, updateTag }) => {
   )
 }
 
-const selectInitial = (tags = []) => {
+const selectInitial = (tags: FuseTag[] = []) => {
   return [
     {
       label: 'All tags',
@@ -144,7 +146,23 @@ const selectInitial = (tags = []) => {
   ]
 }
 
-const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
+type FuseTag = { value: number; label: string; count?: number }
+
+type FilterProps = {
+  active: boolean
+  toggleActive: () => void
+  tags: FuseTag[]
+  updateTag: any
+  selected: any
+}
+
+const Filter = ({
+  active,
+  toggleActive,
+  tags,
+  updateTag,
+  selected,
+}: FilterProps): ReactElement => {
   const filter = new Set()
   selected.forEach(({ value }) => filter.add(value))
   tags = tags
@@ -161,7 +179,7 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
     minMatchCharLength: 2,
     threshold: 0.2,
   }
-  const fuse = new Fuse(tags, fuseOptions)
+  const fuse = new Fuse<FuseTag, Fuse.FuseOptions<FuseTag>>(tags, fuseOptions)
 
   const [recommendedTags, setRecommendedTags] = useState(selectInitial(tags))
   const searchTags = async (query) => fuse.search(query)
@@ -172,12 +190,7 @@ const Filter = ({ active, toggleActive, tags, updateTag, selected }) => {
 
   return (
     <>
-      <FilterHeader
-        active={active}
-        color={CLUBS_BLUE}
-        name="Tags"
-        toggleActive={toggleActive}
-      />
+      <FilterHeader active={active} name="Tags" toggleActive={toggleActive} />
       <SearchWrapper active={active}>
         <Search
           selected={selected}

@@ -123,7 +123,7 @@ const MobileLine = s.hr`
 
 type SearchBarProps = {
   tags: Tag[]
-  updateTag: any
+  updateTag: (data: any, _: string) => void
   selectedTags: Tag[]
   resetDisplay: (nameInput: string, selectedTags: Tag[]) => void
 }
@@ -138,7 +138,7 @@ const SearchBar = ({
   const [activeDropdownFilter, setActiveDropdownFilter] = useState<
     string | null
   >(null)
-  const [selectedTags, setSelectedTags] = useState(propTags)
+  const [selectedTags, setSelectedTags] = useState<Tag[]>(propTags)
   const [timeout, storeTimeout] = useState<number | null>(null)
   const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
 
@@ -148,7 +148,7 @@ const SearchBar = ({
     storeTimeout(setTimeout(() => resetDisplay(nameInput, selectedTags), 200))
   }, [nameInput])
 
-  const toggleActiveDropdownFilter = (name) =>
+  const toggleActiveDropdownFilter = (name: string): void =>
     setActiveDropdownFilter(activeDropdownFilter === name ? null : name)
   const focus = () => inputRef.current && inputRef.current.focus()
 

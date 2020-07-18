@@ -1,9 +1,15 @@
 import Head from 'next/head'
-import { useEffect } from 'react'
+import { ReactElement, useEffect } from 'react'
 
 import { initGA, logPageView } from '../../utils/analytics'
 
-const Heading = () => {
+declare global {
+  interface Window {
+    GA_INITIALIZED: boolean
+  }
+}
+
+const Heading = (): ReactElement => {
   useEffect(() => {
     if (!window.GA_INITIALIZED) {
       initGA()
@@ -24,7 +30,7 @@ const Heading = () => {
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.0/css/bulma.min.css"
         integrity="sha256-aPeK/N8IHpHsvPBCf49iVKMdusfobKo2oxF8lRruWJg="
-        crossorigin="anonymous"
+        crossOrigin="anonymous"
       />
       <link
         href="https://fonts.googleapis.com/css?family=Roboto&display=swap"
