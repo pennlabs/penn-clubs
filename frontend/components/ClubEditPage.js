@@ -5,6 +5,8 @@ import Select from 'react-select'
 import TimeAgo from 'react-timeago'
 import s from 'styled-components'
 
+import BaseCard from '../components/ClubEditPage/BaseCard'
+import FilesCard from '../components/ClubEditPage/FilesCard'
 import { CLUB_FLYER_ROUTE, CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
 import { ClubApplicationRequired, ClubSize, MembershipRank } from '../types'
 import {
@@ -27,15 +29,6 @@ import {
 import AuthPrompt from './common/AuthPrompt'
 import Form, { ModelForm } from './Form'
 import TabView from './TabView'
-
-const Card = ({ children, title }) => (
-  <div className="card" style={{ marginBottom: 20 }}>
-    <div className="card-header">
-      <p className="card-header-title">{title}</p>
-    </div>
-    <div className="card-content">{children}</div>
-  </div>
-)
 
 const QRCode = s.img`
   display: block;
@@ -334,7 +327,6 @@ class ClubForm extends Component {
       editMember: null,
       subscriptions: [],
       deviceContents: {},
-      fileAlert: null,
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -801,7 +793,7 @@ class ClubForm extends Component {
           label: 'Membership',
           content: (
             <>
-              <Card title="Members">
+              <BaseCard title="Members">
                 <ModelForm
                   keyField="username"
                   deleteVerb="Kick"
@@ -846,7 +838,7 @@ class ClubForm extends Component {
                     <Icon alt="download" name="download" /> Download Member List
                   </a>
                 </div>
-              </Card>
+              </BaseCard>
               {invites && !!invites.length && (
                 <div className="card" style={{ marginBottom: 20 }}>
                   <div className="card-header">
@@ -960,7 +952,7 @@ class ClubForm extends Component {
           label: 'Subscriptions',
           content: (
             <>
-              <Card title="Subscribers">
+              <BaseCard title="Subscribers">
                 <table className="table is-fullwidth">
                   <thead>
                     <tr>
@@ -1017,7 +1009,7 @@ class ClubForm extends Component {
                     List
                   </a>
                 </div>
-              </Card>
+              </BaseCard>
             </>
           ),
         },
@@ -1026,7 +1018,7 @@ class ClubForm extends Component {
           label: 'Resources',
           content: (
             <>
-              <Card title="QR Code">
+              <BaseCard title="QR Code">
                 <Text>
                   When scanned, gives mobile-friendly access to your club page
                   and bookmark/subscribe actions.
@@ -1053,8 +1045,8 @@ class ClubForm extends Component {
                     </a>
                   </Link>
                 </div>
-              </Card>
-              <Card title="Member Experiences">
+              </BaseCard>
+              <BaseCard title="Member Experiences">
                 <Text>
                   Provide more information on what being in your organization is
                   like from a member's point of view.
@@ -1070,8 +1062,8 @@ class ClubForm extends Component {
                     },
                   ]}
                 />
-              </Card>
-              <Card title="Events">
+              </BaseCard>
+              <BaseCard title="Events">
                 <Text>Manage events for this club.</Text>
                 <ModelForm
                   baseUrl={`/clubs/${club.code}/events/`}
@@ -1082,80 +1074,8 @@ class ClubForm extends Component {
                   onChange={(obj) => this.setState({ deviceContents: obj })}
                 />
                 <Devices contents={deviceContents} />
-              </Card>
-              <Card title="Files">
-                <table className="table is-fullwidth">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {club && club.files && club.files.length ? (
-                      club.files.map((a) => (
-                        <tr key={a.name}>
-                          <td>{a.name}</td>
-                          <td>
-                            <div className="buttons">
-                              <button
-                                className="button is-small is-danger"
-                                onClick={() =>
-                                  doApiRequest(
-                                    `/clubs/${club.code}/assets/${a.id}/?format=json`,
-                                    { method: 'DELETE' },
-                                  ).then(() =>
-                                    this.setState({
-                                      fileAlert: 'File has been deleted!',
-                                    }),
-                                  )
-                                }
-                              >
-                                <Icon name="x" alt="delete file" /> Delete
-                              </button>
-                              <a
-                                href={`/api/clubs/${club.code}/assets/${a.id}/`}
-                                target="_blank"
-                                className="button is-small is-primary"
-                              >
-                                <Icon name="download" alt="download file" />{' '}
-                                Download
-                              </a>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="2" className="has-text-grey">
-                          There are no uploaded files for this club.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                {this.state.fileAlert && (
-                  <div className="notification is-primary">
-                    {this.state.fileAlert}
-                  </div>
-                )}
-                <Form
-                  fields={[{ name: 'file', type: 'file' }]}
-                  onSubmit={(data) => {
-                    doApiRequest(
-                      `/clubs/${club.code}/upload_file/?format=json`,
-                      {
-                        method: 'POST',
-                        body: data.file,
-                      },
-                    )
-                      .then((resp) => resp.json())
-                      .then((resp) => {
-                        this.setState({ fileAlert: resp.detail })
-                      })
-                  }}
-                />
-              </Card>
+              </BaseCard>
+              <FilesCard />
             </>
           ),
         },

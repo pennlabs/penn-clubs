@@ -75,36 +75,42 @@ export interface QuestionAnswer {
 }
 
 export interface Club {
-  name: string
-  image_url: string
-  code: string
-  active: boolean
-  approved: boolean | null
   accepting_members: boolean
+  active: boolean
   application_required: ClubApplicationRequired
+  approved: boolean | null
+  badges: [Badge]
+  code: string
   description: string
+  email: string
+  events: [ClubEvent]
+  facebook: string
+  favorite_count: number
+  files: File[]
+  github: string
+  how_to_get_involved: string
+  image_url: string
+  instagram: string
+  is_favorite: boolean
+  is_member: MembershipRank | false
+  is_request: boolean
+  is_subscribe: boolean
+  linkedin: string
+  listserv: string
+  members: [Membership]
+  name: string
+  questions: [QuestionAnswer]
+  size: ClubSize
   subtitle: string
   tags: [Tag]
-  badges: [Badge]
-  events: [ClubEvent]
   testimonials: [Testimonial]
-  members: [Membership]
-  size: ClubSize
-  email: string
-  facebook: string
-  website: string
   twitter: string
-  instagram: string
-  linkedin: string
-  github: string
-  listserv: string
-  how_to_get_involved: string
-  questions: [QuestionAnswer]
-  favorite_count: number
-  is_member: MembershipRank | false
-  is_favorite: boolean
-  is_subscribe: boolean
-  is_request: boolean
+  website: string
+}
+
+export interface File {
+  id: number
+  name: string
 }
 
 export interface UserInfo {
