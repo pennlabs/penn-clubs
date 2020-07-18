@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { SingletonRouter } from 'next/router'
 import { Component, ReactElement } from 'react'
 
+import BaseCard from '../components/ClubEditPage/BaseCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
 import InviteCard from '../components/ClubEditPage/InviteCard'
@@ -501,80 +502,70 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           label: 'Settings',
           content: (
             <>
-              <div className="card" style={{ marginBottom: 20 }}>
-                <div className="card-header">
-                  <p className="card-header-title">
-                    {club && club.active ? 'Deactivate' : 'Reactivate'} Club
-                  </p>
-                </div>
-                <div className="card-content">
-                  {club && club.active ? (
-                    <Text>
-                      Mark this organization as inactive. This will hide the
-                      club from various listings and indicate to the public that
-                      the club is no longer active.
-                    </Text>
-                  ) : (
-                    <Text>
-                      Reactivate this club, indicating to the public that this
-                      club is currently active and running.
-                    </Text>
-                  )}
+              <BaseCard
+                title={`
+                    ${club && club.active ? 'Deactivate' : 'Reactivate'} Club`}
+              >
+                {club && club.active ? (
                   <Text>
-                    Only owners of the organization may perform this action.
+                    Mark this organization as inactive. This will hide the club
+                    from various listings and indicate to the public that the
+                    club is no longer active.
                   </Text>
-                  <div className="buttons">
-                    <a
-                      className={
-                        'button is-medium ' +
-                        (club && club.active ? 'is-danger' : 'is-success')
-                      }
-                      onClick={() => this.toggleClubActive()}
-                    >
-                      {club && club.active ? (
-                        <span>
-                          <Icon name="trash" alt="deactivate" /> Deactivate
-                        </span>
-                      ) : (
-                        <span>
-                          <Icon name="plus" alt="Reactivate" /> Reactivate
-                        </span>
-                      )}
-                    </a>
-                  </div>
-                </div>
-              </div>
-              <div className="card">
-                <div className="card-header">
-                  <p className="card-header-title">Delete Club</p>
-                </div>
-                <div className="card-content">
+                ) : (
                   <Text>
-                    Remove this club entry from Penn Clubs.{' '}
-                    <b className="has-text-danger">
-                      This action is permanent and irreversible!
-                    </b>{' '}
-                    All club history and membership information will be
-                    permanently lost. In almost all cases, you want to
-                    deactivate this club instead.
+                    Reactivate this club, indicating to the public that this
+                    club is currently active and running.
                   </Text>
-                  <div className="buttons">
-                    {club && !club.active ? (
-                      <a
-                        className="button is-danger is-medium"
-                        onClick={() => this.deleteClub()}
-                      >
-                        <Icon name="trash" alt="delete" /> Delete Club
-                      </a>
+                )}
+                <Text>
+                  Only owners of the organization may perform this action.
+                </Text>
+                <div className="buttons">
+                  <a
+                    className={
+                      'button is-medium ' +
+                      (club && club.active ? 'is-danger' : 'is-success')
+                    }
+                    onClick={() => this.toggleClubActive()}
+                  >
+                    {club && club.active ? (
+                      <span>
+                        <Icon name="trash" alt="deactivate" /> Deactivate
+                      </span>
                     ) : (
-                      <b>
-                        You must deactivate this club before enabling this
-                        button.
-                      </b>
+                      <span>
+                        <Icon name="plus" alt="Reactivate" /> Reactivate
+                      </span>
                     )}
-                  </div>
+                  </a>
                 </div>
-              </div>
+              </BaseCard>
+              <BaseCard title="Delete Club">
+                <Text>
+                  Remove this club entry from Penn Clubs.{' '}
+                  <b className="has-text-danger">
+                    This action is permanent and irreversible!
+                  </b>{' '}
+                  All club history and membership information will be
+                  permanently lost. In almost all cases, you want to deactivate
+                  this club instead.
+                </Text>
+                <div className="buttons">
+                  {club && !club.active ? (
+                    <a
+                      className="button is-danger is-medium"
+                      onClick={() => this.deleteClub()}
+                    >
+                      <Icon name="trash" alt="delete" /> Delete Club
+                    </a>
+                  ) : (
+                    <b>
+                      You must deactivate this club before enabling this button.
+                    </b>
+                  )}
+                </div>
+              </BaseCard>
             </>
           ),
           disabled: !isEdit,
