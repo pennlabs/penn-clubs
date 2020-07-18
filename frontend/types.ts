@@ -111,6 +111,7 @@ export interface Club {
 export interface File {
   id: number
   name: string
+  created_at: string
 }
 
 export interface UserInfo {

@@ -1,6 +1,7 @@
 import { ReactElement, useState } from 'react'
+import TimeAgo from 'react-timeago'
 
-import { Club } from '../../types'
+import { Club, File } from '../../types'
 import { doApiRequest } from '../../utils'
 import { Icon } from '../common'
 import Form from '../Form'
@@ -11,7 +12,13 @@ type FilesCardProps = {
 }
 
 export default function FilesCard({ club }: FilesCardProps): ReactElement {
-  const [fileAlert, setFileAlert] = useState<string | null>(null)
+  const [files, setFiles] = useState<File[]>(club.files)
+
+  const reloadFiles = () => {
+    doApiRequest(`/clubs/${club.code}/assets/?format=json`)
+      .then((resp) => resp.json())
+      .then(setFiles)
+  }
 
   return (
     <BaseCard title="Files">
@@ -19,14 +26,18 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
         <thead>
           <tr>
             <th>Name</th>
+            <th>Date Uploaded</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {club && club.files && club.files.length ? (
-            club.files.map((a) => (
-              <tr key={a.name}>
+          {files && files.length ? (
+            files.map((a) => (
+              <tr key={`${a.id}-${a.name}`}>
                 <td>{a.name}</td>
+                <td>
+                  <TimeAgo date={a.created_at} />
+                </td>
                 <td>
                   <div className="buttons">
                     <button
@@ -35,7 +46,9 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
                         doApiRequest(
                           `/clubs/${club.code}/assets/${a.id}/?format=json`,
                           { method: 'DELETE' },
-                        ).then(() => setFileAlert('File has been deleted!'))
+                        ).then(() => {
+                          reloadFiles()
+                        })
                       }
                     >
                       <Icon name="x" alt="delete file" /> Delete
@@ -53,14 +66,13 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
             ))
           ) : (
             <tr>
-              <td colSpan={2} className="has-text-grey">
+              <td colSpan={3} className="has-text-grey">
                 There are no uploaded files for this club.
               </td>
             </tr>
           )}
         </tbody>
       </table>
-      {fileAlert && <div className="notification is-primary">{fileAlert}</div>}
       <Form
         fields={[{ name: 'file', type: 'file' }]}
         onSubmit={(data) => {
@@ -70,7 +82,7 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
           })
             .then((resp) => resp.json())
             .then((resp) => {
-              setFileAlert(resp.detail)
+              reloadFiles()
             })
         }}
       />

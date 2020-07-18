@@ -974,7 +974,7 @@ class AssetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Asset
-        fields = ("id", "file_url", "file", "creator", "club", "name")
+        fields = ("id", "file_url", "file", "creator", "club", "name", "created_at")
 
 
 class AuthenticatedClubSerializer(ClubSerializer):
