@@ -9,7 +9,7 @@ The REST API written in Django for Penn Clubs infrastructure.
 ## Installation
 You will need to start both the backend and the frontend to do Penn Clubs development.
 
-Developing on Windows? Check out our [extended guide](https://github.com/pennlabs/penn-clubs/wiki/Windows-Development).
+Developing on Windows? Check out our [extended guide](https://github.com/pennlabs/penn-clubs/wiki/Development-Guide#windows-development).
 
 ### Backend
 
