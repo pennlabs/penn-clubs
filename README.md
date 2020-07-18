@@ -9,6 +9,8 @@ The REST API written in Django for Penn Clubs infrastructure.
 ## Installation
 You will need to start both the backend and the frontend to do Penn Clubs development.
 
+Developing on Windows? Check out our [extended guide](https://github.com/pennlabs/penn-clubs/wiki/Windows-Development).
+
 ### Backend
 
 Running the backend requires [Python 3](https://www.python.org/downloads/).
@@ -48,13 +50,6 @@ Running the frontend requires [Node.js](https://nodejs.org/en/) and [Yarn](https
 4. Access application at [http://localhost:3000](http://localhost:3000).
 
 ### Development
-
-This repository contains several symlinks.
-If you are using Windows, you will need to perform additional steps to ensure they are properly reproduced in your development environment. No action is necessary for MacOS and Linux.
-You may have to enable symlinks globally by editing your git config file, or enable symlinks only for this repo by cloning with the `-c core.symlinks=true` flag, like so:
-```bash
-git clone -c core.symlinks=true git@github.com:pennlabs/penn-clubs.git
-```
 
 Click `Login` to log in as a test user.
 To grant all users in the database superuser privileges for development:
