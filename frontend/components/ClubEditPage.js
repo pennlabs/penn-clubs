@@ -334,6 +334,7 @@ class ClubForm extends Component {
       editMember: null,
       subscriptions: [],
       deviceContents: {},
+      fileAlert: null,
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
@@ -1095,14 +1096,32 @@ class ClubForm extends Component {
                       club.files.map((a) => (
                         <tr key={a.name}>
                           <td>{a.name}</td>
-                          <td className="buttons">
-                            <button className="button is-small is-danger">
-                              <Icon name="times" alt="delete file" /> Delete
-                            </button>
-                            <button className="button is-small is-primary">
-                              <Icon name="download" alt="download file" />{' '}
-                              Download
-                            </button>
+                          <td>
+                            <div className="buttons">
+                              <button
+                                className="button is-small is-danger"
+                                onClick={() =>
+                                  doApiRequest(
+                                    `/clubs/${club.code}/assets/${a.id}/?format=json`,
+                                    { method: 'DELETE' },
+                                  ).then(() =>
+                                    this.setState({
+                                      fileAlert: 'File has been deleted!',
+                                    }),
+                                  )
+                                }
+                              >
+                                <Icon name="x" alt="delete file" /> Delete
+                              </button>
+                              <a
+                                href={`/api/clubs/${club.code}/assets/${a.id}/`}
+                                target="_blank"
+                                className="button is-small is-primary"
+                              >
+                                <Icon name="download" alt="download file" />{' '}
+                                Download
+                              </a>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -1115,6 +1134,27 @@ class ClubForm extends Component {
                     )}
                   </tbody>
                 </table>
+                {this.state.fileAlert && (
+                  <div className="notification is-primary">
+                    {this.state.fileAlert}
+                  </div>
+                )}
+                <Form
+                  fields={[{ name: 'file', type: 'file' }]}
+                  onSubmit={(data) => {
+                    doApiRequest(
+                      `/clubs/${club.code}/upload_file/?format=json`,
+                      {
+                        method: 'POST',
+                        body: data.file,
+                      },
+                    )
+                      .then((resp) => resp.json())
+                      .then((resp) => {
+                        this.setState({ fileAlert: resp.detail })
+                      })
+                  }}
+                />
               </Card>
             </>
           ),

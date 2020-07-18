@@ -743,17 +743,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         ]
 
 
-class AuthenticatedClubSerializer(ClubSerializer):
-    """
-    Provides additional information about the club to members in the club.
-    """
-
-    members = AuthenticatedMembershipSerializer(many=True, source="membership_set", read_only=True)
-
-    class Meta(ClubSerializer.Meta):
-        pass
-
-
 class FavoriteSerializer(serializers.ModelSerializer):
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(
@@ -978,6 +967,18 @@ class AssetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = ("id", "file_url", "file", "creator", "club", "name")
+
+
+class AuthenticatedClubSerializer(ClubSerializer):
+    """
+    Provides additional information about the club to members in the club.
+    """
+
+    members = AuthenticatedMembershipSerializer(many=True, source="membership_set", read_only=True)
+    files = AssetSerializer(many=True, source="asset_set", read_only=True)
+
+    class Meta(ClubSerializer.Meta):
+        fields = ClubSerializer.Meta.fields + ["files"]
 
 
 class NoteTagSerializer(serializers.ModelSerializer):

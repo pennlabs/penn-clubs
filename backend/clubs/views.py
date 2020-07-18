@@ -76,6 +76,22 @@ from clubs.serializers import (
 from clubs.utils import html_to_text
 
 
+def file_upload_endpoint_helper(request, code):
+    obj = get_object_or_404(Club, code=code)
+    if "file" in request.data and isinstance(request.data["file"], UploadedFile):
+        asset = Asset.objects.create(
+            creator=request.user,
+            club=obj,
+            file=request.data["file"],
+            name=request.data["file"].name,
+        )
+    else:
+        return Response(
+            {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST
+        )
+    return Response({"detail": "Club file uploaded!", "id": asset.id})
+
+
 def upload_endpoint_helper(request, cls, field, **kwargs):
     obj = get_object_or_404(cls, **kwargs)
     if "file" in request.data and isinstance(request.data["file"], UploadedFile):
@@ -83,7 +99,9 @@ def upload_endpoint_helper(request, cls, field, **kwargs):
         setattr(obj, field, request.data["file"])
         obj.save()
     else:
-        return Response({"file": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST
+        )
     return Response({"detail": "Club image uploaded!"})
 
 
@@ -232,6 +250,13 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Upload the club logo.
         """
         return upload_endpoint_helper(request, Club, "image", code=kwargs["code"])
+
+    @action(detail=True, methods=["post"])
+    def upload_file(self, request, *args, **kwargs):
+        """
+        Upload a file for the club.
+        """
+        return file_upload_endpoint_helper(request, code=kwargs["code"])
 
     @action(detail=True, methods=["get"])
     def children(self, request, *args, **kwargs):
@@ -647,7 +672,7 @@ class AssetViewSet(viewsets.ModelViewSet):
     Return a list of files that belong to this club.
 
     retrieve:
-    Retrieve information about a specific file that belongs to this club.
+    Retrieve the contents of the specific file that belongs to this club.
 
     create:
     Upload a new file to the club file repository.
@@ -660,6 +685,12 @@ class AssetViewSet(viewsets.ModelViewSet):
     permission_classes = [AssetPermission | IsSuperuser]
     parser_classes = [parsers.MultiPartParser]
     http_method_names = ["get", "post", "delete"]
+
+    def retrieve(self, request, *args, **kwargs):
+        obj = self.get_object()
+        resp = HttpResponse(obj.file, content_type="application/octet-stream")
+        resp["Content-Disposition"] = "attachment; filename={}".format(obj.name)
+        return resp
 
     def get_queryset(self):
         return Asset.objects.filter(club__code=self.kwargs["club_code"])
