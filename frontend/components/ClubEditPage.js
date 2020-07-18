@@ -1136,6 +1136,12 @@ class ClubForm extends Component {
                     the person who answered the question.
                   </p>
                   <ModelForm
+                    empty={
+                      <Empty>
+                        No students have asked any questions yet. Check back
+                        later!
+                      </Empty>
+                    }
                     baseUrl={`/clubs/${club.code}/questions/`}
                     allowCreation={false}
                     initialData={club.questions}

@@ -949,6 +949,7 @@ export class ModelForm extends Component {
             <Icon name="plus" alt="create" /> Create
           </span>
         )}
+        {objects.length === 0 && this.props.empty}
       </>
     )
   }

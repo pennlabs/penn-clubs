@@ -31,11 +31,11 @@ const Wrapper = s.div<WrapperProps>`
   }
 
   ${mediaMinWidth(LG)} {
-    ${getPadding(15)}
+    ${getPadding(10)}
   }
 
   ${mediaMinWidth(XL)} {
-    ${getPadding(25)}
+    ${getPadding(20)}
   }
 
   ${({ fullHeight }) =>
