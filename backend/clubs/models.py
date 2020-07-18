@@ -15,6 +15,19 @@ from phonenumber_field.modelfields import PhoneNumberField
 from clubs.utils import get_domain, html_to_text
 
 
+def send_mail_helper(name, subject, emails, context):
+    """
+    A helper to send out an email given the template name, subject, to emails, and context.
+    """
+    html_content = render_to_string("emails/{}.html".format(name), context)
+    text_content = html_to_text(html_content)
+
+    msg = EmailMultiAlternatives(subject, text_content, settings.FROM_EMAIL, emails)
+
+    msg.attach_alternative(html_content, "text/html")
+    msg.send(fail_silently=False)
+
+
 def get_asset_file_name(instance, fname):
     return os.path.join("assets", uuid.uuid4().hex, fname)
 
@@ -171,18 +184,12 @@ class QuestionAnswer(models.Model):
             "url": settings.QUESTION_URL.format(domain=domain, club=self.club.code),
         }
 
-        html_content = render_to_string("emails/question.html", context)
-        text_content = html_to_text(html_content)
-
-        msg = EmailMultiAlternatives(
-            "Question for {}".format(self.club.name),
-            text_content,
-            settings.FROM_EMAIL,
-            owner_emails,
+        send_mail_helper(
+            name="question",
+            subject="Question for {}".format(self.club.name),
+            emails=owner_emails,
+            context=context,
         )
-
-        msg.attach_alternative(html_content, "text/html")
-        msg.send(fail_silently=False)
 
 
 class Testimonial(models.Model):
@@ -460,17 +467,13 @@ class MembershipInvite(models.Model):
                 domain=domain, id=self.id, token=self.token, club=self.club.code
             ),
         }
-        html_content = render_to_string("emails/invite.html", context)
-        text_content = html_to_text(html_content)
 
-        msg = EmailMultiAlternatives(
-            "Invitation to {}".format(self.club.name),
-            text_content,
-            settings.FROM_EMAIL,
-            [self.email],
+        send_mail_helper(
+            name="invite",
+            subject="Invitation to {}".format(self.club.name),
+            emails=[self.email],
+            context=context,
         )
-        msg.attach_alternative(html_content, "text/html")
-        msg.send(fail_silently=False)
 
     def send_owner_invite(self, request=None):
         """
@@ -490,14 +493,10 @@ class MembershipInvite(models.Model):
                 domain=domain, id=self.id, token=self.token, club=self.club.code
             ),
         }
-        html_content = render_to_string("emails/owner.html", context)
-        text_content = html_to_text(html_content)
 
-        msg = EmailMultiAlternatives(
-            "Welcome to Penn Clubs!", text_content, settings.FROM_EMAIL, [self.email]
+        send_mail_helper(
+            name="owner", subject="Welcome to Penn Clubs!", emails=[self.email], context=context
         )
-        msg.attach_alternative(html_content, "text/html")
-        msg.send(fail_silently=False)
 
 
 class Tag(models.Model):
