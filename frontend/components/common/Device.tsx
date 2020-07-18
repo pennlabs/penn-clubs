@@ -1,6 +1,16 @@
 import Head from 'next/head'
+import { CSSProperties, ReactElement } from 'react'
 
-export const Device = ({ children, style, type = 'iphone' }) => (
+type DeviceProps = React.PropsWithChildren<{
+  style?: CSSProperties
+  type: 'iphone' | 'android'
+}>
+
+export const Device = ({
+  children,
+  style,
+  type = 'iphone',
+}: DeviceProps): ReactElement => (
   <>
     <Head>
       <link
