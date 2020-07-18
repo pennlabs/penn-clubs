@@ -20,7 +20,7 @@ import {
 import { BODY_FONT } from '../constants/styles'
 import { Tag } from '../types'
 import { Icon } from './common'
-import DropdownFilter from './DropdownFilter'
+import DropdownFilter, { SelectableTag } from './DropdownFilter'
 import FilterSearch from './FilterSearch'
 
 const MobileSearchBarSpacer = s.div`
@@ -123,9 +123,9 @@ const MobileLine = s.hr`
 
 type SearchBarProps = {
   tags: Tag[]
-  updateTag: (data: any, _: string) => void
-  selectedTags: Tag[]
-  resetDisplay: (nameInput: string, selectedTags: Tag[]) => void
+  updateTag: (data: SelectableTag, name: string) => void
+  selectedTags: SelectableTag[]
+  resetDisplay: (nameInput: string, selectedTags: SelectableTag[]) => void
 }
 
 const SearchBar = ({
@@ -138,7 +138,7 @@ const SearchBar = ({
   const [activeDropdownFilter, setActiveDropdownFilter] = useState<
     string | null
   >(null)
-  const [selectedTags, setSelectedTags] = useState<Tag[]>(propTags)
+  const [selectedTags, setSelectedTags] = useState<SelectableTag[]>(propTags)
   const [timeout, storeTimeout] = useState<number | null>(null)
   const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
 

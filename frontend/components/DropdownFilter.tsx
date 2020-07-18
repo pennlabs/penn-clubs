@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import {
@@ -59,7 +60,7 @@ const TableRow = s.tr`
   cursor: pointer;
 `
 
-const TableWrapper = s.div`
+const TableWrapper = s.div<{ active?: boolean }>`
   max-height: 0;
   opacity: 0;
   overflow: hidden;
@@ -88,7 +89,7 @@ const TableContainer = s.div`
   }
 `
 
-const Chevron = s(Icon)`
+const Chevron = s(Icon)<{ open?: boolean }>`
   cursor: pointer;
   color: ${CLUBS_GREY};
   transform: rotate(0deg) translateY(0);
@@ -109,12 +110,22 @@ const DropdownHeaderText = s.p`
   margin-bottom: 0;
 `
 
+type FilterHeaderProps = {
+  active: boolean
+  name: string
+  toggleActive: () => void
+}
+
 // TODO: export out into separate component?
-export const FilterHeader = ({ active, name, toggleActive }) => (
+export const FilterHeader = ({
+  active,
+  name,
+  toggleActive,
+}: FilterHeaderProps): ReactElement => (
   <>
     <Line />
     <DropdownHeader onClick={() => toggleActive()}>
-      <DropdownHeaderText active={active}>{name}</DropdownHeaderText>
+      <DropdownHeaderText>{name}</DropdownHeaderText>
       <Chevron
         name="chevron-down"
         alt="toggle dropdown"
@@ -125,6 +136,22 @@ export const FilterHeader = ({ active, name, toggleActive }) => (
   </>
 )
 
+export type SelectableTag = {
+  value: string
+  label: string
+  name: string
+  count?: number
+}
+
+type DropdownFilterProps = {
+  name: string
+  active: boolean
+  selected: SelectableTag[]
+  toggleActive: () => void
+  options: SelectableTag[]
+  updateTag: (tag: SelectableTag, name: string) => void
+}
+
 const DropdownFilter = ({
   selected,
   name,
@@ -132,13 +159,13 @@ const DropdownFilter = ({
   updateTag,
   active,
   toggleActive,
-}) => {
+}: DropdownFilterProps): ReactElement => {
   /**
    * Returns if the supplied tag is in the list of selected tags
    *
    * @param {{value: string}} tag
    */
-  const isSelected = (tag) => {
+  const isSelected = (tag: SelectableTag): boolean => {
     const { value } = tag
     return Boolean(selected.find((tag) => tag.value === value))
   }
@@ -152,7 +179,7 @@ const DropdownFilter = ({
         <TableContainer>
           <table>
             <tbody>
-              {options.map((tag) => (
+              {options.map((tag: SelectableTag) => (
                 <TableRow
                   key={tag.label}
                   onClick={() => {

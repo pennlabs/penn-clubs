@@ -5,7 +5,6 @@ import s from 'styled-components'
 
 import {
   BORDER,
-  CLUBS_BLUE,
   CLUBS_GREY,
   FOCUS_GRAY,
   MEDIUM_GRAY,
@@ -16,7 +15,6 @@ import {
   MD,
   mediaMaxWidth,
 } from '../constants/measurements'
-import { Tag } from '../types'
 import { Icon, SelectedTag } from './common'
 import { FilterHeader } from './DropdownFilter'
 
@@ -56,7 +54,19 @@ const SearchIcon = s(Icon)`
   }
 `
 
-const Search = ({ selected = [], searchTags, recommendedTags, updateTag }) => {
+type SearchProps = {
+  selected: FuseTag[]
+  searchTags: (query: string) => Promise<any[]>
+  recommendedTags: { label: string; options: FuseTag[] }[]
+  updateTag: (tag: FuseTag, name: string) => void
+}
+
+const Search = ({
+  selected = [],
+  searchTags,
+  recommendedTags,
+  updateTag,
+}: SearchProps): ReactElement => {
   // Custom styles for the react-select
   const styles = {
     control: ({ background, ...base }, { isFocused, isSelected }) => {
@@ -146,14 +156,14 @@ const selectInitial = (tags: FuseTag[] = []) => {
   ]
 }
 
-type FuseTag = { value: number; label: string; count?: number }
+type FuseTag = { value: number; label: string; count?: number; name: string }
 
 type FilterProps = {
   active: boolean
   toggleActive: () => void
   tags: FuseTag[]
-  updateTag: any
-  selected: any
+  updateTag: (tag: FuseTag, name: string) => void
+  selected: FuseTag[]
 }
 
 const Filter = ({
