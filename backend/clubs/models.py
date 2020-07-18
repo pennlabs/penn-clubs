@@ -278,6 +278,8 @@ class MembershipRequest(models.Model):
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
 
+    withdrew = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -31,6 +31,7 @@ import { M0, M2, M3 } from '../../../constants/measurements'
 import renderPage from '../../../renderPage'
 import { Club, UserInfo } from '../../../types'
 import { doApiRequest } from '../../../utils'
+import { logEvent } from '../../../utils/analytics'
 
 const Image = s.img`
   height: 86px;
@@ -51,7 +52,6 @@ type ClubPageProps = {
   userInfo: UserInfo
   updateFavorites: (code: string) => boolean
   updateSubscriptions: (code: string) => void
-  updateRequests: (code: string) => void
 }
 
 const ClubPage = ({
@@ -59,7 +59,6 @@ const ClubPage = ({
   userInfo,
   updateFavorites,
   updateSubscriptions,
-  updateRequests,
 }: ClubPageProps): ReactElement => {
   const router = useRouter()
   const [club, setClub] = useState<Club>(initialClub)
@@ -78,11 +77,24 @@ const ClubPage = ({
     updateSubscriptions(code)
   }
 
-  const _updateRequests = (code: string): void => {
+  const updateRequests = (code: string): void => {
     const newClub = Object.assign({}, club)
+    if (!newClub.is_request) {
+      logEvent('request', code)
+      doApiRequest('/requests/?format=json', {
+        method: 'POST',
+        body: {
+          club: code,
+        },
+      })
+    } else {
+      logEvent('unrequest', code)
+      doApiRequest(`/requests/${code}/?format=json`, {
+        method: 'DELETE',
+      })
+    }
     newClub.is_request = !newClub.is_request
     setClub(newClub)
-    updateRequests(code)
   }
 
   const { code } = club
@@ -174,7 +186,7 @@ const ClubPage = ({
             userInfo={userInfo}
             updateFavorites={_updateFavorites}
             updateSubscriptions={_updateSubscriptions}
-            updateRequests={_updateRequests}
+            updateRequests={updateRequests}
           />
           <StyledCard bordered>
             <Description club={club} />
@@ -190,7 +202,7 @@ const ClubPage = ({
             userInfo={userInfo}
             updateFavorites={_updateFavorites}
             updateSubscriptions={_updateSubscriptions}
-            updateRequests={_updateRequests}
+            updateRequests={updateRequests}
           />
           <StyledCard bordered>
             <StrongText>Basic Info</StrongText>

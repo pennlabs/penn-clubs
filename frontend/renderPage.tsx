@@ -51,10 +51,8 @@ function renderPage(Page) {
       this.checkAuth = this.checkAuth.bind(this)
       this._updateFavorites = this._updateFavorites.bind(this)
       this._updateSubscriptions = this._updateSubscriptions.bind(this)
-      this._updateRequests = this._updateRequests.bind(this)
       this.updateFavorites = this.updateFavorites.bind(this)
       this.updateSubscriptions = this.updateSubscriptions.bind(this)
-      this.updateRequests = this.updateRequests.bind(this)
       this.updateUserInfo = this.updateUserInfo.bind(this)
     }
 
@@ -71,7 +69,6 @@ function renderPage(Page) {
           updateFavorites,
           updateUserInfo,
           updateSubscriptions,
-          updateRequests,
         } = this
         const { modal } = state
         const { authenticated, userInfo } = props
@@ -92,7 +89,6 @@ function renderPage(Page) {
                 {...state}
                 updateFavorites={updateFavorites}
                 updateSubscriptions={updateSubscriptions}
-                updateRequests={updateRequests}
                 updateUserInfo={updateUserInfo}
               />
             </Wrapper>
@@ -173,33 +169,6 @@ function renderPage(Page) {
         })
       }
       this.setState({ subscriptions: newSubs })
-      return i === -1
-    }
-
-    updateRequests(id) {
-      return this.checkAuth(this._updateRequests, id)
-    }
-
-    _updateRequests(id) {
-      const { requests: newReqs } = this.state
-      const i = newReqs.indexOf(id)
-      if (i === -1) {
-        newReqs.push(id)
-        logEvent('request', id)
-        doApiRequest('/requests/?format=json', {
-          method: 'POST',
-          body: {
-            club: id,
-          },
-        })
-      } else {
-        newReqs.splice(i, 1)
-        logEvent('unsubscribe', id)
-        doApiRequest(`/requests/${id}/?format=json`, {
-          method: 'DELETE',
-        })
-      }
-      this.setState({ requests: newReqs })
       return i === -1
     }
 

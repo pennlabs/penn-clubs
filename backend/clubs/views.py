@@ -70,6 +70,7 @@ from clubs.serializers import (
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
+    UserMembershipRequestSerializer,
     UserSerializer,
     YearSerializer,
 )
@@ -591,13 +592,39 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
     destroy: Deleted a membership request from a club.
     """
 
-    serializer_class = MembershipRequestSerializer
+    serializer_class = UserMembershipRequestSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "club__code"
     http_method_names = ["get", "post", "delete"]
 
+    def create(self, request, *args, **kwargs):
+        """
+        If a membership request object already exists, reuse it.
+        """
+        club = request.data.get("club", None)
+        obj = MembershipRequest.objects.filter(club__code=club, person=request.user).first()
+        if obj is not None:
+            obj.withdrew = False
+            obj.save(update_fields=["withdrew"])
+            return Response(UserMembershipRequestSerializer(obj).data)
+
+        return super().create(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Don't actually delete the membership request when it is withdrawn.
+
+        This is to keep track of repeat membership requests and avoid spamming the club owners
+        with requests.
+        """
+        obj = self.get_object()
+        obj.withdrew = True
+        obj.save(update_fields=["withdrew"])
+
+        return Response({"success": True})
+
     def get_queryset(self):
-        return MembershipRequest.objects.filter(person=self.request.user)
+        return MembershipRequest.objects.filter(person=self.request.user, withdrew=False)
 
 
 class MembershipRequestOwnerViewSet(viewsets.ModelViewSet):
@@ -612,7 +639,7 @@ class MembershipRequestOwnerViewSet(viewsets.ModelViewSet):
     lookup_field = "person__username"
 
     def get_queryset(self):
-        return MembershipRequest.objects.filter(club__code=self.kwargs["club_code"])
+        return MembershipRequest.objects.filter(club__code=self.kwargs["club_code"], withdrew=False)
 
     @action(detail=True, methods=["post"])
     def accept(self, request, *ages, **kwargs):
