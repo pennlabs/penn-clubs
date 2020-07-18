@@ -137,7 +137,7 @@ export const FilterHeader = ({
 )
 
 export type SelectableTag = {
-  value: string
+  value: number | string
   label: string
   name: string
   count?: number

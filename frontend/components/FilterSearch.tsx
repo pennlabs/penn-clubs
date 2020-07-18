@@ -156,7 +156,12 @@ const selectInitial = (tags: FuseTag[] = []) => {
   ]
 }
 
-type FuseTag = { value: number; label: string; count?: number; name: string }
+type FuseTag = {
+  value: number | string
+  label: string
+  count?: number
+  name?: string
+}
 
 type FilterProps = {
   active: boolean
@@ -192,7 +197,7 @@ const Filter = ({
   const fuse = new Fuse<FuseTag, Fuse.FuseOptions<FuseTag>>(tags, fuseOptions)
 
   const [recommendedTags, setRecommendedTags] = useState(selectInitial(tags))
-  const searchTags = async (query) => fuse.search(query)
+  const searchTags = async (query: string) => fuse.search(query)
 
   useEffect(() => {
     setRecommendedTags(selectInitial(tags))
