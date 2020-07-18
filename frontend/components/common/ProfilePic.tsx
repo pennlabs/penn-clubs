@@ -31,10 +31,10 @@ const Placeholder = s.div<{
   align-items: center;
 
   font-size: ${({ fontSize }) => fontSize || '1.5em'};
-  ${({ isRound }) => (isRound ? 'border-radius: 9999px;' : '')}
+  ${({ isRound }) => (isRound ? 'border-radius: 9999px;' : '')};
   background-color: ${({ backgroundColor }) =>
-    backgroundColor || DEFAULT_BG_COLOR}
-  color: ${({ textColor }) => textColor || DEFAULT_TXT_COLOR}
+    backgroundColor || DEFAULT_BG_COLOR};
+  color: ${({ textColor }) => textColor || DEFAULT_TXT_COLOR};
 `
 
 const Avatar = s.img<{ isRound?: boolean }>`
