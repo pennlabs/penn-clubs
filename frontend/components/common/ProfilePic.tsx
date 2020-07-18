@@ -4,12 +4,12 @@ import s, { CSSProperties } from 'styled-components'
 import { PROPIC_BACKGROUND, PROPIC_TEXT } from '../../constants/colors'
 import { mediaMinWidth, PHONE } from '../../constants/measurements'
 
-const hashCode = (s: string): number => {
+const hashCode = (content: string): number => {
   let h = 0
   let i = 0
-  if (s.length > 0) {
+  if (content.length > 0) {
     while (i < 1) {
-      h = ((h << 5) - h + s.charCodeAt(i++)) | 0
+      h = ((h << 5) - h + content.charCodeAt(i++)) | 0
     }
   }
   return h
