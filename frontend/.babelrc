@@ -1,4 +1,4 @@
 {
     "presets": ["next/babel"],
-    "plugins": ["istanbul", "styled-components"]
+    "plugins": ["istanbul", "styled-components", "react-remove-properties"]
 }

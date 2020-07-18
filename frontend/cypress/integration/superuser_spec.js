@@ -50,11 +50,16 @@ describe('Permissioned user tests', () => {
       'Membership',
       'Subscriptions',
       'Resources',
+      'Questions',
       'Settings',
     ]
 
     tabs.forEach(tab => {
-      cy.contains(tab).click()
+      cy.get('.tabs').contains(tab).should('be.visible')
+    })
+
+    tabs.forEach(tab => {
+      cy.get('.tabs').contains(tab).click()
     })
   })
 })
