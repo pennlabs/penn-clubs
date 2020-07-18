@@ -40,9 +40,9 @@ When installing locally for development, run:
 
 ### Frontend
 
-Running the frontend requires [Node.js](https://nodejs.org/en/).
+Running the frontend requires [Node.js](https://nodejs.org/en/) and [Yarn](https://yarnpkg.com/getting-started/install).
 
-1. Enter the `frontend` directory with a new terminal window.
+1. Enter the `frontend` directory with a **new terminal window**. Don't kill your backend server!
 2. Install dependencies using `yarn install` in the project directory.
 3. Run application using `yarn dev`.
 4. Access application at [http://localhost:3000](http://localhost:3000).
