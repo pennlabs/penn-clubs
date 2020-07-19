@@ -11,9 +11,9 @@ const Image = s.img<{ size?: string }>`
 
 type EmptyStateProps = {
   name: string
-  alt: string
+  alt?: string
   size?: string
-  style: CSSProperties
+  style?: CSSProperties
 }
 
 export const EmptyState = ({

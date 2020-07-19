@@ -58,7 +58,6 @@ from clubs.serializers import (
     ClubListSerializer,
     ClubSerializer,
     EventSerializer,
-    ExtendedUserSerializer,
     FavoriteSerializer,
     MajorSerializer,
     MembershipInviteSerializer,
@@ -72,6 +71,9 @@ from clubs.serializers import (
     TagSerializer,
     TestimonialSerializer,
     UserMembershipRequestSerializer,
+    UserMembershipSerializer,
+    UserSerializer,
+    UserSubscribeSerializer,
     YearSerializer,
 )
 from clubs.utils import html_to_text
@@ -547,6 +549,18 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
         return questions.filter(Q(approved=True) | Q(author=self.request.user))
 
 
+class MembershipViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of clubs that the logged in user is a member of.
+    """
+    serializer_class = UserMembershipSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        return Membership.objects.filter(person=self.request.user)
+
+
 class FavoriteViewSet(viewsets.ModelViewSet):
     """
     list: Return a list of clubs that the logged in user has favorited.
@@ -574,7 +588,7 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     destroy: Unsubscribe from a club.
     """
 
-    serializer_class = SubscribeSerializer
+    serializer_class = UserSubscribeSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "club__code"
     http_method_names = ["get", "post", "delete"]
@@ -777,7 +791,7 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     """
 
     permission_classes = [IsAuthenticated]
-    serializer_class = ExtendedUserSerializer
+    serializer_class = UserSerializer
 
     def get_object(self):
         user = self.request.user

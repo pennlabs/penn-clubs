@@ -10,7 +10,7 @@ import LoginModal from './components/LoginModal'
 import { WHITE } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
-import { Club, Tag, UserInfo } from './types'
+import { Club, ExtendedUserInfo, Tag, UserInfo } from './types'
 import { doApiRequest } from './utils'
 import { logEvent } from './utils/analytics'
 import { logException } from './utils/sentry'
@@ -34,8 +34,6 @@ type RenderPageProps = {
 type RenderPageState = {
   modal: boolean
   userInfo: UserInfo | undefined
-  favorites: string[]
-  subscriptions: string[]
 }
 
 function renderPage(Page) {
@@ -49,19 +47,13 @@ function renderPage(Page) {
 
       this.state = {
         modal: false,
-        favorites: [],
-        subscriptions: [],
         userInfo: props.userInfo,
       }
 
-      this._updateFavorites = this._updateFavorites.bind(this)
-      this._updateSubscriptions = this._updateSubscriptions.bind(this)
       this.checkAuth = this.checkAuth.bind(this)
       this.checkRedirect = this.checkRedirect.bind(this)
       this.closeModal = this.closeModal.bind(this)
       this.openModal = this.openModal.bind(this)
-      this.updateFavorites = this.updateFavorites.bind(this)
-      this.updateSubscriptions = this.updateSubscriptions.bind(this)
       this.updateUserInfo = this.updateUserInfo.bind(this)
     }
 
@@ -75,14 +67,7 @@ function renderPage(Page) {
 
     render() {
       try {
-        const {
-          props,
-          state,
-          closeModal,
-          updateFavorites,
-          updateUserInfo,
-          updateSubscriptions,
-        } = this
+        const { props, state, closeModal } = this
         const { modal } = state
         const { authenticated, userInfo } = props
         return (
@@ -91,13 +76,7 @@ function renderPage(Page) {
               <LoginModal show={modal} closeModal={closeModal} />
               <Header authenticated={authenticated} userInfo={userInfo} />
               <Wrapper>
-                <Page
-                  {...props}
-                  {...state}
-                  updateFavorites={updateFavorites}
-                  updateSubscriptions={updateSubscriptions}
-                  updateUserInfo={updateUserInfo}
-                />
+                <Page {...props} {...state} />
               </Wrapper>
               <Footer />
             </RenderPageWrapper>
@@ -131,58 +110,6 @@ function renderPage(Page) {
       this.setState({ modal: false })
     }
 
-    updateFavorites(id) {
-      return this.checkAuth(this._updateFavorites, id)
-    }
-
-    _updateFavorites(id) {
-      const { favorites: newFavs } = this.state
-      const i = newFavs.indexOf(id)
-      if (i === -1) {
-        newFavs.push(id)
-        logEvent('favorite', id)
-        doApiRequest('/favorites/?format=json', {
-          method: 'POST',
-          body: { club: id },
-        })
-      } else {
-        newFavs.splice(i, 1)
-        logEvent('unfavorite', id)
-        doApiRequest(`/favorites/${id}/?format=json`, {
-          method: 'DELETE',
-        })
-      }
-      this.setState({ favorites: newFavs })
-      return i === -1
-    }
-
-    updateSubscriptions(id) {
-      return this.checkAuth(this._updateSubscriptions, id)
-    }
-
-    _updateSubscriptions(id) {
-      const { subscriptions: newSubs } = this.state
-      const i = newSubs.indexOf(id)
-      if (i === -1) {
-        newSubs.push(id)
-        logEvent('subscribe', id)
-        doApiRequest('/subscribe/?format=json', {
-          method: 'POST',
-          body: {
-            club: id,
-          },
-        })
-      } else {
-        newSubs.splice(i, 1)
-        logEvent('unsubscribe', id)
-        doApiRequest(`/subscribe/${id}/?format=json`, {
-          method: 'DELETE',
-        })
-      }
-      this.setState({ subscriptions: newSubs })
-      return i === -1
-    }
-
     checkRedirect(): void {
       const { userInfo } = this.state
 
@@ -210,16 +137,9 @@ function renderPage(Page) {
             this.setState(
               {
                 userInfo: userInfo,
-                favorites: userInfo.favorite_set.map((a) => a.club),
-                subscriptions: userInfo.subscribe_set.map((a) => a.club),
               },
               this.checkRedirect,
             )
-          })
-        } else {
-          this.setState({
-            favorites: [],
-            subscriptions: [],
           })
         }
       })
@@ -247,7 +167,7 @@ function renderPage(Page) {
       auth.userInfo = await res.json()
       auth.authenticated = true
     }
-    return { ...auth, ...pageProps }
+    return { ...pageProps, ...auth }
   }
 
   return RenderPage

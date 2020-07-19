@@ -1,11 +1,15 @@
 import Link from 'next/link'
+import { ReactElement } from 'react'
 import ReactTooltip from 'react-tooltip'
 import s from 'styled-components'
 
 import { DARK_GRAY } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE, CLUB_ROUTE } from '../../constants/routes'
 import { BODY_FONT } from '../../constants/styles'
+import { Club, MembershipRank } from '../../types'
+import { getRoleDisplay } from '../../utils'
 import { Icon } from '../common'
+import { UserMembership } from './ClubTab'
 import Toggle from './Toggle'
 
 const Table = s.table`
@@ -15,13 +19,21 @@ const Table = s.table`
   color: ${DARK_GRAY} !important;
 `
 
+type ClubTabTableProps = {
+  className?: string
+  memberships: UserMembership[]
+  togglePublic: (club: Club) => void
+  toggleActive: (club: Club) => void
+  leaveClub: (club: Club) => void
+}
+
 export default ({
   className,
-  userInfo,
+  memberships,
   togglePublic,
   toggleActive,
   leaveClub,
-}) => (
+}: ClubTabTableProps): ReactElement => (
   <Table className={`table is-fullwidth ${className}`}>
     <thead>
       <tr>
@@ -66,38 +78,38 @@ export default ({
       </tr>
     </thead>
     <tbody>
-      {userInfo.membership_set.map((item) => (
-        <tr key={item.code}>
+      {memberships.map(({ club, active, public: isPublic, role }) => (
+        <tr key={club.code}>
           <td>
-            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(item.code)}>
-              <a>{item.name}</a>
+            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+              <a>{club.name}</a>
             </Link>
           </td>
-          <td>{item.title}</td>
-          <td>{item.role_display}</td>
+          <td>{club.name}</td>
+          <td>{getRoleDisplay(role)}</td>
           <td>
             <Toggle
-              club={item}
-              active={item.active}
+              club={club}
+              active={active}
               toggle={(club) => toggleActive(club)}
             />
           </td>
           <td>
             <Toggle
-              club={item}
-              active={item.public}
+              club={club}
+              active={isPublic}
               toggle={(club) => togglePublic(club)}
             />
           </td>
           <td>
-            {item.role_display === 'Admin' ? (
-              <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(item.code)}>
+            {role <= MembershipRank.Officer ? (
+              <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(club.code)}>
                 <a className="button is-small">Manage</a>
               </Link>
             ) : (
               <button
                 className="button is-small"
-                onClick={() => leaveClub(item)}
+                onClick={() => leaveClub(club)}
               >
                 Leave
               </button>

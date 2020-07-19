@@ -318,23 +318,6 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         fields = ["email", "token", "id", "name", "public"]
 
 
-class UserMembershipSerializer(serializers.ModelSerializer):
-    """
-    Used for listing which clubs a user is in.
-    """
-
-    code = serializers.SlugField(source="club.code", read_only=True)
-    name = serializers.CharField(source="club.name", read_only=True)
-    role_display = serializers.SerializerMethodField("get_role_display")
-
-    def get_role_display(self, obj):
-        return obj.get_role_display()
-
-    class Meta:
-        model = Membership
-        fields = ("code", "name", "title", "role", "role_display", "active", "public")
-
-
 class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
     """
     Used for listing which users are in a club for members who are not in the club.
@@ -744,22 +727,46 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
+    """
+    Used by users to get a list of clubs that they have favorited.
+    """
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    club = serializers.SlugRelatedField(
-        queryset=Club.objects.all(),
-        slug_field="code",
-        help_text="The club code shown in the URL of the club page.",
-    )
-    name = serializers.CharField(source="club.name", read_only=True)
+    club = ClubListSerializer(read_only=True)
 
     class Meta:
         model = Favorite
-        fields = ("club", "name", "person")
+        fields = ("club", "person")
         validators = [
             validators.UniqueTogetherValidator(
                 queryset=Favorite.objects.all(), fields=["club", "person"]
             )
         ]
+
+
+class UserMembershipSerializer(serializers.ModelSerializer):
+    """
+    Used for listing which clubs a user is in.
+    """
+
+    club = ClubListSerializer(read_only=True)
+
+    def get_role_display(self, obj):
+        return obj.get_role_display()
+
+    class Meta:
+        model = Membership
+        fields = ("club", "role", "title", "active", "public")
+
+
+class UserSubscribeSerializer(serializers.ModelSerializer):
+    """
+    Used by users to get a list of clubs that they have subscribed to.
+    """
+    club = ClubListSerializer(read_only=True)
+
+    class Meta:
+        model = Subscribe
+        fields = ["club"]
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
@@ -800,30 +807,6 @@ class SubscribeSerializer(serializers.ModelSerializer):
                 queryset=Subscribe.objects.all(), fields=["club", "person"]
             )
         ]
-
-
-class UserSubscribeSerializer(serializers.ModelSerializer):
-    """
-    Used by the UserSerializer to return the clubs that the user has subscribed to.
-    """
-
-    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
-
-    class Meta:
-        model = Subscribe
-        fields = ("club",)
-
-
-class UserFavoriteSerializer(serializers.ModelSerializer):
-    """
-    Used by the ExtendedUserSerializer to return the clubs that the user has favorited.
-    """
-
-    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
-
-    class Meta:
-        model = Favorite
-        fields = ("club",)
 
 
 class MembershipRequestSerializer(serializers.ModelSerializer):
@@ -951,20 +934,6 @@ class UserSerializer(serializers.ModelSerializer):
             "name",
             "school",
             "username",
-        ]
-
-
-class ExtendedUserSerializer(UserSerializer):
-    membership_set = UserMembershipSerializer(many=True, read_only=True)
-    favorite_set = UserFavoriteSerializer(many=True, read_only=True)
-    subscribe_set = UserSubscribeSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = UserSerializer.Meta.model
-        fields = UserSerializer.Meta.fields + [
-            "favorite_set",
-            "membership_set",
-            "subscribe_set",
         ]
 
 

@@ -50,8 +50,6 @@ const StyledCard = s(Card)`
 type ClubPageProps = {
   club: Club
   userInfo: UserInfo
-  updateFavorites: (code: string) => boolean
-  updateSubscriptions: (code: string) => void
 }
 
 const ClubPage = ({

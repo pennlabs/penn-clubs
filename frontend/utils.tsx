@@ -1,6 +1,8 @@
 import fetch from 'isomorphic-unfetch'
 import { ReactElement } from 'react'
 
+import { MembershipRank } from './types'
+
 export function stripTags(val: string): string {
   if (!val) {
     return val
@@ -46,7 +48,7 @@ export function getSizeDisplay(size: number, showMembersLabel = true): string {
   else return 'Unknown'
 }
 
-export function getRoleDisplay(role: number): string {
+export function getRoleDisplay(role: MembershipRank): string {
   if (role <= 0) return 'Owner'
   else if (role <= 10) return 'Officer'
   else return 'Member'
@@ -102,14 +104,14 @@ export function apiSetSubscribeStatus(
   subscribed: boolean,
 ): Promise<void> {
   if (subscribed) {
-    return doApiRequest('/subscribe/?format=json', {
+    return doApiRequest('/subscriptions/?format=json', {
       method: 'POST',
       body: {
         club: club,
       },
     }).then(() => undefined)
   } else {
-    return doApiRequest(`/subscribe/${club}/?format=json`, {
+    return doApiRequest(`/subscriptions/${club}/?format=json`, {
       method: 'DELETE',
     }).then(() => undefined)
   }

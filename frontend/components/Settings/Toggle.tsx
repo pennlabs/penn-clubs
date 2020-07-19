@@ -108,9 +108,9 @@ type ToggleState = {
 type ToggleProps = {
   club: Club
   toggle: (club: Club) => void
-  filter: boolean
-  filterOffText: string
-  filterOnText: string
+  filter?: boolean
+  filterOffText?: string
+  filterOnText?: string
   active?: boolean
 }
 

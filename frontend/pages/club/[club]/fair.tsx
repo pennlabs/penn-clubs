@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ReactElement, useContext, useState } from 'react'
 import s from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
@@ -7,6 +8,7 @@ import {
   Center,
   Container,
   Icon,
+  Loading,
   PhoneContainer,
   SmallText,
   StrongText,
@@ -15,9 +17,15 @@ import {
   Title,
 } from '../../../components/common'
 import AuthPrompt from '../../../components/common/AuthPrompt'
+import { AuthCheckContext } from '../../../components/contexts'
 import { CLUB_ROUTE } from '../../../constants/routes'
 import renderPage from '../../../renderPage'
-import { doApiRequest } from '../../../utils'
+import { Club } from '../../../types'
+import {
+  apiSetFavoriteStatus,
+  apiSetSubscribeStatus,
+  doApiRequest,
+} from '../../../utils'
 
 const Image = s.img`
   height: 86px;
@@ -39,16 +47,12 @@ const ClubHeader = s.div`
   }
 `
 
-const Fair = ({
-  authenticated,
-  query,
-  club,
-  userInfo,
-  favorites,
-  updateFavorites,
-  subscriptions,
-  updateSubscriptions,
-}) => {
+type FairProps = {
+  authenticated: boolean | null
+  club: Club
+}
+
+const Fair = ({ authenticated, club }: FairProps): ReactElement | null => {
   if (!club) return null
   if (!club.code) {
     return (
@@ -63,11 +67,24 @@ const Fair = ({
 
   const { image_url: image } = club
 
-  const isFavorite = favorites.includes(club.code)
-  const isSubscribe = subscriptions.includes(club.code)
+  const [isFavorite, setFavorite] = useState<boolean>(club.is_favorite)
+  const [isSubscribe, setSubscribe] = useState<boolean>(club.is_subscribe)
+  const authCheck = useContext(AuthCheckContext)
+
+  const updateFavorite = () => {
+    authCheck(() => {
+      apiSetFavoriteStatus(club.code, true).then(() => setFavorite(true))
+    })
+  }
+
+  const updateSubscription = () => {
+    authCheck(() =>
+      apiSetSubscribeStatus(club.code, true).then(() => setSubscribe(true)),
+    )
+  }
 
   if (authenticated === null) {
-    return <></>
+    return <Loading />
   }
 
   if (authenticated === false) {
@@ -85,31 +102,31 @@ const Fair = ({
         <hr />
         <div className="columns is-mobile">
           <div className="column">
-            <div
+            <button
               className="button is-link is-large"
               disabled={isFavorite}
-              onClick={() => isFavorite || updateFavorites(club.code)}
+              onClick={() => isFavorite || updateFavorite()}
             >
               <Icon
                 alt="bookmark"
                 name={isFavorite ? 'check-circle' : 'bookmark'}
               />{' '}
               {isFavorite ? 'Bookmarked' : 'Bookmark'}
-            </div>
+            </button>
             <Text style={{ marginTop: '0.5rem' }}>To save for later</Text>
           </div>
           <div className="column">
-            <div
+            <button
               className="button is-danger is-large"
               disabled={isSubscribe}
-              onClick={() => isSubscribe || updateSubscriptions(club.code)}
+              onClick={() => isSubscribe || updateSubscription()}
             >
               <Icon
                 alt="subscribe"
                 name={isSubscribe ? 'check-circle' : 'bell'}
               />{' '}
               {isSubscribe ? 'Subscribed' : 'Subscribe'}
-            </div>
+            </button>
             <Text style={{ marginTop: '0.5rem' }}>To join mailing list</Text>
           </div>
         </div>

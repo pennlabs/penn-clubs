@@ -10,7 +10,6 @@ import TabView from '../components/TabView'
 import { CLUBS_BLUE, WHITE } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
 import renderPage from '../renderPage'
-import { doApiRequest, formatResponse } from '../utils'
 
 const Notification = s.span`
   border-radius: ${BORDER_RADIUS};
@@ -31,10 +30,6 @@ class Settings extends React.Component {
     super(props)
     this.state = {}
     this.notify = this.notify.bind(this)
-    this.togglePublic = this.togglePublic.bind(this)
-    this.toggleActive = this.toggleActive.bind(this)
-    this.leaveClub = this.leaveClub.bind(this)
-    this.updateUserInfo = this.props.updateUserInfo
   }
 
   /**
@@ -50,84 +45,8 @@ class Settings extends React.Component {
     )
   }
 
-  togglePublic(club) {
-    const {
-      userInfo: { username },
-    } = this.props
-    doApiRequest(`/clubs/${club.code}/members/${username}/?format=json`, {
-      method: 'PATCH',
-      body: {
-        public: !club.public,
-      },
-    }).then((resp) => {
-      if (resp.ok) {
-        this.notify(`Your privacy setting for ${club.name} has been changed.`)
-        this.props.updateUserInfo()
-      } else {
-        resp.json().then((err) => {
-          this.notify(formatResponse(err))
-        })
-      }
-    })
-  }
-
-  toggleActive(club) {
-    const {
-      userInfo: { username },
-    } = this.props
-    doApiRequest(`/clubs/${club.code}/members/${username}/?format=json`, {
-      method: 'PATCH',
-      body: {
-        active: !club.active,
-      },
-    }).then((resp) => {
-      if (resp.ok) {
-        this.notify(`Your activity setting for ${club.name} has been changed.`)
-        this.props.updateUserInfo()
-      } else {
-        resp.json().then((err) => {
-          this.notify(formatResponse(err))
-        })
-      }
-    })
-  }
-
-  leaveClub(club) {
-    const {
-      userInfo: { username },
-      authenticated,
-    } = this.props
-    if (!authenticated) {
-      this.notify('You must be logged in to perform this action.')
-    } else if (
-      confirm(
-        `Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`,
-      )
-    ) {
-      doApiRequest(`/clubs/${club.code}/members/${username}`, {
-        method: 'DELETE',
-      }).then((resp) => {
-        if (!resp.ok) {
-          resp.json().then((err) => {
-            this.notify(formatResponse(err))
-          })
-        } else {
-          this.notify(`You have left ${club.name}.`)
-          this.updateUserInfo()
-        }
-      })
-    }
-  }
-
   render() {
-    const {
-      userInfo,
-      authenticated,
-      favorites,
-      updateFavorites,
-      subscriptions,
-      updateSubscriptions,
-    } = this.props
+    const { userInfo, authenticated } = this.props
     if (authenticated === null) {
       return <div></div>
     }
@@ -142,38 +61,17 @@ class Settings extends React.Component {
       {
         name: 'Clubs',
         icon: 'peoplelogo',
-        content: (
-          <ClubTab
-            togglePublic={this.togglePublic}
-            toggleActive={this.toggleActive}
-            leaveClub={this.leaveClub}
-            userInfo={userInfo}
-          />
-        ),
+        content: <ClubTab notify={this.notify} userInfo={userInfo} />,
       },
       {
         name: 'Bookmarks',
         icon: 'heart',
-        content: (
-          <FavoritesTab
-            key="bookmark"
-            keyword="bookmark"
-            favorites={favorites}
-            updateFavorites={updateFavorites}
-          />
-        ),
+        content: <FavoritesTab key="bookmark" keyword="bookmark" />,
       },
       {
         name: 'Subscriptions',
         icon: 'bookmark',
-        content: (
-          <FavoritesTab
-            key="subscription"
-            keyword="subscription"
-            favorites={subscriptions}
-            updateFavorites={updateSubscriptions}
-          />
-        ),
+        content: <FavoritesTab key="subscription" keyword="subscription" />,
       },
       {
         name: 'Profile',
