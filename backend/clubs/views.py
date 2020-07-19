@@ -200,7 +200,7 @@ class ClubsFilter(filters.BaseFilterBackend):
                 return {f"{field}__year{suffix}": int(value)}
             if value.lower() in {"none", "null"}:
                 return {f"{field}__isnull": True}
-            raise ValueError(f"Unknown input format for {field}!")
+            return {}
 
         def parse_int(field, value, operation):
             if value.isdigit():
@@ -210,7 +210,7 @@ class ClubsFilter(filters.BaseFilterBackend):
                 return {f"{field}{suffix}": int(value)}
             if value.lower() in {"none", "null"}:
                 return {f"{field}__isnull": True}
-            raise ValueError(f"Unknown input format for {field}!")
+            return {}
 
         def parse_tags(field, value, operation):
             tags = value.strip().split(",")
@@ -247,22 +247,23 @@ class ClubsFilter(filters.BaseFilterBackend):
             "active": parse_boolean,
         }
 
-        try:
-            for param, value in params.items():
-                field = param.split("__")
-                if len(field) <= 1:
-                    field = field[0]
-                    type = "eq"
-                else:
-                    field = field[0]
-                    type = field[1].lower()
+        query = {}
 
-                if field not in fields:
-                    continue
+        for param, value in params.items():
+            field = param.split("__")
+            if len(field) <= 1:
+                field = field[0]
+                type = "eq"
+            else:
+                field = field[0]
+                type = field[1].lower()
 
-                queryset = queryset.filter(**fields[field](field, value.strip(), type))
-        except ValueError:
-            pass
+            if field not in fields:
+                continue
+
+            query.update(fields[field](field, value.strip(), type))
+
+        queryset = queryset.filter(**query)
 
         return queryset
 
