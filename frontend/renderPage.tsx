@@ -1,8 +1,9 @@
 import { NextPageContext } from 'next'
-import { Component } from 'react'
+import React, { Component } from 'react'
 import s from 'styled-components'
 
 import { Loading } from './components/common'
+import { AuthCheckContext } from './components/contexts'
 import Footer from './components/Footer'
 import Header from './components/Header'
 import LoginModal from './components/LoginModal'
@@ -85,20 +86,22 @@ function renderPage(Page) {
         const { modal } = state
         const { authenticated, userInfo } = props
         return (
-          <RenderPageWrapper>
-            <LoginModal show={modal} closeModal={closeModal} />
-            <Header authenticated={authenticated} userInfo={userInfo} />
-            <Wrapper>
-              <Page
-                {...props}
-                {...state}
-                updateFavorites={updateFavorites}
-                updateSubscriptions={updateSubscriptions}
-                updateUserInfo={updateUserInfo}
-              />
-            </Wrapper>
-            <Footer />
-          </RenderPageWrapper>
+          <AuthCheckContext.Provider value={this.checkAuth}>
+            <RenderPageWrapper>
+              <LoginModal show={modal} closeModal={closeModal} />
+              <Header authenticated={authenticated} userInfo={userInfo} />
+              <Wrapper>
+                <Page
+                  {...props}
+                  {...state}
+                  updateFavorites={updateFavorites}
+                  updateSubscriptions={updateSubscriptions}
+                  updateUserInfo={updateUserInfo}
+                />
+              </Wrapper>
+              <Footer />
+            </RenderPageWrapper>
+          </AuthCheckContext.Provider>
         )
       } catch (ex) {
         logException(ex)
@@ -251,11 +254,8 @@ type ListPageProps = {
   clubs: [Club]
   tags: [Tag]
   clubCount: number
-  favorites: [string]
   authenticated: boolean | null
   userInfo: UserInfo
-  updateUserInfo: () => void
-  updateFavorites: (code: string) => void
 }
 
 type ListPageState = {
@@ -274,34 +274,10 @@ export function renderListPage(Page) {
       this.state = {
         clubs: this.props.clubs,
       }
-
-      this._updateFavorites = this._updateFavorites.bind(this)
-    }
-
-    /*
-     * An inefficient shim to account for the new "is_favorite" field in clubs.
-     * When updateFavorites is called, this field should also be kept in sync.
-     * In the future, the "clubs" prop should be the source of truth and the
-     * "favorites" prop should not exist anymore.
-     */
-    _updateFavorites(code: string): void {
-      const clubsCopy = this.state.clubs.slice()
-      const clubIndex = clubsCopy.findIndex((club) => club.code === code)
-      clubsCopy[clubIndex].is_favorite = !clubsCopy[clubIndex].is_favorite
-      this.setState({ clubs: clubsCopy })
-      this.props.updateFavorites(code)
     }
 
     render(): JSX.Element {
-      const {
-        clubs,
-        clubCount,
-        tags,
-        favorites,
-        authenticated,
-        userInfo,
-        updateUserInfo,
-      } = this.props
+      const { clubs, clubCount, tags, authenticated, userInfo } = this.props
 
       if (authenticated === null) {
         return <Loading />
@@ -312,10 +288,7 @@ export function renderListPage(Page) {
           clubs={clubs}
           clubCount={clubCount}
           tags={tags}
-          favorites={favorites}
-          updateFavorites={this._updateFavorites}
           userInfo={userInfo}
-          updateUserInfo={updateUserInfo}
         />
       )
     }

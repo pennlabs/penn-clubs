@@ -1,4 +1,4 @@
-import Fuse from 'fuse.js'
+import Fuse, { FuseOptions } from 'fuse.js'
 import React from 'react'
 import s from 'styled-components'
 
@@ -17,6 +17,7 @@ import {
 } from '../constants/colors'
 import { MD, mediaMaxWidth } from '../constants/measurements'
 import { renderListPage } from '../renderPage'
+import { Club, Tag, UserInfo } from '../types'
 import { doApiRequest } from '../utils'
 import { logEvent } from '../utils/analytics'
 
@@ -58,7 +59,33 @@ const Container = s.div`
   }
 `
 
-class Splash extends React.Component {
+interface RankedClub extends Club {
+  rank?: number
+  target_schools: any[]
+  target_majors: any[]
+  target_years: any[]
+}
+
+type SplashProps = {
+  userInfo: UserInfo
+  clubs: Club[]
+  tags: Tag[]
+}
+
+type SplashState = {
+  clubs: RankedClub[]
+  clubLoaded: boolean
+  clubCount: number
+  displayClubs: RankedClub[]
+  selectedTags: any[]
+  nameInput: string
+  display: string
+}
+
+class Splash extends React.Component<SplashProps, SplashState> {
+  fuseOptions: FuseOptions<Club>
+  fuse: Fuse<Club, FuseOptions<Club>> | null
+
   constructor(props) {
     super(props)
     this.state = {
@@ -70,6 +97,7 @@ class Splash extends React.Component {
       nameInput: '',
       display: 'cards',
     }
+    this.fuse = null
     this.fuseOptions = {
       keys: [
         {
@@ -140,7 +168,7 @@ class Splash extends React.Component {
 
     // fuzzy search
     if (this.fuse && nameInput.length) {
-      clubs = this.fuse.search(nameInput)
+      clubs = this.fuse.search(nameInput) as RankedClub[]
     }
 
     // checkbox filters
@@ -190,8 +218,7 @@ class Splash extends React.Component {
       selectedTags.splice(i, 1)
     }
 
-    this.setState(
-      { selectedTags },
+    this.setState({ selectedTags }, () =>
       this.resetDisplay(this.state.nameInput, this.state.selectedTags),
     )
   }
@@ -238,6 +265,13 @@ class Splash extends React.Component {
     })
     this.setState({
       displayClubs: clubs.sort((a, b) => {
+        if (typeof b.rank === 'undefined') {
+          return -1
+        }
+        if (typeof a.rank === 'undefined') {
+          return 1
+        }
+
         if (a.rank > b.rank) {
           return -1
         }
@@ -259,16 +293,14 @@ class Splash extends React.Component {
       selectedTags,
       nameInput,
     } = this.state
-    const { tags, favorites, updateFavorites } = this.props
+    const { tags } = this.props
     return (
       <>
         <Metadata />
         <div style={{ backgroundColor: SNOW }}>
           <SearchBar
-            clubs={clubs}
             tags={tags}
             resetDisplay={this.resetDisplay.bind(this)}
-            switchDisplay={this.switchDisplay.bind(this)}
             selectedTags={selectedTags}
             updateTag={this.updateTag.bind(this)}
           />
@@ -318,8 +350,7 @@ class Splash extends React.Component {
                   <ClearAllLink
                     className="tag is-rounded"
                     onClick={() =>
-                      this.setState(
-                        { selectedTags: [] },
+                      this.setState({ selectedTags: [] }, () =>
                         this.resetDisplay(nameInput, []),
                       )
                     }
@@ -335,8 +366,6 @@ class Splash extends React.Component {
                 displayClubs={displayClubs}
                 display={display}
                 tags={tags}
-                favorites={favorites}
-                updateFavorites={updateFavorites}
               />
             </WideContainer>
           </Container>

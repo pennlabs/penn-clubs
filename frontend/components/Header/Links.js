@@ -70,7 +70,10 @@ const Menu = s.div`
     ${({ show }) => show && 'display: block;'}
   }
 `
-// Checks authenticated === false to confirm browser has loaded and user is not logged in. Will be undefined if browser has not loaded and true is browser has loaded and user is logged in.
+/**
+ * Checks authenticated === false to confirm browser has loaded and user is not logged in.
+ * Will be undefined if browser has not loaded and true is browser has loaded and user is logged in.
+ */
 export default ({ userInfo, authenticated, show }) => {
   const router = useRouter()
   return (

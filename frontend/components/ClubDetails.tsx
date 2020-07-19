@@ -24,13 +24,11 @@ const iconStyles = {
 
 type DetailsProps = {
   club: Club
-  updateFavorites: (code: string) => void
 }
 
-const Details = ({ club, updateFavorites }: DetailsProps): ReactElement => {
+const Details = ({ club }: DetailsProps): ReactElement => {
   const {
     size,
-    is_favorite: favorite,
     application_required: applicationRequired,
     accepting_members: acceptingMembers,
   } = club
@@ -71,12 +69,7 @@ const Details = ({ club, updateFavorites }: DetailsProps): ReactElement => {
         )}
         {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
       </p>
-      <BookmarkIcon
-        club={club}
-        favorite={favorite}
-        updateFavorites={updateFavorites}
-        padding="0"
-      />
+      <BookmarkIcon club={club} padding="0" />
     </Wrapper>
   )
 }

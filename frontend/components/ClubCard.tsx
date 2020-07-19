@@ -92,10 +92,9 @@ const shorten = (desc: string): string => {
 
 type ClubCardProps = {
   club: Club
-  updateFavorites: (code: string) => void
 }
 
-const ClubCard = ({ club, updateFavorites }: ClubCardProps): ReactElement => {
+const ClubCard = ({ club }: ClubCardProps): ReactElement => {
   const { name, active, approved, description, subtitle, tags, code } = club
   const img = club.image_url
   const textDescription = shorten(
@@ -136,7 +135,7 @@ const ClubCard = ({ club, updateFavorites }: ClubCardProps): ReactElement => {
 
             <Description>{textDescription}</Description>
 
-            <ClubDetails club={club} updateFavorites={updateFavorites} />
+            <ClubDetails club={club} />
           </Card>
         </a>
       </Link>

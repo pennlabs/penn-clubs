@@ -15,10 +15,9 @@ const ClubTableRowWrapper = s.div`
 `
 
 type ClubDisplayProps = {
-  displayClubs: [Club]
-  tags: [Tag]
+  displayClubs: Club[]
+  tags: Tag[]
   display: string
-  updateFavorites: (code: string) => void
 }
 
 type ClubDisplayState = {
@@ -55,18 +54,14 @@ class ClubDisplay extends React.Component<ClubDisplayProps, ClubDisplayState> {
   }
 
   render(): ReactElement {
-    const { displayClubs, updateFavorites, display } = this.props
+    const { displayClubs, display } = this.props
     const clubsToShow = displayClubs.slice(0, this.state.end)
 
     if (display === 'cards') {
       return (
         <div className="columns is-multiline is-desktop is-tablet">
           {clubsToShow.map((club) => (
-            <ClubCard
-              key={club.code}
-              club={club}
-              updateFavorites={updateFavorites}
-            />
+            <ClubCard key={club.code} club={club} />
           ))}
         </div>
       )
@@ -75,11 +70,7 @@ class ClubDisplay extends React.Component<ClubDisplayProps, ClubDisplayState> {
     return (
       <ClubTableRowWrapper>
         {clubsToShow.map((club) => (
-          <ClubTableRow
-            club={club}
-            key={club.code}
-            updateFavorites={updateFavorites}
-          />
+          <ClubTableRow club={club} key={club.code} />
         ))}
       </ClubTableRowWrapper>
     )

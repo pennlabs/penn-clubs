@@ -122,6 +122,8 @@ export interface UserInfo {
   username: string
   is_superuser: boolean
   image_url: string
+  school: any[]
+  major: any[]
 }
 
 export interface ExtendedUserInfo extends UserInfo {

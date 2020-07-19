@@ -81,6 +81,22 @@ export function doApiRequest(path: string, data?: any): Promise<Response> {
   return fetch(getApiUrl(path), data)
 }
 
+export function apiSetFavoriteStatus(
+  club: string,
+  favorited: boolean,
+): Promise<void> {
+  if (favorited) {
+    return doApiRequest('/favorites/?format=json', {
+      method: 'POST',
+      body: { club: club },
+    }).then(() => undefined)
+  } else {
+    return doApiRequest(`/favorites/${club}/?format=json`, {
+      method: 'DELETE',
+    }).then(() => undefined)
+  }
+}
+
 export function titleize(str: string): string {
   if (!str) return str
   return str

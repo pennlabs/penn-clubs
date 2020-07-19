@@ -63,7 +63,6 @@ const Name = ({ children }) => (
 
 type ClubTableRowProps = {
   club: Club
-  updateFavorites: (code: string) => void
 }
 
 class ClubTableRow extends React.Component<ClubTableRowProps> {
@@ -79,7 +78,7 @@ class ClubTableRow extends React.Component<ClubTableRowProps> {
   }
 
   render(): ReactElement {
-    const { club, updateFavorites } = this.props
+    const { club } = this.props
     const { name, tags, code } = club
 
     return (
@@ -98,10 +97,7 @@ class ClubTableRow extends React.Component<ClubTableRowProps> {
                   <div className="column is-8-desktop is-12-mobile">
                     <Content>
                       <Subtitle>{this.getSubtitle()}</Subtitle>
-                      <ClubDetails
-                        club={club}
-                        updateFavorites={updateFavorites}
-                      />
+                      <ClubDetails club={club} />
                     </Content>
                   </div>
                 </div>
