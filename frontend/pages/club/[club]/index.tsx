@@ -126,7 +126,7 @@ const ClubPage = ({
             ) : (
               <span>
                 This club has <b>not been approved yet</b> and is only visible
-                to administrators of Penn Clubs.
+                to the club creator and administrators of Penn Clubs.
               </span>
             )}
           </Text>

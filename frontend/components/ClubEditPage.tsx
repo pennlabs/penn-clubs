@@ -158,7 +158,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           if (!this.state.isEdit) {
             this.props.router.push(
               '/club/[club]/edit',
-              `/club/${info.id}/edit`,
+              `/club/${info.code}/edit`,
               { shallow: true },
             )
             this.setState({
