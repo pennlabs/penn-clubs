@@ -138,7 +138,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     })
   }
 
-  submit(data) {
+  submit(data): void {
     const photo = data.image
     delete data.image
 
@@ -167,20 +167,23 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
             })
           }
 
+          let msg = this.state.isEdit
+            ? 'Club has been successfully saved.'
+            : 'Club has been successfully created.'
+
           if (photo && photo.get('file') instanceof File) {
             doApiRequest(`/clubs/${this.state.club.code}/upload/?format=json`, {
               method: 'POST',
               body: photo,
             }).then((resp) => {
               if (resp.ok) {
-                this.notify('Club and images have been successfully saved.')
+                msg += ' Club image also saved.'
               } else {
-                this.notify('Failed to upload club image file!')
+                msg += ' However, failed to upload club image file!'
               }
             })
-          } else {
-            this.notify('Club has been successfully saved.')
           }
+          this.notify(msg)
         })
       } else {
         resp.json().then((err) => {
@@ -190,7 +193,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     })
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     if (this.state.isEdit) {
       const clubId =
         this.state.club !== null && this.state.club.code
@@ -230,7 +233,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
         <AuthPrompt title="Oh no!" hasLogin={false}>
           <ClubMetadata club={club} />
           You do not have permission to edit the page for{' '}
-          {club.name || 'this club'}. To get access, contact{' '}
+          {(club && club.name) || 'this club'}. To get access, contact{' '}
           <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>.
         </AuthPrompt>
       )
