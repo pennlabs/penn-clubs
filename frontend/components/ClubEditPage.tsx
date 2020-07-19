@@ -10,7 +10,13 @@ import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesC
 import MembersCard from '../components/ClubEditPage/MembersCard'
 import QRCodeCard from '../components/ClubEditPage/QRCodeCard'
 import { CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
-import { Club, ClubApplicationRequired, ClubSize, UserInfo } from '../types'
+import {
+  Club,
+  ClubApplicationRequired,
+  ClubSize,
+  MembershipRank,
+  UserInfo,
+} from '../types'
 import { doApiRequest, formatResponse } from '../utils'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import ClubMetadata from './ClubMetadata'
@@ -212,13 +218,18 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
       )
     }
 
+    const isOfficer =
+      club.is_member === false
+        ? false
+        : club.is_member <= MembershipRank.Officer
+
     if (
       authenticated &&
       club &&
       club.code &&
       isEdit &&
       !userInfo.is_superuser &&
-      !userInfo.membership_set.some((m) => m.code === club.code && m.role <= 10)
+      !isOfficer
     ) {
       return (
         <AuthPrompt title="Oh no!" hasLogin={false}>

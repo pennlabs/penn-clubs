@@ -27,7 +27,6 @@ type RenderPageState = {
   modal: boolean
   favorites: string[]
   subscriptions: string[]
-  requests: string[]
 }
 
 function renderPage(Page) {
@@ -43,7 +42,6 @@ function renderPage(Page) {
         modal: false,
         favorites: [],
         subscriptions: [],
-        requests: [],
       }
 
       this.openModal = this.openModal.bind(this)
@@ -200,7 +198,6 @@ function renderPage(Page) {
           this.setState({
             favorites: [],
             subscriptions: [],
-            requests: [],
           })
         }
       })

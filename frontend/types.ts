@@ -122,8 +122,13 @@ export interface UserInfo {
   username: string
   is_superuser: boolean
   image_url: string
+}
+
+export interface ExtendedUserInfo extends UserInfo {
   membership_set: {
     code: string
     role: MembershipRank
   }[]
+  subscribe_set: { club: string }[]
+  favorite_set: { club: string }[]
 }

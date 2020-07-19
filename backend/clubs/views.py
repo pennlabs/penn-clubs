@@ -58,6 +58,7 @@ from clubs.serializers import (
     ClubListSerializer,
     ClubSerializer,
     EventSerializer,
+    ExtendedUserSerializer,
     FavoriteSerializer,
     MajorSerializer,
     MembershipInviteSerializer,
@@ -71,7 +72,6 @@ from clubs.serializers import (
     TagSerializer,
     TestimonialSerializer,
     UserMembershipRequestSerializer,
-    UserSerializer,
     YearSerializer,
 )
 from clubs.utils import html_to_text
@@ -777,7 +777,7 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     """
 
     permission_classes = [IsAuthenticated]
-    serializer_class = UserSerializer
+    serializer_class = ExtendedUserSerializer
 
     def get_object(self):
         user = self.request.user

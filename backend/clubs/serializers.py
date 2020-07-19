@@ -804,13 +804,25 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
 class UserSubscribeSerializer(serializers.ModelSerializer):
     """
-    Used by the UserSerializer to return the clubs that the user has favorited.
+    Used by the UserSerializer to return the clubs that the user has subscribed to.
     """
 
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
 
     class Meta:
         model = Subscribe
+        fields = ("club",)
+
+
+class UserFavoriteSerializer(serializers.ModelSerializer):
+    """
+    Used by the ExtendedUserSerializer to return the clubs that the user has favorited.
+    """
+
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+
+    class Meta:
+        model = Favorite
         fields = ("club",)
 
 
@@ -884,9 +896,6 @@ class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
     email = serializers.EmailField(read_only=True)
     name = serializers.SerializerMethodField("get_full_name")
-    membership_set = UserMembershipSerializer(many=True, read_only=True)
-    favorite_set = FavoriteSerializer(many=True, read_only=True)
-    subscribe_set = UserSubscribeSerializer(many=True, read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     image = serializers.ImageField(source="profile.image", write_only=True, allow_null=True)
     image_url = serializers.SerializerMethodField("get_image_url")
@@ -930,21 +939,33 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = (
-            "username",
-            "name",
+        fields = [
             "email",
-            "membership_set",
             "favorite_set",
-            "subscribe_set",
-            "is_superuser",
-            "image_url",
-            "image",
             "graduation_year",
-            "school",
-            "major",
             "has_been_prompted",
-        )
+            "image",
+            "image_url",
+            "is_superuser",
+            "major",
+            "name",
+            "school",
+            "username",
+        ]
+
+
+class ExtendedUserSerializer(UserSerializer):
+    membership_set = UserMembershipSerializer(many=True, read_only=True)
+    favorite_set = UserFavoriteSerializer(many=True, read_only=True)
+    subscribe_set = UserSubscribeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = UserSerializer.Meta.model
+        fields = UserSerializer.Meta.fields + [
+            "favorite_set",
+            "membership_set",
+            "subscribe_set",
+        ]
 
 
 class AssetSerializer(serializers.ModelSerializer):
