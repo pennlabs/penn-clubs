@@ -59,6 +59,7 @@ from clubs.serializers import (
     ClubSerializer,
     EventSerializer,
     FavoriteSerializer,
+    FavoriteWriteSerializer,
     MajorSerializer,
     MembershipInviteSerializer,
     MembershipRequestSerializer,
@@ -74,6 +75,7 @@ from clubs.serializers import (
     UserMembershipSerializer,
     UserSerializer,
     UserSubscribeSerializer,
+    UserSubscribeWriteSerializer,
     YearSerializer,
 )
 from clubs.utils import html_to_text
@@ -659,13 +661,17 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     destroy: Unfavorite a club.
     """
 
-    serializer_class = FavoriteSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "club__code"
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
         return Favorite.objects.filter(person=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return FavoriteWriteSerializer
+        return FavoriteSerializer
 
 
 class SubscribeViewSet(viewsets.ModelViewSet):
@@ -677,13 +683,17 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     destroy: Unsubscribe from a club.
     """
 
-    serializer_class = UserSubscribeSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "club__code"
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
         return Subscribe.objects.filter(person=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return UserSubscribeWriteSerializer
+        return UserSubscribeSerializer
 
 
 class MembershipRequestViewSet(viewsets.ModelViewSet):

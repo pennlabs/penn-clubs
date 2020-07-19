@@ -240,6 +240,30 @@ class ClubTestCase(TestCase):
         resp = self.client.delete(reverse("clubs-detail", args=("penn-labs",)))
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
+    def test_subscribe_views(self):
+        """
+        Test listing/adding/deleting subscriptions.
+        """
+        self.client.login(username=self.user1.username, password="test")
+
+        # add subscription
+        resp = self.client.post(reverse("subscribes-list"), {"club": self.club1.code})
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # attempt to add existing subscription
+        resp = self.client.post(reverse("subscribes-list"), {"club": self.club1.code})
+        self.assertIn(resp.status_code, [400], resp.content)
+
+        # list subscriptions
+        resp = self.client.get(reverse("subscribes-list"))
+        self.assertIn(resp.status_code, [200], resp.content)
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertTrue(data)
+
+        # delete subscription
+        resp = self.client.delete(reverse("subscribes-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+
     def test_favorite_views(self):
         """
         Test listing/adding/deleting favorites.

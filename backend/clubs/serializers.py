@@ -737,11 +737,13 @@ class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = ("club", "person")
-        validators = [
-            validators.UniqueTogetherValidator(
-                queryset=Favorite.objects.all(), fields=["club", "person"]
-            )
-        ]
+
+
+class FavoriteWriteSerializer(FavoriteSerializer):
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+
+    class Meta(FavoriteSerializer.Meta):
+        pass
 
 
 class UserMembershipSerializer(serializers.ModelSerializer):
@@ -764,11 +766,19 @@ class UserSubscribeSerializer(serializers.ModelSerializer):
     Used by users to get a list of clubs that they have subscribed to.
     """
 
+    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = ClubListSerializer(read_only=True)
 
     class Meta:
         model = Subscribe
-        fields = ["club"]
+        fields = ("club", "person")
+
+
+class UserSubscribeWriteSerializer(UserSubscribeSerializer):
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+
+    class Meta(UserSubscribeSerializer.Meta):
+        pass
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
