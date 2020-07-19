@@ -88,6 +88,9 @@ describe('Authenticated user tests', () => {
     })
     cy.contains('Submit').click()
 
+    // wait for club to be created 
+    cy.location('pathname').should('eq', '/club/test-new-club/edit')
+
     // delete created club
     cy.visit('/club/test-new-club/edit#settings')
     cy.contains('Delete Club')

@@ -304,7 +304,7 @@ export function renderListPage(Page) {
     const clubsRequest = await doApiRequest('/clubs/?page=1&format=json', data)
     const clubsResponse = await clubsRequest.json()
 
-    const tagsRequest = await doApiRequest('/tags/?format=json')
+    const tagsRequest = await doApiRequest('/tags/?format=json', data)
     const tagsResponse = await tagsRequest.json()
 
     return {
