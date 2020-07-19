@@ -20,7 +20,15 @@ import {
 import { doApiRequest, formatResponse } from '../utils'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import ClubMetadata from './ClubMetadata'
-import { Container, Empty, Icon, InactiveTag, Text, Title } from './common'
+import {
+  Container,
+  Empty,
+  Icon,
+  InactiveTag,
+  Loading,
+  Text,
+  Title,
+} from './common'
 import AuthPrompt from './common/AuthPrompt'
 import Form, { ModelForm } from './Form'
 import TabView from './TabView'
@@ -37,7 +45,7 @@ type ClubFormProps = {
 }
 
 type ClubFormState = {
-  club: any
+  club: Club | null
   isEdit: boolean
   message: ReactElement | string | null
 }
@@ -83,7 +91,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     const isEdit = typeof this.props.clubId !== 'undefined'
 
     this.state = {
-      club: isEdit ? null : {},
+      club: null,
       isEdit: isEdit,
       message: null,
     }
@@ -101,17 +109,23 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     )
   }
 
-  toggleClubActive() {
-    doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
+  toggleClubActive(): void {
+    const { club } = this.state
+
+    if (club === null) {
+      return
+    }
+
+    doApiRequest(`/clubs/${club.code}/?format=json`, {
       method: 'PATCH',
       body: {
-        active: !this.state.club.active,
+        active: !club.active,
       },
     }).then((resp) => {
       if (resp.ok) {
         this.notify(
           `Successfully ${
-            this.state.club.active ? 'deactivated' : 'activated'
+            club.active ? 'deactivated' : 'activated'
           } this club.`,
         )
         this.componentDidMount()
@@ -123,8 +137,14 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     })
   }
 
-  deleteClub() {
-    doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
+  deleteClub(): void {
+    const { club } = this.state
+
+    if (club === null) {
+      return
+    }
+
+    doApiRequest(`/clubs/${club.code}/?format=json`, {
       method: 'DELETE',
     }).then((resp) => {
       if (resp.ok) {
@@ -142,29 +162,36 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     const photo = data.image
     delete data.image
 
-    const req = this.state.isEdit
-      ? doApiRequest(`/clubs/${this.state.club.code}/?format=json`, {
-          method: 'PATCH',
-          body: data,
-        })
-      : doApiRequest('/clubs/?format=json', {
-          method: 'POST',
-          body: data,
-        })
+    const { club } = this.state
+
+    const req =
+      this.state.isEdit && club !== null
+        ? doApiRequest(`/clubs/${club.code}/?format=json`, {
+            method: 'PATCH',
+            body: data,
+          })
+        : doApiRequest('/clubs/?format=json', {
+            method: 'POST',
+            body: data,
+          })
 
     req.then((resp) => {
       if (resp.ok) {
         resp.json().then((info) => {
+          let clubCode: string | null = null
           if (!this.state.isEdit) {
+            this.setState({
+              isEdit: true,
+              club: info,
+            })
             this.props.router.push(
               '/club/[club]/edit',
               `/club/${info.code}/edit`,
               { shallow: true },
             )
-            this.setState({
-              isEdit: true,
-              club: info,
-            })
+            clubCode = info.code
+          } else {
+            clubCode = club?.code ?? null
           }
 
           let msg = this.state.isEdit
@@ -172,7 +199,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
             : 'Club has been successfully created.'
 
           if (photo && photo.get('file') instanceof File) {
-            doApiRequest(`/clubs/${this.state.club.code}/upload/?format=json`, {
+            doApiRequest(`/clubs/${clubCode}/upload/?format=json`, {
               method: 'POST',
               body: photo,
             }).then((resp) => {
@@ -228,6 +255,10 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
         ? false
         : club.is_member <= MembershipRank.Officer)
 
+    if (authenticated === null || (isEdit && club === null)) {
+      return <Loading />
+    }
+
     if (authenticated && isEdit && !userInfo.is_superuser && !isOfficer) {
       return (
         <AuthPrompt title="Oh no!" hasLogin={false}>
@@ -239,11 +270,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
       )
     }
 
-    if (authenticated === null || (isEdit && club === null)) {
-      return <div />
-    }
-
-    if (isEdit && !club.code) {
+    if (isEdit && (!club || !club.code)) {
       return (
         <div className="has-text-centered" style={{ margin: 30 }}>
           <div className="title is-h1">404 Not Found</div>
@@ -419,7 +446,8 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
       content: ReactElement
       disabled?: boolean
     }[] = []
-    if (club.code) {
+
+    if (club && club.code) {
       tabs = [
         {
           name: 'info',
@@ -615,7 +643,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           {
             <Link
               href={isViewButton ? CLUB_ROUTE() : HOME_ROUTE}
-              as={isViewButton ? CLUB_ROUTE(club.code) : HOME_ROUTE}
+              as={isViewButton && club ? CLUB_ROUTE(club.code) : HOME_ROUTE}
             >
               <a
                 className="button is-pulled-right is-secondary is-medium"
@@ -647,7 +675,11 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           <TabView tabs={tabs} />
         ) : (
           <div style={{ marginTop: '1em' }}>
-            <Form fields={fields} defaults={club} onSubmit={this.submit} />
+            <Form
+              fields={fields}
+              defaults={club === null ? {} : club}
+              onSubmit={this.submit}
+            />
           </div>
         )}
       </Container>
