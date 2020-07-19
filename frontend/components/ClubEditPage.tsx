@@ -219,18 +219,13 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     }
 
     const isOfficer =
-      club.is_member === false
-        ? false
-        : club.is_member <= MembershipRank.Officer
-
-    if (
-      authenticated &&
       club &&
       club.code &&
-      isEdit &&
-      !userInfo.is_superuser &&
-      !isOfficer
-    ) {
+      (club.is_member === false
+        ? false
+        : club.is_member <= MembershipRank.Officer)
+
+    if (authenticated && isEdit && !userInfo.is_superuser && !isOfficer) {
       return (
         <AuthPrompt title="Oh no!" hasLogin={false}>
           <ClubMetadata club={club} />
