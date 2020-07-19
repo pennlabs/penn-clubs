@@ -557,6 +557,7 @@ class MembershipViewSet(viewsets.ModelViewSet):
     """
     list: Return a list of clubs that the logged in user is a member of.
     """
+
     serializer_class = UserMembershipSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ["get"]

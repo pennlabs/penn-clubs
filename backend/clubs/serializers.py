@@ -730,6 +730,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
     """
     Used by users to get a list of clubs that they have favorited.
     """
+
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = ClubListSerializer(read_only=True)
 
@@ -762,6 +763,7 @@ class UserSubscribeSerializer(serializers.ModelSerializer):
     """
     Used by users to get a list of clubs that they have subscribed to.
     """
+
     club = ClubListSerializer(read_only=True)
 
     class Meta:
