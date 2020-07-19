@@ -132,7 +132,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
     const loadedClubs = new Set()
     this.state.clubs.forEach((c) => loadedClubs.add(c.code))
 
-    const paginationDownload = (url, count) => {
+    const paginationDownload = (url: string, count = 0): void => {
       doApiRequest(url)
         .then((res) => res.json())
         .then((res) => {
@@ -155,7 +155,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
           }
         })
     }
-    paginationDownload('/clubs/?page=1&format=json', 0)
+    paginationDownload('/clubs/?page=1&format=json')
   }
 
   resetDisplay(nameInput, selectedTags) {
@@ -285,7 +285,6 @@ class Splash extends React.Component<SplashProps, SplashState> {
 
   render() {
     const {
-      clubs,
       clubLoaded,
       clubCount,
       displayClubs,

@@ -223,8 +223,12 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         .order_by("-favorite_count", "name")
     )
     permission_classes = [ClubPermission | IsSuperuser]
-    filter_backends = [filters.SearchFilter]
+
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "subtitle"]
+    ordering_fields = ["favorite_count", "name"]
+    ordering = "-favorite_count"
+
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
     pagination_class = ClubPagination
