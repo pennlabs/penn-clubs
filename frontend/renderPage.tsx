@@ -108,9 +108,12 @@ function renderPage(Page) {
       }
     }
 
-    // Higher order function to wrap operations which require auth.
-    // Usage: console.log("Hello World") becomes checkAuth(console.log, "Hello World")
-    // This function returns null when no user is found, which may be useful.
+    /**
+     * Higher order function to wrap operations which require auth.
+     * Usage: console.log("Hello World") becomes checkAuth(console.log, "Hello World")
+     * This function returns null when no user is found, which may be useful.
+     * Passed to child components using the AuthCheckContext.
+     */
     checkAuth(func, ...args) {
       if (this.props.authenticated) {
         return typeof func === 'function' && func(...args)

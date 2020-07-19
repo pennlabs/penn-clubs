@@ -58,8 +58,6 @@ type ActionsProps = {
   style?: CSSProperties
   className?: string
   updateRequests: (code: string) => void
-  updateFavorites: (code: string) => boolean
-  updateSubscriptions: (code: string) => void
 }
 
 const ModalContent = s.div`
@@ -87,14 +85,10 @@ const Actions = ({
   club,
   userInfo,
   style,
-  updateFavorites,
-  updateSubscriptions,
   updateRequests,
   className,
 }: ActionsProps): ReactElement => {
   const { code, favorite_count: favoriteCount } = club
-  const isFavorite = club.is_favorite
-  const isSubscription = club.is_subscribe
   const isRequested = club.is_request
 
   // inClub is set to the membership object if the user is in the club, otherwise false
@@ -139,22 +133,14 @@ const Actions = ({
           <ActionWrapper>
             <BookmarkIcon
               club={club}
-              favorite={isFavorite}
-              updateFavorites={(id) => {
-                const upd = updateFavorites(id)
-                // If upd is null, checkAuth in renderPage failed, so we do not update the count.
-                if (upd !== null) setFavCount(favCount + (upd ? 1 : -1))
+              onFavorite={(status) => {
+                setFavCount(favCount + (status ? 1 : -1))
               }}
               padding="0"
             />
             <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
             <ActionDiv>|</ActionDiv>
-            <SubscribeIcon
-              padding="0"
-              club={club}
-              subscribe={isSubscription}
-              updateSubscribes={updateSubscriptions}
-            />
+            <SubscribeIcon padding="0" club={club} />
           </ActionWrapper>
         </Wrapper>
       </div>

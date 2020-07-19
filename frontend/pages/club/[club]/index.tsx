@@ -57,25 +57,9 @@ type ClubPageProps = {
 const ClubPage = ({
   club: initialClub,
   userInfo,
-  updateFavorites,
-  updateSubscriptions,
 }: ClubPageProps): ReactElement => {
   const router = useRouter()
   const [club, setClub] = useState<Club>(initialClub)
-
-  const _updateFavorites = (code: string): boolean => {
-    const newClub = Object.assign({}, club)
-    newClub.is_favorite = !newClub.is_favorite
-    setClub(newClub)
-    return updateFavorites(code)
-  }
-
-  const _updateSubscriptions = (code: string): void => {
-    const newClub = Object.assign({}, club)
-    newClub.is_subscribe = !newClub.is_subscribe
-    setClub(newClub)
-    updateSubscriptions(code)
-  }
 
   const updateRequests = (code: string): void => {
     const newClub = Object.assign({}, club)
@@ -184,8 +168,6 @@ const ClubPage = ({
           <MobileActions
             club={club}
             userInfo={userInfo}
-            updateFavorites={_updateFavorites}
-            updateSubscriptions={_updateSubscriptions}
             updateRequests={updateRequests}
           />
           <StyledCard bordered>
@@ -200,8 +182,6 @@ const ClubPage = ({
           <DesktopActions
             club={club}
             userInfo={userInfo}
-            updateFavorites={_updateFavorites}
-            updateSubscriptions={_updateSubscriptions}
             updateRequests={updateRequests}
           />
           <StyledCard bordered>

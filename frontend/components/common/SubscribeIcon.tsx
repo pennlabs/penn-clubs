@@ -1,8 +1,10 @@
-import { ReactElement } from 'react'
+import { ReactElement, useContext, useState } from 'react'
 import s from 'styled-components'
 
 import { BLACK, MEDIUM_GRAY } from '../../constants/colors'
 import { Club } from '../../types'
+import { apiSetSubscribeStatus } from '../../utils'
+import { AuthCheckContext } from '../contexts'
 
 const SubscribeIconTag = s.span<{
   padding?: string
@@ -37,37 +39,46 @@ const SubscribeIconTag = s.span<{
 `
 
 type SubscribeIconProps = {
-  updateSubscribes: (code: string) => void
   club: Club
-  subscribe?: boolean
   absolute?: boolean
   padding?: string
 }
 
 export const SubscribeIcon = ({
-  updateSubscribes,
   club,
-  subscribe = false,
   absolute = false,
   padding,
-}: SubscribeIconProps): ReactElement => (
-  <SubscribeIconTag
-    subscribe={subscribe}
-    absolute={absolute}
-    padding={padding}
-    onClick={(e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      updateSubscribes(club.code)
-    }}
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      className="feather feather-bell"
+}: SubscribeIconProps): ReactElement => {
+  const [subscribe, setSubscribe] = useState<boolean>(club.is_subscribe)
+  const authCheck = useContext(AuthCheckContext)
+
+  const updateSubscribe = () => {
+    authCheck(() => {
+      apiSetSubscribeStatus(club.code, !subscribe).then(() => {
+        setSubscribe(!subscribe)
+      })
+    })
+  }
+
+  return (
+    <SubscribeIconTag
+      subscribe={subscribe}
+      absolute={absolute}
+      padding={padding}
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        updateSubscribe()
+      }}
     >
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-    </svg>
-  </SubscribeIconTag>
-)
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        className="feather feather-bell"
+      >
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+    </SubscribeIconTag>
+  )
+}

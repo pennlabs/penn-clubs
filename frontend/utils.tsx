@@ -97,6 +97,24 @@ export function apiSetFavoriteStatus(
   }
 }
 
+export function apiSetSubscribeStatus(
+  club: string,
+  subscribed: boolean,
+): Promise<void> {
+  if (subscribed) {
+    return doApiRequest('/subscribe/?format=json', {
+      method: 'POST',
+      body: {
+        club: club,
+      },
+    }).then(() => undefined)
+  } else {
+    return doApiRequest(`/subscribe/${club}/?format=json`, {
+      method: 'DELETE',
+    }).then(() => undefined)
+  }
+}
+
 export function titleize(str: string): string {
   if (!str) return str
   return str
