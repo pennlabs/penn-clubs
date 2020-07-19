@@ -18,13 +18,21 @@ const Wrapper = s.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
 `
 
+const RenderPageWrapper = s.div`
+  display: flex;
+  flex-direction: column;
+  background-color: ${WHITE};
+  font-family: ${BODY_FONT};
+`
+
 type RenderPageProps = {
   authenticated: boolean | null
-  userInfo: UserInfo
+  userInfo?: UserInfo
 }
 
 type RenderPageState = {
   modal: boolean
+  userInfo: UserInfo | undefined
   favorites: string[]
   subscriptions: string[]
 }
@@ -35,27 +43,33 @@ function renderPage(Page) {
       ctx: NextPageContext,
     ) => Promise<{ authenticated: boolean; userInfo: undefined }>
 
-    constructor(props) {
+    constructor(props: RenderPageProps) {
       super(props)
 
       this.state = {
         modal: false,
         favorites: [],
         subscriptions: [],
+        userInfo: props.userInfo,
       }
 
-      this.openModal = this.openModal.bind(this)
-      this.closeModal = this.closeModal.bind(this)
-      this.checkAuth = this.checkAuth.bind(this)
       this._updateFavorites = this._updateFavorites.bind(this)
       this._updateSubscriptions = this._updateSubscriptions.bind(this)
+      this.checkAuth = this.checkAuth.bind(this)
+      this.checkRedirect = this.checkRedirect.bind(this)
+      this.closeModal = this.closeModal.bind(this)
+      this.openModal = this.openModal.bind(this)
       this.updateFavorites = this.updateFavorites.bind(this)
       this.updateSubscriptions = this.updateSubscriptions.bind(this)
       this.updateUserInfo = this.updateUserInfo.bind(this)
     }
 
     componentDidMount() {
-      this.updateUserInfo()
+      if (this.props.authenticated === null) {
+        this.updateUserInfo()
+      } else {
+        this.checkRedirect()
+      }
     }
 
     render() {
@@ -71,14 +85,7 @@ function renderPage(Page) {
         const { modal } = state
         const { authenticated, userInfo } = props
         return (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              backgroundColor: WHITE,
-              fontFamily: BODY_FONT,
-            }}
-          >
+          <RenderPageWrapper>
             <LoginModal show={modal} closeModal={closeModal} />
             <Header authenticated={authenticated} userInfo={userInfo} />
             <Wrapper>
@@ -91,7 +98,7 @@ function renderPage(Page) {
               />
             </Wrapper>
             <Footer />
-          </div>
+          </RenderPageWrapper>
         )
       } catch (ex) {
         logException(ex)
@@ -170,29 +177,38 @@ function renderPage(Page) {
       return i === -1
     }
 
-    updateUserInfo() {
+    checkRedirect(): void {
+      const { userInfo } = this.state
+
+      // redirect to welcome page if user hasn't seen it before
+      if (
+        typeof window !== 'undefined' &&
+        userInfo &&
+        userInfo.has_been_prompted === false &&
+        window.location.pathname !== '/welcome'
+      ) {
+        window.location.href =
+          '/welcome?next=' +
+          encodeURIComponent(
+            window.location.pathname +
+              window.location.search +
+              window.location.hash,
+          )
+      }
+    }
+
+    updateUserInfo(): void {
       doApiRequest('/settings/?format=json').then((resp) => {
         if (resp.ok) {
           resp.json().then((userInfo) => {
-            // redirect to welcome page if user hasn't seen it before
-            if (
-              window &&
-              userInfo.has_been_prompted === false &&
-              window.location.pathname !== '/welcome'
-            ) {
-              window.location.href =
-                '/welcome?next=' +
-                encodeURIComponent(
-                  window.location.pathname +
-                    window.location.search +
-                    window.location.hash,
-                )
-            }
-
-            this.setState({
-              favorites: userInfo.favorite_set.map((a) => a.club),
-              subscriptions: userInfo.subscribe_set.map((a) => a.club),
-            })
+            this.setState(
+              {
+                userInfo: userInfo,
+                favorites: userInfo.favorite_set.map((a) => a.club),
+                subscriptions: userInfo.subscribe_set.map((a) => a.club),
+              },
+              this.checkRedirect,
+            )
           })
         } else {
           this.setState({
@@ -205,13 +221,21 @@ function renderPage(Page) {
   }
 
   RenderPage.getInitialProps = async (ctx: NextPageContext) => {
-    let pageProps = {}
-    if (Page.getInitialProps) {
-      pageProps = await Page.getInitialProps(ctx)
+    const originalPageProps = async () => {
+      let pageProps = {}
+      if (Page.getInitialProps) {
+        pageProps = await Page.getInitialProps(ctx)
+      }
+      return pageProps
     }
-    const res = await doApiRequest('/settings/?format=json', {
-      headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
-    })
+
+    const [res, pageProps] = await Promise.all([
+      doApiRequest('/settings/?format=json', {
+        headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
+      }),
+      originalPageProps(),
+    ])
+
     const auth = { authenticated: false, userInfo: undefined }
     if (res.ok) {
       auth.userInfo = await res.json()
