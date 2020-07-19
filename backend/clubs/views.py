@@ -184,6 +184,89 @@ class ClubPagination(PageNumberPagination):
         return super().paginate_queryset(queryset, request, view)
 
 
+class ClubsFilter(filters.BaseFilterBackend):
+    """
+    A DRF filter to implement custom filtering logic for the frontend.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        params = request.GET.dict()
+
+        def parse_year(field, value, operation):
+            if value.isdigit():
+                suffix = ""
+                if operation in {"lt", "gt", "lte", "gte"}:
+                    suffix = f"__{operation}"
+                return {f"{field}__year{suffix}": int(value)}
+            if value.lower() in {"none", "null"}:
+                return {f"{field}__isnull": True}
+            raise ValueError(f"Unknown input format for {field}!")
+
+        def parse_int(field, value, operation):
+            if value.isdigit():
+                suffix = ""
+                if operation in {"lt", "gt", "lte", "gte"}:
+                    suffix = f"__{operation}"
+                return {f"{field}{suffix}": int(value)}
+            if value.lower() in {"none", "null"}:
+                return {f"{field}__isnull": True}
+            raise ValueError(f"Unknown input format for {field}!")
+
+        def parse_tags(field, value, operation):
+            tags = value.strip().split(",")
+            if tags[0].isdigit() or operation == "id":
+                tags = [int(tag) for tag in tags if tag]
+                return {f"{field}__id__in": tags}
+            else:
+                return {f"{field}__name__in": tags}
+
+        def parse_boolean(field, value, operation):
+            value = value.strip().lower()
+
+            if value in {"true", "yes"}:
+                boolval = True
+            elif value in {"false", "no"}:
+                boolval = False
+            elif value in {"null", "none"}:
+                boolval = None
+
+            if boolval is None:
+                return {f"{field}__isnull": boolval}
+
+            return {f"{field}": boolval}
+
+        fields = {
+            "founded": parse_year,
+            "favorite_count": parse_int,
+            "size": parse_int,
+            "application_required": parse_int,
+            "tags": parse_tags,
+            "target_schools": parse_tags,
+            "target_majors": parse_tags,
+            "target_years": parse_tags,
+            "active": parse_boolean,
+        }
+
+        try:
+            for param, value in params.items():
+                field = param.split("__")
+                if len(field) <= 1:
+                    field = field[0]
+                    type = "eq"
+                else:
+                    field = field[0]
+                    type = field[1].lower()
+
+                if field not in fields:
+                    continue
+
+                queryset = queryset.filter(**fields[field](field, value.strip(), type))
+        except ValueError:
+            pass
+
+        return queryset
+
+
 class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     retrieve:
@@ -224,7 +307,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     )
     permission_classes = [ClubPermission | IsSuperuser]
 
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ClubsFilter]
     search_fields = ["name", "subtitle"]
     ordering_fields = ["favorite_count", "name"]
     ordering = "-favorite_count"
