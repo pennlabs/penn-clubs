@@ -5,7 +5,7 @@ import { MEDIUM_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
 import { LOGOUT_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'
-import { Icon, ProfilePic, SmallText } from '../common'
+import { Contact, Icon, ProfilePic, SmallText } from '../common'
 import ProfileForm from './ProfileForm'
 
 const Wrapper = s.div`
@@ -70,8 +70,7 @@ export default ({ defaults }: ProfileTabProps): ReactElement => {
       <br />
       <br />
       <SmallText>
-        If your information is incorrect, please send an email to{' '}
-        <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>{' '}
+        If your information is incorrect, please send an email to <Contact />{' '}
         detailing your issue.
       </SmallText>
       <hr />

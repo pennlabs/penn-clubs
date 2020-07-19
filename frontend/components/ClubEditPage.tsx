@@ -21,6 +21,7 @@ import { doApiRequest, formatResponse } from '../utils'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import ClubMetadata from './ClubMetadata'
 import {
+  Contact,
   Container,
   Empty,
   Icon,
@@ -268,8 +269,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
             moved or deleted?
           </p>
           <p>
-            If you believe this is an error, please contact{' '}
-            <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>.
+            If you believe this is an error, please contact <Contact />.
           </p>
         </div>
       )
@@ -281,7 +281,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           <ClubMetadata club={club} />
           You do not have permission to edit the page for{' '}
           {(club && club.name) || 'this club'}. To get access, contact{' '}
-          <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>.
+          <Contact />.
         </AuthPrompt>
       )
     }

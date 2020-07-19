@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ReactElement } from 'react'
 
 import {
+  Contact,
   Container,
   Line,
   Metadata,
@@ -94,16 +95,14 @@ const FAQ = () => (
         >
           <li>
             If you did not receive administrator permission and you believe you
-            should have, let us know at{' '}
-            <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a> and
-            we’ll work with you to verify your request.
+            should have, let us know at <Contact /> and we will work with you to
+            verify your request.
           </li>
           <li>
             If your club did not submit this information to SAC, we’ve been
             contacting clubs by their listed email to ask for the names of
             people who need administrator permission. You can also email us at{' '}
-            <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a> and
-            we’ll work with you to verify your request.
+            <Contact /> and we will work with you to verify your request.
           </li>
         </ul>
         <br />

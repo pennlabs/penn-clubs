@@ -87,8 +87,7 @@ class Invite extends Component {
               already claimed?
             </p>
             <p>
-              If you believe that this is an error, please contact{' '}
-              <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>.
+              If you believe that this is an error, please contact <Contact />.
             </p>
             <p>{error && formatResponse(error)}</p>
           </div>
