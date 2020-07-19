@@ -259,6 +259,22 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
       return <Loading />
     }
 
+    if (isEdit && (!club || !club.code)) {
+      return (
+        <div className="has-text-centered" style={{ margin: 30 }}>
+          <div className="title is-h1">404 Not Found</div>
+          <p>
+            The club you are looking for does not exist. Perhaps it was recently
+            moved or deleted?
+          </p>
+          <p>
+            If you believe this is an error, please contact{' '}
+            <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>.
+          </p>
+        </div>
+      )
+    }
+
     if (authenticated && isEdit && !userInfo.is_superuser && !isOfficer) {
       return (
         <AuthPrompt title="Oh no!" hasLogin={false}>
@@ -267,14 +283,6 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           {(club && club.name) || 'this club'}. To get access, contact{' '}
           <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>.
         </AuthPrompt>
-      )
-    }
-
-    if (isEdit && (!club || !club.code)) {
-      return (
-        <div className="has-text-centered" style={{ margin: 30 }}>
-          <div className="title is-h1">404 Not Found</div>
-        </div>
       )
     }
 
