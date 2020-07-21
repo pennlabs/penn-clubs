@@ -14,11 +14,11 @@ import { CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
 import { Club, MembershipRank, UserInfo } from '../types'
 import { doApiRequest, formatResponse } from '../utils'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
+import QuestionsCard from './ClubEditPage/QuestionsCard'
 import ClubMetadata from './ClubMetadata'
 import {
   Contact,
   Container,
-  Empty,
   Icon,
   InactiveTag,
   Loading,
@@ -26,7 +26,6 @@ import {
   Title,
 } from './common'
 import AuthPrompt from './common/AuthPrompt'
-import { ModelForm } from './Form'
 import TabView from './TabView'
 
 type ClubFormProps = {
@@ -284,52 +283,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
         {
           name: 'questions',
           label: 'Questions',
-          content: (
-            <>
-              <div className="card" style={{ marginBottom: 20 }}>
-                <div className="card-header">
-                  <p className="card-header-title">Student Questions</p>
-                </div>
-                <div className="card-content">
-                  <p className="mb-3">
-                    You can see a list of questions that prospective club
-                    members have asked below. Answering any of these questions
-                    will make them publically available and show your name as
-                    the person who answered the question.
-                  </p>
-                  <ModelForm
-                    empty={
-                      <Empty>
-                        No students have asked any questions yet. Check back
-                        later!
-                      </Empty>
-                    }
-                    baseUrl={`/clubs/${club.code}/questions/`}
-                    allowCreation={false}
-                    initialData={club.questions}
-                    fields={[
-                      {
-                        name: 'question',
-                        type: 'textarea',
-                        disabled: true,
-                      },
-                      {
-                        name: 'answer',
-                        type: 'textarea',
-                      },
-                      {
-                        name: 'approved',
-                        type: 'checkbox',
-                        disabled: true,
-                        label:
-                          'Is this question and response shown to the public?',
-                      },
-                    ]}
-                  />
-                </div>
-              </div>
-            </>
-          ),
+          content: <QuestionsCard club={club} />,
         },
         {
           name: 'settings',

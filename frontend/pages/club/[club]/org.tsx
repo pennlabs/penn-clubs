@@ -1,3 +1,4 @@
+import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import s from 'styled-components'
@@ -109,8 +110,11 @@ const Organization = ({ query, club }) => {
   )
 }
 
-Organization.getInitialProps = async ({ query }) => {
-  const clubReq = await doApiRequest(`/clubs/${query.club}/?format=json`)
+Organization.getInitialProps = async ({ query, req }: NextPageContext) => {
+  const data = {
+    headers: req ? { cookie: req.headers.cookie } : undefined,
+  }
+  const clubReq = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const clubRes = await clubReq.json()
 
   return { query, club: clubRes }
