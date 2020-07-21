@@ -79,7 +79,7 @@ class Club(models.Model):
     APPLICATION_REQUIRED_NONE = 1
     APPLICATION_REQUIRED_SOME = 2
     APPLICATION_REQUIRED_ALL = 3
-    APPLCIATION_CHOICES = (
+    APPLICATION_CHOICES = (
         (APPLICATION_REQUIRED_NONE, "No Application Required"),
         (APPLICATION_REQUIRED_SOME, "Application Required For Some Positions"),
         (APPLICATION_REQUIRED_ALL, "Application Required For All Positions"),
@@ -112,7 +112,7 @@ class Club(models.Model):
     youtube = models.URLField(blank=True, null=True)
     how_to_get_involved = models.TextField(blank=True)
     application_required = models.IntegerField(
-        choices=APPLCIATION_CHOICES, default=APPLICATION_REQUIRED_ALL
+        choices=APPLICATION_CHOICES, default=APPLICATION_REQUIRED_ALL
     )
     accepting_members = models.BooleanField(default=False)
     listserv = models.CharField(blank=True, max_length=255)

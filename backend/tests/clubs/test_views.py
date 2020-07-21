@@ -1,9 +1,11 @@
 import datetime
 import io
 import json
+import os
 
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.core.management import call_command
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -809,6 +811,32 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200], resp.content)
         data = json.loads(resp.content.decode("utf-8"))
         self.assertTrue(data)
+
+    def test_club_list_filter(self):
+        """
+        Test complex club filtering.
+        """
+        with open(os.devnull, "w") as f:
+            call_command("populate", stdout=f)
+
+        # query will be in the format /clubs/?format=json&<query>
+        # output should be an exact match in terms of clubs returned
+        queries = [
+            {"query": "tags=1,4", "results": ["harvard-rejects"]},
+            {"query": "tags__or=1,4", "results": ["harvard-rejects", "empty-club", "pppjo"]},
+            {"query": "founded__lt=2000", "results": ["pppjo"]},
+            {"query": "tags=1&founded__lt=2000", "results": ["pppjo"]},
+            {"query": "accepting_members=true", "results": ["pppjo"]},
+            {"query": "size__or=2,3", "results": ["pppjo", "lorem-ipsum"]},
+            {"query": "application_required=2", "results": ["pppjo"]},
+        ]
+
+        for query in queries:
+            resp = self.client.get(f"{reverse('clubs-list')}?format=json&{query['query']}")
+            self.assertIn(resp.status_code, [200], resp.content)
+            data = json.loads(resp.content.decode("utf-8"))
+            codes = [club["code"] for club in data]
+            self.assertEqual(set(codes), set(query["results"]), (query, resp.content))
 
     def test_club_modify_wrong_auth(self):
         """

@@ -194,7 +194,7 @@ class ClubsFilter(filters.BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         params = request.GET.dict()
 
-        def parse_year(field, value, operation):
+        def parse_year(field, value, operation, queryset):
             if value.isdigit():
                 suffix = ""
                 if operation in {"lt", "gt", "lte", "gte"}:
@@ -204,7 +204,14 @@ class ClubsFilter(filters.BaseFilterBackend):
                 return {f"{field}__isnull": True}
             return {}
 
-        def parse_int(field, value, operation):
+        def parse_int(field, value, operation, queryset):
+            if "," in value:
+                values = [int(x.strip()) for x in value.split(",") if x]
+                if operation == "and":
+                    for value in values:
+                        queryset = queryset.filter(**{field: value})
+                    return queryset
+                return {f"{field}__in": values}
             if value.isdigit():
                 suffix = ""
                 if operation in {"lt", "gt", "lte", "gte"}:
@@ -214,15 +221,25 @@ class ClubsFilter(filters.BaseFilterBackend):
                 return {f"{field}__isnull": True}
             return {}
 
-        def parse_tags(field, value, operation):
+        def parse_tags(field, value, operation, queryset):
             tags = value.strip().split(",")
+            if operation == "or":
+                if tags[0].isdigit():
+                    tags = [int(tag) for tag in tags if tag]
+                    return {f"{field}__id__in": tags}
+                else:
+                    return {f"{field}__name__in": tags}
+
             if tags[0].isdigit() or operation == "id":
                 tags = [int(tag) for tag in tags if tag]
-                return {f"{field}__id__in": tags}
+                for tag in tags:
+                    queryset = queryset.filter(**{f"{field}__id": tag})
             else:
-                return {f"{field}__name__in": tags}
+                for tag in tags:
+                    queryset = queryset.filter(**{f"{field}__name": tag})
+            return queryset
 
-        def parse_boolean(field, value, operation):
+        def parse_boolean(field, value, operation, queryset):
             value = value.strip().lower()
 
             if value in {"true", "yes"}:
@@ -241,6 +258,7 @@ class ClubsFilter(filters.BaseFilterBackend):
             "founded": parse_year,
             "favorite_count": parse_int,
             "size": parse_int,
+            "accepting_members": parse_boolean,
             "application_required": parse_int,
             "tags": parse_tags,
             "target_schools": parse_tags,
@@ -257,13 +275,17 @@ class ClubsFilter(filters.BaseFilterBackend):
                 field = field[0]
                 type = "eq"
             else:
-                field = field[0]
                 type = field[1].lower()
+                field = field[0]
 
             if field not in fields:
                 continue
 
-            query.update(fields[field](field, value.strip(), type))
+            condition = fields[field](field, value.strip(), type, queryset)
+            if isinstance(condition, dict):
+                query.update(condition)
+            elif condition is not None:
+                queryset = condition
 
         queryset = queryset.filter(**query)
 
