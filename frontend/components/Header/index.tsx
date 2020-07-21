@@ -59,7 +59,7 @@ const Title = s.h1`
 
 type HeaderProps = {
   authenticated: boolean | null
-  userInfo: UserInfo
+  userInfo?: UserInfo
 }
 
 const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
