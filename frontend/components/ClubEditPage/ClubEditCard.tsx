@@ -47,7 +47,7 @@ type ClubEditCardProps = {
   tags: any[]
   club: any
   isEdit: boolean
-  onSubmit: (data: {
+  onSubmit?: (data: {
     message: ReactElement | string | null
     club?: Club
     isEdit?: boolean
@@ -61,7 +61,7 @@ export default function ClubEditCard({
   tags,
   club,
   isEdit,
-  onSubmit,
+  onSubmit = () => undefined,
 }: ClubEditCardProps): ReactElement {
   const submit = (data): void => {
     const photo = data.image

@@ -1,5 +1,11 @@
 import { ReactElement } from 'react'
 
-export function Contact(): ReactElement {
-  return <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>
+type ContactProps = {
+  email?: string
+}
+
+export function Contact({
+  email = 'contact@pennclubs.com',
+}: ContactProps): ReactElement {
+  return <a href={`mailto:${email}`}>{email}</a>
 }
