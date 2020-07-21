@@ -1,3 +1,4 @@
+import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement, useContext, useState } from 'react'
 import s from 'styled-components'
@@ -155,8 +156,11 @@ const Fair = ({ authenticated, club }: FairProps): ReactElement | null => {
   )
 }
 
-Fair.getInitialProps = async ({ query }) => {
-  const resp = await doApiRequest(`/clubs/${query.club}/?format=json`)
+Fair.getInitialProps = async ({ req, query }: NextPageContext) => {
+  const data = {
+    headers: req ? { cookie: req.headers.cookie } : undefined,
+  }
+  const resp = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const club = await resp.json()
   return { query, club }
 }
