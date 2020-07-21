@@ -980,7 +980,7 @@ class MassInviteAPIView(APIView):
         role = request.data.get("role", Membership.ROLE_MEMBER)
         title = request.data.get("title", "Member")
 
-        if mem and mem.role > role:
+        if mem and mem.role > role and not request.user.is_superuser:
             return Response(
                 {"detail": "You cannot send invites for a role higher than your own!"},
                 status=status.HTTP_403_FORBIDDEN,

@@ -2,7 +2,7 @@ import { ReactElement, useEffect, useState } from 'react'
 import Select from 'react-select'
 
 import { Club } from '../../types'
-import { doApiRequest, formatResponse } from '../../utils'
+import { doApiRequest, formatResponse, getRoleDisplay } from '../../utils'
 import { Icon, Text } from '../common'
 import BaseCard from './BaseCard'
 import { MEMBERSHIP_ROLES } from './MembersCard'
@@ -14,6 +14,8 @@ type InviteCardProps = {
 type Invite = {
   id: number
   email: string
+  title: string
+  role: number
 }
 
 export default function InviteCard({ club }: InviteCardProps): ReactElement {
@@ -87,6 +89,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
             <thead>
               <tr>
                 <th>Email</th>
+                <th>Title (Permissions)</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -94,6 +97,9 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
               {invites.map((item) => (
                 <tr key={item.email}>
                   <td>{item.email}</td>
+                  <td>
+                    {item.title} ({getRoleDisplay(item.role)})
+                  </td>
                   <td>
                     <button
                       className="button is-small is-link"

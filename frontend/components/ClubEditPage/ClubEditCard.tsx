@@ -45,7 +45,7 @@ type ClubEditCardProps = {
   majors: any[]
   years: any[]
   tags: any[]
-  club: Club
+  club: any
   isEdit: boolean
   onSubmit: (data: {
     message: ReactElement | string | null
