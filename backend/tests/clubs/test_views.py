@@ -819,16 +819,29 @@ class ClubTestCase(TestCase):
         with open(os.devnull, "w") as f:
             call_command("populate", stdout=f)
 
+        prof_tag_id = Tag.objects.filter(name="Professional").first().id
+        athl_tag_id = Tag.objects.filter(name="Athletics").first().id
+
         # query will be in the format /clubs/?format=json&<query>
         # output should be an exact match in terms of clubs returned
         queries = [
-            {"query": "tags=1,4", "results": ["harvard-rejects"]},
-            {"query": "tags__or=1,4", "results": ["harvard-rejects", "empty-club", "pppjo"]},
+            {"query": "tags=Professional,Athletics", "results": ["pppjo"]},
+            {"query": f"tags={prof_tag_id},{athl_tag_id}", "results": ["pppjo"]},
+            {
+                "query": "tags__or=Professional,Athletics",
+                "results": ["harvard-rejects", "empty-club", "pppjo"],
+            },
             {"query": "founded__lt=2000", "results": ["pppjo"]},
-            {"query": "tags=1&founded__lt=2000", "results": ["pppjo"]},
+            {"query": "tags=Professional&founded__lt=2000", "results": ["pppjo"]},
             {"query": "accepting_members=true", "results": ["pppjo"]},
-            {"query": "size__or=2,3", "results": ["pppjo", "lorem-ipsum"]},
-            {"query": "application_required=2", "results": ["pppjo"]},
+            {
+                "query": f"size__or={Club.SIZE_MEDIUM},{Club.SIZE_LARGE}",
+                "results": ["pppjo", "lorem-ipsum"],
+            },
+            {
+                "query": f"application_required={Club.APPLICATION_REQUIRED_SOME}",
+                "results": ["pppjo"],
+            },
         ]
 
         for query in queries:

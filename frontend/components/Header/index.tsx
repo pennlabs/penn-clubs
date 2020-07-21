@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { useState } from 'react'
+import { ReactElement, useState } from 'react'
 import s from 'styled-components'
 
 import { BORDER, CLUBS_NAVY, WHITE } from '../../constants/colors'
@@ -10,6 +10,7 @@ import {
   NAV_HEIGHT,
 } from '../../constants/measurements'
 import { HOME_ROUTE } from '../../constants/routes'
+import { UserInfo } from '../../types'
 import Burger from './Burger'
 import Feedback from './Feedback'
 import Heading from './Head'
@@ -56,7 +57,12 @@ const Title = s.h1`
   margin-bottom: 0 !important;
 `
 
-const Header = ({ authenticated, userInfo }) => {
+type HeaderProps = {
+  authenticated: boolean | null
+  userInfo: UserInfo
+}
+
+const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
   const [show, setShow] = useState(false)
 
   const toggle = () => setShow(!show)
