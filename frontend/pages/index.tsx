@@ -1,4 +1,5 @@
 import Fuse, { FuseOptions } from 'fuse.js'
+import Link from 'next/link'
 import React from 'react'
 import s from 'styled-components'
 
@@ -18,7 +19,7 @@ import {
 import { MD, mediaMaxWidth } from '../constants/measurements'
 import { renderListPage } from '../renderPage'
 import { Club, Tag, UserInfo } from '../types'
-import { doApiRequest } from '../utils'
+import { doApiRequest, isBetaEnabled } from '../utils'
 import { logEvent } from '../utils/analytics'
 
 const colorMap = {
@@ -59,6 +60,10 @@ const Container = s.div`
   }
 `
 
+const FairTitle = s.h1`
+  font-size: 1.5rem;
+`
+
 interface RankedClub extends Club {
   rank?: number
   target_schools: any[]
@@ -80,6 +85,7 @@ type SplashState = {
   selectedTags: any[]
   nameInput: string
   display: string
+  showFair: boolean
 }
 
 class Splash extends React.Component<SplashProps, SplashState> {
@@ -96,6 +102,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
       selectedTags: [],
       nameInput: '',
       display: 'cards',
+      showFair: false,
     }
     this.fuse = null
     this.fuseOptions = {
@@ -131,6 +138,8 @@ class Splash extends React.Component<SplashProps, SplashState> {
   componentDidMount() {
     const loadedClubs = new Set()
     this.state.clubs.forEach((c) => loadedClubs.add(c.code))
+
+    this.setState({ showFair: isBetaEnabled('fair') })
 
     const paginationDownload = (url: string, count = 0): void => {
       doApiRequest(url)
@@ -291,6 +300,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
       display,
       selectedTags,
       nameInput,
+      showFair,
     } = this.state
     const { tags } = this.props
     return (
@@ -322,6 +332,21 @@ class Splash extends React.Component<SplashProps, SplashState> {
                   Find your people!
                 </p>
               </div>
+              {showFair && (
+                <div className="notification is-primary">
+                  <FairTitle>
+                    🎉 Join the {new Date().getMonth() >= 6 ? 'Fall' : 'Spring'}{' '}
+                    {new Date().getFullYear()} Club Fair! 🎉
+                  </FairTitle>
+                  <p className="mb-5">
+                    The club fair is currently in progress. Click the button
+                    below to join!
+                  </p>
+                  <Link href="/fair">
+                    <a className="button is-link">Join the Club Fair!</a>
+                  </Link>
+                </div>
+              )}
               <ResultsText>
                 {' '}
                 {clubLoaded ? displayClubs.length : clubCount} results

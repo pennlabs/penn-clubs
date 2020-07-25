@@ -48,6 +48,14 @@ export function getSizeDisplay(size: number, showMembersLabel = true): string {
   else return 'Unknown'
 }
 
+export function isBetaEnabled(identifier: string): boolean {
+  return localStorage.getItem(identifier) === 'true'
+}
+
+export function setBetaState(identifier: string, state: boolean): void {
+  localStorage.setItem(identifier, state ? 'true' : 'false')
+}
+
 export function getRoleDisplay(role: MembershipRank): string {
   if (role <= 0) return 'Owner'
   else if (role <= 10) return 'Officer'
