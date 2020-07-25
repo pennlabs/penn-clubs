@@ -205,6 +205,11 @@ class ClubsFilter(filters.BaseFilterBackend):
             return {}
 
         def parse_int(field, value, operation, queryset):
+            if operation == "in":
+                values = value.strip().split(",")
+                sizes = [int(size) for size in values if size]
+                return {f"{field}__in": sizes}
+
             if "," in value:
                 values = [int(x.strip()) for x in value.split(",") if x]
                 if operation == "and":
@@ -212,6 +217,7 @@ class ClubsFilter(filters.BaseFilterBackend):
                         queryset = queryset.filter(**{field: value})
                     return queryset
                 return {f"{field}__in": values}
+                
             if value.isdigit():
                 suffix = ""
                 if operation in {"lt", "gt", "lte", "gte"}:
@@ -265,6 +271,7 @@ class ClubsFilter(filters.BaseFilterBackend):
             "target_majors": parse_tags,
             "target_years": parse_tags,
             "active": parse_boolean,
+            "accepting_members": parse_boolean,
         }
 
         query = {}

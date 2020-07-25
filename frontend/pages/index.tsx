@@ -159,43 +159,61 @@ class Splash extends React.Component<SplashProps, SplashState> {
   }
 
   resetDisplay(nameInput, selectedTags) {
-    const tagSelected = selectedTags.filter((tag) => tag.name === 'Tags')
-    const sizeSelected = selectedTags.filter((tag) => tag.name === 'Size')
-    const applicationSelected = selectedTags.filter(
-      (tag) => tag.name === 'Application',
-    )
-    let { clubs } = this.state
+    const tagSelected = selectedTags
+      .filter((tag) => tag.name === 'Tags')
+      .map((tag) => tag.value)
+    const sizeSelected = selectedTags
+      .filter((tag) => tag.name === 'Size')
+      .map((tag) => tag.value)
 
-    // fuzzy search
-    if (this.fuse && nameInput.length) {
-      clubs = this.fuse.search(nameInput) as RankedClub[]
+    const requiredApplication =
+      selectedTags.findIndex(
+        (tag) => tag.name === 'Application' && tag.value === 1,
+      ) !== -1
+    const noRequiredApplication =
+      selectedTags.findIndex(
+        (tag) => tag.name === 'Application' && tag.value === 2,
+      ) !== -1
+    const acceptingMembers =
+      selectedTags.findIndex(
+        (tag) => tag.name === 'Application' && tag.value === 3,
+      ) !== -1
+
+    const { clubs } = this.state
+
+    let url = '/clubs/?format=json'
+
+    if (nameInput) {
+      url += '&search=' + nameInput
+    }
+    if (tagSelected.length > 0) {
+      url += '&tags=' + tagSelected
+    }
+    if (sizeSelected.length > 0) {
+      url += '&size__in=' + sizeSelected
     }
 
-    // checkbox filters
-    clubs = clubs.filter((club) => {
-      const clubRightSize =
-        !sizeSelected.length ||
-        sizeSelected.findIndex((sizeTag) => sizeTag.value === club.size) !== -1
-      const appRequired =
-        !applicationSelected.length ||
-        (applicationSelected.findIndex((appTag) => appTag.value === 1) !== -1 &&
-          club.application_required !== 1) ||
-        (applicationSelected.findIndex((appTag) => appTag.value === 2) !== -1 &&
-          club.application_required === 1) ||
-        (applicationSelected.findIndex((appTag) => appTag.value === 3) !== -1 &&
-          club.accepting_members)
-      const rightTags =
-        !tagSelected.length ||
-        club.tags.some(
-          (clubTag) =>
-            tagSelected.findIndex((tag) => tag.value === clubTag.id) !== -1,
-        )
+    // XOR here, if both are yes they cancel out, if both are no
+    // we do no filtering
+    if (noRequiredApplication !== requiredApplication) {
+      if (noRequiredApplication) {
+        url += '&application_required__in=1'
+      } else {
+        url += '&application_required__in=2,3'
+      }
+    }
 
-      return clubRightSize && appRequired && rightTags
+    if (acceptingMembers) {
+      url += '&accepting_members=true'
+    }
+
+    doApiRequest(url, {
+      method: 'GET',
     })
-
-    const displayClubs = clubs
-    this.setState({ displayClubs, nameInput, selectedTags })
+      .then((res) => res.json())
+      .then((displayClubs) => {
+        this.setState({ displayClubs, nameInput, selectedTags })
+      })
   }
 
   switchDisplay(display) {
