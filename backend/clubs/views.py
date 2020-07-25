@@ -217,7 +217,7 @@ class ClubsFilter(filters.BaseFilterBackend):
                         queryset = queryset.filter(**{field: value})
                     return queryset
                 return {f"{field}__in": values}
-                
+
             if value.isdigit():
                 suffix = ""
                 if operation in {"lt", "gt", "lte", "gte"}:

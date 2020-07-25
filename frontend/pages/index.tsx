@@ -179,18 +179,16 @@ class Splash extends React.Component<SplashProps, SplashState> {
         (tag) => tag.name === 'Application' && tag.value === 3,
       ) !== -1
 
-    const { clubs } = this.state
-
     let url = '/clubs/?format=json'
 
     if (nameInput) {
-      url += '&search=' + nameInput
+      url += '&search=' + encodeURIComponent(nameInput)
     }
     if (tagSelected.length > 0) {
-      url += '&tags=' + tagSelected
+      url += '&tags=' + encodeURIComponent(tagSelected)
     }
     if (sizeSelected.length > 0) {
-      url += '&size__in=' + sizeSelected
+      url += '&size__in=' + encodeURIComponent(sizeSelected)
     }
 
     // XOR here, if both are yes they cancel out, if both are no
