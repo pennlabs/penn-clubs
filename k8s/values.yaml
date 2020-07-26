@@ -26,3 +26,14 @@ applications:
         value: 80
       - name: DOMAIN
         value: pennclubs.com
+  - name: websocket
+    image: pennlabs/penn-clubs-websocket
+    secret: penn-clubs
+    ingress:
+      hosts:
+        - host: ws01.pennclubs.com
+      extraEnv:
+        - name: PORT
+          value: 80
+        - name: DOMAIN
+          value: ws01.pennclubs.com

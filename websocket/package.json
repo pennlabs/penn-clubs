@@ -21,6 +21,7 @@
   "scripts": {
     "lint": "eslint *.{js,ts}",
     "fix": "eslint *.{js,ts} --fix",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "start": "node server.js"
   }
 }

@@ -42,9 +42,17 @@ workflows:
           tag: "${CIRCLE_SHA1},latest"
           context: docker-publish
           <<: *branch-filters
+      - docker/publish:
+          name: publish-websocket
+          path: websocket
+          cache_from: "pennlabs/penn-clubs-websocket:latest"
+          iamge: "pennlabs/penn-clubs-websocket"
+          context: docker-publish
+          <<: *branch-filters
       - helm-tools/deploy:
           requires:
             - publish-backend
             - publish-frontend
+            - publish-websocket
           context: k8s-deploy
           <<: *branch-filters
