@@ -2,12 +2,31 @@ import { ReactElement, useEffect, useRef, useState } from 'react'
 import s from 'styled-components'
 
 import renderPage from '../../renderPage'
+import { doApiRequest } from '../../utils'
 
 const SmallVideoWindow = s.div`
   & video {
   width: 256px;
   }
 `
+
+function ClientList({ client, connections }): ReactElement | null {
+  if (client === null) {
+    return null
+  }
+
+  return (
+    <div>
+      <b>Client List:</b>
+      <ul>
+        <li>{client.userInfos[client.getId()].full_name} (You)</li>
+        {connections.map((conn) => (
+          <li key={conn}>{client.userInfos[conn].full_name}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 function CameraPreview(): ReactElement {
   const selfVideoRef = useRef<HTMLVideoElement | null>(null)
@@ -50,17 +69,36 @@ class VideoClient {
   ws: WebSocket
   peerConnections: { [id: string]: RTCPeerConnection }
   events: { [name: string]: (data: any) => void }
+  userInfos: { [name: string]: any }
+  id: string
 
   constructor(address) {
     this.ws = new WebSocket(address)
     this.events = {}
     this.peerConnections = {}
+    this.userInfos = {}
+    this.id = null
 
     this.ws.onmessage = (msg) => {
       const data = JSON.parse(msg.data)
 
-      this.events[data.id](data)
+      const handler = this.events[data.id]
+      if (handler) {
+        handler(data)
+      } else {
+        this.events.error({
+          message: `Received invalid packet ID: ${data.id}`,
+        })
+      }
     }
+  }
+
+  getId(): string {
+    return this.id
+  }
+
+  setId(id: string): void {
+    this.id = id
   }
 
   registerEvent(name, handler) {
@@ -88,6 +126,7 @@ class VideoClient {
       conn.close()
     }
     delete this.peerConnections[id]
+    delete this.userInfos[id]
   }
 
   close() {
@@ -108,19 +147,20 @@ function VideoPage(): ReactElement {
     const client = new VideoClient('ws://localhost:4000/')
     websocketRef.current = client
 
+    const createOffer = async (userid) => {
+      const peerConnection = new RTCPeerConnection()
+      client.addPeerConnection(userid, peerConnection)
+      await setUpVideo(userid)
+      const offer = await peerConnection.createOffer()
+      await peerConnection.setLocalDescription(new RTCSessionDescription(offer))
+      client.send('offer', { offer, to: userid })
+    }
+
     client.registerEvent('users', (data) => {
-      data.users
-        .filter((id) => id !== data.myid)
-        .forEach(async (userid) => {
-          const peerConnection = new RTCPeerConnection()
-          client.addPeerConnection(userid, peerConnection)
-          await setUpVideo(userid)
-          const offer = await peerConnection.createOffer()
-          await peerConnection.setLocalDescription(
-            new RTCSessionDescription(offer),
-          )
-          client.send('offer', { offer, to: userid })
-        })
+      client.userInfos = data.userInfos
+      client.setId(data.myid)
+      setConnections([])
+      data.users.filter((id) => id !== data.myid).forEach(createOffer)
     })
 
     const setUpVideo = (id) => {
@@ -177,8 +217,18 @@ function VideoPage(): ReactElement {
       setConnections((conn) => conn.filter((id) => id !== data.peer))
     })
 
-    client.registerEvent('open', () => {
-      client.send('hello', {})
+    client.registerEvent('open', async () => {
+      const resp = await doApiRequest('/fair/jwt/')
+      const json = await resp.json()
+      client.send('auth', { jwt: json.jwt })
+    })
+
+    client.registerEvent('error', (data) => {
+      console.error(data.message)
+    })
+
+    client.registerEvent('newUser', (data) => {
+      client.userInfos[data.peerId] = data.userInfo
     })
 
     return () => {
@@ -196,6 +246,7 @@ function VideoPage(): ReactElement {
         </span>
       ))}
       <CameraPreview />
+      <ClientList client={websocketRef.current} connections={connections} />
     </>
   )
 }

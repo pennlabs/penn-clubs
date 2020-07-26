@@ -23,6 +23,7 @@ from clubs.views import (
     UserUpdateAPIView,
     YearViewSet,
     email_preview,
+    fair_jwt_generator,
 )
 
 
@@ -55,6 +56,7 @@ urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="users-detail"),
     path(r"clubs/<slug:club_code>/invite/", MassInviteAPIView.as_view(), name="club-invite"),
     path(r"emailpreview/", email_preview, name="email-preview"),
+    path(r"fair/jwt/", fair_jwt_generator, name="jwt-generator"),
 ]
 
 urlpatterns += router.urls

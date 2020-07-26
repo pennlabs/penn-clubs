@@ -1,14 +1,16 @@
+import datetime
 import json
 import os
 import re
 
+import jwt
 import qrcode
 from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch, Q
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils.text import slugify
@@ -1071,3 +1073,19 @@ def email_preview(request):
             "variables": context.get_used_variables() if context is not None else [],
         },
     )
+
+
+def fair_jwt_generator(request):
+    if not request.user.is_authenticated:
+        return {"error": "You are not authenticated! You must be logged in to use this endpoint."}
+
+    exp = (datetime.datetime.now() + datetime.timedelta(minutes=3)).utcnow().timestamp()
+
+    token = jwt.encode({
+        "id": request.user.id,
+        "username": request.user.username,
+        "full_name": request.user.get_full_name(),
+        "exp": exp,
+    }, "test_secret_CHANGE_ME_AND_MAKE_LONG", algorithm="HS256")
+
+    return JsonResponse({"jwt": token.decode("utf-8")})
