@@ -1081,11 +1081,15 @@ def fair_jwt_generator(request):
 
     exp = (datetime.datetime.now() + datetime.timedelta(minutes=3)).utcnow().timestamp()
 
-    token = jwt.encode({
-        "id": request.user.id,
-        "username": request.user.username,
-        "full_name": request.user.get_full_name(),
-        "exp": exp,
-    }, "test_secret_CHANGE_ME_AND_MAKE_LONG", algorithm="HS256")
+    token = jwt.encode(
+        {
+            "id": request.user.id,
+            "username": request.user.username,
+            "full_name": request.user.get_full_name(),
+            "exp": exp,
+        },
+        "test_secret_CHANGE_ME_AND_MAKE_LONG",
+        algorithm="HS256",
+    )
 
     return JsonResponse({"jwt": token.decode("utf-8")})
