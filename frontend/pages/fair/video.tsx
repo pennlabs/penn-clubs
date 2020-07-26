@@ -70,7 +70,7 @@ class VideoClient {
   peerConnections: { [id: string]: RTCPeerConnection }
   events: { [name: string]: (data: any) => void }
   userInfos: { [name: string]: any }
-  id: string
+  id: string | null
 
   constructor(address) {
     this.ws = new WebSocket(address)
@@ -93,7 +93,7 @@ class VideoClient {
     }
   }
 
-  getId(): string {
+  getId(): string | null {
     return this.id
   }
 
