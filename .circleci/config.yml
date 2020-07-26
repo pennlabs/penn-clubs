@@ -46,7 +46,7 @@ workflows:
           name: publish-websocket
           path: websocket
           cache_from: "pennlabs/penn-clubs-websocket:latest"
-          iamge: "pennlabs/penn-clubs-websocket"
+          image: "pennlabs/penn-clubs-websocket"
           context: docker-publish
           <<: *branch-filters
       - helm-tools/deploy:
