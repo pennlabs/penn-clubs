@@ -144,7 +144,11 @@ function VideoPage(): ReactElement {
   const [connections, setConnections] = useState<string[]>([])
 
   useEffect(() => {
-    const client = new VideoClient('ws://localhost:4000/')
+    const client = new VideoClient(
+      location.hostname === 'localhost'
+        ? 'ws://localhost:4000/'
+        : 'ws://ws01.pennclubs.com/',
+    )
     websocketRef.current = client
 
     const createOffer = async (userid) => {
