@@ -1,0 +1,25 @@
+{
+  "name": "penn-clubs-websocket-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^7.3.1"
+  },
+  "devDependencies": {
+    "@types/ws": "^7.2.6",
+    "@typescript-eslint/eslint-plugin": "^3.7.0",
+    "@typescript-eslint/parser": "^3.7.0",
+    "eslint": "^7.5.0",
+    "eslint-plugin-react": "^7.20.3",
+    "eslint-plugin-simple-import-sort": "^5.0.3",
+    "nodemon": "^2.0.4",
+    "typescript": "^3.9.7",
+    "uuid": "^8.2.0"
+  },
+  "scripts": {
+    "lint": "eslint *.{js,ts}",
+    "fix": "eslint *.{js,ts} --fix",
+    "dev": "nodemon server.js"
+  }
+}

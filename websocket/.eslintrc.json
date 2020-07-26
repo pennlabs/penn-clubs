@@ -1,0 +1,40 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "env": {
+    "es6": true,
+    "node": true
+  },
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true,
+      "modules": true
+    },
+    "ecmaVersion": 2020,
+    "sourceType": "module"
+  },
+  "plugins": ["react", "simple-import-sort"],
+  "rules": {
+    "comma-dangle": ["error", "always-multiline"],
+    "space-before-function-paren": [
+      "error",
+      {
+        "anonymous": "ignore",
+        "named": "never",
+        "asyncArrow": "always"
+      }
+    ],
+    "no-unused-vars": ["warn"],
+    "camelcase": ["warn", { "ignoreDestructuring": true }],
+    "react/jsx-uses-vars": [2],
+    "no-console": ["warn"],
+    "simple-import-sort/sort": ["warn"],
+    "linebreak-style": ["error", "unix"],
+    "@typescript-eslint/no-var-requires": 0,
+    "no-console": 0
+  }
+}
