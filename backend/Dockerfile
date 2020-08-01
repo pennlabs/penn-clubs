@@ -2,6 +2,9 @@ FROM pennlabs/django-base:3cadd22f7ad51359c5e86b6a3cba2fc155c1c6ab
 
 LABEL maintainer="Penn Labs"
 
+# Install uwsgi
+RUN pip install uwsgi
+
 # Copy project dependencies
 COPY Pipfile* /app/
 
