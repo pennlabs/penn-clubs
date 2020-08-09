@@ -1,0 +1,28 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>Renew <b>{{ name }}</b> on Penn Clubs</h2>
+    <p style="font-size: 1.2em">
+    	Dear student group leaders,
+    </p>
+    <p style="font-size: 1.2em">
+        We have opened the student group registration process for the 2020-2021 academic year. To be
+        considered an active student group on campus, the University requires all student organizations
+        to be registered with the Office of Student Affairs. <b>This year, we have migrated our Student
+        Groups platform from the previous system, G.O. Penn, to Penn Labs' platform, Penn Clubs.</b>
+        All official registry of student groups will be handled through Penn Clubs.
+    </p>
+    <p style="font-size: 1.2em">
+        If you have already graduated, <b>PLEASE FORWARD THIS EMAIL</b> to the current leadership of
+        the group so that they may complete the registration process. Instructions for transferring
+        admin rights are included in this email as well.
+    </p>
+    <p style="font-size: 1.2em">
+        Click the button below to renew your club. You will need to sign in with your PennKey in
+        order to complete the process.
+    </p>
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ url }}">Renew Club</a>
+    <p style="font-size: 1.2em">
+        If you have any questions, feel free to respond to this email.
+    </p>
+{% endblock %}
