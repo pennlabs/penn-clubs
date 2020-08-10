@@ -9,3 +9,4 @@ export const CLUB_FLYER_ROUTE = (slug?: string): string =>
 export const CLUB_RENEW_ROUTE = (slug?: string): string =>
   slug ? `/club/${slug}/renew` : '/club/[club]/renew'
 export const SETTINGS_ROUTE = '/settings'
+export const USER_RENEWAL = '/renew'
