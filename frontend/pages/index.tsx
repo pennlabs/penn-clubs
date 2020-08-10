@@ -83,6 +83,10 @@ type SplashState = {
   display: string
 }
 
+function sortClubsByName (clubs: RankedClub[]): RankedClub[] {
+  return [...clubs].sort(({ name: a }, { name: b }) => a.localeCompare(b))
+}
+
 class Splash extends React.Component<SplashProps, SplashState> {
   constructor(props) {
     super(props)
@@ -91,9 +95,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
       clubCount: props.clubCount,
       clubLoaded: false,
       displayClubs: props.clubs,
-      alphabeticalDisplayClubs: [
-        ...props.clubs,
-      ].sort(({ name: a }, { name: b }) => a.localeCompare(b)),
+      alphabeticalDisplayClubs: sortClubsByName(props.clubs),
       displayAlphabetized: false,
       selectedTags: [],
       nameInput: '',
@@ -118,7 +120,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
           results.forEach((c) => seenClubs.add(c.code))
           clubs.concat(newClubs)
           if (!next || count === 0) {
-            this.setState({ clubs, displayClubs: clubs, clubCount: count })
+            this.setState({ clubs, displayClubs: clubs, alphabeticalDisplayClubs: sortClubsByName(clubs), clubCount: count })
           }
           if (next) {
             paginationDownload(next, count + 1)
@@ -182,7 +184,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
     })
       .then((res) => res.json())
       .then((displayClubs) => {
-        this.setState({ displayClubs, nameInput, selectedTags })
+        this.setState({ displayClubs, alphabeticalDisplayClubs: sortClubsByName(displayClubs), nameInput, selectedTags })
       })
   }
 
@@ -193,15 +195,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
   }
 
   switchSort() {
-    const { displayClubs, displayAlphabetized } = this.state
-    if (displayAlphabetized) this.setState({ displayAlphabetized: false })
-    else
-      this.setState({
-        displayAlphabetized: true,
-        alphabeticalDisplayClubs: [
-          ...displayClubs,
-        ].sort(({ name: a }, { name: b }) => a.localeCompare(b)),
-      })
+    this.setState(({ displayAlphabetized }) => ({ displayAlphabetized: !displayAlphabetized}))
   }
 
   updateTag(tag, name) {
@@ -281,6 +275,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
         }
         return 0
       }),
+      alphabeticalDisplayClubs: sortClubsByName(clubs)
     })
   }
 
