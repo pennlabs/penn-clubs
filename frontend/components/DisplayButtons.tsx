@@ -72,6 +72,14 @@ const DisplayButtons = ({
       <Icon name="shuffle" alt="shuffle club order" style={iconStyles} />
       &nbsp;&nbsp; Shuffle
     </button>
+    <button
+      // onClick={}
+      style={{ ...buttonStyles, color: DARK_GRAY, fontWeight: 600 }}
+      className="button is-small"
+    >
+      <Icon name="filter" alt="shuffle club order" style={iconStyles} />
+      &nbsp;&nbsp; Reorder
+    </button>
     <Link href="/create">
       <AddClubButton className="button is-small">
         <Icon name="plus" alt="create club" style={iconStylesDark} />
