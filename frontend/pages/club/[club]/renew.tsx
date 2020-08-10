@@ -245,6 +245,11 @@ const RenewPage = ({
 
   const nextStep = () => {
     setStep(step + 1)
+    if (step === 3) {
+      doApiRequest(`/clubs/${club.code}/renew/`, {
+        method: 'POST',
+      })
+    }
   }
 
   return (
