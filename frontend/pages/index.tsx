@@ -76,6 +76,8 @@ type SplashState = {
   clubLoaded: boolean
   clubCount: number
   displayClubs: RankedClub[]
+  alphabeticalDisplayClubs: RankedClub[]
+  displayAlphabetized: boolean
   selectedTags: any[]
   nameInput: string
   display: string
@@ -89,6 +91,8 @@ class Splash extends React.Component<SplashProps, SplashState> {
       clubCount: props.clubCount,
       clubLoaded: false,
       displayClubs: props.clubs,
+      alphabeticalDisplayClubs: [...props.clubs].sort(({name: a}, {name: b}) => a.localeCompare(b)),
+      displayAlphabetized: false,
       selectedTags: [],
       nameInput: '',
       display: 'cards',
@@ -96,6 +100,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
 
     this.shuffle = this.shuffle.bind(this)
     this.switchDisplay = this.switchDisplay.bind(this)
+    this.switchSort = this.switchSort.bind(this)
   }
 
   componentDidMount() {
@@ -185,6 +190,15 @@ class Splash extends React.Component<SplashProps, SplashState> {
     this.forceUpdate()
   }
 
+  switchSort(){
+    const { displayClubs, displayAlphabetized } = this.state
+    if (displayAlphabetized) this.setState({ displayAlphabetized: false})
+    else this.setState({
+      displayAlphabetized: true,
+      alphabeticalDisplayClubs: [...displayClubs].sort(({name: a}, {name: b}) => a.localeCompare(b))
+    })
+  }
+
   updateTag(tag, name) {
     const { selectedTags } = this.state
     const { value } = tag
@@ -245,6 +259,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
       club.rank += 2 * Math.random()
     })
     this.setState({
+      displayAlphabetized: false,
       displayClubs: clubs.sort((a, b) => {
         if (typeof b.rank === 'undefined') {
           return -1
@@ -270,6 +285,8 @@ class Splash extends React.Component<SplashProps, SplashState> {
       clubCount,
       displayClubs,
       display,
+      alphabeticalDisplayClubs,
+      displayAlphabetized,
       selectedTags,
       nameInput,
     } = this.state
@@ -291,6 +308,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
                 <DisplayButtons
                   shuffle={this.shuffle}
                   switchDisplay={this.switchDisplay}
+                  switchSort={this.switchSort}
                 />
 
                 <Title className="title" style={{ color: CLUBS_GREY }}>
@@ -343,7 +361,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
               )}
 
               <ClubDisplay
-                displayClubs={displayClubs}
+                displayClubs={displayAlphabetized ? alphabeticalDisplayClubs : displayClubs}
                 display={display}
                 tags={tags}
               />
