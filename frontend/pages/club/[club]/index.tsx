@@ -12,6 +12,7 @@ import Description from '../../../components/ClubPage/Description'
 import Events from '../../../components/ClubPage/Events'
 import Header from '../../../components/ClubPage/Header'
 import InfoBox from '../../../components/ClubPage/InfoBox'
+import RenewalRequest from '../../../components/ClubPage/RenewalRequest'
 import MemberList from '../../../components/ClubPage/MemberList'
 import QuestionList from '../../../components/ClubPage/QuestionList'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
@@ -26,7 +27,7 @@ import {
   Title,
   WideContainer,
 } from '../../../components/common'
-import { SNOW, WHITE } from '../../../constants/colors'
+import { SNOW, WHITE, CLUBS_RED } from '../../../constants/colors'
 import { M0, M2, M3 } from '../../../constants/measurements'
 import renderPage from '../../../renderPage'
 import { Club, UserInfo } from '../../../types'
@@ -43,6 +44,12 @@ const Image = s.img`
 
 const StyledCard = s(Card)`
   background-color: ${WHITE};
+  margin-bottom: ${M3};
+  padding-left: ${M2};
+`
+
+const InactiveCard = s(Card)`
+  background-color: ${CLUBS_RED};
   margin-bottom: ${M3};
   padding-left: ${M2};
 `
@@ -152,6 +159,16 @@ const ClubPage = ({
       )}
       <div className="columns">
         <div className="column">
+
+        <InactiveCard
+            bordered
+            style={{
+              paddingLeft: '1rem',
+            }}
+          >
+            <RenewalRequest club={club} />
+          </InactiveCard>
+
           <StyledCard
             bordered
             style={{
