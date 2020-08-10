@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { M1, M2 } from '../../constants'
 import { doApiRequest } from '../../utils'
 import { Icon } from '../common/Icon'
 import Form from '../Form'
@@ -80,6 +81,19 @@ class ProfileForm extends React.Component {
       {
         name: 'image',
         type: 'file',
+        label: 'Profile Picture',
+        trivia: settings.image_url ? <button
+        onClick={this.deleteProfilePic}
+        className="button is-danger is-pulled-right"
+        style={{
+          marginLeft: M2
+        }}
+      >
+        <span className="file-icon"><Icon name="trash" /></span>
+        <span className="file-label">
+          Remove Image
+        </span>
+      </button> : <></>
       },
       {
         name: 'graduation_year',
@@ -105,7 +119,6 @@ class ProfileForm extends React.Component {
         reverser: (a) => ({ id: a.value, name: a.label }),
       },
     ]
-
     return (
       <>
         <Form
@@ -113,8 +126,8 @@ class ProfileForm extends React.Component {
           defaults={settings}
           onSubmit={this.submit}
           submitButton={
-            <a className="button is-success">
-              <Icon alt="save" name="edit" />
+              <a className="button is-success">
+                <Icon alt="save" name="edit" />
               Save
             </a>
           }
@@ -125,14 +138,7 @@ class ProfileForm extends React.Component {
             </a>
           }
         />
-        {settings.image_url && (
-          <button
-            onClick={this.deleteProfilePic}
-            className="button is-danger is-pulled-right"
-          >
-            <Icon name="trash" /> Delete Profile Picture
-          </button>
-        )}
+
       </>
     )
   }
