@@ -47,6 +47,7 @@ const buttonStyles = {
 
 const DisplayButtons = ({
   switchDisplay,
+  switchSort,
   shuffle,
 }: DisplayButtonsProps): ReactElement => (
   <DisplayButtonsTag>
@@ -73,7 +74,7 @@ const DisplayButtons = ({
       &nbsp;&nbsp; Shuffle
     </button>
     <button
-      // onClick={}
+      onClick={switchSort}
       style={{ ...buttonStyles, color: DARK_GRAY, fontWeight: 600 }}
       className="button is-small"
     >
@@ -91,6 +92,7 @@ const DisplayButtons = ({
 
 type DisplayButtonsProps = {
   switchDisplay: (disp: string) => void
+  switchSort: () => void
   shuffle: () => void
 }
 
