@@ -91,7 +91,9 @@ class Splash extends React.Component<SplashProps, SplashState> {
       clubCount: props.clubCount,
       clubLoaded: false,
       displayClubs: props.clubs,
-      alphabeticalDisplayClubs: [...props.clubs].sort(({name: a}, {name: b}) => a.localeCompare(b)),
+      alphabeticalDisplayClubs: [
+        ...props.clubs,
+      ].sort(({ name: a }, { name: b }) => a.localeCompare(b)),
       displayAlphabetized: false,
       selectedTags: [],
       nameInput: '',
@@ -190,13 +192,16 @@ class Splash extends React.Component<SplashProps, SplashState> {
     this.forceUpdate()
   }
 
-  switchSort(){
+  switchSort() {
     const { displayClubs, displayAlphabetized } = this.state
-    if (displayAlphabetized) this.setState({ displayAlphabetized: false})
-    else this.setState({
-      displayAlphabetized: true,
-      alphabeticalDisplayClubs: [...displayClubs].sort(({name: a}, {name: b}) => a.localeCompare(b))
-    })
+    if (displayAlphabetized) this.setState({ displayAlphabetized: false })
+    else
+      this.setState({
+        displayAlphabetized: true,
+        alphabeticalDisplayClubs: [
+          ...displayClubs,
+        ].sort(({ name: a }, { name: b }) => a.localeCompare(b)),
+      })
   }
 
   updateTag(tag, name) {
@@ -361,7 +366,9 @@ class Splash extends React.Component<SplashProps, SplashState> {
               )}
 
               <ClubDisplay
-                displayClubs={displayAlphabetized ? alphabeticalDisplayClubs : displayClubs}
+                displayClubs={
+                  displayAlphabetized ? alphabeticalDisplayClubs : displayClubs
+                }
                 display={display}
                 tags={tags}
               />
