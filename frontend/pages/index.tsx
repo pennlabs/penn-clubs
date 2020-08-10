@@ -1,4 +1,3 @@
-import Fuse, { FuseOptions } from 'fuse.js'
 import React from 'react'
 import s from 'styled-components'
 
@@ -83,9 +82,6 @@ type SplashState = {
 }
 
 class Splash extends React.Component<SplashProps, SplashState> {
-  fuseOptions: FuseOptions<Club>
-  fuse: Fuse<Club, FuseOptions<Club>> | null
-
   constructor(props) {
     super(props)
     this.state = {
@@ -97,59 +93,28 @@ class Splash extends React.Component<SplashProps, SplashState> {
       nameInput: '',
       display: 'cards',
     }
-    this.fuse = null
-    this.fuseOptions = {
-      keys: [
-        {
-          name: 'name',
-          weight: 0.4,
-        },
-        {
-          name: 'tags.name',
-          weight: 0.3,
-        },
-        {
-          name: 'subtitle',
-          weight: 0.2,
-        },
-        {
-          name: 'description',
-          weight: 0.1,
-        },
-      ],
-      tokenize: true,
-      findAllMatches: true,
-      shouldSort: true,
-      minMatchCharLength: 2,
-      threshold: 0.2,
-    }
 
     this.shuffle = this.shuffle.bind(this)
     this.switchDisplay = this.switchDisplay.bind(this)
   }
 
   componentDidMount() {
-    const loadedClubs = new Set()
-    this.state.clubs.forEach((c) => loadedClubs.add(c.code))
+    const seenClubs = new Set()
+    const { clubs } = this.state
+    clubs.forEach((c) => seenClubs.add(c.code))
 
     const paginationDownload = (url: string, count = 0): void => {
       doApiRequest(url)
         .then((res) => res.json())
-        .then((res) => {
-          this.setState((state) => {
-            const newClubs = res.results.filter((c) => !loadedClubs.has(c.code))
-            res.results.forEach((c) => loadedClubs.add(c.code))
-            return {
-              clubs: state.clubs.concat(newClubs),
-              clubCount: res.count,
-            }
-          })
-          if (!res.next || count === 0) {
-            this.setState((state) => ({ displayClubs: state.clubs }))
-            this.fuse = new Fuse(this.state.clubs, this.fuseOptions)
+        .then(({ results, count, next }) => {
+          const newClubs = results.filter((c) => !seenClubs.has(c.code))
+          results.forEach((c) => seenClubs.add(c.code))
+          clubs.concat(newClubs)
+          if (!next || count === 0) {
+            this.setState({ clubs, displayClubs: clubs, clubCount: count })
           }
-          if (res.next) {
-            paginationDownload(res.next, count + 1)
+          if (next) {
+            paginationDownload(next, count + 1)
           } else {
             this.setState({ clubLoaded: true })
           }
