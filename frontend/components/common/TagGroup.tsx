@@ -25,6 +25,7 @@ export const TagGroup = ({ tags = [] }: TagGroupProps): ReactElement | null => {
               </DefaultTag>
             )
           case 'tag':
+          default:
             return (
               <BlueTag
                 key={`${tag.id}-${tag.kind}`}
