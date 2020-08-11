@@ -7,32 +7,34 @@ type TagGroupProps = {
   tags?: (Tag | Badge)[]
 }
 
-function isBadge(tag): tag is Badge {
-  return tag.label !== undefined || typeof tag.color !== undefined
-}
-
 export const TagGroup = ({ tags = [] }: TagGroupProps): ReactElement | null => {
   if (!tags || !tags.length) return null
 
   return (
     <>
       {tags.map((tag) => {
-        return isBadge(tag) ? (
-          <DefaultTag
-            key={`${tag.id}-badge`}
-            color={tag.color}
-            className="tag is-rounded"
-          >
-            {tag.label}
-          </DefaultTag>
-        ) : (
-          <BlueTag
-            key={`${tag.id}-tag`}
-            className="tag is-rounded has-text-white"
-          >
-            {tag.name}
-          </BlueTag>
-        )
+        switch (tag.kind) {
+          case 'badge':
+            return (
+              <DefaultTag
+                key={`${tag.id}-${tag.kind}`}
+                color={tag.color}
+                className="tag is-rounded"
+              >
+                {tag.label}
+              </DefaultTag>
+            )
+          case 'tag':
+          default:
+            return (
+              <BlueTag
+                key={`${tag.id}-${tag.kind}`}
+                className="tag is-rounded has-text-white"
+              >
+                {tag.name}
+              </BlueTag>
+            )
+        }
       })}
     </>
   )
