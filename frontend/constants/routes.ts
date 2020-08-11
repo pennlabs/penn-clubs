@@ -6,4 +6,6 @@ export const CLUB_EDIT_ROUTE = (slug?: string): string =>
   slug ? `/club/${slug}/edit` : '/club/[club]/edit'
 export const CLUB_FLYER_ROUTE = (slug?: string): string =>
   slug ? `/club/${slug}/flyer` : '/club/[club]/flyer'
+export const CLUB_RENEW_ROUTE = (slug?: string): string =>
+  slug ? `/club/${slug}/renew` : '/club/[club]/renew'
 export const SETTINGS_ROUTE = '/settings'
