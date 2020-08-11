@@ -127,6 +127,14 @@ export interface UserInfo {
   major: any[]
 }
 
+export type UserMembership = {
+  club: Club
+  role: MembershipRank
+  title: string
+  active: boolean
+  public: boolean
+}
+
 export interface ExtendedUserInfo extends UserInfo {
   membership_set: {
     code: string

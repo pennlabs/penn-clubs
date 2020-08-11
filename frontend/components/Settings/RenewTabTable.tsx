@@ -1,16 +1,12 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
-import ReactTooltip from 'react-tooltip'
 import s from 'styled-components'
 
 import { DARK_GRAY } from '../../constants/colors'
-import { CLUB_RENEWAL_ROUTE, CLUB_ROUTE } from '../../constants/routes'
+import { CLUB_RENEW_ROUTE, CLUB_ROUTE } from '../../constants/routes'
 import { BODY_FONT } from '../../constants/styles'
-import { Club, MembershipRank } from '../../types'
-import { getRoleDisplay } from '../../utils'
+import { MembershipRank, UserMembership } from '../../types'
 import { Icon } from '../common'
-import { UserMembership } from './ClubTab'
-import Toggle from './Toggle'
 
 const Table = s.table`
   font-family: ${BODY_FONT};
@@ -22,17 +18,11 @@ const Table = s.table`
 type ClubTabTableProps = {
   className?: string
   memberships: UserMembership[]
-  togglePublic: (club: Club) => void
-  toggleActive: (club: Club) => void
-  leaveClub: (club: Club) => void
 }
 
 export default ({
   className,
   memberships,
-  togglePublic,
-  toggleActive,
-  leaveClub,
 }: ClubTabTableProps): ReactElement => (
   <Table className={`table is-fullwidth ${className}`}>
     <thead>
@@ -42,27 +32,35 @@ export default ({
       </tr>
     </thead>
     <tbody>
-      {memberships.map(({ club, active, public: isPublic, role }) => (
+      {memberships.map(({ club, role }) => (
         <tr key={club.code}>
           <td>
-            {role <= MembershipRank.Officer ? (
-              <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-                <a>{club.name}</a>
-              </Link>
-            ) : (
-              <></>
-            )}
+            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+              <a>{club.name}</a>
+            </Link>
           </td>
           <td>
-            {role <= MembershipRank.Officer ? (
-              <Link
-                href={CLUB_RENEWAL_ROUTE()}
-                as={CLUB_RENEWAL_ROUTE(club.code)}
-              >
-                <a className="button is-small">Register</a>
-              </Link>
+            {!club.active ? (
+              role <= MembershipRank.Officer ? (
+                <Link
+                  href={CLUB_RENEW_ROUTE()}
+                  as={CLUB_RENEW_ROUTE(club.code)}
+                >
+                  <a className="button is-small">Renew</a>
+                </Link>
+              ) : (
+                <span className="has-text-info">
+                  <Icon name="alert-triangle" /> Not Officer
+                </span>
+              )
+            ) : club.approved ? (
+              <span className="has-text-success">
+                <Icon name="check" /> Renewed
+              </span>
             ) : (
-              <></>
+              <span className="has-text-info">
+                <Icon name="clock" /> Pending Approval
+              </span>
             )}
           </td>
         </tr>
