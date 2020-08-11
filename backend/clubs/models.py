@@ -156,7 +156,7 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="renew",
-                subject="Renew {} on Penn Clubs".format(self.name),
+                subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(self.name),
                 emails=[emails],
                 context=context,
             )
