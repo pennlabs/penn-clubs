@@ -4,14 +4,16 @@ import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import ClubEditCard from '../../../components/ClubEditPage/ClubEditCard'
+import FilesCard from '../../../components/ClubEditPage/FilesCard'
 import FormProgressIndicator from '../../../components/ClubEditPage/FormProgressIndicator'
 import ClubMetadata from '../../../components/ClubMetadata'
 import { Contact, Container, Icon, Title } from '../../../components/common'
+import AuthPrompt from '../../../components/common/AuthPrompt'
 import Form from '../../../components/Form'
 import { DARK_GRAY, GREEN, MEDIUM_GRAY } from '../../../constants/colors'
 import { CLUB_ROUTE } from '../../../constants/routes'
 import renderPage from '../../../renderPage'
-import { Club } from '../../../types'
+import { Club, MembershipRank } from '../../../types'
 import { doApiRequest } from '../../../utils'
 
 type RenewPageProps = {
@@ -145,6 +147,25 @@ const RenewPage = ({
   const [changeStatus, setChangeStatus] = useState<boolean>(false)
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
 
+  if (club.is_member === false || club.is_member > MembershipRank.Officer) {
+    return (
+      <AuthPrompt title="Oh no!" hasLogin={false}>
+        <ClubMetadata club={club} />
+        <p>
+          You do not have permission to initiate the renewal process for{' '}
+          {(club && club.name) || 'this club'}. To get access, contact{' '}
+          <Contact />.
+        </p>
+        {club.is_member !== false && (
+          <p>
+            You are a member of this club, but only officers and above can
+            perform this action.
+          </p>
+        )}
+      </AuthPrompt>
+    )
+  }
+
   const year = new Date().getFullYear()
 
   const steps = [
@@ -152,6 +173,14 @@ const RenewPage = ({
       name: 'Introduction',
       content: () => (
         <>
+          {club.active && (
+            <div className="notification is-primary">
+              You or another club officer has already completed this form and
+              started the renewal process for <b>{club.name}</b> for the {year}-
+              {year + 1} school year! You do not have to complete this form, and
+              completing it for a second time will not do anything.
+            </div>
+          )}
           <TextInfoBox>
             <p>
               Every year, the{' '}
@@ -208,6 +237,11 @@ const RenewPage = ({
             club={club}
             isEdit={true}
           />
+          <p className="mt-2">
+            If you have made any changes to your club page, please press the
+            "Submit" button above. Pressing the continue button will discard any
+            unsaved changes.
+          </p>
         </>
       ),
     },
@@ -220,16 +254,11 @@ const RenewPage = ({
               Please upload your constitution in the form below. The club
               constitution should be in pdf or docx format.
             </p>
-            <Form
-              fields={[
-                {
-                  name: 'file',
-                  accept: 'application/pdf,application/msword',
-                  type: 'file',
-                  label: 'Club Constitution',
-                },
-              ]}
-            />
+            <p>
+              If you do not upload a club consitution now, your renewal request
+              will be put on hold until you do so.
+            </p>
+            <FilesCard club={club} />
           </TextInfoBox>
         </>
       ),
