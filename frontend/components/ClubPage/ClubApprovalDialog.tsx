@@ -14,7 +14,9 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   const router = useRouter()
   const year = new Date().getFullYear()
 
-  const [canApprove, setCanApprove] = useState<boolean>(userInfo.is_superuser)
+  const [canApprove, setCanApprove] = useState<boolean>(
+    userInfo && userInfo.is_superuser,
+  )
 
   useEffect(() => {
     apiCheckPermission('approve_club').then(setCanApprove)
