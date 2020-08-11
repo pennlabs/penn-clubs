@@ -366,15 +366,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         else:
             return queryset.filter(approved=True)
 
-    @action(detail=True, methods=["get"])
-    def renew(self, request, *args, **kwargs):
-        """
-        Renew the club in question.
-        """
-        club = self.get_object()
-        club.active = True
-        return Response({"success": True})
-
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
