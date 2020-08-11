@@ -5,25 +5,33 @@ from clubs.models import Club
 
 class Command(BaseCommand):
     help = "Deactivates all clubs in the database. This should be used at \
-            the end of the school year when clubs must be renewed."
+            the beginning of the school year when clubs must be renewed."
 
-    def handle(self, *args, **kwargs):
-        print(
-            "\033[93m"
-            + "You are about to set all club status to inactive and will have"
-            + "to begin the renewal process. This should only happen at the end"
-            + " of the school year. Are you postive this is what you want"
-            + " to do? Type 'deactivate all clubs' to continue."
-            + "\033[0m"
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--force",
+            dest="force",
+            action="store_true",
+            help="Do not prompt for confirmation, just start the club renewal process.",
         )
 
-        correct = "deactivate all clubs"
-        print("Input:", end=" ")
-        while input().strip() != correct:
-            print("Input:", end=" ")
+    def handle(self, *args, **kwargs):
+        if not kwargs["force"]:
+            self.stdout.write(
+                self.style.WARNING(
+                    "You are about to set all club status to inactive and will have "
+                    + "to begin the renewal process. This should only happen at the beginning "
+                    + "of the school year. Are you postive this is what you want "
+                    + "to do? Type 'deactivate all clubs' to continue."
+                )
+            )
+
+            correct = "deactivate all clubs"
+            self.stdout.write("Input:", ending=" ")
+            while input().strip() != correct:
+                self.stdout.write("Input:", ending=" ")
 
         # deactivate all clubs
-        for club in Club.objects.all():
-            club.active = False
+        Club.objects.all().update(active=False)
 
-        print("Clubs deactivated")
+        self.stdout.write("All clubs deactivated!")
