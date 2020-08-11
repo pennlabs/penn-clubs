@@ -6,16 +6,16 @@ import { mediaMaxWidth, mediaMinWidth, SM } from '../../constants/measurements'
 import { Club, MembershipRank, UserInfo } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
 import { Center, EmptyState, Loading, Text } from '../common'
-import ClubTabCards from './ClubTabCards'
-import ClubTabTable from './ClubTabTable'
+import RenewTabCards from './RenewTabCards'
+import RenewTabTable from './RenewTabTable'
 
-const ClubTable = s(ClubTabTable)`
+const ClubTable = s(RenewTabTable)`
   ${mediaMaxWidth(SM)} {
     display: none !important;
   }
 `
 
-const ClubCards = s(ClubTabCards)`
+const ClubCards = s(RenewTabCards)`
   ${mediaMinWidth(SM)} {
     display: none !important;
   }
@@ -138,9 +138,10 @@ export default ({
       <EmptyState name="button" />
       <Center>
         <Text isGray>
-          No memberships yet! Browse clubs{' '}
-          <Link href="/">
-            <a>here</a>
+          You are not listed as an officer for any clubs yet. If you would like
+          to request access, please send your name, PennKey, and club to
+          <Link href="mailto:contact@pennclubs.com">
+            <a>contact@pennclubs.com</a>
           </Link>
           .
         </Text>

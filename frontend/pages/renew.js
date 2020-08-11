@@ -4,9 +4,9 @@ import s from 'styled-components'
 import { Container, Metadata, Title } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import ClubTab from '../components/Settings/ClubTab'
-import RenewTab from '../components/Settings/RenewTab'
 import FavoritesTab from '../components/Settings/FavoritesTab'
 import ProfileTab from '../components/Settings/ProfileTab'
+import RenewTab from '../components/Settings/RenewTab'
 import TabView from '../components/TabView'
 import { CLUBS_BLUE, WHITE } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
@@ -63,7 +63,7 @@ class UserRenewal extends React.Component {
         name: 'Clubs',
         icon: 'peoplelogo',
         content: <RenewTab notify={this.notify} userInfo={userInfo} />,
-      }
+      },
     ]
 
     const { name } = this.props.userInfo
