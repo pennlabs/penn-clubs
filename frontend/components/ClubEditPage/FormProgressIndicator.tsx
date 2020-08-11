@@ -1,4 +1,4 @@
-import { ReactElement } from 'react'
+import React, { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { LIGHT_GREEN, LIGHT_YELLOW, MEDIUM_GRAY } from '../../constants/colors'
@@ -51,13 +51,13 @@ const FormProgressIndicator = ({
   return (
     <StepContainer className="has-text-centered">
       {steps.map(({ name }, i) => (
-        <>
-          <StepBubbleContainer onClick={() => onStepClick(i)}>
+        <React.Fragment key={i}>
+          <StepBubbleContainer onClick={() => onStepClick(i)} key={i}>
             <StepBubble passed={i <= step}>{i + 1}</StepBubble>
             <StepText>{name}</StepText>
           </StepBubbleContainer>
           {i < steps.length - 1 && <StepArrow />}
-        </>
+        </React.Fragment>
       ))}
     </StepContainer>
   )

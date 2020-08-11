@@ -147,6 +147,10 @@ const RenewPage = ({
   const [changeStatus, setChangeStatus] = useState<boolean>(false)
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
 
+  if (club.code === undefined) {
+    return <AuthPrompt />
+  }
+
   if (club.is_member === false || club.is_member > MembershipRank.Officer) {
     return (
       <AuthPrompt title="Oh no!" hasLogin={false}>
