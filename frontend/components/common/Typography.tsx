@@ -1,6 +1,11 @@
 import s from 'styled-components'
 
-import { CLUBS_GREY, CLUBS_NAVY, MEDIUM_GRAY, WHITE } from '../../constants/colors'
+import {
+  CLUBS_GREY,
+  CLUBS_NAVY,
+  MEDIUM_GRAY,
+  WHITE,
+} from '../../constants/colors'
 
 export const Text = s.p<{ isGray?: boolean; color?: string }>`
   font-size: 1rem;
@@ -42,4 +47,8 @@ export const AlertText = s.h1`
 export const AlertDesc = s.h1`  
   font-size: 80%;
   color: ${WHITE};
+
+  & a {
+    color: ${WHITE};
+  }
 `

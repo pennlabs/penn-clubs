@@ -12,9 +12,9 @@ import Description from '../../../components/ClubPage/Description'
 import Events from '../../../components/ClubPage/Events'
 import Header from '../../../components/ClubPage/Header'
 import InfoBox from '../../../components/ClubPage/InfoBox'
-import RenewalRequest from '../../../components/ClubPage/RenewalRequest'
 import MemberList from '../../../components/ClubPage/MemberList'
 import QuestionList from '../../../components/ClubPage/QuestionList'
+import RenewalRequest from '../../../components/ClubPage/RenewalRequest'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
 import Testimonials from '../../../components/ClubPage/Testimonials'
 import {
@@ -27,7 +27,7 @@ import {
   Title,
   WideContainer,
 } from '../../../components/common'
-import { SNOW, WHITE, CLUBS_RED } from '../../../constants/colors'
+import { CLUBS_RED, SNOW, WHITE } from '../../../constants/colors'
 import { M0, M2, M3 } from '../../../constants/measurements'
 import renderPage from '../../../renderPage'
 import { Club, UserInfo } from '../../../types'
@@ -159,8 +159,7 @@ const ClubPage = ({
       )}
       <div className="columns">
         <div className="column">
-
-        <InactiveCard
+          <InactiveCard
             bordered
             style={{
               paddingLeft: '1rem',
