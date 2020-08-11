@@ -25,7 +25,8 @@ const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement => {
         year.
       </AlertText>
       <AlertDesc>
-        {club.is_member !== false && club.is_member <= MembershipRank.Member ? (
+        {club.is_member !== false &&
+        club.is_member <= MembershipRank.Officer ? (
           <>
             <p className="mb-2">
               You are an officer of this club, so you can start the renewal

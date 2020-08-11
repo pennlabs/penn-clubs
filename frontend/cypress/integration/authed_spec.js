@@ -94,7 +94,6 @@ describe('Authenticated user tests', () => {
     // delete created club
     cy.visit('/club/test-new-club/edit#settings')
     cy.contains('Delete Club')
-    cy.contains('.button', 'Deactivate').click()
     cy.contains('.button', 'Delete Club').click()
 
     // ensure club is deleted

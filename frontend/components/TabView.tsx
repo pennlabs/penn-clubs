@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import { BLACK, WHITE, WHITE_ALPHA } from '../constants/colors'
@@ -42,7 +42,22 @@ const Div = s.div`
 `
 const Tabs = s.div``
 
-const TabView = ({ tabs, tabClassName = '', background = false }) => {
+type Props = {
+  background: string | false
+  tabClassName: string
+  tabs: {
+    name: string
+    content: ReactElement | string
+    disabled?: boolean
+    label?: string
+  }[]
+}
+
+const TabView = ({
+  tabs,
+  tabClassName = '',
+  background = false,
+}: Props): ReactElement => {
   // the server side rendering does not have a window object
   const [currentTab, setCurrentTab] = useState(tabs[0].name)
 
