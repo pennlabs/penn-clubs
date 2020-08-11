@@ -196,9 +196,11 @@ const RenewPage = ({
               started the renewal process for <b>{club.name}</b> for the {year}-
               {year + 1} school year! You do not have to complete this form, and
               completing it for a second time will not do anything.
-              <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-                <a className="button is-primary is-light mt-3">Back to Club</a>
-              </Link>
+              <div className="mt-3">
+                <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+                  <a className="button is-primary is-light">Back to Club</a>
+                </Link>
+              </div>
             </div>
           )}
           <TextInfoBox>
@@ -297,6 +299,45 @@ const RenewPage = ({
         </>
       ),
       disabled: !arePoliciesAccepted,
+    },
+    {
+      name: 'SAC Fair',
+      content: () => {
+        return (
+          <TextInfoBox>
+            <p>
+              Every year, the{' '}
+              <a href="https://sacfunded.net/" target="_blank">
+                Student Activities Council
+              </a>{' '}
+              hosts a Fall Activities Fair.
+            </p>
+            <p>
+              If you would like to particpate in the Fall {year} SAC fair, check
+              the box below. If you check the box below, your club information
+              will be shared with the Student Activites Council.
+            </p>
+            <label>
+              <input
+                type="checkbox"
+                checked={club.fair}
+                onChange={(e) => {
+                  const checked = e.target.checked
+                  doApiRequest(`/clubs/${club.code}/?format=json`, {
+                    method: 'PATCH',
+                    body: {
+                      fair: checked,
+                    },
+                  })
+                  e.persist()
+                }}
+              />{' '}
+              Yes, <b>{club.name}</b> would like to participate in the Fall{' '}
+              {year} SAC Fair.
+            </label>
+          </TextInfoBox>
+        )
+      },
     },
     {
       name: 'Complete',

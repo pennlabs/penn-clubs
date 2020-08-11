@@ -15,16 +15,18 @@ const StepBubbleContainer = s.span`
 
 const StepText = s.span`
   color: ${MEDIUM_GRAY};
+  font-size: 0.9em;
+  line-height: 0.9em;
 `
 
 const StepBubble = s.div<{ passed: boolean }>`
   background-color: ${({ passed }) => (passed ? LIGHT_GREEN : LIGHT_YELLOW)};
-  width: 60px;
-  height: 60px;
-  font-size: 36px;
+  width: 48px;
+  height: 48px;
+  font-size: 24px;
   text-align: center;
-  line-height: 60px;
-  border-radius: 30px;
+  line-height: 48px;
+  border-radius: 24px;
   margin: 5px auto;
   cursor: ${({ passed }) => (passed ? 'pointer' : 'default')};
 `
@@ -33,7 +35,7 @@ const StepArrow = s.span`
   border-top: 5px dotted ${MEDIUM_GRAY};
   margin-left: 10px;
   margin-right: 10px;
-  width: 60px;
+  width: 48px;
   margin-bottom: 1em;
 `
 

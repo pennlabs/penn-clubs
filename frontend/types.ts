@@ -85,6 +85,7 @@ export interface Club {
   email: string
   events: [ClubEvent]
   facebook: string
+  fair: boolean
   favorite_count: number
   files: File[]
   github: string

@@ -546,6 +546,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     questions = QuestionAnswerSerializer(many=True, read_only=True)
     events = EventSerializer(many=True, read_only=True)
     is_request = serializers.SerializerMethodField("get_is_request")
+    fair = serializers.BooleanField(write_only=True)
 
     def get_is_request(self, obj):
         user = self.context["request"].user
@@ -702,6 +703,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "badges",
             "events",
             "facebook",
+            "fair",
             "github",
             "how_to_get_involved",
             "image",
@@ -990,6 +992,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
 
     members = AuthenticatedMembershipSerializer(many=True, source="membership_set", read_only=True)
     files = AssetSerializer(many=True, source="asset_set", read_only=True)
+    fair = serializers.BooleanField()
 
     class Meta(ClubSerializer.Meta):
         fields = ClubSerializer.Meta.fields + ["files"]

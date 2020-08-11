@@ -95,6 +95,9 @@ class Club(models.Model):
     )
     approved_on = models.DateTimeField(null=True, blank=True)
 
+    # indicates whether or not the club has expressed interest in this year's SAC fair
+    fair = models.BooleanField(default=False)
+
     code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=True)
     name = models.CharField(max_length=255)

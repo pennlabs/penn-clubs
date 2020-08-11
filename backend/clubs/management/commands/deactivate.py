@@ -46,7 +46,7 @@ class Command(BaseCommand):
             clubs = Club.objects.filter(code__in=kwargs["club"].strip().split(","))
 
         # deactivate all clubs
-        clubs.update(active=False, approved=None, approved_by=None)
+        clubs.update(active=False, approved=None, approved_by=None, fair=False)
 
         self.stdout.write(f"{clubs.count()} clubs deactivated!")
 
