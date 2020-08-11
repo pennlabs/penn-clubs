@@ -190,7 +190,9 @@ class RenewalTestCase(TestCase):
 
         # for at least one of the emails, there are multiple recipients
         for email in mail.outbox:
-            if len(email.to[0]) > 1:
+            tos = email.to[0]
+            self.assertIsInstance(tos, list)
+            if len(tos) > 1:
                 break
         else:
             self.fail(
