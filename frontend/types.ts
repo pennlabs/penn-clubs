@@ -113,6 +113,7 @@ export interface File {
   id: number
   name: string
   created_at: string
+  file_url: string
 }
 
 export interface UserInfo {

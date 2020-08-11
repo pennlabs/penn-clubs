@@ -24,19 +24,17 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
     <div className="notification is-warning">
       <Text>
         {club.approved === false ? (
-          <span>
+          <>
             This club has been marked as <b>rejected</b> and is only visible to
             administrators of Penn Clubs. If you believe that this is a mistake,
             contact <Contact />.
-          </span>
+          </>
         ) : (
-          <span>
-            <p>
-              This club has <b>not been approved yet</b> for the {year}-
-              {year + 1} school year and is only visible to club members and
-              administrators of Penn Clubs.
-            </p>
-          </span>
+          <>
+            This club has <b>not been approved yet</b> for the {year}-{year + 1}{' '}
+            school year and is only visible to club members and administrators
+            of Penn Clubs.
+          </>
         )}
       </Text>
       {canApprove && (
@@ -45,6 +43,22 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
             As an administrator for Penn Clubs, you can approve or reject this
             request.
           </div>
+          {club.files.length ? (
+            <div className="mb-3">
+              <b>Club Files:</b>
+              <ul>
+                {club.files.map(({ name, file_url }, i) => (
+                  <li key={i}>
+                    <a target="_blank" href={file_url}>
+                      {name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="mb-3">This club has not uploaded any files.</div>
+          )}
           <div className="buttons">
             <button
               className="button is-success"
