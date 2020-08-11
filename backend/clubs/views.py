@@ -256,7 +256,7 @@ class ClubsFilter(filters.BaseFilterBackend):
                 boolval = None
 
             if boolval is None:
-                return {f"{field}__isnull": boolval}
+                return {f"{field}__isnull": True}
 
             return {f"{field}": boolval}
 
@@ -271,6 +271,7 @@ class ClubsFilter(filters.BaseFilterBackend):
             "target_majors": parse_tags,
             "target_years": parse_tags,
             "active": parse_boolean,
+            "approved": parse_boolean,
             "accepting_members": parse_boolean,
         }
 
@@ -917,7 +918,12 @@ class UserPermissionAPIView(APIView):
         perm = request.GET.get("perm", None)
 
         if perm is not None:
+            if not request.user.is_authenticated:
+                return Response({"allowed": False})
             return Response({"allowed": request.user.has_perm(perm)})
+
+        if not request.user.is_authenticated:
+            return Response({"permissions": []})
 
         return Response(
             {"permissions": list(request.user.user_permissions.values_list("codename", flat=True))}

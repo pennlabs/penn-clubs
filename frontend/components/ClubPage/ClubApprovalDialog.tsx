@@ -2,7 +2,7 @@ import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 
 import { Club, UserInfo } from '../../types'
-import { doApiRequest } from '../../utils'
+import { apiCheckPermission, doApiRequest } from '../../utils'
 import { Contact, Icon, Text } from '../common'
 
 type Props = {
@@ -17,12 +17,7 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   const [canApprove, setCanApprove] = useState<boolean>(userInfo.is_superuser)
 
   useEffect(() => {
-    doApiRequest(
-      '/settings/permissions/?perm=approve_club&format=json',
-      (data) => {
-        setCanApprove(data.allowed)
-      },
-    )
+    apiCheckPermission('approve_club').then(setCanApprove)
   }, [])
 
   return club.active && club.approved !== true ? (
