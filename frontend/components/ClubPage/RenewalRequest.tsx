@@ -32,7 +32,7 @@ const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement => {
               process by clicking the button below.
             </p>
             <Link href={CLUB_RENEW_ROUTE()} as={CLUB_RENEW_ROUTE(club.code)}>
-              <a className="button is-success">Renew Now</a>
+              <a className="button is-danger is-light">Renew Now</a>
             </Link>
           </>
         ) : (

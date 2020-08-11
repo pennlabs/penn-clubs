@@ -18,6 +18,7 @@ import { doApiRequest } from '../../../utils'
 
 type RenewPageProps = {
   club: Club
+  authenticated: boolean | null
   schools: any[]
   majors: any[]
   years: any[]
@@ -138,6 +139,7 @@ const PolicyBox = ({ onChecked = () => undefined }: Props): ReactElement => {
 
 const RenewPage = ({
   club,
+  authenticated,
   schools,
   majors,
   years,
@@ -147,8 +149,19 @@ const RenewPage = ({
   const [changeStatus, setChangeStatus] = useState<boolean>(false)
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
 
-  if (club.code === undefined) {
+  if (authenticated === false) {
     return <AuthPrompt />
+  }
+
+  if (club.code === undefined) {
+    return (
+      <AuthPrompt title="Oh no!" hasLogin={false}>
+        <p>
+          The club you are looking for does not exist. If you believe this is an
+          error, contact <Contact />.
+        </p>
+      </AuthPrompt>
+    )
   }
 
   if (club.is_member === false || club.is_member > MembershipRank.Officer) {
@@ -183,6 +196,9 @@ const RenewPage = ({
               started the renewal process for <b>{club.name}</b> for the {year}-
               {year + 1} school year! You do not have to complete this form, and
               completing it for a second time will not do anything.
+              <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+                <a className="button is-primary is-light mt-3">Back to Club</a>
+              </Link>
             </div>
           )}
           <TextInfoBox>
