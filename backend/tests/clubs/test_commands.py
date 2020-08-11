@@ -124,8 +124,12 @@ class SendInvitesTestCase(TestCase):
 
 class SendReminderTestCase(TestCase):
     def setUp(self):
-        self.club1 = Club.objects.create(code="one", name="Club One", email="one@example.com")
-        self.club2 = Club.objects.create(code="two", name="Club Two", email="two@example.com")
+        self.club1 = Club.objects.create(
+            code="one", name="Club One", email="one@example.com", active=True
+        )
+        self.club2 = Club.objects.create(
+            code="two", name="Club Two", email="two@example.com", active=True
+        )
 
         self.user1 = get_user_model().objects.create_user(
             "bfranklin", "bfranklin@seas.upenn.edu", "test"
