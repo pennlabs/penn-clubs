@@ -248,16 +248,6 @@ ClubPage.getInitialProps = async (ctx: NextPageContext) => {
   }
   const resp = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const club = await resp.json()
-  // TODO: Enforce kind attribute using TS instead of manually annotating
-  const { badges, tags } = club
-  badges &&
-    badges.forEach((elem) => {
-      elem.kind = 'badge'
-    })
-  tags &&
-    tags.forEach((elem) => {
-      elem.kind = 'tag'
-    })
   return { club }
 }
 
