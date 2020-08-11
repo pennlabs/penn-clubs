@@ -19,8 +19,10 @@ import SocialIcons from '../../../components/ClubPage/SocialIcons'
 import Testimonials from '../../../components/ClubPage/Testimonials'
 import {
   Card,
+  Contact,
   Container,
   Flex,
+  Icon,
   Metadata,
   StrongText,
   Text,
@@ -100,6 +102,7 @@ const ClubPage = ({
   }
 
   const { image_url: image } = club
+  const year = new Date().getFullYear()
 
   return (
     <WideContainer background={SNOW} fullHeight>
@@ -110,49 +113,61 @@ const ClubPage = ({
             {club.approved === false ? (
               <span>
                 This club has been marked as <b>rejected</b> and is only visible
-                to administrators of Penn Clubs.
+                to administrators of Penn Clubs. If you believe that this is a
+                mistake, contact <Contact />.
               </span>
             ) : (
               <span>
-                This club has <b>not been approved yet</b> and is only visible
-                to the club creator and administrators of Penn Clubs.
+                <p>
+                  This club has <b>not been approved yet</b> for the {year}-
+                  {year + 1} school year and is only visible to club members and
+                  administrators of Penn Clubs.
+                </p>
               </span>
             )}
           </Text>
-          <div className="buttons">
-            <button
-              className="button is-success"
-              onClick={() => {
-                doApiRequest(`/clubs/${club.code}/?format=json`, {
-                  method: 'PATCH',
-                  body: {
-                    approved: true,
-                  },
-                })
-                  .then((resp) => resp.json())
-                  .then(() => router.reload())
-              }}
-            >
-              Approve
-            </button>
-            {club.approved !== false && (
-              <button
-                className="button is-danger"
-                onClick={() => {
-                  doApiRequest(`/clubs/${club.code}/?format=json`, {
-                    method: 'PATCH',
-                    body: {
-                      approved: false,
-                    },
-                  })
-                    .then((resp) => resp.json())
-                    .then(() => router.reload())
-                }}
-              >
-                Reject
-              </button>
-            )}
-          </div>
+          {userInfo.is_superuser && (
+            <>
+              <div className="mb-3">
+                As an administrator for Penn Clubs, you can approve or reject
+                this request.
+              </div>
+              <div className="buttons">
+                <button
+                  className="button is-success"
+                  onClick={() => {
+                    doApiRequest(`/clubs/${club.code}/?format=json`, {
+                      method: 'PATCH',
+                      body: {
+                        approved: true,
+                      },
+                    })
+                      .then((resp) => resp.json())
+                      .then(() => router.reload())
+                  }}
+                >
+                  <Icon name="check" /> Approve
+                </button>
+                {club.approved !== false && (
+                  <button
+                    className="button is-danger"
+                    onClick={() => {
+                      doApiRequest(`/clubs/${club.code}/?format=json`, {
+                        method: 'PATCH',
+                        body: {
+                          approved: false,
+                        },
+                      })
+                        .then((resp) => resp.json())
+                        .then(() => router.reload())
+                    }}
+                  >
+                    <Icon name="x" /> Reject
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <div />

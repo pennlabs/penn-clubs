@@ -546,17 +546,13 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     questions = QuestionAnswerSerializer(many=True, read_only=True)
     events = EventSerializer(many=True, read_only=True)
     is_request = serializers.SerializerMethodField("get_is_request")
-    fair = serializers.BooleanField(write_only=True)
+    fair = serializers.BooleanField(write_only=True, default=False)
 
     def get_is_request(self, obj):
         user = self.context["request"].user
         if not user.is_authenticated:
             return False
         return obj.membershiprequest_set.filter(person=user, withdrew=False).exists()
-
-    def get_parent_orgs(self, obj):
-        return []
-        # return [c.slug for c in obj.parent_orgs.all()]
 
     def create(self, validated_data):
         """
@@ -992,7 +988,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
 
     members = AuthenticatedMembershipSerializer(many=True, source="membership_set", read_only=True)
     files = AssetSerializer(many=True, source="asset_set", read_only=True)
-    fair = serializers.BooleanField()
+    fair = serializers.BooleanField(default=False)
 
     class Meta(ClubSerializer.Meta):
         fields = ClubSerializer.Meta.fields + ["files"]
