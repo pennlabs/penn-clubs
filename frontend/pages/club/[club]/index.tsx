@@ -1,5 +1,4 @@
 import { NextPageContext } from 'next'
-import { useRouter } from 'next/router'
 import { ReactElement, useState } from 'react'
 import s from 'styled-components'
 
@@ -8,6 +7,7 @@ import {
   DesktopActions,
   MobileActions,
 } from '../../../components/ClubPage/Actions'
+import ClubApprovalDialog from '../../../components/ClubPage/ClubApprovalDialog'
 import Description from '../../../components/ClubPage/Description'
 import Events from '../../../components/ClubPage/Events'
 import Header from '../../../components/ClubPage/Header'
@@ -19,10 +19,8 @@ import SocialIcons from '../../../components/ClubPage/SocialIcons'
 import Testimonials from '../../../components/ClubPage/Testimonials'
 import {
   Card,
-  Contact,
   Container,
   Flex,
-  Icon,
   Metadata,
   StrongText,
   Text,
@@ -65,7 +63,6 @@ const ClubPage = ({
   club: initialClub,
   userInfo,
 }: ClubPageProps): ReactElement => {
-  const router = useRouter()
   const [club, setClub] = useState<Club>(initialClub)
 
   const updateRequests = (code: string): void => {
@@ -102,76 +99,11 @@ const ClubPage = ({
   }
 
   const { image_url: image } = club
-  const year = new Date().getFullYear()
 
   return (
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
-      {club.active && club.approved !== true ? (
-        <div className="notification is-warning">
-          <Text>
-            {club.approved === false ? (
-              <span>
-                This club has been marked as <b>rejected</b> and is only visible
-                to administrators of Penn Clubs. If you believe that this is a
-                mistake, contact <Contact />.
-              </span>
-            ) : (
-              <span>
-                <p>
-                  This club has <b>not been approved yet</b> for the {year}-
-                  {year + 1} school year and is only visible to club members and
-                  administrators of Penn Clubs.
-                </p>
-              </span>
-            )}
-          </Text>
-          {userInfo.is_superuser && (
-            <>
-              <div className="mb-3">
-                As an administrator for Penn Clubs, you can approve or reject
-                this request.
-              </div>
-              <div className="buttons">
-                <button
-                  className="button is-success"
-                  onClick={() => {
-                    doApiRequest(`/clubs/${club.code}/?format=json`, {
-                      method: 'PATCH',
-                      body: {
-                        approved: true,
-                      },
-                    })
-                      .then((resp) => resp.json())
-                      .then(() => router.reload())
-                  }}
-                >
-                  <Icon name="check" /> Approve
-                </button>
-                {club.approved !== false && (
-                  <button
-                    className="button is-danger"
-                    onClick={() => {
-                      doApiRequest(`/clubs/${club.code}/?format=json`, {
-                        method: 'PATCH',
-                        body: {
-                          approved: false,
-                        },
-                      })
-                        .then((resp) => resp.json())
-                        .then(() => router.reload())
-                    }}
-                  >
-                    <Icon name="x" /> Reject
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      ) : (
-        <div />
-      )}
+      <ClubApprovalDialog club={club} userInfo={userInfo} />
       <div className="columns">
         <div className="column">
           {club.active || (

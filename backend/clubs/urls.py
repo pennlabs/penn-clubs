@@ -20,6 +20,7 @@ from clubs.views import (
     SubscribeViewSet,
     TagViewSet,
     TestimonialViewSet,
+    UserPermissionAPIView,
     UserUpdateAPIView,
     YearViewSet,
     email_preview,
@@ -53,6 +54,7 @@ clubs_router.register(
 
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="users-detail"),
+    path(r"settings/permissions/", UserPermissionAPIView.as_view(), name="users-permission"),
     path(r"clubs/<slug:club_code>/invite/", MassInviteAPIView.as_view(), name="club-invite"),
     path(r"emailpreview/", email_preview, name="email-preview"),
 ]

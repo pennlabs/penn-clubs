@@ -906,6 +906,24 @@ class TagViewSet(viewsets.ModelViewSet):
     lookup_field = "name"
 
 
+class UserPermissionAPIView(APIView):
+    """
+    get: Check if a user has a specific permission, or return a list of all user permissions.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        perm = request.GET.get("perm", None)
+
+        if perm is not None:
+            return Response({"allowed": request.user.has_perm(perm)})
+
+        return Response(
+            {"permissions": list(request.user.user_permissions.values_list("codename", flat=True))}
+        )
+
+
 class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     """
     get: Return information about the logged in user, including bookmarks,
