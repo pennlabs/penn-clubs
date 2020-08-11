@@ -1,4 +1,5 @@
 import csv
+import os
 import tempfile
 
 from django.contrib.auth import get_user_model
@@ -153,6 +154,50 @@ class PopulateTestCase(TestCase):
 
         self.assertNotEqual(Club.objects.all().count(), 0)
         self.assertNotEqual(Tag.objects.all().count(), 0)
+
+
+class RenewalTestCase(TestCase):
+    def test_renewal(self):
+        # populate database with test data
+        with open(os.devnull, "w") as f:
+            call_command("populate", stdout=f)
+
+        # run deactivate script
+        call_command("deactivate", "--force")
+
+        # ensure all clubs are deactivated
+        active_statuses = Club.objects.all().values_list("active", flat=True)
+        self.assertFalse(any(active_statuses))
+
+        # ensure all clubs have approval removed
+        approval_statuses = Club.objects.all().values_list("approved", flat=True)
+        self.assertFalse(any(approval_statuses))
+
+        # ensure emails are sent out
+        self.assertGreater(len(mail.outbox), 0)
+
+        # ensure correct number of emails were sent
+        clubs_with_emails = 0
+        for club in Club.objects.all():
+            if club.email:
+                clubs_with_emails += 1
+                continue
+
+            if club.membership_set.filter(role__lte=Membership.ROLE_OFFICER).exists():
+                clubs_with_emails += 1
+
+        self.assertGreaterEqual(len(mail.outbox), clubs_with_emails)
+
+        # for at least one of the emails, there are multiple recipients
+        for email in mail.outbox:
+            tos = email.to[0]
+            self.assertIsInstance(tos, list)
+            if len(tos) > 1:
+                break
+        else:
+            self.fail(
+                "Expected there to be an email with more than one recipient, but did not exist!"
+            )
 
 
 class MergeDuplicatesTestCase(TestCase):
