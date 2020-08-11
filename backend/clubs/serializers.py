@@ -540,7 +540,6 @@ class ClubListSerializer(serializers.ModelSerializer):
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
     image = serializers.ImageField(write_only=True, required=False)
-    parent_orgs = serializers.SerializerMethodField("get_parent_orgs")
     badges = BadgeSerializer(many=True, required=False)
     testimonials = TestimonialSerializer(many=True, read_only=True)
     questions = QuestionAnswerSerializer(many=True, read_only=True)
@@ -708,7 +707,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "linkedin",
             "listserv",
             "members",
-            "parent_orgs",
             "questions",
             "testimonials",
             "twitter",
