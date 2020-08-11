@@ -197,6 +197,7 @@ class Form extends Component {
       disabled = false,
       required,
       help,
+      trivia,
     } = field
 
     const {
@@ -343,6 +344,7 @@ class Form extends Component {
               </span>
               <span className="file-label">Choose a file...</span>
             </span>
+            {trivia}
           </label>
           {this.state.uploadStatus[name] ? (
             <span style={{ paddingTop: 3, paddingLeft: 8 }}>
