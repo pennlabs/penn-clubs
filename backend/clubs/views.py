@@ -443,14 +443,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         if request.data.get("accepted", False) is True and not request.user.has_perm(
-            "approve_club"
+            "clubs.approve_club"
         ):
             raise PermissionDenied
         return super().partial_update(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         if request.data.get("accepted", False) is True and not request.user.has_perm(
-            "approve_club"
+            "clubs.approve_club"
         ):
             raise PermissionDenied
         return super().update(request, *args, **kwargs)
