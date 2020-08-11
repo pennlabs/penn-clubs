@@ -148,6 +148,7 @@ const RenewPage = ({
   const [step, setStep] = useState<number>(0)
   const [changeStatus, setChangeStatus] = useState<boolean>(false)
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
+  const [isSacChecked, setSacChecked] = useState<boolean>(club.fair)
 
   if (authenticated === false) {
     return <AuthPrompt />
@@ -331,7 +332,7 @@ const RenewPage = ({
             <label>
               <input
                 type="checkbox"
-                checked={club.fair}
+                checked={isSacChecked}
                 onChange={(e) => {
                   const checked = e.target.checked
                   doApiRequest(`/clubs/${club.code}/?format=json`, {
@@ -340,6 +341,7 @@ const RenewPage = ({
                       fair: checked,
                     },
                   })
+                  setSacChecked(checked)
                   e.persist()
                 }}
               />{' '}
