@@ -35,3 +35,9 @@ class Command(BaseCommand):
         Club.objects.all().update(active=False, approved=False, approved_by=None)
 
         self.stdout.write("All clubs deactivated!")
+
+        # send out renewal emails to all clubs
+        for club in Club.objects.all():
+            club.send_renewal_email()
+
+        self.stdout.write("All emails sent out!")

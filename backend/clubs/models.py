@@ -135,6 +135,29 @@ class Club(models.Model):
     def __str__(self):
         return self.name
 
+    def send_renewal_email(self, request=None):
+        domain = get_domain(request)
+
+        context = {
+            "name": self.name,
+            "url": settings.RENEWAL_URL.format(domain=domain, club=self.code),
+        }
+
+        emails = [self.email]
+
+        for user in self.membership_set.filter(role__lte=Membership.ROLE_OFFICER):
+            emails.append(user.person.email)
+
+        emails = [email for email in emails if email]
+
+        if emails:
+            send_mail_helper(
+                name="renew",
+                subject="Renew {} on Penn Clubs".format(self.name),
+                emails=[emails],
+                context=context,
+            )
+
     class Meta:
         ordering = ["name"]
         permissions = [

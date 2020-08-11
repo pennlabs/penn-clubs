@@ -80,6 +80,7 @@ tempor incididunt ut labore et dolore magna aliqua.</i>""",
     {
         "code": "penn-memes",
         "name": "Penn Memes Club",
+        "email": "penn.memes@gmail.com",
         "founded": "2019-01-01",
         "description": """We are exclusive to M&T students.""",
         "active": True,
@@ -261,6 +262,10 @@ class Command(BaseCommand):
         for club in Club.objects.exclude(code="empty-club")[:50]:
             for obj in user_objs[:count]:
                 Membership.objects.get_or_create(club=club, person=obj)
+            first_mship = club.membership_set.first()
+            if first_mship is not None:
+                first_mship.role = Membership.ROLE_OWNER
+                first_mship.save()
             count += 1
 
         self.stdout.write("Finished populating database!")
