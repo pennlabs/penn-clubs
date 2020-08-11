@@ -43,8 +43,8 @@ const Div = s.div`
 const Tabs = s.div``
 
 type Props = {
-  background: string | false
-  tabClassName: string
+  background?: string | false
+  tabClassName?: string
   tabs: {
     name: string
     content: ReactElement | string
@@ -99,11 +99,7 @@ const TabView = ({
                   style={{ borderBottomWidth: '2px', marginBottom: '-2px' }}
                   onClick={() => {
                     setCurrentTab(name)
-                    window.history.replaceState(
-                      undefined,
-                      undefined,
-                      `#${name}`,
-                    )
+                    window.history.replaceState(undefined, '', `#${name}`)
                   }}
                 >
                   {label || titleize(name)}
