@@ -504,10 +504,13 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return ClubListSerializer
         if self.request is not None and self.request.user.is_authenticated:
             see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
-            is_member = Membership.objects.filter(
-                person=self.request.user, club__code=self.kwargs["code"]
-            ).exists()
-            if "code" in self.kwargs and (see_pending or is_member):
+            is_member = (
+                "code" in self.kwargs
+                and Membership.objects.filter(
+                    person=self.request.user, club__code=self.kwargs["code"]
+                ).exists()
+            )
+            if see_pending or is_member:
                 return AuthenticatedClubSerializer
         return ClubSerializer
 
