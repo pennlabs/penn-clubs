@@ -18,7 +18,6 @@ type HeaderProps = {
 
 const Header = ({ club, style }: HeaderProps): ReactElement => {
   const { active, name, tags, badges } = club
-
   return (
     <div style={style}>
       <Wrapper>
@@ -28,8 +27,7 @@ const Header = ({ club, style }: HeaderProps): ReactElement => {
         </Title>
       </Wrapper>
       <div style={{ marginBottom: '1rem' }}>
-        <TagGroup tags={tags} />
-        <TagGroup tags={badges} />
+        <TagGroup tags={[...tags, ...badges]} />
       </div>
     </div>
   )
