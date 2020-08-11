@@ -99,7 +99,7 @@ class Club(models.Model):
     fair = models.BooleanField(default=False)
 
     code = models.SlugField(max_length=255, unique=True, db_index=True)
-    active = models.BooleanField(default=True)
+    active = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
     description = models.TextField(blank=True)
