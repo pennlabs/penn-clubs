@@ -567,6 +567,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             person=self.context["request"].user, club=obj, role=Membership.ROLE_OWNER
         )
 
+        # send a renewal email prompting the user to approve their club
+        obj.send_renewal_email()
+
         return obj
 
     def validate_badges(self, value):
