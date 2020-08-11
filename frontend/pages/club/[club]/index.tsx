@@ -104,7 +104,7 @@ const ClubPage = ({
   return (
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
-      {club.approved !== true ? (
+      {club.active && club.approved !== true ? (
         <div className="notification is-warning">
           <Text>
             {club.approved === false ? (
@@ -159,14 +159,16 @@ const ClubPage = ({
       )}
       <div className="columns">
         <div className="column">
-          <InactiveCard
-            bordered
-            style={{
-              paddingLeft: '1rem',
-            }}
-          >
-            <RenewalRequest club={club} />
-          </InactiveCard>
+          {club.active || (
+            <InactiveCard
+              bordered
+              style={{
+                paddingLeft: '1rem',
+              }}
+            >
+              <RenewalRequest club={club} />
+            </InactiveCard>
+          )}
 
           <StyledCard
             bordered
