@@ -15,6 +15,7 @@ import { Club, MembershipRank, UserInfo } from '../types'
 import { doApiRequest, formatResponse } from '../utils'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import QuestionsCard from './ClubEditPage/QuestionsCard'
+import RenewCard from './ClubEditPage/RenewCard'
 import ClubMetadata from './ClubMetadata'
 import {
   Contact,
@@ -290,45 +291,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           label: 'Settings',
           content: (
             <>
-              <BaseCard
-                title={`
-                    ${club && club.active ? 'Deactivate' : 'Reactivate'} Club`}
-              >
-                {club && club.active ? (
-                  <Text>
-                    Mark this organization as inactive. This will hide the club
-                    from various listings and indicate to the public that the
-                    club is no longer active.
-                  </Text>
-                ) : (
-                  <Text>
-                    Reactivate this club, indicating to the public that this
-                    club is currently active and running.
-                  </Text>
-                )}
-                <Text>
-                  Only owners of the organization may perform this action.
-                </Text>
-                <div className="buttons">
-                  <a
-                    className={
-                      'button is-medium ' +
-                      (club && club.active ? 'is-danger' : 'is-success')
-                    }
-                    onClick={() => this.toggleClubActive()}
-                  >
-                    {club && club.active ? (
-                      <span>
-                        <Icon name="trash" alt="deactivate" /> Deactivate
-                      </span>
-                    ) : (
-                      <span>
-                        <Icon name="plus" alt="Reactivate" /> Reactivate
-                      </span>
-                    )}
-                  </a>
-                </div>
-              </BaseCard>
+              <RenewCard club={club} />
               <BaseCard title="Delete Club">
                 <Text>
                   Remove this club entry from Penn Clubs.{' '}
@@ -349,7 +312,8 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
                     </a>
                   ) : (
                     <b>
-                      You must deactivate this club before enabling this button.
+                      <b>{club.name}</b> must be deactivated before performing
+                      this action. To deactivate your club, contact <Contact />.
                     </b>
                   )}
                 </div>
