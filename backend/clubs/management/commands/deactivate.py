@@ -32,7 +32,7 @@ class Command(BaseCommand):
                 self.stdout.write("Input:", ending=" ")
 
         # deactivate all clubs
-        Club.objects.all().update(active=False, approved=False, approved_by=None)
+        Club.objects.all().update(active=False, approved=None, approved_by=None)
 
         self.stdout.write("All clubs deactivated!")
 

@@ -1,6 +1,6 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
-import { ReactElement, useState } from 'react'
+import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import ClubEditCard from '../../../components/ClubEditPage/ClubEditCard'
@@ -58,7 +58,13 @@ const Policy = s.div`
   }
 `
 
-const PolicyBox = (): ReactElement => {
+type Props = {
+  onChecked?: () => void
+}
+
+const PolicyBox = ({ onChecked = () => undefined }: Props): ReactElement => {
+  const [numChecked, setNumChecked] = useState<number>(0)
+
   const policies = [
     {
       name: 'Campus Membership',
@@ -99,13 +105,28 @@ const PolicyBox = (): ReactElement => {
       ),
     },
   ]
+
+  useEffect(() => {
+    if (numChecked === policies.length) {
+      onChecked()
+    }
+  }, [numChecked])
+
+  const updateCheckedStatus = (e: ChangeEvent<HTMLInputElement>) => {
+    setNumChecked((numChecked) =>
+      e.target.checked ? numChecked + 1 : numChecked - 1,
+    )
+    e.persist()
+  }
+
   return (
     <div>
       {policies.map(({ name, content }) => (
-        <Policy>
+        <Policy key={name}>
           <blockquote>{content}</blockquote>
           <label className="checkbox">
-            <input type="checkbox" /> I agree to the policy on <b>{name}</b>.
+            <input type="checkbox" onChange={updateCheckedStatus} /> I agree to
+            the policy on <b>{name}</b>.
           </label>
         </Policy>
       ))}
@@ -121,6 +142,8 @@ const RenewPage = ({
   tags,
 }: RenewPageProps): ReactElement => {
   const [step, setStep] = useState<number>(0)
+  const [changeStatus, setChangeStatus] = useState<boolean>(false)
+  const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
 
   const year = new Date().getFullYear()
 
@@ -221,30 +244,46 @@ const RenewPage = ({
               Pennsylvania, you must agree to all of the policies listed below.
             </p>
           </TextInfoBox>
-          <PolicyBox />
+          <PolicyBox onChecked={() => setPoliciesAccepted(true)} />
         </>
       ),
+      disabled: !arePoliciesAccepted,
     },
     {
       name: 'Complete',
       content: () => (
         <>
-          <FinishedText>🎉 Congratulations! 🎉</FinishedText>
-          <TextInfoBox>
-            <p>
-              You've completed the club approval form for the {year} -{' '}
-              {year + 1} school year! When your application is processed, all
-              club officers will receive an email from Penn Clubs.
-            </p>
-            <p>Thank you for completing the club renewal process!</p>
-          </TextInfoBox>
+          {changeStatus ? (
+            <>
+              <FinishedText>🎉 Congratulations! 🎉</FinishedText>
+              <TextInfoBox>
+                <p>
+                  You've completed the club approval form for the {year} -{' '}
+                  {year + 1} school year! When your application is processed,
+                  all club officers will receive an email from Penn Clubs.
+                </p>
+                <p>Thank you for completing the club renewal process!</p>
+              </TextInfoBox>
+            </>
+          ) : (
+            <>
+              <FinishedText>Oh no!</FinishedText>
+              <TextInfoBox>
+                <p>
+                  An error occured while submitting your club approval form.
+                  Please contact <Contact /> and we'll help you resolve your
+                  issue.
+                </p>
+                <p>Alternatively, you can refresh this page and try again.</p>
+              </TextInfoBox>
+            </>
+          )}
         </>
       ),
     },
   ]
 
   const nextStep = () => {
-    setStep(step + 1)
     if (step === 3) {
       doApiRequest(`/clubs/${club.code}/?format=json`, {
         method: 'PATCH',
@@ -252,6 +291,16 @@ const RenewPage = ({
           active: true,
         },
       })
+        .then(() => {
+          setStep(step + 1)
+          setChangeStatus(true)
+        })
+        .catch(() => {
+          setStep(step + 1)
+          setChangeStatus(false)
+        })
+    } else {
+      setStep(step + 1)
     }
   }
 
@@ -285,7 +334,11 @@ const RenewPage = ({
       <div className="mt-5">{steps[step].content()}</div>
       <div className="has-text-centered">
         {step < steps.length - 1 ? (
-          <button onClick={nextStep} className="button is-primary">
+          <button
+            onClick={nextStep}
+            disabled={steps[step].disabled}
+            className="button is-primary"
+          >
             <Icon name="chevrons-right" />
             Continue
           </button>
