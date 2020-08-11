@@ -310,12 +310,23 @@ const RenewPage = ({
               <a href="https://sacfunded.net/" target="_blank">
                 Student Activities Council
               </a>{' '}
-              hosts a Fall Activities Fair.
+              hosts a Fall Activities Fair. This year, the SAC Fair will be held
+              virtually during the first few days of school. In addition to Penn
+              Clubs, which now has an anonymous Q & A feature, clubs will be
+              designated one of three days to host a live Zoom session for a
+              couple of hours. All submitted zoom links will be featured on Penn
+              Clubs.
+            </p>
+            <p>
+              Like the in-person SAC Fair, clubs are encouraged to have a few
+              members present on Zoom to introduce their club to prospective
+              members and to answer questions.
             </p>
             <p>
               If you would like to particpate in the Fall {year} SAC fair, check
               the box below. If you check the box below, your club information
-              will be shared with the Student Activites Council.
+              will be shared with the Student Activites Council and more details
+              will be sent to you at a later date.
             </p>
             <label>
               <input
