@@ -6,7 +6,7 @@ import { doApiRequest } from '../utils'
 
 const Create = (props) => <ClubEditPage {...props} />
 
-Create.getInitialProps = async ({ query }) => {
+Create.getInitialProps = async () => {
   const endpoints = ['tags', 'schools', 'majors', 'years']
   return Promise.all(
     endpoints.map(async (item) => {
