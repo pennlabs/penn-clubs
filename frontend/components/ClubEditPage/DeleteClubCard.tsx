@@ -7,9 +7,15 @@ import BaseCard from './BaseCard'
 
 type Props = {
   club: Club
+  notify?: (message: ReactElement | string) => void
+  onDelete?: () => void
 }
 
-const DeleteClubCard = ({ club }: Props): ReactElement => {
+const DeleteClubCard = ({
+  club,
+  notify = () => undefined,
+  onDelete = () => undefined,
+}: Props): ReactElement => {
   const [canDelete, setCanDelete] = useState<boolean>(club && !club.active)
 
   useEffect(() => {
@@ -19,8 +25,6 @@ const DeleteClubCard = ({ club }: Props): ReactElement => {
   }, [])
 
   const deleteClub = (): void => {
-    const { club } = this.state
-
     if (club === null) {
       return
     }
@@ -29,11 +33,11 @@ const DeleteClubCard = ({ club }: Props): ReactElement => {
       method: 'DELETE',
     }).then((resp) => {
       if (resp.ok) {
-        this.notify('Successfully deleted club.')
-        this.componentDidMount()
+        notify('Successfully deleted club.')
+        onDelete()
       } else {
         resp.json().then((err) => {
-          this.notify(formatResponse(err))
+          notify(formatResponse(err))
         })
       }
     })

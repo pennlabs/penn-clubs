@@ -263,7 +263,11 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           content: (
             <>
               <RenewCard club={club} />
-              <DeleteClubCard club={club} />
+              <DeleteClubCard
+                onDelete={this.componentDidMount}
+                notify={notify}
+                club={club}
+              />
             </>
           ),
           disabled: !isEdit,
