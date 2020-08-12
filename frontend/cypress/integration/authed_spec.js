@@ -88,8 +88,8 @@ describe('Authenticated user tests', () => {
     })
     cy.contains('Submit').click()
 
-    // wait for club to be created 
-    cy.contains('View Club').should('be.visible')
+    // wait for club to be created, should be redirected to renewal page
+    cy.contains('Renew Club').should('be.visible') 
 
     // delete created club
     cy.visit('/club/test-new-club/edit#settings')
