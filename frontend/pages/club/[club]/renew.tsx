@@ -1,5 +1,6 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
+import { setUncaughtExceptionCaptureCallback } from 'process'
 import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
@@ -138,13 +139,14 @@ const PolicyBox = ({ onChecked = () => undefined }: Props): ReactElement => {
 }
 
 const RenewPage = ({
-  club,
+  club: initialClub,
   authenticated,
   schools,
   majors,
   years,
   tags,
 }: RenewPageProps): ReactElement => {
+  const [club, setClub] = useState<Club>(initialClub)
   const [step, setStep] = useState<number>(0)
   const [changeStatus, setChangeStatus] = useState<boolean>(false)
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
@@ -259,6 +261,11 @@ const RenewPage = ({
             tags={tags}
             club={club}
             isEdit={true}
+            onSubmit={({ club }) => {
+              if (club !== undefined) {
+                setClub(club)
+              }
+            }}
           />
           <p className="mt-2">
             If you have made any changes to your club page, please press the

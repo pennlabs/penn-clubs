@@ -13,7 +13,7 @@ import {
 } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import ProfileForm from '../components/Settings/ProfileForm'
-import { CLUB_ROUTE } from '../constants/routes'
+import { HOME_ROUTE } from '../constants/routes'
 import renderPage from '../renderPage'
 import { UserInfo } from '../types'
 import { doApiRequest } from '../utils'
@@ -133,7 +133,7 @@ const Welcome = ({
         <Center>
           <Subtitle>3. Start exploring Penn Clubs!</Subtitle>
           <Link
-            href={nextUrl && nextUrl.startsWith('/') ? nextUrl : CLUB_ROUTE()}
+            href={nextUrl && nextUrl.startsWith('/') ? nextUrl : HOME_ROUTE}
           >
             <a className="button is-success is-large" onClick={markWelcome}>
               Browse clubs
