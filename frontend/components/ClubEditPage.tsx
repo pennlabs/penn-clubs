@@ -13,19 +13,12 @@ import QRCodeCard from '../components/ClubEditPage/QRCodeCard'
 import { CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
 import { Club, MembershipRank, UserInfo } from '../types'
 import { doApiRequest, formatResponse } from '../utils'
+import DeleteClubCard from './ClubEditPage/DeleteClubCard'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import QuestionsCard from './ClubEditPage/QuestionsCard'
 import RenewCard from './ClubEditPage/RenewCard'
 import ClubMetadata from './ClubMetadata'
-import {
-  Contact,
-  Container,
-  Icon,
-  InactiveTag,
-  Loading,
-  Text,
-  Title,
-} from './common'
+import { Contact, Container, InactiveTag, Loading, Title } from './common'
 import AuthPrompt from './common/AuthPrompt'
 import TabView from './TabView'
 
@@ -59,7 +52,6 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     }
     this.submit = this.submit.bind(this)
     this.notify = this.notify.bind(this)
-    this.deleteClub = this.deleteClub.bind(this)
   }
 
   notify(msg): void {
@@ -90,27 +82,6 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
             club.active ? 'deactivated' : 'activated'
           } this club.`,
         )
-        this.componentDidMount()
-      } else {
-        resp.json().then((err) => {
-          this.notify(formatResponse(err))
-        })
-      }
-    })
-  }
-
-  deleteClub(): void {
-    const { club } = this.state
-
-    if (club === null) {
-      return
-    }
-
-    doApiRequest(`/clubs/${club.code}/?format=json`, {
-      method: 'DELETE',
-    }).then((resp) => {
-      if (resp.ok) {
-        this.notify('Successfully deleted club.')
         this.componentDidMount()
       } else {
         resp.json().then((err) => {
@@ -292,32 +263,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           content: (
             <>
               <RenewCard club={club} />
-              <BaseCard title="Delete Club">
-                <Text>
-                  Remove this club entry from Penn Clubs.{' '}
-                  <b className="has-text-danger">
-                    This action is permanent and irreversible!
-                  </b>{' '}
-                  All club history and membership information will be
-                  permanently lost. In almost all cases, you want to deactivate
-                  this club instead.
-                </Text>
-                <div className="buttons">
-                  {club && !club.active ? (
-                    <a
-                      className="button is-danger is-medium"
-                      onClick={() => this.deleteClub()}
-                    >
-                      <Icon name="trash" alt="delete" /> Delete Club
-                    </a>
-                  ) : (
-                    <b>
-                      <b>{club.name}</b> must be deactivated before performing
-                      this action. To deactivate your club, contact <Contact />.
-                    </b>
-                  )}
-                </div>
-              </BaseCard>
+              <DeleteClubCard club={club} />
             </>
           ),
           disabled: !isEdit,
