@@ -10,7 +10,12 @@ import InviteCard from '../components/ClubEditPage/InviteCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
 import MembersCard from '../components/ClubEditPage/MembersCard'
 import QRCodeCard from '../components/ClubEditPage/QRCodeCard'
-import { CLUB_ROUTE, HOME_ROUTE } from '../constants/routes'
+import {
+  CLUB_EDIT_ROUTE,
+  CLUB_RENEW_ROUTE,
+  CLUB_ROUTE,
+  HOME_ROUTE,
+} from '../constants/routes'
 import { Club, MembershipRank, UserInfo } from '../types'
 import { doApiRequest, formatResponse } from '../utils'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
@@ -102,9 +107,22 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
   }): void {
     if (typeof club !== 'undefined' && typeof isEdit !== 'undefined') {
       if (!this.state.isEdit && isEdit) {
-        this.props.router.push('/club/[club]/edit', `/club/${club.code}/edit`, {
-          shallow: true,
-        })
+        // if the club is not active, redirect to the renewal page instead of the edit page
+        if (!club.active) {
+          this.props.router.push(
+            CLUB_RENEW_ROUTE(),
+            CLUB_RENEW_ROUTE(club.code),
+          )
+          return
+        } else {
+          this.props.router.push(
+            CLUB_EDIT_ROUTE(),
+            CLUB_EDIT_ROUTE(club.code),
+            {
+              shallow: true,
+            },
+          )
+        }
       }
       this.setState({
         isEdit: isEdit,
