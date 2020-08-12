@@ -264,7 +264,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
             <>
               <RenewCard club={club} />
               <DeleteClubCard
-                onDelete={this.componentDidMount}
+                onDelete={this.componentDidMount.bind(this)}
                 notify={this.notify}
                 club={club}
               />
