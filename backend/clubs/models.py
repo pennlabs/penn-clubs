@@ -203,7 +203,7 @@ class QuestionAnswer(models.Model):
 
         owner_emails = list(
             self.club.membership_set.filter(role__gte=Membership.ROLE_OFFICER).values_list(
-                "person__email"
+                "person__email", flat=True
             )
         )
 
@@ -213,12 +213,13 @@ class QuestionAnswer(models.Model):
             "url": settings.QUESTION_URL.format(domain=domain, club=self.club.code),
         }
 
-        send_mail_helper(
-            name="question",
-            subject="Question for {}".format(self.club.name),
-            emails=owner_emails,
-            context=context,
-        )
+        if owner_emails:
+            send_mail_helper(
+                name="question",
+                subject="Question for {}".format(self.club.name),
+                emails=owner_emails,
+                context=context,
+            )
 
 
 class Testimonial(models.Model):

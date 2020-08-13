@@ -65,7 +65,9 @@ class ClubTestCase(TestCase):
     def setUp(self):
         self.client = Client()
 
-        self.club1 = Club.objects.create(code="test-club", name="Test Club", approved=True)
+        self.club1 = Club.objects.create(
+            code="test-club", name="Test Club", approved=True, email="example@example.com"
+        )
 
         self.event1 = Event.objects.create(
             code="test-event",
@@ -1216,4 +1218,34 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
         self.assertEqual(200, resp.status_code)
 
+        # ensure only approved questions are shown
         self.assertEqual(1, len(resp.data))
+
+    def test_club_question_answer(self):
+        # add officer to club
+        Membership.objects.create(person=self.user5, club=self.club1, role=Membership.ROLE_OFFICER)
+
+        # login to an account
+        self.client.login(username=self.user4.username, password="test")
+
+        # fetch question list from server
+        resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
+        self.assertEqual(200, resp.status_code)
+        old_count = len(resp.data)
+
+        # generate a question
+        resp = self.client.post(
+            reverse("club-questions-list", args=("test-club",)),
+            {"question": "Is this club cool?", "is_anonymous": False},
+        )
+        self.assertIn(resp.status_code, [200, 201])
+
+        # fetch question list from server
+        resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
+        self.assertEqual(200, resp.status_code)
+
+        # ensure question appears in response
+        self.assertEqual(len(resp.data), old_count + 1, resp.data)
+
+        # ensure email was sent out notifying officer of question
+        self.assertEqual(len(mail.outbox), 1, mail.outbox)
