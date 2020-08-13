@@ -1,7 +1,14 @@
 import { ReactElement } from 'react'
 import s from 'styled-components'
 
-import { Container, Icon, StrongText, Text, Title } from '../components/common'
+import {
+  Container,
+  Icon,
+  Metadata,
+  StrongText,
+  Text,
+  Title,
+} from '../components/common'
 import { GREEN, SNOW } from '../constants/colors'
 import renderPage from '../renderPage'
 
@@ -34,6 +41,7 @@ const LargeIcon = s(Icon)`
 
 const Rank = (): ReactElement => (
   <Container background={SNOW}>
+    <Metadata title="Club Ordering" />
     <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
       Club Recommendation Algorithm
     </Title>
