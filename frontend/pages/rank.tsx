@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { Container, Icon, StrongText, Text, Title } from '../components/common'
@@ -31,7 +32,7 @@ const LargeIcon = s(Icon)`
   }
 `
 
-const Rank = () => (
+const Rank = (): ReactElement => (
   <Container background={SNOW}>
     <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
       Club Recommendation Algorithm
@@ -44,7 +45,7 @@ const Rank = () => (
       />
       We're currently in the process of redesigning our club recommendation
       algorithms. In the meantime, clubs are ordered by the number of times that
-      other people have bookmarked them.
+      people have bookmarked them.
     </div>
     <StrongText>How are clubs ordered?</StrongText>
     <Text>
@@ -59,6 +60,11 @@ const Rank = () => (
       to order clubs on the home page. The criteria are:
     </Text>
     {[
+      {
+        name: 'Matches Target Tags',
+        description:
+          'Adding tags will case the club to appear higher on the home page for students who are interested in those tags. Clubs that have specified fewer tags are more likely to appear higher than clubs that have specified more tags, for relevant students.',
+      },
       {
         name: 'Matches Target Schools',
         description:

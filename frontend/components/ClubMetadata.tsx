@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 
 import { CLUB_ROUTE } from '../constants/routes'
+import { Club } from '../types'
 import { Metadata } from './common'
 
-const getTwitterUsername = (url) => {
+const getTwitterUsername = (url: string) => {
   if (typeof url === 'string') {
     const captured = url.match(/https:\/\/twitter\.com\/([a-zA-Z0-9_]+)\/?/)
     if (Array.isArray(captured) && captured.length > 0) return captured[0]
@@ -11,13 +12,23 @@ const getTwitterUsername = (url) => {
   return url
 }
 
-export default ({ club }) => {
+type Props = {
+  club: Club
+}
+
+const ClubMetadata = ({ club }: Props): ReactElement | null => {
   if (!club) {
     return null
   }
-  const { name, code, description, image, twitter: twitterUrl } = club
+  const {
+    name,
+    code,
+    description,
+    image_url: image,
+    twitter: twitterUrl,
+  } = club
   const twitter = getTwitterUsername(twitterUrl)
-  const [baseUrl, setBaseUrl] = useState('')
+  const [baseUrl, setBaseUrl] = useState<string>('')
   useEffect(() => {
     setBaseUrl(window.location.origin)
   }, [])
@@ -33,3 +44,5 @@ export default ({ club }) => {
     />
   )
 }
+
+export default ClubMetadata
