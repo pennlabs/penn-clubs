@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
+import s from 'styled-components'
 
 import {
   Contact,
@@ -10,6 +11,7 @@ import {
   Text,
   Title,
 } from '../components/common'
+import { CREATE_ROUTE } from '../constants'
 import { SNOW } from '../constants/colors'
 import renderPage from '../renderPage'
 
@@ -27,6 +29,12 @@ const Question = ({ title, children }: QuestionProps): ReactElement => (
     </Text>
   </>
 )
+
+const UnorderedList = s.ul`
+  list-style-type: disc;
+  margin-left: 2rem;
+  margin-top: 0.5rem;
+`
 
 const FAQ = () => (
   <Container background={SNOW}>
@@ -59,13 +67,7 @@ const FAQ = () => (
       </Question>
       <Question title="How do I use this site?">
         The #1 way to use this site is to browse clubs at Penn! You can:
-        <ul
-          style={{
-            listStyleType: 'disc',
-            marginLeft: '2rem',
-            marginTop: '0.5rem',
-          }}
-        >
+        <UnorderedList>
           <li>
             Search for clubs by name, and use filters like Tags (tags that
             describe the club), Size (number of members), and Application (if
@@ -76,7 +78,7 @@ const FAQ = () => (
             Browse information that clubs post: description, how to join, member
             testimonials
           </li>
-        </ul>
+        </UnorderedList>
         <br />
         If you run a club, make sure your club has a page on Penn Clubs! This
         lets other students find out about your organization and how to get
@@ -86,13 +88,7 @@ const FAQ = () => (
         You’ll need to have administrator permission for that organization.
         We’ve invited people as administrators based on information submitted by
         clubs to SAC during Spring 2019.
-        <ul
-          style={{
-            listStyleType: 'disc',
-            marginLeft: '2rem',
-            marginTop: '0.5rem',
-          }}
-        >
+        <UnorderedList>
           <li>
             If you did not receive administrator permission and you believe you
             should have, let us know at <Contact /> and we will work with you to
@@ -104,22 +100,36 @@ const FAQ = () => (
             people who need administrator permission. You can also email us at{' '}
             <Contact /> and we will work with you to verify your request.
           </li>
-        </ul>
+        </UnorderedList>
         <br />
         Note that there are 2 levels of administrators: Officers and Owners.
         Officers are able to edit the page, invite other members, and grant
         administrator permissions. In addition to those abilities, Owners are
         able to deactivate or delete the club page.
       </Question>
-      <Question title="Why I can’t find an organization on Penn Clubs?">
+      <Question title="Why I can't find an organization on Penn Clubs?">
         Sorry about that! We’re in the process of making Penn Clubs as
         comprehensive as possible, creating the first complete directory of
-        student organizations at Penn. Please fill out the{' '}
-        <a href="https://airtable.com/shrCsYFWxCwfwE7cf">feedback form</a> as a
-        “Missing Club” and tell us more about what’s missing. If you’re in
-        charge of this club, please enter your email so that we can give you
-        administrator permission to edit the club page that we’ll create for
-        you.
+        student organizations at Penn.
+        <UnorderedList>
+          <li>
+            If you're an officer of a club and it <b>does not exist</b> on Penn
+            Clubs, you can add your club using the form found{' '}
+            <Link href={CREATE_ROUTE} as={CREATE_ROUTE}>
+              <a>here</a>
+            </Link>
+            .
+          </li>
+          <li>
+            If you're an officer of a club and it <b>already exists</b> on Penn
+            Clubs, email <Contact /> to gain edit access for your club.
+          </li>
+          <li>
+            Otherwise, if you're not the administrator of the club but would
+            still like for it to be added to Penn Clubs, please email{' '}
+            <Contact />.
+          </li>
+        </UnorderedList>
       </Question>
       <Question title="How are clubs ordered on Penn Clubs?">
         Click{' '}

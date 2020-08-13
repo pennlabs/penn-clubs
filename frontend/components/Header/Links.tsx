@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
@@ -13,6 +14,7 @@ import {
 } from '../../constants/colors'
 import { MD, mediaMaxWidth } from '../../constants/measurements'
 import { SETTINGS_ROUTE } from '../../constants/routes'
+import { UserInfo } from '../../types'
 import { LOGIN_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'
 import { Icon } from '../common'
@@ -57,7 +59,7 @@ const StyledLink = s.a`
   }
 `
 
-const Menu = s.div`
+const Menu = s.div<{ show?: boolean }>`
   ${mediaMaxWidth(MD)} {
     border-top: 1px solid ${BORDER};
     box-shadow: 0 4px 4px ${BORDER};
@@ -70,11 +72,18 @@ const Menu = s.div`
     ${({ show }) => show && 'display: block;'}
   }
 `
+
+type Props = {
+  userInfo: UserInfo
+  authenticated: boolean | null
+  show?: boolean
+}
+
 /**
  * Checks authenticated === false to confirm browser has loaded and user is not logged in.
  * Will be undefined if browser has not loaded and true is browser has loaded and user is logged in.
  */
-export default ({ userInfo, authenticated, show }) => {
+const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
   const router = useRouter()
   return (
     <Menu className="navbar-menu" show={show}>
@@ -103,3 +112,5 @@ export default ({ userInfo, authenticated, show }) => {
     </Menu>
   )
 }
+
+export default Links
