@@ -130,7 +130,11 @@ class Command(BaseCommand):
         # load email file
         if email_file is not None:
             with open(email_file, "r") as f:
-                for line in csv.reader(f):
+                reader = csv.reader(f)
+                for line in reader:
+                    if not line:
+                        self.stdout.write(self.style.WARNING("Skipping empty line in CSV file..."))
+                        continue
                     raw_name = line[0].strip()
                     club = fuzzy_lookup_club(raw_name)
 

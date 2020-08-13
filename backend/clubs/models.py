@@ -19,10 +19,13 @@ def send_mail_helper(name, subject, emails, context):
     """
     A helper to send out an email given the template name, subject, to emails, and context.
     """
+    if not all(isinstance(email, str) for email in emails):
+        raise ValueError("The to email argument must be a list of strings!")
+
     html_content = render_to_string("emails/{}.html".format(name), context)
     text_content = html_to_text(html_content)
 
-    msg = EmailMultiAlternatives(subject, text_content, settings.FROM_EMAIL, emails)
+    msg = EmailMultiAlternatives(subject, text_content, settings.FROM_EMAIL, list(set(emails)))
 
     msg.attach_alternative(html_content, "text/html")
     msg.send(fail_silently=False)
@@ -157,7 +160,7 @@ class Club(models.Model):
             send_mail_helper(
                 name="renew",
                 subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(self.name),
-                emails=[emails],
+                emails=emails,
                 context=context,
             )
 
@@ -336,7 +339,7 @@ class MembershipRequest(models.Model):
             subject="Membership Request from {} for {}".format(
                 self.person.get_full_name(), self.club.name
             ),
-            emails=[owner_emails],
+            emails=owner_emails,
             context=context,
         )
 

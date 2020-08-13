@@ -37,8 +37,11 @@ class SendInvitesTestCase(TestCase):
         Membership.objects.create(club=self.club3, person=self.user1, role=Membership.ROLE_OWNER)
 
     def test_send_invites(self):
-        with tempfile.NamedTemporaryFile() as tmp:
-            call_command("send_emails", "invite", tmp.name)
+        with tempfile.TemporaryDirectory() as d:
+            tmpname = os.path.join(d, "temp.csv")
+            with open(tmpname, "w"):
+                pass
+            call_command("send_emails", "invite", tmpname)
 
         self.assertEqual(MembershipInvite.objects.count(), 2)
         self.assertEqual(
@@ -58,13 +61,14 @@ class SendInvitesTestCase(TestCase):
             ["Club Three", "sheet3@example.com"],
         ]
 
-        with tempfile.NamedTemporaryFile() as tmp:
-            with open(tmp.name, "w") as f:
+        with tempfile.TemporaryDirectory() as d:
+            tmpname = os.path.join(d, "temp.csv")
+            with open(tmpname, "w") as f:
                 writer = csv.writer(f)
                 for row in data:
                     writer.writerow(row)
 
-            call_command("send_emails", "fair", tmp.name, "--only-sheet")
+            call_command("send_emails", "fair", tmpname, "--only-sheet")
 
         self.assertEqual(len(mail.outbox), 3)
 
@@ -194,8 +198,10 @@ class RenewalTestCase(TestCase):
 
         # for at least one of the emails, there are multiple recipients
         for email in mail.outbox:
-            tos = email.to[0]
+            tos = email.to
             self.assertIsInstance(tos, list)
+            for to in tos:
+                self.assertIsInstance(to, str)
             if len(tos) > 1:
                 break
         else:
