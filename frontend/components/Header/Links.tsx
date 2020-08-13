@@ -74,7 +74,7 @@ const Menu = s.div<{ show?: boolean }>`
 `
 
 type Props = {
-  userInfo: UserInfo
+  userInfo?: UserInfo
   authenticated: boolean | null
   show?: boolean
 }

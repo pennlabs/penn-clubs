@@ -13,7 +13,7 @@ const getTwitterUsername = (url: string) => {
 }
 
 type Props = {
-  club: Club
+  club: Club | null
 }
 
 const ClubMetadata = ({ club }: Props): ReactElement | null => {
