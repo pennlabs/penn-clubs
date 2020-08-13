@@ -1021,7 +1021,7 @@ class MassInviteAPIView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        emails = [x.strip() for x in re.split("\n|,", request.data.get("emails", ""))]
+        emails = [x.strip() for x in re.split(r"\n|,", request.data.get("emails", ""))]
         emails = [x for x in emails if x]
 
         # remove users that are already in the club
@@ -1030,9 +1030,11 @@ class MassInviteAPIView(APIView):
         )
         emails = list(set(emails) - set(exist))
 
+        # ensure all emails are valid
         for email in emails:
             validate_email(email)
 
+        # send invites to all emails
         for email in emails:
             invite = MembershipInvite.objects.create(
                 email=email, club=club, creator=request.user, role=role, title=title
