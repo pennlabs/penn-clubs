@@ -186,7 +186,7 @@ class ClubPagination(PageNumberPagination):
         return super().paginate_queryset(queryset, request, view)
 
 
-class ClubsFilter(filters.BaseFilterBackend):
+class ClubsSearchFilter(filters.BaseFilterBackend):
     """
     A DRF filter to implement custom filtering logic for the frontend.
     """
@@ -340,7 +340,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     )
     permission_classes = [ClubPermission | IsSuperuser]
 
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ClubsFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ClubsSearchFilter]
     search_fields = ["name", "subtitle"]
     ordering_fields = ["favorite_count", "name"]
     ordering = "-favorite_count"
@@ -661,7 +661,9 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
         if not self.request.user.is_authenticated:
             return questions.filter(approved=True)
 
-        membership = Membership.objects.filter(club__code=club_code, person=self.request.user)
+        membership = Membership.objects.filter(
+            club__code=club_code, person=self.request.user
+        ).first()
 
         if self.request.user.is_superuser or (
             membership is not None and membership.role <= Membership.ROLE_OFFICER
