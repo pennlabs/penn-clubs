@@ -142,11 +142,15 @@ export function titleize(str: string): string {
 export function formatResponse(err: { [key: string]: string }): ReactElement {
   return (
     <>
-      {Object.keys(err).map((line) => (
-        <div key={line}>
-          <b>{titleize(line)}:</b> {err[line]}
-        </div>
-      ))}
+      {Object.keys(err)
+        .filter(
+          (line) => !(line === 'success' && typeof err[line] === 'boolean'),
+        )
+        .map((line) => (
+          <div key={line}>
+            <b>{titleize(line)}:</b> {err[line]}
+          </div>
+        ))}
     </>
   )
 }

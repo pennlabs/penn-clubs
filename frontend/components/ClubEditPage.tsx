@@ -59,7 +59,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     this.notify = this.notify.bind(this)
   }
 
-  notify(msg): void {
+  notify(msg: string | ReactElement): void {
     this.setState(
       {
         message: msg,

@@ -1008,7 +1008,7 @@ class MassInviteAPIView(APIView):
 
         if not request.user.is_superuser and (not mem or not mem.role <= Membership.ROLE_OFFICER):
             return Response(
-                {"detail": "You do not have permission to invite new members!"},
+                {"detail": "You do not have permission to invite new members!", "success": False},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -1017,7 +1017,10 @@ class MassInviteAPIView(APIView):
 
         if mem and mem.role > role and not request.user.is_superuser:
             return Response(
-                {"detail": "You cannot send invites for a role higher than your own!"},
+                {
+                    "detail": "You cannot send invites for a role higher than your own!",
+                    "success": False,
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -1044,7 +1047,9 @@ class MassInviteAPIView(APIView):
             else:
                 invite.send_mail(request)
 
-        return Response({"detail": "Sent invite(s) to {} email(s)!".format(len(emails))})
+        return Response(
+            {"detail": "Sent invite(s) to {} email(s)!".format(len(emails)), "success": True}
+        )
 
 
 class EmailPreviewContext(dict):

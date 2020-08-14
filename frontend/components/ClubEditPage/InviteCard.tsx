@@ -26,16 +26,17 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
     value: number
   }>(MEMBERSHIP_ROLES[0])
   const [inviteEmails, setInviteEmails] = useState<string>('')
+  const [isInviting, setInviting] = useState<boolean>(false)
 
   const [message, notify] = useState<ReactElement | string | null>(null)
 
-  const reloadInvites = () => {
+  const reloadInvites = (): void => {
     doApiRequest(`/clubs/${club.code}/invites/?format=json`)
       .then((resp) => resp.json())
       .then(setInvites)
   }
 
-  const deleteInvite = (id) => {
+  const deleteInvite = (id: string | number): void => {
     doApiRequest(`/clubs/${club.code}/invites/${id}/?format=json`, {
       method: 'DELETE',
     }).then((resp) => {
@@ -61,6 +62,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
   }
 
   const sendInvites = () => {
+    setInviting(true)
     doApiRequest(`/clubs/${club.code}/invite/?format=json`, {
       method: 'POST',
       body: {
@@ -71,8 +73,14 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
     })
       .then((resp) => resp.json())
       .then((data) => {
+        if (data.success) {
+          setInviteEmails('')
+        }
         notify(formatResponse(data))
+      })
+      .finally(() => {
         reloadInvites()
+        setInviting(false)
       })
   }
 
@@ -165,7 +173,11 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
             permissions.
           </p>
         </div>
-        <button className="button is-primary" onClick={sendInvites}>
+        <button
+          disabled={isInviting}
+          className="button is-primary"
+          onClick={sendInvites}
+        >
           <Icon name="mail" alt="send invites" />
           &nbsp; Send Invite(s)
         </button>
