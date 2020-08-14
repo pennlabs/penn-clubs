@@ -662,7 +662,7 @@ class Profile(models.Model):
         return self.user.username
 
 
-@receiver(models.signals.post_delete, sender=Asset)
+@receiver(models.signals.pre_delete, sender=Asset)
 def asset_delete_cleanup(sender, instance, **kwargs):
     if instance.file:
         instance.file.delete(save=False)
