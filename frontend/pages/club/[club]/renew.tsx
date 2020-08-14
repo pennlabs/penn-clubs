@@ -276,24 +276,6 @@ const RenewPage = ({
       ),
     },
     {
-      name: 'Constitution',
-      content: () => (
-        <>
-          <TextInfoBox>
-            <p>
-              Please upload your constitution in the form below. The club
-              constitution should be in pdf or docx format.
-            </p>
-            <p>
-              If you do not upload a club consitution now, your renewal request
-              will be put on hold until you do so.
-            </p>
-            <FilesCard club={club} />
-          </TextInfoBox>
-        </>
-      ),
-    },
-    {
       name: 'Policies',
       content: () => (
         <>
@@ -394,7 +376,7 @@ const RenewPage = ({
   ]
 
   const nextStep = () => {
-    if (step === 3) {
+    if (step === steps.length - 2) {
       doApiRequest(`/clubs/${club.code}/?format=json`, {
         method: 'PATCH',
         body: {

@@ -1,5 +1,7 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
+import { Club } from '../../types'
 import { EMPTY_DESCRIPTION } from '../../utils'
 import { StrongText } from '../common'
 
@@ -11,7 +13,11 @@ const Wrapper = s.div`
   flex: 1;
 `
 
-export default ({ club }) => (
+type Props = {
+  club: Club
+}
+
+const Description = ({ club }: Props): ReactElement => (
   <Wrapper>
     <div>
       <StrongText>Description</StrongText>
@@ -24,3 +30,5 @@ export default ({ club }) => (
     </div>
   </Wrapper>
 )
+
+export default Description
