@@ -4,6 +4,7 @@ import re
 
 import qrcode
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch, Q
@@ -18,7 +19,6 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.core.exceptions import ValidationError
 from rest_framework.views import APIView
 
 from clubs.mixins import XLSXFormatterMixin
