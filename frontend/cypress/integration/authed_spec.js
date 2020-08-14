@@ -91,6 +91,18 @@ describe('Authenticated user tests', () => {
     // wait for club to be created, should be redirected to renewal page
     cy.contains('Renew Club').should('be.visible') 
 
+    // test membership invites
+    const fakeEmails = [];
+    for (var i = 0; i < 10; i++) {
+      fakeEmails.push(`test${i}@example.com`);
+    }
+
+    cy.visit('/club/test-new-club/edit#member')
+    cy.contains('Invite Members').scrollIntoView()
+    cy.get('[data-testid="invite-emails-input"]').type(fakeEmails.join(","))
+    cy.get('[data-testid="invite-emails-submit"]').click()
+    cy.contains('Sent invite(s) to 10 email(s)!').should('be.visible')
+
     // delete created club
     cy.visit('/club/test-new-club/edit#settings')
     cy.contains('Delete Club')

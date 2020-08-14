@@ -42,7 +42,7 @@ type ProfileTabProps = {
   }
 }
 
-export default ({ defaults }: ProfileTabProps): ReactElement => {
+const ProfileTab = ({ defaults }: ProfileTabProps): ReactElement => {
   const [profile, setProfile] = useState(defaults)
 
   const { name, username, email, image_url } = profile
@@ -87,3 +87,5 @@ export default ({ defaults }: ProfileTabProps): ReactElement => {
     </Wrapper>
   )
 }
+
+export default ProfileTab

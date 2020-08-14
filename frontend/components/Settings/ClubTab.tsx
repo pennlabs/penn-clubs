@@ -35,7 +35,7 @@ export type UserMembership = {
   public: boolean
 }
 
-export default ({
+const ClubTab = ({
   className,
   userInfo,
   notify,
@@ -148,3 +148,5 @@ export default ({
     </>
   )
 }
+
+export default ClubTab

@@ -43,7 +43,7 @@
     "clean": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\" --fix",
     "test": "./test.sh",
     "dev": "node server.js",
-    "build": "next build",
+    "build": "env NODE_ENV=production next build",
     "start": "env NODE_ENV=production node server.js",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"

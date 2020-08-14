@@ -143,6 +143,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
             onChange={(e) => setInviteEmails(e.target.value)}
             className="textarea"
             placeholder="Enter email addresses here!"
+            data-testid="invite-emails-input"
           ></textarea>
         </div>
         <div className="field">
@@ -177,6 +178,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
           disabled={isInviting}
           className="button is-primary"
           onClick={sendInvites}
+          data-testid="invite-emails-submit"
         >
           <Icon name="mail" alt="send invites" />
           &nbsp; Send Invite(s)
