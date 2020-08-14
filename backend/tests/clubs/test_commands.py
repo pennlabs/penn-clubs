@@ -171,7 +171,7 @@ class RenewalTestCase(TestCase):
             call_command("populate", stdout=f)
 
         # run deactivate script
-        call_command("deactivate", "--force")
+        call_command("deactivate", "all", "--force")
 
         # ensure all clubs are deactivated
         active_statuses = Club.objects.all().values_list("active", flat=True)

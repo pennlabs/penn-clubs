@@ -18,6 +18,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.core.exceptions import ValidationError
 from rest_framework.views import APIView
 
 from clubs.mixins import XLSXFormatterMixin
@@ -1034,14 +1035,19 @@ class MassInviteAPIView(APIView):
         emails = list(set(emails) - set(exist))
 
         # remove users that have already been invited
-        exist = MembershipInvite.objects.filter(club=club, person__email__in=emails).values_list(
-            "person__email", flat=True
+        exist = MembershipInvite.objects.filter(club=club, email__in=emails).values_list(
+            "email", flat=True
         )
         emails = list(set(emails) - set(exist))
 
         # ensure all emails are valid
-        for email in emails:
-            validate_email(email)
+        try:
+            for email in emails:
+                validate_email(email)
+        except ValidationError:
+            return Response(
+                {"detail": "The email address '{}' is not valid!".format(email), "success": False}
+            )
 
         # send invites to all emails
         for email in emails:
