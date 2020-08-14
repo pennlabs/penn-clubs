@@ -135,7 +135,8 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
           invite to join the club. The invite process will go more smoothly if
           you use Penn email addresses, but normal email addresses will work
           provided that the recipient has a PennKey account. We will not send an
-          invite if the account associated with an email is already in the club.
+          invite if the account associated with an email is already in the club
+          or if an invite associated with that email already exists.
         </Text>
         <div className="field">
           <textarea

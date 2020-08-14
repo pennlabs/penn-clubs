@@ -1033,6 +1033,12 @@ class MassInviteAPIView(APIView):
         )
         emails = list(set(emails) - set(exist))
 
+        # remove users that have already been invited
+        exist = MembershipInvite.objects.filter(club=club, person__email__in=emails).values_list(
+            "person__email", flat=True
+        )
+        emails = list(set(emails) - set(exist))
+
         # ensure all emails are valid
         for email in emails:
             validate_email(email)
