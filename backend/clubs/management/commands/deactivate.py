@@ -22,7 +22,21 @@ class Command(BaseCommand):
                   separated list of club codes specified by this argument.",
         )
 
+        parser.add_argument(
+            "action",
+            default="all",
+            choices=["deactivate", "emails", "all"],
+            type=str,
+            help="Specify the actions that you want to take, \
+                  either only deactivating the clubs, only sending the emails, or both.",
+        )
+
     def handle(self, *args, **kwargs):
+        action = kwargs["action"]
+
+        deactivate_clubs = action in {"deactivate", "all"}
+        send_emails = action in {"emails", "all"}
+
         # warn if we're resetting all clubs and force flag is not specified
         if not kwargs["force"] and not kwargs["club"]:
             self.stdout.write(
@@ -46,12 +60,14 @@ class Command(BaseCommand):
             clubs = Club.objects.filter(code__in=kwargs["club"].strip().split(","))
 
         # deactivate all clubs
-        clubs.update(active=False, approved=None, approved_by=None, fair=False)
+        if deactivate_clubs:
+            clubs.update(active=False, approved=None, approved_by=None, fair=False)
 
-        self.stdout.write(f"{clubs.count()} clubs deactivated!")
+            self.stdout.write(f"{clubs.count()} clubs deactivated!")
 
         # send out renewal emails to all clubs
-        for club in clubs:
-            club.send_renewal_email()
+        if send_emails:
+            for club in clubs:
+                club.send_renewal_email()
 
-        self.stdout.write("All emails sent out!")
+            self.stdout.write("All emails sent out!")

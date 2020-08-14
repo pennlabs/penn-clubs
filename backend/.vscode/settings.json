@@ -8,8 +8,7 @@
     "[python]": {
         "editor.formatOnPaste": false,
         "editor.codeActionsOnSave": {
-            "source.fixAll": true,
-            "source.organizeImports": true
+            "source.fixAll": true
         }
     },
     "files.exclude": {
