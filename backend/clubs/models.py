@@ -331,7 +331,7 @@ class MembershipRequest(models.Model):
 
         owner_emails = list(
             self.club.membership_set.filter(role__gte=Membership.ROLE_OFFICER).values_list(
-                "person__email"
+                "person__email", flat=True
             )
         )
 
