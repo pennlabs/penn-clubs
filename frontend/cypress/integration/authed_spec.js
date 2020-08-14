@@ -104,7 +104,7 @@ describe('Authenticated user tests', () => {
     cy.contains('Sent invite(s) to 10 email(s)!').should('be.visible')
 
     // delete created club
-    cy.visit('/club/test-new-club/edit#settings')
+    cy.contains('Settings').click()
     cy.contains('Delete Club')
     cy.contains('.button', 'Delete Club').click()
 
