@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { withRouter } from 'next/router'
 import { Component } from 'react'
 
+import { Contact } from '../../../../../components/common'
 import { CLUB_ROUTE } from '../../../../../constants/routes'
 import renderPage from '../../../../../renderPage'
 import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils'
