@@ -19,6 +19,7 @@ import SocialIcons from '../../../components/ClubPage/SocialIcons'
 import Testimonials from '../../../components/ClubPage/Testimonials'
 import {
   Card,
+  Contact,
   Container,
   Flex,
   Metadata,
@@ -92,7 +93,22 @@ const ClubPage = ({
         <Metadata />
         <div className="has-text-centered">
           <Title>404 Not Found</Title>
-          <Text>The club you are looking for does not exist.</Text>
+          <div className="mt-5 mb-5">
+            <Image src="/static/img/button.svg" alt="page not found" />
+          </div>
+          <Text>
+            The club you are looking for does not exist. Perhaps the club has
+            not been approved yet or the club has been deleted?
+          </Text>
+          {userInfo === undefined && (
+            <Text>
+              You are not logged into Penn Clubs. Logging in may allow you to
+              view further information.
+            </Text>
+          )}
+          <Text>
+            If you believe this is an error, please contact <Contact />.
+          </Text>
         </div>
       </Container>
     )
