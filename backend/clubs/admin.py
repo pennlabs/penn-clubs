@@ -144,13 +144,14 @@ class ClubChildrenInline(TabularInline):
 
 class ClubAdmin(admin.ModelAdmin):
     search_fields = ("name", "subtitle", "email", "code")
-    list_display = ("name", "email", "has_owner", "has_invite", "active", "approved")
+    list_display = ("name", "email", "has_owner", "has_invite", "active", "approved", "fair")
     list_filter = (
         "size",
         "application_required",
         "accepting_members",
         "active",
         "approved",
+        "fair",
         HasOwnerListFilter,
         HasInviteListFilter,
     )
