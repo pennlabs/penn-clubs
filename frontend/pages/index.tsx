@@ -128,36 +128,6 @@ class Splash extends React.Component<SplashProps, SplashState> {
     this.switchDisplay = this.switchDisplay.bind(this)
   }
 
-  componentDidMount() {
-    const loadedClubs = new Set()
-    this.state.clubs.forEach((c) => loadedClubs.add(c.code))
-
-    const paginationDownload = (url: string, count = 0): void => {
-      doApiRequest(url)
-        .then((res) => res.json())
-        .then((res) => {
-          this.setState((state) => {
-            const newClubs = res.results.filter((c) => !loadedClubs.has(c.code))
-            res.results.forEach((c) => loadedClubs.add(c.code))
-            return {
-              clubs: state.clubs.concat(newClubs),
-              clubCount: res.count,
-            }
-          })
-          if (!res.next || count === 0) {
-            this.setState((state) => ({ displayClubs: state.clubs }))
-            this.fuse = new Fuse(this.state.clubs, this.fuseOptions)
-          }
-          if (res.next) {
-            paginationDownload(res.next, count + 1)
-          } else {
-            this.setState({ clubLoaded: true })
-          }
-        })
-    }
-    paginationDownload('/clubs/?page=1&format=json')
-  }
-
   resetDisplay(nameInput, selectedTags) {
     const tagSelected = selectedTags
       .filter((tag) => tag.name === 'Tags')
