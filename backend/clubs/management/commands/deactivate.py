@@ -70,4 +70,4 @@ class Command(BaseCommand):
             for club in clubs:
                 club.send_renewal_email()
 
-            self.stdout.write("All emails sent out!")
+            self.stdout.write(f"All {clubs.count()} emails sent out!")
