@@ -19,6 +19,8 @@ const ListRenewalDialog = (): ReactElement => {
           Affairs renewal process for the {year}-{year + 1} school year. This
           may explain why this club list seems oddly empty. If you are an
           officer of a club, click the button below to start renewing your club!
+          During this process, you will also have the option to register for the
+          SAC fair.
         </p>
         <Link href={USER_RENEWAL} as={USER_RENEWAL}>
           <a className="button is-info is-light">Renew Clubs</a>
