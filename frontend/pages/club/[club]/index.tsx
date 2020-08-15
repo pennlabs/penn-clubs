@@ -1,5 +1,6 @@
 import { NextPageContext } from 'next'
 import { ReactElement, useState } from 'react'
+import Linkify from 'react-linkify'
 import s from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
@@ -174,8 +175,7 @@ const ClubPage = ({
             <StyledCard bordered>
               <StrongText>How To Get Involved</StrongText>
               <Text style={{ marginBottom: M0 }}>
-                {' '}
-                {club.how_to_get_involved}{' '}
+                <Linkify>{club.how_to_get_involved}</Linkify>
               </Text>
             </StyledCard>
           ) : (
