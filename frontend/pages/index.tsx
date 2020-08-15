@@ -3,6 +3,7 @@ import React from 'react'
 import s from 'styled-components'
 
 import ClubDisplay from '../components/ClubDisplay'
+import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
 import SearchBar from '../components/SearchBar'
@@ -346,6 +347,8 @@ class Splash extends React.Component<SplashProps, SplashState> {
               ) : (
                 ''
               )}
+
+              <ListRenewalDialog />
 
               <ClubDisplay
                 displayClubs={displayClubs}
