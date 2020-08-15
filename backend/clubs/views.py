@@ -1035,9 +1035,9 @@ class MassInviteAPIView(APIView):
         emails = list(set(emails) - set(exist))
 
         # remove users that have already been invited
-        exist = MembershipInvite.objects.filter(club=club, email__in=emails).values_list(
-            "email", flat=True
-        )
+        exist = MembershipInvite.objects.filter(
+            club=club, email__in=emails, active=True
+        ).values_list("email", flat=True)
         emails = list(set(emails) - set(exist))
 
         # ensure all emails are valid
