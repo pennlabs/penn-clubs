@@ -50,6 +50,9 @@ class ManyToManySaveMixin(object):
             if not isinstance(m2m, dict):
                 m2m_to_save[i] = {"field": m2m, "mode": None}
 
+        # ignore fields that aren't specified
+        ignore_fields = set()
+
         # remove m2m from validated data and save
         m2m_lists = {}
         for m2m in m2m_to_save:
@@ -63,6 +66,7 @@ class ManyToManySaveMixin(object):
                 m2m_lists[field_name] = []
                 items = self.validated_data.pop(field_name, None)
                 if items is None:
+                    ignore_fields.add(field_name)
                     continue
                 for item in items:
                     m2m_lists[field_name].append(self._lookup_item(model, field_name, item, mode))
@@ -79,6 +83,8 @@ class ManyToManySaveMixin(object):
         for m2m in m2m_to_save:
             field = m2m["field"]
             value = m2m_lists[field]
+            if field in ignore_fields:
+                continue
             if m2m["many"]:
                 getattr(obj, field).set(value)
             else:
