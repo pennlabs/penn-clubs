@@ -156,7 +156,9 @@ class Invite extends Component {
 }
 
 Invite.getInitialProps = async ({ query }) => {
-  const clubRequest = await doApiRequest(`/clubs/${query.club}/?format=json`)
+  const clubRequest = await doApiRequest(
+    `/clubs/${query.club}/?bypass=true&format=json`,
+  )
   const clubResponse = await clubRequest.json()
 
   return { query, club: clubResponse }

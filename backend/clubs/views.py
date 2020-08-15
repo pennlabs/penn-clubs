@@ -360,7 +360,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             queryset = queryset.filter(code__in=subset)
 
         # filter by approved clubs
-        if self.request.user.has_perm("clubs.see_pending_clubs"):
+        if (
+            self.request.user.has_perm("clubs.see_pending_clubs")
+            or self.request.query_params.get("bypass", None).lower() == "true"
+        ):
             return queryset
         elif self.request.user.is_authenticated:
             # Show approved clubs along with clubs that the logged-in user is a member of.
