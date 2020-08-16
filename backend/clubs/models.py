@@ -4,6 +4,7 @@ import uuid
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.db import models
@@ -96,6 +97,7 @@ class Club(models.Model):
         related_name="approved_clubs",
         blank=True,
     )
+    approved_comment = models.TextField(null=True, blank=True)
     approved_on = models.DateTimeField(null=True, blank=True)
 
     # indicates whether or not the club has expressed interest in this year's SAC fair
@@ -149,17 +151,62 @@ class Club(models.Model):
             "url": settings.RENEWAL_URL.format(domain=domain, club=self.code),
         }
 
-        emails = [self.email]
-
-        for user in self.membership_set.filter(role__lte=Membership.ROLE_OFFICER):
-            emails.append(user.person.email)
-
-        emails = [email for email in emails if email]
+        emails = self.get_officer_emails()
 
         if emails:
             send_mail_helper(
                 name="renew",
                 subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(self.name),
+                emails=emails,
+                context=context,
+            )
+
+    def get_officer_emails(self):
+        """
+        Return a list of club officer emails.
+        """
+        emails = []
+
+        # add club contact email if valid
+        try:
+            validate_email(self.email)
+            emails.append(self.email)
+        except ValidationError:
+            pass
+
+        # add email for all officers and above
+        for user in self.membership_set.filter(role__lte=Membership.ROLE_OFFICER):
+            emails.append(user.person.email)
+
+        # remove empty emails
+        emails = [email.strip() for email in emails]
+        emails = [email for email in emails if email]
+
+        # remove duplicate emails
+        emails = list(sorted(set(emails)))
+
+        return emails
+
+    def send_approval_email(self, request=None):
+        domain = get_domain(request)
+
+        context = {
+            "name": self.name,
+            "year": datetime.datetime.now().year,
+            "approved": self.approved,
+            "approved_comment": self.approved_comment,
+            "view_url": settings.VIEW_URL.format(domain=domain, club=self.code),
+            "edit_url": settings.EDIT_URL.format(domain=domain, club=self.code),
+        }
+
+        emails = self.get_officer_emails()
+
+        if emails:
+            send_mail_helper(
+                name="approval_status",
+                subject="{} has been {} on Penn Clubs".format(
+                    self.name, "accepted" if self.approved else "rejected"
+                ),
                 emails=emails,
                 context=context,
             )

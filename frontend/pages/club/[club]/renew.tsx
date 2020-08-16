@@ -267,7 +267,7 @@ const RenewPage = ({
               }
             }}
           />
-          <p className="mt-2">
+          <p className="mt-3 mb-3">
             If you have made any changes to your club page, please press the
             "Submit" button above. Pressing the continue button will discard any
             unsaved changes.
@@ -343,6 +343,19 @@ const RenewPage = ({
     },
     {
       name: 'Complete',
+      onEnterTab: async () => {
+        try {
+          await doApiRequest(`/clubs/${club.code}/?format=json`, {
+            method: 'PATCH',
+            body: {
+              active: true,
+            },
+          })
+          setChangeStatus(true)
+        } catch (e) {
+          setChangeStatus(false)
+        }
+      },
       content: () => (
         <>
           {changeStatus ? (
@@ -376,20 +389,14 @@ const RenewPage = ({
   ]
 
   const nextStep = () => {
-    if (step === steps.length - 2) {
-      doApiRequest(`/clubs/${club.code}/?format=json`, {
-        method: 'PATCH',
-        body: {
-          active: true,
-        },
-      })
+    const enterTab = steps[step + 1].onEnterTab
+    if (enterTab !== undefined) {
+      enterTab()
         .then(() => {
           setStep(step + 1)
-          setChangeStatus(true)
         })
         .catch(() => {
           setStep(step + 1)
-          setChangeStatus(false)
         })
     } else {
       setStep(step + 1)

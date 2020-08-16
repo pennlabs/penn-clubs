@@ -546,6 +546,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     events = EventSerializer(many=True, read_only=True)
     is_request = serializers.SerializerMethodField("get_is_request")
     fair = serializers.BooleanField(write_only=True, default=False)
+    approved_comment = serializers.CharField(required=False)
 
     def get_is_request(self, obj):
         user = self.context["request"].user
@@ -654,13 +655,13 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def validate_active(self, value):
         """
-        Only owners and superusers may change the active status of a club.
+        Only officers, owners, and superusers may change the active status of a club.
         """
         user = self.context["request"].user
         club_code = self.context["view"].kwargs.get("code")
         club = Club.objects.get(code=club_code)
         membership = Membership.objects.filter(person=user, club=club).first()
-        if (membership and membership.role <= Membership.ROLE_OWNER) or user.is_superuser:
+        if (membership and membership.role <= Membership.ROLE_OFFICER) or user.is_superuser:
             return value
         raise serializers.ValidationError(
             "You do not have permissions to change the active status of the club."
@@ -685,19 +686,30 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         elif "code" in self.validated_data:
             del self.validated_data["code"]
 
+        approval_email_required = False
+
         # if approved, update who and when club was approved
         if (
             self.instance
-            and not self.instance.approved
-            and self.validated_data.get("approved") is True
+            and self.instance.approved is None
+            and self.validated_data.get("approved") is not None
         ):
             self.validated_data["approved_by"] = self.context["request"].user
             self.validated_data["approved_on"] = timezone.now()
 
-        return super().save()
+            approval_email_required = True
+
+        obj = super().save()
+
+        # if rejected, send email with reason
+        if approval_email_required:
+            obj.send_approval_email()
+
+        return obj
 
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
+            "approved_comment",
             "badges",
             "events",
             "facebook",

@@ -48,7 +48,17 @@
                         e.preventDefault()
                     })
                 }
+
+                document.getElementById("update").addEventListener("click", () => {
+                    const params = new URLSearchParams(window.location.search);
+                    document.querySelectorAll("#variables ul li input").forEach(ele => {
+                        params.set(ele.getAttribute("name"), ele.value);
+                    });
+                    window.location.href = window.location.pathname + "?" + params.toString();
+                    console.log(values);
+                });
             })
+
         </script>
     </head>
     <body>
@@ -65,9 +75,10 @@
             <b>Used Variables</b>
             <ul>
                 {% for var in variables %}
-                    <li><kbd>{{var.0}}</kbd> - {{var.1}}</li>
+                    <li><kbd>{{var.0}}</kbd> - <input type="text" name="{{ var.0 }}" value="{{var.1}}" /></li>
                 {% endfor %}
             </ul>
+            <button id="update">Update Values</button>
         </div>
     </body>
 </html>

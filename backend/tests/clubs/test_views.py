@@ -591,7 +591,7 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password="test")
 
         # mark club as unapproved
-        self.club1.approved = False
+        self.club1.approved = None
         self.club1.save(update_fields=["approved"])
 
         # approve club
@@ -956,7 +956,7 @@ class ClubTestCase(TestCase):
         """
         Officers should not be able to deactivate the club.
         """
-        Membership.objects.create(club=self.club1, person=self.user2, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(club=self.club1, person=self.user2, role=Membership.ROLE_MEMBER)
         self.client.login(username=self.user2.username, password="test")
         resp = self.client.patch(
             reverse("clubs-detail", args=(self.club1.code,)),
@@ -1249,3 +1249,60 @@ class ClubTestCase(TestCase):
 
         # ensure email was sent out notifying officer of question
         self.assertEqual(len(mail.outbox), 1, mail.outbox)
+
+    def test_club_renew(self):
+        # run deactivate script
+        with open(os.devnull, "w") as f:
+            call_command("deactivate", "all", "--force", stdout=f)
+
+        # count already sent emails
+        mail_count = len(mail.outbox)
+
+        # choose a club
+        club = self.club1
+
+        # add officer to club
+        Membership.objects.create(person=self.user4, club=club, role=Membership.ROLE_OFFICER)
+
+        # login to officer account
+        self.client.login(username=self.user4.username, password="test")
+
+        # mark the club as active (student side renewal)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"active": True},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # login to admin account
+        self.client.login(username=self.user5.username, password="test")
+
+        # approve the club
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"approved": True, "approved_comment": "This is a great club!"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure email is sent out to let club know
+        self.assertEqual(len(mail.outbox), mail_count + 1, mail.outbox)
+
+        # update mail count
+        mail_count = len(mail.outbox)
+
+        # mark club has unapproved
+        club.approved = None
+        club.save(update_fields=["approved"])
+
+        # reject the club
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"approved": False, "approved_comment": "This is a bad club!"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure email is sent out to let club know
+        self.assertEqual(len(mail.outbox), mail_count + 1, mail.outbox)
