@@ -38,6 +38,7 @@ export const CheckboxLabel = s.label`
 `
 
 type CheckboxProps = {
+  id?: string
   className?: string
   checked: boolean
   onChange: () => void

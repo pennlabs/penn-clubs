@@ -3,7 +3,13 @@ import { ReactElement, useEffect, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import s from 'styled-components'
 
-import { Checkbox, CheckboxLabel, Empty, Icon } from '../../components/common'
+import {
+  Checkbox,
+  CheckboxLabel,
+  Empty,
+  Icon,
+  Metadata,
+} from '../../components/common'
 import {
   CLUBS_BLUE,
   CLUBS_GREY,
@@ -157,6 +163,7 @@ const Reports = ({ nameToCode }: ReportsProps): ReactElement => {
         {fields.map((field, idx) => (
           <div key={idx}>
             <Checkbox
+              id={field}
               checked={includedFields[field]}
               onChange={() => {
                 setIncludedFields((prev) => ({
@@ -185,7 +192,8 @@ const Reports = ({ nameToCode }: ReportsProps): ReactElement => {
   }
 
   return (
-    <div>
+    <>
+      <Metadata title="Club Reports" />
       {isEdit ? (
         <div>
           <ColoredHeader>
@@ -304,7 +312,7 @@ const Reports = ({ nameToCode }: ReportsProps): ReactElement => {
           <br />
         </div>
       )}
-    </div>
+    </>
   )
 }
 
