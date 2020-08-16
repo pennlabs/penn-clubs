@@ -5,6 +5,11 @@ export enum MembershipRank {
   Member = 20,
 }
 
+export interface MembershipRole {
+  value: number
+  label: string
+}
+
 export interface Report {
   id: number
   name: string
