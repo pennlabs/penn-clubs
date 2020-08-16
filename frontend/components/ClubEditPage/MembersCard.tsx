@@ -1,12 +1,12 @@
 import { ReactElement } from 'react'
 
-import { Club, MembershipRank } from '../../types'
+import { Club, MembershipRank, MembershipRole } from '../../types'
 import { getApiUrl, getRoleDisplay } from '../../utils'
 import { Icon } from '../common'
 import { ModelForm } from '../Form'
 import BaseCard from './BaseCard'
 
-export const MEMBERSHIP_ROLES = [
+export const MEMBERSHIP_ROLES: MembershipRole[] = [
   {
     value: MembershipRank.Member,
     label: 'Member',

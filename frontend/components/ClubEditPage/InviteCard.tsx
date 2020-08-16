@@ -1,7 +1,7 @@
 import { ReactElement, useEffect, useState } from 'react'
 import Select from 'react-select'
 
-import { Club } from '../../types'
+import { Club, MembershipRole } from '../../types'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../../utils'
 import { Icon, Text } from '../common'
 import BaseCard from './BaseCard'
@@ -21,10 +21,9 @@ type Invite = {
 export default function InviteCard({ club }: InviteCardProps): ReactElement {
   const [invites, setInvites] = useState<Invite[]>([])
   const [inviteTitle, setInviteTitle] = useState<string>('Member')
-  const [inviteRole, setInviteRole] = useState<{
-    label: string
-    value: number
-  }>(MEMBERSHIP_ROLES[0])
+  const [inviteRole, setInviteRole] = useState<MembershipRole>(
+    MEMBERSHIP_ROLES[0],
+  )
   const [inviteEmails, setInviteEmails] = useState<string>('')
   const [isInviting, setInviting] = useState<boolean>(false)
 
@@ -82,6 +81,13 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
         reloadInvites()
         setInviting(false)
       })
+  }
+
+  const updatePermissions = (opt: MembershipRole) => {
+    setInviteRole(opt)
+    if (['Member', 'Officer', 'Owner'].includes(inviteTitle)) {
+      setInviteTitle(opt.label)
+    }
   }
 
   useEffect(reloadInvites, [])
@@ -153,7 +159,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
             <Select
               options={MEMBERSHIP_ROLES}
               value={inviteRole}
-              onChange={(opt) => setInviteRole(opt)}
+              onChange={updatePermissions}
             />
           </div>
           <p className="help">
