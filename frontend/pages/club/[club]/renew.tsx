@@ -219,7 +219,7 @@ const RenewPage = ({
               performed once a year by the current leadership of the club.
             </p>
             <p>
-              You must fill out this approval form by <b>August 20, {year}</b>{' '}
+              You must fill out this approval form by <b>August 24, {year}</b>{' '}
               in order to have your club shown during the New Student
               Orientation. Late submissions will be accepted, but we cannot
               guarantee that they will be processed in time for New Student
