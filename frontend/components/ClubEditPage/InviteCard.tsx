@@ -85,7 +85,8 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
 
   const updatePermissions = (opt: MembershipRole) => {
     setInviteRole(opt)
-    if (['Member', 'Officer', 'Owner'].includes(inviteTitle)) {
+
+    if (MEMBERSHIP_ROLES.map((role) => role.label).includes(inviteTitle)) {
       setInviteTitle(opt.label)
     }
   }
