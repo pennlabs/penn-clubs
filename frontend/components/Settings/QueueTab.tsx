@@ -11,7 +11,7 @@ const QueueTab = (): ReactElement => {
   const [clubs, setClubs] = useState<Club[]>([])
 
   useEffect(() => {
-    apiCheckPermission('approve_club').then((approved) => {
+    apiCheckPermission('clubs.approve_club').then((approved) => {
       setCanApprove(approved)
       if (approved) {
         doApiRequest('/clubs/?active=true&approved=none&format=json')

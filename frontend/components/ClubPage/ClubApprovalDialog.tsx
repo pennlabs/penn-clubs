@@ -19,7 +19,7 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   )
 
   useEffect(() => {
-    apiCheckPermission('approve_club').then(setCanApprove)
+    apiCheckPermission('clubs.approve_club').then(setCanApprove)
   }, [])
 
   return club.active && club.approved !== true ? (

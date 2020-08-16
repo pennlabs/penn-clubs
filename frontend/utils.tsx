@@ -65,7 +65,7 @@ export function getApiUrl(path: string): string {
 /**
  * Check if the user has a Django permission set.
  * If you were checking for the "clubs.approve_club" permission, pass the
- * string "approve_club".
+ * string "clubs.approve_club".
  */
 export async function apiCheckPermission(permission: string): Promise<boolean> {
   const resp = await doApiRequest(
