@@ -29,10 +29,18 @@ class ClubPermission(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
 
+        # club approvers can update the club
+        if view.action in ["update", "partial_update"] and request.user.has_perm(
+            "clubs.approve_club"
+        ):
+            return True
+
+        # user must be in club to perform non-view actions
         membership = Membership.objects.filter(person=request.user, club=obj).first()
         if membership is None:
             return False
 
+        # user has to be an owner to delete a club, an officer to edit it
         if view.action in ["destroy"]:
             return membership.role <= Membership.ROLE_OWNER
         else:
