@@ -7,6 +7,7 @@ from django.core import mail
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
+from django.urls import reverse
 
 from clubs.models import Club, Favorite, Membership, MembershipInvite, Tag
 from clubs.utils import fuzzy_lookup_club

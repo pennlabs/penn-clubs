@@ -447,16 +447,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return super().get_filename()
 
     def partial_update(self, request, *args, **kwargs):
-        if request.data.get("accepted", False) is True and not request.user.has_perm(
-            "clubs.approve_club"
-        ):
+        if (
+            request.data.get("accepted", None) is not None
+            or request.data.get("accepted_comment", None) is not None
+        ) and not request.user.has_perm("clubs.approve_club"):
             raise PermissionDenied
         return super().partial_update(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        if request.data.get("accepted", False) is True and not request.user.has_perm(
-            "clubs.approve_club"
-        ):
+        if (
+            request.data.get("accepted", None) is not None
+            or request.data.get("accepted_comment", None) is not None
+        ) and not request.user.has_perm("clubs.approve_club"):
             raise PermissionDenied
         return super().update(request, *args, **kwargs)
 
@@ -1108,13 +1110,30 @@ def email_preview(request):
 
     if "email" in request.GET:
         email_path = os.path.basename(request.GET.get("email"))
-        context = EmailPreviewContext(
-            {
-                "name": "[Club Name]",
-                "sender": {"username": "[Sender Username]", "email": "[Sender Email]"},
-                "role": 0,
-            }
-        )
+
+        # initial values
+        initial_context = {
+            "name": "[Club Name]",
+            "sender": {"username": "[Sender Username]", "email": "[Sender Email]"},
+            "role": 0,
+        }
+
+        # set specified values
+        for param, value in request.GET.items():
+            if param not in {"email"}:
+                # parse non-string representations
+                if value.strip().lower() == "true":
+                    value = True
+                elif value.strip().lower() == "false":
+                    value = False
+                elif value.isdigit():
+                    value = int(value)
+                elif value.startswith("{"):
+                    value = json.loads(value)
+
+                initial_context[param] = value
+
+        context = EmailPreviewContext(initial_context)
         email = render_to_string("emails/{}.html".format(email_path), context)
         text_email = html_to_text(email)
 

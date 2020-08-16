@@ -77,6 +77,7 @@ export interface Club {
   active: boolean
   application_required: ClubApplicationRequired
   approved: boolean | null
+  approved_comment: string | null
   badges: [Badge]
   code: string
   description: string
