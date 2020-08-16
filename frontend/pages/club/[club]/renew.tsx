@@ -269,8 +269,8 @@ const RenewPage = ({
           />
           <p className="mt-3 mb-3">
             If you have made any changes to your club page, please press the
-            "Submit" button above. Pressing the continue button will discard any
-            unsaved changes.
+            "Submit" button above. Pressing the continue button will{' '}
+            <b>discard any unsaved changes</b>.
           </p>
         </>
       ),
