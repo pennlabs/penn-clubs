@@ -3,7 +3,7 @@ import { ReactElement } from 'react'
 
 import { Club, ClubApplicationRequired, ClubSize } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
-import { Text } from '../common'
+import { Contact, Text } from '../common'
 import Form from '../Form'
 
 const CLUB_APPLICATIONS = [
@@ -123,9 +123,14 @@ export default function ClubEditCard({
           name: 'name',
           type: 'text',
           required: true,
-          help:
-            !isEdit &&
-            'Your club URL will be generated from your club name, and cannot be changed upon creation. Your club name can still be changed afterwards.',
+          help: isEdit ? (
+            <>
+              If you would like to change your club URL in addition to your club
+              name, you will need to email <Contact />.
+            </>
+          ) : (
+            'Your club URL will be generated from your club name, and cannot be changed upon creation. Your club name can still be changed afterwards.'
+          ),
         },
         {
           name: 'subtitle',
