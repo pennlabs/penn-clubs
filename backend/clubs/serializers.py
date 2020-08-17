@@ -576,6 +576,18 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     def validate_badges(self, value):
         return value
 
+    def validate_tags(self, value):
+        """
+        Check for required tags before saving the club.
+        """
+        tag_names = [tag.get("name") for tag in value]
+        necessary_tags = {"Undergraduate", "Graduate"}
+        if not any(tag in necessary_tags for tag in tag_names):
+            raise serializers.ValidationError(
+                "You must specify either the 'Undegraduate' or 'Graduate' tag in this list or both."
+            )
+        return value
+
     def validate_description(self, value):
         """
         Allow the description to have HTML tags that come from a whitelist.

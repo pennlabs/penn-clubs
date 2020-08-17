@@ -62,6 +62,9 @@ class ClubTestCase(TestCase):
         cls.user5.is_superuser = True
         cls.user5.save()
 
+        Tag.objects.create(name="Graduate")
+        Tag.objects.create(name="Undergraduate")
+
     def setUp(self):
         self.client = Client()
 
@@ -219,7 +222,7 @@ class ClubTestCase(TestCase):
         # create club as superuser
         resp = self.client.post(
             reverse("clubs-list"),
-            {"name": "Penn Labs", "description": "We code stuff.", "tags": []},
+            {"name": "Penn Labs", "description": "We code stuff.", "tags": [{"name": "Graduate"}]},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -383,7 +386,7 @@ class ClubTestCase(TestCase):
         # create club
         resp = self.client.post(
             reverse("clubs-list"),
-            {"name": "Penn Labs", "description": "We code stuff.", "tags": []},
+            {"name": "Penn Labs", "description": "We code stuff.", "tags": [{"name": "Graduate"}]},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -572,7 +575,7 @@ class ClubTestCase(TestCase):
                 "code": "penn-labs",
                 "name": "Penn Labs",
                 "description": "",
-                "tags": [],
+                "tags": [{"name": "Graduate"}],
                 "facebook": "",
                 "twitter": "",
                 "instagram": "",
@@ -653,7 +656,11 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password="test")
         resp = self.client.post(
             reverse("clubs-list"),
-            {"name": "Penn Labs", "tags": [], "description": test_good_string},
+            {
+                "name": "Penn Labs",
+                "tags": [{"name": "Undergraduate"}],
+                "description": test_good_string,
+            },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -673,7 +680,7 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password="test")
         resp = self.client.post(
             reverse("clubs-list"),
-            {"name": "Penn Labs", "tags": [], "description": test_bad_string},
+            {"name": "Penn Labs", "tags": [{"name": "Graduate"}], "description": test_bad_string},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -746,7 +753,7 @@ class ClubTestCase(TestCase):
                 "name": "Penn Labs",
                 "description": "We code stuff.",
                 "badges": [{"label": "SAC Funded"}],
-                "tags": [{"name": tag1.name}, {"name": tag2.name}],
+                "tags": [{"name": tag1.name}, {"name": tag2.name}, {"name": "Graduate"}],
                 "target_schools": [{"name": school1.name}],
                 "facebook": "https://www.facebook.com/groups/966590693376781/"
                 + "?ref=nf_target&fref=nf",
@@ -904,7 +911,7 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password="test")
         resp = self.client.patch(
             reverse("clubs-detail", args=(self.club1.code,)),
-            {"description": "We do stuff.", "tags": [{"name": tag3.name}]},
+            {"description": "We do stuff.", "tags": [{"name": tag3.name}, {"name": "Graduate"}]},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -915,7 +922,7 @@ class ClubTestCase(TestCase):
 
         data = json.loads(resp.content.decode("utf-8"))
         self.assertEqual(data["description"], "We do stuff.")
-        self.assertEqual(len(data["tags"]), 1)
+        self.assertEqual(len(data["tags"]), 2)
 
     def test_club_delete_no_auth(self):
         """
