@@ -299,7 +299,10 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
             and self.instance.club.membership_set.count() > 0
         ):
             invite_username = self.instance.email.rsplit("@", 1)[0]
-            if not invite_username.lower() == user.username.lower():
+            if not (
+                invite_username.lower() == user.username.lower()
+                or self.instance.email == user.email
+            ):
                 raise serializers.ValidationError(
                     'This invitation was meant for "{}", but you are logged in as "{}"!'.format(
                         invite_username, user.username
