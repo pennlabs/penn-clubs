@@ -186,7 +186,7 @@ const Reports = ({ nameToCode }: ReportsProps): ReactElement => {
   }
 
   const handleDownload = (report) => {
-    window.location.href = `${API_BASE_URL}/clubs/?existing=true&${serializeParams(
+    window.location.href = `${API_BASE_URL}/clubs/?bypass=true&existing=true&${serializeParams(
       JSON.parse(report.parameters),
     )}`
   }

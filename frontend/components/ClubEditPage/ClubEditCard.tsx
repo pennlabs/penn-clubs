@@ -276,5 +276,12 @@ export default function ClubEditCard({
     },
   ]
 
-  return <Form fields={fields} defaults={club} onSubmit={submit} />
+  return (
+    <Form
+      fields={fields}
+      defaults={club}
+      onSubmit={submit}
+      enableSubmitWithoutEdit={true}
+    />
+  )
 }

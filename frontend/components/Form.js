@@ -481,6 +481,7 @@ class Form extends Component {
       submitButton,
       disabledSubmitButton,
       fields,
+      enableSubmitWithoutEdit = false,
       submitButtonAttributes = 'button is-primary is-medium',
     } = this.props
     const { edited } = this.state
@@ -489,7 +490,7 @@ class Form extends Component {
     // we can disable or enable the button. Otherwise, we show the submitButton by default
     // and form validation must be implemented in the parent component.
     let button
-    if (edited) {
+    if (edited || enableSubmitWithoutEdit) {
       if (submitButton) {
         button = <span onClick={this.handleSubmit}>{submitButton}</span>
       } else {

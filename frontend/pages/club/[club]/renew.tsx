@@ -149,6 +149,10 @@ const RenewPage = ({
   const [club, setClub] = useState<Club>(initialClub)
   const [step, setStep] = useState<number>(0)
   const [changeStatus, setChangeStatus] = useState<boolean>(false)
+  const [hasSubmitted, setSubmitted] = useState<boolean>(false)
+  const [submitMessage, setSubmitMessage] = useState<
+    string | ReactElement | null
+  >(null)
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
   const [isSacChecked, setSacChecked] = useState<boolean>(club.fair)
 
@@ -261,19 +265,24 @@ const RenewPage = ({
             tags={tags}
             club={club}
             isEdit={true}
-            onSubmit={({ club }) => {
+            onSubmit={({ club, message }) => {
               if (club !== undefined) {
                 setClub(club)
+                setSubmitted(true)
+              }
+              if (message !== undefined) {
+                setSubmitMessage(message)
               }
             }}
           />
-          <p className="mt-3 mb-3">
-            If you have made any changes to your club page, please press the
-            "Submit" button above. Pressing the continue button will{' '}
-            <b>discard any unsaved changes</b>.
-          </p>
+          {submitMessage !== null && (
+            <div className="mt-3 mb-3 notification is-info">
+              {submitMessage}
+            </div>
+          )}
         </>
       ),
+      disabled: !hasSubmitted,
     },
     {
       name: 'Policies',
