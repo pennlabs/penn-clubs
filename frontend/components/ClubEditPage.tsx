@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { SingletonRouter } from 'next/router'
 import React, { Component, ReactElement } from 'react'
 
-import BaseCard from '../components/ClubEditPage/BaseCard'
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
@@ -156,7 +155,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
 
     let metadata
     if (club) {
-      metadata = <ClubMetadata club={club} />;
+      metadata = <ClubMetadata club={club} />
     } else {
       metadata = <Metadata title="Create Club" />
     }
