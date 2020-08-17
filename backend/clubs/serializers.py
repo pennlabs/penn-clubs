@@ -546,7 +546,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     events = EventSerializer(many=True, read_only=True)
     is_request = serializers.SerializerMethodField("get_is_request")
     fair = serializers.BooleanField(write_only=True, default=False)
-    approved_comment = serializers.CharField(required=False)
+    approved_comment = serializers.CharField(required=False, allow_blank=True)
 
     def get_is_request(self, obj):
         user = self.context["request"].user

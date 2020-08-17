@@ -76,6 +76,7 @@ describe('Authenticated user tests', () => {
       },
     ]
 
+    // set fields
     fields.forEach(({ label, value, pressEnter }) => {
       const input = cy.contains('.field', label).find('input')
       input.focus().clear().type(value)
@@ -86,6 +87,12 @@ describe('Authenticated user tests', () => {
 
       input.blur()
     })
+
+    // set tags
+    cy.contains('Select tags relevant to your club!').click()
+    cy.contains('Undergraduate').click()
+
+    // submit form
     cy.contains('Submit').click()
 
     // wait for club to be created, should be redirected to renewal page

@@ -26,6 +26,7 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   const router = useRouter()
   const year = new Date().getFullYear()
   const [comment, setComment] = useState<string>(club.approved_comment || '')
+  const [loading, setLoading] = useState<boolean>(false)
 
   const [canApprove, setCanApprove] = useState<boolean>(
     userInfo && userInfo.is_superuser,
@@ -98,7 +99,9 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
           <div className="buttons">
             <button
               className="button is-success"
+              disabled={loading}
               onClick={() => {
+                setLoading(true)
                 doApiRequest(`/clubs/${club.code}/?format=json`, {
                   method: 'PATCH',
                   body: {
@@ -106,15 +109,17 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
                     approved_comment: comment,
                   },
                 })
-                  .then((resp) => resp.json())
                   .then(() => router.reload())
+                  .finally(() => setLoading(false))
               }}
             >
               <Icon name="check" /> Approve
             </button>
             <button
               className="button is-danger"
+              disabled={loading}
               onClick={() => {
+                setLoading(true)
                 doApiRequest(`/clubs/${club.code}/?format=json`, {
                   method: 'PATCH',
                   body: {
@@ -122,8 +127,8 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
                     approved_comment: comment,
                   },
                 })
-                  .then((resp) => resp.json())
                   .then(() => router.reload())
+                  .finally(() => setLoading(false))
               }}
             >
               <Icon name="x" /> Reject

@@ -1327,3 +1327,14 @@ class ClubTestCase(TestCase):
 
         # ensure email is sent out to let club know
         self.assertEqual(len(mail.outbox), mail_count + 1, mail.outbox)
+
+        # approve the club without comment
+        club.approved = None
+        club.save(update_fields=["approved"])
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"approved": True, "approved_comment": ""},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
