@@ -4,6 +4,8 @@ import json
 import os
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.management import call_command
 from django.test import Client, TestCase
@@ -1282,8 +1284,20 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        # login to admin account
-        self.client.login(username=self.user5.username, password="test")
+        # add approve privileges to account
+        content_type = ContentType.objects.get_for_model(Club)
+        self.user3.user_permissions.add(
+            Permission.objects.get(codename="approve_club", content_type=content_type)
+        )
+        self.user3.user_permissions.add(
+            Permission.objects.get(codename="see_pending_clubs", content_type=content_type)
+        )
+
+        # ensure user is not superuser
+        self.assertFalse(self.user3.is_superuser)
+
+        # login to account with approve club privilege
+        self.client.login(username=self.user3.username, password="test")
 
         # approve the club
         resp = self.client.patch(
