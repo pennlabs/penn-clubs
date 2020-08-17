@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { withRouter } from 'next/router'
 import { Component } from 'react'
 
+import ClubMetadata from '../../../../../components/ClubMetadata'
 import { Contact } from '../../../../../components/common'
 import { CLUB_ROUTE } from '../../../../../constants/routes'
 import renderPage from '../../../../../renderPage'
@@ -82,6 +83,7 @@ class Invite extends Component {
             className="has-text-centered"
             style={{ margin: 30, marginTop: 60 }}
           >
+            <ClubMetadata club={club} />
             <h1 className="title is-2">404 Not Found</h1>
             <p>
               The invite you are looking for does not exist. Perhaps it was
@@ -99,6 +101,7 @@ class Invite extends Component {
             className="has-text-centered"
             style={{ margin: 30, marginTop: 60 }}
           >
+            <ClubMetadata club={club} />
             <h1 className="title is-2">Loading...</h1>
             <p>Processing your invitation...</p>
           </div>
@@ -110,6 +113,7 @@ class Invite extends Component {
     const { name: member, email } = invite
     return (
       <div style={{ padding: '30px 50px' }} className="has-text-centered">
+        <ClubMetadata club={club} />
         {/* &#x1F389; is the confetti emoji. */}
         <h2 className="title is-2">
           &#x1F389; Invitation for {name} &#x1F389;
