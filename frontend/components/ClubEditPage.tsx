@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { SingletonRouter } from 'next/router'
 import React, { Component, ReactElement } from 'react'
 
-import BaseCard from '../components/ClubEditPage/BaseCard'
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
@@ -23,7 +22,14 @@ import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import QuestionsCard from './ClubEditPage/QuestionsCard'
 import RenewCard from './ClubEditPage/RenewCard'
 import ClubMetadata from './ClubMetadata'
-import { Contact, Container, InactiveTag, Loading, Title } from './common'
+import {
+  Contact,
+  Container,
+  InactiveTag,
+  Loading,
+  Metadata,
+  Title,
+} from './common'
 import AuthPrompt from './common/AuthPrompt'
 import TabView from './TabView'
 
@@ -154,12 +160,15 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     const { authenticated, userInfo, schools, years, majors, tags } = this.props
     const { club, isEdit, message } = this.state
 
+    let metadata
+    if (club) {
+      metadata = <ClubMetadata club={club} />
+    } else {
+      metadata = <Metadata title="Create Club" />
+    }
+
     if (authenticated === false) {
-      return (
-        <AuthPrompt>
-          <ClubMetadata club={club} />
-        </AuthPrompt>
-      )
+      return <AuthPrompt>{metadata}</AuthPrompt>
     }
 
     const isOfficer =
@@ -191,7 +200,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     if (authenticated && isEdit && !userInfo.is_superuser && !isOfficer) {
       return (
         <AuthPrompt title="Oh no!" hasLogin={false}>
-          <ClubMetadata club={club} />
+          {metadata}
           You do not have permission to edit the page for{' '}
           {(club && club.name) || 'this club'}. To get access, contact{' '}
           <Contact />.
@@ -308,7 +317,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
 
     return (
       <Container>
-        <ClubMetadata club={club} />
+        {metadata}
         <Title>
           {nameOrDefault}
           {showInactiveTag && <InactiveTag />}

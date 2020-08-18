@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 
-import { Contact } from '../../../../../components/common'
+import ClubMetadata from '../../../../../components/ClubMetadata'
+import { Contact, Metadata } from '../../../../../components/common'
 import { CLUB_ROUTE } from '../../../../../constants/routes'
 import renderPage from '../../../../../renderPage'
 import { Club } from '../../../../../types'
@@ -87,6 +88,7 @@ const Invite = ({ club, query }: InviteProps): ReactElement => {
           className="has-text-centered"
           style={{ margin: 30, marginTop: 60 }}
         >
+          <Metadata title="Club Invite" />
           <h1 className="title is-2">404 Not Found</h1>
           <p>
             The invite you are looking for does not exist. Perhaps it was
@@ -104,6 +106,7 @@ const Invite = ({ club, query }: InviteProps): ReactElement => {
           className="has-text-centered"
           style={{ margin: 30, marginTop: 60 }}
         >
+          <ClubMetadata club={club} />
           <h1 className="title is-2">Loading...</h1>
           <p>Processing your invitation...</p>
         </div>
@@ -115,6 +118,7 @@ const Invite = ({ club, query }: InviteProps): ReactElement => {
 
   return (
     <div style={{ padding: '30px 50px' }} className="has-text-centered">
+      <ClubMetadata club={club} />
       {/* &#x1F389; is the confetti emoji. */}
       <h2 className="title is-2">&#x1F389; Invitation for {name} &#x1F389;</h2>
       <div className="title is-4" style={{ fontWeight: 'normal' }}>
