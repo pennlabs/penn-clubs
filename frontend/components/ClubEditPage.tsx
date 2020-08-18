@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { SingletonRouter } from 'next/router'
-import { Component, ReactElement } from 'react'
+import React, { Component, ReactElement } from 'react'
 
 import BaseCard from '../components/ClubEditPage/BaseCard'
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
@@ -228,8 +228,23 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           label: 'Membership',
           content: (
             <>
-              <MembersCard club={club} />
               <InviteCard club={club} />
+              <PotentialMemberCard
+                club={club}
+                source="membershiprequests"
+                actions={[
+                  {
+                    name: 'Accept',
+                    onClick: (id: string): Promise<void> => {
+                      return doApiRequest(
+                        `/clubs/${club.code}/membershiprequests/${id}/accept/?format=json`,
+                        { method: 'POST' },
+                      ).then(() => undefined)
+                    },
+                  },
+                ]}
+              />
+              <MembersCard club={club} />
             </>
           ),
           disabled: !isEdit,
@@ -248,22 +263,8 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           label: 'Recruitment',
           content: (
             <>
+              <QRCodeCard club={club} />
               <PotentialMemberCard club={club} source="subscription" />
-              <PotentialMemberCard
-                club={club}
-                source="membershiprequests"
-                actions={[
-                  {
-                    name: 'Accept',
-                    onClick: (id: string): Promise<void> => {
-                      return doApiRequest(
-                        `/clubs/${club.code}/membershiprequests/${id}/accept/?format=json`,
-                        { method: 'POST' },
-                      ).then(() => undefined)
-                    },
-                  },
-                ]}
-              />
             </>
           ),
         },
@@ -272,7 +273,6 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           label: 'Resources',
           content: (
             <>
-              <QRCodeCard club={club} />
               <MemberExperiencesCard club={club} />
               <FilesCard club={club} />
             </>
