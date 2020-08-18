@@ -44,15 +44,15 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
         {club.approved === false ? (
           <>
             <p>
-              This club has been marked as <b>rejected</b> and is only visible
-              to administrators of Penn Clubs. The reason that your club was
-              rejected by the Office of Student Affairs is listed below. If you
-              believe that this is a mistake, contact <Contact />.
+              This club has been marked as <b>not approved</b> and is only
+              visible to administrators of Penn Clubs. The reason that your club
+              was not approved by the Office of Student Affairs is listed below.
+              If you believe that this is a mistake, contact <Contact />.
             </p>
             <ReviewQuote>
               {club.approved_comment || (
                 <>
-                  No reason has been given for why your club was rejected.
+                  No reason has been given for why your club was not approved.
                   Contact <Contact /> for more details.
                 </>
               )}
@@ -73,8 +73,8 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
             request. Approving this request will display it publically on the
             Penn Clubs website and send out an email notifying club officers
             that their club has been renewed. Rejecting this request will send
-            out an email notifying club officers that their club has been
-            rejected and include instructions on how to request approval again.
+            out an email notifying club officers that their club was not
+            approved and include instructions on how to request approval again.
           </div>
           {club.files.length ? (
             <div className="mb-3">

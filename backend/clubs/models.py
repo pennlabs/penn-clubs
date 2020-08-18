@@ -204,8 +204,8 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="approval_status",
-                subject="{} has been {} on Penn Clubs".format(
-                    self.name, "accepted" if self.approved else "rejected"
+                subject="{} {} on Penn Clubs".format(
+                    self.name, "has been accepted" if self.approved else "not approved"
                 ),
                 emails=emails,
                 context=context,
