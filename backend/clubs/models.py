@@ -12,6 +12,7 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from phonenumber_field.modelfields import PhoneNumberField
+from simple_history.models import HistoricalRecords
 
 from clubs.utils import get_domain, html_to_text
 
@@ -139,6 +140,8 @@ class Club(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name
