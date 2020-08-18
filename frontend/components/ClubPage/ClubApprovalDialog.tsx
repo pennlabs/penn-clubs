@@ -8,10 +8,12 @@ import { apiCheckPermission, doApiRequest } from '../../utils'
 import { Contact, Icon, Text } from '../common'
 
 const ReviewQuote = s.span`
+  white-space: pre-wrap;
   display: block;
   margin-top: 12px;
   margin-bottom: 5px;
   padding: 5px;
+  padding-left: 12px;
   border-left: 3px solid ${MEDIUM_GRAY};
   color: ${MEDIUM_GRAY};
   font-size: 1.2em;
