@@ -125,7 +125,7 @@ const Actions = ({
           {canEdit && (
             <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
               <ActionButton className="button is-success">
-                Edit Club
+                Manage Club
               </ActionButton>
             </Link>
           )}

@@ -144,7 +144,7 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
         club.is_member <= MembershipRank.Officer && (
           <>
             <div className="mb-3">
-              You can edit your club details using the <b>Edit Club</b> button
+              You can edit your club details using the <b>Manage Club</b> button
               on this page. After you have addressed the issues mentioned above,
               you can request renewal again using the button below.
             </div>
