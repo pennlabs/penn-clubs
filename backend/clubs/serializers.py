@@ -222,7 +222,6 @@ class YearSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
-    id = serializers.SlugField(required=False)
     club = serializers.SlugRelatedField(
         queryset=Club.objects.all(), required=False, slug_field="code"
     )
