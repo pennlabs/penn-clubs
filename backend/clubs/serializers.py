@@ -542,7 +542,7 @@ class ClubListSerializer(serializers.ModelSerializer):
 
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
-    image = serializers.ImageField(write_only=True, required=False)
+    image = serializers.ImageField(write_only=True, required=False, allow_null=True)
     badges = BadgeSerializer(many=True, required=False)
     testimonials = TestimonialSerializer(many=True, read_only=True)
     questions = QuestionAnswerSerializer(many=True, read_only=True)

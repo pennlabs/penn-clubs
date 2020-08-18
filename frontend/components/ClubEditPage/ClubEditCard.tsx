@@ -65,7 +65,9 @@ export default function ClubEditCard({
 }: ClubEditCardProps): ReactElement {
   const submit = (data): void => {
     const photo = data.image
-    delete data.image
+    if (photo !== null) {
+      delete data.image
+    }
 
     const req =
       isEdit && club !== null
@@ -154,9 +156,10 @@ export default function ClubEditCard({
         },
         {
           name: 'image',
+          value: club.image_url,
           apiName: 'file',
           accept: 'image/*',
-          type: 'file',
+          type: 'image',
           label: 'Club Logo',
         },
         {
