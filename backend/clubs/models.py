@@ -216,6 +216,7 @@ class Club(models.Model):
         permissions = [
             ("approve_club", "Can approve pending clubs"),
             ("see_pending_clubs", "View pending clubs that are not one's own"),
+            ("see_fair_status", "See whether or not a club has registered for the SAC fair"),
         ]
 
 
