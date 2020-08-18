@@ -1,13 +1,13 @@
-import Link from 'next/link'
 import { NextPageContext } from 'next'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { ReactElement, useState, useEffect } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 
 import { Contact } from '../../../../../components/common'
 import { CLUB_ROUTE } from '../../../../../constants/routes'
 import renderPage from '../../../../../renderPage'
-import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils'
 import { Club } from '../../../../../types'
+import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils'
 
 type Query = {
   club: string
