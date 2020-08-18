@@ -78,8 +78,8 @@ class ClubTestCase(TestCase):
             code="test-event",
             club=self.club1,
             name="Test Event",
-            start_time=timezone.now(),
-            end_time=timezone.now(),
+            start_time=timezone.now() + timezone.timedelta(days=2),
+            end_time=timezone.now() + timezone.timedelta(days=3),
         )
 
         self.question1 = QuestionAnswer.objects.create(
@@ -311,11 +311,50 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
-        # list events
+        e2 = Event.objects.create(
+            code="test-event-2",
+            club=self.club1,
+            name="Past Test Event 2",
+            start_time=timezone.now() - timezone.timedelta(days=3),
+            end_time=timezone.now() - timezone.timedelta(days=2),
+        )
+        e3 = Event.objects.create(
+            code="test-event-3",
+            club=self.club1,
+            name="Present Test Event 3",
+            start_time=timezone.now() - timezone.timedelta(days=3),
+            end_time=timezone.now() + timezone.timedelta(days=2),
+        )
+
+        # list events without a club to namespace.
+        resp = self.client.get(reverse("events-list"), content_type="application/json",)
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertEquals(2, len(resp.data), resp.data)
+
+        # list events currently happening.
         resp = self.client.get(
-            reverse("club-events-list", args=(self.club1.code,)), content_type="application/json",
+            reverse("club-events-live", args=(self.club1.code,)), content_type="application/json",
         )
         self.assertIn(resp.status_code, [200], resp.content)
+        self.assertEquals(1, len(resp.data), resp.data)
+        self.assertEquals(e3.id, resp.data[0]["id"], resp.data)
+
+        # upcoming events.
+        resp = self.client.get(
+            reverse("club-events-upcoming", args=(self.club1.code,)),
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertEquals(1, len(resp.data), resp.data)
+        self.assertEquals(self.event1.id, resp.data[0]["id"], resp.data)
+
+        # events that have ended.
+        resp = self.client.get(
+            reverse("club-events-ended", args=(self.club1.code,)), content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertEquals(1, len(resp.data), resp.data)
+        self.assertEquals(e2.id, resp.data[0]["id"], resp.data)
 
     def test_event_create_delete(self):
         """

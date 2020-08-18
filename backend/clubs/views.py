@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from datetime import datetime
 
 import qrcode
 from django.conf import settings
@@ -605,8 +606,48 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         return upload_endpoint_helper(request, Event, "image", code=kwargs["id"])
 
+    @action(detail=False, methods=["get"])
+    def live(self, request, *args, **kwargs):
+        """
+        Get all events happening now.
+        """
+        now = datetime.now()
+        return Response(
+            EventSerializer(
+                self.get_queryset().filter(start_time__lte=now, end_time__gte=now), many=True
+            ).data
+        )
+
+    @action(detail=False, methods=["get"])
+    def upcoming(self, request, *args, **kwargs):
+        """
+        Get all events happening in the future.
+        """
+        now = datetime.now()
+        return Response(
+            EventSerializer(self.get_queryset().filter(start_time__gte=now), many=True).data
+        )
+
+    @action(detail=False, methods=["get"])
+    def ended(self, request, *args, **kwargs):
+        """
+        Get events which have ended.
+        """
+        now = datetime.now()
+        return Response(
+            EventSerializer(self.get_queryset().filter(end_time__lt=now), many=True).data
+        )
+
     def get_queryset(self):
-        return Event.objects.filter(club__code=self.kwargs["club_code"])
+        qs = Event.objects.all()
+        if self.kwargs.get("club_code") is not None:
+            qs = qs.filter(club__code=self.kwargs["club_code"])
+
+        now = datetime.now()
+        if self.action in ["list"]:
+            qs = qs.filter(end_time__gte=now)
+
+        return qs.select_related("club", "creator",)
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):
