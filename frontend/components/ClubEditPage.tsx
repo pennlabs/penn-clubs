@@ -210,7 +210,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
       tabs = [
         {
           name: 'info',
-          label: 'Information',
+          label: 'Edit Club Page',
           content: (
             <ClubEditCard
               isEdit={this.state.isEdit}
@@ -233,6 +233,15 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
             </>
           ),
           disabled: !isEdit,
+        },
+        {
+          name: 'events',
+          label: 'Events',
+          content: (
+            <>
+              <EventsCard club={club} />
+            </>
+          ),
         },
         {
           name: 'recruitment',
@@ -265,7 +274,6 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
             <>
               <QRCodeCard club={club} />
               <MemberExperiencesCard club={club} />
-              <EventsCard club={club} />
               <FilesCard club={club} />
             </>
           ),
