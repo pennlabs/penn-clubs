@@ -243,8 +243,7 @@ const RenewPage = ({
             </p>
             <p>
               If you have any questions about the club renewal process, please
-              contact the Office of Student Affairs at{' '}
-              <Contact email="pennosa@zimbra.upenn.edu" />.
+              contact the Office of Student Affairs at <Contact point="osa" />.
             </p>
           </TextInfoBox>
         </>

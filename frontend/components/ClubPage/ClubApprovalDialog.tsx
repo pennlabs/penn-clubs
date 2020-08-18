@@ -53,7 +53,7 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
               {club.approved_comment || (
                 <>
                   No reason has been given for why your club was not approved.
-                  Contact <Contact /> for more details.
+                  Contact <Contact point="osa" /> for more details.
                 </>
               )}
             </ReviewQuote>

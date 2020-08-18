@@ -2,10 +2,18 @@ import { ReactElement } from 'react'
 
 type ContactProps = {
   email?: string
+  point?: 'pennclubs' | 'osa'
 }
 
 export function Contact({
-  email = 'contact@pennclubs.com',
+  email,
+  point = 'pennclubs',
 }: ContactProps): ReactElement {
-  return <a href={`mailto:${email}`}>{email}</a>
+  let finalEmail = email || 'contact@pennclubs.com'
+
+  if (point === 'osa') {
+    finalEmail = 'rodneyr@upenn.edu'
+  }
+
+  return <a href={`mailto:${finalEmail}`}>{finalEmail}</a>
 }
