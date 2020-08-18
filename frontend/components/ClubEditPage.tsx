@@ -22,8 +22,8 @@ import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import QuestionsCard from './ClubEditPage/QuestionsCard'
 import RenewCard from './ClubEditPage/RenewCard'
 import ClubMetadata from './ClubMetadata'
-import Metadata from './common'
 import AuthPrompt from './common/AuthPrompt'
+import { Contact, Container, InactiveTag, Loading, Title, Metadata } from './common'
 import TabView from './TabView'
 
 type ClubFormProps = {
