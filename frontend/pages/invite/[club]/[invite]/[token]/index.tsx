@@ -10,9 +10,9 @@ import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils'
 import { Club } from '../../../../../types'
 
 type Query = {
-  club: String
-  invite: String
-  token: String
+  club: string
+  invite: string
+  token: string
 }
 
 type InviteProps = {
@@ -21,9 +21,9 @@ type InviteProps = {
 }
 
 type Inviter = {
-  id: Number
-  name: String
-  email: String
+  id: number
+  name: string
+  email: string
 }
 
 type Error = { [key: string]: string }
@@ -34,7 +34,7 @@ const Invite = ({ club, query }: InviteProps): ReactElement => {
   const [inviter, setInviter] = useState<Inviter | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
-  const accept = (isPublic: Boolean) => {
+  const accept = (isPublic: boolean) => {
     doApiRequest(`/clubs/${query.club}/invites/${query.invite}/?format=json`, {
       method: 'PATCH',
       body: {
