@@ -2,7 +2,6 @@ import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { Container, Metadata, Title } from '../components/common'
-import { WHITE } from '../constants/colors'
 import renderPage from '../renderPage'
 import { Club } from '../types'
 import { doApiRequest } from '../utils'
@@ -17,22 +16,41 @@ const DirectoryList = s.ul`
   -moz-column-count: 2;
   column-count: 2;
 
+  -webkit-column-gap: 40px;
+  -moz-column-gap: 40px;
+  column-gap: 40px;
+
+  margin-left: 2em;
+
   & li {
     margin-bottom: 8px;
   }
 `
 
+const DirectoryTitle = s(Title)`
+  padding-top: 2.5vw;
+`
+
 const Directory = ({ clubs }: Props): ReactElement => {
   return (
     <>
-      <Container background={WHITE}>
+      <Container>
         <Metadata title="Clubs Directory" />
-        <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
-          Clubs Directory
-        </Title>
+        <DirectoryTitle>Clubs Directory</DirectoryTitle>
+        <p className="mb-5 has-text-grey">
+          The directory is an alphabetically sorted list of all clubs on Penn
+          Clubs, including clubs that have not yet been approved. If a club
+          exists but has not been approved, it is shown in grey in the list
+          below.
+        </p>
         <DirectoryList>
           {clubs.map((club) => (
-            <li key={club.code}>{club.name}</li>
+            <li
+              key={club.code}
+              className={!club.approved ? 'has-text-grey' : undefined}
+            >
+              {club.name}
+            </li>
           ))}
         </DirectoryList>
       </Container>
