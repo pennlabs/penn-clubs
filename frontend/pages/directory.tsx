@@ -1,50 +1,47 @@
-import React from 'react'
+import { ReactElement } from 'react'
 
 import { Container, Metadata, Title } from '../components/common'
 import { WHITE } from '../constants/colors'
 import renderPage from '../renderPage'
+import { Club } from '../types'
 import { doApiRequest } from '../utils'
 
-class Directory extends React.Component<unknown, { clubs: JSX.Element[] }> {
-  constructor(props) {
-    super(props)
-    this.state = { clubs: [] }
-  }
+type Props = {
+  clubs: Club[]
+}
 
-  async componentWillMount() {
-    const clubsRequest = await doApiRequest('/clubs/?format=json')
-    const clubsResponse = await clubsRequest.json()
-    const clubsList: JSX.Element = []
+const Directory = ({ clubs }: Props): ReactElement => {
+  return (
+    <>
+      <Container background={WHITE}>
+        <Metadata title="Clubs Directory" />
+        <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
+          Clubs Directory
+        </Title>
+        <ul
+          style={{
+            'list-style-type': 'circle',
+            '-webkit-column-count': '2',
+            '-moz-column-count': '2',
+            'column-count': '2',
+          }}
+        >
+          {clubs.map((club) => (
+            <li style={{ 'margin-bottom': '8px' }} key={club.code}>
+              {club.name}
+            </li>
+          ))}
+        </ul>
+      </Container>
+    </>
+  )
+}
 
-    clubsResponse.forEach((club) => {
-      clubsList.push(<li style={{ 'margin-bottom': '8px' }}>{club.name}</li>)
-    })
+Directory.getInitialProps = async () => {
+  const request = await doApiRequest('/clubs/?bypass=true&format=json')
+  const response = await request.json()
 
-    this.setState({ clubs: clubsList })
-  }
-
-  render() {
-    return (
-      <>
-        <Container background={WHITE}>
-          <Metadata title="Clubs Directory" />
-          <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
-            Clubs Directory
-          </Title>
-          <ul
-            style={{
-              'list-style-type': 'circle',
-              '-webkit-column-count': '2',
-              '-moz-column-count': '2',
-              'column-count': '2',
-            }}
-          >
-            {this.state.clubs}
-          </ul>
-        </Container>
-      </>
-    )
-  }
+  return { clubs: response }
 }
 
 export default renderPage(Directory)
