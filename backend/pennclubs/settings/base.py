@@ -173,3 +173,8 @@ MEDIA_URL = "/api/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "uploads")
 MAX_FILE_SIZE = 1073741824  # Max file size
 FILE_SIZE_ONE_GB = 1073741824  # 1GB
+
+
+# Simple history settings
+
+SIMPLE_HISTORY_FILEFIELD_TO_CHARFIELD = True

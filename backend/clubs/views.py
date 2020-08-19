@@ -104,12 +104,13 @@ def upload_endpoint_helper(request, cls, field, **kwargs):
     if "file" in request.data and isinstance(request.data["file"], UploadedFile):
         getattr(obj, field).delete(save=False)
         setattr(obj, field, request.data["file"])
+        obj._change_reason = "Update {} image field".format(field)
         obj.save()
     else:
         return Response(
             {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST
         )
-    return Response({"detail": "Club image uploaded!"})
+    return Response({"detail": "{} image uploaded!".format(cls.__name__)})
 
 
 def find_relationship_helper(relationship, club_object, found):
