@@ -60,10 +60,9 @@ const Directory = ({ clubs }: Props): ReactElement => {
 }
 
 Directory.getInitialProps = async (ctx: NextPageContext) => {
-  const request = await doApiRequest(
-    '/clubs/?bypass=true&ordering=name&format=json',
-    { headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined },
-  )
+  const request = await doApiRequest('/clubs/directory/?format=json', {
+    headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
+  })
   const response = await request.json()
 
   return { clubs: response }

@@ -429,6 +429,16 @@ class AuthenticatedMembershipSerializer(MembershipSerializer):
         fields = MembershipSerializer.Meta.fields + ["email", "username"]
 
 
+class ClubMinimalSerializer(serializers.ModelSerializer):
+    """
+    Return only the club name, code, and approval status for a club.
+    """
+
+    class Meta:
+        model = Club
+        fields = ["name", "code", "approved"]
+
+
 class ClubListSerializer(serializers.ModelSerializer):
     """
     The club list serializer returns a subset of the information that the full serializer returns.

@@ -58,6 +58,7 @@ from clubs.serializers import (
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     ClubListSerializer,
+    ClubMinimalSerializer,
     ClubSerializer,
     EventSerializer,
     FavoriteSerializer,
@@ -436,6 +437,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         serializer = SubscribeSerializer(
             Subscribe.objects.filter(club__code=self.kwargs["code"]), many=True
         )
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def directory(self, request, *args, **kwargs):
+        """
+        Custom return endpoint for the directory page, allows the page to load faster.
+        """
+        serializer = ClubMinimalSerializer(Club.objects.all().order_by("name"), many=True)
         return Response(serializer.data)
 
     def get_filename(self):
