@@ -1,11 +1,11 @@
 # IDE files
-.vscode/*
-!.vscode/settings.json
+.vscode/
 .idea/
 
 # Python files
 __pycache__/
 *.pyc
+.log/
 
 # Distribution
 build/
