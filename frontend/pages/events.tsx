@@ -9,6 +9,7 @@ import { Title } from '../components/common/Typography'
 import renderPage from '../renderPage'
 import styled from 'styled-components'
 import { mediaMaxWidth, mediaMinWidth, PHONE } from '../constants/measurements'
+import Link from 'next/link'
 
 interface EventPageProps {
   liveEvents: ClubEvent[]
@@ -22,7 +23,11 @@ const EventCard = (props: { event: ClubEvent }) => {
     <div>
       <ul>
         <li>{event.name}</li>
-        <li>{event.club}</li>
+        <li>
+          <Link href={'/club/[club]/'} as={`/club/${event.club}`}>
+            <a>{event.club_name}</a>
+          </Link>
+        </li>
         <li>{new Date(event.start_time).toLocaleString()}</li>
         <li>{new Date(event.end_time).toLocaleString()}</li>
       </ul>

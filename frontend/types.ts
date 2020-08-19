@@ -39,6 +39,7 @@ export interface ClubEvent {
   id: number
   name: string
   club: string
+  club_name: string
   description: string
   start_time: number
   end_time: number
