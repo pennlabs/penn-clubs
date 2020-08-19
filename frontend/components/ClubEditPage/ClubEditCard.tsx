@@ -128,7 +128,8 @@ export default function ClubEditCard({
           help: isEdit ? (
             <>
               If you would like to change your club URL in addition to your club
-              name, you will need to email <Contact />.
+              name, you will need to email <Contact />. Changing this field will
+              require reapproval from OSA.
             </>
           ) : (
             'Your club URL will be generated from your club name, and cannot be changed upon creation. Your club name can still be changed afterwards.'
@@ -137,12 +138,12 @@ export default function ClubEditCard({
         {
           name: 'subtitle',
           type: 'text',
-          required: true,
           help:
             'This text will be shown next to your club name in list and card views.',
         },
         {
           name: 'description',
+          help: 'Changing this field will require reapproval from OSA.',
           placeholder: 'Type your club description here!',
           type: 'html',
         },
@@ -156,6 +157,7 @@ export default function ClubEditCard({
         },
         {
           name: 'image',
+          help: 'Changing this field will require reapproval from OSA.',
           value: club.image_url,
           apiName: 'file',
           accept: 'image/*',

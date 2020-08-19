@@ -6,6 +6,7 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from rest_framework import serializers, validators
+from simple_history.utils import update_change_reason
 
 from clubs.mixins import ManyToManySaveMixin
 from clubs.models import (
@@ -702,22 +703,42 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         approval_email_required = False
 
+        # if key fields were edited, require re-approval
+        needs_reapproval = False
+        if self.instance:
+            for field in {"name", "image", "description"}:
+                if field in self.validated_data and not self.validated_data[field] == getattr(
+                    self.instance, field, None
+                ):
+                    needs_reapproval = True
+                    break
+
+        if needs_reapproval:
+            self.validated_data["approved"] = None
+            self.validated_data["approved_by"] = None
+            self.validated_data["approved_on"] = None
+            self.validated_data["ghost"] = True
+
         # if approved, update who and when club was approved
-        if (
-            self.instance
-            and self.instance.approved is None
-            and self.validated_data.get("approved") is not None
-        ):
+        new_approval_status = self.validated_data.get("approved")
+
+        if self.instance and self.instance.approved is None and new_approval_status is not None:
             self.validated_data["approved_by"] = self.context["request"].user
             self.validated_data["approved_on"] = timezone.now()
 
             approval_email_required = True
 
+            if new_approval_status is True:
+                self.validated_data["ghost"] = False
+
         obj = super().save()
 
-        # if rejected, send email with reason
+        # if accepted or rejected, send email with reason
         if approval_email_required:
             obj.send_approval_email()
+            update_change_reason(obj, "{} club".format("Approve" if obj.approved else "Reject"))
+        else:
+            update_change_reason(obj, "Edit club through UI")
 
         return obj
 
