@@ -13,6 +13,7 @@ import {
   CLUB_EDIT_ROUTE,
   CLUB_RENEW_ROUTE,
   CLUB_ROUTE,
+  DIRECTORY_ROUTE,
   HOME_ROUTE,
 } from '../constants/routes'
 import { Club, MembershipRank, UserInfo } from '../types'
@@ -336,12 +337,23 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           }
         </Title>
         {!isEdit && (
-          <p>
-            Clubs that you create from this form will enter an approval process
-            before being displayed to the public. After your club has been
-            approved by the Office of Student Affairs, it will appear on the
-            Penn Clubs website.
-          </p>
+          <>
+            <p className="mb-3">
+              Clubs that you create from this form will enter an approval
+              process before being displayed to the public. After your club has
+              been approved by the Office of Student Affairs, it will appear on
+              the Penn Clubs website.
+            </p>
+            <p>
+              <b>Before creating your club,</b> please check to see if it
+              already exists on the{' '}
+              <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
+                <a>directory page</a>
+              </Link>
+              . If your club already exists, please email <Contact /> to gain
+              access instead of filling out this form.
+            </p>
+          </>
         )}
         {message && (
           <div className="notification is-primary">
