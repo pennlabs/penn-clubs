@@ -12,6 +12,7 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from phonenumber_field.modelfields import PhoneNumberField
+from simple_history.models import HistoricalRecords
 
 from clubs.utils import get_domain, html_to_text
 
@@ -140,6 +141,9 @@ class Club(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    ghost = models.BooleanField(default=False)
+    history = HistoricalRecords(cascade_delete_history=True)
+
     def __str__(self):
         return self.name
 
@@ -204,8 +208,8 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="approval_status",
-                subject="{} has been {} on Penn Clubs".format(
-                    self.name, "accepted" if self.approved else "rejected"
+                subject="{} {} on Penn Clubs".format(
+                    self.name, "has been accepted" if self.approved else "not approved"
                 ),
                 emails=emails,
                 context=context,
@@ -216,6 +220,7 @@ class Club(models.Model):
         permissions = [
             ("approve_club", "Can approve pending clubs"),
             ("see_pending_clubs", "View pending clubs that are not one's own"),
+            ("see_fair_status", "See whether or not a club has registered for the SAC fair"),
         ]
 
 

@@ -57,6 +57,10 @@ export default ({
               <span className="has-text-success">
                 <Icon name="check" /> Renewed
               </span>
+            ) : club.approved === false ? (
+              <span className="has-text-danger">
+                <Icon name="x" /> Not Approved
+              </span>
             ) : (
               <span className="has-text-info">
                 <Icon name="clock" /> Pending Approval

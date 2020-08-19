@@ -1,5 +1,6 @@
 import datetime
 
+import simple_history
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import TabularInline
@@ -142,7 +143,7 @@ class ClubChildrenInline(TabularInline):
     verbose_name_plural = "Children orgs"
 
 
-class ClubAdmin(admin.ModelAdmin):
+class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
     search_fields = ("name", "subtitle", "email", "code")
     list_display = ("name", "email", "has_owner", "has_invite", "active", "approved", "fair")
     list_filter = (

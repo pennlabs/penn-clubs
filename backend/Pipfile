@@ -35,6 +35,7 @@ qrcode = "*"
 drf-renderer-xlsx = "*"
 python-dateutil = "*"
 psycopg2 = "*"
+django-simple-history = "*"
 
 [requires]
 python_version = "3"

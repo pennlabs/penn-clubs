@@ -34,6 +34,7 @@ class Form extends Component {
       mounted: false,
       edited: false,
       uploadStatus: {},
+      uploadPreview: {},
     }
 
     this.files = {}
@@ -79,11 +80,12 @@ class Form extends Component {
     this.generateField = this.generateField.bind(this)
     this.generateFields = this.generateFields.bind(this)
     this.handleUpload = this.handleUpload.bind(this)
+    this.removeUpload = this.removeUpload.bind(this)
     this.handleUploadClick = this.handleUploadClick.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
   }
 
-  handleUpload(e, name) {
+  handleUpload(e, name, preview) {
     if (e.target.files[0]) {
       const newDict = Object.assign({}, this.state.uploadStatus)
       newDict[name] = e.target.files[0].name
@@ -92,7 +94,26 @@ class Form extends Component {
         edited: true,
       })
       this.onChange(e)
+
+      if (preview) {
+        const reader = new FileReader()
+
+        reader.onload = (e) => {
+          this.setState((state) => ({
+            uploadPreview: { ...state.uploadPreview, [name]: e.target.result },
+          }))
+        }
+
+        reader.readAsDataURL(e.target.files[0])
+      }
     }
+  }
+
+  removeUpload(name) {
+    this.setState((state) => ({
+      uploadStatus: { ...state.uploadStatus, [name]: false },
+      uploadPreview: { ...state.uploadPreview, [name]: false },
+    }))
   }
 
   handleUploadClick(e, name) {
@@ -158,7 +179,11 @@ class Form extends Component {
         return Boolean(val)
       case 'date':
         return val || null
-      case 'file': {
+      case 'file':
+      case 'image': {
+        if (this.state.uploadStatus[name] === false) {
+          return null
+        }
         const data = new FormData()
         data.append(apiName || name, this.files[name].files[0])
         return data
@@ -323,42 +348,72 @@ class Form extends Component {
       )
     } else if (type === 'component') {
       return <div key={name}>{content}</div>
-    } else if (type === 'file') {
+    } else if (type === 'file' || type === 'image') {
+      let preview = false
+      let deleted = false
+      if (this.state.uploadPreview[name] !== undefined) {
+        preview = this.state.uploadPreview[name]
+        if (preview === false) {
+          deleted = true
+        }
+      } else {
+        preview = field.value
+      }
+
       inpt = (
-        <div className="file" key={name}>
-          <label className="file-label">
-            <input
-              className="file-input"
-              ref={(c) => {
-                this.files[name] = c
-              }}
-              accept={accept}
-              type="file"
-              name={name}
-              onChange={(e) => this.handleUpload(e, name)}
-              onClick={(e) => this.handleUploadClick(e, name)}
-            />
-            <span className="file-cta">
-              <span className="file-icon">
-                <Icon name="upload" alt="upload" />
+        <>
+          {type === 'image' && preview && (
+            <div className="mb-3">
+              <img style={{ height: 100 }} src={preview} alt="current value" />
+            </div>
+          )}
+          {deleted && <small>(submit form to confirm deletion)</small>}
+          <div className="file" key={name}>
+            <label className="file-label">
+              <input
+                className="file-input"
+                ref={(c) => {
+                  this.files[name] = c
+                }}
+                accept={accept}
+                type="file"
+                name={name}
+                onChange={(e) => this.handleUpload(e, name, type === 'image')}
+                onClick={(e) => this.handleUploadClick(e, name)}
+              />
+              <span className="file-cta">
+                <span className="file-icon">
+                  <Icon name="upload" alt="upload" />
+                </span>
+                <span className="file-label">Choose a file...</span>
               </span>
-              <span className="file-label">Choose a file...</span>
-            </span>
-            {trivia}
-          </label>
-          {this.state.uploadStatus[name] ? (
-            <span style={{ paddingTop: 3, paddingLeft: 8 }}>
-              {' '}
-              <Icon
-                name="check-circle"
-                size="1.2rem"
-                alt="checkbox"
-                style={{ color: 'green' }}
-              ></Icon>{' '}
-              {this.state.uploadStatus[name]}
-            </span>
-          ) : null}
-        </div>
+              {trivia}
+            </label>
+            {this.state.uploadStatus[name] ? (
+              <span style={{ paddingTop: 3, paddingLeft: 8 }}>
+                {' '}
+                <Icon
+                  name="check-circle"
+                  size="1.2rem"
+                  alt="checkbox"
+                  style={{ color: 'green' }}
+                ></Icon>{' '}
+                {this.state.uploadStatus[name]}
+              </span>
+            ) : (
+              type === 'image' &&
+              field.value &&
+              this.state.uploadStatus[name] !== false && (
+                <button
+                  className="ml-3 button is-danger"
+                  onClick={() => this.removeUpload(name)}
+                >
+                  <Icon name="trash" /> Remove Image
+                </button>
+              )
+            )}
+          </div>
+        </>
       )
     } else if (type === 'multiselect') {
       if (this.state.mounted) {
@@ -635,11 +690,15 @@ export class ModelForm extends Component {
     const { baseUrl, fields, keyField = 'id' } = this.props
 
     // remove file fields
-    const fileFields = fields.filter((f) => f.type === 'file')
+    const fileFields = fields.filter(
+      (f) => f.type === 'file' || f.type === 'image',
+    )
     const fileData = {}
     fileFields.forEach(({ name }) => {
-      fileData[name] = data[name]
-      delete data[name]
+      if (data[name] !== null) {
+        fileData[name] = data[name]
+        delete data[name]
+      }
     })
 
     // create or edit the object, uploading all non-file fields

@@ -96,7 +96,7 @@ const Rank = (): ReactElement => (
       {
         name: 'Is Club Active',
         description:
-          'Clubs that are marked as inactive will be shifted to the bottom of the list. You can easily reactivate your club from the "Edit Club" page if it has been marked as inactive.',
+          'Clubs that are marked as inactive will be shifted to thev very bottom of the list. You can easily reactivate your club from the settings tab in the manage club page.',
       },
       {
         name: 'Random Factor',

@@ -1,14 +1,14 @@
 {% extends 'emails/base.html' %}
 
 {% block content %}
-    <h2><b>{{ name }}</b> renewal has been marked as {% if approved %}approved{% else %}rejected{% endif %} on Penn Clubs</h2>
+    <h2><b>{{ name }}</b> renewal has been marked as {% if approved %}approved{% else %}not approved{% endif %} on Penn Clubs</h2>
     {% if approved %}
     <p style="font-size: 1.2em; color: #228B22">
         <b>🎉 Congratulations!</b> Your club has been approved by the <b>Office of Student Affairs</b> for the {{ year }} school year! 
         Your club information is now open to the public on Penn Clubs.
     </p>
     {% if approved_comment %}
-        <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc;">{{ approved_comment }}</p>
+        <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc; white-space: pre-wrap;">{{ approved_comment }}</p>
     {% endif %}
     <p style="font-size: 1.2em">
         You do not need to perform any further actions. If you indicated interest in the SAC fair, SAC will reach out to you with further details on the fair.
@@ -22,9 +22,9 @@
     </p>
     {% else %}
     <p style="font-size: 1.2em; color: #8B2222">
-        <b>Oh no!</b> Your club renewal has been <b>rejected</b> by the <b>Office of Student Affairs</b>. You will need to make changes to your club information before gaining approval.
+        <b>Oh no!</b> Your club renewal has <b>not been approved</b> by the <b>Office of Student Affairs</b>. You will need to make changes to your club information before gaining approval.
     </p>
-    <p style="font-size: 1.2em">The reason your club was rejected is shown below:</p>
+    <p style="font-size: 1.2em">The reason your club was not approved is shown below:</p>
     <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc;">{{ approved_comment }}</p>
     <p style="font-size: 1.2em">You will need to <a href="{{ edit_url }}">make edits</a> to your club and press the button found <a href="{{ view_url }}">here</a> to apply again for approval.</p>
     <p style="font-size: 1.2em">If you run into any issues with the approval process, you can respond to this email.</p>

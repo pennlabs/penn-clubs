@@ -12,6 +12,7 @@ from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
@@ -103,12 +104,13 @@ def upload_endpoint_helper(request, cls, field, **kwargs):
     if "file" in request.data and isinstance(request.data["file"], UploadedFile):
         getattr(obj, field).delete(save=False)
         setattr(obj, field, request.data["file"])
+        obj._change_reason = "Update {} image field".format(field)
         obj.save()
     else:
         return Response(
             {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST
         )
-    return Response({"detail": "Club image uploaded!"})
+    return Response({"detail": "{} image uploaded!".format(cls.__name__)})
 
 
 def find_relationship_helper(relationship, club_object, found):
@@ -605,8 +607,48 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         return upload_endpoint_helper(request, Event, "image", code=kwargs["id"])
 
+    @action(detail=False, methods=["get"])
+    def live(self, request, *args, **kwargs):
+        """
+        Get all events happening now.
+        """
+        now = timezone.now()
+        return Response(
+            EventSerializer(
+                self.get_queryset().filter(start_time__lte=now, end_time__gte=now), many=True
+            ).data
+        )
+
+    @action(detail=False, methods=["get"])
+    def upcoming(self, request, *args, **kwargs):
+        """
+        Get all events happening in the future.
+        """
+        now = timezone.now()
+        return Response(
+            EventSerializer(self.get_queryset().filter(start_time__gte=now), many=True).data
+        )
+
+    @action(detail=False, methods=["get"])
+    def ended(self, request, *args, **kwargs):
+        """
+        Get events which have ended.
+        """
+        now = timezone.now()
+        return Response(
+            EventSerializer(self.get_queryset().filter(end_time__lt=now), many=True).data
+        )
+
     def get_queryset(self):
-        return Event.objects.filter(club__code=self.kwargs["club_code"])
+        qs = Event.objects.all()
+        if self.kwargs.get("club_code") is not None:
+            qs = qs.filter(club__code=self.kwargs["club_code"])
+
+        now = timezone.now()
+        if self.action in ["list"]:
+            qs = qs.filter(end_time__gte=now)
+
+        return qs.select_related("club", "creator",)
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):

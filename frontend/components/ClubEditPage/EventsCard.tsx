@@ -317,7 +317,8 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
         currentTitle={(obj) => obj.name}
         onChange={(obj) => setDeviceContents(obj)}
       />
-      <Devices contents={deviceContents} />
+      {/* TODO: uncomment device preview when we have mobile integration. */}
+      {/* <Devices contents={deviceContents} /> */}
     </BaseCard>
   )
 }

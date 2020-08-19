@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
+    "simple_history",
     "accounts.apps.AccountsConfig",
     "clubs.apps.ClubsConfig",
 ]
@@ -57,6 +58,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "accounts.middleware.OAuth2TokenMiddleware",
+    "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
 ROOT_URLCONF = "pennclubs.urls"
@@ -171,3 +173,8 @@ MEDIA_URL = "/api/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "uploads")
 MAX_FILE_SIZE = 1073741824  # Max file size
 FILE_SIZE_ONE_GB = 1073741824  # 1GB
+
+
+# Simple history settings
+
+SIMPLE_HISTORY_FILEFIELD_TO_CHARFIELD = True

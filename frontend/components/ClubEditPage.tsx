@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { SingletonRouter } from 'next/router'
-import { Component, ReactElement } from 'react'
+import React, { Component, ReactElement } from 'react'
 
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
@@ -219,7 +219,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
       tabs = [
         {
           name: 'info',
-          label: 'Information',
+          label: 'Edit Club Page',
           content: (
             <ClubEditCard
               isEdit={this.state.isEdit}
@@ -237,18 +237,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           label: 'Membership',
           content: (
             <>
-              <MembersCard club={club} />
               <InviteCard club={club} />
-            </>
-          ),
-          disabled: !isEdit,
-        },
-        {
-          name: 'recruitment',
-          label: 'Recruitment',
-          content: (
-            <>
-              <PotentialMemberCard club={club} source="subscription" />
               <PotentialMemberCard
                 club={club}
                 source="membershiprequests"
@@ -264,6 +253,27 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
                   },
                 ]}
               />
+              <MembersCard club={club} />
+            </>
+          ),
+          disabled: !isEdit,
+        },
+        {
+          name: 'events',
+          label: 'Events',
+          content: (
+            <>
+              <EventsCard club={club} />
+            </>
+          ),
+        },
+        {
+          name: 'recruitment',
+          label: 'Recruitment',
+          content: (
+            <>
+              <QRCodeCard club={club} />
+              <PotentialMemberCard club={club} source="subscription" />
             </>
           ),
         },
@@ -272,9 +282,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           label: 'Resources',
           content: (
             <>
-              <QRCodeCard club={club} />
               <MemberExperiencesCard club={club} />
-              <EventsCard club={club} />
               <FilesCard club={club} />
             </>
           ),
