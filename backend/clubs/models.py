@@ -254,7 +254,7 @@ class QuestionAnswer(models.Model):
         domain = get_domain(request)
 
         owner_emails = list(
-            self.club.membership_set.filter(role__gte=Membership.ROLE_OFFICER).values_list(
+            self.club.membership_set.filter(role__lte=Membership.ROLE_OFFICER).values_list(
                 "person__email", flat=True
             )
         )
@@ -382,7 +382,7 @@ class MembershipRequest(models.Model):
         }
 
         owner_emails = list(
-            self.club.membership_set.filter(role__gte=Membership.ROLE_OFFICER).values_list(
+            self.club.membership_set.filter(role__lte=Membership.ROLE_OFFICER).values_list(
                 "person__email", flat=True
             )
         )
