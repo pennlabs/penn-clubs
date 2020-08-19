@@ -1,4 +1,5 @@
 import { ReactElement } from 'react'
+import s from 'styled-components'
 
 import { Container, Metadata, Title } from '../components/common'
 import { WHITE } from '../constants/colors'
@@ -10,6 +11,17 @@ type Props = {
   clubs: Club[]
 }
 
+const DirectoryList = s.ul`
+  list-style-type: circle;
+  -webkit-column-count: 2;
+  -moz-column-count: 2;
+  column-count: 2;
+
+  & li {
+    margin-bottom: 8px;
+  }
+`
+
 const Directory = ({ clubs }: Props): ReactElement => {
   return (
     <>
@@ -18,27 +30,20 @@ const Directory = ({ clubs }: Props): ReactElement => {
         <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
           Clubs Directory
         </Title>
-        <ul
-          style={{
-            'list-style-type': 'circle',
-            '-webkit-column-count': '2',
-            '-moz-column-count': '2',
-            'column-count': '2',
-          }}
-        >
+        <DirectoryList>
           {clubs.map((club) => (
-            <li style={{ 'margin-bottom': '8px' }} key={club.code}>
-              {club.name}
-            </li>
+            <li key={club.code}>{club.name}</li>
           ))}
-        </ul>
+        </DirectoryList>
       </Container>
     </>
   )
 }
 
 Directory.getInitialProps = async () => {
-  const request = await doApiRequest('/clubs/?bypass=true&format=json')
+  const request = await doApiRequest(
+    '/clubs/?bypass=true&ordering=name&format=json',
+  )
   const response = await request.json()
 
   return { clubs: response }
