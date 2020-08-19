@@ -1,7 +1,6 @@
 import json
 import os
 import re
-from datetime import datetime
 
 import qrcode
 from django.conf import settings
@@ -13,6 +12,7 @@ from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
@@ -611,7 +611,7 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Get all events happening now.
         """
-        now = datetime.now()
+        now = timezone.now()
         return Response(
             EventSerializer(
                 self.get_queryset().filter(start_time__lte=now, end_time__gte=now), many=True
@@ -623,7 +623,7 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Get all events happening in the future.
         """
-        now = datetime.now()
+        now = timezone.now()
         return Response(
             EventSerializer(self.get_queryset().filter(start_time__gte=now), many=True).data
         )
@@ -633,7 +633,7 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Get events which have ended.
         """
-        now = datetime.now()
+        now = timezone.now()
         return Response(
             EventSerializer(self.get_queryset().filter(end_time__lt=now), many=True).data
         )
@@ -643,7 +643,7 @@ class EventViewSet(viewsets.ModelViewSet):
         if self.kwargs.get("club_code") is not None:
             qs = qs.filter(club__code=self.kwargs["club_code"])
 
-        now = datetime.now()
+        now = timezone.now()
         if self.action in ["list"]:
             qs = qs.filter(end_time__gte=now)
 
