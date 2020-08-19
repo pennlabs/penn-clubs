@@ -37,9 +37,14 @@ export interface Testimonial {
 
 export interface ClubEvent {
   id: number
-  start_time: number
-  location: string
   name: string
+  club: string
+  description: string
+  start_time: number
+  end_time: number
+  image_url: string | null
+  location: string | null
+  url: string | null
 }
 
 export enum ClubSize {
