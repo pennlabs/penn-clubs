@@ -123,11 +123,12 @@ class Splash extends React.Component<SplashProps, SplashState> {
       threshold: 0.2,
     }
 
-    this.shuffle = this.shuffle.bind(this)
     this.switchDisplay = this.switchDisplay.bind(this)
   }
 
-  resetDisplay(nameInput, selectedTags) {
+  resetDisplay(nameInput: string, selectedTags): void {
+    this.setState({ nameInput, selectedTags })
+
     const tagSelected = selectedTags
       .filter((tag) => tag.name === 'Tags')
       .map((tag) => tag.value)
@@ -179,14 +180,18 @@ class Splash extends React.Component<SplashProps, SplashState> {
     })
       .then((res) => res.json())
       .then((displayClubs) => {
-        this.setState({ displayClubs, nameInput, selectedTags })
+        if (
+          this.state.nameInput === nameInput &&
+          this.state.selectedTags === selectedTags
+        ) {
+          this.setState({ displayClubs, clubCount: displayClubs.length })
+        }
       })
   }
 
-  switchDisplay(display) {
+  switchDisplay(display: 'list' | 'cards'): void {
     logEvent('viewMode', display)
     this.setState({ display })
-    this.forceUpdate()
   }
 
   updateTag(tag, name) {
@@ -206,66 +211,6 @@ class Splash extends React.Component<SplashProps, SplashState> {
     this.setState({ selectedTags }, () =>
       this.resetDisplay(this.state.nameInput, this.state.selectedTags),
     )
-  }
-
-  shuffle() {
-    const { userInfo } = this.props
-    const { clubs } = this.state
-
-    let userSchools = new Set()
-    let userMajors = new Set()
-
-    if (userInfo) {
-      userSchools = new Set(userInfo.school.map((a) => a.name))
-      userMajors = new Set(userInfo.major.map((a) => a.name))
-    }
-    clubs.forEach((club) => {
-      club.rank = 0
-      const hasSchool = club.target_schools.some(({ name }) =>
-        userSchools.has(name),
-      )
-      const hasMajor = club.target_majors.some(({ name }) =>
-        userMajors.has(name),
-      )
-      const hasYear =
-        userInfo &&
-        club.target_years.some(({ year }) => userInfo.graduation_year === year)
-      const hasDescription = club.description.length > 8
-      if (hasSchool) {
-        club.rank += Math.max(0, 1 - club.target_schools.length / 4)
-      }
-      if (hasYear) {
-        club.rank += Math.max(0, 1 - club.target_years.length / 4)
-      }
-      if (hasMajor) {
-        club.rank += 3 * Math.max(0, 1 - club.target_majors.length / 10)
-      }
-      if (!hasDescription) {
-        club.rank -= 1
-      }
-      if (!club.active) {
-        club.rank -= 5
-      }
-      club.rank += 2 * Math.random()
-    })
-    this.setState({
-      displayClubs: clubs.sort((a, b) => {
-        if (typeof b.rank === 'undefined') {
-          return -1
-        }
-        if (typeof a.rank === 'undefined') {
-          return 1
-        }
-
-        if (a.rank > b.rank) {
-          return -1
-        }
-        if (b.rank > a.rank) {
-          return 1
-        }
-        return 0
-      }),
-    })
   }
 
   render() {
@@ -291,10 +236,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
           <Container>
             <WideContainer background={SNOW}>
               <div style={{ padding: '30px 0' }}>
-                <DisplayButtons
-                  shuffle={this.shuffle}
-                  switchDisplay={this.switchDisplay}
-                />
+                <DisplayButtons switchDisplay={this.switchDisplay} />
 
                 <Title className="title" style={{ color: CLUBS_GREY }}>
                   Browse Clubs
@@ -306,9 +248,12 @@ class Splash extends React.Component<SplashProps, SplashState> {
                   Find your people!
                 </p>
               </div>
-              <ResultsText> {clubCount} results</ResultsText>
+              <ResultsText>
+                {' '}
+                {clubCount} result{clubCount === 1 ? '' : 's'}
+              </ResultsText>
 
-              {selectedTags.length ? (
+              {!!selectedTags.length && (
                 <div style={{ padding: '0 30px 30px 0' }}>
                   {selectedTags.map((tag) => (
                     <span
@@ -338,8 +283,6 @@ class Splash extends React.Component<SplashProps, SplashState> {
                     Clear All
                   </ClearAllLink>
                 </div>
-              ) : (
-                ''
               )}
 
               <ListRenewalDialog />

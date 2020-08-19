@@ -6,7 +6,6 @@ import {
   ALLBIRDS_GRAY,
   BLACK_ALPHA,
   CLUBS_BLUE,
-  DARK_GRAY,
   WHITE,
   WHITE_ALPHA,
 } from '../constants/colors'
@@ -47,7 +46,6 @@ const buttonStyles = {
 
 const DisplayButtons = ({
   switchDisplay,
-  shuffle,
 }: DisplayButtonsProps): ReactElement => (
   <DisplayButtonsTag>
     <button
@@ -64,14 +62,6 @@ const DisplayButtons = ({
     >
       <Icon name="list" alt="switch to list view" style={iconStyles} />
     </button>
-    <button
-      onClick={shuffle}
-      style={{ ...buttonStyles, color: DARK_GRAY, fontWeight: 600 }}
-      className="button is-small"
-    >
-      <Icon name="shuffle" alt="shuffle club order" style={iconStyles} />
-      &nbsp;&nbsp; Shuffle
-    </button>
     <Link href="/create">
       <AddClubButton className="button is-small">
         <Icon name="plus" alt="create club" style={iconStylesDark} />
@@ -82,8 +72,7 @@ const DisplayButtons = ({
 )
 
 type DisplayButtonsProps = {
-  switchDisplay: (disp: string) => void
-  shuffle: () => void
+  switchDisplay: (disp: 'list' | 'cards') => void
 }
 
 export default DisplayButtons
