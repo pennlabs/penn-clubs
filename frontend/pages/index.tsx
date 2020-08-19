@@ -75,7 +75,6 @@ type SplashProps = {
 
 type SplashState = {
   clubs: RankedClub[]
-  clubLoaded: boolean
   clubCount: number
   displayClubs: RankedClub[]
   selectedTags: any[]
@@ -92,7 +91,6 @@ class Splash extends React.Component<SplashProps, SplashState> {
     this.state = {
       clubs: props.clubs,
       clubCount: props.clubCount,
-      clubLoaded: false,
       displayClubs: props.clubs,
       selectedTags: [],
       nameInput: '',
@@ -272,7 +270,6 @@ class Splash extends React.Component<SplashProps, SplashState> {
 
   render() {
     const {
-      clubLoaded,
       clubCount,
       displayClubs,
       display,
@@ -309,10 +306,7 @@ class Splash extends React.Component<SplashProps, SplashState> {
                   Find your people!
                 </p>
               </div>
-              <ResultsText>
-                {' '}
-                {clubLoaded ? displayClubs.length : clubCount} results
-              </ResultsText>
+              <ResultsText> {clubCount} results</ResultsText>
 
               {selectedTags.length ? (
                 <div style={{ padding: '0 30px 30px 0' }}>
