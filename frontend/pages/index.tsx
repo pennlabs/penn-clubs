@@ -139,6 +139,11 @@ const Splash = (props: SplashProps): ReactElement => {
       params.set('size__in', sizeSelected.join(','))
     }
 
+    if (order === 'random') {
+      const seed = new Date().getTime()
+      params.set('seed', seed)
+    }
+
     if (order.length > 0) {
       params.set('ordering', order)
     }

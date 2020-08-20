@@ -244,6 +244,7 @@ const OrderInput = ({ onChange }): ReactElement => {
         <div className="dropdown-content">
           {orderings.map((order) => (
             <a
+              key={order.key}
               href="#"
               className={`dropdown-item ${
                 order.key === ordering ? 'is-active' : ''

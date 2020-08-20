@@ -88,6 +88,7 @@ from clubs.utils import html_to_text
 
 
 DEFAULT_PAGE_SIZE = 20
+DEFAULT_SEED = 1234
 
 
 def file_upload_endpoint_helper(request, code):
@@ -191,7 +192,7 @@ class ClubPagination(PageNumberPagination):
 
     def paginate_queryset(self, queryset, request, view=None):
         if "random" in request.query_params.get("ordering", "").split(","):
-            rng = random.Random(1234)
+            rng = random.Random(request.GET.get("seed", DEFAULT_SEED))
             results = list(queryset)
             rng.shuffle(results)
 
@@ -356,7 +357,7 @@ class ClubsOrderingFilter(filters.OrderingFilter):
         if "random" in request.GET.get("ordering", "").split(","):
             page = int(request.GET.get("page", 1)) - 1
             page_size = int(request.GET.get("page_size", DEFAULT_PAGE_SIZE))
-            rng = random.Random(1234)
+            rng = random.Random(request.GET.get("seed", DEFAULT_SEED))
 
             all_ids = list(Club.objects.values_list("id", flat=True))
             rng.shuffle(all_ids)

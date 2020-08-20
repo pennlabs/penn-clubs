@@ -2,7 +2,6 @@ import datetime
 import io
 import json
 import os
-import random
 from collections import Counter
 
 from django.contrib.auth import get_user_model
