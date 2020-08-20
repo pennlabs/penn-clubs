@@ -28,10 +28,6 @@ const PaginatedClubDisplay = ({
   const fetchNextPage = async (): Promise<void> => {
     const myLoadNumber = loadNumber.current
 
-    if (loadQueue.current.includes(myLoadNumber)) {
-      return
-    }
-
     if (nextUrl !== null) {
       loadQueue.current.push(myLoadNumber)
     }
@@ -72,9 +68,9 @@ const PaginatedClubDisplay = ({
   }
 
   useEffect(() => {
-    loadNumber.current += 1
     setClubs(displayClubs.results)
     nextUrl.current = displayClubs.next
+    loadNumber.current += 1
     fetchNextPage()
   }, [displayClubs])
 
