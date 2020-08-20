@@ -1,5 +1,4 @@
-import Fuse, { FuseOptions } from 'fuse.js'
-import React from 'react'
+import { ReactElement, useEffect, useRef, useState } from 'react'
 import s from 'styled-components'
 
 import ClubDisplay from '../components/ClubDisplay'
@@ -20,7 +19,6 @@ import { MD, mediaMaxWidth } from '../constants/measurements'
 import { renderListPage } from '../renderPage'
 import { Club, Tag, UserInfo } from '../types'
 import { doApiRequest } from '../utils'
-import { logEvent } from '../utils/analytics'
 
 const colorMap = {
   Tags: CLUBS_BLUE,
@@ -60,74 +58,29 @@ const Container = s.div`
   }
 `
 
-interface RankedClub extends Club {
-  rank?: number
-  target_schools: any[]
-  target_majors: any[]
-  target_years: any[]
-}
-
 type SplashProps = {
   userInfo: UserInfo
   clubs: Club[]
   tags: Tag[]
-}
-
-type SplashState = {
-  clubs: RankedClub[]
   clubCount: number
-  displayClubs: RankedClub[]
-  selectedTags: any[]
-  nameInput: string
-  display: string
 }
 
-class Splash extends React.Component<SplashProps, SplashState> {
-  fuseOptions: FuseOptions<Club>
-  fuse: Fuse<Club, FuseOptions<Club>> | null
+type SearchInput = {
+  nameInput: string
+  selectedTags: any[]
+}
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      clubs: props.clubs,
-      clubCount: props.clubCount,
-      displayClubs: props.clubs,
-      selectedTags: [],
-      nameInput: '',
-      display: 'cards',
-    }
-    this.fuse = null
-    this.fuseOptions = {
-      keys: [
-        {
-          name: 'name',
-          weight: 0.4,
-        },
-        {
-          name: 'tags.name',
-          weight: 0.3,
-        },
-        {
-          name: 'subtitle',
-          weight: 0.2,
-        },
-        {
-          name: 'description',
-          weight: 0.1,
-        },
-      ],
-      tokenize: true,
-      findAllMatches: true,
-      shouldSort: true,
-      minMatchCharLength: 2,
-      threshold: 0.2,
-    }
+const Splash = (props: SplashProps): ReactElement => {
+  const currentSearch = useRef<SearchInput | null>(null)
 
-    this.switchDisplay = this.switchDisplay.bind(this)
-  }
+  const [clubs, setClubs] = useState<Club[]>(props.clubs)
+  const [clubCount, setClubCount] = useState<number>(props.clubCount)
+  const [selectedTags, setSelectedTags] = useState<any[]>([])
+  const [nameInput, setNameInput] = useState<string>('')
+  const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
-  resetDisplay(nameInput: string, selectedTags): void {
-    this.setState({ nameInput, selectedTags })
+  useEffect((): void => {
+    currentSearch.current = { nameInput, selectedTags }
 
     const tagSelected = selectedTags
       .filter((tag) => tag.name === 'Tags')
@@ -155,10 +108,10 @@ class Splash extends React.Component<SplashProps, SplashState> {
       url += '&search=' + encodeURIComponent(nameInput)
     }
     if (tagSelected.length > 0) {
-      url += '&tags=' + encodeURIComponent(tagSelected)
+      url += '&tags=' + encodeURIComponent(tagSelected.join(','))
     }
     if (sizeSelected.length > 0) {
-      url += '&size__in=' + encodeURIComponent(sizeSelected)
+      url += '&size__in=' + encodeURIComponent(sizeSelected.join(','))
     }
 
     // XOR here, if both are yes they cancel out, if both are no
@@ -181,21 +134,17 @@ class Splash extends React.Component<SplashProps, SplashState> {
       .then((res) => res.json())
       .then((displayClubs) => {
         if (
-          this.state.nameInput === nameInput &&
-          this.state.selectedTags === selectedTags
+          currentSearch.current === null ||
+          (currentSearch.current.nameInput === nameInput &&
+            currentSearch.current.selectedTags === selectedTags)
         ) {
-          this.setState({ displayClubs, clubCount: displayClubs.length })
+          setClubs(displayClubs)
+          setClubCount(displayClubs.length)
         }
       })
-  }
+  }, [nameInput, selectedTags])
 
-  switchDisplay(display: 'list' | 'cards'): void {
-    logEvent('viewMode', display)
-    this.setState({ display })
-  }
-
-  updateTag(tag, name) {
-    const { selectedTags } = this.state
+  const updateTag = (tag, name) => {
     const { value } = tag
     const i = selectedTags.findIndex(
       (tag) => tag.value === value && tag.name === name,
@@ -208,96 +157,83 @@ class Splash extends React.Component<SplashProps, SplashState> {
       selectedTags.splice(i, 1)
     }
 
-    this.setState({ selectedTags }, () =>
-      this.resetDisplay(this.state.nameInput, this.state.selectedTags),
-    )
+    setSelectedTags([...selectedTags])
   }
 
-  render() {
-    const {
-      clubCount,
-      displayClubs,
-      display,
-      selectedTags,
-      nameInput,
-    } = this.state
-    const { tags } = this.props
-    return (
-      <>
-        <Metadata />
-        <div style={{ backgroundColor: SNOW }}>
-          <SearchBar
-            tags={tags}
-            resetDisplay={this.resetDisplay.bind(this)}
-            selectedTags={selectedTags}
-            updateTag={this.updateTag.bind(this)}
-          />
+  return (
+    <>
+      <Metadata />
+      <div style={{ backgroundColor: SNOW }}>
+        <SearchBar
+          tags={props.tags}
+          resetDisplay={(nameInput, selectedTags) => {
+            setNameInput(nameInput)
+            setSelectedTags(selectedTags)
+          }}
+          selectedTags={selectedTags}
+          updateTag={updateTag}
+        />
 
-          <Container>
-            <WideContainer background={SNOW}>
-              <div style={{ padding: '30px 0' }}>
-                <DisplayButtons switchDisplay={this.switchDisplay} />
+        <Container>
+          <WideContainer background={SNOW}>
+            <div style={{ padding: '30px 0' }}>
+              <DisplayButtons switchDisplay={setDisplay} />
 
-                <Title className="title" style={{ color: CLUBS_GREY }}>
-                  Browse Clubs
-                </Title>
-                <p
-                  className="subtitle is-size-5"
-                  style={{ color: CLUBS_GREY_LIGHT }}
-                >
-                  Find your people!
-                </p>
-              </div>
-              <ResultsText>
-                {' '}
-                {clubCount} result{clubCount === 1 ? '' : 's'}
-              </ResultsText>
+              <Title className="title" style={{ color: CLUBS_GREY }}>
+                Browse Clubs
+              </Title>
+              <p
+                className="subtitle is-size-5"
+                style={{ color: CLUBS_GREY_LIGHT }}
+              >
+                Find your people!
+              </p>
+            </div>
+            <ResultsText>
+              {' '}
+              {clubCount} result{clubCount === 1 ? '' : 's'}
+            </ResultsText>
 
-              {!!selectedTags.length && (
-                <div style={{ padding: '0 30px 30px 0' }}>
-                  {selectedTags.map((tag) => (
-                    <span
-                      key={tag.label}
-                      className="tag is-rounded has-text-white"
-                      style={{
-                        backgroundColor: colorMap[tag.name],
-                        fontWeight: 600,
-                        margin: 3,
-                      }}
-                    >
-                      {tag.label}
-                      <button
-                        className="delete is-small"
-                        onClick={() => this.updateTag(tag, tag.name)}
-                      />
-                    </span>
-                  ))}
-                  <ClearAllLink
-                    className="tag is-rounded"
-                    onClick={() =>
-                      this.setState({ selectedTags: [] }, () =>
-                        this.resetDisplay(nameInput, []),
-                      )
-                    }
+            {!!selectedTags.length && (
+              <div style={{ padding: '0 30px 30px 0' }}>
+                {selectedTags.map((tag) => (
+                  <span
+                    key={tag.label}
+                    className="tag is-rounded has-text-white"
+                    style={{
+                      backgroundColor: colorMap[tag.name],
+                      fontWeight: 600,
+                      margin: 3,
+                    }}
                   >
-                    Clear All
-                  </ClearAllLink>
-                </div>
-              )}
+                    {tag.label}
+                    <button
+                      className="delete is-small"
+                      onClick={() => updateTag(tag, tag.name)}
+                    />
+                  </span>
+                ))}
+                <ClearAllLink
+                  className="tag is-rounded"
+                  onClick={() => setSelectedTags([])}
+                >
+                  Clear All
+                </ClearAllLink>
+              </div>
+            )}
 
-              <ListRenewalDialog />
+            <ListRenewalDialog />
 
-              <ClubDisplay
-                displayClubs={displayClubs}
-                display={display}
-                tags={tags}
-              />
-            </WideContainer>
-          </Container>
-        </div>
-      </>
-    )
-  }
+            <ClubDisplay
+              displayClubs={clubs}
+              display={display}
+              tags={props.tags}
+            />
+          </WideContainer>
+        </Container>
+      </div>
+    </>
+  )
 }
 
 export default renderListPage(Splash)
