@@ -134,7 +134,7 @@ const Search = ({
       defaultOptions={recommendedTags}
       value={selected}
       backspaceRemovesValue
-      onChange={(_, selectEvent) => {
+      onChange={(_, selectEvent): void => {
         const { action, option, removedValue } = selectEvent
         if (action === 'select-option') {
           updateTag(option, 'Tags')

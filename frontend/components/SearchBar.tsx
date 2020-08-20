@@ -18,6 +18,7 @@ import {
   SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import { BODY_FONT } from '../constants/styles'
+import { SearchInput } from '../pages'
 import { Tag } from '../types'
 import { Icon } from './common'
 import DropdownFilter, { SelectableTag } from './DropdownFilter'
@@ -125,7 +126,7 @@ type SearchBarProps = {
   tags: Tag[]
   updateTag: (data: SelectableTag, name: string) => void
   selectedTags: SelectableTag[]
-  resetDisplay: (nameInput: string, selectedTags: SelectableTag[]) => void
+  resetDisplay: (input: SearchInput) => void
 }
 
 const DROPDOWNS = {
@@ -165,9 +166,12 @@ const SearchBar = ({
   }, [])
 
   useEffect(() => setSelectedTags(propTags), [propTags])
+
   useEffect(() => {
     timeout !== null && clearTimeout(timeout)
-    storeTimeout(setTimeout(() => resetDisplay(nameInput, selectedTags), 200))
+    storeTimeout(
+      setTimeout(() => resetDisplay({ nameInput, selectedTags }), 200),
+    )
   }, [nameInput])
 
   const toggleActiveDropdownFilter = (name: string): void => {

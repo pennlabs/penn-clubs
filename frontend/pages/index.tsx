@@ -1,7 +1,7 @@
+import equal from 'deep-equal'
 import { ReactElement, useEffect, useRef, useState } from 'react'
 import s from 'styled-components'
 
-import ClubDisplay from '../components/ClubDisplay'
 import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
@@ -72,41 +72,29 @@ type SplashProps = {
   clubCount: number
 }
 
-type SearchInput = {
+export type SearchInput = {
   nameInput: string
   selectedTags: SearchTag[]
-}
-
-function checkArrayEqual<T>(a: T[], b: T[]): boolean {
-  if (a.length !== b.length) {
-    return false
-  }
-
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) {
-      return false
-    }
-  }
-  return true
 }
 
 const Splash = (props: SplashProps): ReactElement => {
   const currentSearch = useRef<SearchInput>({ nameInput: '', selectedTags: [] })
 
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
-  const [selectedTags, setSelectedTags] = useState<SearchTag[]>([])
-  const [nameInput, setNameInput] = useState<string>('')
+  const [searchInput, setSearchInput] = useState<SearchInput>({
+    nameInput: '',
+    selectedTags: [],
+  })
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {
-    if (
-      currentSearch.current.nameInput === nameInput &&
-      checkArrayEqual(currentSearch.current.selectedTags, selectedTags)
-    ) {
+    const { nameInput, selectedTags } = searchInput
+
+    if (equal(searchInput, currentSearch.current)) {
       return
     }
 
-    currentSearch.current = { nameInput, selectedTags }
+    currentSearch.current = { ...searchInput }
 
     const tagSelected = selectedTags
       .filter((tag) => tag.name === 'Tags')
@@ -159,29 +147,30 @@ const Splash = (props: SplashProps): ReactElement => {
     })
       .then((res) => res.json())
       .then((displayClubs) => {
-        if (
-          currentSearch.current.nameInput === nameInput &&
-          currentSearch.current.selectedTags === selectedTags
-        ) {
+        if (equal(currentSearch.current, searchInput)) {
           setClubs(displayClubs)
         }
       })
-  }, [nameInput, selectedTags])
+  }, [searchInput])
 
-  const updateTag = (tag, name) => {
-    const { value } = tag
-    const i = selectedTags.findIndex(
-      (tag) => tag.value === value && tag.name === name,
-    )
+  const updateTag = (tag: SearchTag, name: string): void => {
+    setSearchInput((inpt) => {
+      const selectedTags = [...inpt.selectedTags]
 
-    if (i === -1) {
-      tag.name = name
-      selectedTags.push(tag)
-    } else {
-      selectedTags.splice(i, 1)
-    }
+      const { value } = tag
+      const i = selectedTags.findIndex(
+        (tag) => tag.value === value && tag.name === name,
+      )
 
-    setSelectedTags([...selectedTags])
+      if (i === -1) {
+        tag.name = name
+        selectedTags.push(tag)
+      } else {
+        selectedTags.splice(i, 1)
+      }
+
+      return { ...inpt, selectedTags }
+    })
   }
 
   return (
@@ -190,11 +179,8 @@ const Splash = (props: SplashProps): ReactElement => {
       <div style={{ backgroundColor: SNOW }}>
         <SearchBar
           tags={props.tags}
-          resetDisplay={(nameInput, selectedTags) => {
-            setNameInput(nameInput)
-            setSelectedTags(selectedTags)
-          }}
-          selectedTags={selectedTags}
+          resetDisplay={setSearchInput}
+          selectedTags={searchInput.selectedTags}
           updateTag={updateTag}
         />
 
@@ -218,9 +204,9 @@ const Splash = (props: SplashProps): ReactElement => {
               {clubs.count} result{clubs.count === 1 ? '' : 's'}
             </ResultsText>
 
-            {!!selectedTags.length && (
+            {!!searchInput.selectedTags.length && (
               <div style={{ padding: '0 30px 30px 0' }}>
-                {selectedTags.map((tag) => (
+                {searchInput.selectedTags.map((tag) => (
                   <span
                     key={tag.label}
                     className="tag is-rounded has-text-white"
@@ -239,7 +225,9 @@ const Splash = (props: SplashProps): ReactElement => {
                 ))}
                 <ClearAllLink
                   className="tag is-rounded"
-                  onClick={() => setSelectedTags([])}
+                  onClick={() =>
+                    setSearchInput((inpt) => ({ ...inpt, selectedTags: [] }))
+                  }
                 >
                   Clear All
                 </ClearAllLink>
