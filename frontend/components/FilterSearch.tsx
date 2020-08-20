@@ -185,7 +185,7 @@ const Filter = ({
     minMatchCharLength: 2,
     threshold: 0.2,
   }
-  const fuse = new Fuse<FuseTag, Fuse.FuseOptions<FuseTag>>(tags, fuseOptions)
+  const fuse = new Fuse<FuseTag>(tags, fuseOptions)
 
   const [recommendedTags, setRecommendedTags] = useState(selectInitial(tags))
   const searchTags = async (query: string) => fuse.search(query)

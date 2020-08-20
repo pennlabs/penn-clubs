@@ -139,8 +139,8 @@ const Splash = (props: SplashProps): ReactElement => {
       params.set('size__in', sizeSelected.join(','))
     }
 
-    if (order && order.length > 0) {
-      params.set('order', order)
+    if (order.length > 0) {
+      params.set('ordering', order)
     }
 
     // XOR here, if both are yes they cancel out, if both are no

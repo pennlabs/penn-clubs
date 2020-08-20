@@ -174,6 +174,96 @@ const Collapsible = ({
   )
 }
 
+const DropdownWrapper = s.div`
+  width: 100%;
+
+  & .dropdown-trigger, & .dropdown-trigger button {
+    width: 100%;
+  }
+
+  & .dropdown-trigger button {
+    text-align: left;
+    justify-content: flex-start;
+  }
+
+  & .dropdown-trigger .icon:last-child:not(:first-child) {
+    display: inline-block;
+    margin-left: auto;
+  }
+`
+
+const OrderInput = ({ onChange }): ReactElement => {
+  const orderings = [
+    {
+      key: '',
+      name: 'Featured',
+      icon: 'star',
+    },
+    {
+      key: 'name',
+      name: 'Alphabetical',
+      icon: 'list',
+    },
+    {
+      key: '-favorite_count',
+      name: 'Bookmarks',
+      icon: 'bookmark',
+    },
+    {
+      key: 'random',
+      name: 'Random',
+      icon: 'shuffle',
+    },
+  ]
+
+  const [ordering, setOrdering] = useState<string>('')
+
+  const [isActive, setActive] = useState<boolean>(false)
+
+  const selectedOrdering = orderings.find((order) => order.key === ordering)
+
+  return (
+    <DropdownWrapper className={`dropdown ${isActive ? 'is-active' : ''}`}>
+      <div className="dropdown-trigger">
+        <button
+          className="button"
+          aria-haspopup="true"
+          aria-controls="dropdown-menu"
+          onClick={() => setActive((active) => !active)}
+        >
+          <span>
+            <Icon name={selectedOrdering?.icon ?? 'x'} />{' '}
+            {selectedOrdering?.name ?? 'Unknown'}
+          </span>
+          <span className="icon">
+            <Icon name="chevron-down" />
+          </span>
+        </button>
+      </div>
+      <div className="dropdown-menu" role="menu">
+        <div className="dropdown-content">
+          {orderings.map((order) => (
+            <a
+              href="#"
+              className={`dropdown-item ${
+                order.key === ordering ? 'is-active' : ''
+              }`}
+              onClick={(e) => {
+                e.preventDefault()
+                setOrdering(order.key)
+                onChange(order.key)
+                setActive(false)
+              }}
+            >
+              <Icon name={order.icon} /> {order.name}
+            </a>
+          ))}
+        </div>
+      </div>
+    </DropdownWrapper>
+  )
+}
+
 const SearchBar = ({
   tags,
   updateTag,
@@ -240,6 +330,11 @@ const SearchBar = ({
               updateTag={updateTag}
               selected={selectedTags.filter((tag) => tag.name === 'Tags')}
               clearTags={clearTags}
+            />
+          </Collapsible>
+          <Collapsible name="Ordering" active={initialActive}>
+            <OrderInput
+              onChange={(order) => resetDisplay((inpt) => ({ ...inpt, order }))}
             />
           </Collapsible>
           {Object.keys(DROPDOWNS).map((key) => (
