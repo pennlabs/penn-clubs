@@ -9,7 +9,7 @@ import { Loading } from './common'
 type ClubDisplayProps = {
   displayClubs: PaginatedClubPage
   tags: Tag[]
-  display: string
+  display: 'list' | 'cards'
 }
 
 const PaginatedClubDisplay = ({

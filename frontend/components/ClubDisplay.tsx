@@ -17,7 +17,7 @@ const ClubTableRowWrapper = s.div`
 type ClubDisplayProps = {
   displayClubs: Club[]
   tags: Tag[]
-  display: string
+  display: 'cards' | 'list'
   onScroll?: () => void
   pageSize?: number
 }

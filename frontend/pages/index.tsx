@@ -141,7 +141,7 @@ const Splash = (props: SplashProps): ReactElement => {
 
     if (order === 'random') {
       const seed = new Date().getTime()
-      params.set('seed', seed)
+      params.set('seed', seed.toString())
     }
 
     if (order.length > 0) {
