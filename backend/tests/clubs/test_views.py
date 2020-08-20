@@ -2,6 +2,8 @@ import datetime
 import io
 import json
 import os
+import random
+from collections import Counter
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -24,6 +26,72 @@ from clubs.models import (
     Tag,
     Testimonial,
 )
+from clubs.views import DEFAULT_PAGE_SIZE
+
+
+class SearchTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        Club.objects.bulk_create(
+            [
+                Club(code=f"club-{i}", name=f"Club #{i}", active=True, approved=True)
+                for i in range(0, 100)
+            ]
+        )
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_random_listing(self):
+        self.perform_random_fetch(DEFAULT_PAGE_SIZE)
+
+    def test_random_listing_odd_page(self):
+        self.perform_random_fetch(17)
+
+    def perform_random_fetch(self, page_size):
+        # fetch clubs using random ordering
+        resp = self.client.get(
+            reverse("clubs-list"),
+            {"ordering": "random", "page": "1", "page_size": str(page_size)},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = resp.json()
+
+        clubs = []
+        pages = []
+
+        while data["next"] is not None:
+            self.assertLessEqual(len(data["results"]), page_size)
+            self.assertGreater(len(data["results"]), 0, pages)
+
+            clubs.extend(data["results"])
+
+            pages.append(sorted([club["code"] for club in data["results"]]))
+
+            resp = self.client.get(data["next"], content_type="application/json")
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+            data = resp.json()
+
+        clubs = sorted([club["code"] for club in clubs])
+
+        # calculate the base truth
+        truth = sorted(Club.objects.values_list("code", flat=True))
+        truth_counter = Counter(truth)
+        clubs_counter = Counter(clubs)
+        missing = truth_counter - clubs_counter
+        extra = clubs_counter - truth_counter
+
+        # ensure all clubs existing in the complete listing
+        self.assertEqual(
+            clubs,
+            truth,
+            "\nMissing from results: {}\nExtra in results: {}\n\n{}".format(
+                list(missing.elements()),
+                list(sorted(extra.elements())),
+                "\n".join(str(page) for page in pages),
+            ),
+        )
 
 
 class ClubTestCase(TestCase):
