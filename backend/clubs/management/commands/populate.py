@@ -224,6 +224,24 @@ class Command(BaseCommand):
                     for new_obj in info[name]:
                         new_obj, _ = obj.objects.get_or_create(club=club, **new_obj)
 
+        # create additional clubs
+        tag_undergrad, _ = Tag.objects.get_or_create(name="Undergraduate")
+        tag_generic, _ = Tag.objects.get_or_create(name="Generic")
+
+        for i in range(1, 50):
+            club, _ = Club.objects.get_or_create(
+                code="z-club-{}".format(i),
+                defaults={
+                    "name": "Z-Club {}".format(i),
+                    "description": "This is a generic test club.",
+                    "approved": True,
+                    "active": True,
+                },
+            )
+
+            club.tags.add(tag_undergrad)
+            club.tags.add(tag_generic)
+
         # create users
         count = 0
         schools = ["seas", "nursing", "wharton", "sas"]

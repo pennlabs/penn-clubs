@@ -5,6 +5,7 @@ import ClubDisplay from '../components/ClubDisplay'
 import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
+import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
 import SearchBar from '../components/SearchBar'
 import {
   CLUBS_BLUE,
@@ -16,8 +17,8 @@ import {
   SNOW,
 } from '../constants/colors'
 import { MD, mediaMaxWidth } from '../constants/measurements'
-import { renderListPage } from '../renderPage'
-import { Club, Tag, UserInfo } from '../types'
+import { PaginatedClubPage, renderListPage } from '../renderPage'
+import { Tag, UserInfo } from '../types'
 import { doApiRequest } from '../utils'
 
 const colorMap = {
@@ -58,28 +59,53 @@ const Container = s.div`
   }
 `
 
+type SearchTag = {
+  name: string
+  label: string
+  value: string | number
+}
+
 type SplashProps = {
   userInfo: UserInfo
-  clubs: Club[]
+  clubs: PaginatedClubPage
   tags: Tag[]
   clubCount: number
 }
 
 type SearchInput = {
   nameInput: string
-  selectedTags: any[]
+  selectedTags: SearchTag[]
+}
+
+function checkArrayEqual<T>(a: T[], b: T[]): boolean {
+  if (a.length !== b.length) {
+    return false
+  }
+
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false
+    }
+  }
+  return true
 }
 
 const Splash = (props: SplashProps): ReactElement => {
-  const currentSearch = useRef<SearchInput | null>(null)
+  const currentSearch = useRef<SearchInput>({ nameInput: '', selectedTags: [] })
 
-  const [clubs, setClubs] = useState<Club[]>(props.clubs)
-  const [clubCount, setClubCount] = useState<number>(props.clubCount)
-  const [selectedTags, setSelectedTags] = useState<any[]>([])
+  const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
+  const [selectedTags, setSelectedTags] = useState<SearchTag[]>([])
   const [nameInput, setNameInput] = useState<string>('')
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {
+    if (
+      currentSearch.current.nameInput === nameInput &&
+      checkArrayEqual(currentSearch.current.selectedTags, selectedTags)
+    ) {
+      return
+    }
+
     currentSearch.current = { nameInput, selectedTags }
 
     const tagSelected = selectedTags
@@ -102,7 +128,7 @@ const Splash = (props: SplashProps): ReactElement => {
         (tag) => tag.name === 'Application' && tag.value === 3,
       ) !== -1
 
-    let url = '/clubs/?format=json'
+    let url = '/clubs/?format=json&page=1'
 
     if (nameInput) {
       url += '&search=' + encodeURIComponent(nameInput)
@@ -134,12 +160,10 @@ const Splash = (props: SplashProps): ReactElement => {
       .then((res) => res.json())
       .then((displayClubs) => {
         if (
-          currentSearch.current === null ||
-          (currentSearch.current.nameInput === nameInput &&
-            currentSearch.current.selectedTags === selectedTags)
+          currentSearch.current.nameInput === nameInput &&
+          currentSearch.current.selectedTags === selectedTags
         ) {
           setClubs(displayClubs)
-          setClubCount(displayClubs.length)
         }
       })
   }, [nameInput, selectedTags])
@@ -191,7 +215,7 @@ const Splash = (props: SplashProps): ReactElement => {
             </div>
             <ResultsText>
               {' '}
-              {clubCount} result{clubCount === 1 ? '' : 's'}
+              {clubs.count} result{clubs.count === 1 ? '' : 's'}
             </ResultsText>
 
             {!!selectedTags.length && (
@@ -224,7 +248,7 @@ const Splash = (props: SplashProps): ReactElement => {
 
             <ListRenewalDialog />
 
-            <ClubDisplay
+            <PaginatedClubDisplay
               displayClubs={clubs}
               display={display}
               tags={props.tags}

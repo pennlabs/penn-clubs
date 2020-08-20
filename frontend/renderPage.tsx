@@ -1,5 +1,5 @@
 import { NextPageContext } from 'next'
-import React, { Component } from 'react'
+import React, { Component, ReactElement } from 'react'
 import s from 'styled-components'
 
 import { Loading } from './components/common'
@@ -173,47 +173,33 @@ function renderPage(Page) {
   return RenderPage
 }
 
+export type PaginatedClubPage = {
+  results: Club[]
+  count: number
+  next: string
+}
+
 type ListPageProps = {
-  clubs: [Club]
-  tags: [Tag]
-  clubCount: number
+  clubs: PaginatedClubPage
+  tags: Tag[]
   authenticated: boolean | null
   userInfo: UserInfo
 }
 
-type ListPageState = {
-  clubs: Array<Club>
-}
-
 export function renderListPage(Page) {
-  class RenderListPage extends Component<ListPageProps, ListPageState> {
+  class RenderListPage extends Component<ListPageProps> {
     static getInitialProps: (
       ctx: NextPageContext,
-    ) => Promise<{ tags: [Tag]; clubs: [Club]; clubCount: number }>
+    ) => Promise<{ tags: Tag[]; clubs: PaginatedClubPage }>
 
-    constructor(props) {
-      super(props)
-
-      this.state = {
-        clubs: this.props.clubs,
-      }
-    }
-
-    render(): JSX.Element {
-      const { clubs, clubCount, tags, authenticated, userInfo } = this.props
+    render(): ReactElement {
+      const { clubs, tags, authenticated, userInfo } = this.props
 
       if (authenticated === null) {
         return <Loading />
       }
 
-      return (
-        <Page
-          clubs={clubs}
-          clubCount={clubCount}
-          tags={tags}
-          userInfo={userInfo}
-        />
-      )
+      return <Page clubs={clubs} tags={tags} userInfo={userInfo} />
     }
   }
 
@@ -229,8 +215,7 @@ export function renderListPage(Page) {
 
     return {
       tags: tagsResponse,
-      clubs: clubsResponse.results,
-      clubCount: clubsResponse.count,
+      clubs: clubsResponse,
     }
   }
 

@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react'
+import { ReactElement, useEffect, useRef } from 'react'
 import s from 'styled-components'
 
 import ClubCard from '../components/ClubCard'
@@ -18,63 +18,49 @@ type ClubDisplayProps = {
   displayClubs: Club[]
   tags: Tag[]
   display: string
+  onScroll?: () => void
+  pageSize?: number
 }
 
-type ClubDisplayState = {
-  end: number
-}
-
-class ClubDisplay extends React.Component<ClubDisplayProps, ClubDisplayState> {
-  constructor(props: ClubDisplayProps) {
-    super(props)
-    this.state = {
-      end: 10,
-    }
-  }
-
-  onScroll = (): void => {
+const ClubDisplay = ({
+  displayClubs,
+  display,
+  onScroll = () => undefined,
+}: ClubDisplayProps): ReactElement => {
+  const onWindowScroll = (): void => {
     const { innerHeight = 0, scrollY = 0 } = window
     const {
       body: { offsetHeight = 0 },
     } = document
-    const { end } = this.state
 
-    if (innerHeight + scrollY >= offsetHeight - 500) {
-      this.setState({ end: end + 20 })
+    if (innerHeight + scrollY >= offsetHeight - innerHeight / 2) {
+      onScroll()
     }
   }
 
-  componentDidMount(): void {
-    // The "false" means do not add additional event listener options
-    window.addEventListener('scroll', this.onScroll, false)
-  }
+  useEffect(() => {
+    window.addEventListener('scroll', onWindowScroll, false)
+    onWindowScroll()
+    return () => window.removeEventListener('scroll', onWindowScroll, false)
+  }, [])
 
-  componentWillUnmount(): void {
-    window.removeEventListener('scroll', this.onScroll, false)
-  }
-
-  render(): ReactElement {
-    const { displayClubs, display } = this.props
-    const clubsToShow = displayClubs.slice(0, this.state.end)
-
-    if (display === 'cards') {
-      return (
-        <div className="columns is-multiline is-desktop is-tablet">
-          {clubsToShow.map((club) => (
-            <ClubCard key={club.code} club={club} />
-          ))}
-        </div>
-      )
-    }
-
+  if (display === 'cards') {
     return (
-      <ClubTableRowWrapper>
-        {clubsToShow.map((club) => (
-          <ClubTableRow club={club} key={club.code} />
+      <div className="columns is-multiline is-desktop is-tablet">
+        {displayClubs.map((club) => (
+          <ClubCard key={club.code} club={club} />
         ))}
-      </ClubTableRowWrapper>
+      </div>
     )
   }
+
+  return (
+    <ClubTableRowWrapper>
+      {displayClubs.map((club) => (
+        <ClubTableRow club={club} key={club.code} />
+      ))}
+    </ClubTableRowWrapper>
+  )
 }
 
 export default ClubDisplay

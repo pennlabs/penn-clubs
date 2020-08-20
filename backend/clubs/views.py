@@ -180,7 +180,7 @@ class ClubPagination(PageNumberPagination):
     Custom pagination for club list view.
     """
 
-    page_size = 100
+    page_size = 20
     page_size_query_param = "page_size"
 
     def paginate_queryset(self, queryset, request, view=None):

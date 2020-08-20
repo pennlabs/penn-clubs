@@ -44,10 +44,10 @@ export const Loading = ({
   title = 'Loading...',
   delay = 200,
 }: LoadingProps): ReactElement => {
-  const [hidden, toggleHidden] = useState(true)
+  const [hidden, toggleHidden] = useState(delay > 0)
 
   useEffect(() => {
-    if (hidden) {
+    if (hidden && delay > 0) {
       const timer = setTimeout(() => {
         toggleHidden(false)
       }, delay)
