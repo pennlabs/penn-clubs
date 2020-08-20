@@ -1,4 +1,10 @@
-import { ReactElement, useEffect, useRef, useState } from 'react'
+import React, {
+  ReactElement,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import s from 'styled-components'
 
 import {
@@ -21,7 +27,7 @@ import { BODY_FONT } from '../constants/styles'
 import { SearchInput } from '../pages'
 import { Tag } from '../types'
 import { Icon } from './common'
-import DropdownFilter, { SelectableTag } from './DropdownFilter'
+import DropdownFilter, { FilterHeader, SelectableTag } from './DropdownFilter'
 import FilterSearch from './FilterSearch'
 
 const MobileSearchBarSpacer = s.div`
@@ -126,7 +132,7 @@ type SearchBarProps = {
   tags: Tag[]
   updateTag: (data: SelectableTag, name: string) => void
   selectedTags: SelectableTag[]
-  resetDisplay: (input: SearchInput) => void
+  resetDisplay: (modifier: SetStateAction<SearchInput>) => void
   clearTags: () => void
 }
 
@@ -144,46 +150,48 @@ const DROPDOWNS = {
   ],
 }
 
+type CollapsibleProps = React.PropsWithChildren<{
+  active?: boolean
+  name: string
+}>
+
+const Collapsible = ({
+  children,
+  active,
+  name,
+}: CollapsibleProps): ReactElement => {
+  const [isActive, setActive] = useState<boolean>(active ?? true)
+
+  return (
+    <>
+      <FilterHeader
+        active={isActive}
+        name={name}
+        toggleActive={() => setActive((active) => !active)}
+      />
+      {isActive && children}
+    </>
+  )
+}
+
 const SearchBar = ({
   tags,
   updateTag,
   clearTags,
-  selectedTags: propTags,
+  selectedTags,
   resetDisplay,
 }: SearchBarProps): ReactElement => {
   const [nameInput, setNameInput] = useState<string>('')
-  const [activeDropdownFilters, setActiveDropdownFilters] = useState<
-    Set<string>
-  >(new Set<string>())
-  const [selectedTags, setSelectedTags] = useState<SelectableTag[]>(propTags)
   const [timeout, storeTimeout] = useState<number | null>(null)
   const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth >= 1000) {
-      setActiveDropdownFilters(
-        new Set<string>(['Tags', ...Object.keys(DROPDOWNS)]),
-      )
-    }
-  }, [])
-
-  useEffect(() => setSelectedTags(propTags), [propTags])
-
-  useEffect(() => {
     timeout !== null && clearTimeout(timeout)
     storeTimeout(
-      setTimeout(() => resetDisplay({ nameInput, selectedTags }), 200),
+      setTimeout(() => resetDisplay((inpt) => ({ ...inpt, nameInput })), 200),
     )
   }, [nameInput])
 
-  const toggleActiveDropdownFilter = (name: string): void => {
-    if (activeDropdownFilters.has(name)) {
-      activeDropdownFilters.delete(name)
-    } else {
-      activeDropdownFilters.add(name)
-    }
-    setActiveDropdownFilters(new Set<string>(activeDropdownFilters))
-  }
   const focus = () => inputRef.current && inputRef.current.focus()
 
   const isTextInSearchBar = Boolean(nameInput)
@@ -192,6 +200,9 @@ const SearchBar = ({
     label: name,
     count: clubs,
   }))
+
+  const initialActive =
+    typeof window !== 'undefined' ? window.innerWidth >= 1047 : true
 
   return (
     <>
@@ -223,24 +234,23 @@ const SearchBar = ({
             />
           </SearchWrapper>
           <MobileLine />
-          <FilterSearch
-            active={activeDropdownFilters.has('Tags')}
-            toggleActive={() => toggleActiveDropdownFilter('Tags')}
-            tags={relabeledTags}
-            updateTag={updateTag}
-            selected={selectedTags.filter((tag) => tag.name === 'Tags')}
-            clearTags={clearTags}
-          />
-          {Object.keys(DROPDOWNS).map((key) => (
-            <DropdownFilter
-              active={activeDropdownFilters.has(key)}
-              toggleActive={() => toggleActiveDropdownFilter(key)}
-              name={key}
-              key={key}
-              options={DROPDOWNS[key]}
-              selected={selectedTags.filter((tag) => tag.name === key)}
+          <Collapsible name="Tags" active={initialActive}>
+            <FilterSearch
+              tags={relabeledTags}
               updateTag={updateTag}
+              selected={selectedTags.filter((tag) => tag.name === 'Tags')}
+              clearTags={clearTags}
             />
+          </Collapsible>
+          {Object.keys(DROPDOWNS).map((key) => (
+            <Collapsible name={key} key={key} active={initialActive}>
+              <DropdownFilter
+                name={key}
+                options={DROPDOWNS[key]}
+                selected={selectedTags.filter((tag) => tag.name === key)}
+                updateTag={updateTag}
+              />
+            </Collapsible>
           ))}
         </Content>
       </Wrapper>

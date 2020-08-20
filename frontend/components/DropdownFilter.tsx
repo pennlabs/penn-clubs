@@ -60,13 +60,13 @@ const TableRow = s.tr`
   cursor: pointer;
 `
 
-const TableWrapper = s.div<{ active?: boolean }>`
+const TableWrapper = s.div`
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: all ${ANIMATION_DURATION}ms ease;
 
-  ${({ active }) => active && 'max-height: 150vh; opacity: 1;'}
+  max-height: 150vh;
+  opacity: 1;
 
   ${mediaMaxWidth(MD)} {
     position: fixed;
@@ -75,11 +75,8 @@ const TableWrapper = s.div<{ active?: boolean }>`
     top: calc(${SEARCH_BAR_MOBILE_HEIGHT} + ${NAV_HEIGHT});
     background: ${WHITE};
     height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
-    ${({ active }) =>
-      active &&
-      `
       overflow-y: auto;
-      max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});`}
+      max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
   }
 `
 
@@ -145,9 +142,7 @@ export type SelectableTag = {
 
 type DropdownFilterProps = {
   name: string
-  active: boolean
   selected: SelectableTag[]
-  toggleActive: () => void
   options: SelectableTag[]
   updateTag: (tag: SelectableTag, name: string) => void
 }
@@ -157,8 +152,6 @@ const DropdownFilter = ({
   name,
   options,
   updateTag,
-  active,
-  toggleActive,
 }: DropdownFilterProps): ReactElement => {
   /**
    * Returns if the supplied tag is in the list of selected tags
@@ -174,8 +167,7 @@ const DropdownFilter = ({
 
   return (
     <>
-      <FilterHeader active={active} name={name} toggleActive={toggleActive} />
-      <TableWrapper active={active}>
+      <TableWrapper>
         <TableContainer>
           <table>
             <tbody>

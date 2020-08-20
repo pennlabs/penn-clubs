@@ -10,23 +10,12 @@ import {
   MEDIUM_GRAY,
   WHITE,
 } from '../constants/colors'
-import {
-  ANIMATION_DURATION,
-  MD,
-  mediaMaxWidth,
-} from '../constants/measurements'
+import { MD, mediaMaxWidth } from '../constants/measurements'
 import { Icon, SelectedTag } from './common'
-import { FilterHeader } from './DropdownFilter'
 
-const SearchWrapper = s.div<{ active?: boolean }>`
+const SearchWrapper = s.div`
   margin-bottom: 30px;
-  max-height: 0;
-  opacity: 0;
-  display: none;
   overflow: visible;
-  transition: all ${ANIMATION_DURATION}ms ease;
-
-  ${({ active }) => active && 'max-height: 100%; opacity: 1; display: block;'}
 
   ${mediaMaxWidth(MD)} {
     height: auto;
@@ -168,8 +157,6 @@ type FuseTag = {
 }
 
 type FilterProps = {
-  active: boolean
-  toggleActive: () => void
   tags: FuseTag[]
   updateTag: (tag: FuseTag, name: string) => void
   selected: FuseTag[]
@@ -177,8 +164,6 @@ type FilterProps = {
 }
 
 const Filter = ({
-  active,
-  toggleActive,
   tags,
   updateTag,
   clearTags,
@@ -211,8 +196,7 @@ const Filter = ({
 
   return (
     <>
-      <FilterHeader active={active} name="Tags" toggleActive={toggleActive} />
-      <SearchWrapper active={active}>
+      <SearchWrapper>
         <Search
           selected={selected}
           searchTags={searchTags}

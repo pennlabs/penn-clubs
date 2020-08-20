@@ -74,22 +74,28 @@ type SplashProps = {
 
 export type SearchInput = {
   nameInput: string
+  order: string
   selectedTags: SearchTag[]
 }
 
 const Splash = (props: SplashProps): ReactElement => {
-  const currentSearch = useRef<SearchInput>({ nameInput: '', selectedTags: [] })
+  const currentSearch = useRef<SearchInput>({
+    nameInput: '',
+    selectedTags: [],
+    order: '',
+  })
 
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [searchInput, setSearchInput] = useState<SearchInput>({
     nameInput: '',
     selectedTags: [],
+    order: '',
   })
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {
-    const { nameInput, selectedTags } = searchInput
+    const { nameInput, selectedTags, order } = searchInput
 
     if (equal(searchInput, currentSearch.current)) {
       return
@@ -119,33 +125,39 @@ const Splash = (props: SplashProps): ReactElement => {
         (tag) => tag.name === 'Application' && tag.value === 3,
       ) !== -1
 
-    let url = '/clubs/?format=json&page=1'
+    const params = new URLSearchParams()
+    params.set('format', 'json')
+    params.set('page', '1')
 
     if (nameInput) {
-      url += '&search=' + encodeURIComponent(nameInput)
+      params.set('search', nameInput)
     }
     if (tagSelected.length > 0) {
-      url += '&tags=' + encodeURIComponent(tagSelected.join(','))
+      params.set('tags', tagSelected.join(','))
     }
     if (sizeSelected.length > 0) {
-      url += '&size__in=' + encodeURIComponent(sizeSelected.join(','))
+      params.set('size__in', sizeSelected.join(','))
+    }
+
+    if (order && order.length > 0) {
+      params.set('order', order)
     }
 
     // XOR here, if both are yes they cancel out, if both are no
     // we do no filtering
     if (noRequiredApplication !== requiredApplication) {
       if (noRequiredApplication) {
-        url += '&application_required__in=1'
+        params.set('application_required__in', '1')
       } else {
-        url += '&application_required__in=2,3'
+        params.set('application_required__in', '2,3')
       }
     }
 
     if (acceptingMembers) {
-      url += '&accepting_members=true'
+      params.set('accepting_members', 'true')
     }
 
-    doApiRequest(url, {
+    doApiRequest(`/clubs/?${params.toString()}`, {
       method: 'GET',
     })
       .then((res) => res.json())
