@@ -81,6 +81,7 @@ const Splash = (props: SplashProps): ReactElement => {
   const currentSearch = useRef<SearchInput>({ nameInput: '', selectedTags: [] })
 
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
+  const [isLoading, setLoading] = useState<boolean>(false)
   const [searchInput, setSearchInput] = useState<SearchInput>({
     nameInput: '',
     selectedTags: [],
@@ -95,6 +96,8 @@ const Splash = (props: SplashProps): ReactElement => {
     }
 
     currentSearch.current = { ...searchInput }
+
+    setLoading(true)
 
     const tagSelected = selectedTags
       .filter((tag) => tag.name === 'Tags')
@@ -149,6 +152,7 @@ const Splash = (props: SplashProps): ReactElement => {
       .then((displayClubs) => {
         if (equal(currentSearch.current, searchInput)) {
           setClubs(displayClubs)
+          setLoading(false)
         }
       })
   }, [searchInput])
@@ -182,6 +186,14 @@ const Splash = (props: SplashProps): ReactElement => {
           resetDisplay={setSearchInput}
           selectedTags={searchInput.selectedTags}
           updateTag={updateTag}
+          clearTags={() => {
+            setSearchInput((inpt) => ({
+              ...inpt,
+              selectedTags: inpt.selectedTags.filter(
+                (tag) => tag.name !== 'Tags',
+              ),
+            }))
+          }}
         />
 
         <Container>
@@ -235,6 +247,12 @@ const Splash = (props: SplashProps): ReactElement => {
             )}
 
             <ListRenewalDialog />
+
+            {isLoading && (
+              <progress className="progress is-small" max={100}>
+                Loading...
+              </progress>
+            )}
 
             <PaginatedClubDisplay
               displayClubs={clubs}

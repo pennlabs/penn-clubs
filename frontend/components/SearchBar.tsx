@@ -127,6 +127,7 @@ type SearchBarProps = {
   updateTag: (data: SelectableTag, name: string) => void
   selectedTags: SelectableTag[]
   resetDisplay: (input: SearchInput) => void
+  clearTags: () => void
 }
 
 const DROPDOWNS = {
@@ -146,6 +147,7 @@ const DROPDOWNS = {
 const SearchBar = ({
   tags,
   updateTag,
+  clearTags,
   selectedTags: propTags,
   resetDisplay,
 }: SearchBarProps): ReactElement => {
@@ -227,6 +229,7 @@ const SearchBar = ({
             tags={relabeledTags}
             updateTag={updateTag}
             selected={selectedTags.filter((tag) => tag.name === 'Tags')}
+            clearTags={clearTags}
           />
           {Object.keys(DROPDOWNS).map((key) => (
             <DropdownFilter

@@ -59,6 +59,7 @@ type SearchProps = {
   searchTags: (query: string) => Promise<any[]>
   recommendedTags: { label: string; options: FuseTag[] }[]
   updateTag: (tag: FuseTag, name: string) => void
+  clearTags: () => void
 }
 
 const Search = ({
@@ -66,6 +67,7 @@ const Search = ({
   searchTags,
   recommendedTags,
   updateTag,
+  clearTags,
 }: SearchProps): ReactElement => {
   // Custom styles for the react-select
   const styles = {
@@ -140,6 +142,8 @@ const Search = ({
           updateTag(option, 'Tags')
         } else if (action === 'pop-value') {
           updateTag(removedValue, 'Tags')
+        } else if (action === 'clear') {
+          clearTags()
         }
       }}
       placeholder="Search for tags"
@@ -169,6 +173,7 @@ type FilterProps = {
   tags: FuseTag[]
   updateTag: (tag: FuseTag, name: string) => void
   selected: FuseTag[]
+  clearTags: () => void
 }
 
 const Filter = ({
@@ -176,6 +181,7 @@ const Filter = ({
   toggleActive,
   tags,
   updateTag,
+  clearTags,
   selected,
 }: FilterProps): ReactElement => {
   const filter = new Set()
@@ -212,6 +218,7 @@ const Filter = ({
           searchTags={searchTags}
           recommendedTags={recommendedTags}
           updateTag={updateTag}
+          clearTags={clearTags}
         />
       </SearchWrapper>
     </>
