@@ -437,9 +437,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return queryset
         elif self.request.user.is_authenticated:
             # Show approved clubs along with clubs that the logged-in user is a member of.
-            return queryset.filter(Q(approved=True) | Q(members=self.request.user))
+            return queryset.filter(Q(approved=True) | Q(members=self.request.user) | Q(ghost=True))
         else:
-            return queryset.filter(approved=True)
+            return queryset.filter(Q(approved=True) | Q(ghost=True))
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):

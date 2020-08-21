@@ -101,6 +101,7 @@ export interface Club {
   is_member: MembershipRank | false
   is_request: boolean
   is_subscribe: boolean
+  is_ghost: boolean
   linkedin: string
   listserv: string
   members: [Membership]
