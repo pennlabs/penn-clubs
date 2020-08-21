@@ -11,7 +11,8 @@ const IconWrapper = s.span<IconWrapperProps>`
   display: inline-block;
   vertical-align: ${({noAlign}) => (noAlign ? 'baseline' : 'middle')};
 
-  .button & {
+  .button &,
+  .dropdown-item & {
     margin-right: 0.25rem;
   }
 
