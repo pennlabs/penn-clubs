@@ -28,6 +28,7 @@ from rest_framework.views import APIView
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     Asset,
+    Badge,
     Club,
     Event,
     Favorite,
@@ -60,6 +61,7 @@ from clubs.serializers import (
     AssetSerializer,
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
+    BadgeSerializer,
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
@@ -1034,10 +1036,28 @@ class TagViewSet(viewsets.ModelViewSet):
     """
     list:
     Return a list of tags.
+
+    get:
+    Return details for a specific tag by name.
     """
 
     queryset = Tag.objects.all().annotate(clubs=Count("club")).order_by("name")
     serializer_class = TagSerializer
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
+class BadgeViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of badges.
+
+    get:
+    Return details for a specific badge by name.
+    """
+
+    queryset = Badge.objects.all()
+    serializer_class = BadgeSerializer
     http_method_names = ["get"]
     lookup_field = "name"
 
