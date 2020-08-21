@@ -3,15 +3,11 @@ import s, { CSSProperties } from 'styled-components'
 
 const reqSvgs = require.context('../../public/static/img/icons', true, /\.svg$/)
 
-type IconWrapperProps = {
-  noAlign?: boolean
-}
-
-const IconWrapper = s.span<IconWrapperProps>`
+const IconWrapper = s.span`
   display: inline-block;
-  vertical-align: ${(props) => (props.noAlign ? 'baseline' : 'middle')};
 
-  .button & {
+  .button &,
+  .dropdown-item & {
     margin-right: 0.25rem;
   }
 
