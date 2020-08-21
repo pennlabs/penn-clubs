@@ -3,6 +3,7 @@ import { ReactElement, useEffect, useRef, useState } from 'react'
 import s from 'styled-components'
 
 import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
+import LiveEventsDialog from '../components/ClubPage/LiveEventsDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
 import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
@@ -262,7 +263,7 @@ const Splash = (props: SplashProps): ReactElement => {
                 </ClearAllLink>
               </div>
             )}
-
+            <LiveEventsDialog />
             <ListRenewalDialog />
 
             {isLoading && (
