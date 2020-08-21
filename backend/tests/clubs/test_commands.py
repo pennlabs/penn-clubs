@@ -164,6 +164,29 @@ class PopulateTestCase(TestCase):
         self.assertNotEqual(Tag.objects.all().count(), 0)
 
 
+class RankTestCase(TestCase):
+    def test_rank(self):
+        # create some clubs
+        Club.objects.bulk_create(
+            [
+                Club(
+                    code=f"club-{i}",
+                    name=f"Test Club #{i}",
+                    description="This is a sentence. " * i,
+                    active=True,
+                    subtitle="This is a subtitle.",
+                )
+                for i in range(1, 101)
+            ]
+        )
+
+        # run the rank command
+        call_command("rank")
+
+        for club in Club.objects.all():
+            self.assertGreater(club.rank, 0)
+
+
 class RenewalTestCase(TestCase):
     def test_renewal(self):
         # populate database with test data
@@ -208,7 +231,7 @@ class RenewalTestCase(TestCase):
             self.fail(
                 "Expected there to be an email with more than one recipient, but did not exist!"
             )
-        
+
         # send out reminder emails
         current_email_count = len(mail.outbox)
 

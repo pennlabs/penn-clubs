@@ -84,5 +84,5 @@ class Command(BaseCommand):
             rejected_clubs = clubs.filter(approved=False)
             for club in rejected_clubs:
                 club.send_approval_email()
-            
+
             self.stdout.write(f"All {rejected_clubs.count()} rejection emails sent out!")

@@ -139,6 +139,8 @@ class Club(models.Model):
     target_schools = models.ManyToManyField("School", blank=True)
     target_majors = models.ManyToManyField("Major", blank=True)
 
+    rank = models.IntegerField(default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

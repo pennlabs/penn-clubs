@@ -195,7 +195,7 @@ const DropdownWrapper = s.div`
 const OrderInput = ({ onChange }): ReactElement => {
   const orderings = [
     {
-      key: '',
+      key: 'featured',
       name: 'Featured',
       icon: 'star',
     },
@@ -216,7 +216,7 @@ const OrderInput = ({ onChange }): ReactElement => {
     },
   ]
 
-  const [ordering, setOrdering] = useState<string>('')
+  const [ordering, setOrdering] = useState<string>('featured')
 
   const [isActive, setActive] = useState<boolean>(false)
 

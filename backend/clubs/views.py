@@ -89,7 +89,7 @@ from clubs.serializers import (
 from clubs.utils import html_to_text
 
 
-DEFAULT_PAGE_SIZE = 20
+DEFAULT_PAGE_SIZE = 15
 DEFAULT_SEED = 1234
 
 
@@ -354,9 +354,10 @@ class ClubsOrderingFilter(filters.OrderingFilter):
     """
 
     def filter_queryset(self, request, queryset, view):
-        queryset = super().filter_queryset(request, queryset, view)
+        new_queryset = super().filter_queryset(request, queryset, view)
+        ordering = request.GET.get("ordering", "").split(",")
 
-        if "random" in request.GET.get("ordering", "").split(","):
+        if "random" in ordering:
             page = int(request.GET.get("page", 1)) - 1
             page_size = int(request.GET.get("page_size", DEFAULT_PAGE_SIZE))
             rng = random.Random(request.GET.get("seed", DEFAULT_SEED))
@@ -368,9 +369,12 @@ class ClubsOrderingFilter(filters.OrderingFilter):
             end_index = (page + 1) * page_size
             page_ids = all_ids[start_index:end_index]
 
-            return queryset.filter(id__in=page_ids)
+            return new_queryset.filter(id__in=page_ids)
 
-        return queryset
+        if "featured" in ordering:
+            return queryset.order_by("-rank")
+
+        return new_queryset
 
 
 class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
