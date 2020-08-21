@@ -26,3 +26,10 @@ applications:
         value: 80
       - name: DOMAIN
         value: pennclubs.com
+
+cronjobs:
+  - name: rank-clubs
+    schedule: "0 1 * * *"
+    image: pennlabs/penn-clubs-backend
+    secret: penn-clubs
+    cmd: ["python", "manage.py", "rank"]
