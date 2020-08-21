@@ -1,8 +1,10 @@
+import datetime
 import random
 from math import floor
 
 import bleach
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
 from clubs.models import Club, Membership
 
@@ -62,6 +64,22 @@ class Command(BaseCommand):
                 ranking += 10
 
             if len(cleaned_description) > 1000:
+                ranking += 10
+
+            # points for events
+            now = timezone.now()
+            today_events = club.events.filter(
+                end_time__gte=now, start_time__lte=now + datetime.timedelta(days=1)
+            )
+
+            if today_events.exists():
+                ranking += 20
+
+            close_events = club.events.filter(
+                end_time__gte=now, start_time__lte=now + datetime.timedelta(weeks=1)
+            )
+
+            if close_events.exists():
                 ranking += 10
 
             # rng
