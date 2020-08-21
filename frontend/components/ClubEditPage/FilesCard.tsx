@@ -46,9 +46,7 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
                         doApiRequest(
                           `/clubs/${club.code}/assets/${a.id}/?format=json`,
                           { method: 'DELETE' },
-                        ).then(() => {
-                          reloadFiles()
-                        })
+                        ).then(() => reloadFiles())
                       }
                     >
                       <Icon name="x" alt="delete file" /> Delete
@@ -81,9 +79,7 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
             body: data.file,
           })
             .then((resp) => resp.json())
-            .then((resp) => {
-              reloadFiles()
-            })
+            .then(() => reloadFiles())
         }}
       />
     </BaseCard>
