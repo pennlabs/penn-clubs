@@ -1,15 +1,16 @@
-import React, { ReactElement } from 'react'
 import { NextPageContext } from 'next'
-import { Metadata } from '../components/common/Metadata'
-import { doApiRequest } from '../utils'
-import { Club, ClubEvent } from '../types'
-import { WideContainer } from '../components/common/Container'
-import { CLUBS_GREY, SNOW } from '../constants/colors'
-import { Title } from '../components/common/Typography'
-import renderPage from '../renderPage'
-import styled from 'styled-components'
-import { mediaMaxWidth, mediaMinWidth, PHONE } from '../constants/measurements'
 import Link from 'next/link'
+import React, { ReactElement } from 'react'
+import styled from 'styled-components'
+
+import { WideContainer } from '../components/common/Container'
+import { Metadata } from '../components/common/Metadata'
+import { Title } from '../components/common/Typography'
+import { CLUBS_GREY, SNOW } from '../constants/colors'
+import { mediaMaxWidth, mediaMinWidth, PHONE } from '../constants/measurements'
+import renderPage from '../renderPage'
+import { Club, ClubEvent } from '../types'
+import { doApiRequest } from '../utils'
 
 interface EventPageProps {
   liveEvents: ClubEvent[]
