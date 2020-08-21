@@ -1367,7 +1367,8 @@ class ClubTestCase(TestCase):
 
     def test_club_sensitive_field_renew(self):
         """
-        When editing sensitive fields like the name, description, and 
+        When editing sensitive fields like the name, description, and club image, require
+        the club to be reapproved.
         """
         club = self.club1
 
