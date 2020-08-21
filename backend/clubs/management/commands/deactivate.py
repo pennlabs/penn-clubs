@@ -75,7 +75,7 @@ class Command(BaseCommand):
 
         # send out reminder emails to all clubs
         if send_remind_emails:
-            pending_clubs = clubs.filter(approved__isnull=True)
+            pending_clubs = clubs.filter(active=False)
             for club in pending_clubs:
                 club.send_renewal_reminder_email()
 
