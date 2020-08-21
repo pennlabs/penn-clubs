@@ -19,44 +19,50 @@ const PaginatedClubDisplay = ({
 }: ClubDisplayProps): ReactElement => {
   const [isLoading, setLoading] = useState<boolean>(false)
   const [clubs, setClubs] = useState<Club[]>(displayClubs.results)
-  const nextUrl = useRef<string | null>(displayClubs.next)
+  const [nextUrl, setNextUrl] = useState<string | null>(null)
+  const savedNextUrl = useRef<string | null>(displayClubs.next)
 
-  const loadLock = useRef<boolean>(false)
-  const loadNumber = useRef<number>(0)
-
-  const fetchNextPage = async (): Promise<void> => {
-    const myLoadNumber = loadNumber.current
-
-    if (nextUrl.current === null) {
-      return
+  const fetchNextPage = async (): Promise<PaginatedClubPage | null> => {
+    if (nextUrl === null) {
+      return null
     }
 
-    if (loadLock.current) {
-      return
-    }
-
-    loadLock.current = true
     setLoading(true)
 
     // fetch the entry
-    const resp = await doApiRequest(nextUrl.current)
+    const resp = await doApiRequest(nextUrl)
     const json = await resp.json()
 
-    // if we're still up to date, set the entry
-    if (myLoadNumber === loadNumber.current) {
-      nextUrl.current = json.next
-      setClubs((clubs) => [...clubs, ...json.results])
-    }
-
     setLoading(false)
-    loadLock.current = false
+
+    return json
+  }
+
+  const loadNextPage = () => {
+    if (savedNextUrl.current !== null) {
+      setNextUrl(savedNextUrl.current)
+      savedNextUrl.current = null
+    }
   }
 
   useEffect(() => {
-    loadNumber.current += 1
-    setClubs([...displayClubs.results])
-    nextUrl.current = displayClubs.next
-    fetchNextPage()
+    let isMounted = true
+
+    fetchNextPage().then((page: PaginatedClubPage | null): void => {
+      if (page !== null && isMounted) {
+        savedNextUrl.current = page.next
+        setClubs((clubs) => [...clubs, ...page.results])
+      }
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [nextUrl])
+
+  useEffect(() => {
+    setClubs(displayClubs.results)
+    setNextUrl(displayClubs.next)
   }, [displayClubs])
 
   return (
@@ -65,7 +71,7 @@ const PaginatedClubDisplay = ({
         displayClubs={clubs}
         tags={tags}
         display={display}
-        onScroll={fetchNextPage}
+        onScroll={loadNextPage}
       />
       {isLoading && <Loading delay={0} />}
     </>
