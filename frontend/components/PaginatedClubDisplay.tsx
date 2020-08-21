@@ -23,48 +23,33 @@ const PaginatedClubDisplay = ({
 
   const loadLock = useRef<boolean>(false)
   const loadNumber = useRef<number>(0)
-  const loadQueue = useRef<number[]>([])
 
   const fetchNextPage = async (): Promise<void> => {
     const myLoadNumber = loadNumber.current
 
-    if (nextUrl !== null) {
-      loadQueue.current.push(myLoadNumber)
+    if (nextUrl.current === null) {
+      return
     }
 
-    if (!loadLock.current) {
-      loadLock.current = true
-      setLoading(true)
-
-      // get valid fetch entry and go through queue
-      while (loadQueue.current) {
-        let num = loadQueue.current.shift()
-        while (loadQueue.current.length && num !== loadNumber.current) {
-          num = loadQueue.current.shift()
-        }
-
-        if (num !== loadNumber.current) {
-          break
-        }
-
-        if (nextUrl.current === null) {
-          break
-        }
-
-        // fetch the entry
-        const resp = await doApiRequest(nextUrl.current)
-        const json = await resp.json()
-
-        // if we're still up to date, set the entry
-        if (myLoadNumber === loadNumber.current) {
-          nextUrl.current = json.next
-          setClubs((clubs) => [...clubs, ...json.results])
-        }
-      }
-
-      setLoading(false)
-      loadLock.current = false
+    if (loadLock.current) {
+      return
     }
+
+    loadLock.current = true
+    setLoading(true)
+
+    // fetch the entry
+    const resp = await doApiRequest(nextUrl.current)
+    const json = await resp.json()
+
+    // if we're still up to date, set the entry
+    if (myLoadNumber === loadNumber.current) {
+      nextUrl.current = json.next
+      setClubs((clubs) => [...clubs, ...json.results])
+    }
+
+    setLoading(false)
+    loadLock.current = false
   }
 
   useEffect(() => {

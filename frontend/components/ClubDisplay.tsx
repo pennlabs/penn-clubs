@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useRef } from 'react'
+import { ReactElement, useEffect } from 'react'
 import s from 'styled-components'
 
 import ClubCard from '../components/ClubCard'
