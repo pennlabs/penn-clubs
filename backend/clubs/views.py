@@ -112,7 +112,7 @@ def upload_endpoint_helper(request, cls, field, **kwargs):
     if "file" in request.data and isinstance(request.data["file"], UploadedFile):
         getattr(obj, field).delete(save=False)
         setattr(obj, field, request.data["file"])
-        obj._change_reason = "Update {} image field".format(field)
+        obj._change_reason = "Update '{}' image field".format(field)
         obj.save()
     else:
         return Response(
@@ -446,7 +446,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Upload the club logo.
         """
-        return upload_endpoint_helper(request, Club, "image", code=kwargs["code"])
+        club = Club.objects.get(code=kwargs["code"])
+        resp = upload_endpoint_helper(request, Club, "image", code=kwargs["code"])
+        if status.is_success(resp.status_code):
+            club.approved = None
+            club.approved_by = None
+            club.approved_on = None
+            club.save(update_fields=["approved", "approved_by", "approved_on"])
+        return resp
 
     @action(detail=True, methods=["post"])
     def upload_file(self, request, *args, **kwargs):

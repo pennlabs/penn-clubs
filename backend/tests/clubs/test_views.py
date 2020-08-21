@@ -1365,6 +1365,38 @@ class ClubTestCase(TestCase):
         # ensure email was sent out notifying officer of question
         self.assertEqual(len(mail.outbox), 1, mail.outbox)
 
+    def test_club_sensitive_field_renew(self):
+        """
+        When editing sensitive fields like the name, description, and 
+        """
+        club = self.club1
+
+        # ensure club is approved
+        self.assertTrue(club.approved)
+
+        # add officer to club
+        Membership.objects.create(person=self.user4, club=club, role=Membership.ROLE_OFFICER)
+
+        # login to officer user
+        self.client.login(username=self.user4.username, password="test")
+
+        for field in {"name", "description"}:
+            # edit sensitive field
+            resp = self.client.patch(
+                reverse("clubs-detail", args=(club.code,)),
+                {field: "New Club Name/Description"},
+                content_type="application/json",
+            )
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+
+            # ensure club is marked as not approved
+            club.refresh_from_db()
+            self.assertFalse(club.approved)
+
+            # reset to approved
+            club.approved = True
+            club.save(update_fields=["approved"])
+
     def test_club_renew(self):
         # run deactivate script
         with open(os.devnull, "w") as f:
