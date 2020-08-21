@@ -53,9 +53,9 @@ const PaginatedClubDisplay = ({
   }
 
   useEffect(() => {
-    setClubs(displayClubs.results)
-    nextUrl.current = displayClubs.next
     loadNumber.current += 1
+    setClubs([...displayClubs.results])
+    nextUrl.current = displayClubs.next
     fetchNextPage()
   }, [displayClubs])
 
