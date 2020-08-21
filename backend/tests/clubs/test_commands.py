@@ -208,6 +208,13 @@ class RenewalTestCase(TestCase):
             self.fail(
                 "Expected there to be an email with more than one recipient, but did not exist!"
             )
+        
+        # send out reminder emails
+        current_email_count = len(mail.outbox)
+
+        call_command("deactivate", "remind", "--force")
+
+        self.assertGreater(len(mail.outbox), current_email_count)
 
 
 class MergeDuplicatesTestCase(TestCase):

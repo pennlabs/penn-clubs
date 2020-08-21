@@ -10,6 +10,7 @@ from django.core.validators import validate_email
 from django.db import models
 from django.dispatch import receiver
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from phonenumber_field.modelfields import PhoneNumberField
 from simple_history.models import HistoricalRecords
@@ -148,6 +149,10 @@ class Club(models.Model):
         return self.name
 
     def send_renewal_email(self, request=None):
+        """
+        Send an email notifying all club officers about renewing their approval with the
+        Office of Student Affairs and registering for the SAC fair.
+        """
         domain = get_domain(request)
 
         context = {
@@ -165,9 +170,32 @@ class Club(models.Model):
                 context=context,
             )
 
+    def send_renewal_reminder_email(self, request=None):
+        """
+        Send a reminder email to clubs about renewing their approval with the Office of Student
+        Affairs and registering for the SAC fair.
+        """
+        domain = get_domain(request)
+
+        context = {
+            "name": self.name,
+            "url": settings.RENEWAL_URL.format(domain=domain, club=self.code),
+            "year": timezone.now().year,
+        }
+
+        emails = self.get_officer_emails()
+
+        if emails:
+            send_mail_helper(
+                name="renewal_reminder",
+                subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(self.name),
+                emails=emails,
+                context=context,
+            )
+
     def get_officer_emails(self):
         """
-        Return a list of club officer emails.
+        Return a list of club officer emails, including the contact email for the club.
         """
         emails = []
 
