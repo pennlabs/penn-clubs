@@ -207,7 +207,10 @@ export function renderListPage(Page) {
     const data = {
       headers: req ? { cookie: req.headers.cookie } : undefined,
     }
-    const clubsRequest = await doApiRequest('/clubs/?page=1&format=json', data)
+    const clubsRequest = await doApiRequest(
+      '/clubs/?page=1&ordering=featured&format=json',
+      data,
+    )
     const clubsResponse = await clubsRequest.json()
 
     const tagsRequest = await doApiRequest('/tags/?format=json', data)
