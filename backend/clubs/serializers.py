@@ -318,7 +318,7 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MembershipInvite
-        fields = ["email", "token", "id", "name", "public", "title", "role"]
+        fields = ["email", "token", "id", "name", "public", "title", "role", "updated_at"]
 
 
 class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
