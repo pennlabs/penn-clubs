@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { M1, M2 } from '../../constants'
+import { M2 } from '../../constants'
 import { doApiRequest } from '../../utils'
 import { Icon } from '../common/Icon'
 import Form from '../Form'
