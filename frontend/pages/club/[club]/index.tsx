@@ -71,7 +71,7 @@ const ClubPage = ({
   const [club, setClub] = useState<Club>(initialClub)
 
   const updateRequests = (code: string): void => {
-    const newClub = Object.assign({}, club)
+    const newClub = { ...club }
     logEvent(!newClub.is_request ? 'request' : 'unrequest', code)
     const req = !newClub.is_request
       ? doApiRequest('/requests/?format=json', {
@@ -118,7 +118,13 @@ const ClubPage = ({
     )
   }
 
-  const { image_url: image } = club
+  const {
+    active: isActive,
+    image_url: image,
+    how_to_get_involved: involvement,
+    events,
+    testimonials,
+  } = club
 
   return (
     <WideContainer background={SNOW} fullHeight>
@@ -126,7 +132,7 @@ const ClubPage = ({
       <ClubApprovalDialog club={club} userInfo={userInfo} />
       <div className="columns">
         <div className="column">
-          {club.active || (
+          {isActive || (
             <InactiveCard
               bordered
               style={{
@@ -183,18 +189,18 @@ const ClubPage = ({
             <StrongText>Contact</StrongText>
             <SocialIcons club={club} />
           </StyledCard>
-          {club.how_to_get_involved ? (
+          {involvement ? (
             <StyledCard bordered>
               <StrongText>How To Get Involved</StrongText>
               <Text style={{ marginBottom: M0 }}>
-                <Linkify>{club.how_to_get_involved}</Linkify>
+                <Linkify>{involvement}</Linkify>
               </Text>
             </StyledCard>
           ) : (
-            <div></div>
+            <></>
           )}
-          <Events data={club.events} />
-          <Testimonials data={club.testimonials} />
+          <Events data={events} />
+          <Testimonials data={testimonials} />
         </div>
       </div>
     </WideContainer>
