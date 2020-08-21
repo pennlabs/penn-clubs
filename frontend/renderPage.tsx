@@ -218,8 +218,7 @@ export function renderListPage(Page) {
 
     return {
       tags: tagsResponse,
-      clubs: clubsResponse.results,
-      clubCount: clubsResponse.count,
+      clubs: clubsResponse,
       liveEventCount: liveEventResponse.length,
     }
   }
