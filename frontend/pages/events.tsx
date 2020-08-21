@@ -1,38 +1,20 @@
-import React, { ReactElement } from 'react'
 import { NextPageContext } from 'next'
-import { Metadata } from '../components/common/Metadata'
-import { doApiRequest } from '../utils'
-import { Club, ClubEvent } from '../types'
-import { WideContainer } from '../components/common/Container'
-import { CLUBS_GREY, SNOW } from '../constants/colors'
-import { Title } from '../components/common/Typography'
-import renderPage from '../renderPage'
+import React, { ReactElement } from 'react'
 import styled from 'styled-components'
-import { mediaMaxWidth, mediaMinWidth, PHONE } from '../constants/measurements'
-import Link from 'next/link'
+
+import { WideContainer } from '../components/common/Container'
+import { Metadata } from '../components/common/Metadata'
+import { Title } from '../components/common/Typography'
+import EventCard from '../components/EventPage/EventCard'
+import { CLUBS_GREY, SNOW } from '../constants/colors'
+import { mediaMaxWidth, PHONE } from '../constants/measurements'
+import renderPage from '../renderPage'
+import { ClubEvent } from '../types'
+import { doApiRequest } from '../utils'
 
 interface EventPageProps {
   liveEvents: ClubEvent[]
   upcomingEvents: ClubEvent[]
-}
-
-const EventCard = (props: { event: ClubEvent }) => {
-  const { event } = props
-
-  return (
-    <div>
-      <ul>
-        <li>{event.name}</li>
-        <li>
-          <Link href={'/club/[club]/'} as={`/club/${event.club}`}>
-            <a>{event.club_name}</a>
-          </Link>
-        </li>
-        <li>{new Date(event.start_time).toLocaleString()}</li>
-        <li>{new Date(event.end_time).toLocaleString()}</li>
-      </ul>
-    </div>
-  )
 }
 
 const CardList = styled.div`
@@ -54,7 +36,7 @@ function EventPage(props: EventPageProps): ReactElement {
         </Title>
         <CardList>
           {liveEvents.map((e) => (
-            <EventCard event={e} />
+            <EventCard key={e.id} event={e} isHappening={true} />
           ))}
         </CardList>
         <br />
@@ -63,7 +45,7 @@ function EventPage(props: EventPageProps): ReactElement {
         </Title>
         <CardList>
           {upcomingEvents.map((e) => (
-            <EventCard event={e} />
+            <EventCard key={e.id} event={e} isHappening={false} />
           ))}
         </CardList>
       </WideContainer>
