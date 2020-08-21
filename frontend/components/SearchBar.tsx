@@ -192,8 +192,7 @@ const DropdownWrapper = s.div`
   }
 `
 
-const OrderInput = ({ onChange }): ReactElement => {
-  const orderings = [
+const ORDERINGS = [
     {
       key: 'featured',
       name: 'Featured',
@@ -216,11 +215,10 @@ const OrderInput = ({ onChange }): ReactElement => {
     },
   ]
 
+const OrderInput = ({ onChange }): ReactElement => {
   const [ordering, setOrdering] = useState<string>('featured')
-
   const [isActive, setActive] = useState<boolean>(false)
-
-  const selectedOrdering = orderings.find((order) => order.key === ordering)
+  const selectedOrdering = ORDERINGS.find((order) => order.key === ordering)
 
   return (
     <DropdownWrapper className={`dropdown ${isActive ? 'is-active' : ''}`}>
@@ -242,10 +240,9 @@ const OrderInput = ({ onChange }): ReactElement => {
       </div>
       <div className="dropdown-menu" role="menu">
         <div className="dropdown-content">
-          {orderings.map((order) => (
+          {ORDERINGS.map((order) => (
             <a
               key={order.key}
-              href="#"
               className={`dropdown-item ${
                 order.key === ordering ? 'is-active' : ''
               }`}
