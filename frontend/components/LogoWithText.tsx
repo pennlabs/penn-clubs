@@ -5,12 +5,12 @@ import { CLUBS_NAVY } from '../constants/colors'
 import { L1, L2 } from '../constants/measurements'
 
 const Wrapper = s.div`
-  width: 18.5rem;
+  width: 16.5rem;
   display:inline-block;
 `
 
 const Logo = s.img`
-  width: 120px;
+  width: 105px;
 `
 
 const TitleText = s.div`
@@ -28,7 +28,9 @@ const SubtitleText = s.div`
   text-align: left;
   color: ${CLUBS_NAVY};
   font-size: ${L2};
+  margin-bottom:2rem;
   font-style:italic;
+  font-weight: semibold;
   display:inline-block;
 `
 
