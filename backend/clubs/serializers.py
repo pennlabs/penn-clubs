@@ -510,11 +510,13 @@ class ClubListSerializer(serializers.ModelSerializer):
             if not user.has_perm("clubs.see_pending_clubs") and not (
                 user.is_authenticated and instance.membership_set.filter(person=user).exists()
             ):
-                approved_instance = (
-                    instance.history.filter(approved=True).order_by("-approved_on").first().instance
+                historical_club = (
+                    instance.history.filter(approved=True).order_by("-approved_on").first()
                 )
-                approved_instance._is_historical = True
-                return super().to_representation(approved_instance)
+                if historical_club is not None:
+                    approved_instance = historical_club.instance
+                    approved_instance._is_historical = True
+                    return super().to_representation(approved_instance)
         return super().to_representation(instance)
 
     class Meta:
