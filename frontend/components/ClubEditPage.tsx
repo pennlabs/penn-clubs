@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { SingletonRouter } from 'next/router'
-import React, { Component, ReactElement } from 'react'
+import { Component, ReactElement } from 'react'
 
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
