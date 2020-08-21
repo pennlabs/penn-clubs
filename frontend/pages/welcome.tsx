@@ -12,6 +12,7 @@ import {
   Title,
 } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
+import LogoWithText from '../components/LogoWithText'
 import ProfileForm from '../components/Settings/ProfileForm'
 import { HOME_ROUTE } from '../constants/routes'
 import renderPage from '../renderPage'
@@ -81,7 +82,7 @@ const Welcome = ({
       <Metadata title="Welcome!" />
       <PhoneContainer>
         <TitleHeader>
-          <Image src="/static/img/peoplelogo.png" />
+          <LogoWithText></LogoWithText>
           <Title>Welcome to Penn Clubs!</Title>
         </TitleHeader>
         <hr />

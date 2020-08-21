@@ -5,6 +5,7 @@ import s from 'styled-components'
 import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
+import LogoWithText from '../components/LogoWithText'
 import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
 import SearchBar from '../components/SearchBar'
 import {

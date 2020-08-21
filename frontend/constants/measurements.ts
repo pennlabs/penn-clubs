@@ -15,7 +15,7 @@ export const DESKTOP = '1248px'
 export const TABLET = '992px'
 export const PHONE = '584px'
 
-export const NAV_HEIGHT = '3.25rem'
+export const NAV_HEIGHT = '4em'
 export const SEARCH_BAR_MOBILE_HEIGHT = '91.33px'
 
 export const ANIMATION_DURATION = '200ms'
@@ -26,3 +26,6 @@ export const M1 = '0.4rem'
 export const M2 = '0.8rem'
 export const M3 = '1.2rem'
 export const M4 = '1.6rem'
+
+export const L1 = '3.4rem'
+export const L2 = '0.7rem'

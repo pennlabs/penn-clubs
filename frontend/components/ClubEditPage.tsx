@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { SingletonRouter } from 'next/router'
-import React, { Component, ReactElement } from 'react'
+import { Component, ReactElement } from 'react'
 
+import BaseCard from '../components/ClubEditPage/BaseCard'
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
@@ -13,7 +14,6 @@ import {
   CLUB_EDIT_ROUTE,
   CLUB_RENEW_ROUTE,
   CLUB_ROUTE,
-  DIRECTORY_ROUTE,
   HOME_ROUTE,
 } from '../constants/routes'
 import { Club, MembershipRank, UserInfo } from '../types'
@@ -23,14 +23,7 @@ import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import QuestionsCard from './ClubEditPage/QuestionsCard'
 import RenewCard from './ClubEditPage/RenewCard'
 import ClubMetadata from './ClubMetadata'
-import {
-  Contact,
-  Container,
-  InactiveTag,
-  Loading,
-  Metadata,
-  Title,
-} from './common'
+import { Contact, Container, InactiveTag, Loading, Title } from './common'
 import AuthPrompt from './common/AuthPrompt'
 import TabView from './TabView'
 
@@ -161,15 +154,12 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     const { authenticated, userInfo, schools, years, majors, tags } = this.props
     const { club, isEdit, message } = this.state
 
-    let metadata
-    if (club) {
-      metadata = <ClubMetadata club={club} />
-    } else {
-      metadata = <Metadata title="Create Club" />
-    }
-
     if (authenticated === false) {
-      return <AuthPrompt>{metadata}</AuthPrompt>
+      return (
+        <AuthPrompt>
+          <ClubMetadata club={club} />
+        </AuthPrompt>
+      )
     }
 
     const isOfficer =
@@ -201,7 +191,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
     if (authenticated && isEdit && !userInfo.is_superuser && !isOfficer) {
       return (
         <AuthPrompt title="Oh no!" hasLogin={false}>
-          {metadata}
+          <ClubMetadata club={club} />
           You do not have permission to edit the page for{' '}
           {(club && club.name) || 'this club'}. To get access, contact{' '}
           <Contact />.
@@ -220,7 +210,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
       tabs = [
         {
           name: 'info',
-          label: 'Edit Club Page',
+          label: 'Information',
           content: (
             <ClubEditCard
               isEdit={this.state.isEdit}
@@ -238,7 +228,18 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           label: 'Membership',
           content: (
             <>
+              <MembersCard club={club} />
               <InviteCard club={club} />
+            </>
+          ),
+          disabled: !isEdit,
+        },
+        {
+          name: 'recruitment',
+          label: 'Recruitment',
+          content: (
+            <>
+              <PotentialMemberCard club={club} source="subscription" />
               <PotentialMemberCard
                 club={club}
                 source="membershiprequests"
@@ -254,27 +255,6 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
                   },
                 ]}
               />
-              <MembersCard club={club} />
-            </>
-          ),
-          disabled: !isEdit,
-        },
-        {
-          name: 'events',
-          label: 'Events',
-          content: (
-            <>
-              <EventsCard club={club} />
-            </>
-          ),
-        },
-        {
-          name: 'recruitment',
-          label: 'Recruitment',
-          content: (
-            <>
-              <QRCodeCard club={club} />
-              <PotentialMemberCard club={club} source="subscription" />
             </>
           ),
         },
@@ -283,7 +263,9 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           label: 'Resources',
           content: (
             <>
+              <QRCodeCard club={club} />
               <MemberExperiencesCard club={club} />
+              <EventsCard club={club} />
               <FilesCard club={club} />
             </>
           ),
@@ -318,7 +300,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
 
     return (
       <Container>
-        {metadata}
+        <ClubMetadata club={club} />
         <Title>
           {nameOrDefault}
           {showInactiveTag && <InactiveTag />}
@@ -337,23 +319,12 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           }
         </Title>
         {!isEdit && (
-          <>
-            <p className="mb-3">
-              Clubs that you create from this form will enter an approval
-              process before being displayed to the public. After your club has
-              been approved by the Office of Student Affairs, it will appear on
-              the Penn Clubs website.
-            </p>
-            <p>
-              <b>Before creating your club,</b> please check to see if it
-              already exists on the{' '}
-              <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
-                <a>directory page</a>
-              </Link>
-              . If your club already exists, please email <Contact /> to gain
-              access instead of filling out this form.
-            </p>
-          </>
+          <p>
+            Clubs that you create from this form will enter an approval process
+            before being displayed to the public. After your club has been
+            approved by the Office of Student Affairs, it will appear on the
+            Penn Clubs website.
+          </p>
         )}
         {message && (
           <div className="notification is-primary">
