@@ -1,7 +1,7 @@
-import bleach
 import random
-
 from math import floor
+
+import bleach
 from django.core.management.base import BaseCommand
 
 from clubs.models import Club, Membership
