@@ -19,14 +19,6 @@ import renderPage from '../renderPage'
 import { UserInfo } from '../types'
 import { doApiRequest } from '../utils'
 
-const Image = s.img`
-  height: 86px;
-  width: auto;
-  max-width: 242px;
-  margin-right: 1rem;
-  object-fit: contain;
-`
-
 const Subtitle = s(Title)`
   font-size: 1.3rem;
   margin-bottom: 1rem;
