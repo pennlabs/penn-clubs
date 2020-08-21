@@ -130,7 +130,7 @@ const Search = ({
         if (action === 'select-option') {
           updateTag(option, 'Tags')
         } else if (action === 'pop-value') {
-          //pop-value events contain removedValue = undefined if no tags are selected
+          // pop-value events contain removedValue = undefined if no tags are selected
           removedValue && updateTag(removedValue, 'Tags')
         } else if (action === 'clear') {
           clearTags()
