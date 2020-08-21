@@ -21,6 +21,7 @@ const PaginatedClubDisplay = ({
   const [clubs, setClubs] = useState<Club[]>(displayClubs.results)
   const [nextUrl, setNextUrl] = useState<string | null>(null)
   const savedNextUrl = useRef<string | null>(displayClubs.next)
+  const [refresher, setRefresher] = useState<boolean>(false)
 
   const fetchNextPage = async (): Promise<PaginatedClubPage | null> => {
     if (nextUrl === null) {
@@ -61,18 +62,28 @@ const PaginatedClubDisplay = ({
   }, [nextUrl])
 
   useEffect(() => {
+    setRefresher(true)
     setClubs(displayClubs.results)
     setNextUrl(displayClubs.next)
   }, [displayClubs])
 
+  // hack to fix the weird ghost club appearing
+  useEffect(() => {
+    if (refresher) {
+      setRefresher(false)
+    }
+  }, [refresher])
+
   return (
     <>
-      <ClubDisplay
-        displayClubs={clubs}
-        tags={tags}
-        display={display}
-        onScroll={loadNextPage}
-      />
+      {!refresher && (
+        <ClubDisplay
+          displayClubs={clubs}
+          tags={tags}
+          display={display}
+          onScroll={loadNextPage}
+        />
+      )}
       {isLoading && <Loading delay={0} />}
     </>
   )
