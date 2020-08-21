@@ -1,5 +1,5 @@
 import { NextPageContext } from 'next'
-import React, { Component, ReactElement } from 'react'
+import { Component, ReactElement } from 'react'
 import s from 'styled-components'
 
 import { Loading } from './components/common'
@@ -10,9 +10,8 @@ import LoginModal from './components/LoginModal'
 import { WHITE } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
-import { Club, ExtendedUserInfo, Tag, UserInfo } from './types'
+import { Club, Tag, UserInfo } from './types'
 import { doApiRequest } from './utils'
-import { logEvent } from './utils/analytics'
 import { logException } from './utils/sentry'
 
 const Wrapper = s.div`
