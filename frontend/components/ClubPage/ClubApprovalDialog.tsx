@@ -47,7 +47,7 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
 
   return (
     <>
-      {club.approved && (
+      {club.approved && canApprove && (
         <div className="notification is-info">
           <div className="mb-3">
             <b>{club.name}</b> has been approved by <b>{club.approved_by}</b>{' '}
