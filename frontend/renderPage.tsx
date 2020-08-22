@@ -199,7 +199,7 @@ export function renderListPage(Page) {
         return <Loading />
       }
 
-      return <Page clubs={clubs} tags={tags} userInfo={userInfo} />
+      return <Page {...this.props} />
     }
   }
 
@@ -215,6 +215,7 @@ export function renderListPage(Page) {
 
     const liveEventRequest = await doApiRequest('/events/live/', data)
     const liveEventResponse = (await liveEventRequest.json()) as ClubEvent[]
+    console.log("LIVEEVENT", liveEventResponse)
 
     return {
       tags: tagsResponse,

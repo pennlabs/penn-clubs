@@ -39,16 +39,18 @@ const WhiteButton = s.div`
   margin-top:10px;
 `
 
-const LiveEventsDialog = (): ReactElement => {
-  const numEvents = new Date().getFullYear()
+interface Props {
+  liveEventCount: number
+}
 
+const LiveEventsDialog = ({ liveEventCount }: Props): ReactElement => {
   return (
     <LiveBanner>
       <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
         <WhiteButton>See Live Events</WhiteButton>
       </Link>
       <LiveTitle>Virtual Activity Fair</LiveTitle>
-      <LiveSub>{numEvents} clubs are holding events right now.</LiveSub>
+      <LiveSub>{liveEventCount} {liveEventCount === 1 ? 'club is holding an event' : 'clubs are holding events'} right now.</LiveSub>
     </LiveBanner>
   )
 }

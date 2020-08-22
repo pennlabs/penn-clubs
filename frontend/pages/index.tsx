@@ -71,6 +71,7 @@ type SplashProps = {
   clubs: PaginatedClubPage
   tags: Tag[]
   clubCount: number
+  liveEventCount: number
 }
 
 export type SearchInput = {
@@ -263,7 +264,8 @@ const Splash = (props: SplashProps): ReactElement => {
                 </ClearAllLink>
               </div>
             )}
-            <LiveEventsDialog />
+            {console.log(props.liveEventCount)}
+            {props.liveEventCount > 0 && <LiveEventsDialog liveEventCount={props.liveEventCount}/>}
             <ListRenewalDialog />
 
             {isLoading && (
