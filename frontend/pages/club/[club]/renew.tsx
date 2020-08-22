@@ -323,6 +323,10 @@ const RenewPage = ({
               will be shared with the Student Activites Council and more details
               will be sent to you at a later date.
             </p>
+            <p>
+              Note that this SAC Fair is for <b>Undergraduate Organizations</b>
+              only.
+            </p>
             <label>
               <input
                 type="checkbox"
