@@ -77,7 +77,9 @@ class Command(BaseCommand):
             )
 
             if today_events.exists():
-                short_events = [(e.end_time - e.start_time).hours < 16 for e in today_events]
+                short_events = [
+                    (e.end_time - e.start_time).seconds / 3600 < 16 for e in today_events
+                ]
                 if any(short_events):
                     ranking += 20
 
@@ -86,7 +88,9 @@ class Command(BaseCommand):
             )
 
             if close_events.exists():
-                short_events = [(e.end_time - e.start_time).hours < 16 for e in close_events]
+                short_events = [
+                    (e.end_time - e.start_time).seconds / 3600 < 16 for e in close_events
+                ]
                 if any(short_events):
                     ranking += 10
 
