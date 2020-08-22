@@ -5,6 +5,7 @@ const reqSvgs = require.context('../../public/static/img/icons', true, /\.svg$/)
 
 type IconWrapperProps = {
   noAlign?: boolean
+  noMargin?: boolean
 }
 
 const IconWrapper = s.span<IconWrapperProps>`
@@ -13,7 +14,7 @@ const IconWrapper = s.span<IconWrapperProps>`
 
   .button &,
   .dropdown-item & {
-    margin-right: 0.25rem;
+    margin-right: ${({ noMargin }) => (noMargin ? '0' : '0.25rem')};
   }
 
   & svg {
@@ -22,28 +23,30 @@ const IconWrapper = s.span<IconWrapperProps>`
   }
 `
 
-type Props = {
+type IconProps = {
   name: string
   alt?: string
   size?: string
   style?: CSSProperties
   show?: boolean
   onClick?: () => void
+  noMargin?: boolean
 }
 
 export const Icon = ({
   name,
   show = true,
   size = '1rem',
+  noMargin,
   ...props
-}: Props): ReactElement | null => {
+}: IconProps): ReactElement | null => {
   const svg = reqSvgs(`./${name}.svg`)
   if (!show || !svg || !svg.default) {
     return null
   }
   const iconInfo = svg.default().props
   return (
-    <IconWrapper>
+    <IconWrapper noMargin={noMargin}>
       {svg.default({
         preserveAspectRatio: 'xMidYMid meet',
         width: size,
