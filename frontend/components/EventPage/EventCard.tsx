@@ -22,9 +22,10 @@ const EventCard = (props: {
   return (
     <CardContainer>
       <Card bordered hoverable background={WHITE}>
-        <CoverPhoto>
-          <p>{event.club_name.toLocaleUpperCase()}</p>
-        </CoverPhoto>
+        <CoverPhoto
+          image={event.image_url}
+          fallback={<p>{event.club_name.toLocaleUpperCase()}</p>}
+        />
         <DateInterval
           start={new Date(event.start_time)}
           end={new Date(event.end_time)}
