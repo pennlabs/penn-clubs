@@ -64,7 +64,15 @@ class Command(BaseCommand):
         if deactivate_clubs:
             clubs.update(active=False, approved=None, approved_by=None, fair=False)
 
-            self.stdout.write(f"{clubs.count()} clubs deactivated!")
+            # allow existing approved version to stay on penn clubs website for now
+            ghosted = 0
+            for club in clubs:
+                if club.history.filter(approved=True).exists():
+                    club.ghost = True
+                    club.save(update_fields=["ghost"])
+                    ghosted += 1
+
+            self.stdout.write(f"{clubs.count()} clubs deactivated! {ghosted} clubs ghosted!")
 
         # send out renewal emails to all clubs
         if send_emails:
