@@ -9,7 +9,7 @@ type IconWrapperProps = {
 
 const IconWrapper = s.span<IconWrapperProps>`
   display: inline-block;
-  vertical-align: ${({noAlign}) => (noAlign ? 'baseline' : 'middle')};
+  vertical-align: ${({ noAlign }) => (noAlign ? 'baseline' : 'middle')};
 
   .button &,
   .dropdown-item & {
