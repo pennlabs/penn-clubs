@@ -572,7 +572,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             ):
                 name = request.query_params.get("name")
                 desc = request.query_params.get("desc")
-                public = request.query_params.get("public", "").lower() == "true"
+                public = request.query_params.get("public", "false").lower().strip() == "true"
                 parameters = json.dumps(dict(request.query_params))
                 Report.objects.create(
                     name=name,
