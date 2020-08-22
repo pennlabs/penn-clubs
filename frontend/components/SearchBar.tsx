@@ -2,6 +2,7 @@ import React, {
   ReactElement,
   SetStateAction,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -224,32 +225,55 @@ const DropdownWrapper = s.div`
 `
 
 const ORDERINGS = [
-    {
-      key: 'featured',
-      name: 'Featured',
-      icon: 'star',
-    },
-    {
-      key: 'name',
-      name: 'Alphabetical',
-      icon: 'list',
-    },
-    {
-      key: '-favorite_count',
-      name: 'Bookmarks',
-      icon: 'bookmark',
-    },
-    {
-      key: 'random',
-      name: 'Random',
-      icon: 'shuffle',
-    },
-  ]
+  {
+    key: 'featured',
+    name: 'Featured',
+    icon: 'star',
+  },
+  {
+    key: 'name',
+    name: 'Alphabetical',
+    icon: 'list',
+  },
+  {
+    key: '-favorite_count',
+    name: 'Bookmarks',
+    icon: 'bookmark',
+  },
+  {
+    key: 'random',
+    name: 'Random',
+    icon: 'shuffle',
+  },
+]
 
 const OrderInput = ({ onChange }): ReactElement => {
   const [ordering, setOrdering] = useState<string>('featured')
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const selectedOrdering = ORDERINGS.find((order) => order.key === ordering)
+
+  const dropdownMenuRef = useRef<HTMLDivElement>(null)
+  // Memoize listener to ensure the listener is preserved between rerenders
+  const dropdownBlurListener = useMemo(
+    () => (e) => {
+      if (
+        dropdownMenuRef &&
+        dropdownMenuRef.current &&
+        !dropdownMenuRef.current.contains(e.target)
+      ) {
+        setIsOpen(false)
+      }
+    },
+    [dropdownMenuRef],
+  )
+  useEffect(() => {
+    if (!isOpen) document.removeEventListener('click', dropdownBlurListener)
+    else document.addEventListener('click', dropdownBlurListener)
+  }, [isOpen])
+  useEffect(
+    () => () => document.removeEventListener('click', dropdownBlurListener),
+    [],
+  )
 
   return (
     <DropdownWrapper className={`dropdown ${isOpen ? 'is-active' : ''}`}>
@@ -258,14 +282,14 @@ const OrderInput = ({ onChange }): ReactElement => {
           className="button"
           aria-haspopup="true"
           aria-controls="dropdown-menu"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => !isOpen && setIsOpen(true)}
         >
           <Icon name={selectedOrdering?.icon ?? 'x'} />{' '}
           {selectedOrdering?.name ?? 'Unknown'}
           <Icon name="chevron-down" />
         </button>
       </div>
-      <div className="dropdown-menu" role="menu">
+      <div ref={dropdownMenuRef} className="dropdown-menu" role="menu">
         <div className="dropdown-content">
           {ORDERINGS.map((order) => (
             <a
