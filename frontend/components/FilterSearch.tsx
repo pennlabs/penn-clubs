@@ -43,10 +43,12 @@ const SearchIcon = s(Icon)`
   }
 `
 
+type SearchOption = { label: string; options: FuseTag[] }
+
 type SearchProps = {
   selected: FuseTag[]
-  searchTags: (query: string) => Promise<any[]>
-  recommendedTags: { label: string; options: FuseTag[] }[]
+  searchTags: (query: string) => Promise<SearchOption[]>
+  recommendedTags: SearchOption[]
   updateTag: (tag: FuseTag, name: string) => void
   clearTags: () => void
 }
@@ -189,7 +191,12 @@ const Filter = ({
   const fuse = new Fuse<FuseTag>(tags, fuseOptions)
 
   const [recommendedTags, setRecommendedTags] = useState(selectInitial(tags))
-  const searchTags = async (query: string) => fuse.search(query)
+  const searchTags = async (query: string) => [
+    {
+      label: query.length > 0 ? 'Matched tags' : 'All tags',
+      options: fuse.search(query).map((result) => result.item),
+    },
+  ]
 
   useEffect(() => {
     setRecommendedTags(selectInitial(tags))
