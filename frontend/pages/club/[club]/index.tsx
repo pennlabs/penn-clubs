@@ -23,6 +23,7 @@ import {
   Contact,
   Container,
   Flex,
+  Icon,
   Metadata,
   StrongText,
   Text,
@@ -145,6 +146,15 @@ const ClubPage = ({
               <Header club={club} style={{ flex: 1 }} />
             </Flex>
           </StyledCard>
+
+          {club.is_ghost && (
+            <div className="notification is-info is-light">
+              <Icon name="alert-circle" style={{ marginTop: '-3px' }} /> There
+              are changes to this club page that are still pending approval from
+              the Office of Student Affairs.
+            </div>
+          )}
+
           <MobileActions
             club={club}
             userInfo={userInfo}

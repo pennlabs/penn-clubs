@@ -19,69 +19,71 @@ const PaginatedClubDisplay = ({
 }: ClubDisplayProps): ReactElement => {
   const [isLoading, setLoading] = useState<boolean>(false)
   const [clubs, setClubs] = useState<Club[]>(displayClubs.results)
-  const nextUrl = useRef<string | null>(displayClubs.next)
+  const [nextUrl, setNextUrl] = useState<string | null>(null)
+  const savedNextUrl = useRef<string | null>(displayClubs.next)
+  const [refresher, setRefresher] = useState<boolean>(false)
 
-  const loadLock = useRef<boolean>(false)
-  const loadNumber = useRef<number>(0)
-  const loadQueue = useRef<number[]>([])
-
-  const fetchNextPage = async (): Promise<void> => {
-    const myLoadNumber = loadNumber.current
-
-    if (nextUrl !== null) {
-      loadQueue.current.push(myLoadNumber)
+  const fetchNextPage = async (): Promise<PaginatedClubPage | null> => {
+    if (nextUrl === null) {
+      return null
     }
 
-    if (!loadLock.current) {
-      loadLock.current = true
-      setLoading(true)
+    setLoading(true)
 
-      // get valid fetch entry and go through queue
-      while (loadQueue.current) {
-        let num = loadQueue.current.shift()
-        while (loadQueue.current.length && num !== loadNumber.current) {
-          num = loadQueue.current.shift()
-        }
+    // fetch the entry
+    const resp = await doApiRequest(nextUrl)
+    const json = await resp.json()
 
-        if (num !== loadNumber.current) {
-          break
-        }
+    setLoading(false)
 
-        if (nextUrl.current === null) {
-          break
-        }
+    return json
+  }
 
-        // fetch the entry
-        const resp = await doApiRequest(nextUrl.current)
-        const json = await resp.json()
-
-        // if we're still up to date, set the entry
-        if (myLoadNumber === loadNumber.current) {
-          nextUrl.current = json.next
-          setClubs((clubs) => [...clubs, ...json.results])
-        }
-      }
-
-      setLoading(false)
-      loadLock.current = false
+  const loadNextPage = () => {
+    if (savedNextUrl.current !== null) {
+      setNextUrl(savedNextUrl.current)
+      savedNextUrl.current = null
     }
   }
 
   useEffect(() => {
+    let isMounted = true
+
+    fetchNextPage().then((page: PaginatedClubPage | null): void => {
+      if (page !== null && isMounted) {
+        savedNextUrl.current = page.next
+        setClubs((clubs) => [...clubs, ...page.results])
+      }
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [nextUrl])
+
+  useEffect(() => {
+    setRefresher(true)
     setClubs(displayClubs.results)
-    nextUrl.current = displayClubs.next
-    loadNumber.current += 1
-    fetchNextPage()
+    setNextUrl(displayClubs.next)
   }, [displayClubs])
+
+  // hack to fix the weird ghost club appearing
+  useEffect(() => {
+    if (refresher) {
+      setRefresher(false)
+    }
+  }, [refresher])
 
   return (
     <>
-      <ClubDisplay
-        displayClubs={clubs}
-        tags={tags}
-        display={display}
-        onScroll={fetchNextPage}
-      />
+      {!refresher && (
+        <ClubDisplay
+          displayClubs={clubs}
+          tags={tags}
+          display={display}
+          onScroll={loadNextPage}
+        />
+      )}
       {isLoading && <Loading delay={0} />}
     </>
   )

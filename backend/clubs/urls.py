@@ -3,6 +3,7 @@ from rest_framework_nested import routers
 
 from clubs.views import (
     AssetViewSet,
+    BadgeViewSet,
     ClubViewSet,
     EventViewSet,
     FavoriteViewSet,
@@ -31,6 +32,7 @@ router = routers.SimpleRouter()
 router.register(r"clubs", ClubViewSet, basename="clubs")
 router.register(r"events", EventViewSet, basename="events")
 router.register(r"tags", TagViewSet, basename="tags")
+router.register(r"badges", BadgeViewSet, basename="badges")
 router.register(r"favorites", FavoriteViewSet, basename="favorites")
 router.register(r"subscriptions", SubscribeViewSet, basename="subscribes")
 router.register(r"memberships", MembershipViewSet, basename="members")

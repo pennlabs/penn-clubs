@@ -318,7 +318,7 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MembershipInvite
-        fields = ["email", "token", "id", "name", "public", "title", "role"]
+        fields = ["email", "token", "id", "name", "public", "title", "role", "updated_at"]
 
 
 class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
@@ -503,6 +503,22 @@ class ClubListSerializer(serializers.ModelSerializer):
 
         return fields_subset if len(fields_subset) > 0 else all_fields
 
+    def to_representation(self, instance):
+        if instance.ghost:
+            user = self.context["request"].user
+
+            if not user.has_perm("clubs.see_pending_clubs") and not (
+                user.is_authenticated and instance.membership_set.filter(person=user).exists()
+            ):
+                historical_club = (
+                    instance.history.filter(approved=True).order_by("-approved_on").first()
+                )
+                if historical_club is not None:
+                    approved_instance = historical_club.instance
+                    approved_instance._is_historical = True
+                    return super().to_representation(approved_instance)
+        return super().to_representation(instance)
+
     class Meta:
         model = Club
         fields = [
@@ -560,6 +576,24 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     is_request = serializers.SerializerMethodField("get_is_request")
     fair = serializers.BooleanField(default=False)
     approved_comment = serializers.CharField(required=False, allow_blank=True)
+    approved_by = serializers.SerializerMethodField("get_approved_by")
+
+    is_ghost = serializers.SerializerMethodField("get_is_ghost")
+
+    def get_is_ghost(self, obj):
+        if obj.ghost:
+            return True
+        return hasattr(obj, "_is_historical")
+
+    def get_approved_by(self, obj):
+        user = self.context["request"].user
+        if not user.is_authenticated:
+            return None
+        if not user.has_perm("clubs.see_pending_clubs"):
+            return None
+        if obj.approved_by is None:
+            return "Unknown"
+        return obj.approved_by.get_full_name()
 
     def get_is_request(self, obj):
         user = self.context["request"].user
@@ -729,6 +763,12 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             self.validated_data["approved_on"] = None
             self.validated_data["ghost"] = True
 
+        # if approval was revoked, also reset the other fields
+        if "approved" in self.validated_data and self.validated_data["approved"] is None:
+            self.validated_data["approved"] = None
+            self.validated_data["approved_by"] = None
+            self.validated_data["approved_on"] = None
+
         # if approved, update who and when club was approved
         new_approval_status = self.validated_data.get("approved")
 
@@ -747,6 +787,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if approval_email_required:
             obj.send_approval_email()
             update_change_reason(obj, "{} club".format("Approve" if obj.approved else "Reject"))
+        elif needs_reapproval:
+            update_change_reason(obj, "Edit club through UI (reapproval required)")
         else:
             update_change_reason(obj, "Edit club through UI")
 
@@ -754,6 +796,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
+            "approved_by",
             "approved_comment",
             "badges",
             "events",
@@ -763,6 +806,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "how_to_get_involved",
             "image",
             "instagram",
+            "is_ghost",
             "is_request",
             "linkedin",
             "listserv",

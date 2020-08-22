@@ -17,6 +17,11 @@ const ReviewQuote = s.span`
   border-left: 3px solid ${MEDIUM_GRAY};
   color: ${MEDIUM_GRAY};
   font-size: 1.2em;
+
+  .notification.is-info & {
+    color: white;
+    border-left-color: white;
+  }
 `
 
 type Props = {
@@ -42,6 +47,43 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
 
   return (
     <>
+      {club.approved && canApprove && (
+        <div className="notification is-info">
+          <div className="mb-3">
+            <b>{club.name}</b> has been approved by <b>{club.approved_by}</b>{' '}
+            for the school year. If you want to revoke approval for this club,
+            use the button below.
+          </div>
+          {club.approved_comment && (
+            <div className="mb-5">
+              <ReviewQuote>{club.approved_comment}</ReviewQuote>
+            </div>
+          )}
+          <button
+            className="button is-info is-light"
+            disabled={loading}
+            onClick={() => {
+              if (
+                confirm(
+                  `Are you sure you would like to revoke approval for ${club.name}?`,
+                )
+              ) {
+                setLoading(true)
+                doApiRequest(`/clubs/${club.code}/?format=json`, {
+                  method: 'PATCH',
+                  body: {
+                    approved: null,
+                  },
+                })
+                  .then(() => router.reload())
+                  .finally(() => setLoading(false))
+              }
+            }}
+          >
+            <Icon name="x" /> Revoke Approval
+          </button>
+        </div>
+      )}
       {club.active && club.approved !== true ? (
         <div className="notification is-warning">
           <Text>

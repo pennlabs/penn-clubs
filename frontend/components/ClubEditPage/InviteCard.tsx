@@ -1,5 +1,6 @@
 import { ReactElement, useEffect, useState } from 'react'
 import Select from 'react-select'
+import TimeAgo from 'react-timeago'
 
 import { Club, MembershipRole } from '../../types'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../../utils'
@@ -16,6 +17,7 @@ type Invite = {
   email: string
   title: string
   role: number
+  updated_at: string
 }
 
 export default function InviteCard({ club }: InviteCardProps): ReactElement {
@@ -105,6 +107,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
               <tr>
                 <th>Email</th>
                 <th>Title (Permissions)</th>
+                <th>Invite Time</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -114,6 +117,9 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
                   <td>{item.email}</td>
                   <td>
                     {item.title} ({getRoleDisplay(item.role)})
+                  </td>
+                  <td>
+                    <TimeAgo date={item.updated_at} />
                   </td>
                   <td>
                     <button

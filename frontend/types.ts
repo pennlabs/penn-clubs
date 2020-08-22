@@ -82,6 +82,7 @@ export interface Club {
   active: boolean
   application_required: ClubApplicationRequired
   approved: boolean | null
+  approved_by: string | null
   approved_comment: string | null
   badges: [Badge]
   code: string
@@ -100,6 +101,7 @@ export interface Club {
   is_member: MembershipRank | false
   is_request: boolean
   is_subscribe: boolean
+  is_ghost: boolean
   linkedin: string
   listserv: string
   members: [Membership]

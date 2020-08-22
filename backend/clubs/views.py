@@ -28,6 +28,7 @@ from rest_framework.views import APIView
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     Asset,
+    Badge,
     Club,
     Event,
     Favorite,
@@ -60,6 +61,7 @@ from clubs.serializers import (
     AssetSerializer,
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
+    BadgeSerializer,
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
@@ -87,7 +89,7 @@ from clubs.serializers import (
 from clubs.utils import html_to_text
 
 
-DEFAULT_PAGE_SIZE = 20
+DEFAULT_PAGE_SIZE = 15
 DEFAULT_SEED = 1234
 
 
@@ -112,7 +114,7 @@ def upload_endpoint_helper(request, cls, field, **kwargs):
     if "file" in request.data and isinstance(request.data["file"], UploadedFile):
         getattr(obj, field).delete(save=False)
         setattr(obj, field, request.data["file"])
-        obj._change_reason = "Update {} image field".format(field)
+        obj._change_reason = "Update '{}' image field".format(field)
         obj.save()
     else:
         return Response(
@@ -352,9 +354,10 @@ class ClubsOrderingFilter(filters.OrderingFilter):
     """
 
     def filter_queryset(self, request, queryset, view):
-        queryset = super().filter_queryset(request, queryset, view)
+        new_queryset = super().filter_queryset(request, queryset, view)
+        ordering = request.GET.get("ordering", "").split(",")
 
-        if "random" in request.GET.get("ordering", "").split(","):
+        if "random" in ordering:
             page = int(request.GET.get("page", 1)) - 1
             page_size = int(request.GET.get("page_size", DEFAULT_PAGE_SIZE))
             rng = random.Random(request.GET.get("seed", DEFAULT_SEED))
@@ -366,9 +369,12 @@ class ClubsOrderingFilter(filters.OrderingFilter):
             end_index = (page + 1) * page_size
             page_ids = all_ids[start_index:end_index]
 
-            return queryset.filter(id__in=page_ids)
+            return new_queryset.filter(id__in=page_ids)
 
-        return queryset
+        if "featured" in ordering:
+            return queryset.order_by("-rank")
+
+        return new_queryset
 
 
 class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
@@ -437,16 +443,23 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return queryset
         elif self.request.user.is_authenticated:
             # Show approved clubs along with clubs that the logged-in user is a member of.
-            return queryset.filter(Q(approved=True) | Q(members=self.request.user))
+            return queryset.filter(Q(approved=True) | Q(members=self.request.user) | Q(ghost=True))
         else:
-            return queryset.filter(approved=True)
+            return queryset.filter(Q(approved=True) | Q(ghost=True))
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
         Upload the club logo.
         """
-        return upload_endpoint_helper(request, Club, "image", code=kwargs["code"])
+        club = Club.objects.get(code=kwargs["code"])
+        resp = upload_endpoint_helper(request, Club, "image", code=kwargs["code"])
+        if status.is_success(resp.status_code):
+            club.approved = None
+            club.approved_by = None
+            club.approved_on = None
+            club.save(update_fields=["approved", "approved_by", "approved_on"])
+        return resp
 
     @action(detail=True, methods=["post"])
     def upload_file(self, request, *args, **kwargs):
@@ -1027,10 +1040,28 @@ class TagViewSet(viewsets.ModelViewSet):
     """
     list:
     Return a list of tags.
+
+    get:
+    Return details for a specific tag by name.
     """
 
     queryset = Tag.objects.all().annotate(clubs=Count("club")).order_by("name")
     serializer_class = TagSerializer
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
+class BadgeViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of badges.
+
+    get:
+    Return details for a specific badge by name.
+    """
+
+    queryset = Badge.objects.all()
+    serializer_class = BadgeSerializer
     http_method_names = ["get"]
     lookup_field = "name"
 
