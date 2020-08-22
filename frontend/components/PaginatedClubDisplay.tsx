@@ -65,6 +65,7 @@ const PaginatedClubDisplay = ({
 
   useEffect(() => {
     freshCounter.current += 1
+    savedNextUrl.current = null
     setRefresher(true)
     setClubs(displayClubs.results)
     setNextUrl(displayClubs.next)
