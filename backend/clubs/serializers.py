@@ -757,11 +757,14 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                     needs_reapproval = True
                     break
 
+        has_approved_version = self.instance and self.instance.history.filter(approved=True).exists()
+
         if needs_reapproval:
             self.validated_data["approved"] = None
             self.validated_data["approved_by"] = None
             self.validated_data["approved_on"] = None
-            self.validated_data["ghost"] = True
+            if has_approved_version:
+                self.validated_data["ghost"] = True
 
         # if approval was revoked, also reset the other fields
         if "approved" in self.validated_data and self.validated_data["approved"] is None:

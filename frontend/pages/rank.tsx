@@ -159,6 +159,18 @@ const Rank = (): ReactElement => (
           ],
         },
         {
+          name: 'Testimonials',
+          description:
+            'Adding some testimonials help students gain perspective on what being in the club is like.',
+          points: [[10, 'At least one testimonial']],
+        },
+        {
+          name: 'How to Get Involved',
+          description:
+            'Prospective members want to know how to join your student organization. Omitting this section will result in a ordering penalty.',
+          points: [[-20, 'Empty how to get involved section']],
+        },
+        {
           name: 'Is Club Active',
           description:
             'Clubs that are marked as inactive will be shifted to the very bottom of the list. You can easily renew your club from the settings tab in the manage club page.',

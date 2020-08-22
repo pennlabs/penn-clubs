@@ -82,8 +82,16 @@ class Command(BaseCommand):
             if close_events.exists():
                 ranking += 10
 
+            # points for how to get involved
+            if len(club.how_to_get_involved.strip()) <= 3:
+                ranking -= 20
+
+            # points for testimonials
+            if club.testimonials.count() >= 1:
+                ranking += 10
+
             # rng
-            ranking += floor(random.random() * 5)
+            ranking += floor(random.random() * 10)
 
             club.rank = ranking
             club.skip_history_when_saving = True
