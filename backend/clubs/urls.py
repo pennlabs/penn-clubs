@@ -7,6 +7,7 @@ from clubs.views import (
     ClubViewSet,
     EventViewSet,
     FavoriteViewSet,
+    LastEmailAPIView,
     MajorViewSet,
     MassInviteAPIView,
     MemberInviteViewSet,
@@ -25,7 +26,6 @@ from clubs.views import (
     UserUpdateAPIView,
     YearViewSet,
     email_preview,
-    LastEmailAPIView,
 )
 
 

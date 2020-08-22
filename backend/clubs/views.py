@@ -1229,6 +1229,7 @@ class MassInviteAPIView(APIView):
             {"detail": "Sent invite(s) to {} email(s)!".format(len(emails)), "success": True}
         )
 
+
 class LastEmailAPIView(APIView):
     """
     get: Return the club code, invite id and token of the last sent email invite
@@ -1237,7 +1238,7 @@ class LastEmailAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        latest_email_invite = MembershipInvite.objects.filter(active=True).latest('created_at')
+        latest_email_invite = MembershipInvite.objects.filter(active=True).latest("created_at")
         club_code = latest_email_invite.club.code
         email_id = latest_email_invite.id
         email_token = latest_email_invite.token
@@ -1258,6 +1259,7 @@ class LastEmailAPIView(APIView):
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
+
 
 class EmailPreviewContext(dict):
     """
