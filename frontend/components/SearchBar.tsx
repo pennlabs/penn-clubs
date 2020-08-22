@@ -10,7 +10,9 @@ import s from 'styled-components'
 import {
   ALLBIRDS_GRAY,
   BORDER,
+  CLUBS_BLUE,
   CLUBS_GREY,
+  CLUBS_GREY_LIGHT,
   FOCUS_GRAY,
   MEDIUM_GRAY,
   WHITE,
@@ -177,8 +179,10 @@ const Collapsible = ({
 const DropdownWrapper = s.div`
   width: 100%;
 
-  & .dropdown-trigger, & .dropdown-trigger button {
+  & .dropdown-trigger,
+  & .dropdown-trigger button {
     width: 100%;
+    border-radius: ${BORDER_RADIUS};
   }
 
   & .dropdown-trigger button {
@@ -189,6 +193,33 @@ const DropdownWrapper = s.div`
   & .dropdown-trigger .icon:last-child:not(:first-child) {
     display: inline-block;
     margin-left: auto;
+  }
+
+  & .dropdown-content {
+    padding: 0;
+  }
+
+  & .dropdown-item {
+    display: flex;
+    align-items: center;
+  }
+
+  
+  & .dropdown-item.is-active {
+    background: ${CLUBS_BLUE};
+  }
+
+  & button, a {
+    padding: 8px 10px;
+    color: ${CLUBS_GREY_LIGHT};
+    font-family: ${BODY_FONT};
+  }
+
+  & button:focus, button:hover {
+    outline: none !important;
+    border: 1px solid ${BORDER};
+    color: ${CLUBS_GREY_LIGHT};
+    background: ${FOCUS_GRAY};
   }
 `
 
@@ -227,15 +258,11 @@ const OrderInput = ({ onChange }): ReactElement => {
           className="button"
           aria-haspopup="true"
           aria-controls="dropdown-menu"
-          onClick={() => setActive((active) => !active)}
+          onClick={() => setActive((isActive) => !isActive)}
         >
-          <span>
-            <Icon name={selectedOrdering?.icon ?? 'x'} />{' '}
-            {selectedOrdering?.name ?? 'Unknown'}
-          </span>
-          <span className="icon">
-            <Icon name="chevron-down" />
-          </span>
+          <Icon name={selectedOrdering?.icon ?? 'x'} />{' '}
+          {selectedOrdering?.name ?? 'Unknown'}
+          <Icon name="chevron-down" />
         </button>
       </div>
       <div className="dropdown-menu" role="menu">
