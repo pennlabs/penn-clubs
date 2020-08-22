@@ -785,6 +785,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             if new_approval_status is True:
                 self.validated_data["ghost"] = False
 
+        # if fair interest was indicated, set the earliest indication of interest
+        if "fair" in self.validated_data and self.validated_data["fair"] is True:
+            if not self.instance or self.instance.fair_on is None:
+                self.validated_data["fair_on"] = timezone.now()
+
         obj = super().save()
 
         # if accepted or rejected, send email with reason
