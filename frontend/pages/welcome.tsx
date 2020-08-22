@@ -5,6 +5,7 @@ import s from 'styled-components'
 
 import {
   Center,
+  Container,
   Icon,
   Metadata,
   PhoneContainer,
@@ -72,7 +73,7 @@ const Welcome = ({
   return (
     <>
       <Metadata title="Welcome!" />
-      <PhoneContainer>
+      <Container>
         <TitleHeader>
           <LogoWithText></LogoWithText>
           <Title>Welcome to Penn Clubs!</Title>
@@ -129,11 +130,13 @@ const Welcome = ({
             href={nextUrl && nextUrl.startsWith('/') ? nextUrl : HOME_ROUTE}
           >
             <a className="button is-success is-large" onClick={markWelcome}>
-              Browse clubs
+              {nextUrl && nextUrl.startsWith('/') && nextUrl !== HOME_ROUTE
+                ? 'Continue'
+                : 'Browse clubs'}
             </a>
           </Link>
         </Center>
-      </PhoneContainer>
+      </Container>
     </>
   )
 }
