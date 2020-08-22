@@ -12,19 +12,12 @@ import {
   Title,
 } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
+import LogoWithText from '../components/LogoWithText'
 import ProfileForm from '../components/Settings/ProfileForm'
 import { HOME_ROUTE } from '../constants/routes'
 import renderPage from '../renderPage'
 import { UserInfo } from '../types'
 import { doApiRequest } from '../utils'
-
-const Image = s.img`
-  height: 86px;
-  width: auto;
-  max-width: 242px;
-  margin-right: 1rem;
-  object-fit: contain;
-`
 
 const Subtitle = s(Title)`
   font-size: 1.3rem;
@@ -81,7 +74,7 @@ const Welcome = ({
       <Metadata title="Welcome!" />
       <PhoneContainer>
         <TitleHeader>
-          <Image src="/static/img/peoplelogo.png" />
+          <LogoWithText></LogoWithText>
           <Title>Welcome to Penn Clubs!</Title>
         </TitleHeader>
         <hr />
