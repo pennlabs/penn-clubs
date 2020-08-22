@@ -25,6 +25,7 @@ from clubs.views import (
     UserUpdateAPIView,
     YearViewSet,
     email_preview,
+    LastEmailAPIView,
 )
 
 
@@ -60,6 +61,7 @@ urlpatterns = [
     path(r"settings/permissions/", UserPermissionAPIView.as_view(), name="users-permission"),
     path(r"clubs/<slug:club_code>/invite/", MassInviteAPIView.as_view(), name="club-invite"),
     path(r"emailpreview/", email_preview, name="email-preview"),
+    path(r"test/lastemail", LastEmailAPIView.as_view(), name="last-email"),
 ]
 
 urlpatterns += router.urls
