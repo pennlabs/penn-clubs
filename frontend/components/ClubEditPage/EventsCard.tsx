@@ -326,8 +326,10 @@ const EventPreviewContainer = s.div`
 const EventPreviewDescriptionContainer = s.div`
   display: grid;
   margin: auto 0;
+  width: 40%;
+`
+const PreviewContainer = s.div`
   max-width: 40%;
-  min-width: 30%;
 `
 const EventPreview = ({ event }: { event: ClubEvent }) => (
   <EventPreviewContainer>
@@ -335,7 +337,9 @@ const EventPreview = ({ event }: { event: ClubEvent }) => (
       <h3 className="subtitle">Event Preview</h3>
       <p>This is how your event will appear to students on the event page</p>
     </EventPreviewDescriptionContainer>
-    <EventModal event={event} isHappening={false} />
+    <PreviewContainer>
+      <EventModal event={event} isHappening={false} />
+    </PreviewContainer>
     {/* TODO: uncomment device preview when we have mobile integration. */}
     {/* <Devices contents={event} /> */}
   </EventPreviewContainer>
@@ -362,8 +366,9 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
             club_name: club.name,
             image_url:
               (deviceContents.image &&
-                URL.createObjectURL(deviceContents.image.get('image'))) ||
-              deviceContents.image_url,
+              deviceContents.image.get('image') instanceof File
+                ? URL.createObjectURL(deviceContents.image.get('image'))
+                : false) || deviceContents.image_url,
           } as ClubEvent
         }
       />

@@ -264,7 +264,6 @@ const Splash = (props: SplashProps): ReactElement => {
                 </ClearAllLink>
               </div>
             )}
-            {console.log(props.liveEventCount)}
             {props.liveEventCount > 0 && (
               <LiveEventsDialog liveEventCount={props.liveEventCount} />
             )}

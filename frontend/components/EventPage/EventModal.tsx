@@ -42,7 +42,11 @@ const StyledDescription = styled(Description)`
   margin-top: 5px;
   margin-bottom: 15px;
   max-height: 150px;
-  overflow: auto;
+  overflow-y: auto;
+
+  & > p {
+    word-wrap: break-word;
+  }
 `
 const RightAlign = styled.div`
   & > * {
