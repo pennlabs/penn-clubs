@@ -114,7 +114,7 @@ const Rank = (): ReactElement => (
         {
           name: 'Upcoming Events',
           description:
-            'If your club has upcoming events registered on Penn Clubs, it will be prioritized on the home page a short period before and during the event.',
+            'If your club has upcoming events registered on Penn Clubs, it will be prioritized on the home page a short period before and during the event. Only events shorter than 16 hours are eligible.',
           points: [
             [20, 'At least one upcoming event is today'],
             [10, 'At least one upcoming event in the next week'],
@@ -125,8 +125,8 @@ const Rank = (): ReactElement => (
           description:
             'Having your officers and club members displayed on Penn Clubs provides more points of contact for questions about your club.',
           points: [
-            [15, 'At least 3 officers'],
-            [10, 'At least 3 members'],
+            [15, 'At least 3 active officers'],
+            [10, 'At least 3 active members'],
             [0.1, 'For every non-officer member'],
           ],
         },

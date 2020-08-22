@@ -22,7 +22,7 @@ class Command(BaseCommand):
                 ranking -= 1000
 
             # small points for favorites
-            ranking += floor(club.favorite_set.count() / 25)
+            ranking += club.favorite_set.count() / 25
 
             # points for minimum amount of tags
             tags = club.tags.count()
@@ -30,15 +30,19 @@ class Command(BaseCommand):
                 ranking += 15
 
             # lots of points for officers
-            officers = club.membership_set.filter(role__lte=Membership.ROLE_OFFICER).count()
+            officers = club.membership_set.filter(
+                active=True, role__lte=Membership.ROLE_OFFICER
+            ).count()
             if officers >= 3:
                 ranking += 15
 
             # ordinary members give even more points
-            members = club.membership_set.filter(role__gte=Membership.ROLE_MEMBER).count()
+            members = club.membership_set.filter(
+                active=True, role__gte=Membership.ROLE_MEMBER
+            ).count()
             if members >= 3:
                 ranking += 10
-            ranking += floor(members / 10)
+            ranking += members / 10
 
             # points for logo
             if club.image is not None:
@@ -73,14 +77,18 @@ class Command(BaseCommand):
             )
 
             if today_events.exists():
-                ranking += 20
+                short_events = [(e.end_time - e.start_time).hours < 16 for e in today_events]
+                if any(short_events):
+                    ranking += 20
 
             close_events = club.events.filter(
                 end_time__gte=now, start_time__lte=now + datetime.timedelta(weeks=1)
             )
 
             if close_events.exists():
-                ranking += 10
+                short_events = [(e.end_time - e.start_time).hours < 16 for e in close_events]
+                if any(short_events):
+                    ranking += 10
 
             # points for how to get involved
             if len(club.how_to_get_involved.strip()) <= 3:
@@ -95,8 +103,8 @@ class Command(BaseCommand):
                 ranking += 10
 
             # rng
-            ranking += floor(random.random() * 10)
+            ranking += random.random() * 10
 
-            club.rank = ranking
+            club.rank = floor(ranking)
             club.skip_history_when_saving = True
             club.save(update_fields=["rank"])
