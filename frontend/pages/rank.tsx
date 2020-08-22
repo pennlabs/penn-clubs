@@ -156,6 +156,7 @@ const Rank = (): ReactElement => (
             [10, 'At least 10 characters'],
             [10, 'At least 250 characters'],
             [10, 'At least 1000 characters'],
+            [3, 'Having images in your description'],
           ],
         },
         {
