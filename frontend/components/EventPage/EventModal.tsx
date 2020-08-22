@@ -4,10 +4,9 @@ import styled from 'styled-components'
 
 import { Icon, TransparentButton } from '../../components/common'
 import { CLUB_ROUTE } from '../../constants'
-import { CLUBS_BLUE, WHITE } from '../../constants/colors'
+import { CLUBS_BLUE } from '../../constants/colors'
 import { M2 } from '../../constants/measurements'
 import { ClubEvent } from '../../types'
-import { Card } from '../common/Card'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
@@ -22,17 +21,17 @@ const EventDetails = styled.div`
 `
 
 const Description = ({
-  html,
+  contents,
   className,
 }: {
-  html: string
-  className: string
+  contents: string
+  className?: string
 }) => (
   <div
     className={className}
     style={{ whiteSpace: 'pre-wrap' }}
     dangerouslySetInnerHTML={{
-      __html: html || '',
+      __html: contents || '',
     }}
   />
 )
@@ -56,7 +55,6 @@ const RightAlign = styled.div`
 
 const MetaDataGrid = styled.div`
   display: grid;
-  grid-gap: auto;
   grid-template-columns: 2fr 1fr;
 `
 
@@ -85,7 +83,7 @@ const EventModal = (props: {
         <ClubName>{event.club_name}</ClubName>
         <EventName>{event.name}</EventName>
         {event.url && <EventLink href={event.url}>{event.url}</EventLink>}
-        <StyledDescription html={event.description} />
+        <StyledDescription contents={event.description} />
         <RightAlign>
           <TransparentButton
             backgroundColor={CLUBS_BLUE}

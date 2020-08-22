@@ -43,6 +43,7 @@
   "scripts": {
     "lint": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\"",
     "clean": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\" --fix",
+    "checkts": "tsc --noemit",
     "test": "./test.sh",
     "dev": "node server.js",
     "build": "env NODE_ENV=production next build",

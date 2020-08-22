@@ -116,7 +116,7 @@ type ModalProps = React.PropsWithChildren<{
   show: boolean
   marginBottom?: boolean
   closeModal: () => void
-  width: string
+  width?: string
 }>
 
 export default Modal

@@ -5,8 +5,8 @@ import { WHITE, WHITE_ALPHA } from '../../constants/colors'
 import { Icon } from './Icon'
 
 interface TransparentButtonProps {
-  backgroundColor: string
-  textColor: string
+  backgroundColor?: string
+  textColor?: string
 }
 export const TransparentButton = s.button<TransparentButtonProps>`
   width: 12.5em;

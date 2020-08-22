@@ -6,7 +6,6 @@ import s from 'styled-components'
 import { Club, ClubEvent } from '../../types'
 import { stripTags } from '../../utils'
 import { Device, Text } from '../common'
-import EventCard from '../EventPage/EventCard'
 import { ModelForm } from '../Form'
 import BaseCard from './BaseCard'
 import EventModal from '../EventPage/EventModal'
@@ -329,6 +328,7 @@ const EventPreviewDescriptionContainer = s.div`
   width: 40%;
 `
 const PreviewContainer = s.div`
+  margin-top: 2rem;
   max-width: 40%;
 `
 const EventPreview = ({ event }: { event: ClubEvent }) => (
