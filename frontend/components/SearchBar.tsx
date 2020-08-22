@@ -248,17 +248,17 @@ const ORDERINGS = [
 
 const OrderInput = ({ onChange }): ReactElement => {
   const [ordering, setOrdering] = useState<string>('featured')
-  const [isActive, setActive] = useState<boolean>(false)
+  const [isOpen, setIsOpen] = useState<boolean>(false)
   const selectedOrdering = ORDERINGS.find((order) => order.key === ordering)
 
   return (
-    <DropdownWrapper className={`dropdown ${isActive ? 'is-active' : ''}`}>
+    <DropdownWrapper className={`dropdown ${isOpen ? 'is-active' : ''}`}>
       <div className="dropdown-trigger">
         <button
           className="button"
           aria-haspopup="true"
           aria-controls="dropdown-menu"
-          onClick={() => setActive((isActive) => !isActive)}
+          onClick={() => setIsOpen(!isOpen)}
         >
           <Icon name={selectedOrdering?.icon ?? 'x'} />{' '}
           {selectedOrdering?.name ?? 'Unknown'}
@@ -277,7 +277,7 @@ const OrderInput = ({ onChange }): ReactElement => {
                 e.preventDefault()
                 setOrdering(order.key)
                 onChange(order.key)
-                setActive(false)
+                setIsOpen(false)
               }}
             >
               <Icon name={order.icon} /> {order.name}
