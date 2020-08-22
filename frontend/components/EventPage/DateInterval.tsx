@@ -7,6 +7,9 @@ import { LIGHT_GRAY } from '../../constants/colors'
 
 const dateIntervalString = (startDate: Date, endDate: Date): string => {
   const [start, end] = [startDate, endDate].map((d) => moment(d))
+  if (!(start.isValid() && end.isValid())) {
+    return 'Invalid date range'
+  }
   const [startDateString, endDateString] = [start, end].map((d) =>
     d.format('dddd, MMM D'),
   )

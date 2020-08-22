@@ -1,13 +1,14 @@
 import moment from 'moment'
-import { ReactElement, useState } from 'react'
+import React, { ReactElement, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import s from 'styled-components'
 
-import { Club } from '../../types'
+import { Club, ClubEvent } from '../../types'
 import { stripTags } from '../../utils'
 import { Device, Text } from '../common'
 import { ModelForm } from '../Form'
 import BaseCard from './BaseCard'
+import EventCard from '../EventPage/EventCard'
 
 const EventBox = s.div<{ type: 'ios' | 'android' }>`
   text-align: left;
@@ -236,6 +237,14 @@ const types = [
     value: 1,
     label: 'Recruitment',
   },
+  {
+    value: 2,
+    label: 'General Body Meeting (GBM)',
+  },
+  {
+    value: 3,
+    label: 'Speaker Event',
+  },
 ]
 
 const eventTableFields = [
@@ -264,14 +273,18 @@ const eventFields = [
     help: 'Provide a descriptive name for the planned event.',
   },
   {
-    name: 'location',
-    placeholder: 'Provide the event location',
-    type: 'text',
-  },
-  {
     name: 'url',
     type: 'url',
+    placeholder:
+      'Provide a videoconference link to join the event (zoom.us, hangouts, etc)',
+    label: 'Zoom Invite Link',
   },
+  // TODO: Un-comment location field when campus re-opens.
+  // {
+  //   name: 'location',
+  //   placeholder: 'Provide the event location',
+  //   type: 'text',
+  // },
   {
     name: 'image',
     type: 'file',
@@ -303,8 +316,32 @@ const eventFields = [
   },
 ]
 
+const EventPreviewContainer = s.div`
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+`
+
+const EventPreviewDescriptionContainer = s.div`
+  display: grid;
+  margin: auto 0;
+  max-width: 40%;
+  min-width: 30%;
+`
+const EventPreview = ({ event }: { event: ClubEvent }) => (
+  <EventPreviewContainer>
+    <EventPreviewDescriptionContainer>
+      <h3 className="subtitle">Event Preview</h3>
+      <p>This is how your event will appear to students on the event page</p>
+    </EventPreviewDescriptionContainer>
+    <EventCard event={event} isHappening={false} />
+    {/* TODO: uncomment device preview when we have mobile integration. */}
+    {/* <Devices contents={event} /> */}
+  </EventPreviewContainer>
+)
+
 export default function EventsCard({ club }: EventsCardProps): ReactElement {
-  const [deviceContents, setDeviceContents] = useState({})
+  const [deviceContents, setDeviceContents] = useState<any>({})
 
   return (
     <BaseCard title="Events">
@@ -317,8 +354,18 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
         currentTitle={(obj) => obj.name}
         onChange={(obj) => setDeviceContents(obj)}
       />
-      {/* TODO: uncomment device preview when we have mobile integration. */}
-      {/* <Devices contents={deviceContents} /> */}
+      <EventPreview
+        event={
+          {
+            ...deviceContents,
+            club_name: club.name,
+            image_url:
+              deviceContents.image_url ||
+              (deviceContents.image &&
+                URL.createObjectURL(deviceContents.image.get('image'))),
+          } as ClubEvent
+        }
+      />
     </BaseCard>
   )
 }
