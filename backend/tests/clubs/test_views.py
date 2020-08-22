@@ -1409,6 +1409,10 @@ class ClubTestCase(TestCase):
         # choose a club
         club = self.club1
 
+        # add a badge to the club
+        badge = Badge.objects.create(label="Test Badge", description="This is a test badge!")
+        club.badges.add(badge)
+
         # add officer to club
         Membership.objects.create(person=self.user4, club=club, role=Membership.ROLE_OFFICER)
 
@@ -1477,3 +1481,6 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure badge still exists
+        self.assertTrue(club.badges.filter(pk=badge.pk).count(), 1)
