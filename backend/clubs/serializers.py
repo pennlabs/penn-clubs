@@ -571,7 +571,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
     badges = BadgeSerializer(many=True, required=False)
     testimonials = TestimonialSerializer(many=True, read_only=True)
-    questions = QuestionAnswerSerializer(many=True, read_only=True)
     events = EventSerializer(many=True, read_only=True)
     is_request = serializers.SerializerMethodField("get_is_request")
     fair = serializers.BooleanField(default=False)
@@ -816,7 +815,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "linkedin",
             "listserv",
             "members",
-            "questions",
             "testimonials",
             "twitter",
             "website",
