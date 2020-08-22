@@ -66,7 +66,9 @@ urlpatterns = [
 
 # Only add the following endpoint if Django is in development/testing
 if settings.DEBUG:
-    urlpatterns.append(path(r"test/lastemail", LastEmailInviteTestAPIView.as_view(), name="last-email"))
+    urlpatterns.append(
+        path(r"test/lastemail", LastEmailInviteTestAPIView.as_view(), name="last-email")
+    )
 
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls
