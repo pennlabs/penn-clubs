@@ -177,7 +177,7 @@ const Collapsible = ({
   )
 }
 
-const DropdownWrapper = s.div`
+const OrderingWrapper = s.div`
   width: 100%;
 
   & .dropdown-trigger,
@@ -276,7 +276,7 @@ const OrderInput = ({ onChange }): ReactElement => {
   )
 
   return (
-    <DropdownWrapper className={`dropdown ${isOpen ? 'is-active' : ''}`}>
+    <OrderingWrapper className={`dropdown ${isOpen ? 'is-active' : ''}`}>
       <div className="dropdown-trigger">
         <button
           className="button"
@@ -309,7 +309,7 @@ const OrderInput = ({ onChange }): ReactElement => {
           ))}
         </div>
       </div>
-    </DropdownWrapper>
+    </OrderingWrapper>
   )
 }
 
