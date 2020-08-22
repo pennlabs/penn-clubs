@@ -1242,7 +1242,7 @@ class LastEmailInviteTestAPIView(APIView):
         club_code = latest_email_invite.club.code
         email_id = latest_email_invite.id
         email_token = latest_email_invite.token
- 
+
         if request.user.email == latest_email_invite.email:
             return Response(
                 {
