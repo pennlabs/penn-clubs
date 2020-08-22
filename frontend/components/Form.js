@@ -113,6 +113,7 @@ class Form extends Component {
     this.setState((state) => ({
       uploadStatus: { ...state.uploadStatus, [name]: false },
       uploadPreview: { ...state.uploadPreview, [name]: false },
+      edited: true,
     }))
   }
 
