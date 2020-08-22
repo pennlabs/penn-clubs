@@ -1,13 +1,19 @@
 import { ReactElement, useEffect, useState } from 'react'
 
+import { UserInfo } from '../../types'
 import { doApiRequest } from '../../utils'
 import { Icon } from '../common/Icon'
 import Form from '../Form'
 
+type Props = {
+  settings: UserInfo
+  onUpdate: (info: UserInfo) => void
+}
+
 const ProfileForm = ({
   settings,
   onUpdate = () => undefined,
-}): ReactElement => {
+}: Props): ReactElement => {
   const [schools, setSchools] = useState([])
   const [majors, setMajors] = useState([])
 

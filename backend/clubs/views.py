@@ -1154,6 +1154,8 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
         """
         invite = self.get_object()
         invite.send_mail(request)
+        invite.updated_at = timezone.now()
+        invite.save(update_fields=["updated_at"])
 
         return Response({"detail": "Resent email invitation to {}!".format(invite.email)})
 

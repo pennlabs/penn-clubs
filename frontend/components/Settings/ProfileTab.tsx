@@ -3,6 +3,7 @@ import s from 'styled-components'
 
 import { MEDIUM_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
+import { UserInfo } from '../../types'
 import { LOGOUT_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'
 import { Contact, Icon, ProfilePic, SmallText } from '../common'
@@ -34,12 +35,7 @@ const ProfilePicWrapper = s.div`
 `
 
 type ProfileTabProps = {
-  defaults: {
-    name: string
-    username: string
-    email: string
-    image_url: string | null
-  }
+  defaults: UserInfo
 }
 
 const ProfileTab = ({ defaults }: ProfileTabProps): ReactElement => {

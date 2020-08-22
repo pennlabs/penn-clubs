@@ -1,6 +1,6 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
-import { ReactElement, useEffect } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import {
@@ -51,9 +51,11 @@ type WelcomeProps = {
 
 const Welcome = ({
   authenticated,
-  userInfo,
+  userInfo: initialUserInfo,
   nextUrl,
 }: WelcomeProps): ReactElement => {
+  const [userInfo, setUserInfo] = useState<UserInfo>(initialUserInfo)
+
   if (authenticated === false) {
     return <AuthPrompt />
   }
@@ -95,7 +97,7 @@ const Welcome = ({
             fields blank if you'd prefer not the share this info.
           </Text>
         </Center>
-        <ProfileForm settings={userInfo} />
+        <ProfileForm settings={userInfo} onUpdate={setUserInfo} />
         <hr />
         <Center>
           <Subtitle>2. Getting started</Subtitle>
