@@ -757,7 +757,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                     needs_reapproval = True
                     break
 
-        has_approved_version = self.instance and self.instance.history.filter(approved=True).exists()
+        has_approved_version = (
+            self.instance and self.instance.history.filter(approved=True).exists()
+        )
 
         if needs_reapproval:
             self.validated_data["approved"] = None
