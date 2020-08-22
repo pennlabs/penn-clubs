@@ -27,7 +27,6 @@ export default function QuestionsCard({
         }
         baseUrl={`/clubs/${club.code}/questions/`}
         allowCreation={false}
-        initialData={club.questions}
         fields={[
           {
             name: 'question',
