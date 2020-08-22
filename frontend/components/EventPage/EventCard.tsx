@@ -9,7 +9,7 @@ import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
 import EventModal from './EventModal'
-import HappeningNowStyled from './HappeningNow'
+import HappeningNow from './HappeningNow'
 
 const CardContainer = styled.div`
   max-width: 18em;
@@ -21,37 +21,32 @@ const EventCard = (props: {
   isHappening: boolean
 }): ReactElement => {
   const { event, isHappening } = props
-  const [showModal, setShowModal] = useState(false)
+  const { image_url, club_name, start_time, end_time, name, url } = event
+  const [modalVisible, setModalVisible] = useState(false)
 
-  const doShow = () => setShowModal(true)
-  const doClose = () => setShowModal(false)
+  const showModal = () => setModalVisible(true)
+  const hideModal = () => setModalVisible(false)
 
   return (
     <>
       <CardContainer>
-        <Card bordered hoverable background={WHITE} onClick={doShow}>
+        <Card bordered hoverable background={WHITE} onClick={showModal}>
           <CoverPhoto
-            image={event.image_url}
+            image={image_url}
             fallback={
               <p>
-                <b>{event.club_name.toLocaleUpperCase()}</b>
+                <b>{club_name.toLocaleUpperCase()}</b>
               </p>
             }
-            inCard
           />
-          <DateInterval
-            start={new Date(event.start_time)}
-            end={new Date(event.end_time)}
-          />
-          {isHappening && <HappeningNowStyled />}
-          <ClubName>{event.club_name}</ClubName>
-          <EventName>{event.name}</EventName>
-          {event.url && (
-            <EventLink href={event.url}>{clipLink(event.url)}</EventLink>
-          )}
+          <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
+          {isHappening && <HappeningNow />}
+          <ClubName>{club_name}</ClubName>
+          <EventName>{name}</EventName>
+          {url && <EventLink href={url}>{clipLink(url)}</EventLink>}
         </Card>
       </CardContainer>
-      <Modal show={showModal} closeModal={doClose} width="45%">
+      <Modal show={modalVisible} closeModal={hideModal} width="45%">
         <EventModal {...props} />
       </Modal>
     </>

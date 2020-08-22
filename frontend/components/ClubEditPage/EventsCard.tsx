@@ -6,9 +6,9 @@ import s from 'styled-components'
 import { Club, ClubEvent } from '../../types'
 import { stripTags } from '../../utils'
 import { Device, Text } from '../common'
+import EventModal from '../EventPage/EventModal'
 import { ModelForm } from '../Form'
 import BaseCard from './BaseCard'
-import EventModal from '../EventPage/EventModal'
 
 const EventBox = s.div<{ type: 'ios' | 'android' }>`
   text-align: left;
@@ -348,6 +348,15 @@ const EventPreview = ({ event }: { event: ClubEvent }) => (
 export default function EventsCard({ club }: EventsCardProps): ReactElement {
   const [deviceContents, setDeviceContents] = useState<any>({})
 
+  const event = {
+    ...deviceContents,
+    club_name: club.name,
+    image_url:
+      (deviceContents.image && deviceContents.image.get('image') instanceof File
+        ? URL.createObjectURL(deviceContents.image.get('image'))
+        : false) || deviceContents.image_url,
+  } as ClubEvent
+
   return (
     <BaseCard title="Events">
       <Text>Manage events for this club.</Text>
@@ -359,19 +368,7 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
         currentTitle={(obj) => obj.name}
         onChange={(obj) => setDeviceContents(obj)}
       />
-      <EventPreview
-        event={
-          {
-            ...deviceContents,
-            club_name: club.name,
-            image_url:
-              (deviceContents.image &&
-              deviceContents.image.get('image') instanceof File
-                ? URL.createObjectURL(deviceContents.image.get('image'))
-                : false) || deviceContents.image_url,
-          } as ClubEvent
-        }
-      />
+      <EventPreview event={event} />
     </BaseCard>
   )
 }

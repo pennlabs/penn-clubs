@@ -1,13 +1,13 @@
 // Sunday, Sept 12 | 8:00-9:00 EDT
 import moment from 'moment'
-import React, { ReactElement } from 'react'
+import { ReactElement } from 'react'
 import styled from 'styled-components'
 
-import { LIGHT_GRAY } from '../../constants/colors'
+import { LIGHT_GRAY } from '../../constants'
 
 const dateIntervalString = (startDate: Date, endDate: Date): string => {
   const [start, end] = [startDate, endDate].map((d) => moment(d))
-  if (!(start.isValid() && end.isValid())) {
+  if (![start, end].every((d) => d.isValid())) {
     return 'Invalid date range'
   }
   const [startDateString, endDateString] = [start, end].map((d) =>

@@ -3,14 +3,12 @@ import React, { ReactElement } from 'react'
 import styled from 'styled-components'
 
 import { Icon, TransparentButton } from '../../components/common'
-import { CLUB_ROUTE } from '../../constants'
-import { CLUBS_BLUE } from '../../constants/colors'
-import { M2 } from '../../constants/measurements'
+import { CLUB_ROUTE, CLUBS_BLUE, M2 } from '../../constants'
 import { ClubEvent } from '../../types'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
-import HappeningNowStyled from './HappeningNow'
+import HappeningNow from './HappeningNow'
 
 const ModalContainer = styled.div`
   text-align: left;
@@ -29,7 +27,6 @@ const Description = ({
 }) => (
   <div
     className={className}
-    style={{ whiteSpace: 'pre-wrap' }}
     dangerouslySetInnerHTML={{
       __html: contents || '',
     }}
@@ -42,6 +39,7 @@ const StyledDescription = styled(Description)`
   margin-bottom: 15px;
   max-height: 150px;
   overflow-y: auto;
+  white-space: pre-wrap;
 
   & > p {
     word-wrap: break-word;
@@ -63,27 +61,33 @@ const EventModal = (props: {
   isHappening: boolean
 }): ReactElement => {
   const { event, isHappening } = props
+  const {
+    image_url,
+    club_name,
+    start_time,
+    end_time,
+    name,
+    url,
+    description,
+  } = event
   const router = useRouter()
 
   return (
     <ModalContainer>
       <CoverPhoto
-        image={event.image_url}
-        fallback={<p>{event.club_name.toLocaleUpperCase()}</p>}
+        image={image_url}
+        fallback={<p>{club_name.toLocaleUpperCase()}</p>}
       />
       <EventDetails>
         <MetaDataGrid>
-          <DateInterval
-            start={new Date(event.start_time)}
-            end={new Date(event.end_time)}
-          />
-          <RightAlign>{isHappening && <HappeningNowStyled />}</RightAlign>
+          <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
+          <RightAlign>{isHappening && <HappeningNow />}</RightAlign>
         </MetaDataGrid>
 
-        <ClubName>{event.club_name}</ClubName>
-        <EventName>{event.name}</EventName>
-        {event.url && <EventLink href={event.url}>{event.url}</EventLink>}
-        <StyledDescription contents={event.description} />
+        <ClubName>{club_name}</ClubName>
+        <EventName>{name}</EventName>
+        {url && <EventLink href={url}>{url}</EventLink>}
+        <StyledDescription contents={description} />
         <RightAlign>
           <TransparentButton
             backgroundColor={CLUBS_BLUE}

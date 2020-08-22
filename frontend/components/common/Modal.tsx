@@ -52,7 +52,7 @@ type ModalContentProps = {
   marginBottom?: boolean
 }
 
-const ModalContent = s.div<ModalContentProps>`
+export const ModalContent = s.div<ModalContentProps>`
   margin: auto;
   ${({ marginBottom }) => (marginBottom ? 'margin-bottom: 10%;' : '')}
 `

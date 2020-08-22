@@ -4,7 +4,7 @@ import styled, { keyframes } from 'styled-components'
 import { RED } from '../../constants/colors'
 
 const blink = keyframes`
- 0% {
+  0% {
     opacity: 0;
   }
   50% {
@@ -16,7 +16,8 @@ const blink = keyframes`
 `
 
 const HappeningNow = (props) => <p {...props}>HAPPENING NOW</p>
-const HappeningNowStyled = styled(HappeningNow)`
+
+export default styled(HappeningNow)`
   color: ${RED};
   font-size: 14px;
   font-weight: 500;
@@ -27,5 +28,3 @@ const HappeningNowStyled = styled(HappeningNow)`
     color: ${RED};
   }
 `
-
-export default HappeningNowStyled

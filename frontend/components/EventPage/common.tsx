@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-import { CLUBS_BLUE, CLUBS_GREY, MEDIUM_GRAY } from '../../constants/colors'
+import { CLUBS_BLUE, CLUBS_GREY, MEDIUM_GRAY } from '../../constants'
 
 export const ClubName = styled.p`
   font-size: 21px;

@@ -1,13 +1,10 @@
 import { NextPageContext } from 'next'
-import React, { ReactElement } from 'react'
+import { ReactElement } from 'react'
 import styled from 'styled-components'
 
-import { WideContainer } from '../components/common/Container'
-import { Metadata } from '../components/common/Metadata'
-import { Title } from '../components/common/Typography'
+import { Metadata, Title, WideContainer } from '../components/common'
 import EventCard from '../components/EventPage/EventCard'
-import { CLUBS_GREY, SNOW } from '../constants/colors'
-import { mediaMaxWidth, PHONE } from '../constants/measurements'
+import { CLUBS_GREY, mediaMaxWidth, PHONE, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { ClubEvent } from '../types'
 import { doApiRequest } from '../utils'
@@ -25,8 +22,10 @@ const CardList = styled.div`
   }
 `
 
-function EventPage(props: EventPageProps): ReactElement {
-  const { upcomingEvents, liveEvents } = props
+function EventPage({
+  upcomingEvents,
+  liveEvents,
+}: EventPageProps): ReactElement {
   return (
     <>
       <Metadata title="Events" />

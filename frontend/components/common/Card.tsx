@@ -1,7 +1,6 @@
 import styled from 'styled-components'
 
-import { BORDER } from '../../constants/colors'
-import { ANIMATION_DURATION } from '../../constants/measurements'
+import { ANIMATION_DURATION, BORDER } from '../../constants'
 
 type CardProps = {
   bordered?: boolean
