@@ -171,6 +171,12 @@ const Rank = (): ReactElement => (
           points: [[-20, 'Empty how to get involved section']],
         },
         {
+          name: 'Is Club Updated',
+          description:
+            'Clubs that have not been updated in the last 8 months will receive a small ordering penalty.',
+          points: [[-10, 'No updates for 8 months']],
+        },
+        {
           name: 'Is Club Active',
           description:
             'Clubs that are marked as inactive will be shifted to the very bottom of the list. You can easily renew your club from the settings tab in the manage club page.',
@@ -179,8 +185,10 @@ const Rank = (): ReactElement => (
         {
           name: 'Random Factor',
           description:
-            'A random factor is applied periodically in order to ensure that students see new clubs every time they visit the site.',
-          points: [[5, 'Random points between 0 and 5']],
+            'A random factor is applied periodically in order to ensure that students see new clubs when they visit the site.',
+          points: [
+            [10, 'Random number between 0 and this number, updated daily'],
+          ],
         },
       ]}
     />

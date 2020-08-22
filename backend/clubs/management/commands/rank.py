@@ -86,6 +86,10 @@ class Command(BaseCommand):
             if len(club.how_to_get_involved.strip()) <= 3:
                 ranking -= 20
 
+            # points for updated
+            if club.updated_at < now - datetime.timedelta(days=30 * 8):
+                ranking -= 10
+
             # points for testimonials
             if club.testimonials.count() >= 1:
                 ranking += 10
