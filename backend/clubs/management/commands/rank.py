@@ -69,14 +69,14 @@ class Command(BaseCommand):
             # points for events
             now = timezone.now()
             today_events = club.events.filter(
-                end_time__gte=now, start_time__lte=now - datetime.timedelta(days=1)
+                end_time__gte=now, start_time__lte=now + datetime.timedelta(days=1)
             )
 
             if today_events.exists():
                 ranking += 20
 
             close_events = club.events.filter(
-                end_time__gte=now, start_time__lte=now - datetime.timedelta(weeks=1)
+                end_time__gte=now, start_time__lte=now + datetime.timedelta(weeks=1)
             )
 
             if close_events.exists():
