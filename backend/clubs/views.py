@@ -1230,7 +1230,7 @@ class MassInviteAPIView(APIView):
         )
 
 
-class LastEmailAPIView(APIView):
+class LastEmailInviteTestAPIView(APIView):
     """
     get: Return the club code, invite id and token of the last sent email invite
     """
@@ -1242,11 +1242,11 @@ class LastEmailAPIView(APIView):
         club_code = latest_email_invite.club.code
         email_id = latest_email_invite.id
         email_token = latest_email_invite.token
-
-        if os.environ.get("DJANGO_SETTINGS_MODULE") == "pennclubs.settings.development":
+        
+        if request.user.email == latest_email_invite.email:
             return Response(
                 {
-                    "code": "{}".format(club_code),
+                    "code": club_code,
                     "id": "{}".format(email_id),
                     "token": "{}".format(email_token),
                 },
@@ -1254,7 +1254,8 @@ class LastEmailAPIView(APIView):
         else:
             return Response(
                 {
-                    "detail": "You can only access this endpoint during development/testing",
+                    "detail": "You can only access invitation token that matches your email credentials",
+                    "email": request.user.email,
                     "success": False,
                 },
                 status=status.HTTP_403_FORBIDDEN,

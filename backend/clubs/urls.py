@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import path
 from rest_framework_nested import routers
 
@@ -7,7 +8,7 @@ from clubs.views import (
     ClubViewSet,
     EventViewSet,
     FavoriteViewSet,
-    LastEmailAPIView,
+    LastEmailInviteTestAPIView,
     MajorViewSet,
     MassInviteAPIView,
     MemberInviteViewSet,
@@ -61,8 +62,11 @@ urlpatterns = [
     path(r"settings/permissions/", UserPermissionAPIView.as_view(), name="users-permission"),
     path(r"clubs/<slug:club_code>/invite/", MassInviteAPIView.as_view(), name="club-invite"),
     path(r"emailpreview/", email_preview, name="email-preview"),
-    path(r"test/lastemail", LastEmailAPIView.as_view(), name="last-email"),
 ]
+
+# Only add the following endpoint if Django is in development/testing
+if settings.DEBUG:
+    urlpatterns.append(path(r"test/lastemail", LastEmailInviteTestAPIView.as_view(), name="last-email"))
 
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls

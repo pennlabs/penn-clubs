@@ -12,8 +12,6 @@ const Toggle = s.div`
 `
 
 const MemberList = ({ club: { members } }) => {
-  members = members.filter((member) => member.public)
-
   const [expanded, setExpanded] = useState(false)
   const hasMembers = members.length > 0
 
