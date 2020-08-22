@@ -71,6 +71,9 @@ export async function apiCheckPermission(permission: string): Promise<boolean> {
   const resp = await doApiRequest(
     `/settings/permissions/?perm=${encodeURIComponent(permission)}&format=json`,
   )
+  if (!resp.ok) {
+    return false
+  }
   const json = await resp.json()
   return json.allowed
 }
