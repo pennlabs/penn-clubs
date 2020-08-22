@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { CLUBS_NAVY } from '../constants/colors'
