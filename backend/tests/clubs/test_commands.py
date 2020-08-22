@@ -1,4 +1,5 @@
 import csv
+import datetime
 import os
 import tempfile
 
@@ -7,8 +8,9 @@ from django.core import mail
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
+from django.utils import timezone
 
-from clubs.models import Club, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.utils import fuzzy_lookup_club
 
 
@@ -160,8 +162,12 @@ class PopulateTestCase(TestCase):
         # make sure script can handle duplicate runs
         call_command("populate")
 
+        # ensure objects are created
         self.assertNotEqual(Club.objects.all().count(), 0)
         self.assertNotEqual(Tag.objects.all().count(), 0)
+
+        # ensure ranking works properly
+        call_command("rank")
 
 
 class RankTestCase(TestCase):
@@ -178,6 +184,29 @@ class RankTestCase(TestCase):
                 )
                 for i in range(1, 101)
             ]
+        )
+
+        # create some tags
+        tag1 = Tag.objects.create(name="Undergraduate")
+        tag2 = Tag.objects.create(name="Graduate")
+        tag3 = Tag.objects.create(name="Professional")
+
+        # add objects to club
+        for club in Club.objects.all()[:10]:
+            club.tags.add(tag1)
+            club.tags.add(tag2)
+            club.tags.add(tag3)
+
+        now = timezone.now()
+
+        # add an event
+        Event.objects.create(
+            code="test-event-1",
+            name="Test Event 1",
+            club=Club.objects.first(),
+            start_time=now,
+            end_time=now + datetime.timedelta(hours=2),
+            description="This is a test event!",
         )
 
         # run the rank command
