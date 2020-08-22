@@ -111,6 +111,7 @@ class Club(models.Model):
 
     # indicates whether or not the club has expressed interest in this year's SAC fair
     fair = models.BooleanField(default=False)
+    fair_on = models.DateTimeField(null=True, blank=True)
 
     code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=False)

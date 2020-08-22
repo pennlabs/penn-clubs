@@ -87,6 +87,7 @@ const ActionButton = s.button`
   margin-left: 0.4em;
   margin-right: 0.4em;
   font-weight: 500;
+  cursor: pointer;
 `
 
 const TableHeader = s.th`
