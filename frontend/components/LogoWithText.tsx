@@ -34,11 +34,7 @@ const SubtitleText = s.div`
   display:inline-block;
 `
 
-export default () => {
-  const [newlyMounted, setNewlyMounted] = useState(true)
-  useEffect(() => {
-    newlyMounted && setNewlyMounted(false)
-  })
+const LogoWithText = (): ReactElement => {
   return (
     <Wrapper>
       <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
@@ -53,3 +49,5 @@ export default () => {
     </Wrapper>
   )
 }
+
+export default LogoWithText
