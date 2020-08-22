@@ -215,7 +215,7 @@ export function renderListPage(Page) {
 
     const liveEventRequest = await doApiRequest('/events/live/', data)
     const liveEventResponse = (await liveEventRequest.json()) as ClubEvent[]
-    console.log("LIVEEVENT", liveEventResponse)
+    console.log('LIVEEVENT', liveEventResponse)
 
     return {
       tags: tagsResponse,

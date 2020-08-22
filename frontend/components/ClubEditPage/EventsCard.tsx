@@ -6,9 +6,10 @@ import s from 'styled-components'
 import { Club, ClubEvent } from '../../types'
 import { stripTags } from '../../utils'
 import { Device, Text } from '../common'
+import EventCard from '../EventPage/EventCard'
 import { ModelForm } from '../Form'
 import BaseCard from './BaseCard'
-import EventCard from '../EventPage/EventCard'
+import EventModal from '../EventPage/EventModal'
 
 const EventBox = s.div<{ type: 'ios' | 'android' }>`
   text-align: left;
@@ -334,7 +335,7 @@ const EventPreview = ({ event }: { event: ClubEvent }) => (
       <h3 className="subtitle">Event Preview</h3>
       <p>This is how your event will appear to students on the event page</p>
     </EventPreviewDescriptionContainer>
-    <EventCard event={event} isHappening={false} />
+    <EventModal event={event} isHappening={false} />
     {/* TODO: uncomment device preview when we have mobile integration. */}
     {/* <Devices contents={event} /> */}
   </EventPreviewContainer>
@@ -360,9 +361,9 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
             ...deviceContents,
             club_name: club.name,
             image_url:
-              deviceContents.image_url ||
               (deviceContents.image &&
-                URL.createObjectURL(deviceContents.image.get('image'))),
+                URL.createObjectURL(deviceContents.image.get('image'))) ||
+              deviceContents.image_url,
           } as ClubEvent
         }
       />

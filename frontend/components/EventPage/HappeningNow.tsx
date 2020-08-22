@@ -20,6 +20,7 @@ const HappeningNowStyled = styled(HappeningNow)`
   color: ${RED};
   font-size: 14px;
   font-weight: 500;
+  ${({ floatRight }) => (floatRight ? 'float: right;' : '')}
   &:after {
     animation: ${blink} 1.5s infinite;
     content: ' \\25CF';

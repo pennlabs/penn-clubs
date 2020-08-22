@@ -25,4 +25,7 @@ export const EventLink = styled.a`
     text-decoration: underline;
     color: ${CLUBS_BLUE};
   }
+  white-space: nowrap;
+  width: 100%;
+  text-overflow: ellipsis;
 `

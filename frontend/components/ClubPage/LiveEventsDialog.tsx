@@ -50,7 +50,13 @@ const LiveEventsDialog = ({ liveEventCount }: Props): ReactElement => {
         <WhiteButton>See Live Events</WhiteButton>
       </Link>
       <LiveTitle>Virtual Activity Fair</LiveTitle>
-      <LiveSub>{liveEventCount} {liveEventCount === 1 ? 'club is holding an event' : 'clubs are holding events'} right now.</LiveSub>
+      <LiveSub>
+        {liveEventCount}{' '}
+        {liveEventCount === 1
+          ? 'club is holding an event'
+          : 'clubs are holding events'}{' '}
+        right now.
+      </LiveSub>
     </LiveBanner>
   )
 }
