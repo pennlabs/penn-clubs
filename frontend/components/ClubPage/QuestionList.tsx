@@ -1,4 +1,5 @@
 import { ReactElement, useState } from 'react'
+import Linkify from 'react-linkify'
 import s from 'styled-components'
 
 import { Club, QuestionAnswer } from '../../types'
@@ -64,7 +65,7 @@ const QuestionList = ({
           <AnswerText>
             {question.answer ? (
               <>
-                {question.answer}
+                <Linkify>{question.answer}</Linkify>
                 <div>
                   <QuoteAuthor>- {question.responder}</QuoteAuthor>
                 </div>
