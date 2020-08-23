@@ -116,6 +116,7 @@ const Actions = ({
   useEffect(() => {
     if (showModal) {
       setSubmitDisabled(false)
+      setSubmitted(false)
     }
   }, [showModal])
 
