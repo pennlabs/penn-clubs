@@ -245,8 +245,8 @@ class MembershipAdmin(admin.ModelAdmin):
 
 class ProfileAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "user__email")
-    list_display = ("user", "email", "graduation_year", "studies")
-    list_filter = ("graduation_year", "school", "major")
+    list_display = ("user", "email", "graduation_year", "studies", "has_been_prompted")
+    list_filter = ("graduation_year", "school", "major", "has_been_prompted")
 
     def email(self, obj):
         return str(obj.user.email or None)
