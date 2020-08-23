@@ -308,9 +308,11 @@ class BadgeAdmin(admin.ModelAdmin):
         if not re.match(r"^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", obj.color):
             return obj.color
         return mark_safe(
-            "<div style='background-color: #{};width:1em;height:1em;border:1px solid black;border-radius:3px' />".format(
-                obj.color
-            )
+            f"<div style='background-color: #{obj.color}; \
+                width:1em; \
+                height:1em; \
+                border:1px solid black; \
+                border-radius:3px' />"
         )
 
     search_fields = ("label",)
