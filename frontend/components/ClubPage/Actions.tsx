@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { CSSProperties, ReactElement, useState } from 'react'
+import { CSSProperties, ReactElement, useEffect, useState } from 'react'
+import Linkify from 'react-linkify'
 import s from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
@@ -57,7 +58,7 @@ type ActionsProps = {
   userInfo: UserInfo
   style?: CSSProperties
   className?: string
-  updateRequests: (code: string) => void
+  updateRequests: (code: string) => Promise<void>
 }
 
 const ModalContent = s.div`
@@ -100,8 +101,10 @@ const Actions = ({
     (inClub && inClub.role <= MembershipRank.Officer) ||
     (userInfo && userInfo.is_superuser)
 
-  const [favCount, setFavCount] = useState(favoriteCount || 0)
-  const [showModal, setShowModal] = useState(false)
+  const [favCount, setFavCount] = useState<number>(favoriteCount || 0)
+  const [showModal, setShowModal] = useState<boolean>(false)
+  const [isSubmitDisabled, setSubmitDisabled] = useState<boolean>(false)
+  const [isSubmitted, setSubmitted] = useState<boolean>(false)
   const requestMembership = () => {
     if (!isRequested) {
       setShowModal(true)
@@ -109,6 +112,13 @@ const Actions = ({
       updateRequests(code)
     }
   }
+
+  useEffect(() => {
+    if (showModal) {
+      setSubmitDisabled(false)
+      setSubmitted(false)
+    }
+  }, [showModal])
 
   return (
     <>
@@ -160,22 +170,41 @@ const Actions = ({
             section for more details!
           </p>
           <Quote>
-            {club.how_to_get_involved ||
-              'There is currently no information about how to get involved with this club.'}
+            <Linkify>
+              {club.how_to_get_involved ||
+                'There is currently no information about how to get involved with this club.'}
+            </Linkify>
           </Quote>
           <p>
             If you are an existing member of this club, use the button below to
             confirm your membership request.
           </p>
-          <div
-            className="button is-success"
-            onClick={() => {
-              updateRequests(code)
-              setShowModal(false)
-            }}
-          >
-            Confirm
-          </div>
+          <p className="has-text-danger">
+            If you are not an existing member of this club, please <b>do not</b>{' '}
+            press the button below. This <b>is not</b> the application process
+            for {club.name}.
+          </p>
+          {isSubmitted ? (
+            <p className="has-text-success">
+              <b>Success!</b> Your membership request has been submitted. An
+              email has been sent to club officers asking them to confirm your
+              membership. Click anywhere outside this popup to close it.
+            </p>
+          ) : (
+            <button
+              className="button is-warning"
+              disabled={isSubmitDisabled}
+              onClick={(e) => {
+                setSubmitDisabled(true)
+                e.preventDefault()
+                updateRequests(code).then(() => {
+                  setSubmitted(true)
+                })
+              }}
+            >
+              Confirm
+            </button>
+          )}
         </ModalContent>
       </Modal>
     </>

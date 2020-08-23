@@ -26,6 +26,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
   const [inviteRole, setInviteRole] = useState<MembershipRole>(
     MEMBERSHIP_ROLES[0],
   )
+  const [invitePercentage, setInvitePercentage] = useState<number | null>(null)
   const [inviteEmails, setInviteEmails] = useState<string>('')
   const [isInviting, setInviting] = useState<boolean>(false)
 
@@ -62,27 +63,74 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
       })
   }
 
-  const sendInvites = () => {
-    setInviting(true)
-    doApiRequest(`/clubs/${club.code}/invite/?format=json`, {
+  const sendInviteBatch = async (emails: string[]) => {
+    const resp = doApiRequest(`/clubs/${club.code}/invite/?format=json`, {
       method: 'POST',
       body: {
-        emails: inviteEmails,
+        emails: emails.join('\n'),
         role: inviteRole.value,
         title: inviteTitle,
       },
     })
-      .then((resp) => resp.json())
-      .then((data) => {
+
+    const json = (await resp).json()
+    return json
+  }
+
+  const sendInvites = async () => {
+    const emails = inviteEmails
+      .split(/(?:\n|\||,)/)
+      .map((email) => email.trim())
+      .filter((email) => email.length > 0)
+
+    setInviting(true)
+
+    if (emails.length <= 10) {
+      try {
+        const data = await sendInviteBatch(emails)
         if (data.success) {
           setInviteEmails('')
         }
         notify(formatResponse(data))
-      })
-      .finally(() => {
+      } finally {
         reloadInvites()
         setInviting(false)
-      })
+      }
+    } else {
+      setInvitePercentage(0)
+      const chunks: string[][] = []
+      for (let i = 0; i < emails.length; i += 10) {
+        chunks.push(emails.slice(i, i + 10))
+      }
+
+      const responses: { sent: number; skipped: number }[] = []
+      for (let i = 0; i < chunks.length; i++) {
+        const data = await sendInviteBatch(chunks[i])
+        if (!data.success) {
+          notify(formatResponse(data))
+          reloadInvites()
+          setInviting(false)
+          setInvitePercentage(null)
+          return
+        }
+        setInvitePercentage((i + 1) / chunks.length)
+        responses.push(data)
+      }
+
+      notify(
+        <>
+          Sent invites to{' '}
+          {responses.map((resp) => resp.sent).reduce((a, b) => a + b, 0)}{' '}
+          emails!{' '}
+          {responses.map((resp) => resp.skipped).reduce((a, b) => a + b, 0)}{' '}
+          emails were skipped because they are already invited or a member.
+        </>,
+      )
+      setInviteEmails('')
+      reloadInvites()
+      setInviting(false)
+      setInvitePercentage(null)
+    }
   }
 
   const updatePermissions = (opt: MembershipRole) => {
@@ -188,6 +236,15 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
             permissions.
           </p>
         </div>
+        {invitePercentage !== null && (
+          <div className="mb-3">
+            <progress
+              className="progress"
+              value={(invitePercentage ?? 0) * 100}
+              max={100}
+            />
+          </div>
+        )}
         <button
           disabled={isInviting}
           className="button is-primary"

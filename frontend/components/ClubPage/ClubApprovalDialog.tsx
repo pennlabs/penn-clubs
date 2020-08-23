@@ -92,9 +92,12 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
                 <p>
                   This club has been marked as <b>not approved</b> and is only
                   visible to administrators of Penn Clubs. The reason that your
-                  club was not approved by the Office of Student Affairs is
-                  listed below. If you believe that this is a mistake, contact{' '}
-                  <Contact point="osa" />.
+                  club was not approved by the{' '}
+                  <a href="https://osa.vpul.upenn.edu/">
+                    Office of Student Affairs
+                  </a>{' '}
+                  is listed below. If you believe that this is a mistake,
+                  contact <Contact point="osa" />.
                 </p>
                 <ReviewQuote>
                   {club.approved_comment || (

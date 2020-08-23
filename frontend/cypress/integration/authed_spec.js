@@ -105,7 +105,7 @@ describe('Authenticated user tests', () => {
 
     // test membership invites
     const fakeEmails = [];
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 50; i++) {
       fakeEmails.push(`test${i}@example.com`);
     }
 
@@ -113,7 +113,7 @@ describe('Authenticated user tests', () => {
     cy.contains('Invite Members').scrollIntoView()
     cy.get('[data-testid="invite-emails-input"]').type(fakeEmails.join(","))
     cy.get('[data-testid="invite-emails-submit"]').click()
-    cy.contains('Sent invite(s) to 10 email(s)!').should('be.visible')
+    cy.contains(/Sent invites? to 50 emails?/).should('be.visible')
 
     // delete created club
     cy.contains('Settings').click()
