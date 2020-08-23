@@ -213,7 +213,8 @@ class SubscribeAdmin(admin.ModelAdmin):
 
 class MembershipRequestAdmin(admin.ModelAdmin):
     search_fields = ("person__username", "person__email", "club__name", "club__pk")
-    list_display = ("person", "club", "email")
+    list_display = ("person", "club", "email", "withdrew", "is_member")
+    list_filter = ("withdrew",)
 
     def person(self, obj):
         return obj.person.username
@@ -223,6 +224,11 @@ class MembershipRequestAdmin(admin.ModelAdmin):
 
     def email(self, obj):
         return obj.person.email
+
+    def is_member(self, obj):
+        return obj.club.membership_set.filter(person__pk=obj.person.pk).exists()
+
+    is_member.boolean = True
 
 
 class MembershipAdmin(admin.ModelAdmin):
