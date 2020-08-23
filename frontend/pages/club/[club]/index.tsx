@@ -189,15 +189,13 @@ const ClubPage = ({
             <StrongText>Contact</StrongText>
             <SocialIcons club={club} />
           </StyledCard>
-          {involvement ? (
+          {involvement && (
             <StyledCard bordered>
               <StrongText>How To Get Involved</StrongText>
               <Text style={{ marginBottom: M0 }}>
                 <Linkify>{involvement}</Linkify>
               </Text>
             </StyledCard>
-          ) : (
-            <></>
           )}
           <Events data={events} />
           <Testimonials data={testimonials} />
