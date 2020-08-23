@@ -1235,6 +1235,8 @@ class MassInviteAPIView(APIView):
         emails = [x.strip() for x in re.split(r"\n|,", request.data.get("emails", ""))]
         emails = [x for x in emails if x]
 
+        original_count = len(emails)
+
         # remove users that are already in the club
         exist = Membership.objects.filter(club=club, person__email__in=emails).values_list(
             "person__email", flat=True
@@ -1266,8 +1268,22 @@ class MassInviteAPIView(APIView):
             else:
                 invite.send_mail(request)
 
+        sent_emails = len(emails)
+        skipped_emails = original_count - len(emails)
+
         return Response(
-            {"detail": "Sent invite(s) to {} email(s)!".format(len(emails)), "success": True}
+            {
+                "detail": "Sent invite{} to {} email{}! {} email{} were skipped.".format(
+                    "" if sent_emails == 1 else "s",
+                    sent_emails,
+                    "" if sent_emails == 1 else "s",
+                    skipped_emails,
+                    "" if skipped_emails == 1 else "s",
+                ),
+                "sent": sent_emails,
+                "skipped": skipped_emails,
+                "success": True,
+            }
         )
 
 
