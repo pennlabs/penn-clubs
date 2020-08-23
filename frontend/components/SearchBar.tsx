@@ -1,4 +1,4 @@
-import React, {
+import {
   ReactElement,
   SetStateAction,
   useEffect,
@@ -29,6 +29,7 @@ import { Tag } from '../types'
 import { Icon } from './common'
 import DropdownFilter, { FilterHeader, SelectableTag } from './DropdownFilter'
 import FilterSearch from './FilterSearch'
+import OrderInput from './OrderInput'
 
 const MobileSearchBarSpacer = s.div`
   display: block;
@@ -171,97 +172,6 @@ const Collapsible = ({
       />
       {isActive && children}
     </>
-  )
-}
-
-const DropdownWrapper = s.div`
-  width: 100%;
-
-  & .dropdown-trigger, & .dropdown-trigger button {
-    width: 100%;
-  }
-
-  & .dropdown-trigger button {
-    text-align: left;
-    justify-content: flex-start;
-  }
-
-  & .dropdown-trigger .icon:last-child:not(:first-child) {
-    display: inline-block;
-    margin-left: auto;
-  }
-`
-
-const OrderInput = ({ onChange }): ReactElement => {
-  const orderings = [
-    {
-      key: 'featured',
-      name: 'Featured',
-      icon: 'star',
-    },
-    {
-      key: 'name',
-      name: 'Alphabetical',
-      icon: 'list',
-    },
-    {
-      key: '-favorite_count',
-      name: 'Bookmarks',
-      icon: 'bookmark',
-    },
-    {
-      key: 'random',
-      name: 'Random',
-      icon: 'shuffle',
-    },
-  ]
-
-  const [ordering, setOrdering] = useState<string>('featured')
-
-  const [isActive, setActive] = useState<boolean>(false)
-
-  const selectedOrdering = orderings.find((order) => order.key === ordering)
-
-  return (
-    <DropdownWrapper className={`dropdown ${isActive ? 'is-active' : ''}`}>
-      <div className="dropdown-trigger">
-        <button
-          className="button"
-          aria-haspopup="true"
-          aria-controls="dropdown-menu"
-          onClick={() => setActive((active) => !active)}
-        >
-          <span>
-            <Icon name={selectedOrdering?.icon ?? 'x'} />{' '}
-            {selectedOrdering?.name ?? 'Unknown'}
-          </span>
-          <span className="icon">
-            <Icon name="chevron-down" />
-          </span>
-        </button>
-      </div>
-      <div className="dropdown-menu" role="menu">
-        <div className="dropdown-content">
-          {orderings.map((order) => (
-            <a
-              key={order.key}
-              href="#"
-              className={`dropdown-item ${
-                order.key === ordering ? 'is-active' : ''
-              }`}
-              onClick={(e) => {
-                e.preventDefault()
-                setOrdering(order.key)
-                onChange(order.key)
-                setActive(false)
-              }}
-            >
-              <Icon name={order.icon} /> {order.name}
-            </a>
-          ))}
-        </div>
-      </div>
-    </DropdownWrapper>
   )
 }
 
