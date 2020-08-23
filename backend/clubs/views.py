@@ -19,7 +19,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ParseError, PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -461,12 +461,15 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         self.check_object_permissions(request, club)
 
         # reset approval status after upload
-        resp = upload_endpoint_helper(request, Club, "image", code=kwargs["code"])
+        resp = upload_endpoint_helper(request, Club, "image", code=club.code)
         if status.is_success(resp.status_code):
             club.approved = None
             club.approved_by = None
             club.approved_on = None
-            club.save(update_fields=["approved", "approved_by", "approved_on"])
+            if club.history.filter(approved=True).exists():
+                club.ghost = True
+
+            club.save(update_fields=["approved", "approved_by", "approved_on", "ghost"])
         return resp
 
     @action(detail=True, methods=["post"])
@@ -478,7 +481,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
         self.check_object_permissions(request, club)
 
-        return file_upload_endpoint_helper(request, code=kwargs["code"])
+        return file_upload_endpoint_helper(request, code=club.code)
 
     @action(detail=True, methods=["get"])
     def children(self, request, *args, **kwargs):
@@ -517,7 +520,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return a QR code png image representing a link to the club on Penn Clubs.
         """
-        url = f"https://{settings.DEFAULT_DOMAIN}/club/{self.kwargs['code']}/fair"
+        club = self.get_object()
+        self.check_object_permissions(request, club)
+
+        url = f"https://{settings.DEFAULT_DOMAIN}/club/{club.code}/fair"
         response = HttpResponse(content_type="image/png")
         qr_image = qrcode.make(url, box_size=20, border=0)
         qr_image.save(response, "PNG")
@@ -552,20 +558,28 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return "{}.xlsx".format(slugify(name))
         return super().get_filename()
 
-    def partial_update(self, request, *args, **kwargs):
+    def check_approval_permission(self, request):
+        """
+        Only users with specific permissions can modify the approval field.
+        """
         if (
-            request.data.get("accepted", None) is not None
-            or request.data.get("accepted_comment", None) is not None
-        ) and not request.user.has_perm("clubs.approve_club"):
-            raise PermissionDenied
+            request.data.get("approved", None) is not None
+            or request.data.get("approved_comment", None) is not None
+        ):
+            # users without approve permission cannot approve
+            if not request.user.has_perm("clubs.approve_club"):
+                raise PermissionDenied
+
+            # an approval request must not modify any other fields
+            if set(request.data.keys()) - {"approved", "approved_comment"}:
+                raise ParseError
+
+    def partial_update(self, request, *args, **kwargs):
+        self.check_approval_permission(request)
         return super().partial_update(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        if (
-            request.data.get("accepted", None) is not None
-            or request.data.get("accepted_comment", None) is not None
-        ) and not request.user.has_perm("clubs.approve_club"):
-            raise PermissionDenied
+        self.check_approval_permission(request)
         return super().update(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
@@ -585,11 +599,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 name = request.query_params.get("name")
                 desc = request.query_params.get("desc")
                 public = request.query_params.get("public", "false").lower().strip() == "true"
-                parameters = json.dumps(dict(request.query_params))
+                parameters = request.query_params.dict()
+
+                # avoid storing redundant data
+                for field in {"name", "desc", "public"}:
+                    if field in parameters:
+                        del parameters[field]
+
                 Report.objects.create(
                     name=name,
                     description=desc,
-                    parameters=parameters,
+                    parameters=json.dumps(parameters),
                     creator=request.user,
                     public=public,
                 )
@@ -1075,6 +1095,7 @@ class TagViewSet(viewsets.ModelViewSet):
 
     queryset = Tag.objects.all().annotate(clubs=Count("club")).order_by("name")
     serializer_class = TagSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
     lookup_field = "name"
 
@@ -1090,6 +1111,7 @@ class BadgeViewSet(viewsets.ModelViewSet):
 
     queryset = Badge.objects.all()
     serializer_class = BadgeSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
     lookup_field = "name"
 
