@@ -181,7 +181,8 @@ const OrderingWrapper = s.div`
   width: 100%;
 
   & .dropdown-trigger,
-  & .dropdown-trigger button {
+  & .dropdown-trigger button,
+  & .dropdown-menu {
     width: 100%;
     border-radius: ${BORDER_RADIUS};
   }
@@ -189,6 +190,7 @@ const OrderingWrapper = s.div`
   & .dropdown-trigger button {
     text-align: left;
     justify-content: flex-start;
+    padding-right: 0;
   }
 
   & .dropdown-trigger .icon:last-child:not(:first-child) {
@@ -203,6 +205,7 @@ const OrderingWrapper = s.div`
   & .dropdown-item {
     display: flex;
     align-items: center;
+    border-radius: ${BORDER_RADIUS};
   }
 
   
@@ -218,6 +221,7 @@ const OrderingWrapper = s.div`
 
   & button:focus, button:hover {
     outline: none !important;
+    box-shadow: none !important;
     border: 1px solid ${BORDER};
     color: ${CLUBS_GREY_LIGHT};
     background: ${FOCUS_GRAY};
@@ -246,6 +250,19 @@ const ORDERINGS = [
     icon: 'shuffle',
   },
 ]
+
+const OrderingChevronWrapper = s.div`
+  cursor: pointer;
+  color: ${MEDIUM_GRAY};
+  opacity: 0.5;
+  margin-right: 6px !important;
+  margin-left: auto;
+  vertical-align: middle;
+
+  ${mediaMaxWidth(MD)} {
+    right: 24px;
+  }
+`
 
 const OrderInput = ({ onChange }): ReactElement => {
   const [ordering, setOrdering] = useState<string>('featured')
@@ -286,7 +303,9 @@ const OrderInput = ({ onChange }): ReactElement => {
         >
           <Icon name={selectedOrdering?.icon ?? 'x'} />{' '}
           {selectedOrdering?.name ?? 'Unknown'}
-          <Icon name="chevron-down" />
+          <OrderingChevronWrapper>
+            <Icon name="chevron-down" noMargin />
+          </OrderingChevronWrapper>
         </button>
       </div>
       <div ref={dropdownMenuRef} className="dropdown-menu" role="menu">
