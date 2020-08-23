@@ -1552,3 +1552,21 @@ class ClubTestCase(TestCase):
 
         # ensure badge still exists
         self.assertTrue(club.badges.filter(pk=badge.pk).count(), 1)
+
+        # mark club as unapproved
+        club.approved = None
+        club.save(update_fields=["approved"])
+
+        # login as user without approve permissions
+        self.assertFalse(self.user2.has_perm("clubs.approve_club"))
+        Membership.objects.create(person=self.user2, club=club, role=Membership.ROLE_OFFICER)
+
+        self.client.login(username=self.user2.username, password="test")
+
+        # try approving the club
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"approved": True, "approved_comment": "I'm approving my own club!"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [401, 403], resp.content)

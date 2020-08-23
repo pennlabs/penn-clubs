@@ -19,7 +19,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ParseError, PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -461,12 +461,15 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         self.check_object_permissions(request, club)
 
         # reset approval status after upload
-        resp = upload_endpoint_helper(request, Club, "image", code=kwargs["code"])
+        resp = upload_endpoint_helper(request, Club, "image", code=club.code)
         if status.is_success(resp.status_code):
             club.approved = None
             club.approved_by = None
             club.approved_on = None
-            club.save(update_fields=["approved", "approved_by", "approved_on"])
+            if club.history.filter(approved=True).exists():
+                club.ghost = True
+
+            club.save(update_fields=["approved", "approved_by", "approved_on", "ghost"])
         return resp
 
     @action(detail=True, methods=["post"])
@@ -478,7 +481,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
         self.check_object_permissions(request, club)
 
-        return file_upload_endpoint_helper(request, code=kwargs["code"])
+        return file_upload_endpoint_helper(request, code=club.code)
 
     @action(detail=True, methods=["get"])
     def children(self, request, *args, **kwargs):
@@ -552,20 +555,28 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return "{}.xlsx".format(slugify(name))
         return super().get_filename()
 
-    def partial_update(self, request, *args, **kwargs):
+    def check_approval_permission(self, request):
+        """
+        Only users with specific permissions can modify the approval field.
+        """
         if (
-            request.data.get("accepted", None) is not None
-            or request.data.get("accepted_comment", None) is not None
-        ) and not request.user.has_perm("clubs.approve_club"):
-            raise PermissionDenied
+            request.data.get("approved", None) is not None
+            or request.data.get("approved_comment", None) is not None
+        ):
+            # users without approve permission cannot approve
+            if not request.user.has_perm("clubs.approve_club"):
+                raise PermissionDenied
+
+            # an approval request must not modify any other fields
+            if set(request.data.keys()) - {"approved", "approved_comment"}:
+                raise ParseError
+
+    def partial_update(self, request, *args, **kwargs):
+        self.check_approval_permission(request)
         return super().partial_update(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        if (
-            request.data.get("accepted", None) is not None
-            or request.data.get("accepted_comment", None) is not None
-        ) and not request.user.has_perm("clubs.approve_club"):
-            raise PermissionDenied
+        self.check_approval_permission(request)
         return super().update(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
