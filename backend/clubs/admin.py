@@ -1,4 +1,5 @@
 import datetime
+import re
 
 import simple_history
 from django import forms
@@ -6,6 +7,7 @@ from django.contrib import admin, messages
 from django.contrib.admin import TabularInline
 from django.contrib.auth.models import Group
 from django.db.models import Count, Exists, OuterRef
+from django.utils.safestring import mark_safe
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
 from clubs.management.commands.remind import send_reminder_to_club
@@ -302,8 +304,17 @@ class BadgeAdmin(admin.ModelAdmin):
     def club_count(self, obj):
         return obj.club_set.count()
 
+    def badge_color(self, obj):
+        if not re.match(r"^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", obj.color):
+            return obj.color
+        return mark_safe(
+            "<div style='background-color: #{};width:1em;height:1em;border:1px solid black;border-radius:3px' />".format(
+                obj.color
+            )
+        )
+
     search_fields = ("label",)
-    list_display = ("label", "club_count")
+    list_display = ("label", "org", "club_count", "badge_color")
     actions = [do_merge_tags]
 
 
