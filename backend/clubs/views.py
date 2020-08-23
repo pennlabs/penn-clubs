@@ -1086,6 +1086,7 @@ class TagViewSet(viewsets.ModelViewSet):
 
     queryset = Tag.objects.all().annotate(clubs=Count("club")).order_by("name")
     serializer_class = TagSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
     lookup_field = "name"
 
@@ -1101,6 +1102,7 @@ class BadgeViewSet(viewsets.ModelViewSet):
 
     queryset = Badge.objects.all()
     serializer_class = BadgeSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
     lookup_field = "name"
 
