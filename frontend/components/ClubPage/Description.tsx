@@ -11,6 +11,14 @@ const Wrapper = s.div`
   flex-direction: row;
   align-items: center;
   flex: 1;
+
+  & ul, & ol {
+    margin-left: 2em;
+  }
+
+  & ul {
+    list-style-type: disc;
+  }
 `
 
 type Props = {
