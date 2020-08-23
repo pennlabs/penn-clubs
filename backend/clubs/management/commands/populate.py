@@ -148,6 +148,15 @@ you can procrastinate on the application and ultimately miss the deadline!""",
         "approved": True,
         "tags": [{"name": "Professional"}, {"name": "Undergraduate"}],
     },
+    {
+        "code": "tac",
+        "name": "Testing Activities Council",
+        "description": "We are an umbrella organization for many of the clubs on campus.",
+        "email": "tac@example.com",
+        "active": True,
+        "approved": True,
+        "tags": [{"name": "Umbrella Organization"}, {"name": "Undergraduate"}],
+    },
 ]
 
 
@@ -224,6 +233,11 @@ class Command(BaseCommand):
                     for new_obj in info[name]:
                         new_obj, _ = obj.objects.get_or_create(club=club, **new_obj)
 
+        # create badges
+        badge, _ = Badge.objects.get_or_create(
+            label="TAC", description="Testing Activities Council", org=Club.objects.get(code="tac")
+        )
+
         # create additional clubs
         tag_undergrad, _ = Tag.objects.get_or_create(name="Undergraduate")
         tag_generic, _ = Tag.objects.get_or_create(name="Generic")
@@ -241,6 +255,7 @@ class Command(BaseCommand):
 
             club.tags.add(tag_undergrad)
             club.tags.add(tag_generic)
+            club.badges.add(badge)
 
         # create users
         count = 0

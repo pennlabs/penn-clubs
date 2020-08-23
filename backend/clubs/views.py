@@ -53,6 +53,7 @@ from clubs.permissions import (
     InvitePermission,
     IsSuperuser,
     MemberPermission,
+    MembershipRequestPermission,
     NotePermission,
     QuestionAnswerPermission,
     ReadOnly,
@@ -455,7 +456,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Upload the club logo.
         """
-        club = Club.objects.get(code=kwargs["code"])
+        # ensure user is allowed to upload image
+        club = self.get_object()
+        self.check_object_permissions(request, club)
+
+        # reset approval status after upload
         resp = upload_endpoint_helper(request, Club, "image", code=kwargs["code"])
         if status.is_success(resp.status_code):
             club.approved = None
@@ -469,6 +474,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Upload a file for the club.
         """
+        # ensure user is allowed to upload file
+        club = self.get_object()
+        self.check_object_permissions(request, club)
+
         return file_upload_endpoint_helper(request, code=kwargs["code"])
 
     @action(detail=True, methods=["get"])
@@ -477,6 +486,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a recursive list of all children that this club is a parent of.
         """
         club = self.get_object()
+        self.check_object_permissions(request, club)
         child_tree = find_relationship_helper("children_orgs", club, {club.code})
         return Response(child_tree)
 
@@ -486,6 +496,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a recursive list of all parents that this club is a child to.
         """
         club = self.get_object()
+        self.check_object_permissions(request, club)
         parent_tree = find_relationship_helper("parent_orgs", club, {club.code})
         return Response(parent_tree)
 
@@ -495,6 +506,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a list of notes about this club, used by members of parent organizations.
         """
         club = self.get_object()
+        self.check_object_permissions(request, club)
         queryset = Note.objects.filter(subject_club__code=club.code)
         queryset = filter_note_permission(queryset, club, self.request.user)
         serializer = NoteSerializer(queryset, many=True)
@@ -517,9 +529,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a list of all students that have subscribed to the club,
         including their names and emails.
         """
-        serializer = SubscribeSerializer(
-            Subscribe.objects.filter(club__code=self.kwargs["code"]), many=True
-        )
+        club = self.get_object()
+        self.check_object_permissions(request, club)
+        serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
@@ -706,7 +718,10 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Upload a picture for the event.
         """
-        return upload_endpoint_helper(request, Event, "image", code=kwargs["id"])
+        event = Event.objects.get(id=kwargs["id"])
+        self.check_object_permissions(request, event)
+
+        return upload_endpoint_helper(request, Event, "image", pk=event.pk)
 
     @action(detail=False, methods=["get"])
     def live(self, request, *args, **kwargs):
@@ -930,7 +945,7 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
 
     serializer_class = MembershipRequestSerializer
-    permission_field = [MemberPermission | IsSuperuser]
+    permission_classes = [MembershipRequestPermission | IsSuperuser]
     http_method_names = ["get", "post", "delete"]
     lookup_field = "person__username"
 
@@ -940,6 +955,7 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def accept(self, request, *ages, **kwargs):
         request_object = self.get_object()
+        self.check_object_permissions(request, request_object)
         Membership.objects.create(person=request_object.person, club=request_object.club)
         request_object.delete()
         return Response({"success": True})
@@ -1153,6 +1169,7 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
         Resend an email invitation that has already been issued.
         """
         invite = self.get_object()
+        self.check_object_permissions(request, invite)
         invite.send_mail(request)
         invite.updated_at = timezone.now()
         invite.save(update_fields=["updated_at"])

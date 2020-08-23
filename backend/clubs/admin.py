@@ -215,7 +215,8 @@ class SubscribeAdmin(admin.ModelAdmin):
 
 class MembershipRequestAdmin(admin.ModelAdmin):
     search_fields = ("person__username", "person__email", "club__name", "club__pk")
-    list_display = ("person", "club", "email")
+    list_display = ("person", "club", "email", "withdrew", "is_member")
+    list_filter = ("withdrew",)
 
     def person(self, obj):
         return obj.person.username
@@ -225,6 +226,11 @@ class MembershipRequestAdmin(admin.ModelAdmin):
 
     def email(self, obj):
         return obj.person.email
+
+    def is_member(self, obj):
+        return obj.club.membership_set.filter(person__pk=obj.person.pk).exists()
+
+    is_member.boolean = True
 
 
 class MembershipAdmin(admin.ModelAdmin):
@@ -241,8 +247,8 @@ class MembershipAdmin(admin.ModelAdmin):
 
 class ProfileAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "user__email")
-    list_display = ("user", "email", "graduation_year", "studies")
-    list_filter = ("graduation_year", "school", "major")
+    list_display = ("user", "email", "graduation_year", "studies", "has_been_prompted")
+    list_filter = ("graduation_year", "school", "major", "has_been_prompted")
 
     def email(self, obj):
         return str(obj.user.email or None)
