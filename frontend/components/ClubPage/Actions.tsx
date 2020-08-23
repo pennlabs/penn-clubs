@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { CSSProperties, ReactElement, useState } from 'react'
+import { CSSProperties, ReactElement, useEffect, useState } from 'react'
+import Linkify from 'react-linkify'
 import s from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
@@ -57,7 +58,7 @@ type ActionsProps = {
   userInfo: UserInfo
   style?: CSSProperties
   className?: string
-  updateRequests: (code: string) => void
+  updateRequests: (code: string) => Promise<void>
 }
 
 const ModalContent = s.div`
@@ -160,22 +161,30 @@ const Actions = ({
             section for more details!
           </p>
           <Quote>
-            {club.how_to_get_involved ||
-              'There is currently no information about how to get involved with this club.'}
+            <Linkify>
+              {club.how_to_get_involved ||
+                'There is currently no information about how to get involved with this club.'}
+            </Linkify>
           </Quote>
           <p>
             If you are an existing member of this club, use the button below to
             confirm your membership request.
           </p>
-          <div
-            className="button is-success"
-            onClick={() => {
+          <p className="has-text-danger">
+            If you are not an existing member of this club, please <b>do not</b>{' '}
+            press the button below. This <b>is not</b> the application process
+            for {club.name}.
+          </p>
+          <button
+            className="button is-warning"
+            onClick={(e) => {
+              e.preventDefault()
               updateRequests(code)
               setShowModal(false)
             }}
           >
             Confirm
-          </div>
+          </button>
         </ModalContent>
       </Modal>
     </>

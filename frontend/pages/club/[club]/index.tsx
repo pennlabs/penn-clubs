@@ -70,7 +70,7 @@ const ClubPage = ({
 }: ClubPageProps): ReactElement => {
   const [club, setClub] = useState<Club>(initialClub)
 
-  const updateRequests = (code: string): void => {
+  const updateRequests = async (code: string): Promise<void> => {
     const newClub = { ...club }
     logEvent(!newClub.is_request ? 'request' : 'unrequest', code)
     const req = !newClub.is_request
@@ -84,10 +84,10 @@ const ClubPage = ({
           method: 'DELETE',
         })
 
-    req.then(() => {
-      newClub.is_request = !newClub.is_request
-      setClub(newClub)
-    })
+    await req
+
+    newClub.is_request = !newClub.is_request
+    setClub(newClub)
   }
 
   const { code } = club
