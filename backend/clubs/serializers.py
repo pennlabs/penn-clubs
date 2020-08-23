@@ -303,16 +303,18 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
             self.instance.email.endswith((".upenn.edu", "@upenn.edu"))
             and self.instance.club.membership_set.count() > 0
         ):
-            invite_username = self.instance.email.rsplit("@", 1)[0]
-            if not (
-                invite_username.lower() == user.username.lower()
-                or self.instance.email == user.email
-            ):
-                raise serializers.ValidationError(
-                    'This invitation was meant for "{}", but you are logged in as "{}"!'.format(
-                        invite_username, user.username
+            # penn medicine emails have multiple aliases
+            if not self.instance.email.endswith("@pennmedicine.upenn.edu"):
+                invite_username = self.instance.email.rsplit("@", 1)[0]
+                if not (
+                    invite_username.lower() == user.username.lower()
+                    or self.instance.email == user.email
+                ):
+                    raise serializers.ValidationError(
+                        'This invitation was meant for "{}", but you are logged in as "{}"!'.format(
+                            invite_username, user.username
+                        )
                     )
-                )
 
         # claim the invite and set the membership public status
         obj = instance.claim(user)
@@ -576,7 +578,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
     badges = BadgeSerializer(many=True, required=False)
     testimonials = TestimonialSerializer(many=True, read_only=True)
-    questions = QuestionAnswerSerializer(many=True, read_only=True)
     events = EventSerializer(many=True, read_only=True)
     is_request = serializers.SerializerMethodField("get_is_request")
     fair = serializers.BooleanField(default=False)
@@ -762,11 +763,16 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                     needs_reapproval = True
                     break
 
+        has_approved_version = (
+            self.instance and self.instance.history.filter(approved=True).exists()
+        )
+
         if needs_reapproval:
             self.validated_data["approved"] = None
             self.validated_data["approved_by"] = None
             self.validated_data["approved_on"] = None
-            self.validated_data["ghost"] = True
+            if has_approved_version:
+                self.validated_data["ghost"] = True
 
         # if approval was revoked, also reset the other fields
         if "approved" in self.validated_data and self.validated_data["approved"] is None:
@@ -785,6 +791,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
             if new_approval_status is True:
                 self.validated_data["ghost"] = False
+
+        # if fair interest was indicated, set the earliest indication of interest
+        if "fair" in self.validated_data and self.validated_data["fair"] is True:
+            if not self.instance or self.instance.fair_on is None:
+                self.validated_data["fair_on"] = timezone.now()
 
         obj = super().save()
 
@@ -816,7 +827,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "linkedin",
             "listserv",
             "members",
-            "questions",
             "testimonials",
             "twitter",
             "website",

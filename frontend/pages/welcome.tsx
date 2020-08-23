@@ -1,10 +1,11 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
-import { ReactElement, useEffect } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import {
   Center,
+  Container,
   Icon,
   Metadata,
   PhoneContainer,
@@ -12,19 +13,12 @@ import {
   Title,
 } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
+import LogoWithText from '../components/LogoWithText'
 import ProfileForm from '../components/Settings/ProfileForm'
 import { HOME_ROUTE } from '../constants/routes'
 import renderPage from '../renderPage'
 import { UserInfo } from '../types'
 import { doApiRequest } from '../utils'
-
-const Image = s.img`
-  height: 86px;
-  width: auto;
-  max-width: 242px;
-  margin-right: 1rem;
-  object-fit: contain;
-`
 
 const Subtitle = s(Title)`
   font-size: 1.3rem;
@@ -57,9 +51,11 @@ type WelcomeProps = {
 
 const Welcome = ({
   authenticated,
-  userInfo,
+  userInfo: initialUserInfo,
   nextUrl,
 }: WelcomeProps): ReactElement => {
+  const [userInfo, setUserInfo] = useState<UserInfo>(initialUserInfo)
+
   if (authenticated === false) {
     return <AuthPrompt />
   }
@@ -79,9 +75,9 @@ const Welcome = ({
   return (
     <>
       <Metadata title="Welcome!" />
-      <PhoneContainer>
+      <Container>
         <TitleHeader>
-          <Image src="/static/img/peoplelogo.png" />
+          <LogoWithText></LogoWithText>
           <Title>Welcome to Penn Clubs!</Title>
         </TitleHeader>
         <hr />
@@ -101,7 +97,7 @@ const Welcome = ({
             fields blank if you'd prefer not the share this info.
           </Text>
         </Center>
-        <ProfileForm settings={userInfo} />
+        <ProfileForm settings={userInfo} onUpdate={setUserInfo} />
         <hr />
         <Center>
           <Subtitle>2. Getting started</Subtitle>
@@ -136,11 +132,13 @@ const Welcome = ({
             href={nextUrl && nextUrl.startsWith('/') ? nextUrl : HOME_ROUTE}
           >
             <a className="button is-success is-large" onClick={markWelcome}>
-              Browse clubs
+              {nextUrl && nextUrl.startsWith('/') && nextUrl !== HOME_ROUTE
+                ? 'Continue'
+                : 'Browse clubs'}
             </a>
           </Link>
         </Center>
-      </PhoneContainer>
+      </Container>
     </>
   )
 }

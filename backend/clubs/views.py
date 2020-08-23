@@ -181,7 +181,10 @@ class ReportViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "delete"]
 
     def get_queryset(self):
-        return Report.objects.filter(creator=self.request.user)
+        if not self.request.user.has_perm("clubs.generate_reports"):
+            return Report.objects.none()
+
+        return Report.objects.filter(Q(creator=self.request.user) | Q(public=True))
 
 
 class ClubPagination(PageNumberPagination):
@@ -563,14 +566,20 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             # save request as new report if name is set
             if (
                 request.user.is_authenticated
+                and request.user.has_perm("clubs.generate_reports")
                 and request.query_params.get("name")
                 and not request.query_params.get("existing")
             ):
                 name = request.query_params.get("name")
                 desc = request.query_params.get("desc")
+                public = request.query_params.get("public", "false").lower().strip() == "true"
                 parameters = json.dumps(dict(request.query_params))
                 Report.objects.create(
-                    name=name, description=desc, parameters=parameters, creator=request.user,
+                    name=name,
+                    description=desc,
+                    parameters=parameters,
+                    creator=request.user,
+                    public=public,
                 )
 
         return super().list(request, *args, **kwargs)
@@ -597,7 +606,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return SubscribeSerializer
         if self.action == "list":
             if self.request is not None and self.request.accepted_renderer.format == "xlsx":
-                return ClubSerializer
+                if self.request.user.has_perm("clubs.generate_reports"):
+                    return AuthenticatedClubSerializer
+                else:
+                    return ClubSerializer
             return ClubListSerializer
         if self.request is not None and self.request.user.is_authenticated:
             see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
@@ -1142,6 +1154,8 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
         """
         invite = self.get_object()
         invite.send_mail(request)
+        invite.updated_at = timezone.now()
+        invite.save(update_fields=["updated_at"])
 
         return Response({"detail": "Resent email invitation to {}!".format(invite.email)})
 

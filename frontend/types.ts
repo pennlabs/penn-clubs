@@ -112,7 +112,6 @@ export interface Club {
   listserv: string
   members: [Membership]
   name: string
-  questions: [QuestionAnswer]
   size: ClubSize
   subtitle: string
   tags: [Tag]

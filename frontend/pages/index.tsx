@@ -6,6 +6,7 @@ import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
 import LiveEventsDialog from '../components/ClubPage/LiveEventsDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
+import LogoWithText from '../components/LogoWithText'
 import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
 import SearchBar from '../components/SearchBar'
 import {

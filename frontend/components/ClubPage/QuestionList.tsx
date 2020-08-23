@@ -1,7 +1,8 @@
 import { ReactElement, useState } from 'react'
+import Linkify from 'react-linkify'
 import s from 'styled-components'
 
-import { Club } from '../../types'
+import { Club, QuestionAnswer } from '../../types'
 import { doApiRequest } from '../../utils'
 import Form from '../Form'
 
@@ -26,10 +27,12 @@ const QuoteAuthor = s.i`
 
 type QuestionListProps = {
   club: Club
+  questions: QuestionAnswer[]
 }
 
 const QuestionList = ({
-  club: { name, code, questions },
+  club: { name, code },
+  questions,
 }: QuestionListProps): ReactElement => {
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [formErrors, setFormErrors] = useState(null)
@@ -62,7 +65,7 @@ const QuestionList = ({
           <AnswerText>
             {question.answer ? (
               <>
-                {question.answer}
+                <Linkify>{question.answer}</Linkify>
                 <div>
                   <QuoteAuthor>- {question.responder}</QuoteAuthor>
                 </div>

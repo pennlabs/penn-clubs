@@ -33,7 +33,7 @@ import {
 import { CLUBS_RED, SNOW, WHITE } from '../../../constants/colors'
 import { M0, M2, M3 } from '../../../constants/measurements'
 import renderPage from '../../../renderPage'
-import { Club, UserInfo } from '../../../types'
+import { Club, QuestionAnswer, UserInfo } from '../../../types'
 import { doApiRequest } from '../../../utils'
 import { logEvent } from '../../../utils/analytics'
 
@@ -60,10 +60,12 @@ const InactiveCard = s(Card)`
 type ClubPageProps = {
   club: Club
   userInfo: UserInfo
+  questions: QuestionAnswer[]
 }
 
 const ClubPage = ({
   club: initialClub,
+  questions,
   userInfo,
 }: ClubPageProps): ReactElement => {
   const [club, setClub] = useState<Club>(initialClub)
@@ -166,7 +168,7 @@ const ClubPage = ({
           <StrongText>Members</StrongText>
           <MemberList club={club} />
           <StrongText>FAQ</StrongText>
-          <QuestionList club={club} />
+          <QuestionList club={club} questions={questions} />
         </div>
         <div className="column is-one-third">
           <DesktopActions
@@ -199,14 +201,20 @@ const ClubPage = ({
   )
 }
 
-ClubPage.getInitialProps = async (ctx: NextPageContext) => {
+ClubPage.getInitialProps = async (
+  ctx: NextPageContext,
+): Promise<{ club: Club; questions: QuestionAnswer[] }> => {
   const { query, req } = ctx
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
-  const resp = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
-  const club = await resp.json()
-  return { club }
+  const [club, questions] = await Promise.all(
+    [
+      `/clubs/${query.club}/?format=json`,
+      `/clubs/${query.club}/questions/?format=json`,
+    ].map(async (url) => (await doApiRequest(url, data)).json()),
+  )
+  return { club, questions }
 }
 
 export default renderPage(ClubPage)

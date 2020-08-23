@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { ReactElement, useState } from 'react'
 import s from 'styled-components'
 
 import { Flex, Icon } from '../../components/common'
@@ -33,6 +33,15 @@ const ReportsContainer = s.div`
   margin: 2em;
 `
 
+type Props = {
+  fields: any
+  generateCheckboxGroup: any
+  query: { fields: string[] }
+  updateReportFlag: (val: boolean) => void
+  reportFlag: boolean
+  handleBack: () => void
+}
+
 const Edit = ({
   fields,
   generateCheckboxGroup,
@@ -40,11 +49,11 @@ const Edit = ({
   updateReportFlag,
   reportFlag,
   handleBack,
-}) => {
+}: Props): ReactElement => {
   const [nameInput, setNameInput] = useState('')
   const [descInput, setDescInput] = useState('')
 
-  const handleGenerateReport = () => {
+  const handleGenerateReport = (): void => {
     window.open(
       `${API_BASE_URL}/clubs/?format=xlsx&name=${encodeURIComponent(
         nameInput,
@@ -93,7 +102,6 @@ const Edit = ({
                 <TallTextArea
                   name="description"
                   className="input"
-                  type="text"
                   placeholder='e.g. "Pulls all clubs, the emails from club owners, and names of owners"'
                   value={descInput}
                   onChange={(e) => setDescInput(e.target.value)}

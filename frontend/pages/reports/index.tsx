@@ -6,10 +6,12 @@ import s from 'styled-components'
 import {
   Checkbox,
   CheckboxLabel,
+  Contact,
   Empty,
   Icon,
   Metadata,
 } from '../../components/common'
+import AuthPrompt from '../../components/common/AuthPrompt'
 import {
   CLUBS_BLUE,
   CLUBS_GREY,
@@ -22,7 +24,7 @@ import {
 } from '../../constants/colors'
 import renderPage from '../../renderPage'
 import { Report } from '../../types'
-import { API_BASE_URL, doApiRequest } from '../../utils'
+import { API_BASE_URL, apiCheckPermission, doApiRequest } from '../../utils'
 import Edit from './edit'
 
 const GroupLabel = s.h4`
@@ -85,6 +87,7 @@ const ActionButton = s.button`
   margin-left: 0.4em;
   margin-right: 0.4em;
   font-weight: 500;
+  cursor: pointer;
 `
 
 const TableHeader = s.th`
@@ -114,15 +117,17 @@ const serializeParams = (params) => {
 
 type ReportsProps = {
   nameToCode: { [key: string]: string }
+  authenticated: boolean | null
 }
 
-const Reports = ({ nameToCode }: ReportsProps): ReactElement => {
+const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
   const fields = {
     Fields: Object.keys(nameToCode),
   }
 
   const [reports, setReports] = useState<Report[]>([])
   const [reportFlag, updateReportFlag] = useState(false)
+  const [permission, setPermission] = useState<boolean | null>(null)
 
   const [isEdit, setIsEdit] = useState(false)
 
@@ -131,6 +136,10 @@ const Reports = ({ nameToCode }: ReportsProps): ReactElement => {
       .then((resp) => (resp.ok ? resp.json() : []))
       .then((data) => setReports(data))
   }, [reportFlag])
+
+  useEffect(() => {
+    apiCheckPermission('clubs.generate_reports').then(setPermission)
+  }, [])
 
   const [includedFields, setIncludedFields] = useState(() => {
     const initial = {}
@@ -189,6 +198,22 @@ const Reports = ({ nameToCode }: ReportsProps): ReactElement => {
     window.location.href = `${API_BASE_URL}/clubs/?bypass=true&existing=true&${serializeParams(
       JSON.parse(report.parameters),
     )}`
+  }
+
+  if (authenticated === false || permission === false) {
+    return (
+      <AuthPrompt title="Oh no!" hasLogin={!authenticated}>
+        <Metadata title="Club Reports" />
+        <div className="mb-3">
+          You do not have permission to view this page.
+          {!authenticated && <> Logging in to Penn Clubs might help.</>}
+        </div>
+        <div className="mb-3">
+          If you believe that you should have access to this page, please email{' '}
+          <Contact />.
+        </div>
+      </AuthPrompt>
+    )
   }
 
   return (

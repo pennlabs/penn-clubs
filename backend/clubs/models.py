@@ -59,12 +59,19 @@ class Report(models.Model):
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     description = models.TextField(blank=True)
     parameters = models.TextField(blank=True)
+    public = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ["name"]
+        permissions = [
+            ("generate_reports", "Can generate reports"),
+        ]
 
 
 class Club(models.Model):
@@ -104,6 +111,7 @@ class Club(models.Model):
 
     # indicates whether or not the club has expressed interest in this year's SAC fair
     fair = models.BooleanField(default=False)
+    fair_on = models.DateTimeField(null=True, blank=True)
 
     code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=False)

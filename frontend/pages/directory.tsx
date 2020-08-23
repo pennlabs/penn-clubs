@@ -40,9 +40,10 @@ const Directory = ({ clubs }: Props): ReactElement => {
         <DirectoryTitle>Clubs Directory</DirectoryTitle>
         <p className="mb-5 has-text-grey">
           The directory is an alphabetically sorted list of all {clubs.length}{' '}
-          clubs on Penn Clubs, including clubs that have not yet been approved.
-          If a club exists but has not been approved, it is shown in grey in the
-          list below.
+          clubs on Penn Clubs, including the{' '}
+          {clubs.filter((club) => !club.approved).length} clubs that have not
+          yet been approved. If a club exists but has not been approved, it is
+          shown in grey in the list below.
         </p>
         <DirectoryList>
           {clubs.map((club) => (

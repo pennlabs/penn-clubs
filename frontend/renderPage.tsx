@@ -207,10 +207,13 @@ export function renderListPage(Page) {
     const data = {
       headers: req ? { cookie: req.headers.cookie } : undefined,
     }
-    const clubsRequest = await doApiRequest('/clubs/?page=1&format=json', data)
-    const clubsResponse = await clubsRequest.json()
 
-    const tagsRequest = await doApiRequest('/tags/?format=json', data)
+    const [clubsRequest, tagsRequest] = await Promise.all([
+      doApiRequest('/clubs/?page=1&ordering=featured&format=json', data),
+      doApiRequest('/tags/?format=json', data),
+    ])
+
+    const clubsResponse = await clubsRequest.json()
     const tagsResponse = await tagsRequest.json()
 
     const liveEventRequest = await doApiRequest('/events/live/', data)
