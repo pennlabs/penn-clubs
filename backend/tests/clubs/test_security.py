@@ -97,7 +97,7 @@ class SecurityTestCase(TestCase):
             return True
 
         # Don't put your function here unless it never returns any private information.
-        whitelist = {("ClubViewSet", "qr")}
+        whitelist = set()
 
         for name, obj in inspect.getmembers(views, inspect.isclass):
             # loop through all model view set classes

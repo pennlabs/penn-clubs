@@ -520,7 +520,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return a QR code png image representing a link to the club on Penn Clubs.
         """
-        url = f"https://{settings.DEFAULT_DOMAIN}/club/{self.kwargs['code']}/fair"
+        club = self.get_object()
+        self.check_object_permissions(request, club)
+
+        url = f"https://{settings.DEFAULT_DOMAIN}/club/{club.code}/fair"
         response = HttpResponse(content_type="image/png")
         qr_image = qrcode.make(url, box_size=20, border=0)
         qr_image.save(response, "PNG")
