@@ -4,7 +4,6 @@ import s from 'styled-components'
 import {
   BORDER,
   CLUBS_BLUE,
-  CLUBS_GREY_LIGHT,
   FOCUS_GRAY,
   MEDIUM_GRAY,
 } from '../constants/colors'
@@ -73,7 +72,7 @@ const OrderingWrapper = s.div`
 
   & button, a {
     padding: 8px 10px;
-    color: ${CLUBS_GREY_LIGHT};
+    color: ${MEDIUM_GRAY};
     font-family: ${BODY_FONT};
   }
 
@@ -81,7 +80,7 @@ const OrderingWrapper = s.div`
     outline: none !important;
     box-shadow: none !important;
     border: 1px solid ${BORDER};
-    color: ${CLUBS_GREY_LIGHT};
+    color: ${MEDIUM_GRAY};
     background: ${FOCUS_GRAY};
   }
 `
