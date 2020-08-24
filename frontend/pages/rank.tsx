@@ -2,6 +2,7 @@ import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import {
+  Contact,
   Container,
   Icon,
   Metadata,
@@ -48,7 +49,7 @@ const LargeIcon = s(Icon)`
 
 type RankItemData = {
   name: string
-  description: string
+  description: string | ReactElement
   points?: [number, string][]
 }
 
@@ -128,6 +129,21 @@ const Rank = (): ReactElement => (
             [15, 'At least 3 active officers'],
             [10, 'At least 3 active members'],
             [0.1, 'For every non-officer member'],
+          ],
+        },
+        {
+          name: 'Useful Tags',
+          description: (
+            <>
+              Adding relevant tags to your club can help prospective members
+              find the clubs that they are interested in. If you cannot find at
+              least 2 relevant tags for your club, please email <Contact /> and
+              we will work with you to find something appropriate.
+            </>
+          ),
+          points: [
+            [15, 'Has anywhere between 3 and 7 tags'],
+            [7, 'Has more than 7 tags'],
           ],
         },
         {

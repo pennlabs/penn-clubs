@@ -1,4 +1,5 @@
 import { ReactElement } from 'react'
+import Linkify from 'react-linkify'
 import s from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
@@ -57,7 +58,9 @@ const Events = ({ data }: EventsProps): ReactElement | null => {
                 }).format(new Date(entry.start_time))}{' '}
                 | {entry.location}
               </BigParagraph>
-              <SmallParagraph>{entry.name}</SmallParagraph>
+              <SmallParagraph>
+                <Linkify>{entry.name}</Linkify>
+              </SmallParagraph>
             </div>
           </Wrapper>
         )
