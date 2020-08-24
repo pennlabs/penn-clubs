@@ -1,7 +1,9 @@
 describe('Invitation tests', () => {
   before(() => {
     cy.login('bfranklin', 'test') 
+    cy.visit('/api/admin/auth/user')  
   })
+
 
   after(() => {
     // Remove James Madison from the club
