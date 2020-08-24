@@ -61,7 +61,7 @@ type ActionsProps = {
   updateRequests: (code: string) => Promise<void>
 }
 
-const ModalContent = s.div`
+export const ModalContent = s.div`
   text-align: left;
   padding: 15px;
 
@@ -72,6 +72,10 @@ const ModalContent = s.div`
 
   & p {
     margin-bottom: 1em;
+  }
+
+  & input {
+    box-sizing: border-box;
   }
 `
 

@@ -19,6 +19,10 @@ const Wrapper = s.div`
   & ul {
     list-style-type: disc;
   }
+
+  & iframe {
+    width: 100%;
+  }
 `
 
 type Props = {
@@ -27,7 +31,7 @@ type Props = {
 
 const Description = ({ club }: Props): ReactElement => (
   <Wrapper>
-    <div>
+    <div style={{ width: '100%' }}>
       <StrongText>Description</StrongText>
       <div
         style={{ whiteSpace: 'pre-wrap' }}

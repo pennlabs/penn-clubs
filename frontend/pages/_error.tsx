@@ -7,7 +7,7 @@ import { Center, Container, Metadata } from '../components/common'
 import { SNOW } from '../constants/colors'
 import { HOME_ROUTE } from '../constants/routes'
 import renderPage from '../renderPage'
-import { captureMessage } from '../utils/sentry'
+import { logMessage } from '../utils/sentry'
 
 const Image = s.img`
   margin-top: calc(1rem + 5vh);
@@ -51,7 +51,7 @@ Error.getInitialProps = ({ res, err }: NextPageContext) => {
       message = 'Something went wrong.'
     }
   } else {
-    captureMessage(`${statusCode}: ${message}`)
+    logMessage(`${statusCode}: ${message}`)
   }
 
   return { statusCode, message }
