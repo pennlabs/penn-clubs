@@ -332,8 +332,8 @@ class MajorAdmin(admin.ModelAdmin):
 
 class ReportAdmin(admin.ModelAdmin):
     search_fields = ("name", "description")
-    list_display = ("name", "creator")
-    list_filter = ("created_at",)
+    list_display = ("name", "creator", "public")
+    list_filter = ("created_at", "public")
 
 
 class YearAdmin(admin.ModelAdmin):
