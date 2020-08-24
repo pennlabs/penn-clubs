@@ -121,7 +121,7 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
           </button>
         </div>
       )}
-      {club.active && club.approved !== true ? (
+      {(club.active || canDeleteClub) && club.approved !== true ? (
         <div className="notification is-warning">
           <Text>
             {club.approved === false ? (
@@ -161,78 +161,86 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
               </>
             )}
           </Text>
-          {canApprove && (
+          {(canApprove || canDeleteClub) && (
             <>
-              <div className="mb-3">
-                As an administrator for Penn Clubs, you can approve or reject
-                this request. Approving this request will display it publically
-                on the Penn Clubs website and send out an email notifying club
-                officers that their club has been renewed. Rejecting this
-                request will send out an email notifying club officers that
-                their club was not approved and include instructions on how to
-                request approval again.
-              </div>
-              {club.files.length ? (
-                <div className="mb-3">
-                  <b>Club Files:</b>
-                  <ul>
-                    {club.files.map(({ name, file_url }, i) => (
-                      <li key={i}>
-                        <a target="_blank" href={file_url}>
-                          {name}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <div className="mb-3">
-                  This club has not uploaded any files.
-                </div>
+              {canApprove && club.active && (
+                <>
+                  <div className="mb-3">
+                    As an administrator for Penn Clubs, you can approve or
+                    reject this request. Approving this request will display it
+                    publically on the Penn Clubs website and send out an email
+                    notifying club officers that their club has been renewed.
+                    Rejecting this request will send out an email notifying club
+                    officers that their club was not approved and include
+                    instructions on how to request approval again.
+                  </div>
+                  {club.files.length ? (
+                    <div className="mb-3">
+                      <b>Club Files:</b>
+                      <ul>
+                        {club.files.map(({ name, file_url }, i) => (
+                          <li key={i}>
+                            <a target="_blank" href={file_url}>
+                              {name}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="mb-3">
+                      This club has not uploaded any files.
+                    </div>
+                  )}
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="textarea mb-4"
+                    placeholder="Enter approval or rejection notes here! Your notes will be sent to the club officers when you approve or reject this request."
+                  ></textarea>
+                </>
               )}
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="textarea mb-4"
-                placeholder="Enter approval or rejection notes here! Your notes will be sent to the club officers when you approve or reject this request."
-              ></textarea>
               <div className="buttons">
-                <button
-                  className="button is-success"
-                  disabled={loading}
-                  onClick={() => {
-                    setLoading(true)
-                    doApiRequest(`/clubs/${club.code}/?format=json`, {
-                      method: 'PATCH',
-                      body: {
-                        approved: true,
-                        approved_comment: comment,
-                      },
-                    })
-                      .then(() => router.reload())
-                      .finally(() => setLoading(false))
-                  }}
-                >
-                  <Icon name="check" /> Approve
-                </button>
-                <button
-                  className="button is-danger"
-                  disabled={loading}
-                  onClick={() => {
-                    setLoading(true)
-                    doApiRequest(`/clubs/${club.code}/?format=json`, {
-                      method: 'PATCH',
-                      body: {
-                        approved: false,
-                        approved_comment: comment,
-                      },
-                    })
-                      .then(() => router.reload())
-                      .finally(() => setLoading(false))
-                  }}
-                >
-                  <Icon name="x" /> Reject
-                </button>
+                {canApprove && club.active && (
+                  <>
+                    <button
+                      className="button is-success"
+                      disabled={loading}
+                      onClick={() => {
+                        setLoading(true)
+                        doApiRequest(`/clubs/${club.code}/?format=json`, {
+                          method: 'PATCH',
+                          body: {
+                            approved: true,
+                            approved_comment: comment,
+                          },
+                        })
+                          .then(() => router.reload())
+                          .finally(() => setLoading(false))
+                      }}
+                    >
+                      <Icon name="check" /> Approve
+                    </button>
+                    <button
+                      className="button is-danger"
+                      disabled={loading}
+                      onClick={() => {
+                        setLoading(true)
+                        doApiRequest(`/clubs/${club.code}/?format=json`, {
+                          method: 'PATCH',
+                          body: {
+                            approved: false,
+                            approved_comment: comment,
+                          },
+                        })
+                          .then(() => router.reload())
+                          .finally(() => setLoading(false))
+                      }}
+                    >
+                      <Icon name="x" /> Reject
+                    </button>
+                  </>
+                )}
                 {canDeleteClub && (
                   <button
                     className="button is-danger is-pulled-right"
