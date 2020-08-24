@@ -26,8 +26,10 @@ class Command(BaseCommand):
 
             # points for minimum amount of tags
             tags = club.tags.count()
-            if tags >= 3 and tags <= 10:
+            if tags >= 3 and tags <= 7:
                 ranking += 15
+            elif tags > 7:
+                ranking += 7
 
             # lots of points for officers
             officers = club.membership_set.filter(
@@ -53,7 +55,7 @@ class Command(BaseCommand):
                 ranking += 5
 
             # images in description? awesome
-            if "<img" in club.description:
+            if "<img" in club.description or "<iframe" in club.description:
                 ranking += 3
 
             # points for longer descriptions

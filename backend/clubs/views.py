@@ -357,6 +357,23 @@ class ClubsOrderingFilter(filters.OrderingFilter):
     Custom ordering filter for club objects.
     """
 
+    def get_valid_fields(self, queryset, view, context={}):
+        # report generators can order by any field
+        request = context.get("request")
+        if (
+            request is not None
+            and request.user.is_authenticated
+            and request.user.has_perm("clubs.generate_reports")
+        ):
+            valid_fields = [
+                (field.name, field.verbose_name) for field in queryset.model._meta.fields
+            ]
+            valid_fields += [(key, key.title().split("__")) for key in queryset.query.annotations]
+            return valid_fields
+
+        # other people can order by whitelist
+        return super().get_valid_fields(queryset, view, context)
+
     def filter_queryset(self, request, queryset, view):
         new_queryset = super().filter_queryset(request, queryset, view)
         ordering = request.GET.get("ordering", "").split(",")
@@ -403,7 +420,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     queryset = (
         Club.objects.all()
-        .annotate(favorite_count=Count("favorite"))
+        .annotate(favorite_count=Count("favorite", distinct=True))
         .prefetch_related(
             "tags",
             "badges",
@@ -620,7 +637,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return Response(
             {
                 name_to_title.get(f, f.replace("_", " ").title()): f
-                for f in ClubSerializer.Meta.fields
+                for f in self.get_serializer_class().Meta.fields
             }
         )
 
@@ -629,8 +646,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return AssetSerializer
         if self.action == "subscription":
             return SubscribeSerializer
-        if self.action == "list":
-            if self.request is not None and self.request.accepted_renderer.format == "xlsx":
+        if self.action in {"list", "fields"}:
+            if self.request is not None and (
+                self.request.accepted_renderer.format == "xlsx" or self.action == "fields"
+            ):
                 if self.request.user.has_perm("clubs.generate_reports"):
                     return AuthenticatedClubSerializer
                 else:
@@ -1085,7 +1104,7 @@ class TagViewSet(viewsets.ModelViewSet):
     Return details for a specific tag by name.
     """
 
-    queryset = Tag.objects.all().annotate(clubs=Count("club")).order_by("name")
+    queryset = Tag.objects.all().annotate(clubs=Count("club", distinct=True)).order_by("name")
     serializer_class = TagSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]

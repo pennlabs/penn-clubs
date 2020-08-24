@@ -62,13 +62,14 @@ class Command(BaseCommand):
 
         # deactivate all clubs
         if deactivate_clubs:
-            clubs.update(active=False, approved=None, approved_by=None, fair=False)
+            clubs.update(active=False, approved=None, approved_by=None, fair=False, fair_on=None)
 
             # allow existing approved version to stay on penn clubs website for now
             ghosted = 0
             for club in clubs:
                 if club.history.filter(approved=True).exists():
                     club.ghost = True
+                    club._change_reason = "Mark pending approval (yearly renewal process)"
                     club.save(update_fields=["ghost"])
                     ghosted += 1
 

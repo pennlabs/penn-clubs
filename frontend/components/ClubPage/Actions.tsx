@@ -6,7 +6,8 @@ import s from 'styled-components'
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
 import { Club, MembershipRank, UserInfo } from '../../types'
-import { BookmarkIcon, Modal, SubscribeIcon } from '../common'
+import { logException } from '../../utils/sentry'
+import { BookmarkIcon, Contact, Modal, SubscribeIcon } from '../common'
 
 const Wrapper = s.span`
   display: flex;
@@ -105,10 +106,10 @@ const Actions = ({
     (inClub && inClub.role <= MembershipRank.Officer) ||
     (userInfo && userInfo.is_superuser)
 
-  const [favCount, setFavCount] = useState<number>(favoriteCount || 0)
+  const [favCount, setFavCount] = useState<number>(favoriteCount ?? 0)
   const [showModal, setShowModal] = useState<boolean>(false)
   const [isSubmitDisabled, setSubmitDisabled] = useState<boolean>(false)
-  const [isSubmitted, setSubmitted] = useState<boolean>(false)
+  const [isSubmitted, setSubmitted] = useState<boolean | null>(null)
   const requestMembership = () => {
     if (!isRequested) {
       setShowModal(true)
@@ -120,7 +121,7 @@ const Actions = ({
   useEffect(() => {
     if (showModal) {
       setSubmitDisabled(false)
-      setSubmitted(false)
+      setSubmitted(null)
     }
   }, [showModal])
 
@@ -188,11 +189,16 @@ const Actions = ({
             press the button below. This <b>is not</b> the application process
             for {club.name}.
           </p>
-          {isSubmitted ? (
+          {isSubmitted === true ? (
             <p className="has-text-success">
               <b>Success!</b> Your membership request has been submitted. An
               email has been sent to club officers asking them to confirm your
               membership. Click anywhere outside this popup to close it.
+            </p>
+          ) : isSubmitted === false ? (
+            <p className="has-text-danger">
+              Could not send your membership request. Please email <Contact />{' '}
+              for assistance.
             </p>
           ) : (
             <button
@@ -201,9 +207,14 @@ const Actions = ({
               onClick={(e) => {
                 setSubmitDisabled(true)
                 e.preventDefault()
-                updateRequests(code).then(() => {
-                  setSubmitted(true)
-                })
+                updateRequests(code)
+                  .then(() => {
+                    setSubmitted(true)
+                  })
+                  .catch((e) => {
+                    setSubmitted(false)
+                    logException(e)
+                  })
               }}
             >
               Confirm
