@@ -15,6 +15,11 @@ import {
   titleize,
 } from '../utils'
 import { Icon, Loading } from './common'
+import EmbedOption, {
+  blockRendererFunction,
+  entityToHtml,
+  htmlToEntity,
+} from './EmbedOption'
 
 const UNSAVED_MESSAGE =
   'You have unsaved changes. Are you sure you want to leave?'
@@ -55,7 +60,7 @@ class Form extends Component {
             this.state[`editorState-${name}`] = value
               ? EditorState.createWithContent(
                   ContentState.createFromBlockArray(
-                    htmlToDraft(value).contentBlocks,
+                    htmlToDraft(value, htmlToEntity).contentBlocks,
                   ),
                 )
               : EditorState.createEmpty()
@@ -296,6 +301,9 @@ class Form extends Component {
                   [`editorState-${name}`]: state,
                   [`field-${name}`]: draftToHtml(
                     convertToRaw(state.getCurrentContent()),
+                    undefined,
+                    undefined,
+                    entityToHtml,
                   ),
                 })
               }}
@@ -317,6 +325,8 @@ class Form extends Component {
                 border: '1px solid #dbdbdb',
                 padding: '0 1em',
               }}
+              toolbarCustomButtons={[<EmbedOption />]}
+              customBlockRenderFunc={blockRendererFunction}
             />
           ) : (
             <div />

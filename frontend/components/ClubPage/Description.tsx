@@ -19,9 +19,10 @@ type Props = {
 
 const Description = ({ club }: Props): ReactElement => (
   <Wrapper>
-    <div>
+    <div style={{ width: '100%' }}>
       <StrongText>Description</StrongText>
       <div
+        className="content"
         style={{ whiteSpace: 'pre-wrap' }}
         dangerouslySetInnerHTML={{
           __html: club.description || EMPTY_DESCRIPTION,

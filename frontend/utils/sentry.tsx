@@ -1,12 +1,9 @@
 import React from 'react'
 let Sentry
 
-const { SENTRY_URL } = process.env
+const SENTRY_URL =
+  'https://d24382d743314dadadb80d1eabdb139e@sentry.pennlabs.org/13'
 const dev = process.env.NODE_ENV !== 'production'
-
-if (!SENTRY_URL && !dev) {
-  console.log('Missing SENTRY_URL in process environment.') // eslint-disable-line no-console
-}
 
 if (process.browser) {
   // If the code is running in user's browser
@@ -20,11 +17,15 @@ if (!dev) {
   Sentry.init({ dsn: SENTRY_URL })
 }
 
-export function logException(ex, context) {
+export function logException(ex: Error, context?: any): void {
   Sentry.captureException(ex, {
     extra: context,
   })
   window.console && console.error && console.error(ex) // eslint-disable-line no-console
+}
+
+export function logMessage(msg: string): void {
+  Sentry.captureMessage(msg)
 }
 
 export default function withSentry(WrappedComponent) {

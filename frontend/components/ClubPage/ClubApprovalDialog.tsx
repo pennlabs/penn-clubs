@@ -115,11 +115,11 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
                 {year + 1} school year and is only visible to club members and
                 administrators of Penn Clubs.
                 {club.is_ghost && (
-                  <div className="mt-3">
+                  <span className="mt-3 is-block">
                     The latest approved version of this club will be shown in
                     the meantime. When your changes have been approved, your
                     club page will be updated.
-                  </div>
+                  </span>
                 )}
               </>
             )}

@@ -74,6 +74,34 @@ def html_to_text(html):
     return traverse(soup.children).strip()
 
 
+# a list of allowed domains for embedding iframes
+IFRAME_EMBED_WHITELIST = {
+    "calendar.google.com",
+    "docs.google.com",
+    "drive.google.com",
+    "facebook.com",
+    "google.com",
+    "twitframe.com",
+    "xkcd.com",
+    "youtube.com",
+}
+
+
+def allow_iframe(tag, name, value):
+    if name in {"width", "height"}:
+        return True
+    if name == "src":
+        parsed = urlparse(value)
+        if not parsed.netloc:
+            return False
+        domain = parsed.netloc
+        if domain.startswith("www."):
+            domain = domain[4:]
+        if domain in IFRAME_EMBED_WHITELIST:
+            return True
+    return False
+
+
 def clean(text):
     """
     Uses bleach to sanitize HTML input with a larger group of exceptions.
@@ -82,12 +110,9 @@ def clean(text):
         text,
         tags=bleach.sanitizer.ALLOWED_TAGS
         + [
-            "sub",
-            "sup",
-            "p",
+            "br",
+            "code",
             "del",
-            "ins",
-            "span",
             "div",
             "h1",
             "h2",
@@ -95,14 +120,22 @@ def clean(text):
             "h4",
             "h5",
             "h6",
-            "img",
-            "u",
-            "br",
             "hr",
+            "iframe",
+            "img",
+            "ins",
+            "li",
+            "ol",
+            "p",
+            "span",
+            "sub",
+            "sup",
+            "u",
+            "ul",
         ],
         attributes={
             **bleach.sanitizer.ALLOWED_ATTRIBUTES,
-            **{"*": ["style"], "img": ["src", "alt"]},
+            **{"*": ["style"], "img": ["src", "alt"], "iframe": allow_iframe},
         },
         styles=["color", "background-color", "text-align", "font-size", "font-family"],
     )
