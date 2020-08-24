@@ -1,15 +1,29 @@
 describe('Invitation tests', () => {
   before(() => {
     cy.login('bfranklin', 'test') 
+
     cy.visit('/api/admin/auth/user')  
+
+    // Promote James Madision as a staff
+    cy.contains('jmadison').click()
+    cy.get('input[id="id_is_staff"]').check()
+    cy.get('input[id="id_is_superuser"]').check()
+    cy.contains('Save').click({ force: true })
   })
 
 
   after(() => {
-    // Remove James Madison from the club
+    // Remove James Madison (self) from the club
     cy.visit('/settings')
     cy.get('table > tbody > tr').last().contains('Leave').click()
      
+    // Demote James Madison (self) from staff
+    cy.visit('/api/admin/auth/user')  
+    cy.contains('jmadison').click()
+    cy.get('input[id="id_is_staff"]').uncheck()
+    cy.get('input[id="id_is_superuser"]').uncheck()
+    cy.contains('Save').click({ force: true })
+
     cy.logout()
   })
 
@@ -65,8 +79,7 @@ describe('Invitation tests', () => {
       cy.contains('Accept Invitation').click()
 
       // Redirect to club page
-      cy.contains('has been approved by Unknown').should('be.visible')
-      cy.contains('jmadison@seas.upenn.edu')
+      cy.title().should('eq', 'Penn Pre-Professional Juggling Organization')
       
       // Accessing invitation link after accepting it leads to 404 
       cy.visit(`/invite/${response.body['code']}/${response.body['id']}/${response.body['token']}`)
