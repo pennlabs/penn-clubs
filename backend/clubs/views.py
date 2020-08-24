@@ -1104,7 +1104,7 @@ class TagViewSet(viewsets.ModelViewSet):
     Return details for a specific tag by name.
     """
 
-    queryset = Tag.objects.all().annotate(clubs=Count("club")).order_by("name")
+    queryset = Tag.objects.all().annotate(clubs=Count("club", distinct=True)).order_by("name")
     serializer_class = TagSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
