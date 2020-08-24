@@ -647,9 +647,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if self.action == "subscription":
             return SubscribeSerializer
         if self.action in {"list", "fields"}:
-            if (
-                self.request is not None and self.request.accepted_renderer.format == "xlsx"
-            ) or self.action == "fields":
+            if self.request is not None and (
+                self.request.accepted_renderer.format == "xlsx" or self.action == "fields"
+            ):
                 if self.request.user.has_perm("clubs.generate_reports"):
                     return AuthenticatedClubSerializer
                 else:

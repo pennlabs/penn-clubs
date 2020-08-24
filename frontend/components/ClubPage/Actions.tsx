@@ -105,7 +105,7 @@ const Actions = ({
     (inClub && inClub.role <= MembershipRank.Officer) ||
     (userInfo && userInfo.is_superuser)
 
-  const [favCount, setFavCount] = useState<number>(favoriteCount || 0)
+  const [favCount, setFavCount] = useState<number>(favoriteCount ?? 0)
   const [showModal, setShowModal] = useState<boolean>(false)
   const [isSubmitDisabled, setSubmitDisabled] = useState<boolean>(false)
   const [isSubmitted, setSubmitted] = useState<boolean>(false)
