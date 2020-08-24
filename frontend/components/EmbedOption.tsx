@@ -193,12 +193,44 @@ const EmbedOption = (props: Props): ReactElement => {
                 </small>
               </li>
               <li>
+                Popular Web Services
+                <br />
+                <small>
+                  <a
+                    target="_blank"
+                    href="https://support.google.com/a/users/answer/9308623?hl=en"
+                  >
+                    Google Forms
+                  </a>
+                  ,{' '}
+                  <a
+                    target="_blank"
+                    href="https://developers.facebook.com/docs/plugins/page-plugin/"
+                  >
+                    Facebook Posts
+                  </a>
+                  , Google Maps,{' '}
+                  <a
+                    target="_blank"
+                    href="https://support.google.com/calendar/answer/41207?hl=en"
+                  >
+                    Google Calendars
+                  </a>
+                  ,{' '}
+                  <a target="_blank" href="https://twitframe.com/">
+                    Twitter Tweets
+                  </a>
+                </small>
+              </li>
+              <li>
                 Any Website Page
                 <br />
                 <small>
                   You can embed any website page using this form. Note that you
                   may need to configure your website to allow it to be embedded
-                  in an iframe. Example link format: https://xkcd.com/
+                  in an iframe. If the website is not common, you will need to
+                  contact <Contact /> to get it added to the whitelist. Example
+                  link format: https://xkcd.com/
                 </small>
               </li>
             </ul>
