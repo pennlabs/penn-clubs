@@ -119,6 +119,9 @@ class SecurityTestCase(TestCase):
                             continue
 
                         # check to ensure check_object_permissions called
+                        check_object_permissions = False
+                        get_object = False
+
                         for child in ast.walk(node):
                             if isinstance(child, ast.Call) and isinstance(
                                 child.func, ast.Attribute
@@ -127,10 +130,20 @@ class SecurityTestCase(TestCase):
                                     continue
                                 if not child.func.value.id == "self":
                                     continue
-                                if not child.func.attr == "check_object_permissions":
-                                    continue
-                                break
-                        else:
+                                if child.func.attr == "check_object_permissions":
+                                    check_object_permissions = True
+                                if child.func.attr == "get_object":
+                                    get_object = True
+
+                        if get_object and check_object_permissions:
+                            self.fail(
+                                f"Function {node.name} in class {name} has a duplicate check for "
+                                "object permissions. You do not need to call "
+                                "self.check_object_permissions(request, object) if you call "
+                                "self.get_object()."
+                            )
+
+                        if not (get_object or check_object_permissions):
                             if (name, node.name) in whitelist:
                                 continue
 

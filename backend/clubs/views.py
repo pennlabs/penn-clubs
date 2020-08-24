@@ -458,7 +458,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         # ensure user is allowed to upload image
         club = self.get_object()
-        self.check_object_permissions(request, club)
 
         # reset approval status after upload
         resp = upload_endpoint_helper(request, Club, "image", code=club.code)
@@ -479,7 +478,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         # ensure user is allowed to upload file
         club = self.get_object()
-        self.check_object_permissions(request, club)
 
         return file_upload_endpoint_helper(request, code=club.code)
 
@@ -489,7 +487,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a recursive list of all children that this club is a parent of.
         """
         club = self.get_object()
-        self.check_object_permissions(request, club)
         child_tree = find_relationship_helper("children_orgs", club, {club.code})
         return Response(child_tree)
 
@@ -499,7 +496,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a recursive list of all parents that this club is a child to.
         """
         club = self.get_object()
-        self.check_object_permissions(request, club)
         parent_tree = find_relationship_helper("parent_orgs", club, {club.code})
         return Response(parent_tree)
 
@@ -509,7 +505,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a list of notes about this club, used by members of parent organizations.
         """
         club = self.get_object()
-        self.check_object_permissions(request, club)
         queryset = Note.objects.filter(subject_club__code=club.code)
         queryset = filter_note_permission(queryset, club, self.request.user)
         serializer = NoteSerializer(queryset, many=True)
@@ -521,7 +516,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a QR code png image representing a link to the club on Penn Clubs.
         """
         club = self.get_object()
-        self.check_object_permissions(request, club)
 
         url = f"https://{settings.DEFAULT_DOMAIN}/club/{club.code}/fair"
         response = HttpResponse(content_type="image/png")
@@ -536,7 +530,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         including their names and emails.
         """
         club = self.get_object()
-        self.check_object_permissions(request, club)
         serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
         return Response(serializer.data)
 
@@ -975,7 +968,6 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def accept(self, request, *ages, **kwargs):
         request_object = self.get_object()
-        self.check_object_permissions(request, request_object)
         Membership.objects.create(person=request_object.person, club=request_object.club)
         request_object.delete()
         return Response({"success": True})
@@ -1191,7 +1183,6 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
         Resend an email invitation that has already been issued.
         """
         invite = self.get_object()
-        self.check_object_permissions(request, invite)
         invite.send_mail(request)
         invite.updated_at = timezone.now()
         invite.save(update_fields=["updated_at"])
