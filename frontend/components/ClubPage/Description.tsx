@@ -11,18 +11,6 @@ const Wrapper = s.div`
   flex-direction: row;
   align-items: center;
   flex: 1;
-
-  & ul, & ol {
-    margin-left: 2em;
-  }
-
-  & ul {
-    list-style-type: disc;
-  }
-
-  & iframe {
-    width: 100%;
-  }
 `
 
 type Props = {
@@ -34,6 +22,7 @@ const Description = ({ club }: Props): ReactElement => (
     <div style={{ width: '100%' }}>
       <StrongText>Description</StrongText>
       <div
+        className="content"
         style={{ whiteSpace: 'pre-wrap' }}
         dangerouslySetInnerHTML={{
           __html: club.description || EMPTY_DESCRIPTION,
