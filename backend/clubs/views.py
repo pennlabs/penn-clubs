@@ -357,6 +357,23 @@ class ClubsOrderingFilter(filters.OrderingFilter):
     Custom ordering filter for club objects.
     """
 
+    def get_valid_fields(self, queryset, view, context={}):
+        # report generators can order by any field
+        request = context.get("request")
+        if (
+            request is not None
+            and request.user.is_authenticated
+            and request.user.has_perm("clubs.generate_reports")
+        ):
+            valid_fields = [
+                (field.name, field.verbose_name) for field in queryset.model._meta.fields
+            ]
+            valid_fields += [(key, key.title().split("__")) for key in queryset.query.annotations]
+            return valid_fields
+
+        # other people can order by whitelist
+        return super().get_valid_fields(queryset, view, context)
+
     def filter_queryset(self, request, queryset, view):
         new_queryset = super().filter_queryset(request, queryset, view)
         ordering = request.GET.get("ordering", "").split(",")
