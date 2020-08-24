@@ -1,11 +1,15 @@
+import datetime
+
 import requests
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 
 from clubs.models import (
     Badge,
     Club,
+    Event,
     Major,
     Membership,
     Profile,
@@ -292,6 +296,27 @@ class Command(BaseCommand):
         ben.is_superuser = True
         ben.is_staff = True
         ben.save()
+
+        now = timezone.now()
+
+        for i, club in enumerate(Club.objects.all()[:20]):
+            event, _ = Event.objects.get_or_create(
+                club=club,
+                code="test-event-for-club-{}".format(club),
+                defaults={
+                    "creator": ben,
+                    "name": f"Test Event for {club.name}",
+                    "description": "This is the description for this event.",
+                    "start_time": now,
+                    "end_time": now,
+                },
+            )
+            if i <= 10:
+                event.start_time = now + datetime.timedelta(days=1) + datetime.timedelta(hours=i)
+            else:
+                event.start_time = now - datetime.timedelta(minutes=1)
+            event.end_time = event.start_time + datetime.timedelta(hours=1)
+            event.save(update_fields=["start_time", "end_time"])
 
         # dismiss welcome prompt for all users
         Profile.objects.all().update(has_been_prompted=True)
