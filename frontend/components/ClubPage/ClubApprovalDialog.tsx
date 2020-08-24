@@ -5,7 +5,8 @@ import s from 'styled-components'
 import { MEDIUM_GRAY } from '../../constants'
 import { Club, MembershipRank, UserInfo } from '../../types'
 import { apiCheckPermission, doApiRequest } from '../../utils'
-import { Contact, Icon, Text } from '../common'
+import { Contact, Icon, Modal, Text } from '../common'
+import { ModalContent } from './Actions'
 
 const ReviewQuote = s.span`
   white-space: pre-wrap;
@@ -29,24 +30,56 @@ type Props = {
   userInfo: UserInfo
 }
 
+type ConfirmParams = {
+  func: () => void
+  message: ReactElement | string
+}
+
 const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   const router = useRouter()
   const year = new Date().getFullYear()
   const [comment, setComment] = useState<string>(club.approved_comment || '')
   const [loading, setLoading] = useState<boolean>(false)
   const [seeFairStatus, setSeeFairStatus] = useState<boolean>(false)
+  const [canDeleteClub, setCanDeleteClub] = useState<boolean>(false)
+  const [confirmModal, setConfirmModal] = useState<ConfirmParams | null>(null)
 
   const [canApprove, setCanApprove] = useState<boolean>(
     userInfo && userInfo.is_superuser,
   )
 
+  const doConfirm = (params: ConfirmParams): void => {
+    setConfirmModal(params)
+  }
+
   useEffect(() => {
     apiCheckPermission('clubs.approve_club').then(setCanApprove)
     apiCheckPermission('clubs.see_fair_status').then(setSeeFairStatus)
+    apiCheckPermission('clubs.delete_club').then(setCanDeleteClub)
   }, [])
 
   return (
     <>
+      {confirmModal !== null && (
+        <Modal
+          show={true}
+          closeModal={() => setConfirmModal(null)}
+          marginBottom={false}
+        >
+          <ModalContent>
+            <div className="mb-3">{confirmModal.message}</div>
+            <button
+              className="button is-danger"
+              onClick={() => {
+                confirmModal.func()
+                setConfirmModal(null)
+              }}
+            >
+              Confirm
+            </button>
+          </ModalContent>
+        </Modal>
+      )}
       {club.approved && canApprove && (
         <div className="notification is-info">
           <div className="mb-3">
@@ -63,21 +96,25 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
             className="button is-info is-light"
             disabled={loading}
             onClick={() => {
-              if (
-                confirm(
-                  `Are you sure you would like to revoke approval for ${club.name}?`,
-                )
-              ) {
-                setLoading(true)
-                doApiRequest(`/clubs/${club.code}/?format=json`, {
-                  method: 'PATCH',
-                  body: {
-                    approved: null,
-                  },
-                })
-                  .then(() => router.reload())
-                  .finally(() => setLoading(false))
-              }
+              doConfirm({
+                func: () => {
+                  setLoading(true)
+                  doApiRequest(`/clubs/${club.code}/?format=json`, {
+                    method: 'PATCH',
+                    body: {
+                      approved: null,
+                    },
+                  })
+                    .then(() => router.reload())
+                    .finally(() => setLoading(false))
+                },
+                message: (
+                  <>
+                    Are you sure you would like to revoke approval for{' '}
+                    <b>{club.name}</b>?
+                  </>
+                ),
+              })
             }}
           >
             <Icon name="x" /> Revoke Approval
@@ -196,6 +233,51 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
                 >
                   <Icon name="x" /> Reject
                 </button>
+                {canDeleteClub && (
+                  <button
+                    className="button is-danger is-pulled-right"
+                    disabled={loading}
+                    onClick={() => {
+                      doConfirm({
+                        func: () => {
+                          setLoading(true)
+                          doApiRequest(`/clubs/${club.code}/?format=json`, {
+                            method: 'DELETE',
+                          })
+                            .then(() => router.reload())
+                            .finally(() => setLoading(false))
+                        },
+                        message: (
+                          <>
+                            <p>
+                              Are you sure you want to delete <b>{club.name}</b>
+                              ?
+                            </p>
+                            <p>
+                              Here are a list of reasons for using this feature:
+                            </p>
+                            <div className="content">
+                              <ul>
+                                <li>Duplicate club entries</li>
+                                <li>
+                                  Mistakenly created club with user
+                                  acknowledgement and permission
+                                </li>
+                              </ul>
+                            </div>
+                            <p>
+                              If you are deleting this club for another reason
+                              that is not on this list, please check with{' '}
+                              <Contact /> first. Thank you!
+                            </p>
+                          </>
+                        ),
+                      })
+                    }}
+                  >
+                    <Icon name="trash" /> Delete
+                  </button>
+                )}
               </div>
             </>
           )}
