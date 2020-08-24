@@ -192,7 +192,7 @@ const ClubPage = ({
           {involvement && (
             <StyledCard bordered>
               <StrongText>How To Get Involved</StrongText>
-              <Text style={{ marginBottom: M0 }}>
+              <Text style={{ marginBottom: M0, wordBreak: 'break-word' }}>
                 <Linkify>{involvement}</Linkify>
               </Text>
             </StyledCard>
