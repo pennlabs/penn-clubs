@@ -148,3 +148,19 @@ export interface ExtendedUserInfo extends UserInfo {
   subscribe_set: { club: string }[]
   favorite_set: { club: string }[]
 }
+
+export type TargetSchool = {
+  id: number
+  name: string
+}
+
+export type TargetMajor = {
+  id: number
+  name: string
+}
+
+export type TargetYear = {
+  id: number
+  name: string
+  year: number
+}

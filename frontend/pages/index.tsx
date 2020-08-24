@@ -18,7 +18,14 @@ import {
 } from '../constants/colors'
 import { MD, mediaMaxWidth } from '../constants/measurements'
 import { renderListPage } from '../renderPage'
-import { Club, Tag, UserInfo } from '../types'
+import {
+  Club,
+  Tag,
+  TargetMajor,
+  TargetSchool,
+  TargetYear,
+  UserInfo,
+} from '../types'
 import { doApiRequest } from '../utils'
 import { logEvent } from '../utils/analytics'
 
@@ -62,9 +69,9 @@ const Container = s.div`
 
 interface RankedClub extends Club {
   rank?: number
-  target_schools: any[]
-  target_majors: any[]
-  target_years: any[]
+  target_schools: TargetSchool[]
+  target_majors: TargetMajor[]
+  target_years: TargetYear[]
 }
 
 type SplashProps = {
@@ -345,8 +352,8 @@ class Splash extends React.Component<SplashProps, SplashState> {
                   </ClearAllLink>
                 </div>
               ) : (
-                ''
-              )}
+                  ''
+                )}
 
               <ListRenewalDialog />
 
