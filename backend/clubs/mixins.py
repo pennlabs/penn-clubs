@@ -198,7 +198,11 @@ class XLSXFormatterMixin(object):
         elif isinstance(field_object, BooleanField):
             return lambda x: str(bool(x))
         elif isinstance(field_object, DateTimeField):
-            return lambda x: dateutil.parser.parse(x).strftime("%m/%d/%Y %H:%M:%S %p")
+            return (
+                lambda x: dateutil.parser.parse(x).strftime("%m/%d/%Y %H:%M:%S %p")
+                if x is not None
+                else None
+            )
         elif hasattr(field_object, "choices") and field_object.choices is not None:
             choices = dict(field_object.choices)
             return lambda x: choices.get(x, "Unknown")
