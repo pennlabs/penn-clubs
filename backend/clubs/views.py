@@ -620,7 +620,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return Response(
             {
                 name_to_title.get(f, f.replace("_", " ").title()): f
-                for f in ClubSerializer.Meta.fields
+                for f in self.get_serializer_class().Meta.fields
             }
         )
 
@@ -629,8 +629,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return AssetSerializer
         if self.action == "subscription":
             return SubscribeSerializer
-        if self.action == "list":
-            if self.request is not None and self.request.accepted_renderer.format == "xlsx":
+        if self.action in {"list", "fields"}:
+            if (
+                self.request is not None and self.request.accepted_renderer.format == "xlsx"
+            ) or self.action == "fields":
                 if self.request.user.has_perm("clubs.generate_reports"):
                     return AuthenticatedClubSerializer
                 else:

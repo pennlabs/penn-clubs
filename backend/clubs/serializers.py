@@ -1101,9 +1101,10 @@ class AuthenticatedClubSerializer(ClubSerializer):
     members = AuthenticatedMembershipSerializer(many=True, source="membership_set", read_only=True)
     files = AssetSerializer(many=True, source="asset_set", read_only=True)
     fair = serializers.BooleanField(default=False)
+    fair_on = serializers.DateTimeField(read_only=True)
 
     class Meta(ClubSerializer.Meta):
-        fields = ClubSerializer.Meta.fields + ["files"]
+        fields = ClubSerializer.Meta.fields + ["files", "fair_on"]
 
 
 class NoteTagSerializer(serializers.ModelSerializer):
