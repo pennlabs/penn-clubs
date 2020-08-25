@@ -10,9 +10,20 @@ import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
 import EventModal from './EventModal'
 import HappeningNow from './HappeningNow'
+import {
+  mediaMaxWidth,
+  mediaMinWidth,
+  PHONE,
+} from '../../constants/measurements'
 
 const CardContainer = styled.div`
-  max-width: 18em;
+  ${mediaMinWidth(PHONE)} {
+    max-width: 18em;
+    margin: 1rem;
+  }
+  ${mediaMaxWidth(PHONE)} {
+    margin: 1rem 0;
+  }
 `
 const clipLink = (s: string) => (s.length > 40 ? `${s.slice(0, 37)}...` : s)
 

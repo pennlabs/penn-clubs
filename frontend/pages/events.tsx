@@ -8,6 +8,8 @@ import { CLUBS_GREY, mediaMaxWidth, PHONE, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { ClubEvent } from '../types'
 import { doApiRequest } from '../utils'
+import { Card } from '../components/common/Card'
+import { mediaMinWidth } from '../constants/measurements'
 
 interface EventPageProps {
   liveEvents: ClubEvent[]
@@ -17,8 +19,14 @@ interface EventPageProps {
 const CardList = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  ${mediaMaxWidth(PHONE)} {
+  ${mediaMinWidth('80rem')} {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  ${mediaMaxWidth('50rem')} {
     grid-template-columns: repeat(2, 1fr);
+  }
+  ${mediaMaxWidth(PHONE)} {
+    grid-template-columns: 1fr;
   }
 `
 
