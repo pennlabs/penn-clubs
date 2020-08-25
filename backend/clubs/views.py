@@ -1247,14 +1247,14 @@ class LastEmailInviteTestAPIView(APIView):
             return Response(
                 {
                     "code": club_code,
-                    "id": "{}".format(email_id),
-                    "token": "{}".format(email_token),
+                    "id": email_id,
+                    "token": email_token,
                 },
             )
         else:
             return Response(
                 {
-                    "detail": "You can only access tokens for invitations that match your email",
+                    "detail": "You can only access tokens for invitations that match your email.",
                     "email": request.user.email,
                     "success": False,
                 },
