@@ -19,7 +19,8 @@ from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ParseError, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -582,7 +583,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
             # an approval request must not modify any other fields
             if set(request.data.keys()) - {"approved", "approved_comment"}:
-                raise ParseError
+                raise DRFValidationError(
+                    "You can only pass the approved and approved_comment fields "
+                    "when performing club approval."
+                )
+
+        if request.data.get("fair", None) is not None:
+            if set(request.data.keys()) - {"fair"}:
+                raise DRFValidationError(
+                    "You can only pass the fair field when registering "
+                    "or deregistering for the SAC fair."
+                )
 
     def partial_update(self, request, *args, **kwargs):
         self.check_approval_permission(request)
