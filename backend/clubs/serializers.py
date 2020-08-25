@@ -316,6 +316,9 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         obj.public = public
         obj.save()
 
+        # if a membership request exists, delete it
+        MembershipRequest.objects.filter(person=user, club=self.instance.club).delete()
+
         return instance
 
     class Meta:
