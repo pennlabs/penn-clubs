@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "simple_history",
     "accounts.apps.AccountsConfig",
     "clubs.apps.ClubsConfig",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -178,3 +179,8 @@ FILE_SIZE_ONE_GB = 1073741824  # 1GB
 # Simple history settings
 
 SIMPLE_HISTORY_FILEFIELD_TO_CHARFIELD = True
+
+
+# Django Channels settings
+
+ASGI_APPLICATION = "pennclubs.routing.application"
