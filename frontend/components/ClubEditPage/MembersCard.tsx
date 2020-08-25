@@ -66,7 +66,7 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
       <div style={{ marginTop: '1em' }}>
         <a
           href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)}
-          className="button is-link"
+          className="button is-link is-small"
         >
           <Icon alt="download" name="download" /> Download Member List
         </a>

@@ -1,14 +1,6 @@
 describe('Invitation tests', () => {
   before(() => {
     cy.login('bfranklin', 'test') 
-
-    cy.visit('/api/admin/auth/user')  
-
-    // Promote James Madision as a staff
-    cy.contains('jmadison').click()
-    cy.get('input[id="id_is_staff"]').check()
-    cy.get('input[id="id_is_superuser"]').check()
-    cy.contains('Save').click({ force: true })
   })
 
 
@@ -16,13 +8,6 @@ describe('Invitation tests', () => {
     // Remove James Madison (self) from the club
     cy.visit('/settings')
     cy.get('table > tbody > tr').last().contains('Leave').click()
-     
-    // Demote James Madison (self) from staff
-    cy.visit('/api/admin/auth/user')  
-    cy.contains('jmadison').click()
-    cy.get('input[id="id_is_staff"]').uncheck()
-    cy.get('input[id="id_is_superuser"]').uncheck()
-    cy.contains('Save').click({ force: true })
 
     cy.logout()
   })

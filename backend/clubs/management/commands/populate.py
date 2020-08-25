@@ -288,6 +288,7 @@ class Command(BaseCommand):
                 obj = User.objects.create_user(username, email, "test")
                 obj.first_name = first
                 obj.last_name = last
+                obj.is_staff = True
                 obj.save()
                 user_objs.append(obj)
 
