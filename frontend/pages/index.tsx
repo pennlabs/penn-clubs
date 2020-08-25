@@ -265,7 +265,7 @@ const Splash = (props: SplashProps): ReactElement => {
                 </ClearAllLink>
               </div>
             )}
-            {props.liveEventCount > 0 && (
+            {false && props.liveEventCount > 0 && (
               <LiveEventsDialog liveEventCount={props.liveEventCount} />
             )}
             <ListRenewalDialog />

@@ -13,7 +13,7 @@ import {
 import { Icon } from './Icon'
 import Shade from './Shade'
 
-const ModalWrapper = s.div<{ show?: boolean }>`
+const ModalWrapper = s.div<{ show?: boolean; width?: string }>`
   position: fixed;
   top: 0;
   left: 0;
@@ -48,8 +48,7 @@ const ModalCard = s.div<{ width?: string }>`
       : ''}
 `
 
-
-const ModalContent = s.div<{ marginBottom?: boolean }>`
+export const ModalContent = s.div<{ marginBottom?: boolean }>`
   margin: auto;
   ${({ marginBottom }) => (marginBottom ? 'margin-bottom: 10%;' : '')}
 `
@@ -114,7 +113,6 @@ type ModalProps = React.PropsWithChildren<{
   marginBottom?: boolean
   width?: string
   closeModal: () => void
-  width?: string
 }>
 
 export default Modal
