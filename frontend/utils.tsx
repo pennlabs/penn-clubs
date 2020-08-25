@@ -30,7 +30,7 @@ export function getDefaultClubImageURL(): string {
 
 export const SITE_ORIGIN =
   process.env.NODE_ENV === 'production'
-    ? `https://${process.env.DOMAIN || 'pennclubs.com'}`
+    ? `https://${process.env.DOMAIN || 'upenn.club'}`
     : `http://localhost:${process.env.PORT || 3000}`
 export const API_BASE_URL = `${SITE_ORIGIN}/api`
 
@@ -138,7 +138,7 @@ export function titleize(str: string): string {
   return str
     .replace(/_/g, ' ')
     .split(' ')
-    .map((a) => a[0].toUpperCase() + a.substr(1).toLowerCase())
+    .map(a => a[0].toUpperCase() + a.substr(1).toLowerCase())
     .join(' ')
 }
 
@@ -146,11 +146,9 @@ export function formatResponse(err: { [key: string]: string }): ReactElement {
   return (
     <>
       {Object.keys(err)
-        .filter(
-          (line) => !(line === 'success' && typeof err[line] === 'boolean'),
-        )
-        .filter((line) => !(typeof err[line] === 'number'))
-        .map((line) => (
+        .filter(line => !(line === 'success' && typeof err[line] === 'boolean'))
+        .filter(line => !(typeof err[line] === 'number'))
+        .map(line => (
           <div key={line}>
             <b>{titleize(line)}:</b> {err[line]}
           </div>
