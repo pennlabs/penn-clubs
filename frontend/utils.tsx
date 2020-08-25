@@ -30,7 +30,7 @@ export function getDefaultClubImageURL(): string {
 
 export const SITE_ORIGIN =
   process.env.NODE_ENV === 'production'
-    ? `https://${process.env.DOMAIN || 'upenn.club'}`
+    ? `https://${process.env.DOMAIN || 'pennclubs.com'}`
     : `http://localhost:${process.env.PORT || 3000}`
 export const API_BASE_URL = `${SITE_ORIGIN}/api`
 

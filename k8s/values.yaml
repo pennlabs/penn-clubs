@@ -12,11 +12,11 @@ applications:
     replicas: 2
     ingress:
       hosts:
-        - host: upenn.club
+        - host: pennclubs.com
           paths: ["/api"]
     extraEnv:
       - name: DOMAIN
-        value: upenn.club
+        value: pennclubs.com
       - name: DJANGO_SETTINGS_MODULE
         value: pennclubs.settings.production
   - name: react
@@ -24,13 +24,13 @@ applications:
     secret: penn-clubs
     ingress:
       hosts:
-        - host: upenn.club
+        - host: pennclubs.com
           paths: ["/"]
     extraEnv:
       - name: PORT
         value: 80
       - name: DOMAIN
-        value: upenn.club
+        value: pennclubs.com
 
 cronjobs:
   - name: rank-clubs

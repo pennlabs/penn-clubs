@@ -10,7 +10,6 @@ branch-filters: &branch-filters
     branches:
       only:
         - master
-        - websockets
 
 workflows:
   version: 2
