@@ -40,7 +40,7 @@ describe('Invitation tests', () => {
 
     cy.get('[data-testid="invite-emails-submit"]').click()
 
-    cy.contains('Sent invite(s) to 1 email(s)!').should('be.visible')
+    cy.contains(/Sent invites? to 1 emails?/).should('be.visible')
   })
 
   it('Visits invitation page', () => {
