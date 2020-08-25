@@ -640,8 +640,6 @@ class ClubTestCase(TestCase):
             self.assertIn(resp.status_code, [400, 403], resp.content)
 
         good_tries = [
-            {"public": True},
-            {"public": False},
             {"active": True},
             {"active": False},
         ]
