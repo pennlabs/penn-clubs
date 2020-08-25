@@ -1297,6 +1297,32 @@ class MassInviteAPIView(APIView):
         )
 
 
+class LastEmailInviteTestAPIView(APIView):
+    """
+    get: Return the club code, invite id and token of the last sent email invite
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        latest_email_invite = MembershipInvite.objects.filter(active=True).latest("created_at")
+        club_code = latest_email_invite.club.code
+        email_id = latest_email_invite.id
+        email_token = latest_email_invite.token
+
+        if request.user.email == latest_email_invite.email:
+            return Response({"code": club_code, "id": email_id, "token": email_token},)
+        else:
+            return Response(
+                {
+                    "detail": "You can only access tokens for invitations that match your email.",
+                    "email": request.user.email,
+                    "success": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+
 class EmailPreviewContext(dict):
     """
     A dict class to keep track of which variables were actually used by the template.
