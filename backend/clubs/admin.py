@@ -1,4 +1,5 @@
 import datetime
+import re
 
 import simple_history
 from django import forms
@@ -6,6 +7,7 @@ from django.contrib import admin, messages
 from django.contrib.admin import TabularInline
 from django.contrib.auth.models import Group
 from django.db.models import Count, Exists, OuterRef
+from django.utils.safestring import mark_safe
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
 from clubs.management.commands.remind import send_reminder_to_club
@@ -213,7 +215,8 @@ class SubscribeAdmin(admin.ModelAdmin):
 
 class MembershipRequestAdmin(admin.ModelAdmin):
     search_fields = ("person__username", "person__email", "club__name", "club__pk")
-    list_display = ("person", "club", "email")
+    list_display = ("person", "club", "email", "withdrew", "is_member")
+    list_filter = ("withdrew",)
 
     def person(self, obj):
         return obj.person.username
@@ -223,6 +226,11 @@ class MembershipRequestAdmin(admin.ModelAdmin):
 
     def email(self, obj):
         return obj.person.email
+
+    def is_member(self, obj):
+        return obj.club.membership_set.filter(person__pk=obj.person.pk).exists()
+
+    is_member.boolean = True
 
 
 class MembershipAdmin(admin.ModelAdmin):
@@ -239,8 +247,8 @@ class MembershipAdmin(admin.ModelAdmin):
 
 class ProfileAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "user__email")
-    list_display = ("user", "email", "graduation_year", "studies")
-    list_filter = ("graduation_year", "school", "major")
+    list_display = ("user", "email", "graduation_year", "studies", "has_been_prompted")
+    list_filter = ("graduation_year", "school", "major", "has_been_prompted")
 
     def email(self, obj):
         return str(obj.user.email or None)
@@ -302,8 +310,19 @@ class BadgeAdmin(admin.ModelAdmin):
     def club_count(self, obj):
         return obj.club_set.count()
 
+    def badge_color(self, obj):
+        if not re.match(r"^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", obj.color):
+            return obj.color
+        return mark_safe(
+            f"<div style='background-color: #{obj.color}; \
+                width:1em; \
+                height:1em; \
+                border:1px solid black; \
+                border-radius:3px' />"
+        )
+
     search_fields = ("label",)
-    list_display = ("label", "club_count")
+    list_display = ("label", "org", "club_count", "badge_color")
     actions = [do_merge_tags]
 
 
@@ -313,8 +332,8 @@ class MajorAdmin(admin.ModelAdmin):
 
 class ReportAdmin(admin.ModelAdmin):
     search_fields = ("name", "description")
-    list_display = ("name", "creator")
-    list_filter = ("created_at",)
+    list_display = ("name", "creator", "public")
+    list_filter = ("created_at", "public")
 
 
 class YearAdmin(admin.ModelAdmin):

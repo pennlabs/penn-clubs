@@ -13,12 +13,7 @@ import {
 import { Icon } from './Icon'
 import Shade from './Shade'
 
-type ModalWrapperProps = {
-  show?: boolean
-  width?: string
-}
-
-const ModalWrapper = s.div<ModalWrapperProps>`
+const ModalWrapper = s.div<{ show?: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
@@ -37,8 +32,11 @@ const ModalCard = s.div<{ width?: string }>`
   border: 0 !important;
   box-shadow: none !important;
   height: auto;
-  width: ${({ width }) => width || '35%'};
+  width: ${({ width }) => width ?? '35%'};
 
+  ${({ width }) =>
+    width
+      ? `
   ${mediaMaxWidth(MD)} {
     width: 50%;
   }
@@ -46,13 +44,12 @@ const ModalCard = s.div<{ width?: string }>`
   ${mediaMaxWidth(SM)} {
     width: 90%;
   }
+  `
+      : ''}
 `
 
-type ModalContentProps = {
-  marginBottom?: boolean
-}
 
-export const ModalContent = s.div<ModalContentProps>`
+const ModalContent = s.div<{ marginBottom?: boolean }>`
   margin: auto;
   ${({ marginBottom }) => (marginBottom ? 'margin-bottom: 10%;' : '')}
 `
@@ -104,7 +101,7 @@ export const Modal = ({
       show={show}
     >
       <Shade className="modal-background" onClick={closeModal} show={show} />
-      <ModalCard width={width} className="card" onClick={noop}>
+      <ModalCard className="card" onClick={noop} width={width}>
         <CloseModalIcon name="x" alt="&#215;" onClick={closeModal} />
         <ModalContent marginBottom={marginBottom}>{children}</ModalContent>
       </ModalCard>
@@ -115,6 +112,7 @@ export const Modal = ({
 type ModalProps = React.PropsWithChildren<{
   show: boolean
   marginBottom?: boolean
+  width?: string
   closeModal: () => void
   width?: string
 }>

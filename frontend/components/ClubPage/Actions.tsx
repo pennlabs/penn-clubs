@@ -1,11 +1,14 @@
 import Link from 'next/link'
-import { CSSProperties, ReactElement, useState } from 'react'
+import { CSSProperties, ReactElement, useEffect, useState } from 'react'
+import Linkify from 'react-linkify'
 import s from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
 import { Club, MembershipRank, UserInfo } from '../../types'
-import { BookmarkIcon, Modal, SubscribeIcon } from '../common'
+import { doApiRequest } from '../../utils'
+import { logException, logMessage } from '../../utils/sentry'
+import { BookmarkIcon, Contact, Modal, SubscribeIcon } from '../common'
 
 const Wrapper = s.span`
   display: flex;
@@ -57,10 +60,10 @@ type ActionsProps = {
   userInfo: UserInfo
   style?: CSSProperties
   className?: string
-  updateRequests: (code: string) => void
+  updateRequests: (code: string) => Promise<void>
 }
 
-const ModalContent = s.div`
+export const ModalContent = s.div`
   text-align: left;
   padding: 15px;
 
@@ -71,6 +74,10 @@ const ModalContent = s.div`
 
   & p {
     margin-bottom: 1em;
+  }
+
+  & input {
+    box-sizing: border-box;
   }
 `
 
@@ -100,8 +107,10 @@ const Actions = ({
     (inClub && inClub.role <= MembershipRank.Officer) ||
     (userInfo && userInfo.is_superuser)
 
-  const [favCount, setFavCount] = useState(favoriteCount || 0)
-  const [showModal, setShowModal] = useState(false)
+  const [favCount, setFavCount] = useState<number>(favoriteCount ?? 0)
+  const [showModal, setShowModal] = useState<boolean>(false)
+  const [isSubmitDisabled, setSubmitDisabled] = useState<boolean>(false)
+  const [isSubmitted, setSubmitted] = useState<boolean | null>(null)
   const requestMembership = () => {
     if (!isRequested) {
       setShowModal(true)
@@ -109,6 +118,13 @@ const Actions = ({
       updateRequests(code)
     }
   }
+
+  useEffect(() => {
+    if (showModal) {
+      setSubmitDisabled(false)
+      setSubmitted(null)
+    }
+  }, [showModal])
 
   return (
     <>
@@ -160,22 +176,64 @@ const Actions = ({
             section for more details!
           </p>
           <Quote>
-            {club.how_to_get_involved ||
-              'There is currently no information about how to get involved with this club.'}
+            <Linkify>
+              {club.how_to_get_involved ||
+                'There is currently no information about how to get involved with this club.'}
+            </Linkify>
           </Quote>
           <p>
             If you are an existing member of this club, use the button below to
             confirm your membership request.
           </p>
-          <div
-            className="button is-success"
-            onClick={() => {
-              updateRequests(code)
-              setShowModal(false)
-            }}
-          >
-            Confirm
-          </div>
+          <p className="has-text-danger">
+            If you are not an existing member of this club, please <b>do not</b>{' '}
+            press the button below. This <b>is not</b> the application process
+            for {club.name}.
+          </p>
+          {isSubmitted === true ? (
+            <p className="has-text-success">
+              <b>Success!</b> Your membership request has been submitted. An
+              email has been sent to club officers asking them to confirm your
+              membership. Click anywhere outside this popup to close it.
+            </p>
+          ) : isSubmitted === false ? (
+            <p className="has-text-danger">
+              <b>Oh no!</b> An error occured and we could not send your
+              membership request. Please email <Contact /> for assistance.
+            </p>
+          ) : (
+            <button
+              className="button is-warning"
+              disabled={isSubmitDisabled}
+              onClick={async (e) => {
+                setSubmitDisabled(true)
+                e.preventDefault()
+                try {
+                  await updateRequests(code)
+
+                  // sanity check
+                  const resp = await doApiRequest(
+                    `/requests/${code}/?format=json`,
+                  )
+
+                  if (resp.ok) {
+                    setSubmitted(true)
+                  } else {
+                    setSubmitted(false)
+                    const data = await resp.text()
+                    logMessage(
+                      `${resp.status} when performing membership request sanity check: ${data}`,
+                    )
+                  }
+                } catch (e) {
+                  setSubmitted(false)
+                  logException(e)
+                }
+              }}
+            >
+              Confirm
+            </button>
+          )}
         </ModalContent>
       </Modal>
     </>

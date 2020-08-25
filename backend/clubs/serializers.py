@@ -321,6 +321,9 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         obj.public = public
         obj.save()
 
+        # if a membership request exists, delete it
+        MembershipRequest.objects.filter(person=user, club=self.instance.club).delete()
+
         return instance
 
     class Meta:
@@ -402,7 +405,7 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
             membership is None or membership.role > Membership.ROLE_OFFICER
         ):
             for field in data:
-                if field not in ["public", "active"]:
+                if field not in {"active"}:
                     raise serializers.ValidationError(
                         'Normal members are not allowed to change "{}"!'.format(field)
                     )
@@ -983,6 +986,7 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
 
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    club_name = serializers.CharField(source="club.name", read_only=True)
 
     def create(self, validated_data):
         """
@@ -998,6 +1002,7 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
         model = MembershipRequest
         fields = (
             "club",
+            "club_name",
             "person",
         )
 
@@ -1106,9 +1111,10 @@ class AuthenticatedClubSerializer(ClubSerializer):
     members = AuthenticatedMembershipSerializer(many=True, source="membership_set", read_only=True)
     files = AssetSerializer(many=True, source="asset_set", read_only=True)
     fair = serializers.BooleanField(default=False)
+    fair_on = serializers.DateTimeField(read_only=True)
 
     class Meta(ClubSerializer.Meta):
-        fields = ClubSerializer.Meta.fields + ["files"]
+        fields = ClubSerializer.Meta.fields + ["files", "fair_on"]
 
 
 class NoteTagSerializer(serializers.ModelSerializer):

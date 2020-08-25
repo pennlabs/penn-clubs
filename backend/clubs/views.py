@@ -20,6 +20,7 @@ from django.utils.text import slugify
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -53,6 +54,7 @@ from clubs.permissions import (
     InvitePermission,
     IsSuperuser,
     MemberPermission,
+    MembershipRequestPermission,
     NotePermission,
     QuestionAnswerPermission,
     ReadOnly,
@@ -356,6 +358,23 @@ class ClubsOrderingFilter(filters.OrderingFilter):
     Custom ordering filter for club objects.
     """
 
+    def get_valid_fields(self, queryset, view, context={}):
+        # report generators can order by any field
+        request = context.get("request")
+        if (
+            request is not None
+            and request.user.is_authenticated
+            and request.user.has_perm("clubs.generate_reports")
+        ):
+            valid_fields = [
+                (field.name, field.verbose_name) for field in queryset.model._meta.fields
+            ]
+            valid_fields += [(key, key.title().split("__")) for key in queryset.query.annotations]
+            return valid_fields
+
+        # other people can order by whitelist
+        return super().get_valid_fields(queryset, view, context)
+
     def filter_queryset(self, request, queryset, view):
         new_queryset = super().filter_queryset(request, queryset, view)
         ordering = request.GET.get("ordering", "").split(",")
@@ -402,7 +421,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     queryset = (
         Club.objects.all()
-        .annotate(favorite_count=Count("favorite"))
+        .annotate(favorite_count=Count("favorite", distinct=True))
         .prefetch_related(
             "tags",
             "badges",
@@ -455,13 +474,19 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Upload the club logo.
         """
-        club = Club.objects.get(code=kwargs["code"])
-        resp = upload_endpoint_helper(request, Club, "image", code=kwargs["code"])
+        # ensure user is allowed to upload image
+        club = self.get_object()
+
+        # reset approval status after upload
+        resp = upload_endpoint_helper(request, Club, "image", code=club.code)
         if status.is_success(resp.status_code):
             club.approved = None
             club.approved_by = None
             club.approved_on = None
-            club.save(update_fields=["approved", "approved_by", "approved_on"])
+            if club.history.filter(approved=True).exists():
+                club.ghost = True
+
+            club.save(update_fields=["approved", "approved_by", "approved_on", "ghost"])
         return resp
 
     @action(detail=True, methods=["post"])
@@ -469,7 +494,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Upload a file for the club.
         """
-        return file_upload_endpoint_helper(request, code=kwargs["code"])
+        # ensure user is allowed to upload file
+        club = self.get_object()
+
+        return file_upload_endpoint_helper(request, code=club.code)
 
     @action(detail=True, methods=["get"])
     def children(self, request, *args, **kwargs):
@@ -505,7 +533,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return a QR code png image representing a link to the club on Penn Clubs.
         """
-        url = f"https://{settings.DEFAULT_DOMAIN}/club/{self.kwargs['code']}/fair"
+        club = self.get_object()
+
+        url = f"https://{settings.DEFAULT_DOMAIN}/club/{club.code}/fair"
         response = HttpResponse(content_type="image/png")
         qr_image = qrcode.make(url, box_size=20, border=0)
         qr_image.save(response, "PNG")
@@ -517,9 +547,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a list of all students that have subscribed to the club,
         including their names and emails.
         """
-        serializer = SubscribeSerializer(
-            Subscribe.objects.filter(club__code=self.kwargs["code"]), many=True
-        )
+        club = self.get_object()
+        serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
@@ -540,20 +569,38 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return "{}.xlsx".format(slugify(name))
         return super().get_filename()
 
-    def partial_update(self, request, *args, **kwargs):
+    def check_approval_permission(self, request):
+        """
+        Only users with specific permissions can modify the approval field.
+        """
         if (
-            request.data.get("accepted", None) is not None
-            or request.data.get("accepted_comment", None) is not None
-        ) and not request.user.has_perm("clubs.approve_club"):
-            raise PermissionDenied
+            request.data.get("approved", None) is not None
+            or request.data.get("approved_comment", None) is not None
+        ):
+            # users without approve permission cannot approve
+            if not request.user.has_perm("clubs.approve_club"):
+                raise PermissionDenied
+
+            # an approval request must not modify any other fields
+            if set(request.data.keys()) - {"approved", "approved_comment"}:
+                raise DRFValidationError(
+                    "You can only pass the approved and approved_comment fields "
+                    "when performing club approval."
+                )
+
+        if request.data.get("fair", None) is not None:
+            if set(request.data.keys()) - {"fair"}:
+                raise DRFValidationError(
+                    "You can only pass the fair field when registering "
+                    "or deregistering for the SAC fair."
+                )
+
+    def partial_update(self, request, *args, **kwargs):
+        self.check_approval_permission(request)
         return super().partial_update(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        if (
-            request.data.get("accepted", None) is not None
-            or request.data.get("accepted_comment", None) is not None
-        ) and not request.user.has_perm("clubs.approve_club"):
-            raise PermissionDenied
+        self.check_approval_permission(request)
         return super().update(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
@@ -573,11 +620,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 name = request.query_params.get("name")
                 desc = request.query_params.get("desc")
                 public = request.query_params.get("public", "false").lower().strip() == "true"
-                parameters = json.dumps(dict(request.query_params))
+                parameters = request.query_params.dict()
+
+                # avoid storing redundant data
+                for field in {"name", "desc", "public"}:
+                    if field in parameters:
+                        del parameters[field]
+
                 Report.objects.create(
                     name=name,
                     description=desc,
-                    parameters=parameters,
+                    parameters=json.dumps(parameters),
                     creator=request.user,
                     public=public,
                 )
@@ -595,7 +648,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return Response(
             {
                 name_to_title.get(f, f.replace("_", " ").title()): f
-                for f in ClubSerializer.Meta.fields
+                for f in self.get_serializer_class().Meta.fields
             }
         )
 
@@ -604,8 +657,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return AssetSerializer
         if self.action == "subscription":
             return SubscribeSerializer
-        if self.action == "list":
-            if self.request is not None and self.request.accepted_renderer.format == "xlsx":
+        if self.action in {"list", "fields"}:
+            if self.request is not None and (
+                self.request.accepted_renderer.format == "xlsx" or self.action == "fields"
+            ):
                 if self.request.user.has_perm("clubs.generate_reports"):
                     return AuthenticatedClubSerializer
                 else:
@@ -706,7 +761,10 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Upload a picture for the event.
         """
-        return upload_endpoint_helper(request, Event, "image", code=kwargs["id"])
+        event = Event.objects.get(id=kwargs["id"])
+        self.check_object_permissions(request, event)
+
+        return upload_endpoint_helper(request, Event, "image", pk=event.pk)
 
     @action(detail=False, methods=["get"])
     def live(self, request, *args, **kwargs):
@@ -930,7 +988,7 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
 
     serializer_class = MembershipRequestSerializer
-    permission_field = [MemberPermission | IsSuperuser]
+    permission_classes = [MembershipRequestPermission | IsSuperuser]
     http_method_names = ["get", "post", "delete"]
     lookup_field = "person__username"
 
@@ -1057,8 +1115,9 @@ class TagViewSet(viewsets.ModelViewSet):
     Return details for a specific tag by name.
     """
 
-    queryset = Tag.objects.all().annotate(clubs=Count("club")).order_by("name")
+    queryset = Tag.objects.all().annotate(clubs=Count("club", distinct=True)).order_by("name")
     serializer_class = TagSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
     lookup_field = "name"
 
@@ -1074,6 +1133,7 @@ class BadgeViewSet(viewsets.ModelViewSet):
 
     queryset = Badge.objects.all()
     serializer_class = BadgeSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
     lookup_field = "name"
 
@@ -1196,6 +1256,8 @@ class MassInviteAPIView(APIView):
         emails = [x.strip() for x in re.split(r"\n|,", request.data.get("emails", ""))]
         emails = [x for x in emails if x]
 
+        original_count = len(emails)
+
         # remove users that are already in the club
         exist = Membership.objects.filter(club=club, person__email__in=emails).values_list(
             "person__email", flat=True
@@ -1227,9 +1289,49 @@ class MassInviteAPIView(APIView):
             else:
                 invite.send_mail(request)
 
+        sent_emails = len(emails)
+        skipped_emails = original_count - len(emails)
+
         return Response(
-            {"detail": "Sent invite(s) to {} email(s)!".format(len(emails)), "success": True}
+            {
+                "detail": "Sent invite{} to {} email{}! {} email{} were skipped.".format(
+                    "" if sent_emails == 1 else "s",
+                    sent_emails,
+                    "" if sent_emails == 1 else "s",
+                    skipped_emails,
+                    "" if skipped_emails == 1 else "s",
+                ),
+                "sent": sent_emails,
+                "skipped": skipped_emails,
+                "success": True,
+            }
         )
+
+
+class LastEmailInviteTestAPIView(APIView):
+    """
+    get: Return the club code, invite id and token of the last sent email invite
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        latest_email_invite = MembershipInvite.objects.filter(active=True).latest("created_at")
+        club_code = latest_email_invite.club.code
+        email_id = latest_email_invite.id
+        email_token = latest_email_invite.token
+
+        if request.user.email == latest_email_invite.email:
+            return Response({"code": club_code, "id": email_id, "token": email_token},)
+        else:
+            return Response(
+                {
+                    "detail": "You can only access tokens for invitations that match your email.",
+                    "email": request.user.email,
+                    "success": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
 
 class EmailPreviewContext(dict):

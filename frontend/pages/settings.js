@@ -5,6 +5,7 @@ import { Container, Metadata, Title } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import ClubTab from '../components/Settings/ClubTab'
 import FavoritesTab from '../components/Settings/FavoritesTab'
+import MembershipRequestsTab from '../components/Settings/MembershipRequestsTab'
 import ProfileTab from '../components/Settings/ProfileTab'
 import TabView from '../components/TabView'
 import { CLUBS_BLUE, WHITE } from '../constants/colors'
@@ -72,6 +73,11 @@ class Settings extends React.Component {
         name: 'Subscriptions',
         icon: 'bookmark',
         content: <FavoritesTab key="subscription" keyword="subscription" />,
+      },
+      {
+        name: 'Requests',
+        icon: 'user-check',
+        content: <MembershipRequestsTab />,
       },
       {
         name: 'Profile',

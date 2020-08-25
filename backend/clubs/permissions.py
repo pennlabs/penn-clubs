@@ -164,6 +164,24 @@ class MemberPermission(permissions.BasePermission):
             return True
 
 
+class MembershipRequestPermission(permissions.BasePermission):
+    """
+    Only officers and above can view and modify membership requests.
+    """
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+
+        if "club_code" not in view.kwargs:
+            return False
+
+        membership = Membership.objects.filter(
+            person=request.user, club__code=view.kwargs["club_code"]
+        ).first()
+        return membership is not None and membership.role <= Membership.ROLE_OFFICER
+
+
 class InvitePermission(permissions.BasePermission):
     """
     Officers and higher can list/delete invitations.

@@ -149,6 +149,7 @@ export function formatResponse(err: { [key: string]: string }): ReactElement {
         .filter(
           (line) => !(line === 'success' && typeof err[line] === 'boolean'),
         )
+        .filter((line) => !(typeof err[line] === 'number'))
         .map((line) => (
           <div key={line}>
             <b>{titleize(line)}:</b> {err[line]}

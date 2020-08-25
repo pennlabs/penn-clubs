@@ -226,7 +226,7 @@ class ClubTestCase(TestCase):
 
         # successful image upload
         resp = self.client.post(
-            reverse("club-events-upload", args=(self.club1.code, self.event1.code)),
+            reverse("club-events-upload", args=(self.club1.code, self.event1.id)),
             {"file": io.BytesIO(b"")},
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -640,8 +640,6 @@ class ClubTestCase(TestCase):
             self.assertIn(resp.status_code, [400, 403], resp.content)
 
         good_tries = [
-            {"public": True},
-            {"public": False},
             {"active": True},
             {"active": False},
         ]
@@ -1398,6 +1396,74 @@ class ClubTestCase(TestCase):
             club.approved = True
             club.save(update_fields=["approved"])
 
+    def test_club_detail_endpoints_unauth(self):
+        """
+        Ensure that club based endpoints are not usable by unauthenticated users.
+        """
+        club = self.club1
+
+        # subscription endpoint should fail
+        resp = self.client.get(
+            reverse("clubs-subscription", args=(club.code,)), content_type="application/json"
+        )
+        self.assertIn(resp.status_code, [401, 403], resp.content)
+
+        # membership requests should fail
+        resp = self.client.get(
+            reverse("club-membership-requests-list", args=(club.code,)),
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [401, 403], resp.content)
+
+        # uploading image should fail
+        resp = self.client.post(
+            reverse("clubs-upload", args=(club.code,)), content_type="application/json"
+        )
+        self.assertIn(resp.status_code, [401, 403], resp.content)
+
+        # uploading file should fail
+        resp = self.client.post(
+            reverse("clubs-upload-file", args=(club.code,)), content_type="application/json"
+        )
+        self.assertIn(resp.status_code, [401, 403], resp.content)
+
+    def test_club_detail_endpoints_insufficient_auth(self):
+        """
+        Ensure that the club based endpoints are not usable by users with insufficient auth.
+        """
+        # login to account
+        self.client.login(username=self.user4.username, password="test")
+
+        club = self.club1
+
+        # ensure account is not a member
+        self.assertFalse(club.membership_set.filter(person=self.user4).exists())
+
+        # subscription endpoint should fail
+        resp = self.client.get(
+            reverse("clubs-subscription", args=(club.code,)), content_type="application/json"
+        )
+        self.assertIn(resp.status_code, [401, 403], resp.content)
+
+        # membership requests should fail
+        resp = self.client.get(
+            reverse("club-membership-requests-list", args=(club.code,)),
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [401, 403], resp.content)
+
+        # uploading image should fail
+        resp = self.client.post(
+            reverse("clubs-upload", args=(club.code,)), content_type="application/json"
+        )
+        self.assertIn(resp.status_code, [401, 403], resp.content)
+
+        # uploading file should fail
+        resp = self.client.post(
+            reverse("clubs-upload-file", args=(club.code,)), content_type="application/json"
+        )
+        self.assertIn(resp.status_code, [401, 403], resp.content)
+
     def test_club_renew(self):
         # run deactivate script
         with open(os.devnull, "w") as f:
@@ -1484,3 +1550,21 @@ class ClubTestCase(TestCase):
 
         # ensure badge still exists
         self.assertTrue(club.badges.filter(pk=badge.pk).count(), 1)
+
+        # mark club as unapproved
+        club.approved = None
+        club.save(update_fields=["approved"])
+
+        # login as user without approve permissions
+        self.assertFalse(self.user2.has_perm("clubs.approve_club"))
+        Membership.objects.create(person=self.user2, club=club, role=Membership.ROLE_OFFICER)
+
+        self.client.login(username=self.user2.username, password="test")
+
+        # try approving the club
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"approved": True, "approved_comment": "I'm approving my own club!"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [401, 403], resp.content)

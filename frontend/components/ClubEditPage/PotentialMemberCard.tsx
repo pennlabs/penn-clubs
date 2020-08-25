@@ -72,7 +72,7 @@ export default function PotentialMemberCard({
         <tbody>
           {students.map((item, i) => (
             <tr key={i}>
-              <td>{item.name || <Empty>None</Empty>}</td>
+              <td>{item.name || item.username || <Empty>None</Empty>}</td>
               <td>{item.email || <Empty>None</Empty>}</td>
               <td>{item.graduation_year || <Empty>None</Empty>}</td>
               <td>

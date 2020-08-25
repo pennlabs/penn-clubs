@@ -46,11 +46,13 @@ INSTALLED_APPS = [
     "simple_history",
     "accounts.apps.AccountsConfig",
     "clubs.apps.ClubsConfig",
+    "channels",
 ]
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -178,3 +180,8 @@ FILE_SIZE_ONE_GB = 1073741824  # 1GB
 # Simple history settings
 
 SIMPLE_HISTORY_FILEFIELD_TO_CHARFIELD = True
+
+
+# Django Channels settings
+
+ASGI_APPLICATION = "pennclubs.routing.application"

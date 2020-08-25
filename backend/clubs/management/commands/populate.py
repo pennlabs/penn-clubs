@@ -1,11 +1,15 @@
+import datetime
+
 import requests
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 
 from clubs.models import (
     Badge,
     Club,
+    Event,
     Major,
     Membership,
     Profile,
@@ -148,6 +152,15 @@ you can procrastinate on the application and ultimately miss the deadline!""",
         "approved": True,
         "tags": [{"name": "Professional"}, {"name": "Undergraduate"}],
     },
+    {
+        "code": "tac",
+        "name": "Testing Activities Council",
+        "description": "We are an umbrella organization for many of the clubs on campus.",
+        "email": "tac@example.com",
+        "active": True,
+        "approved": True,
+        "tags": [{"name": "Umbrella Organization"}, {"name": "Undergraduate"}],
+    },
 ]
 
 
@@ -224,6 +237,11 @@ class Command(BaseCommand):
                     for new_obj in info[name]:
                         new_obj, _ = obj.objects.get_or_create(club=club, **new_obj)
 
+        # create badges
+        badge, _ = Badge.objects.get_or_create(
+            label="TAC", description="Testing Activities Council", org=Club.objects.get(code="tac")
+        )
+
         # create additional clubs
         tag_undergrad, _ = Tag.objects.get_or_create(name="Undergraduate")
         tag_generic, _ = Tag.objects.get_or_create(name="Generic")
@@ -241,6 +259,7 @@ class Command(BaseCommand):
 
             club.tags.add(tag_undergrad)
             club.tags.add(tag_generic)
+            club.badges.add(badge)
 
         # create users
         count = 0
@@ -269,6 +288,7 @@ class Command(BaseCommand):
                 obj = User.objects.create_user(username, email, "test")
                 obj.first_name = first
                 obj.last_name = last
+                obj.is_staff = True
                 obj.save()
                 user_objs.append(obj)
 
@@ -277,6 +297,27 @@ class Command(BaseCommand):
         ben.is_superuser = True
         ben.is_staff = True
         ben.save()
+
+        now = timezone.now()
+
+        for i, club in enumerate(Club.objects.all()[:20]):
+            event, _ = Event.objects.get_or_create(
+                club=club,
+                code="test-event-for-club-{}".format(club),
+                defaults={
+                    "creator": ben,
+                    "name": f"Test Event for {club.name}",
+                    "description": "This is the description for this event.",
+                    "start_time": now,
+                    "end_time": now,
+                },
+            )
+            if i <= 10:
+                event.start_time = now + datetime.timedelta(days=1) + datetime.timedelta(hours=i)
+            else:
+                event.start_time = now - datetime.timedelta(minutes=1)
+            event.end_time = event.start_time + datetime.timedelta(hours=1)
+            event.save(update_fields=["start_time", "end_time"])
 
         # dismiss welcome prompt for all users
         Profile.objects.all().update(has_been_prompted=True)
