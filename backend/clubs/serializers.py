@@ -226,9 +226,13 @@ class EventSerializer(serializers.ModelSerializer):
     club = serializers.SlugRelatedField(
         queryset=Club.objects.all(), required=False, slug_field="code"
     )
+    club_name = serializers.SerializerMethodField()
     image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField("get_image_url")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    def get_club_name(self, obj):
+        return obj.club.name
 
     def get_image_url(self, obj):
         if not obj.image:
@@ -261,6 +265,7 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = (
             "id",
+            "club_name",
             "name",
             "club",
             "creator",

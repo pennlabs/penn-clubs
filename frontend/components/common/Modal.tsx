@@ -13,12 +13,12 @@ import {
 import { Icon } from './Icon'
 import Shade from './Shade'
 
-const ModalWrapper = s.div<{ show?: boolean }>`
+const ModalWrapper = s.div<{ show?: boolean; width?: string }>`
   position: fixed;
   top: 0;
   left: 0;
   height: 100%;
-  width: 100%;
+  width: ${({ width }) => width || '100%'};
   overflow-x: hidden;
   overflow-y: auto;
   z-index: 1002;
@@ -48,7 +48,7 @@ const ModalCard = s.div<{ width?: string }>`
       : ''}
 `
 
-const ModalContent = s.div<{ marginBottom?: boolean }>`
+export const ModalContent = s.div<{ marginBottom?: boolean }>`
   margin: auto;
   ${({ marginBottom }) => (marginBottom ? 'margin-bottom: 10%;' : '')}
 `

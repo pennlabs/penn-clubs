@@ -1,19 +1,21 @@
-import s from 'styled-components'
+import styled from 'styled-components'
 
-import { BORDER } from '../../constants/colors'
-import { ANIMATION_DURATION } from '../../constants/measurements'
+import { ANIMATION_DURATION, BORDER } from '../../constants'
 
 type CardProps = {
   bordered?: boolean
   hoverable?: boolean
+  background?: string
 }
 
-export const Card = s.div<CardProps>`
+export const CARD_BORDER_RADIUS = '4px'
+export const Card = styled.div<CardProps>`
   padding: 0.5rem;
   width: 100%;
   box-shadow: 0 0 0 transparent;
-  border-radius: 4px;
+  border-radius: ${CARD_BORDER_RADIUS};
   transition: all ${ANIMATION_DURATION}ms ease;
+  background-color: ${({ background }) => background || 'transparent'};
 
   ${({ bordered }) => bordered && `border: 1px solid ${BORDER};`}
 

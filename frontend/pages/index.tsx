@@ -3,6 +3,7 @@ import { ReactElement, useEffect, useRef, useState } from 'react'
 import s from 'styled-components'
 
 import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
+import LiveEventsDialog from '../components/ClubPage/LiveEventsDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
 import LogoWithText from '../components/LogoWithText'
@@ -71,6 +72,7 @@ type SplashProps = {
   clubs: PaginatedClubPage
   tags: Tag[]
   clubCount: number
+  liveEventCount: number
 }
 
 export type SearchInput = {
@@ -263,7 +265,9 @@ const Splash = (props: SplashProps): ReactElement => {
                 </ClearAllLink>
               </div>
             )}
-
+            {false && props.liveEventCount > 0 && (
+              <LiveEventsDialog liveEventCount={props.liveEventCount} />
+            )}
             <ListRenewalDialog />
 
             {isLoading && (

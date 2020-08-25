@@ -341,7 +341,10 @@ class Event(models.Model):
     description = models.TextField(blank=True)
 
     RECRUITMENT = 1
-    TYPES = ((RECRUITMENT, "Recruitment"),)
+    GBM = 2
+    SPEAKER = 3
+    OTHER = 0
+    TYPES = ((RECRUITMENT, "Recruitment"), (GBM, "GBM"), (SPEAKER, "Speaker"), (OTHER, "Other"))
 
     type = models.IntegerField(choices=TYPES, default=RECRUITMENT)
 

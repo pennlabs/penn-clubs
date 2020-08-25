@@ -10,7 +10,7 @@ import LoginModal from './components/LoginModal'
 import { WHITE } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
-import { Club, ExtendedUserInfo, Tag, UserInfo } from './types'
+import { Club, ClubEvent, ExtendedUserInfo, Tag, UserInfo } from './types'
 import { doApiRequest } from './utils'
 import { logEvent } from './utils/analytics'
 import { logException } from './utils/sentry'
@@ -208,7 +208,7 @@ export function renderListPage(Page) {
         return <Loading />
       }
 
-      return <Page clubs={clubs} tags={tags} userInfo={userInfo} />
+      return <Page {...this.props} />
     }
   }
 
@@ -225,9 +225,13 @@ export function renderListPage(Page) {
     const clubsResponse = await clubsRequest.json()
     const tagsResponse = await tagsRequest.json()
 
+    const liveEventRequest = await doApiRequest('/events/live/', data)
+    const liveEventResponse = (await liveEventRequest.json()) as ClubEvent[]
+
     return {
       tags: tagsResponse,
       clubs: clubsResponse,
+      liveEventCount: liveEventResponse.length,
     }
   }
 

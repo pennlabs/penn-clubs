@@ -29,3 +29,5 @@ export const M4 = '1.6rem'
 
 export const L1 = '2.9rem'
 export const L2 = '0.6rem'
+
+export const SIXTEEN_BY_NINE = '56.25%'
