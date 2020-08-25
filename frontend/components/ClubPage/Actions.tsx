@@ -6,7 +6,8 @@ import s from 'styled-components'
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
 import { Club, MembershipRank, UserInfo } from '../../types'
-import { logException } from '../../utils/sentry'
+import { doApiRequest } from '../../utils'
+import { logException, logMessage } from '../../utils/sentry'
 import { BookmarkIcon, Contact, Modal, SubscribeIcon } from '../common'
 
 const Wrapper = s.span`
@@ -197,24 +198,37 @@ const Actions = ({
             </p>
           ) : isSubmitted === false ? (
             <p className="has-text-danger">
-              Could not send your membership request. Please email <Contact />{' '}
-              for assistance.
+              <b>Oh no!</b> An error occured and we could not send your
+              membership request. Please email <Contact /> for assistance.
             </p>
           ) : (
             <button
               className="button is-warning"
               disabled={isSubmitDisabled}
-              onClick={(e) => {
+              onClick={async (e) => {
                 setSubmitDisabled(true)
                 e.preventDefault()
-                updateRequests(code)
-                  .then(() => {
+                try {
+                  await updateRequests(code)
+
+                  // sanity check
+                  const resp = await doApiRequest(
+                    `/requests/${code}/?format=json`,
+                  )
+
+                  if (resp.ok) {
                     setSubmitted(true)
-                  })
-                  .catch((e) => {
+                  } else {
                     setSubmitted(false)
-                    logException(e)
-                  })
+                    const data = await resp.text()
+                    logMessage(
+                      `${resp.status} when performing membership request sanity check: ${data}`,
+                    )
+                  }
+                } catch (e) {
+                  setSubmitted(false)
+                  logException(e)
+                }
               }}
             >
               Confirm
