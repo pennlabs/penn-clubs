@@ -978,6 +978,7 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
 
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    club_name = serializers.CharField(source="club.name", read_only=True)
 
     def create(self, validated_data):
         """
@@ -993,6 +994,7 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
         model = MembershipRequest
         fields = (
             "club",
+            "club_name",
             "person",
         )
 

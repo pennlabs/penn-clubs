@@ -13,22 +13,38 @@ type MembershipRequest = {
 const MembershipRequestsTab = (): ReactElement => {
   const [requests, setRequests] = useState<MembershipRequest[] | null>(null)
 
-  useEffect(() => {
+  const fetchTable = (): void => {
     doApiRequest('/requests/?format=json')
       .then((resp) => resp.json())
       .then(setRequests)
+  }
+
+  useEffect(() => {
+    fetchTable()
   }, [])
 
   if (requests === null) {
     return <Loading />
   }
 
+  const withdrawRequest = (code: string): void => {
+    doApiRequest(`/requests/${code}/?format=json`, { method: 'DELETE' }).then(
+      fetchTable,
+    )
+  }
+
   return (
     <div>
+      <p>
+        The list below contains all of the clubs you have submitted membership
+        requests to. Requests that have already been accepted or denied will not
+        be shown on this list.
+      </p>
       <table className="table is-fullwidth">
         <thead>
           <tr>
             <th>Club</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -38,6 +54,14 @@ const MembershipRequestsTab = (): ReactElement => {
                 <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(req.club)}>
                   <a>{req.club_name}</a>
                 </Link>
+              </td>
+              <td>
+                <button
+                  className="button is-small"
+                  onClick={() => withdrawRequest(req.club)}
+                >
+                  Withdraw
+                </button>
               </td>
             </tr>
           ))}
