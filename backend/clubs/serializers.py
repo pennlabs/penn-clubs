@@ -400,7 +400,7 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
             membership is None or membership.role > Membership.ROLE_OFFICER
         ):
             for field in data:
-                if field not in ["public", "active"]:
+                if field not in {"active"}:
                     raise serializers.ValidationError(
                         'Normal members are not allowed to change "{}"!'.format(field)
                     )
