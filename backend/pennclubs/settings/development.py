@@ -20,3 +20,6 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 SHELL_PLUS_PRE_IMPORTS = [
     ("clubs.utils", "fuzzy_lookup_club"),
 ]
+
+# Django Channels settings
+CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}

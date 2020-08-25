@@ -36,6 +36,8 @@ drf-renderer-xlsx = "*"
 python-dateutil = "*"
 psycopg2 = "*"
 django-simple-history = "*"
+channels = "*"
+whitenoise = "*"
 
 [requires]
 python_version = "3"

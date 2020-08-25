@@ -155,10 +155,19 @@ function renderPage(Page) {
       return pageProps
     }
 
+    const fetchSettings = async () => {
+      try {
+        const resp = await doApiRequest('/settings/?format=json', {
+          headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
+        })
+        return resp
+      } catch (e) {
+        return { ok: false, json: () => null }
+      }
+    }
+
     const [res, pageProps] = await Promise.all([
-      doApiRequest('/settings/?format=json', {
-        headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
-      }),
+      fetchSettings(),
       originalPageProps(),
     ])
 

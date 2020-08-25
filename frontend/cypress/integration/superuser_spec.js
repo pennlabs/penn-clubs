@@ -20,9 +20,9 @@ describe('Permissioned user tests', () => {
     cy.visit('/club/pppjo')
     cy.contains('Benjamin Franklin').should('be.visible')
 
-    cy.contains('button', 'Manage Club').click({ force: true })
+    cy.contains('button:visible', 'Manage Club').click({ force: true })
 
-    cy.url({ timeout: 10000 }).should('contain', 'edit')
+    cy.url({ timeout: 15000 }).should('contain', 'edit')
     cy.contains('.field', 'Name')
       .should('be.visible')
       .find('input')
@@ -34,7 +34,7 @@ describe('Permissioned user tests', () => {
     cy.contains('View Club').click({ force: true })
     cy.contains('Penn Pre-Professional Juggling Organization - Edited')
 
-    cy.contains('button', 'Manage Club').click({ force: true })
+    cy.contains('button:visible', 'Manage Club').click({ force: true })
     cy.contains('.field', 'Name')
       .find('input')
       .clear()

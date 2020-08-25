@@ -2,9 +2,14 @@ deploy_version: 0.1.20
 image_tag: latest
 
 applications:
+  - name: redis
+    image: redis
+    tag: "6.0"
+    port: 6379
   - name: django
     image: pennlabs/penn-clubs-backend
     secret: penn-clubs
+    replicas: 2
     ingress:
       hosts:
         - host: pennclubs.com
