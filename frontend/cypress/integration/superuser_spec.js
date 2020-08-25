@@ -22,7 +22,7 @@ describe('Permissioned user tests', () => {
 
     cy.contains('button:visible', 'Manage Club').click({ force: true })
 
-    cy.url({ timeout: 10000 }).should('contain', 'edit')
+    cy.url({ timeout: 15000 }).should('contain', 'edit')
     cy.contains('.field', 'Name')
       .should('be.visible')
       .find('input')
