@@ -38,7 +38,7 @@ type RenderPageState = {
 
 function renderPage(Page) {
   class RenderPage extends Component<RenderPageProps, RenderPageState> {
-    static getInitialProps: (
+    static getInitialProps?: (
       ctx: NextPageContext,
     ) => Promise<{ authenticated: boolean; userInfo: undefined }>
 
