@@ -774,7 +774,10 @@ class EventViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         return Response(
             EventSerializer(
-                self.get_queryset().filter(start_time__lte=now, end_time__gte=now), many=True
+                self.get_queryset()
+                .filter(start_time__lte=now, end_time__gte=now)
+                .filter(type=Event.FAIR),
+                many=True,
             ).data
         )
 
@@ -785,7 +788,9 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         now = timezone.now()
         return Response(
-            EventSerializer(self.get_queryset().filter(start_time__gte=now), many=True).data
+            EventSerializer(
+                self.get_queryset().filter(start_time__gte=now).filter(type=Event.FAIR), many=True
+            ).data
         )
 
     @action(detail=False, methods=["get"])
@@ -821,7 +826,7 @@ class EventViewSet(viewsets.ModelViewSet):
         if self.action in ["list"]:
             qs = qs.filter(end_time__gte=now)
 
-        return qs.select_related("club", "creator",).filter(type=Event.FAIR).order_by("start_time")
+        return qs.select_related("club", "creator",).order_by("start_time")
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):

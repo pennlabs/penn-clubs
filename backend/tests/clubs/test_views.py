@@ -389,6 +389,7 @@ class ClubTestCase(TestCase):
             name="Past Test Event 2",
             start_time=timezone.now() - timezone.timedelta(days=3),
             end_time=timezone.now() - timezone.timedelta(days=2),
+            type=Event.FAIR,
         )
         e3 = Event.objects.create(
             code="test-event-3",
@@ -396,7 +397,10 @@ class ClubTestCase(TestCase):
             name="Present Test Event 3",
             start_time=timezone.now() - timezone.timedelta(days=3),
             end_time=timezone.now() + timezone.timedelta(days=2),
+            type=Event.FAIR,
         )
+        self.event1.type = Event.FAIR
+        self.event1.save()
 
         # list events without a club to namespace.
         resp = self.client.get(reverse("events-list"), content_type="application/json",)
