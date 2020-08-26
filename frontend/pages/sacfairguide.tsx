@@ -22,9 +22,9 @@ const UnorderedList = s.ul`
   margin-top: 0.5rem;
 `
 
-const FAQ = () => (
+const SACGuide = () => (
   <Container background={SNOW}>
-    <Metadata title="FAQ" />
+    <Metadata title="SAC Fair Guide" />
     <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
       Virtual SAC Fair Guide
     </Title>
@@ -282,4 +282,4 @@ const FAQ = () => (
   </Container>
 )
 
-export default renderPage(FAQ)
+export default renderPage(SACGuide)
