@@ -30,15 +30,22 @@ const relativeLinks = () => {
   ]
 }
 
-export async function fetchMarkdown(file: string): Promise<string> {
-  const contents = await readFilePromise(
-    path.join(process.cwd(), 'markdown', path.basename(`${file}.md`)),
-  )
-  const converter = new showdown.Converter({
-    parseImgDimensions: true,
-    strikethrough: true,
-    tables: true,
-    extensions: [relativeLinks],
-  })
-  return converter.makeHtml(contents.toString())
+export async function fetchMarkdown(file: string): Promise<string | null> {
+  try {
+    const contents = await readFilePromise(
+      path.join(process.cwd(), 'markdown', path.basename(`${file}.md`)),
+    )
+    const converter = new showdown.Converter({
+      parseImgDimensions: true,
+      strikethrough: true,
+      tables: true,
+      extensions: [relativeLinks],
+    })
+    return converter.makeHtml(contents.toString())
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      return null
+    }
+    throw e
+  }
 }

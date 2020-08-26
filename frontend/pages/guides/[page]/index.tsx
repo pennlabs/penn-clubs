@@ -3,7 +3,7 @@ import { NextPageContext } from 'next'
 import { ReactElement } from 'react'
 import s from 'styled-components'
 
-import { Container, Metadata } from '../../../components/common'
+import { Contact, Container, Metadata } from '../../../components/common'
 import {
   BACKGROUND_GRAY,
   LIGHT_GRAY,
@@ -50,17 +50,32 @@ const GuidePage = ({ title, contents, toc }): ReactElement => {
       <Metadata title={title} />
       <MarkdownContent>
         <h1>{title}</h1>
-        <div className="toc">
-          <b>Table of Contents</b>
-          <ul className="mt-0">
-            {toc.map(({ title, id }) => (
-              <li key={id}>
-                <a href={`#${id}`}>{title}</a>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div dangerouslySetInnerHTML={{ __html: contents }} />
+        {contents !== null ? (
+          <>
+            <div className="toc">
+              <b>Table of Contents</b>
+              <ul className="mt-0">
+                {toc.map(({ title, id }) => (
+                  <li key={id}>
+                    <a href={`#${id}`}>{title}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div dangerouslySetInnerHTML={{ __html: contents }} />
+          </>
+        ) : (
+          <>
+            <p>
+              The guide you are looking for does not exist. Perhaps it was moved
+              or deleted?
+            </p>
+            <p>
+              If you believe that this guide should exist, please contact{' '}
+              <Contact />.
+            </p>
+          </>
+        )}
       </MarkdownContent>
     </Container>
   )
@@ -80,19 +95,30 @@ export const getServerSideProps = async (ctx: NextPageContext) => {
     fetchMarkdown(ctx.query.page as string),
   ])
 
-  const dom = cheerio.load(contents)
-  const title = dom('h1').eq(0).text() ?? 'Penn Clubs Guide'
-  dom('h1').eq(0).remove()
-  const toc = dom('h2')
-    .map((i, el) => {
-      return {
-        title: dom(el).text(),
-        id: dom(el).attr('id'),
-      }
-    })
-    .get()
+  if (contents !== null) {
+    const dom = cheerio.load(contents)
+    const title = dom('h1').eq(0).text() ?? 'Penn Clubs Guide'
+    dom('h1').eq(0).remove()
+    const toc = dom('h2')
+      .map((i, el) => {
+        return {
+          title: dom(el).text(),
+          id: dom(el).attr('id'),
+        }
+      })
+      .get()
 
-  return { props: { ...props, title, contents: dom.html(), toc } }
+    return { props: { ...props, title, contents: dom.html(), toc } }
+  } else {
+    return {
+      props: {
+        ...props,
+        title: '404 Not Found',
+        contents: null,
+        toc: [],
+      },
+    }
+  }
 }
 
 export default completePage
