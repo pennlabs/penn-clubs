@@ -63,6 +63,8 @@ type Props = {
   onChecked?: () => void
 }
 
+const SAC_FAIR_OPEN = false
+
 const PolicyBox = ({ onChecked = () => undefined }: Props): ReactElement => {
   const [numChecked, setNumChecked] = useState<number>(0)
 
@@ -324,28 +326,36 @@ const RenewPage = ({
               will be sent to you at a later date.
             </p>
             <p>
-              Note that this SAC Fair is for <b>Undergraduate Organizations</b>
-              only.
+              Note that this SAC Fair is for <b>Undergraduate Organizations</b>{' '}
+              only. If you are not an undergraduate organization, please do not
+              sign up for the SAC fair.
             </p>
-            <label>
-              <input
-                type="checkbox"
-                checked={isSacChecked}
-                onChange={(e) => {
-                  const checked = e.target.checked
-                  doApiRequest(`/clubs/${club.code}/?format=json`, {
-                    method: 'PATCH',
-                    body: {
-                      fair: checked,
-                    },
-                  })
-                  setSacChecked(checked)
-                  e.persist()
-                }}
-              />{' '}
-              Yes, <b>{club.name}</b> would like to participate in the Fall{' '}
-              {year} SAC Fair.
-            </label>
+            {SAC_FAIR_OPEN ? (
+              <label>
+                <input
+                  type="checkbox"
+                  checked={isSacChecked}
+                  onChange={(e) => {
+                    const checked = e.target.checked
+                    doApiRequest(`/clubs/${club.code}/?format=json`, {
+                      method: 'PATCH',
+                      body: {
+                        fair: checked,
+                      },
+                    })
+                    setSacChecked(checked)
+                    e.persist()
+                  }}
+                />{' '}
+                Yes, <b>{club.name}</b> would like to participate in the Fall{' '}
+                {year} SAC Fair.
+              </label>
+            ) : (
+              <p className="has-text-danger">
+                SAC Fair registration is now closed. If you have any questions,
+                please contact <Contact point="sac" />.
+              </p>
+            )}
           </TextInfoBox>
         )
       },

@@ -2,7 +2,7 @@ import { ReactElement } from 'react'
 
 type ContactProps = {
   email?: string
-  point?: 'pennclubs' | 'osa'
+  point?: 'pennclubs' | 'osa' | 'sac'
 }
 
 export function Contact({
@@ -13,6 +13,8 @@ export function Contact({
 
   if (point === 'osa') {
     finalEmail = 'rodneyr@upenn.edu'
+  } else if (point === 'sac') {
+    finalEmail = 'sac@sacfunded.net'
   }
 
   return <a href={`mailto:${finalEmail}`}>{finalEmail}</a>
