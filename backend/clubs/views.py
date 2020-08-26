@@ -798,6 +798,20 @@ class EventViewSet(viewsets.ModelViewSet):
             EventSerializer(self.get_queryset().filter(end_time__lt=now), many=True).data
         )
 
+    def create(self, request, *args, **kwargs):
+        """
+        Do not let non-superusers create events with the FAIR type through the API.
+        """
+        type = request.data.get("type", 0)
+        if type == Event.FAIR and not self.request.user.is_superuser:
+            raise DRFValidationError(
+                detail="Approved activities fair events have already been created. "
+                "See above for events to edit, and "
+                "please email contact@pennclubs.com if this is en error."
+            )
+
+        return super().create(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = Event.objects.all()
         if self.kwargs.get("club_code") is not None:

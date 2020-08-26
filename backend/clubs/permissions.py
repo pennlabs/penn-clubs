@@ -81,6 +81,23 @@ class EventPermission(permissions.BasePermission):
         else:
             return True
 
+    def has_object_permission(self, request, view, obj):
+        """
+        Do not allow transitions from and to club fair event.
+        """
+        FAIR_TYPE = 4
+        old_type = obj.type
+        new_type = request.data.get("type", old_type)
+
+        if view.action in ["update", "partial_update"]:
+            if old_type == FAIR_TYPE and new_type != FAIR_TYPE:
+                return False
+
+            if old_type != FAIR_TYPE and new_type == FAIR_TYPE:
+                return False
+
+        return True
+
 
 class ClubItemPermission(permissions.BasePermission):
     """
