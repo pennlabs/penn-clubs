@@ -21,17 +21,25 @@ const MarkdownContent = s.div`
     font-weight: bold;
   }
 
+  & h2 {
+    font-size: 1.5rem;
+  }
+
+  & h2:not(:first-child) {
+    margin-top: 2em;
+  }
+
   & img {
     display: block;
     max-height: 400px;
-    margin: 15px auto;
+    margin: 25px auto;
     box-shadow 2px 2px 10px ${MEDIUM_GRAY};
   }
 
   & div.toc {
     border-left: 5px solid ${LIGHT_GRAY};
     padding: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 25px;
     background-color: ${BACKGROUND_GRAY};
   }
 `
@@ -69,7 +77,7 @@ export const getServerSideProps = async (ctx: NextPageContext) => {
 
   const [props, contents] = await Promise.all([
     fetchProps(),
-    fetchMarkdown('sacfairguide'),
+    fetchMarkdown(ctx.query.page as string),
   ])
 
   const dom = cheerio.load(contents)

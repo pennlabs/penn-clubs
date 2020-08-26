@@ -41,6 +41,7 @@ When hosting your event:
 - Make all present members of the session **co-hosts** to help control the session.
 - Have the chat window **open** to answer any questions. For busier sessions, we recommend designating one member to be monitoring the chat window.
 - For busier sessions where multiple club members are present, we recommend taking advantage of the **breakout room** feature, which can be prompted by hosts. We would suggest **manually assigning** people to a breakout room, to ensure a member of the club is there to answer questions.
+- <important>Ensure that you setup and test breakout rooms before the SAC fair starts! If you do not setup breakout rooms beforehand, you will not be able to use them during the meeting.</important>
 
     ![Zoom Breakout Rooms](5.png)
 

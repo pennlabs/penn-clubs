@@ -22,12 +22,17 @@ const relativeLinks = () => {
       regex: /(\w+)@pennclubs\.com/g,
       replace: '[$1@pennclubs.com](mailto:$1@pennclubs.com)',
     },
+    {
+      type: 'lang',
+      regex: /<important>(.*?)<\/important>/g,
+      replace: '<div class="has-text-danger has-text-weight-bold">$1</div>',
+    },
   ]
 }
 
 export async function fetchMarkdown(file: string): Promise<string> {
   const contents = await readFilePromise(
-    path.join(process.cwd(), `markdown/${file}.md`),
+    path.join(process.cwd(), 'markdown', path.basename(`${file}.md`)),
   )
   const converter = new showdown.Converter({
     parseImgDimensions: true,
