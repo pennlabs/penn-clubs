@@ -21,8 +21,7 @@ const Placeholder = styled.div`
   }
   ${ModalContent} & {
     width: 100%;
-    margin-top: -1.5rem;
-  }
+    margin: -1.5rem 0 0 0;
   }
 `
 const CoverPhotoImage = styled.div<{ image: string | null }>`
@@ -32,13 +31,12 @@ const CoverPhotoImage = styled.div<{ image: string | null }>`
   padding-bottom: ${SIXTEEN_BY_NINE};
   background-image: url(${(props) => props.image});
   background-size: cover;
-
   ${Card} & {
     margin: -0.5rem -0.5rem 0.5rem;
   }
   ${ModalContent} & {
     width: 100%;
-    margin-top: -1.5rem;
+    margin: -1.5rem 0 0 0;
   }
 `
 

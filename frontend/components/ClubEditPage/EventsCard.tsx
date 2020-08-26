@@ -245,6 +245,10 @@ const types = [
     value: 3,
     label: 'Speaker Event',
   },
+  {
+    value: 4,
+    label: 'Activities Fair',
+  },
 ]
 
 const eventTableFields = [

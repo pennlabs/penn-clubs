@@ -1,8 +1,7 @@
 import { ReactElement, useEffect, useRef } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
-import { fadeIn, fadeOut } from '../../constants/animations'
-import { LIGHT_GRAY } from '../../constants/colors'
+import { fadeIn, fadeOut, LIGHT_GRAY } from '../../constants'
 import {
   BORDER_RADIUS_LG,
   LONG_ANIMATION_DURATION,
@@ -13,7 +12,7 @@ import {
 import { Icon } from './Icon'
 import Shade from './Shade'
 
-const ModalWrapper = s.div<{ show?: boolean; width?: string }>`
+const ModalWrapper = styled.div<{ show?: boolean; width?: string }>`
   position: fixed;
   top: 0;
   left: 0;
@@ -27,7 +26,7 @@ const ModalWrapper = s.div<{ show?: boolean; width?: string }>`
   animation-duration: ${LONG_ANIMATION_DURATION};
 `
 
-const ModalCard = s.div<{ width?: string }>`
+const ModalCard = styled.div<{ width?: string }>`
   border-radius: ${BORDER_RADIUS_LG};
   border: 0 !important;
   box-shadow: none !important;
@@ -48,12 +47,12 @@ const ModalCard = s.div<{ width?: string }>`
       : ''}
 `
 
-export const ModalContent = s.div<{ marginBottom?: boolean }>`
+export const ModalContent = styled.div<{ marginBottom?: boolean }>`
   margin: auto;
   ${({ marginBottom }) => (marginBottom ? 'margin-bottom: 10%;' : '')}
 `
 
-const CloseModalIcon = s(Icon)<{ onClick?: () => void }>`
+const CloseModalIcon = styled(Icon)<{ onClick?: () => void }>`
   position: absolute;
   right: 20px;
   top: 20px;

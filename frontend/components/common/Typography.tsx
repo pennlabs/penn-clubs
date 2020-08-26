@@ -25,7 +25,7 @@ export const StrongText = s(Text)`
   font-weight: bold;
 `
 
-export const Title = s.h1.attrs(() => ({ class: 'title' }))`
+export const Title = s.h1.attrs({ className: 'title' })`
   font-size: 2rem;
   font-weight: bold;
 `
