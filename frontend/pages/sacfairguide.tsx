@@ -20,6 +20,7 @@ const UnorderedList = s.ul`
   list-style-type: disc;
   margin-left: 2rem;
   margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 `
 
 const SACGuide = () => (
@@ -43,9 +44,8 @@ const SACGuide = () => (
       navigate to your club, click the green "Manage Club" button on the
       top-right corner of the page. If you do not see this button, it means you
       are not an officer of the club. Either ask an officer listed on your club
-      to add you to the site through the "Membership" tab of the "Manage Club"
-      page, or email <Contact /> with your Penn email and club name to be added
-      as an officer.
+      to add you to the site, or email <Contact /> with your Penn email and club
+      name to be added as an officer.
     </p>
     <img
       style={{
@@ -72,8 +72,8 @@ const SACGuide = () => (
     />
 
     <p>
-      There will be an existing event with your designated date & time titled
-      "SAC Fair Info Session". Click "Edit".
+      There will be an existing event with your designated date & time titled{' '}
+      <strong>"SAC Fair Info Session"</strong>. Click "Edit".
     </p>
     <img
       style={{
@@ -89,8 +89,11 @@ const SACGuide = () => (
     <p>
       Edit the club details: you <strong>MUST</strong> provide a Zoom link
       (preferably from your school Zoom account) where prospective students can
-      navigate to. You can add a description, as well as upload a cover photo
-      (dimensions 16:9) to make your event stand out in the live events portal.
+      navigate to. Here, you can also:
+      <UnorderedList>
+        <li>Add an event description</li>
+        <li>Upload a cover photo (16:9 dimensions)</li>
+      </UnorderedList>
       Be sure to{' '}
       <strong>
         hit the green "save" button on the lefthand side when you are done!
@@ -169,8 +172,8 @@ const SACGuide = () => (
     <p>
       Tired of creating a Google Form to track all interested members? Now,
       students can click the "Subscribe" bell button on your club's page to
-      immediately be added to your club's own listserv without spending the time
-      to fill out a form.
+      immediately be added to your club's interest list without spending the
+      time to fill out a form.
     </p>
 
     <img
@@ -186,12 +189,11 @@ const SACGuide = () => (
     />
 
     <p>
-      To access this listserv, simply navigate to "Manage Club" once again, then
-      to the "Recruitment" tab. Here, you will also find a QR code your club can
-      use for members to bookmark or subscribe to your club. You will also see a
-      table of members who have subscribed to your club. You can scroll to the
-      bottom to download an Excel file of all these members' names, emails, and
-      more self-reported information.
+      To access this interest list, simply navigate to "Manage Club" once again,
+      then to the "Recruitment" tab. You will see a table of members who have
+      shown interest by subscribing to your club. You can scroll to the bottom
+      to download an Excel file of all these members' names, emails, and more
+      self-reported information.
     </p>
 
     <img
@@ -208,10 +210,10 @@ const SACGuide = () => (
 
     <Subheading>Club FAQ</Subheading>
     <p>
-      To facilitate asynchronous interactions with prospective members, we also
-      have an FAQ section on each club's page. When students post a question,
-      all officers listed under the club will receive an email notification that
-      a question for your club has been asked.
+      To allow prospective members to ask questions at any time, we also have an
+      FAQ section on each club's page. When students post a question, all
+      officers listed under the club will receive an email notification that a
+      question for your club has been asked.
     </p>
 
     <img
@@ -255,7 +257,7 @@ const SACGuide = () => (
       do the same with non-officer members, but leaving their status as
       "Member".{' '}
       <strong>
-        Only Officers and Owners of a club can use the Manage Club button.
+        Only Officers and Owners of a club have access to the Manage Club page.
       </strong>
     </p>
 
@@ -278,6 +280,15 @@ const SACGuide = () => (
       <a href="/rank">ranking algorithm here </a>our to discover ways to boost
       your club and events to the top of Penn Clubs, simply by providing more
       information on your club for prospective members.
+    </p>
+
+    <Subheading>Feedback</Subheading>
+    <p>
+      This is all a new process, even for us, and we're always looking for ways
+      to improve our products. If you have any feedback, whether it be bugs,
+      improvements, new features, or anything else, please let us know by
+      filling out our{' '}
+      <a href="https://airtable.com/shrCsYFWxCwfwE7cf">feedback form</a>!
     </p>
   </Container>
 )
