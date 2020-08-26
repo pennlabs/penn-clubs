@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import s, { CSSProperties } from 'styled-components'
+import styled, { CSSProperties } from 'styled-components'
 
 const reqSvgs = require.context('../../public/static/img/icons', true, /\.svg$/)
 
@@ -8,7 +8,7 @@ type IconWrapperProps = {
   noMargin?: boolean
 }
 
-const IconWrapper = s.span<IconWrapperProps>`
+const IconWrapper = styled.span<IconWrapperProps>`
   display: inline-block;
   vertical-align: ${({ noAlign }) => (noAlign ? 'baseline' : 'middle')};
 

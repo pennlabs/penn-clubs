@@ -5,6 +5,7 @@ import { CLUBS_NAVY, WHITE } from '../../constants'
 import { SIXTEEN_BY_NINE } from '../../constants/measurements'
 import { Card, CARD_BORDER_RADIUS } from '../common/Card'
 import { ModalContent } from '../common/Modal'
+import { EventCardContainer } from './EventCard'
 
 const Placeholder = styled.div`
   border-radius: ${CARD_BORDER_RADIUS} ${CARD_BORDER_RADIUS} 0 0;
@@ -16,13 +17,12 @@ const Placeholder = styled.div`
   height: 9.5rem;
   color: white;
 
-  ${Card} & {
-    margin: -0.5rem -0.5rem 0.5rem;
-  }
   ${ModalContent} & {
     width: 100%;
     margin-top: -1.5rem;
   }
+  ${EventCardContainer} & {
+    margin: -0.5rem -0.5rem 0.5rem;
   }
 `
 const CoverPhotoImage = styled.div<{ image: string | null }>`
@@ -32,13 +32,12 @@ const CoverPhotoImage = styled.div<{ image: string | null }>`
   padding-bottom: ${SIXTEEN_BY_NINE};
   background-image: url(${(props) => props.image});
   background-size: cover;
-
-  ${Card} & {
-    margin: -0.5rem -0.5rem 0.5rem;
-  }
   ${ModalContent} & {
     width: 100%;
     margin-top: -1.5rem;
+  }
+  ${EventCardContainer} & {
+    margin: -0.5rem -0.5rem 0.5rem;
   }
 `
 

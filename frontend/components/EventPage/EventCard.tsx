@@ -16,7 +16,7 @@ import DateInterval from './DateInterval'
 import EventModal from './EventModal'
 import HappeningNow from './HappeningNow'
 
-const CardContainer = styled.div`
+export const EventCardContainer = styled.div`
   ${mediaMinWidth(PHONE)} {
     max-width: 18em;
     margin: 1rem;
@@ -40,7 +40,7 @@ const EventCard = (props: {
 
   return (
     <>
-      <CardContainer>
+      <EventCardContainer>
         <Card bordered hoverable background={WHITE} onClick={showModal}>
           <CoverPhoto
             image={image_url}
@@ -56,7 +56,7 @@ const EventCard = (props: {
           <EventName>{name}</EventName>
           {url && <EventLink href={url}>{clipLink(url)}</EventLink>}
         </Card>
-      </CardContainer>
+      </EventCardContainer>
       <Modal show={modalVisible} closeModal={hideModal} width="45%">
         <EventModal {...props} />
       </Modal>
