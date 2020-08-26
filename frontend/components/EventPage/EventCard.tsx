@@ -16,7 +16,7 @@ import DateInterval from './DateInterval'
 import EventModal from './EventModal'
 import HappeningNow from './HappeningNow'
 
-export const EventCardContainer = styled.div`
+const EventCardContainer = styled.div`
   ${mediaMinWidth(PHONE)} {
     max-width: 18em;
     margin: 1rem;
