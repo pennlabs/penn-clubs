@@ -13,7 +13,7 @@ import {
 import renderPage from '../../../renderPage'
 import { fetchMarkdown } from '../../../utils/server'
 
-const MarkdownContent = s.div`
+const MarkdownContent = s.div.attrs({ className: 'content' })`
   & h1 {
     margin-top: 2.5vw;
     margin-bottom: 2rem;
@@ -48,7 +48,7 @@ const GuidePage = ({ title, contents, toc }): ReactElement => {
   return (
     <Container background={SNOW}>
       <Metadata title={title} />
-      <MarkdownContent className="content">
+      <MarkdownContent>
         <h1>{title}</h1>
         <div className="toc">
           <b>Table of Contents</b>

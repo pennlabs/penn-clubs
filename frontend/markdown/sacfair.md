@@ -18,21 +18,23 @@ There will be an existing event with your designated date & time titled "SAC Fai
 
 ![Edit SAC Fair Event](3.png)
 
-Edit the club details: you MUST provide a Zoom link (preferably from your school Zoom account) where prospective students can navigate to for your info session. Here, you can also:
+Edit the club details: you MUST provide a Zoom link (preferably from your school Zoom account, see details below for why) where prospective students can navigate to for your info session. Here, you can also:
 - Add a description
-- Add a cover photo (16:9 dimensiions)
+- Add a cover photo (16:9 dimensions, preferably 1920 x 1080)
 
-Note that this date is **fixed**. Trying to change the date and time will result in an error, preventing you from saving your details. 
+We recommend that you fill out as many details as possible. Students will be shown currently occuring events in completely random order, with one exception. Clubs that have fully entered their event information will appear above clubs who have not.
+
+Note that this date is **fixed**. Trying to change the date and time will result in an error, preventing you from saving your details. If you have any questions about the date, please email sac@sacfunded.net.
 
 **Be sure to hit the green "save" button on the lefthand side when you are done!**
 
 ![Save SAC Fair Changes](4.png)
 
-**And that's it!** Your club's event will show up in the portal during the live, virtual SAC Fair on the day you were assigned.
+**And that's it!** Your club's event will show up in the portal during the live, virtual SAC Fair on the day you are assigned.
 
 ## 📷 Zoom Best Practices
 
-To get all possible features, please use an account using the school's licensed Zoom accounts. You should have received an email from your home school about obtaining login credentials for this.
+To get all possible features on Zoom, please use an account using the school's licensed Zoom accounts. You should have received an email from your home school about obtaining login credentials for this.
 
 Schedule a new meeting, using the given **date and time** as outlined in the e-mail given to you by SAC with these settings:
 
@@ -40,26 +42,31 @@ Schedule a new meeting, using the given **date and time** as outlined in the e-m
 - Under Advanced Options:
     - Waiting room **disabled**
     - **Mute participants upon entry enabled**
-    - **Only authenticated users can join enabled**
+    - [**Only authenticated users can join enabled**](https://support.zoom.us/hc/en-us/articles/360037117472-Authentication-Profiles-for-meetings-and-webinars)
 
 When hosting your event:
 
 - Make all present members of the session **co-hosts** to help control the session.
 - Have the chat window **open** to answer any questions. For busier sessions, we recommend designating one member to be monitoring the chat window.
-- For busier sessions where multiple club members are present, we recommend taking advantage of the **breakout room** feature, which can be prompted by hosts. We would suggest **manually assigning** people to a breakout room, to ensure a member of the club is there to answer questions.
-- <important>Ensure that you setup and test breakout rooms before the SAC fair starts by using! If you do not setup breakout rooms beforehand, you will not be able to use them during the meeting.</important> See [this guide](https://support.zoom.us/hc/en-us/articles/206476093-Enabling-breakout-rooms) on how to set up breakout rooms.
+- For busier sessions where multiple club members are present, we recommend taking advantage of the **breakout room** feature, which can be prompted by hosts. Breakout rooms can be used to facilitate 1 on 1 conversations with club members and fair attendees. We would suggest **manually assigning** people to a breakout room, to ensure a member of the club is there to answer questions.
+- <important>Ensure that you setup and test breakout rooms before the SAC fair starts! If you do not setup breakout rooms beforehand, you will not be able to use them during the meeting.</important> See [this guide](https://support.zoom.us/hc/en-us/articles/206476093-Enabling-breakout-rooms) on how to set up breakout rooms.
 
     ![Zoom Breakout Rooms](5.png)
 
 ## 📎 Recruitment Resources
 
-Tired of creating a Google Form to track all interested members? Now, students can click the "Subscribe" bell button on your club's page to immediately be added to your club's own interest list without spending the time to fill out a form. By hitting the "Subscribe" bell button, interested members will have their name and email added to your interest list.
+Tired of creating a Google Form to track all interested members? Now, students can click the "Subscribe" bell button on your club's page to immediately be added to your club's own interest list without spending the time to fill out a form. By hitting the "Subscribe" bell button, interested members will have their name and email added to your interest list. You will receive the following information about each subscriber:
+- Name
+- Email
+- Graduation Year
+- School(s)
+- Major(s)
 
 ![Subscribe Button](6.png)
 
 To access this interest list, simply navigate to "Manage Club" once again, then to the "Recruitment" tab. You will see a table of members who have subscribed to your club. You can scroll to the bottom to download an Excel file of all these members' names, emails, and more self-reported information.
 
-![Listserv](7.png)
+![Interest List](7.png)
 
 ## ❓Club Q&A
 
@@ -73,7 +80,7 @@ To answer the questions, navigate once again to the "Manage Club", and then to t
 
 ## 👩‍👧‍👦 Managing Members
 
-As you can tell, there is a lot of responsibility for club owners already. To help lessen the load, you can invite other officers of your club to join your club's profile. Click the "Manage Club" button once again, and then navigate to the "Membership" tab. By entering email addresses (separated by commas or newlines) you can send invites to all the officers of your club by clicking the "Officer" status under Permissions. You can do the same with non-officer members, but leaving their status as "Member". **Only Officers and Owners of a club can use the Manage Club button**. 
+As you can tell, there is a lot of responsibility for club owners already. To help lessen the load, you can invite other officers of your club to join your club's profile. Click the "Manage Club" button once again, and then navigate to the "Membership" tab. By entering email addresses (separated by commas or newlines) you can send invites to all the officers of your club by clicking the "Officer" status under Permissions. You can do the same with non-officer members, but leaving their status as "Member". **Only Officers and Owners of a club have access to the Manage Club button**. 
 
 ![Managing Club Members](10.png)
 

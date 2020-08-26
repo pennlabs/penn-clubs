@@ -19,8 +19,8 @@ const relativeLinks = () => {
     },
     {
       type: 'lang',
-      regex: /(\w+)@pennclubs\.com/g,
-      replace: '[$1@pennclubs.com](mailto:$1@pennclubs.com)',
+      regex: /(\w+)@(pennclubs\.com|sacfunded\.net)/g,
+      replace: '[$1@$2](mailto:$1@$2)',
     },
     {
       type: 'lang',

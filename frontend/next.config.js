@@ -6,12 +6,11 @@ module.exports = {
     })
     return config
   },
-  async redirects() {
+  async rewrites() {
     return [
       {
         source: '/sacfairguide',
         destination: '/guides/sacfair',
-        permanent: true,
       },
     ]
   },
