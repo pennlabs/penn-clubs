@@ -22,6 +22,8 @@ Edit the club details: you MUST provide a Zoom link (preferably from your school
 - Add a description
 - Add a cover photo (16:9 dimensiions)
 
+Note that this date is **fixed**. Trying to change the date and time will result in an error, preventing you from saving your details. 
+
 **Be sure to hit the green "save" button on the lefthand side when you are done!**
 
 ![Save SAC Fair Changes](4.png)
