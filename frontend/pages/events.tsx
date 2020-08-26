@@ -3,13 +3,13 @@ import { ReactElement } from 'react'
 import styled from 'styled-components'
 
 import { Metadata, Title, WideContainer } from '../components/common'
+import { Card } from '../components/common/Card'
 import EventCard from '../components/EventPage/EventCard'
 import { CLUBS_GREY, mediaMaxWidth, PHONE, SNOW } from '../constants'
+import { mediaMinWidth } from '../constants/measurements'
 import renderPage from '../renderPage'
 import { ClubEvent } from '../types'
 import { doApiRequest } from '../utils'
-import { Card } from '../components/common/Card'
-import { mediaMinWidth } from '../constants/measurements'
 
 interface EventPageProps {
   liveEvents: ClubEvent[]

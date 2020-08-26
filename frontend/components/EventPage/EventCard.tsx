@@ -3,6 +3,11 @@ import styled from 'styled-components'
 
 import { Modal } from '../../components/common'
 import { WHITE } from '../../constants/colors'
+import {
+  mediaMaxWidth,
+  mediaMinWidth,
+  PHONE,
+} from '../../constants/measurements'
 import { ClubEvent } from '../../types'
 import { Card } from '../common/Card'
 import { ClubName, EventLink, EventName } from './common'
@@ -10,11 +15,6 @@ import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
 import EventModal from './EventModal'
 import HappeningNow from './HappeningNow'
-import {
-  mediaMaxWidth,
-  mediaMinWidth,
-  PHONE,
-} from '../../constants/measurements'
 
 const CardContainer = styled.div`
   ${mediaMinWidth(PHONE)} {

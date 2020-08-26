@@ -85,7 +85,9 @@ const EmbedOption = (props: Props): ReactElement => {
   const [embedUrl, setEmbedUrl] = useState<string>('')
   const [embedWidth, setEmbedWidth] = useState<string>('100%')
   const [embedHeight, setEmbedHeight] = useState<string>('1200px')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<
+    ReactElement | string | null
+  >(null)
 
   const embedContent = () => {
     if (!embedUrl.length) {
@@ -95,7 +97,10 @@ const EmbedOption = (props: Props): ReactElement => {
 
     if (/\.(?:png|svg|jpg|jpeg)$/.test(embedUrl)) {
       setErrorMessage(
-        'If you would like to embed an image file, please use the image functionality instead.',
+        <>
+          If you would like to embed an image file, please use the image
+          functionality found in the toolbar (<Icon name="image" />) instead.
+        </>,
       )
       return false
     }
