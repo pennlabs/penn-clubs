@@ -75,6 +75,11 @@ describe('Authenticated user tests', () => {
       },
       { label: 'Size', value: '< 20', pressEnter: true },
       {
+        label: 'Email',
+        value: 'example@example.com',
+        pressEnter: false,
+      },
+      {
         label: 'Is an application required to join your organization?',
         value: 'No Application Required',
         pressEnter: true,

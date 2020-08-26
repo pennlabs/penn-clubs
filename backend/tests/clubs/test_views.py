@@ -291,7 +291,12 @@ class ClubTestCase(TestCase):
         # create club as superuser
         resp = self.client.post(
             reverse("clubs-list"),
-            {"name": "Penn Labs", "description": "We code stuff.", "tags": [{"name": "Graduate"}]},
+            {
+                "name": "Penn Labs",
+                "description": "We code stuff.",
+                "tags": [{"name": "Graduate"}],
+                "email": "example@example.com",
+            },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -494,7 +499,12 @@ class ClubTestCase(TestCase):
         # create club
         resp = self.client.post(
             reverse("clubs-list"),
-            {"name": "Penn Labs", "description": "We code stuff.", "tags": [{"name": "Graduate"}]},
+            {
+                "name": "Penn Labs",
+                "description": "We code stuff.",
+                "tags": [{"name": "Graduate"}],
+                "email": "example@example.com",
+            },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -767,6 +777,7 @@ class ClubTestCase(TestCase):
                 "name": "Penn Labs",
                 "tags": [{"name": "Undergraduate"}],
                 "description": test_good_string,
+                "email": "example@example.com",
             },
             content_type="application/json",
         )
@@ -787,7 +798,12 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password="test")
         resp = self.client.post(
             reverse("clubs-list"),
-            {"name": "Penn Labs", "tags": [{"name": "Graduate"}], "description": test_bad_string},
+            {
+                "name": "Penn Labs",
+                "tags": [{"name": "Graduate"}],
+                "description": test_bad_string,
+                "email": "example@example.com",
+            },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -862,6 +878,7 @@ class ClubTestCase(TestCase):
                 "badges": [{"label": "SAC Funded"}],
                 "tags": [{"name": tag1.name}, {"name": tag2.name}, {"name": "Graduate"}],
                 "target_schools": [{"name": school1.name}],
+                "email": "example@example.com",
                 "facebook": "https://www.facebook.com/groups/966590693376781/"
                 + "?ref=nf_target&fref=nf",
                 "twitter": "https://twitter.com/Penn",
