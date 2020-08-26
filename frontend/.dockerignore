@@ -8,6 +8,7 @@ Dockerfile
 .gitignore
 .gitmodules
 **/*.md
+!markdown/*.md
 LICENSE
 
 # Misc
