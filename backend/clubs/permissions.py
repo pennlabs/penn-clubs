@@ -85,15 +85,19 @@ class EventPermission(permissions.BasePermission):
         """
         Do not allow transitions from and to club fair event.
         """
-        FAIR_TYPE = 4
+        # prevent circular import
+        from clubs.models import Event
+
+        FAIR_TYPE = Event.FAIR
+
         old_type = obj.type
         new_type = request.data.get("type", old_type)
 
         if view.action in ["update", "partial_update"]:
-            if old_type == FAIR_TYPE and new_type != FAIR_TYPE:
+            if old_type == FAIR_TYPE and not new_type == FAIR_TYPE:
                 return False
 
-            if old_type != FAIR_TYPE and new_type == FAIR_TYPE:
+            if not old_type == FAIR_TYPE and new_type == FAIR_TYPE:
                 return False
 
         return True
