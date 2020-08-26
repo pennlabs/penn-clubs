@@ -774,7 +774,10 @@ class EventViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         return Response(
             EventSerializer(
-                self.get_queryset().filter(start_time__lte=now, end_time__gte=now), many=True
+                self.get_queryset()
+                .filter(start_time__lte=now, end_time__gte=now)
+                .filter(type=Event.FAIR),
+                many=True,
             ).data
         )
 
@@ -785,7 +788,9 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         now = timezone.now()
         return Response(
-            EventSerializer(self.get_queryset().filter(start_time__gte=now), many=True).data
+            EventSerializer(
+                self.get_queryset().filter(start_time__gte=now).filter(type=Event.FAIR), many=True
+            ).data
         )
 
     @action(detail=False, methods=["get"])
@@ -798,6 +803,20 @@ class EventViewSet(viewsets.ModelViewSet):
             EventSerializer(self.get_queryset().filter(end_time__lt=now), many=True).data
         )
 
+    def create(self, request, *args, **kwargs):
+        """
+        Do not let non-superusers create events with the FAIR type through the API.
+        """
+        type = request.data.get("type", 0)
+        if type == Event.FAIR and not self.request.user.is_superuser:
+            raise DRFValidationError(
+                detail="Approved activities fair events have already been created. "
+                "See above for events to edit, and "
+                "please email contact@pennclubs.com if this is en error."
+            )
+
+        return super().create(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = Event.objects.all()
         if self.kwargs.get("club_code") is not None:
@@ -807,7 +826,7 @@ class EventViewSet(viewsets.ModelViewSet):
         if self.action in ["list"]:
             qs = qs.filter(end_time__gte=now)
 
-        return qs.select_related("club", "creator",)
+        return qs.select_related("club", "creator",).order_by("start_time")
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):

@@ -389,6 +389,7 @@ class ClubTestCase(TestCase):
             name="Past Test Event 2",
             start_time=timezone.now() - timezone.timedelta(days=3),
             end_time=timezone.now() - timezone.timedelta(days=2),
+            type=Event.FAIR,
         )
         e3 = Event.objects.create(
             code="test-event-3",
@@ -396,7 +397,10 @@ class ClubTestCase(TestCase):
             name="Present Test Event 3",
             start_time=timezone.now() - timezone.timedelta(days=3),
             end_time=timezone.now() + timezone.timedelta(days=2),
+            type=Event.FAIR,
         )
+        self.event1.type = Event.FAIR
+        self.event1.save()
 
         # list events without a club to namespace.
         resp = self.client.get(reverse("events-list"), content_type="application/json",)
@@ -427,6 +431,41 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertEquals(1, len(resp.data), resp.data)
         self.assertEquals(e2.id, resp.data[0]["id"], resp.data)
+
+    def test_event_update_fair(self):
+        Membership.objects.create(person=self.user1, club=self.club1, role=Membership.ROLE_OWNER)
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.patch(
+            reverse("club-events-detail", args=(self.club1.code, self.event1.pk)),
+            {"type": Event.FAIR},
+            content_type="application/json",
+        )
+        self.assertFalse(200 <= resp.status_code < 300, resp.data)
+
+        e2 = Event.objects.create(
+            code="test-event-2",
+            club=self.club1,
+            name="Past Test Event 2",
+            start_time=timezone.now() - timezone.timedelta(days=3),
+            end_time=timezone.now() + timezone.timedelta(days=2),
+            type=Event.FAIR,
+        )
+
+        resp = self.client.patch(
+            reverse("club-events-detail", args=(self.club1.code, e2.pk)),
+            {"type": Event.RECRUITMENT},
+            content_type="application/json",
+        )
+        self.assertFalse(200 <= resp.status_code < 300, resp.data)
+
+        # test can change other properties
+        resp = self.client.patch(
+            reverse("club-events-detail", args=(self.club1.code, e2.pk)),
+            {"name": "New name for event"},
+            content_type="application/json",
+        )
+        self.assertTrue(200 <= resp.status_code < 300, resp.data)
 
     def test_event_create_delete(self):
         """
