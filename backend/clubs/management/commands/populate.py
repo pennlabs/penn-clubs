@@ -29,6 +29,7 @@ clubs = [
 Come with your juggling equipment (and business formal attire) to
 hone your skills in time for recruiting season!""",
         "image": "https://i.imgur.com/WwUKiHP.png",
+        "email": "example@example.com",
         "active": True,
         "approved": True,
         "size": Club.SIZE_MEDIUM,

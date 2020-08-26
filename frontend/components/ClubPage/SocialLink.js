@@ -7,6 +7,9 @@ const SocialLink = ({ club, item, type }) => {
 
   if (type === 'email') {
     const email = club[item.name]
+    if (email === 'Hidden') {
+      return email
+    }
     url = `mailto:${email}`
     text = email
   } else {
