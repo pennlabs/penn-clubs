@@ -821,7 +821,7 @@ class EventViewSet(viewsets.ModelViewSet):
         if self.action in ["list"]:
             qs = qs.filter(end_time__gte=now)
 
-        return qs.select_related("club", "creator",)
+        return qs.select_related("club", "creator",).filter(type=Event.FAIR).order_by("start_time")
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):
