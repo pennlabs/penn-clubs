@@ -38,32 +38,36 @@ const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
   const showModal = () => setShow(true)
   const hideModal = () => setShow(false)
   return (
-    <Wrapper onClick={showModal}>
-      <Icon
-        name="calendar"
-        style={{ marginRight: '7px' }}
-        size="32px"
-        alt="Calendar icon"
-      />
-      <div>
-        <BigParagraph>
-          {new Intl.DateTimeFormat('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: '2-digit',
-            hour: 'numeric',
-            minute: 'numeric',
-          }).format(new Date(entry.start_time))}
-          {entry.location && ` | ${entry.location}`}
-        </BigParagraph>
-        <SmallParagraph>
-          <Linkify>{entry.name}</Linkify>
-        </SmallParagraph>
+    <>
+      <Wrapper onClick={showModal}>
+        <Icon
+          name="calendar"
+          style={{ marginRight: '7px' }}
+          size="32px"
+          alt="Calendar icon"
+        />
+        <div>
+          <BigParagraph>
+            {new Intl.DateTimeFormat('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: '2-digit',
+              hour: 'numeric',
+              minute: 'numeric',
+            }).format(new Date(entry.start_time))}
+            {entry.location && ` | ${entry.location}`}
+          </BigParagraph>
+          <SmallParagraph>
+            <Linkify>{entry.name}</Linkify>
+          </SmallParagraph>
+        </div>
+      </Wrapper>
+      {show && (
         <Modal show={show} closeModal={hideModal}>
           <EventModal event={entry} isHappening={false} />
         </Modal>
-      </div>
-    </Wrapper>
+      )}
+    </>
   )
 }
 const Events = ({ data }: EventsProps): ReactElement | null => {
