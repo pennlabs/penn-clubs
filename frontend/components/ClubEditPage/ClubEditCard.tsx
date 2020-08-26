@@ -143,6 +143,7 @@ export default function ClubEditCard({
         },
         {
           name: 'description',
+          required: true,
           help: 'Changing this field will require reapproval from OSA.',
           placeholder: 'Type your club description here!',
           type: 'html',
@@ -190,7 +191,16 @@ export default function ClubEditCard({
       fields: [
         {
           name: 'email',
+          required: true,
           type: 'email',
+          help:
+            'Along with your club officers, this email will receive important notifications from Penn Clubs. It will also be shown on your club page unless otherwise specified.',
+        },
+        {
+          name: 'email_public',
+          type: 'checkbox',
+          label:
+            'Show this contact email to the public. If you do not check this box, your contact email will only be visible to internal club members.',
         },
         {
           name: 'website',
@@ -286,10 +296,15 @@ export default function ClubEditCard({
     },
   ]
 
+  const creationDefaults = {
+    subtitle: 'Your Subtitle Here',
+    email_public: true,
+  }
+
   return (
     <Form
       fields={fields}
-      defaults={club}
+      defaults={Object.keys(club).length ? club : creationDefaults}
       onSubmit={submit}
       enableSubmitWithoutEdit={true}
     />

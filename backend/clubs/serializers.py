@@ -467,6 +467,13 @@ class ClubListSerializer(serializers.ModelSerializer):
     is_subscribe = serializers.SerializerMethodField("get_is_subscribe")
     is_member = serializers.SerializerMethodField("get_is_member")
 
+    email = serializers.SerializerMethodField("get_email")
+
+    def get_email(self, obj):
+        if obj.email_public:
+            return obj.email
+        return "Hidden"
+
     def get_is_favorite(self, obj):
         user = self.context["request"].user
         if not user.is_authenticated:
@@ -647,8 +654,24 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     def validate_description(self, value):
         """
         Allow the description to have HTML tags that come from a whitelist.
+        The description must exist and not be extremely short.
         """
-        return clean(value)
+        out = clean(value).strip()
+        if len(out) <= 10:
+            raise serializers.ValidationError("You must enter a valid description for your club.")
+        return out
+
+    def validate_email(self, value):
+        """
+        You must enter a contact email.
+        """
+        if not value:
+            raise serializers.ValidationError(
+                "You must enter a contact email for notification purposes. "
+                "You can decide whether or not to display this email to the public. "
+                "If you do not have a club email, you can use an officer email."
+            )
+        return value
 
     def validate_facebook(self, value):
         """
@@ -1112,9 +1135,11 @@ class AuthenticatedClubSerializer(ClubSerializer):
     files = AssetSerializer(many=True, source="asset_set", read_only=True)
     fair = serializers.BooleanField(default=False)
     fair_on = serializers.DateTimeField(read_only=True)
+    email = serializers.EmailField()
+    email_public = serializers.BooleanField(default=True)
 
     class Meta(ClubSerializer.Meta):
-        fields = ClubSerializer.Meta.fields + ["files", "fair_on"]
+        fields = ClubSerializer.Meta.fields + ["email_public", "files", "fair_on"]
 
 
 class NoteTagSerializer(serializers.ModelSerializer):

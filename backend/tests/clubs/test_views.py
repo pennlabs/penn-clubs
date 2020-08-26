@@ -680,8 +680,9 @@ class ClubTestCase(TestCase):
             {
                 "code": "penn-labs",
                 "name": "Penn Labs",
-                "description": "",
+                "description": "This is an example description.",
                 "tags": [{"name": "Graduate"}],
+                "email": "example@example.com",
                 "facebook": "",
                 "twitter": "",
                 "instagram": "",

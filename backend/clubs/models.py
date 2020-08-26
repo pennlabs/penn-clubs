@@ -121,6 +121,7 @@ class Club(models.Model):
     founded = models.DateField(blank=True, null=True)
     size = models.IntegerField(choices=SIZE_CHOICES, default=SIZE_SMALL)
     email = models.EmailField(blank=True, null=True)
+    email_public = models.BooleanField(default=True)
     facebook = models.URLField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     twitter = models.URLField(blank=True, null=True)
