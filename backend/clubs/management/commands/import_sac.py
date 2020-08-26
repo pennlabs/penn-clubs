@@ -1,20 +1,13 @@
 import csv
-import os
 import datetime
-import pytz
+import os
 
-from django.core.management.base import (
-    BaseCommand,
-    CommandError,
-)
+import pytz
+from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 from django.utils import timezone
 
-from clubs.models import (
-    Badge,
-    Club,
-    Event,
-)
+from clubs.models import Badge, Club, Event
 
 
 class Command(BaseCommand):
