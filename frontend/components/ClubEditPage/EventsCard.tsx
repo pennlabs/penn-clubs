@@ -247,7 +247,7 @@ const types = [
   },
   {
     value: 4,
-    label: 'SAC Fair',
+    label: 'Activities Fair',
   },
 ]
 
