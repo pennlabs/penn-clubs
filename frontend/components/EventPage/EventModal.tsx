@@ -59,8 +59,9 @@ const MetaDataGrid = styled.div`
 const EventModal = (props: {
   event: ClubEvent
   isHappening: boolean
+  showDetailsButton?: boolean
 }): ReactElement => {
-  const { event, isHappening } = props
+  const { event, isHappening, showDetailsButton } = props
   const {
     image_url,
     club_name,
@@ -88,14 +89,17 @@ const EventModal = (props: {
         <EventName>{name}</EventName>
         {url && <EventLink href={url}>{url}</EventLink>}
         <StyledDescription contents={description} />
-        <RightAlign>
-          <TransparentButton
-            backgroundColor={CLUBS_BLUE}
-            onClick={() => router.push(CLUB_ROUTE(), CLUB_ROUTE(event.club))}
-          >
-            See Club Details <Icon name="chevrons-right" alt="chevrons-right" />
-          </TransparentButton>
-        </RightAlign>
+        {showDetailsButton !== false && (
+          <RightAlign>
+            <TransparentButton
+              backgroundColor={CLUBS_BLUE}
+              onClick={() => router.push(CLUB_ROUTE(), CLUB_ROUTE(event.club))}
+            >
+              See Club Details{' '}
+              <Icon name="chevrons-right" alt="chevrons-right" />
+            </TransparentButton>
+          </RightAlign>
+        )}
       </EventDetails>
     </ModalContainer>
   )

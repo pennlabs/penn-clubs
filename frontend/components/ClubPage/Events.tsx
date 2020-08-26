@@ -2,7 +2,7 @@ import { ReactElement, useState } from 'react'
 import Linkify from 'react-linkify'
 import styled from 'styled-components'
 
-import { WHITE } from '../../constants/colors'
+import { HOVER_GRAY, WHITE } from '../../constants/colors'
 import { M2, M3 } from '../../constants/measurements'
 import { ClubEvent } from '../../types'
 import { Card, Icon, StrongText } from '../common'
@@ -31,6 +31,11 @@ const Wrapper = styled.div`
   margin-bottom: 0.5rem;
   display: flex;
   cursor: pointer;
+  border-radius: 3px;
+
+  &:hover {
+    background-color: ${HOVER_GRAY};
+  }
 `
 
 const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
@@ -64,7 +69,11 @@ const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
       </Wrapper>
       {show && (
         <Modal show={show} closeModal={hideModal}>
-          <EventModal event={entry} isHappening={false} />
+          <EventModal
+            event={entry}
+            isHappening={false}
+            showDetailsButton={false}
+          />
         </Modal>
       )}
     </>
