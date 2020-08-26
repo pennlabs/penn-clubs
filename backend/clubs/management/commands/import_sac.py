@@ -86,7 +86,7 @@ class Command(BaseCommand):
             badge_map[badge] = badge_obj
             self.stdout.write(f"{'Created' if stat else 'Retrieved'} {label} badge.")
 
-        eastern_tz = pytz.timezone("US/Eastern")
+        eastern_tz = pytz.timezone("America/New_York")
         year = timezone.now().year
 
         # add event badges and events to clubs
@@ -95,9 +95,10 @@ class Command(BaseCommand):
             club = Club.objects.get(code=code)
             club.badges.add(badge_map[tag])
 
-            start_time = datetime.datetime(year, 9, int(day), 17, 0, 0, tzinfo=eastern_tz,)
+            start_time = eastern_tz.localize(datetime.datetime(year, 9, int(day), 17, 0, 0))
+            duration = datetime.timedelta(hours=3)
 
-            (_, created,) = Event.objects.get_or_create(
+            (_, created) = Event.objects.get_or_create(
                 code=f"sac-fair-{year}-{code}",
                 club=club,
                 defaults={
@@ -105,8 +106,9 @@ class Command(BaseCommand):
                     "name": "SAC Fair Info Session",
                     "start_time": start_time,
                     "type": Event.FAIR,
-                    "end_time": start_time + datetime.timedelta(hours=3),
+                    "end_time": start_time + duration,
                     "description": "Replace this description!",
                 },
             )
+
             self.stdout.write(f"{'Created' if created else 'Retrieved'} event for {club.code}.")
