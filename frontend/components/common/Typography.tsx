@@ -25,7 +25,10 @@ export const StrongText = s(Text)`
   font-weight: bold;
 `
 
-export const Title = s.h1.attrs({ className: 'title' })`
+export const Title = s.h1.attrs((props) => ({
+  ...props,
+  className: `title ${props.className ?? ''}`,
+}))`
   font-size: 2rem;
   font-weight: bold;
 `
