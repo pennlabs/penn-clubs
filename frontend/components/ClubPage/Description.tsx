@@ -23,7 +23,6 @@ const Description = ({ club }: Props): ReactElement => (
       <StrongText>Description</StrongText>
       <div
         className="content"
-        style={{ whiteSpace: 'pre-wrap' }}
         dangerouslySetInnerHTML={{
           __html: club.description || EMPTY_DESCRIPTION,
         }}
