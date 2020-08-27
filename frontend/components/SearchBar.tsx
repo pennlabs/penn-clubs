@@ -240,36 +240,46 @@ const SearchBar = ({
   const initialActive =
     typeof window !== 'undefined' ? window.innerWidth >= 1047 : true
 
-  return (
-    <>
-      <Wrapper>
-        <Content>
-          <SearchWrapper>
-            <SearchIcon>
-              {isTextInSearchBar ? (
-                <Icon
-                  name="x"
-                  alt="cancel search"
-                  onClick={() => {
-                    setNameInput('')
-                    focus()
-                  }}
-                />
-              ) : (
-                <Icon name="search" alt="search" onClick={focus} />
-              )}
-            </SearchIcon>
-            <Input
-              type="text"
-              name="search"
-              placeholder="Search"
-              aria-label="Search"
-              ref={inputRef}
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-            />
-          </SearchWrapper>
-          <MobileLine />
+  const searchFilters = [
+    {
+      key: 'text',
+      content: () => {
+        return (
+          <>
+            <SearchWrapper>
+              <SearchIcon>
+                {isTextInSearchBar ? (
+                  <Icon
+                    name="x"
+                    alt="cancel search"
+                    onClick={() => {
+                      setNameInput('')
+                      focus()
+                    }}
+                  />
+                ) : (
+                  <Icon name="search" alt="search" onClick={focus} />
+                )}
+              </SearchIcon>
+              <Input
+                type="text"
+                name="search"
+                placeholder="Search"
+                aria-label="Search"
+                ref={inputRef}
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+              />
+            </SearchWrapper>
+            <MobileLine />
+          </>
+        )
+      },
+    },
+    {
+      key: 'tags',
+      content: () => {
+        return (
           <Collapsible name="Tags" active={initialActive}>
             <FilterSearch
               tags={relabeledTags}
@@ -278,20 +288,47 @@ const SearchBar = ({
               clearTags={clearTags}
             />
           </Collapsible>
+        )
+      },
+    },
+    {
+      key: 'ordering',
+      content: () => {
+        return (
           <Collapsible name="Ordering" active={initialActive}>
             <OrderInput
               onChange={(order) => updateSearch((inpt) => ({ ...inpt, order }))}
             />
           </Collapsible>
-          {Object.keys(DROPDOWNS).map((key) => (
-            <Collapsible name={key} key={key} active={initialActive}>
-              <DropdownFilter
-                name={key}
-                options={DROPDOWNS[key]}
-                selected={selectedTags.filter((tag) => tag.name === key)}
-                updateTag={updateTag}
-              />
-            </Collapsible>
+        )
+      },
+    },
+  ]
+
+  Object.keys(DROPDOWNS).map((key) =>
+    searchFilters.push({
+      key,
+      content: () => {
+        return (
+          <Collapsible name={key} key={key} active={initialActive}>
+            <DropdownFilter
+              name={key}
+              options={DROPDOWNS[key]}
+              selected={selectedTags.filter((tag) => tag.name === key)}
+              updateTag={updateTag}
+            />
+          </Collapsible>
+        )
+      },
+    }),
+  )
+
+  return (
+    <>
+      <Wrapper>
+        <Content>
+          {searchFilters.map(({ key, content }) => (
+            <div key={key}>{content()}</div>
           ))}
         </Content>
       </Wrapper>
