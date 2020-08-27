@@ -13,19 +13,21 @@ import {
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   CLUBS_NAVY,
+  CLUBS_PURPLE,
   CLUBS_RED,
   FOCUS_GRAY,
   SNOW,
 } from '../constants/colors'
 import { MD, mediaMaxWidth } from '../constants/measurements'
 import { PaginatedClubPage, renderListPage } from '../renderPage'
-import { Tag, UserInfo } from '../types'
+import { Badge, Tag, UserInfo } from '../types'
 import { doApiRequest } from '../utils'
 
 const colorMap = {
   Tags: CLUBS_BLUE,
   Size: CLUBS_NAVY,
   Application: CLUBS_RED,
+  Badges: CLUBS_PURPLE,
 }
 
 const ClearAllLink = s.span`
@@ -64,6 +66,7 @@ type SplashProps = {
   userInfo: UserInfo
   clubs: PaginatedClubPage
   tags: Tag[]
+  badges: Badge[]
   clubCount: number
   liveEventCount: number
 }
@@ -98,6 +101,9 @@ const Splash = (props: SplashProps): ReactElement => {
     const tagSelected = selectedTags
       .filter((tag) => tag.name === 'Tags')
       .map((tag) => tag.value)
+    const badgesSelected = selectedTags
+      .filter((tag) => tag.name === 'Badges')
+      .map((tag) => tag.value)
     const sizeSelected = selectedTags
       .filter((tag) => tag.name === 'Size')
       .map((tag) => tag.value)
@@ -124,6 +130,9 @@ const Splash = (props: SplashProps): ReactElement => {
     }
     if (tagSelected.length > 0) {
       params.set('tags', tagSelected.join(','))
+    }
+    if (badgesSelected.length > 0) {
+      params.set('badges', badgesSelected.join(','))
     }
     if (sizeSelected.length > 0) {
       params.set('size__in', sizeSelected.join(','))
@@ -170,6 +179,7 @@ const Splash = (props: SplashProps): ReactElement => {
       <div style={{ backgroundColor: SNOW }}>
         <SearchBar
           tags={props.tags}
+          badges={props.badges}
           updateSearch={setSearchInput}
           searchValue={searchInput}
         />

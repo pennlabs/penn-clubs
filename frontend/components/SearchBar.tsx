@@ -24,7 +24,7 @@ import {
   SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import { BODY_FONT } from '../constants/styles'
-import { Tag } from '../types'
+import { Badge, Tag } from '../types'
 import { Icon } from './common'
 import DropdownFilter, { FilterHeader } from './DropdownFilter'
 import FilterSearch from './FilterSearch'
@@ -130,6 +130,7 @@ const MobileLine = s.hr`
 
 type SearchBarProps = {
   tags: Tag[]
+  badges: Badge[]
   searchValue: SearchInput
   updateSearch: (modifier: SetStateAction<SearchInput>) => void
 }
@@ -185,6 +186,7 @@ export type SearchTag = {
 }
 
 const SearchBar = ({
+  badges,
   tags,
   searchValue,
   updateSearch,
@@ -198,7 +200,9 @@ const SearchBar = ({
   const clearTags = (): void =>
     updateSearch((inpt) => ({
       ...inpt,
-      selectedTags: inpt.selectedTags.filter((tag) => tag.name !== 'Tags'),
+      selectedTags: inpt.selectedTags.filter(
+        (tag) => tag.name !== 'Tags' && tag.name !== 'Badges',
+      ),
     }))
 
   const updateTag = (tag: SearchTag, name: string): void => {
@@ -235,6 +239,11 @@ const SearchBar = ({
     value: id,
     label: name,
     count: clubs,
+  }))
+
+  const relabeledBadges = badges.map(({ id, label }) => ({
+    value: id,
+    label: label,
   }))
 
   const initialActive =
@@ -282,9 +291,26 @@ const SearchBar = ({
         return (
           <Collapsible name="Tags" active={initialActive}>
             <FilterSearch
+              name="Tags"
               tags={relabeledTags}
               updateTag={updateTag}
               selected={selectedTags.filter((tag) => tag.name === 'Tags')}
+              clearTags={clearTags}
+            />
+          </Collapsible>
+        )
+      },
+    },
+    {
+      key: 'badges',
+      content: () => {
+        return (
+          <Collapsible name="Badges" active={initialActive}>
+            <FilterSearch
+              name="Badges"
+              tags={relabeledBadges}
+              updateTag={updateTag}
+              selected={selectedTags.filter((tag) => tag.name === 'Badges')}
               clearTags={clearTags}
             />
           </Collapsible>
