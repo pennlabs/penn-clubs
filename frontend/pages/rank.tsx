@@ -156,6 +156,15 @@ const Rank = (): ReactElement => (
           ],
         },
         {
+          name: 'Contact Information',
+          description:
+            'Having contact information is important for prospective members who want to know more about the club. Social links can be used to give students a better idea of what you do and the events that you hold.',
+          points: [
+            [10, 'Has a public email'],
+            [10, 'Has 2 or more social links'],
+          ],
+        },
+        {
           name: 'Bookmarks',
           description:
             'Bookmarks are a method for Penn students to show interest in your club. The more bookmarks you have, the higher your club will appear.',
