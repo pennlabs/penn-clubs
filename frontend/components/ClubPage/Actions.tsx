@@ -1,5 +1,11 @@
 import Link from 'next/link'
-import { CSSProperties, ReactElement, useEffect, useState } from 'react'
+import {
+  CSSProperties,
+  ReactElement,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 import Linkify from 'react-linkify'
 import s from 'styled-components'
 
@@ -9,6 +15,7 @@ import { Club, MembershipRank, UserInfo } from '../../types'
 import { doApiRequest } from '../../utils'
 import { logException, logMessage } from '../../utils/sentry'
 import { BookmarkIcon, Contact, Modal, SubscribeIcon } from '../common'
+import { AuthCheckContext } from '../contexts'
 
 const Wrapper = s.span`
   display: flex;
@@ -95,6 +102,7 @@ const Actions = ({
   updateRequests,
   className,
 }: ActionsProps): ReactElement => {
+  const authCheck = useContext(AuthCheckContext)
   const { code, favorite_count: favoriteCount } = club
   const isRequested = club.is_request
 
@@ -113,7 +121,9 @@ const Actions = ({
   const [isSubmitted, setSubmitted] = useState<boolean | null>(null)
   const requestMembership = () => {
     if (!isRequested) {
-      setShowModal(true)
+      authCheck(() => {
+        setShowModal(true)
+      })
     } else {
       updateRequests(code)
     }

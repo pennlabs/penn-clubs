@@ -117,8 +117,17 @@ const Rank = (): ReactElement => (
           description:
             'If your club has upcoming events registered on Penn Clubs, it will be prioritized on the home page a short period before and during the event. Only events shorter than 16 hours are eligible.',
           points: [
-            [20, 'At least one upcoming event is today'],
-            [10, 'At least one upcoming event in the next week'],
+            [10, 'Participating in upcoming activities fair'],
+            [10, 'At least one upcoming event is today'],
+            [
+              10,
+              'All upcoming events today have a complete picture and description',
+            ],
+            [5, 'At least one upcoming event in the next week'],
+            [
+              5,
+              'All upcoming events this week have a complete picture and description',
+            ],
           ],
         },
         {
@@ -169,7 +178,7 @@ const Rank = (): ReactElement => (
           description:
             'Adding a description helps students learn more about whether or not a club is a good fit for them. Clubs without a description will therefore appear lower on the homepage. Longer and more detailed descriptions are awarded bonus points.',
           points: [
-            [10, 'At least 10 characters'],
+            [10, 'At least 25 characters'],
             [10, 'At least 250 characters'],
             [10, 'At least 1000 characters'],
             [3, 'Having images in your description'],
@@ -184,8 +193,8 @@ const Rank = (): ReactElement => (
         {
           name: 'How to Get Involved',
           description:
-            'Prospective members want to know how to join your student organization. Omitting this section will result in a ordering penalty.',
-          points: [[-20, 'Empty how to get involved section']],
+            'Prospective members want to know how to join your student organization. Omitting this section will result in a large ordering penalty.',
+          points: [[-30, 'Empty how to get involved section']],
         },
         {
           name: 'Is Club Updated',

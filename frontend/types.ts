@@ -35,6 +35,13 @@ export interface Testimonial {
   text: string
 }
 
+export enum ClubEventType {
+  RECRUITMENT = 1,
+  GBM = 2,
+  SPEAKER = 3,
+  FAIR = 4,
+}
+
 export interface ClubEvent {
   id: number
   name: string
@@ -46,6 +53,7 @@ export interface ClubEvent {
   image_url: string | null
   location: string | null
   url: string | null
+  type: ClubEventType
 }
 
 export enum ClubSize {
