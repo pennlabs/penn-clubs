@@ -46,7 +46,7 @@ const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
     <>
       <Wrapper onClick={showModal}>
         <Icon
-          name="calendar"
+          name={entry.type === ClubEventType.FAIR ? 'tent' : 'calendar'}
           style={{
             marginRight: '7px',
             color: entry.type === ClubEventType.FAIR ? PURPLE : DARK_BLUE,
