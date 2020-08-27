@@ -100,17 +100,14 @@ class SearchTestCase(TestCase):
         extra = clubs_counter - truth_counter
 
         # ensure all clubs existing in the complete listing
+        detail_text = "\n".join(str(list(sorted(page))) for page in pages)
         self.assertEqual(
             clubs,
             truth,
-            "\nMissing from results: {}\nExtra in results: {}\n{} pages * {} per page, {} clubs\n\n{}".format(
-                list(missing.elements()),
-                list(sorted(extra.elements())),
-                page_count,
-                page_size,
-                returned_count,
-                "\n".join(str(list(sorted(page))) for page in pages),
-            ),
+            f"\nMissing from results: {list(missing.elements())}\n"
+            f"Extra in results: {list(sorted(extra.elements()))}\n"
+            f"{page_count} pages * {page_size} per page, {returned_count} clubs\n"
+            f"\n{detail_text}",
         )
 
         # ensure returned count is correct
