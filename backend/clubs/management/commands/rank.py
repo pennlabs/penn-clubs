@@ -92,7 +92,7 @@ class Command(BaseCommand):
                         len(e.description) >= 3
                         and e.description not in {"Replace this description!"}
                         and e.image is not None
-                        for e in short_events
+                        for e in today_events
                     ):
                         ranking += 10
 
@@ -110,7 +110,7 @@ class Command(BaseCommand):
                         len(e.description) >= 3
                         and e.description not in {"Replace this description!"}
                         and e.image is not None
-                        for e in short_events
+                        for e in close_events
                     ):
                         ranking += 5
 
