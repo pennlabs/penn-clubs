@@ -37,16 +37,43 @@ const CardList = styled.div`
   }
 `
 
+/**
+ * Randomize the order the events are shown in, but prioritize the ones with
+ * filled out information.
+ */
+const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
+  const withRankings = events.map((event) => {
+    let rank = Math.random()
+    if (event.image_url) {
+      rank += 1
+    }
+    if (
+      event.description &&
+      event.description.length > 3 &&
+      event.description !== 'Replace this description!'
+    ) {
+      rank += 2
+    }
+    if (event.url) {
+      rank += 3
+    }
+    return { event, rank }
+  })
+  return withRankings.sort((a, b) => b.rank - a.rank).map((a) => a.event)
+}
+
 function EventPage({
   upcomingEvents: initialUpcomingEvents,
   liveEvents: initialLiveEvents,
   tags,
   badges,
 }: EventPageProps): ReactElement {
-  const [upcomingEvents, setUpcomingEvents] = useState<ClubEvent[]>(
-    initialUpcomingEvents,
+  const [upcomingEvents, setUpcomingEvents] = useState<ClubEvent[]>(() =>
+    randomizeEvents(initialUpcomingEvents),
   )
-  const [liveEvents, setLiveEvents] = useState<ClubEvent[]>(initialLiveEvents)
+  const [liveEvents, setLiveEvents] = useState<ClubEvent[]>(() =>
+    randomizeEvents(initialLiveEvents),
+  )
 
   const [searchInput, setSearchInput] = useState<SearchInput>(
     getInitialSearch(),
@@ -121,14 +148,14 @@ function EventPage({
       .then((resp) => resp.json())
       .then((resp) => {
         if (isCurrent) {
-          setLiveEvents(resp)
+          setLiveEvents(randomizeEvents(resp))
         }
       })
     doApiRequest(`/events/upcoming/?${params.toString()}`)
       .then((resp) => resp.json())
       .then((resp) => {
         if (isCurrent) {
-          setUpcomingEvents(resp)
+          setUpcomingEvents(randomizeEvents(resp))
         }
       })
 
