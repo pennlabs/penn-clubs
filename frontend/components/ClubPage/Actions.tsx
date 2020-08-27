@@ -145,7 +145,7 @@ const Actions = ({
               className="button is-success"
               onClick={requestMembership}
             >
-              {isRequested ? 'Withdraw Request' : 'Request Membership'}
+              {isRequested ? 'Withdraw Request' : "I'm a Member"}
             </ActionButton>
           )}
           {canEdit && (
