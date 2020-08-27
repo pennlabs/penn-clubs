@@ -5,7 +5,7 @@ describe('Membership request tests', () => {
 
     // request membership
     cy.visit('/club/pppjo/')
-    cy.contains('.button:visible', 'Request Membership').click()
+    cy.contains('.button:visible', "I'm a Member").click()
     cy.contains('.button:visible', 'Confirm').click()
 
     cy.contains('Success!').should('be.visible')
