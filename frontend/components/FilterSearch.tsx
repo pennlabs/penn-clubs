@@ -197,7 +197,7 @@ const Filter = ({
     .filter(({ value }) => !filter.has(value))
     .map(({ label, count, color, ...tag }) => ({
       ...tag,
-      text: label,
+      text: label as string,
       label: (
         <>
           {color != null && <ColorPreview color={color}> </ColorPreview>}
