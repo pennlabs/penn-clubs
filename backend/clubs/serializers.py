@@ -1,3 +1,4 @@
+import re
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -452,6 +453,8 @@ class ClubMinimalSerializer(serializers.ModelSerializer):
 class ClubListSerializer(serializers.ModelSerializer):
     """
     The club list serializer returns a subset of the information that the full serializer returns.
+    Optimized for the home page, some fields may be missing if not necessary.
+    For example, if the subtitle is set, the description is returned as null.
     This is done for a quicker response.
     """
 
@@ -468,11 +471,17 @@ class ClubListSerializer(serializers.ModelSerializer):
     is_member = serializers.SerializerMethodField("get_is_member")
 
     email = serializers.SerializerMethodField("get_email")
+    description = serializers.SerializerMethodField("get_short_description")
 
     def get_email(self, obj):
         if obj.email_public:
             return obj.email
         return "Hidden"
+
+    def get_short_description(self, obj):
+        if obj.subtitle:
+            return None
+        return "".join(re.split(r"(\.|\n|!)", obj.description.lstrip())[:2]).strip()
 
     def get_is_favorite(self, obj):
         user = self.context["request"].user
@@ -593,6 +602,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     fair = serializers.BooleanField(default=False)
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
+    description = serializers.CharField()
 
     is_ghost = serializers.SerializerMethodField("get_is_ghost")
 
