@@ -133,6 +133,7 @@ type SearchBarProps = {
   badges: Badge[]
   searchValue: SearchInput
   updateSearch: (modifier: SetStateAction<SearchInput>) => void
+  options?: { [key: string]: { disabled: boolean } }
 }
 
 const DROPDOWNS = {
@@ -190,6 +191,7 @@ const SearchBar = ({
   tags,
   searchValue,
   updateSearch,
+  options = {},
 }: SearchBarProps): ReactElement => {
   const { selectedTags } = searchValue
 
@@ -354,9 +356,11 @@ const SearchBar = ({
     <>
       <Wrapper>
         <Content>
-          {searchFilters.map(({ key, content }) => (
-            <div key={key}>{content()}</div>
-          ))}
+          {searchFilters
+            .filter(({ key }) => !options[key] || !options[key].disabled)
+            .map(({ key, content }) => (
+              <div key={key}>{content()}</div>
+            ))}
         </Content>
       </Wrapper>
 

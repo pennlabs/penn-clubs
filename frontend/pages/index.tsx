@@ -182,6 +182,11 @@ const Splash = (props: SplashProps): ReactElement => {
           badges={props.badges}
           updateSearch={setSearchInput}
           searchValue={searchInput}
+          options={{
+            badges: {
+              disabled: !(props.userInfo && props.userInfo.is_superuser),
+            },
+          }}
         />
 
         <Container>
