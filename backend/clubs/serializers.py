@@ -462,10 +462,6 @@ class ClubListSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField("get_image_url")
     favorite_count = serializers.IntegerField(read_only=True)
 
-    target_schools = SchoolSerializer(many=True, required=False)
-    target_majors = MajorSerializer(many=True, required=False)
-    target_years = YearSerializer(many=True, required=False)
-
     is_favorite = serializers.SerializerMethodField("get_is_favorite")
     is_subscribe = serializers.SerializerMethodField("get_is_subscribe")
     is_member = serializers.SerializerMethodField("get_is_member")
@@ -562,9 +558,6 @@ class ClubListSerializer(serializers.ModelSerializer):
             "image_url",
             "favorite_count",
             "active",
-            "target_schools",
-            "target_majors",
-            "target_years",
             "is_favorite",
             "is_subscribe",
             "is_member",
@@ -603,6 +596,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
     description = serializers.CharField()
+
+    target_schools = SchoolSerializer(many=True, required=False)
+    target_majors = MajorSerializer(many=True, required=False)
+    target_years = YearSerializer(many=True, required=False)
 
     is_ghost = serializers.SerializerMethodField("get_is_ghost")
 
@@ -863,6 +860,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "linkedin",
             "listserv",
             "members",
+            "target_majors",
+            "target_schools",
+            "target_years",
             "testimonials",
             "twitter",
             "website",
