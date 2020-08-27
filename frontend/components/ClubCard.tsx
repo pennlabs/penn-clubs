@@ -18,7 +18,6 @@ import {
 } from '../constants/measurements'
 import { CLUB_ROUTE } from '../constants/routes'
 import { Club } from '../types'
-import { stripTags } from '../utils'
 import ClubDetails from './ClubDetails'
 import { InactiveTag, TagGroup } from './common'
 
@@ -95,11 +94,9 @@ type ClubCardProps = {
 }
 
 const ClubCard = ({ club }: ClubCardProps): ReactElement => {
-  const { name, active, approved, description, subtitle, tags, code } = club
+  const { name, active, approved, subtitle, tags, code } = club
   const img = club.image_url
-  const textDescription = shorten(
-    subtitle || stripTags(description) || 'This club has no description.',
-  )
+  const textDescription = shorten(subtitle || 'This club has no description.')
 
   return (
     <CardWrapper className="column is-half-desktop">

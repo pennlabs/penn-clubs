@@ -467,7 +467,7 @@ class ClubListSerializer(serializers.ModelSerializer):
     is_member = serializers.SerializerMethodField("get_is_member")
 
     email = serializers.SerializerMethodField("get_email")
-    description = serializers.SerializerMethodField("get_short_description")
+    subtitle = serializers.SerializerMethodField("get_short_description")
 
     def get_email(self, obj):
         if obj.email_public:
@@ -476,8 +476,10 @@ class ClubListSerializer(serializers.ModelSerializer):
 
     def get_short_description(self, obj):
         if obj.subtitle:
-            return None
-        return "".join(re.split(r"(\.|\n|!)", obj.description.lstrip())[:2]).strip()
+            return obj.subtitle
+        return re.sub(
+            r"<[^>]+>", "", "".join(re.split(r"(\.|\n|!)", obj.description.lstrip())[:2]).strip()
+        )
 
     def get_is_favorite(self, obj):
         user = self.context["request"].user
@@ -544,23 +546,22 @@ class ClubListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Club
         fields = [
-            "name",
-            "code",
-            "approved",
-            "description",
-            "founded",
-            "size",
-            "email",
-            "tags",
-            "subtitle",
-            "application_required",
             "accepting_members",
-            "image_url",
-            "favorite_count",
             "active",
+            "application_required",
+            "approved",
+            "code",
+            "email",
+            "favorite_count",
+            "founded",
+            "image_url",
             "is_favorite",
-            "is_subscribe",
             "is_member",
+            "is_subscribe",
+            "name",
+            "size",
+            "subtitle",
+            "tags",
         ]
         extra_kwargs = {
             "name": {
@@ -570,8 +571,8 @@ class ClubListSerializer(serializers.ModelSerializer):
             "code": {
                 "required": False,
                 "validators": [validators.UniqueValidator(queryset=Club.objects.all())],
-                "help_text": "An alphanumeric string shown in the URL"
-                + "and used to identify this club.",
+                "help_text": "An alphanumeric string shown in the URL "
+                "and used to identify this club.",
             },
             "description": {
                 "help_text": "A long description for the club. Certain HTML tags are allowed."
@@ -579,8 +580,8 @@ class ClubListSerializer(serializers.ModelSerializer):
             "email": {"help_text": "The primary contact email for the club."},
             "subtitle": {
                 "required": False,
-                "help_text": "The text shown to the user in a preview card."
-                + "Short description of the club.",
+                "help_text": "The text shown to the user in a preview card. "
+                "Short description of the club.",
             },
         }
 
@@ -595,7 +596,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     fair = serializers.BooleanField(default=False)
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
-    description = serializers.CharField()
 
     target_schools = SchoolSerializer(many=True, required=False)
     target_majors = MajorSerializer(many=True, required=False)
@@ -848,6 +848,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "approved_by",
             "approved_comment",
             "badges",
+            "description",
             "events",
             "facebook",
             "fair",
