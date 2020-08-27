@@ -63,8 +63,8 @@ class Command(BaseCommand):
                 club.description, tags=[], attributes={}, styles=[], strip=True
             ).strip()
 
-            if len(cleaned_description) > 10:
-                ranking += 10
+            if len(cleaned_description) > 25:
+                ranking += 25
 
             if len(cleaned_description) > 250:
                 ranking += 10
@@ -116,7 +116,7 @@ class Command(BaseCommand):
 
             # points for how to get involved
             if len(club.how_to_get_involved.strip()) <= 3:
-                ranking -= 20
+                ranking -= 30
 
             # points for updated
             if club.updated_at < now - datetime.timedelta(days=30 * 8):
