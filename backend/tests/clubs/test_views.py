@@ -13,6 +13,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
     Badge,
     Club,
@@ -25,7 +26,6 @@ from clubs.models import (
     Tag,
     Testimonial,
 )
-from clubs.views import DEFAULT_PAGE_SIZE
 
 
 class SearchTestCase(TestCase):
