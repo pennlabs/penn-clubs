@@ -203,7 +203,11 @@ class ClubPagination(PageNumberPagination):
             results = list(queryset)
             rng.shuffle(results)
 
-            self._random_count = Club.objects.count()
+            self._random_count = getattr(request, "_original_clubs_count", None)
+            if self._random_count is None:
+                self._random_count = Club.objects.count()
+            else:
+                del request._original_clubs_count
 
             page = int(request.GET.get("page", 1))
             page_size = int(request.GET.get("page_size", DEFAULT_PAGE_SIZE))
@@ -379,17 +383,20 @@ class ClubsOrderingFilter(filters.OrderingFilter):
         new_queryset = super().filter_queryset(request, queryset, view)
         ordering = request.GET.get("ordering", "").split(",")
 
+        # handle random ordering
         if "random" in ordering:
             page = int(request.GET.get("page", 1)) - 1
             page_size = int(request.GET.get("page_size", DEFAULT_PAGE_SIZE))
             rng = random.Random(request.GET.get("seed", DEFAULT_SEED))
 
-            all_ids = list(Club.objects.values_list("id", flat=True))
+            all_ids = list(new_queryset.order_by("id").values_list("id", flat=True))
             rng.shuffle(all_ids)
 
             start_index = page * page_size
             end_index = (page + 1) * page_size
             page_ids = all_ids[start_index:end_index]
+
+            request._original_clubs_count = new_queryset.count()
 
             return new_queryset.filter(id__in=page_ids)
 
@@ -439,7 +446,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     )
     permission_classes = [ClubPermission | IsSuperuser]
 
-    filter_backends = [filters.SearchFilter, ClubsOrderingFilter, ClubsSearchFilter]
+    filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
     search_fields = ["name", "subtitle"]
     ordering_fields = ["favorite_count", "name"]
     ordering = "-favorite_count"
