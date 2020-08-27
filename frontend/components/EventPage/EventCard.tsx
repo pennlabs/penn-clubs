@@ -1,4 +1,5 @@
 import React, { ReactElement, useState } from 'react'
+import LazyLoad from 'react-lazy-load'
 import styled from 'styled-components'
 
 import { Modal } from '../../components/common'
@@ -42,14 +43,16 @@ const EventCard = (props: {
     <>
       <EventCardContainer>
         <Card bordered hoverable background={WHITE} onClick={showModal}>
-          <CoverPhoto
-            image={image_url}
-            fallback={
-              <p>
-                <b>{club_name.toLocaleUpperCase()}</b>
-              </p>
-            }
-          />
+          <LazyLoad offset={800}>
+            <CoverPhoto
+              image={image_url}
+              fallback={
+                <p>
+                  <b>{club_name.toLocaleUpperCase()}</b>
+                </p>
+              }
+            />
+          </LazyLoad>
           <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
           {isHappening && <HappeningNow />}
           <ClubName>{club_name}</ClubName>
