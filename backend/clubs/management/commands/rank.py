@@ -128,7 +128,8 @@ class Command(BaseCommand):
                 "github",
                 "youtube",
             ]
-            has_fields = [len(getattr(club, field)) >= 3 for field in social_fields]
+            social_fields = [getattr(club, field) for field in social_fields]
+            has_fields = [field is not None and len(field) >= 3 for field in social_fields]
             has_fields = [field for field in social_fields if field]
             if len(has_fields) >= 2:
                 ranking += 10
