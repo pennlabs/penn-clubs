@@ -477,8 +477,17 @@ class ClubListSerializer(serializers.ModelSerializer):
     def get_short_description(self, obj):
         if obj.subtitle:
             return obj.subtitle
-        return re.sub(
-            r"<[^>]+>", "", "".join(re.split(r"(\.|\n|!)", obj.description.lstrip())[:2]).strip()
+
+        # return first sentence of description without html tags
+        return (
+            re.sub(r"<[^>]+>", "", "".join(re.split(r"(\.|\n|!)", obj.description.lstrip())[:2]))
+            .replace("&amp;", "&")
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+            .replace("&ndash;", "-")
+            .replace("&mdash;", "-")
+            .replace("&nbsp;", " ")
+            .strip()
         )
 
     def get_is_favorite(self, obj):
