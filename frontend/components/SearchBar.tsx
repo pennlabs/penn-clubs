@@ -241,9 +241,10 @@ const SearchBar = ({
     count: clubs,
   }))
 
-  const relabeledBadges = badges.map(({ id, label }) => ({
+  const relabeledBadges = badges.map(({ id, label, color }) => ({
     value: id,
-    label: label,
+    label,
+    color,
   }))
 
   const initialActive =

@@ -2,9 +2,11 @@ import Link from 'next/link'
 import { ReactElement } from 'react'
 
 import { DIRECTORY_ROUTE, USER_RENEWAL } from '../../constants'
+import { useSetting } from '../../utils'
 
 const ListRenewalDialog = (): ReactElement => {
   const year = new Date().getFullYear()
+  const isFairOpen = useSetting('FAIR_REGISTRATION_OPEN')
 
   return (
     <div className="notification is-info is-clearfix">
@@ -16,11 +18,16 @@ const ListRenewalDialog = (): ReactElement => {
       <div>
         <p className="mb-3">
           All clubs on Penn Clubs are undergoing the annual Office of Student
-          Affairs renewal process for the {year}-{year + 1} school year. This
-          may explain why this club list seems oddly empty. If you are an
-          officer of a club, click the button below to start renewing your club!
-          During this process, you will also have the option to register for the
-          SAC fair. For a complete list of clubs, see{' '}
+          Affairs renewal process for the {year}-{year + 1} school year. If you
+          are an officer of a club, click the button below to start renewing
+          your club!
+          {isFairOpen && (
+            <>
+              During this process, you will also have the option to register for
+              the SAC fair.
+            </>
+          )}{' '}
+          For a complete list of clubs, see{' '}
           <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
             <a>this page</a>
           </Link>

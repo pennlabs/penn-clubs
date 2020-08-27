@@ -32,6 +32,17 @@ const SearchWrapper = s.div`
   }
 `
 
+const ColorPreview = s.div<{ color: string }>`
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-color: #${({ color }) => color};
+  border: 1px solid black;
+  border-radius: 3px;
+  margin-right: 5px;
+  vertical-align: middle;
+`
+
 const SearchIcon = s(Icon)`
   cursor: pointer;
   color: ${MEDIUM_GRAY};
@@ -156,8 +167,10 @@ const selectInitial = (name: string, tags: FuseTag[] = []) => {
 
 type FuseTag = {
   value: number | string
-  label: string
+  label: string | ReactElement
+  text?: string
   count?: number
+  color?: string
   name?: string
 }
 
@@ -178,14 +191,23 @@ const Filter = ({
 }: FilterProps): ReactElement => {
   const filter = new Set()
   selected.forEach(({ value }) => filter.add(value))
+
+  // add count annotation to label
   tags = tags
     .filter(({ value }) => !filter.has(value))
-    .map(({ label, count, ...tag }) => ({
+    .map(({ label, count, color, ...tag }) => ({
       ...tag,
-      label: `${label}${count != null ? ` (${count})` : ''}`,
+      text: label,
+      label: (
+        <>
+          {color != null && <ColorPreview color={color}> </ColorPreview>}
+          {`${label}${count != null ? ` (${count})` : ''}`}
+        </>
+      ),
     }))
+
   const fuseOptions = {
-    keys: ['label'],
+    keys: ['text'],
     tokenize: true,
     findAllMatches: true,
     shouldSort: true,
