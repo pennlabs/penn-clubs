@@ -200,6 +200,8 @@ class Command(BaseCommand):
             ]
         ]
 
+        image_cache = {}
+
         # create clubs
         for info in clubs:
             partial = dict(info)
@@ -217,7 +219,11 @@ class Command(BaseCommand):
             club, _ = Club.objects.get_or_create(code=info["code"], defaults=partial)
 
             if "image" in info:
-                contents = requests.get(info["image"]).content
+                if info["image"] not in image_cache:
+                    contents = requests.get(info["image"]).content
+                    image_cache[info["image"]] = contents
+                else:
+                    contents = image_cache[info["image"]]
                 club.image.save("image.png", ContentFile(contents))
                 club.save()
 
