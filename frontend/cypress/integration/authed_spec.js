@@ -102,6 +102,10 @@ describe('Authenticated user tests', () => {
     cy.contains('Select tags relevant to your club!').click()
     cy.contains('Undergraduate').click()
 
+    // set description
+    cy.contains('Type your club description here!').click({ force: true })
+    cy.focused().type('This is an example club description!').blur()
+
     // submit form
     cy.contains('Submit').click()
 
