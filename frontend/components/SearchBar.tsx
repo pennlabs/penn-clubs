@@ -24,7 +24,6 @@ import {
   SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import { BODY_FONT } from '../constants/styles'
-import { SearchInput } from '../pages'
 import { Tag } from '../types'
 import { Icon } from './common'
 import DropdownFilter, { FilterHeader, SelectableTag } from './DropdownFilter'
@@ -131,10 +130,8 @@ const MobileLine = s.hr`
 
 type SearchBarProps = {
   tags: Tag[]
-  updateTag: (data: SelectableTag, name: string) => void
   selectedTags: SelectableTag[]
-  resetDisplay: (modifier: SetStateAction<SearchInput>) => void
-  clearTags: () => void
+  updateSearch: (modifier: SetStateAction<SearchInput>) => void
 }
 
 const DROPDOWNS = {
@@ -175,21 +172,57 @@ const Collapsible = ({
   )
 }
 
+export type SearchInput = {
+  nameInput: string
+  order: string
+  selectedTags: SearchTag[]
+}
+
+export type SearchTag = {
+  name: string
+  label: string
+  value: string | number
+}
+
 const SearchBar = ({
   tags,
-  updateTag,
-  clearTags,
   selectedTags,
-  resetDisplay,
+  updateSearch,
 }: SearchBarProps): ReactElement => {
   const [nameInput, setNameInput] = useState<string>('')
   const [timeout, storeTimeout] = useState<number | null>(null)
   const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
 
+  const clearTags = (): void =>
+    updateSearch((inpt) => ({
+      ...inpt,
+      selectedTags: inpt.selectedTags.filter((tag) => tag.name !== 'Tags'),
+    }))
+
+  const updateTag = (tag: SearchTag, name: string): void => {
+    updateSearch((inpt) => {
+      const selectedTags = [...inpt.selectedTags]
+
+      const { value } = tag
+      const i = selectedTags.findIndex(
+        (tag) => tag.value === value && tag.name === name,
+      )
+
+      if (i === -1) {
+        tag.name = name
+        selectedTags.push(tag)
+      } else {
+        selectedTags.splice(i, 1)
+      }
+
+      return { ...inpt, selectedTags }
+    })
+  }
+
   useEffect(() => {
     timeout !== null && clearTimeout(timeout)
     storeTimeout(
-      setTimeout(() => resetDisplay((inpt) => ({ ...inpt, nameInput })), 200),
+      setTimeout(() => updateSearch((inpt) => ({ ...inpt, nameInput })), 200),
     )
   }, [nameInput])
 
@@ -245,7 +278,7 @@ const SearchBar = ({
           </Collapsible>
           <Collapsible name="Ordering" active={initialActive}>
             <OrderInput
-              onChange={(order) => resetDisplay((inpt) => ({ ...inpt, order }))}
+              onChange={(order) => updateSearch((inpt) => ({ ...inpt, order }))}
             />
           </Collapsible>
           {Object.keys(DROPDOWNS).map((key) => (

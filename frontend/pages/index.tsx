@@ -7,7 +7,7 @@ import LiveEventsDialog from '../components/ClubPage/LiveEventsDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
 import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
-import SearchBar from '../components/SearchBar'
+import SearchBar, { SearchInput } from '../components/SearchBar'
 import {
   CLUBS_BLUE,
   CLUBS_GREY,
@@ -60,24 +60,12 @@ const Container = s.div`
   }
 `
 
-type SearchTag = {
-  name: string
-  label: string
-  value: string | number
-}
-
 type SplashProps = {
   userInfo: UserInfo
   clubs: PaginatedClubPage
   tags: Tag[]
   clubCount: number
   liveEventCount: number
-}
-
-export type SearchInput = {
-  nameInput: string
-  order: string
-  selectedTags: SearchTag[]
 }
 
 const Splash = (props: SplashProps): ReactElement => {
@@ -176,43 +164,14 @@ const Splash = (props: SplashProps): ReactElement => {
       })
   }, [searchInput])
 
-  const updateTag = (tag: SearchTag, name: string): void => {
-    setSearchInput((inpt) => {
-      const selectedTags = [...inpt.selectedTags]
-
-      const { value } = tag
-      const i = selectedTags.findIndex(
-        (tag) => tag.value === value && tag.name === name,
-      )
-
-      if (i === -1) {
-        tag.name = name
-        selectedTags.push(tag)
-      } else {
-        selectedTags.splice(i, 1)
-      }
-
-      return { ...inpt, selectedTags }
-    })
-  }
-
   return (
     <>
       <Metadata />
       <div style={{ backgroundColor: SNOW }}>
         <SearchBar
           tags={props.tags}
-          resetDisplay={setSearchInput}
+          updateSearch={setSearchInput}
           selectedTags={searchInput.selectedTags}
-          updateTag={updateTag}
-          clearTags={() => {
-            setSearchInput((inpt) => ({
-              ...inpt,
-              selectedTags: inpt.selectedTags.filter(
-                (tag) => tag.name !== 'Tags',
-              ),
-            }))
-          }}
         />
 
         <Container>
@@ -250,7 +209,17 @@ const Splash = (props: SplashProps): ReactElement => {
                     {tag.label}
                     <button
                       className="delete is-small"
-                      onClick={() => updateTag(tag, tag.name)}
+                      onClick={() =>
+                        setSearchInput((inpt) => ({
+                          ...inpt,
+                          selectedTags: inpt.selectedTags.filter(
+                            (oth) =>
+                              !(
+                                tag.name === oth.name && tag.value === oth.value
+                              ),
+                          ),
+                        }))
+                      }
                     />
                   </span>
                 ))}
