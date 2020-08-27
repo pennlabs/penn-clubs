@@ -117,8 +117,17 @@ const Rank = (): ReactElement => (
           description:
             'If your club has upcoming events registered on Penn Clubs, it will be prioritized on the home page a short period before and during the event. Only events shorter than 16 hours are eligible.',
           points: [
-            [20, 'At least one upcoming event is today'],
-            [10, 'At least one upcoming event in the next week'],
+            [10, 'Participating in upcoming activities fair'],
+            [10, 'At least one upcoming event is today'],
+            [
+              10,
+              'All upcoming events today have a complete picture and description',
+            ],
+            [5, 'At least one upcoming event in the next week'],
+            [
+              5,
+              'All upcoming events this week have a complete picture and description',
+            ],
           ],
         },
         {

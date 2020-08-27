@@ -2,9 +2,9 @@ import { ReactElement, useState } from 'react'
 import Linkify from 'react-linkify'
 import styled from 'styled-components'
 
-import { HOVER_GRAY, WHITE } from '../../constants/colors'
+import { DARK_BLUE, HOVER_GRAY, PURPLE, WHITE } from '../../constants/colors'
 import { M2, M3 } from '../../constants/measurements'
-import { ClubEvent } from '../../types'
+import { ClubEvent, ClubEventType } from '../../types'
 import { Card, Icon, StrongText } from '../common'
 import Modal from '../common/Modal'
 import EventModal from '../EventPage/EventModal'
@@ -47,7 +47,10 @@ const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
       <Wrapper onClick={showModal}>
         <Icon
           name="calendar"
-          style={{ marginRight: '7px' }}
+          style={{
+            marginRight: '7px',
+            color: entry.type === ClubEventType.FAIR ? PURPLE : DARK_BLUE,
+          }}
           size="32px"
           alt="Calendar icon"
         />
@@ -86,7 +89,10 @@ const Events = ({ data }: EventsProps): ReactElement | null => {
 
   return (
     <StyledCard bordered>
-      <StrongText>Events</StrongText>
+      <div className="mb-3">
+        <StrongText className="mb-0">Events</StrongText>
+        <small>Click on an event to get more details.</small>
+      </div>
       {data.map((entry, index) => (
         <Event entry={entry} key={index} />
       ))}

@@ -72,6 +72,10 @@ class Command(BaseCommand):
             if len(cleaned_description) > 1000:
                 ranking += 10
 
+            # points for fair
+            if club.fair:
+                ranking += 10
+
             # points for events
             now = timezone.now()
             today_events = club.events.filter(
@@ -83,7 +87,14 @@ class Command(BaseCommand):
                     (e.end_time - e.start_time).seconds / 3600 < 16 for e in today_events
                 ]
                 if any(short_events):
-                    ranking += 20
+                    ranking += 10
+                    if all(
+                        len(e.description) >= 3
+                        and e.description not in {"Replace this description!"}
+                        and e.image is not None
+                        for e in short_events
+                    ):
+                        ranking += 10
 
             close_events = club.events.filter(
                 end_time__gte=now, start_time__lte=now + datetime.timedelta(weeks=1)
@@ -94,7 +105,14 @@ class Command(BaseCommand):
                     (e.end_time - e.start_time).seconds / 3600 < 16 for e in close_events
                 ]
                 if any(short_events):
-                    ranking += 10
+                    ranking += 5
+                    if all(
+                        len(e.description) >= 3
+                        and e.description not in {"Replace this description!"}
+                        and e.image is not None
+                        for e in short_events
+                    ):
+                        ranking += 5
 
             # points for how to get involved
             if len(club.how_to_get_involved.strip()) <= 3:
