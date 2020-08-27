@@ -171,7 +171,7 @@ const Splash = (props: SplashProps): ReactElement => {
         <SearchBar
           tags={props.tags}
           updateSearch={setSearchInput}
-          selectedTags={searchInput.selectedTags}
+          searchValue={searchInput}
         />
 
         <Container>

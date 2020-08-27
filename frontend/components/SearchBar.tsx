@@ -26,7 +26,7 @@ import {
 import { BODY_FONT } from '../constants/styles'
 import { Tag } from '../types'
 import { Icon } from './common'
-import DropdownFilter, { FilterHeader, SelectableTag } from './DropdownFilter'
+import DropdownFilter, { FilterHeader } from './DropdownFilter'
 import FilterSearch from './FilterSearch'
 import OrderInput from './OrderInput'
 
@@ -130,7 +130,7 @@ const MobileLine = s.hr`
 
 type SearchBarProps = {
   tags: Tag[]
-  selectedTags: SelectableTag[]
+  searchValue: SearchInput
   updateSearch: (modifier: SetStateAction<SearchInput>) => void
 }
 
@@ -186,9 +186,11 @@ export type SearchTag = {
 
 const SearchBar = ({
   tags,
-  selectedTags,
+  searchValue,
   updateSearch,
 }: SearchBarProps): ReactElement => {
+  const { selectedTags } = searchValue
+
   const [nameInput, setNameInput] = useState<string>('')
   const [timeout, storeTimeout] = useState<number | null>(null)
   const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
