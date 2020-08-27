@@ -15,6 +15,7 @@ const Placeholder = styled.div`
   background-color: ${CLUBS_NAVY};
   height: 9.5rem;
   color: white;
+  text-align: center;
 
   ${Card} & {
     margin: -0.5rem -0.5rem 0.5rem;
@@ -31,6 +32,7 @@ const CoverPhotoImage = styled.div<{ image: string | null }>`
   padding-bottom: ${SIXTEEN_BY_NINE};
   background-image: url(${(props) => props.image});
   background-size: cover;
+  background-position: center;
   ${Card} & {
     margin: -0.5rem -0.5rem 0.5rem;
   }

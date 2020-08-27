@@ -1,3 +1,4 @@
+import re
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -452,6 +453,8 @@ class ClubMinimalSerializer(serializers.ModelSerializer):
 class ClubListSerializer(serializers.ModelSerializer):
     """
     The club list serializer returns a subset of the information that the full serializer returns.
+    Optimized for the home page, some fields may be missing if not necessary.
+    For example, if the subtitle is set, the description is returned as null.
     This is done for a quicker response.
     """
 
@@ -459,20 +462,33 @@ class ClubListSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField("get_image_url")
     favorite_count = serializers.IntegerField(read_only=True)
 
-    target_schools = SchoolSerializer(many=True, required=False)
-    target_majors = MajorSerializer(many=True, required=False)
-    target_years = YearSerializer(many=True, required=False)
-
     is_favorite = serializers.SerializerMethodField("get_is_favorite")
     is_subscribe = serializers.SerializerMethodField("get_is_subscribe")
     is_member = serializers.SerializerMethodField("get_is_member")
 
     email = serializers.SerializerMethodField("get_email")
+    subtitle = serializers.SerializerMethodField("get_short_description")
 
     def get_email(self, obj):
         if obj.email_public:
             return obj.email
         return "Hidden"
+
+    def get_short_description(self, obj):
+        if obj.subtitle:
+            return obj.subtitle
+
+        # return first sentence of description without html tags
+        return (
+            re.sub(r"<[^>]+>", "", "".join(re.split(r"(\.|\n|!)", obj.description.lstrip())[:2]))
+            .replace("&amp;", "&")
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+            .replace("&ndash;", "-")
+            .replace("&mdash;", "-")
+            .replace("&nbsp;", " ")
+            .strip()
+        )
 
     def get_is_favorite(self, obj):
         user = self.context["request"].user
@@ -539,26 +555,22 @@ class ClubListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Club
         fields = [
-            "name",
-            "code",
-            "approved",
-            "description",
-            "founded",
-            "size",
-            "email",
-            "tags",
-            "subtitle",
-            "application_required",
             "accepting_members",
-            "image_url",
-            "favorite_count",
             "active",
-            "target_schools",
-            "target_majors",
-            "target_years",
+            "application_required",
+            "approved",
+            "code",
+            "email",
+            "favorite_count",
+            "founded",
+            "image_url",
             "is_favorite",
-            "is_subscribe",
             "is_member",
+            "is_subscribe",
+            "name",
+            "size",
+            "subtitle",
+            "tags",
         ]
         extra_kwargs = {
             "name": {
@@ -568,8 +580,8 @@ class ClubListSerializer(serializers.ModelSerializer):
             "code": {
                 "required": False,
                 "validators": [validators.UniqueValidator(queryset=Club.objects.all())],
-                "help_text": "An alphanumeric string shown in the URL"
-                + "and used to identify this club.",
+                "help_text": "An alphanumeric string shown in the URL "
+                "and used to identify this club.",
             },
             "description": {
                 "help_text": "A long description for the club. Certain HTML tags are allowed."
@@ -577,8 +589,8 @@ class ClubListSerializer(serializers.ModelSerializer):
             "email": {"help_text": "The primary contact email for the club."},
             "subtitle": {
                 "required": False,
-                "help_text": "The text shown to the user in a preview card."
-                + "Short description of the club.",
+                "help_text": "The text shown to the user in a preview card. "
+                "Short description of the club.",
             },
         }
 
@@ -593,6 +605,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     fair = serializers.BooleanField(default=False)
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
+
+    target_schools = SchoolSerializer(many=True, required=False)
+    target_majors = MajorSerializer(many=True, required=False)
+    target_years = YearSerializer(many=True, required=False)
 
     is_ghost = serializers.SerializerMethodField("get_is_ghost")
 
@@ -841,6 +857,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "approved_by",
             "approved_comment",
             "badges",
+            "description",
             "events",
             "facebook",
             "fair",
@@ -853,6 +870,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "linkedin",
             "listserv",
             "members",
+            "target_majors",
+            "target_schools",
+            "target_years",
             "testimonials",
             "twitter",
             "website",

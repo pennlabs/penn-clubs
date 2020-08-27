@@ -1,9 +1,6 @@
 import json
 import os
-import random
 import re
-from collections import OrderedDict
-from urllib.parse import quote
 
 import qrcode
 from django.conf import settings
@@ -21,11 +18,11 @@ from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError as DRFValidationError
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     Asset,
@@ -89,10 +86,6 @@ from clubs.serializers import (
     YearSerializer,
 )
 from clubs.utils import html_to_text
-
-
-DEFAULT_PAGE_SIZE = 15
-DEFAULT_SEED = 1234
 
 
 def file_upload_endpoint_helper(request, code):
@@ -189,59 +182,10 @@ class ReportViewSet(viewsets.ModelViewSet):
         return Report.objects.filter(Q(creator=self.request.user) | Q(public=True))
 
 
-class ClubPagination(PageNumberPagination):
-    """
-    Custom pagination for club list view.
-    """
-
-    page_size = DEFAULT_PAGE_SIZE
-    page_size_query_param = "page_size"
-
-    def paginate_queryset(self, queryset, request, view=None):
-        if "random" in request.query_params.get("ordering", "").split(","):
-            rng = random.Random(request.GET.get("seed", DEFAULT_SEED))
-            results = list(queryset)
-            rng.shuffle(results)
-
-            self._random_count = Club.objects.count()
-
-            page = int(request.GET.get("page", 1))
-            page_size = int(request.GET.get("page_size", DEFAULT_PAGE_SIZE))
-
-            if (page - 1) * page_size >= self._random_count:
-                self._random_next_page = None
-            else:
-                new_params = request.GET.dict()
-                new_params["page"] = str(page + 1)
-                self._random_next_page = "{}?{}".format(
-                    request.build_absolute_uri(request.path),
-                    "&".join(["{}={}".format(k, quote(v)) for k, v in new_params.items()]),
-                )
-            return results
-
-        if self.page_query_param not in request.query_params:
-            return None
-
-        return super().paginate_queryset(queryset, request, view)
-
-    def get_paginated_response(self, data):
-        if hasattr(self, "_random_next_page"):
-            return Response(
-                OrderedDict(
-                    [
-                        ("count", self._random_count),
-                        ("next", self._random_next_page),
-                        ("results", data),
-                    ]
-                )
-            )
-
-        return super().get_paginated_response(data)
-
-
 class ClubsSearchFilter(filters.BaseFilterBackend):
     """
     A DRF filter to implement custom filtering logic for the frontend.
+    If model is not a Club, expects the model to have a club foreign key to Club.
     """
 
     def filter_queryset(self, request, queryset, view):
@@ -280,14 +224,14 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
                 return {f"{field}__isnull": True}
             return {}
 
-        def parse_tags(field, value, operation, queryset):
+        def parse_many_to_many(label, field, value, operation, queryset):
             tags = value.strip().split(",")
             if operation == "or":
                 if tags[0].isdigit():
                     tags = [int(tag) for tag in tags if tag]
                     return {f"{field}__id__in": tags}
                 else:
-                    return {f"{field}__name__in": tags}
+                    return {f"{field}__{label}__in": tags}
 
             if tags[0].isdigit() or operation == "id":
                 tags = [int(tag) for tag in tags if tag]
@@ -295,8 +239,14 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
                     queryset = queryset.filter(**{f"{field}__id": tag})
             else:
                 for tag in tags:
-                    queryset = queryset.filter(**{f"{field}__name": tag})
+                    queryset = queryset.filter(**{f"{field}__{label}": tag})
             return queryset
+
+        def parse_badges(field, value, operation, queryset):
+            return parse_many_to_many("label", field, value, operation, queryset)
+
+        def parse_tags(field, value, operation, queryset):
+            return parse_many_to_many("name", field, value, operation, queryset)
 
         def parse_boolean(field, value, operation, queryset):
             value = value.strip().lower()
@@ -320,6 +270,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             "accepting_members": parse_boolean,
             "application_required": parse_int,
             "tags": parse_tags,
+            "badges": parse_badges,
             "target_schools": parse_tags,
             "target_majors": parse_tags,
             "target_years": parse_tags,
@@ -328,10 +279,17 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             "accepting_members": parse_boolean,
         }
 
+        if not queryset.model == Club:
+            fields = {f"club__{k}": v for k, v in fields.items()}
+
         query = {}
 
         for param, value in params.items():
             field = param.split("__")
+            if field[0] == "club":
+                prefix = field.pop(0)
+                field[0] = f"{prefix}__{field[0]}"
+
             if len(field) <= 1:
                 field = field[0]
                 type = "eq"
@@ -353,9 +311,10 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
         return queryset
 
 
-class ClubsOrderingFilter(filters.OrderingFilter):
+class ClubsOrderingFilter(RandomOrderingFilter):
     """
     Custom ordering filter for club objects.
+    If used by a non club model, the object must have a foreign key to Club named club.
     """
 
     def get_valid_fields(self, queryset, view, context={}):
@@ -370,6 +329,10 @@ class ClubsOrderingFilter(filters.OrderingFilter):
                 (field.name, field.verbose_name) for field in queryset.model._meta.fields
             ]
             valid_fields += [(key, key.title().split("__")) for key in queryset.query.annotations]
+            valid_fields += [
+                (f"club__{field.name}", f"Club - {field.verbose_name}")
+                for field in Club._meta.fields
+            ]
             return valid_fields
 
         # other people can order by whitelist
@@ -379,22 +342,10 @@ class ClubsOrderingFilter(filters.OrderingFilter):
         new_queryset = super().filter_queryset(request, queryset, view)
         ordering = request.GET.get("ordering", "").split(",")
 
-        if "random" in ordering:
-            page = int(request.GET.get("page", 1)) - 1
-            page_size = int(request.GET.get("page_size", DEFAULT_PAGE_SIZE))
-            rng = random.Random(request.GET.get("seed", DEFAULT_SEED))
-
-            all_ids = list(Club.objects.values_list("id", flat=True))
-            rng.shuffle(all_ids)
-
-            start_index = page * page_size
-            end_index = (page + 1) * page_size
-            page_ids = all_ids[start_index:end_index]
-
-            return new_queryset.filter(id__in=page_ids)
-
         if "featured" in ordering:
-            return queryset.order_by("-rank")
+            if queryset.model == Club:
+                return queryset.order_by("-rank")
+            return queryset.order_by("-club__rank")
 
         return new_queryset
 
@@ -439,14 +390,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     )
     permission_classes = [ClubPermission | IsSuperuser]
 
-    filter_backends = [filters.SearchFilter, ClubsOrderingFilter, ClubsSearchFilter]
+    filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
     search_fields = ["name", "subtitle"]
     ordering_fields = ["favorite_count", "name"]
     ordering = "-favorite_count"
 
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
-    pagination_class = ClubPagination
+    pagination_class = RandomPageNumberPagination
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -753,6 +704,8 @@ class EventViewSet(viewsets.ModelViewSet):
 
     serializer_class = EventSerializer
     permission_classes = [EventPermission | IsSuperuser]
+    filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
+    search_fields = ["name", "club__name", "description"]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
@@ -774,7 +727,7 @@ class EventViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         return Response(
             EventSerializer(
-                self.get_queryset()
+                self.filter_queryset(self.get_queryset())
                 .filter(start_time__lte=now, end_time__gte=now)
                 .filter(type=Event.FAIR),
                 many=True,
@@ -789,7 +742,10 @@ class EventViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         return Response(
             EventSerializer(
-                self.get_queryset().filter(start_time__gte=now).filter(type=Event.FAIR), many=True
+                self.filter_queryset(self.get_queryset())
+                .filter(start_time__gte=now)
+                .filter(type=Event.FAIR),
+                many=True,
             ).data
         )
 
@@ -800,7 +756,9 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         now = timezone.now()
         return Response(
-            EventSerializer(self.get_queryset().filter(end_time__lt=now), many=True).data
+            EventSerializer(
+                self.filter_queryset(self.get_queryset()).filter(end_time__lt=now), many=True
+            ).data
         )
 
     def create(self, request, *args, **kwargs):
