@@ -40,6 +40,25 @@ const MobileSearchBarSpacer = s.div`
   }
 `
 
+export const getInitialSearch = (): SearchInput => {
+  return {
+    nameInput: '',
+    selectedTags: [],
+    order: '',
+  }
+}
+
+export const SearchbarRightContainer = s.div`
+  width: 80vw;
+  margin-left: 20vw;
+  padding: 0;
+
+  ${mediaMaxWidth(MD)} {
+    width: 100%;
+    margin-left: 0;
+  }
+`
+
 const Wrapper = s.div`
   height: 100vh;
   width: 20vw;
@@ -83,7 +102,6 @@ const Content = s.div`
     border-bottom: 1px solid ${BORDER};
     position: fixed;
     z-index: 1000;
-    background: ${WHITE};
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.075);
   }
 `

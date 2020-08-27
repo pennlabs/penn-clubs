@@ -114,6 +114,26 @@ class Command(BaseCommand):
                     ):
                         ranking += 5
 
+            # points for public contact email
+            if club.email and club.email_public:
+                ranking += 10
+
+            # points for social links
+            social_fields = [
+                "facebook",
+                "website",
+                "twitter",
+                "instagram",
+                "linkedin",
+                "github",
+                "youtube",
+            ]
+            social_fields = [getattr(club, field) for field in social_fields]
+            has_fields = [field is not None and len(field) >= 3 for field in social_fields]
+            has_fields = [field for field in social_fields if field]
+            if len(has_fields) >= 2:
+                ranking += 10
+
             # points for how to get involved
             if len(club.how_to_get_involved.strip()) <= 3:
                 ranking -= 30

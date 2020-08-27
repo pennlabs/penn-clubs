@@ -47,21 +47,30 @@ class SearchTestCase(TestCase):
     def test_random_listing_odd_page(self):
         self.perform_random_fetch(17)
 
-    def perform_random_fetch(self, page_size):
-        # fetch clubs using random ordering
+    def test_featured_listing(self):
+        self.perform_random_fetch(DEFAULT_PAGE_SIZE, ordering="featured")
+
+    def test_alphabetical_listing(self):
+        self.perform_random_fetch(DEFAULT_PAGE_SIZE, ordering="name")
+
+    def perform_random_fetch(self, page_size, ordering="random"):
+        # fetch clubs using specified ordering
         resp = self.client.get(
             reverse("clubs-list"),
-            {"ordering": "random", "page": "1", "page_size": str(page_size)},
+            {"ordering": ordering, "page": "1", "page_size": str(page_size)},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = resp.json()
+        returned_count = data["count"]
+        page_count = 1
 
         clubs = []
         pages = []
 
         while data["next"] is not None:
-            self.assertLessEqual(len(data["results"]), page_size)
+            old_results_len = len(data["results"])
+            self.assertLessEqual(old_results_len, page_size)
             self.assertGreater(len(data["results"]), 0, pages)
 
             clubs.extend(data["results"])
@@ -71,6 +80,15 @@ class SearchTestCase(TestCase):
             resp = self.client.get(data["next"], content_type="application/json")
             self.assertIn(resp.status_code, [200, 201], resp.content)
             data = resp.json()
+            page_count += 1
+
+            # if not last page, ensure page size is returned
+            if data["next"] is not None:
+                self.assertEqual(old_results_len, page_size)
+
+        # add results from last page
+        clubs.extend(data["results"])
+        pages.append(sorted([club["code"] for club in data["results"]]))
 
         clubs = sorted([club["code"] for club in clubs])
 
@@ -82,15 +100,18 @@ class SearchTestCase(TestCase):
         extra = clubs_counter - truth_counter
 
         # ensure all clubs existing in the complete listing
+        detail_text = "\n".join(str(list(sorted(page))) for page in pages)
         self.assertEqual(
             clubs,
             truth,
-            "\nMissing from results: {}\nExtra in results: {}\n\n{}".format(
-                list(missing.elements()),
-                list(sorted(extra.elements())),
-                "\n".join(str(page) for page in pages),
-            ),
+            f"\nMissing from results: {list(missing.elements())}\n"
+            f"Extra in results: {list(sorted(extra.elements()))}\n"
+            f"{page_count} pages * {page_size} per page, {returned_count} clubs\n"
+            f"\n{detail_text}",
         )
+
+        # ensure returned count is correct
+        self.assertEqual(len(clubs), returned_count)
 
 
 class ClubTestCase(TestCase):

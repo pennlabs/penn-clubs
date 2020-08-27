@@ -7,7 +7,11 @@ import LiveEventsDialog from '../components/ClubPage/LiveEventsDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
 import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
-import SearchBar, { SearchInput } from '../components/SearchBar'
+import SearchBar, {
+  getInitialSearch,
+  SearchbarRightContainer,
+  SearchInput,
+} from '../components/SearchBar'
 import {
   CLUBS_BLUE,
   CLUBS_GREY,
@@ -18,7 +22,6 @@ import {
   FOCUS_GRAY,
   SNOW,
 } from '../constants/colors'
-import { MD, mediaMaxWidth } from '../constants/measurements'
 import { PaginatedClubPage, renderListPage } from '../renderPage'
 import { Badge, Tag, UserInfo } from '../types'
 import { doApiRequest } from '../utils'
@@ -51,17 +54,6 @@ const ResultsText = s.div`
   margin: 5px;
 `
 
-const Container = s.div`
-  width: 80vw;
-  margin-left: 20vw;
-  padding: 0;
-
-  ${mediaMaxWidth(MD)} {
-    width: 100%;
-    margin-left: 0;
-  }
-`
-
 type SplashProps = {
   userInfo: UserInfo
   clubs: PaginatedClubPage
@@ -72,19 +64,13 @@ type SplashProps = {
 }
 
 const Splash = (props: SplashProps): ReactElement => {
-  const currentSearch = useRef<SearchInput>({
-    nameInput: '',
-    selectedTags: [],
-    order: '',
-  })
+  const currentSearch = useRef<SearchInput>(getInitialSearch())
 
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
   const [isLoading, setLoading] = useState<boolean>(false)
-  const [searchInput, setSearchInput] = useState<SearchInput>({
-    nameInput: '',
-    selectedTags: [],
-    order: '',
-  })
+  const [searchInput, setSearchInput] = useState<SearchInput>(
+    getInitialSearch(),
+  )
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {
@@ -189,7 +175,7 @@ const Splash = (props: SplashProps): ReactElement => {
           }}
         />
 
-        <Container>
+        <SearchbarRightContainer>
           <WideContainer background={SNOW}>
             <div style={{ padding: '30px 0' }}>
               <DisplayButtons switchDisplay={setDisplay} />
@@ -265,7 +251,7 @@ const Splash = (props: SplashProps): ReactElement => {
               tags={props.tags}
             />
           </WideContainer>
-        </Container>
+        </SearchbarRightContainer>
       </div>
     </>
   )

@@ -344,8 +344,8 @@ class ClubsOrderingFilter(RandomOrderingFilter):
 
         if "featured" in ordering:
             if queryset.model == Club:
-                return queryset.order_by("-rank")
-            return queryset.order_by("-club__rank")
+                return queryset.order_by("-rank", "-favorite_count", "-id")
+            return queryset.order_by("-club__rank", "-club__favorite_count", "-club__id")
 
         return new_queryset
 
