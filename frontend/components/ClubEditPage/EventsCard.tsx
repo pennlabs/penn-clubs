@@ -3,6 +3,7 @@ import React, { ReactElement, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import s from 'styled-components'
 
+import { LIGHT_GRAY } from '../../constants'
 import { Club, ClubEvent } from '../../types'
 import { stripTags } from '../../utils'
 import { Device, Text } from '../common'
@@ -334,6 +335,9 @@ const EventPreviewDescriptionContainer = s.div`
 const PreviewContainer = s.div`
   margin-top: 2rem;
   max-width: 40%;
+  box-shadow: 2px 2px 10px ${LIGHT_GRAY};
+  padding-bottom: 1em;
+  border-radius: 3px;
 `
 const EventPreview = ({ event }: { event: ClubEvent }) => (
   <EventPreviewContainer>

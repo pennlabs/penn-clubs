@@ -18,6 +18,14 @@ export function stripTags(val: string): string {
     .trim()
 }
 
+export function useSetting(key: string): string | boolean | null {
+  switch (key) {
+    case 'FAIR_OPEN':
+      return false
+  }
+  return null
+}
+
 export function getCurrentRelativePath(): string {
   return (
     window.location.pathname + window.location.search + window.location.hash

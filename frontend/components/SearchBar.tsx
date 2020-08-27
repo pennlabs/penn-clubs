@@ -24,10 +24,9 @@ import {
   SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import { BODY_FONT } from '../constants/styles'
-import { SearchInput } from '../pages'
-import { Tag } from '../types'
+import { Badge, Tag } from '../types'
 import { Icon } from './common'
-import DropdownFilter, { FilterHeader, SelectableTag } from './DropdownFilter'
+import DropdownFilter, { FilterHeader } from './DropdownFilter'
 import FilterSearch from './FilterSearch'
 import OrderInput from './OrderInput'
 
@@ -131,10 +130,10 @@ const MobileLine = s.hr`
 
 type SearchBarProps = {
   tags: Tag[]
-  updateTag: (data: SelectableTag, name: string) => void
-  selectedTags: SelectableTag[]
-  resetDisplay: (modifier: SetStateAction<SearchInput>) => void
-  clearTags: () => void
+  badges: Badge[]
+  searchValue: SearchInput
+  updateSearch: (modifier: SetStateAction<SearchInput>) => void
+  options?: { [key: string]: { disabled: boolean } }
 }
 
 const DROPDOWNS = {
@@ -175,21 +174,63 @@ const Collapsible = ({
   )
 }
 
+export type SearchInput = {
+  nameInput: string
+  order: string
+  selectedTags: SearchTag[]
+}
+
+export type SearchTag = {
+  name: string
+  label: string
+  value: string | number
+}
+
 const SearchBar = ({
+  badges,
   tags,
-  updateTag,
-  clearTags,
-  selectedTags,
-  resetDisplay,
+  searchValue,
+  updateSearch,
+  options = {},
 }: SearchBarProps): ReactElement => {
+  const { selectedTags } = searchValue
+
   const [nameInput, setNameInput] = useState<string>('')
   const [timeout, storeTimeout] = useState<number | null>(null)
   const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
 
+  const clearTags = (): void =>
+    updateSearch((inpt) => ({
+      ...inpt,
+      selectedTags: inpt.selectedTags.filter(
+        (tag) => tag.name !== 'Tags' && tag.name !== 'Badges',
+      ),
+    }))
+
+  const updateTag = (tag: SearchTag, name: string): void => {
+    updateSearch((inpt) => {
+      const selectedTags = [...inpt.selectedTags]
+
+      const { value } = tag
+      const i = selectedTags.findIndex(
+        (tag) => tag.value === value && tag.name === name,
+      )
+
+      if (i === -1) {
+        tag.name = name
+        selectedTags.push(tag)
+      } else {
+        selectedTags.splice(i, 1)
+      }
+
+      return { ...inpt, selectedTags }
+    })
+  }
+
   useEffect(() => {
     timeout !== null && clearTimeout(timeout)
     storeTimeout(
-      setTimeout(() => resetDisplay((inpt) => ({ ...inpt, nameInput })), 200),
+      setTimeout(() => updateSearch((inpt) => ({ ...inpt, nameInput })), 200),
     )
   }, [nameInput])
 
@@ -202,62 +243,124 @@ const SearchBar = ({
     count: clubs,
   }))
 
+  const relabeledBadges = badges.map(({ id, label, color }) => ({
+    value: id,
+    label,
+    color,
+  }))
+
   const initialActive =
     typeof window !== 'undefined' ? window.innerWidth >= 1047 : true
 
-  return (
-    <>
-      <Wrapper>
-        <Content>
-          <SearchWrapper>
-            <SearchIcon>
-              {isTextInSearchBar ? (
-                <Icon
-                  name="x"
-                  alt="cancel search"
-                  onClick={() => {
-                    setNameInput('')
-                    focus()
-                  }}
-                />
-              ) : (
-                <Icon name="search" alt="search" onClick={focus} />
-              )}
-            </SearchIcon>
-            <Input
-              type="text"
-              name="search"
-              placeholder="Search"
-              aria-label="Search"
-              ref={inputRef}
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-            />
-          </SearchWrapper>
-          <MobileLine />
+  const searchFilters = [
+    {
+      key: 'text',
+      content: () => {
+        return (
+          <>
+            <SearchWrapper>
+              <SearchIcon>
+                {isTextInSearchBar ? (
+                  <Icon
+                    name="x"
+                    alt="cancel search"
+                    onClick={() => {
+                      setNameInput('')
+                      focus()
+                    }}
+                  />
+                ) : (
+                  <Icon name="search" alt="search" onClick={focus} />
+                )}
+              </SearchIcon>
+              <Input
+                type="text"
+                name="search"
+                placeholder="Search"
+                aria-label="Search"
+                ref={inputRef}
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+              />
+            </SearchWrapper>
+            <MobileLine />
+          </>
+        )
+      },
+    },
+    {
+      key: 'tags',
+      content: () => {
+        return (
           <Collapsible name="Tags" active={initialActive}>
             <FilterSearch
+              name="Tags"
               tags={relabeledTags}
               updateTag={updateTag}
               selected={selectedTags.filter((tag) => tag.name === 'Tags')}
               clearTags={clearTags}
             />
           </Collapsible>
-          <Collapsible name="Ordering" active={initialActive}>
-            <OrderInput
-              onChange={(order) => resetDisplay((inpt) => ({ ...inpt, order }))}
+        )
+      },
+    },
+    {
+      key: 'badges',
+      content: () => {
+        return (
+          <Collapsible name="Badges" active={initialActive}>
+            <FilterSearch
+              name="Badges"
+              tags={relabeledBadges}
+              updateTag={updateTag}
+              selected={selectedTags.filter((tag) => tag.name === 'Badges')}
+              clearTags={clearTags}
             />
           </Collapsible>
-          {Object.keys(DROPDOWNS).map((key) => (
-            <Collapsible name={key} key={key} active={initialActive}>
-              <DropdownFilter
-                name={key}
-                options={DROPDOWNS[key]}
-                selected={selectedTags.filter((tag) => tag.name === key)}
-                updateTag={updateTag}
-              />
-            </Collapsible>
-          ))}
+        )
+      },
+    },
+    {
+      key: 'ordering',
+      content: () => {
+        return (
+          <Collapsible name="Ordering" active={initialActive}>
+            <OrderInput
+              onChange={(order) => updateSearch((inpt) => ({ ...inpt, order }))}
+            />
+          </Collapsible>
+        )
+      },
+    },
+  ]
+
+  Object.keys(DROPDOWNS).map((key) =>
+    searchFilters.push({
+      key,
+      content: () => {
+        return (
+          <Collapsible name={key} key={key} active={initialActive}>
+            <DropdownFilter
+              name={key}
+              options={DROPDOWNS[key]}
+              selected={selectedTags.filter((tag) => tag.name === key)}
+              updateTag={updateTag}
+            />
+          </Collapsible>
+        )
+      },
+    }),
+  )
+
+  return (
+    <>
+      <Wrapper>
+        <Content>
+          {searchFilters
+            .filter(({ key }) => !options[key] || !options[key].disabled)
+            .map(({ key, content }) => (
+              <div key={key}>{content()}</div>
+            ))}
         </Content>
       </Wrapper>
 

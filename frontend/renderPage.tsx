@@ -202,7 +202,7 @@ export function renderListPage(Page) {
     ) => Promise<{ tags: Tag[]; clubs: PaginatedClubPage }>
 
     render(): ReactElement {
-      const { clubs, tags, authenticated, userInfo } = this.props
+      const { authenticated } = this.props
 
       if (authenticated === null) {
         return <Loading />
@@ -217,19 +217,26 @@ export function renderListPage(Page) {
       headers: req ? { cookie: req.headers.cookie } : undefined,
     }
 
-    const [clubsRequest, tagsRequest] = await Promise.all([
+    const [
+      clubsRequest,
+      tagsRequest,
+      badgesRequest,
+      liveEventRequest,
+    ] = await Promise.all([
       doApiRequest('/clubs/?page=1&ordering=featured&format=json', data),
       doApiRequest('/tags/?format=json', data),
+      doApiRequest('/badges/?format=json'),
+      doApiRequest('/events/live/', data),
     ])
 
     const clubsResponse = await clubsRequest.json()
     const tagsResponse = await tagsRequest.json()
-
-    const liveEventRequest = await doApiRequest('/events/live/', data)
+    const badgesResponse = await badgesRequest.json()
     const liveEventResponse = (await liveEventRequest.json()) as ClubEvent[]
 
     return {
       tags: tagsResponse,
+      badges: badgesResponse,
       clubs: clubsResponse,
       liveEventCount: liveEventResponse.length,
     }

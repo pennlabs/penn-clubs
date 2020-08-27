@@ -7,25 +7,27 @@ import LiveEventsDialog from '../components/ClubPage/LiveEventsDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
 import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
-import SearchBar from '../components/SearchBar'
+import SearchBar, { SearchInput } from '../components/SearchBar'
 import {
   CLUBS_BLUE,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   CLUBS_NAVY,
+  CLUBS_PURPLE,
   CLUBS_RED,
   FOCUS_GRAY,
   SNOW,
 } from '../constants/colors'
 import { MD, mediaMaxWidth } from '../constants/measurements'
 import { PaginatedClubPage, renderListPage } from '../renderPage'
-import { Tag, UserInfo } from '../types'
+import { Badge, Tag, UserInfo } from '../types'
 import { doApiRequest } from '../utils'
 
 const colorMap = {
   Tags: CLUBS_BLUE,
   Size: CLUBS_NAVY,
   Application: CLUBS_RED,
+  Badges: CLUBS_PURPLE,
 }
 
 const ClearAllLink = s.span`
@@ -60,24 +62,13 @@ const Container = s.div`
   }
 `
 
-type SearchTag = {
-  name: string
-  label: string
-  value: string | number
-}
-
 type SplashProps = {
   userInfo: UserInfo
   clubs: PaginatedClubPage
   tags: Tag[]
+  badges: Badge[]
   clubCount: number
   liveEventCount: number
-}
-
-export type SearchInput = {
-  nameInput: string
-  order: string
-  selectedTags: SearchTag[]
 }
 
 const Splash = (props: SplashProps): ReactElement => {
@@ -110,6 +101,9 @@ const Splash = (props: SplashProps): ReactElement => {
     const tagSelected = selectedTags
       .filter((tag) => tag.name === 'Tags')
       .map((tag) => tag.value)
+    const badgesSelected = selectedTags
+      .filter((tag) => tag.name === 'Badges')
+      .map((tag) => tag.value)
     const sizeSelected = selectedTags
       .filter((tag) => tag.name === 'Size')
       .map((tag) => tag.value)
@@ -136,6 +130,9 @@ const Splash = (props: SplashProps): ReactElement => {
     }
     if (tagSelected.length > 0) {
       params.set('tags', tagSelected.join(','))
+    }
+    if (badgesSelected.length > 0) {
+      params.set('badges', badgesSelected.join(','))
     }
     if (sizeSelected.length > 0) {
       params.set('size__in', sizeSelected.join(','))
@@ -176,42 +173,19 @@ const Splash = (props: SplashProps): ReactElement => {
       })
   }, [searchInput])
 
-  const updateTag = (tag: SearchTag, name: string): void => {
-    setSearchInput((inpt) => {
-      const selectedTags = [...inpt.selectedTags]
-
-      const { value } = tag
-      const i = selectedTags.findIndex(
-        (tag) => tag.value === value && tag.name === name,
-      )
-
-      if (i === -1) {
-        tag.name = name
-        selectedTags.push(tag)
-      } else {
-        selectedTags.splice(i, 1)
-      }
-
-      return { ...inpt, selectedTags }
-    })
-  }
-
   return (
     <>
       <Metadata />
       <div style={{ backgroundColor: SNOW }}>
         <SearchBar
           tags={props.tags}
-          resetDisplay={setSearchInput}
-          selectedTags={searchInput.selectedTags}
-          updateTag={updateTag}
-          clearTags={() => {
-            setSearchInput((inpt) => ({
-              ...inpt,
-              selectedTags: inpt.selectedTags.filter(
-                (tag) => tag.name !== 'Tags',
-              ),
-            }))
+          badges={props.badges}
+          updateSearch={setSearchInput}
+          searchValue={searchInput}
+          options={{
+            badges: {
+              disabled: !(props.userInfo && props.userInfo.is_superuser),
+            },
           }}
         />
 
@@ -250,7 +224,17 @@ const Splash = (props: SplashProps): ReactElement => {
                     {tag.label}
                     <button
                       className="delete is-small"
-                      onClick={() => updateTag(tag, tag.name)}
+                      onClick={() =>
+                        setSearchInput((inpt) => ({
+                          ...inpt,
+                          selectedTags: inpt.selectedTags.filter(
+                            (oth) =>
+                              !(
+                                tag.name === oth.name && tag.value === oth.value
+                              ),
+                          ),
+                        }))
+                      }
                     />
                   </span>
                 ))}

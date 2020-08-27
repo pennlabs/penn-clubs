@@ -18,6 +18,8 @@ import EventModal from './EventModal'
 import HappeningNow from './HappeningNow'
 
 const EventCardContainer = styled.div`
+  cursor: pointer;
+
   ${mediaMinWidth(PHONE)} {
     max-width: 18em;
     margin: 1rem;

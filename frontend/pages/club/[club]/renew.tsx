@@ -12,7 +12,7 @@ import { DARK_GRAY, GREEN, MEDIUM_GRAY } from '../../../constants/colors'
 import { CLUB_ROUTE } from '../../../constants/routes'
 import renderPage from '../../../renderPage'
 import { Club, MembershipRank } from '../../../types'
-import { doApiRequest } from '../../../utils'
+import { doApiRequest, useSetting } from '../../../utils'
 
 type RenewPageProps = {
   club: Club
@@ -62,8 +62,6 @@ const Policy = s.div`
 type Props = {
   onChecked?: () => void
 }
-
-const SAC_FAIR_OPEN = false
 
 const PolicyBox = ({ onChecked = () => undefined }: Props): ReactElement => {
   const [numChecked, setNumChecked] = useState<number>(0)
@@ -154,6 +152,7 @@ const RenewPage = ({
   >(null)
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
   const [isSacChecked, setSacChecked] = useState<boolean>(club.fair)
+  const isFairOpen = useSetting('FAIR_REGISTRATION_OPEN')
 
   if (authenticated === false) {
     return <AuthPrompt />
@@ -330,7 +329,7 @@ const RenewPage = ({
               only. If you are not an undergraduate organization, please do not
               sign up for the SAC fair.
             </p>
-            {SAC_FAIR_OPEN ? (
+            {isFairOpen ? (
               <label>
                 <input
                   type="checkbox"

@@ -32,6 +32,17 @@ const SearchWrapper = s.div`
   }
 `
 
+const ColorPreview = s.div<{ color: string }>`
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-color: #${({ color }) => color};
+  border: 1px solid black;
+  border-radius: 3px;
+  margin-right: 5px;
+  vertical-align: middle;
+`
+
 const SearchIcon = s(Icon)`
   cursor: pointer;
   color: ${MEDIUM_GRAY};
@@ -51,9 +62,11 @@ type SearchProps = {
   recommendedTags: SearchOption[]
   updateTag: (tag: FuseTag, name: string) => void
   clearTags: () => void
+  name: 'Tags' | 'Badges'
 }
 
 const Search = ({
+  name,
   selected = [],
   searchTags,
   recommendedTags,
@@ -87,7 +100,7 @@ const Search = ({
   // Overriding specific components of the react-select
   const components = {
     IndicatorSeparator: () => null,
-    DropdownIndicator: () => <SearchIcon name="tag" alt="" />,
+    DropdownIndicator: () => <SearchIcon name="tag" />,
     MultiValueContainer: ({ innerProps, children }) => {
       return (
         <SelectedTag {...innerProps} className="tag is-rounded has-text-white">
@@ -103,7 +116,7 @@ const Search = ({
       const removeGenerator = (func) => {
         return (e) => {
           func(e)
-          updateTag(data, 'Tags')
+          updateTag(data, name)
         }
       }
       return (
@@ -130,23 +143,23 @@ const Search = ({
       onChange={(_, selectEvent): void => {
         const { action, option, removedValue } = selectEvent
         if (action === 'select-option') {
-          updateTag(option, 'Tags')
+          updateTag(option, name)
         } else if (action === 'pop-value') {
           // pop-value events contain removedValue = undefined if no tags are selected
-          removedValue && updateTag(removedValue, 'Tags')
+          removedValue && updateTag(removedValue, name)
         } else if (action === 'clear') {
           clearTags()
         }
       }}
-      placeholder="Search for tags"
+      placeholder={`Search for ${name.toLowerCase()}`}
     />
   )
 }
 
-const selectInitial = (tags: FuseTag[] = []) => {
+const selectInitial = (name: string, tags: FuseTag[] = []) => {
   return [
     {
-      label: 'All tags',
+      label: `All ${name.toLowerCase()}`,
       options: tags,
     },
   ]
@@ -154,12 +167,15 @@ const selectInitial = (tags: FuseTag[] = []) => {
 
 type FuseTag = {
   value: number | string
-  label: string
+  label: string | ReactElement
+  text?: string
   count?: number
+  color?: string
   name?: string
 }
 
 type FilterProps = {
+  name: 'Tags' | 'Badges'
   tags: FuseTag[]
   updateTag: (tag: FuseTag, name: string) => void
   selected: FuseTag[]
@@ -167,6 +183,7 @@ type FilterProps = {
 }
 
 const Filter = ({
+  name,
   tags,
   updateTag,
   clearTags,
@@ -174,14 +191,23 @@ const Filter = ({
 }: FilterProps): ReactElement => {
   const filter = new Set()
   selected.forEach(({ value }) => filter.add(value))
+
+  // add count annotation to label
   tags = tags
     .filter(({ value }) => !filter.has(value))
-    .map(({ label, count, ...tag }) => ({
+    .map(({ label, count, color, ...tag }) => ({
       ...tag,
-      label: `${label} (${count})`,
+      text: label,
+      label: (
+        <>
+          {color != null && <ColorPreview color={color}> </ColorPreview>}
+          {`${label}${count != null ? ` (${count})` : ''}`}
+        </>
+      ),
     }))
+
   const fuseOptions = {
-    keys: ['label'],
+    keys: ['text'],
     tokenize: true,
     findAllMatches: true,
     shouldSort: true,
@@ -190,22 +216,28 @@ const Filter = ({
   }
   const fuse = new Fuse<FuseTag>(tags, fuseOptions)
 
-  const [recommendedTags, setRecommendedTags] = useState(selectInitial(tags))
+  const [recommendedTags, setRecommendedTags] = useState(
+    selectInitial(name, tags),
+  )
   const searchTags = async (query: string) => [
     {
-      label: query.length > 0 ? 'Matched tags' : 'All tags',
+      label:
+        query.length > 0
+          ? `Matched ${name.toLowerCase()}`
+          : `All ${name.toLowerCase()}`,
       options: fuse.search(query).map((result) => result.item),
     },
   ]
 
   useEffect(() => {
-    setRecommendedTags(selectInitial(tags))
+    setRecommendedTags(selectInitial(name, tags))
   }, [selected])
 
   return (
     <>
       <SearchWrapper>
         <Search
+          name={name}
           selected={selected}
           searchTags={searchTags}
           recommendedTags={recommendedTags}
