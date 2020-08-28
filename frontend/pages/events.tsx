@@ -10,8 +10,7 @@ import SearchBar, {
   SearchbarRightContainer,
   SearchInput,
 } from '../components/SearchBar'
-import { CLUBS_GREY, mediaMaxWidth, PHONE, SNOW } from '../constants'
-import { mediaMinWidth } from '../constants/measurements'
+import { CLUBS_GREY, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, Tag } from '../types'
 import { doApiRequest } from '../utils'
@@ -24,16 +23,10 @@ interface EventPageProps {
 }
 
 const CardList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  ${mediaMinWidth('80rem')} {
-    grid-template-columns: repeat(4, 1fr);
-  }
-  ${mediaMaxWidth('50rem')} {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  ${mediaMaxWidth(PHONE)} {
-    grid-template-columns: 1fr;
+  & .event {
+    display: inline-block;
+    vertical-align: top;
+    width: 400px;
   }
 `
 

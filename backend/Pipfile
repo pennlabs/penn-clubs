@@ -38,6 +38,7 @@ psycopg2 = "*"
 django-simple-history = "*"
 channels = "*"
 whitenoise = "*"
+django-runtime-options = "*"
 
 [requires]
 python_version = "3"

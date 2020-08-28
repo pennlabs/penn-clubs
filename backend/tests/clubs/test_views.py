@@ -212,6 +212,21 @@ class ClubTestCase(TestCase):
         # ensure cleanup doesn't throw error
         self.club1.delete()
 
+    def test_club_file_upload(self):
+        """
+        Test uploading a file to the club.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        # successful file upload
+        resp = self.client.post(
+            reverse("clubs-upload-file", args=(self.club1.code,)), {"file": io.BytesIO(b"")}
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure cleanup doesn't throw error
+        self.club1.delete()
+
     def test_club_qr(self):
         """
         Test generating a club fair QR code image.

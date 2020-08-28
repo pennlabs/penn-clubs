@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.urls import path
+from django.urls import include, path
 from rest_framework_nested import routers
 
 from clubs.views import (
@@ -62,6 +62,7 @@ urlpatterns = [
     path(r"settings/permissions/", UserPermissionAPIView.as_view(), name="users-permission"),
     path(r"clubs/<slug:club_code>/invite/", MassInviteAPIView.as_view(), name="club-invite"),
     path(r"emailpreview/", email_preview, name="email-preview"),
+    path(r"options/", include("options.urls", namespace="options")),
 ]
 
 # Only add the following endpoint if Django is in development/testing

@@ -65,6 +65,7 @@ type SplashProps = {
 
 const Splash = (props: SplashProps): ReactElement => {
   const fairIsOpen = useSetting('FAIR_OPEN')
+  const renewalBanner = useSetting('CLUB_REGISTRATION')
   const currentSearch = useRef<SearchInput>(getInitialSearch())
 
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
@@ -238,7 +239,7 @@ const Splash = (props: SplashProps): ReactElement => {
             {fairIsOpen && (
               <LiveEventsDialog liveEventCount={props.liveEventCount} />
             )}
-            <ListRenewalDialog />
+            {renewalBanner && <ListRenewalDialog />}
 
             {isLoading && (
               <progress className="progress is-small" max={100}>

@@ -202,6 +202,14 @@ class Command(BaseCommand):
 
         image_cache = {}
 
+        def get_image(url):
+            if url not in image_cache:
+                contents = requests.get(url).content
+                image_cache[url] = contents
+            else:
+                contents = image_cache[url]
+            return contents
+
         # create clubs
         for info in clubs:
             partial = dict(info)
@@ -219,11 +227,7 @@ class Command(BaseCommand):
             club, _ = Club.objects.get_or_create(code=info["code"], defaults=partial)
 
             if "image" in info:
-                if info["image"] not in image_cache:
-                    contents = requests.get(info["image"]).content
-                    image_cache[info["image"]] = contents
-                else:
-                    contents = image_cache[info["image"]]
+                contents = get_image(info["image"])
                 club.image.save("image.png", ContentFile(contents))
                 club.save()
 
@@ -305,10 +309,12 @@ class Command(BaseCommand):
         ben.is_staff = True
         ben.save()
 
+        # create test events
+        event_image_url = "https://i.imgur.com/IBCoKE3.jpg"
         now = timezone.now()
 
         for i, club in enumerate(Club.objects.all()[:20]):
-            event, _ = Event.objects.get_or_create(
+            event, created = Event.objects.get_or_create(
                 club=club,
                 code="test-event-for-club-{}".format(club),
                 defaults={
@@ -319,6 +325,9 @@ class Command(BaseCommand):
                     "end_time": now,
                 },
             )
+            if created:
+                contents = get_image(event_image_url)
+                event.image.save("image.png", ContentFile(contents))
             if i <= 10:
                 event.start_time = now + datetime.timedelta(days=1) + datetime.timedelta(hours=i)
             else:

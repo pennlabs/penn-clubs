@@ -11,7 +11,7 @@ import { WHITE } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
 import { Club, ClubEvent, ExtendedUserInfo, Tag, UserInfo } from './types'
-import { doApiRequest } from './utils'
+import { doApiRequest, OptionsContext } from './utils'
 import { logEvent } from './utils/analytics'
 import { logException } from './utils/sentry'
 
@@ -29,6 +29,7 @@ const RenderPageWrapper = s.div`
 type RenderPageProps = {
   authenticated: boolean | null
   userInfo?: UserInfo
+  options: { [key: string]: string | number | boolean | null }
 }
 
 type RenderPageState = {
@@ -71,16 +72,18 @@ function renderPage(Page) {
         const { modal } = state
         const { authenticated, userInfo } = props
         return (
-          <AuthCheckContext.Provider value={this.checkAuth}>
-            <RenderPageWrapper>
-              <LoginModal show={modal} closeModal={closeModal} />
-              <Header authenticated={authenticated} userInfo={userInfo} />
-              <Wrapper>
-                <Page {...props} {...state} />
-              </Wrapper>
-              <Footer />
-            </RenderPageWrapper>
-          </AuthCheckContext.Provider>
+          <OptionsContext.Provider value={this.props.options}>
+            <AuthCheckContext.Provider value={this.checkAuth}>
+              <RenderPageWrapper>
+                <LoginModal show={modal} closeModal={closeModal} />
+                <Header authenticated={authenticated} userInfo={userInfo} />
+                <Wrapper>
+                  <Page {...props} {...state} />
+                </Wrapper>
+                <Footer />
+              </RenderPageWrapper>
+            </AuthCheckContext.Provider>
+          </OptionsContext.Provider>
         )
       } catch (ex) {
         logException(ex)
@@ -155,20 +158,32 @@ function renderPage(Page) {
       return pageProps
     }
 
+    const data = {
+      headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
+    }
+
     const fetchSettings = async () => {
       try {
-        const resp = await doApiRequest('/settings/?format=json', {
-          headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
-        })
+        const resp = await doApiRequest('/settings/?format=json', data)
         return resp
       } catch (e) {
         return { ok: false, json: () => null }
       }
     }
 
-    const [res, pageProps] = await Promise.all([
+    const fetchOptions = async () => {
+      try {
+        const resp = await doApiRequest('/options/?format=json', data)
+        return await resp.json()
+      } catch (e) {
+        return {}
+      }
+    }
+
+    const [res, pageProps, options] = await Promise.all([
       fetchSettings(),
       originalPageProps(),
+      fetchOptions(),
     ])
 
     const auth = { authenticated: false, userInfo: undefined }
@@ -176,7 +191,7 @@ function renderPage(Page) {
       auth.userInfo = await res.json()
       auth.authenticated = true
     }
-    return { ...pageProps, ...auth }
+    return { ...pageProps, ...auth, options }
   }
 
   return RenderPage
