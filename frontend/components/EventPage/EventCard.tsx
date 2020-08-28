@@ -63,7 +63,7 @@ const EventCard = (props: {
         </Card>
       </EventCardContainer>
       <Modal show={modalVisible} closeModal={hideModal} width="45%">
-        <EventModal {...props} />
+        <EventModal event={event} isHappening={isHappening} />
       </Modal>
     </>
   )
