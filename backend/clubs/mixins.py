@@ -123,9 +123,11 @@ class XLSXFormatterMixin(object):
         """
         if isinstance(value, dict):
             if len(value) == 1:
-                return next(value.values())
+                return self._many_to_many_individual_formatter(next(value.values()))
             elif len(value) > 1:
-                return next(v for k, v in value.items() if not k == "id")
+                return self._many_to_many_individual_formatter(
+                    next(v for k, v in value.items() if not k == "id")
+                )
         return str(value)
 
     def _many_to_many_formatter(self, value):
