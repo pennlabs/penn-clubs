@@ -45,7 +45,7 @@ const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
   const withRankings = events.map((event) => {
     let rank = Math.random()
     if (event.image_url) {
-      rank += 1
+      rank += 2
     }
     if (
       event.description &&
@@ -57,9 +57,24 @@ const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
     if (event.url) {
       rank += 3
     }
-    return { event, rank }
+    return {
+      event,
+      rank,
+      startDate: new Date(event.start_time),
+      endDate: new Date(event.end_time),
+    }
   })
-  return withRankings.sort((a, b) => b.rank - a.rank).map((a) => a.event)
+  return withRankings
+    .sort((a, b) => {
+      if (a.startDate < b.startDate) {
+        return -1
+      }
+      if (b.startDate < a.startDate) {
+        return 1
+      }
+      return b.rank - a.rank
+    })
+    .map((a) => a.event)
 }
 
 function EventPage({

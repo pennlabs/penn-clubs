@@ -48,8 +48,8 @@ export interface ClubEvent {
   club: string
   club_name: string
   description: string
-  start_time: number
-  end_time: number
+  start_time: string
+  end_time: string
   image_url: string | null
   location: string | null
   url: string | null
