@@ -20,6 +20,8 @@ export function stripTags(val: string): string {
 
 export function useSetting(key: string): string | boolean | null {
   switch (key) {
+    case 'CLUB_REGISTRATION':
+      return true
     case 'FAIR_OPEN':
       return false
     case 'FAIR_REGISTRATION_OPEN':
