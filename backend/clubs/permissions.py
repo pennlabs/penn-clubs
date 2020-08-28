@@ -29,6 +29,10 @@ class ClubPermission(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
 
+        # admins can delete
+        if request.user.has_perm("clubs.delete_club") and view.action in {"destroy"}:
+            return True
+
         # club approvers can update the club
         if view.action in ["update", "partial_update"] and request.user.has_perm(
             "clubs.approve_club"
