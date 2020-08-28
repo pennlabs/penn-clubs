@@ -940,7 +940,7 @@ class ClubTestCase(TestCase):
         tag1 = Tag.objects.create(name="Wharton")
         tag2 = Tag.objects.create(name="Engineering")
 
-        badge1 = Badge.objects.create(label="SAC Funded")
+        badge1 = Badge.objects.create(label="SAC Funded", purpose="org")
         school1 = School.objects.create(name="Engineering")
 
         self.client.login(username=self.user5.username, password="test")

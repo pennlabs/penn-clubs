@@ -57,9 +57,11 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class BadgeSerializer(serializers.ModelSerializer):
+    purpose = serializers.CharField(read_only=True)
+
     class Meta:
         model = Badge
-        fields = ("id", "label", "color", "description")
+        fields = ("id", "purpose", "label", "color", "description")
 
 
 class SchoolSerializer(serializers.ModelSerializer):

@@ -19,12 +19,10 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
 
   events.forEach((item) => {
     const startTimestamp = new Date(item.start_time).getTime()
-    const categorySplit = (
+    const category =
       item.badges
-        .map(({ label }) => label)
-        .find((badge) => badge.startsWith('SAC Fair - ')) ?? 'Miscellaneous'
-    ).split('-')
-    const category = categorySplit[categorySplit.length - 1]
+        .filter(({ purpose }) => purpose === 'fair')
+        .map(({ label }) => label)[0] ?? 'Miscellaneous'
 
     if (!(startTimestamp in eventsByDay)) {
       eventsByDay[startTimestamp] = {}

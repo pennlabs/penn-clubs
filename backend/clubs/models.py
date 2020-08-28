@@ -671,6 +671,7 @@ class Tag(models.Model):
 
 class Badge(models.Model):
     label = models.CharField(max_length=255)
+    purpose = models.CharField(max_length=255)
     description = models.TextField(blank=True)
 
     # The color of the badge to be displayed on the frontend.

@@ -74,17 +74,17 @@ class Command(BaseCommand):
         event_badges = set([e[1] for e in events])
         badge_map = {}
         for badge in event_badges:
-            label = f"SAC Fair - {badge}"
             (badge_obj, stat,) = Badge.objects.get_or_create(
-                label=label,
+                label=badge,
                 defaults={
-                    "description": f"This is a badge for the {label} category for the SAC Fair.",
+                    "description": f"This is a badge for the {badge} category for the SAC Fair.",
                     "color": "0099FF",
                     "org": None,
+                    "purpose": "fair",
                 },
             )
             badge_map[badge] = badge_obj
-            self.stdout.write(f"{'Created' if stat else 'Retrieved'} {label} badge.")
+            self.stdout.write(f"{'Created' if stat else 'Retrieved'} {badge} badge.")
 
         eastern_tz = pytz.timezone("America/New_York")
         year = timezone.now().year

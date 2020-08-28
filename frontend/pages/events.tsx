@@ -227,9 +227,7 @@ function EventPage({
   )
 }
 
-EventPage.getInitialProps = async (
-  ctx: NextPageContext,
-): Promise<EventPageProps> => {
+EventPage.getInitialProps = async (ctx: NextPageContext) => {
   const { req } = ctx
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
@@ -243,11 +241,7 @@ EventPage.getInitialProps = async (
     doApiRequest('/tags/?format=json', data).then((resp) => resp.json()),
     doApiRequest('/badges/?format=json', data)
       .then((resp) => resp.json())
-      .then((resp) =>
-        resp
-          .filter(({ label }) => label.includes('SAC Fair - '))
-          .map((obj) => ({ ...obj, label: obj.label.split('-')[1].trim() })),
-      ),
+      .then((resp) => resp.filter(({ purpose }) => purpose === 'fair')),
   ])
 
   return { liveEvents, upcomingEvents, tags, badges }
