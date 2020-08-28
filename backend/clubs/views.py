@@ -283,9 +283,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             fields = {f"club__{k}": v for k, v in fields.items()}
 
         if queryset.model == Event:
-            fields.update({
-                "type": parse_int
-            })
+            fields.update({"type": parse_int})
 
         query = {}
 
@@ -789,7 +787,11 @@ class EventViewSet(viewsets.ModelViewSet):
         if self.action in ["list"]:
             qs = qs.filter(end_time__gte=now)
 
-        return qs.select_related("club", "creator",).order_by("start_time")
+        return (
+            qs.select_related("club", "creator",)
+            .prefetch_related("club__badges")
+            .order_by("start_time")
+        )
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):

@@ -228,7 +228,7 @@ class EventSerializer(serializers.ModelSerializer):
         queryset=Club.objects.all(), required=False, slug_field="code"
     )
     club_name = serializers.SerializerMethodField()
-    badges = BadgeSerializer(source="club__badges", many=True, read_only=True)
+    badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
     image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField("get_image_url")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
