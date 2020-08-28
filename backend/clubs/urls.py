@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework_nested import routers
 
 from clubs.views import (
