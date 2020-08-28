@@ -80,6 +80,7 @@ export interface Badge {
   id: number
   label: string
   color: string
+  purpose: string
   description: string
 }
 

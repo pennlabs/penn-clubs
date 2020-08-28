@@ -1,4 +1,4 @@
-import { ReactElement } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import { CLUBS_BLUE } from '../../constants/colors'
@@ -35,39 +35,45 @@ const AuthPrompt = ({
   title = 'One last step...',
   children,
   hasLogin = true,
-}: AuthPromptProps): ReactElement => (
-  <PhoneContainer>
-    <Center>
-      <TitleHeader>
-        <Image src="/static/img/peoplelogo.png" />
-        <Title>{title}</Title>
-      </TitleHeader>
-      <Margin>
-        <Text>
-          {children ||
-            'To make the most of Penn Clubs features, like bookmarking and subscribing to clubs, please login using your PennKey.'}
-        </Text>
-      </Margin>
-      {hasLogin && (
-        <>
-          <Margin>
-            <a
-              href={`${LOGIN_URL}?next=${
-                typeof window !== 'undefined' ? getCurrentRelativePath() : '/'
-              }`}
-              className="button is-large is-link"
-              style={{ backgroundColor: CLUBS_BLUE }}
-            >
-              <Icon alt="login" name="key" /> Continue to login
-            </a>
-          </Margin>
-          <SmallText>
-            <i>(We're sorry, we hate two-step too.)</i>
-          </SmallText>
-        </>
-      )}
-    </Center>
-  </PhoneContainer>
-)
+}: AuthPromptProps): ReactElement => {
+  const [nextLink, setNextLink] = useState<string>('/')
+
+  useEffect(() => {
+    setNextLink(getCurrentRelativePath())
+  }, [])
+
+  return (
+    <PhoneContainer>
+      <Center>
+        <TitleHeader>
+          <Image src="/static/img/peoplelogo.png" />
+          <Title>{title}</Title>
+        </TitleHeader>
+        <Margin>
+          <Text>
+            {children ||
+              'To make the most of Penn Clubs features, like bookmarking and subscribing to clubs, please login using your PennKey.'}
+          </Text>
+        </Margin>
+        {hasLogin && (
+          <>
+            <Margin>
+              <a
+                href={`${LOGIN_URL}?next=${nextLink}`}
+                className="button is-large is-link"
+                style={{ backgroundColor: CLUBS_BLUE }}
+              >
+                <Icon alt="login" name="key" /> Continue to login
+              </a>
+            </Margin>
+            <SmallText>
+              <i>(We're sorry, we hate two-step too.)</i>
+            </SmallText>
+          </>
+        )}
+      </Center>
+    </PhoneContainer>
+  )
+}
 
 export default AuthPrompt

@@ -4,6 +4,7 @@ import { ReactElement, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 
 import { Metadata, Title, WideContainer } from '../components/common'
+import AuthPrompt from '../components/common/AuthPrompt'
 import EventCard from '../components/EventPage/EventCard'
 import SearchBar, {
   getInitialSearch,
@@ -14,8 +15,10 @@ import { CLUBS_GREY, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, Tag } from '../types'
 import { doApiRequest } from '../utils'
+import { ListLoadIndicator } from '.'
 
 interface EventPageProps {
+  authenticated: boolean | null
   liveEvents: ClubEvent[]
   upcomingEvents: ClubEvent[]
   tags: Tag[]
@@ -71,6 +74,7 @@ const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
 }
 
 function EventPage({
+  authenticated,
   upcomingEvents: initialUpcomingEvents,
   liveEvents: initialLiveEvents,
   tags,
@@ -87,6 +91,7 @@ function EventPage({
     getInitialSearch(),
   )
   const currentSearch = useRef<SearchInput>(getInitialSearch())
+  const [isLoading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
     if (equal(searchInput, currentSearch.current)) {
@@ -152,25 +157,33 @@ function EventPage({
       params.set('club__accepting_members', 'true')
     }
 
-    doApiRequest(`/events/live/?${params.toString()}`)
-      .then((resp) => resp.json())
-      .then((resp) => {
-        if (isCurrent) {
-          setLiveEvents(randomizeEvents(resp))
-        }
-      })
-    doApiRequest(`/events/upcoming/?${params.toString()}`)
-      .then((resp) => resp.json())
-      .then((resp) => {
-        if (isCurrent) {
-          setUpcomingEvents(randomizeEvents(resp))
-        }
-      })
+    setLoading(true)
+
+    Promise.all([
+      doApiRequest(`/events/live/?${params.toString()}`)
+        .then((resp) => resp.json())
+        .then((resp) => {
+          if (isCurrent) {
+            setLiveEvents(randomizeEvents(resp))
+          }
+        }),
+      doApiRequest(`/events/upcoming/?${params.toString()}`)
+        .then((resp) => resp.json())
+        .then((resp) => {
+          if (isCurrent) {
+            setUpcomingEvents(randomizeEvents(resp))
+          }
+        }),
+    ]).then(() => setLoading(false))
 
     return () => {
       isCurrent = false
     }
   }, [searchInput])
+
+  if (!authenticated) {
+    return <AuthPrompt />
+  }
 
   return (
     <>
@@ -191,6 +204,7 @@ function EventPage({
             >
               Live Events
             </Title>
+            {isLoading && <ListLoadIndicator />}
             <CardList>
               {liveEvents.map((e) => (
                 <EventCard key={e.id} event={e} isHappening={true} />
@@ -200,6 +214,7 @@ function EventPage({
             <Title className="title" style={{ color: CLUBS_GREY }}>
               Upcoming Events
             </Title>
+            {isLoading && <ListLoadIndicator />}
             <CardList>
               {upcomingEvents.map((e) => (
                 <EventCard key={e.id} event={e} isHappening={false} />
@@ -212,9 +227,7 @@ function EventPage({
   )
 }
 
-EventPage.getInitialProps = async (
-  ctx: NextPageContext,
-): Promise<EventPageProps> => {
+EventPage.getInitialProps = async (ctx: NextPageContext) => {
   const { req } = ctx
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
@@ -228,11 +241,7 @@ EventPage.getInitialProps = async (
     doApiRequest('/tags/?format=json', data).then((resp) => resp.json()),
     doApiRequest('/badges/?format=json', data)
       .then((resp) => resp.json())
-      .then((resp) =>
-        resp
-          .filter(({ label }) => label.includes('SAC Fair - '))
-          .map((obj) => ({ ...obj, label: obj.label.split('-')[1].trim() })),
-      ),
+      .then((resp) => resp.filter(({ purpose }) => purpose === 'fair')),
   ])
 
   return { liveEvents, upcomingEvents, tags, badges }
