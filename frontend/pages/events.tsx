@@ -4,6 +4,7 @@ import { ReactElement, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 
 import { Metadata, Title, WideContainer } from '../components/common'
+import AuthPrompt from '../components/common/AuthPrompt'
 import EventCard from '../components/EventPage/EventCard'
 import SearchBar, {
   getInitialSearch,
@@ -17,6 +18,7 @@ import { doApiRequest } from '../utils'
 import { ListLoadIndicator } from '.'
 
 interface EventPageProps {
+  authenticated: boolean | null
   liveEvents: ClubEvent[]
   upcomingEvents: ClubEvent[]
   tags: Tag[]
@@ -72,6 +74,7 @@ const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
 }
 
 function EventPage({
+  authenticated,
   upcomingEvents: initialUpcomingEvents,
   liveEvents: initialLiveEvents,
   tags,
@@ -177,6 +180,10 @@ function EventPage({
       isCurrent = false
     }
   }, [searchInput])
+
+  if (!authenticated) {
+    return <AuthPrompt />
+  }
 
   return (
     <>
