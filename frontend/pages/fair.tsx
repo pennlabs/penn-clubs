@@ -18,10 +18,20 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
 
   events.forEach((item) => {
     const startTimestamp = new Date(item.start_time).getTime()
+    const categorySplit = (
+      item.badges
+        .map(({ label }) => label)
+        .find((badge) => badge.startsWith('SAC Fair - ')) ?? 'Miscellaneous'
+    ).split('-')
+    const category = categorySplit[categorySplit.length - 1]
+
     if (!(startTimestamp in eventsByDay)) {
-      eventsByDay[startTimestamp] = []
+      eventsByDay[startTimestamp] = {}
     }
-    eventsByDay[startTimestamp].push(item)
+    if (!(category in eventsByDay[startTimestamp])) {
+      eventsByDay[startTimestamp][category] = []
+    }
+    eventsByDay[startTimestamp][category].push(item)
   })
 
   return (
@@ -35,8 +45,7 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
           days. The event will be held virtually over Zoom.
         </p>
         <p>
-          You can find the schedule for the activities fair below. Click on the
-          button below to view current events.
+          You can find the schedule for the activities fair in the table below.
         </p>
         <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
           <a className="button is-primary">
@@ -44,30 +53,49 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
           </a>
         </Link>
         <div className="columns mt-3">
-          {Object.entries(eventsByDay).map(
-            ([day, events]: [string, ClubEvent[]]): ReactElement => {
-              const parsedDate = moment(parseInt(day))
-              const endDate = moment(events[0].end_time)
-              return (
-                <div key={day} className="column">
-                  <b>
-                    {parsedDate.format('LLL')} - {endDate.format('LT')}
-                  </b>
-                  <ul>
-                    {events
-                      .sort((a, b) => a.club_name.localeCompare(b.club_name))
-                      .map((event) => (
-                        <li key={event.club}>
-                          <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
-                            <a>{event.club_name}</a>
-                          </Link>
-                        </li>
+          {Object.entries(eventsByDay)
+            .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+            .map(
+              ([day, events]: [
+                string,
+                { [category: string]: ClubEvent[] },
+              ]): ReactElement => {
+                const parsedDate = moment(parseInt(day))
+                const endDate = moment(Object.values(events)[0][0].end_time)
+                return (
+                  <div key={day} className="column">
+                    <div className="mb-3">
+                      <b className="has-text-info">
+                        {parsedDate.format('LLL')} - {endDate.format('LT')}
+                      </b>
+                    </div>
+                    {Object.entries(events)
+                      .sort((a, b) => a[0].localeCompare(b[0]))
+                      .map(([category, list]) => (
+                        <>
+                          <b>{category}</b>
+                          <ul className="mt-0 mb-3">
+                            {list
+                              .sort((a, b) =>
+                                a.club_name.localeCompare(b.club_name),
+                              )
+                              .map((event) => (
+                                <li key={event.club}>
+                                  <Link
+                                    href={CLUB_ROUTE()}
+                                    as={CLUB_ROUTE(event.club)}
+                                  >
+                                    <a>{event.club_name}</a>
+                                  </Link>
+                                </li>
+                              ))}
+                          </ul>
+                        </>
                       ))}
-                  </ul>
-                </div>
-              )
-            },
-          )}
+                  </div>
+                )
+              },
+            )}
         </div>
       </div>
     </Container>
