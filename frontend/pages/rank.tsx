@@ -5,6 +5,7 @@ import {
   Contact,
   Container,
   Icon,
+  InfoPageTitle,
   Metadata,
   StrongText,
   Text,
@@ -91,9 +92,7 @@ const RankList = ({ items }: RankListProps): ReactElement => {
 const Rank = (): ReactElement => (
   <Container background={SNOW}>
     <Metadata title="Club Ordering" />
-    <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
-      Club Recommendation Algorithm
-    </Title>
+    <InfoPageTitle>Club Recommendation Algorithm</InfoPageTitle>
     <StrongText>How are clubs ordered?</StrongText>
     <Text>
       The order that clubs appear on the home page for the default ordering

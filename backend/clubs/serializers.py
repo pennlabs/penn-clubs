@@ -228,6 +228,7 @@ class EventSerializer(serializers.ModelSerializer):
         queryset=Club.objects.all(), required=False, slug_field="code"
     )
     club_name = serializers.SerializerMethodField()
+    badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
     image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField("get_image_url")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
@@ -265,19 +266,20 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = (
-            "id",
-            "club_name",
-            "name",
+            "badges",
             "club",
+            "club_name",
             "creator",
-            "start_time",
-            "end_time",
-            "location",
-            "url",
-            "type",
-            "image_url",
             "description",
+            "end_time",
+            "id",
             "image",
+            "image_url",
+            "location",
+            "name",
+            "start_time",
+            "type",
+            "url",
         )
 
 
@@ -950,13 +952,18 @@ class SubscribeSerializer(serializers.ModelSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     name = serializers.SerializerMethodField("get_full_name")
     username = serializers.CharField(source="person.username", read_only=True)
-    email = serializers.EmailField(source="person.email", read_only=True)
+    email = serializers.SerializerMethodField("get_email")
 
     school = SchoolSerializer(many=True, source="person.profile.school", read_only=True)
     major = MajorSerializer(many=True, source="person.profile.major", read_only=True)
     graduation_year = serializers.IntegerField(
         source="person.profile.graduation_year", read_only=True
     )
+
+    def get_email(self, obj):
+        if obj.person.email:
+            return obj.person.email
+        return f"{obj.person.username}@upenn.edu"
 
     def get_full_name(self, obj):
         return obj.person.get_full_name()
