@@ -131,7 +131,7 @@ const Search = ({
   }
   return (
     <Select
-      instanceId="club-search"
+      instanceId={`club-search-${name}`}
       isMulti
       cacheOptions
       styles={styles}

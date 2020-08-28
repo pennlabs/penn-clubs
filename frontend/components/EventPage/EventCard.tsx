@@ -35,7 +35,14 @@ const EventCard = (props: {
   isHappening: boolean
 }): ReactElement => {
   const { event, isHappening } = props
-  const { image_url, club_name, start_time, end_time, name, url } = event
+  const {
+    image_url: imageUrl,
+    club_name: clubName,
+    start_time,
+    end_time,
+    name,
+    url,
+  } = event
   const [modalVisible, setModalVisible] = useState(false)
 
   const showModal = () => setModalVisible(true)
@@ -47,24 +54,26 @@ const EventCard = (props: {
         <Card bordered hoverable background={WHITE} onClick={showModal}>
           <LazyLoad offset={800}>
             <CoverPhoto
-              image={image_url}
+              image={imageUrl}
               fallback={
                 <p>
-                  <b>{club_name.toLocaleUpperCase()}</b>
+                  <b>{clubName.toLocaleUpperCase()}</b>
                 </p>
               }
             />
           </LazyLoad>
           <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
           {isHappening && <HappeningNow />}
-          <ClubName>{club_name}</ClubName>
+          <ClubName>{clubName}</ClubName>
           <EventName>{name}</EventName>
           {url && <EventLink href={url}>{clipLink(url)}</EventLink>}
         </Card>
       </EventCardContainer>
-      <Modal show={modalVisible} closeModal={hideModal} width="45%">
-        <EventModal {...props} />
-      </Modal>
+      {modalVisible && (
+        <Modal show={modalVisible} closeModal={hideModal} width="45%">
+          <EventModal {...props} />
+        </Modal>
+      )}
     </>
   )
 }

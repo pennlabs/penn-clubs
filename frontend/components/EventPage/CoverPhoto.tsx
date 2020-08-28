@@ -25,12 +25,11 @@ const Placeholder = styled.div`
     margin: -1.5rem 0 0 0;
   }
 `
-const CoverPhotoImage = styled.div<{ image: string | null }>`
+const CoverPhotoImage = styled.div`
   border-radius: ${CARD_BORDER_RADIUS} ${CARD_BORDER_RADIUS} 0 0;
   color: ${WHITE};
   height: 0;
   padding-bottom: ${SIXTEEN_BY_NINE};
-  background-image: url(${(props) => props.image});
   background-size: cover;
   background-position: center;
   ${Card} & {
@@ -49,7 +48,7 @@ interface CoverPhotoProps {
 
 const CoverPhoto = ({ image, fallback }: CoverPhotoProps): ReactElement =>
   image ? (
-    <CoverPhotoImage image={image} />
+    <CoverPhotoImage style={{ backgroundImage: `url(${image})` }} />
   ) : (
     <Placeholder> {fallback}</Placeholder>
   )

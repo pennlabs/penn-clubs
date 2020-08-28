@@ -1,8 +1,6 @@
-import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { WHITE, WHITE_ALPHA } from '../../constants/colors'
-import { Icon } from './Icon'
 
 interface TransparentButtonProps {
   backgroundColor?: string
