@@ -37,6 +37,7 @@ from clubs.models import (
     Asset,
     Badge,
     Club,
+    ClubVisit,
     Event,
     Favorite,
     Major,
@@ -73,6 +74,7 @@ from clubs.serializers import (
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
+    ClubVisitSerializer,
     EventSerializer,
     EventWriteSerializer,
     FavoriteSerializer,
@@ -1031,6 +1033,20 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             return UserSubscribeWriteSerializer
         return UserSubscribeSerializer
+
+
+class ClubVisitOwnerViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of users who have visited the club sorted by visit time.
+    """
+
+    serializer_class = ClubVisitSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["get", "post", "delete"]
+    lookup_field = "person__username"
+
+    def get_queryset(self):
+        return ClubVisit.objects.filter(club__code=self.kwargs["club_code"]).order_by('-created_at')
 
 
 class MembershipRequestViewSet(viewsets.ModelViewSet):

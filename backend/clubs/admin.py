@@ -16,6 +16,7 @@ from clubs.models import (
     Asset,
     Badge,
     Club,
+    ClubVisit,
     Event,
     Favorite,
     Major,
@@ -353,6 +354,7 @@ admin.site.unregister(Group)
 admin.site.register(Asset)
 admin.site.register(Advisor, AdvisorAdmin)
 admin.site.register(Club, ClubAdmin)
+admin.site.register(ClubVisit)
 admin.site.register(Badge, BadgeAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
