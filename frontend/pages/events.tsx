@@ -14,6 +14,7 @@ import { CLUBS_GREY, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, Tag } from '../types'
 import { doApiRequest } from '../utils'
+import { ListLoadIndicator } from '.'
 
 interface EventPageProps {
   liveEvents: ClubEvent[]
@@ -87,6 +88,7 @@ function EventPage({
     getInitialSearch(),
   )
   const currentSearch = useRef<SearchInput>(getInitialSearch())
+  const [isLoading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
     if (equal(searchInput, currentSearch.current)) {
@@ -152,20 +154,24 @@ function EventPage({
       params.set('club__accepting_members', 'true')
     }
 
-    doApiRequest(`/events/live/?${params.toString()}`)
-      .then((resp) => resp.json())
-      .then((resp) => {
-        if (isCurrent) {
-          setLiveEvents(randomizeEvents(resp))
-        }
-      })
-    doApiRequest(`/events/upcoming/?${params.toString()}`)
-      .then((resp) => resp.json())
-      .then((resp) => {
-        if (isCurrent) {
-          setUpcomingEvents(randomizeEvents(resp))
-        }
-      })
+    setLoading(true)
+
+    Promise.all([
+      doApiRequest(`/events/live/?${params.toString()}`)
+        .then((resp) => resp.json())
+        .then((resp) => {
+          if (isCurrent) {
+            setLiveEvents(randomizeEvents(resp))
+          }
+        }),
+      doApiRequest(`/events/upcoming/?${params.toString()}`)
+        .then((resp) => resp.json())
+        .then((resp) => {
+          if (isCurrent) {
+            setUpcomingEvents(randomizeEvents(resp))
+          }
+        }),
+    ]).then(() => setLoading(false))
 
     return () => {
       isCurrent = false
@@ -191,6 +197,7 @@ function EventPage({
             >
               Live Events
             </Title>
+            {isLoading && <ListLoadIndicator />}
             <CardList>
               {liveEvents.map((e) => (
                 <EventCard key={e.id} event={e} isHappening={true} />
@@ -200,6 +207,7 @@ function EventPage({
             <Title className="title" style={{ color: CLUBS_GREY }}>
               Upcoming Events
             </Title>
+            {isLoading && <ListLoadIndicator />}
             <CardList>
               {upcomingEvents.map((e) => (
                 <EventCard key={e.id} event={e} isHappening={false} />

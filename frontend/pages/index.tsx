@@ -63,6 +63,14 @@ type SplashProps = {
   liveEventCount: number
 }
 
+export const ListLoadIndicator = (): ReactElement => {
+  return (
+    <progress className="progress is-small" max={100}>
+      Loading...
+    </progress>
+  )
+}
+
 const Splash = (props: SplashProps): ReactElement => {
   const fairIsOpen = useSetting('FAIR_OPEN')
   const renewalBanner = useSetting('CLUB_REGISTRATION')
@@ -241,11 +249,7 @@ const Splash = (props: SplashProps): ReactElement => {
             )}
             {renewalBanner && <ListRenewalDialog />}
 
-            {isLoading && (
-              <progress className="progress is-small" max={100}>
-                Loading...
-              </progress>
-            )}
+            {isLoading && <ListLoadIndicator />}
 
             <PaginatedClubDisplay
               displayClubs={clubs}
