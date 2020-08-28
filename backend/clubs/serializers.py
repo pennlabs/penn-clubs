@@ -228,6 +228,7 @@ class EventSerializer(serializers.ModelSerializer):
         queryset=Club.objects.all(), required=False, slug_field="code"
     )
     club_name = serializers.SerializerMethodField()
+    badges = BadgeSerializer(source="club__badges", many=True, read_only=True)
     image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField("get_image_url")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
@@ -265,19 +266,20 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = (
-            "id",
-            "club_name",
-            "name",
+            "badges",
             "club",
+            "club_name",
             "creator",
-            "start_time",
-            "end_time",
-            "location",
-            "url",
-            "type",
-            "image_url",
             "description",
+            "end_time",
+            "id",
             "image",
+            "image_url",
+            "location",
+            "name",
+            "start_time",
+            "type",
+            "url",
         )
 
 

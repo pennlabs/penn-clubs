@@ -33,6 +33,11 @@ export const Title = s.h1.attrs((props) => ({
   font-weight: bold;
 `
 
+export const InfoPageTitle = s(Title)`
+  padding-top: 2.5vw;
+  padding-bottom: 2rem;
+`
+
 export const Empty = s(Text)`
   color: ${MEDIUM_GRAY};
 `

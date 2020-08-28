@@ -5,6 +5,7 @@ import s from 'styled-components'
 import {
   Contact,
   Container,
+  InfoPageTitle,
   Line,
   Metadata,
   StrongText,
@@ -39,9 +40,7 @@ const UnorderedList = s.ul`
 const FAQ = () => (
   <Container background={SNOW}>
     <Metadata title="FAQ" />
-    <Title style={{ paddingTop: '2.5vw', paddingBottom: '2rem' }}>
-      Frequently Asked Questions
-    </Title>
+    <InfoPageTitle>Frequently Asked Questions</InfoPageTitle>
     <p>
       <Question title="What is Penn Clubs?">
         Penn Clubs is meant to be your central source of information about

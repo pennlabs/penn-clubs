@@ -282,6 +282,11 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
         if not queryset.model == Club:
             fields = {f"club__{k}": v for k, v in fields.items()}
 
+        if queryset.model == Event:
+            fields.update({
+                "type": parse_int
+            })
+
         query = {}
 
         for param, value in params.items():
