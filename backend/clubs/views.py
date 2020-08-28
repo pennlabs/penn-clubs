@@ -75,6 +75,7 @@ from clubs.serializers import (
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
+    ClubVisitSerializer,
     EventSerializer,
     EventWriteSerializer,
     FavoriteSerializer,

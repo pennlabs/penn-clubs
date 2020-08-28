@@ -61,7 +61,6 @@ clubs_router.register(r"questions", QuestionAnswerViewSet, basename="club-questi
 clubs_router.register(
     r"membershiprequests", MembershipRequestOwnerViewSet, basename="club-membership-requests"
 )
-clubs_router.register(r"analytics", ClubVisitOwnerViewSet, basename="club-analytics")
 
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="users-detail"),
