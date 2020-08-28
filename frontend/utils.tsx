@@ -1,5 +1,5 @@
 import fetch from 'isomorphic-unfetch'
-import { ReactElement } from 'react'
+import { createContext, ReactElement, useContext } from 'react'
 
 import { MembershipRank } from './types'
 
@@ -18,16 +18,18 @@ export function stripTags(val: string): string {
     .trim()
 }
 
-export function useSetting(key: string): string | boolean | null {
-  switch (key) {
-    case 'CLUB_REGISTRATION':
-      return true
-    case 'FAIR_OPEN':
-      return false
-    case 'FAIR_REGISTRATION_OPEN':
-      return false
+export const OptionsContext = createContext({})
+
+export function useSetting(key: string): string | number | boolean | null {
+  const options = useContext(OptionsContext)
+  const value = options[key] ?? null
+  if (value === 'true') {
+    return true
   }
-  return null
+  if (value === 'false') {
+    return false
+  }
+  return value
 }
 
 export function getCurrentRelativePath(): string {

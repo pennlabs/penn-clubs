@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "simple_history",
     "accounts.apps.AccountsConfig",
     "clubs.apps.ClubsConfig",
+    "options.apps.OptionsConfig",
     "channels",
 ]
 
