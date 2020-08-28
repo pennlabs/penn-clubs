@@ -50,7 +50,7 @@ const EventCard = (props: {
 
   return (
     <>
-      <EventCardContainer>
+      <EventCardContainer className="event">
         <Card bordered hoverable background={WHITE} onClick={showModal}>
           <LazyLoad offset={800}>
             <CoverPhoto
