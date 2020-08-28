@@ -591,6 +591,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
 
+    def perform_destroy(self, instance):
+        """
+        Manually delete uploaded asset instances because of PostgreSQL integrity rules.
+        """
+        for asset in instance.asset_set.all():
+            asset.delete()
+        instance.delete()
+
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
         """
