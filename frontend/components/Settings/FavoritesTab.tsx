@@ -23,7 +23,7 @@ export default ({ keyword }: FavoritesTabProps): ReactElement => {
       .then((values) => setFavorites(values.map((relation) => relation.club)))
   }, [])
 
-  if (favorites === null) {
+  if (favorites == null) {
     return <Loading />
   }
 
