@@ -24,7 +24,7 @@ import {
 } from '../constants/colors'
 import { PaginatedClubPage, renderListPage } from '../renderPage'
 import { Badge, Tag, UserInfo } from '../types'
-import { doApiRequest } from '../utils'
+import { doApiRequest, useSetting } from '../utils'
 
 const colorMap = {
   Tags: CLUBS_BLUE,
@@ -64,6 +64,7 @@ type SplashProps = {
 }
 
 const Splash = (props: SplashProps): ReactElement => {
+  const fairIsOpen = useSetting('FAIR_OPEN')
   const currentSearch = useRef<SearchInput>(getInitialSearch())
 
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
@@ -234,7 +235,7 @@ const Splash = (props: SplashProps): ReactElement => {
                 </ClearAllLink>
               </div>
             )}
-            {props.liveEventCount > 0 && (
+            {fairIsOpen && (
               <LiveEventsDialog liveEventCount={props.liveEventCount} />
             )}
             <ListRenewalDialog />

@@ -7,13 +7,14 @@ import { Container, Icon, InfoPageTitle, Metadata } from '../components/common'
 import { CLUB_ROUTE, LIVE_EVENTS, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { ClubEvent, ClubEventType } from '../types'
-import { doApiRequest } from '../utils'
+import { doApiRequest, useSetting } from '../utils'
 
 type FairPageProps = {
   events: ClubEvent[]
 }
 
 const FairPage = ({ events }: FairPageProps): ReactElement => {
+  const isFairOpen = useSetting('FAIR_OPEN')
   const eventsByDay = {}
 
   events.forEach((item) => {
@@ -47,11 +48,13 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
         <p>
           You can find the schedule for the activities fair in the table below.
         </p>
-        <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
-          <a className="button is-primary">
-            <Icon name="chevrons-right" /> Go to events
-          </a>
-        </Link>
+        {isFairOpen && (
+          <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
+            <a className="button is-primary">
+              <Icon name="chevrons-right" /> Go to events
+            </a>
+          </Link>
+        )}
         <div className="columns mt-3">
           {Object.entries(eventsByDay)
             .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))

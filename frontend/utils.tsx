@@ -22,6 +22,8 @@ export function useSetting(key: string): string | boolean | null {
   switch (key) {
     case 'FAIR_OPEN':
       return false
+    case 'FAIR_REGISTRATION_OPEN':
+      return false
   }
   return null
 }

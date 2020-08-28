@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ReactElement } from 'react'
 import s from 'styled-components'
 
-import { LIVE_EVENTS, M2, M4 } from '../../constants'
+import { FAIR_INFO_ROUTE, LIVE_EVENTS, M2, M4 } from '../../constants'
 
 const LiveBanner = s.div`
   padding: 20px;
@@ -35,6 +35,7 @@ const WhiteButton = s.div`
   float: right;
   cursor: pointer;
   margin-top: 10px;
+  margin-left: 15px;
 `
 
 interface LiveEventsDialogProps {
@@ -48,13 +49,22 @@ const LiveEventsDialog = ({
     <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
       <WhiteButton>See Live Events</WhiteButton>
     </Link>
-    <LiveTitle>Virtual Activity Fair</LiveTitle>
+    <Link href={FAIR_INFO_ROUTE} as={FAIR_INFO_ROUTE}>
+      <WhiteButton>Fair Information</WhiteButton>
+    </Link>
+    <LiveTitle>SAC Virtual Activities Fair</LiveTitle>
     <LiveSub>
-      {liveEventCount}{' '}
-      {liveEventCount === 1
-        ? 'club is holding an event'
-        : 'clubs are holding events'}{' '}
-      right now.
+      {liveEventCount === 0 ? (
+        'The fair is starting soon!'
+      ) : (
+        <>
+          {liveEventCount}{' '}
+          {liveEventCount === 1
+            ? 'club is holding an event'
+            : 'clubs are holding events'}{' '}
+          right now.
+        </>
+      )}
     </LiveSub>
   </LiveBanner>
 )
