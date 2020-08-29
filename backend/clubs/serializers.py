@@ -614,7 +614,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     target_majors = MajorSerializer(many=True, required=False)
     target_years = YearSerializer(many=True, required=False)
 
-    subtitle = serializers.CharField()
+    subtitle = serializers.CharField(required=False, allow_blank=True)
 
     is_ghost = serializers.SerializerMethodField("get_is_ghost")
 
