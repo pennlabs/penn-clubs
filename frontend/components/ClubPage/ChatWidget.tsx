@@ -17,7 +17,12 @@ const ChatWidget = ({ code }: Props): ReactElement => {
     ws.current = new WebSocket(wsUrl)
     ws.current.onmessage = (e) => {
       const data = JSON.parse(e.data)
-      setMessages((msg) => [...msg, <div key={msg.length}>{data.message}</div>])
+      setMessages((msg) => [
+        ...msg,
+        <div key={msg.length}>
+          <b>{data.full_name}:</b> {data.message}
+        </div>,
+      ])
     }
     ws.current.onopen = () => {
       setInputEnabled(true)
