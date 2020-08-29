@@ -36,6 +36,7 @@ uploads/
 
 # Virtualenv
 backend/.venv
+backend/.env
 
 # Cypress
 frontend/cypress/videos

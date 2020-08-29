@@ -11,6 +11,7 @@ from clubs.views import (
     LastEmailInviteTestAPIView,
     MajorViewSet,
     MassInviteAPIView,
+    MeetingZoomAPIView,
     MemberInviteViewSet,
     MembershipRequestOwnerViewSet,
     MembershipRequestViewSet,
@@ -25,6 +26,7 @@ from clubs.views import (
     TestimonialViewSet,
     UserPermissionAPIView,
     UserUpdateAPIView,
+    UserZoomAPIView,
     YearViewSet,
     email_preview,
 )
@@ -59,10 +61,13 @@ clubs_router.register(
 
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="users-detail"),
+    path(r"settings/zoom/", UserZoomAPIView.as_view(), name="users-zoom"),
+    path(r"settings/zoom/meetings", MeetingZoomAPIView.as_view(), name="users-zoom-meeting"),
     path(r"settings/permissions/", UserPermissionAPIView.as_view(), name="users-permission"),
     path(r"clubs/<slug:club_code>/invite/", MassInviteAPIView.as_view(), name="club-invite"),
     path(r"emailpreview/", email_preview, name="email-preview"),
     path(r"options/", include("options.urls", namespace="options")),
+    path(r"social/", include("social_django.urls", namespace="social")),
 ]
 
 # Only add the following endpoint if Django is in development/testing
