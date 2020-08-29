@@ -1249,9 +1249,15 @@ class UserZoomAPIView(APIView):
                 else:
                     cache.delete(key)
 
-        response = zoom_api_call(
-            request.user, "GET", "https://api.zoom.us/v2/users/{uid}/settings",
-        )
+        try:
+            response = zoom_api_call(
+                request.user, "GET", "https://api.zoom.us/v2/users/{uid}/settings",
+            )
+        except ValueError:
+            raise DRFValidationError(
+                "An error occured while fetching user information. "
+                "Try reconnecting your account."
+            )
 
         settings = response.json()
         res = {"success": settings.get("code") is None, "settings": settings}
