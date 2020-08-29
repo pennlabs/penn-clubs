@@ -39,11 +39,14 @@ AWS_ACCESS_SECRET_ID = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_QUERYSTRING_AUTH = False
 
+# Redis settings
+REDIS_HOST = os.getenv("REDIS_HOST")
+
 # Django Channels settings
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [("localhost", 6379)]},
+        "CONFIG": {"hosts": [(REDIS_HOST, 6379)]},
     },
 }
 
@@ -51,7 +54,7 @@ CHANNEL_LAYERS = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis:6379/1",
+        "LOCATION": f"redis://{REDIS_HOST}:6379/1",
         "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
         "KEY_PREFIX": "django",
     }
