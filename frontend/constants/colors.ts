@@ -46,6 +46,8 @@ export const CLUBS_BLUE = '#4954f4'
 export const CLUBS_LIGHT_BLUE = '#e1e3ff'
 export const CLUBS_DEEP_BLUE = '#2c37d1'
 
+export const ZOOM_BLUE = '#2D8CFF'
+
 export const PROPIC_BACKGROUND = [
   '#D0F0FD',
   '#C2F5E9',

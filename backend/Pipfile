@@ -40,6 +40,7 @@ channels = "*"
 whitenoise = "*"
 django-runtime-options = "*"
 social-auth-app-django = "*"
+django-redis = "*"
 
 [requires]
 python_version = "3"

@@ -5,6 +5,7 @@ import re
 import qrcode
 import requests
 from django.conf import settings
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
@@ -22,6 +23,7 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from social_django.utils import load_strategy
 
 from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
 from clubs.mixins import XLSXFormatterMixin
@@ -732,6 +734,24 @@ class EventViewSet(viewsets.ModelViewSet):
         return upload_endpoint_helper(request, Event, "image", pk=event.pk)
 
     @action(detail=False, methods=["get"])
+    def owned(self, request, *args, **kwargs):
+        """
+        Return all events that the user has officer permissions over.
+        """
+        if not request.user.is_authenticated:
+            return Response([])
+
+        now = timezone.now()
+
+        events = self.filter_queryset(self.get_queryset()).filter(
+            club__membership__person=request.user,
+            club__membership__role__lte=Membership.ROLE_OFFICER,
+            start_time__gte=now,
+        )
+
+        return Response(EventSerializer(events, many=True).data)
+
+    @action(detail=False, methods=["get"])
     def live(self, request, *args, **kwargs):
         """
         Get all events happening now.
@@ -1154,6 +1174,53 @@ class UserPermissionAPIView(APIView):
         )
 
 
+def zoom_api_call(user, verb, url, *args, **kwargs):
+    """
+    Perform an API call to Zoom with various checks.
+    """
+    if not settings.SOCIAL_AUTH_ZOOM_OAUTH2_KEY:
+        raise DRFValidationError("Server is not configured with Zoom OAuth2 credentials.")
+
+    if not user.is_authenticated:
+        raise DRFValidationError("You are not authenticated.")
+
+    social = user.social_auth.filter(provider="zoom-oauth2").first()
+    if social is None:
+        raise DRFValidationError("You have not linked your Zoom account yet.")
+
+    out = requests.request(
+        verb,
+        url.format(uid=social.uid),
+        *args,
+        headers={"Authorization": f"Bearer {social.get_access_token(load_strategy())}"},
+        **kwargs,
+    )
+
+    if not out.status_code == 204:
+        return out
+
+    try:
+        data = out.json()
+        if data.get("code") == 124 and "retry" not in kwargs:
+            social.refresh_token(load_strategy())
+            kwargs["retry"] = True
+            return zoom_api_call(user, verb, url, *args, **kwargs)
+    except json.decoder.JSONDecodeError as e:
+        raise ValueError(f"{out.status_code} error parsing zoom api response: {out.content}") from e
+
+    return out
+
+
+class MeetingZoomAPIView(APIView):
+    """
+    get: Return a list of upcoming Zoom meetings for a user.
+    """
+
+    def get(self, request):
+        response = zoom_api_call(request.user, "GET", "https://api.zoom.us/v2/users/{uid}/meetings")
+        return Response({"success": True, "meetings": response.json()})
+
+
 class UserZoomAPIView(APIView):
     """
     get: Return information about the Zoom account associated with the logged in user.
@@ -1162,59 +1229,44 @@ class UserZoomAPIView(APIView):
     """
 
     def get(self, request):
-        if not settings.SOCIAL_AUTH_ZOOM_OAUTH2_KEY:
-            return Response(
-                {
-                    "success": False,
-                    "detail": "Server is not configured with Zoom OAuth2 credentials.",
-                }
-            )
+        if request.user.is_authenticated:
+            key = f"zoom:user:{request.user.username}"
+            res = cache.get(key)
+            if res is not None and "code" not in res.get("settings", {}):
+                return Response(res)
 
-        if not request.user.is_authenticated:
-            return Response({"success": False, "detail": "You are not authenticated."})
-
-        social = request.user.social_auth.filter(provider="zoom-oauth2").first()
-        if social is None:
-            return Response({"success": False, "detail": "You do not have a linked Zoom account."})
-        response = requests.get(
-            f"https://api.zoom.us/v2/users/{social.uid}/settings",
-            headers={"Authorization": f"Bearer {social.extra_data['access_token']}"},
+        response = zoom_api_call(
+            request.user, "GET", "https://api.zoom.us/v2/users/{uid}/settings",
         )
 
-        return Response({"success": True, "settings": response.json()})
+        res = {"success": True, "settings": response.json()}
+
+        cache.set(key, res, 900)
+        return Response(res)
 
     def post(self, request):
-        if not settings.SOCIAL_AUTH_ZOOM_OAUTH2_KEY:
-            return Response(
-                {
-                    "success": False,
-                    "detail": "Server is not configured with Zoom OAuth2 credentials.",
-                }
-            )
+        if request.user.is_authenticated:
+            key = f"zoom:user:{request.user.username}"
+            cache.delete(key)
 
-        if not request.user.is_authenticated:
-            return Response({"success": False, "detail": "You are not authenticated."})
-
-        social = request.user.social_auth.filter(provider="zoom-oauth2").first()
-        if social is None:
-            return Response({"success": False, "detail": "You do not have a linked Zoom account."})
-        response = requests.patch(
-            f"https://api.zoom.us/v2/users/{social.uid}/settings",
+        response = zoom_api_call(
+            request.user,
+            "PATCH",
+            "https://api.zoom.us/v2/users/{uid}/settings",
             json={
                 "in_meeting": {
                     "breakout_room": True,
                     "waiting_room": False,
                     "co_host": True,
-                    "closed_caption": True,
                     "screen_sharing": True,
                 }
             },
-            headers={"Authorization": f"Bearer {social.extra_data['access_token']}"},
         )
+
         return Response(
             {
                 "success": response.ok,
-                "detail": "User Settings update sent to Zoom."
+                "detail": "Your user settings have been updated on Zoom."
                 if response.ok
                 else "Failed to update Zoom user settings.",
             }
