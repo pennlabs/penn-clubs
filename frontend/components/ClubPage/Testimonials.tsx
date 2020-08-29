@@ -65,7 +65,7 @@ const Testimonials = (props: TestimonialsProps): ReactElement | null => {
   }
 
   return (
-    <>
+    <div className="is-clearfix">
       <StrongText>Member Experiences</StrongText>
       {expanded ? (
         data.map(({ text }, i) => (
@@ -92,7 +92,7 @@ const Testimonials = (props: TestimonialsProps): ReactElement | null => {
           />
         </Toggle>
       )}
-    </>
+    </div>
   )
 }
 

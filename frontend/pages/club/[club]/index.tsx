@@ -8,6 +8,7 @@ import {
   DesktopActions,
   MobileActions,
 } from '../../../components/ClubPage/Actions'
+import ChatWidget from '../../../components/ClubPage/ChatWidget'
 import ClubApprovalDialog from '../../../components/ClubPage/ClubApprovalDialog'
 import Description from '../../../components/ClubPage/Description'
 import Events from '../../../components/ClubPage/Events'
@@ -199,6 +200,7 @@ const ClubPage = ({
           )}
           <Events data={events} />
           <Testimonials data={testimonials} />
+          {userInfo && userInfo.is_superuser && <ChatWidget code={club.code} />}
         </div>
       </div>
     </WideContainer>

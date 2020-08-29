@@ -7,6 +7,7 @@ const devProxy = {
   '/api': {
     target: 'http://localhost:8000',
     changeOrigin: true,
+    ws: true,
   },
 }
 
@@ -30,7 +31,8 @@ app
     if (dev && devProxy) {
       const proxyMiddleware = require('http-proxy-middleware')
       Object.keys(devProxy).forEach(function (context) {
-        server.use(proxyMiddleware(context, devProxy[context]))
+        const proxy = proxyMiddleware(context, devProxy[context])
+        server.use(proxy)
       })
     }
 
