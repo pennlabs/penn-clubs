@@ -1196,17 +1196,28 @@ def zoom_api_call(user, verb, url, *args, **kwargs):
         **kwargs,
     )
 
-    if not out.status_code == 204:
+    if out.status_code == 204:
         return out
 
     try:
         data = out.json()
-        if data.get("code") == 124 and "retry" not in kwargs:
-            social.refresh_token(load_strategy())
-            kwargs["retry"] = True
-            return zoom_api_call(user, verb, url, *args, **kwargs)
     except json.decoder.JSONDecodeError as e:
         raise ValueError(f"{out.status_code} error parsing zoom api response: {out.content}") from e
+
+    if data.get("code"):
+        if "retry" not in kwargs:
+            try:
+                social.refresh_token(load_strategy())
+            except requests.exceptions.HTTPError as e:
+                raise ValueError(
+                    f"Zoom API token renew {e.response.status_code}: {e.response.content}"
+                ) from e
+            kwargs["retry"] = True
+            return zoom_api_call(user, verb, url, *args, **kwargs)
+        else:
+            raise ValueError(
+                f"Zoom API returned response code {data.get('code')}: {data.get('message')}"
+            )
 
     return out
 
@@ -1232,16 +1243,21 @@ class UserZoomAPIView(APIView):
         if request.user.is_authenticated:
             key = f"zoom:user:{request.user.username}"
             res = cache.get(key)
-            if res is not None and "code" not in res.get("settings", {}):
-                return Response(res)
+            if res is not None:
+                if res.get("success") is True:
+                    return Response(res)
+                else:
+                    cache.delete(key)
 
         response = zoom_api_call(
             request.user, "GET", "https://api.zoom.us/v2/users/{uid}/settings",
         )
 
-        res = {"success": True, "settings": response.json()}
+        settings = response.json()
+        res = {"success": settings.get("code") is None, "settings": settings}
 
-        cache.set(key, res, 900)
+        if res["success"]:
+            cache.set(key, res, 900)
         return Response(res)
 
     def post(self, request):

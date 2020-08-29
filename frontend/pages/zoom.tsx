@@ -118,10 +118,19 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
             <Icon name="video" /> Login to Zoom
           </a>
         ) : (
-          <p className="has-text-info">
-            <b>Success!</b> You are logged into Zoom and your account is
-            connected to Penn Clubs.
-          </p>
+          <>
+            <p className="has-text-info">
+              <b>Success!</b> You are logged into Zoom and your account is
+              connected to Penn Clubs.
+            </p>
+            <a
+              className="button is-info is-small"
+              style={{ backgroundColor: ZOOM_BLUE }}
+              href={`/api/social/login/zoom-oauth2/?next=${nextUrl}`}
+            >
+              <Icon name="video" /> Reconnect
+            </a>
+          </>
         )}
         <h3>2. Configure Your User Account Settings</h3>
         <p>
