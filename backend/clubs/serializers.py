@@ -604,7 +604,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
     badges = BadgeSerializer(many=True, required=False)
     testimonials = TestimonialSerializer(many=True, read_only=True)
-    events = EventSerializer(many=True, read_only=True)
+    events = serializers.SerializerMethodField("get_events")
     is_request = serializers.SerializerMethodField("get_is_request")
     fair = serializers.BooleanField(default=False)
     approved_comment = serializers.CharField(required=False, allow_blank=True)
@@ -617,6 +617,12 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     subtitle = serializers.CharField(required=False, allow_blank=True)
 
     is_ghost = serializers.SerializerMethodField("get_is_ghost")
+
+    def get_events(self, obj):
+        now = timezone.now()
+        return EventSerializer(
+            obj.events.filter(start_time__gte=now).order_by("start_time"), many=True, read_only=True
+        ).data
 
     def get_is_ghost(self, obj):
         if obj.ghost:
