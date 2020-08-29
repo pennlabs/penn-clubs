@@ -36,8 +36,16 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
   return (
     <Container background={SNOW}>
       <Metadata title="Virtual Activities Fair" />
-      <InfoPageTitle>SAC Virtual Activities Fair</InfoPageTitle>
+      <InfoPageTitle>SAC Virtual Activities Fair – User Guide</InfoPageTitle>
       <div className="content">
+        <p>
+          <b>Hi there! Welcome to Penn Clubs!</b> We are the official platform
+          for student organizations on campus, and we are excited to get you
+          connected to clubs on our platform this year. In collaboration with
+          SAC, we will be hosting the virtual club fair this fall. Below is some
+          important information that will set you up for a successful
+          experience.
+        </p>
         <p>
           <b>How the SAC Fair will be run:</b>
         </p>
