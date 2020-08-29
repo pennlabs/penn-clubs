@@ -39,6 +39,7 @@ django-simple-history = "*"
 channels = "*"
 whitenoise = "*"
 django-runtime-options = "*"
+social-auth-app-django = "*"
 
 [requires]
 python_version = "3"

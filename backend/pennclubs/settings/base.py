@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "clubs.apps.ClubsConfig",
     "options.apps.OptionsConfig",
     "channels",
+    "social_django",
 ]
 
 MIDDLEWARE = [
@@ -107,6 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Authentication Backends
 
 AUTHENTICATION_BACKENDS = (
+    "clubs.backends.ZoomOAuth2",
     "accounts.backends.LabsUserBackend",
     "django.contrib.auth.backends.ModelBackend",
 )
@@ -186,3 +188,24 @@ SIMPLE_HISTORY_FILEFIELD_TO_CHARFIELD = True
 # Django Channels settings
 
 ASGI_APPLICATION = "pennclubs.routing.application"
+
+
+# Social Auth settings
+SOCIAL_AUTH_PIPELINE = (
+    "social_core.pipeline.social_auth.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+)
+
+SOCIAL_AUTH_ZOOM_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_ZOOM_OAUTH2_KEY")
+SOCIAL_AUTH_ZOOM_OAUTH2_SECRET = os.environ.get("SOCIAL_AUTH_ZOOM_OAUTH2_SECRET")
+SOCIAL_AUTH_ZOOM_OAUTH2_SCOPE = [
+    "user:read",
+    "user:write",
+    "meeting:read",
+    "meeting:write",
+]
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/"

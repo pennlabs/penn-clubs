@@ -3,6 +3,7 @@ import os
 import re
 
 import qrcode
+import requests
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
@@ -1150,6 +1151,73 @@ class UserPermissionAPIView(APIView):
 
         return Response(
             {"permissions": list(request.user.user_permissions.values_list("codename", flat=True))}
+        )
+
+
+class UserZoomAPIView(APIView):
+    """
+    get: Return information about the Zoom account associated with the logged in user.
+
+    post: Update the Zoom account settings to be the recommended Penn Clubs settings.
+    """
+
+    def get(self, request):
+        if not settings.SOCIAL_AUTH_ZOOM_OAUTH2_KEY:
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Server is not configured with Zoom OAuth2 credentials.",
+                }
+            )
+
+        if not request.user.is_authenticated:
+            return Response({"success": False, "detail": "You are not authenticated."})
+
+        social = request.user.social_auth.filter(provider="zoom-oauth2").first()
+        if social is None:
+            return Response({"success": False, "detail": "You do not have a linked Zoom account."})
+        response = requests.get(
+            f"https://api.zoom.us/v2/users/{social.uid}/settings",
+            headers={"Authorization": f"Bearer {social.extra_data['access_token']}"},
+        )
+
+        return Response({"success": True, "settings": response.json()})
+
+    def post(self, request):
+        if not settings.SOCIAL_AUTH_ZOOM_OAUTH2_KEY:
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Server is not configured with Zoom OAuth2 credentials.",
+                }
+            )
+
+        if not request.user.is_authenticated:
+            return Response({"success": False, "detail": "You are not authenticated."})
+
+        social = request.user.social_auth.filter(provider="zoom-oauth2").first()
+        if social is None:
+            return Response({"success": False, "detail": "You do not have a linked Zoom account."})
+        response = requests.patch(
+            f"https://api.zoom.us/v2/users/{social.uid}/settings",
+            json={
+                "in_meeting": {
+                    "breakout_room": True,
+                    "waiting_room": False,
+                    "co_host": True,
+                    "closed_caption": True,
+                    "screen_sharing": True,
+                }
+            },
+            headers={"Authorization": f"Bearer {social.extra_data['access_token']}"},
+        )
+        return Response(
+            {
+                "success": response.ok,
+                "detail": "User Settings update sent to Zoom."
+                if response.ok
+                else "Failed to update Zoom user settings.",
+            }
         )
 
 
