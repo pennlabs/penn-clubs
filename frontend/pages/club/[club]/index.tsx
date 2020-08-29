@@ -200,7 +200,7 @@ const ClubPage = ({
           )}
           <Events data={events} />
           <Testimonials data={testimonials} />
-          <ChatWidget code={club.code} />
+          {userInfo && userInfo.is_superuser && <ChatWidget code={club.code} />}
         </div>
       </div>
     </WideContainer>
