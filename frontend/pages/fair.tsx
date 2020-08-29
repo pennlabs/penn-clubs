@@ -101,12 +101,14 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
           <li>
             Please be respectful in attending information sessions. If the
             session is busy with many attendees, allow each other to take turns
-            asking questions.
+            asking questions. Where appropriate, use the 'raise hand' feature to
+            reduce interruptions.
           </li>
           <li>
             Please use appropriate language in the chat windows on Zoom. There
-            will be officers from OSA and Penn Clubs patrolling sessions
-            ensuring that students are not abusing any features.
+            will be peer to peer monitoring, ensuring that student participants
+            and club members are not misusing any features during these
+            sessions.
           </li>
         </ul>
         <p>
