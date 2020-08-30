@@ -18,7 +18,7 @@ There will be an existing event with your designated date & time titled "SAC Fai
 
 ![Edit SAC Fair Event](3.png)
 
-Edit the club details: you MUST provide a Zoom link (preferably from your school Zoom account, see details below for why) where prospective students can navigate to for your info session. Here, you can also:
+Edit the club details: you **MUST provide a Zoom link** (preferably from your school Zoom account, see details below for best practices for setting up your scheduled Zoom meeting) where prospective students can navigate to for your info session. Here, you can also:
 - Add a description
 - Add a cover photo (16:9 dimensions, preferably 1920 x 1080)
 
@@ -32,26 +32,29 @@ Note that this date is **fixed**. Trying to change the date and time will result
 
 **And that's it!** Your club's event will show up in the portal during the live, virtual SAC Fair on the day you are assigned.
 
-## 📷 Zoom Best Practices
+## 📸 Zoom Best Practices: Automated
 
-To get all possible features on Zoom, please use the school's licensed Zoom accounts. You should have received an email from your home school about obtaining login credentials for this. To login to Zoom, you want to select "Sign in with SSO" instead of entering an email and password. The company domain that you should use for the next step is **upenn**. After choosing the company domain, you will be redirected to the PennKey login page.
+To get all possible features on Zoom, please use the school's licensed Zoom accounts. To help get set-up, we encourage you to use our automated system [here](/zoom), which is a quick, three-click process that will make sure your settings for meetings are configured correctly for the SAC Fair. To configure your settings manually, follow the steps below.
+
+## 📷 Zoom Best Practices: Manual
+
+You should have received an email from your home school about obtaining login credentials for your Zoom account. To login to Zoom, you want to select "Sign in with SSO" instead of entering an email and password. The company domain that you should use for the next step is **upenn**. After choosing the company domain, you will be redirected to the PennKey login page.
 
 ![Zoom Login](zoom1.png)
 
-Schedule a new meeting, using the given **date and time** as outlined in the e-mail given to you by SAC. You can also see your time slot [here](/fair). Use the following settings:
+Enable breakout rooms for your meetings. See [this guide](https://support.zoom.us/hc/en-us/articles/206476093-Enabling-breakout-rooms) on how to set up breakout rooms. Then, schedule a new meeting, using the given **date and time** as outlined in the e-mail given to you by SAC. You can also see your time slot [here](/fair). Use the following settings:
 
 - A required meeting password
 - Under Advanced Options:
-    - Waiting room **disabled**
-    - **Mute participants upon entry enabled**
-    - [**Only authenticated users can join enabled**](https://support.zoom.us/hc/en-us/articles/360037117472-Authentication-Profiles-for-meetings-and-webinars)
+    - Waiting room – **disabled**
+    - Mute participants upon entry - **enabled**
+    - [Only authenticated users can join](https://support.zoom.us/hc/en-us/articles/360037117472-Authentication-Profiles-for-meetings-and-webinars) - **enabled**
 
-When hosting your event:
+## 🎤 Hosting Your Zoom Event
 - If you use a personal account, the maximum number of people that can attend your meeting at once is **100 people**. If you use the school provided account, this limit increases to **300 people**. You can check the meeting limit for you account on the Zoom settings page.
 - Make all present members of the session **co-hosts** to help control the session.
 - Have the chat window **open** to answer any questions. For busier sessions, we recommend designating one member to be monitoring the chat window.
 - For busier sessions where multiple club members are present, we recommend taking advantage of the **breakout room** feature, which can be prompted by hosts. Breakout rooms can be used to facilitate 1 on 1 conversations with club members and fair attendees. We would suggest **manually assigning** people to a breakout room, to ensure a member of the club is there to answer questions.
-- <important>Ensure that you setup and test breakout rooms before the SAC fair starts! If you do not setup breakout rooms beforehand, you will not be able to use them during the meeting.</important> We recommend getting familiar with breakout rooms before the fair starts. See [this guide](https://support.zoom.us/hc/en-us/articles/206476093-Enabling-breakout-rooms) on how to set up breakout rooms.
 
     ![Zoom Breakout Rooms](5.png)
 
