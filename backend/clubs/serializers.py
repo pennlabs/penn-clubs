@@ -934,6 +934,22 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ("club", "person")
 
 
+class FavoriteTimeSerializer(serializers.ModelSerializer):
+    """
+    Used by users to get a list of clubs that they have favorited.
+    """
+
+    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    hour = serializers.SerializerMethodField("get_hour")
+
+    def get_hour(self, obj):
+        return obj.created_at.hour - 4
+
+    class Meta:
+        model = Favorite
+        fields = ("club", "created_at", "hour", "person")
+
 class FavoriteWriteSerializer(FavoriteSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
 
@@ -1046,12 +1062,61 @@ class SubscribeSerializer(serializers.ModelSerializer):
             "person",
             "school",
             "username",
+            "hour",
         )
         validators = [
             validators.UniqueTogetherValidator(
                 queryset=Subscribe.objects.all(), fields=["club", "person"]
             )
         ]
+
+
+class UserClubVisitSerializer(serializers.ModelSerializer):
+    """
+    Used by users to get a list of clubs that they have subscribed to.
+    """
+
+    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    club = ClubListSerializer(read_only=True)
+
+    class Meta:
+        model = ClubVisit
+        fields = ("club", "person")
+
+
+class UserClubVisitWriteSerializer(UserSubscribeSerializer):
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+
+    class Meta(UserClubVisitSerializer.Meta):
+        pass
+
+
+class ClubVisitSerializer(serializers.ModelSerializer):
+    """
+    Used by club owners/officers to see aggregate club visits.
+    """
+
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    school = SchoolSerializer(many=True, source="person.profile.school", read_only=True)
+    major = MajorSerializer(many=True, source="person.profile.major", read_only=True)
+    graduation_year = serializers.IntegerField(
+        source="person.profile.graduation_year", read_only=True
+    )
+    hour = serializers.SerializerMethodField("get_hour")
+
+    def get_hour(self, obj):
+        return obj.created_at.hour - 4
+
+    class Meta:
+        model = Subscribe
+        fields = (
+            "club",
+            "created_at",
+            "graduation_year",
+            "major",
+            "school",
+            "hour",
+        )
 
 
 class MembershipRequestSerializer(serializers.ModelSerializer):

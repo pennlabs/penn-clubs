@@ -78,6 +78,7 @@ from clubs.serializers import (
     EventSerializer,
     EventWriteSerializer,
     FavoriteSerializer,
+    FavoriteTimeSerializer,
     FavoriteWriteSerializer,
     MajorSerializer,
     MembershipInviteSerializer,
@@ -90,6 +91,8 @@ from clubs.serializers import (
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
+    UserClubVisitSerializer,
+    UserClubVisitWriteSerializer,
     UserMembershipRequestSerializer,
     UserMembershipSerializer,
     UserSerializer,
@@ -98,6 +101,7 @@ from clubs.serializers import (
     YearSerializer,
 )
 from clubs.utils import html_to_text
+import datetime
 
 
 def file_upload_endpoint_helper(request, code):
@@ -514,7 +518,40 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         including their names and emails.
         """
         club = self.get_object()
-        serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
+        if 'date' in request.query_params.keys():
+            date = datetime.datetime.strptime(request.query_params['date'], '%Y-%m-%d')
+            serializer = SubscribeSerializer(Subscribe.objects.filter(club=club, created_at__day=date.day), many=True)
+        else:
+            serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
+        
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def favorite(self, request, *args, **kwargs):
+        """
+        Return a list of all students that have favorited to the club.
+        """
+        club = self.get_object()
+        if 'date' in request.query_params.keys():
+            date = datetime.datetime.strptime(request.query_params['date'], '%Y-%m-%d')
+            serializer = FavoriteTimeSerializer(Favorite.objects.filter(club=club, created_at__day=date.day), many=True)
+        else:
+            serializer = FavoriteTimeSerializer(Favorite.objects.filter(club=club), many=True)
+        
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def club_visit(self, request, *args, **kwargs):
+        """
+        Return a list of all visits to a club page.
+        """
+        club = self.get_object()
+        if 'date' in request.query_params.keys():
+            date = datetime.datetime.strptime(request.query_params['date'], '%Y-%m-%d')
+            serializer = ClubVisitSerializer(ClubVisit.objects.filter(club=club, created_at__day=date.day), many=True)
+        else:
+            serializer = ClubVisitSerializer(ClubVisit.objects.filter(club=club), many=True)
+
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
@@ -1035,18 +1072,24 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         return UserSubscribeSerializer
 
 
-class ClubVisitOwnerViewSet(viewsets.ModelViewSet):
+class ClubVisitViewSet(viewsets.ModelViewSet):
     """
-    list: Return a list of users who have visited the club sorted by visit time.
+    list: Return a list of clubs that the logged in user has visited.
+
+    create: Visit a club.
     """
 
-    serializer_class = ClubVisitSerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = ["get", "post", "delete"]
-    lookup_field = "person__username"
+    lookup_field = "club__code"
+    http_method_names = ["get", "post"]
 
     def get_queryset(self):
-        return ClubVisit.objects.filter(club__code=self.kwargs["club_code"]).order_by('-created_at')
+        return ClubVisit.objects.filter(person=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return UserClubVisitWriteSerializer
+        return UserClubVisitSerializer
 
 
 class MembershipRequestViewSet(viewsets.ModelViewSet):

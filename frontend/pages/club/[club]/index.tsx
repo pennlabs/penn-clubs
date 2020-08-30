@@ -1,5 +1,5 @@
 import { NextPageContext } from 'next'
-import { ReactElement, useState } from 'react'
+import { ReactElement, useState, useEffect } from 'react'
 import Linkify from 'react-linkify'
 import s from 'styled-components'
 
@@ -90,6 +90,15 @@ const ClubPage = ({
     newClub.is_request = !newClub.is_request
     setClub(newClub)
   }
+
+  useEffect(() => {
+    doApiRequest('/clubvisits/?format=json', {
+      method: 'POST',
+      body: {
+        club: code,
+      },
+    })
+  })
 
   const { code } = club
   if (!code) {
