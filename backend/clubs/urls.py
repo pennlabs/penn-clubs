@@ -12,6 +12,7 @@ from clubs.views import (
     MajorViewSet,
     MassInviteAPIView,
     MeetingZoomAPIView,
+    MeetingZoomWebhookAPIView,
     MemberInviteViewSet,
     MembershipRequestOwnerViewSet,
     MembershipRequestViewSet,
@@ -68,6 +69,7 @@ urlpatterns = [
     path(r"emailpreview/", email_preview, name="email-preview"),
     path(r"options/", include("options.urls", namespace="options")),
     path(r"social/", include("social_django.urls", namespace="social")),
+    path(r"webhook/meeting/", MeetingZoomWebhookAPIView.as_view(), name="webhooks-meeting"),
 ]
 
 # Only add the following endpoint if Django is in development/testing

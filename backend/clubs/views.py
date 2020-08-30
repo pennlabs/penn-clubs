@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import os
 import re
 import secrets
@@ -1224,6 +1225,17 @@ def generate_zoom_password():
     """
     alphabet = string.ascii_letters + string.digits
     return "".join(secrets.choice(alphabet) for i in range(10))
+
+
+class MeetingZoomWebhookAPIView(APIView):
+    """
+    post: Trigger this webhook. Should be triggered when a Zoom event occurs.
+    Not available to the public, requires Zoom verification token.
+    """
+
+    def post(self, request):
+        logging.error(str(request.data))
+        return Response({"success": True})
 
 
 class MeetingZoomAPIView(APIView):
