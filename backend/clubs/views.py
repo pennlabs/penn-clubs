@@ -533,12 +533,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         including their names and emails.
         """
         club = self.get_object()
-        if 'date' in request.query_params.keys():
-            date = datetime.datetime.strptime(request.query_params['date'], '%Y-%m-%d')
-            serializer = SubscribeSerializer(Subscribe.objects.filter(club=club, created_at__day=date.day), many=True)
+        if "date" in request.query_params.keys():
+            date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
+            serializer = SubscribeSerializer(
+                Subscribe.objects.filter(club=club, created_at__day=date.day),
+                many=True)
         else:
             serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
-        
+
         return Response(serializer.data)
 
     @action(detail=True, methods=["get"])
@@ -547,12 +549,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a list of all students that have favorited to the club.
         """
         club = self.get_object()
-        if 'date' in request.query_params.keys():
-            date = datetime.datetime.strptime(request.query_params['date'], '%Y-%m-%d')
-            serializer = FavoriteTimeSerializer(Favorite.objects.filter(club=club, created_at__day=date.day), many=True)
+        if "date" in request.query_params.keys():
+            date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
+            serializer = FavoriteTimeSerializer(
+                Favorite.objects.filter(club=club, created_at__day=date.day),
+                many=True)
         else:
             serializer = FavoriteTimeSerializer(Favorite.objects.filter(club=club), many=True)
-        
+
         return Response(serializer.data)
 
     @action(detail=True, methods=["get"])
@@ -561,9 +565,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a list of all visits to a club page.
         """
         club = self.get_object()
-        if 'date' in request.query_params.keys():
-            date = datetime.datetime.strptime(request.query_params['date'], '%Y-%m-%d')
-            serializer = ClubVisitSerializer(ClubVisit.objects.filter(club=club, created_at__day=date.day), many=True)
+        if "date" in request.query_params.keys():
+            date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
+            serializer = ClubVisitSerializer(
+                ClubVisit.objects.filter(club=club, created_at__day=date.day),
+                many=True)
         else:
             serializer = ClubVisitSerializer(ClubVisit.objects.filter(club=club), many=True)
 
