@@ -70,9 +70,9 @@ type CheckListProps = {
 const CheckList = ({ items }: CheckListProps): ReactElement => {
   return (
     <ul>
-      {items.map(({ value, label, details }) => (
+      {items.map(({ value, label, details }, i) => (
         <li
-          key={label}
+          key={i}
           className={
             value
               ? 'has-text-success'
