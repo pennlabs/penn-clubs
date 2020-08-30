@@ -43,6 +43,7 @@ type ZoomMeeting = {
   timezone: string
   created_at: string
   join_url: string
+  extra_details: any
 }
 
 const SmallEvent = s.div`
@@ -126,7 +127,17 @@ const loadMeetings = async (
     data,
   )
     .then((resp) => resp.json())
-    .then((data) => (data.meetings ?? { meetings: [] }).meetings ?? [])
+    .then((data) => {
+      const meetings = (data.meetings ?? { meetings: [] }).meetings ?? []
+      if (data.extra_details) {
+        meetings.forEach((meeting) => {
+          if (meeting.id in data.extra_details) {
+            meeting.extra_details = data.extra_details[meeting.id]
+          }
+        })
+      }
+      return meetings
+    })
 }
 
 const loadEvents = (data?: any): Promise<ClubEvent[]> => {
@@ -333,9 +344,10 @@ const ZoomPage = ({
           the list.
         </p>
         <p>
-          If you have multiple clubs participating in the Zoom fair, have a
-          different officer create a Zoom meeting for each club. Zoom does not
-          allow you to have multiple meetings in the same time slot.
+          <b>If you have multiple clubs participating in the Zoom fair,</b> have
+          a different officer create a Zoom meeting for each club. Zoom does not
+          allow you to have or join multiple meetings in the same time slot with
+          one account.
         </p>
         <button
           className="button is-small"
@@ -466,6 +478,32 @@ const ZoomPage = ({
                                 'LLL',
                               )}`
                             : 'You must own the Zoom meeting to see this information about it.',
+                      },
+                      {
+                        value:
+                          matchingMeeting != null
+                            ? !matchingMeeting.extra_details?.settings
+                                ?.waiting_room
+                            : null,
+                        label: 'Meeting room disabled',
+                        details:
+                          'Having the meeting room disabled will make it easier for prospective members to join your meeting.',
+                      },
+                      {
+                        value:
+                          matchingMeeting?.extra_details?.settings
+                            ?.mute_upon_entry,
+                        label: 'Mute upon entry enabled',
+                        details:
+                          'You should mute newcomers by default to prevent any disruptions to your pitch.',
+                      },
+                      {
+                        value:
+                          matchingMeeting?.extra_details?.settings
+                            ?.meeting_authentication,
+                        label: 'Meeting authentication enabled',
+                        details:
+                          'You should enable meeting authentication so that only Penn students can join your meeting.',
                       },
                       {
                         value:

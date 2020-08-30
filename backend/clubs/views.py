@@ -1241,10 +1241,44 @@ class MeetingZoomAPIView(APIView):
                 if res is not None:
                     return Response(res)
 
-        data = zoom_api_call(request.user, "GET", "https://api.zoom.us/v2/users/{uid}/meetings")
-        response = {"success": data.ok, "meetings": data.json()}
+        try:
+            data = zoom_api_call(request.user, "GET", "https://api.zoom.us/v2/users/{uid}/meetings")
+        except requests.exceptions.HTTPError as e:
+            raise DRFValidationError(
+                "An error occured while fetching meetings for current user."
+            ) from e
+
+        # get meeting ids
+        body = data.json()
+        meetings = [meeting["id"] for meeting in body.get("meetings", [])]
+
+        # get user events
+        if request.user.is_authenticated:
+            events = Event.objects.filter(
+                club__membership__role__lte=Membership.ROLE_OFFICER,
+                club__membership__person=request.user,
+            )
+        else:
+            events = []
+
+        extra_details = {}
+        for event in events:
+            if event.url is not None and "zoom.us" in event.url:
+                match = re.search(r"(\d+)", urlparse(event.url).path)
+                if match is not None:
+                    zoom_id = int(match[1])
+                    if zoom_id in meetings:
+                        try:
+                            individual_data = zoom_api_call(
+                                request.user, "GET", f"https://api.zoom.us/v2/meetings/{zoom_id}"
+                            ).json()
+                            extra_details[individual_data["id"]] = individual_data
+                        except requests.exceptions.HTTPError:
+                            pass
+
+        response = {"success": data.ok, "meetings": body, "extra_details": extra_details}
         if response["success"]:
-            cache.set(key, response, 30)
+            cache.set(key, response, 120)
         return Response(response)
 
     def post(self, request):
@@ -1358,7 +1392,15 @@ class MeetingZoomAPIView(APIView):
                 request.user, "PATCH", f"https://api.zoom.us/v2/meetings/{zoom_id}", json=body
             )
 
-            return Response({"success": out.ok, "detail": "Your Zoom meeting has been updated."})
+            return Response(
+                {
+                    "success": out.ok,
+                    "detail": "Your Zoom meeting has been updated."
+                    if out.ok
+                    else "Your Zoom meeting has not been updated. "
+                    "Are you the owner of the meeting?",
+                }
+            )
 
 
 class UserZoomAPIView(APIView):
