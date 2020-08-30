@@ -199,6 +199,12 @@ const ZoomPage = ({
           page that appears when you click the login button below and enter{' '}
           <b>upenn</b> as the domain name.
         </p>
+        <p>
+          If you see a <b>You cannot authorize the app</b> message when clicking
+          the button below, you are not logged into a Penn Zoom account. Log out
+          of your current Zoom account and login to your Penn Zoom account to
+          continue the process.
+        </p>
         {!zoomSettings.success ? (
           <a
             className="button is-info"
