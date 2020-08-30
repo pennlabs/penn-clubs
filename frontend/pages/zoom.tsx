@@ -126,7 +126,7 @@ const loadMeetings = async (
     data,
   )
     .then((resp) => resp.json())
-    .then((data) => data.meetings.meetings ?? [])
+    .then((data) => (data.meetings ?? { meetings: [] }).meetings ?? [])
 }
 
 const loadEvents = (data?: any): Promise<ClubEvent[]> => {
