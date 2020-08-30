@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import json
 import logging
 import os
@@ -78,7 +79,6 @@ from clubs.serializers import (
     EventSerializer,
     EventWriteSerializer,
     FavoriteSerializer,
-    FavoriteTimeSerializer,
     FavoriteWriteSerializer,
     MajorSerializer,
     MembershipInviteSerializer,
@@ -101,7 +101,6 @@ from clubs.serializers import (
     YearSerializer,
 )
 from clubs.utils import html_to_text
-import itertools
 
 
 def file_upload_endpoint_helper(request, code):
