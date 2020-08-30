@@ -56,7 +56,7 @@ const MetaDataGrid = styled.div`
   grid-template-columns: 2fr 1fr;
 `
 
-export const MEETING_REGEX = /^https?:\/\/[\w-]+\.zoom\.us\//i
+export const MEETING_REGEX = /^https?:\/\/(?:[\w-]+\.)?zoom\.us\//i
 
 const EventModal = (props: {
   event: ClubEvent
