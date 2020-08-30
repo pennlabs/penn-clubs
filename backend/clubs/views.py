@@ -1240,16 +1240,19 @@ class UserZoomAPIView(APIView):
     """
 
     def get(self, request):
+        refresh = request.query_params.get("refresh", "false").lower() == "true"
+        no_cache = request.query_params.get("noCache", "false").lower() == "true"
+
         if request.user.is_authenticated:
             key = f"zoom:user:{request.user.username}"
             res = cache.get(key)
-            if (
-                res is not None
-                and not request.query_params.get("refresh", "false").lower() == "true"
-            ):
-                if res.get("success") is True:
-                    return Response(res)
-                else:
+            if res is not None:
+                if not refresh:
+                    if res.get("success") is True:
+                        return Response(res)
+                    else:
+                        cache.delete(key)
+                if no_cache:
                     cache.delete(key)
 
         try:

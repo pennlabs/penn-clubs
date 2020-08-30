@@ -72,8 +72,12 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
     setNextUrl(window.location.pathname)
   }, [])
 
-  const loadSettings = async (refresh: boolean) => {
-    await doApiRequest(`/settings/zoom/?format=json&refresh=${refresh}`)
+  const loadSettings = async (refresh: boolean, noCache?: boolean) => {
+    await doApiRequest(
+      `/settings/zoom/?format=json&refresh=${refresh}&noCache=${
+        noCache ?? false
+      }`,
+    )
       .then((resp) => resp.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -144,8 +148,8 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
                   doApiRequest(
                     `/social/disconnect/zoom-oauth2/?next=${nextUrl}`,
                     { method: 'POST' },
-                  ).then(() => {
-                    router.reload()
+                  ).finally(() => {
+                    loadSettings(true, true)
                   })
                 }}
               >
@@ -204,7 +208,7 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
         <div className="buttons">
           <button
             className="button is-success"
-            disabled={isLoading}
+            disabled={isLoading || !zoomSettings.success}
             onClick={() => {
               setLoading(true)
               doApiRequest('/settings/zoom/?format=json', { method: 'POST' })
@@ -224,7 +228,7 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
           </button>
           <button
             className="button"
-            disabled={isLoading}
+            disabled={isLoading || !zoomSettings.success}
             onClick={async () => {
               setLoading(true)
               await loadSettings(true)
