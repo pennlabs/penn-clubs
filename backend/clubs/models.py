@@ -438,7 +438,7 @@ class Subscribe(models.Model):
 
 class ClubVisit(models.Model):
     """
-    Used when people visit a club for analytics
+    Stores user visits to club pages to be used later in analytics
     """
 
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)

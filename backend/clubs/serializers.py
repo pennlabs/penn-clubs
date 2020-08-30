@@ -936,7 +936,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 class FavoriteTimeSerializer(serializers.ModelSerializer):
     """
-    Used by users to get a list of clubs that they have favorited.
+    Used by clubs to get a list of people who have favorited their club as
+    well as when those people have favorited (for analytics).
     """
 
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
@@ -1074,7 +1075,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
 class UserClubVisitSerializer(serializers.ModelSerializer):
     """
-    Used by users to get a list of clubs that they have subscribed to.
+    Used by users to get a list of clubs that they have visited.
     """
 
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
