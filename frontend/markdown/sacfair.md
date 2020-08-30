@@ -36,7 +36,9 @@ Finally, check that you have the best settings for your Zoom meeting with [this 
 
 ## 📸 Zoom Best Practices: Automated
 
-To get all possible features on Zoom, please use the school's licensed Zoom accounts. To help you get set up, we encourage you to use our automated system [here](/zoom), which is a quick, three-click process that will make sure your settings for meetings are configured correctly for the SAC Fair. To configure your settings manually, follow the steps below.
+To get all possible features on Zoom, please use the school's licensed Zoom accounts. To help you get set up, we encourage you to use our automated system [here](/zoom), which is a quick, three-step process that will make sure your settings for meetings are configured correctly for the SAC Fair. If you would like to configure your settings manually, follow the steps in the section below.
+
+<a href="/zoom" class="button is-success">Start Setup</a>
 
 ## 📷 Zoom Best Practices: Manual
 
@@ -51,6 +53,7 @@ Enable breakout rooms for your meetings. See [this guide](https://support.zoom.u
     - Waiting room – **disabled**
     - Mute participants upon entry - **enabled**
     - [Only authenticated users can join](https://support.zoom.us/hc/en-us/articles/360037117472-Authentication-Profiles-for-meetings-and-webinars) - **enabled**
+- <important>Ensure that you setup and test breakout rooms before the SAC fair starts! If you do not setup breakout rooms beforehand, you will not be able to use them during the meeting.</important> We recommend getting familiar with breakout rooms before the fair starts, as the behavior may not be what you expect. While using breakout rooms, ensure that you still have an officer in the main room in case anyone comes in.
 
 ## 🎤 Hosting Your Zoom Event
 - If you use a personal account, the maximum number of people that can attend your meeting at once is **100 people**. If you use the school provided account, this limit increases to **300 people**. You can check the meeting limit for you account on the Zoom settings page.
@@ -67,7 +70,7 @@ If you are planning to use a short pitch or short presentation to share with pro
 - Before recording, you must announce aloud at the start of the session that the presentation portion will be recorded for content purposes and allow students to decide if they wish to stay off-camera until the recording is complete. Once the record button is selected, all participants will receive a consent pop up message prompting them to stay in or leave the meeting during the recording.
 - No other virtual session portions should be recorded, including chats, Q & A, or other activities (i.e. icebreakers, etc.) that may occur during sessions.
 
-To do this, a host of the session can simply just hit the record button. To most easily link the file on your club page later, we recommend to click the "Record to the Cloud" option.
+To do this, a host of the session can simply just hit the record button. To easily link the file on your club page later, we recommend you click on the "Record to the Cloud" option.
 
 ![Zoom Recording](zoom2.png)
 
