@@ -2,7 +2,7 @@ import React, { ReactElement, useState } from 'react'
 import LazyLoad from 'react-lazy-load'
 import styled from 'styled-components'
 
-import { Modal } from '../../components/common'
+import { Icon, Modal } from '../../components/common'
 import { WHITE } from '../../constants/colors'
 import {
   mediaMaxWidth,
@@ -14,7 +14,7 @@ import { Card } from '../common/Card'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
-import EventModal from './EventModal'
+import EventModal, { MEETING_REGEX } from './EventModal'
 import HappeningNow from './HappeningNow'
 
 const EventCardContainer = styled.div`
@@ -28,7 +28,7 @@ const EventCardContainer = styled.div`
     margin: 1rem 0;
   }
 `
-const clipLink = (s: string) => (s.length > 40 ? `${s.slice(0, 37)}...` : s)
+const clipLink = (s: string) => (s.length > 32 ? `${s.slice(0, 35)}...` : s)
 
 const EventCard = (props: {
   event: ClubEvent
@@ -66,6 +66,7 @@ const EventCard = (props: {
           {isHappening && <HappeningNow />}
           <ClubName>{clubName}</ClubName>
           <EventName>{name}</EventName>
+          {url && MEETING_REGEX.test(url) && <Icon name="video" />}{' '}
           {url && <EventLink href={url}>{clipLink(url)}</EventLink>}
         </Card>
       </EventCardContainer>

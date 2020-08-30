@@ -56,6 +56,8 @@ const MetaDataGrid = styled.div`
   grid-template-columns: 2fr 1fr;
 `
 
+export const MEETING_REGEX = /^https?:\/\/[\w-]+\.zoom\.us\//i
+
 const EventModal = (props: {
   event: ClubEvent
   isHappening: boolean
@@ -88,7 +90,7 @@ const EventModal = (props: {
         <ClubName>{club_name}</ClubName>
         <EventName>{name}</EventName>
         {url &&
-          (url.startsWith('') ? (
+          (MEETING_REGEX.test(url) ? (
             <a
               className="button is-info is-small mt-3 mb-2"
               style={{ backgroundColor: ZOOM_BLUE }}
