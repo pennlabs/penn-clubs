@@ -101,6 +101,7 @@ from clubs.serializers import (
     YearSerializer,
 )
 from clubs.utils import html_to_text
+import itertools
 
 
 def file_upload_endpoint_helper(request, code):
@@ -178,6 +179,20 @@ def filter_note_permission(queryset, club, user):
     ) | queryset.filter(outside_club_permission__gte=subject_club_membership)
 
     return queryset
+
+
+def hour_to_string_helper(hour):
+    hour_string = ""
+    if hour == 0:
+        hour_string = "12am"
+    elif hour < 12:
+        hour_string = str(hour) + "am"
+    elif hour == 12:
+        hour_string = "12pm"
+    else:
+        hour_string = str(hour - 12) + "pm"
+
+    return hour_string
 
 
 class ReportViewSet(viewsets.ModelViewSet):
@@ -517,47 +532,60 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         including their names and emails.
         """
         club = self.get_object()
-        if "date" in request.query_params.keys():
-            date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
-            serializer = SubscribeSerializer(
-                Subscribe.objects.filter(club=club, created_at__day=date.day), many=True
-            )
-        else:
-            serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
-
+        serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["get"])
-    def favorite(self, request, *args, **kwargs):
+    def analytics(self, request, *args, **kwargs):
         """
-        Return a list of all students that have favorited to the club.
+        Returns a list of all analytics (club visits, favorites,
+        subscriptions) for a club.
         """
         club = self.get_object()
         if "date" in request.query_params.keys():
             date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
-            serializer = FavoriteTimeSerializer(
-                Favorite.objects.filter(club=club, created_at__day=date.day), many=True
-            )
         else:
-            serializer = FavoriteTimeSerializer(Favorite.objects.filter(club=club), many=True)
+            date = datetime.date.today()
 
-        return Response(serializer.data)
+        visits_data = []
+        favorites_data = []
+        subscriptions_data = []
+        max_value = 0
 
-    @action(detail=True, methods=["get"])
-    def club_visit(self, request, *args, **kwargs):
-        """
-        Return a list of all visits to a club page.
-        """
-        club = self.get_object()
-        if "date" in request.query_params.keys():
-            date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
-            serializer = ClubVisitSerializer(
-                ClubVisit.objects.filter(club=club, created_at__day=date.day), many=True
-            )
-        else:
-            serializer = ClubVisitSerializer(ClubVisit.objects.filter(club=club), many=True)
+        for hour in range(24):
+            visits_data.append({"x": hour_to_string_helper(hour), "y": 0})
+            favorites_data.append({"x": hour_to_string_helper(hour), "y": 0})
+            subscriptions_data.append({"x": hour_to_string_helper(hour), "y": 0})
 
-        return Response(serializer.data)
+        visits = ClubVisit.objects.filter(club=club, created_at__day=date.day)
+        grouped = itertools.groupby(visits, lambda row: row.created_at.hour)
+        for hour, visits in grouped:
+            visits_data[hour]["y"] = len(list(visits))
+            if visits_data[hour]["y"] > max_value:
+                max_value = visits_data[hour]["y"]
+
+        favorites = Favorite.objects.filter(club=club, created_at__day=date.day)
+        grouped = itertools.groupby(favorites, lambda row: row.created_at.hour)
+        for hour, favorites in grouped:
+            favorites_data[hour]["y"] = len(list(favorites))
+            if favorites_data[hour]["y"] > max_value:
+                max_value = favorites_data[hour]["y"]
+
+        subscriptions = Subscribe.objects.filter(club=club, created_at__day=date.day)
+        grouped = itertools.groupby(subscriptions, lambda row: row.created_at.hour)
+        for hour, subscriptions in grouped:
+            subscriptions_data[hour]["y"] = len(list(subscriptions))
+            if subscriptions_data[hour]["y"] > max_value:
+                max_value = subscriptions_data[hour]["y"]
+
+        analytics_dict = {
+            "visits": visits_data,
+            "favorites": favorites_data,
+            "subscriptions": subscriptions_data,
+            "max": max_value,
+        }
+
+        return HttpResponse(json.dumps(analytics_dict))
 
     @action(detail=False, methods=["get"])
     def directory(self, request, *args, **kwargs):

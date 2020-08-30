@@ -16,17 +16,12 @@ import s from 'styled-components'
 import { Club, MembershipRank, MembershipRole } from '../../types'
 import { doApiRequest } from '../../utils'
 import BaseCard from './BaseCard'
+import { Text } from '../common'
 
 type AnalyticsCardProps = {
   club: Club
 }
 
-const DatePickerHeader = s.span`
-  position: relative;
-  font-size: 1.2em;
-  top: 7px;
-  margin-right: 10px;
-`
 const PlotContainer = s.div`
   width: 100%;
   text-align: center;
@@ -39,63 +34,24 @@ export default function AnalyticsCard({
   const [favorites, setFavorites] = useState([])
   const [subscriptions, setSubscriptions] = useState([])
   const [date, setDate] = useState(new Date())
-
-  async function loadData(url) {
-    const request = await doApiRequest(url, {})
-
-    const hours = {}
-    const response = await request.json()
-
-    for (let i = 0; i < 24; i++) {
-      hours[i.toString()] = 0
-    }
-
-    for (let i = 0; i < response.length; i++) {
-      const hour = response[i].hour
-      if (hours[hour] === undefined) {
-        hours[hour] = 1
-      } else {
-        hours[hour]++
-      }
-    }
-
-    const data = []
-    for (const hour in hours) {
-      let label = ''
-      if (Number(hour) === 0) {
-        label = '12am'
-      } else if (Number(hour) < 12) {
-        label = hour + 'am'
-      } else if (Number(hour) === 12) {
-        label = '12pm'
-      } else {
-        label = String(Number(hour) % 12) + 'pm'
-      }
-
-      data.push({ x: label, y: hours[hour] })
-    }
-
-    return data
-  }
+  const [max, setMax] = useState(1)
 
   useEffect(() => {
-    loadData(
-      `/clubs/${club.code}/club_visit?format=json&date=${Moment(date).format(
+    doApiRequest(
+      `/clubs/${club.code}/analytics?format=json&date=${Moment(date).format(
         'YYYY-MM-DD',
       )}`,
-    ).then((data) => setVisits(data))
-
-    loadData(
-      `/clubs/${club.code}/favorite?format=json&date=${Moment(date).format(
-        'YYYY-MM-DD',
-      )}`,
-    ).then((data) => setFavorites(data))
-
-    loadData(
-      `/clubs/${club.code}/subscription?format=json&date=${Moment(date).format(
-        'YYYY-MM-DD',
-      )}`,
-    ).then((data) => setSubscriptions(data))
+      {},
+    )
+      .then((request) => request.json())
+      .then((response) => {
+        setVisits(response.visits)
+        setFavorites(response.favorites)
+        setSubscriptions(response.subscriptions)
+        if (response.max > 1) {
+          setMax(response.max)
+        }
+      })
   }, [date])
 
   const legendItems = [
@@ -128,7 +84,9 @@ export default function AnalyticsCard({
         />
       </Head>
       <BaseCard title="Analytics">
-        <DatePickerHeader>Date:</DatePickerHeader>
+        <Text>
+          Analyze the traffic that your club has recieved on a specific date.
+        </Text>
         <DatePicker
           className="input"
           format="MM'/'dd'/'y"
@@ -145,7 +103,7 @@ export default function AnalyticsCard({
           orientation="vertical"
           style={{ display: 'flex' }}
         />
-        <XYPlot xType="ordinal" width={800} height={350}>
+        <XYPlot xType="ordinal" yDomain={[0, max]} width={800} height={350}>
           <XAxis />
           <YAxis />
 
