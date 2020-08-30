@@ -3,7 +3,7 @@ import React, { ReactElement } from 'react'
 import styled from 'styled-components'
 
 import { Icon, TransparentButton } from '../../components/common'
-import { CLUB_ROUTE, CLUBS_BLUE, M2 } from '../../constants'
+import { CLUB_ROUTE, CLUBS_BLUE, M2, ZOOM_BLUE } from '../../constants'
 import { ClubEvent } from '../../types'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
@@ -87,7 +87,19 @@ const EventModal = (props: {
 
         <ClubName>{club_name}</ClubName>
         <EventName>{name}</EventName>
-        {url && <EventLink href={url}>{url}</EventLink>}
+        {url &&
+          (url.startsWith('') ? (
+            <a
+              className="button is-info is-small mt-3 mb-2"
+              style={{ backgroundColor: ZOOM_BLUE }}
+              href={url}
+              target="_blank"
+            >
+              <Icon name="video" /> Join Meeting
+            </a>
+          ) : (
+            <EventLink href={url}>{url}</EventLink>
+          ))}
         <StyledDescription contents={description} />
         {showDetailsButton !== false && (
           <RightAlign>
