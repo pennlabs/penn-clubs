@@ -159,6 +159,30 @@ class Club(models.Model):
     def __str__(self):
         return self.name
 
+    def send_virtual_fair_email(self, request=None):
+        """
+        Send the virtual fair email to all club officers
+        about setting up their club for the virtual fair.
+        """
+        domain = get_domain(request)
+
+        context = {
+            "name": self.name,
+            "guide_url": f"https://{domain}/sacfairguide",
+            "zoom_url": f"https://{domain}/zoom",
+            "fair_url": f"https://{domain}/fair",
+        }
+
+        emails = self.get_officer_emails()
+
+        if emails:
+            send_mail_helper(
+                name="fair_info",
+                subject="[ACTION REQUIRED] SAC Fair Setup and Information",
+                emails=emails,
+                context=context,
+            )
+
     def send_renewal_email(self, request=None):
         """
         Send an email notifying all club officers about renewing their approval with the

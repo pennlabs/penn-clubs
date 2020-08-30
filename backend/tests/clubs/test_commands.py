@@ -70,7 +70,14 @@ class SendInvitesTestCase(TestCase):
                 for row in data:
                     writer.writerow(row)
 
-            call_command("send_emails", "fair", tmpname, "--only-sheet")
+            call_command("send_emails", "physical_fair", tmpname, "--only-sheet")
+
+        self.assertEqual(len(mail.outbox), 3)
+
+    def test_send_virtual_fair(self):
+        Club.objects.filter(code__in=["one", "two", "three"]).update(fair=True)
+
+        call_command("send_emails", "virtual_fair")
 
         self.assertEqual(len(mail.outbox), 3)
 
