@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
+from options.models import Option
 
 from clubs.models import (
     Badge,
@@ -171,6 +172,14 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         if Club.objects.filter(name="Penn Labs").exists():
             raise CommandError("You probably do not want to run this script in production!")
+
+        # create options
+        bool_options = ["FAIR_OPEN", "FAIR_REGISTRATION_OPEN", "CLUB_REGISTRATION"]
+        for option in bool_options:
+            Option.objects.get_or_create(
+                key=option,
+                defaults={"value": "false", "value_type": Option.TYPE_BOOL, "public": True},
+            )
 
         # create years
         [
