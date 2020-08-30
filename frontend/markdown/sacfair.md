@@ -34,11 +34,11 @@ Note that this date is **fixed**. Trying to change the date and time will result
 
 ## 📸 Zoom Best Practices: Automated
 
-To get all possible features on Zoom, please use the school's licensed Zoom accounts. To help get set-up, we encourage you to use our automated system [here](/zoom), which is a quick, three-click process that will make sure your settings for meetings are configured correctly for the SAC Fair. To configure your settings manually, follow the steps below.
+To get all possible features on Zoom, please use the school's licensed Zoom accounts. To help you get set up, we encourage you to use our automated system [here](/zoom), which is a quick, three-click process that will make sure your settings for meetings are configured correctly for the SAC Fair. To configure your settings manually, follow the steps below.
 
 ## 📷 Zoom Best Practices: Manual
 
-You should have received an email from your home school about obtaining login credentials for your Zoom account. To login to Zoom, you want to select "Sign in with SSO" instead of entering an email and password. The company domain that you should use for the next step is **upenn**. After choosing the company domain, you will be redirected to the PennKey login page.
+If the automated process above doesn't work for you, you can configure your Zoom room manually using the instructions below. You should have received an email from your home school about obtaining login credentials for your Zoom account. To login to Zoom, you want to select "Sign in with SSO" instead of entering an email and password. The company domain that you should use for the next step is **upenn**. After choosing the company domain, you will be redirected to the PennKey login page.
 
 ![Zoom Login](zoom1.png)
 

@@ -1,7 +1,12 @@
+import datetime
 import json
 import os
 import re
+import secrets
+import string
+from urllib.parse import urlparse
 
+import pytz
 import qrcode
 import requests
 from django.conf import settings
@@ -1188,6 +1193,10 @@ def zoom_api_call(user, verb, url, *args, **kwargs):
     if social is None:
         raise DRFValidationError("You have not linked your Zoom account yet.")
 
+    is_retry = "retry" in kwargs
+    if is_retry:
+        del kwargs["retry"]
+
     out = requests.request(
         verb,
         url.format(uid=social.uid),
@@ -1199,27 +1208,22 @@ def zoom_api_call(user, verb, url, *args, **kwargs):
     if out.status_code == 204:
         return out
 
-    try:
-        data = out.json()
-    except json.decoder.JSONDecodeError as e:
-        raise ValueError(f"{out.status_code} error parsing zoom api response: {out.content}") from e
-
-    if data.get("code"):
-        if "retry" not in kwargs:
-            try:
-                social.refresh_token(load_strategy())
-            except requests.exceptions.HTTPError as e:
-                raise ValueError(
-                    f"Zoom API token renew {e.response.status_code}: {e.response.content}"
-                ) from e
-            kwargs["retry"] = True
-            return zoom_api_call(user, verb, url, *args, **kwargs)
-        else:
-            raise ValueError(
-                f"Zoom API returned response code {data.get('code')}: {data.get('message')}"
-            )
+    # check for token expired event
+    data = out.json()
+    if data.get("code") == 124 and not is_retry:
+        social.refresh_token(load_strategy())
+        kwargs["retry"] = True
+        return zoom_api_call(user, verb, url, *args, **kwargs)
 
     return out
+
+
+def generate_zoom_password():
+    """
+    Create a secure Zoom password for the meeting.
+    """
+    alphabet = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphabet) for i in range(10))
 
 
 class MeetingZoomAPIView(APIView):
@@ -1228,8 +1232,174 @@ class MeetingZoomAPIView(APIView):
     """
 
     def get(self, request):
-        response = zoom_api_call(request.user, "GET", "https://api.zoom.us/v2/users/{uid}/meetings")
-        return Response({"success": True, "meetings": response.json()})
+        refresh = request.query_params.get("refresh", "false").lower() == "true"
+
+        if request.user.is_authenticated:
+            key = f"zoom:meetings:{request.user.username}"
+            if not refresh:
+                res = cache.get(key)
+                if res is not None:
+                    return Response(res)
+
+        try:
+            data = zoom_api_call(request.user, "GET", "https://api.zoom.us/v2/users/{uid}/meetings")
+        except requests.exceptions.HTTPError as e:
+            raise DRFValidationError(
+                "An error occured while fetching meetings for current user."
+            ) from e
+
+        # get meeting ids
+        body = data.json()
+        meetings = [meeting["id"] for meeting in body.get("meetings", [])]
+
+        # get user events
+        if request.user.is_authenticated:
+            events = Event.objects.filter(
+                club__membership__role__lte=Membership.ROLE_OFFICER,
+                club__membership__person=request.user,
+            )
+        else:
+            events = []
+
+        extra_details = {}
+        for event in events:
+            if event.url is not None and "zoom.us" in event.url:
+                match = re.search(r"(\d+)", urlparse(event.url).path)
+                if match is not None:
+                    zoom_id = int(match[1])
+                    if zoom_id in meetings:
+                        try:
+                            individual_data = zoom_api_call(
+                                request.user, "GET", f"https://api.zoom.us/v2/meetings/{zoom_id}"
+                            ).json()
+                            extra_details[individual_data["id"]] = individual_data
+                        except requests.exceptions.HTTPError:
+                            pass
+
+        response = {"success": data.ok, "meetings": body, "extra_details": extra_details}
+        if response["success"]:
+            cache.set(key, response, 120)
+        return Response(response)
+
+    def post(self, request):
+        """
+        Create a new Zoom meeting for this event or try to fix the existing zoom meeting.
+        """
+        try:
+            event = Event.objects.get(id=request.query_params.get("event"))
+        except Event.DoesNotExist as e:
+            raise DRFValidationError("The event you are trying to modify does not exist.") from e
+
+        eastern = pytz.timezone("America/New_York")
+
+        # add all other officers as alternative hosts
+        alt_hosts = []
+        for mship in event.club.membership_set.filter(role__lte=Membership.ROLE_OFFICER):
+            social = mship.person.social_auth.filter(provider="zoom-oauth2").first()
+            if social is not None:
+                alt_hosts.append(social.extra_data["email"])
+
+        # recommended zoom meeting settings
+        recommended_settings = {
+            "audio": "both",
+            "join_before_host": True,
+            "mute_upon_entry": True,
+            "waiting_room": False,
+            "meeting_authentication": True,
+            "authentication_domains": "upenn.edu,*.upenn.edu",
+        }
+
+        if alt_hosts:
+            recommended_settings["alternative_hosts"] = ",".join(alt_hosts)
+
+        if not event.url:
+            password = generate_zoom_password()
+            body = {
+                "topic": f"Virtual Activities Fair - {event.club.name}",
+                "type": 2,
+                "start_time": event.start_time.astimezone(eastern)
+                .replace(tzinfo=None, microsecond=0, second=0)
+                .isoformat(),
+                "duration": (event.end_time - event.start_time) / datetime.timedelta(minutes=1),
+                "timezone": "America/New_York",
+                "agenda": f"Virtual Activities Fair Booth for {event.club.name}",
+                "password": password,
+                "settings": recommended_settings,
+            }
+            data = zoom_api_call(
+                request.user, "POST", "https://api.zoom.us/v2/users/{uid}/meetings", json=body
+            )
+            out = data.json()
+            event.url = out.get("join_url", "")
+            event.save(update_fields=["url"])
+            return Response({"success": True, "detail": "Your Zoom meeting has been created!"})
+        else:
+            parsed_url = urlparse(event.url)
+
+            if "zoom.us" not in parsed_url.netloc:
+                return Response(
+                    {
+                        "success": False,
+                        "detail": "The current meeting link is not a Zoom link. "
+                        "If you would like to have your Zoom link automatically generated, "
+                        "please clear the URL field and try again.",
+                    }
+                )
+
+            if "upenn.zoom.us" not in parsed_url.netloc:
+                return Response(
+                    {
+                        "success": False,
+                        "detail": "The current meeting link is not a Penn Zoom link. "
+                        "If you would like to have your Penn Zoom link automatically generated, "
+                        "login with your Penn Zoom account, clear the URL from your event, "
+                        "and try this process again.",
+                    }
+                )
+
+            match = re.search(r"(\d+)", parsed_url.path)
+            if match is None:
+                return Response(
+                    {
+                        "success": False,
+                        "detail": "Failed to parse your URL, "
+                        "are you sure this is a valid Zoom link?",
+                    }
+                )
+
+            zoom_id = int(match[1])
+
+            data = zoom_api_call(request.user, "GET", f"https://api.zoom.us/v2/meetings/{zoom_id}")
+            out = data.json()
+            event.url = out.get("join_url", event.url)
+            event.save(update_fields=["url"])
+
+            start_time = (
+                event.start_time.astimezone(eastern)
+                .replace(tzinfo=None, microsecond=0, second=0)
+                .isoformat()
+            )
+
+            body = {
+                "start_time": start_time,
+                "duration": (event.end_time - event.start_time) / datetime.timedelta(minutes=1),
+                "timezone": "America/New_York",
+                "settings": recommended_settings,
+            }
+
+            out = zoom_api_call(
+                request.user, "PATCH", f"https://api.zoom.us/v2/meetings/{zoom_id}", json=body
+            )
+
+            return Response(
+                {
+                    "success": out.ok,
+                    "detail": "Your Zoom meeting has been updated."
+                    if out.ok
+                    else "Your Zoom meeting has not been updated. "
+                    "Are you the owner of the meeting?",
+                }
+            )
 
 
 class UserZoomAPIView(APIView):
@@ -1240,24 +1410,30 @@ class UserZoomAPIView(APIView):
     """
 
     def get(self, request):
+        refresh = request.query_params.get("refresh", "false").lower() == "true"
+        no_cache = request.query_params.get("noCache", "false").lower() == "true"
+
         if request.user.is_authenticated:
             key = f"zoom:user:{request.user.username}"
             res = cache.get(key)
             if res is not None:
-                if res.get("success") is True:
-                    return Response(res)
-                else:
+                if not refresh:
+                    if res.get("success") is True:
+                        return Response(res)
+                    else:
+                        cache.delete(key)
+                if no_cache:
                     cache.delete(key)
 
         try:
             response = zoom_api_call(
                 request.user, "GET", "https://api.zoom.us/v2/users/{uid}/settings",
             )
-        except ValueError:
+        except requests.exceptions.HTTPError as e:
             raise DRFValidationError(
                 "An error occured while fetching user information. "
                 "Try reconnecting your account."
-            )
+            ) from e
 
         settings = response.json()
         res = {"success": settings.get("code") is None, "settings": settings}
