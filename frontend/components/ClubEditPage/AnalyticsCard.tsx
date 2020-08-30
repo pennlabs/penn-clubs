@@ -1,4 +1,4 @@
-import Moment from 'moment';
+import Moment from 'moment'
 import Head from 'next/head'
 import { ReactElement, useEffect, useState } from 'react'
 import DatePicker from 'react-datepicker'

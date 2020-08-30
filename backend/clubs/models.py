@@ -440,6 +440,7 @@ class ClubVisit(models.Model):
     """
     Used when people visit a club for analytics
     """
+
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
 
