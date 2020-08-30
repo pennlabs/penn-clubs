@@ -30,6 +30,19 @@ type ZoomPageProps = {
 
 type ZoomSettings = any
 
+type ZoomMeeting = {
+  uuid: string
+  id: number
+  host_id: string
+  topic: string
+  type: number
+  start_time: string
+  duration: number
+  timezone: string
+  created_at: string
+  join_url: string
+}
+
 const SmallEvent = s.div`
   padding: 10px;
   display: inline-block;
@@ -96,6 +109,7 @@ const ZoomPage = ({
     detail: string
   } | null>(null)
   const [isLoading, setLoading] = useState<boolean>(false)
+  const [userMeetings, setUserMeetings] = useState<ZoomMeeting[]>([])
 
   useEffect(() => {
     setNextUrl(window.location.pathname)
@@ -254,63 +268,73 @@ const ZoomPage = ({
         <h3>3. Setup Your Virtual Activities Fair Zoom Meeting</h3>
         <p>
           Here is a list of all of the virtual fair events that you have access
-          to edit. Make sure that you have a Zoom link, description, and photo
-          for all events! Events without these three attributes will be sent to
-          the bottom of the list.
+          to edit. Make sure that you have a{' '}
+          <b>valid Zoom link, description, and photo</b> for all events! Events
+          without any of these three attributes will be sent to the bottom of
+          the list.
         </p>
-        {events.map((event) => (
-          <SmallEvent key={event.id}>
-            <b>{event.name}</b>
-            <div>
-              <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
-                <a>{event.club_name}</a>
-              </Link>
-              <CheckList
-                items={[
-                  {
-                    value: !!event.url,
-                    label: 'Has link to meeting',
-                  },
-                  {
-                    value: !!(event.url && event.url.includes('zoom.us')),
-                    label: 'Is a Zoom link',
-                  },
-                  {
-                    value: !!(
-                      event.url &&
-                      event.url.startsWith('https://upenn.zoom.us/')
-                    ),
-                    label: 'Is Penn Zoom link',
-                  },
-                  {
-                    value: !!(event.url && event.url.includes('?pwd=')),
-                    label: 'Includes password in zoom link',
-                  },
-                  {
-                    value:
-                      event.description.length > 3 &&
-                      event.description !== 'Replace this description!',
-                    label: 'Has meaningful description',
-                  },
-                  {
-                    value: !!event.image_url,
-                    label: 'Has cover photo',
-                  },
-                ]}
-              />
-            </div>
-            <div className="mt-3">
-              <Link
-                href={CLUB_EDIT_ROUTE() + '#events'}
-                as={CLUB_EDIT_ROUTE(event.club) + '#events'}
-              >
-                <a className="button is-small is-info">
-                  <Icon name="edit" /> Edit Event
-                </a>
-              </Link>
-            </div>
-          </SmallEvent>
-        ))}
+        <p>
+          If you have multiple clubs participating in the Zoom fair, have a
+          different officer create a Zoom meeting for each club. Zoom does not
+          allow you to have multiple meetings in the same time slot.
+        </p>
+        <div className="mb-3">
+          {events.map((event) => (
+            <SmallEvent key={event.id}>
+              <b>{event.name}</b>
+              <div>
+                <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
+                  <a>{event.club_name}</a>
+                </Link>
+                <CheckList
+                  items={[
+                    {
+                      value: !!event.url,
+                      label: 'Has link to meeting',
+                    },
+                    {
+                      value: !!(event.url && event.url.includes('zoom.us')),
+                      label: 'Is a Zoom link',
+                    },
+                    {
+                      value: !!(
+                        event.url &&
+                        event.url.startsWith('https://upenn.zoom.us/')
+                      ),
+                      label: 'Is Penn Zoom link',
+                    },
+                    {
+                      value: !!(event.url && event.url.includes('?pwd=')),
+                      label: 'Includes password in zoom link',
+                    },
+                    {
+                      value:
+                        event.description.length > 3 &&
+                        event.description !== 'Replace this description!',
+                      label: 'Has meaningful description',
+                    },
+                    {
+                      value: !!event.image_url,
+                      label: 'Has cover photo',
+                    },
+                  ]}
+                />
+              </div>
+              <div className="mt-3">
+                <Link
+                  href={CLUB_EDIT_ROUTE() + '#events'}
+                  as={CLUB_EDIT_ROUTE(event.club) + '#events'}
+                >
+                  <a className="button is-small is-info">
+                    <Icon name="edit" /> Edit Event
+                  </a>
+                </Link>
+              </div>
+            </SmallEvent>
+          ))}
+        </div>
+        <h3>4. Accessing your Meeting during the Activities Fair</h3>
+        <p>TODO</p>
       </div>
     </Container>
   )
