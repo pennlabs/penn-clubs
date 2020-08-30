@@ -58,6 +58,17 @@ Enable breakout rooms for your meetings. See [this guide](https://support.zoom.u
 
     ![Zoom Breakout Rooms](5.png)
 
+## 🎥 Recording Part of Your Session
+
+If you are planning to use a short pitch or short presentation to share with prospective students, we encourage you to record a small partof your Zoom session so that students, especially those with time zone conflicts, can access the recording again. You will be able to link the video recording on your club page after the fair. If you choose to do this, please keep in mind:
+- You should aim to record one presentation/description of your club that is no longer than a few minutes.
+- Before recording, you must announce aloud at the start of the session that the presentation portion will be recorded for content purposes and allow students to decide if they wish to stay off-camera until the recording is complete. Once the record button is selected, all participants will receive a consent pop up message prompting them to stay in or leave the meeting during the recording.
+- No other virtual session portions should be recorded, including chats, Q & A, or other activities (i.e. icebreakers, etc.) that may occur during sessions.
+
+To do this, a host of the session can simply just hit the record button. To most easily link the file on your club page later, we recommend to click the "Record to the Cloud" option.
+
+![Zoom Recording](zoom2.png)
+
 ## 📎 Recruitment Resources
 
 Tired of creating a Google Form to track all interested members? Now, students can click the "Subscribe" bell button on your club's page to immediately be added to your club's own interest list without spending the time to fill out a form. By hitting the "Subscribe" bell button, interested members will have their name and email added to your interest list. You will receive the following information about each subscriber:
