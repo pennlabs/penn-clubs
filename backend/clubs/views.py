@@ -535,8 +535,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if "date" in request.query_params.keys():
             date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
             serializer = SubscribeSerializer(
-                Subscribe.objects.filter(club=club, created_at__day=date.day),
-                many=True)
+                Subscribe.objects.filter(club=club, created_at__day=date.day), many=True
+            )
         else:
             serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
 
@@ -551,8 +551,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if "date" in request.query_params.keys():
             date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
             serializer = FavoriteTimeSerializer(
-                Favorite.objects.filter(club=club, created_at__day=date.day),
-                many=True)
+                Favorite.objects.filter(club=club, created_at__day=date.day), many=True
+            )
         else:
             serializer = FavoriteTimeSerializer(Favorite.objects.filter(club=club), many=True)
 
@@ -567,8 +567,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if "date" in request.query_params.keys():
             date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
             serializer = ClubVisitSerializer(
-                ClubVisit.objects.filter(club=club, created_at__day=date.day),
-                many=True)
+                ClubVisit.objects.filter(club=club, created_at__day=date.day), many=True
+            )
         else:
             serializer = ClubVisitSerializer(ClubVisit.objects.filter(club=club), many=True)
 
