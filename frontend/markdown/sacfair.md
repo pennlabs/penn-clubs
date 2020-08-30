@@ -1,5 +1,7 @@
 # Penn Clubs: SAC Fair Guide
 
+<div class="notification is-info"><b>Are you a fair participant?</b> This guide is meant for club officers to prepare for the virtual fair. If you are looking for instructions on how to participate in the fair, click <a href="/fair">here</a>.</div>
+
 Hi there! 🎉
 
 Welcome to **Penn Clubs**, the University of Pennsylvania's official registry for student organizations on campus. The purpose of this guide is to walk you through the many different features that Penn Clubs can offer that will make your experience recruiting new members as easy as possible.

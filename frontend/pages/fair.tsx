@@ -36,15 +36,15 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
   return (
     <Container background={SNOW}>
       <Metadata title="Virtual Activities Fair" />
-      <InfoPageTitle>SAC Virtual Activities Fair – User Guide</InfoPageTitle>
+      <InfoPageTitle>SAC Virtual Activities Fair – Student Guide</InfoPageTitle>
       <div className="content">
         <p>
           <b>Hi there! Welcome to Penn Clubs!</b> We are the official platform
           for student organizations on campus, and we are excited to get you
           connected to clubs on our platform this year. In collaboration with
-          SAC, we will be hosting the virtual club fair this fall. Below is some
-          important information that will set you up for a successful
-          experience.
+          the Student Activities Council, we will be hosting the virtual club
+          fair this fall. Below is some important information that will set you
+          up for a successful experience.
         </p>
         <p>
           <b>How the SAC Fair will be run:</b>
@@ -97,9 +97,9 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
           </li>
           <li>
             If you have not already downloaded the Zoom desktop client, we
-            highly encourage you to do so, to take advantage of all features.
-            Click <a href="https://zoom.us/download">here</a> to download the
-            desktop client.
+            highly encourage you to do so to take advantage of all Zoom
+            features. Click <a href="https://zoom.us/download">here</a> to
+            download the desktop client.
           </li>
         </ul>
         <p>

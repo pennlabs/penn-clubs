@@ -40,7 +40,7 @@ class Command(BaseCommand):
             "type",
             type=str,
             help="The type of email to send.",
-            choices=("invite", "fair", "postfair"),
+            choices=("invite", "physical_fair", "physical_postfair", "virtual_fair"),
         )
         parser.add_argument(
             "emails",
@@ -91,6 +91,16 @@ class Command(BaseCommand):
         include_staff = kwargs["include_staff"]
         role = kwargs["role"]
         role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
+
+        # handle sending out virtual fair emails
+        if action == "virtual_fair":
+            clubs = Club.objects.filter(fair=True)
+            self.stdout.write(f"Found {clubs.count()} clubs participating in the fair.")
+            for club in clubs:
+                self.stdout.write(f"Sending virtual fair setup email to {club.name}...")
+                if not dry_run:
+                    club.send_virtual_fair_email()
+            return
 
         if only_sheet:
             clubs = Club.objects.all()
@@ -198,9 +208,9 @@ class Command(BaseCommand):
                                     invite.send_owner_invite()
                                 else:
                                     invite.send_mail()
-                        elif action == "fair":
+                        elif action == "physical_fair":
                             send_fair_email(club, receiver)
-                        elif action == "postfair":
+                        elif action == "physical_postfair":
                             send_fair_email(club, receiver, template="postfair")
 
         self.stdout.write(f"Sent {clubs_sent} email(s), {clubs_missing} missing club(s)")
