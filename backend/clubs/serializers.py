@@ -934,6 +934,22 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ("club", "person")
 
 
+class FavoriteTimeSerializer(serializers.ModelSerializer):
+    """
+    Used by users to get a list of clubs that they have favorited.
+    """
+
+    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    hour = serializers.SerializerMethodField("get_hour")
+
+    def get_hour(self, obj):
+        return obj.created_at.hour - 4
+
+    class Meta:
+        model = Favorite
+        fields = ("club", "created_at", "hour", "person")
+
 class FavoriteWriteSerializer(FavoriteSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
 
@@ -1046,6 +1062,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
             "person",
             "school",
             "username",
+            "hour",
         )
         validators = [
             validators.UniqueTogetherValidator(
