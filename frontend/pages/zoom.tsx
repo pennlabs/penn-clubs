@@ -619,10 +619,12 @@ const ZoomPage = ({
           should appear on the left hand list with a name like "Virtual
           Activities Fair - Club Name". Click "Start" to start the meeting.
         </p>
-        <img
-          src="/static/img/screenshots/zoom_login_3.png"
-          alt="Zoom Meeting Screen"
-        />
+        <div className="has-text-centered">
+          <img
+            src="/static/img/screenshots/zoom_login_3.png"
+            alt="Zoom Meeting Screen"
+          />
+        </div>
         <p>
           We recommend familiarizing yourself with breakout rooms before the
           fair and entering your meeting a few minutes before the fair starts.
