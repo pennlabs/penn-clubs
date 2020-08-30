@@ -1,3 +1,4 @@
+import moment from 'moment'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
@@ -45,28 +46,43 @@ type ZoomMeeting = {
 
 const SmallEvent = s.div`
   padding: 10px;
-  display: inline-block;
+  display: block;
   vertical-align: top;
   background-color: ${WHITE};
   border: 1px solid ${LIGHT_GRAY};
-  margin: 10px;
+  margin: 10px 0px;
   border-radius: 3px;
-  width: 350px;
+
+  & .has-text-warning {
+    color: #FFA500 !important;
+  }
 `
 
 type CheckListProps = {
-  items: { value: boolean; label: string }[]
+  items: { value: boolean | null; label: string; details?: string }[]
 }
 
 const CheckList = ({ items }: CheckListProps): ReactElement => {
   return (
     <ul>
-      {items.map(({ value, label }) => (
+      {items.map(({ value, label, details }) => (
         <li
           key={label}
-          className={value ? 'has-text-success' : 'has-text-danger'}
+          className={
+            value
+              ? 'has-text-success'
+              : value == null
+              ? 'has-text-warning'
+              : 'has-text-danger'
+          }
         >
-          <Icon name={value ? 'check' : 'x'} /> {label}
+          <Icon
+            name={value ? 'check' : value == null ? 'alert-triangle' : 'x'}
+          />{' '}
+          {label}
+          {details != null && (
+            <div className="is-size-7 ml-5 mb-2">{details}</div>
+          )}
         </li>
       ))}
     </ul>
@@ -112,6 +128,12 @@ const ZoomPage = ({
   const [userMeetings, setUserMeetings] = useState<ZoomMeeting[]>([])
 
   useEffect(() => {
+    doApiRequest(`/settings/zoom/meetings/?format=json`)
+      .then((resp) => resp.json())
+      .then((data) => setUserMeetings(data.meetings.meetings))
+  }, [])
+
+  useEffect(() => {
     setNextUrl(window.location.pathname)
   }, [])
 
@@ -127,9 +149,9 @@ const ZoomPage = ({
       </p>
       <div className="content">
         <p>
-          You can use the tool below to automatically configure Zoom for you and
-          get you set up for the virtual activities fair. If you run into any
-          issues while using the tool, please contact <Contact />.
+          You can use the 4-step process below to automatically configure Zoom
+          for you and get you set up for the virtual activities fair. If you run
+          into any issues while using the tool, please contact <Contact />.
         </p>
         <h3>1. Login to your Zoom Account</h3>
         <p>
@@ -193,22 +215,32 @@ const ZoomPage = ({
               {
                 value: zoomSettings.settings.feature.meeting_capacity >= 300,
                 label: 'Zoom meeting room capacity at least 300 people',
+                details:
+                  'We cannot adjust this setting for you. If your account does not support 300 people, you are most likely not logged into your Penn account. If this happens to you, disconnect your account and login to your Penn account.',
               },
               {
                 value: zoomSettings.settings.in_meeting.breakout_room,
                 label: 'Breakout rooms enabled',
+                details:
+                  'Breakout rooms will allow you to setup one on one interactions with prospective members. This setting should be enabled.',
               },
               {
                 value: !zoomSettings.settings.in_meeting.waiting_room,
                 label: 'Waiting rooms disabled',
+                details:
+                  'We recommend disabling waiting rooms and relying on Zoom authentication and meeting passwords. This will save you from the hassle of having to admit people periodically.',
               },
               {
                 value: zoomSettings.settings.in_meeting.co_host,
                 label: 'Co-hosting enabled',
+                details:
+                  'We recommend that you enable co-hosting on your account to allow other officers to assist you with managing Zoom and taking over if you get disconnected.',
               },
               {
                 value: zoomSettings.settings.in_meeting.screen_sharing,
                 label: 'Screen sharing enabled',
+                details:
+                  'If you would like to share a presentation or other materials, ensure that you have screen sharing enabled on your account.',
               },
             ]}
           />
@@ -228,6 +260,10 @@ const ZoomPage = ({
             {settingsNotif.detail}
           </div>
         )}
+        <p>
+          Pressing the button below will automatically configure your Zoom
+          account with the recommended settings.
+        </p>
         <div className="buttons">
           <button
             className="button is-success"
@@ -279,59 +315,104 @@ const ZoomPage = ({
           allow you to have multiple meetings in the same time slot.
         </p>
         <div className="mb-3">
-          {events.map((event) => (
-            <SmallEvent key={event.id}>
-              <b>{event.name}</b>
-              <div>
-                <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
-                  <a>{event.club_name}</a>
-                </Link>
-                <CheckList
-                  items={[
-                    {
-                      value: !!event.url,
-                      label: 'Has link to meeting',
-                    },
-                    {
-                      value: !!(event.url && event.url.includes('zoom.us')),
-                      label: 'Is a Zoom link',
-                    },
-                    {
-                      value: !!(
-                        event.url &&
-                        event.url.startsWith('https://upenn.zoom.us/')
-                      ),
-                      label: 'Is Penn Zoom link',
-                    },
-                    {
-                      value: !!(event.url && event.url.includes('?pwd=')),
-                      label: 'Includes password in zoom link',
-                    },
-                    {
-                      value:
-                        event.description.length > 3 &&
-                        event.description !== 'Replace this description!',
-                      label: 'Has meaningful description',
-                    },
-                    {
-                      value: !!event.image_url,
-                      label: 'Has cover photo',
-                    },
-                  ]}
-                />
-              </div>
-              <div className="mt-3">
-                <Link
-                  href={CLUB_EDIT_ROUTE() + '#events'}
-                  as={CLUB_EDIT_ROUTE(event.club) + '#events'}
-                >
-                  <a className="button is-small is-info">
-                    <Icon name="edit" /> Edit Event
-                  </a>
-                </Link>
-              </div>
-            </SmallEvent>
-          ))}
+          {events.map((event) => {
+            let zoomId: number | null = null
+            if (event.url != null) {
+              const match = event.url.match(/\/\w\/(\w+)\??/)
+              if (match != null) {
+                zoomId = parseInt(match[1])
+              }
+            }
+
+            const matchingMeeting = userMeetings.find(({ id }) => id === zoomId)
+            const startTime = moment(event.start_time)
+            const endTime = moment(event.end_time)
+
+            return (
+              <SmallEvent key={event.id}>
+                <b>{event.name}</b>
+                <div>
+                  <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
+                    <a>{event.club_name}</a>
+                  </Link>
+                  <div>
+                    {startTime.format('LLL')} - {endTime.format('LT')}
+                  </div>
+                  <span className="has-text-grey">
+                    {moment.duration(endTime.diff(startTime)).asHours()} Hour
+                    Block
+                  </span>
+                  <CheckList
+                    items={[
+                      {
+                        value: !!event.url,
+                        label: 'Has link to meeting',
+                      },
+                      {
+                        value: !!(event.url && event.url.includes('zoom.us')),
+                        label: 'Is a Zoom link',
+                      },
+                      {
+                        value: !!(
+                          event.url &&
+                          event.url.startsWith('https://upenn.zoom.us/')
+                        ),
+                        label: 'Is Penn Zoom link',
+                      },
+                      {
+                        value: !!(event.url && event.url.includes('?pwd=')),
+                        label: 'Includes password in zoom link',
+                        details:
+                          'Including your meeting password in the Zoom link will save students from having to enter it when they connect.',
+                      },
+                      {
+                        value: matchingMeeting != null ? true : null,
+                        label: 'You own the Zoom meeting',
+                        details:
+                          'If you own the Zoom meeting, we can perform additional checks on the meeting to ensure you have set everything up correctly.',
+                      },
+                      {
+                        value:
+                          matchingMeeting != null
+                            ? matchingMeeting.duration >= 60 * 3
+                            : null,
+                        label: 'Meeting duration matches fair duration',
+                      },
+                      {
+                        value:
+                          matchingMeeting != null
+                            ? moment(matchingMeeting.start_time).isSame(
+                                startTime,
+                              )
+                            : null,
+                        label: 'Meeting time matches fair start time',
+                      },
+                      {
+                        value:
+                          event.description.length > 3 &&
+                          event.description !== 'Replace this description!',
+                        label: 'Has meaningful description',
+                      },
+                      {
+                        value: !!event.image_url,
+                        label: 'Has cover photo',
+                      },
+                    ]}
+                  />
+                </div>
+                <div className="mt-3">
+                  <Link
+                    href={CLUB_EDIT_ROUTE() + '#events'}
+                    as={CLUB_EDIT_ROUTE(event.club) + '#events'}
+                  >
+                    <a className="button is-small is-info">
+                      <Icon name="edit" /> Edit Event
+                    </a>
+                  </Link>
+                </div>
+              </SmallEvent>
+            )
+          })}
         </div>
         <h3>4. Accessing your Meeting during the Activities Fair</h3>
         <p>TODO</p>
