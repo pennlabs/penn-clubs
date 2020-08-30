@@ -1,13 +1,21 @@
-import { ReactElement, useState, useEffect } from 'react'
+import Moment from 'moment';
+import Head from 'next/head'
+import { ReactElement, useEffect, useState } from 'react'
+import DatePicker from 'react-datepicker'
+import {
+  DiscreteColorLegend,
+  HorizontalGridLines,
+  LineMarkSeries,
+  VerticalGridLines,
+  XAxis,
+  XYPlot,
+  YAxis,
+} from 'react-vis'
+import s from 'styled-components'
 
 import { Club, MembershipRank, MembershipRole } from '../../types'
-import {ChartLabel, DiscreteColorLegend, XYPlot, XAxis, YAxis, HorizontalGridLines, VerticalGridLines, LineMarkSeries} from 'react-vis';
-import BaseCard from './BaseCard'
-import Head from 'next/head'
 import { doApiRequest } from '../../utils'
-import DatePicker from 'react-datepicker'
-import s from 'styled-components'
-import Moment from 'moment';
+import BaseCard from './BaseCard'
 
 type AnalyticsCardProps = {
   club: Club
