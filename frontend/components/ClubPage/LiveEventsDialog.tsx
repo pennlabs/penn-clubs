@@ -2,7 +2,13 @@ import Link from 'next/link'
 import { ReactElement } from 'react'
 import s from 'styled-components'
 
-import { FAIR_INFO_ROUTE, LIVE_EVENTS, M2, M4 } from '../../constants'
+import {
+  FAIR_INFO_ROUTE,
+  FAIR_OFFICER_GUIDE_ROUTE,
+  LIVE_EVENTS,
+  M2,
+  M4,
+} from '../../constants'
 
 const LiveBanner = s.div`
   padding: 20px;
@@ -40,22 +46,30 @@ const WhiteButton = s.div`
 
 interface LiveEventsDialogProps {
   liveEventCount: number
+  isPreFair: boolean
 }
 
 const LiveEventsDialog = ({
   liveEventCount,
+  isPreFair,
 }: LiveEventsDialogProps): ReactElement => (
   <LiveBanner>
-    <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
-      <WhiteButton>See Live Events</WhiteButton>
-    </Link>
+    {isPreFair ? (
+      <Link href={FAIR_OFFICER_GUIDE_ROUTE} as={FAIR_OFFICER_GUIDE_ROUTE}>
+        <WhiteButton>Officer Setup</WhiteButton>
+      </Link>
+    ) : (
+      <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
+        <WhiteButton>See Live Events</WhiteButton>
+      </Link>
+    )}
     <Link href={FAIR_INFO_ROUTE} as={FAIR_INFO_ROUTE}>
       <WhiteButton>Fair Information</WhiteButton>
     </Link>
     <LiveTitle>SAC Virtual Activities Fair</LiveTitle>
     <LiveSub>
       {liveEventCount === 0 ? (
-        'The fair is starting soon!'
+        'Get ready for the virtual activities fair!'
       ) : (
         <>
           {liveEventCount}{' '}

@@ -73,6 +73,7 @@ export const ListLoadIndicator = (): ReactElement => {
 
 const Splash = (props: SplashProps): ReactElement => {
   const fairIsOpen = useSetting('FAIR_OPEN')
+  const preFair = useSetting('PRE_FAIR')
   const renewalBanner = useSetting('CLUB_REGISTRATION')
   const currentSearch = useRef<SearchInput>(getInitialSearch())
 
@@ -244,8 +245,11 @@ const Splash = (props: SplashProps): ReactElement => {
                 </ClearAllLink>
               </div>
             )}
-            {fairIsOpen && (
-              <LiveEventsDialog liveEventCount={props.liveEventCount} />
+            {(preFair || fairIsOpen) && (
+              <LiveEventsDialog
+                isPreFair={!!preFair}
+                liveEventCount={props.liveEventCount}
+              />
             )}
             {renewalBanner && <ListRenewalDialog />}
 

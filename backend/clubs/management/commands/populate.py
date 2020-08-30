@@ -174,7 +174,7 @@ class Command(BaseCommand):
             raise CommandError("You probably do not want to run this script in production!")
 
         # create options
-        bool_options = ["FAIR_OPEN", "FAIR_REGISTRATION_OPEN", "CLUB_REGISTRATION"]
+        bool_options = ["FAIR_OPEN", "FAIR_REGISTRATION_OPEN", "CLUB_REGISTRATION", "PRE_FAIR"]
         for option in bool_options:
             Option.objects.get_or_create(
                 key=option,
