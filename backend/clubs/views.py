@@ -1447,8 +1447,14 @@ class UserZoomAPIView(APIView):
                 "Try reconnecting your account."
             ) from e
 
+        social = request.user.social_auth.filter(provider="zoom-oauth2").first()
+        if social is None:
+            email = None
+        else:
+            email = social.extra_data.get("email")
+
         settings = response.json()
-        res = {"success": settings.get("code") is None, "settings": settings}
+        res = {"success": settings.get("code") is None, "settings": settings, "email": email}
 
         if res["success"]:
             cache.set(key, res, 900)

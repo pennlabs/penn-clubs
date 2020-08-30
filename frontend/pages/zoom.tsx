@@ -101,7 +101,7 @@ const CheckList = ({ items }: CheckListProps): ReactElement => {
 const loadSettings = async (
   refresh: boolean,
   noCache?: boolean,
-  data?: ZoomSettings,
+  data?: any,
 ) => {
   return await doApiRequest(
     `/settings/zoom/?format=json&refresh=${refresh}&noCache=${
@@ -211,8 +211,16 @@ const ZoomPage = ({
           <>
             <p className="has-text-info">
               <b>Success!</b> You are logged into Zoom and your account is
-              connected to Penn Clubs.
+              connected to Penn Clubs. Your Zoom email is{' '}
+              <b>{zoomSettings.email}</b>.
             </p>
+            {zoomSettings.email &&
+              !zoomSettings.email.endsWith('@upenn.edu') && (
+                <p className="has-text-danger">
+                  This does not appear to be a University of Pennsylvania Zoom
+                  account. Are you sure you logged into the right email?
+                </p>
+              )}
             <div className="buttons">
               <a
                 className="button is-info is-small"
