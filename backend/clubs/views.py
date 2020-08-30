@@ -1304,7 +1304,6 @@ class MeetingZoomAPIView(APIView):
             "audio": "both",
             "join_before_host": True,
             "mute_upon_entry": True,
-            "auto_recording": "local",
             "waiting_room": False,
             "meeting_authentication": True,
             "authentication_domains": "upenn.edu,*.upenn.edu",
