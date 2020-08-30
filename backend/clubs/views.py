@@ -1243,7 +1243,10 @@ class UserZoomAPIView(APIView):
         if request.user.is_authenticated:
             key = f"zoom:user:{request.user.username}"
             res = cache.get(key)
-            if res is not None:
+            if (
+                res is not None
+                and not request.query_params.get("refresh", "false").lower() == "true"
+            ):
                 if res.get("success") is True:
                     return Response(res)
                 else:

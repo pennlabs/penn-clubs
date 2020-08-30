@@ -1,5 +1,6 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
@@ -58,6 +59,7 @@ const CheckList = ({ items }: CheckListProps): ReactElement => {
 }
 
 const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
+  const router = useRouter()
   const [nextUrl, setNextUrl] = useState<string>('/')
   const [zoomSettings, setZoomSettings] = useState<any>({})
   const [settingsNotif, setSettingsNotif] = useState<{
@@ -70,8 +72,8 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
     setNextUrl(window.location.pathname)
   }, [])
 
-  const loadSettings = async () => {
-    await doApiRequest('/settings/zoom/?format=json')
+  const loadSettings = async (refresh: boolean) => {
+    await doApiRequest(`/settings/zoom/?format=json&refresh=${refresh}`)
       .then((resp) => resp.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -83,7 +85,7 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
   }
 
   useEffect(() => {
-    loadSettings()
+    loadSettings(false)
   }, [])
 
   return (
@@ -109,6 +111,11 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
           help you configure your meeting. Ensure that you login to your{' '}
           <b>Penn provided</b> Zoom account.
         </p>
+        <p>
+          To do this, use the <b>Sign in with SSO</b> button on the Zoom login
+          page that appears when you click the login button below and enter{' '}
+          <b>upenn</b> as the domain name.
+        </p>
         {!zoomSettings.success ? (
           <a
             className="button is-info"
@@ -123,13 +130,28 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
               <b>Success!</b> You are logged into Zoom and your account is
               connected to Penn Clubs.
             </p>
-            <a
-              className="button is-info is-small"
-              style={{ backgroundColor: ZOOM_BLUE }}
-              href={`/api/social/login/zoom-oauth2/?next=${nextUrl}`}
-            >
-              <Icon name="video" /> Reconnect
-            </a>
+            <div className="buttons">
+              <a
+                className="button is-info is-small"
+                style={{ backgroundColor: ZOOM_BLUE }}
+                href={`/api/social/login/zoom-oauth2/?next=${nextUrl}`}
+              >
+                <Icon name="video" /> Reconnect
+              </a>
+              <button
+                className="button is-small"
+                onClick={() => {
+                  doApiRequest(
+                    `/social/disconnect/zoom-oauth2/?next=${nextUrl}`,
+                    { method: 'POST' },
+                  ).then(() => {
+                    router.reload()
+                  })
+                }}
+              >
+                <Icon name="x" /> Disconnect
+              </button>
+            </div>
           </>
         )}
         <h3>2. Configure Your User Account Settings</h3>
@@ -179,26 +201,39 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
             {settingsNotif.detail}
           </div>
         )}
-        <button
-          className="button is-success"
-          disabled={isLoading}
-          onClick={() => {
-            setLoading(true)
-            doApiRequest('/settings/zoom/?format=json', { method: 'POST' })
-              .then((resp) => resp.json())
-              .then((data) => {
-                if (Array.isArray(data)) {
-                  setSettingsNotif({ success: false, detail: data.join(' ') })
-                } else {
-                  setSettingsNotif(data)
-                }
-                loadSettings()
-                setLoading(false)
-              })
-          }}
-        >
-          <Icon name="settings" /> Update Settings
-        </button>
+        <div className="buttons">
+          <button
+            className="button is-success"
+            disabled={isLoading}
+            onClick={() => {
+              setLoading(true)
+              doApiRequest('/settings/zoom/?format=json', { method: 'POST' })
+                .then((resp) => resp.json())
+                .then((data) => {
+                  if (Array.isArray(data)) {
+                    setSettingsNotif({ success: false, detail: data.join(' ') })
+                  } else {
+                    setSettingsNotif(data)
+                  }
+                  loadSettings(false)
+                  setLoading(false)
+                })
+            }}
+          >
+            <Icon name="settings" /> Update Settings
+          </button>
+          <button
+            className="button"
+            disabled={isLoading}
+            onClick={async () => {
+              setLoading(true)
+              await loadSettings(true)
+              setLoading(false)
+            }}
+          >
+            <Icon name="shuffle" /> Refresh
+          </button>
+        </div>
         <h3>3. Setup Your Virtual Activities Fair Zoom Meeting</h3>
         <p>
           Here is a list of all of the virtual fair events that you have access
@@ -221,7 +256,7 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
                   },
                   {
                     value: !!(event.url && event.url.includes('zoom.us')),
-                    label: 'Is a zoom link',
+                    label: 'Is a Zoom link',
                   },
                   {
                     value: !!(event.url && event.url.includes('?pwd=')),
