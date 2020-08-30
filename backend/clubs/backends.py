@@ -21,6 +21,7 @@ class ZoomOAuth2(BaseOAuth2):
         ("refresh_token", "refresh_token"),
         ("token_type", "token_type"),
         ("expires_in", "expires_in"),
+        ("email", "email"),
     ]
 
     def user_data(self, access_token, *args, **kwargs):
