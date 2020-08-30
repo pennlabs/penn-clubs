@@ -950,6 +950,7 @@ class FavoriteTimeSerializer(serializers.ModelSerializer):
         model = Favorite
         fields = ("club", "created_at", "hour", "person")
 
+
 class FavoriteWriteSerializer(FavoriteSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
 

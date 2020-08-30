@@ -101,7 +101,6 @@ from clubs.serializers import (
     YearSerializer,
 )
 from clubs.utils import html_to_text
-import datetime
 
 
 def file_upload_endpoint_helper(request, code):
