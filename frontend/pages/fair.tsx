@@ -57,10 +57,14 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
           <li>
             The main fair functionality is each club's informational Zoom
             meeting, which will all be visible on our{' '}
-            <a href="https://pennclubs.com/events">Live Events Page</a>.
-            Representatives of each club will be available in these meetings to
-            answer questions, give short presentations, and otherwise interact
-            with students.
+            {isFairOpen ? (
+              <a href="https://pennclubs.com/events">Live Events Page</a>
+            ) : (
+              'Live Events Page'
+            )}
+            . Representatives of each club will be available in these meetings
+            to answer questions, give short presentations, and otherwise
+            interact with students.
           </li>
           <li>
             You can also visit each club's individual page. Each club's page has
@@ -68,21 +72,29 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
             officers will be monitoring throughout the fair that you can use to
             ask questions. Questions can be submitted anonymously.
           </li>
-          {/* <li>
+          <li>
             To keep track of clubs you are interested in, we encourage you to
             use some of the tools on our platform!
             <ul>
               <li>
-                The <b>Bookmark</b> button will allow you to save a club for
-                later for your own personal reference.
+                The{' '}
+                <b>
+                  <Icon name="bookmark" /> Bookmark
+                </b>{' '}
+                button will allow you to save a club for later for your own
+                personal reference.
               </li>
               <li>
-                The <b>Subscribe</b> button will put your name on a club's
-                mailing list. Club officers can use it to send you updates on
-                their application process, upcoming meetings, and more.
+                The{' '}
+                <b>
+                  <Icon name="bell" /> Subscribe
+                </b>{' '}
+                button will put your name on a club's mailing list. Club
+                officers can use this list to send you updates on their
+                application process, upcoming meetings, and more.
               </li>
             </ul>
-          </li> */}
+          </li>
         </ul>
 
         <p>
