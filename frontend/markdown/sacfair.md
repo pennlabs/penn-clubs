@@ -30,6 +30,8 @@ Note that this date is **fixed**. Trying to change the date and time will result
 
 ![Save SAC Fair Changes](4.png)
 
+Finally, check that you have the best settings for your Zoom meeting with [this tool](/zoom).
+
 **And that's it!** Your club's event will show up in the portal during the live, virtual SAC Fair on the day you are assigned.
 
 ## 📸 Zoom Best Practices: Automated
