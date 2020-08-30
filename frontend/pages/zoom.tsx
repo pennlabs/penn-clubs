@@ -1,6 +1,5 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
@@ -26,7 +25,10 @@ import { doApiRequest } from '../utils'
 
 type ZoomPageProps = {
   events: ClubEvent[]
+  zoomSettings: ZoomSettings
 }
+
+type ZoomSettings = any
 
 const SmallEvent = s.div`
   padding: 10px;
@@ -58,10 +60,37 @@ const CheckList = ({ items }: CheckListProps): ReactElement => {
   )
 }
 
-const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
-  const router = useRouter()
+/**
+ * Fetch the current user's zoom settings from the server.
+ */
+const loadSettings = async (
+  refresh: boolean,
+  noCache?: boolean,
+  data?: ZoomSettings,
+) => {
+  return await doApiRequest(
+    `/settings/zoom/?format=json&refresh=${refresh}&noCache=${
+      noCache ?? false
+    }`,
+    data,
+  )
+    .then((resp) => resp.json())
+    .then((data) => {
+      if (Array.isArray(data)) {
+        return { success: false, detail: data.join(' ') }
+      }
+      return data
+    })
+}
+
+const ZoomPage = ({
+  events,
+  zoomSettings: initialZoomSettings,
+}: ZoomPageProps): ReactElement => {
   const [nextUrl, setNextUrl] = useState<string>('/')
-  const [zoomSettings, setZoomSettings] = useState<any>({})
+  const [zoomSettings, setZoomSettings] = useState<ZoomSettings>(
+    initialZoomSettings,
+  )
   const [settingsNotif, setSettingsNotif] = useState<{
     success: boolean
     detail: string
@@ -70,26 +99,6 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
 
   useEffect(() => {
     setNextUrl(window.location.pathname)
-  }, [])
-
-  const loadSettings = async (refresh: boolean, noCache?: boolean) => {
-    await doApiRequest(
-      `/settings/zoom/?format=json&refresh=${refresh}&noCache=${
-        noCache ?? false
-      }`,
-    )
-      .then((resp) => resp.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setZoomSettings({ success: false, detail: data.join(' ') })
-        } else {
-          setZoomSettings(data)
-        }
-      })
-  }
-
-  useEffect(() => {
-    loadSettings(false)
   }, [])
 
   return (
@@ -149,7 +158,7 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
                     `/social/disconnect/zoom-oauth2/?next=${nextUrl}`,
                     { method: 'POST' },
                   ).finally(() => {
-                    loadSettings(true, true)
+                    loadSettings(true, true).then(setZoomSettings)
                   })
                 }}
               >
@@ -220,7 +229,10 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
                     setSettingsNotif(data)
                   }
                   loadSettings(false)
-                  setLoading(false)
+                    .then(setZoomSettings)
+                    .then(() => {
+                      setLoading(false)
+                    })
                 })
             }}
           >
@@ -231,7 +243,8 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
             disabled={isLoading || !zoomSettings.success}
             onClick={async () => {
               setLoading(true)
-              await loadSettings(true)
+              const settings = await loadSettings(true)
+              setZoomSettings(settings)
               setLoading(false)
             }}
           >
@@ -261,6 +274,13 @@ const ZoomPage = ({ events }: ZoomPageProps): ReactElement => {
                   {
                     value: !!(event.url && event.url.includes('zoom.us')),
                     label: 'Is a Zoom link',
+                  },
+                  {
+                    value: !!(
+                      event.url &&
+                      event.url.startsWith('https://upenn.zoom.us/')
+                    ),
+                    label: 'Is Penn Zoom link',
                   },
                   {
                     value: !!(event.url && event.url.includes('?pwd=')),
@@ -301,14 +321,15 @@ ZoomPage.getInitialProps = async (ctx: NextPageContext) => {
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
-  const [events] = await Promise.all([
+  const [events, zoomSettings] = await Promise.all([
     doApiRequest(
       `/events/owned/?format=json&type=${ClubEventType.FAIR}`,
       data,
     ).then((resp) => resp.json()),
+    loadSettings(false, false, data),
   ])
 
-  return { events }
+  return { events, zoomSettings }
 }
 
 export default renderPage(ZoomPage)

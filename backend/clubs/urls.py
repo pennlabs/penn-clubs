@@ -62,7 +62,7 @@ clubs_router.register(
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="users-detail"),
     path(r"settings/zoom/", UserZoomAPIView.as_view(), name="users-zoom"),
-    path(r"settings/zoom/meetings", MeetingZoomAPIView.as_view(), name="users-zoom-meeting"),
+    path(r"settings/zoom/meetings/", MeetingZoomAPIView.as_view(), name="users-zoom-meeting"),
     path(r"settings/permissions/", UserPermissionAPIView.as_view(), name="users-permission"),
     path(r"clubs/<slug:club_code>/invite/", MassInviteAPIView.as_view(), name="club-invite"),
     path(r"emailpreview/", email_preview, name="email-preview"),
