@@ -59,17 +59,17 @@ const TabView = ({
   background = false,
 }: Props): ReactElement => {
   // the server side rendering does not have a window object
-  const [currentTab, setCurrentTab] = useState(tabs[0].name)
+  const [currentTab, setCurrentTab] = useState<string>(tabs[0].name)
 
   useEffect(() => {
     setCurrentTab(window.location.hash.substring(1) || currentTab)
   }, [])
 
-  const getTabContent = () => (
+  const getTabContent = (): ReactElement => (
     <div key={currentTab}>
       {
         (
-          tabs.filter((a) => a.name === currentTab)[0] || {
+          tabs.find((a) => a.name === currentTab) ?? {
             content: <>Invalid tab selected.</>,
           }
         ).content

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { Container, Metadata, Title } from '../components/common'
@@ -11,6 +11,7 @@ import TabView from '../components/TabView'
 import { CLUBS_BLUE, WHITE } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
 import renderPage from '../renderPage'
+import { UserInfo } from '../types'
 
 const Notification = s.span`
   border-radius: ${BORDER_RADIUS};
@@ -26,18 +27,29 @@ const Notification = s.span`
   max-width: 50%;
 `
 
-class Settings extends React.Component {
+type SettingsProps = {
+  userInfo: UserInfo
+  authenticated: boolean | null
+}
+
+type SettingsState = {
+  message: ReactElement | string | null
+}
+
+class Settings extends React.Component<SettingsProps, SettingsState> {
   constructor(props) {
     super(props)
-    this.state = {}
+    this.state = {
+      message: null,
+    }
     this.notify = this.notify.bind(this)
   }
 
   /**
-   * @param {string} msg
+   * Display the message and scroll the user to the top of the page.
+   * @param The message to show to the user.
    */
-  notify(msg) {
-    // Display the message and scroll the user to the top of the page
+  notify(msg: ReactElement | string): void {
     this.setState(
       {
         message: msg,
@@ -100,7 +112,7 @@ class Settings extends React.Component {
         </Container>
         <TabView background={gradient} tabs={tabs} tabClassName="is-boxed" />
 
-        {message && (
+        {message != null && (
           <Container>
             <Notification className="notification">
               <button
