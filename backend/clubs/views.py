@@ -1,7 +1,6 @@
 import datetime
 import itertools
 import json
-import logging
 import os
 import re
 import secrets
@@ -23,6 +22,7 @@ from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.text import slugify
+from django_redis import get_redis_connection
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -1404,7 +1404,15 @@ class MeetingZoomWebhookAPIView(APIView):
     """
 
     def post(self, request):
-        logging.error(str(request.data) + " " + str(request.headers))
+        action = request.data.get("event")
+        meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
+        if meeting_id is not None:
+            conn = get_redis_connection()
+            key = f"zoom:meeting:live:{meeting_id}"
+            if action == "meeting.participant_joined":
+                conn.incr(key)
+            elif action == "meeting.participant_left":
+                conn.decr(key)
         return Response({"success": True})
 
 

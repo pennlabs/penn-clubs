@@ -148,9 +148,10 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
               </>
             ) : (
               <>
-                This club has <b>not been approved yet</b> for the {year}-
-                {year + 1} school year and is only visible to club members and
-                administrators of Penn Clubs.
+                {club.is_ghost ? 'Changes to this club have' : 'This club has'}{' '}
+                <b>not been approved yet</b> for the {year}-{year + 1} school
+                year and is only visible to club members and administrators of
+                Penn Clubs.
                 {club.is_ghost && (
                   <span className="mt-3 is-block">
                     The latest approved version of this club will be shown in
