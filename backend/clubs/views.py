@@ -808,33 +808,57 @@ class EventViewSet(viewsets.ModelViewSet):
     def live(self, request, *args, **kwargs):
         """
         Get all events happening now.
+        This endpoint is cached for 5 min for a no filter parameter call.
         """
+        params = set(request.query_params.keys())
+        params.remove("format")
+        should_cache = not params
+
+        if should_cache:
+            key = f"events:fair:live:{request.user.is_authenticated}"
+            cached = cache.get(key)
+            if cached:
+                return Response(cached)
+
         now = timezone.now()
-        return Response(
-            EventSerializer(
-                self.filter_queryset(self.get_queryset())
-                .filter(start_time__lte=now, end_time__gte=now)
-                .filter(type=Event.FAIR),
-                many=True,
-                context=super().get_serializer_context(),
-            ).data
-        )
+        output = EventSerializer(
+            self.filter_queryset(self.get_queryset())
+            .filter(start_time__lte=now, end_time__gte=now)
+            .filter(type=Event.FAIR),
+            many=True,
+            context=super().get_serializer_context(),
+        ).data
+        if should_cache:
+            cache.set(key, output, 5 * 60)
+        return Response(output)
 
     @action(detail=False, methods=["get"])
     def upcoming(self, request, *args, **kwargs):
         """
         Get all events happening in the future.
+        This endpoint is cached for 5 min for a no filter parameter call.
         """
+        params = set(request.query_params.keys())
+        params.remove("format")
+        should_cache = not params
+
+        if should_cache:
+            key = f"events:fair:upcoming:{request.user.is_authenticated}"
+            cached = cache.get(key)
+            if cached:
+                return Response(cached)
+
         now = timezone.now()
-        return Response(
-            EventSerializer(
-                self.filter_queryset(self.get_queryset())
-                .filter(start_time__gte=now)
-                .filter(type=Event.FAIR),
-                many=True,
-                context=super().get_serializer_context(),
-            ).data
-        )
+        output = EventSerializer(
+            self.filter_queryset(self.get_queryset())
+            .filter(start_time__gte=now)
+            .filter(type=Event.FAIR),
+            many=True,
+            context=super().get_serializer_context(),
+        ).data
+        if should_cache:
+            cache.set(key, output, 5 * 60)
+        return Response(output)
 
     @action(detail=False, methods=["get"])
     def ended(self, request, *args, **kwargs):
