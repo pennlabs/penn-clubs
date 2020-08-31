@@ -941,39 +941,6 @@ class FavoriteWriteSerializer(FavoriteSerializer):
         pass
 
 
-class ClubVisitSerializer(serializers.ModelSerializer):
-    """
-    Used to get the visit history of the club for analytics purpose
-    """
-    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
-    name = serializers.SerializerMethodField("get_full_name")
-    username = serializers.CharField(source="person.username", read_only=True)
-    email = serializers.EmailField(source="person.email", read_only=True)
-
-    school = SchoolSerializer(many=True, source="person.profile.school", read_only=True)
-    major = MajorSerializer(many=True, source="person.profile.major", read_only=True)
-    graduation_year = serializers.IntegerField(
-        source="person.profile.graduation_year", read_only=True
-    )
-
-    def get_full_name(self, obj):
-        return obj.person.get_full_name()
-
-    class Meta:
-        model = ClubVisit
-        fields = (
-            "club",
-            "created_at",
-            "email",
-            "graduation_year",
-            "major",
-            "name",
-            "person",
-            "school",
-            "username",
-        )
-
-
 class UserMembershipSerializer(serializers.ModelSerializer):
     """
     Used for listing which clubs a user is in.
