@@ -233,10 +233,25 @@ class EventSerializer(serializers.ModelSerializer):
     badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
     image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField("get_image_url")
+    url = serializers.SerializerMethodField("get_event_url")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     def get_club_name(self, obj):
         return obj.club.name
+
+    def get_event_url(self, obj):
+        # if no url, return that
+        if not obj.url:
+            return obj.url
+
+        # if is zoom link, hide url unless authenticated
+        if "request" in self.context and "zoom.us" in urlparse(obj.url).netloc:
+            user = self.context["request"].user
+            if user.is_authenticated:
+                return obj.url
+            return "(Login to view url)"
+
+        return obj.url
 
     def get_image_url(self, obj):
         if not obj.image:
@@ -283,6 +298,10 @@ class EventSerializer(serializers.ModelSerializer):
             "type",
             "url",
         )
+
+
+class EventWriteSerializer(EventSerializer):
+    url = serializers.CharField(required=False, allow_blank=True)
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
@@ -621,7 +640,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     def get_events(self, obj):
         now = timezone.now()
         return EventSerializer(
-            obj.events.filter(start_time__gte=now).order_by("start_time"), many=True, read_only=True
+            obj.events.filter(start_time__gte=now).order_by("start_time"),
+            many=True,
+            read_only=True,
+            context=self.context,
         ).data
 
     def get_is_ghost(self, obj):

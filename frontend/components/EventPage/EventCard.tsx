@@ -67,7 +67,12 @@ const EventCard = (props: {
           <ClubName>{clubName}</ClubName>
           <EventName>{name}</EventName>
           {url && MEETING_REGEX.test(url) && <Icon name="video" />}{' '}
-          {url && <EventLink href={url}>{clipLink(url)}</EventLink>}
+          {url &&
+            (/^\(.*\)$/.test(url) ? (
+              url
+            ) : (
+              <EventLink href={url}>{clipLink(url)}</EventLink>
+            ))}
         </Card>
       </EventCardContainer>
       {modalVisible && (

@@ -99,6 +99,8 @@ const EventModal = (props: {
             >
               <Icon name="video" /> Join Meeting
             </a>
+          ) : /^\(.*\)$/.test(url) ? (
+            url
           ) : (
             <EventLink href={url}>{url}</EventLink>
           ))}

@@ -20,6 +20,11 @@ export function stripTags(val: string): string {
 
 export const OptionsContext = createContext({})
 
+/**
+ * A react hook that returns the value of a Django runtime option setting.
+ * If the setting is still loading, returns null.
+ * @param key The setting to retrieve.
+ */
 export function useSetting(key: string): string | number | boolean | null {
   const options = useContext(OptionsContext)
   const value = options[key] ?? null
@@ -92,6 +97,11 @@ export async function apiCheckPermission(permission: string): Promise<boolean> {
   return json.allowed
 }
 
+/**
+ * Perform an API request to the Django backend server.
+ * @param path The path to the REST endpoint, excluding the /api/ component.
+ * @param data Additional fetch data to be passed in the request.
+ */
 export function doApiRequest(path: string, data?: any): Promise<Response> {
   if (!data) {
     data = {}
@@ -147,6 +157,9 @@ export function apiSetSubscribeStatus(
   }
 }
 
+/**
+ * Convert underscores into spaces and capitalize the first letter of every word.
+ */
 export function titleize(str: string): string {
   if (!str) return str
   return str
@@ -156,6 +169,10 @@ export function titleize(str: string): string {
     .join(' ')
 }
 
+/**
+ * Given a dictionary that you want to display to the user, converts this
+ * dictionary into a displayable list of key value pairs.
+ */
 export function formatResponse(err: { [key: string]: string }): ReactElement {
   return (
     <>

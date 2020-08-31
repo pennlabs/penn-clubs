@@ -97,6 +97,9 @@ const CheckList = ({ items }: CheckListProps): ReactElement => {
 
 /**
  * Fetch the current user's zoom settings from the server.
+ * @param refresh If true, disable cache while fetching the request.
+ * @param noCache If true, delete the existing cache while fetching the request.
+ * @param data Additional data to be sent with the request.
  */
 const loadSettings = async (
   refresh: boolean,
@@ -118,6 +121,11 @@ const loadSettings = async (
     })
 }
 
+/**
+ * Fetch meetings stored in Zoom from the server.
+ * @param data Additional data to be sent with the request.
+ * @param refresh If true, disable cache when fetching the request.
+ */
 const loadMeetings = async (
   data?: any,
   refresh?: boolean,
@@ -140,6 +148,10 @@ const loadMeetings = async (
     })
 }
 
+/**
+ * Fetch events stored in Django from the server.
+ * @param data Additional data to be sent with the request.
+ */
 const loadEvents = (data?: any): Promise<ClubEvent[]> => {
   return doApiRequest(
     `/events/owned/?format=json&type=${ClubEventType.FAIR}`,

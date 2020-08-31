@@ -74,6 +74,7 @@ from clubs.serializers import (
     ClubMinimalSerializer,
     ClubSerializer,
     EventSerializer,
+    EventWriteSerializer,
     FavoriteSerializer,
     FavoriteWriteSerializer,
     MajorSerializer,
@@ -722,12 +723,16 @@ class EventViewSet(viewsets.ModelViewSet):
     Delete an event.
     """
 
-    serializer_class = EventSerializer
     permission_classes = [EventPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
     search_fields = ["name", "club__name", "description"]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    def get_serializer_class(self):
+        if self.action in {"create", "update", "partial_update"}:
+            return EventWriteSerializer
+        return EventSerializer
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
@@ -769,6 +774,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 .filter(start_time__lte=now, end_time__gte=now)
                 .filter(type=Event.FAIR),
                 many=True,
+                context=super().get_serializer_context(),
             ).data
         )
 
@@ -784,6 +790,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 .filter(start_time__gte=now)
                 .filter(type=Event.FAIR),
                 many=True,
+                context=super().get_serializer_context(),
             ).data
         )
 
@@ -795,7 +802,9 @@ class EventViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         return Response(
             EventSerializer(
-                self.filter_queryset(self.get_queryset()).filter(end_time__lt=now), many=True
+                self.filter_queryset(self.get_queryset()).filter(end_time__lt=now),
+                many=True,
+                context=super().get_serializer_context(),
             ).data
         )
 
