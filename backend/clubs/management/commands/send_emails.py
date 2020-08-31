@@ -100,7 +100,7 @@ class Command(BaseCommand):
         role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
 
         # get club whitelist
-        clubs_whitelist = [club.strip() for club in kwargs.get("clubs", "").split(",")]
+        clubs_whitelist = [club.strip() for club in (kwargs.get("clubs") or "").split(",")]
         clubs_whitelist = [club for club in clubs_whitelist if club]
 
         found_whitelist = set(
