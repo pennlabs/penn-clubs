@@ -184,11 +184,11 @@ def hour_to_string_helper(hour):
     if hour == 0:
         hour_string = "12am"
     elif hour < 12:
-        hour_string = str(hour) + "am"
+        hour_string = f"{hour}am"
     elif hour == 12:
         hour_string = "12pm"
     else:
-        hour_string = str(hour - 12) + "pm"
+        hour_string = f"{hour - 12}pm"
 
     return hour_string
 
