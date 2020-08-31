@@ -11,6 +11,7 @@ import {
   InfoPageTitle,
   Metadata,
 } from '../components/common'
+import AuthPrompt from '../components/common/AuthPrompt'
 import {
   CLUB_EDIT_ROUTE,
   CLUB_ROUTE,
@@ -25,6 +26,7 @@ import { ClubEvent, ClubEventType } from '../types'
 import { doApiRequest } from '../utils'
 
 type ZoomPageProps = {
+  authenticated: boolean | null
   events: ClubEvent[]
   userMeetings: ZoomMeeting[]
   zoomSettings: ZoomSettings
@@ -160,6 +162,7 @@ const loadEvents = (data?: any): Promise<ClubEvent[]> => {
 }
 
 const ZoomPage = ({
+  authenticated,
   events: initialEvents,
   zoomSettings: initialZoomSettings,
   userMeetings: initialUserMeetings,
@@ -182,6 +185,10 @@ const ZoomPage = ({
   useEffect(() => {
     setNextUrl(window.location.pathname)
   }, [])
+
+  if (authenticated === false) {
+    return <AuthPrompt />
+  }
 
   return (
     <Container background={SNOW}>

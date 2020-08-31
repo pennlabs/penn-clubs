@@ -6,32 +6,22 @@ import { ReactElement } from 'react'
 import { Container, Icon, InfoPageTitle, Metadata } from '../components/common'
 import { CLUB_ROUTE, LIVE_EVENTS, SNOW } from '../constants'
 import renderPage from '../renderPage'
-import { ClubEvent, ClubEventType } from '../types'
+import { ClubEvent } from '../types'
 import { doApiRequest, useSetting } from '../utils'
 
 type FairPageProps = {
-  events: ClubEvent[]
+  events: {
+    start_time: string
+    end_time: string
+    events: {
+      category: string | null
+      events: { name: string; code: string }[]
+    }[]
+  }[]
 }
 
 const FairPage = ({ events }: FairPageProps): ReactElement => {
   const isFairOpen = useSetting('FAIR_OPEN')
-  const eventsByDay = {}
-
-  events.forEach((item) => {
-    const startTimestamp = new Date(item.start_time).getTime()
-    const category =
-      item.badges
-        .filter(({ purpose }) => purpose === 'fair')
-        .map(({ label }) => label)[0] ?? 'Miscellaneous'
-
-    if (!(startTimestamp in eventsByDay)) {
-      eventsByDay[startTimestamp] = {}
-    }
-    if (!(category in eventsByDay[startTimestamp])) {
-      eventsByDay[startTimestamp][category] = []
-    }
-    eventsByDay[startTimestamp][category].push(item)
-  })
 
   return (
     <Container background={SNOW}>
@@ -158,51 +148,38 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
           </Link>
         )}
         <div className="columns mt-3">
-          {Object.entries(eventsByDay)
-            .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-            .map(
-              ([day, events]: [
-                string,
-                { [category: string]: ClubEvent[] },
-              ]): ReactElement => {
-                const parsedDate = moment(parseInt(day)).tz('America/New_York')
-                const endDate = moment(Object.values(events)[0][0].end_time).tz(
-                  'America/New_York',
-                )
-                return (
-                  <div key={day} className="column">
-                    <div className="mb-3">
-                      <b className="has-text-info">
-                        {parsedDate.format('LLL')} - {endDate.format('LT z')}
-                      </b>
-                    </div>
-                    {Object.entries(events)
-                      .sort((a, b) => a[0].localeCompare(b[0]))
-                      .map(([category, list]) => (
-                        <div key={category}>
-                          <b>{category}</b>
-                          <ul className="mt-0 mb-3">
-                            {list
-                              .sort((a, b) =>
-                                a.club_name.localeCompare(b.club_name),
-                              )
-                              .map((event) => (
-                                <li key={event.club}>
-                                  <Link
-                                    href={CLUB_ROUTE()}
-                                    as={CLUB_ROUTE(event.club)}
-                                  >
-                                    <a>{event.club_name}</a>
-                                  </Link>
-                                </li>
-                              ))}
-                          </ul>
-                        </div>
-                      ))}
+          {events.map(
+            ({ start_time, end_time, events }, i): ReactElement => {
+              const parsedDate = moment(start_time).tz('America/New_York')
+              const endDate = moment(end_time).tz('America/New_York')
+              return (
+                <div key={i} className="column">
+                  <div className="mb-3">
+                    <b className="has-text-info">
+                      {parsedDate.format('LLL')} - {endDate.format('LT z')}
+                    </b>
                   </div>
-                )
-              },
-            )}
+                  {events.map(({ category, events }) => (
+                    <div key={category}>
+                      <b>{category}</b>
+                      <ul className="mt-0 mb-3">
+                        {events.map((event) => (
+                          <li key={event.code}>
+                            <Link
+                              href={CLUB_ROUTE()}
+                              as={CLUB_ROUTE(event.code)}
+                            >
+                              <a>{event.name}</a>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )
+            },
+          )}
         </div>
       </div>
     </Container>
@@ -215,10 +192,7 @@ FairPage.getInitialProps = async (ctx: NextPageContext) => {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
 
-  const resp = await doApiRequest(
-    `/events/?format=json&type=${ClubEventType.FAIR}`,
-    data,
-  )
+  const resp = await doApiRequest('/events/fair/?format=json', data)
   const json = await resp.json()
 
   return { events: json }
