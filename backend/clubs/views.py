@@ -811,7 +811,8 @@ class EventViewSet(viewsets.ModelViewSet):
         This endpoint is cached for 5 min for a no filter parameter call.
         """
         params = set(request.query_params.keys())
-        params.remove("format")
+        if "format" in params:
+            params.remove("format")
         should_cache = not params
 
         if should_cache:
@@ -839,7 +840,8 @@ class EventViewSet(viewsets.ModelViewSet):
         This endpoint is cached for 5 min for a no filter parameter call.
         """
         params = set(request.query_params.keys())
-        params.remove("format")
+        if "format" in params:
+            params.remove("format")
         should_cache = not params
 
         if should_cache:
