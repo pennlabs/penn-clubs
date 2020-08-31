@@ -183,8 +183,10 @@ const ClubPage = ({
           <StyledCard bordered>
             <Description club={club} />
           </StyledCard>
-          <StrongText ref={questionsScrollRef}>FAQ</StrongText>
-          <QuestionList club={club} questions={questions} />
+          <div className="mb-3">
+            <StrongText ref={questionsScrollRef}>FAQ</StrongText>
+            <QuestionList club={club} questions={questions} />
+          </div>
           <StrongText>Members</StrongText>
           <MemberList club={club} />
         </div>
