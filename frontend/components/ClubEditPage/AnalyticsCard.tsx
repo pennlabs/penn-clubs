@@ -3,6 +3,7 @@ import Head from 'next/head'
 import { ReactElement, useEffect, useState } from 'react'
 import DatePicker from 'react-datepicker'
 import {
+  ChartLabel,
   DiscreteColorLegend,
   HorizontalGridLines,
   LineMarkSeries,
@@ -103,10 +104,21 @@ export default function AnalyticsCard({
           orientation="vertical"
           style={{ display: 'flex' }}
         />
-        <XYPlot xType="ordinal" yDomain={[0, max]} width={800} height={350}>
+        <XYPlot
+          xType="ordinal"
+          yDomain={[0, max]}
+          width={800}
+          height={350}
+          margin={{ bottom: 60 }}
+        >
           <XAxis />
           <YAxis />
-
+          <ChartLabel
+            text="Time (US/Eastern)"
+            includeMargin={true}
+            xPercent={0.45}
+            yPercent={0.85}
+          />
           <HorizontalGridLines />
           <VerticalGridLines />
           <LineMarkSeries data={visits} />

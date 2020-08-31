@@ -549,6 +549,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         favorites_data = []
         subscriptions_data = []
         max_value = 0
+        eastern = pytz.timezone("America/New_York")
 
         for hour in range(24):
             visits_data.append({"x": hour_to_string_helper(hour), "y": 0})
@@ -556,73 +557,23 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             subscriptions_data.append({"x": hour_to_string_helper(hour), "y": 0})
 
         visits = ClubVisit.objects.filter(club=club, created_at__day=date.day)
-        grouped = itertools.groupby(visits, lambda row: row.created_at.hour)
+        grouped = itertools.groupby(visits, lambda row: row.created_at.astimezone(eastern).hour)
         for hour, visits in grouped:
             visits_data[hour]["y"] = len(list(visits))
             if visits_data[hour]["y"] > max_value:
                 max_value = visits_data[hour]["y"]
 
         favorites = Favorite.objects.filter(club=club, created_at__day=date.day)
-        grouped = itertools.groupby(favorites, lambda row: row.created_at.hour)
+        grouped = itertools.groupby(favorites, lambda row: row.created_at.astimezone(eastern).hour)
         for hour, favorites in grouped:
             favorites_data[hour]["y"] = len(list(favorites))
             if favorites_data[hour]["y"] > max_value:
                 max_value = favorites_data[hour]["y"]
 
         subscriptions = Subscribe.objects.filter(club=club, created_at__day=date.day)
-        grouped = itertools.groupby(subscriptions, lambda row: row.created_at.hour)
-        for hour, subscriptions in grouped:
-            subscriptions_data[hour]["y"] = len(list(subscriptions))
-            if subscriptions_data[hour]["y"] > max_value:
-                max_value = subscriptions_data[hour]["y"]
-
-        analytics_dict = {
-            "visits": visits_data,
-            "favorites": favorites_data,
-            "subscriptions": subscriptions_data,
-            "max": max_value,
-        }
-
-        return HttpResponse(json.dumps(analytics_dict))
-
-    @action(detail=True, methods=["get"])
-    def analytics(self, request, *args, **kwargs):
-        """
-        Returns a list of all analytics (club visits, favorites,
-        subscriptions) for a club.
-        """
-        club = self.get_object()
-        if "date" in request.query_params.keys():
-            date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
-        else:
-            date = datetime.date.today()
-
-        visits_data = []
-        favorites_data = []
-        subscriptions_data = []
-        max_value = 0
-
-        for hour in range(24):
-            visits_data.append({"x": hour_to_string_helper(hour), "y": 0})
-            favorites_data.append({"x": hour_to_string_helper(hour), "y": 0})
-            subscriptions_data.append({"x": hour_to_string_helper(hour), "y": 0})
-
-        visits = ClubVisit.objects.filter(club=club, created_at__day=date.day)
-        grouped = itertools.groupby(visits, lambda row: row.created_at.hour)
-        for hour, visits in grouped:
-            visits_data[hour]["y"] = len(list(visits))
-            if visits_data[hour]["y"] > max_value:
-                max_value = visits_data[hour]["y"]
-
-        favorites = Favorite.objects.filter(club=club, created_at__day=date.day)
-        grouped = itertools.groupby(favorites, lambda row: row.created_at.hour)
-        for hour, favorites in grouped:
-            favorites_data[hour]["y"] = len(list(favorites))
-            if favorites_data[hour]["y"] > max_value:
-                max_value = favorites_data[hour]["y"]
-
-        subscriptions = Subscribe.objects.filter(club=club, created_at__day=date.day)
-        grouped = itertools.groupby(subscriptions, lambda row: row.created_at.hour)
+        grouped = itertools.groupby(
+            subscriptions, lambda row: row.created_at.astimezone(eastern).hour
+        )
         for hour, subscriptions in grouped:
             subscriptions_data[hour]["y"] = len(list(subscriptions))
             if subscriptions_data[hour]["y"] > max_value:

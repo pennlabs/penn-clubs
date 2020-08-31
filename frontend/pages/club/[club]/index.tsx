@@ -98,7 +98,7 @@ const ClubPage = ({
         club: code,
       },
     })
-  })
+  }, [])
 
   const { code } = club
   if (!code) {

@@ -1,7 +1,5 @@
 import fetch from 'isomorphic-unfetch'
 import { createContext, ReactElement, useContext } from 'react'
-import FormData from 'form-data'
-
 import { MembershipRank } from './types'
 
 export function stripTags(val: string): string {
