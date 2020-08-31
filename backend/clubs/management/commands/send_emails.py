@@ -81,6 +81,13 @@ class Command(BaseCommand):
             action="store_true",
             help="Include staff members of a club in the email being sent out.",
         )
+        parser.add_argument(
+            "--clubs",
+            dest="clubs",
+            type=str,
+            help="The comma separated list of club codes to send emails to. "
+            "Helpful for previewing the email before it is sent.",
+        )
         parser.set_defaults(include_staff=False, dry_run=False, only_sheet=False, only_active=True)
 
     def handle(self, *args, **kwargs):
@@ -92,9 +99,22 @@ class Command(BaseCommand):
         role = kwargs["role"]
         role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
 
+        # get club whitelist
+        clubs_whitelist = [club.strip() for club in kwargs.get("clubs", "").split(",")]
+        clubs_whitelist = [club for club in clubs_whitelist if club]
+
+        found_whitelist = set(
+            Club.objects.filter(code__in=clubs_whitelist).values_list("code", flat=True)
+        )
+        missing = set(clubs_whitelist) - found_whitelist
+        if missing:
+            raise CommandError(f"Invalid club codes in clubs parameter: {missing}")
+
         # handle sending out virtual fair emails
         if action == "virtual_fair":
             clubs = Club.objects.filter(fair=True)
+            if clubs_whitelist:
+                clubs = clubs.filter(code__in=clubs_whitelist)
             self.stdout.write(f"Found {clubs.count()} clubs participating in the fair.")
             for club in clubs:
                 self.stdout.write(f"Sending virtual fair setup email to {club.name}...")
@@ -102,6 +122,7 @@ class Command(BaseCommand):
                     club.send_virtual_fair_email()
             return
 
+        # handle all other email events
         if only_sheet:
             clubs = Club.objects.all()
         else:
@@ -119,6 +140,9 @@ class Command(BaseCommand):
 
         if kwargs["only_active"]:
             clubs = clubs.filter(active=True)
+
+        if clubs_whitelist:
+            clubs = clubs.filter(code__in=clubs_whitelist)
 
         clubs_missing = 0
         clubs_sent = 0
