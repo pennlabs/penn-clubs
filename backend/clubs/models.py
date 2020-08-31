@@ -166,8 +166,19 @@ class Club(models.Model):
         """
         domain = get_domain(request)
 
+        now = timezone.now()
+        event = (
+            self.events.filter(start_time__gte=now, type=Event.FAIR).order_by("start_time").first()
+        )
+
+        prefix = (
+            "ACTION REQUIRED"
+            if event is None or not event.url or "zoom.us" not in event.url
+            else "REMINDER"
+        )
         context = {
             "name": self.name,
+            "prefix": prefix,
             "guide_url": f"https://{domain}/sacfairguide",
             "zoom_url": f"https://{domain}/zoom",
             "fair_url": f"https://{domain}/fair",
@@ -178,7 +189,7 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="fair_info",
-                subject="[ACTION REQUIRED] SAC Fair Setup and Information",
+                subject=f"[{prefix}] SAC Fair Setup and Information",
                 emails=emails,
                 context=context,
             )
