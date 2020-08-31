@@ -1,4 +1,4 @@
-import moment from 'moment'
+import moment from 'moment-timezone'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement } from 'react'
@@ -165,19 +165,21 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
                 string,
                 { [category: string]: ClubEvent[] },
               ]): ReactElement => {
-                const parsedDate = moment(parseInt(day))
-                const endDate = moment(Object.values(events)[0][0].end_time)
+                const parsedDate = moment(parseInt(day)).tz('America/New_York')
+                const endDate = moment(Object.values(events)[0][0].end_time).tz(
+                  'America/New_York',
+                )
                 return (
                   <div key={day} className="column">
                     <div className="mb-3">
                       <b className="has-text-info">
-                        {parsedDate.format('LLL')} - {endDate.format('LT')}
+                        {parsedDate.format('LLL')} - {endDate.format('LT z')}
                       </b>
                     </div>
                     {Object.entries(events)
                       .sort((a, b) => a[0].localeCompare(b[0]))
                       .map(([category, list]) => (
-                        <>
+                        <div key={category}>
                           <b>{category}</b>
                           <ul className="mt-0 mb-3">
                             {list
@@ -195,7 +197,7 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
                                 </li>
                               ))}
                           </ul>
-                        </>
+                        </div>
                       ))}
                   </div>
                 )
