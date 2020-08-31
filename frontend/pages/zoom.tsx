@@ -538,6 +538,11 @@ const ZoomPage = ({
                   edit event if you want to edit the cover photo and description
                   for your virtual activities fair booth.
                 </p>
+                <p className="mt-3">
+                  Clicking the button below will also attempt to add all
+                  officers who have linked their Zoom accounts to Penn Clubs as
+                  co-hosts of the meeting.
+                </p>
                 {createResp && createResp.event === event.id && (
                   <p
                     className={

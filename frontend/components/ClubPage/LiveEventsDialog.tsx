@@ -47,18 +47,21 @@ const WhiteButton = s.div`
 interface LiveEventsDialogProps {
   liveEventCount: number
   isPreFair: boolean
+  isFair: boolean
 }
 
 const LiveEventsDialog = ({
   liveEventCount,
   isPreFair,
+  isFair,
 }: LiveEventsDialogProps): ReactElement => (
   <LiveBanner>
-    {isPreFair ? (
+    {isPreFair && (
       <Link href={FAIR_OFFICER_GUIDE_ROUTE} as={FAIR_OFFICER_GUIDE_ROUTE}>
         <WhiteButton>Officer Setup</WhiteButton>
       </Link>
-    ) : (
+    )}
+    {isFair && (
       <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
         <WhiteButton>See Live Events</WhiteButton>
       </Link>

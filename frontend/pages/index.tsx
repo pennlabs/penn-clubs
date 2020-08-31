@@ -248,6 +248,7 @@ const Splash = (props: SplashProps): ReactElement => {
             {(preFair || fairIsOpen) && (
               <LiveEventsDialog
                 isPreFair={!!preFair}
+                isFair={!!fairIsOpen}
                 liveEventCount={props.liveEventCount}
               />
             )}
