@@ -233,6 +233,16 @@ function EventPage({
                 <EventCard key={e.id} event={e} isHappening={false} />
               ))}
             </CardList>
+            {!upcomingEvents.length && (
+              <div className="notification is-info is-clearfix">
+                <img
+                  className="is-pulled-left mr-5 mb-3"
+                  style={{ width: 100 }}
+                  src="/static/img/events_calendar.png"
+                />
+                <div>There are no current upcoming events.</div>
+              </div>
+            )}
           </WideContainer>
         </SearchbarRightContainer>
       </div>
