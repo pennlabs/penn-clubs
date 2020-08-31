@@ -41,6 +41,7 @@
     "react-timeago": "^4.4.0",
     "react-tooltip": "^3.11.1",
     "showdown": "^1.9.1",
+    "react-vis": "^1.11.7",
     "styled-components": "^4.4.1"
   },
   "scripts": {

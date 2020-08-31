@@ -436,6 +436,21 @@ class Subscribe(models.Model):
         unique_together = (("person", "club"),)
 
 
+class ClubVisit(models.Model):
+    """
+    Stores user visits to club pages to be used later in analytics
+    """
+
+    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "<Visit: {} visited {}>".format(self.person.username, self.club.code)
+
+
 class MembershipRequest(models.Model):
     """
     Used when users are not in the club but request membership from the owner

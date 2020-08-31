@@ -14,6 +14,7 @@ from clubs.models import (
     Asset,
     Badge,
     Club,
+    ClubVisit,
     Event,
     Favorite,
     Major,
@@ -1035,6 +1036,26 @@ class SubscribeSerializer(serializers.ModelSerializer):
                 queryset=Subscribe.objects.all(), fields=["club", "person"]
             )
         ]
+
+
+class UserClubVisitSerializer(serializers.ModelSerializer):
+    """
+    Used by users to get a list of clubs that they have visited.
+    """
+
+    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    club = ClubListSerializer(read_only=True)
+
+    class Meta:
+        model = ClubVisit
+        fields = ("club", "person")
+
+
+class UserClubVisitWriteSerializer(UserSubscribeSerializer):
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+
+    class Meta(UserClubVisitSerializer.Meta):
+        pass
 
 
 class MembershipRequestSerializer(serializers.ModelSerializer):

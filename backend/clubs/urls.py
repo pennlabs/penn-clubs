@@ -6,6 +6,7 @@ from clubs.views import (
     AssetViewSet,
     BadgeViewSet,
     ClubViewSet,
+    ClubVisitViewSet,
     EventViewSet,
     FavoriteViewSet,
     LastEmailInviteTestAPIView,
@@ -40,6 +41,7 @@ router.register(r"tags", TagViewSet, basename="tags")
 router.register(r"badges", BadgeViewSet, basename="badges")
 router.register(r"favorites", FavoriteViewSet, basename="favorites")
 router.register(r"subscriptions", SubscribeViewSet, basename="subscribes")
+router.register(r"clubvisits", ClubVisitViewSet, basename="clubvisits")
 router.register(r"memberships", MembershipViewSet, basename="members")
 router.register(r"requests", MembershipRequestViewSet, basename="requests")
 

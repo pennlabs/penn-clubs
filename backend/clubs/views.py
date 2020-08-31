@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import json
 import os
 import re
@@ -37,6 +38,7 @@ from clubs.models import (
     Asset,
     Badge,
     Club,
+    ClubVisit,
     Event,
     Favorite,
     Major,
@@ -88,6 +90,8 @@ from clubs.serializers import (
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
+    UserClubVisitSerializer,
+    UserClubVisitWriteSerializer,
     UserMembershipRequestSerializer,
     UserMembershipSerializer,
     UserSerializer,
@@ -173,6 +177,20 @@ def filter_note_permission(queryset, club, user):
     ) | queryset.filter(outside_club_permission__gte=subject_club_membership)
 
     return queryset
+
+
+def hour_to_string_helper(hour):
+    hour_string = ""
+    if hour == 0:
+        hour_string = "12am"
+    elif hour < 12:
+        hour_string = f"{hour}am"
+    elif hour == 12:
+        hour_string = "12pm"
+    else:
+        hour_string = f"{hour - 12}pm"
+
+    return hour_string
 
 
 class ReportViewSet(viewsets.ModelViewSet):
@@ -514,6 +532,61 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
         serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def analytics(self, request, *args, **kwargs):
+        """
+        Returns a list of all analytics (club visits, favorites,
+        subscriptions) for a club.
+        """
+        club = self.get_object()
+        if "date" in request.query_params.keys():
+            date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
+        else:
+            date = datetime.date.today()
+
+        visits_data = []
+        favorites_data = []
+        subscriptions_data = []
+        max_value = 0
+        eastern = pytz.timezone("America/New_York")
+
+        for hour in range(24):
+            visits_data.append({"x": hour_to_string_helper(hour), "y": 0})
+            favorites_data.append({"x": hour_to_string_helper(hour), "y": 0})
+            subscriptions_data.append({"x": hour_to_string_helper(hour), "y": 0})
+
+        visits = ClubVisit.objects.filter(club=club, created_at__day=date.day)
+        grouped = itertools.groupby(visits, lambda row: row.created_at.astimezone(eastern).hour)
+        for hour, visits in grouped:
+            visits_data[hour]["y"] = len(list(visits))
+            if visits_data[hour]["y"] > max_value:
+                max_value = visits_data[hour]["y"]
+
+        favorites = Favorite.objects.filter(club=club, created_at__day=date.day)
+        grouped = itertools.groupby(favorites, lambda row: row.created_at.astimezone(eastern).hour)
+        for hour, favorites in grouped:
+            favorites_data[hour]["y"] = len(list(favorites))
+            if favorites_data[hour]["y"] > max_value:
+                max_value = favorites_data[hour]["y"]
+
+        subscriptions = Subscribe.objects.filter(club=club, created_at__day=date.day)
+        grouped = itertools.groupby(
+            subscriptions, lambda row: row.created_at.astimezone(eastern).hour
+        )
+        for hour, subscriptions in grouped:
+            subscriptions_data[hour]["y"] = len(list(subscriptions))
+            if subscriptions_data[hour]["y"] > max_value:
+                max_value = subscriptions_data[hour]["y"]
+
+        analytics_dict = {
+            "visits": visits_data,
+            "favorites": favorites_data,
+            "subscriptions": subscriptions_data,
+            "max": max_value,
+        }
+
+        return HttpResponse(json.dumps(analytics_dict))
 
     @action(detail=False, methods=["get"])
     def directory(self, request, *args, **kwargs):
@@ -1031,6 +1104,26 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             return UserSubscribeWriteSerializer
         return UserSubscribeSerializer
+
+
+class ClubVisitViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of clubs that the logged in user has visited.
+
+    create: Visit a club.
+    """
+
+    permission_classes = [IsAuthenticated]
+    lookup_field = "club__code"
+    http_method_names = ["get", "post"]
+
+    def get_queryset(self):
+        return ClubVisit.objects.filter(person=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return UserClubVisitWriteSerializer
+        return UserClubVisitSerializer
 
 
 class MembershipRequestViewSet(viewsets.ModelViewSet):
