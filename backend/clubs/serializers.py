@@ -269,6 +269,23 @@ class EventSerializer(serializers.ModelSerializer):
         """
         return clean(value)
 
+    def update(self, instance, validated_data):
+        # ensure user cannot update start time or end time for a fair event
+        user = self.context["request"].user
+        if not (user.is_authenticated and user.has_perm("clubs.see_fair_status")):
+            if instance and instance.type == Event.FAIR:
+                unchanged_fields = {"start_time", "end_time"}
+                for field in unchanged_fields:
+                    if (
+                        field in validated_data
+                        and not getattr(self.instance, field, None) == validated_data[field]
+                    ):
+                        raise serializers.ValidationError(
+                            "You may not change the start and end times for a fair event!"
+                        )
+
+        return super().update(instance, validated_data)
+
     def save(self):
         if "club" not in self.validated_data:
             self.validated_data["club"] = Club.objects.get(
