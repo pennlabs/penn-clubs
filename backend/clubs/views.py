@@ -1243,7 +1243,7 @@ class MeetingZoomWebhookAPIView(APIView):
     """
 
     def post(self, request):
-        logging.error(str(request.data))
+        logging.error(str(request.data) + " " + str(request.headers))
         return Response({"success": True})
 
 
