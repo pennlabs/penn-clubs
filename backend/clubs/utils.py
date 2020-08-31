@@ -81,6 +81,7 @@ IFRAME_EMBED_WHITELIST = {
     "drive.google.com",
     "facebook.com",
     "google.com",
+    "penniic.org",
     "streamable.com",
     "twitframe.com",
     "xkcd.com",
