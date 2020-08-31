@@ -1,5 +1,5 @@
 import { NextPageContext } from 'next'
-import { ReactElement, useState } from 'react'
+import { ReactElement, useRef, useState } from 'react'
 import Linkify from 'react-linkify'
 import s from 'styled-components'
 
@@ -64,12 +64,23 @@ type ClubPageProps = {
   questions: QuestionAnswer[]
 }
 
+const QAButton = s.button.attrs({ className: 'button is-primary' })`
+  font-size: 0.8em;
+  margin-bottom: 1rem;
+  padding: 1.5rem;
+  width: 100%;
+  white-space: pre-wrap;
+`
+
 const ClubPage = ({
   club: initialClub,
   questions,
   userInfo,
 }: ClubPageProps): ReactElement => {
   const [club, setClub] = useState<Club>(initialClub)
+  const scrollToRef = (ref) => window.scrollTo(0, ref.current.offsetTop - 100)
+  const questionsScrollRef = useRef(null)
+  const scrollToQuestions = () => scrollToRef(questionsScrollRef)
 
   const updateRequests = async (code: string): Promise<void> => {
     const newClub = { ...club }
@@ -172,10 +183,10 @@ const ClubPage = ({
           <StyledCard bordered>
             <Description club={club} />
           </StyledCard>
+          <StrongText ref={questionsScrollRef}>FAQ</StrongText>
+          <QuestionList club={club} questions={questions} />
           <StrongText>Members</StrongText>
           <MemberList club={club} />
-          <StrongText>FAQ</StrongText>
-          <QuestionList club={club} questions={questions} />
         </div>
         <div className="column is-one-third">
           <DesktopActions
@@ -183,6 +194,13 @@ const ClubPage = ({
             userInfo={userInfo}
             updateRequests={updateRequests}
           />
+          <QAButton onClick={scrollToQuestions}>
+            {questions.length > 0
+              ? `Click here to see the ${questions.length} question${
+                  questions.length === 1 ? '' : 's'
+                } asked about this club so far!`
+              : 'Be the first to ask a question about this club!'}
+          </QAButton>
           <StyledCard bordered>
             <StrongText>Basic Info</StrongText>
             <InfoBox club={club} />
