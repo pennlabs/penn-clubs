@@ -264,10 +264,26 @@ class EventSerializer(serializers.ModelSerializer):
         else:
             return obj.image.url
 
+    def validate_url(self, value):
+        """
+        Block virtual event links.
+        """
+
+        if "virtualevent.ml" in value:
+            raise serializers.ValidationError(
+                "Please use an alternative video conferencing platform like Zoom"
+            )
+        return value
+
     def validate_description(self, value):
         """
         Allow the description to have HTML tags that come from a whitelist.
+        Block virtual event links.
         """
+        if "virtualevent.ml" in value:
+            raise serializers.ValidationError(
+                "Please use an alternative video conferencing platform like Zoom"
+            )
         return clean(value)
 
     def update(self, instance, validated_data):
@@ -929,13 +945,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "website",
             "youtube",
         ]
-        save_related_fields = [
-            "tags",
-            "badges",
-            "target_schools",
-            "target_majors",
-            "target_years",
-        ]
+        save_related_fields = ["tags", "badges", "target_schools", "target_majors", "target_years"]
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
@@ -1119,11 +1129,7 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MembershipRequest
-        fields = (
-            "club",
-            "club_name",
-            "person",
-        )
+        fields = ("club", "club_name", "person")
 
 
 class UserSerializer(serializers.ModelSerializer):
