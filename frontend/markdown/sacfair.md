@@ -61,7 +61,6 @@ Enable breakout rooms for your meetings. See [this guide](https://support.zoom.u
 - If you use a personal account, the maximum number of people that can attend your meeting at once is **100 people**. If you use the school provided account, this limit increases to **300 people**. You can check the meeting limit for you account on the Zoom settings page.
 - Make all present members of the session **co-hosts** to help control the session.
 - Have the chat window **open** to answer any questions. For busier sessions, we recommend designating one member to be monitoring the chat window.
-- For busier sessions where multiple club members are present, we recommend taking advantage of the **breakout room** feature, which can be prompted by hosts. Breakout rooms can be used to facilitate 1 on 1 conversations with club members and fair attendees. We would suggest **manually assigning** people to a breakout room, to ensure a member of the club is there to answer questions.
 
     ![Zoom Breakout Rooms](5.png)
 
@@ -75,6 +74,26 @@ If you are planning to use a short pitch or short presentation to share with pro
 To do this, a host of the session can simply just hit the record button. To easily link the file on your club page later, we recommend you click on the "Record to the Cloud" option.
 
 ![Zoom Recording](zoom2.png)
+
+## 👨‍👩‍👧‍👦 Managing Breakout Rooms
+
+For busier sessions where multiple club members are present, we recommend taking advantage of the **breakout room** feature, which can be prompted by hosts. Breakout rooms can be used to facilitate 1 on 1 conversations with club members and fair attendees. We would suggest **manually assigning** people to a breakout room, to ensure a member of the club is in each breakout room to answer questions.
+
+![Assign Breakout Rooms Manually](Breakout1.png)
+
+Once you choose the number of rooms, you can manually assign participants to each room. Just click the "Assign" button and select the active participants you would like to move into each breakout room.
+
+![Assign Breakout Rooms Manually](Breakout4.png)
+
+Hosts and co-hosts can move around to breakout rooms freely, though regular participants must join the room they are assigned. As a host, you must regularly be watching the Breakout Rooms window, as new participants will not be put in a breakout room initially. You will have to assign them manually, by clicking the "Assign to" button next to their name when they join. They will be listed under the "Unassigned" attendees.
+
+![Assign Breakout Rooms to New Participants](Breakout3.png)
+
+You can also broadcast messages to all of the participants in the breakout by using the "Broadcast message to all" button.
+
+![Assign Breakout Rooms to New Participants](Breakout2.png)
+
+For more information, check out the on the Zoom website about breakout rooms [here](https://support.zoom.us/hc/en-us/articles/206476313-Managing-Breakout-Rooms).
 
 ## 📎 Recruitment Resources
 
