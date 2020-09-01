@@ -985,7 +985,10 @@ export class ModelForm extends Component {
           <ModelStatus status={currentObject._status} />
           {currentObject._error_message && (
             <div style={{ color: 'red', marginTop: '1rem' }}>
-              <Icon name="alert-circle" /> {currentObject._error_message}
+              <Icon name="alert-circle" />{' '}
+              {typeof currentObject._error_message === 'object' &&
+                'Errors occured while processing your request:'}
+              {formatResponse(currentObject._error_message)}
             </div>
           )}
         </>
