@@ -1612,7 +1612,7 @@ class MeetingZoomAPIView(APIView):
                 {
                     "success": out.ok,
                     "detail": "Your Zoom meeting has been updated. "
-                    f"The following accounts have been made hosts: {alt_hosts.join(', ')}"
+                    f"The following accounts have been made hosts: {', '.join(alt_hosts)}"
                     if out.ok
                     else "Your Zoom meeting has not been updated. "
                     "Are you the owner of the meeting?",
