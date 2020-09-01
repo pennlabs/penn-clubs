@@ -16,8 +16,8 @@ import s from 'styled-components'
 
 import { Club, MembershipRank, MembershipRole } from '../../types'
 import { doApiRequest } from '../../utils'
-import BaseCard from './BaseCard'
 import { Text } from '../common'
+import BaseCard from './BaseCard'
 
 type AnalyticsCardProps = {
   club: Club

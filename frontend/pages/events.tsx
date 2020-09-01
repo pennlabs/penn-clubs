@@ -6,6 +6,7 @@ import styled from 'styled-components'
 import { Metadata, Title, WideContainer } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import EventCard from '../components/EventPage/EventCard'
+import { MEETING_REGEX } from '../components/EventPage/EventModal'
 import SearchBar, {
   getInitialSearch,
   SearchbarRightContainer,
@@ -52,6 +53,9 @@ const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
     }
     if (event.url) {
       rank += 3
+      if (MEETING_REGEX.test(event.url)) {
+        rank += 0.5
+      }
     }
     return {
       event,

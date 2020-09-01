@@ -1,10 +1,11 @@
 import { useRouter } from 'next/router'
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import { Icon, TransparentButton } from '../../components/common'
 import { CLUB_ROUTE, CLUBS_BLUE, M2, ZOOM_BLUE } from '../../constants'
 import { ClubEvent } from '../../types'
+import { doApiRequest } from '../../utils'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
@@ -74,6 +75,21 @@ const EventModal = (props: {
     description,
   } = event
   const router = useRouter()
+  const [userCount, setUserCount] = useState<number>(0)
+
+  useEffect(() => {
+    if (url && MEETING_REGEX.test(url)) {
+      const match = url.match(/\/(\d+)/)
+      if (match) {
+        const id = match[1]
+        doApiRequest(`/webhook/meeting/?format=json&event=${id}`)
+          .then((resp) => resp.json())
+          .then((resp) => {
+            setUserCount(resp.count)
+          })
+      }
+    }
+  }, [])
 
   return (
     <ModalContainer>
@@ -86,7 +102,6 @@ const EventModal = (props: {
           <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
           <RightAlign>{isHappening && <HappeningNow />}</RightAlign>
         </MetaDataGrid>
-
         <ClubName>{club_name}</ClubName>
         <EventName>{name}</EventName>
         {url &&
@@ -103,7 +118,12 @@ const EventModal = (props: {
             url
           ) : (
             <EventLink href={url}>{url}</EventLink>
-          ))}
+          ))}{' '}
+        {userCount > 0 && (
+          <span className="mt-3 ml-2 is-inline-block has-text-info">
+            <Icon name="user" /> {userCount} attendees
+          </span>
+        )}
         <StyledDescription contents={description} />
         {showDetailsButton !== false && (
           <RightAlign>

@@ -1418,7 +1418,10 @@ class MeetingZoomWebhookAPIView(APIView):
         if not id:
             return Response({"count": 0})
 
-        conn = get_redis_connection()
+        try:
+            conn = get_redis_connection()
+        except NotImplementedError:
+            return Response({"count": 0})
         key = f"zoom:meeting:live:{id}"
         ans = conn.get(key)
         if ans is None:
