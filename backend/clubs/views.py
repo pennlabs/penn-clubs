@@ -1549,7 +1549,13 @@ class MeetingZoomAPIView(APIView):
             out = data.json()
             event.url = out.get("join_url", "")
             event.save(update_fields=["url"])
-            return Response({"success": True, "detail": "Your Zoom meeting has been created!"})
+            return Response(
+                {
+                    "success": True,
+                    "detail": "Your Zoom meeting has been created!"
+                    f"The following accounts have been made hosts: {', '.join(alt_hosts)}",
+                }
+            )
         else:
             parsed_url = urlparse(event.url)
 
