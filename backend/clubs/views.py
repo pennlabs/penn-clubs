@@ -857,6 +857,10 @@ class EventViewSet(viewsets.ModelViewSet):
             output[ts]["events"][category]["events"].append({"name": event[2], "code": event[3]})
         for item in output.values():
             item["events"] = list(sorted(item["events"].values(), key=lambda cat: cat["category"]))
+            for category in item["events"]:
+                category["events"] = list(
+                    sorted(category["events"], key=lambda e: e["name"].casefold())
+                )
 
         output = list(sorted(output.values(), key=lambda cat: cat["start_time"]))
         cache.set(key, output, 60 * 5)
