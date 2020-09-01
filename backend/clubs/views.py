@@ -16,6 +16,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch, Q
+from django.db.models.functions import Lower
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -377,6 +378,9 @@ class ClubsOrderingFilter(RandomOrderingFilter):
             if queryset.model == Club:
                 return queryset.order_by("-rank", "-favorite_count", "-id")
             return queryset.order_by("-club__rank", "-club__favorite_count", "-club__id")
+
+        if "alphabetical" in ordering:
+            new_queryset = new_queryset.order_by(Lower("name"))
 
         return new_queryset
 

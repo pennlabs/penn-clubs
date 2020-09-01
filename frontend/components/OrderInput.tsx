@@ -18,7 +18,7 @@ const ORDERINGS = [
     icon: 'star',
   },
   {
-    key: 'name',
+    key: 'alphabetical',
     name: 'Alphabetical',
     icon: 'list',
   },
