@@ -674,7 +674,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     def get_events(self, obj):
         now = timezone.now()
         return EventSerializer(
-            obj.events.filter(start_time__gte=now).order_by("start_time"),
+            obj.events.filter(end_time__gte=now).order_by("start_time"),
             many=True,
             read_only=True,
             context=self.context,
