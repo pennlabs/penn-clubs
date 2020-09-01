@@ -731,7 +731,9 @@ export class ModelForm extends Component {
                 object._status = false
                 return resp.json().then((resp) => {
                   // eslint-disable-next-line camelcase
-                  object._error_message = resp
+                // TODO: the validation error is in the form 'field: ["message"]'
+                // Need to unwrap that for the error message
+                object._error_message = resp.description
                 })
               }
             })
@@ -755,7 +757,9 @@ export class ModelForm extends Component {
                 })
               } else {
                 // eslint-disable-next-line camelcase
-                object._error_message = resp
+                // TODO: the validation error is in the form 'field: ["message"]'
+                // Need to unwrap that for the error message
+                object._error_message = resp.description
               }
               this.setState(({ objects }) => ({
                 objects: [...objects],
