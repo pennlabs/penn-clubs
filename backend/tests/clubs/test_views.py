@@ -503,12 +503,17 @@ class ClubTestCase(TestCase):
         )
         self.assertTrue(200 <= resp.status_code < 300, resp.data)
 
-    def test_event_create_delete(self):
+    def test_event_create_update_delete(self):
         """
-        Test creating and deleting a club event.
+        Test creating, updating, and deleting a club event as a normal user.
         """
-        self.client.login(username=self.user5.username, password="test")
+        self.client.login(username=self.user4.username, password="test")
+        self.assertFalse(self.user4.is_superuser)
 
+        # add user as officer
+        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+
+        # set event start and end dates
         start_date = datetime.datetime.now() - datetime.timedelta(days=3)
         end_date = start_date + datetime.timedelta(hours=2)
 
@@ -519,6 +524,7 @@ class ClubTestCase(TestCase):
                 "name": "Interest Meeting",
                 "description": "Interest Meeting on Friday!",
                 "location": "JMHH G06",
+                "type": Event.RECRUITMENT,
                 "start_time": start_date.isoformat(),
                 "end_time": end_date.isoformat(),
             },
@@ -529,7 +535,24 @@ class ClubTestCase(TestCase):
 
         # ensure event exists
         self.assertEqual(Event.objects.filter(name="Interest Meeting").count(), 1)
-        self.assertEqual(Event.objects.get(name="Interest Meeting").creator, self.user5)
+        self.assertEqual(Event.objects.get(name="Interest Meeting").creator, self.user4)
+
+        # update event
+        resp = self.client.patch(
+            reverse("club-events-detail", args=(self.club1.code, id)),
+            {
+                "name": "Awesome Interest Meeting",
+                "description": "Interest meeting is actually on Sunday!",
+                "location": "JMHH 256",
+                "start_time": start_date + datetime.timedelta(days=1),
+                "end_time": end_date + datetime.timedelta(days=1),
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure event is updated
+        self.assertEqual(Event.objects.get(id=id).name, "Awesome Interest Meeting")
 
         # delete event
         resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, id)))

@@ -1399,9 +1399,25 @@ def generate_zoom_password():
 
 class MeetingZoomWebhookAPIView(APIView):
     """
+    get: Given a Zoom meeting ID, return the number of people on the call.
+
     post: Trigger this webhook. Should be triggered when a Zoom event occurs.
     Not available to the public, requires Zoom verification token.
     """
+
+    def get(self, request):
+        id = request.query_params.get("event")
+        if not id:
+            return Response({"count": 0})
+
+        conn = get_redis_connection()
+        key = f"zoom:meeting:live:{id}"
+        ans = conn.get(key)
+        if ans is None:
+            ans = 0
+        else:
+            ans = int(ans)
+        return Response({"count": ans})
 
     def post(self, request):
         action = request.data.get("event")
@@ -1584,7 +1600,8 @@ class MeetingZoomAPIView(APIView):
             return Response(
                 {
                     "success": out.ok,
-                    "detail": "Your Zoom meeting has been updated."
+                    "detail": "Your Zoom meeting has been updated. "
+                    f"The following accounts have been made hosts: {alt_hosts.join(', ')}"
                     if out.ok
                     else "Your Zoom meeting has not been updated. "
                     "Are you the owner of the meeting?",
