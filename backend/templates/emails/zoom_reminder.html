@@ -1,0 +1,30 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>[{{ prefix }}] URGENT: Using Zoom for the SAC Fair</h2>
+    <p style="font-size: 1.2em">
+    	Dear <b>{{ name }}</b> officers,
+    </p>
+    <p style="font-size: 1.2em">
+        If you are receiving this email, it means your club has linked a non-Zoom link in your SAC Fair
+        Booth. In order to provide a standardardized experience across all clubs for the SAC Fair, we are requesting
+        that all clubs use a <b>Zoom</b> link instead of Campus Groups or Virtual Event. While these other
+        platforms may be used for other schools or events, to provide a more seamless experience for 
+        prospective members, OSA and SAC are requesting that all clubs use <b>Zoom</b>. 
+    </p>
+    <p style="font-size: 1.2em">
+        Please follow the link below for more information on how to
+        use our <a href="{{ zoom_url }}">three-step process</a> to replace your link with a Zoom meeting with
+        all our recommended preferences, how to best take advantage of the tools Penn Clubs has to 
+        offer, and tips on how to boost your club to the top of our homepage!
+    </p>
+    
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ guide_url }}">SAC Fair Guide</a>
+    <p style="font-size: 1.2em">
+        If you have any questions about the Penn Clubs platform, please feel free to respond to this email.
+    </p>
+
+    <p style="font-size: 1.2em">
+        If you have any questions about the SAC Fair in general, please contact <a href="mailto:sacfair@sacfunded.net">sacfair@sacfunded.net</a>.
+    </p>
+{% endblock %}
