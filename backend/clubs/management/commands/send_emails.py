@@ -1,4 +1,5 @@
 import csv
+import datetime
 import os
 
 from django.conf import settings
@@ -6,6 +7,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Count, Q
 from django.template.loader import render_to_string
+from django.utils import timezone
 
 from clubs.models import Club, Event, Membership, MembershipInvite
 from clubs.utils import fuzzy_lookup_club, html_to_text
@@ -128,15 +130,22 @@ class Command(BaseCommand):
                     club.send_virtual_fair_email()
             return
         elif action == "urgent_virtual_fair":
-            events = Event.objects.filter(type=Event.FAIR)
+            now = timezone.now()
+            events = Event.objects.filter(
+                type=Event.FAIR, end_time__geq=now, start_time__leq=now + datetime.timedelta(days=1)
+            )
             if clubs_whitelist:
                 events = events.filter(club__code__in=clubs_whitelist)
 
             for event in events:
-                if event.url is None or "zoom.us" not in event.url:
+                if event.url is None or not event.url:
                     self.stdout.write(f"Sending virtual fair urgent reminder to {club.name}...")
                     if not dry_run:
-                        event.club.send_virtual_fair_email(urgent=True)
+                        event.club.send_virtual_fair_email(email="urgent")
+                elif "zoom.us" not in event.url:
+                    self.stdout.write(f"Sending Zoom reminder to {club.name}...")
+                    if not dry_run:
+                        event.club.send_virtual_fair_email(email="zoom")
 
         # handle all other email events
         if only_sheet:

@@ -159,7 +159,7 @@ class Club(models.Model):
     def __str__(self):
         return self.name
 
-    def send_virtual_fair_email(self, request=None, urgent=False):
+    def send_virtual_fair_email(self, request=None, email="setup"):
         """
         Send the virtual fair email to all club officers
         about setting up their club for the virtual fair.
@@ -176,7 +176,7 @@ class Club(models.Model):
             if event is None or not event.url or "zoom.us" not in event.url
             else "REMINDER"
         )
-        if urgent:
+        if email in {"urgent", "zoom"}:
             prefix = "URGENT"
 
         context = {
@@ -188,11 +188,13 @@ class Club(models.Model):
         }
 
         emails = self.get_officer_emails()
-        subj = "SAC Fair Setup" if urgent else "SAC Fair Setup and Information"
+        subj = "SAC Fair Setup" if email in {"urgent", "zoom"} else "SAC Fair Setup and Information"
 
         if emails:
             send_mail_helper(
-                name="fair_reminder" if urgent else "fair_info",
+                name={"setup": "fair_info", "urgent": "fair_reminder", "zoom": "zoom_reminder"}[
+                    email
+                ],
                 subject=f"[{prefix}] {subj}",
                 emails=emails,
                 context=context,
