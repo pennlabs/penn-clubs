@@ -426,7 +426,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     permission_classes = [ClubPermission | IsSuperuser]
 
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
-    search_fields = ["name", "subtitle"]
+    search_fields = ["name", "subtitle", "code"]
     ordering_fields = ["favorite_count", "name"]
     ordering = "-favorite_count"
 
@@ -802,7 +802,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
     permission_classes = [EventPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
-    search_fields = ["name", "club__name", "description"]
+    search_fields = ["name", "club__name", "club__subtitle", "description", "club__code"]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
