@@ -43,6 +43,7 @@ django-redis = "*"
 channels-redis = "*"
 uwsgi = {version = "*", sys_platform = "== 'linux'"}
 uvicorn = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3"
