@@ -6,7 +6,7 @@ applications:
     image: redis
     tag: "6.0"
     port: 6379
-  - name: django
+  - name: django-wgsi
     image: pennlabs/penn-clubs-backend
     secret: penn-clubs
     replicas: 30
@@ -14,6 +14,20 @@ applications:
       hosts:
         - host: pennclubs.com
           paths: ["/api"]
+    extraEnv:
+      - name: DOMAIN
+        value: pennclubs.com
+      - name: DJANGO_SETTINGS_MODULE
+        value: pennclubs.settings.production
+  - name: django-asgi
+    image: pennlabs/penn-clubs-backend
+    secret: penn-clubs
+    cmd: ["/usr/local/bin/asgi-run"]
+    replicas: 2
+    ingress:
+      hosts:
+        - host: pennclubs.com
+          paths: ["/api/ws"]
     extraEnv:
       - name: DOMAIN
         value: pennclubs.com

@@ -4,7 +4,7 @@
 /usr/local/bin/python3 /app/manage.py migrate --noinput
 
 # Switch to project folder
-cd /app/backend/
+cd /app/
 
 # Run Daphne
 exec /usr/local/bin/daphne -b 0.0.0.0 -p 80 pennclubs.asgi:application
