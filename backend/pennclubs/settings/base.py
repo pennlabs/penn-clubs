@@ -54,7 +54,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -202,11 +201,6 @@ SOCIAL_AUTH_PIPELINE = (
 
 SOCIAL_AUTH_ZOOM_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_ZOOM_OAUTH2_KEY")
 SOCIAL_AUTH_ZOOM_OAUTH2_SECRET = os.environ.get("SOCIAL_AUTH_ZOOM_OAUTH2_SECRET")
-SOCIAL_AUTH_ZOOM_OAUTH2_SCOPE = [
-    "user:read",
-    "user:write",
-    "meeting:read",
-    "meeting:write",
-]
+SOCIAL_AUTH_ZOOM_OAUTH2_SCOPE = ["user:read", "user:write", "meeting:read", "meeting:write"]
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/"
 ZOOM_VERIFICATION_TOKEN = os.environ.get("ZOOM_VERIFICATION_TOKEN")

@@ -1,4 +1,4 @@
-FROM pennlabs/django-base:3cadd22f7ad51359c5e86b6a3cba2fc155c1c6ab
+FROM pennlabs/django-base:a142aa6975ee293bbc8a09ef0b81998ce7063dd3
 
 LABEL maintainer="Penn Labs"
 
@@ -14,8 +14,8 @@ COPY . /app/
 ENV DJANGO_SETTINGS_MODULE pennclubs.settings.production
 ENV SECRET_KEY 'temporary key just to build the docker image'
 
-# Copy custom django-run
-COPY ./scripts/django-run /usr/local/bin/
+# Copy custom asgi-run
+COPY ./scripts/asgi-run /usr/local/bin/
 
 # Collect static files
 RUN python3 /app/manage.py collectstatic --noinput
