@@ -139,11 +139,13 @@ class Command(BaseCommand):
 
             for event in events:
                 if event.url is None or not event.url:
-                    self.stdout.write(f"Sending virtual fair urgent reminder to {club.name}...")
+                    self.stdout.write(
+                        f"Sending virtual fair urgent reminder to {event.club.name}..."
+                    )
                     if not dry_run:
                         event.club.send_virtual_fair_email(email="urgent")
                 elif "zoom.us" not in event.url:
-                    self.stdout.write(f"Sending Zoom reminder to {club.name}...")
+                    self.stdout.write(f"Sending Zoom reminder to {event.club.name}...")
                     if not dry_run:
                         event.club.send_virtual_fair_email(email="zoom")
 
