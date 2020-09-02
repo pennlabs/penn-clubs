@@ -30,7 +30,7 @@ const LiveSub = s.div`
   color: white;
 `
 
-const WhiteButton = s.div`
+const WhiteButton = s.a`
   padding: 7px;
   width: 140px;
   text-align: center;
@@ -42,6 +42,12 @@ const WhiteButton = s.div`
   cursor: pointer;
   margin-top: 10px;
   margin-left: 15px;
+  transition: background-color 0.25s ease;
+
+  &:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.36);
+  }
 `
 
 interface LiveEventsDialogProps {
@@ -57,16 +63,20 @@ const LiveEventsDialog = ({
 }: LiveEventsDialogProps): ReactElement => (
   <LiveBanner>
     {isPreFair && (
-      <Link href={FAIR_OFFICER_GUIDE_ROUTE} as={FAIR_OFFICER_GUIDE_ROUTE}>
+      <Link
+        href={FAIR_OFFICER_GUIDE_ROUTE}
+        as={FAIR_OFFICER_GUIDE_ROUTE}
+        passHref
+      >
         <WhiteButton>Officer Setup</WhiteButton>
       </Link>
     )}
     {isFair && (
-      <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
+      <Link href={LIVE_EVENTS} as={LIVE_EVENTS} passHref>
         <WhiteButton>See Live Events</WhiteButton>
       </Link>
     )}
-    <Link href={FAIR_INFO_ROUTE} as={FAIR_INFO_ROUTE}>
+    <Link href={FAIR_INFO_ROUTE} as={FAIR_INFO_ROUTE} passHref>
       <WhiteButton>Fair Information</WhiteButton>
     </Link>
     <LiveTitle>SAC Virtual Activities Fair</LiveTitle>

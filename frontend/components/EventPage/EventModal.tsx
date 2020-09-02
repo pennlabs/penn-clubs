@@ -1,8 +1,8 @@
-import { useRouter } from 'next/router'
+import Link from 'next/link'
 import React, { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
-import { Icon, TransparentButton } from '../../components/common'
+import { Icon, TransparentButtonLink } from '../../components/common'
 import { CLUB_ROUTE, CLUBS_BLUE, M2, ZOOM_BLUE } from '../../constants'
 import { ClubEvent } from '../../types'
 import { doApiRequest } from '../../utils'
@@ -74,7 +74,6 @@ const EventModal = (props: {
     url,
     description,
   } = event
-  const router = useRouter()
   const [userCount, setUserCount] = useState<number>(0)
 
   useEffect(() => {
@@ -127,13 +126,19 @@ const EventModal = (props: {
         <StyledDescription contents={description} />
         {showDetailsButton !== false && (
           <RightAlign>
-            <TransparentButton
-              backgroundColor={CLUBS_BLUE}
-              onClick={() => router.push(CLUB_ROUTE(), CLUB_ROUTE(event.club))}
-            >
-              See Club Details{' '}
-              <Icon name="chevrons-right" alt="chevrons-right" />
-            </TransparentButton>
+            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)} passHref>
+              <TransparentButtonLink
+                backgroundColor={CLUBS_BLUE}
+                onClick={(e) => {
+                  if (!event.club) {
+                    e.preventDefault()
+                  }
+                }}
+              >
+                See Club Details{' '}
+                <Icon name="chevrons-right" alt="chevrons-right" />
+              </TransparentButtonLink>
+            </Link>
           </RightAlign>
         )}
       </EventDetails>
