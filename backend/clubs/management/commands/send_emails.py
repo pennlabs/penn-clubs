@@ -132,7 +132,7 @@ class Command(BaseCommand):
         elif action == "urgent_virtual_fair":
             now = timezone.now()
             events = Event.objects.filter(
-                type=Event.FAIR, end_time__geq=now, start_time__leq=now + datetime.timedelta(days=1)
+                type=Event.FAIR, end_time__gte=now, start_time__lte=now + datetime.timedelta(days=1)
             )
             if clubs_whitelist:
                 events = events.filter(club__code__in=clubs_whitelist)
