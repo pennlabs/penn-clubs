@@ -138,6 +138,9 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
         </ul>
 
         <p>
+          <b>Additional Opportunities:</b>
+        </p>
+        <p>
           In addition to student-run clubs, there are several
           university-sponsored programs that also provide student involvement
           opportunities covering a wide variety of interests. Details for some
