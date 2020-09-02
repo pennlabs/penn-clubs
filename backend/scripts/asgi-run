@@ -7,4 +7,4 @@
 cd /app/
 
 # Run Daphne
-exec /usr/local/bin/daphne -b 0.0.0.0 -p 80 pennclubs.asgi:application
+exec /usr/local/bin/gunicorn -b 0.0.0.0:80 -w 4 -k uvicorn.workers.UvicornWorker pennclubs.asgi:application
