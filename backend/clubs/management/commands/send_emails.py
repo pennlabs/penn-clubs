@@ -137,6 +137,7 @@ class Command(BaseCommand):
             if clubs_whitelist:
                 events = events.filter(club__code__in=clubs_whitelist)
 
+            self.stdout.write(f"{events.count()} clubs have not registered for the virtual fair.")
             for event in events:
                 if event.url is None or not event.url:
                     self.stdout.write(
@@ -148,6 +149,9 @@ class Command(BaseCommand):
                     self.stdout.write(f"Sending Zoom reminder to {event.club.name}...")
                     if not dry_run:
                         event.club.send_virtual_fair_email(email="zoom")
+
+            # don't continue
+            return
 
         # handle all other email events
         if only_sheet:
