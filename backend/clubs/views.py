@@ -971,6 +971,20 @@ class EventViewSet(viewsets.ModelViewSet):
 
         return super().create(request, *args, **kwargs)
 
+    def destroy(self, request, *args, **kwargs):
+        """
+        Do not let non-superusers delete events with the FAIR type through the API.
+        """
+        event = self.get_object()
+
+        if event.type == Event.FAIR and not self.request.user.is_superuser:
+            raise DRFValidationError(
+                detail="You cannot delete activities fair events. "
+                "If you would like to do this, email contact@pennclubs.com."
+            )
+
+        return super().destroy(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = Event.objects.all()
         if self.kwargs.get("club_code") is not None:
