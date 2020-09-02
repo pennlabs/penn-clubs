@@ -138,8 +138,23 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
         </ul>
 
         <p>
+          In addition to student-run clubs, there are several
+          university-sponsored programs that also provide student involvement
+          opportunities covering a wide variety of interests. Details for some
+          of these programs are included on the SAC website at{' '}
+          <a
+            href="https://sacfunded.net/additional-opportunities"
+            target="_blank"
+          >
+            https://sacfunded.net/additional-opportunities
+          </a>
+          .
+        </p>
+
+        <p>
           You can find the schedule for the activities fair in the table below.
         </p>
+
         {isFairOpen && (
           <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
             <a className="button is-primary">
