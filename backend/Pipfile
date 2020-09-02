@@ -28,7 +28,7 @@ uritemplate = "*"
 pyyaml = "*"
 django-storages = "*"
 pillow = "*"
-"boto3" = "*"
+boto3 = "==1.14.51"
 django-phonenumber-field = "*"
 phonenumbers = "*"
 qrcode = "*"
@@ -46,6 +46,7 @@ uvloop = {version = "*", sys_platform = "== 'linux'"}
 uvicorn = "*"
 gunicorn = "*"
 httptools = "*"
+botocore = "==1.17.51"
 
 [requires]
 python_version = "3"

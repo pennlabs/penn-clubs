@@ -19,9 +19,6 @@ workflows:
           project-name: pennclubs
           project-location: backend
           python-version: "3.8"
-      - react-tools/check:
-          project-location: frontend
-          image: pennlabs/frontend-test:latest
       - docker/publish:
           name: publish-backend
           requires:
@@ -34,8 +31,6 @@ workflows:
           <<: *branch-filters
       - docker/publish:
           name: publish-frontend
-          requires:
-            - react-tools/check
           path: frontend
           cache_from: "pennlabs/penn-clubs-frontend:latest"
           image: "pennlabs/penn-clubs-frontend"
