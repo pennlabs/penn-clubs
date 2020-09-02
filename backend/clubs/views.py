@@ -1454,6 +1454,7 @@ class MeetingZoomWebhookAPIView(APIView):
                 conn.incr(key)
             elif action == "meeting.participant_left":
                 conn.decr(key)
+            conn.expire(key, datetime.timedelta(hours=8))
         return Response({"success": True})
 
 

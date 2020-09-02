@@ -6,6 +6,8 @@ Hi there! 🎉
 
 Welcome to **Penn Clubs**, the University of Pennsylvania's official registry for student organizations on campus. The purpose of this guide is to walk you through the many different features that Penn Clubs can offer that will make your experience recruiting new members as easy as possible.
 
+<div class="has-text-danger">Club officers will <b>not</b> be able to access the list of students that have bookmarked their club. Bookmarks are intended for personal use only. If you would like a student to send you their contact information, ensure that they <b>subscribe</b> to your club instead of bookmarking it.</div>
+
 ## 📅 REQUIRED: Editing Your SAC Fair "Booth"
 
 You will need to add a Zoom link to your club's SAC Fair event. Once you navigate to your club on [pennclubs.com](http://pennclubs.com), click the green "Manage Club" button on the top-right corner of the page. If you do not see this button, it means you are not an officer of the club. Either ask an officer listed on your club to add you to the page, or email contact@pennclubs.com with your Penn email and club name to be added as an officer.

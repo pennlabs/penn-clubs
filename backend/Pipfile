@@ -45,6 +45,7 @@ uwsgi = {version = "*", sys_platform = "== 'linux'"}
 uvloop = {version = "*", sys_platform = "== 'linux'"}
 uvicorn = "*"
 gunicorn = "*"
+httptools = "*"
 
 [requires]
 python_version = "3"
