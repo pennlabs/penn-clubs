@@ -41,9 +41,6 @@ const CardList = styled.div`
 const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
   const withRankings = events.map((event) => {
     let rank = Math.random()
-    if (event.image_url) {
-      rank += 2
-    }
     if (
       event.description &&
       event.description.length > 3 &&
