@@ -1,4 +1,5 @@
 import { ReactElement } from 'react'
+import s from 'styled-components'
 
 import { Club } from '../../types'
 import { Icon } from '../common'
@@ -48,6 +49,12 @@ const socials = [
   },
 ]
 
+const SocialLine = s.div`
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
 const iconStyles = {
   opacity: 0.5,
   marginRight: '5px',
@@ -62,10 +69,10 @@ const SocialIcons = ({ club }: SocialIconsProps): ReactElement => (
     {socials
       .filter((item) => club[item.name])
       .map((item) => (
-        <div key={item.name}>
+        <SocialLine key={item.name}>
           <Icon style={iconStyles} name={item.icon} alt={item.icon} />{' '}
           <SocialLink club={club} item={item} type={item.name} />
-        </div>
+        </SocialLine>
       ))}
   </>
 )
