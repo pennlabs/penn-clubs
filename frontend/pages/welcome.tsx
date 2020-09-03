@@ -104,7 +104,9 @@ const Welcome = ({
           <Text>
             Here are two common buttons that you'll see around the site.
             Bookmarks and subscriptions can be managed from your Penn Clubs
-            account at any time.
+            account at any time. Bookmarks are intended to be private and for
+            your own personal use. Subscriptions are intended as a feature to
+            give your information to the clubs that you are interested in.
           </Text>
           <div className="columns is-mobile">
             <div className="column">
