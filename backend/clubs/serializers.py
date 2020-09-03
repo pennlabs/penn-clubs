@@ -536,8 +536,10 @@ class ClubListSerializer(serializers.ModelSerializer):
             return obj.subtitle
 
         # return first sentence of description without html tags
+        desc = obj.description.lstrip()[:1000]
+        cleaned_desc = re.sub(r"<[^>]+>", "", desc)
         return (
-            re.sub(r"<[^>]+>", "", "".join(re.split(r"(\.|\n|!)", obj.description.lstrip())[:2]))
+            "".join(re.split(r"(\.|\n|!)", cleaned_desc)[:2])
             .replace("&amp;", "&")
             .replace("&lt;", "<")
             .replace("&gt;", ">")
