@@ -30,6 +30,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.utils.serializer_helpers import ReturnList
 from rest_framework.views import APIView
 from social_django.utils import load_strategy
 
@@ -544,7 +545,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         ).filter(club=club, person__profile__share_bookmarks=True)
         bookmark_serializer = SubscribeBookmarkSerializer(shared_bookmarks, many=True)
         serializer = SubscribeSerializer(subscribes, many=True)
-        return Response(serializer.data + bookmark_serializer.data)
+        output = serializer.data + bookmark_serializer.data
+        return Response(ReturnList(output, serializer=serializer))
 
     @action(detail=True, methods=["get"])
     def analytics(self, request, *args, **kwargs):

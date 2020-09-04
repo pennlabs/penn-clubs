@@ -1053,6 +1053,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
 class SubscribeBookmarkSerializer(SubscribeSerializer):
     class Meta:
         model = Favorite
+        fields = SubscribeSerializer.Meta.fields
         validators = [
             validators.UniqueTogetherValidator(
                 queryset=Favorite.objects.all(), fields=["club", "person"]
