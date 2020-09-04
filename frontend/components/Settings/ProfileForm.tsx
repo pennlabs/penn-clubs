@@ -80,6 +80,11 @@ const ProfileForm = ({
       converter: (a) => ({ value: a.id, label: a.name }),
       reverser: (a) => ({ id: a.value, name: a.label }),
     },
+    {
+      name: 'share_bookmarks',
+      type: 'checkbox',
+      label: 'Share my user information with the clubs that I have bookmarked.',
+    },
   ]
 
   return (

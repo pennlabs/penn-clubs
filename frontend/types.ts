@@ -141,6 +141,7 @@ export interface UserInfo {
   email: string
   graduation_year: number
   has_been_prompted: boolean
+  share_bookmarks: boolean
   name: string
   username: string
   is_superuser: boolean

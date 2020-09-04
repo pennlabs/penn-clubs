@@ -812,6 +812,7 @@ class Profile(models.Model):
     image = models.ImageField(upload_to=get_user_file_name, null=True, blank=True)
 
     has_been_prompted = models.BooleanField(default=False)
+    share_bookmarks = models.BooleanField(default=False)
     graduation_year = models.PositiveSmallIntegerField(null=True, blank=True)
     school = models.ManyToManyField(School, blank=True)
     major = models.ManyToManyField(Major, blank=True)

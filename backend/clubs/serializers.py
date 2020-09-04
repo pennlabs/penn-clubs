@@ -1050,6 +1050,16 @@ class SubscribeSerializer(serializers.ModelSerializer):
         ]
 
 
+class SubscribeBookmarkSerializer(SubscribeSerializer):
+    class Meta:
+        model = Favorite
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=Favorite.objects.all(), fields=["club", "person"]
+            )
+        ]
+
+
 class UserClubVisitSerializer(serializers.ModelSerializer):
     """
     Used by users to get a list of clubs that they have visited.
@@ -1143,6 +1153,7 @@ class UserSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField("get_image_url")
 
     has_been_prompted = serializers.BooleanField(source="profile.has_been_prompted")
+    share_bookmarks = serializers.BooleanField(source="profile.share_bookmarks")
     graduation_year = serializers.IntegerField(source="profile.graduation_year", allow_null=True)
     school = SchoolSerializer(many=True, source="profile.school")
     major = MajorSerializer(many=True, source="profile.major")
@@ -1192,6 +1203,7 @@ class UserSerializer(serializers.ModelSerializer):
             "major",
             "name",
             "school",
+            "share_bookmarks",
             "username",
         ]
 

@@ -88,6 +88,7 @@ from clubs.serializers import (
     QuestionAnswerSerializer,
     ReportSerializer,
     SchoolSerializer,
+    SubscribeBookmarkSerializer,
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
@@ -532,10 +533,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return a list of all students that have subscribed to the club,
         including their names and emails.
+
+        If a student has indicated that they want to share their bookmarks as well,
+        include this information in the results.
         """
         club = self.get_object()
-        serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
-        return Response(serializer.data)
+        subscribes = Subscribe.objects.filter(club=club)
+        shared_bookmarks = Favorite.objects.exclude(
+            person__pk__in=subscribes.values_list("person__pk", flat=True)
+        ).filter(club=club, person__profile__share_bookmarks=True)
+        bookmark_serializer = SubscribeBookmarkSerializer(shared_bookmarks, many=True)
+        serializer = SubscribeSerializer(subscribes, many=True)
+        return Response(serializer.data + bookmark_serializer.data)
 
     @action(detail=True, methods=["get"])
     def analytics(self, request, *args, **kwargs):
