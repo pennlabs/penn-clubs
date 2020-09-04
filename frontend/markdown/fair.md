@@ -28,7 +28,7 @@ Edit the club details: you **MUST provide a Zoom link** (preferably from your sc
 
 We recommend that you fill out as many details as possible. Students will be shown currently occuring events in completely random order, with one exception. Clubs that have fully entered their event information will appear above clubs who have not.
 
-Note that this date is **fixed**. Trying to change the date and time will result in an error, preventing you from saving your details. If you have any questions about the date, please email sac@sacfunded.net.
+Note that this date is **fixed**. Trying to change the date and time will result in an error, preventing you from saving your details. If you have any questions about the date, please email the event organizers.
 
 **Be sure to hit the green "save" button on the lefthand side when you are done!**
 
