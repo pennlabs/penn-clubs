@@ -5,6 +5,7 @@ type FairInfoType = {
     name: string
     organization: string
     contact: string
+    time: string
     additionalInformation?: () => ReactElement | null
   }
 }
@@ -14,6 +15,7 @@ export const FAIR_INFO: FairInfoType = {
     name: 'SAC Virtual Activities Fair',
     organization: 'Student Activities Council',
     contact: 'sacfair@sacfunded.net',
+    time: 'September 1 - 3 from 5pm to 8pm',
     additionalInformation: (): ReactElement => {
       return (
         <>
@@ -39,6 +41,7 @@ export const FAIR_INFO: FairInfoType = {
   },
   esac: {
     name: 'ESAC Virtual Activities Fair',
+    time: 'September 8 from 4pm to 7pm',
     organization: 'Engineering Student Activities Council',
     contact: 'pennesac@gmail.com',
   },

@@ -55,8 +55,7 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
         </p>
         <ul>
           <li>
-            The {fairInfo.name} will be held on <b>September 1 - 3</b> from{' '}
-            <b>5pm to 8pm</b> on each of the three days.
+            The {fairInfo.name} will be held on <b>{fairInfo.time}</b>.
           </li>
           <li>
             The main fair functionality is each club's informational Zoom
