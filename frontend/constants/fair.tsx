@@ -5,7 +5,7 @@ type FairInfoType = {
     name: string
     organization: string
     contact: string
-    additionalInformation: () => ReactElement | null
+    additionalInformation?: () => ReactElement | null
   }
 }
 
@@ -36,5 +36,10 @@ export const FAIR_INFO: FairInfoType = {
         </>
       )
     },
+  },
+  esac: {
+    name: 'ESAC Virtual Activities Fair',
+    organization: 'Engineering Student Activities Council',
+    contact: 'pennesac@gmail.com',
   },
 }
