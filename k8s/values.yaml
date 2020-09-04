@@ -9,7 +9,7 @@ applications:
   - name: django-wgsi
     image: pennlabs/penn-clubs-backend
     secret: penn-clubs
-    replicas: 50
+    replicas: 10
     ingress:
       hosts:
         - host: pennclubs.com
@@ -36,7 +36,7 @@ applications:
   - name: react
     image: pennlabs/penn-clubs-frontend
     secret: penn-clubs
-    replicas: 25
+    replicas: 5
     ingress:
       hosts:
         - host: pennclubs.com
