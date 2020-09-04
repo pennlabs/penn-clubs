@@ -16,6 +16,7 @@ import {
   CLUB_EDIT_ROUTE,
   CLUB_ROUTE,
   CLUBS_GREY_LIGHT,
+  FAIR_INFO,
   LIGHT_GRAY,
   SNOW,
   WHITE,
@@ -23,7 +24,7 @@ import {
 } from '../constants'
 import renderPage from '../renderPage'
 import { ClubEvent, ClubEventType } from '../types'
-import { doApiRequest } from '../utils'
+import { doApiRequest, useSetting } from '../utils'
 
 type ZoomPageProps = {
   authenticated: boolean | null
@@ -181,6 +182,8 @@ const ZoomPage = ({
     initialUserMeetings,
   )
   const [createResp, setCreateResp] = useState<any>(null)
+  const fairName = useSetting('FAIR_NAME')
+  const fairInfo = FAIR_INFO[(fairName ?? 'sac') as string]
 
   useEffect(() => {
     setNextUrl(window.location.pathname)
@@ -198,13 +201,13 @@ const ZoomPage = ({
         className="subtitle is-size-5 mb-3"
         style={{ color: CLUBS_GREY_LIGHT }}
       >
-        Virtual Club Fair
+        {fairInfo.name}
       </p>
       <div className="content">
         <p>
           You can use the 4-step process below to automatically configure Zoom
-          for you and get you set up for the virtual activities fair. If you run
-          into any issues while using the tool, please contact <Contact />.
+          for you and get you set up for the {fairInfo.name}. If you run into
+          any issues while using the tool, please contact <Contact />.
         </p>
         <h3>1. Login to your Zoom Account</h3>
         <p>

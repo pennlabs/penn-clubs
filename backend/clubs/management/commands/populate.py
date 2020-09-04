@@ -181,6 +181,12 @@ class Command(BaseCommand):
                 defaults={"value": "false", "value_type": Option.TYPE_BOOL, "public": True},
             )
 
+        string_options = [("FAIR_NAME", "sac")]
+        for key, value in string_options:
+            Option.objects.get_or_create(
+                key=key, defaults={"value": value, "value_type": Option.TYPE_TXT, "public": True}
+            )
+
         # create years
         [
             Year.objects.get_or_create(name=year)

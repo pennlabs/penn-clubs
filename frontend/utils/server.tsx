@@ -5,8 +5,8 @@ import util from 'util'
 
 const readFilePromise = util.promisify(fs.readFile)
 
-const relativeLinks = () => {
-  return [
+const relativeLinks = (guidePath: string) => {
+  return () => [
     {
       type: 'lang',
       regex: /!\[(.*?)\]\((.*?)\)/g,
@@ -14,7 +14,7 @@ const relativeLinks = () => {
         if (/^https?:/.test(url)) {
           return content
         }
-        return `![${desc}](/static/img/markdown/sacfairguide/${url})`
+        return `![${desc}](/static/img/markdown/${guidePath}/${url})`
       },
     },
     {
@@ -39,7 +39,7 @@ export async function fetchMarkdown(file: string): Promise<string | null> {
       parseImgDimensions: true,
       strikethrough: true,
       tables: true,
-      extensions: [relativeLinks],
+      extensions: [relativeLinks(file)],
     })
     return converter.makeHtml(contents.toString())
   } catch (e) {

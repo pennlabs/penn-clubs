@@ -841,9 +841,12 @@ class EventViewSet(viewsets.ModelViewSet):
         if cached:
             return Response(cached)
 
-        events = Event.objects.filter(type=Event.FAIR, club__badges__purpose="fair").values_list(
-            "start_time", "end_time", "club__name", "club__code", "club__badges__label"
-        )
+        now = timezone.now()
+        events = Event.objects.filter(
+            type=Event.FAIR,
+            club__badges__purpose="fair",
+            end_time__gte=now - datetime.timedelta(days=1),
+        ).values_list("start_time", "end_time", "club__name", "club__code", "club__badges__label")
         output = {}
         for event in events:
             # group by start date

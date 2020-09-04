@@ -10,7 +10,7 @@ module.exports = {
     return [
       {
         source: '/sacfairguide',
-        destination: '/guides/sacfair',
+        destination: '/guides/fair',
       },
     ]
   },
