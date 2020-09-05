@@ -20,7 +20,7 @@ Click the "Events" tab:
 
 There will be an existing event with your designated date & time that contains the words "Fair Info Session". Click "Edit".
 
-![Edit Virtul Activites Fair Event](3.png)
+![Edit Virtual Activites Fair Event](3.png)
 
 Edit the club details: you **MUST provide a Zoom link** (preferably from your school Zoom account, see details below for best practices for setting up your scheduled Zoom meeting) where prospective students can navigate to for your info session. <b>Please do not use a URL shortener service on your Zoom link</b>, as we will not be able to recognize it as a Zoom link and enable additional features. Here, you can also:
 - Add a description
