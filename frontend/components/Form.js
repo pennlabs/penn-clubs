@@ -712,6 +712,17 @@ export class ModelForm extends Component {
       }
     })
 
+    // if object was deleted, return
+    if (object == null) {
+      return new Promise((resolve) => {
+        resolve({
+          _status: false,
+          _error_message:
+            'This object hass already been deleted and cannot be saved.',
+        })
+      })
+    }
+
     // create or edit the object, uploading all non-file fields
     const savePromise =
       typeof object[keyField] === 'undefined'
@@ -914,6 +925,7 @@ export class ModelForm extends Component {
                   this.onChange(data)
                 }}
                 errors={
+                  currentObject &&
                   currentObject._status === false &&
                   currentObject._error_message
                 }
@@ -940,7 +952,10 @@ export class ModelForm extends Component {
                 }}
                 submitButton={
                   <>
-                    <span className="button is-primary">
+                    <span
+                      className="button is-primary"
+                      disabled={currentObject == null}
+                    >
                       {currentlyEditing !== null ? (
                         <>
                           <Icon name="edit" alt="save" /> Save
@@ -982,8 +997,8 @@ export class ModelForm extends Component {
               )}
             </span>
           )}
-          <ModelStatus status={currentObject._status} />
-          {currentObject._error_message && (
+          <ModelStatus status={currentObject?._status} />
+          {currentObject?._error_message && (
             <div style={{ color: 'red', marginTop: '1rem' }}>
               <Icon name="alert-circle" />{' '}
               {typeof currentObject._error_message === 'object' &&
@@ -1008,7 +1023,9 @@ export class ModelForm extends Component {
             <Form
               fields={fields}
               defaults={object}
-              errors={object._status === false && object._error_message}
+              errors={
+                object && object._status === false && object._error_message
+              }
               submitButton={
                 <span className="button is-primary">
                   <Icon name="edit" alt="save" /> Save

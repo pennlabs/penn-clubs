@@ -37,11 +37,15 @@ python-dateutil = "*"
 psycopg2 = "*"
 django-simple-history = "*"
 channels = "*"
-whitenoise = "*"
 django-runtime-options = "*"
 social-auth-app-django = "*"
 django-redis = "*"
 channels-redis = "*"
+uwsgi = {version = "*", sys_platform = "== 'linux'"}
+uvloop = {version = "*", sys_platform = "== 'linux'"}
+uvicorn = "*"
+gunicorn = "*"
+httptools = "*"
 
 [requires]
 python_version = "3"

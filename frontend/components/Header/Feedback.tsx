@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { CLUBS_BLUE, CLUBS_DEEP_BLUE } from '../../constants/colors'
@@ -29,7 +30,7 @@ const FeedbackLink = s.a`
   }
 `
 
-export default () => (
+const Feedback = (): ReactElement => (
   <FeedbackLink
     href="https://airtable.com/shrCsYFWxCwfwE7cf"
     title="Feedback"
@@ -44,3 +45,5 @@ export default () => (
     />
   </FeedbackLink>
 )
+
+export default Feedback

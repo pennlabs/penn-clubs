@@ -1,4 +1,5 @@
 import csv
+import datetime
 import os
 
 from django.conf import settings
@@ -6,8 +7,9 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Count, Q
 from django.template.loader import render_to_string
+from django.utils import timezone
 
-from clubs.models import Club, Membership, MembershipInvite
+from clubs.models import Club, Event, Membership, MembershipInvite
 from clubs.utils import fuzzy_lookup_club, html_to_text
 
 
@@ -40,7 +42,13 @@ class Command(BaseCommand):
             "type",
             type=str,
             help="The type of email to send.",
-            choices=("invite", "physical_fair", "physical_postfair", "virtual_fair"),
+            choices=(
+                "invite",
+                "physical_fair",
+                "physical_postfair",
+                "virtual_fair",
+                "urgent_virtual_fair",
+            ),
         )
         parser.add_argument(
             "emails",
@@ -120,6 +128,29 @@ class Command(BaseCommand):
                 self.stdout.write(f"Sending virtual fair setup email to {club.name}...")
                 if not dry_run:
                     club.send_virtual_fair_email()
+            return
+        elif action == "urgent_virtual_fair":
+            now = timezone.now()
+            events = Event.objects.filter(
+                type=Event.FAIR, end_time__gte=now, start_time__lte=now + datetime.timedelta(days=1)
+            )
+            if clubs_whitelist:
+                events = events.filter(club__code__in=clubs_whitelist)
+
+            self.stdout.write(f"{events.count()} clubs have not registered for the virtual fair.")
+            for event in events:
+                if event.url is None or not event.url:
+                    self.stdout.write(
+                        f"Sending virtual fair urgent reminder to {event.club.name}..."
+                    )
+                    if not dry_run:
+                        event.club.send_virtual_fair_email(email="urgent")
+                elif "zoom.us" not in event.url:
+                    self.stdout.write(f"Sending Zoom reminder to {event.club.name}...")
+                    if not dry_run:
+                        event.club.send_virtual_fair_email(email="zoom")
+
+            # don't continue
             return
 
         # handle all other email events

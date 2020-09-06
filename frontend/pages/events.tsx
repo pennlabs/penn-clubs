@@ -222,8 +222,8 @@ function EventPage({
                   src="/static/img/events_calendar.png"
                 />
                 <div>
-                  There are no events happening at this moment. See the section
-                  below for upcoming events.
+                  There are no events happening at this moment that match your
+                  search query. See the section below for upcoming events.
                 </div>
               </div>
             )}
@@ -244,7 +244,9 @@ function EventPage({
                   style={{ width: 100 }}
                   src="/static/img/events_calendar.png"
                 />
-                <div>There are no current upcoming events.</div>
+                <div>
+                  There are no upcoming events that match your search query.
+                </div>
               </div>
             )}
           </WideContainer>

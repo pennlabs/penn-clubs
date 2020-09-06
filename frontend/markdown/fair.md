@@ -1,4 +1,4 @@
-# Penn Clubs: SAC Fair Guide
+# Penn Clubs: Virtual Activites Fair Officer Guide
 
 <div class="notification is-info"><b>Are you a fair participant?</b> This guide is meant for club officers to prepare for the virtual fair. If you are looking for instructions on how to participate in the fair, click <a href="/fair">here</a>.</div>
 
@@ -6,9 +6,11 @@ Hi there! 🎉
 
 Welcome to **Penn Clubs**, the University of Pennsylvania's official registry for student organizations on campus. The purpose of this guide is to walk you through the many different features that Penn Clubs can offer that will make your experience recruiting new members as easy as possible.
 
-## 📅 REQUIRED: Editing Your SAC Fair "Booth"
+<div class="has-text-danger">Club officers will <b>not</b> be able to access the list of students that have bookmarked their club. Bookmarks are intended for personal use only. If you would like a student to send you their contact information, ensure that they <b>subscribe</b> to your club instead of bookmarking it.</div>
 
-You will need to add a Zoom link to your club's SAC Fair event. Once you navigate to your club on [pennclubs.com](http://pennclubs.com), click the green "Manage Club" button on the top-right corner of the page. If you do not see this button, it means you are not an officer of the club. Either ask an officer listed on your club to add you to the page, or email contact@pennclubs.com with your Penn email and club name to be added as an officer.
+## 📅 REQUIRED: Editing Your Activites Fair Fair "Booth"
+
+You will need to add a Zoom link to your club's Virtual Activities Fair event. Once you navigate to your club on [pennclubs.com](http://pennclubs.com), click the green "Manage Club" button on the top-right corner of the page. If you do not see this button, it means you are not an officer of the club. Either ask an officer listed on your club to add you to the page, or email contact@pennclubs.com with your Penn email and club name to be added as an officer.
 
 ![Manage Club Buton](1.png)
 
@@ -16,9 +18,9 @@ Click the "Events" tab:
 
 ![Events Tab](2.png)
 
-There will be an existing event with your designated date & time titled "SAC Fair Info Session". Click "Edit".
+There will be an existing event with your designated date & time that contains the words "Fair Info Session". Click "Edit".
 
-![Edit SAC Fair Event](3.png)
+![Edit Virtual Activites Fair Event](3.png)
 
 Edit the club details: you **MUST provide a Zoom link** (preferably from your school Zoom account, see details below for best practices for setting up your scheduled Zoom meeting) where prospective students can navigate to for your info session. <b>Please do not use a URL shortener service on your Zoom link</b>, as we will not be able to recognize it as a Zoom link and enable additional features. Here, you can also:
 - Add a description
@@ -26,19 +28,19 @@ Edit the club details: you **MUST provide a Zoom link** (preferably from your sc
 
 We recommend that you fill out as many details as possible. Students will be shown currently occuring events in completely random order, with one exception. Clubs that have fully entered their event information will appear above clubs who have not.
 
-Note that this date is **fixed**. Trying to change the date and time will result in an error, preventing you from saving your details. If you have any questions about the date, please email sac@sacfunded.net.
+Note that this date is **fixed**. Trying to change the date and time will result in an error, preventing you from saving your details. If you have any questions about the date, please email the event organizers.
 
 **Be sure to hit the green "save" button on the lefthand side when you are done!**
 
-![Save SAC Fair Changes](4.png)
+![Save Virtual Activities Fair Changes](4.png)
 
 Finally, check that you have the best settings for your Zoom meeting with [this tool](/zoom).
 
-**And that's it!** Your club's event will show up in the portal during the live, virtual SAC Fair on the day you are assigned.
+**And that's it!** Your club's event will show up in the portal during the live, virtual activites fair on the day you are assigned.
 
 ## 📸 Zoom Best Practices: Automated
 
-To get all possible features on Zoom, please use the school's licensed Zoom accounts. To help you get set up, we encourage you to use our automated system [here](/zoom), which is a quick, three-step process that will make sure your settings for meetings are configured correctly for the SAC Fair. If you would like to configure your settings manually, follow the steps in the section below.
+To get all possible features on Zoom, please use the school's licensed Zoom accounts. To help you get set up, we encourage you to use our automated system [here](/zoom), which is a quick, three-step process that will make sure your settings for meetings are configured correctly for the Virtual Activities Fair. If you would like to configure your settings manually, follow the steps in the section below.
 
 <a href="/zoom" class="button is-success">Start Setup</a>
 
@@ -48,14 +50,14 @@ If the automated process above doesn't work for you, you can configure your Zoom
 
 ![Zoom Login](zoom1.png)
 
-Enable breakout rooms for your meetings. See [this guide](https://support.zoom.us/hc/en-us/articles/206476093-Enabling-breakout-rooms) on how to set up breakout rooms. Then, schedule a new meeting, using the given **date and time** as outlined in the e-mail given to you by SAC. You can also see your time slot [here](/fair). Use the following settings:
+Enable breakout rooms for your meetings. See [this guide](https://support.zoom.us/hc/en-us/articles/206476093-Enabling-breakout-rooms) on how to set up breakout rooms. Then, schedule a new meeting, using the given **date and time** as outlined in the e-mail given to you by the event organizer. You can also see your time slot [here](/fair). Use the following settings:
 
 - A required meeting password
 - Under Advanced Options:
     - Waiting room – **disabled**
     - Mute participants upon entry - **enabled**
     - [Only authenticated users can join](https://support.zoom.us/hc/en-us/articles/360037117472-Authentication-Profiles-for-meetings-and-webinars) - **enabled**
-- <important>Ensure that you setup and test breakout rooms before the SAC fair starts! If you do not setup breakout rooms beforehand, you will not be able to use them during the meeting.</important> We recommend getting familiar with breakout rooms before the fair starts, as the behavior may not be what you expect. While using breakout rooms, ensure that you still have an officer in the main room in case anyone comes in.
+- <important>Ensure that you setup and test breakout rooms before the fair starts! If you do not setup breakout rooms beforehand, you will not be able to use them during the meeting.</important> We recommend getting familiar with breakout rooms before the fair starts, as the behavior may not be what you expect. While using breakout rooms, ensure that you still have an officer in the main room in case anyone comes in.
 
 ## 🎤 Hosting Your Zoom Event
 - If you use a personal account, the maximum number of people that can attend your meeting at once is **100 people**. If you use the school provided account, this limit increases to **300 people**. You can check the meeting limit for you account on the Zoom settings page.

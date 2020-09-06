@@ -166,9 +166,16 @@ const FAQ = () => (
               name: 'Office of Student Affairs',
               image: '/static/img/collaborators/osa.png',
               url: 'https://www.vpul.upenn.edu/osa/',
+              className: 'mr-4',
             },
-          ].map(({ name, url, image, height }) => (
-            <a href={url} target="_blank" key={name}>
+            {
+              name: 'Engineering Student Activities Council',
+              image: '/static/img/collaborators/esac.png',
+              url: 'https://esac.squarespace.com/',
+              height: 80,
+            },
+          ].map(({ name, url, image, height, className }) => (
+            <a href={url} target="_blank" key={name} className={className}>
               <img
                 style={{
                   maxHeight: height || 100,

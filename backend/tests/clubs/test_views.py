@@ -503,6 +503,11 @@ class ClubTestCase(TestCase):
         )
         self.assertTrue(200 <= resp.status_code < 300, resp.data)
 
+        # ensure we can't delete the event as a normal user
+        resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, e2.pk)))
+        self.assertIn(resp.status_code, [400, 401, 403], resp.data)
+        self.assertTrue(Event.objects.filter(pk=e2.pk).exists())
+
     def test_event_create_update_delete(self):
         """
         Test creating, updating, and deleting a club event as a normal user.

@@ -30,6 +30,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.utils.serializer_helpers import ReturnList
 from rest_framework.views import APIView
 from social_django.utils import load_strategy
 
@@ -88,6 +89,7 @@ from clubs.serializers import (
     QuestionAnswerSerializer,
     ReportSerializer,
     SchoolSerializer,
+    SubscribeBookmarkSerializer,
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
@@ -426,7 +428,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     permission_classes = [ClubPermission | IsSuperuser]
 
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
-    search_fields = ["name", "subtitle"]
+    search_fields = ["name", "subtitle", "code"]
     ordering_fields = ["favorite_count", "name"]
     ordering = "-favorite_count"
 
@@ -532,10 +534,19 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return a list of all students that have subscribed to the club,
         including their names and emails.
+
+        If a student has indicated that they want to share their bookmarks as well,
+        include this information in the results.
         """
         club = self.get_object()
-        serializer = SubscribeSerializer(Subscribe.objects.filter(club=club), many=True)
-        return Response(serializer.data)
+        subscribes = Subscribe.objects.filter(club=club)
+        shared_bookmarks = Favorite.objects.exclude(
+            person__pk__in=subscribes.values_list("person__pk", flat=True)
+        ).filter(club=club, person__profile__share_bookmarks=True)
+        bookmark_serializer = SubscribeBookmarkSerializer(shared_bookmarks, many=True)
+        serializer = SubscribeSerializer(subscribes, many=True)
+        output = serializer.data + bookmark_serializer.data
+        return Response(ReturnList(output, serializer=serializer))
 
     @action(detail=True, methods=["get"])
     def analytics(self, request, *args, **kwargs):
@@ -802,7 +813,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
     permission_classes = [EventPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
-    search_fields = ["name", "club__name", "description"]
+    search_fields = ["name", "club__name", "club__subtitle", "description", "club__code"]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
@@ -832,9 +843,12 @@ class EventViewSet(viewsets.ModelViewSet):
         if cached:
             return Response(cached)
 
-        events = Event.objects.filter(type=Event.FAIR, club__badges__purpose="fair").values_list(
-            "start_time", "end_time", "club__name", "club__code", "club__badges__label"
-        )
+        now = timezone.now()
+        events = Event.objects.filter(
+            type=Event.FAIR,
+            club__badges__purpose="fair",
+            end_time__gte=now - datetime.timedelta(days=1),
+        ).values_list("start_time", "end_time", "club__name", "club__code", "club__badges__label")
         output = {}
         for event in events:
             # group by start date
@@ -970,6 +984,20 @@ class EventViewSet(viewsets.ModelViewSet):
             )
 
         return super().create(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Do not let non-superusers delete events with the FAIR type through the API.
+        """
+        event = self.get_object()
+
+        if event.type == Event.FAIR and not self.request.user.is_superuser:
+            raise DRFValidationError(
+                detail="You cannot delete activities fair events. "
+                "If you would like to do this, email contact@pennclubs.com."
+            )
+
+        return super().destroy(request, *args, **kwargs)
 
     def get_queryset(self):
         qs = Event.objects.all()
@@ -1440,6 +1468,7 @@ class MeetingZoomWebhookAPIView(APIView):
                 conn.incr(key)
             elif action == "meeting.participant_left":
                 conn.decr(key)
+            conn.expire(key, datetime.timedelta(hours=8))
         return Response({"success": True})
 
 

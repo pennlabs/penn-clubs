@@ -3,12 +3,14 @@ import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import {
+  FAIR_INFO,
   FAIR_INFO_ROUTE,
   FAIR_OFFICER_GUIDE_ROUTE,
   LIVE_EVENTS,
   M2,
   M4,
 } from '../../constants'
+import { useSetting } from '../../utils'
 
 const LiveBanner = s.div`
   padding: 20px;
@@ -30,7 +32,7 @@ const LiveSub = s.div`
   color: white;
 `
 
-const WhiteButton = s.div`
+const WhiteButton = s.a`
   padding: 7px;
   width: 140px;
   text-align: center;
@@ -42,6 +44,12 @@ const WhiteButton = s.div`
   cursor: pointer;
   margin-top: 10px;
   margin-left: 15px;
+  transition: background-color 0.25s ease;
+
+  &:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.36);
+  }
 `
 
 interface LiveEventsDialogProps {
@@ -54,36 +62,50 @@ const LiveEventsDialog = ({
   liveEventCount,
   isPreFair,
   isFair,
-}: LiveEventsDialogProps): ReactElement => (
-  <LiveBanner>
-    {isPreFair && (
-      <Link href={FAIR_OFFICER_GUIDE_ROUTE} as={FAIR_OFFICER_GUIDE_ROUTE}>
-        <WhiteButton>Officer Setup</WhiteButton>
-      </Link>
-    )}
-    {isFair && (
-      <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
-        <WhiteButton>See Live Events</WhiteButton>
-      </Link>
-    )}
-    <Link href={FAIR_INFO_ROUTE} as={FAIR_INFO_ROUTE}>
-      <WhiteButton>Fair Information</WhiteButton>
-    </Link>
-    <LiveTitle>SAC Virtual Activities Fair</LiveTitle>
-    <LiveSub>
-      {liveEventCount === 0 ? (
-        'Get ready for the virtual activities fair!'
-      ) : (
-        <>
-          {liveEventCount}{' '}
-          {liveEventCount === 1
-            ? 'club is holding an event'
-            : 'clubs are holding events'}{' '}
-          right now.
-        </>
+}: LiveEventsDialogProps): ReactElement | null => {
+  const fairName = useSetting('FAIR_NAME')
+
+  if (fairName == null) {
+    return null
+  }
+
+  const fairInfo = FAIR_INFO[fairName as string]
+
+  return (
+    <LiveBanner>
+      {isPreFair && (
+        <Link
+          href={FAIR_OFFICER_GUIDE_ROUTE}
+          as={FAIR_OFFICER_GUIDE_ROUTE}
+          passHref
+        >
+          <WhiteButton>Officer Setup</WhiteButton>
+        </Link>
       )}
-    </LiveSub>
-  </LiveBanner>
-)
+      {isFair && (
+        <Link href={LIVE_EVENTS} as={LIVE_EVENTS} passHref>
+          <WhiteButton>See Live Events</WhiteButton>
+        </Link>
+      )}
+      <Link href={FAIR_INFO_ROUTE} as={FAIR_INFO_ROUTE} passHref>
+        <WhiteButton>Fair Information</WhiteButton>
+      </Link>
+      <LiveTitle>{fairInfo.name}</LiveTitle>
+      <LiveSub>
+        {liveEventCount === 0 ? (
+          'Get ready for the virtual activities fair!'
+        ) : (
+          <>
+            {liveEventCount}{' '}
+            {liveEventCount === 1
+              ? 'club is holding an event'
+              : 'clubs are holding events'}{' '}
+            right now.
+          </>
+        )}
+      </LiveSub>
+    </LiveBanner>
+  )
+}
 
 export default LiveEventsDialog

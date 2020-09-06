@@ -68,13 +68,9 @@ type ClubTableRowProps = {
 class ClubTableRow extends React.Component<ClubTableRowProps> {
   getSubtitle(): string {
     const { club } = this.props
-    const { subtitle, description } = club
+    const { subtitle } = club
 
-    if (subtitle) return subtitle
-
-    if (description.length < 200) return description
-
-    return description.substring(0, 200) + '...'
+    return subtitle
   }
 
   render(): ReactElement {

@@ -373,7 +373,7 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
         fields={eventFields}
         tableFields={eventTableFields}
         noun="Event"
-        currentTitle={(obj) => obj.name}
+        currentTitle={(obj) => (obj != null ? obj.name : 'Deleted Event')}
         onChange={(obj) => setDeviceContents(obj)}
       />
       <EventPreview event={event} />

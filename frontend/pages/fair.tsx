@@ -3,10 +3,15 @@ import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement } from 'react'
 
-import { Container, Icon, InfoPageTitle, Metadata } from '../components/common'
-import { CLUB_ROUTE, LIVE_EVENTS, SNOW } from '../constants'
+import {
+  Contact,
+  Container,
+  Icon,
+  InfoPageTitle,
+  Metadata,
+} from '../components/common'
+import { CLUB_ROUTE, FAIR_INFO, LIVE_EVENTS, SNOW } from '../constants'
 import renderPage from '../renderPage'
-import { ClubEvent } from '../types'
 import { doApiRequest, useSetting } from '../utils'
 
 type FairPageProps = {
@@ -22,27 +27,35 @@ type FairPageProps = {
 
 const FairPage = ({ events }: FairPageProps): ReactElement => {
   const isFairOpen = useSetting('FAIR_OPEN')
+  const fairName = useSetting('FAIR_NAME')
+
+  if (fairName == null) {
+    return (
+      <p className="has-text-danger">Fair setup is not configured correctly.</p>
+    )
+  }
+
+  const fairInfo = FAIR_INFO[fairName as string]
 
   return (
     <Container background={SNOW}>
-      <Metadata title="Virtual Activities Fair" />
-      <InfoPageTitle>SAC Virtual Activities Fair – Student Guide</InfoPageTitle>
+      <Metadata title={fairInfo.name} />
+      <InfoPageTitle>{fairInfo.name} – Student Guide</InfoPageTitle>
       <div className="content">
         <p>
           <b>Hi there! Welcome to Penn Clubs!</b> We are the official platform
           for student organizations on campus, and we are excited to get you
           connected to clubs on our platform this year. In collaboration with
-          the Student Activities Council, we will be hosting the virtual club
-          fair this fall. Below is some important information that will set you
-          up for a successful experience.
+          the {fairInfo.organization}, we will be hosting the virtual club fair
+          this fall. Below is some important information that will set you up
+          for a successful experience.
         </p>
         <p>
-          <b>How the SAC Fair will be run:</b>
+          <b>How the {fairInfo.name} will be run:</b>
         </p>
         <ul>
           <li>
-            The SAC Fair will be held on <b>September 1 - 3</b> from{' '}
-            <b>5pm to 8pm</b> on each of the three days.
+            The {fairInfo.name} will be held on <b>{fairInfo.time}</b>.
           </li>
           <li>
             The main fair functionality is each club's informational Zoom
@@ -72,7 +85,8 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
                   <Icon name="bookmark" /> Bookmark
                 </b>{' '}
                 button will allow you to save a club for later for your own
-                personal reference.
+                personal reference. Clubs will not be able to see your contact
+                information unless you have allowed it.
               </li>
               <li>
                 The{' '}
@@ -126,20 +140,21 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
         </p>
         <ul>
           <li>
-            If you have any questions or concerns regarding the SAC Fair, please
-            contact{' '}
-            <a href="mailto:sacfair@sacfunded.net">sacfair@sacfunded.net</a>.
+            If you have any questions or concerns regarding the {fairInfo.name},
+            please contact <Contact email={fairInfo.contact} />.
           </li>
           <li>
             If you have any questions or concerns regarding the Penn Clubs
-            platform, please contact{' '}
-            <a href="mailto:contact@pennclubs.com">contact@pennclubs.com</a>.
+            platform, please contact <Contact />.
           </li>
         </ul>
+
+        {fairInfo.additionalInformation && fairInfo.additionalInformation()}
 
         <p>
           You can find the schedule for the activities fair in the table below.
         </p>
+
         {isFairOpen && (
           <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
             <a className="button is-primary">

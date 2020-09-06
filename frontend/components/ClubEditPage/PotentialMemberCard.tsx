@@ -57,6 +57,12 @@ export default function PotentialMemberCard({
 
   return (
     <BaseCard title={title}>
+      <p className="mb-5">
+        The table below shows all the users that have subscribed (
+        <Icon name="bell" />) to your club. If users have elected to share their
+        bookmarks (<Icon name="bookmark" />) with club officers, they will also
+        show up in the list below.
+      </p>
       <table className="table is-fullwidth">
         <thead>
           <tr>

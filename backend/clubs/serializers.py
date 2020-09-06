@@ -536,8 +536,10 @@ class ClubListSerializer(serializers.ModelSerializer):
             return obj.subtitle
 
         # return first sentence of description without html tags
+        desc = obj.description.lstrip()[:1000]
+        cleaned_desc = re.sub(r"<[^>]+>", "", desc)
         return (
-            re.sub(r"<[^>]+>", "", "".join(re.split(r"(\.|\n|!)", obj.description.lstrip())[:2]))
+            "".join(re.split(r"(\.|\n|!)", cleaned_desc)[:2])
             .replace("&amp;", "&")
             .replace("&lt;", "<")
             .replace("&gt;", ">")
@@ -674,7 +676,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     def get_events(self, obj):
         now = timezone.now()
         return EventSerializer(
-            obj.events.filter(start_time__gte=now).order_by("start_time"),
+            obj.events.filter(end_time__gte=now).order_by("start_time"),
             many=True,
             read_only=True,
             context=self.context,
@@ -1048,6 +1050,17 @@ class SubscribeSerializer(serializers.ModelSerializer):
         ]
 
 
+class SubscribeBookmarkSerializer(SubscribeSerializer):
+    class Meta:
+        model = Favorite
+        fields = SubscribeSerializer.Meta.fields
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=Favorite.objects.all(), fields=["club", "person"]
+            )
+        ]
+
+
 class UserClubVisitSerializer(serializers.ModelSerializer):
     """
     Used by users to get a list of clubs that they have visited.
@@ -1141,6 +1154,7 @@ class UserSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField("get_image_url")
 
     has_been_prompted = serializers.BooleanField(source="profile.has_been_prompted")
+    share_bookmarks = serializers.BooleanField(source="profile.share_bookmarks")
     graduation_year = serializers.IntegerField(source="profile.graduation_year", allow_null=True)
     school = SchoolSerializer(many=True, source="profile.school")
     major = MajorSerializer(many=True, source="profile.major")
@@ -1190,6 +1204,7 @@ class UserSerializer(serializers.ModelSerializer):
             "major",
             "name",
             "school",
+            "share_bookmarks",
             "username",
         ]
 

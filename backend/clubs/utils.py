@@ -80,9 +80,11 @@ IFRAME_EMBED_WHITELIST = {
     "docs.google.com",
     "drive.google.com",
     "facebook.com",
+    "forms.gle",
     "google.com",
     "penniic.org",
     "streamable.com",
+    "thedp.com",
     "twitframe.com",
     "xkcd.com",
     "youtube.com",
@@ -95,6 +97,8 @@ def allow_iframe(tag, name, value):
     if name == "src":
         parsed = urlparse(value)
         if not parsed.netloc:
+            return False
+        if parsed.scheme not in {"http", "https"}:
             return False
         domain = parsed.netloc
         if domain.startswith("www."):

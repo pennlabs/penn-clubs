@@ -81,6 +81,8 @@ class SendInvitesTestCase(TestCase):
 
         self.assertEqual(len(mail.outbox), 3)
 
+        call_command("send_emails", "urgent_virtual_fair")
+
     def test_fuzzy_lookup(self):
         # test failed matches
         self.assertFalse(fuzzy_lookup_club("Club Thirteen"))

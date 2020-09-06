@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
 
-import { CLUB_RENEW_ROUTE } from '../../constants'
+import { CLUB_RENEW_ROUTE, FAIR_INFO } from '../../constants'
 import { Club } from '../../types'
+import { useSetting } from '../../utils'
 import BaseCard from './BaseCard'
 
 type RenewCardProps = {
@@ -10,6 +11,15 @@ type RenewCardProps = {
 }
 
 export default function RenewCard({ club }: RenewCardProps): ReactElement {
+  const fairName = useSetting('FAIR_NAME')
+
+  let fairInfo
+  if (fairName == null) {
+    fairInfo = { name: 'Unknown Fair' }
+  } else {
+    fairInfo = FAIR_INFO[fairName as string]
+  }
+
   const year = new Date().getFullYear()
 
   return (
@@ -36,13 +46,15 @@ export default function RenewCard({ club }: RenewCardProps): ReactElement {
           <div>
             {club.fair ? (
               <span className="has-text-success">
-                <b>This club has indicated interest in the SAC fair.</b>{' '}
+                <b>This club has indicated interest in the {fairInfo.name}.</b>{' '}
                 Priority for the fair will be given to SAC affiliated clubs, but
                 we will make every attempt to accomodate all clubs.
               </span>
             ) : (
               <span className="has-text-danger">
-                <b>This club has not indicated interested in the SAC fair.</b>{' '}
+                <b>
+                  This club has not indicated interested in the {fairInfo.name}.
+                </b>{' '}
                 If this is a mistake, you can fill out the{' '}
                 <Link
                   href={CLUB_RENEW_ROUTE()}
