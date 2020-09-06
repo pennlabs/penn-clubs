@@ -166,3 +166,19 @@ export interface ExtendedUserInfo extends UserInfo {
   subscribe_set: { club: string }[]
   favorite_set: { club: string }[]
 }
+
+export interface School {
+  id: number
+  name: string
+}
+
+export interface Major {
+  id: number
+  name: string
+}
+
+export interface Year {
+  id: number
+  name: string
+  year: number
+}
