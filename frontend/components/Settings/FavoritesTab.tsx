@@ -13,17 +13,22 @@ type FavoritesTabProps = {
 }
 
 export default ({ keyword }: FavoritesTabProps): ReactElement => {
-  const [favorites, setFavorites] = useState<Club[] | null>(null)
+  const [favorites, setFavorites] = useState<Club[]>([])
+  const [isLoading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
+    setLoading(true)
     doApiRequest(
       `/${keyword === 'bookmark' ? 'favorite' : 'subscription'}s/?format=json`,
     )
       .then((res) => res.json())
-      .then((values) => setFavorites(values.map((relation) => relation.club)))
+      .then((values) => {
+        setFavorites(values.map((relation) => relation.club))
+        setLoading(false)
+      })
   }, [])
 
-  if (favorites == null) {
+  if (isLoading) {
     return <Loading />
   }
 

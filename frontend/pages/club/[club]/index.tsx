@@ -1,5 +1,5 @@
 import { NextPageContext } from 'next'
-import { ReactElement, useRef, useState, useEffect } from 'react'
+import { ReactElement, useEffect, useRef, useState } from 'react'
 import Linkify from 'react-linkify'
 import s from 'styled-components'
 

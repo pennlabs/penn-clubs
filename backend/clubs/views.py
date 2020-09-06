@@ -1418,7 +1418,10 @@ class MeetingZoomWebhookAPIView(APIView):
         if not id:
             return Response({"count": 0})
 
-        conn = get_redis_connection()
+        try:
+            conn = get_redis_connection()
+        except NotImplementedError:
+            return Response({"count": 0})
         key = f"zoom:meeting:live:{id}"
         ans = conn.get(key)
         if ans is None:
@@ -1546,7 +1549,13 @@ class MeetingZoomAPIView(APIView):
             out = data.json()
             event.url = out.get("join_url", "")
             event.save(update_fields=["url"])
-            return Response({"success": True, "detail": "Your Zoom meeting has been created!"})
+            return Response(
+                {
+                    "success": True,
+                    "detail": "Your Zoom meeting has been created!"
+                    f"The following accounts have been made hosts: {', '.join(alt_hosts)}",
+                }
+            )
         else:
             parsed_url = urlparse(event.url)
 
@@ -1609,7 +1618,7 @@ class MeetingZoomAPIView(APIView):
                 {
                     "success": out.ok,
                     "detail": "Your Zoom meeting has been updated. "
-                    f"The following accounts have been made hosts: {alt_hosts.join(', ')}"
+                    f"The following accounts have been made hosts: {', '.join(alt_hosts)}"
                     if out.ok
                     else "Your Zoom meeting has not been updated. "
                     "Are you the owner of the meeting?",

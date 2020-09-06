@@ -1,5 +1,6 @@
 import fetch from 'isomorphic-unfetch'
 import { createContext, ReactElement, useContext } from 'react'
+
 import { MembershipRank } from './types'
 
 export function stripTags(val: string): string {
@@ -172,7 +173,13 @@ export function titleize(str: string): string {
  * Given a dictionary that you want to display to the user, converts this
  * dictionary into a displayable list of key value pairs.
  */
-export function formatResponse(err: { [key: string]: string }): ReactElement {
+export function formatResponse(
+  err: { [key: string]: string } | string,
+): ReactElement {
+  if (typeof err === 'string') {
+    return <>{err}</>
+  }
+
   return (
     <>
       {Object.keys(err)
