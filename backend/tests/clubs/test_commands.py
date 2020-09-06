@@ -77,11 +77,16 @@ class SendInvitesTestCase(TestCase):
     def test_send_virtual_fair(self):
         Club.objects.filter(code__in=["one", "two", "three"]).update(fair=True)
 
+        # send initial virtual fair email
         call_command("send_emails", "virtual_fair")
 
         self.assertEqual(len(mail.outbox), 3)
 
+        # send urgent fair reminder email
         call_command("send_emails", "urgent_virtual_fair")
+
+        # test post fair email
+        call_command("send_emails", "post_virtual_fair")
 
     def test_fuzzy_lookup(self):
         # test failed matches
