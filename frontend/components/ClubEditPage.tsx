@@ -16,7 +16,15 @@ import {
   DIRECTORY_ROUTE,
   HOME_ROUTE,
 } from '../constants/routes'
-import { Club, MembershipRank, UserInfo } from '../types'
+import {
+  Club,
+  Major,
+  MembershipRank,
+  School,
+  Tag,
+  UserInfo,
+  Year,
+} from '../types'
 import { doApiRequest, formatResponse } from '../utils'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
@@ -39,10 +47,10 @@ type ClubFormProps = {
   clubId: string | undefined
   authenticated: boolean | null
   userInfo: UserInfo
-  schools: any[]
-  majors: any[]
-  years: any[]
-  tags: any[]
+  schools: School[]
+  majors: Major[]
+  years: Year[]
+  tags: Tag[]
   router: SingletonRouter
 }
 
