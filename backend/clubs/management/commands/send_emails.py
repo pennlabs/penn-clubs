@@ -48,6 +48,7 @@ class Command(BaseCommand):
                 "physical_postfair",
                 "virtual_fair",
                 "urgent_virtual_fair",
+                "post_virtual_fair",
             ),
         )
         parser.add_argument(
@@ -151,6 +152,23 @@ class Command(BaseCommand):
                         event.club.send_virtual_fair_email(email="zoom")
 
             # don't continue
+            return
+        elif action == "post_virtual_fair":
+            now = timezone.now()
+            events = Event.objects.filter(
+                type=Event.FAIR,
+                end_time__lte=now,
+                start_time__gte=now - datetime.timedelta(weeks=2),
+            )
+            if clubs_whitelist:
+                events = events.filter(club__code__in=clubs_whitelist)
+
+                self.stdout.write(f"{events.count()} post fair emails to send to participants.")
+                for event in events:
+                    self.stdout.write(f"Sending post fair reminder to {event.club.name}...")
+                    if not dry_run:
+                        event.club.send_virtual_fair_email(email="post")
+
             return
 
         # handle all other email events
