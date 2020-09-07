@@ -1,7 +1,15 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
 
-import { Club, ClubApplicationRequired, ClubSize } from '../../types'
+import {
+  Club,
+  ClubApplicationRequired,
+  ClubSize,
+  Major,
+  School,
+  Tag,
+  Year,
+} from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
 import { Contact, Text } from '../common'
 import Form from '../Form'
@@ -41,11 +49,11 @@ const CLUB_SIZES = [
 ]
 
 type ClubEditCardProps = {
-  schools: any[]
-  majors: any[]
-  years: any[]
-  tags: any[]
-  club: any
+  schools: School[]
+  majors: Major[]
+  years: Year[]
+  tags: Tag[]
+  club: Club
   isEdit: boolean
   onSubmit?: (data: {
     message: ReactElement | string | null
