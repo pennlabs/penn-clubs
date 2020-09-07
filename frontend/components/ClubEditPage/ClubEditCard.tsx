@@ -49,11 +49,11 @@ const CLUB_SIZES = [
 ]
 
 type ClubEditCardProps = {
-  schools: School[]
-  majors: Major[]
-  years: Year[]
-  tags: Tag[]
-  club: Club
+  schools: Readonly<School[]>
+  majors: Readonly<Major[]>
+  years: Readonly<Year[]>
+  tags: Readonly<Tag[]>
+  club: Partial<Club>
   isEdit: boolean
   onSubmit?: (data: {
     message: ReactElement | string | null

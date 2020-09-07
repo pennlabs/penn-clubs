@@ -47,8 +47,8 @@ export default function RenewCard({ club }: RenewCardProps): ReactElement {
             {club.fair ? (
               <span className="has-text-success">
                 <b>This club has indicated interest in the {fairInfo.name}.</b>{' '}
-                Priority for the fair will be given to SAC affiliated clubs, but
-                we will make every attempt to accomodate all clubs.
+                Priority for the fair will be given to affiliated clubs, but we
+                will make every attempt to accomodate all clubs.
               </span>
             ) : (
               <span className="has-text-danger">
