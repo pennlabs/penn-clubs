@@ -185,6 +185,8 @@ class Club(models.Model):
             "guide_url": f"https://{domain}/sacfairguide",
             "zoom_url": f"https://{domain}/zoom",
             "fair_url": f"https://{domain}/fair",
+            "subscriptions_url": f"https://{domain}/club/{self.code}/edit#recruitment",
+            "num_subscriptions": self.subscribe_set.count(),
         }
 
         emails = self.get_officer_emails()
@@ -201,7 +203,7 @@ class Club(models.Model):
                     "setup": "fair_info",
                     "urgent": "fair_reminder",
                     "zoom": "zoom_reminder",
-                    "post": "fair_post_virtual",
+                    "post": "fair_feedback_officers",
                 }[email],
                 subject=f"[{prefix}] {subj}",
                 emails=emails,
