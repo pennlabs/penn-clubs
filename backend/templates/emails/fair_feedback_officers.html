@@ -1,17 +1,17 @@
 {% extends 'emails/base.html' %}
 
 {% block content %}
-    <h2>[IMPORTANT] SAC Fair Feedback & Information</h2>
+    <h2>[{{ prefix }}] SAC Fair Feedback & Information</h2>
     <p style="font-size: 1.2em">
-    	Hi there!
+    	Hi {{ name }} officers!
     </p>
     <p style="font-size: 1.2em">
         We hope you had a great SAC Fair! As a club officer, we would love to hear your feedback on the 
         transition to Penn Clubs this summer and any comments you have about the SAC Fair.
     </p>
     <p style="font-size: 1.2em">
-        We also wanted to remind you to take advantage of your "Subscriptions" list, which currently
-        has {{ num_subscriptions }} users' information easily accessible to you — a feature that
+        <b>We also wanted to remind you to take advantage of your "Subscriptions" list,</b> which currently
+        has <b>{{ num_subscriptions }}</b> users' information easily accessible to you — a feature that
         Penn Clubs has put together for users to easily be added to your listserv through an Excel
         download. It is <b>imperative</b> that if you have an application, info session, or additional
          information, that you reach out to these prospective students. You can access your club's 
