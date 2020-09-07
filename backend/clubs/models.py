@@ -185,16 +185,26 @@ class Club(models.Model):
             "guide_url": f"https://{domain}/sacfairguide",
             "zoom_url": f"https://{domain}/zoom",
             "fair_url": f"https://{domain}/fair",
+            "subscriptions_url": f"https://{domain}/club/{self.code}/edit#recruitment",
+            "num_subscriptions": self.subscribe_set.count(),
         }
 
         emails = self.get_officer_emails()
-        subj = "SAC Fair Setup" if email in {"urgent", "zoom"} else "SAC Fair Setup and Information"
+        subj = "SAC Fair Setup and Information"
+        if email in {"urgent", "zoom"}:
+            subj = "SAC Fair Setup"
+        elif email in {"post"}:
+            subj = "Post SAC Fair Information"
+            prefix = "INFO"
 
         if emails:
             send_mail_helper(
-                name={"setup": "fair_info", "urgent": "fair_reminder", "zoom": "zoom_reminder"}[
-                    email
-                ],
+                name={
+                    "setup": "fair_info",
+                    "urgent": "fair_reminder",
+                    "zoom": "zoom_reminder",
+                    "post": "fair_feedback_officers",
+                }[email],
                 subject=f"[{prefix}] {subj}",
                 emails=emails,
                 context=context,
