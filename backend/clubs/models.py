@@ -179,6 +179,14 @@ class Club(models.Model):
         if email in {"urgent", "zoom"}:
             prefix = "URGENT"
 
+        emails = self.get_officer_emails()
+        subj = "SAC Fair Setup and Information"
+        if email in {"urgent", "zoom"}:
+            subj = "SAC Fair Setup"
+        elif email in {"post"}:
+            subj = "Post SAC Fair Information"
+            prefix = "REMINDER"
+
         context = {
             "name": self.name,
             "prefix": prefix,
@@ -188,14 +196,6 @@ class Club(models.Model):
             "subscriptions_url": f"https://{domain}/club/{self.code}/edit#recruitment",
             "num_subscriptions": self.subscribe_set.count(),
         }
-
-        emails = self.get_officer_emails()
-        subj = "SAC Fair Setup and Information"
-        if email in {"urgent", "zoom"}:
-            subj = "SAC Fair Setup"
-        elif email in {"post"}:
-            subj = "Post SAC Fair Information"
-            prefix = "INFO"
 
         if emails:
             send_mail_helper(
