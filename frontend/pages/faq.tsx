@@ -129,6 +129,16 @@ const FAQ = () => (
             <Contact />.
           </li>
         </UnorderedList>
+        <br />
+        If you have any questions about the club creation process, please email{' '}
+        <Contact />.
+      </Question>
+      <Question title="Who is responsible for approving clubs on Penn Clubs?">
+        Newly created clubs require approval from the{' '}
+        <a href="https://osa.vpul.upenn.edu/">Office of Student Affairs</a> in
+        order to comply with university guidelines. When your club requires
+        review, it will be added to a queue that is periodically checked by OSA.
+        You will be notified when your club has been reviewed.
       </Question>
       <Question title="How are clubs ordered on Penn Clubs?">
         Click{' '}

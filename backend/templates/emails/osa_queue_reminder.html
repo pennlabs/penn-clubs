@@ -1,0 +1,9 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <p style="font-size: 1.2em">There are {{ num_clubs }} clubs waiting for your approval on Penn Clubs.</p>
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 20px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ url }}">
+        Review Clubs
+    </a>
+    <p style="font-size: 1.2em">This is an automated message.</p>
+{% endblock %}

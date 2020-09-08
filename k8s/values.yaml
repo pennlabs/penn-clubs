@@ -53,3 +53,8 @@ cronjobs:
     image: pennlabs/penn-clubs-backend
     secret: penn-clubs
     cmd: ["python", "manage.py", "rank"]
+  - name: daily-notifications
+    schedule: "0 13 * * *"
+    image: pennlabs/penn-clubs-backend
+    secret: penn-clubs
+    cmd: ["python", "manage.py", "daily_notifications"]
