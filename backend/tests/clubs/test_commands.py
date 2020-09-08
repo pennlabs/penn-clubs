@@ -88,6 +88,11 @@ class SendInvitesTestCase(TestCase):
         # test post fair email
         call_command("send_emails", "post_virtual_fair")
 
+    def test_daily_notifications(self):
+        call_command("daily_notifications")
+
+        self.assertGreater(len(mail.outbox), 0)
+
     def test_fuzzy_lookup(self):
         # test failed matches
         self.assertFalse(fuzzy_lookup_club("Club Thirteen"))
