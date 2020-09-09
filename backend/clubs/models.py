@@ -281,7 +281,7 @@ class Club(models.Model):
 
         return emails
 
-    def send_approval_email(self, request=None):
+    def send_approval_email(self, request=None, change=False):
         domain = get_domain(request)
 
         context = {
@@ -291,6 +291,7 @@ class Club(models.Model):
             "approved_comment": self.approved_comment,
             "view_url": settings.VIEW_URL.format(domain=domain, club=self.code),
             "edit_url": settings.EDIT_URL.format(domain=domain, club=self.code),
+            "change": change,
         }
 
         emails = self.get_officer_emails()
@@ -298,8 +299,10 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="approval_status",
-                subject="{} {} on Penn Clubs".format(
-                    self.name, "has been accepted" if self.approved else "not approved"
+                subject="{}{} {} on Penn Clubs".format(
+                    "Changes to " if change else "",
+                    self.name,
+                    "accepted" if self.approved else "not approved",
                 ),
                 emails=emails,
                 context=context,
@@ -310,7 +313,7 @@ class Club(models.Model):
         permissions = [
             ("approve_club", "Can approve pending clubs"),
             ("see_pending_clubs", "View pending clubs that are not one's own"),
-            ("see_fair_status", "See whether or not a club has registered for the SAC fair"),
+            ("see_fair_status", "See whether or not a club has registered for the SAC fair",),
         ]
 
 
@@ -720,7 +723,7 @@ class MembershipInvite(models.Model):
         }
 
         send_mail_helper(
-            name="owner", subject="Welcome to Penn Clubs!", emails=[self.email], context=context
+            name="owner", subject="Welcome to Penn Clubs!", emails=[self.email], context=context,
         )
 
 

@@ -203,7 +203,15 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
     class Meta:
         model = QuestionAnswer
-        fields = ("id", "question", "answer", "author", "responder", "is_anonymous", "approved")
+        fields = (
+            "id",
+            "question",
+            "answer",
+            "author",
+            "responder",
+            "is_anonymous",
+            "approved",
+        )
 
 
 class ReportSerializer(serializers.ModelSerializer):
@@ -214,7 +222,15 @@ class ReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Report
-        fields = ("id", "name", "creator", "description", "parameters", "created_at", "updated_at")
+        fields = (
+            "id",
+            "name",
+            "creator",
+            "description",
+            "parameters",
+            "created_at",
+            "updated_at",
+        )
 
 
 class YearSerializer(serializers.ModelSerializer):
@@ -386,7 +402,16 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MembershipInvite
-        fields = ["email", "token", "id", "name", "public", "title", "role", "updated_at"]
+        fields = [
+            "email",
+            "token",
+            "id",
+            "name",
+            "public",
+            "title",
+            "role",
+            "updated_at",
+        ]
 
 
 class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
@@ -912,7 +937,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         # if accepted or rejected, send email with reason
         if approval_email_required:
-            obj.send_approval_email()
+            obj.send_approval_email(change=has_approved_version)
             update_change_reason(obj, "{} club".format("Approve" if obj.approved else "Reject"))
         elif needs_reapproval:
             update_change_reason(obj, "Edit club through UI (reapproval required)")
@@ -947,7 +972,13 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "website",
             "youtube",
         ]
-        save_related_fields = ["tags", "badges", "target_schools", "target_majors", "target_years"]
+        save_related_fields = [
+            "tags",
+            "badges",
+            "target_schools",
+            "target_majors",
+            "target_years",
+        ]
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
