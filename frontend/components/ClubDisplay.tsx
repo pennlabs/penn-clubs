@@ -26,7 +26,7 @@ const ClubDisplay = ({
   displayClubs,
   display,
   onScroll = () => undefined,
-}: ClubDisplayProps): ReactElement => {
+}: ClubDisplayProps): ReactElement | null => {
   const onWindowScroll = (): void => {
     const { innerHeight = 0, scrollY = 0 } = window
     const {
@@ -36,6 +36,10 @@ const ClubDisplay = ({
     if (innerHeight + scrollY >= offsetHeight - innerHeight / 2) {
       onScroll()
     }
+  }
+
+  if (!displayClubs) {
+    return null
   }
 
   useEffect(() => {

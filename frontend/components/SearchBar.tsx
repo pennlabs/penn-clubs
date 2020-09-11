@@ -151,7 +151,7 @@ type SearchBarProps = {
   badges: Badge[]
   searchValue: SearchInput
   updateSearch: (modifier: SetStateAction<SearchInput>) => void
-  options?: { [key: string]: { disabled: boolean } }
+  options?: { [key: string]: { disabled?: boolean } }
 }
 
 const DROPDOWNS = {
@@ -165,6 +165,13 @@ const DROPDOWNS = {
     { value: 1, label: 'Requires application' },
     { value: 2, label: 'Does not require application' },
     { value: 3, label: 'Currently accepting applications' },
+  ],
+  Event_Type: [
+    { value: 2, label: 'GBM' },
+    { value: 1, label: 'Recruitment' },
+    { value: 3, label: 'Speaker' },
+    { value: 4, label: 'Activities Fair' },
+    { value: 0, label: 'Other' },
   ],
 }
 
@@ -273,6 +280,7 @@ const SearchBar = ({
   const searchFilters = [
     {
       key: 'text',
+      disabledByDefault: false,
       content: () => {
         return (
           <>
@@ -352,12 +360,18 @@ const SearchBar = ({
     },
   ]
 
-  Object.keys(DROPDOWNS).map((key) =>
+  Object.keys(DROPDOWNS).map((key) => {
+    const disabledByDefault = key.includes('Event')
     searchFilters.push({
       key,
+      disabledByDefault,
       content: () => {
         return (
-          <Collapsible name={key} key={key} active={initialActive}>
+          <Collapsible
+            name={key.replace('_', ' ')}
+            key={key}
+            active={initialActive}
+          >
             <DropdownFilter
               name={key}
               options={DROPDOWNS[key]}
@@ -367,15 +381,20 @@ const SearchBar = ({
           </Collapsible>
         )
       },
-    }),
-  )
+    })
+  })
 
   return (
     <>
       <Wrapper>
         <Content>
           {searchFilters
-            .filter(({ key }) => !options[key] || !options[key].disabled)
+            .filter(
+              ({ key, disabledByDefault }) =>
+                (!options[key] || !options[key].disabled) &&
+                (!disabledByDefault ||
+                  (options[key] && options[key].disabled === false)),
+            )
             .map(({ key, content }) => (
               <div key={key}>{content()}</div>
             ))}

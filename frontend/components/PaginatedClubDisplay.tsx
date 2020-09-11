@@ -25,7 +25,7 @@ const PaginatedClubDisplay = ({
   const [refresher, setRefresher] = useState<boolean>(false)
 
   const fetchNextPage = async (): Promise<PaginatedClubPage | null> => {
-    if (nextUrl === null) {
+    if (nextUrl == null) {
       return null
     }
 
@@ -41,7 +41,7 @@ const PaginatedClubDisplay = ({
   }
 
   const loadNextPage = () => {
-    if (savedNextUrl.current !== null) {
+    if (savedNextUrl.current != null) {
       setNextUrl(savedNextUrl.current)
       savedNextUrl.current = null
     }
@@ -52,7 +52,7 @@ const PaginatedClubDisplay = ({
     const counter = freshCounter.current
 
     fetchNextPage().then((page: PaginatedClubPage | null): void => {
-      if (page !== null && isMounted && freshCounter.current === counter) {
+      if (page != null && isMounted && freshCounter.current === counter) {
         savedNextUrl.current = page.next
         setClubs((clubs) => [...clubs, ...page.results])
       }

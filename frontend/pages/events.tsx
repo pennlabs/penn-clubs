@@ -35,8 +35,9 @@ const CardList = styled.div`
 `
 
 /**
- * Randomize the order the events are shown in, but prioritize the ones with
- * filled out information.
+ * Randomize the order the events are shown in.
+ * First prioritize the events with an earlier start date.
+ * If these are equal, slightly prioritize events with more filled out info.
  */
 const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
   const withRankings = events.map((event) => {
@@ -117,6 +118,9 @@ function EventPage({
     const sizeSelected = selectedTags
       .filter((tag) => tag.name === 'Size')
       .map((tag) => tag.value)
+    const eventTypeSelected = selectedTags
+      .filter((tag) => tag.name === 'Event_Type')
+      .map((tag) => tag.value)
 
     const requiredApplication =
       selectedTags.findIndex(
@@ -145,6 +149,9 @@ function EventPage({
     }
     if (sizeSelected.length > 0) {
       params.set('club__size__in', sizeSelected.join(','))
+    }
+    if (eventTypeSelected.length > 0) {
+      params.set('type__in', eventTypeSelected.join(','))
     }
 
     // XOR here, if both are yes they cancel out, if both are no
@@ -198,11 +205,14 @@ function EventPage({
           badges={badges}
           updateSearch={setSearchInput}
           searchValue={searchInput}
-          options={{ ordering: { disabled: true } }}
+          options={{
+            ordering: { disabled: true },
+            Event_Type: { disabled: false },
+          }}
         />
         <SearchbarRightContainer>
           <WideContainer background={SNOW} fullHeight>
-            {liveEvents.length && (
+            {!!liveEvents.length && (
               <>
                 <Title
                   className="title"
@@ -236,7 +246,9 @@ function EventPage({
                   src="/static/img/events_calendar.png"
                 />
                 <div>
-                  There are no upcoming events that match your search query.
+                  There are no upcoming events that match your search query. If
+                  you are a club officer, you can add new events on the manage
+                  club page.
                 </div>
               </div>
             )}

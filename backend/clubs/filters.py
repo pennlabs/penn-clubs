@@ -26,7 +26,7 @@ class OptionalPageNumberPagination(PageNumberPagination):
         return super().paginate_queryset(queryset, request, view)
 
 
-class RandomPageNumberPagination(PageNumberPagination):
+class RandomPageNumberPagination(OptionalPageNumberPagination):
     """
     Custom pagination that supports randomly sorting objects with pagination.
     Must be used with the associated ordering filter.
