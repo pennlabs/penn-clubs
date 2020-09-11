@@ -14,9 +14,9 @@ import {
 } from 'react-vis'
 import s from 'styled-components'
 
-import { Club, MembershipRank, MembershipRole } from '../../types'
+import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
-import { Text } from '../common'
+import { Loading, Text } from '../common'
 import BaseCard from './BaseCard'
 
 type AnalyticsCardProps = {
@@ -36,8 +36,10 @@ export default function AnalyticsCard({
   const [subscriptions, setSubscriptions] = useState([])
   const [date, setDate] = useState(new Date())
   const [max, setMax] = useState(1)
+  const [isLoading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
+    setLoading(true)
     doApiRequest(
       `/clubs/${club.code}/analytics?format=json&date=${Moment(date).format(
         'YYYY-MM-DD',
@@ -52,6 +54,7 @@ export default function AnalyticsCard({
         if (response.max > 1) {
           setMax(response.max)
         }
+        setLoading(false)
       })
   }, [date])
 
@@ -98,33 +101,38 @@ export default function AnalyticsCard({
         />
         <br></br>
         <br></br>
-
-        <DiscreteColorLegend
-          items={legendItems}
-          orientation="vertical"
-          style={{ display: 'flex' }}
-        />
-        <XYPlot
-          xType="ordinal"
-          yDomain={[0, max]}
-          width={800}
-          height={350}
-          margin={{ bottom: 60 }}
-        >
-          <XAxis />
-          <YAxis />
-          <ChartLabel
-            text="Time (US/Eastern)"
-            includeMargin={true}
-            xPercent={0.45}
-            yPercent={0.85}
-          />
-          <HorizontalGridLines />
-          <VerticalGridLines />
-          <LineMarkSeries data={visits} />
-          <LineMarkSeries data={favorites} />
-          <LineMarkSeries data={subscriptions} />
-        </XYPlot>
+        {isLoading ? (
+          <Loading />
+        ) : (
+          <>
+            <DiscreteColorLegend
+              items={legendItems}
+              orientation="vertical"
+              style={{ display: 'flex' }}
+            />
+            <XYPlot
+              xType="ordinal"
+              yDomain={[0, max]}
+              width={800}
+              height={350}
+              margin={{ bottom: 60 }}
+            >
+              <XAxis />
+              <YAxis />
+              <ChartLabel
+                text="Time (US/Eastern)"
+                includeMargin={true}
+                xPercent={0.45}
+                yPercent={0.85}
+              />
+              <HorizontalGridLines />
+              <VerticalGridLines />
+              <LineMarkSeries data={visits} />
+              <LineMarkSeries data={favorites} />
+              <LineMarkSeries data={subscriptions} />
+            </XYPlot>
+          </>
+        )}
       </BaseCard>
     </>
   )

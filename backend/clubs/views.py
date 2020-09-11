@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 import pytz
 import qrcode
 import requests
+from dateutil.parser import parse
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -116,7 +117,7 @@ def file_upload_endpoint_helper(request, code):
         )
     else:
         return Response(
-            {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST
+            {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST,
         )
     return Response({"detail": "Club file uploaded!", "id": asset.id})
 
@@ -130,7 +131,7 @@ def upload_endpoint_helper(request, cls, field, **kwargs):
         obj.save()
     else:
         return Response(
-            {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST
+            {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST,
         )
     return Response({"detail": "{} image uploaded!".format(cls.__name__)})
 
@@ -555,10 +556,21 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         subscriptions) for a club.
         """
         club = self.get_object()
-        if "date" in request.query_params.keys():
+        if "date" in request.query_params:
             date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
         else:
-            date = datetime.date.today()
+            date = datetime.combine(datetime.date.today(), datetime.min.time())
+
+        # parse date range
+        if "start" in request.query_params:
+            start = parse(request.query_params["start"])
+        else:
+            start = date
+
+        if "end" in request.query_params:
+            end = parse(request.query_params["end"])
+        else:
+            end = start + datetime.timedelta(days=1)
 
         visits_data = []
         favorites_data = []
@@ -571,21 +583,23 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             favorites_data.append({"x": hour_to_string_helper(hour), "y": 0})
             subscriptions_data.append({"x": hour_to_string_helper(hour), "y": 0})
 
-        visits = ClubVisit.objects.filter(club=club, created_at__day=date.day)
+        visits = ClubVisit.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
         grouped = itertools.groupby(visits, lambda row: row.created_at.astimezone(eastern).hour)
         for hour, visits in grouped:
             visits_data[hour]["y"] = len(list(visits))
             if visits_data[hour]["y"] > max_value:
                 max_value = visits_data[hour]["y"]
 
-        favorites = Favorite.objects.filter(club=club, created_at__day=date.day)
+        favorites = Favorite.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
         grouped = itertools.groupby(favorites, lambda row: row.created_at.astimezone(eastern).hour)
         for hour, favorites in grouped:
             favorites_data[hour]["y"] = len(list(favorites))
             if favorites_data[hour]["y"] > max_value:
                 max_value = favorites_data[hour]["y"]
 
-        subscriptions = Subscribe.objects.filter(club=club, created_at__day=date.day)
+        subscriptions = Subscribe.objects.filter(
+            club=club, created_at__gte=start, created_at__lte=end
+        )
         grouped = itertools.groupby(
             subscriptions, lambda row: row.created_at.astimezone(eastern).hour
         )
@@ -813,7 +827,13 @@ class EventViewSet(viewsets.ModelViewSet):
 
     permission_classes = [EventPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
-    search_fields = ["name", "club__name", "club__subtitle", "description", "club__code"]
+    search_fields = [
+        "name",
+        "club__name",
+        "club__subtitle",
+        "description",
+        "club__code",
+    ]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
@@ -1516,13 +1536,17 @@ class MeetingZoomAPIView(APIView):
                     if zoom_id in meetings:
                         try:
                             individual_data = zoom_api_call(
-                                request.user, "GET", f"https://api.zoom.us/v2/meetings/{zoom_id}"
+                                request.user, "GET", f"https://api.zoom.us/v2/meetings/{zoom_id}",
                             ).json()
                             extra_details[individual_data["id"]] = individual_data
                         except requests.exceptions.HTTPError:
                             pass
 
-        response = {"success": data.ok, "meetings": body, "extra_details": extra_details}
+        response = {
+            "success": data.ok,
+            "meetings": body,
+            "extra_details": extra_details,
+        }
         if response["success"]:
             cache.set(key, response, 120)
         return Response(response)
@@ -1573,7 +1597,7 @@ class MeetingZoomAPIView(APIView):
                 "settings": recommended_settings,
             }
             data = zoom_api_call(
-                request.user, "POST", "https://api.zoom.us/v2/users/{uid}/meetings", json=body
+                request.user, "POST", "https://api.zoom.us/v2/users/{uid}/meetings", json=body,
             )
             out = data.json()
             event.url = out.get("join_url", "")
@@ -1640,7 +1664,7 @@ class MeetingZoomAPIView(APIView):
             }
 
             out = zoom_api_call(
-                request.user, "PATCH", f"https://api.zoom.us/v2/meetings/{zoom_id}", json=body
+                request.user, "PATCH", f"https://api.zoom.us/v2/meetings/{zoom_id}", json=body,
             )
 
             return Response(
@@ -1695,7 +1719,11 @@ class UserZoomAPIView(APIView):
             email = social.extra_data.get("email")
 
         settings = response.json()
-        res = {"success": settings.get("code") is None, "settings": settings, "email": email}
+        res = {
+            "success": settings.get("code") is None,
+            "settings": settings,
+            "email": email,
+        }
 
         if res["success"]:
             cache.set(key, res, 900)

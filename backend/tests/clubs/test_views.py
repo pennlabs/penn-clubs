@@ -1689,3 +1689,17 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [401, 403], resp.content)
+
+    def test_club_analytics(self):
+        # choose a club
+        club = self.club1
+
+        # add officer to club
+        Membership.objects.create(person=self.user4, club=club, role=Membership.ROLE_OFFICER)
+
+        # login to officer account
+        self.client.login(username=self.user4.username, password="test")
+
+        # hit analytics endpoint
+        resp = self.client.get(reverse("clubs-analytics", args=(club.code,)))
+        self.assertIn(resp.status_code, [200], resp.content)
