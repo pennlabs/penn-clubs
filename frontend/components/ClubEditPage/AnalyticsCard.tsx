@@ -66,7 +66,7 @@ function parsePie(obj): PieData {
   obj.forEach((item) => {
     output.push({
       angle: item.count,
-      label: obj.person__profile__graduation_year ?? 'None',
+      label: item.person__profile__graduation_year ?? 'None',
     })
   })
   return output
