@@ -556,18 +556,27 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
         lower_bound = timezone.now() - datetime.timedelta(days=30 * 6)
 
-        def get_graduation_year_breakdown(obj):
-            return list(
-                obj.objects.filter(club=club, created_at__gte=lower_bound)
-                .values("person__profile__graduation_year")
-                .annotate(count=Count("id"))
-            )
+        def get_graduation_year_breakdown(obj, title):
+            return {
+                "title": title,
+                "content": list(
+                    obj.objects.filter(club=club, created_at__gte=lower_bound)
+                    .values("person__profile__graduation_year")
+                    .annotate(count=Count("id"))
+                ),
+            }
 
         return Response(
             {
-                "favorite_graduation_year": get_graduation_year_breakdown(Favorite),
-                "subscribe_graduation_year": get_graduation_year_breakdown(Subscribe),
-                "visit_graduation_year": get_graduation_year_breakdown(ClubVisit),
+                "favorite_graduation_year": get_graduation_year_breakdown(
+                    Favorite, "Graduation Year - Bookmarks"
+                ),
+                "subscribe_graduation_year": get_graduation_year_breakdown(
+                    Subscribe, "Graduation Year - Subscriptions"
+                ),
+                "visit_graduation_year": get_graduation_year_breakdown(
+                    ClubVisit, "Graduation Year - Page Views"
+                ),
             }
         )
 

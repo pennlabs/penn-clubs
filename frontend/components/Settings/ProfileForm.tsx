@@ -1,7 +1,7 @@
 import { ReactElement, useEffect, useState } from 'react'
 
 import { UserInfo } from '../../types'
-import { doApiRequest } from '../../utils'
+import { doApiRequest, formatResponse } from '../../utils'
 import { Icon } from '../common/Icon'
 import Form from '../Form'
 
@@ -16,6 +16,9 @@ const ProfileForm = ({
 }: Props): ReactElement => {
   const [schools, setSchools] = useState([])
   const [majors, setMajors] = useState([])
+  const [errorMessage, setErrorMessage] = useState<
+    ReactElement | string | null
+  >(null)
 
   useEffect(() => {
     doApiRequest('/schools/?format=json')
@@ -29,15 +32,20 @@ const ProfileForm = ({
 
   function submit(data) {
     const infoSubmit = () => {
+      setErrorMessage(null)
       if (data.image !== null) {
         delete data.image
       }
       doApiRequest('/settings/?format=json', {
         method: 'PATCH',
         body: data,
+      }).then((resp) => {
+        if (resp.ok) {
+          resp.json().then(onUpdate)
+        } else {
+          resp.json().then((resp) => setErrorMessage(formatResponse(resp)))
+        }
       })
-        .then((resp) => resp.json())
-        .then(onUpdate)
     }
 
     if (data.image && data.image.get('image') instanceof File) {
@@ -83,28 +91,34 @@ const ProfileForm = ({
     {
       name: 'share_bookmarks',
       type: 'checkbox',
-      label: 'Share my user information with the clubs that I have bookmarked.',
+      label:
+        'Share my user information with the clubs that I have bookmarked. By default, this information is not visible to club officers.',
     },
   ]
 
   return (
-    <Form
-      fields={fields}
-      defaults={settings}
-      onSubmit={submit}
-      submitButton={
-        <button className="button is-success">
-          <Icon alt="save" name="edit" />
-          Save
-        </button>
-      }
-      disabledSubmitButton={
-        <button className="button is-success" disabled={true}>
-          <Icon alt="save" name="check-circle" />
-          Saved!
-        </button>
-      }
-    />
+    <>
+      <Form
+        fields={fields}
+        defaults={settings}
+        onSubmit={submit}
+        submitButton={
+          <button className="button is-success">
+            <Icon alt="save" name="edit" />
+            Save
+          </button>
+        }
+        disabledSubmitButton={
+          <button className="button is-success" disabled={true}>
+            <Icon alt="save" name="check-circle" />
+            Saved!
+          </button>
+        }
+      />
+      {errorMessage && (
+        <div className="has-text-danger mt-3">{errorMessage}</div>
+      )}
+    </>
   )
 }
 

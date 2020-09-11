@@ -25,18 +25,13 @@ type AnalyticsCardProps = {
 }
 
 type PieChartData = {
-  favorite_graduation_year: {
-    person__profile__graduation_year: number | null
-    count: number
-  }[]
-  subscribe_graduation_year: {
-    person__profile__graduation_year: number | null
-    count: number
-  }[]
-  visit_graduation_year: {
-    person__profile__graduation_year: number | null
-    count: number
-  }[]
+  [key: string]: {
+    title: string
+    content: {
+      person__profile__graduation_year: number | null
+      count: number
+    }[]
+  }
 }
 
 type LineData = { x: Date; y: number }[]
@@ -228,16 +223,19 @@ export default function AnalyticsCard({
         ) : (
           <div className="is-clearfix">
             {Object.entries(pieChartData).map(([key, value]) => {
+              const pieData = parsePie(value.content)
               return (
-                <div key={key} className="is-pulled-left mr-3">
-                  <b>{titleize(key)}</b>
+                <div key={key} className="is-pulled-left mr-3 mb-3">
+                  <b>{value.title}</b>
                   <br />
-                  <RadialChart
-                    data={parsePie(value)}
-                    width={300}
-                    height={300}
-                    showLabels={true}
-                  />
+                  <RadialChart data={pieData} width={300} height={300}>
+                    <DiscreteColorLegend
+                      items={pieData.map((item) => ({
+                        title: item.label,
+                        strokeWidth: 6,
+                      }))}
+                    />
+                  </RadialChart>
                 </div>
               )
             })}

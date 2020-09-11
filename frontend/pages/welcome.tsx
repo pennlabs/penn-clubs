@@ -104,26 +104,25 @@ const Welcome = ({
           <Text>
             Here are two common buttons that you'll see around the site.
             Bookmarks and subscriptions can be managed from your Penn Clubs
-            account at any time. Bookmarks are intended to be private and for
-            your own personal use. Subscriptions are intended as a feature to
-            give your information to the clubs that you are interested in.
+            account at any time. Bookmarks (<Icon name="bookmark" />) are
+            intended to be private and for your own personal use. Subscriptions
+            (<Icon name="bell" />) are intended as a feature to give your
+            information to the clubs that you are interested in.
           </Text>
           <div className="columns is-mobile">
             <div className="column">
               <div className="button is-link is-large">
                 <Icon alt="bookmark" name="bookmark" /> Bookmark
               </div>
-              <Text style={{ marginTop: '0.5rem' }}>
-                To save a club for later
-              </Text>
+              <Text className="mt-1 mb-0">To save a club for later</Text>
+              <small>(For your own use)</small>
             </div>
             <div className="column">
               <div className="button is-danger is-large">
                 <Icon alt="subscribe" name="bell" /> Subscribe
               </div>
-              <Text style={{ marginTop: '0.5rem' }}>
-                To join the mailing list
-              </Text>
+              <Text className="mt-1 mb-0">To join the mailing list</Text>
+              <small>(Contact info given to club)</small>
             </div>
           </div>
         </Center>

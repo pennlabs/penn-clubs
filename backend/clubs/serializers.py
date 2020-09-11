@@ -1190,6 +1190,22 @@ class UserSerializer(serializers.ModelSerializer):
     school = SchoolSerializer(many=True, source="profile.school")
     major = MajorSerializer(many=True, source="profile.major")
 
+    def validate_graduation_year(self, value):
+        if not value:
+            return None
+        current_year = timezone.now().year
+        min_year = current_year - 2
+        max_year = current_year + 10
+        if value < min_year:
+            raise serializers.ValidationError(
+                "Invalid graduation year, must be greater than or equal to {}.".format(min_year)
+            )
+        elif value > max_year:
+            raise serializers.ValidationError(
+                "Invalid graduation year, must be less than or equal to {}.".format(max_year)
+            )
+        return value
+
     def get_image_url(self, obj):
         if not obj.profile.image:
             return None
