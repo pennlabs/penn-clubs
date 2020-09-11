@@ -202,32 +202,23 @@ function EventPage({
         />
         <SearchbarRightContainer>
           <WideContainer background={SNOW} fullHeight>
-            <Title
-              className="title"
-              style={{ color: CLUBS_GREY, marginTop: '30px' }}
-            >
-              Live Events
-            </Title>
-            {isLoading && <ListLoadIndicator />}
-            <CardList>
-              {liveEvents.map((e) => (
-                <EventCard key={e.id} event={e} isHappening={true} />
-              ))}
-            </CardList>
-            {!liveEvents.length && (
-              <div className="notification is-info is-clearfix">
-                <img
-                  className="is-pulled-left mr-5 mb-3"
-                  style={{ width: 100 }}
-                  src="/static/img/events_calendar.png"
-                />
-                <div>
-                  There are no events happening at this moment that match your
-                  search query. See the section below for upcoming events.
-                </div>
-              </div>
+            {liveEvents.length && (
+              <>
+                <Title
+                  className="title"
+                  style={{ color: CLUBS_GREY, marginTop: '30px' }}
+                >
+                  Live Events
+                </Title>
+                {isLoading && <ListLoadIndicator />}
+                <CardList>
+                  {liveEvents.map((e) => (
+                    <EventCard key={e.id} event={e} isHappening={true} />
+                  ))}
+                </CardList>
+                <br />
+              </>
             )}
-            <br />
             <Title className="title" style={{ color: CLUBS_GREY }}>
               Upcoming Events
             </Title>
