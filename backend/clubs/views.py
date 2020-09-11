@@ -17,7 +17,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch, Q
-from django.db.models.functions import Lower
+from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -559,7 +559,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if "date" in request.query_params:
             date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
         else:
-            date = datetime.combine(datetime.date.today(), datetime.min.time())
+            date = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
 
         # parse date range
         if "start" in request.query_params:
@@ -572,41 +572,30 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         else:
             end = start + datetime.timedelta(days=1)
 
-        visits_data = []
-        favorites_data = []
-        subscriptions_data = []
-        max_value = 0
-        eastern = pytz.timezone("America/New_York")
+        # retrieve data
+        def get_count(obj):
+            """
+            Return a json serializable hourly aggregation of analytics data for a specific model.
+            """
+            objs = (
+                obj.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
+                .annotate(hour=Trunc("created_at", "hour"))
+                .values("hour")
+                .annotate(count=Count("id"))
+            )
+            for item in objs:
+                item["hour"] = item["hour"].isoformat()
+            return list(objs)
 
-        for hour in range(24):
-            visits_data.append({"x": hour_to_string_helper(hour), "y": 0})
-            favorites_data.append({"x": hour_to_string_helper(hour), "y": 0})
-            subscriptions_data.append({"x": hour_to_string_helper(hour), "y": 0})
+        visits_data = get_count(ClubVisit)
+        favorites_data = get_count(Favorite)
+        subscriptions_data = get_count(Subscribe)
 
-        visits = ClubVisit.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
-        grouped = itertools.groupby(visits, lambda row: row.created_at.astimezone(eastern).hour)
-        for hour, visits in grouped:
-            visits_data[hour]["y"] = len(list(visits))
-            if visits_data[hour]["y"] > max_value:
-                max_value = visits_data[hour]["y"]
-
-        favorites = Favorite.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
-        grouped = itertools.groupby(favorites, lambda row: row.created_at.astimezone(eastern).hour)
-        for hour, favorites in grouped:
-            favorites_data[hour]["y"] = len(list(favorites))
-            if favorites_data[hour]["y"] > max_value:
-                max_value = favorites_data[hour]["y"]
-
-        subscriptions = Subscribe.objects.filter(
-            club=club, created_at__gte=start, created_at__lte=end
+        max_value = max(
+            max([v["count"] for v in visits_data], default=0),
+            max([v["count"] for v in favorites_data], default=0),
+            max([v["count"] for v in subscriptions_data], default=0),
         )
-        grouped = itertools.groupby(
-            subscriptions, lambda row: row.created_at.astimezone(eastern).hour
-        )
-        for hour, subscriptions in grouped:
-            subscriptions_data[hour]["y"] = len(list(subscriptions))
-            if subscriptions_data[hour]["y"] > max_value:
-                max_value = subscriptions_data[hour]["y"]
 
         analytics_dict = {
             "visits": visits_data,

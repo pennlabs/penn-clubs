@@ -1,4 +1,4 @@
-import Moment from 'moment'
+import moment from 'moment'
 import Head from 'next/head'
 import { ReactElement, useEffect, useState } from 'react'
 import DatePicker from 'react-datepicker'
@@ -7,12 +7,12 @@ import {
   DiscreteColorLegend,
   HorizontalGridLines,
   LineMarkSeries,
+  makeWidthFlexible,
   VerticalGridLines,
   XAxis,
   XYPlot,
   YAxis,
 } from 'react-vis'
-import s from 'styled-components'
 
 import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
@@ -23,40 +23,67 @@ type AnalyticsCardProps = {
   club: Club
 }
 
-const PlotContainer = s.div`
-  width: 100%;
-  text-align: center;
-`
+type LineData = { x: Date; y: number }[]
+
+const FlexibleXYPlot = makeWidthFlexible(XYPlot)
+
+function parse(
+  obj,
+  startRange: Date,
+  endRange: Date,
+  interval: number,
+): LineData {
+  const exists = {}
+  obj.forEach((item) => {
+    exists[new Date(item.hour).getTime()] = item.count
+  })
+  const output: LineData = []
+  for (let i = startRange.getTime(); i <= endRange.getTime(); i += interval) {
+    output.push({ x: new Date(i), y: exists[i] ?? 0 })
+  }
+  return output
+}
 
 export default function AnalyticsCard({
   club,
 }: AnalyticsCardProps): ReactElement {
-  const [visits, setVisits] = useState([])
-  const [favorites, setFavorites] = useState([])
-  const [subscriptions, setSubscriptions] = useState([])
-  const [date, setDate] = useState(new Date())
-  const [max, setMax] = useState(1)
+  const [visits, setVisits] = useState<LineData>([])
+  const [favorites, setFavorites] = useState<LineData>([])
+  const [subscriptions, setSubscriptions] = useState<LineData>([])
+  const [date, setDate] = useState<Date>(() => {
+    const startDate = new Date()
+    startDate.setHours(0, 0, 0, 0)
+    return startDate
+  })
+  const [endRange, setEndRange] = useState<Date>(() => {
+    const endDate = new Date()
+    endDate.setHours(0, 0, 0, 0)
+    return endDate
+  })
+  const [max, setMax] = useState<number>(1)
   const [isLoading, setLoading] = useState<boolean>(false)
+
+  const endDate = new Date(endRange.getTime() + 24 * 60 * 60 * 1000)
+  const interval = 60 * 60 * 1000
 
   useEffect(() => {
     setLoading(true)
     doApiRequest(
-      `/clubs/${club.code}/analytics?format=json&date=${Moment(date).format(
-        'YYYY-MM-DD',
-      )}`,
-      {},
+      `/clubs/${club.code}/analytics?format=json&start=${moment(
+        date,
+      ).toISOString()}&end=${moment(endDate).toISOString()}`,
     )
       .then((request) => request.json())
       .then((response) => {
-        setVisits(response.visits)
-        setFavorites(response.favorites)
-        setSubscriptions(response.subscriptions)
+        setVisits(parse(response.visits, date, endDate, interval))
+        setFavorites(parse(response.favorites, date, endDate, interval))
+        setSubscriptions(parse(response.subscriptions, date, endDate, interval))
         if (response.max > 1) {
           setMax(response.max)
         }
         setLoading(false)
       })
-  }, [date])
+  }, [date, endRange])
 
   const legendItems = [
     {
@@ -87,18 +114,38 @@ export default function AnalyticsCard({
           key="datepicker-css"
         />
       </Head>
-      <BaseCard title="Analytics">
+      <BaseCard title="Time Series Analytics">
         <Text>
-          Analyze the traffic that your club has recieved on a specific date.
+          Analyze the traffic that your club has recieved on a specific date
+          range. Displays data between the start of the first day and the end of
+          the last day.
         </Text>
-        <DatePicker
-          className="input"
-          format="MM'/'dd'/'y"
-          selected={date}
-          onChange={(val) => {
-            setDate(val)
-          }}
-        />
+        <div className="is-clearfix">
+          <div className="is-pulled-left mr-3">
+            <small>Start Range</small>
+            <br />
+            <DatePicker
+              className="input"
+              format="MM'/'dd'/'y"
+              selected={date}
+              onChange={(val) => {
+                setDate(val)
+              }}
+            />
+          </div>
+          <div className="is-pulled-left">
+            <small>End Range</small>
+            <br />
+            <DatePicker
+              className="input"
+              format="MM'/'dd'/'y"
+              selected={endRange}
+              onChange={(val) => {
+                setEndRange(val)
+              }}
+            />
+          </div>
+        </div>
         <br></br>
         <br></br>
         {isLoading ? (
@@ -110,19 +157,19 @@ export default function AnalyticsCard({
               orientation="vertical"
               style={{ display: 'flex' }}
             />
-            <XYPlot
-              xType="ordinal"
+            <FlexibleXYPlot
+              xType="time"
+              xDomain={[date, endDate]}
               yDomain={[0, max]}
-              width={800}
               height={350}
               margin={{ bottom: 60 }}
             >
-              <XAxis />
+              <XAxis tickFormat={(date) => moment(date).format('H')} />
               <YAxis />
               <ChartLabel
-                text="Time (US/Eastern)"
+                text="Time (Hour)"
                 includeMargin={true}
-                xPercent={0.45}
+                xPercent={0.5}
                 yPercent={0.85}
               />
               <HorizontalGridLines />
@@ -130,7 +177,7 @@ export default function AnalyticsCard({
               <LineMarkSeries data={visits} />
               <LineMarkSeries data={favorites} />
               <LineMarkSeries data={subscriptions} />
-            </XYPlot>
+            </FlexibleXYPlot>
           </>
         )}
       </BaseCard>
