@@ -300,11 +300,12 @@ class ClubTestCase(TestCase):
 
         # update user with fields
         # user field should not be updated
+        given_year = timezone.now().year
         resp = self.client.patch(
             reverse("users-detail"),
             {
                 "user": self.user1.id,
-                "graduation_year": timezone.now().year,
+                "graduation_year": given_year,
                 "school": [{"name": "Wharton"}, {"name": "Engineering"}],
             },
             content_type="application/json",
@@ -315,7 +316,7 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("users-detail"))
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = json.loads(resp.content.decode("utf-8"))
-        self.assertEqual(data["graduation_year"], 3000)
+        self.assertEqual(data["graduation_year"], given_year)
         self.assertEqual(set([s["name"] for s in data["school"]]), {"Wharton", "Engineering"})
 
     def test_superuser_views(self):
