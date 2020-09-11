@@ -34,7 +34,10 @@ from rest_framework.utils.serializer_helpers import ReturnList
 from rest_framework.views import APIView
 from social_django.utils import load_strategy
 
-from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
+from clubs.filters import (
+    RandomOrderingFilter,
+    RandomPageNumberPagination,
+)
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     Asset,
@@ -856,6 +859,7 @@ class EventViewSet(viewsets.ModelViewSet):
     ]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
+    pagination_class = RandomPageNumberPagination
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:

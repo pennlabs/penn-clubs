@@ -11,14 +11,26 @@ DEFAULT_PAGE_SIZE = 15
 DEFAULT_SEED = 1234
 
 
+class OptionalPageNumberPagination(PageNumberPagination):
+    """
+    Optional pagination that does not paginate the response if the user does not specify it.
+    """
+
+    page_size = DEFAULT_PAGE_SIZE
+    page_size_query_param = "page_size"
+
+    def paginate_queryset(self, queryset, request, view=None):
+        if self.page_query_param not in request.query_params:
+            return None
+
+        return super().paginate_queryset(queryset, request, view)
+
+
 class RandomPageNumberPagination(PageNumberPagination):
     """
     Custom pagination that supports randomly sorting objects with pagination.
     Must be used with the associated ordering filter.
     """
-
-    page_size = DEFAULT_PAGE_SIZE
-    page_size_query_param = "page_size"
 
     def paginate_queryset(self, queryset, request, view=None):
         if "random" in request.query_params.get("ordering", "").split(","):
@@ -45,9 +57,6 @@ class RandomPageNumberPagination(PageNumberPagination):
                     "&".join(["{}={}".format(k, quote(v)) for k, v in new_params.items()]),
                 )
             return results
-
-        if self.page_query_param not in request.query_params:
-            return None
 
         return super().paginate_queryset(queryset, request, view)
 

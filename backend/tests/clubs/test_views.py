@@ -304,7 +304,7 @@ class ClubTestCase(TestCase):
             reverse("users-detail"),
             {
                 "user": self.user1.id,
-                "graduation_year": 3000,
+                "graduation_year": timezone.now().year,
                 "school": [{"name": "Wharton"}, {"name": "Engineering"}],
             },
             content_type="application/json",
