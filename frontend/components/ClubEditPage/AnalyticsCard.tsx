@@ -8,6 +8,7 @@ import {
   HorizontalGridLines,
   LineMarkSeries,
   makeWidthFlexible,
+  RadialChart,
   VerticalGridLines,
   XAxis,
   XYPlot,
@@ -15,7 +16,7 @@ import {
 } from 'react-vis'
 
 import { Club } from '../../types'
-import { doApiRequest } from '../../utils'
+import { doApiRequest, titleize } from '../../utils'
 import { Loading, Text } from '../common'
 import BaseCard from './BaseCard'
 
@@ -23,7 +24,23 @@ type AnalyticsCardProps = {
   club: Club
 }
 
+type PieChartData = {
+  favorite_graduation_year: {
+    person__profile__graduation_year: number | null
+    count: number
+  }[]
+  subscribe_graduation_year: {
+    person__profile__graduation_year: number | null
+    count: number
+  }[]
+  visit_graduation_year: {
+    person__profile__graduation_year: number | null
+    count: number
+  }[]
+}
+
 type LineData = { x: Date; y: number }[]
+type PieData = { angle: number; label: string }[]
 
 const FlexibleXYPlot = makeWidthFlexible(XYPlot)
 
@@ -41,6 +58,17 @@ function parse(
   for (let i = startRange.getTime(); i <= endRange.getTime(); i += interval) {
     output.push({ x: new Date(i), y: exists[i] ?? 0 })
   }
+  return output
+}
+
+function parsePie(obj): PieData {
+  const output: PieData = []
+  obj.forEach((item) => {
+    output.push({
+      angle: item.count,
+      label: obj.person__profile__graduation_year ?? 'None',
+    })
+  })
   return output
 }
 
@@ -62,6 +90,7 @@ export default function AnalyticsCard({
   })
   const [max, setMax] = useState<number>(1)
   const [isLoading, setLoading] = useState<boolean>(false)
+  const [pieChartData, setPieChartData] = useState<PieChartData | null>(null)
 
   const endDate = new Date(endRange.getTime() + 24 * 60 * 60 * 1000)
   const interval = 60 * 60 * 1000
@@ -84,6 +113,14 @@ export default function AnalyticsCard({
         setLoading(false)
       })
   }, [date, endRange])
+
+  useEffect(() => {
+    doApiRequest(`/clubs/${club.code}/analytics_pie_charts/?format=json`)
+      .then((resp) => resp.json())
+      .then((resp) => {
+        setPieChartData(resp)
+      })
+  }, [])
 
   const legendItems = [
     {
@@ -179,6 +216,32 @@ export default function AnalyticsCard({
               <LineMarkSeries data={subscriptions} />
             </FlexibleXYPlot>
           </>
+        )}
+      </BaseCard>
+      <BaseCard title="Pie Chart Analytics">
+        <Text>
+          Show demographic information about people who have bookmarked,
+          subscribed, or visited the club.
+        </Text>
+        {pieChartData == null ? (
+          <Loading />
+        ) : (
+          <div className="is-clearfix">
+            {Object.entries(pieChartData).map(([key, value]) => {
+              return (
+                <div key={key} className="is-pulled-left mr-3">
+                  <b>{titleize(key)}</b>
+                  <br />
+                  <RadialChart
+                    data={parsePie(value)}
+                    width={300}
+                    height={300}
+                    showLabels={true}
+                  />
+                </div>
+              )
+            })}
+          </div>
         )}
       </BaseCard>
     </>
