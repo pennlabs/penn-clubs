@@ -958,9 +958,9 @@ class EventViewSet(viewsets.ModelViewSet):
 
         now = timezone.now()
         output = EventSerializer(
-            self.filter_queryset(self.get_queryset())
-            .filter(start_time__lte=now, end_time__gte=now)
-            .filter(type=Event.FAIR),
+            self.filter_queryset(self.get_queryset()).filter(
+                start_time__lte=now, end_time__gte=now
+            ),
             many=True,
             context=super().get_serializer_context(),
         ).data
@@ -987,9 +987,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         now = timezone.now()
         output = EventSerializer(
-            self.filter_queryset(self.get_queryset())
-            .filter(start_time__gte=now)
-            .filter(type=Event.FAIR),
+            self.filter_queryset(self.get_queryset()).filter(start_time__gte=now),
             many=True,
             context=super().get_serializer_context(),
         ).data
