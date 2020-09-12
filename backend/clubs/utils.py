@@ -322,7 +322,7 @@ def resize_image(content, width=None, height=None):
     # save final image
     img.thumbnail((width, height))
     with io.BytesIO() as output:
-        img.save(output, format="PNG", optimize=True)
+        img.convert("RGBA").save(output, format="PNG", optimize=True)
         return output.getvalue()
 
 
