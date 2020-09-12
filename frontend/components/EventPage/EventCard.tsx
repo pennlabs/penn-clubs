@@ -1,4 +1,4 @@
-import React, { ReactElement, useState } from 'react'
+import { ReactElement, useState } from 'react'
 import LazyLoad from 'react-lazy-load'
 import styled from 'styled-components'
 
@@ -48,6 +48,12 @@ const EventCard = (props: {
   const showModal = () => setModalVisible(true)
   const hideModal = () => setModalVisible(false)
 
+  const startDate = new Date(start_time)
+  const endDate = new Date(end_time)
+
+  const hoursBetween =
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60)
+
   return (
     <>
       <EventCardContainer className="event">
@@ -62,8 +68,8 @@ const EventCard = (props: {
               }
             />
           </LazyLoad>
-          <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
-          {isHappening && <HappeningNow />}
+          <DateInterval start={startDate} end={endDate} />
+          {isHappening && <HappeningNow urgent={hoursBetween <= 12} />}
           <ClubName>{clubName}</ClubName>
           <EventName>{name}</EventName>
           {url && MEETING_REGEX.test(url) && <Icon name="video" />}{' '}

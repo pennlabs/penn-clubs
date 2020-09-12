@@ -176,14 +176,9 @@ const Splash = (props: SplashProps): ReactElement => {
       <div style={{ backgroundColor: SNOW }}>
         <SearchBar
           tags={props.tags}
-          badges={props.badges}
+          badges={props.badges.filter(({ purpose }) => purpose === 'fair')}
           updateSearch={setSearchInput}
           searchValue={searchInput}
-          options={{
-            badges: {
-              disabled: !(props.userInfo && props.userInfo.is_superuser),
-            },
-          }}
         />
 
         <SearchbarRightContainer>

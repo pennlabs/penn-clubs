@@ -1,5 +1,5 @@
 import React from 'react'
-import styled, { keyframes } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 
 import { RED } from '../../constants/colors'
 
@@ -17,14 +17,19 @@ const blink = keyframes`
 
 const HappeningNow = (props) => <p {...props}>HAPPENING NOW</p>
 
-export default styled(HappeningNow)`
+const UrgentText = css`
   color: ${RED};
-  font-size: 14px;
-  font-weight: 500;
-  ${({ floatRight }) => (floatRight ? 'float: right;' : '')}
+
   &:after {
     animation: ${blink} 1.5s infinite;
     content: ' \\25CF';
     color: ${RED};
   }
+`
+
+export default styled(HappeningNow)`
+  font-size: 14px;
+  font-weight: 500;
+  ${({ floatRight }) => (floatRight ? 'float: right;' : '')}
+  ${({ urgent }) => (urgent ? UrgentText : '')}
 `

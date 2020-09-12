@@ -99,7 +99,9 @@ const EventModal = (props: {
       <EventDetails>
         <MetaDataGrid>
           <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
-          <RightAlign>{isHappening && <HappeningNow />}</RightAlign>
+          <RightAlign>
+            {isHappening && <HappeningNow urgent={true} />}
+          </RightAlign>
         </MetaDataGrid>
         <ClubName>{club_name}</ClubName>
         <EventName>{name}</EventName>
