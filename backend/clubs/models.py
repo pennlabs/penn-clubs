@@ -42,6 +42,10 @@ def get_club_file_name(instance, fname):
     return os.path.join("clubs", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
 
 
+def get_club_small_file_name(instance, fname):
+    return os.path.join("clubs_small", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
+
+
 def get_event_file_name(instance, fname):
     return os.path.join("events", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
 
@@ -136,6 +140,7 @@ class Club(models.Model):
     accepting_members = models.BooleanField(default=False)
     listserv = models.CharField(blank=True, max_length=255)
     image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
+    image_small = models.ImageField(upload_to=get_club_small_file_name, null=True, blank=True)
     tags = models.ManyToManyField("Tag")
     members = models.ManyToManyField(get_user_model(), through="Membership")
     # Represents which organizations this club is directly under in the organizational structure.

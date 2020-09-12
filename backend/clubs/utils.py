@@ -1,11 +1,15 @@
+import io
 import re
 from urllib.parse import urlparse
 
 import bleach
+import requests
 from bs4 import BeautifulSoup, NavigableString
 from django.conf import settings
+from django.core.files.images import ImageFile
 from django.db.models import CharField, F, Q, Value
 from django.template.defaultfilters import slugify
+from PIL import Image
 
 
 def get_domain(request):
@@ -296,3 +300,36 @@ def fuzzy_lookup_club(name):
             return club
 
     return None
+
+
+def resize_image(content, width=None, height=None):
+    """
+    Accepts a byte string representing an input image file.
+    Returns a byte string representing the minified output image file.
+    """
+    img = Image.open(io.BytesIO(content))
+
+    # ensure parameter is specified
+    if height is None and width is None:
+        raise ValueError("You must specify either the maximum width or the maximum height!")
+
+    # preserve aspect ratio
+    if height is not None:
+        width = img.width * (height / img.height)
+    elif width is not None:
+        height = img.height * (width / img.width)
+
+    # save final image
+    img.thumbnail((width, height))
+    with io.BytesIO() as output:
+        img.save(output, format="PNG", optimize=True)
+        return output.getvalue()
+
+
+def get_django_minified_image(url, **kwargs):
+    """
+    Accepts a URL to an image and returns the minified ImageFile for that image.
+    """
+    resp = requests.get(url)
+    new_image = resize_image(resp.content, **kwargs)
+    return ImageFile(io.BytesIO(new_image), name="image.png")

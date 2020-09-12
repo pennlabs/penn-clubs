@@ -596,14 +596,20 @@ class ClubListSerializer(serializers.ModelSerializer):
         return mship.role
 
     def get_image_url(self, obj):
-        if not obj.image:
+        # use small version if exists
+        image = obj.image_small
+        if not image:
+            image = obj.image
+
+        # correct path rendering
+        if not image:
             return None
-        if obj.image.url.startswith("http"):
-            return obj.image.url
+        if image.url.startswith("http"):
+            return image.url
         elif "request" in self.context:
-            return self.context["request"].build_absolute_uri(obj.image.url)
+            return self.context["request"].build_absolute_uri(image.url)
         else:
-            return obj.image.url
+            return image.url
 
     def get_fields(self):
         all_fields = super().get_fields()

@@ -102,7 +102,7 @@ from clubs.serializers import (
     UserSubscribeWriteSerializer,
     YearSerializer,
 )
-from clubs.utils import html_to_text
+from clubs.utils import get_django_minified_image, html_to_text
 
 
 def file_upload_endpoint_helper(request, code):
@@ -121,18 +121,31 @@ def file_upload_endpoint_helper(request, code):
     return Response({"detail": "Club file uploaded!", "id": asset.id})
 
 
-def upload_endpoint_helper(request, cls, field, **kwargs):
-    obj = get_object_or_404(cls, **kwargs)
+def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
+    """
+    Given a Model class with lookup arguments or a Model object, save the uploaded image
+    to the image field specified in the argument.
+
+    The save parameter can be used to control whether the Model is actually saved to the database.
+    This parameter only applies if you pass in a Model object.
+
+    Returns a response that can be given to the end user.
+    """
+    if isinstance(cls, type):
+        obj = get_object_or_404(cls, **kwargs)
+    else:
+        obj = cls
     if "file" in request.data and isinstance(request.data["file"], UploadedFile):
         getattr(obj, field).delete(save=False)
         setattr(obj, field, request.data["file"])
-        obj._change_reason = "Update '{}' image field".format(field)
-        obj.save()
+        if save:
+            obj._change_reason = "Update '{}' image field".format(field)
+            obj.save()
     else:
         return Response(
             {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST,
         )
-    return Response({"detail": "{} image uploaded!".format(cls.__name__)})
+    return Response({"detail": "{} image uploaded!".format(obj.__class__.__name__)})
 
 
 def find_relationship_helper(relationship, club_object, found):
@@ -461,12 +474,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def upload(self, request, *args, **kwargs):
         """
         Upload the club logo.
+        Marks the club as pending approval since the logo has changed.
+        Also create a thumbnail version of the club logo.
         """
         # ensure user is allowed to upload image
         club = self.get_object()
 
         # reset approval status after upload
-        resp = upload_endpoint_helper(request, Club, "image", code=club.code)
+        resp = upload_endpoint_helper(request, club, "image", save=False)
         if status.is_success(resp.status_code):
             club.approved = None
             club.approved_by = None
@@ -474,7 +489,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             if club.history.filter(approved=True).exists():
                 club.ghost = True
 
-            club.save(update_fields=["approved", "approved_by", "approved_on", "ghost"])
+            club._change_reason = "Mark pending approval due to image change"
+            club.save(update_fields=["image", "approved", "approved_by", "approved_on", "ghost"])
+
+            # create thumbnail
+            image_url = club.image.url
+            if not image_url.startswith("http"):
+                image_url = request.build_absolute_uri(image_url)
+            club.image_small = get_django_minified_image(image_url, height=200)
+            club.skip_history_when_saving = True
+            club.save(update_fields=["image_small"])
+
         return resp
 
     @action(detail=True, methods=["post"])
