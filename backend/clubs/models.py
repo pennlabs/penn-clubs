@@ -40,11 +40,11 @@ def get_asset_file_name(instance, fname):
 
 
 def get_club_file_name(instance, fname):
-    return os.path.join("clubs", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
+    return os.path.join("clubs", "{}.{}".format(instance.code, fname.rsplit(".", 1)[-1]))
 
 
 def get_club_small_file_name(instance, fname):
-    return os.path.join("clubs_small", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
+    return os.path.join("clubs_small", "{}.{}".format(instance.code, fname.rsplit(".", 1)[-1]))
 
 
 def get_event_file_name(instance, fname):

@@ -1,3 +1,4 @@
+import Color from 'color'
 import moment from 'moment'
 import Head from 'next/head'
 import { ReactElement, useEffect, useState } from 'react'
@@ -15,8 +16,9 @@ import {
   YAxis,
 } from 'react-vis'
 
+import { CLUBS_BLUE } from '../../constants'
 import { Club } from '../../types'
-import { doApiRequest, titleize } from '../../utils'
+import { doApiRequest } from '../../utils'
 import { Loading, Text } from '../common'
 import BaseCard from './BaseCard'
 
@@ -35,7 +37,7 @@ type PieChartData = {
 }
 
 type LineData = { x: Date; y: number }[]
-type PieData = { angle: number; label: string }[]
+type PieData = { angle: number; label: string; color?: string }[]
 
 const FlexibleXYPlot = makeWidthFlexible(XYPlot)
 
@@ -57,12 +59,15 @@ function parse(
 }
 
 function parsePie(obj): PieData {
+  let color = Color(CLUBS_BLUE)
   const output: PieData = []
   obj.forEach((item) => {
     output.push({
       angle: item.count,
       label: item.person__profile__graduation_year ?? 'None',
+      color: color.rgb().string(),
     })
+    color = color.lighten(0.15)
   })
   return output
 }
@@ -228,14 +233,19 @@ export default function AnalyticsCard({
                 <div key={key} className="is-pulled-left mr-3 mb-3">
                   <b>{value.title}</b>
                   <br />
-                  <RadialChart data={pieData} width={300} height={300}>
-                    <DiscreteColorLegend
-                      items={pieData.map((item) => ({
-                        title: item.label,
-                        strokeWidth: 6,
-                      }))}
-                    />
-                  </RadialChart>
+                  <RadialChart
+                    data={pieData}
+                    width={300}
+                    height={300}
+                    colorType="literal"
+                  />
+                  <DiscreteColorLegend
+                    items={pieData.map((item) => ({
+                      title: item.label,
+                      strokeWidth: 6,
+                      color: item.color,
+                    }))}
+                  />
                 </div>
               )
             })}
