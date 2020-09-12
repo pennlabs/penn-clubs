@@ -15,7 +15,7 @@ from django.utils.crypto import get_random_string
 from phonenumber_field.modelfields import PhoneNumberField
 from simple_history.models import HistoricalRecords
 
-from clubs.utils import get_domain, html_to_text
+from clubs.utils import get_django_minified_image, get_domain, html_to_text
 
 
 def send_mail_helper(name, subject, emails, context):
@@ -163,6 +163,16 @@ class Club(models.Model):
 
     def __str__(self):
         return self.name
+
+    def create_thumbnail(self, request=None):
+        if not self.image:
+            return
+        image_url = self.image.url
+        if not image_url.startswith("http") and request is not None:
+            image_url = request.build_absolute_uri(image_url)
+        self.image_small = get_django_minified_image(image_url, height=200)
+        self.skip_history_when_saving = True
+        self.save(update_fields=["image_small"])
 
     def send_virtual_fair_email(self, request=None, email="setup"):
         """

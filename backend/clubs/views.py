@@ -102,7 +102,7 @@ from clubs.serializers import (
     UserSubscribeWriteSerializer,
     YearSerializer,
 )
-from clubs.utils import get_django_minified_image, html_to_text
+from clubs.utils import html_to_text
 
 
 def file_upload_endpoint_helper(request, code):
@@ -493,12 +493,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             club.save(update_fields=["image", "approved", "approved_by", "approved_on", "ghost"])
 
             # create thumbnail
-            image_url = club.image.url
-            if not image_url.startswith("http"):
-                image_url = request.build_absolute_uri(image_url)
-            club.image_small = get_django_minified_image(image_url, height=200)
-            club.skip_history_when_saving = True
-            club.save(update_fields=["image_small"])
+            club.create_thumbnail()
 
         return resp
 
