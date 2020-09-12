@@ -67,7 +67,7 @@ function parsePie(obj): PieData {
       label: item.person__profile__graduation_year ?? 'None',
       color: color.rgb().string(),
     })
-    color = color.lighten(0.15)
+    color = color.rotate(360 / obj.length)
   })
   return output
 }
