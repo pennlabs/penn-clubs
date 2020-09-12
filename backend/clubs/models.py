@@ -166,13 +166,17 @@ class Club(models.Model):
 
     def create_thumbnail(self, request=None):
         if not self.image:
-            return
+            return False
         image_url = self.image.url
-        if not image_url.startswith("http") and request is not None:
-            image_url = request.build_absolute_uri(image_url)
+        if not image_url.startswith("http"):
+            if request is not None:
+                image_url = request.build_absolute_uri(image_url)
+            else:
+                return False
         self.image_small = get_django_minified_image(image_url, height=200)
         self.skip_history_when_saving = True
         self.save(update_fields=["image_small"])
+        return True
 
     def send_virtual_fair_email(self, request=None, email="setup"):
         """
