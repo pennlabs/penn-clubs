@@ -1,14 +1,29 @@
 {
-    "presets": ["next/babel"],
-    "plugins": ["istanbul"],
+    "presets": [
+        "next/babel"
+    ],
+    "plugins": [
+        "istanbul"
+    ],
     "env": {
         "production": {
             "plugins": [
-                "react-remove-properties"
+                "react-remove-properties",
+                [
+                    "babel-plugin-styled-components",
+                    {
+                        "displayName": false,
+                        "fileName": false,
+                        "minify": true,
+                        "transpileTemplateLiterals": true
+                    }
+                ]
             ]
         },
         "development": {
-            "plugins": ["babel-plugin-styled-components"]
+            "plugins": [
+                "babel-plugin-styled-components"
+            ]
         }
     }
 }
