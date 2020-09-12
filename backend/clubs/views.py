@@ -493,7 +493,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             club.save(update_fields=["image", "approved", "approved_by", "approved_on", "ghost"])
 
             # create thumbnail
-            club.create_thumbnail()
+            club.create_thumbnail(request)
 
         return resp
 

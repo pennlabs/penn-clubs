@@ -2,6 +2,7 @@ import datetime
 import os
 import uuid
 
+import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -173,9 +174,12 @@ class Club(models.Model):
                 image_url = request.build_absolute_uri(image_url)
             else:
                 return False
-        self.image_small = get_django_minified_image(image_url, height=200)
-        self.skip_history_when_saving = True
-        self.save(update_fields=["image_small"])
+        try:
+            self.image_small = get_django_minified_image(image_url, height=200)
+            self.skip_history_when_saving = True
+            self.save(update_fields=["image_small"])
+        except requests.exceptions.RequestException:
+            return False
         return True
 
     def send_virtual_fair_email(self, request=None, email="setup"):
