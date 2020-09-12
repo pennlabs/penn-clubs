@@ -586,6 +586,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 ),
             }
 
+        def get_school_breakdown(obj, title):
+            return {
+                "title": title,
+                "content": list(
+                    obj.objects.filter(club=club, created_at__gte=lower_bound)
+                    .values("person__profile__school__name")
+                    .annotate(count=Count("id"))
+                ),
+            }
+
         return Response(
             {
                 "favorite_graduation_year": get_graduation_year_breakdown(
@@ -597,6 +607,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 "visit_graduation_year": get_graduation_year_breakdown(
                     ClubVisit, "Graduation Year - Page Views"
                 ),
+                "favorite_school": get_school_breakdown(Favorite, "School - Bookmarks"),
+                "subscribe_school": get_school_breakdown(Subscribe, "School - Subscriptions"),
+                "visit_school": get_school_breakdown(ClubVisit, "School - Page Views"),
             }
         )
 

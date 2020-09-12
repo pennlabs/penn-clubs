@@ -62,9 +62,15 @@ function parsePie(obj): PieData {
   let color = Color(CLUBS_BLUE)
   const output: PieData = []
   obj.forEach((item) => {
+    const label =
+      ((Object.entries(item).find((key) => key[0].startsWith('person')) ?? [
+        'None',
+        'None',
+      ])[1] as string) ?? 'None'
+
     output.push({
       angle: item.count,
-      label: item.person__profile__graduation_year ?? 'None',
+      label,
       color: color.rgb().string(),
     })
     color = color.rotate(360 / obj.length)
@@ -221,7 +227,8 @@ export default function AnalyticsCard({
       <BaseCard title="Pie Chart Analytics">
         <Text>
           Show demographic information about people who have bookmarked,
-          subscribed, or visited the club.
+          subscribed, or visited the club. Students with multiple schools are
+          counted twice for applicable graphs.
         </Text>
         {pieChartData == null ? (
           <Loading />
@@ -229,6 +236,11 @@ export default function AnalyticsCard({
           <div className="is-clearfix">
             {Object.entries(pieChartData).map(([key, value]) => {
               const pieData = parsePie(value.content)
+              const pieLegend = pieData.map((item) => ({
+                title: `${item.label} (${item.angle})`,
+                strokeWidth: 6,
+                color: item.color,
+              }))
               return (
                 <div key={key} className="is-pulled-left mr-3 mb-3">
                   <b>{value.title}</b>
@@ -239,13 +251,7 @@ export default function AnalyticsCard({
                     height={300}
                     colorType="literal"
                   />
-                  <DiscreteColorLegend
-                    items={pieData.map((item) => ({
-                      title: item.label,
-                      strokeWidth: 6,
-                      color: item.color,
-                    }))}
-                  />
+                  <DiscreteColorLegend items={pieLegend} />
                 </div>
               )
             })}
