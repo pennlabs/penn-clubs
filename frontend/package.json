@@ -9,7 +9,7 @@
     "@svgr/webpack": "^5.1.0",
     "babel-loader": "^8.0.5",
     "babel-plugin-istanbul": "^6.0.0",
-    "babel-plugin-styled-components": "^1.10.6",
+    "babel-plugin-styled-components": "^1.11.1",
     "babel-preset-next": "^1.2.0",
     "body-parser": "^1.18.3",
     "body-scroll-lock": "^2.6.1",
