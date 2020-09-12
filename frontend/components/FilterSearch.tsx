@@ -6,6 +6,7 @@ import s from 'styled-components'
 import {
   BORDER,
   CLUBS_GREY,
+  CLUBS_GREY_LIGHT,
   FOCUS_GRAY,
   MEDIUM_GRAY,
   WHITE,
@@ -29,6 +30,15 @@ const SearchWrapper = s.div`
     z-index: 1000;
     background: ${WHITE};
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.075);
+  }
+`
+
+const SubLabel = s.div`
+  font-size: 0.9em;
+  color: ${CLUBS_GREY_LIGHT};
+
+  .tag & {
+    display: none;
   }
 `
 
@@ -172,6 +182,7 @@ type FuseTag = {
   count?: number
   color?: string
   name?: string
+  description?: string
 }
 
 type FilterProps = {
@@ -195,13 +206,14 @@ const Filter = ({
   // add count annotation to label
   tags = tags
     .filter(({ value }) => !filter.has(value))
-    .map(({ label, count, color, ...tag }) => ({
+    .map(({ label, count, color, description, ...tag }) => ({
       ...tag,
       text: label as string,
       label: (
         <>
           {color != null && <ColorPreview color={color}> </ColorPreview>}
           {`${label}${count != null ? ` (${count})` : ''}`}
+          {!!description && <SubLabel>{description}</SubLabel>}
         </>
       ),
     }))
