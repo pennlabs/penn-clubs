@@ -764,6 +764,7 @@ export class ModelForm extends Component {
                 Object.keys(resp).forEach((key) => {
                   object[key] = resp[key]
                 })
+                object._error_message = null
               } else {
                 // eslint-disable-next-line camelcase
                 object._error_message = resp

@@ -319,8 +319,11 @@ def resize_image(content, width=None, height=None):
     elif width is not None:
         height = img.height * (width / img.width)
 
+    # if image is already smaller, then don't bother resizing
+    if img.width > width or img.height > height:
+        img.thumbnail((width, height))
+
     # save final image
-    img.thumbnail((width, height))
     with io.BytesIO() as output:
         img.convert("RGBA").save(output, format="PNG", optimize=True)
         return output.getvalue()

@@ -891,7 +891,13 @@ class EventViewSet(viewsets.ModelViewSet):
         event = Event.objects.get(id=kwargs["id"])
         self.check_object_permissions(request, event)
 
-        return upload_endpoint_helper(request, Event, "image", pk=event.pk)
+        resp = upload_endpoint_helper(request, Event, "image", pk=event.pk)
+
+        # if image uploaded, create thumbnail
+        if status.is_success(resp.status_code):
+            event.create_thumbnail(request)
+
+        return resp
 
     @action(detail=False, methods=["get"])
     def fair(self, request, *args, **kwargs):

@@ -52,6 +52,7 @@ export interface ClubEvent {
   start_time: string
   end_time: string
   image_url: string | null
+  large_image_url: string | null
   location: string | null
   url: string | null
   type: ClubEventType

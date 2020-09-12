@@ -51,6 +51,10 @@ def get_event_file_name(instance, fname):
     return os.path.join("events", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
 
 
+def get_event_small_file_name(instance, fname):
+    return os.path.join("events_small", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
+
+
 def get_user_file_name(instance, fname):
     return os.path.join("users", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
 
@@ -77,6 +81,35 @@ class Report(models.Model):
         permissions = [
             ("generate_reports", "Can generate reports"),
         ]
+
+
+def create_thumbnail_helper(self, request, height):
+    """
+    Helper to create thumbnail on "image_small" given "image" exists on the model.
+    """
+    if not self.image:
+        return False
+    image_url = self.image.url
+
+    # can't minify svgs
+    if image_url.endswith(".svg"):
+        return False
+
+    # fix path for development
+    if not image_url.startswith("http"):
+        if request is not None:
+            image_url = request.build_absolute_uri(image_url)
+        else:
+            return False
+
+    # if failed to download image, ignore
+    try:
+        self.image_small = get_django_minified_image(image_url, height=height)
+        self.skip_history_when_saving = True
+        self.save(update_fields=["image_small"])
+    except requests.exceptions.RequestException:
+        return False
+    return True
 
 
 class Club(models.Model):
@@ -166,21 +199,7 @@ class Club(models.Model):
         return self.name
 
     def create_thumbnail(self, request=None):
-        if not self.image:
-            return False
-        image_url = self.image.url
-        if not image_url.startswith("http"):
-            if request is not None:
-                image_url = request.build_absolute_uri(image_url)
-            else:
-                return False
-        try:
-            self.image_small = get_django_minified_image(image_url, height=200)
-            self.skip_history_when_saving = True
-            self.save(update_fields=["image_small"])
-        except requests.exceptions.RequestException:
-            return False
-        return True
+        return create_thumbnail_helper(self, request, 200)
 
     def send_virtual_fair_email(self, request=None, email="setup"):
         """
@@ -416,6 +435,7 @@ class Event(models.Model):
     location = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
+    image_small = models.ImageField(upload_to=get_event_small_file_name, null=True, blank=True)
     description = models.TextField(blank=True)
 
     RECRUITMENT = 1
@@ -435,6 +455,9 @@ class Event(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def create_thumbnail(self, request=None):
+        return create_thumbnail_helper(self, request, 400)
 
     def __str__(self):
         return self.name

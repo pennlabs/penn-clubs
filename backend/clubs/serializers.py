@@ -3,6 +3,8 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import URLValidator
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils import timezone
@@ -250,6 +252,7 @@ class EventSerializer(serializers.ModelSerializer):
     badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
     image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField("get_image_url")
+    large_image_url = serializers.SerializerMethodField("get_large_image_url")
     url = serializers.SerializerMethodField("get_event_url")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
@@ -270,20 +273,49 @@ class EventSerializer(serializers.ModelSerializer):
 
         return obj.url
 
-    def get_image_url(self, obj):
-        if not obj.image:
+    def get_large_image_url(self, obj):
+        image = obj.image
+
+        # correct path rendering
+        if not image:
             return None
-        if obj.image.url.startswith("http"):
-            return obj.image.url
+        if image.url.startswith("http"):
+            return image.url
         elif "request" in self.context:
-            return self.context["request"].build_absolute_uri(obj.image.url)
+            return self.context["request"].build_absolute_uri(image.url)
         else:
-            return obj.image.url
+            return image.url
+
+    def get_image_url(self, obj):
+        # use thumbnail if exists
+        image = obj.image_small
+        if not image:
+            image = obj.image
+
+        # fix image path in development
+        if not image:
+            return None
+        if image.url.startswith("http"):
+            return image.url
+        elif "request" in self.context:
+            return self.context["request"].build_absolute_uri(image.url)
+        else:
+            return image.url
 
     def validate_url(self, value):
         """
+        Ensure that the URL is valid.
         Block virtual event links.
         """
+        if value:
+            validate = URLValidator()
+            try:
+                validate(value)
+            except DjangoValidationError:
+                raise serializers.ValidationError(
+                    "The URL you entered does not appear to be valid. "
+                    "Please check your URL and try again."
+                )
 
         if "virtualevent.ml" in value:
             raise serializers.ValidationError(
@@ -342,6 +374,7 @@ class EventSerializer(serializers.ModelSerializer):
             "id",
             "image",
             "image_url",
+            "large_image_url",
             "location",
             "name",
             "start_time",

@@ -66,6 +66,7 @@ const EventModal = (props: {
 }): ReactElement => {
   const { event, isHappening, showDetailsButton } = props
   const {
+    large_image_url,
     image_url,
     club_name,
     start_time,
@@ -93,7 +94,7 @@ const EventModal = (props: {
   return (
     <ModalContainer>
       <CoverPhoto
-        image={image_url}
+        image={large_image_url ?? image_url}
         fallback={<p>{club_name.toLocaleUpperCase()}</p>}
       />
       <EventDetails>

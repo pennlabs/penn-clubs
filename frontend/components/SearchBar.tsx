@@ -167,7 +167,7 @@ const DROPDOWNS = {
     { value: 3, label: 'Currently accepting applications' },
   ],
   Event_Type: [
-    { value: 2, label: 'GBM' },
+    { value: 2, label: 'General Body Meeting (GBM)' },
     { value: 1, label: 'Recruitment' },
     { value: 3, label: 'Speaker' },
     { value: 4, label: 'Activities Fair' },

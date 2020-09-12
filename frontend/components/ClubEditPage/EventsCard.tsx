@@ -281,8 +281,8 @@ const eventFields = [
     name: 'url',
     type: 'url',
     placeholder:
-      'Provide a videoconference link to join the event (zoom.us, hangouts, etc)',
-    label: 'Zoom Invite Link',
+      'Provide a videoconference link to join the event (Zoom, Google Meet, etc)',
+    label: 'Meeting Link',
   },
   // TODO: Un-comment location field when campus re-opens.
   // {
