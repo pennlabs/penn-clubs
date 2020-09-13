@@ -7,6 +7,7 @@
     "@sentry/browser": "^5.11.0",
     "@sentry/node": "^5.11.0",
     "@svgr/webpack": "^5.1.0",
+    "@zeit/next-source-maps": "0.0.4-canary.1",
     "babel-loader": "^8.0.5",
     "babel-plugin-istanbul": "^6.0.0",
     "babel-plugin-styled-components": "^1.11.1",
