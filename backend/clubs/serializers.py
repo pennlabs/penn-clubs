@@ -249,6 +249,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
     """
     Within the context of an existing club, return events that are a part of this club.
     """
+
     image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField("get_image_url")
     large_image_url = serializers.SerializerMethodField("get_large_image_url")
@@ -380,6 +381,7 @@ class EventSerializer(ClubEventSerializer):
     """
     A serializer for an event that includes basic associated club information.
     """
+
     club = serializers.SlugRelatedField(
         queryset=Club.objects.all(), required=False, slug_field="code"
     )
