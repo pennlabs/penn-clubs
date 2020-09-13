@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import URLValidator
 from django.db import models
+from django.db.models import Prefetch
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from rest_framework import serializers, validators
@@ -611,19 +612,26 @@ class ClubListSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         if not user.is_authenticated:
             return False
+        if hasattr(obj, "user_favorite_set"):
+            return bool(obj.user_favorite_set)
         return obj.favorite_set.filter(person=user).exists()
 
     def get_is_subscribe(self, obj):
         user = self.context["request"].user
         if not user.is_authenticated:
             return False
+        if hasattr(obj, "user_subscribe_set"):
+            return bool(obj.user_subscribe_set)
         return obj.subscribe_set.filter(person=user).exists()
 
     def get_is_member(self, obj):
         user = self.context["request"].user
         if not user.is_authenticated:
             return False
-        mship = obj.membership_set.filter(person=user).first()
+        if hasattr(obj, "user_membership_set"):
+            mship = next(iter(obj.user_membership_set), None)
+        else:
+            mship = obj.membership_set.filter(person=user).first()
         if mship is None:
             return False
         return mship.role
@@ -1213,6 +1221,71 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = MembershipRequest
         fields = ("club", "club_name", "person")
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """
+    A profile serializer used to display user information to other users.
+    """
+
+    name = serializers.SerializerMethodField("get_full_name")
+    image_url = serializers.SerializerMethodField("get_image_url")
+    clubs = serializers.SerializerMethodField("get_clubs")
+
+    graduation_year = serializers.IntegerField(source="profile.graduation_year")
+    school = SchoolSerializer(many=True, source="profile.school")
+    major = MajorSerializer(many=True, source="profile.major")
+
+    def get_full_name(self, obj):
+        return obj.get_full_name()
+
+    def get_image_url(self, obj):
+        if not obj.profile.image:
+            return None
+        if obj.profile.image.url.startswith("http"):
+            return obj.profile.image.url
+        elif "request" in self.context:
+            return self.context["request"].build_absolute_uri(obj.profile.image.url)
+        else:
+            return obj.profile.image.url
+
+    def get_clubs(self, obj):
+        user = self.context["request"].user
+        if not user.is_authenticated:
+            user = None
+        queryset = Club.objects.filter(membership__person=obj).prefetch_related(
+            "tags",
+            Prefetch(
+                "favorite_set",
+                queryset=Favorite.objects.filter(person=user),
+                to_attr="user_favorite_set",
+            ),
+            Prefetch(
+                "subscribe_set",
+                queryset=Subscribe.objects.filter(person=user),
+                to_attr="user_subscribe_set",
+            ),
+            Prefetch(
+                "membership_set",
+                queryset=Membership.objects.filter(person=user),
+                to_attr="user_membership_set",
+            ),
+        )
+        serializer = ClubListSerializer(instance=queryset, many=True, context=self.context)
+        return serializer.data
+
+    class Meta:
+        model = get_user_model()
+        fields = [
+            "name",
+            "username",
+            "email",
+            "image_url",
+            "graduation_year",
+            "school",
+            "major",
+            "clubs",
+        ]
 
 
 class UserSerializer(serializers.ModelSerializer):

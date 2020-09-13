@@ -28,6 +28,7 @@ from clubs.views import (
     TestimonialViewSet,
     UserPermissionAPIView,
     UserUpdateAPIView,
+    UserViewSet,
     UserZoomAPIView,
     YearViewSet,
     email_preview,
@@ -49,6 +50,7 @@ router.register(r"schools", SchoolViewSet, basename="schools")
 router.register(r"majors", MajorViewSet, basename="majors")
 router.register(r"reports", ReportViewSet, basename="reports")
 router.register(r"years", YearViewSet, basename="years")
+router.register(r"users", UserViewSet, basename="users")
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")

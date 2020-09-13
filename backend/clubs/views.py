@@ -11,6 +11,7 @@ import qrcode
 import requests
 from dateutil.parser import parse
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
@@ -24,7 +25,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.text import slugify
 from django_redis import get_redis_connection
-from rest_framework import filters, generics, parsers, status, viewsets
+from rest_framework import filters, generics, mixins, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -97,6 +98,7 @@ from clubs.serializers import (
     UserClubVisitWriteSerializer,
     UserMembershipRequestSerializer,
     UserMembershipSerializer,
+    UserProfileSerializer,
     UserSerializer,
     UserSubscribeSerializer,
     UserSubscribeWriteSerializer,
@@ -451,6 +453,33 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        # additional prefetch optimizations
+        person = self.request.user
+        if not person.is_authenticated:
+            person = None
+
+        if self.action in {"list", "retrieve"}:
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    "favorite_set",
+                    queryset=Favorite.objects.filter(person=person),
+                    to_attr="user_favorite_set",
+                ),
+                Prefetch(
+                    "subscribe_set",
+                    queryset=Subscribe.objects.filter(person=person),
+                    to_attr="user_subscribe_set",
+                ),
+                Prefetch(
+                    "membership_set",
+                    queryset=Membership.objects.filter(person=person),
+                    to_attr="user_membership_set",
+                ),
+            )
+
+            if self.action in {"retrieve"}:
+                queryset = queryset.prefetch_related("testimonials", "asset_set")
 
         # select subset of clubs if requested
         subset = self.request.query_params.get("in", None)
@@ -1876,6 +1905,18 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return MembershipInvite.objects.filter(club__code=self.kwargs["club_code"], active=True)
+
+
+class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    get: Retrieve the profile information for given user.
+    """
+
+    queryset = get_user_model().objects.all()
+    permission_classes = [IsSuperuser]
+    serializer_class = UserProfileSerializer
+    http_method_names = ["get"]
+    lookup_field = "username"
 
 
 class MassInviteAPIView(APIView):
