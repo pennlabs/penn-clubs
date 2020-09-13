@@ -245,20 +245,15 @@ class YearSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "year")
 
 
-class EventSerializer(serializers.ModelSerializer):
-    club = serializers.SlugRelatedField(
-        queryset=Club.objects.all(), required=False, slug_field="code"
-    )
-    club_name = serializers.SerializerMethodField()
-    badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
+class ClubEventSerializer(serializers.ModelSerializer):
+    """
+    Within the context of an existing club, return events that are a part of this club.
+    """
     image = serializers.ImageField(write_only=True, required=False)
     image_url = serializers.SerializerMethodField("get_image_url")
     large_image_url = serializers.SerializerMethodField("get_large_image_url")
     url = serializers.SerializerMethodField("get_event_url")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
-    def get_club_name(self, obj):
-        return obj.club.name
 
     def get_event_url(self, obj):
         # if no url, return that
@@ -365,10 +360,7 @@ class EventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = (
-            "badges",
-            "club",
-            "club_name",
+        fields = [
             "creator",
             "description",
             "end_time",
@@ -381,7 +373,29 @@ class EventSerializer(serializers.ModelSerializer):
             "start_time",
             "type",
             "url",
-        )
+        ]
+
+
+class EventSerializer(ClubEventSerializer):
+    """
+    A serializer for an event that includes basic associated club information.
+    """
+    club = serializers.SlugRelatedField(
+        queryset=Club.objects.all(), required=False, slug_field="code"
+    )
+    club_name = serializers.SerializerMethodField()
+    badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
+
+    def get_club_name(self, obj):
+        return obj.club.name
+
+    class Meta:
+        model = Event
+        fields = ClubEventSerializer.Meta.fields + [
+            "club",
+            "club_name",
+            "badges",
+        ]
 
 
 class EventWriteSerializer(EventSerializer):
@@ -747,7 +761,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def get_events(self, obj):
         now = timezone.now()
-        return EventSerializer(
+        return ClubEventSerializer(
             obj.events.filter(end_time__gte=now).order_by("start_time"),
             many=True,
             read_only=True,

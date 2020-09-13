@@ -588,10 +588,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         include this information in the results.
         """
         club = self.get_object()
-        subscribes = Subscribe.objects.filter(club=club)
-        shared_bookmarks = Favorite.objects.exclude(
-            person__pk__in=subscribes.values_list("person__pk", flat=True)
-        ).filter(club=club, person__profile__share_bookmarks=True)
+        subscribes = (
+            Subscribe.objects.filter(club=club)
+            .select_related("person", "person__profile", "club")
+            .prefetch_related("person__profile__school", "person__profile__major")
+        )
+        shared_bookmarks = (
+            Favorite.objects.exclude(person__pk__in=subscribes.values_list("person__pk", flat=True))
+            .filter(club=club, person__profile__share_bookmarks=True)
+            .select_related("person", "person__profile", "club")
+            .prefetch_related("person__profile__school", "person__profile__major")
+        )
         bookmark_serializer = SubscribeBookmarkSerializer(shared_bookmarks, many=True)
         serializer = SubscribeSerializer(subscribes, many=True)
         output = serializer.data + bookmark_serializer.data
@@ -697,7 +704,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             "max": max_value,
         }
 
-        return HttpResponse(json.dumps(analytics_dict))
+        return Response(analytics_dict)
 
     @action(detail=False, methods=["get"])
     def directory(self, request, *args, **kwargs):
@@ -1366,7 +1373,9 @@ class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     lookup_field = "person__username"
 
     def get_queryset(self):
-        return Membership.objects.filter(club__code=self.kwargs["club_code"])
+        return Membership.objects.filter(club__code=self.kwargs["club_code"]).select_related(
+            "person", "person__profile"
+        )
 
     def get_serializer_class(self):
         if self.request is not None and self.request.user.is_authenticated:
