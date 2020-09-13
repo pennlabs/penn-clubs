@@ -95,7 +95,9 @@ const EventModal = (props: {
     <ModalContainer>
       <CoverPhoto
         image={large_image_url ?? image_url}
-        fallback={<p>{club_name.toLocaleUpperCase()}</p>}
+        fallback={
+          <p>{club_name != null ? club_name.toLocaleUpperCase() : 'Event'}</p>
+        }
       />
       <EventDetails>
         <MetaDataGrid>
@@ -104,7 +106,7 @@ const EventModal = (props: {
             {isHappening && <HappeningNow urgent={true} />}
           </RightAlign>
         </MetaDataGrid>
-        <ClubName>{club_name}</ClubName>
+        {club_name != null && <ClubName>{club_name}</ClubName>}
         <EventName>{name}</EventName>
         {url &&
           (MEETING_REGEX.test(url) ? (
