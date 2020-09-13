@@ -433,7 +433,7 @@ class Event(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     location = models.CharField(max_length=255, null=True, blank=True)
-    url = models.URLField(null=True, blank=True)
+    url = models.URLField(max_length=2048, null=True, blank=True)
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
     image_small = models.ImageField(upload_to=get_event_small_file_name, null=True, blank=True)
     description = models.TextField(blank=True)

@@ -401,7 +401,7 @@ class EventSerializer(ClubEventSerializer):
 
 
 class EventWriteSerializer(EventSerializer):
-    url = serializers.CharField(required=False, allow_blank=True)
+    url = serializers.CharField(max_length=2048, required=False, allow_blank=True)
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
