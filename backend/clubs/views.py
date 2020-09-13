@@ -1863,14 +1863,7 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         user = self.request.user
         prefetch_related_objects(
-            [user],
-            "favorite_set",
-            "subscribe_set",
-            "membershiprequest_set",
-            "profile__school",
-            "membership_set",
-            "membership_set__club",
-            "profile__major",
+            [user], "profile__school", "profile__major",
         )
         return user
 

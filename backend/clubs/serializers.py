@@ -1354,7 +1354,6 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = [
             "email",
-            "favorite_set",
             "graduation_year",
             "has_been_prompted",
             "image",
