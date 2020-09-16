@@ -1478,7 +1478,7 @@ class BadgeViewSet(viewsets.ModelViewSet):
     lookup_field = "name"
 
     def get_queryset(self):
-        return Badge.objects.filter(Q(purpose="fair") | Q(label="OSA"))
+        return Badge.objects.filter(Q(purpose="fair") | Q(label="SAC"))
 
 
 class UserPermissionAPIView(APIView):
