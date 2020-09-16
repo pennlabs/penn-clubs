@@ -1472,11 +1472,13 @@ class BadgeViewSet(viewsets.ModelViewSet):
     Return details for a specific badge by name.
     """
 
-    queryset = Badge.objects.all()
     serializer_class = BadgeSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
     lookup_field = "name"
+
+    def get_queryset(self):
+        return Badge.objects.filter(Q(purpose="fair") | Q(label="OSA"))
 
 
 class UserPermissionAPIView(APIView):

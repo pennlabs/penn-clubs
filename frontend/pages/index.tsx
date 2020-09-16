@@ -176,7 +176,7 @@ const Splash = (props: SplashProps): ReactElement => {
       <div style={{ backgroundColor: SNOW }}>
         <SearchBar
           tags={props.tags}
-          badges={props.badges.filter(({ purpose }) => purpose === 'fair')}
+          badges={props.badges}
           updateSearch={setSearchInput}
           searchValue={searchInput}
         />

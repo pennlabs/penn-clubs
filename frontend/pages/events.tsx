@@ -271,9 +271,7 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
       resp.json(),
     ),
     doApiRequest('/tags/?format=json', data).then((resp) => resp.json()),
-    doApiRequest('/badges/?format=json', data)
-      .then((resp) => resp.json())
-      .then((resp) => resp.filter(({ purpose }) => purpose === 'fair')),
+    doApiRequest('/badges/?format=json', data).then((resp) => resp.json()),
   ])
 
   return { liveEvents, upcomingEvents, tags, badges }
