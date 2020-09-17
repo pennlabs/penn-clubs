@@ -47,7 +47,7 @@ const LoginButton = s.a`
   }
 `
 
-const StyledLink = s.a`
+const StyledLinkAnchor = s.a`
   padding: 14px 20px;
   color: ${CLUBS_NAVY} !important;
   display: inline-block;
@@ -58,6 +58,12 @@ const StyledLink = s.a`
     padding: 8px 0;
   }
 `
+
+const StyledLink = (props) => {
+  <Link>
+    <StyledLinkAnchor {...props} />
+  </Link>
+}
 
 const Menu = s.div<{ show?: boolean }>`
   ${mediaMaxWidth(MD)} {
