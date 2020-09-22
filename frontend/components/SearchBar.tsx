@@ -94,8 +94,9 @@ const Content = s.div`
   }
 
   ${mediaMaxWidth(MD)} {
-    height: auto;
-    overflow: visible;
+    background: ${WHITE};
+    height: 100vh;
+    overflow: auto;
     width: 100%;
     margin: 0;
     padding: 8px 1rem;
@@ -122,6 +123,9 @@ const Input = s.input`
   &:focus {
     background: ${FOCUS_GRAY};
   }
+  ${mediaMaxWidth(MD)} {
+    width: 83%;
+  }
 `
 
 const SearchIcon = s.span`
@@ -133,18 +137,31 @@ const SearchIcon = s.span`
   right: 24px;
 
   ${mediaMaxWidth(MD)} {
-    right: 24px;
+    right: 24%;
   }
 `
 
-const MobileLine = s.hr`
-  display: none;  
+const FilterToggle = s.button.attrs(() => ({ className: 'button '}))`
+  color: ${MEDIUM_GRAY};
+  display: none;
+
   ${mediaMaxWidth(MD)} {
-    display: block;
-    margin: 1.0em 0 0 0;
-    border-color: ${CLUBS_GREY};
+    display: inline;
+    margin-left: 2%;
+    width: 15%;
   }
 `
+
+const useBreakpoint = breakpointWidth => {
+  const [isMobile, setIsMobile] = useState<Boolean>(window.innerWidth < breakpointWidth)
+  const [resizeHandler, setResizeHandler] = useState<EventHandlerNonNull>(() => {});
+  useEffect(() => {
+            setResizeHandler(() => setIsMobile(window.innerWidth < breakpointWidth)) 
+            window.addEventListener('resize', resizeHandler)
+            return () => window.removeEventListener('resize', resizeHandler)
+        }, [])
+  return isMobile;
+}
 
 type SearchBarProps = {
   tags: Tag[]
@@ -259,6 +276,7 @@ const SearchBar = ({
     )
   }, [nameInput])
 
+
   const focus = () => inputRef.current && inputRef.current.focus()
 
   const isTextInSearchBar = Boolean(nameInput)
@@ -275,8 +293,8 @@ const SearchBar = ({
     description,
   }))
 
-  const initialActive =
-    typeof window !== 'undefined' ? window.innerWidth >= 1047 : true
+  const isMobile = window !== 'undefined' || useBreakpoint(1047)
+  const initialActive = window !== 'undefined' || !isMobile;
 
   const searchFilters = [
     {
@@ -309,8 +327,10 @@ const SearchBar = ({
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
               />
+              <FilterToggle>
+                <Icon name="filter" />
+              </FilterToggle>
             </SearchWrapper>
-            <MobileLine />
           </>
         )
       },

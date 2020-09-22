@@ -33,27 +33,30 @@ const Line = s.hr`
   margin: 0;
   margin-top: 30px;
   padding: 0;
-
-  ${mediaMaxWidth(MD)} {
-    display: none !important;
-  }
 `
+
+// `
+//   ${mediaMaxWidth(MD)} {
+//     display: none !important;
+//   }
+// `
 
 const DropdownHeader = s.div`
   display: flex;
   justify-content: space-between;
   padding: 7px 3px;
   cursor: pointer;
-
-  ${mediaMaxWidth(MD)} {
-    display: inline-flex;
-    padding: 4px 8px;
-    margin-right: 6px;
-    border-radius: 16px;
-    font-size: 80%;
-    color: ${LIGHT_GRAY};
-  }
 `
+
+//   ${mediaMaxWidth(MD)} {
+//     display: inline-flex;
+//     padding: 4px 8px;
+//     margin-right: 6px;
+//     border-radius: 16px;
+//     font-size: 80%;
+//     color: ${LIGHT_GRAY};
+//   }
+// `
 
 const TableRow = s.tr`
   padding-top: 3px;
@@ -69,22 +72,22 @@ const TableWrapper = s.div`
   opacity: 1;
 
   ${mediaMaxWidth(MD)} {
-    position: fixed;
-    left: 0;
-    width: 100%;
-    top: calc(${SEARCH_BAR_MOBILE_HEIGHT} + ${NAV_HEIGHT});
     background: ${WHITE};
-    height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
-      overflow-y: auto;
-      max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
   }
 `
 
-const TableContainer = s.div`
-  ${mediaMaxWidth(MD)} {
-    padding: 1rem;
-  }
-`
+//   ${mediaMaxWidth(MD)} {
+//     position: fixed;
+//     left: 0;
+//     width: 100%;
+//     top: calc(${SEARCH_BAR_MOBILE_HEIGHT} + ${NAV_HEIGHT});
+//     background: ${WHITE};
+//     height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
+//       overflow-y: auto;
+//       max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
+//   }
+// `
+
 
 const Chevron = s(Icon)<{ open?: boolean }>`
   cursor: pointer;
@@ -168,7 +171,6 @@ const DropdownFilter = ({
   return (
     <>
       <TableWrapper>
-        <TableContainer>
           <table>
             <tbody>
               {options.map((tag: SelectableTag) => (
@@ -204,7 +206,6 @@ const DropdownFilter = ({
               ))}
             </tbody>
           </table>
-        </TableContainer>
       </TableWrapper>
     </>
   )
