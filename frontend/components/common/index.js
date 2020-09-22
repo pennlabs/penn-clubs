@@ -1,4 +1,5 @@
 export * from './BookmarkIcon'
+export * from './BreakpointContainer'
 export * from './Card'
 export * from './Checkbox'
 export * from './Contact'
