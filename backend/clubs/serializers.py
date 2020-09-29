@@ -512,15 +512,16 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
         if membership.role > value:
             raise serializers.ValidationError("You cannot promote someone above your own level.")
         if value > Membership.ROLE_OWNER and user.id == mem_user_id:
-            if (
-                Membership.objects.filter(
-                    club__code=club_code, role__lte=Membership.ROLE_OWNER
-                ).count()
-                <= 1
-            ):
-                raise serializers.ValidationError(
-                    "You cannot demote yourself if you are the only owner!"
-                )
+            if membership.role <= Membership.ROLE_OWNER:
+                if (
+                    Membership.objects.filter(
+                        club__code=club_code, role__lte=Membership.ROLE_OWNER
+                    ).count()
+                    <= 1
+                ):
+                    raise serializers.ValidationError(
+                        "You cannot demote yourself if you are the only owner!"
+                    )
         return value
 
     def validate(self, data):
