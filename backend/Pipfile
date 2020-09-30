@@ -42,8 +42,7 @@ social-auth-app-django = "*"
 django-redis = "*"
 channels-redis = "*"
 uwsgi = {version = "*", sys_platform = "== 'linux'"}
-uvloop = {version = "*", sys_platform = "== 'linux'"}
-uvicorn = "*"
+uvicorn = {extras = ["standard"], version = "*"}
 gunicorn = "*"
 httptools = "*"
 
