@@ -47,7 +47,7 @@ const LoginButton = s.a`
   }
 `
 
-const StyledLink = s.a`
+const StyledLinkAnchor = s.a`
   padding: 14px 20px;
   color: ${CLUBS_NAVY} !important;
   display: inline-block;
@@ -58,6 +58,14 @@ const StyledLink = s.a`
     padding: 8px 0;
   }
 `
+
+const StyledLink = (props) => {
+  return (
+    <Link href={props.href}>
+      <StyledLinkAnchor {...props} />
+    </Link>
+  )
+}
 
 const Menu = s.div<{ show?: boolean }>`
   ${mediaMaxWidth(MD)} {
@@ -104,12 +112,10 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
           </LoginButton>
         )}
         {userInfo && (
-          <Link href={SETTINGS_ROUTE}>
-            <StyledLink>
-              <StyledIcon name="user" alt="settings" />
-              {userInfo.name || userInfo.username}
-            </StyledLink>
-          </Link>
+          <StyledLink href={SETTINGS_ROUTE}>
+            <StyledIcon name="user" alt="settings" />
+            {userInfo.name || userInfo.username}
+          </StyledLink>
         )}
       </div>
     </Menu>
