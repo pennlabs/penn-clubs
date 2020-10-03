@@ -60,9 +60,11 @@ const StyledLinkAnchor = s.a`
 `
 
 const StyledLink = (props) => {
-  <Link>
-    <StyledLinkAnchor {...props} />
-  </Link>
+  return (
+    <Link href={props.href}>
+      <StyledLinkAnchor {...props} />
+    </Link>
+  )
 }
 
 const Menu = s.div<{ show?: boolean }>`
@@ -110,12 +112,10 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
           </LoginButton>
         )}
         {userInfo && (
-          <Link href={SETTINGS_ROUTE}>
-            <StyledLink>
-              <StyledIcon name="user" alt="settings" />
-              {userInfo.name || userInfo.username}
-            </StyledLink>
-          </Link>
+          <StyledLink href={SETTINGS_ROUTE}>
+            <StyledIcon name="user" alt="settings" />
+            {userInfo.name || userInfo.username}
+          </StyledLink>
         )}
       </div>
     </Menu>
