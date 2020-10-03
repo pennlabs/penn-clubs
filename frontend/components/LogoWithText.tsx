@@ -3,6 +3,7 @@ import s from 'styled-components'
 
 import { CLUBS_NAVY } from '../constants/colors'
 import { L1, L2 } from '../constants/measurements'
+import { SITE_LOGO, SITE_NAME, SITE_SUBTITLE } from '../utils/branding'
 
 const Wrapper = s.div`
   width: 16.5rem;
@@ -22,6 +23,7 @@ const TitleText = s.div`
   font-weight: bold;
   display:inline;
   float:right;
+  width:140px;
 `
 
 const SubtitleText = s.div`
@@ -37,15 +39,9 @@ const SubtitleText = s.div`
 const LogoWithText = (): ReactElement => {
   return (
     <Wrapper>
-      <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
-      <TitleText>
-        Penn
-        <br />
-        Clubs
-      </TitleText>
-      <SubtitleText>
-        Student Organizations at the University of Pennsylvania
-      </SubtitleText>
+      <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
+      <TitleText>{SITE_NAME}</TitleText>
+      <SubtitleText>{SITE_SUBTITLE}</SubtitleText>
     </Wrapper>
   )
 }

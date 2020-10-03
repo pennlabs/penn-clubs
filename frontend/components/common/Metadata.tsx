@@ -1,8 +1,14 @@
 import Head from 'next/head'
 import { ReactElement } from 'react'
 
+import {
+  OBJECT_NAME_LONG_PLURAL,
+  OBJECT_NAME_PLURAL,
+  SITE_NAME,
+} from '../../utils/branding'
+
 // Data to populate site metadata
-const title = 'Penn Clubs'
+const title = SITE_NAME
 const keywords = [
   'clubs',
   'penn',
@@ -22,12 +28,11 @@ const keywords = [
   'school',
 ].join(', ')
 const author = 'Penn Labs <contact@pennlabs.org>'
-const description =
-  'Penn Clubs is your central source of information about student organizations at the University of Pennsylvania. Keep discovering new clubs throughout the year.'
+const description = `${SITE_NAME} is your central source of information about ${OBJECT_NAME_LONG_PLURAL} at the University of Pennsylvania. Keep discovering new ${OBJECT_NAME_PLURAL} throughout the year.`
 const url = 'https://pennclubs.com'
 const image =
   'https://pennlabs-assets.s3.amazonaws.com/metadata-images/penn-clubs.png'
-const imageAlt = 'Penn Clubs logo'
+const imageAlt = `${SITE_NAME} logo`
 const type = 'website'
 const twitterUsername = '@pennlabs'
 const twitterCardType = 'summary'

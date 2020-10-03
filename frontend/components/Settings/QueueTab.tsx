@@ -5,6 +5,13 @@ import s from 'styled-components'
 import { CLUB_ROUTE } from '../../constants'
 import { Club } from '../../types'
 import { apiCheckPermission, doApiRequest } from '../../utils'
+import {
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE,
+  OBJECT_NAME_TITLE_SINGULAR,
+  SITE_NAME,
+} from '../../utils/branding'
 import { Icon } from '../common'
 
 type QueueTableProps = {
@@ -18,7 +25,9 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
 
   if (!clubs.length) {
     return (
-      <div className="has-text-info">There are no clubs in this table.</div>
+      <div className="has-text-info">
+        There are no {OBJECT_NAME_PLURAL} in this table.
+      </div>
     )
   }
 
@@ -26,7 +35,7 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
     <table className="table is-fullwidth">
       <thead>
         <tr>
-          <th>Club</th>
+          <th>{OBJECT_NAME_TITLE_SINGULAR}</th>
           <th>Status</th>
         </tr>
       </thead>
@@ -122,7 +131,7 @@ const QueueTab = (): ReactElement => {
       <SmallTitle>Overview</SmallTitle>
       <div className="mb-3">
         From the progress bar below, you can see the current approval status of
-        all clubs across Penn Clubs.
+        all {OBJECT_NAME_PLURAL} across {SITE_NAME}.
       </div>
       <MultiProgressBar className="has-background-light mb-3 is-clearfix">
         {totalClubs > 0 && (
@@ -147,24 +156,34 @@ const QueueTab = (): ReactElement => {
         )}
       </MultiProgressBar>
       <ul>
-        <li className="has-text-info">{inactiveClubs} Inactive Clubs</li>
-        <li className="has-text-warning-dark">{pendingClubs} Pending Clubs</li>
-        <li className="has-text-danger">
-          {rejectedClubs?.length ?? 0} Rejected Clubs
+        <li className="has-text-info">
+          {inactiveClubs} Inactive {OBJECT_NAME_TITLE}
         </li>
-        <li className="has-text-success">{approvedClubs} Approved Clubs</li>
+        <li className="has-text-warning-dark">
+          {pendingClubs} Pending {OBJECT_NAME_TITLE}
+        </li>
+        <li className="has-text-danger">
+          {rejectedClubs?.length ?? 0} Rejected {OBJECT_NAME_TITLE}
+        </li>
+        <li className="has-text-success">
+          {approvedClubs} Approved {OBJECT_NAME_TITLE}
+        </li>
       </ul>
       <SmallTitle>Pending Clubs</SmallTitle>
       <div className="mb-3">
-        As an administrator of Penn Clubs, you can approve and reject club
-        approval requests. The table below contains a list of {pendingClubs}{' '}
-        clubs pending your approval. Click on the club name to view the club.
+        As an administrator of {SITE_NAME}, you can approve and reject{' '}
+        {OBJECT_NAME_SINGULAR}
+        approval requests. The table below contains a list of {
+          pendingClubs
+        }{' '}
+        {OBJECT_NAME_PLURAL} pending your approval. Click on the{' '}
+        {OBJECT_NAME_SINGULAR} name to view the {OBJECT_NAME_SINGULAR}.
       </div>
       <QueueTable clubs={clubs} />
       <SmallTitle>Rejected Clubs</SmallTitle>
       <div className="mt-3 mb-3">
-        The table below shows a list of {rejectedClubs?.length ?? 0} clubs that
-        have been marked as not approved.
+        The table below shows a list of {rejectedClubs?.length ?? 0}{' '}
+        {OBJECT_NAME_PLURAL} that have been marked as not approved.
       </div>
       <QueueTable clubs={rejectedClubs} />
     </>

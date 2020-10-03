@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import { DARK_GRAY } from '../constants/colors'
 import { getCurrentRelativePath, LOGIN_URL } from '../utils'
+import { SITE_LOGO, SITE_NAME } from '../utils/branding'
 import { Loading, Modal } from './common'
 
 const Logo = s.img`
@@ -18,7 +19,11 @@ const ModalTitle = s.h1`
   margin: 2% 0;
 `
 
-export default ({ show, ...props }) => {
+type Props = {
+  show: boolean
+}
+
+const LoginModal = ({ show, ...props }: Props): ReactElement => {
   const [newlyMounted, setNewlyMounted] = useState(true)
   useEffect(() => {
     newlyMounted && setNewlyMounted(false)
@@ -29,12 +34,8 @@ export default ({ show, ...props }) => {
         <Loading />
       ) : (
         <>
-          <Logo
-            show={show}
-            src="/static/img/peoplelogo.png"
-            alt="Penn Clubs Logo"
-          />
-          <ModalTitle show={show}>Uh oh!</ModalTitle>
+          <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
+          <ModalTitle>Uh oh!</ModalTitle>
           This feature requires a Penn login.
           <br />
           Please{' '}
@@ -47,3 +48,5 @@ export default ({ show, ...props }) => {
     </Modal>
   )
 }
+
+export default LoginModal

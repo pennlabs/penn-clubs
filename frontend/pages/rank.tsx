@@ -9,10 +9,15 @@ import {
   Metadata,
   StrongText,
   Text,
-  Title,
 } from '../components/common'
 import { GREEN, SNOW } from '../constants/colors'
 import renderPage from '../renderPage'
+import {
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE,
+  SITE_NAME,
+} from '../utils/branding'
 
 const RankItem = s.div`
   padding: 0.75em;
@@ -92,29 +97,33 @@ const RankList = ({ items }: RankListProps): ReactElement => {
 const Rank = (): ReactElement => (
   <Container background={SNOW}>
     <Metadata title="Club Ordering" />
-    <InfoPageTitle>Club Recommendation Algorithm</InfoPageTitle>
-    <StrongText>How are clubs ordered?</StrongText>
+    <InfoPageTitle>
+      {OBJECT_NAME_TITLE_SINGULAR} Recommendation Algorithm
+    </InfoPageTitle>
+    <StrongText>How are {OBJECT_NAME_PLURAL} ordered?</StrongText>
     <Text>
-      The order that clubs appear on the home page for the default ordering
-      method is determined by several criteria. A recommendation algorithm uses
-      these criteria to ensure that students receive the best experience when
-      browsing for new clubs and that clubs can effectively reach their target
-      demographic.
+      The order that {OBJECT_NAME_PLURAL} appear on the home page for the
+      default ordering method is determined by several criteria. A
+      recommendation algorithm uses these criteria to ensure that students
+      receive the best experience when browsing for new {OBJECT_NAME_PLURAL} and
+      that {OBJECT_NAME_PLURAL} can effectively reach their target demographic.
     </Text>
-    <StrongText>How does the club recommendation algorithm work?</StrongText>
+    <StrongText>
+      How does the {OBJECT_NAME_SINGULAR} recommendation algorithm work?
+    </StrongText>
     <Text>
       The recommendation algorithm uses the following non-targeted criteria to
-      determine how to order clubs on the home page. Clubs are ordered by
-      points, and then this ordering as adjusted based on personalized data. The
-      points obtained from these categories is calculated and saved once per day
-      at 4 AM, so make your changes early! The criteria are:
+      determine how to order {OBJECT_NAME_PLURAL} on the home page.{' '}
+      {OBJECT_NAME_TITLE} are ordered by points, and then this ordering as
+      adjusted based on personalized data. The points obtained from these
+      categories is calculated and saved once per day at 4 AM, so make your
+      changes early! The criteria are:
     </Text>
     <RankList
       items={[
         {
           name: 'Upcoming Events',
-          description:
-            'If your club has upcoming events registered on Penn Clubs, it will be prioritized on the home page a short period before and during the event. Only events shorter than 16 hours are eligible.',
+          description: `If your ${OBJECT_NAME_SINGULAR} has upcoming events registered on ${SITE_NAME}, it will be prioritized on the home page a short period before and during the event. Only events shorter than 16 hours are eligible.`,
           points: [
             [10, 'Participating in upcoming activities fair'],
             [10, 'At least one upcoming event is today'],
@@ -131,8 +140,7 @@ const Rank = (): ReactElement => (
         },
         {
           name: 'Membership',
-          description:
-            'Having your officers and club members displayed on Penn Clubs provides more points of contact for questions about your club.',
+          description: `Having your ${OBJECT_NAME_SINGULAR} members displayed on Penn Clubs provides more points of contact for questions about your ${OBJECT_NAME_SINGULAR}.`,
           points: [
             [15, 'At least 3 active officers'],
             [10, 'At least 3 active members'],
@@ -143,10 +151,11 @@ const Rank = (): ReactElement => (
           name: 'Useful Tags',
           description: (
             <>
-              Adding relevant tags to your club can help prospective members
-              find the clubs that they are interested in. If you cannot find at
-              least 2 relevant tags for your club, please email <Contact /> and
-              we will work with you to find something appropriate.
+              Adding relevant tags to your {OBJECT_NAME_SINGULAR} can help
+              prospective students find the {OBJECT_NAME_PLURAL} that they are
+              interested in. If you cannot find at least 2 relevant tags for
+              your {OBJECT_NAME_SINGULAR}, please email <Contact /> and we will
+              work with you to find something appropriate.
             </>
           ),
           points: [
@@ -156,8 +165,14 @@ const Rank = (): ReactElement => (
         },
         {
           name: 'Contact Information',
-          description:
-            'Having contact information is important for prospective members who want to know more about the club. Social links can be used to give students a better idea of what you do and the events that you hold.',
+          description: (
+            <>
+              Having contact information is important for prospective members
+              who want to know more about the {OBJECT_NAME_SINGULAR}. Social
+              links can be used to give students a better idea of what you do
+              and the events that you hold.
+            </>
+          ),
           points: [
             [10, 'Has a public email'],
             [10, 'Has 2 or more social links'],
@@ -165,26 +180,50 @@ const Rank = (): ReactElement => (
         },
         {
           name: 'Bookmarks',
-          description:
-            'Bookmarks are a method for Penn students to show interest in your club. The more bookmarks you have, the higher your club will appear.',
+          description: (
+            <>
+              Bookmarks are a method for Penn students to show interest in your
+              {OBJECT_NAME_SINGULAR}. The more bookmarks you have, the higher
+              your {OBJECT_NAME_SINGULAR} will appear.
+            </>
+          ),
           points: [[0.04, 'For each bookmark']],
         },
         {
           name: 'Logo Image',
-          description:
-            'Adding a logo to your club can make your club more recognizable. The logo is shown on the homepage before the user clicks on your club.',
+          description: (
+            <>
+              Adding a logo to your {OBJECT_NAME_SINGULAR} can make your{' '}
+              {OBJECT_NAME_SINGULAR} more recognizable. The logo is shown on the
+              homepage before the user clicks on your {OBJECT_NAME_SINGULAR}.
+            </>
+          ),
           points: [[15, 'Has a logo']],
         },
         {
-          name: 'Club Subtitle',
-          description:
-            'Adding a subtitle is a quick change that can give students more information about your club without having to visit your club page. The subtitle is shown on the homepage before the user clicks on your club.',
+          name: `${OBJECT_NAME_TITLE} Subtitle`,
+          description: (
+            <>
+              Adding a subtitle is a quick change that can give students more
+              information about your {OBJECT_NAME_SINGULAR} without having to
+              visit your {OBJECT_NAME_SINGULAR}
+              page. The subtitle is shown on the homepage before the user clicks
+              on your {OBJECT_NAME_SINGULAR}.
+            </>
+          ),
           points: [[5, 'Has a subtitle']],
         },
         {
-          name: 'Club Description',
-          description:
-            'Adding a description helps students learn more about whether or not a club is a good fit for them. Clubs without a description will therefore appear lower on the homepage. Longer and more detailed descriptions are awarded bonus points.',
+          name: `${OBJECT_NAME_TITLE} Description`,
+          description: (
+            <>
+              Adding a description helps students learn more about whether or
+              not a {OBJECT_NAME_SINGULAR} is a good fit for them.{' '}
+              {OBJECT_NAME_TITLE} without a description will therefore appear
+              lower on the homepage. Longer and more detailed descriptions are
+              awarded bonus points.
+            </>
+          ),
           points: [
             [10, 'At least 25 characters'],
             [10, 'At least 250 characters'],
@@ -194,32 +233,39 @@ const Rank = (): ReactElement => (
         },
         {
           name: 'Testimonials',
-          description:
-            'Adding some testimonials help students gain perspective on what being in the club is like.',
+          description: (
+            <>
+              Adding some testimonials help students gain perspective on what
+              participating in the {OBJECT_NAME_SINGULAR} is like.
+            </>
+          ),
           points: [[10, 'At least one testimonial']],
         },
         {
           name: 'How to Get Involved',
-          description:
-            'Prospective members want to know how to join your student organization. Omitting this section will result in a large ordering penalty.',
+          description: `Prospective members want to know how to join your ${OBJECT_NAME_SINGULAR}. Omitting this section will result in a large ordering penalty.`,
           points: [[-30, 'Empty how to get involved section']],
         },
         {
           name: 'Is Club Updated',
-          description:
-            'Clubs that have not been updated in the last 8 months will receive a small ordering penalty.',
+          description: `${OBJECT_NAME_TITLE} that have not been updated in the last 8 months will receive a small ordering penalty.`,
           points: [[-10, 'No updates for 8 months']],
         },
         {
           name: 'Is Club Active',
-          description:
-            'Clubs that are marked as inactive will be shifted to the very bottom of the list. You can easily renew your club from the settings tab in the manage club page.',
-          points: [[-1000, 'For inactive clubs']],
+          description: (
+            <>
+              ${OBJECT_NAME_TITLE} that are marked as inactive will be shifted
+              to the very bottom of the list. You can easily renew your{' '}
+              {OBJECT_NAME_SINGULAR}
+              from the settings tab in the manage {OBJECT_NAME_SINGULAR} page.
+            </>
+          ),
+          points: [[-1000, `For inactive ${OBJECT_NAME_PLURAL}`]],
         },
         {
           name: 'Random Factor',
-          description:
-            'A random factor is applied periodically in order to ensure that students see new clubs when they visit the site.',
+          description: `A random factor is applied periodically in order to ensure that students see new ${OBJECT_NAME_PLURAL} when they visit the site.`,
           points: [
             [10, 'Random number between 0 and this number, updated daily'],
           ],
@@ -234,23 +280,55 @@ const Rank = (): ReactElement => (
       items={[
         {
           name: 'Matches Target Tags',
-          description:
-            'Adding tags will case the club to appear higher on the home page for students who are interested in those tags. Clubs that have specified fewer tags are more likely to appear higher than clubs that have specified more tags, for relevant students.',
+          description: (
+            <>
+              Adding tags will case the {OBJECT_NAME_SINGULAR} to appear higher
+              on the home page for students who are interested in those tags.{' '}
+              {OBJECT_NAME_TITLE} that have specified fewer tags are more likely
+              to appear higher than {OBJECT_NAME_PLURAL} that have specified
+              more tags, for relevant students.
+            </>
+          ),
         },
         {
           name: 'Matches Target Schools',
-          description:
-            'Adding target schools will cause the club to appear higher on the home page for students in those schools. Clubs that have specified fewer schools are more likely to appear higher than clubs that have specified more schools, for relevant students. Specifying all of the schools is the same as specifying none of them.',
+          description: (
+            <>
+              Adding target schools will cause the {OBJECT_NAME_SINGULAR} to
+              appear higher on the home page for students in those schools.
+              {OBJECT_NAME_TITLE} that have specified fewer schools are more
+              likely to appear higher than {OBJECT_NAME_PLURAL} that have
+              specified more schools, for relevant students. Specifying all of
+              the schools is the same as specifying none of them.
+            </>
+          ),
         },
         {
           name: 'Matches Target Majors',
-          description:
-            'Adding target majors will cause the club to appear higher on the home page for students in those majors. Clubs that have specified fewer majors are more likely to appear higher than clubs that have specified more majors, for relevant students. Specifying 10 or more majors is the same as specifying no majors.',
+          description: (
+            <>
+              Adding target majors will cause the {OBJECT_NAME_SINGULAR} to
+              appear higher on the home page for students in those majors.{' '}
+              {OBJECT_NAME_TITLE} that have specified fewer majors are more
+              likely to appear higher than {OBJECT_NAME_PLURAL} that have
+              specified more majors, for relevant students. Specifying 10 or
+              more majors is the same as specifying no majors.
+            </>
+          ),
         },
         {
           name: 'Matches Target Years',
-          description:
-            'Adding target years will cause the club to appear higher on the home page for students in those years. Clubs that have specified fewer years are more likely to appear higher than clubs that have specified more years, for relevant students. Specifying all of the years is the same as specifying none of them.',
+          description: (
+            <>
+              Adding target years will cause the {OBJECT_NAME_SINGULAR} to
+              appear higher on the home page for students in those years.{' '}
+              {OBJECT_NAME_TITLE}
+              that have specified fewer years are more likely to appear higher
+              than {OBJECT_NAME_PLURAL} that have specified more years, for
+              relevant students. Specifying all of the years is the same as
+              specifying none of them.
+            </>
+          ),
         },
       ]}
     />
