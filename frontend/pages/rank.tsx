@@ -16,6 +16,7 @@ import {
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
+  OBJECT_NAME_TITLE_SINGULAR,
   SITE_NAME,
 } from '../utils/branding'
 
@@ -80,8 +81,8 @@ const RankList = ({ items }: RankListProps): ReactElement => {
             <Text>{description}</Text>
             {points && (
               <ul>
-                {points.map(([num, desc]) => (
-                  <li>
+                {points.map(([num, desc], i) => (
+                  <li key={i}>
                     <b>{num > 0 ? `+${num}` : num}</b>: {desc}
                   </li>
                 ))}
