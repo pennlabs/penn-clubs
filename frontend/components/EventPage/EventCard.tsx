@@ -16,6 +16,7 @@ import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
 import EventModal, { MEETING_REGEX } from './EventModal'
 import HappeningNow from './HappeningNow'
+import TimeLeft from "./TimeLeft"
 
 const EventCardContainer = styled.div`
   cursor: pointer;
@@ -70,6 +71,7 @@ const EventCard = (props: {
           </LazyLoad>
           <DateInterval start={startDate} end={endDate} />
           {isHappening && <HappeningNow urgent={hoursBetween <= 12} />}
+          {!isHappening && <TimeLeft start={startDate} />}
           <ClubName>{clubName}</ClubName>
           <EventName>{name}</EventName>
           {url && MEETING_REGEX.test(url) && <Icon name="video" />}{' '}

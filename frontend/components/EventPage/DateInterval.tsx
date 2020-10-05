@@ -2,7 +2,6 @@
 import moment from 'moment'
 import { ReactElement } from 'react'
 import styled from 'styled-components'
-import TimeAgo from 'react-timeago';
 
 import { LIGHT_GRAY } from '../../constants'
 
@@ -41,7 +40,7 @@ const DateInterval = ({
   end: Date
   className?: string
 }): ReactElement => (
-  <p className={className}>{dateIntervalString(start, end)}</p>
+  <p className={className}>{dateIntervalString(start, end)} </p>
 )
 
 export default styled(DateInterval)`
