@@ -957,6 +957,8 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         # accept custom date for preview rendering
         date = request.query_params.get("date")
+        if date in {"null", "undefined"}:
+            date = None
         if date:
             date = parse(date)
 
