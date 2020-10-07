@@ -952,17 +952,28 @@ class EventViewSet(viewsets.ModelViewSet):
     def fair(self, request, *args, **kwargs):
         """
         Get the minimal information required for a fair directory listing.
+        Groups by the start date of the event, and then the event category.
+        Each event's club must have an associated fair badge in order to be displayed.
         """
-        # cache the response for this endpoint with short timeout
-        key = f"events:fair:directory:{request.user.is_authenticated}"
-        cached = cache.get(key)
-        if cached:
-            return Response(cached)
+        # accept custom date for preview rendering
+        date = request.query_params.get("date")
+        if date in {"null", "undefined"}:
+            date = None
+        if date:
+            date = parse(date)
 
-        now = timezone.now()
+        # cache the response for this endpoint with short timeout
+        if not date:
+            key = f"events:fair:directory:{request.user.is_authenticated}"
+            cached = cache.get(key)
+            if cached:
+                return Response(cached)
+
+        now = date or timezone.now()
         events = Event.objects.filter(
             type=Event.FAIR,
             club__badges__purpose="fair",
+            start_time__lte=now + datetime.timedelta(days=7),
             end_time__gte=now - datetime.timedelta(days=1),
         ).values_list("start_time", "end_time", "club__name", "club__code", "club__badges__label")
         output = {}
@@ -993,7 +1004,8 @@ class EventViewSet(viewsets.ModelViewSet):
                 )
 
         output = list(sorted(output.values(), key=lambda cat: cat["start_time"]))
-        cache.set(key, output, 60 * 5)
+        if not date:
+            cache.set(key, output, 60 * 5)
 
         return Response(output)
 

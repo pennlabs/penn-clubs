@@ -207,7 +207,10 @@ FairPage.getInitialProps = async (ctx: NextPageContext) => {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
 
-  const resp = await doApiRequest('/events/fair/?format=json', data)
+  const resp = await doApiRequest(
+    `/events/fair/?date=${ctx.query.date as string}&format=json`,
+    data,
+  )
   const json = await resp.json()
 
   return { events: json }

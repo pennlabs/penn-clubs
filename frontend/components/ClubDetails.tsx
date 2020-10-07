@@ -4,7 +4,7 @@ import s from 'styled-components'
 import { CLUBS_GREY } from '../constants/colors'
 import { Club } from '../types'
 import { getSizeDisplay } from '../utils'
-import { BookmarkIcon, Icon } from './common'
+import { BookmarkIcon, Icon, SubscribeIcon } from './common'
 
 const Wrapper = s.div`
   margin-top: 0.25rem;
@@ -13,6 +13,10 @@ const Wrapper = s.div`
   width: 100%;
   display: flex;
   justify-content: space-between;
+
+  & > :not(:first-child) {
+    margin-left: 5px;
+  }
 `
 
 const iconStyles = {
@@ -35,7 +39,9 @@ const Details = ({ club }: DetailsProps): ReactElement => {
 
   return (
     <Wrapper>
-      <p style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8 }}>
+      <div
+        style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8, flex: 1 }}
+      >
         <Icon name="user" alt="members" size="0.8rem" style={iconStyles} />
         {getSizeDisplay(size, false)}
         &nbsp;
@@ -68,8 +74,9 @@ const Details = ({ club }: DetailsProps): ReactElement => {
           />
         )}
         {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
-      </p>
+      </div>
       <BookmarkIcon club={club} padding="0" />
+      <SubscribeIcon club={club} padding="0" />
     </Wrapper>
   )
 }

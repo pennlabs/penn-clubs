@@ -185,8 +185,12 @@ class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
 
 
 class EventAdmin(admin.ModelAdmin):
+    list_display = ("name", "club", "type", "start_time", "end_time")
     search_fields = ("name", "club__name")
     list_filter = ("start_time", "end_time")
+
+    def club(self, obj):
+        return obj.club.name
 
 
 class FavoriteAdmin(admin.ModelAdmin):
