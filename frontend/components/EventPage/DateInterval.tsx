@@ -12,7 +12,7 @@ const dateIntervalString = (startDate: Date, endDate: Date): string => {
     return 'Invalid date range'
   }
   const [startDateString, endDateString] = [start, end].map((d) => {
-    const dateDifference: number = start
+    const dateDifference: number = moment(start)
       .startOf('day')
       .diff(moment().startOf('day'), 'days')
     if (dateDifference === 0) return 'Today'
