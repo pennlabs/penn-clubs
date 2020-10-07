@@ -1,9 +1,10 @@
 import { ReactElement, useState } from 'react'
 import LazyLoad from 'react-lazy-load'
+import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
 import { Icon, Modal } from '../../components/common'
-import { WHITE } from '../../constants/colors'
+import { MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import {
   mediaMaxWidth,
   mediaMinWidth,
@@ -27,6 +28,10 @@ const EventCardContainer = styled.div`
   ${mediaMaxWidth(PHONE)} {
     margin: 1rem 0;
   }
+`
+const TimeLeft = styled(TimeAgo)<{ date: Date }>`
+  color: ${MEDIUM_GRAY};
+  font-size: 12px;
 `
 const clipLink = (s: string) => (s.length > 32 ? `${s.slice(0, 35)}...` : s)
 
@@ -69,7 +74,11 @@ const EventCard = (props: {
             />
           </LazyLoad>
           <DateInterval start={startDate} end={endDate} />
-          {isHappening && <HappeningNow urgent={hoursBetween <= 12} />}
+          {isHappening ? (
+            <HappeningNow urgent={true} />
+          ) : (
+            <TimeLeft date={new Date(startDate)} />
+          )}
           <ClubName>{clubName}</ClubName>
           <EventName>{name}</EventName>
           {url && MEETING_REGEX.test(url) && <Icon name="video" />}{' '}

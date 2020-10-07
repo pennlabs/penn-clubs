@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import React, { ReactElement, useEffect, useState } from 'react'
+import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
 import { Icon, TransparentButtonLink } from '../../components/common'
 import { CLUB_ROUTE, CLUBS_BLUE, M2, ZOOM_BLUE } from '../../constants'
+import { MEDIUM_GRAY } from '../../constants/colors'
 import { ClubEvent } from '../../types'
 import { doApiRequest } from '../../utils'
 import { ClubName, EventLink, EventName } from './common'
@@ -56,6 +58,10 @@ const MetaDataGrid = styled.div`
   display: grid;
   grid-template-columns: 2fr 1fr;
 `
+const TimeLeft = styled(TimeAgo)<{ date: Date }>`
+  color: ${MEDIUM_GRAY};
+  font-size: 12px;
+`
 
 export const MEETING_REGEX = /^https?:\/\/(?:[\w-]+\.)?zoom\.us\//i
 
@@ -103,7 +109,11 @@ const EventModal = (props: {
         <MetaDataGrid>
           <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
           <RightAlign>
-            {isHappening && <HappeningNow urgent={true} />}
+            {isHappening ? (
+              <HappeningNow urgent={true} />
+            ) : (
+              <TimeLeft date={new Date(start_time)} />
+            )}
           </RightAlign>
         </MetaDataGrid>
         {club_name != null && <ClubName>{club_name}</ClubName>}

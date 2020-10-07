@@ -7,12 +7,18 @@ import { LIGHT_GRAY } from '../../constants'
 
 const dateIntervalString = (startDate: Date, endDate: Date): string => {
   const [start, end] = [startDate, endDate].map((d) => moment(d))
+
   if (![start, end].every((d) => d.isValid())) {
     return 'Invalid date range'
   }
-  const [startDateString, endDateString] = [start, end].map((d) =>
-    d.format('dddd, MMM D'),
-  )
+  const [startDateString, endDateString] = [start, end].map((d) => {
+    const dateDifference: number = start
+      .startOf('day')
+      .diff(moment().startOf('day'), 'days')
+    if (dateDifference === 0) return 'Today'
+    if (dateDifference === 1) return 'Tomorrow'
+    return d.format('dddd, MMM D')
+  })
   if (startDateString !== endDateString) {
     return `${startDateString} - ${endDateString}`
   }
@@ -35,7 +41,7 @@ const DateInterval = ({
   end: Date
   className?: string
 }): ReactElement => (
-  <p className={className}>{dateIntervalString(start, end)}</p>
+  <p className={className}>{dateIntervalString(start, end)} </p>
 )
 
 export default styled(DateInterval)`
