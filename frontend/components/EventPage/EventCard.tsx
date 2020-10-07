@@ -74,8 +74,11 @@ const EventCard = (props: {
             />
           </LazyLoad>
           <DateInterval start={startDate} end={endDate} />
-          {isHappening && <HappeningNow urgent={hoursBetween <= 12} />}
-          {!isHappening && <TimeLeft date={startDate} />}
+          {isHappening ? (
+            <HappeningNow urgent={true} />
+          ) : (
+            <TimeLeft date={new Date(startDate)} />
+          )}
           <ClubName>{clubName}</ClubName>
           <EventName>{name}</EventName>
           {url && MEETING_REGEX.test(url) && <Icon name="video" />}{' '}
