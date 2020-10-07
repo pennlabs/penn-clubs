@@ -5,19 +5,20 @@ import styled from 'styled-components'
 
 import { LIGHT_GRAY } from '../../constants'
 
-
 const dateIntervalString = (startDate: Date, endDate: Date): string => {
   const [start, end] = [startDate, endDate].map((d) => moment(d))
-    
+
   if (![start, end].every((d) => d.isValid())) {
     return 'Invalid date range'
   }
   const [startDateString, endDateString] = [start, end].map((d) => {
-    const dateDifference = start.startOf("day").diff(moment().startOf("day"), "days");
-    if (dateDifference == 0) return "Today";
-    if (dateDifference == 1) return "Tomorrow";
-    return d.format('dddd, MMM D')}
-  )
+    const dateDifference: number = start
+      .startOf('day')
+      .diff(moment().startOf('day'), 'days')
+    if (dateDifference === 0) return 'Today'
+    if (dateDifference === 1) return 'Tomorrow'
+    return d.format('dddd, MMM D')
+  })
   if (startDateString !== endDateString) {
     return `${startDateString} - ${endDateString}`
   }
