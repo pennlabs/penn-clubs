@@ -473,6 +473,8 @@ class ClubTestCase(TestCase):
         Membership.objects.create(person=self.user1, club=self.club1, role=Membership.ROLE_OWNER)
 
         self.client.login(username=self.user1.username, password="test")
+
+        # cannot change non-fair event to fair event
         resp = self.client.patch(
             reverse("club-events-detail", args=(self.club1.code, self.event1.pk)),
             {"type": Event.FAIR},
@@ -489,6 +491,7 @@ class ClubTestCase(TestCase):
             type=Event.FAIR,
         )
 
+        # cannot change fair event to non-fair event
         resp = self.client.patch(
             reverse("club-events-detail", args=(self.club1.code, e2.pk)),
             {"type": Event.RECRUITMENT},
@@ -503,6 +506,16 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertTrue(200 <= resp.status_code < 300, resp.data)
+
+        # test google zoom link parsing
+        resp = self.client.patch(
+            reverse("club-events-detail", args=(self.club1.code, e2.pk)),
+            {"url": "https://www.google.com/url?q=https://upenn.zoom.us/j/123456789"},
+            content_type="application/json",
+        )
+        self.assertTrue(200 <= resp.status_code < 300, resp.data)
+        e2.refresh_from_db()
+        self.assertEqual(e2.url, "https://upenn.zoom.us/j/123456789")
 
         # ensure we can't delete the event as a normal user
         resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, e2.pk)))
