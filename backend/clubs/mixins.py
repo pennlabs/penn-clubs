@@ -72,9 +72,12 @@ class ManyToManySaveMixin(object):
                     m2m_lists[field_name].append(self._lookup_item(model, field_name, item, mode))
             else:
                 m2m["many"] = False
-                model = field.Meta.model
-                item = self.validated_data.pop(field_name, None)
-                m2m_lists[field_name] = self._lookup_item(model, field_name, item, mode)
+                if hasattr(field, "Meta"):
+                    model = field.Meta.model
+                    item = self.validated_data.pop(field_name, None)
+                    m2m_lists[field_name] = self._lookup_item(model, field_name, item, mode)
+                else:
+                    ignore_fields.add(field_name)
 
         obj = super(ManyToManySaveMixin, self).save()
 
@@ -82,9 +85,9 @@ class ManyToManySaveMixin(object):
         updates = []
         for m2m in m2m_to_save:
             field = m2m["field"]
-            value = m2m_lists[field]
             if field in ignore_fields:
                 continue
+            value = m2m_lists[field]
             if m2m["many"]:
                 getattr(obj, field).set(value)
             else:
