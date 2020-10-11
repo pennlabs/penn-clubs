@@ -52,7 +52,7 @@ const MemberCard = ({ account }): ReactElement => {
               <a href={`mailto:${email}`}>{email}</a>
             </span>
           ) : (
-            'No Email'
+            'Hidden Email'
           )}
         </Label>
       </MemberInfo>
