@@ -3,6 +3,7 @@ from django.urls import include, path
 from rest_framework_nested import routers
 
 from clubs.views import (
+    AdvisorViewSet,
     AssetViewSet,
     BadgeViewSet,
     ClubViewSet,
@@ -63,6 +64,7 @@ clubs_router.register(r"questions", QuestionAnswerViewSet, basename="club-questi
 clubs_router.register(
     r"membershiprequests", MembershipRequestOwnerViewSet, basename="club-membership-requests"
 )
+clubs_router.register(r"advisors", AdvisorViewSet, basename="club-advisors")
 
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="users-detail"),

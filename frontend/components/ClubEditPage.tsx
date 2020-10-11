@@ -35,6 +35,7 @@ import {
   OBJECT_TAB_RECRUITMENT_LABEL,
   SITE_NAME,
 } from '../utils/branding'
+import AdvisorCard from './ClubEditPage/AdvisorCard'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
 import EnableSubscriptionCard from './ClubEditPage/EnableSubscriptionCard'
@@ -274,6 +275,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
                 ]}
               />
               <MembersCard club={club} />
+              <AdvisorCard club={club} schools={schools} />
             </>
           ),
           disabled: !isEdit,

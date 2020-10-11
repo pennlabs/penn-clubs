@@ -97,7 +97,9 @@ class AdvisorTestCase(TestCase):
         club = Club.objects.create(
             code="a", name="a", subtitle="a", founded=date, description="a", size=1
         )
-        self.advisor = Advisor.objects.create(name="Eric Wang", phone="+12025550133", club=club)
+        self.advisor = Advisor.objects.create(
+            name="Eric Wang", phone="+12025550133", club=club, public=True
+        )
 
     def test_str(self):
         self.assertEqual(str(self.advisor), self.advisor.name)

@@ -94,10 +94,21 @@ export interface QuestionAnswer {
   responder: string
 }
 
+export interface Advisor {
+  id: number
+  name: string
+  title: string
+  school: School[]
+  email: string
+  phone: string
+  public: boolean
+}
+
 export interface Club {
   accepting_members: boolean
   enables_subscription: boolean
   active: boolean
+  advisor_set: Advisor[]
   application_required: ClubApplicationRequired
   approved: boolean | null
   approved_by: string | null
