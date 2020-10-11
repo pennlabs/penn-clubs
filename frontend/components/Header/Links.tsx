@@ -52,11 +52,6 @@ const StyledLinkAnchor = s.a`
   color: ${CLUBS_NAVY} !important;
   display: inline-block;
   cursor: pointer;
-
-  ${mediaMaxWidth(MD)} {
-    text-align: center;
-    padding: 8px 0;
-  }
 `
 
 const StyledLink = (props) => {
@@ -69,14 +64,6 @@ const StyledLink = (props) => {
 
 const Menu = s.div<{ show?: boolean }>`
   ${mediaMaxWidth(MD)} {
-    border-top: 1px solid ${BORDER};
-    box-shadow: 0 4px 4px ${BORDER};
-
-    a {
-      display: block;
-      width: 100%;
-    }
-
     ${({ show }) => show && 'display: block;'}
   }
 `

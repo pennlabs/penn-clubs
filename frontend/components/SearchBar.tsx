@@ -276,7 +276,7 @@ const SearchBar = ({
   }))
 
   const initialActive =
-    typeof window !== 'undefined' ? window.innerWidth >= 1047 : true
+    typeof window !== 'undefined' ? window.innerWidth >= parseInt(MD) : true
 
   const searchFilters = [
     {

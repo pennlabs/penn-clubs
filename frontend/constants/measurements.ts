@@ -6,9 +6,9 @@ export const mediaMinWidth = (width: string): string =>
 export const mediaMaxWidth = (width: string): string =>
   `@media screen and (max-width: ${width})`
 
-export const SM = '848px'
-export const MD = '1047px'
-export const LG = '1204px'
+export const SM = '768px'
+export const MD = '992px'
+export const LG = '1200px'
 export const XL = '1440px'
 
 export const DESKTOP = '1248px'
