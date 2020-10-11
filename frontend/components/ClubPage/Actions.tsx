@@ -165,8 +165,8 @@ const Actions = ({
               padding="0"
             />
             <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
-            <ActionDiv>|</ActionDiv>
-            <SubscribeIcon padding="0" club={club} />
+            {club.enables_subscription && <ActionDiv>|</ActionDiv>}
+            {club.enables_subscription && <SubscribeIcon padding="0" club={club} />}
           </ActionWrapper>
         </Wrapper>
       </div>

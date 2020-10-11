@@ -40,8 +40,7 @@ export default function EnableSubscription({
   return (
     <BaseCard title="Enable Subscription List">
       <Text>
-        This allows you to choose wether you want a subscription list for your
-        club or not
+      This allows you to choose whether you want a subscription list for your club or not
       </Text>
       <div style={{ display: 'flex', flexDirection: 'row', width: '100' }}>
         <span>Enable Subscription List</span>
