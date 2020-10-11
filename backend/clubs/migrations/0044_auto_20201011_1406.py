@@ -6,18 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0043_auto_20200913_1554'),
+        ("clubs", "0043_auto_20200913_1554"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='club',
-            name='enables_subscription',
-            field=models.BooleanField(default=True),
+            model_name="club", name="enables_subscription", field=models.BooleanField(default=True),
         ),
         migrations.AlterField(
-            model_name='historicalclub',
-            name='enables_subscription',
+            model_name="historicalclub",
+            name="enables_subscription",
             field=models.BooleanField(default=True),
         ),
     ]
