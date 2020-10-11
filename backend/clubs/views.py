@@ -314,6 +314,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             "favorite_count": parse_int,
             "size": parse_int,
             "accepting_members": parse_boolean,
+            "enables_subscription": parse_boolean,
             "application_required": parse_int,
             "tags": parse_tags,
             "badges": parse_badges,

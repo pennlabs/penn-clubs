@@ -1084,6 +1084,7 @@ class ClubTestCase(TestCase):
             {"query": "founded__lt=2000", "results": ["pppjo"]},
             {"query": "tags=Professional&founded__lt=2000", "results": ["pppjo"]},
             {"query": "accepting_members=true", "results": ["pppjo"]},
+            {"query": "enables_subscription=true", "results": ["pppjo"]},
             {
                 "query": f"size__or={Club.SIZE_MEDIUM},{Club.SIZE_LARGE}",
                 "results": ["pppjo", "lorem-ipsum"],

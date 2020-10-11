@@ -96,6 +96,7 @@ export interface QuestionAnswer {
 
 export interface Club {
   accepting_members: boolean
+  enables_subscription: boolean
   active: boolean
   application_required: ClubApplicationRequired
   approved: boolean | null
