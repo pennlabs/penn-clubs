@@ -56,7 +56,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("accepting_members", models.BooleanField(default=False)),
-                ("enables_subscription", models.BooleanField(default=True)),
                 ("listserv", models.CharField(blank=True, max_length=255)),
                 (
                     "image",
