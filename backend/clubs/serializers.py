@@ -1,5 +1,5 @@
 import re
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -302,8 +302,11 @@ class ClubEventSerializer(serializers.ModelSerializer):
     def validate_url(self, value):
         """
         Ensure that the URL is valid.
-        Block virtual event links.
         """
+        # remove surrounding whitespace
+        value = value.strip()
+
+        # throw an error if the url is not valid
         if value:
             validate = URLValidator()
             try:
@@ -314,22 +317,31 @@ class ClubEventSerializer(serializers.ModelSerializer):
                     "Please check your URL and try again."
                 )
 
-        if "virtualevent.ml" in value:
-            raise serializers.ValidationError(
-                "Please use an alternative video conferencing platform like Zoom"
-            )
+        # expand links copied from google calendar
+        parsed = urlparse(value)
+        if parsed.netloc.endswith(".google.com") and parsed.path == "/url":
+            return parse_qs(parsed.query)["q"][0]
+
         return value
 
     def validate_description(self, value):
         """
         Allow the description to have HTML tags that come from a whitelist.
-        Block virtual event links.
         """
-        if "virtualevent.ml" in value:
-            raise serializers.ValidationError(
-                "Please use an alternative video conferencing platform like Zoom"
-            )
         return clean(value)
+
+    def validate(self, data):
+        start_time = data.get(
+            "start_time", self.instance.start_time if self.instance is not None else None
+        )
+        end_time = data.get(
+            "end_time", self.instance.end_time if self.instance is not None else None
+        )
+        if start_time is not None and end_time is not None and start_time > end_time:
+            raise serializers.ValidationError(
+                "Your event start time must be less than the end time!"
+            )
+        return data
 
     def update(self, instance, validated_data):
         # ensure user cannot update start time or end time for a fair event
@@ -401,6 +413,12 @@ class EventSerializer(ClubEventSerializer):
 
 
 class EventWriteSerializer(EventSerializer):
+    """
+    A serializer for an event that is used when creating/editing the event.
+
+    Enables URL checking for the url field.
+    """
+
     url = serializers.CharField(max_length=2048, required=False, allow_blank=True)
 
 
