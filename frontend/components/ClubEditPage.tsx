@@ -284,7 +284,11 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           content: (
             <>
               <QRCodeCard club={club} />
-              <EnableSubscription notify={this.notify} club={club} onUpdate={this.componentDidMount.bind(this)} />
+              <EnableSubscription
+                notify={this.notify}
+                club={club}
+                onUpdate={this.componentDidMount.bind(this)}
+              />
               {club.enables_subscription && (
                 <PotentialMemberCard club={club} source="subscription" />
               )}
