@@ -15,6 +15,7 @@ import {
 import { CREATE_ROUTE } from '../constants'
 import { SNOW } from '../constants/colors'
 import renderPage from '../renderPage'
+import { SITE_ID } from '../utils/branding'
 
 type QuestionProps = React.PropsWithChildren<{
   title: string
@@ -37,10 +38,8 @@ const UnorderedList = s.ul`
   margin-top: 0.5rem;
 `
 
-const FAQ = () => (
-  <Container background={SNOW}>
-    <Metadata title="FAQ" />
-    <InfoPageTitle>Frequently Asked Questions</InfoPageTitle>
+const FAQS = {
+  clubs: (
     <p>
       <Question title="What is Penn Clubs?">
         Penn Clubs is meant to be your central source of information about
@@ -201,6 +200,26 @@ const FAQ = () => (
         </div>
       </Question>
     </p>
+  ),
+  fyh: (
+    <p>
+      <Question title="What is First Year Hub?"></Question>
+      <Question title="How can I provide feedback?"></Question>
+      <Question title="How do I edit a resource's profile?"></Question>
+    </p>
+  ),
+}
+
+const FAQ = () => (
+  <Container background={SNOW}>
+    <Metadata title="FAQ" />
+    <InfoPageTitle>Frequently Asked Questions</InfoPageTitle>
+    {FAQS[SITE_ID] ?? (
+      <p>
+        There is currently no FAQ page for this site. If you believe that this
+        is an error, please contact <Contact />.
+      </p>
+    )}
   </Container>
 )
 

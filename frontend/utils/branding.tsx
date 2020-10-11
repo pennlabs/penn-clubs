@@ -35,6 +35,7 @@ const sites = {
   },
 }
 
+export const SITE_ID = site
 export const SITE_NAME = sites[site].SITE_NAME
 export const SITE_SUBTITLE = sites[site].SITE_SUBTITLE
 export const SITE_TAGLINE = sites[site].SITE_TAGLINE
