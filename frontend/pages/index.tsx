@@ -25,6 +25,7 @@ import {
 import { PaginatedClubPage, renderListPage } from '../renderPage'
 import { Badge, Tag, UserInfo } from '../types'
 import { doApiRequest, useSetting } from '../utils'
+import { OBJECT_NAME_TITLE, SITE_TAGLINE } from '../utils/branding'
 
 const colorMap = {
   Tags: CLUBS_BLUE,
@@ -187,13 +188,13 @@ const Splash = (props: SplashProps): ReactElement => {
               <DisplayButtons switchDisplay={setDisplay} />
 
               <Title className="title" style={{ color: CLUBS_GREY }}>
-                Browse Clubs
+                Browse {OBJECT_NAME_TITLE}
               </Title>
               <p
                 className="subtitle is-size-5"
                 style={{ color: CLUBS_GREY_LIGHT }}
               >
-                Find your people!
+                {SITE_TAGLINE}
               </p>
             </div>
             <ResultsText>

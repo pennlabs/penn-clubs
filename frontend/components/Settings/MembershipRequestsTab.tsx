@@ -3,6 +3,7 @@ import { ReactElement, useEffect, useState } from 'react'
 
 import { CLUB_ROUTE } from '../../constants'
 import { doApiRequest } from '../../utils'
+import { OBJECT_NAME_PLURAL } from '../../utils/branding'
 import { Loading } from '../common'
 
 type MembershipRequest = {
@@ -36,9 +37,9 @@ const MembershipRequestsTab = (): ReactElement => {
   return (
     <div>
       <p>
-        The list below contains all of the clubs you have submitted membership
-        requests to. Requests that have already been accepted or denied will not
-        be shown on this list.
+        The list below contains all of the {OBJECT_NAME_PLURAL} you have
+        submitted membership requests to. Requests that have already been
+        accepted or denied will not be shown on this list.
       </p>
       <table className="table is-fullwidth">
         <thead>

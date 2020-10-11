@@ -11,6 +11,12 @@ import {
   Year,
 } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
+import {
+  APPROVAL_AUTHORITY,
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
+  SITE_NAME,
+} from '../../utils/branding'
 import { Contact, Text } from '../common'
 import Form from '../Form'
 
@@ -135,43 +141,47 @@ export default function ClubEditCard({
           required: true,
           help: isEdit ? (
             <>
-              If you would like to change your club URL in addition to your club
-              name, you will need to email <Contact />. Changing this field will
-              require reapproval from OSA.
+              If you would like to change your {OBJECT_NAME_SINGULAR} URL in
+              addition to your {OBJECT_NAME_SINGULAR} name, you will need to
+              email <Contact />. Changing this field will require reapproval
+              from the {APPROVAL_AUTHORITY}.
             </>
           ) : (
-            'Your club URL will be generated from your club name, and cannot be changed upon creation. Your club name can still be changed afterwards.'
+            <>
+              Your club URL will be generated from your {OBJECT_NAME_SINGULAR}{' '}
+              name, and cannot be changed upon creation. Your{' '}
+              {OBJECT_NAME_SINGULAR} name can still be changed afterwards.
+            </>
           ),
         },
         {
           name: 'subtitle',
           type: 'text',
-          help:
-            'This text will be shown next to your club name in list and card views.',
+          help: `This text will be shown next to your ${OBJECT_NAME_SINGULAR} name in list and card views.`,
         },
         {
           name: 'description',
           required: true,
-          help: 'Changing this field will require reapproval from OSA.',
-          placeholder: 'Type your club description here!',
+          help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
+          placeholder: `Type your ${OBJECT_NAME_SINGULAR} description here!`,
           type: 'html',
         },
         {
           name: 'tags',
           type: 'multiselect',
-          placeholder: 'Select tags relevant to your club!',
+          placeholder: `Select tags relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: tags,
           converter: (a) => ({ value: a.id, label: a.name }),
           reverser: (a) => ({ id: a.value, name: a.label }),
         },
         {
           name: 'image',
-          help: 'Changing this field will require reapproval from OSA.',
+          help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
           value: club.image_url,
           apiName: 'file',
           accept: 'image/*',
           type: 'image',
-          label: 'Club Logo',
+          label: `${OBJECT_NAME_TITLE_SINGULAR} Logo`,
         },
         {
           name: 'size',
@@ -193,7 +203,8 @@ export default function ClubEditCard({
       type: 'group',
       description: (
         <Text>
-          Contact information entered here will be shown on your club page.
+          Contact information entered here will be shown on your{' '}
+          {OBJECT_NAME_SINGULAR} page.
         </Text>
       ),
       fields: [
@@ -201,14 +212,12 @@ export default function ClubEditCard({
           name: 'email',
           required: true,
           type: 'email',
-          help:
-            'Along with your club officers, this email will receive important notifications from Penn Clubs. It will also be shown on your club page unless otherwise specified.',
+          help: `Along with your ${OBJECT_NAME_SINGULAR} officers, this email will receive important notifications from ${SITE_NAME}. It will also be shown on your ${OBJECT_NAME_SINGULAR} page unless otherwise specified.`,
         },
         {
           name: 'email_public',
           type: 'checkbox',
-          label:
-            'Show this contact email to the public. If you do not check this box, your contact email will only be visible to internal club members.',
+          label: `Show this contact email to the public. If you do not check this box, your contact email will only be visible to internal ${OBJECT_NAME_SINGULAR} members.`,
         },
         {
           name: 'website',
@@ -249,8 +258,8 @@ export default function ClubEditCard({
       type: 'group',
       description: (
         <Text>
-          Some of these fields will be used to adjust club ordering on the home
-          page. Click{' '}
+          Some of these fields will be used to adjust {OBJECT_NAME_SINGULAR}{' '}
+          ordering on the home page. Click{' '}
           <Link href="/rank">
             <a>here</a>
           </Link>{' '}
@@ -260,7 +269,7 @@ export default function ClubEditCard({
       fields: [
         {
           name: 'application_required',
-          label: 'Is an application required to join your organization?',
+          label: `Is an application required to join your ${OBJECT_NAME_SINGULAR}?`,
           required: true,
           type: 'select',
           choices: CLUB_APPLICATIONS,
@@ -279,7 +288,7 @@ export default function ClubEditCard({
         {
           name: 'target_years',
           type: 'multiselect',
-          placeholder: 'Select graduation years relevant to your club!',
+          placeholder: `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: years,
           converter: (a) => ({ value: a.id, label: a.name }),
           reverser: (a) => ({ id: a.value, name: a.label }),
@@ -287,7 +296,7 @@ export default function ClubEditCard({
         {
           name: 'target_schools',
           type: 'multiselect',
-          placeholder: 'Select schools relevant to your club!',
+          placeholder: `Select schools relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: schools,
           converter: (a) => ({ value: a.id, label: a.name }),
           reverser: (a) => ({ id: a.value, name: a.label }),
@@ -295,7 +304,7 @@ export default function ClubEditCard({
         {
           name: 'target_majors',
           type: 'multiselect',
-          placeholder: 'Select majors relevant to your club!',
+          placeholder: `Select majors relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: majors,
           converter: (a) => ({ value: a.id, label: a.name }),
           reverser: (a) => ({ id: a.value, name: a.label }),

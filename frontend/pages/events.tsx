@@ -16,6 +16,7 @@ import { CLUBS_GREY, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, Tag } from '../types'
 import { doApiRequest } from '../utils'
+import { OBJECT_NAME_SINGULAR } from '../utils/branding'
 import { ListLoadIndicator } from '.'
 
 interface EventPageProps {
@@ -247,8 +248,8 @@ function EventPage({
                 />
                 <div>
                   There are no upcoming events that match your search query. If
-                  you are a club officer, you can add new events on the manage
-                  club page.
+                  you are a member of a {OBJECT_NAME_SINGULAR}, you can add new
+                  events on the manage {OBJECT_NAME_SINGULAR} page.
                 </div>
               </div>
             )}

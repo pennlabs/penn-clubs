@@ -172,12 +172,9 @@ const QueueTab = (): ReactElement => {
       <SmallTitle>Pending Clubs</SmallTitle>
       <div className="mb-3">
         As an administrator of {SITE_NAME}, you can approve and reject{' '}
-        {OBJECT_NAME_SINGULAR}
-        approval requests. The table below contains a list of {
-          pendingClubs
-        }{' '}
-        {OBJECT_NAME_PLURAL} pending your approval. Click on the{' '}
-        {OBJECT_NAME_SINGULAR} name to view the {OBJECT_NAME_SINGULAR}.
+        {OBJECT_NAME_SINGULAR} approval requests. The table below contains a
+        list of {pendingClubs} {OBJECT_NAME_PLURAL} pending your approval. Click
+        on the {OBJECT_NAME_SINGULAR} name to view the {OBJECT_NAME_SINGULAR}.
       </div>
       <QueueTable clubs={clubs} />
       <SmallTitle>Rejected Clubs</SmallTitle>

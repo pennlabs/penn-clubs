@@ -2,6 +2,11 @@ import { ReactElement, useEffect, useState } from 'react'
 
 import { Club } from '../../types'
 import { apiCheckPermission, doApiRequest, formatResponse } from '../../utils'
+import {
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
+  SITE_NAME,
+} from '../../utils/branding'
 import { Contact, Icon, Text } from '../common'
 import BaseCard from './BaseCard'
 
@@ -33,7 +38,7 @@ const DeleteClubCard = ({
       method: 'DELETE',
     }).then((resp) => {
       if (resp.ok) {
-        notify('Successfully deleted club.')
+        notify(`Successfully deleted ${OBJECT_NAME_SINGULAR}.`)
         onDelete()
       } else {
         resp.json().then((err) => {
@@ -46,12 +51,13 @@ const DeleteClubCard = ({
   return (
     <BaseCard title="Delete Club">
       <Text>
-        Remove this club entry from Penn Clubs.{' '}
+        Remove this {OBJECT_NAME_SINGULAR} entry from {SITE_NAME}.{' '}
         <b className="has-text-danger">
           This action is permanent and irreversible!
         </b>{' '}
-        All club history and membership information will be permanently lost. In
-        almost all cases, you want to deactivate this club instead.
+        All {OBJECT_NAME_SINGULAR} history and membership information will be
+        permanently lost. In almost all cases, you want to deactivate this{' '}
+        {OBJECT_NAME_SINGULAR} instead.
       </Text>
       <div className="buttons">
         {canDelete ? (
@@ -59,12 +65,14 @@ const DeleteClubCard = ({
             className="button is-danger is-medium"
             onClick={() => deleteClub()}
           >
-            <Icon name="trash" alt="delete" /> Delete Club
+            <Icon name="trash" alt="delete" /> Delete{' '}
+            {OBJECT_NAME_TITLE_SINGULAR}
           </a>
         ) : (
           <b>
             <b>{club.name}</b> must be deactivated before performing this
-            action. To deactivate your club, contact <Contact />.
+            action. To deactivate your {OBJECT_NAME_SINGULAR}, contact{' '}
+            <Contact />.
           </b>
         )}
       </div>

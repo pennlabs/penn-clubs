@@ -2,9 +2,9 @@ import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
-import { MEDIUM_GRAY } from '../../constants'
+import { FAIR_INFO, MEDIUM_GRAY } from '../../constants'
 import { Club, MembershipRank, UserInfo } from '../../types'
-import { apiCheckPermission, doApiRequest } from '../../utils'
+import { apiCheckPermission, doApiRequest, useSetting } from '../../utils'
 import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -48,6 +48,9 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   const [seeFairStatus, setSeeFairStatus] = useState<boolean>(false)
   const [canDeleteClub, setCanDeleteClub] = useState<boolean>(false)
   const [confirmModal, setConfirmModal] = useState<ConfirmParams | null>(null)
+  const fairInProgress = useSetting('FAIR_OPEN') || useSetting('PRE_FAIR')
+  const fairName = useSetting('FAIR_NAME')
+  const fairInfo = FAIR_INFO[fairName as string]
 
   const [canApprove, setCanApprove] = useState<boolean>(
     userInfo && userInfo.is_superuser,
@@ -329,19 +332,19 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
             )}
         </div>
       ) : null}
-      {seeFairStatus && (
+      {seeFairStatus && fairInProgress && (
         <div
           className={`notification ${club.fair ? 'is-success' : 'is-warning'}`}
         >
           {club.fair ? (
             <>
-              <Icon name="check" /> <b>{club.name}</b> is signed up for the SAC
-              fair.
+              <Icon name="check" /> <b>{club.name}</b> is signed up for the{' '}
+              {fairInfo.name}.
             </>
           ) : (
             <>
-              <Icon name="x" /> <b>{club.name}</b> is not signed up for the SAC
-              fair.
+              <Icon name="x" /> <b>{club.name}</b> is not signed up for the{' '}
+              {fairInfo.name}.
             </>
           )}
         </div>

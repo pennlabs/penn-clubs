@@ -26,6 +26,10 @@ import {
   Year,
 } from '../types'
 import { doApiRequest, formatResponse } from '../utils'
+import {
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
+} from '../utils/branding'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
@@ -197,8 +201,8 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
         <div className="has-text-centered" style={{ margin: 30 }}>
           <div className="title is-h1">404 Not Found</div>
           <p>
-            The club you are looking for does not exist. Perhaps it was recently
-            moved or deleted?
+            The {OBJECT_NAME_SINGULAR} you are looking for does not exist.
+            Perhaps it was recently moved or deleted?
           </p>
           <p>
             If you believe this is an error, please contact <Contact />.
@@ -212,8 +216,8 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
         <AuthPrompt title="Oh no!" hasLogin={false}>
           {metadata}
           You do not have permission to edit the page for{' '}
-          {(club && club.name) || 'this club'}. To get access, contact{' '}
-          <Contact />.
+          {(club && club.name) || `this ${OBJECT_NAME_SINGULAR}`}. To get
+          access, contact <Contact />.
         </AuthPrompt>
       )
     }
@@ -229,7 +233,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
       tabs = [
         {
           name: 'info',
-          label: 'Edit Club Page',
+          label: `Edit ${OBJECT_NAME_TITLE_SINGULAR} Page`,
           content: (
             <ClubEditCard
               isEdit={this.state.isEdit}

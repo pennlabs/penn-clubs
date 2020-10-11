@@ -4,6 +4,7 @@ import TimeAgo from 'react-timeago'
 
 import { Club, MembershipRole } from '../../types'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../../utils'
+import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Icon, Text } from '../common'
 import BaseCard from './BaseCard'
 import { MEMBERSHIP_ROLES } from './MembersCard'
@@ -193,11 +194,12 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
         <Text>
           Enter an email address or a list of email addresses separated by
           commas or newlines in the box below. All emails listed will be sent an
-          invite to join the club. The invite process will go more smoothly if
-          you use Penn email addresses, but normal email addresses will work
-          provided that the recipient has a PennKey account. We will not send an
-          invite if the account associated with an email is already in the club
-          or if an invite associated with that email already exists.
+          invite to join the {OBJECT_NAME_SINGULAR}. The invite process will go
+          more smoothly if you use Penn email addresses, but normal email
+          addresses will work provided that the recipient has a valid PennKey
+          account. We will not send an invite if the account associated with an
+          email is already in the {OBJECT_NAME_SINGULAR} or if an invite
+          associated with that email already exists.
         </Text>
         <div className="field">
           <textarea
@@ -218,8 +220,8 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
             />
           </div>
           <p className="help">
-            Owners have full control over the club, officers can perform
-            editing, and members have read-only permissions.
+            Owners have full control over the {OBJECT_NAME_SINGULAR}, officers
+            can perform editing, and members have read-only permissions.
           </p>
         </div>
         <div className="field">

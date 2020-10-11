@@ -97,7 +97,7 @@ const RankList = ({ items }: RankListProps): ReactElement => {
 
 const Rank = (): ReactElement => (
   <Container background={SNOW}>
-    <Metadata title="Club Ordering" />
+    <Metadata title={`${OBJECT_NAME_TITLE_SINGULAR} Ordering`} />
     <InfoPageTitle>
       {OBJECT_NAME_TITLE_SINGULAR} Recommendation Algorithm
     </InfoPageTitle>
