@@ -276,7 +276,7 @@ class MembershipInviteAdmin(admin.ModelAdmin):
 
 class AdvisorAdmin(admin.ModelAdmin):
     search_fields = ("name", "title", "email", "phone", "club__name")
-    list_display = ("name", "title", "email", "phone", "club")
+    list_display = ("name", "title", "email", "phone", "club", "public")
 
     def club(self, obj):
         return obj.club.name

@@ -567,14 +567,17 @@ class MembershipRequest(models.Model):
 
 class Advisor(models.Model):
     """
-    Represents the faculty advisor of a club
+    Represents one faculty advisor for a club.
     """
 
     name = models.CharField(max_length=255)
     title = models.CharField(max_length=255, blank=True, null=True)
+    school = models.ManyToManyField("School", blank=True)
     email = models.CharField(max_length=255, blank=True, null=True, validators=[validate_email])
     phone = PhoneNumberField(null=False, blank=False, unique=True)
+
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    public = models.BooleanField()
 
     def __str__(self):
         return self.name

@@ -14,6 +14,7 @@ from simple_history.utils import update_change_reason
 
 from clubs.mixins import ManyToManySaveMixin
 from clubs.models import (
+    Advisor,
     Asset,
     Badge,
     Club,
@@ -243,6 +244,15 @@ class YearSerializer(serializers.ModelSerializer):
     class Meta:
         model = Year
         fields = ("id", "name", "year")
+
+
+class AdvisorSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
+    school = SchoolSerializer(many=True)
+
+    class Meta:
+        model = Advisor
+        fields = ("id", "name", "title", "school", "email", "phone")
+        save_related_fields = ["school"]
 
 
 class ClubEventSerializer(serializers.ModelSerializer):
@@ -773,6 +783,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
 
+    advisor_set = serializers.SerializerMethodField("get_advisor_set")
+
     target_schools = SchoolSerializer(many=True, required=False)
     target_majors = MajorSerializer(many=True, required=False)
     target_years = YearSerializer(many=True, required=False)
@@ -804,6 +816,14 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if obj.approved_by is None:
             return "Unknown"
         return obj.approved_by.get_full_name()
+
+    def get_advisor_set(self, obj):
+        return AdvisorSerializer(
+            obj.advisor_set.filter(public=True).order_by("name").prefetch_related("school"),
+            many=True,
+            read_only=True,
+            context=self.context,
+        ).data
 
     def get_is_request(self, obj):
         user = self.context["request"].user
@@ -1031,6 +1051,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + [
+            "advisor_set",
             "approved_by",
             "approved_comment",
             "badges",
@@ -1061,6 +1082,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "target_schools",
             "target_majors",
             "target_years",
+            "advisor_set",
         ]
 
 
@@ -1448,6 +1470,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
     fair_on = serializers.DateTimeField(read_only=True)
     email = serializers.EmailField()
     email_public = serializers.BooleanField(default=True)
+    advisor_set = AdvisorSerializer(many=True, required=False)
 
     class Meta(ClubSerializer.Meta):
         fields = ClubSerializer.Meta.fields + ["email_public", "files", "fair_on"]
