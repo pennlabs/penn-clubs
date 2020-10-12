@@ -21,6 +21,7 @@ const ModalTitle = s.h1`
 
 type Props = {
   show: boolean
+  closeModal: () => void
 }
 
 const LoginModal = ({ show, ...props }: Props): ReactElement => {

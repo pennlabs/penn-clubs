@@ -40,6 +40,7 @@ import { logEvent } from '../../../utils/analytics'
 import {
   APPROVAL_AUTHORITY,
   OBJECT_NAME_SINGULAR,
+  SITE_NAME,
 } from '../../../utils/branding'
 
 const Image = s.img`

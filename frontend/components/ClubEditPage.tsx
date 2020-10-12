@@ -32,7 +32,7 @@ import {
 } from '../utils/branding'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
-import EnableSubscription from './ClubEditPage/EnableSubscription'
+import EnableSubscriptionCard from './ClubEditPage/EnableSubscriptionCard'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import QuestionsCard from './ClubEditPage/QuestionsCard'
 import RenewCard from './ClubEditPage/RenewCard'
@@ -288,7 +288,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           content: (
             <>
               <QRCodeCard club={club} />
-              <EnableSubscription
+              <EnableSubscriptionCard
                 notify={this.notify}
                 club={club}
                 onUpdate={this.componentDidMount.bind(this)}

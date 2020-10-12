@@ -1,7 +1,8 @@
 import { ReactElement, useState } from 'react'
 
 import { Club } from '../../types'
-import { apiCheckPermission, doApiRequest, formatResponse } from '../../utils'
+import { doApiRequest, formatResponse } from '../../utils'
+import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Text } from '../common'
 import Toggle from '../Settings/Toggle'
 import BaseCard from './BaseCard'
@@ -12,7 +13,7 @@ type Props = {
   onUpdate?: () => void
 }
 
-export default function EnableSubscription({
+export default function EnableSubscriptionCard({
   club,
   notify = () => undefined,
   onUpdate = () => undefined,
@@ -26,7 +27,11 @@ export default function EnableSubscription({
       },
     }).then((resp) => {
       if (resp.ok) {
-        notify('Successfully changed subscription status')
+        notify(
+          `Successfully ${
+            !club.enables_subscription ? 'enabled' : 'disabled'
+          } subscriptions feature for ${club.name}.`,
+        )
         onUpdate()
       } else {
         resp.json().then((err) => {
@@ -40,9 +45,10 @@ export default function EnableSubscription({
     <BaseCard title="Enable Subscription List">
       <Text>
         This feature allows you to enable or disable the subscription list. When
-        disabled, students will not be able to subscribe to your club, and you
-        cannot view the subscription list. Existing subscriptions, however, will
-        be saved and can be retrieved when the feature is enabled again.
+        disabled, students will not be able to subscribe to your{' '}
+        {OBJECT_NAME_SINGULAR}, and you cannot view the subscription list.
+        Existing subscriptions, however, will be saved and can be retrieved when
+        the feature is enabled again.
       </Text>
       <div style={{ display: 'flex', flexDirection: 'row', width: '100' }}>
         <span>Enable Subscription List</span>
