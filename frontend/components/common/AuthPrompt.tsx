@@ -3,6 +3,7 @@ import s from 'styled-components'
 
 import { CLUBS_BLUE } from '../../constants/colors'
 import { getCurrentRelativePath, LOGIN_URL } from '../../utils'
+import { OBJECT_NAME_PLURAL, SITE_LOGO, SITE_NAME } from '../../utils/branding'
 import { Center, Icon, PhoneContainer, SmallText, Text, Title } from '.'
 
 const Image = s.img`
@@ -46,13 +47,13 @@ const AuthPrompt = ({
     <PhoneContainer>
       <Center>
         <TitleHeader>
-          <Image src="/static/img/peoplelogo.png" />
+          <Image src={SITE_LOGO} />
           <Title>{title}</Title>
         </TitleHeader>
         <Margin>
           <Text>
             {children ||
-              'To make the most of Penn Clubs features, like bookmarking and subscribing to clubs, please login using your PennKey.'}
+              `To make the most of ${SITE_NAME} features, like bookmarking and subscribing to ${OBJECT_NAME_PLURAL}, please login using your PennKey.`}
           </Text>
         </Margin>
         {hasLogin && (

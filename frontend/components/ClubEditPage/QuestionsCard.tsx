@@ -1,6 +1,7 @@
 import { ReactElement } from 'react'
 
 import { Club } from '../../types'
+import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Empty } from '../common'
 import { ModelForm } from '../Form'
 import BaseCard from './BaseCard'
@@ -15,9 +16,10 @@ export default function QuestionsCard({
   return (
     <BaseCard title="Student Questions">
       <p className="mb-3">
-        You can see a list of questions that prospective club members have asked
-        below. Answering any of these questions will make them publically
-        available and show your name as the person who answered the question.
+        You can see a list of questions that prospective {OBJECT_NAME_SINGULAR}{' '}
+        members have asked below. Answering any of these questions will make
+        them publically available and show your name as the person who answered
+        the question.
       </p>
       <ModelForm
         empty={

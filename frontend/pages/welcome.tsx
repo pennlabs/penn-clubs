@@ -19,6 +19,12 @@ import { HOME_ROUTE } from '../constants/routes'
 import renderPage from '../renderPage'
 import { UserInfo } from '../types'
 import { doApiRequest } from '../utils'
+import {
+  OBJECT_NAME_LONG_PLURAL,
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_SINGULAR,
+  SITE_NAME,
+} from '../utils/branding'
 
 const Subtitle = s(Title)`
   font-size: 1.3rem;
@@ -78,23 +84,24 @@ const Welcome = ({
       <Container>
         <TitleHeader>
           <LogoWithText></LogoWithText>
-          <Title>Welcome to Penn Clubs!</Title>
+          <Title>Welcome to {SITE_NAME}!</Title>
         </TitleHeader>
         <hr />
         <Center>
           <Text>
-            Penn Clubs is your central source of information about student
-            organizations at Penn.
+            {SITE_NAME} is your central source of information about{' '}
+            {OBJECT_NAME_LONG_PLURAL} at Penn.
           </Text>
         </Center>
         <hr />
         <Center>
           <Subtitle>1. Tell us about yourself</Subtitle>
           <Text>
-            The info below helps us tailor your Penn Clubs experience to find
-            clubs that you're likely to be interested in. It will also be shared
-            with clubs that you choose to subscribe to. Feel free to leave
-            fields blank if you'd prefer not the share this info.
+            The info below helps us tailor your {SITE_NAME} experience to find
+            {OBJECT_NAME_PLURAL} that you're likely to be interested in. It will
+            also be shared with {OBJECT_NAME_PLURAL} that you choose to
+            subscribe to. Feel free to leave fields blank if you'd prefer not
+            the share this info.
           </Text>
         </Center>
         <ProfileForm settings={userInfo} onUpdate={setUserInfo} />
@@ -103,7 +110,7 @@ const Welcome = ({
           <Subtitle>2. Getting started</Subtitle>
           <Text>
             Here are two common buttons that you'll see around the site.
-            Bookmarks and subscriptions can be managed from your Penn Clubs
+            Bookmarks and subscriptions can be managed from your {SITE_NAME}
             account at any time. Bookmarks (<Icon name="bookmark" />) are
             intended to be private and for your own personal use. Subscriptions
             (<Icon name="bell" />) are intended as a feature to give your
@@ -114,7 +121,9 @@ const Welcome = ({
               <div className="button is-link is-large">
                 <Icon alt="bookmark" name="bookmark" /> Bookmark
               </div>
-              <Text className="mt-1 mb-0">To save a club for later</Text>
+              <Text className="mt-1 mb-0">
+                To save a {OBJECT_NAME_SINGULAR} for later
+              </Text>
               <small>(For your own use)</small>
             </div>
             <div className="column">
@@ -122,20 +131,20 @@ const Welcome = ({
                 <Icon alt="subscribe" name="bell" /> Subscribe
               </div>
               <Text className="mt-1 mb-0">To join the mailing list</Text>
-              <small>(Contact info given to club)</small>
+              <small>(Contact info given to {OBJECT_NAME_SINGULAR})</small>
             </div>
           </div>
         </Center>
         <hr />
         <Center>
-          <Subtitle>3. Start exploring Penn Clubs!</Subtitle>
+          <Subtitle>3. Start exploring {SITE_NAME}!</Subtitle>
           <Link
             href={nextUrl && nextUrl.startsWith('/') ? nextUrl : HOME_ROUTE}
           >
             <a className="button is-success is-large" onClick={markWelcome}>
               {nextUrl && nextUrl.startsWith('/') && nextUrl !== HOME_ROUTE
                 ? 'Continue'
-                : 'Browse clubs'}
+                : `Browse ${OBJECT_NAME_PLURAL}`}
             </a>
           </Link>
         </Center>

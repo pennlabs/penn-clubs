@@ -2,9 +2,14 @@ import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
-import { MEDIUM_GRAY } from '../../constants'
+import { FAIR_INFO, MEDIUM_GRAY } from '../../constants'
 import { Club, MembershipRank, UserInfo } from '../../types'
-import { apiCheckPermission, doApiRequest } from '../../utils'
+import { apiCheckPermission, doApiRequest, useSetting } from '../../utils'
+import {
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
+  SITE_NAME,
+} from '../../utils/branding'
 import { Contact, Icon, Modal, Text } from '../common'
 import { ModalContent } from './Actions'
 
@@ -43,6 +48,9 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   const [seeFairStatus, setSeeFairStatus] = useState<boolean>(false)
   const [canDeleteClub, setCanDeleteClub] = useState<boolean>(false)
   const [confirmModal, setConfirmModal] = useState<ConfirmParams | null>(null)
+  const fairInProgress = useSetting('FAIR_OPEN') || useSetting('PRE_FAIR')
+  const fairName = useSetting('FAIR_NAME')
+  const fairInfo = FAIR_INFO[fairName as string]
 
   const [canApprove, setCanApprove] = useState<boolean>(
     userInfo && userInfo.is_superuser,
@@ -84,8 +92,8 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
         <div className="notification is-info">
           <div className="mb-3">
             <b>{club.name}</b> has been approved by <b>{club.approved_by}</b>{' '}
-            for the school year. If you want to revoke approval for this club,
-            use the button below.
+            for the school year. If you want to revoke approval for this{' '}
+            {OBJECT_NAME_SINGULAR}, use the button below.
           </div>
           {club.approved_comment && (
             <div className="mb-5">
@@ -127,9 +135,10 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
             {club.approved === false ? (
               <>
                 <p>
-                  This club has been marked as <b>not approved</b> and is only
-                  visible to administrators of Penn Clubs. The reason that your
-                  club was not approved by the{' '}
+                  This {OBJECT_NAME_SINGULAR} has been marked as{' '}
+                  <b>not approved</b> and is only visible to administrators of
+                  {SITE_NAME}. The reason that your {OBJECT_NAME_SINGULAR} was
+                  not approved by the{' '}
                   <a href="https://osa.vpul.upenn.edu/">
                     Office of Student Affairs
                   </a>{' '}
@@ -148,15 +157,17 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
               </>
             ) : (
               <>
-                {club.is_ghost ? 'Changes to this club have' : 'This club has'}{' '}
+                {club.is_ghost
+                  ? `Changes to this ${OBJECT_NAME_SINGULAR} have`
+                  : `This ${OBJECT_NAME_SINGULAR} has`}{' '}
                 <b>not been approved yet</b> for the {year}-{year + 1} school
-                year and is only visible to club members and administrators of
-                Penn Clubs.
+                year and is only visible to {OBJECT_NAME_SINGULAR} members and
+                administrators of {SITE_NAME}.
                 {club.is_ghost && (
                   <span className="mt-3 is-block">
-                    The latest approved version of this club will be shown in
-                    the meantime. When your changes have been approved, your
-                    club page will be updated.
+                    The latest approved version of this {OBJECT_NAME_SINGULAR}{' '}
+                    will be shown in the meantime. When your changes have been
+                    approved, your {OBJECT_NAME_SINGULAR} page will be updated.
                   </span>
                 )}
               </>
@@ -167,12 +178,14 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
               {canApprove && club.active && (
                 <>
                   <div className="mb-3">
-                    As an administrator for Penn Clubs, you can approve or
+                    As an administrator for {SITE_NAME}, you can approve or
                     reject this request. Approving this request will display it
-                    publically on the Penn Clubs website and send out an email
-                    notifying club officers that their club has been renewed.
-                    Rejecting this request will send out an email notifying club
-                    officers that their club was not approved and include
+                    publically on the {SITE_NAME} website and send out an email
+                    notifying {OBJECT_NAME_SINGULAR} members that their{' '}
+                    {OBJECT_NAME_SINGULAR} has been renewed. Rejecting this
+                    request will send out an email notifying{' '}
+                    {OBJECT_NAME_SINGULAR} members that their{' '}
+                    {OBJECT_NAME_SINGULAR} was not approved and include
                     instructions on how to request approval again.
                   </div>
                   {club.files.length ? (
@@ -190,14 +203,14 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
                     </div>
                   ) : (
                     <div className="mb-3">
-                      This club has not uploaded any files.
+                      This {OBJECT_NAME_SINGULAR} has not uploaded any files.
                     </div>
                   )}
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     className="textarea mb-4"
-                    placeholder="Enter approval or rejection notes here! Your notes will be sent to the club officers when you approve or reject this request."
+                    placeholder="Enter approval or rejection notes here! Your notes will be emailed to the requester when you approve or reject this request."
                   ></textarea>
                 </>
               )}
@@ -267,17 +280,19 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
                             </p>
                             <div className="content">
                               <ul>
-                                <li>Duplicate club entries</li>
                                 <li>
-                                  Mistakenly created club with user
-                                  acknowledgement and permission
+                                  Duplicate {OBJECT_NAME_SINGULAR} entries
+                                </li>
+                                <li>
+                                  Mistakenly created {OBJECT_NAME_SINGULAR} with
+                                  user acknowledgement and permission
                                 </li>
                               </ul>
                             </div>
                             <p>
-                              If you are deleting this club for another reason
-                              that is not on this list, please check with{' '}
-                              <Contact /> first. Thank you!
+                              If you are deleting this {OBJECT_NAME_SINGULAR}{' '}
+                              for another reason that is not on this list,
+                              please check with <Contact /> first. Thank you!
                             </p>
                           </>
                         ),
@@ -295,10 +310,10 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
             club.is_member <= MembershipRank.Officer && (
               <>
                 <div className="mb-3">
-                  You can edit your club details using the <b>Manage Club</b>{' '}
-                  button on this page. After you have addressed the issues
-                  mentioned above, you can request renewal again using the
-                  button below.
+                  You can edit your {OBJECT_NAME_SINGULAR} details using the{' '}
+                  <b>Manage {OBJECT_NAME_TITLE_SINGULAR}</b> button on this
+                  page. After you have addressed the issues mentioned above, you
+                  can request renewal again using the button below.
                 </div>
                 <button
                   className="button is-warning is-light"
@@ -317,19 +332,19 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
             )}
         </div>
       ) : null}
-      {seeFairStatus && (
+      {seeFairStatus && fairInProgress && (
         <div
           className={`notification ${club.fair ? 'is-success' : 'is-warning'}`}
         >
           {club.fair ? (
             <>
-              <Icon name="check" /> <b>{club.name}</b> is signed up for the SAC
-              fair.
+              <Icon name="check" /> <b>{club.name}</b> is signed up for the{' '}
+              {fairInfo.name}.
             </>
           ) : (
             <>
-              <Icon name="x" /> <b>{club.name}</b> is not signed up for the SAC
-              fair.
+              <Icon name="x" /> <b>{club.name}</b> is not signed up for the{' '}
+              {fairInfo.name}.
             </>
           )}
         </div>

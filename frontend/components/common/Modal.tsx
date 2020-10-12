@@ -79,7 +79,9 @@ export const Modal = ({
       (keyCode === ESCAPE_KEY_CODE || key.toLowerCase() === 'escape') &&
       show
     ) {
-      closeModal()
+      if (closeModal != null) {
+        closeModal()
+      }
     }
   }
 
@@ -111,7 +113,7 @@ type ModalProps = React.PropsWithChildren<{
   show: boolean
   marginBottom?: boolean
   width?: string
-  closeModal: () => void
+  closeModal?: () => void
 }>
 
 export default Modal

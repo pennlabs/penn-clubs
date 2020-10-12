@@ -90,7 +90,7 @@ describe('Authenticated user tests', () => {
         pressEnter: false,
       },
       {
-        label: 'Is an application required to join your organization?',
+        label: 'Is an application required to join your club?',
         value: 'No Application Required',
         pressEnter: true,
       },

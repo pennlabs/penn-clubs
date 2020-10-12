@@ -7,6 +7,7 @@ import RenewTab from '../components/Settings/RenewTab'
 import TabView from '../components/TabView'
 import { WHITE } from '../constants/colors'
 import renderPage from '../renderPage'
+import { OBJECT_NAME_TITLE } from '../utils/branding'
 
 function UserRenewal({ userInfo, authenticated }): ReactElement {
   if (authenticated === null) {
@@ -29,10 +30,10 @@ function UserRenewal({ userInfo, authenticated }): ReactElement {
 
   return (
     <>
-      <Metadata title="Renew Clubs" />
+      <Metadata title={`Renew ${OBJECT_NAME_TITLE}`} />
       <Container background={gradient}>
         <Title style={{ marginTop: '2.5vw', color: WHITE, opacity: 0.95 }}>
-          Renew Clubs
+          Renew {OBJECT_NAME_TITLE}
         </Title>
       </Container>
       <TabView background={gradient} tabs={tabs} tabClassName="is-boxed" />

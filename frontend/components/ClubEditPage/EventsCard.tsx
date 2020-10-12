@@ -6,6 +6,7 @@ import s from 'styled-components'
 import { LIGHT_GRAY } from '../../constants'
 import { Club, ClubEvent } from '../../types'
 import { stripTags } from '../../utils'
+import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Device, Text } from '../common'
 import EventModal from '../EventPage/EventModal'
 import { ModelForm } from '../Form'
@@ -343,7 +344,7 @@ const EventPreview = ({ event }: { event: ClubEvent }) => (
   <EventPreviewContainer>
     <EventPreviewDescriptionContainer>
       <h3 className="subtitle">Event Preview</h3>
-      <p>This is how your event will appear to students on the event page</p>
+      <p>This is how your event will appear to students on the event page.</p>
     </EventPreviewDescriptionContainer>
     <PreviewContainer>
       <EventModal event={event} isHappening={false} />
@@ -367,7 +368,7 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
 
   return (
     <BaseCard title="Events">
-      <Text>Manage events for this club.</Text>
+      <Text>Manage events for this {OBJECT_NAME_SINGULAR}.</Text>
       <ModelForm
         baseUrl={`/clubs/${club.code}/events/`}
         fields={eventFields}

@@ -3,6 +3,7 @@ import TimeAgo from 'react-timeago'
 
 import { Club } from '../../types'
 import { doApiRequest, getApiUrl } from '../../utils'
+import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Empty, Icon, Loading } from '../common'
 import BaseCard from './BaseCard'
 
@@ -59,9 +60,10 @@ export default function PotentialMemberCard({
     <BaseCard title={title}>
       <p className="mb-5">
         The table below shows all the users that have subscribed (
-        <Icon name="bell" />) to your club. If users have elected to share their
-        bookmarks (<Icon name="bookmark" />) with club officers, they will also
-        show up in the list below.
+        <Icon name="bell" />) to your {OBJECT_NAME_SINGULAR}. If users have
+        elected to share their bookmarks (<Icon name="bookmark" />) with{' '}
+        {OBJECT_NAME_SINGULAR} officers, they will also show up in the list
+        below.
       </p>
       <table className="table is-fullwidth">
         <thead>
@@ -122,7 +124,7 @@ export default function PotentialMemberCard({
           {(students !== null && !!students.length) || (
             <tr>
               <td colSpan={actions ? 6 : 5} className="has-text-grey">
-                No one has {pastVerb} to this club yet.
+                No one has {pastVerb} to this {OBJECT_NAME_SINGULAR} yet.
               </td>
             </tr>
           )}

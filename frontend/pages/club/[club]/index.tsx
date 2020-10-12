@@ -37,6 +37,10 @@ import renderPage from '../../../renderPage'
 import { Club, QuestionAnswer, UserInfo } from '../../../types'
 import { doApiRequest } from '../../../utils'
 import { logEvent } from '../../../utils/analytics'
+import {
+  APPROVAL_AUTHORITY,
+  OBJECT_NAME_SINGULAR,
+} from '../../../utils/branding'
 
 const Image = s.img`
   height: 86px;
@@ -122,12 +126,13 @@ const ClubPage = ({
             <Image src="/static/img/button.svg" alt="page not found" />
           </div>
           <Text>
-            The club you are looking for does not exist. Perhaps the club has
-            not been approved yet or the club has been deleted?
+            The {OBJECT_NAME_SINGULAR} you are looking for does not exist.
+            Perhaps the {OBJECT_NAME_SINGULAR} has not been approved yet or the{' '}
+            {OBJECT_NAME_SINGULAR} has been deleted?
           </Text>
           {userInfo === undefined && (
             <Text>
-              You are not logged into Penn Clubs. Logging in may allow you to
+              You are not logged into {SITE_NAME}. Logging in may allow you to
               view further information.
             </Text>
           )}
@@ -179,8 +184,8 @@ const ClubPage = ({
           {club.is_ghost && (
             <div className="notification is-info is-light">
               <Icon name="alert-circle" style={{ marginTop: '-3px' }} /> There
-              are changes to this club page that are still pending approval from
-              the Office of Student Affairs.
+              are changes to this {OBJECT_NAME_SINGULAR} page that are still
+              pending approval from the {APPROVAL_AUTHORITY}.
             </div>
           )}
 
@@ -209,8 +214,8 @@ const ClubPage = ({
             {questions.length > 0
               ? `Click here to see the ${questions.length} question${
                   questions.length === 1 ? '' : 's'
-                } asked about this club so far!`
-              : 'Be the first to ask a question about this club!'}
+                } asked about this ${OBJECT_NAME_SINGULAR} so far!`
+              : `Be the first to ask a question about this ${OBJECT_NAME_SINGULAR}!`}
           </QAButton>
           <StyledCard bordered>
             <StrongText>Basic Info</StrongText>

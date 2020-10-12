@@ -8,6 +8,7 @@ import { CLUB_ROUTE, CLUBS_BLUE, M2, ZOOM_BLUE } from '../../constants'
 import { MEDIUM_GRAY } from '../../constants/colors'
 import { ClubEvent } from '../../types'
 import { doApiRequest } from '../../utils'
+import { OBJECT_NAME_TITLE_SINGULAR } from '../../utils/branding'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
@@ -150,7 +151,7 @@ const EventModal = (props: {
                   }
                 }}
               >
-                See Club Details{' '}
+                See {OBJECT_NAME_TITLE_SINGULAR} Details{' '}
                 <Icon name="chevrons-right" alt="chevrons-right" />
               </TransparentButtonLink>
             </Link>

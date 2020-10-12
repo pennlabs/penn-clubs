@@ -11,6 +11,7 @@ import {
 } from '../../constants/measurements'
 import { HOME_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
+import { SITE_LOGO, SITE_NAME } from '../../utils/branding'
 import Burger from './Burger'
 import Feedback from './Feedback'
 import Heading from './Head'
@@ -77,8 +78,8 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
         <div className="navbar-brand">
           <Link href={HOME_ROUTE}>
             <a className="navbar-item" style={{ padding: 0 }}>
-              <Logo src="/static/img/peoplelogo.png" alt="Penn Clubs Logo" />
-              <Title className="title is-size-4">Penn Clubs</Title>
+              <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
+              <Title className="title is-size-4">{SITE_NAME}</Title>
             </a>
           </Link>
 
