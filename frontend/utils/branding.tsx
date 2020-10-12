@@ -30,7 +30,7 @@ const sites = {
     CONTACT_EMAIL: 'contact@pennclubs.com',
   },
   fyh: {
-    SITE_NAME: 'First Year Hub',
+    SITE_NAME: 'Hub @ Penn',
     SCHOOL_NAME: 'University of Pennsylvania',
     SITE_SUBTITLE: 'Student Resources at the University of Pennsylvania',
     DOMAIN: 'hub.provost.upenn.edu',
@@ -44,7 +44,7 @@ const sites = {
 
     SITE_LOGO: '/static/img/penn_shield.png',
     SITE_FAVICON: '/static/penn_favicon.ico',
-    SITE_TAGLINE: 'Find your activities!',
+    SITE_TAGLINE: 'Find resources at the University of Pennsylvania!',
 
     APPROVAL_AUTHORITY: 'Office of Student Affairs',
     APPROVAL_AUTHORITY_URL: 'https://osa.vpul.upenn.edu/',
