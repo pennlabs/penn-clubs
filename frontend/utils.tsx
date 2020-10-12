@@ -2,6 +2,7 @@ import fetch from 'isomorphic-unfetch'
 import { createContext, ReactElement, useContext } from 'react'
 
 import { MembershipRank } from './types'
+import { DOMAIN } from './utils/branding'
 
 export function stripTags(val: string): string {
   if (!val) {
@@ -49,7 +50,7 @@ export function getDefaultClubImageURL(): string {
 
 export const SITE_ORIGIN =
   process.env.NODE_ENV === 'production'
-    ? `https://${process.env.DOMAIN || 'pennclubs.com'}`
+    ? `https://${process.env.DOMAIN || DOMAIN}`
     : `http://localhost:${process.env.PORT || 3000}`
 export const API_BASE_URL = `${SITE_ORIGIN}/api`
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import {
@@ -9,7 +9,9 @@ import {
   Title,
 } from '../../../components/common'
 import { CLUBS_NAVY } from '../../../constants/colors'
+import { Club } from '../../../types'
 import { doApiRequest, getApiUrl } from '../../../utils'
+import { DOMAIN } from '../../../utils/branding'
 
 const Image = s.img`
   padding: 0;
@@ -143,41 +145,38 @@ const truncate = (str, len = 54) => {
   return `${str.substring(0, len)}...`
 }
 
-const Flyer = ({ query }) => {
-  const [clubs, setClubs] = useState(null)
-  const [count, setCount] = useState(0)
-  const [failedClubs, setFailedClubs] = useState([])
-  const [showErrorPane, setShowErrorPane] = useState(false)
+const Flyer = ({ query }): ReactElement => {
+  const [clubs, setClubs] = useState<Club[] | null>(null)
+  const [count, setCount] = useState<number>(0)
+  const [failedClubs, setFailedClubs] = useState<string[]>([])
+  const [showErrorPane, setShowErrorPane] = useState<boolean>(false)
 
   useEffect(() => {
-    const fetchClub = (club, tries) => {
+    const fetchClub = (club, tries): Promise<Club | null> => {
       const url = `/clubs/${club}/?format=json`
-      return doApiRequest(url).then(
-        (resp) => {
-          if (resp.ok) {
-            setCount((prevCount) => prevCount + 1)
-            return resp.json()
-          } else if (resp.status === 502 && tries > 0) {
-            // If we get a Gateway Timeout, wait a while and try one more time
-            return new Promise((resolve) => {
-              setTimeout(resolve.bind(null), 5000 * Math.random())
-            }).then(() => fetchClub(club, tries - 1))
-          } else {
-            setCount((prevCount) => prevCount + 1)
-            setFailedClubs((prevFailed) => prevFailed.concat(club))
-            return null
-          }
-        },
-        {
-          referrerPolicy: 'no-referrer',
-          cache: tries === 1 ? 'reload' : 'default',
-        },
-      )
+      return doApiRequest(url, {
+        referrerPolicy: 'no-referrer',
+        cache: tries === 1 ? 'reload' : 'default',
+      }).then((resp): Promise<Club | null> | null => {
+        if (resp.ok) {
+          setCount((prevCount) => prevCount + 1)
+          return resp.json()
+        } else if (resp.status === 502 && tries > 0) {
+          // If we get a Gateway Timeout, wait a while and try one more time
+          return new Promise((resolve) => {
+            setTimeout(resolve.bind(null), 5000 * Math.random())
+          }).then(() => fetchClub(club, tries - 1))
+        } else {
+          setCount((prevCount) => prevCount + 1)
+          setFailedClubs((prevFailed) => prevFailed.concat(club))
+          return null
+        }
+      })
     }
 
-    Promise.all(query.club.split(',').map((c) => fetchClub(c, 3))).then(
-      setClubs,
-    )
+    Promise.all(
+      query.club.split(',').map((c) => fetchClub(c, 3)),
+    ).then((clubs) => setClubs(clubs.filter((c) => c != null) as Club[]))
   }, [query])
 
   const totalClubCount = query.club.split(',').length
@@ -267,7 +266,9 @@ const Flyer = ({ query }) => {
                         <Text style={{ color: CLUBS_NAVY }}>
                           <b>Or visit:</b>
                           <br />
-                          <i>https://pennclubs.com/club/{club.code}/fair/</i>
+                          <i>
+                            https://{DOMAIN}/club/{club.code}/fair/
+                          </i>
                         </Text>
                       </Center>
                     </Margin>

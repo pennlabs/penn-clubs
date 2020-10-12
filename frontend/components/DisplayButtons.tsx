@@ -10,6 +10,10 @@ import {
   WHITE_ALPHA,
 } from '../constants/colors'
 import { BODY_FONT } from '../constants/styles'
+import {
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
+} from '../utils/branding'
 import { Icon } from './common'
 
 const DisplayButtonsTag = s.div`
@@ -64,8 +68,12 @@ const DisplayButtons = ({
     </button>
     <Link href="/create">
       <AddClubButton className="button is-small">
-        <Icon name="plus" alt="create club" style={iconStylesDark} />
-        Add Club
+        <Icon
+          name="plus"
+          alt={`create ${OBJECT_NAME_SINGULAR}`}
+          style={iconStylesDark}
+        />
+        Add {OBJECT_NAME_TITLE_SINGULAR}
       </AddClubButton>
     </Link>
   </DisplayButtonsTag>

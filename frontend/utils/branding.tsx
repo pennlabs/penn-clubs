@@ -4,6 +4,7 @@ const sites = {
   clubs: {
     SITE_NAME: 'Penn Clubs',
     SITE_SUBTITLE: 'Student Organizations at the University of Pennsylvania',
+    DOMAIN: 'pennclubs.com',
 
     OBJECT_NAME_PLURAL: 'clubs',
     OBJECT_NAME_LONG_PLURAL: 'student organizations',
@@ -20,6 +21,7 @@ const sites = {
   fyh: {
     SITE_NAME: 'First Year Hub',
     SITE_SUBTITLE: 'Student Resources at the University of Pennsylvania',
+    DOMAIN: 'hub.provost.upenn.edu',
 
     OBJECT_NAME_PLURAL: 'resources',
     OBJECT_NAME_LONG_PLURAL: 'university resources',
@@ -39,6 +41,7 @@ export const SITE_ID = site
 export const SITE_NAME = sites[site].SITE_NAME
 export const SITE_SUBTITLE = sites[site].SITE_SUBTITLE
 export const SITE_TAGLINE = sites[site].SITE_TAGLINE
+export const DOMAIN = sites[site].DOMAIN
 
 export const OBJECT_NAME_PLURAL = sites[site].OBJECT_NAME_PLURAL
 export const OBJECT_NAME_LONG_PLURAL = sites[site].OBJECT_NAME_LONG_PLURAL
