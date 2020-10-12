@@ -19,6 +19,8 @@ applications:
         value: pennclubs.com
       - name: DJANGO_SETTINGS_MODULE
         value: pennclubs.settings.production
+      - name: REDIS_HOST
+        value: penn-clubs-redis
   - name: django-asgi
     image: pennlabs/penn-clubs-backend
     secret: penn-clubs
@@ -33,9 +35,10 @@ applications:
         value: pennclubs.com
       - name: DJANGO_SETTINGS_MODULE
         value: pennclubs.settings.production
+      - name: REDIS_HOST
+        value: penn-clubs-redis
   - name: react
     image: pennlabs/penn-clubs-frontend
-    secret: penn-clubs
     replicas: 2
     ingress:
       hosts:
@@ -46,6 +49,53 @@ applications:
         value: 80
       - name: DOMAIN
         value: pennclubs.com
+  - name: hub-redis
+    image: redis
+    tag: "6.0"
+    port: 6379
+  - name: hub-django-wgsi
+    image: pennlabs/first-year-hub-backend
+    secret: first-year-hub
+    replicas: 3
+    ingress:
+      hosts:
+        - host: hub.provost.upenn.edu
+          paths: ["/api"]
+    extraEnv:
+      - name: DOMAIN
+        value: hub.provost.upenn.edu
+      - name: DJANGO_SETTINGS_MODULE
+        value: pennclubs.settings.production
+      - name: REDIS_HOST
+        value: penn-clubs-hub-redis
+  - name: hub-django-asgi
+    image: pennlabs/first-year-hub-backend
+    secret: first-year-hub
+    cmd: ["/usr/local/bin/asgi-run"]
+    replicas: 2
+    ingress:
+      hosts:
+        - host: hub.provost.upenn.edu
+          paths: ["/api/ws"]
+    extraEnv:
+      - name: DOMAIN
+        value: hub.provost.upenn.edu
+      - name: DJANGO_SETTINGS_MODULE
+        value: pennclubs.settings.production
+      - name: REDIS_HOST
+        value: penn-clubs-hub-redis
+  - name: hub-react
+    image: pennlabs/first-year-hub-frontend
+    replicas: 2
+    ingress:
+      hosts:
+        - host: hub.provost.upenn.edu
+          paths: ["/"]
+    extraEnv:
+      - name: PORT
+        value: 80
+      - name: DOMAIN
+        value: hub.provost.upenn.edu
 
 cronjobs:
   - name: rank-clubs
