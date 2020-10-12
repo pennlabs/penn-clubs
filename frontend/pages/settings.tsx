@@ -12,6 +12,7 @@ import { CLUBS_BLUE, WHITE } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
 import renderPage from '../renderPage'
 import { UserInfo } from '../types'
+import { OBJECT_NAME_TITLE } from '../utils/branding'
 
 const Notification = s.span`
   border-radius: ${BORDER_RADIUS};
@@ -72,7 +73,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
     const tabs = [
       {
-        name: 'Clubs',
+        name: OBJECT_NAME_TITLE,
         icon: 'peoplelogo',
         content: <ClubTab notify={this.notify} userInfo={userInfo} />,
       },

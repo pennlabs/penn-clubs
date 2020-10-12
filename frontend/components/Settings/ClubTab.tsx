@@ -5,6 +5,7 @@ import s from 'styled-components'
 import { mediaMaxWidth, mediaMinWidth, SM } from '../../constants/measurements'
 import { Club, MembershipRank, UserInfo } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
+import { OBJECT_NAME_PLURAL } from '../../utils/branding'
 import { Center, EmptyState, Loading, Text } from '../common'
 import ClubTabCards from './ClubTabCards'
 import ClubTabTable from './ClubTabTable'
@@ -138,7 +139,7 @@ const ClubTab = ({
       <EmptyState name="button" />
       <Center>
         <Text isGray>
-          No memberships yet! Browse clubs{' '}
+          No memberships yet! Browse {OBJECT_NAME_PLURAL}{' '}
           <Link href="/">
             <a>here</a>
           </Link>

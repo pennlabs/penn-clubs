@@ -5,6 +5,7 @@ import { CLUBS_GREY_LIGHT } from '../../constants/colors'
 import { HOME_ROUTE } from '../../constants/routes'
 import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
+import { OBJECT_NAME_PLURAL } from '../../utils/branding'
 import ClubTableRow from '../ClubTableRow'
 import { Center, EmptyState, Loading, Text } from '../common'
 
@@ -38,7 +39,7 @@ export default ({ keyword }: FavoritesTabProps): ReactElement => {
         <EmptyState name={`${keyword}s`} />
         <Center>
           <Text color={CLUBS_GREY_LIGHT}>
-            No {keyword}s yet! Browse clubs{' '}
+            No {keyword}s yet! Browse {OBJECT_NAME_PLURAL}{' '}
             <Link href={HOME_ROUTE}>
               <a>here</a>
             </Link>

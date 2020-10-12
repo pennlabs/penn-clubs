@@ -27,8 +27,11 @@ import {
 } from '../types'
 import { doApiRequest, formatResponse } from '../utils'
 import {
+  APPROVAL_AUTHORITY,
   OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE,
   OBJECT_NAME_TITLE_SINGULAR,
+  SITE_NAME,
 } from '../utils/branding'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
@@ -341,7 +344,8 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
       ]
     }
 
-    const nameOrDefault = (club && club.name) || 'New Club'
+    const nameOrDefault =
+      (club && club.name) || `New ${OBJECT_NAME_TITLE_SINGULAR}`
     const showInactiveTag = !(club && club.active) && isEdit
 
     const isViewButton = isEdit && club
@@ -369,19 +373,19 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
         {!isEdit && (
           <>
             <p className="mb-3">
-              Clubs that you create from this form will enter an approval
-              process before being displayed to the public. After your club has
-              been approved by the Office of Student Affairs, it will appear on
-              the Penn Clubs website.
+              {OBJECT_NAME_TITLE} that you create from this form will enter an
+              approval process before being displayed to the public. After your
+              {OBJECT_NAME_SINGULAR} has been approved by the{' '}
+              {APPROVAL_AUTHORITY}, it will appear on the {SITE_NAME} website.
             </p>
             <p>
-              <b>Before creating your club,</b> please check to see if it
-              already exists on the{' '}
+              <b>Before creating your {OBJECT_NAME_SINGULAR},</b> please check
+              to see if it already exists on the{' '}
               <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
                 <a>directory page</a>
               </Link>
-              . If your club already exists, please email <Contact /> to gain
-              access instead of filling out this form.
+              . If your {OBJECT_NAME_SINGULAR} already exists, please email{' '}
+              <Contact /> to gain access instead of filling out this form.
             </p>
           </>
         )}

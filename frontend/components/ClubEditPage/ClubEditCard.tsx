@@ -105,8 +105,8 @@ export default function ClubEditCard({
           }
 
           let msg = isEdit
-            ? 'Club has been successfully saved.'
-            : 'Club has been successfully created.'
+            ? `${OBJECT_NAME_TITLE_SINGULAR} has been successfully saved.`
+            : `${OBJECT_NAME_TITLE_SINGULAR} has been successfully created.`
 
           if (photo && photo.get('file') instanceof File) {
             doApiRequest(`/clubs/${clubCode}/upload/?format=json`, {
@@ -114,9 +114,9 @@ export default function ClubEditCard({
               body: photo,
             }).then((resp) => {
               if (resp.ok) {
-                msg += ' Club image also saved.'
+                msg += ` ${OBJECT_NAME_TITLE_SINGULAR} image also saved.`
               } else {
-                msg += ' However, failed to upload club image file!'
+                msg += ` However, failed to upload ${OBJECT_NAME_SINGULAR} image file!`
               }
             })
           }
@@ -148,9 +148,9 @@ export default function ClubEditCard({
             </>
           ) : (
             <>
-              Your club URL will be generated from your {OBJECT_NAME_SINGULAR}{' '}
-              name, and cannot be changed upon creation. Your{' '}
-              {OBJECT_NAME_SINGULAR} name can still be changed afterwards.
+              Your {OBJECT_NAME_SINGULAR} URL will be generated from your{' '}
+              {OBJECT_NAME_SINGULAR} name, and cannot be changed upon creation.
+              Your {OBJECT_NAME_SINGULAR} name can still be changed afterwards.
             </>
           ),
         },
