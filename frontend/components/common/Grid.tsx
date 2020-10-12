@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import {
@@ -7,14 +8,14 @@ import {
   TABLET,
 } from '../../constants/measurements'
 
-const percent = (numCols) => (numCols / 12) * 100 + '%'
+const percent = (numCols: number): string => (numCols / 12) * 100 + '%'
 
 export const Flex = s.div`
   width: 100%;
   display: flex;
 `
 
-export const Row = s.div`
+export const Row = s.div<{ alwaysFlex?: boolean; margin?: string }>`
   display: flex;
   flex-direction: row;
   width: 100%;
@@ -30,7 +31,19 @@ export const Row = s.div`
   `}
 `
 
-const ColWrapper = s.div`
+interface ColWrapperProps {
+  width?: string
+  sm?: number
+  offsetSm?: number
+  overflowY?: string
+  md?: number
+  offsetMd?: number
+  lg?: number
+  offsetLg?: number
+  flex?: boolean
+}
+
+const ColWrapper = s.div<ColWrapperProps>`
   flex: ${({ width }) => (width ? 'none' : 1)};
   width: ${({ width }) => width || 'auto'};
   overflow-y: ${({ overflowY }) => overflowY || 'visible'};
@@ -50,7 +63,11 @@ const ColWrapper = s.div`
   ${({ flex }) => flex && 'display: flex;'}
 `
 
-const ColContainer = s.div`
+const ColContainer = s.div<{
+  background?: string
+  flex?: boolean
+  margin?: string
+}>`
   background: ${({ background }) => background || 'transparent'};
   overflow-x: visible;
   position: relative;
@@ -60,7 +77,19 @@ const ColContainer = s.div`
     margin && `margin-left: ${margin}; margin-right: ${margin};`}
 `
 
-export const Col = ({ margin, children, background, flex, ...other }) => (
+interface Props {
+  background?: string
+  margin?: string
+  flex?: boolean
+}
+
+export const Col = ({
+  margin,
+  children,
+  background,
+  flex,
+  ...other
+}: React.PropsWithChildren<Props & ColWrapperProps>): ReactElement => (
   <ColWrapper flex={flex} {...other}>
     <ColContainer flex={flex} margin={margin} background={background}>
       {children}

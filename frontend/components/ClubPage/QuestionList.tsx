@@ -4,6 +4,7 @@ import s from 'styled-components'
 
 import { Club, QuestionAnswer } from '../../types'
 import { doApiRequest } from '../../utils'
+import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../utils/branding'
 import Form from '../Form'
 
 const Question = s.div`
@@ -83,9 +84,9 @@ const QuestionList = ({
           <b>Your question has been submitted!</b>
           <p>
             It will be posted publically once it has been approved and answered
-            by club members.
+            by {OBJECT_NAME_SINGULAR} members.
           </p>
-          <p className="mb-3">Thank you for contributing to Penn Clubs!</p>
+          <p className="mb-3">Thank you for contributing to {SITE_NAME}!</p>
           <button
             className="button is-link is-small"
             onClick={(e) => {

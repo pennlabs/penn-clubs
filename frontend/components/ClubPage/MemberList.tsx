@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { ReactElement, useState } from 'react'
 import s from 'styled-components'
 
 import { DARK_GRAY } from '../../constants/colors'
 import { M1 } from '../../constants/measurements'
+import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../utils/branding'
 import { Center, Col, EmptyState, Icon, Row, Text } from '../common'
 import MemberCard from './MemberCard'
 
@@ -11,7 +12,7 @@ const Toggle = s.div`
   cursor: pointer;
 `
 
-const MemberList = ({ club: { members } }) => {
+const MemberList = ({ club: { members } }): ReactElement => {
   const [expanded, setExpanded] = useState(false)
   const hasMembers = members.length > 0
   return hasMembers ? (
@@ -68,9 +69,10 @@ const MemberList = ({ club: { members } }) => {
         style={{ marginTop: 0, marginBottom: 0 }}
       />
       <Text>
-        No club members have linked their accounts on Penn Clubs yet.
+        No {OBJECT_NAME_SINGULAR} members have linked their accounts on{' '}
+        {SITE_NAME} yet.
         <br />
-        Check back later for a list of club members!
+        Check back later for a list of {OBJECT_NAME_SINGULAR} members!
       </Text>
     </Center>
   )

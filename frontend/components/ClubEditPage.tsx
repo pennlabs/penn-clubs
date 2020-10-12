@@ -31,6 +31,8 @@ import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
   OBJECT_NAME_TITLE_SINGULAR,
+  OBJECT_TAB_MEMBERSHIP_LABEL,
+  OBJECT_TAB_RECRUITMENT_LABEL,
   SITE_NAME,
 } from '../utils/branding'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
@@ -252,7 +254,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
         },
         {
           name: 'member',
-          label: 'Membership',
+          label: OBJECT_TAB_MEMBERSHIP_LABEL,
           content: (
             <>
               <InviteCard club={club} />
@@ -287,7 +289,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
         },
         {
           name: 'recruitment',
-          label: 'Recruitment',
+          label: OBJECT_TAB_RECRUITMENT_LABEL,
           content: (
             <>
               <QRCodeCard club={club} />

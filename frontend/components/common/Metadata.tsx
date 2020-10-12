@@ -2,8 +2,10 @@ import Head from 'next/head'
 import { ReactElement } from 'react'
 
 import {
+  DOMAIN,
   OBJECT_NAME_LONG_PLURAL,
   OBJECT_NAME_PLURAL,
+  SCHOOL_NAME,
   SITE_NAME,
 } from '../../utils/branding'
 
@@ -28,8 +30,8 @@ const keywords = [
   'school',
 ].join(', ')
 const author = 'Penn Labs <contact@pennlabs.org>'
-const description = `${SITE_NAME} is your central source of information about ${OBJECT_NAME_LONG_PLURAL} at the University of Pennsylvania. Keep discovering new ${OBJECT_NAME_PLURAL} throughout the year.`
-const url = 'https://pennclubs.com'
+const description = `${SITE_NAME} is your central source of information about ${OBJECT_NAME_LONG_PLURAL} at the ${SCHOOL_NAME}. Keep discovering new ${OBJECT_NAME_PLURAL} throughout the year.`
+const url = `https://${DOMAIN}`
 const image =
   'https://pennlabs-assets.s3.amazonaws.com/metadata-images/penn-clubs.png'
 const imageAlt = `${SITE_NAME} logo`
