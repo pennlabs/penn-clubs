@@ -172,6 +172,7 @@ class Club(models.Model):
         choices=APPLICATION_CHOICES, default=APPLICATION_REQUIRED_ALL
     )
     accepting_members = models.BooleanField(default=False)
+    enables_subscription = models.BooleanField(default=True)
     listserv = models.CharField(blank=True, max_length=255)
     image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
     image_small = models.ImageField(upload_to=get_club_small_file_name, null=True, blank=True)

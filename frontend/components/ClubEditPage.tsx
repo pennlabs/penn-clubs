@@ -28,6 +28,7 @@ import {
 import { doApiRequest, formatResponse } from '../utils'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
+import EnableSubscription from './ClubEditPage/EnableSubscription'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import QuestionsCard from './ClubEditPage/QuestionsCard'
 import RenewCard from './ClubEditPage/RenewCard'
@@ -283,7 +284,14 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           content: (
             <>
               <QRCodeCard club={club} />
-              <PotentialMemberCard club={club} source="subscription" />
+              <EnableSubscription
+                notify={this.notify}
+                club={club}
+                onUpdate={this.componentDidMount.bind(this)}
+              />
+              {club.enables_subscription && (
+                <PotentialMemberCard club={club} source="subscription" />
+              )}
             </>
           ),
         },

@@ -37,6 +37,7 @@ hone your skills in time for recruiting season!""",
         "application_required": Club.APPLICATION_REQUIRED_SOME,
         "founded": "1984-01-01",
         "accepting_members": True,
+        "enables_subscription": True,
         "tags": [{"name": "Professional"}, {"name": "Athletics"}, {"name": "Undergraduate"}],
         "badges": [
             {"label": "Red Badge", "color": "ff0000"},

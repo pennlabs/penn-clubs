@@ -722,6 +722,7 @@ class ClubListSerializer(serializers.ModelSerializer):
         model = Club
         fields = [
             "accepting_members",
+            "enables_subscription",
             "active",
             "application_required",
             "approved",

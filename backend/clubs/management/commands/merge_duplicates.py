@@ -150,6 +150,9 @@ def merge_clubs(one, two):
     # If either one is accepting members, the final one is as well
     primary.accepting_members = primary.accepting_members or secondary.accepting_members
 
+    # If either one enables subscription, the final one does as well
+    primary.enables_subscription = primary.enables_subscription or secondary.enables_subscription
+
     # Choose most restrictive application_required
     primary.application_required = max(primary.application_required, secondary.application_required)
 

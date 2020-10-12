@@ -76,7 +76,7 @@ const Details = ({ club }: DetailsProps): ReactElement => {
         {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
       </div>
       <BookmarkIcon club={club} padding="0" />
-      <SubscribeIcon club={club} padding="0" />
+      {club.enables_subscription && <SubscribeIcon club={club} padding="0" />}
     </Wrapper>
   )
 }

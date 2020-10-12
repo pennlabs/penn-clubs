@@ -153,6 +153,7 @@ class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
         "size",
         "application_required",
         "accepting_members",
+        "enables_subscription",
         "active",
         "approved",
         "fair",
