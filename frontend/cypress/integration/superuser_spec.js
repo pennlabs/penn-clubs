@@ -35,6 +35,7 @@ describe('Permissioned user tests', () => {
     cy.contains('Penn Pre-Professional Juggling Organization - Edited')
 
     cy.contains('button:visible', 'Manage Club').click({ force: true })
+    cy.url({ timeout: 15000 }).should('contain', 'edit')
     cy.contains('.field', 'Name')
       .find('input')
       .clear()
