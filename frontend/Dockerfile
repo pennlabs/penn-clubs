@@ -17,6 +17,9 @@ COPY . /app/
 # Disable telemetry back to zeit
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Set branding
+ARG NEXT_PUBLIC_SITE_NAME=clubs
+
 # Build project
 RUN yarn build
 
