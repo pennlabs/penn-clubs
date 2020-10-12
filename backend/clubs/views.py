@@ -38,6 +38,7 @@ from social_django.utils import load_strategy
 from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
+    Advisor,
     Asset,
     Badge,
     Club,
@@ -71,6 +72,7 @@ from clubs.permissions import (
     ReadOnly,
 )
 from clubs.serializers import (
+    AdvisorSerializer,
     AssetSerializer,
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
@@ -901,6 +903,36 @@ class YearViewSet(viewsets.ModelViewSet):
     serializer_class = YearSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     queryset = Year.objects.all()
+
+
+class AdvisorViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of advisors for this club.
+
+    create:
+    Add an advisor to this club.
+
+    put:
+    Update an advisor for this club. All fields are required.
+
+    patch:
+    Update an advisor for this club. Only specified fields are updated.
+
+    retrieve:
+    Return a single advisor.
+
+    destroy:
+    Delete an advisor.
+    """
+
+    serializer_class = AdvisorSerializer
+    permission_classes = [ClubItemPermission | IsSuperuser]
+    lookup_field = "id"
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    def get_queryset(self):
+        return Advisor.objects.filter(club__code=self.kwargs.get("club_code")).order_by("name")
 
 
 class EventViewSet(viewsets.ModelViewSet):

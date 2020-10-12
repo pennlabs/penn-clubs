@@ -3,6 +3,7 @@ import s from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
 import { M2, M3, mediaMinWidth, PHONE } from '../../constants/measurements'
+import { Membership } from '../../types'
 import { Card, ProfilePic } from '../common'
 
 const StyledCard = s(Card)`
@@ -35,7 +36,11 @@ const MemberInfo = s.div`
   }
 `
 
-const MemberCard = ({ account }): ReactElement => {
+type Props = {
+  account: Membership
+}
+
+const MemberCard = ({ account }: Props): ReactElement => {
   const { email, name, title } = account
   return (
     <StyledCard bordered>
@@ -52,7 +57,7 @@ const MemberCard = ({ account }): ReactElement => {
               <a href={`mailto:${email}`}>{email}</a>
             </span>
           ) : (
-            'No Email'
+            'Hidden Email'
           )}
         </Label>
       </MemberInfo>

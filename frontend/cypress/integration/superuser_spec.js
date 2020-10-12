@@ -22,6 +22,7 @@ describe('Permissioned user tests', () => {
 
     cy.contains('button:visible', 'Manage Club').click({ force: true })
 
+    // wait additional time for manage club page to compile
     cy.url({ timeout: 60000 }).should('contain', 'edit')
     cy.contains('.field', 'Name')
       .should('be.visible')

@@ -1,5 +1,7 @@
 import { ReactElement } from 'react'
 
+import { CONTACT_EMAIL } from '../../utils/branding'
+
 type ContactProps = {
   email?: string
   point?: 'pennclubs' | 'osa' | 'sac'
@@ -9,7 +11,7 @@ export function Contact({
   email,
   point = 'pennclubs',
 }: ContactProps): ReactElement {
-  let finalEmail = email || 'contact@pennclubs.com'
+  let finalEmail = email || CONTACT_EMAIL
 
   if (point === 'osa') {
     finalEmail = 'rodneyr@upenn.edu'
