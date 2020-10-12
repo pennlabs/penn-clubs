@@ -39,8 +39,10 @@ export default function EnableSubscription({
   return (
     <BaseCard title="Enable Subscription List">
       <Text>
-        This allows you to choose whether you want a subscription list for your
-        club or not
+        This feature allows you to enable or disable the subscription list. When
+        disabled, students will not be able to subscribe to your club, and you
+        cannot view the subscription list. Existing subscriptions, however, will
+        be saved and can be retrieved when the feature is enabled again.
       </Text>
       <div style={{ display: 'flex', flexDirection: 'row', width: '100' }}>
         <span>Enable Subscription List</span>
