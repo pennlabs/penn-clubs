@@ -6,6 +6,7 @@ import {
   OBJECT_NAME_LONG_PLURAL,
   OBJECT_NAME_PLURAL,
   SCHOOL_NAME,
+  SITE_FAVICON,
   SITE_NAME,
 } from '../../utils/branding'
 
@@ -78,7 +79,7 @@ export const Metadata = ({
     <meta property="twitter:image:alt" content={imageAlt} />
     <meta property="twitter:card" content={twitterCardType} />
 
-    <link rel="shortcut icon" href="/static/favicon.ico" />
+    <link rel="shortcut icon" href={SITE_FAVICON} />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.0/css/bulma.min.css"

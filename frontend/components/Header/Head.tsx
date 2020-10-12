@@ -2,6 +2,7 @@ import Head from 'next/head'
 import { ReactElement, useEffect } from 'react'
 
 import { initGA, logPageView } from '../../utils/analytics'
+import { SITE_FAVICON } from '../../utils/branding'
 
 declare global {
   interface Window {
@@ -25,7 +26,7 @@ const Heading = (): ReactElement => {
       <meta name="theme-color" content="#ffffff" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-      <link rel="shortcut icon" href="/static/favicon.ico" />
+      <link rel="shortcut icon" href={SITE_FAVICON} />
       <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.0/css/bulma.min.css"
