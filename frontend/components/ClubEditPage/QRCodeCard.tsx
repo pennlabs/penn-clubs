@@ -5,6 +5,7 @@ import s from 'styled-components'
 import { CLUB_FLYER_ROUTE } from '../../constants/routes'
 import { Club } from '../../types'
 import { getApiUrl } from '../../utils'
+import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Icon, Text } from '../common'
 import BaseCard from './BaseCard'
 
@@ -23,8 +24,8 @@ export default function QRCodeCard({ club }: QRCodeCardProps): ReactElement {
   return (
     <BaseCard title="QR Code">
       <Text>
-        When scanned, gives mobile-friendly access to your club page and
-        bookmark/subscribe actions.
+        When scanned, gives mobile-friendly access to your{' '}
+        {OBJECT_NAME_SINGULAR} page and bookmark/subscribe actions.
       </Text>
       <QRCode src={getApiUrl(`/clubs/${club.code}/qr`)} alt="qr code" />
       <div className="buttons">

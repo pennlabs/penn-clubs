@@ -12,6 +12,10 @@ module.exports = {
         source: '/sacfairguide',
         destination: '/guides/fair',
       },
+      {
+        source: '/org/:slug*',
+        destination: '/club/:slug*',
+      },
     ]
   },
 }

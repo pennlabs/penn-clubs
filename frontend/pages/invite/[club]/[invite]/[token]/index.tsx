@@ -44,7 +44,7 @@ const Invite = ({ club, query }: InviteProps): ReactElement => {
       },
     }).then((resp) => {
       if (resp.ok) {
-        router.push('/club/[club]', `/club/${query.club}`)
+        router.push(CLUB_ROUTE(), CLUB_ROUTE(query.club))
       } else {
         resp.json().then((data) => {
           setInviter(null)

@@ -39,6 +39,7 @@ import { doApiRequest } from '../../../utils'
 import { logEvent } from '../../../utils/analytics'
 import {
   APPROVAL_AUTHORITY,
+  FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_SINGULAR,
   SITE_NAME,
 } from '../../../utils/branding'
@@ -227,7 +228,7 @@ const ClubPage = ({
           </StyledCard>
           {involvement && (
             <StyledCard bordered>
-              <StrongText>How To Get Involved</StrongText>
+              <StrongText>{FIELD_PARTICIPATION_LABEL}</StrongText>
               <Text style={{ marginBottom: M0, wordBreak: 'break-word' }}>
                 <Linkify>{involvement}</Linkify>
               </Text>

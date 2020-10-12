@@ -365,7 +365,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
                 className="button is-pulled-right is-secondary is-medium"
                 style={{ fontWeight: 'normal' }}
               >
-                {isViewButton ? 'View Club' : 'Back'}
+                {isViewButton ? `View ${OBJECT_NAME_TITLE_SINGULAR}` : 'Back'}
               </a>
             </Link>
           }

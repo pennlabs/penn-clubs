@@ -5,6 +5,7 @@ import s from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
 import { Icon, Loading, Title, WideContainer } from '../../../components/common'
+import { CLUB_ORG_ROUTE, CLUB_ROUTE } from '../../../constants'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
 
@@ -53,13 +54,13 @@ const OrgChild = ({ name, code, children, isParent, detail }) => {
           </>
         )}
         {!isParent ? (
-          <Link href="/club/[club]/org" as={`/club/${code}/org`}>
+          <Link href={CLUB_ORG_ROUTE()} as={CLUB_ORG_ROUTE(code)}>
             <a>{name}</a>
           </Link>
         ) : (
           name
         )}
-        <Link href="/club/[club]" as={`/club/${code}`}>
+        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
           <a target="_blank" className="is-pulled-right">
             <Icon name="external-link" alt="view" />
           </a>
@@ -94,7 +95,7 @@ const Organization = ({ query, club }) => {
       <WideContainer>
         <div className="is-clearfix">
           <Title className="is-pulled-left">{club.name}</Title>
-          <Link href="/club/[club]" as={`/club/${club.code}`}>
+          <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
             <a className="button is-pulled-right is-secondary is-medium">
               Back
             </a>

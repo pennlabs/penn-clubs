@@ -13,10 +13,10 @@ export default function MemberExperiencesCard({
   club,
 }: MemberExperiencesCardProps): ReactElement {
   return (
-    <BaseCard title="Member Experiences">
+    <BaseCard title="Student Experiences">
       <Text>
-        Provide more information on what being in your organization is like from
-        a member's point of view.
+        Provide more information on what participating in your organization is
+        like from a student's point of view.
       </Text>
       <ModelForm
         baseUrl={`/clubs/${club.code}/testimonials/`}

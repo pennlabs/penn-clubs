@@ -66,7 +66,7 @@ const Testimonials = (props: TestimonialsProps): ReactElement | null => {
 
   return (
     <div className="is-clearfix">
-      <StrongText>Member Experiences</StrongText>
+      <StrongText>Student Experiences</StrongText>
       {expanded ? (
         data.map(({ text }, i) => (
           <Wrapper key={i}>

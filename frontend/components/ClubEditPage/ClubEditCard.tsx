@@ -13,6 +13,7 @@ import {
 import { doApiRequest, formatResponse } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
+  FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   SITE_NAME,
@@ -283,6 +284,7 @@ export default function ClubEditCard({
         },
         {
           name: 'how_to_get_involved',
+          label: FIELD_PARTICIPATION_LABEL,
           type: 'textarea',
         },
         {

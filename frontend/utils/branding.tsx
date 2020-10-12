@@ -17,6 +17,10 @@ const sites = {
     SITE_TAGLINE: 'Find your people!',
 
     APPROVAL_AUTHORITY: 'Office of Student Affairs',
+
+    FIELD_PARTICIPATION_LABEL: 'How to Get Involved',
+
+    OBJECT_URL_SLUG: 'club',
   },
   fyh: {
     SITE_NAME: 'First Year Hub',
@@ -34,6 +38,10 @@ const sites = {
     SITE_TAGLINE: 'Find your activities!',
 
     APPROVAL_AUTHORITY: 'Office of Student Affairs',
+
+    FIELD_PARTICIPATION_LABEL: 'Services Offered',
+
+    OBJECT_URL_SLUG: 'org',
   },
 }
 
@@ -53,3 +61,6 @@ export const OBJECT_NAME_TITLE_SINGULAR = sites[site].OBJECT_NAME_TITLE_SINGULAR
 export const APPROVAL_AUTHORITY = sites[site].APPROVAL_AUTHORITY
 
 export const SITE_LOGO = sites[site].SITE_LOGO
+
+export const FIELD_PARTICIPATION_LABEL = sites[site].FIELD_PARTICIPATION_LABEL
+export const OBJECT_URL_SLUG = sites[site].OBJECT_URL_SLUG

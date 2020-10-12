@@ -13,6 +13,12 @@ import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
 import { Club, MembershipRank, UserInfo } from '../../types'
 import { doApiRequest } from '../../utils'
+import {
+  FIELD_PARTICIPATION_LABEL,
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
+  SITE_NAME,
+} from '../../utils/branding'
 import { logException, logMessage } from '../../utils/sentry'
 import { BookmarkIcon, Contact, Modal, SubscribeIcon } from '../common'
 import { AuthCheckContext } from '../contexts'
@@ -151,7 +157,7 @@ const Actions = ({
           {canEdit && (
             <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
               <ActionButton className="button is-success">
-                Manage Club
+                Manage {OBJECT_NAME_TITLE_SINGULAR}
               </ActionButton>
             </Link>
           )}
@@ -182,33 +188,34 @@ const Actions = ({
         <ModalContent>
           <h1>Confirm Membership Request</h1>
           <p>
-            This feature is intended for existing club members to quickly add
-            themselves to Penn Clubs.
+            This feature is intended for existing ${OBJECT_NAME_SINGULAR}{' '}
+            members to quickly add themselves to ${SITE_NAME}.
           </p>
           <p>
-            If you are not a member, you can read the "how to get involved"
-            section for more details!
+            If you are not a member, you can read the "$
+            {FIELD_PARTICIPATION_LABEL}" section for more details!
           </p>
           <Quote>
             <Linkify>
               {club.how_to_get_involved ||
-                'There is currently no information about how to get involved with this club.'}
+                `There is currently no information about how to participate in this ${OBJECT_NAME_SINGULAR}.`}
             </Linkify>
           </Quote>
           <p>
-            If you are an existing member of this club, use the button below to
-            confirm your membership request.
+            If you are an existing member of this ${OBJECT_NAME_SINGULAR}, use
+            the button below to confirm your membership request.
           </p>
           <p className="has-text-danger">
-            If you are not an existing member of this club, please <b>do not</b>{' '}
-            press the button below. This <b>is not</b> the application process
-            for {club.name}.
+            If you are not an existing member of this ${OBJECT_NAME_SINGULAR},
+            please <b>do not</b> press the button below. This <b>is not</b> the
+            application process for {club.name}.
           </p>
           {isSubmitted === true ? (
             <p className="has-text-success">
               <b>Success!</b> Your membership request has been submitted. An
-              email has been sent to club officers asking them to confirm your
-              membership. Click anywhere outside this popup to close it.
+              email has been sent to ${OBJECT_NAME_SINGULAR} officers asking
+              them to confirm your membership. Click anywhere outside this popup
+              to close it.
             </p>
           ) : isSubmitted === false ? (
             <p className="has-text-danger">

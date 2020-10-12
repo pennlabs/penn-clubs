@@ -13,6 +13,7 @@ import {
 import { GREEN, SNOW } from '../constants/colors'
 import renderPage from '../renderPage'
 import {
+  FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
@@ -243,17 +244,17 @@ const Rank = (): ReactElement => (
           points: [[10, 'At least one testimonial']],
         },
         {
-          name: 'How to Get Involved',
-          description: `Prospective members want to know how to join your ${OBJECT_NAME_SINGULAR}. Omitting this section will result in a large ordering penalty.`,
-          points: [[-30, 'Empty how to get involved section']],
+          name: FIELD_PARTICIPATION_LABEL,
+          description: `Prospective members want to know how to participate in your ${OBJECT_NAME_SINGULAR}. Omitting this section will result in a large ordering penalty.`,
+          points: [[-30, `Empty ${FIELD_PARTICIPATION_LABEL} section`]],
         },
         {
-          name: 'Is Club Updated',
+          name: `Is ${OBJECT_NAME_TITLE_SINGULAR} Updated`,
           description: `${OBJECT_NAME_TITLE} that have not been updated in the last 8 months will receive a small ordering penalty.`,
           points: [[-10, 'No updates for 8 months']],
         },
         {
-          name: 'Is Club Active',
+          name: `Is ${OBJECT_NAME_TITLE_SINGULAR} Active`,
           description: (
             <>
               ${OBJECT_NAME_TITLE} that are marked as inactive will be shifted
@@ -266,7 +267,7 @@ const Rank = (): ReactElement => (
         },
         {
           name: 'Random Factor',
-          description: `A random factor is applied periodically in order to ensure that students see new ${OBJECT_NAME_PLURAL} when they visit the site.`,
+          description: `A random factor is applied periodically in order to ensure that students see new ${OBJECT_NAME_PLURAL} when they visit ${SITE_NAME}.`,
           points: [
             [10, 'Random number between 0 and this number, updated daily'],
           ],

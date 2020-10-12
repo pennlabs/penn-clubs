@@ -11,7 +11,7 @@ import {
 import { CLUBS_NAVY } from '../../../constants/colors'
 import { Club } from '../../../types'
 import { doApiRequest, getApiUrl } from '../../../utils'
-import { DOMAIN } from '../../../utils/branding'
+import { DOMAIN, OBJECT_URL_SLUG } from '../../../utils/branding'
 
 const Image = s.img`
   padding: 0;
@@ -267,7 +267,8 @@ const Flyer = ({ query }): ReactElement => {
                           <b>Or visit:</b>
                           <br />
                           <i>
-                            https://{DOMAIN}/club/{club.code}/fair/
+                            https://{DOMAIN}/${OBJECT_URL_SLUG}/{club.code}
+                            /fair/
                           </i>
                         </Text>
                       </Center>

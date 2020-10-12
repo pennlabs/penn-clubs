@@ -1,13 +1,21 @@
+import { OBJECT_URL_SLUG } from '../utils/branding'
+
 export const HOME_ROUTE = '/'
 // Links require both the route with route parameters and the route itself Ex: /club/penn-labs and /club/[club]
 export const CLUB_ROUTE = (slug?: string): string =>
-  slug ? `/club/${slug}` : '/club/[club]'
+  slug ? `/${OBJECT_URL_SLUG}/${slug}` : `/${OBJECT_URL_SLUG}/[club]`
 export const CLUB_EDIT_ROUTE = (slug?: string): string =>
-  slug ? `/club/${slug}/edit` : '/club/[club]/edit'
+  slug ? `/${OBJECT_URL_SLUG}/${slug}/edit` : `/${OBJECT_URL_SLUG}/[club]/edit`
 export const CLUB_FLYER_ROUTE = (slug?: string): string =>
-  slug ? `/club/${slug}/flyer` : '/club/[club]/flyer'
+  slug
+    ? `/${OBJECT_URL_SLUG}/${slug}/flyer`
+    : `/${OBJECT_URL_SLUG}/[club]/flyer`
 export const CLUB_RENEW_ROUTE = (slug?: string): string =>
-  slug ? `/club/${slug}/renew` : '/club/[club]/renew'
+  slug
+    ? `/${OBJECT_URL_SLUG}/${slug}/renew`
+    : `/${OBJECT_URL_SLUG}/[club]/renew`
+export const CLUB_ORG_ROUTE = (slug?: string): string =>
+  slug ? `/${OBJECT_URL_SLUG}/${slug}/org` : `/${OBJECT_URL_SLUG}/[club]/org`
 export const SETTINGS_ROUTE = '/settings'
 export const USER_RENEWAL = '/renew'
 export const CREATE_ROUTE = '/create'
