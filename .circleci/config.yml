@@ -47,7 +47,7 @@ workflows:
           requires:
             - django-tools/check
           path: backend
-          cache_from: "pennlabs/first-year-hub:latest"
+          cache_from: "pennlabs/first-year-hub-backend:latest"
           image: "pennlabs/first-year-hub-backend"
           tag: "${CIRCLE_SHA1},latest"
           context: docker-publish
