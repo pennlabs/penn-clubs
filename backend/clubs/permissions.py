@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from clubs.models import Membership, Club
+from clubs.models import Club, Membership
 
 
 def codes_extract_helper(obj, key):
@@ -21,6 +21,7 @@ def codes_extract_helper(obj, key):
             for item in obj:
                 extract(item, arr, key)
         return arr
+
     values = extract(obj, arr, key)
     return values
 
@@ -31,9 +32,13 @@ def find_membership_helper(user, obj):
     with the most authority
     """
     from clubs.views import find_relationship_helper
-    related_codes = codes_extract_helper(find_relationship_helper("parent_orgs", obj, {obj.code}), 'code')
-    membership_instances = \
-        Membership.objects.filter(person=user, club__code__in=related_codes).order_by('role')
+
+    related_codes = codes_extract_helper(
+        find_relationship_helper("parent_orgs", obj, {obj.code}), "code"
+    )
+    membership_instances = Membership.objects.filter(
+        person=user, club__code__in=related_codes
+    ).order_by("role")
     if not membership_instances:
         return None
     else:
