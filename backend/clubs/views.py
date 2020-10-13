@@ -444,7 +444,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         .order_by("-favorite_count", "name")
     )
     permission_classes = [ClubPermission | IsSuperuser]
-
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
     search_fields = ["name", "subtitle", "code"]
     ordering_fields = ["favorite_count", "name"]

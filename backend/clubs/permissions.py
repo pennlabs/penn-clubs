@@ -1,6 +1,35 @@
 from rest_framework import permissions
 
-from clubs.models import Membership
+from clubs.models import Membership, Club
+
+
+def codes_extract_helper(obj, key):
+    arr = []
+
+    def extract(obj, arr, key):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if isinstance(v, (dict, list)):
+                    extract(v, arr, key)
+                elif k == key:
+                    arr.append(v)
+        elif isinstance(obj, list):
+            for item in obj:
+                extract(item, arr, key)
+        return arr
+    values = extract(obj, arr, key)
+    return values
+
+
+def find_membership_helper(user, obj):
+    from clubs.views import find_relationship_helper
+    related_codes = codes_extract_helper(find_relationship_helper("parent_orgs", obj, {obj.code}), 'code')
+    membership_instances = \
+        Membership.objects.filter(person=user, club__code__in=related_codes).order_by('role')
+    if not membership_instances:
+        return None
+    else:
+        return membership_instances[0]
 
 
 class ReadOnly(permissions.BasePermission):
@@ -39,11 +68,10 @@ class ClubPermission(permissions.BasePermission):
         ):
             return True
 
-        # user must be in club to perform non-view actions
-        membership = Membership.objects.filter(person=request.user, club=obj).first()
+        # user must be in club or parent club to perform non-view actions
+        membership = find_membership_helper(request.user, obj)
         if membership is None:
             return False
-
         # user has to be an owner to delete a club, an officer to edit it
         if view.action in ["destroy"]:
             return membership.role <= Membership.ROLE_OWNER
@@ -78,9 +106,8 @@ class EventPermission(permissions.BasePermission):
                 return False
             if not request.user.is_authenticated:
                 return False
-            membership = Membership.objects.filter(
-                person=request.user, club__code=view.kwargs["club_code"]
-            ).first()
+            obj = Club.objects.get(code=view.kwargs["club_code"])
+            membership = find_membership_helper(request.user, obj)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
             return True
@@ -119,9 +146,8 @@ class ClubItemPermission(permissions.BasePermission):
                 return False
             if not request.user.is_authenticated:
                 return False
-            membership = Membership.objects.filter(
-                person=request.user, club__code=view.kwargs["club_code"]
-            ).first()
+            obj = Club.objects.get(code=view.kwargs["club_code"])
+            membership = find_membership_helper(request.user, obj)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
             return True
@@ -149,9 +175,8 @@ class MemberPermission(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        membership = Membership.objects.filter(
-            person=request.user, club__code=view.kwargs["club_code"]
-        ).first()
+        object = Club.objects.get(code=view.kwargs["club_code"])
+        membership = find_membership_helper(request.user, object)
         if membership is None:
             return False
 
@@ -181,9 +206,8 @@ class MemberPermission(permissions.BasePermission):
                 return False
             if "club_code" not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(
-                person=request.user, club__code=view.kwargs["club_code"]
-            ).first()
+            obj = Club.objects.get(code=view.kwargs["club_code"])
+            membership = find_membership_helper(request.user, obj)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         else:
             return True
@@ -201,9 +225,8 @@ class MembershipRequestPermission(permissions.BasePermission):
         if "club_code" not in view.kwargs:
             return False
 
-        membership = Membership.objects.filter(
-            person=request.user, club__code=view.kwargs["club_code"]
-        ).first()
+        obj = Club.objects.get(code=view.kwargs["club_code"])
+        membership = find_membership_helper(request.user, obj)
         return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
 
@@ -221,9 +244,8 @@ class InvitePermission(permissions.BasePermission):
                 return False
             if "club_code" not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(
-                person=request.user, club__code=view.kwargs["club_code"]
-            ).first()
+            obj = Club.objects.get(code=view.kwargs["club_code"])
+            membership = find_membership_helper(request.user, obj)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
 
@@ -241,9 +263,8 @@ class AssetPermission(permissions.BasePermission):
                 return False
             if "club_code" not in view.kwargs:
                 return False
-            membership = Membership.objects.filter(
-                person=request.user, club__code=view.kwargs["club_code"]
-            ).first()
+            obj = Club.objects.get(code=view.kwargs["club_code"])
+            membership = find_membership_helper(request.user, obj)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
 
@@ -263,9 +284,8 @@ class QuestionAnswerPermission(permissions.BasePermission):
                 return True
 
             # otherwise, allow club officers to edit and delete comments
-            membership = Membership.objects.filter(
-                person=request.user, club__code=view.kwargs["club_code"]
-            ).first()
+            object = Club.objects.get(code=view.kwargs["club_code"])
+            membership = find_membership_helper(request.user, object)
 
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
@@ -310,9 +330,8 @@ class NotePermission(permissions.BasePermission):
             if creating_club_permission is None:
                 return False
 
-            membership = Membership.objects.filter(
-                person=request.user, club__code=view.kwargs["club_code"]
-            ).first()
+            obj = Club.objects.get(code=view.kwargs["club_code"])
+            membership = find_membership_helper(request.user, obj)
 
             if membership is None or membership.role > creating_club_permission:
                 return False
