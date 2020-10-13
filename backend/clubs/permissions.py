@@ -36,13 +36,13 @@ def find_membership_helper(user, obj):
     related_codes = codes_extract_helper(
         find_relationship_helper("parent_orgs", obj, {obj.code}), "code"
     )
-    membership_instances = Membership.objects.filter(
-        person=user, club__code__in=related_codes
-    ).order_by("role")
-    if not membership_instances:
-        return None
-    else:
-        return membership_instances[0]
+    membership_instance = (
+        Membership.objects.filter(person=user, club__code__in=related_codes)
+        .order_by("role")
+        .first()
+    )
+
+    return membership_instance
 
 
 class ReadOnly(permissions.BasePermission):
@@ -297,8 +297,7 @@ class QuestionAnswerPermission(permissions.BasePermission):
                 return True
 
             # otherwise, allow club officers to edit and delete comments
-            object = Club.objects.get(code=view.kwargs["club_code"])
-            membership = find_membership_helper(request.user, object)
+            membership = find_membership_helper(request.user, obj.club)
 
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
