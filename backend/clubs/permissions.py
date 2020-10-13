@@ -4,6 +4,10 @@ from clubs.models import Membership, Club
 
 
 def codes_extract_helper(obj, key):
+    """
+    Traverses parent tree and returns
+    flattened list of parent club codes
+    """
     arr = []
 
     def extract(obj, arr, key):
@@ -22,6 +26,10 @@ def codes_extract_helper(obj, key):
 
 
 def find_membership_helper(user, obj):
+    """
+    Finds the membership instance in the family tree of a club
+    with the most authority
+    """
     from clubs.views import find_relationship_helper
     related_codes = codes_extract_helper(find_relationship_helper("parent_orgs", obj, {obj.code}), 'code')
     membership_instances = \
