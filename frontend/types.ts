@@ -134,6 +134,7 @@ export interface Club {
   linkedin: string
   listserv: string
   members: [Membership]
+  membership_count: number
   name: string
   size: ClubSize
   subtitle: string
