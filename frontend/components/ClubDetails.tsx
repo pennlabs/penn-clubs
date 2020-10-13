@@ -33,6 +33,7 @@ type DetailsProps = {
 const Details = ({ club }: DetailsProps): ReactElement => {
   const {
     size,
+    membership_count: membershipCount,
     application_required: applicationRequired,
     accepting_members: acceptingMembers,
   } = club
@@ -43,7 +44,9 @@ const Details = ({ club }: DetailsProps): ReactElement => {
         style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8, flex: 1 }}
       >
         <Icon name="user" alt="members" size="0.8rem" style={iconStyles} />
-        {getSizeDisplay(size, false)}
+        {membershipCount > 0
+          ? `${membershipCount}`
+          : getSizeDisplay(size, false)}
         &nbsp;
         {' • '}
         &nbsp;
