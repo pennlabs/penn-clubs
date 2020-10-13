@@ -142,7 +142,7 @@ const Rank = (): ReactElement => (
         },
         {
           name: 'Membership',
-          description: `Having your ${OBJECT_NAME_SINGULAR} members displayed on Penn Clubs provides more points of contact for questions about your ${OBJECT_NAME_SINGULAR}.`,
+          description: `Having your ${OBJECT_NAME_SINGULAR} members displayed on ${SITE_NAME} provides more points of contact for questions about your ${OBJECT_NAME_SINGULAR}.`,
           points: [
             [15, 'At least 3 active officers'],
             [10, 'At least 3 active members'],

@@ -25,6 +25,7 @@ import {
 import renderPage from '../../renderPage'
 import { Report } from '../../types'
 import { API_BASE_URL, apiCheckPermission, doApiRequest } from '../../utils'
+import { OBJECT_NAME_TITLE_SINGULAR, SITE_NAME } from '../../utils/branding'
 import Edit from './edit'
 
 const GroupLabel = s.h4`
@@ -203,10 +204,10 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
   if (authenticated === false || permission === false) {
     return (
       <AuthPrompt title="Oh no!" hasLogin={!authenticated}>
-        <Metadata title="Club Reports" />
+        <Metadata title={`${OBJECT_NAME_TITLE_SINGULAR} Reports`} />
         <div className="mb-3">
           You do not have permission to view this page.
-          {!authenticated && <> Logging in to Penn Clubs might help.</>}
+          {!authenticated && <> Logging in to {SITE_NAME} might help.</>}
         </div>
         <div className="mb-3">
           If you believe that you should have access to this page, please email{' '}
@@ -218,7 +219,7 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
 
   return (
     <>
-      <Metadata title="Club Reports" />
+      <Metadata title={`${OBJECT_NAME_TITLE_SINGULAR} Reports`} />
       {isEdit ? (
         <div>
           <ColoredHeader>
@@ -242,7 +243,7 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
               <span className="title is-2" style={{ color: 'white' }}>
                 Reports
               </span>
-              <TransparentTitle>OSA Dashboard</TransparentTitle>
+              <TransparentTitle>Admin Dashboard</TransparentTitle>
             </div>
             <TransparentButton onClick={() => setIsEdit(true)}>
               Create New Report <Icon name="plus" alt="plus" />

@@ -13,6 +13,15 @@ import { CLUB_ROUTE } from '../../../constants/routes'
 import renderPage from '../../../renderPage'
 import { Club, MembershipRank } from '../../../types'
 import { doApiRequest, useSetting } from '../../../utils'
+import {
+  APPROVAL_AUTHORITY,
+  APPROVAL_AUTHORITY_URL,
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
+  SCHOOL_NAME,
+  SITE_NAME,
+} from '../../../utils/branding'
 
 type RenewPageProps = {
   club: Club
@@ -162,8 +171,8 @@ const RenewPage = ({
     return (
       <AuthPrompt title="Oh no!" hasLogin={false}>
         <p>
-          The club you are looking for does not exist. If you believe this is an
-          error, contact <Contact />.
+          The {OBJECT_NAME_SINGULAR} you are looking for does not exist. If you
+          believe this is an error, contact <Contact />.
         </p>
       </AuthPrompt>
     )
@@ -175,13 +184,13 @@ const RenewPage = ({
         <ClubMetadata club={club} />
         <p>
           You do not have permission to initiate the renewal process for{' '}
-          {(club && club.name) || 'this club'}. To get access, contact{' '}
-          <Contact />.
+          {(club && club.name) || `this ${OBJECT_NAME_SINGULAR}`}. To get
+          access, contact <Contact />.
         </p>
         {club.is_member !== false && (
           <p>
-            You are a member of this club, but only officers and above can
-            perform this action.
+            You are a member of this {OBJECT_NAME_SINGULAR}, but only officers
+            and above can perform this action.
           </p>
         )}
       </AuthPrompt>
@@ -197,13 +206,16 @@ const RenewPage = ({
         <>
           {club.active && (
             <div className="notification is-primary">
-              You or another club officer has already completed this form and
-              started the renewal process for <b>{club.name}</b> for the {year}-
-              {year + 1} school year! You do not have to complete this form, and
-              completing it for a second time will not do anything.
+              You or another {OBJECT_NAME_SINGULAR} officer has already
+              completed this form and started the renewal process for{' '}
+              <b>{club.name}</b> for the {year}-{year + 1} school year! You do
+              not have to complete this form, and completing it for a second
+              time will not do anything.
               <div className="mt-3">
                 <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-                  <a className="button is-primary is-light">Back to Club</a>
+                  <a className="button is-primary is-light">
+                    Back to {OBJECT_NAME_TITLE_SINGULAR}
+                  </a>
                 </Link>
               </div>
             </div>
@@ -211,49 +223,52 @@ const RenewPage = ({
           <TextInfoBox>
             <p>
               Every year, the{' '}
-              <a target="_blank" href="https://www.vpul.upenn.edu/osa/">
-                Office of Student Affairs (OSA)
+              <a target="_blank" href={APPROVAL_AUTHORITY_URL}>
+                {APPROVAL_AUTHORITY}
               </a>{' '}
               requires clubs to renew their approval status to ensure that the
-              Office of Student Affairs has the{' '}
-              <b>most up to date information</b> and that club members are{' '}
-              <b>aware of university policies</b>. This process must be
-              performed once a year by the current leadership of the club.
+              {APPROVAL_AUTHORITY} has the <b>most up to date information</b>{' '}
+              and that club members are <b>aware of university policies</b>.
+              This process must be performed once a year by the current
+              leadership of the club.
             </p>
             <p>
               You must fill out this approval form by <b>August 24, {year}</b>{' '}
-              in order to have your club shown during the New Student
-              Orientation. Late submissions will be accepted, but we cannot
-              guarantee that they will be processed in time for New Student
-              Orientation.
+              in order to have your {OBJECT_NAME_SINGULAR} shown during the New
+              Student Orientation. Late submissions will be accepted, but we
+              cannot guarantee that they will be processed in time for New
+              Student Orientation.
             </p>
             <p>
-              During this process, you will review your club information, update
-              your club constitution, and agree to the latest policies governing
-              student organizations at the University of Pennsylvania.
+              During this process, you will review your {OBJECT_NAME_SINGULAR}{' '}
+              information, update your {OBJECT_NAME_SINGULAR} constitution, and
+              agree to the latest policies governing student organizations at
+              the {SCHOOL_NAME}.
             </p>
             <p>
-              Starting from Fall 2020, all clubs will perform this process using
-              the Penn Clubs website. We hope to make the process as easy as
-              possible, and would love your feedback on how we're doing. If you
-              run into technical difficulties or have feedback on the renewal
-              process, please contact <Contact />.
+              Starting from Fall 2020, all {OBJECT_NAME_PLURAL} will perform
+              this process using the {SITE_NAME} website. We hope to make the
+              process as easy as possible, and would love your feedback on how
+              we're doing. If you run into technical difficulties or have
+              feedback on the renewal process, please contact <Contact />.
             </p>
             <p>
-              If you have any questions about the club renewal process, please
-              contact the Office of Student Affairs at <Contact point="osa" />.
+              If you have any questions about the {OBJECT_NAME_SINGULAR} renewal
+              process, please contact the {APPROVAL_AUTHORITY} at{' '}
+              <Contact point="osa" />.
             </p>
           </TextInfoBox>
         </>
       ),
     },
     {
-      name: 'Club Info',
+      name: `${OBJECT_NAME_TITLE_SINGULAR} Info`,
       content: () => (
         <>
           <TextInfoBox>
-            Please verify that your club information is up to date. If you need
-            to make any changes, change it in the form below and hit submit.
+            Please verify that your {OBJECT_NAME_SINGULAR} information is up to
+            date. If you need to make any changes, change it in the form below
+            and hit submit.
           </TextInfoBox>
           <ClubEditCard
             schools={schools}
@@ -287,8 +302,8 @@ const RenewPage = ({
         <>
           <TextInfoBox>
             <p>
-              As a student organization associated with the University of
-              Pennsylvania, you must agree to all of the policies listed below.
+              As a student organization associated with the {SCHOOL_NAME}, you
+              must agree to all of the policies listed below.
             </p>
           </TextInfoBox>
           <PolicyBox onChecked={() => setPoliciesAccepted(true)} />
@@ -308,7 +323,7 @@ const RenewPage = ({
               </a>{' '}
               hosts a Fall Activities Fair. This year, the SAC Fair will be held
               virtually during the first few days of school. In addition to Penn
-              Clubs, which now has an anonymous Q & A feature, clubs will be
+              Clubs, which now has an anonymous Q &amp; A feature, clubs will be
               designated one of three days to host a live Zoom session for a
               couple of hours. All submitted zoom links will be featured on Penn
               Clubs.
@@ -381,11 +396,15 @@ const RenewPage = ({
               <FinishedText>🎉 Congratulations! 🎉</FinishedText>
               <TextInfoBox>
                 <p>
-                  You've completed the club approval form for the {year} -{' '}
-                  {year + 1} school year! When your application is processed,
-                  all club officers will receive an email from Penn Clubs.
+                  You've completed the {OBJECT_NAME_SINGULAR} approval form for
+                  the {year} - {year + 1} school year! When your application is
+                  processed, all club officers will receive an email from{' '}
+                  {SITE_NAME}.
                 </p>
-                <p>Thank you for completing the club renewal process!</p>
+                <p>
+                  Thank you for completing the {OBJECT_NAME_SINGULAR} renewal
+                  process!
+                </p>
               </TextInfoBox>
             </>
           ) : (
@@ -393,9 +412,9 @@ const RenewPage = ({
               <FinishedText>Oh no!</FinishedText>
               <TextInfoBox>
                 <p>
-                  An error occured while submitting your club approval form.
-                  Please contact <Contact /> and we'll help you resolve your
-                  issue.
+                  An error occured while submitting your {OBJECT_NAME_SINGULAR}{' '}
+                  approval form. Please contact <Contact /> and we'll help you
+                  resolve your issue.
                 </p>
                 <p>Alternatively, you can refresh this page and try again.</p>
               </TextInfoBox>
@@ -426,7 +445,7 @@ const RenewPage = ({
       <ClubMetadata club={club} />
       <div className="is-clearfix mb-5">
         <div className="is-pulled-left">
-          <Title>Renew Club Approval</Title>
+          <Title>Renew {OBJECT_NAME_TITLE_SINGULAR} Approval</Title>
           <SubTitle>
             <b>{club.name}</b>
           </SubTitle>
@@ -463,7 +482,7 @@ const RenewPage = ({
           <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
             <a className="button is-primary">
               <Icon name="chevrons-left" />
-              Back to Club
+              Back to {OBJECT_NAME_TITLE_SINGULAR}
             </a>
           </Link>
         )}

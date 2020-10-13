@@ -11,6 +11,7 @@ import {
   SNOW,
 } from '../../../constants/colors'
 import renderPage from '../../../renderPage'
+import { SITE_NAME } from '../../../utils/branding'
 import { fetchMarkdown } from '../../../utils/server'
 
 const MarkdownContent = s.div.attrs({ className: 'content' })`
@@ -97,7 +98,7 @@ export const getServerSideProps = async (ctx: NextPageContext) => {
 
   if (contents !== null) {
     const dom = cheerio.load(contents)
-    const title = dom('h1').eq(0).text() ?? 'Penn Clubs Guide'
+    const title = dom('h1').eq(0).text() ?? `${SITE_NAME} Guide`
     dom('h1').eq(0).remove()
     const toc = dom('h2')
       .map((i, el) => {

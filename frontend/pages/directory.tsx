@@ -6,6 +6,12 @@ import { Container, Metadata, Title } from '../components/common'
 import renderPage from '../renderPage'
 import { Club } from '../types'
 import { doApiRequest } from '../utils'
+import {
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE,
+  SITE_NAME,
+} from '../utils/branding'
 
 type Props = {
   clubs: Club[]
@@ -36,14 +42,14 @@ const Directory = ({ clubs }: Props): ReactElement => {
   return (
     <>
       <Container>
-        <Metadata title="Clubs Directory" />
-        <DirectoryTitle>Clubs Directory</DirectoryTitle>
+        <Metadata title={`${OBJECT_NAME_TITLE} Directory`} />
+        <DirectoryTitle>{OBJECT_NAME_TITLE} Directory</DirectoryTitle>
         <p className="mb-5 has-text-grey">
           The directory is an alphabetically sorted list of all {clubs.length}{' '}
-          clubs on Penn Clubs, including the{' '}
-          {clubs.filter((club) => !club.approved).length} clubs that have not
-          yet been approved. If a club exists but has not been approved, it is
-          shown in grey in the list below.
+          {OBJECT_NAME_PLURAL} on {SITE_NAME}, including the{' '}
+          {clubs.filter((club) => !club.approved).length} {OBJECT_NAME_PLURAL}{' '}
+          that have not yet been approved. If a {OBJECT_NAME_SINGULAR} exists
+          but has not been approved, it is shown in grey in the list below.
         </p>
         <DirectoryList>
           {clubs.map((club) => (

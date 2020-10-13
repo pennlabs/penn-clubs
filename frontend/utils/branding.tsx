@@ -30,7 +30,7 @@ const sites = {
     CONTACT_EMAIL: 'contact@pennclubs.com',
   },
   fyh: {
-    SITE_NAME: 'Hub @ Penn',
+    SITE_NAME: 'Hub@Penn',
     SCHOOL_NAME: 'University of Pennsylvania',
     SITE_SUBTITLE: 'Student Resources at the University of Pennsylvania',
     DOMAIN: 'hub.provost.upenn.edu',
@@ -55,7 +55,7 @@ const sites = {
     OBJECT_TAB_MEMBERSHIP_LABEL: 'Admins',
     OBJECT_TAB_RECRUITMENT_LABEL: 'Mailing List',
 
-    CONTACT_EMAIL: 'contact@hub.provost.upenn.edu',
+    CONTACT_EMAIL: 'hub.provost@upenn.edu',
   },
 }
 

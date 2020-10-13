@@ -13,6 +13,13 @@ import {
 import { CLUB_ROUTE, FAIR_INFO, LIVE_EVENTS, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { doApiRequest, useSetting } from '../utils'
+import {
+  OBJECT_NAME_LONG_PLURAL,
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE,
+  OBJECT_NAME_TITLE_SINGULAR,
+  SITE_NAME,
+} from '../utils/branding'
 
 type FairPageProps = {
   events: {
@@ -31,7 +38,10 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
 
   if (fairName == null) {
     return (
-      <p className="has-text-danger">Fair setup is not configured correctly.</p>
+      <p className="has-text-danger">
+        Fair setup is not configured correctly. Contact <Contact /> for
+        assistance.
+      </p>
     )
   }
 
@@ -43,12 +53,12 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
       <InfoPageTitle>{fairInfo.name} – Student Guide</InfoPageTitle>
       <div className="content">
         <p>
-          <b>Hi there! Welcome to Penn Clubs!</b> We are the official platform
-          for student organizations on campus, and we are excited to get you
+          <b>Hi there! Welcome to {SITE_NAME}!</b> We are the official platform
+          for {OBJECT_NAME_LONG_PLURAL} on campus, and we are excited to get you
           connected to clubs on our platform this year. In collaboration with
-          the {fairInfo.organization}, we will be hosting the virtual club fair
-          this fall. Below is some important information that will set you up
-          for a successful experience.
+          the {fairInfo.organization}, we will be hosting the virtual fair for
+          this semester. Below is some important information that will set you
+          up for a successful experience.
         </p>
         <p>
           <b>How the {fairInfo.name} will be run:</b>
@@ -58,8 +68,8 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
             The {fairInfo.name} will be held on <b>{fairInfo.time}</b>.
           </li>
           <li>
-            The main fair functionality is each club's informational Zoom
-            meeting, which will all be visible on our{' '}
+            The main fair functionality is each {OBJECT_NAME_SINGULAR}'s
+            informational Zoom meeting, which will all be visible on our{' '}
             {isFairOpen ? (
               <a href="https://pennclubs.com/events">Live Events Page</a>
             ) : (
@@ -70,10 +80,11 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
             interact with students.
           </li>
           <li>
-            You can also visit each club's individual page. Each club's page has
-            a description, contact information, and a FAQ feature that club
-            officers will be monitoring throughout the fair that you can use to
-            ask questions. Questions can be submitted anonymously.
+            You can also visit each {OBJECT_NAME_SINGULAR}'s individual page.
+            Each {OBJECT_NAME_SINGULAR}'s page has a description, contact
+            information, and a FAQ feature that {OBJECT_NAME_SINGULAR} officers
+            will be monitoring throughout the fair that you can use to ask
+            questions. Questions can be submitted anonymously.
           </li>
           <li>
             To keep track of clubs you are interested in, we encourage you to
@@ -85,15 +96,16 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
                   <Icon name="bookmark" /> Bookmark
                 </b>{' '}
                 button will allow you to save a club for later for your own
-                personal reference. Clubs will not be able to see your contact
-                information unless you have allowed it.
+                personal reference. {OBJECT_NAME_TITLE} will not be able to see
+                your contact information unless you have allowed it.
               </li>
               <li>
                 The{' '}
                 <b>
                   <Icon name="bell" /> Subscribe
                 </b>{' '}
-                button will put your name on a club's mailing list. Club
+                button will put your name on a club's mailing list.{' '}
+                {OBJECT_NAME_TITLE_SINGULAR}
                 officers can use this list to send you updates on their
                 application process, upcoming meetings, and more.
               </li>
@@ -144,7 +156,7 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
             please contact <Contact email={fairInfo.contact} />.
           </li>
           <li>
-            If you have any questions or concerns regarding the Penn Clubs
+            If you have any questions or concerns regarding the {SITE_NAME}{' '}
             platform, please contact <Contact />.
           </li>
         </ul>

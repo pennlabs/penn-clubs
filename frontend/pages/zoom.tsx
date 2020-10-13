@@ -25,6 +25,12 @@ import {
 import renderPage from '../renderPage'
 import { ClubEvent, ClubEventType } from '../types'
 import { doApiRequest, useSetting } from '../utils'
+import {
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_SINGULAR,
+  SCHOOL_NAME,
+  SITE_NAME,
+} from '../utils/branding'
 
 type ZoomPageProps = {
   authenticated: boolean | null
@@ -211,8 +217,8 @@ const ZoomPage = ({
         </p>
         <h3>1. Login to your Zoom Account</h3>
         <p>
-          Use the button below to login to Zoom and link your Zoom account to
-          Penn Clubs. We will request user and meeting settings write access to
+          Use the button below to login to Zoom and link your Zoom account to{' '}
+          {SITE_NAME}. We will request user and meeting settings write access to
           help you configure your meeting. Ensure that you login to your{' '}
           <b>Penn provided</b> Zoom account.
         </p>
@@ -239,14 +245,14 @@ const ZoomPage = ({
           <>
             <p className="has-text-info">
               <b>Success!</b> You are logged into Zoom and your account is
-              connected to Penn Clubs. Your Zoom email is{' '}
+              connected to {SITE_NAME}. Your Zoom email is{' '}
               <b>{zoomSettings.email}</b>.
             </p>
             {zoomSettings.email &&
               !zoomSettings.email.endsWith('@upenn.edu') && (
                 <p className="has-text-danger">
-                  This does not appear to be a University of Pennsylvania Zoom
-                  account. Are you sure you logged into the right email?
+                  This does not appear to be a {SCHOOL_NAME} Zoom account. Are
+                  you sure you logged into the right email?
                 </p>
               )}
             <div className="buttons">
@@ -380,10 +386,13 @@ const ZoomPage = ({
           the list.
         </p>
         <p>
-          <b>If you have multiple clubs participating in the Zoom fair,</b> have
-          a different officer create a Zoom meeting for each club. Zoom does not
-          allow you to have or join multiple meetings in the same time slot with
-          one account.
+          <b>
+            If you have multiple {OBJECT_NAME_PLURAL} participating in the Zoom
+            fair,
+          </b>{' '}
+          have a different officer create a Zoom meeting for each{' '}
+          {OBJECT_NAME_SINGULAR}. Zoom does not allow you to have or join
+          multiple meetings in the same time slot with one account.
         </p>
         <button
           className="button is-small"
@@ -452,8 +461,7 @@ const ZoomPage = ({
                           <>
                             Zoom is a proven and trusted platform for
                             videoconferencing and has a contract with the
-                            University of Pennsylvania to provide premium
-                            accounts.{' '}
+                            {SCHOOL_NAME} to provide premium accounts.{' '}
                             <b>
                               We strongly recommend that you use this service
                               for your virtual fair booth.
@@ -562,7 +570,7 @@ const ZoomPage = ({
                 </p>
                 <p className="mt-3">
                   Clicking the button below will also attempt to add all
-                  officers who have linked their Zoom accounts to Penn Clubs as
+                  officers who have linked their Zoom accounts to {SITE_NAME} as
                   co-hosts of the meeting.
                 </p>
                 {createResp && createResp.event === event.id && (

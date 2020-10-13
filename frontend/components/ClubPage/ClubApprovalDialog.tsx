@@ -6,6 +6,8 @@ import { FAIR_INFO, MEDIUM_GRAY } from '../../constants'
 import { Club, MembershipRank, UserInfo } from '../../types'
 import { apiCheckPermission, doApiRequest, useSetting } from '../../utils'
 import {
+  APPROVAL_AUTHORITY,
+  APPROVAL_AUTHORITY_URL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   SITE_NAME,
@@ -136,21 +138,19 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
               <>
                 <p>
                   This {OBJECT_NAME_SINGULAR} has been marked as{' '}
-                  <b>not approved</b> and is only visible to administrators of
+                  <b>not approved</b> and is only visible to administrators of{' '}
                   {SITE_NAME}. The reason that your {OBJECT_NAME_SINGULAR} was
                   not approved by the{' '}
-                  <a href="https://osa.vpul.upenn.edu/">
-                    Office of Student Affairs
-                  </a>{' '}
-                  is listed below. If you believe that this is a mistake,
-                  contact <Contact point="osa" />.
+                  <a href={APPROVAL_AUTHORITY_URL}>{APPROVAL_AUTHORITY}</a> is
+                  listed below. If you believe that this is a mistake, contact{' '}
+                  <Contact point="osa" />.
                 </p>
                 <ReviewQuote>
                   {club.approved_comment || (
                     <>
-                      No reason has been given for why your club was not
-                      approved. Contact <Contact point="osa" /> for more
-                      details.
+                      No reason has been given for why your{' '}
+                      {OBJECT_NAME_SINGULAR} was not approved. Contact{' '}
+                      <Contact point="osa" /> for more details.
                     </>
                   )}
                 </ReviewQuote>

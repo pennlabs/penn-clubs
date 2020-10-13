@@ -27,6 +27,7 @@ import {
   apiSetSubscribeStatus,
   doApiRequest,
 } from '../../../utils'
+import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../../utils/branding'
 
 const Image = s.img`
   height: 86px;
@@ -60,7 +61,9 @@ const Fair = ({ authenticated, club }: FairProps): ReactElement | null => {
       <Container>
         <div className="has-text-centered">
           <Title>404 Not Found</Title>
-          <Text>The club you are looking for does not exist.</Text>
+          <Text>
+            The {OBJECT_NAME_SINGULAR} you are looking for does not exist.
+          </Text>
         </div>
       </Container>
     )
@@ -133,7 +136,7 @@ const Fair = ({ authenticated, club }: FairProps): ReactElement | null => {
         </div>
         <SmallText>
           <i>
-            Bookmarks and subscriptions can be managed from your Penn Clubs
+            Bookmarks and subscriptions can be managed from your {SITE_NAME}{' '}
             account at any time.
           </i>
         </SmallText>
