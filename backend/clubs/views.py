@@ -634,21 +634,31 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     .annotate(count=Count("id"))
                 ),
             }
-
+            
         return Response(
             {
-                "favorite_graduation_year": get_graduation_year_breakdown(
-                    Favorite, "Graduation Year - Bookmarks"
-                ),
-                "subscribe_graduation_year": get_graduation_year_breakdown(
-                    Subscribe, "Graduation Year - Subscriptions"
-                ),
-                "visit_graduation_year": get_graduation_year_breakdown(
-                    ClubVisit, "Graduation Year - Page Views"
-                ),
-                "favorite_school": get_school_breakdown(Favorite, "School - Bookmarks"),
-                "subscribe_school": get_school_breakdown(Subscribe, "School - Subscriptions"),
-                "visit_school": get_school_breakdown(ClubVisit, "School - Page Views"),
+                "school": {
+                    "favorite": get_school_breakdown(
+                        Favorite, "School - Bookmarks"
+                    ),
+                    "subscribe": get_school_breakdown(
+                        Subscribe, "School - Subscriptions"
+                    ),
+                    "visit": get_school_breakdown(
+                        ClubVisit, "School - Page Views"
+                    ),
+                },
+                "graduation_year": {
+                    "favorite": get_graduation_year_breakdown(
+                        Favorite, "Graduation Year - Bookmarks"
+                    ),
+                    "subscribe": get_graduation_year_breakdown(
+                        Subscribe, "Graduation Year - Subscriptions"
+                    ),
+                    "visit": get_graduation_year_breakdown(
+                        ClubVisit, "Graduation Year - Page Views"
+                    ),
+                }
             }
         )
 

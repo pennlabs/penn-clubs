@@ -3,6 +3,7 @@ import moment from 'moment'
 import Head from 'next/head'
 import { ReactElement, useEffect, useState } from 'react'
 import DatePicker from 'react-datepicker'
+import Select from 'react-select'
 import {
   ChartLabel,
   DiscreteColorLegend,
@@ -40,6 +41,43 @@ type LineData = { x: Date; y: number }[]
 type PieData = { angle: number; label: string; color?: string }[]
 
 const FlexibleXYPlot = makeWidthFlexible(XYPlot)
+
+enum Metric {
+  Bookmark = 'favorite',
+  Subscription = 'subscribe',
+  Visit = 'visit',
+}
+
+enum Category {
+  School = 'school',
+  Graduation_Year = 'graduation_year',
+}
+
+const METRICS = [
+  {
+    value: Metric.Bookmark,
+    label: 'Bookmarks',
+  },
+  {
+    value: Metric.Subscription,
+    label: 'Subscriptions',
+  },
+  {
+    value: Metric.Visit,
+    label: 'Visits',
+  },
+]
+
+const CATEGORIES = [
+  {
+    value: Category.School,
+    label: 'School',
+  },
+  {
+    value: Category.Graduation_Year,
+    label: 'Graduation Year',
+  },
+]
 
 function parse(
   obj,
@@ -97,6 +135,8 @@ export default function AnalyticsCard({
   const [max, setMax] = useState<number>(1)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [pieChartData, setPieChartData] = useState<PieChartData | null>(null)
+  const [metric, setMetric] = useState(METRICS[0])
+  const [category, setCategory] = useState(CATEGORIES[0])
 
   const endDate = new Date(endRange.getTime() + 24 * 60 * 60 * 1000)
   const interval = 60 * 60 * 1000
@@ -165,27 +205,23 @@ export default function AnalyticsCard({
         </Text>
         <div className="is-clearfix">
           <div className="is-pulled-left mr-3">
-            <small>Start Range</small>
+            <label>Start Range</label>
             <br />
             <DatePicker
               className="input"
               format="MM'/'dd'/'y"
               selected={date}
-              onChange={(val) => {
-                setDate(val)
-              }}
+              onChange={setDate}
             />
           </div>
           <div className="is-pulled-left">
-            <small>End Range</small>
+            <label>End Range</label>
             <br />
             <DatePicker
               className="input"
               format="MM'/'dd'/'y"
               selected={endRange}
-              onChange={(val) => {
-                setEndRange(val)
-              }}
+              onChange={setEndRange}
             />
           </div>
         </div>
@@ -217,9 +253,9 @@ export default function AnalyticsCard({
               />
               <HorizontalGridLines />
               <VerticalGridLines />
-              <LineMarkSeries data={visits} />
-              <LineMarkSeries data={favorites} />
-              <LineMarkSeries data={subscriptions} />
+              <LineMarkSeries size={1} data={visits} />
+              <LineMarkSeries size={1} data={favorites} />
+              <LineMarkSeries size={1} data={subscriptions} />
             </FlexibleXYPlot>
           </>
         )}
@@ -230,32 +266,57 @@ export default function AnalyticsCard({
           subscribed, or visited the club. Students with multiple schools are
           counted twice for applicable graphs.
         </Text>
+        <div className="columns">
+          <div className="column">
+            <label>Category</label>
+            <br />
+            <Select
+              options={CATEGORIES}
+              value={category}
+              onChange={(val) => {
+                return setCategory(val)
+              }}
+            />
+          </div>
+          <div className="column">
+            <label>Metric</label>
+            <br />
+            <Select options={METRICS} value={metric} onChange={setMetric} />
+          </div>
+        </div>
+        <br></br>
+        <br></br>
         {pieChartData == null ? (
           <Loading />
         ) : (
-          <div className="is-clearfix">
-            {Object.entries(pieChartData).map(([key, value]) => {
-              const pieData = parsePie(value.content)
-              const pieLegend = pieData.map((item) => ({
-                title: `${item.label} (${item.angle})`,
-                strokeWidth: 6,
-                color: item.color,
-              }))
-              return (
-                <div key={key} className="is-pulled-left mr-3 mb-3">
-                  <b>{value.title}</b>
-                  <br />
+          <>
+            <div className="is-clearfix">
+              <div className="columns">
+                <div className="column">
+                  <b>{pieChartData[category.value][metric.value].title}</b>
+                  <DiscreteColorLegend
+                    items={parsePie(
+                      pieChartData[category.value][metric.value].content,
+                    ).map((item) => ({
+                      title: `${item.label} (${item.angle})`,
+                      strokeWidth: 6,
+                      color: item.color,
+                    }))}
+                  />
+                </div>
+                <div className="column is-8">
                   <RadialChart
-                    data={pieData}
-                    width={300}
-                    height={300}
+                    data={parsePie(
+                      pieChartData[category.value][metric.value].content,
+                    )}
+                    width={400}
+                    height={400}
                     colorType="literal"
                   />
-                  <DiscreteColorLegend items={pieLegend} />
                 </div>
-              )
-            })}
-          </div>
+              </div>
+            </div>
+          </>
         )}
       </BaseCard>
     </>
