@@ -669,6 +669,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         subscriptions) for a club.
         """
         club = self.get_object()
+        group = self.request.query_params.get("group")
         if "date" in request.query_params:
             date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
         else:
@@ -688,16 +689,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # retrieve data
         def get_count(obj):
             """
-            Return a json serializable hourly aggregation of analytics data for a specific model.
+            Return a json serializable aggregation of analytics data for a specific model.
             """
             objs = (
                 obj.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
-                .annotate(hour=Trunc("created_at", "hour"))
-                .values("hour")
+                .annotate(group=Trunc("created_at", group))
+                .values("group")
                 .annotate(count=Count("id"))
             )
             for item in objs:
-                item["hour"] = item["hour"].isoformat()
+                item["group"] = item["group"].isoformat()
             return list(objs)
 
         visits_data = get_count(ClubVisit)

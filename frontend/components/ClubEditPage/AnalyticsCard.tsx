@@ -7,11 +7,9 @@ import Select from 'react-select'
 import {
   ChartLabel,
   DiscreteColorLegend,
-  HorizontalGridLines,
   LineMarkSeries,
   makeWidthFlexible,
   RadialChart,
-  VerticalGridLines,
   XAxis,
   XYPlot,
   YAxis,
@@ -53,6 +51,13 @@ enum Category {
   Graduation_Year = 'graduation_year',
 }
 
+enum Group {
+  Hour = 'hour',
+  Day = 'day',
+  Week = 'week',
+  Month = 'month',
+}
+
 const METRICS = [
   {
     value: Metric.Bookmark,
@@ -79,19 +84,52 @@ const CATEGORIES = [
   },
 ]
 
-function parse(
-  obj,
-  startRange: Date,
-  endRange: Date,
-  interval: number,
-): LineData {
+const GROUPS = [
+  {
+    value: Group.Hour,
+    label: 'Hour',
+  },
+  {
+    value: Group.Day,
+    label: 'Day',
+  },
+  {
+    value: Group.Week,
+    label: 'Week',
+  },
+  {
+    value: Group.Month,
+    label: 'Month',
+  },
+]
+
+function parse(obj, startRange: Date, endRange: Date, group: Group): LineData {
   const exists = {}
   obj.forEach((item) => {
-    exists[new Date(item.hour).getTime()] = item.count
+    exists[new Date(item.group).getTime()] = item.count
   })
   const output: LineData = []
-  for (let i = startRange.getTime(); i <= endRange.getTime(); i += interval) {
-    output.push({ x: new Date(i), y: exists[i] ?? 0 })
+  if (group === Group.Week) {
+    startRange.setDate(startRange.getDate() - startRange.getDay() + 1)
+  } else if (group === Group.Month) {
+    startRange = new Date(startRange.getFullYear(), startRange.getMonth(), 1)
+  }
+  let current = startRange
+  for (let i = startRange.getTime(); i <= endRange.getTime(); ) {
+    current = new Date(i)
+    output.push({ x: current, y: exists[i] ?? 0 })
+
+    if (group === Group.Hour) {
+      i += 60 * 60 * 1000
+    } else if (group === Group.Day) {
+      i += 24 * 60 * 60 * 1000
+    } else if (group === Group.Week) {
+      i += 7 * 24 * 60 * 60 * 1000
+    } else if (group === Group.Month) {
+      // There is not a standardized interval between months
+      current = new Date(current.setMonth(current.getMonth() + 1))
+      i = current.getTime()
+    }
   }
   return output
 }
@@ -137,28 +175,32 @@ export default function AnalyticsCard({
   const [pieChartData, setPieChartData] = useState<PieChartData | null>(null)
   const [metric, setMetric] = useState(METRICS[0])
   const [category, setCategory] = useState(CATEGORIES[0])
+  const [group, setGroup] = useState(GROUPS[1])
 
   const endDate = new Date(endRange.getTime() + 24 * 60 * 60 * 1000)
-  const interval = 60 * 60 * 1000
 
   useEffect(() => {
     setLoading(true)
     doApiRequest(
       `/clubs/${club.code}/analytics?format=json&start=${moment(
         date,
-      ).toISOString()}&end=${moment(endDate).toISOString()}`,
+      ).toISOString()}&end=${moment(endDate).toISOString()}&group=${
+        group.value
+      }`,
     )
       .then((request) => request.json())
       .then((response) => {
-        setVisits(parse(response.visits, date, endDate, interval))
-        setFavorites(parse(response.favorites, date, endDate, interval))
-        setSubscriptions(parse(response.subscriptions, date, endDate, interval))
+        setVisits(parse(response.visits, date, endDate, group.value))
+        setFavorites(parse(response.favorites, date, endDate, group.value))
+        setSubscriptions(
+          parse(response.subscriptions, date, endDate, group.value),
+        )
         if (response.max > 1) {
           setMax(response.max)
         }
         setLoading(false)
       })
-  }, [date, endRange])
+  }, [date, endRange, group])
 
   useEffect(() => {
     doApiRequest(`/clubs/${club.code}/analytics_pie_charts/?format=json`)
@@ -204,25 +246,32 @@ export default function AnalyticsCard({
           the last day.
         </Text>
         <div className="is-clearfix">
-          <div className="is-pulled-left mr-3">
-            <label>Start Range</label>
-            <br />
-            <DatePicker
-              className="input"
-              format="MM'/'dd'/'y"
-              selected={date}
-              onChange={setDate}
-            />
-          </div>
-          <div className="is-pulled-left">
-            <label>End Range</label>
-            <br />
-            <DatePicker
-              className="input"
-              format="MM'/'dd'/'y"
-              selected={endRange}
-              onChange={setEndRange}
-            />
+          <div className="columns">
+            <div className="column is-2">
+              <label>Start Range</label>
+              <br />
+              <DatePicker
+                className="input"
+                format="MM'/'dd'/'y"
+                selected={date}
+                onChange={setDate}
+              />
+            </div>
+            <div className="column is-2">
+              <label>End Range</label>
+              <br />
+              <DatePicker
+                className="input"
+                format="MM'/'dd'/'y"
+                selected={endRange}
+                onChange={setEndRange}
+              />
+            </div>
+            <div className="column is-8">
+              <label>Group By</label>
+              <br />
+              <Select options={GROUPS} value={group} onChange={setGroup} />
+            </div>
           </div>
         </div>
         <br></br>
@@ -243,16 +292,29 @@ export default function AnalyticsCard({
               height={350}
               margin={{ bottom: 60 }}
             >
-              <XAxis tickFormat={(date) => moment(date).format('H')} />
+              <XAxis
+                tickValues={visits.map((visit) => visit.x)}
+                tickFormat={(date) => {
+                  if (group.value === Group.Hour) {
+                    return moment(date).format('H')
+                  } else if (group.value === Group.Day) {
+                    return moment(date).format('D')
+                  } else if (group.value === Group.Week) {
+                    // We need to round down for Week values
+                    return (parseInt(moment(date).format('W')) - 1).toString()
+                  } else if (group.value === Group.Month) {
+                    // We need to round down for Month values
+                    return (parseInt(moment(date).format('M')) - 1).toString()
+                  }
+                }}
+              />
               <YAxis />
               <ChartLabel
-                text="Time (Hour)"
+                text={`Time (${group.label})`}
                 includeMargin={true}
                 xPercent={0.5}
                 yPercent={0.85}
               />
-              <HorizontalGridLines />
-              <VerticalGridLines />
               <LineMarkSeries size={1} data={visits} />
               <LineMarkSeries size={1} data={favorites} />
               <LineMarkSeries size={1} data={subscriptions} />
@@ -273,9 +335,7 @@ export default function AnalyticsCard({
             <Select
               options={CATEGORIES}
               value={category}
-              onChange={(val) => {
-                return setCategory(val)
-              }}
+              onChange={setCategory}
             />
           </div>
           <div className="column">
