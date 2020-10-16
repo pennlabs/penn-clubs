@@ -58,6 +58,13 @@ export const HUB_WHITE = '#ffffff'
 export const HUB_SNOW = '#f2f2f3'
 export const HUB_LIGHT_BLUE = '#82afd3'
 export const HUB_YELLOW = '#f2c100'
+export const EVENT_TYPE_COLORS = [
+  '#E5E5E5',
+  '#FFF5DD',
+  '#FDE4E7',
+  '#E1E3FF',
+  '#EDE2FE',
+]
 
 export const ZOOM_BLUE = '#2D8CFF'
 
