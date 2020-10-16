@@ -413,6 +413,20 @@ function EventPage({
               }}
               style={{ flex: '1' }}
             />
+            {!upcomingEvents.length && (
+              <div className="notification is-info is-clearfix">
+                <img
+                  className="is-pulled-left mr-5 mb-3"
+                  style={{ width: 100 }}
+                  src="/static/img/events_calendar.png"
+                />
+                <div>
+                  There are no upcoming events that match your search query. If
+                  you are a member of a {OBJECT_NAME_SINGULAR}, you can add new
+                  events on the manage {OBJECT_NAME_SINGULAR} page.
+                </div>
+              </div>
+            )}
           </WideWrapper>
         </SearchbarRightContainer>
       </div>
