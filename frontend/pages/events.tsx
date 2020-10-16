@@ -1,6 +1,9 @@
 import equal from 'deep-equal'
+import moment from 'moment'
 import { NextPageContext } from 'next'
-import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
+import Head from 'next/head'
+import { ReactElement, useEffect, useRef, useState } from 'react'
+import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
 import { Metadata, Title, WideContainer } from '../components/common'
@@ -37,6 +40,16 @@ const CardList = styled.div`
     width: 400px;
   }
 `
+
+const localizer = momentLocalizer(moment)
+
+const CalendarEvent = ({
+  event: { resource },
+}: {
+  event: { resource: ClubEvent }
+}) => {
+  return resource.name
+}
 
 /**
  * Randomize the order the events are shown in.
@@ -167,6 +180,13 @@ function EventPage({
 
   return (
     <>
+      <Head>
+        <link
+          href="/static/css/react-big-calendar.css"
+          rel="stylesheet"
+          key="big-calendar-css"
+        />
+      </Head>
       <Metadata title="Events" />
       <div style={{ backgroundColor: SNOW }}>
         <SearchBar updateSearch={setSearchInput} searchInput={searchInput}>
@@ -270,11 +290,33 @@ function EventPage({
               Upcoming Events
             </Title>
             {isLoading && <ListLoadIndicator />}
-            <CardList>
-              {upcomingEvents.map((e) => (
-                <EventCard key={e.id} event={e} />
-              ))}
-            </CardList>
+            <Calendar
+              localizer={localizer}
+              components={{
+                event: CalendarEvent,
+              }}
+              events={[...liveEvents, ...upcomingEvents].map((e) => ({
+                title: e.name,
+                start: new Date(e.start_time),
+                end: new Date(e.end_time),
+                allDay: false,
+                resource: e,
+              }))}
+              eventPropGetter={({
+                resource,
+                start,
+                end,
+              }: {
+                resource: ClubEvent
+                start: Date
+                end: Date
+              }) => {
+                const now = new Date()
+                const live = start <= now && end >= now
+                return { style: { backgroundColor: live ? 'red' : 'blue' } }
+              }}
+              style={{ height: '700px' }}
+            />
             {!upcomingEvents.length && (
               <div className="notification is-info is-clearfix">
                 <img

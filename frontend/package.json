@@ -36,6 +36,7 @@
     "react": "^17.0.1",
     "react-datepicker": "^3.3.0",
     "react-dom": "^17.0.1",
+    "react-big-calendar": "^0.28.1",
     "react-draft-wysiwyg": "^1.14.4",
     "react-ga": "^3.2.0",
     "react-lazy-load": "^3.1.13",
