@@ -6,8 +6,7 @@ import { ReactElement, useEffect, useRef, useState } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
-import { EVENT_TYPES } from '../components/ClubEditPage/EventsCard'
-import { Metadata, Title, WideContainer } from '../components/common'
+import { Metadata, Title, WideWrapper } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import EventCard from '../components/EventPage/EventCard'
 import { MEETING_REGEX } from '../components/EventPage/EventModal'
@@ -263,7 +262,14 @@ function EventPage({
           )}
         </SearchBar>
         <SearchbarRightContainer>
-          <WideContainer background={SNOW} fullHeight>
+          <WideWrapper
+            fullHeight
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              background: SNOW,
+            }}
+          >
             {/* {!!liveEvents.length && (
               <>
                 <Title
@@ -317,7 +323,7 @@ function EventPage({
                   },
                 }
               }}
-              style={{ height: '700px' }}
+              style={{ flex: '1' }}
             />
             {!upcomingEvents.length && (
               <div className="notification is-info is-clearfix">
@@ -333,7 +339,7 @@ function EventPage({
                 </div>
               </div>
             )}
-          </WideContainer>
+          </WideWrapper>
         </SearchbarRightContainer>
       </div>
     </>
