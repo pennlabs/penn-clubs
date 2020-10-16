@@ -19,7 +19,7 @@ import SearchBar, {
   SearchBarTextItem,
   SearchInput,
 } from '../components/SearchBar'
-import { CLUBS_GREY, SNOW } from '../constants'
+import { CLUBS_GREY, EVENT_TYPE_COLORS, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, Tag } from '../types'
 import { doApiRequest, isClubFieldShown } from '../utils'
@@ -264,7 +264,7 @@ function EventPage({
         </SearchBar>
         <SearchbarRightContainer>
           <WideContainer background={SNOW} fullHeight>
-            {!!liveEvents.length && (
+            {/* {!!liveEvents.length && (
               <>
                 <Title
                   className="title"
@@ -280,9 +280,9 @@ function EventPage({
                 </CardList>
                 <br />
               </>
-            )}
+            )} */}
             <Title className="title" style={{ color: CLUBS_GREY }}>
-              Upcoming Events
+              Events
             </Title>
             {isLoading && <ListLoadIndicator />}
             <Calendar
@@ -306,9 +306,16 @@ function EventPage({
                 start: Date
                 end: Date
               }) => {
-                const now = new Date()
-                const live = start <= now && end >= now
-                return { style: { backgroundColor: live ? 'red' : 'blue' } }
+                // const now = new Date()
+                // const live = start <= now && end >= now
+                const color = EVENT_TYPE_COLORS[resource.type] || CLUBS_GREY
+                return {
+                  style: {
+                    backgroundColor: color,
+                    color: '#6F6F6F',
+                    border: 'none',
+                  },
+                }
               }}
               style={{ height: '700px' }}
             />
