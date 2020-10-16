@@ -66,7 +66,7 @@ type ContainerProps = React.PropsWithChildren<{
   style?: CSSProperties
 }>
 
-const WideWrapper = s(Wrapper)`
+export const WideWrapper = s(Wrapper)`
   ${mediaMinWidth(MD)} {
     ${getPadding(2.5)}
   }
