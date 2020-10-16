@@ -29,7 +29,9 @@ const InfoBox = (props: InfoBoxProps): ReactElement => {
     {
       icon: 'user',
       alt: 'members',
-      text: ' ' + getSizeDisplay(props.club.size),
+      text: `${props.club.membership_count} Registered (${getSizeDisplay(
+        props.club.size,
+      )})`,
     },
     {
       icon: props.club.accepting_members ? 'check-circle' : 'x-circle',

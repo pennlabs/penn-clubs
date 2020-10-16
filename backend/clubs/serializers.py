@@ -622,6 +622,7 @@ class ClubListSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     image_url = serializers.SerializerMethodField("get_image_url")
     favorite_count = serializers.IntegerField(read_only=True)
+    membership_count = serializers.IntegerField(read_only=True)
 
     is_favorite = serializers.SerializerMethodField("get_is_favorite")
     is_subscribe = serializers.SerializerMethodField("get_is_subscribe")
@@ -744,6 +745,7 @@ class ClubListSerializer(serializers.ModelSerializer):
             "is_favorite",
             "is_member",
             "is_subscribe",
+            "membership_count",
             "name",
             "size",
             "subtitle",

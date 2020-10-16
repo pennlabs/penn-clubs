@@ -427,7 +427,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     queryset = (
         Club.objects.all()
-        .annotate(favorite_count=Count("favorite", distinct=True))
+        .annotate(
+            favorite_count=Count("favorite", distinct=True),
+            membership_count=Count("membership", distinct=True, filter=Q(active=True)),
+        )
         .prefetch_related(
             "tags",
             "badges",
