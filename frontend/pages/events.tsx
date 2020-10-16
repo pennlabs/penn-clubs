@@ -93,6 +93,7 @@ const StyledHeader = styled.div`
   }
 `
 
+<<<<<<< HEAD
 const CalendarHeader = ({
   // date,
   label,
@@ -143,6 +144,16 @@ const CalendarHeader = ({
       </div>
     </StyledHeader>
   )
+=======
+const localizer = momentLocalizer(moment)
+
+const CalendarEvent = ({
+  event: { resource },
+}: {
+  event: { resource: ClubEvent }
+}) => {
+  return resource.name
+>>>>>>> Barebone calendar
 }
 
 /**
@@ -389,10 +400,13 @@ function EventPage({
               localizer={localizer}
               components={{
                 event: CalendarEvent,
+<<<<<<< HEAD
                 toolbar: CalendarHeader,
               }}
               onSelectEvent={(event: { resource: ClubEvent }) => {
                 setPreviewEvent(event.resource)
+=======
+>>>>>>> Barebone calendar
               }}
               events={[...liveEvents, ...upcomingEvents].map((e) => ({
                 title: e.name,
@@ -401,6 +415,7 @@ function EventPage({
                 allDay: false,
                 resource: e,
               }))}
+<<<<<<< HEAD
               eventPropGetter={({ resource }: { resource: ClubEvent }) => {
                 const color = EVENT_TYPE_COLORS[resource.type] || CLUBS_GREY
                 return {
@@ -414,6 +429,38 @@ function EventPage({
               style={{ flex: '1' }}
             />
           </WideWrapper>
+=======
+              eventPropGetter={({
+                resource,
+                start,
+                end,
+              }: {
+                resource: ClubEvent
+                start: Date
+                end: Date
+              }) => {
+                const now = new Date()
+                const live = start <= now && end >= now
+                return { style: { backgroundColor: live ? 'red' : 'blue' } }
+              }}
+              style={{ height: '700px' }}
+            />
+            {!upcomingEvents.length && (
+              <div className="notification is-info is-clearfix">
+                <img
+                  className="is-pulled-left mr-5 mb-3"
+                  style={{ width: 100 }}
+                  src="/static/img/events_calendar.png"
+                />
+                <div>
+                  There are no upcoming events that match your search query. If
+                  you are a member of a {OBJECT_NAME_SINGULAR}, you can add new
+                  events on the manage {OBJECT_NAME_SINGULAR} page.
+                </div>
+              </div>
+            )}
+          </WideContainer>
+>>>>>>> Barebone calendar
         </SearchbarRightContainer>
       </div>
       {previewEvent && (
