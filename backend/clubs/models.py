@@ -425,29 +425,10 @@ class RecurringEvent(models.Model):
     """
     Represents recurring events hosted by a club.
     """
-    code = models.SlugField(max_length=255, db_index=True)
-    creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
-    name = models.CharField(max_length=255)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, null=True)
-    RECRUITMENT = 1
-    GBM = 2
-    SPEAKER = 3
-    OTHER = 0
-    FAIR = 4
-    TYPES = (
-        (RECRUITMENT, "Recruitment"),
-        (GBM, "GBM"),
-        (SPEAKER, "Speaker"),
-        (OTHER, "Other"),
-        (FAIR, "Activities Fair"),
-    )
-    type = models.IntegerField(choices=TYPES, default=RECRUITMENT)
-
     id = models.IntegerField(primary_key=True)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     offset = models.IntegerField()
-    duration = models.IntegerField()
 
     """
     RECURRING_DATES = (
