@@ -196,3 +196,14 @@ export function formatResponse(
     </>
   )
 }
+
+/**
+ * Indicates whether a field is shown on the edit page
+ * and the club information page.
+ *
+ * Looks up information from current branding to see which
+ * fields should be displayed.
+ */
+export function isClubFieldShown(name: string): boolean {
+  return true
+}

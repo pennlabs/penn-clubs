@@ -10,7 +10,7 @@ import {
   Tag,
   Year,
 } from '../../types'
-import { doApiRequest, formatResponse } from '../../utils'
+import { doApiRequest, formatResponse, isClubFieldShown } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   FIELD_PARTICIPATION_LABEL,
@@ -252,7 +252,7 @@ export default function ClubEditCard({
           name: 'listserv',
           type: 'text',
         },
-      ],
+      ].filter(({ name }) => isClubFieldShown(name)),
     },
     {
       name: 'Admission',
@@ -311,7 +311,7 @@ export default function ClubEditCard({
           converter: (a) => ({ value: a.id, label: a.name }),
           reverser: (a) => ({ id: a.value, name: a.label }),
         },
-      ],
+      ].filter(({ name }) => isClubFieldShown(name)),
     },
   ]
 
