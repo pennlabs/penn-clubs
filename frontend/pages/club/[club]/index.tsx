@@ -8,6 +8,7 @@ import {
   DesktopActions,
   MobileActions,
 } from '../../../components/ClubPage/Actions'
+import AdvisorList from '../../../components/ClubPage/AdvisorList'
 import ChatWidget from '../../../components/ClubPage/ChatWidget'
 import ClubApprovalDialog from '../../../components/ClubPage/ClubApprovalDialog'
 import Description from '../../../components/ClubPage/Description'
@@ -203,6 +204,7 @@ const ClubPage = ({
           {club.advisor_set.length > 0 && (
             <>
               <StrongText>Points of Contact</StrongText>
+              <AdvisorList club={club} />
             </>
           )}
           <div className="mb-3">
