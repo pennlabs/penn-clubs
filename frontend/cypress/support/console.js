@@ -4,6 +4,10 @@ Cypress.on('window:before:load', (win) => {
 
 afterEach(() => {
   cy.window().then((win) => {
-    expect(win.console.error).to.have.callCount(0)
+    win.console.error.getCalls().forEach((fn) => {
+      if (!fn.args[0].startsWith("Warning: Can't perform a React state update on an unmounted component.")) {
+        throw new Error(`Unexpected console.error call with ${fn}`)
+      }
+    })
   })
 })
