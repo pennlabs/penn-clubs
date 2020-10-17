@@ -16,6 +16,7 @@ import {
   FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
+  OBJECT_TAB_ADMISSION_LABEL,
   SITE_NAME,
 } from '../../utils/branding'
 import { Contact, Text } from '../common'
@@ -197,7 +198,7 @@ export default function ClubEditCard({
           type: 'date',
           label: 'Date Founded',
         },
-      ],
+      ].filter(({ name }) => isClubFieldShown(name)),
     },
     {
       name: 'Contact',
@@ -255,7 +256,7 @@ export default function ClubEditCard({
       ].filter(({ name }) => isClubFieldShown(name)),
     },
     {
-      name: 'Admission',
+      name: OBJECT_TAB_ADMISSION_LABEL,
       type: 'group',
       description: (
         <Text>

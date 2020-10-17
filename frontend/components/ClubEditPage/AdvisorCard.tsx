@@ -1,6 +1,7 @@
 import { ReactElement } from 'react'
 
 import { Club, School } from '../../types'
+import { SITE_NAME } from '../../utils/branding'
 import { Text } from '../common'
 import { ModelForm } from '../Form'
 import BaseCard from './BaseCard'
@@ -12,8 +13,12 @@ type Props = {
 
 export default function AdvisorCard({ club, schools }: Props): ReactElement {
   return (
-    <BaseCard title="Advisors">
-      <Text>Provide faculty advisor contacts for your organization.</Text>
+    <BaseCard title="Points of Contact">
+      <Text>
+        Provide points of contact for your organization. Public points of
+        contact will be shown to the public, while private points of contact
+        will be shown to only {SITE_NAME} administrators.
+      </Text>
       <ModelForm
         baseUrl={`/clubs/${club.code}/advisors/`}
         initialData={club.advisor_set}
@@ -24,7 +29,7 @@ export default function AdvisorCard({ club, schools }: Props): ReactElement {
             name: 'school',
             type: 'multiselect',
             placeholder:
-              'Select schools that this faculty advisor belongs under',
+              'Select schools or departments that this point of contact belongs under',
             choices: schools,
             converter: (a) => ({ value: a.id, label: a.name }),
             reverser: (a) => ({ id: a.value, name: a.label }),

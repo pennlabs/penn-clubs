@@ -41,6 +41,7 @@ import {
   APPROVAL_AUTHORITY,
   FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_SINGULAR,
+  SHOW_MEMBERS,
   SITE_NAME,
 } from '../../../utils/branding'
 
@@ -203,8 +204,12 @@ const ClubPage = ({
             <StrongText ref={questionsScrollRef}>FAQ</StrongText>
             <QuestionList club={club} questions={questions} />
           </div>
-          <StrongText>Members</StrongText>
-          <MemberList club={club} />
+          {SHOW_MEMBERS && (
+            <>
+              <StrongText>Members</StrongText>
+              <MemberList club={club} />
+            </>
+          )}
         </div>
         <div className="column is-one-third">
           <DesktopActions

@@ -2,7 +2,7 @@ import fetch from 'isomorphic-unfetch'
 import { createContext, ReactElement, useContext } from 'react'
 
 import { MembershipRank } from './types'
-import { DOMAIN } from './utils/branding'
+import { ALL_CLUB_FIELDS, CLUB_FIELDS, DOMAIN } from './utils/branding'
 
 export function stripTags(val: string): string {
   if (!val) {
@@ -205,5 +205,8 @@ export function formatResponse(
  * fields should be displayed.
  */
 export function isClubFieldShown(name: string): boolean {
+  if (ALL_CLUB_FIELDS.has(name) && !CLUB_FIELDS.has(name)) {
+    return false
+  }
   return true
 }
