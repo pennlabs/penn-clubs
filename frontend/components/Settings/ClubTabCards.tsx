@@ -12,7 +12,7 @@ type ClubTabCardProps = {
   leaveClub: (club: Club) => void
 }
 
-export default ({
+const ClubTabCards = ({
   className,
   memberships,
   togglePublic,
@@ -31,3 +31,5 @@ export default ({
     ))}
   </div>
 )
+
+export default ClubTabCards
