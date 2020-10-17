@@ -95,7 +95,10 @@ export const ProfilePic = ({
   // Assuming the name is properly capitalized, this extracts the name's initials.
   const initials = name.replace(/[a-z]|\s/g, '')
   return (
-    <AvatarWrapper className="has-background-light image is-64x64">
+    <AvatarWrapper
+      isCentered={isCentered}
+      className="has-background-light image is-64x64"
+    >
       <Placeholder
         style={style}
         className={className}
