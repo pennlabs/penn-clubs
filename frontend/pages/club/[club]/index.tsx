@@ -200,6 +200,11 @@ const ClubPage = ({
           <StyledCard bordered>
             <Description club={club} />
           </StyledCard>
+          {club.advisor_set.length > 0 && (
+            <>
+              <StrongText>Points of Contact</StrongText>
+            </>
+          )}
           <div className="mb-3">
             <StrongText ref={questionsScrollRef}>FAQ</StrongText>
             <QuestionList club={club} questions={questions} />
