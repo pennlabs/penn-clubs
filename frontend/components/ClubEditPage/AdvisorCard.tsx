@@ -1,7 +1,11 @@
 import { ReactElement } from 'react'
 
 import { Club, School } from '../../types'
-import { SITE_NAME } from '../../utils/branding'
+import {
+  OBJECT_NAME_SINGULAR,
+  SHOW_MEMBERS,
+  SITE_NAME,
+} from '../../utils/branding'
 import { Text } from '../common'
 import { ModelForm } from '../Form'
 import BaseCard from './BaseCard'
@@ -18,6 +22,15 @@ export default function AdvisorCard({ club, schools }: Props): ReactElement {
         Provide points of contact for your organization. Public points of
         contact will be shown to the public, while private points of contact
         will be shown to only {SITE_NAME} administrators.
+        {SHOW_MEMBERS && (
+          <>
+            {' '}
+            Your {OBJECT_NAME_SINGULAR} members will show up on the{' '}
+            {OBJECT_NAME_SINGULAR} page, but only the name, title, and profile
+            picture will be shown. If you would like to provide more detailed
+            contact information, use the form below.
+          </>
+        )}
       </Text>
       <ModelForm
         baseUrl={`/clubs/${club.code}/advisors/`}
