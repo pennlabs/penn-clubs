@@ -13,10 +13,15 @@ const CONSOLE_ERROR_WHITELIST = [
 
 afterEach(() => {
   cy.window().then((win) => {
+    const collection = []
     win.console.error.getCalls().forEach((fn) => {
       if (!CONSOLE_ERROR_WHITELIST.some(prefix => fn.args[0].startsWith(prefix))) {
-        throw new Error(`Unexpected console.error call with ${fn}`)
+        collection.push(`Unexpected console.error call with ${fn}`)
       }
     })
+
+    if (collection.length > 0) {
+      throw new Error(collection.join("\n"))
+    }
   })
 })

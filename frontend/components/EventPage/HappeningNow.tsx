@@ -15,7 +15,7 @@ const blink = keyframes`
   }
 `
 
-const HappeningNow = (props): ReactElement => <p {...props}>HAPPENING NOW</p>
+const HappeningNow = (): ReactElement => <p>HAPPENING NOW</p>
 
 const UrgentText = css`
   color: ${RED};
