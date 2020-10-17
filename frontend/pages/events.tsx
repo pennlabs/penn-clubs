@@ -6,7 +6,12 @@ import { ReactElement, useEffect, useRef, useState } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
-import { Metadata, Title, WideWrapper } from '../components/common'
+import {
+  Metadata,
+  SegmentedButton,
+  Title,
+  WideWrapper,
+} from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import EventCard from '../components/EventPage/EventCard'
 import { MEETING_REGEX } from '../components/EventPage/EventModal'
@@ -49,6 +54,100 @@ const CalendarEvent = ({
   event: { resource: ClubEvent }
 }) => {
   return resource.name
+}
+
+enum CalendarNavigation {
+  PREVIOUS = 'PREV',
+  NEXT = 'NEXT',
+  TODAY = 'TODAY',
+  DATE = 'DATE',
+}
+
+enum CalendarView {
+  MONTH = 'month',
+  WEEK = 'week',
+  WORK_WEEK = 'work_week',
+  DAY = 'day',
+  AGENDA = 'agenda',
+}
+interface CalendarHeaderProps {
+  date: Date
+  label: string
+  onNavigate(action: CalendarNavigation, newDate?: Date): void
+  onView(view: CalendarView): void
+  view: string
+  views: CalendarView[]
+}
+
+const StyledHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+  .tools {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+    .view-label {
+      font-size: 18px;
+    }
+    & > *:not(:first-child) {
+      margin-left: 20px;
+    }
+  }
+`
+
+const CalendarHeader = ({
+  // date,
+  label,
+  onNavigate,
+  onView,
+  view,
+}: CalendarHeaderProps) => {
+  const _views: CalendarView[] = [
+    CalendarView.DAY,
+    CalendarView.WEEK,
+    CalendarView.MONTH,
+  ]
+  return (
+    <StyledHeader>
+      <Title className="title" style={{ color: CLUBS_GREY, margin: 0 }}>
+        Events
+      </Title>
+      <div className="tools">
+        <div className="view-label">{label}</div>
+        <SegmentedButton
+          buttons={[
+            {
+              key: 'prev',
+              label: '<',
+              onClick: () => {
+                onNavigate(CalendarNavigation.PREVIOUS)
+              },
+            },
+            {
+              key: 'next',
+              label: '>',
+              onClick: () => {
+                onNavigate(CalendarNavigation.NEXT)
+              },
+            },
+          ]}
+        />
+        <SegmentedButton
+          buttons={_views.map((key) => ({
+            key,
+            label: key[0].toUpperCase() + key.slice(1),
+            selected: key === view,
+            onClick: () => {
+              onView(key)
+            },
+          }))}
+        />
+      </div>
+    </StyledHeader>
+  )
 }
 
 /**
@@ -287,14 +386,12 @@ function EventPage({
                 <br />
               </>
             )} */}
-            <Title className="title" style={{ color: CLUBS_GREY }}>
-              Events
-            </Title>
             {isLoading && <ListLoadIndicator />}
             <Calendar
               localizer={localizer}
               components={{
                 event: CalendarEvent,
+                toolbar: CalendarHeader,
               }}
               events={[...liveEvents, ...upcomingEvents].map((e) => ({
                 title: e.name,
