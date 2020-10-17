@@ -3,7 +3,7 @@ Cypress.on('winddow:before:load', (win) => {
 })
 
 afterEach(() => {
-  cy.window.then((win) => {
+  cy.window().then((win) => {
     expect(win.console.error).to.have.callCount(0)
   })
 })
