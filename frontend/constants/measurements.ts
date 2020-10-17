@@ -1,3 +1,23 @@
+import { SITE_ID } from '../utils/branding'
+
+const MEASUREMENTS = {
+  clubs: {
+    NAV_HEIGHT: '3.25rem',
+    LOGO_SCALE: '1',
+    TITLE_CLASS: '1.5rem',
+    TITLE_MARGIN: '15px',
+    TITLE_WEIGHT: 'default',
+  },
+  fyh: {
+    NAV_HEIGHT: '5.25rem',
+    LOGO_SCALE: '1.7',
+    TITLE_CLASS: '2rem',
+    TITLE_MARGIN: '35px',
+    TITLE_WEIGHT: '300',
+
+  },
+}
+
 export const BORDER_RADIUS = '4px'
 export const BORDER_RADIUS_LG = '8px'
 
@@ -15,7 +35,12 @@ export const DESKTOP = '1248px'
 export const TABLET = '992px'
 export const PHONE = '584px'
 
-export const NAV_HEIGHT = '3.25rem'
+export const NAV_HEIGHT = MEASUREMENTS[SITE_ID].NAV_HEIGHT
+export const LOGO_SCALE = MEASUREMENTS[SITE_ID].LOGO_SCALE
+export const TITLE_SIZE = MEASUREMENTS[SITE_ID].TITLE_CLASS
+export const TITLE_MARGIN = MEASUREMENTS[SITE_ID].TITLE_MARGIN
+export const TITLE_WEIGHT = MEASUREMENTS[SITE_ID].TITLE_WEIGHT
+
 export const SEARCH_BAR_MOBILE_HEIGHT = '91.33px'
 
 export const ANIMATION_DURATION = '200ms'

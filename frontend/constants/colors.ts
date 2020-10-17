@@ -1,3 +1,19 @@
+import { SITE_ID } from '../utils/branding'
+
+const COLOR_SCHEME = {
+  clubs: {
+    BANNER_BG: '#ffffff',
+    BANNER_TEXT: '#1f2049',
+  },
+  fyh: {
+    BANNER_BG: '#000f3a',
+    BANNER_TEXT: '#ffffff',
+  },
+}
+
+export const BANNER_BG = COLOR_SCHEME[SITE_ID].BANNER_BG
+export const BANNER_TEXT = COLOR_SCHEME[SITE_ID].BANNER_TEXT
+
 export const WHITE = '#fff'
 export const WHITE_ALPHA = (alpha: number): string =>
   `rgba(255, 255, 255, ${alpha})`
@@ -45,6 +61,13 @@ export const CLUBS_YELLOW = '#FFCF59'
 export const CLUBS_BLUE = '#4954f4'
 export const CLUBS_LIGHT_BLUE = '#e1e3ff'
 export const CLUBS_DEEP_BLUE = '#2c37d1'
+
+export const HUB_NAVY = '#000f3a'
+export const HUB_RED = '#95001a'
+export const HUB_WHITE = '#ffffff'
+export const HUB_SNOW = '#f2f2f3'
+export const HUB_LIGHT_BLUE = '#82afd3'
+export const HUB_YELLOW = '#f2c100'
 
 export const ZOOM_BLUE = '#2D8CFF'
 
