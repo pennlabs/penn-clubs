@@ -1,3 +1,6 @@
+// Ensure that there are no console.error calls when running through the test suite.
+// Ignore the React no-op unmounted state component errors.
+
 Cypress.on('window:before:load', (win) => {
   cy.spy(win.console, 'error')
 })

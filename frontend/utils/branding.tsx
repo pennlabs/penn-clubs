@@ -40,6 +40,7 @@ const sites = {
       'accepting_members',
     ],
     SHOW_MEMBERS: true,
+    SHOW_MEMBERSHIP_REQUEST: true,
   },
   fyh: {
     SITE_NAME: 'Hub@Penn',
@@ -72,6 +73,7 @@ const sites = {
 
     CLUB_FIELDS: [],
     SHOW_MEMBERS: false,
+    SHOW_MEMBERSHIP_REQUEST: false,
   },
 }
 
@@ -105,6 +107,7 @@ export const OBJECT_TAB_RECRUITMENT_LABEL =
 export const OBJECT_TAB_ADMISSION_LABEL = sites[site].OBJECT_TAB_ADMISSION_LABEL
 
 export const SHOW_MEMBERS = sites[site].SHOW_MEMBERS
+export const SHOW_MEMBERSHIP_REQUEST = sites[site].SHOW_MEMBERSHIP_REQUEST
 
 export const CLUB_FIELDS = new Set(sites[site].CLUB_FIELDS)
 export const ALL_CLUB_FIELDS = new Set(
