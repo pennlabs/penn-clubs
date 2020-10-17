@@ -259,7 +259,8 @@ const Rank = (): ReactElement => (
             <>
               ${OBJECT_NAME_TITLE} that are marked as inactive will be shifted
               to the very bottom of the list. You can easily renew your{' '}
-              {OBJECT_NAME_SINGULAR} from the settings tab in the manage {OBJECT_NAME_SINGULAR} page.
+              {OBJECT_NAME_SINGULAR} from the settings tab in the manage{' '}
+              {OBJECT_NAME_SINGULAR} page.
             </>
           ),
           points: [[-1000, `For inactive ${OBJECT_NAME_PLURAL}`]],
