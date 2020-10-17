@@ -1,5 +1,5 @@
-import React from 'react'
-import styled, { css, keyframes } from 'styled-components'
+import { ReactElement } from 'react'
+import s, { css, keyframes } from 'styled-components'
 
 import { RED } from '../../constants/colors'
 
@@ -15,7 +15,7 @@ const blink = keyframes`
   }
 `
 
-const HappeningNow = (props) => <p {...props}>HAPPENING NOW</p>
+const HappeningNow = (props): ReactElement => <p {...props}>HAPPENING NOW</p>
 
 const UrgentText = css`
   color: ${RED};
@@ -27,7 +27,7 @@ const UrgentText = css`
   }
 `
 
-export default styled(HappeningNow)`
+export default s(HappeningNow)<{ urgent?: boolean; floatRight?: boolean }>`
   font-size: 14px;
   font-weight: 500;
   ${({ floatRight }) => (floatRight ? 'float: right;' : '')}

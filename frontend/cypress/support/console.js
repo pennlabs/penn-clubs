@@ -7,7 +7,8 @@ Cypress.on('window:before:load', (win) => {
 
 const CONSOLE_ERROR_WHITELIST = [
   "Warning: Can't perform a React state update on an unmounted component.",
-  'Warning: validateDOMNesting(...):'
+  'Warning: validateDOMNesting(...):',
+  "Warning: Expected server HTML to contain a matching ",
 ]
 
 afterEach(() => {
