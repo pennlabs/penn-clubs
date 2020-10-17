@@ -5,6 +5,7 @@ import s from 'styled-components'
 
 import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
 import {
+  BANNER_TEXT,
   BORDER,
   CLUBS_NAVY,
   CLUBS_RED,
@@ -49,7 +50,7 @@ const LoginButton = s.a`
 
 const StyledLinkAnchor = s.a`
   padding: 14px 20px;
-  color: ${CLUBS_NAVY} !important;
+  color: ${BANNER_TEXT} !important;
   display: inline-block;
   cursor: pointer;
 `
