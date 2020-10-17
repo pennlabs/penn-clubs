@@ -421,6 +421,53 @@ class Testimonial(models.Model):
     def __str__(self):
         return self.text
 
+class RecurringEvent(models.Model):
+    """
+    Represents recurring events hosted by a club.
+    """
+    code = models.SlugField(max_length=255, db_index=True)
+    creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
+    name = models.CharField(max_length=255)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, null=True)
+    RECRUITMENT = 1
+    GBM = 2
+    SPEAKER = 3
+    OTHER = 0
+    FAIR = 4
+    TYPES = (
+        (RECRUITMENT, "Recruitment"),
+        (GBM, "GBM"),
+        (SPEAKER, "Speaker"),
+        (OTHER, "Other"),
+        (FAIR, "Activities Fair"),
+    )
+    type = models.IntegerField(choices=TYPES, default=RECRUITMENT)
+
+    id = models.IntegerField(primary_key=True)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    offset = models.IntegerField()
+    duration = models.IntegerField()
+
+    """
+    RECURRING_DATES = (
+        ('m', 'Monday'),
+        ('t', 'Tuesday'),
+        ('w', 'Wednesday'),
+        ('th', 'Thursday'),
+        ('f', 'Friday'),
+        ('sa', 'Saturday'),
+        ('su', 'Sunday')
+    )
+    recurring_date = models.CharField(max_length=2, choices=RECURRING_DATES, default='m')
+    """
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return str(self.id)
+
 
 class Event(models.Model):
     """
@@ -438,6 +485,7 @@ class Event(models.Model):
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
     image_small = models.ImageField(upload_to=get_event_small_file_name, null=True, blank=True)
     description = models.TextField(blank=True)
+    parent_recurring_event = models.ForeignKey('RecurringEvent', on_delete=models.CASCADE, null=True)
 
     RECRUITMENT = 1
     GBM = 2

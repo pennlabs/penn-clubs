@@ -51,6 +51,7 @@ from clubs.models import (
     MembershipRequest,
     Note,
     QuestionAnswer,
+    RecurringEvent,
     Report,
     School,
     Subscribe,
@@ -90,6 +91,7 @@ from clubs.serializers import (
     MembershipSerializer,
     NoteSerializer,
     QuestionAnswerSerializer,
+    RecurringEventSerializer,
     ReportSerializer,
     SchoolSerializer,
     SubscribeBookmarkSerializer,
@@ -1172,6 +1174,12 @@ class EventViewSet(viewsets.ModelViewSet):
             .prefetch_related("club__badges")
             .order_by("start_time")
         )
+
+class RecurringEventViewSet(viewsets.ModelViewSet):
+    serializer_class = RecurringEventSerializer
+    queryset = RecurringEvent.objects.all()
+    #permission_classes = [ClubItemPermission | IsSuperuser]
+
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):

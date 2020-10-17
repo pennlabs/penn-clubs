@@ -22,6 +22,7 @@ from clubs.views import (
     MemberViewSet,
     NoteViewSet,
     QuestionAnswerViewSet,
+    RecurringEventViewSet,
     ReportViewSet,
     SchoolViewSet,
     SubscribeViewSet,
@@ -39,6 +40,7 @@ from clubs.views import (
 router = routers.SimpleRouter()
 router.register(r"clubs", ClubViewSet, basename="clubs")
 router.register(r"events", EventViewSet, basename="events")
+router.register(r"recurringevents", RecurringEventViewSet, basename="recurringevents")
 router.register(r"tags", TagViewSet, basename="tags")
 router.register(r"badges", BadgeViewSet, basename="badges")
 router.register(r"favorites", FavoriteViewSet, basename="favorites")

@@ -1,6 +1,7 @@
 import re
 from urllib.parse import parse_qs, urlparse
 
+import datetime
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -29,6 +30,7 @@ from clubs.models import (
     NoteTag,
     Profile,
     QuestionAnswer,
+    RecurringEvent,
     Report,
     School,
     Subscribe,
@@ -430,6 +432,38 @@ class EventWriteSerializer(EventSerializer):
     """
 
     url = serializers.CharField(max_length=2048, required=False, allow_blank=True)
+
+class RecurringEventSerializer(serializers.ModelSerializer):
+    """
+    A serializer for a recurring event that is used when creating/editing the event.
+    """
+    start_date=serializers.DateTimeField()
+    end_date=serializers.DateTimeField()
+    offset=serializers.IntegerField()
+    #duration=serializers.IntegerField()
+
+    def create(self, validated_data):
+        #print(validated_data['start_date'])
+        start_date = validated_data['start_date']
+        end_date = validated_data['end_date']
+        offset = validated_data['offset']
+        duration = 3
+        #duration = validated_data['duration']
+        recurring_event_instance = RecurringEvent.objects.create(start_date=start_date,
+                                                         end_date=end_date,
+                                                         offset=offset)
+
+        event_date = start_date
+        while event_date < end_date:
+            #Event.create(**validated_data, parent_recurring_event=recurring_event_instance)
+            event_date = event_date + datetime.timedelta(days=offset)
+
+        return recurring_event_instance
+
+    class Meta:
+        model = RecurringEvent
+        fields = ('start_date', 'end_date', 'offset')
+
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
