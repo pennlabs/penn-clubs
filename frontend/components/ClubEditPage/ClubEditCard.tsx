@@ -10,12 +10,13 @@ import {
   Tag,
   Year,
 } from '../../types'
-import { doApiRequest, formatResponse } from '../../utils'
+import { doApiRequest, formatResponse, isClubFieldShown } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
+  OBJECT_TAB_ADMISSION_LABEL,
   SITE_NAME,
 } from '../../utils/branding'
 import { Contact, Text } from '../common'
@@ -197,7 +198,7 @@ export default function ClubEditCard({
           type: 'date',
           label: 'Date Founded',
         },
-      ],
+      ].filter(({ name }) => isClubFieldShown(name)),
     },
     {
       name: 'Contact',
@@ -252,10 +253,10 @@ export default function ClubEditCard({
           name: 'listserv',
           type: 'text',
         },
-      ],
+      ].filter(({ name }) => isClubFieldShown(name)),
     },
     {
-      name: 'Admission',
+      name: OBJECT_TAB_ADMISSION_LABEL,
       type: 'group',
       description: (
         <Text>
@@ -311,7 +312,7 @@ export default function ClubEditCard({
           converter: (a) => ({ value: a.id, label: a.name }),
           reverser: (a) => ({ id: a.value, name: a.label }),
         },
-      ],
+      ].filter(({ name }) => isClubFieldShown(name)),
     },
   ]
 

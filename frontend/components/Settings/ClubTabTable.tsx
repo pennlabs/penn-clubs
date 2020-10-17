@@ -27,7 +27,7 @@ type ClubTabTableProps = {
   leaveClub: (club: Club) => void
 }
 
-export default ({
+const ClubTabTable = ({
   className,
   memberships,
   togglePublic,
@@ -120,3 +120,5 @@ export default ({
     </tbody>
   </Table>
 )
+
+export default ClubTabTable

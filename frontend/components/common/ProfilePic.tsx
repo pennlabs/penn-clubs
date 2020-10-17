@@ -48,12 +48,17 @@ const Avatar = s.img<{ isRound?: boolean }>`
   ${({ isRound }) => isRound && 'border-radius: 50%;'}
 `
 
-const AvatarWrapper = s.div`
+const AvatarWrapper = s.div<{ isCentered?: boolean }>`
   border-radius: 50%;
   margin: 5px 15px;
-  ${mediaMinWidth(PHONE)} {
-    margin: 0 auto;
-  }
+  ${({ isCentered }) =>
+    isCentered
+      ? `
+    ${mediaMinWidth(PHONE)} {
+      margin: 0 auto;
+    }
+  `
+      : ''}
 `
 
 type ProfilePicProps = {
@@ -62,6 +67,7 @@ type ProfilePicProps = {
   isRound?: boolean
   style?: CSSProperties
   fontSize?: string
+  isCentered?: boolean
 }
 
 export const ProfilePic = ({
@@ -70,11 +76,15 @@ export const ProfilePic = ({
   isRound = true,
   style,
   fontSize,
+  isCentered = true,
 }: ProfilePicProps): ReactElement => {
   const { name, image } = user
   if (image)
     return (
-      <AvatarWrapper className="has-background-light image is-64x64">
+      <AvatarWrapper
+        isCentered={isCentered}
+        className="has-background-light image is-64x64"
+      >
         <Avatar src={image} isRound={isRound} />
       </AvatarWrapper>
     )

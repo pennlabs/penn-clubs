@@ -26,8 +26,21 @@ const sites = {
     OBJECT_URL_SLUG: 'club',
     OBJECT_TAB_MEMBERSHIP_LABEL: 'Membership',
     OBJECT_TAB_RECRUITMENT_LABEL: 'Recruitment',
+    OBJECT_TAB_ADMISSION_LABEL: 'Admission',
 
     CONTACT_EMAIL: 'contact@pennclubs.com',
+
+    CLUB_FIELDS: [
+      'size',
+      'founded',
+      'github',
+      'linkedin',
+      'listserv',
+      'application_required',
+      'accepting_members',
+    ],
+    SHOW_MEMBERS: true,
+    SHOW_MEMBERSHIP_REQUEST: true,
   },
   fyh: {
     SITE_NAME: 'Hub@Penn',
@@ -54,8 +67,13 @@ const sites = {
     OBJECT_URL_SLUG: 'org',
     OBJECT_TAB_MEMBERSHIP_LABEL: 'Admins',
     OBJECT_TAB_RECRUITMENT_LABEL: 'Mailing List',
+    OBJECT_TAB_ADMISSION_LABEL: 'Usage',
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
+
+    CLUB_FIELDS: [],
+    SHOW_MEMBERS: false,
+    SHOW_MEMBERSHIP_REQUEST: false,
   },
 }
 
@@ -86,3 +104,14 @@ export const OBJECT_TAB_MEMBERSHIP_LABEL =
   sites[site].OBJECT_TAB_MEMBERSHIP_LABEL
 export const OBJECT_TAB_RECRUITMENT_LABEL =
   sites[site].OBJECT_TAB_RECRUITMENT_LABEL
+export const OBJECT_TAB_ADMISSION_LABEL = sites[site].OBJECT_TAB_ADMISSION_LABEL
+
+export const SHOW_MEMBERS = sites[site].SHOW_MEMBERS
+export const SHOW_MEMBERSHIP_REQUEST = sites[site].SHOW_MEMBERSHIP_REQUEST
+
+export const CLUB_FIELDS = new Set(sites[site].CLUB_FIELDS)
+export const ALL_CLUB_FIELDS = new Set(
+  Object.values(sites)
+    .map(({ CLUB_FIELDS }) => CLUB_FIELDS)
+    .flat(),
+)

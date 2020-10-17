@@ -17,7 +17,7 @@ type ClubTabProps = {
   userInfo: UserInfo
 }
 
-export default ({ className }: ClubTabProps): ReactElement => {
+const RenewTab = ({ className }: ClubTabProps): ReactElement => {
   const [memberships, setMemberships] = useState<UserMembership[] | null>(null)
 
   const reloadMemberships = () => {
@@ -79,3 +79,5 @@ export default ({ className }: ClubTabProps): ReactElement => {
     </>
   )
 }
+
+export default RenewTab

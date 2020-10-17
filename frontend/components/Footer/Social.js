@@ -22,7 +22,7 @@ const Icons = s.div`
   }
 `
 
-export default () => (
+const Social = () => (
   <Icons>
     <a href="https://github.com/pennlabs/" aria-label="GitHub">
       <Icon name="github" alt="github" />
@@ -32,3 +32,5 @@ export default () => (
     </a>
   </Icons>
 )
+
+export default Social

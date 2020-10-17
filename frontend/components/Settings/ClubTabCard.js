@@ -92,7 +92,7 @@ const RightWrapper = s.div`
   justify-content: flex-start;
 `
 
-export default ({ club, toggleActive, togglePublic, leaveClub }) => {
+const ClubTabCard = ({ club, toggleActive, togglePublic, leaveClub }) => {
   const {
     code,
     name,
@@ -154,3 +154,5 @@ export default ({ club, toggleActive, togglePublic, leaveClub }) => {
     </Card>
   )
 }
+
+export default ClubTabCard
