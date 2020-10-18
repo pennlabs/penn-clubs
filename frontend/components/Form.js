@@ -20,6 +20,7 @@ import EmbedOption, {
   entityToHtml,
   htmlToEntity,
 } from './EmbedOption'
+import AddressField from "./ClubEditPage/AddressField"
 
 const UNSAVED_MESSAGE =
   'You have unsaved changes. Are you sure you want to leave?'
@@ -479,7 +480,18 @@ class Form extends Component {
           {label}
         </label>
       )
-    } else {
+    } 
+    //AIzaSyBoSqUqsroLYdbFB26lwcdZKvEJbjA77d0
+    else if (type === 'address') {
+      
+      inpt = (
+        <AddressField 
+        addressValue = {value}
+         changeAddress={(address)=>{this.setState({[`field-${name}`]: address}), () => this.onChange(address)}}
+         ></AddressField>
+      )
+    }
+    else {
       inpt = (
         <span style={{ color: 'red' }}>{`Unknown field type '${type}'!`}</span>
       )
