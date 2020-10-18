@@ -74,7 +74,7 @@ urlpatterns = [
     path(r"settings/permissions/", UserPermissionAPIView.as_view(), name="users-permission"),
     path(r"clubs/<slug:club_code>/invite/", MassInviteAPIView.as_view(), name="club-invite"),
     path(
-        r"favorites/<slug:user_secretuuid>/",
+        r"calendar/<slug:user_secretuuid>/",
         FavoriteCalendarAPIView.as_view(),
         name="favoritescalendar",
     ),
