@@ -7,13 +7,11 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0046_auto_20201017_1149'),
+        ("clubs", "0046_auto_20201017_1149"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profile',
-            name='uuid_secret',
-            field=models.UUIDField(default=uuid.uuid4),
+            model_name="profile", name="uuid_secret", field=models.UUIDField(default=uuid.uuid4),
         ),
     ]
