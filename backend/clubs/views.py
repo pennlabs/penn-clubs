@@ -1542,11 +1542,11 @@ class FavoriteCalendarAPIView(APIView):
         ).distinct()
         for event in all_events:
             e = ICSEvent()
-            e.name = event.club.name + ": " + event.name
+            e.name = "{} - {}".format(event.club.name, event.name)
             e.begin = event.start_time
             e.end = event.end_time
             e.location = event.location
-            e.description = ("" if event.url is None else event.url) + "\n\n" + event.description
+            e.description = "{}\n\n{}".format(event.url or "", event.description)
             calendar.events.add(e)
         response = HttpResponse(calendar, content_type="text/calendar")
         response["Content-Disposition"] = "attachment; filename=favorite_events.ics"
