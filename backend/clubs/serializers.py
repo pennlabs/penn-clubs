@@ -1087,10 +1087,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
-    # noinspection PyPackageRequirements
     """
         Used by users to get a list of clubs that they have favorited.
-        """
+    """
 
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = ClubListSerializer(read_only=True)
