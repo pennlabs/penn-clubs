@@ -1,15 +1,19 @@
 import equal from 'deep-equal'
 import { NextPageContext } from 'next'
-import { ReactElement, useEffect, useRef, useState } from 'react'
+import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 
 import { Metadata, Title, WideContainer } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import EventCard from '../components/EventPage/EventCard'
 import { MEETING_REGEX } from '../components/EventPage/EventModal'
+import { FuseTag } from '../components/FilterSearch'
 import SearchBar, {
   getInitialSearch,
+  SearchBarCheckboxItem,
   SearchbarRightContainer,
+  SearchBarTagItem,
+  SearchBarTextItem,
   SearchInput,
 } from '../components/SearchBar'
 import { CLUBS_GREY, SNOW } from '../constants'
@@ -106,68 +110,14 @@ function EventPage({
 
     currentSearch.current = searchInput
 
-    const { nameInput, selectedTags } = searchInput
-
     let isCurrent = true
-
-    const tagSelected = selectedTags
-      .filter((tag) => tag.name === 'Tags')
-      .map((tag) => tag.value)
-    const badgesSelected = selectedTags
-      .filter((tag) => tag.name === 'Badges')
-      .map((tag) => tag.value)
-    const sizeSelected = selectedTags
-      .filter((tag) => tag.name === 'Size')
-      .map((tag) => tag.value)
-    const eventTypeSelected = selectedTags
-      .filter((tag) => tag.name === 'Event_Type')
-      .map((tag) => tag.value)
-
-    const requiredApplication =
-      selectedTags.findIndex(
-        (tag) => tag.name === 'Application' && tag.value === 1,
-      ) !== -1
-    const noRequiredApplication =
-      selectedTags.findIndex(
-        (tag) => tag.name === 'Application' && tag.value === 2,
-      ) !== -1
-    const acceptingMembers =
-      selectedTags.findIndex(
-        (tag) => tag.name === 'Application' && tag.value === 3,
-      ) !== -1
 
     const params = new URLSearchParams()
     params.set('format', 'json')
 
-    if (searchInput.nameInput) {
-      params.set('search', nameInput)
-    }
-    if (tagSelected.length > 0) {
-      params.set('club__tags', tagSelected.join(','))
-    }
-    if (badgesSelected.length > 0) {
-      params.set('club__badges', badgesSelected.join(','))
-    }
-    if (sizeSelected.length > 0) {
-      params.set('club__size__in', sizeSelected.join(','))
-    }
-    if (eventTypeSelected.length > 0) {
-      params.set('type__in', eventTypeSelected.join(','))
-    }
-
-    // XOR here, if both are yes they cancel out, if both are no
-    // we do no filtering
-    if (noRequiredApplication !== requiredApplication) {
-      if (noRequiredApplication) {
-        params.set('club__application_required__in', '1')
-      } else {
-        params.set('club__application_required__in', '2,3')
-      }
-    }
-
-    if (acceptingMembers) {
-      params.set('club__accepting_members', 'true')
-    }
+    Object.entries(searchInput).forEach(([key, value]) =>
+      params.set(key, value),
+    )
 
     setLoading(true)
 
@@ -197,20 +147,89 @@ function EventPage({
     return <AuthPrompt />
   }
 
+  const tagOptions = useMemo<FuseTag[]>(
+    () =>
+      tags.map(({ id, name, clubs }) => ({
+        value: id,
+        label: name,
+        count: clubs,
+      })),
+    [tags],
+  )
+
+  const badgeOptions = useMemo<FuseTag[]>(
+    () =>
+      badges.map(({ id, label, color, description }) => ({
+        value: id,
+        label,
+        color,
+        description,
+      })),
+    [badges],
+  )
+
   return (
     <>
       <Metadata title="Events" />
       <div style={{ backgroundColor: SNOW }}>
-        <SearchBar
-          tags={tags}
-          badges={badges}
-          updateSearch={setSearchInput}
-          searchValue={searchInput}
-          options={{
-            ordering: { disabled: true },
-            Event_Type: { disabled: false },
-          }}
-        />
+        <SearchBar updateSearch={setSearchInput} searchInput={searchInput}>
+          <SearchBarTextItem param="search" />
+          <SearchBarTagItem
+            param="club__tags__in"
+            label="Tags"
+            options={tagOptions}
+          />
+          <SearchBarTagItem
+            param="club__badges__in"
+            label="Badges"
+            options={badgeOptions}
+          />
+          <SearchBarCheckboxItem
+            param="type__in"
+            label="Event Type"
+            options={[
+              { value: 2, label: 'General Body Meeting (GBM)', name: 'type' },
+              { value: 1, label: 'Recruitment', name: 'type' },
+              { value: 3, label: 'Speaker', name: 'type' },
+              { value: 4, label: 'Activities Fair', name: 'type' },
+              { value: 0, label: 'Other', name: 'type' },
+            ]}
+          />
+          <SearchBarCheckboxItem
+            param="club__application_required__in"
+            label="Application Required"
+            options={[
+              { value: 1, label: 'No Application Required', name: 'app' },
+              {
+                value: 2,
+                label: 'Required for Some Positions',
+                name: 'app',
+              },
+              {
+                value: 3,
+                label: 'Required for All Positions',
+                name: 'app',
+              },
+            ]}
+          />
+          <SearchBarCheckboxItem
+            param="club__size__in"
+            label="Size"
+            options={[
+              { value: 1, label: 'less than 20 members', name: 'size' },
+              { value: 2, label: '20 to 50 members', name: 'size' },
+              { value: 3, label: '50 to 100 members', name: 'size' },
+              { value: 4, label: 'more than 100', name: 'size' },
+            ]}
+          />
+          <SearchBarCheckboxItem
+            param="club__accepting_members"
+            label="Accepting Members"
+            options={[
+              { value: 'true', label: 'Is Accepting Members', name: 'accept' },
+            ]}
+          />
+        </SearchBar>
         <SearchbarRightContainer>
           <WideContainer background={SNOW} fullHeight>
             {!!liveEvents.length && (
