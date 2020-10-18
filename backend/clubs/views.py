@@ -1537,16 +1537,16 @@ class FavoriteCalendarAPIView(APIView):
         calendar = ICSCal()
         calendar.extra.append(ICSParse.ContentLine(name="X-WR-CALNAME", value="Penn Clubs Events"))
 
-        all_events = Event.objects.filter(club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"]).distinct()
+        all_events = Event.objects.filter(
+            club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"]
+        ).distinct()
         for event in all_events:
             e = ICSEvent()
             e.name = event.club.name + ": " + event.name
             e.begin = event.start_time
             e.end = event.end_time
             e.location = event.location
-            e.description = (
-                ("" if event.url is None else event.url) + "\n\n" + event.description
-            )
+            e.description = ("" if event.url is None else event.url) + "\n\n" + event.description
             calendar.events.add(e)
         response = HttpResponse(calendar, content_type="text/calendar")
         response["Content-Disposition"] = "attachment; filename=favorite_events.ics"
