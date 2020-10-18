@@ -29,14 +29,14 @@ import {
 } from '../constants/colors'
 import { PaginatedClubPage, renderListPage } from '../renderPage'
 import { Badge, Tag, UserInfo } from '../types'
-import { doApiRequest, useSetting } from '../utils'
+import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_TITLE, SITE_TAGLINE } from '../utils/branding'
 
 const colorMap = {
-  Tags: CLUBS_BLUE,
-  Size: CLUBS_NAVY,
-  Application: CLUBS_RED,
-  Badges: CLUBS_PURPLE,
+  tags__in: CLUBS_BLUE,
+  size__in: CLUBS_NAVY,
+  application_required__in: CLUBS_RED,
+  badges__in: CLUBS_PURPLE,
 }
 
 const ClearAllLink = s.span`
@@ -89,11 +89,11 @@ const SearchTags = ({
         .split(',')
         .filter((val) => val.length > 0)
         .map((value) =>
-          optionMapping.tags__in.find((tag) => tag.value.toString() === value),
+          optionMapping[param].find((tag) => tag.value.toString() === value),
         )
         .filter((tag) => tag !== undefined)
         .map((tag) => {
-          tag.category = param
+          tag.name = param
           return tag
         })
     })
@@ -109,7 +109,7 @@ const SearchTags = ({
                 key={tag.value}
                 className="tag is-rounded has-text-white"
                 style={{
-                  backgroundColor: colorMap.Tags,
+                  backgroundColor: colorMap[tag.name],
                   fontWeight: 600,
                   margin: 3,
                 }}
@@ -118,19 +118,19 @@ const SearchTags = ({
                 <button
                   className="delete is-small"
                   onClick={() => {
-                    const newTags = searchInput[tag.category]
+                    const newTags = searchInput[tag.name]
                       .split(',')
                       .filter((t) => t.value === tag.value)
                       .join(',')
                     if (newTags.length > 0) {
                       setSearchInput((inpt) => ({
                         ...inpt,
-                        [tag.category]: newTags,
+                        [tag.name]: newTags,
                       }))
                     } else {
                       setSearchInput((inpt) => {
                         const newInpt = { ...inpt }
-                        delete newInpt[tag.category]
+                        delete newInpt[tag.name]
                         return newInpt
                       })
                     }
@@ -226,6 +226,27 @@ const Splash = (props: SplashProps): ReactElement => {
     [props.badges],
   )
 
+  const applicationRequiredOptions = [
+    { value: 1, label: 'No Application Required', name: 'app' },
+    {
+      value: 2,
+      label: 'Required for Some Positions',
+      name: 'app',
+    },
+    {
+      value: 3,
+      label: 'Required for All Positions',
+      name: 'app',
+    },
+  ]
+
+  const sizeOptions = [
+    { value: 1, label: 'less than 20 members', name: 'size' },
+    { value: 2, label: '20 to 50 members', name: 'size' },
+    { value: 3, label: '50 to 100 members', name: 'size' },
+    { value: 4, label: 'more than 100', name: 'size' },
+  ]
+
   return (
     <>
       <Metadata />
@@ -243,40 +264,33 @@ const Splash = (props: SplashProps): ReactElement => {
             options={badgeOptions}
           />
           <SearchBarOptionItem param="ordering" label="Ordering" />
-          <SearchBarCheckboxItem
-            param="application_required__in"
-            label="Application Required"
-            options={[
-              { value: 1, label: 'No Application Required', name: 'app' },
-              {
-                value: 2,
-                label: 'Required for Some Positions',
-                name: 'app',
-              },
-              {
-                value: 3,
-                label: 'Required for All Positions',
-                name: 'app',
-              },
-            ]}
-          />
-          <SearchBarCheckboxItem
-            param="size__in"
-            label="Size"
-            options={[
-              { value: 1, label: 'less than 20 members', name: 'size' },
-              { value: 2, label: '20 to 50 members', name: 'size' },
-              { value: 3, label: '50 to 100 members', name: 'size' },
-              { value: 4, label: 'more than 100', name: 'size' },
-            ]}
-          />
-          <SearchBarCheckboxItem
-            param="accepting_members"
-            label="Accepting Members"
-            options={[
-              { value: 'true', label: 'Is Accepting Members', name: 'accept' },
-            ]}
-          />
+          {isClubFieldShown('application_required') && (
+            <SearchBarCheckboxItem
+              param="application_required__in"
+              label="Application Required"
+              options={applicationRequiredOptions}
+            />
+          )}
+          {isClubFieldShown('size') && (
+            <SearchBarCheckboxItem
+              param="size__in"
+              label="Size"
+              options={sizeOptions}
+            />
+          )}
+          {isClubFieldShown('accepting_members') && (
+            <SearchBarCheckboxItem
+              param="accepting_members"
+              label="Accepting Members"
+              options={[
+                {
+                  value: 'true',
+                  label: 'Is Accepting Members',
+                  name: 'accept',
+                },
+              ]}
+            />
+          )}
         </SearchBar>
 
         <SearchbarRightContainer>
@@ -302,7 +316,12 @@ const Splash = (props: SplashProps): ReactElement => {
             <SearchTags
               searchInput={searchInput}
               setSearchInput={setSearchInput}
-              optionMapping={{ tags__in: tagOptions, badges__in: badgeOptions }}
+              optionMapping={{
+                tags__in: tagOptions,
+                badges__in: badgeOptions,
+                application_required__in: applicationRequiredOptions,
+                size__in: sizeOptions,
+              }}
             />
 
             {(preFair || fairIsOpen) && (

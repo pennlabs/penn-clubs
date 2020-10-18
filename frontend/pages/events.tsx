@@ -19,7 +19,7 @@ import SearchBar, {
 import { CLUBS_GREY, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, Tag } from '../types'
-import { doApiRequest } from '../utils'
+import { doApiRequest, isClubFieldShown } from '../utils'
 import { OBJECT_NAME_SINGULAR } from '../utils/branding'
 import { ListLoadIndicator } from '.'
 
@@ -195,40 +195,50 @@ function EventPage({
               { value: 0, label: 'Other', name: 'type' },
             ]}
           />
-          <SearchBarCheckboxItem
-            param="club__application_required__in"
-            label="Application Required"
-            options={[
-              { value: 1, label: 'No Application Required', name: 'app' },
-              {
-                value: 2,
-                label: 'Required for Some Positions',
-                name: 'app',
-              },
-              {
-                value: 3,
-                label: 'Required for All Positions',
-                name: 'app',
-              },
-            ]}
-          />
-          <SearchBarCheckboxItem
-            param="club__size__in"
-            label="Size"
-            options={[
-              { value: 1, label: 'less than 20 members', name: 'size' },
-              { value: 2, label: '20 to 50 members', name: 'size' },
-              { value: 3, label: '50 to 100 members', name: 'size' },
-              { value: 4, label: 'more than 100', name: 'size' },
-            ]}
-          />
-          <SearchBarCheckboxItem
-            param="club__accepting_members"
-            label="Accepting Members"
-            options={[
-              { value: 'true', label: 'Is Accepting Members', name: 'accept' },
-            ]}
-          />
+          {isClubFieldShown('application_required') && (
+            <SearchBarCheckboxItem
+              param="club__application_required__in"
+              label="Application Required"
+              options={[
+                { value: 1, label: 'No Application Required', name: 'app' },
+                {
+                  value: 2,
+                  label: 'Required for Some Positions',
+                  name: 'app',
+                },
+                {
+                  value: 3,
+                  label: 'Required for All Positions',
+                  name: 'app',
+                },
+              ]}
+            />
+          )}
+          {isClubFieldShown('size') && (
+            <SearchBarCheckboxItem
+              param="club__size__in"
+              label="Size"
+              options={[
+                { value: 1, label: 'less than 20 members', name: 'size' },
+                { value: 2, label: '20 to 50 members', name: 'size' },
+                { value: 3, label: '50 to 100 members', name: 'size' },
+                { value: 4, label: 'more than 100', name: 'size' },
+              ]}
+            />
+          )}
+          {isClubFieldShown('accepting_members') && (
+            <SearchBarCheckboxItem
+              param="club__accepting_members"
+              label="Accepting Members"
+              options={[
+                {
+                  value: 'true',
+                  label: 'Is Accepting Members',
+                  name: 'accept',
+                },
+              ]}
+            />
+          )}
         </SearchBar>
         <SearchbarRightContainer>
           <WideContainer background={SNOW} fullHeight>
