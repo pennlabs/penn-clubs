@@ -189,8 +189,8 @@ class Club(models.Model):
     target_majors = models.ManyToManyField("Major", blank=True)
 
     # Hub@Penn fields
-    available_virtually = models.BooleanField()
-    appointment_needed = models.BooleanField()
+    available_virtually = models.BooleanField(default=False)
+    appointment_needed = models.BooleanField(default=False)
     signature_events = models.TextField(blank=True)
 
     # cache club rankings

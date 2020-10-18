@@ -289,6 +289,26 @@ const Splash = (props: SplashProps): ReactElement => {
               ]}
             />
           )}
+          {isClubFieldShown('available_virtually') && (
+            <SearchBarCheckboxItem
+              param="available_virtually__in"
+              label="Available Virtually"
+              options={[
+                { value: 'true', label: 'Yes', name: 'virtual' },
+                { value: 'false', label: 'No', name: 'virtual' },
+              ]}
+            />
+          )}
+          {isClubFieldShown('appointment_needed') && (
+            <SearchBarCheckboxItem
+              param="appointment_needed__in"
+              label="Appointment Needed"
+              options={[
+                { value: 'true', label: 'Yes', name: 'virtual' },
+                { value: 'false', label: 'No', name: 'virtual' },
+              ]}
+            />
+          )}
         </SearchBar>
 
         <SearchbarRightContainer>

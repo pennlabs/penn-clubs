@@ -3,7 +3,7 @@ import s from 'styled-components'
 
 import { CLUBS_GREY } from '../constants/colors'
 import { Club } from '../types'
-import { getSizeDisplay } from '../utils'
+import { getSizeDisplay, isClubFieldShown } from '../utils'
 import { BookmarkIcon, Icon, SubscribeIcon } from './common'
 
 const Wrapper = s.div`
@@ -30,12 +30,24 @@ type DetailsProps = {
   club: Club
 }
 
+const DetailBoolIcon = ({ value, alt }): ReactElement => {
+  return (
+    <Icon
+      name={value ? 'check-circle' : 'x-circle'}
+      alt={alt}
+      size="0.8rem"
+      style={iconStyles}
+    />
+  )
+}
+
 const Details = ({ club }: DetailsProps): ReactElement => {
   const {
     size,
-    membership_count: membershipCount,
     application_required: applicationRequired,
     accepting_members: acceptingMembers,
+    available_virtually: availableVirtually,
+    appointment_needed: appointmentNeeded,
   } = club
 
   return (
@@ -43,38 +55,64 @@ const Details = ({ club }: DetailsProps): ReactElement => {
       <div
         style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8, flex: 1 }}
       >
-        <Icon name="user" alt="members" size="0.8rem" style={iconStyles} />
-        {getSizeDisplay(size, false)}
-        &nbsp;
-        {' • '}
-        &nbsp;
-        <Icon name="edit" alt="applications" size="0.8rem" style={iconStyles} />
-        {'Apps for '}
-        {{
-          1: 'No',
-          2: 'Some',
-          3: 'All',
-        }[applicationRequired] || 'Unknown If'}
-        {' Roles'}
-        &nbsp;
-        {' • '}
-        &nbsp;
-        {acceptingMembers ? (
-          <Icon
-            name="check-circle"
-            alt="accepting members"
-            size="0.8rem"
-            style={iconStyles}
-          />
-        ) : (
-          <Icon
-            name="x-circle"
-            alt="accepting members"
-            size="0.8rem"
-            style={iconStyles}
-          />
+        {isClubFieldShown('size') && (
+          <>
+            <Icon name="user" alt="members" size="0.8rem" style={iconStyles} />
+            {getSizeDisplay(size, false)}
+          </>
         )}
-        {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
+        {isClubFieldShown('available_virtually') && (
+          <>
+            <DetailBoolIcon
+              value={availableVirtually}
+              alt="available virtually"
+            />
+            {availableVirtually
+              ? 'Available Virtually'
+              : 'Not Available Virtually'}
+          </>
+        )}
+        {isClubFieldShown('appointment_needed') && (
+          <>
+            &nbsp;
+            {' • '}
+            &nbsp;
+            <DetailBoolIcon
+              value={!appointmentNeeded}
+              alt="appointment needed"
+            />
+            {appointmentNeeded ? 'Appointment Needed' : 'No Appointment Needed'}
+          </>
+        )}
+        {isClubFieldShown('application_required') && (
+          <>
+            &nbsp;
+            {' • '}
+            &nbsp;
+            <Icon
+              name="edit"
+              alt="applications"
+              size="0.8rem"
+              style={iconStyles}
+            />
+            {'Apps for '}
+            {{
+              1: 'No',
+              2: 'Some',
+              3: 'All',
+            }[applicationRequired] || 'Unknown If'}
+            {' Roles'}
+          </>
+        )}
+        {isClubFieldShown('accepting_members') && (
+          <>
+            &nbsp;
+            {' • '}
+            &nbsp;
+            <DetailBoolIcon value={acceptingMembers} alt="accepting members" />
+            {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
+          </>
+        )}
       </div>
       <BookmarkIcon club={club} padding="0" />
       {club.enables_subscription && <SubscribeIcon club={club} padding="0" />}

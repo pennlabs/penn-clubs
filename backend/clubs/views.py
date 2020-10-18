@@ -302,12 +302,18 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
         def parse_boolean(field, value, operation, queryset):
             value = value.strip().lower()
 
+            if operation == "in":
+                if set(value.split(",")) == {"true", "false"}:
+                    return
+
             if value in {"true", "yes"}:
                 boolval = True
             elif value in {"false", "no"}:
                 boolval = False
             elif value in {"null", "none"}:
                 boolval = None
+            else:
+                return
 
             if boolval is None:
                 return {f"{field}__isnull": True}
@@ -315,20 +321,21 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             return {f"{field}": boolval}
 
         fields = {
-            "founded": parse_year,
-            "favorite_count": parse_int,
-            "size": parse_int,
             "accepting_members": parse_boolean,
-            "enables_subscription": parse_boolean,
-            "application_required": parse_int,
-            "tags": parse_tags,
-            "badges": parse_badges,
-            "target_schools": parse_tags,
-            "target_majors": parse_tags,
-            "target_years": parse_tags,
             "active": parse_boolean,
+            "application_required": parse_int,
+            "appointment_needed": parse_boolean,
             "approved": parse_boolean,
-            "accepting_members": parse_boolean,
+            "available_virtually": parse_boolean,
+            "badges": parse_badges,
+            "enables_subscription": parse_boolean,
+            "favorite_count": parse_int,
+            "founded": parse_year,
+            "size": parse_int,
+            "tags": parse_tags,
+            "target_majors": parse_tags,
+            "target_schools": parse_tags,
+            "target_years": parse_tags,
         }
 
         if not queryset.model == Club:
