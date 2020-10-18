@@ -188,8 +188,7 @@ class MemberPermission(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        object = Club.objects.get(code=view.kwargs["club_code"])
-        membership = find_membership_helper(request.user, object)
+        membership = find_membership_helper(request.user, obj.club)
         if membership is None:
             return False
 

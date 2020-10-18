@@ -25,6 +25,9 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.text import slugify
 from django_redis import get_redis_connection
+from ics import Calendar as cal
+from ics import Event as ev
+from ics import parse
 from rest_framework import filters, generics, mixins, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -1523,6 +1526,33 @@ class BadgeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Badge.objects.filter(Q(purpose="fair") | Q(label="SAC"))
+
+
+class FavoriteCalendarAPIView(APIView):
+    """
+        get: Return a .ics file of the user's favorite clubs' events.
+    """
+
+    def get(self, request, *args, **kwargs):
+        calendar = cal()
+        calendar.extra.append(parse.ContentLine(name="X-WR-CALNAME", value="Penn Clubs Events"))
+        favs = Favorite.objects.filter(person__profile__uuid_secret=kwargs["user_secretuuid"])
+        clubs = {fav.club for fav in favs}  # set contains distinct elements
+        for club in clubs:
+            all_events = club.events.all()
+            for event in all_events:
+                e = ev()
+                e.name = event.club.name + ": " + event.name
+                e.begin = event.start_time
+                e.end = event.end_time
+                e.location = event.location
+                e.description = (
+                    ("" if event.url is None else event.url) + "\n\n" + event.description
+                )
+                calendar.events.add(e)
+        response = HttpResponse(calendar, content_type="text/calendar")
+        response["Content-Disposition"] = "attachment; filename=favorite_events.ics"
+        return response
 
 
 class UserPermissionAPIView(APIView):

@@ -873,6 +873,7 @@ class Profile(models.Model):
 
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, primary_key=True)
     image = models.ImageField(upload_to=get_user_file_name, null=True, blank=True)
+    uuid_secret = models.UUIDField(default=uuid.uuid4, editable=False)
 
     has_been_prompted = models.BooleanField(default=False)
     share_bookmarks = models.BooleanField(default=False)
