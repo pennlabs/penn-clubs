@@ -59,7 +59,7 @@ const LoginButton = s.a`
 `
 
 const StyledLinkAnchor = s.a`
-  padding: ${LINK_MARGIN} ${LINK_SPACING} ${LINK_MARGIN} 20px;
+  padding: ${LINK_MARGIN} 20px;
   color: ${BANNER_TEXT} !important;
   display: inline-block;
   cursor: pointer;

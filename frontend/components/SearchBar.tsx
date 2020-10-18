@@ -12,6 +12,7 @@ import {
   BORDER,
   CLUBS_GREY,
   FOCUS_GRAY,
+  H1_TEXT,
   MEDIUM_GRAY,
   WHITE,
 } from '../constants/colors'
@@ -60,13 +61,14 @@ export const SearchbarRightContainer = s.div`
 `
 
 const Wrapper = s.div`
-  height: 100vh;
+  height:100vh;
   width: 20vw;
   overflow-x: hidden;
   overflow-y: auto;
   position: fixed;
   top: 0;
   padding-top: ${NAV_HEIGHT};
+  color: ${H1_TEXT};
 
   ${mediaMaxWidth(MD)} {
     position: relative;
