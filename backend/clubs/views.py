@@ -1536,20 +1536,18 @@ class FavoriteCalendarAPIView(APIView):
     def get(self, request, *args, **kwargs):
         calendar = ICSCal()
         calendar.extra.append(ICSParse.ContentLine(name="X-WR-CALNAME", value="Penn Clubs Events"))
-        favs = Favorite.objects.filter(person__profile__uuid_secret=kwargs["user_secretuuid"])
-        clubs = {fav.club for fav in favs}  # set contains distinct elements
-        for club in clubs:
-            all_events = club.events.all()
-            for event in all_events:
-                e = ICSEvent()
-                e.name = event.club.name + ": " + event.name
-                e.begin = event.start_time
-                e.end = event.end_time
-                e.location = event.location
-                e.description = (
-                    ("" if event.url is None else event.url) + "\n\n" + event.description
-                )
-                calendar.events.add(e)
+
+        all_events = Event.objects.filter(club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"]).distinct()
+        for event in all_events:
+            e = ICSEvent()
+            e.name = event.club.name + ": " + event.name
+            e.begin = event.start_time
+            e.end = event.end_time
+            e.location = event.location
+            e.description = (
+                ("" if event.url is None else event.url) + "\n\n" + event.description
+            )
+            calendar.events.add(e)
         response = HttpResponse(calendar, content_type="text/calendar")
         response["Content-Disposition"] = "attachment; filename=favorite_events.ics"
         return response

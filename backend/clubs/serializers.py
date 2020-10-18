@@ -1088,7 +1088,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
 class FavoriteSerializer(serializers.ModelSerializer):
     """
-        Used by users to get a list of clubs that they have favorited.
+    Used by users to get a list of clubs that they have favorited.
     """
 
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
