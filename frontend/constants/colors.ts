@@ -5,17 +5,32 @@ const COLOR_SCHEME = {
     BANNER_BG: '#ffffff',
     BANNER_TEXT: '#1f2049',
     LOGIN_BACKGROUND: '#ef4c5f',
+    H1_TEXT: '#414654',
+    ADD_BUTTON: '#4954f4',
+    PRIMARY_TAG_BG: '#e1e3ff',
+    PRIMARY_TAG_TEXT: '#4954f4',
+    FEEDBACK_BG: '$4954f4',
   },
   fyh: {
     BANNER_BG: '#000f3a',
     BANNER_TEXT: '#ffffff',
     LOGIN_BACKGROUND: '#000f3a',
+    H1_TEXT: '#000f3a',
+    ADD_BUTTON: '#95001a',
+    PRIMARY_TAG_BG: '#95001a',
+    PRIMARY_TAG_TEXT: '#ffffff',
+    FEEDBACK_BG: '#000f3a',
   },
 }
 
 export const BANNER_BG = COLOR_SCHEME[SITE_ID].BANNER_BG
 export const BANNER_TEXT = COLOR_SCHEME[SITE_ID].BANNER_TEXT
 export const LOGIN_BACKGROUND = COLOR_SCHEME[SITE_ID].LOGIN_BACKGROUND
+export const H1_TEXT = COLOR_SCHEME[SITE_ID].H1_TEXT
+export const ADD_BUTTON = COLOR_SCHEME[SITE_ID].ADD_BUTTON
+export const PRIMARY_TAG_BG = COLOR_SCHEME[SITE_ID].PRIMARY_TAG_BG
+export const PRIMARY_TAG_TEXT = COLOR_SCHEME[SITE_ID].PRIMARY_TAG_TEXT
+export const FEEDBACK_BG = COLOR_SCHEME[SITE_ID].FEEDBACK_BG
 
 export const WHITE = '#fff'
 export const WHITE_ALPHA = (alpha: number): string =>

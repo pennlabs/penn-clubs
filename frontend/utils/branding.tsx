@@ -57,7 +57,8 @@ const sites = {
 
     SITE_LOGO: '/static/img/penn_shield.png',
     SITE_FAVICON: '/static/penn_favicon.ico',
-    SITE_TAGLINE: 'Find resources at the University of Pennsylvania!',
+    SITE_TAGLINE:
+      'Find the support resources you need on and around Penn’s campus!',
 
     APPROVAL_AUTHORITY: 'Office of Student Affairs',
     APPROVAL_AUTHORITY_URL: 'https://osa.vpul.upenn.edu/',

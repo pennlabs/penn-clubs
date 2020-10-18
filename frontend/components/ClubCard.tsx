@@ -7,14 +7,17 @@ import {
   ALLBIRDS_GRAY,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
+  H1_TEXT,
   HOVER_GRAY,
   WHITE,
 } from '../constants/colors'
 import {
   ANIMATION_DURATION,
   BORDER_RADIUS,
+  CARD_HEADING,
   mediaMaxWidth,
   SM,
+  TITLE_WEIGHT,
 } from '../constants/measurements'
 import { CLUB_ROUTE } from '../constants/routes'
 import { Club } from '../types'
@@ -80,8 +83,9 @@ const CardHeader = s.div`
 
 const CardTitle = s.strong`
   line-height: 1.2;
-  color: ${CLUBS_GREY};
+  color: ${H1_TEXT};
   margin-bottom: 0.5rem;
+  font-weight: ${CARD_HEADING};
 `
 
 const shorten = (desc: string): string => {

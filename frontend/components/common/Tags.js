@@ -7,6 +7,8 @@ import {
   CLUBS_LIGHT_BLUE,
   DARK_GRAY,
   FOCUS_GRAY,
+  PRIMARY_TAG_BG,
+  PRIMARY_TAG_TEXT,
   WHITE,
 } from '../../constants/colors'
 
@@ -32,8 +34,8 @@ export const Tag = s.span`
 `
 
 export const BlueTag = s(Tag)`
-  background-color: ${CLUBS_LIGHT_BLUE} !important;
-  color: ${CLUBS_BLUE} !important;
+  background-color: ${PRIMARY_TAG_BG} !important;
+  color: ${PRIMARY_TAG_TEXT} !important;
 `
 
 export const SelectedTag = s(Tag)`
