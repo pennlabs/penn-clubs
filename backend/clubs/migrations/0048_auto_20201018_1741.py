@@ -6,38 +6,32 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0047_profile_uuid_secret'),
+        ("clubs", "0047_profile_uuid_secret"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='club',
-            name='appointment_needed',
+            model_name="club", name="appointment_needed", field=models.BooleanField(default=False),
+        ),
+        migrations.AddField(
+            model_name="club", name="available_virtually", field=models.BooleanField(default=False),
+        ),
+        migrations.AddField(
+            model_name="club", name="signature_events", field=models.TextField(blank=True),
+        ),
+        migrations.AddField(
+            model_name="historicalclub",
+            name="appointment_needed",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='club',
-            name='available_virtually',
+            model_name="historicalclub",
+            name="available_virtually",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='club',
-            name='signature_events',
-            field=models.TextField(blank=True),
-        ),
-        migrations.AddField(
-            model_name='historicalclub',
-            name='appointment_needed',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='historicalclub',
-            name='available_virtually',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='historicalclub',
-            name='signature_events',
+            model_name="historicalclub",
+            name="signature_events",
             field=models.TextField(blank=True),
         ),
     ]
