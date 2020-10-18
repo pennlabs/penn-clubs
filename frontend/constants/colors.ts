@@ -4,15 +4,18 @@ const COLOR_SCHEME = {
   clubs: {
     BANNER_BG: '#ffffff',
     BANNER_TEXT: '#1f2049',
+    LOGIN_BACKGROUND: '#ef4c5f',
   },
   fyh: {
     BANNER_BG: '#000f3a',
     BANNER_TEXT: '#ffffff',
+    LOGIN_BACKGROUND: '#000f3a',
   },
 }
 
 export const BANNER_BG = COLOR_SCHEME[SITE_ID].BANNER_BG
 export const BANNER_TEXT = COLOR_SCHEME[SITE_ID].BANNER_TEXT
+export const LOGIN_BACKGROUND = COLOR_SCHEME[SITE_ID].LOGIN_BACKGROUND
 
 export const WHITE = '#fff'
 export const WHITE_ALPHA = (alpha: number): string =>
