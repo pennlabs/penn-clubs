@@ -17,6 +17,7 @@ import renderPage from '../renderPage'
 import {
   APPROVAL_AUTHORITY,
   APPROVAL_AUTHORITY_URL,
+  FEEDBACK_URL,
   OBJECT_NAME_LONG_PLURAL,
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
@@ -59,9 +60,7 @@ const GENERIC_TEMPLATE = (data) => (
       We’re so excited to let everyone at the {SCHOOL_NAME} contribute to the
       development of {SITE_NAME}! Your feedback is incredibly important to us.
       Have any questions or comments? Find any bugs?{' '}
-      <a href="https://airtable.com/shrCsYFWxCwfwE7cf">
-        Please let us know on our feedback form.
-      </a>
+      <a href={FEEDBACK_URL}>Please let us know on our feedback form.</a>
     </Question>
     <Line />
     <Question title="Why do I have to log in?">
@@ -164,9 +163,7 @@ const GENERIC_TEMPLATE = (data) => (
       for details about our {OBJECT_NAME_SINGULAR} recommendation algorithm.
     </Question>
     <Question title="I have another question!">
-      <a href="https://airtable.com/shrCsYFWxCwfwE7cf">
-        Please let us know on our feedback form :)
-      </a>
+      <a href={FEEDBACK_URL}>Please let us know on our feedback form :)</a>
     </Question>
     <Line />
     <Question title="Special Thanks">

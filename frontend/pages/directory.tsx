@@ -3,6 +3,7 @@ import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { Container, Metadata, Title } from '../components/common'
+import { SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { Club } from '../types'
 import { doApiRequest } from '../utils'
@@ -41,7 +42,7 @@ const DirectoryTitle = s(Title)`
 const Directory = ({ clubs }: Props): ReactElement => {
   return (
     <>
-      <Container>
+      <Container fullHeight background={SNOW}>
         <Metadata title={`${OBJECT_NAME_TITLE} Directory`} />
         <DirectoryTitle>{OBJECT_NAME_TITLE} Directory</DirectoryTitle>
         <p className="mb-5 has-text-grey">

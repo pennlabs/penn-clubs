@@ -29,6 +29,7 @@ const sites = {
     OBJECT_TAB_ADMISSION_LABEL: 'Admission',
 
     CONTACT_EMAIL: 'contact@pennclubs.com',
+    FEEDBACK_URL: 'https://airtable.com/shrCsYFWxCwfwE7cf',
 
     CLUB_FIELDS: [
       'size',
@@ -97,6 +98,7 @@ const sites = {
     OBJECT_TAB_ADMISSION_LABEL: 'Usage',
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
+    FEEDBACK_URL: 'https://airtable.com/shrm3UcvjpPEl0qXq',
 
     CLUB_FIELDS: [
       'appointment_needed',
@@ -124,6 +126,7 @@ export const SITE_TAGLINE = sites[site].SITE_TAGLINE
 export const SCHOOL_NAME = sites[site].SCHOOL_NAME
 export const DOMAIN = sites[site].DOMAIN
 export const CONTACT_EMAIL = sites[site].CONTACT_EMAIL
+export const FEEDBACK_URL = sites[site].FEEDBACK_URL
 
 export const OBJECT_NAME_PLURAL = sites[site].OBJECT_NAME_PLURAL
 export const OBJECT_NAME_LONG_PLURAL = sites[site].OBJECT_NAME_LONG_PLURAL
