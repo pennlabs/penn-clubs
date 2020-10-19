@@ -394,13 +394,31 @@ class ClubsOrderingFilter(RandomOrderingFilter):
         return super().get_valid_fields(queryset, view, context)
 
     def filter_queryset(self, request, queryset, view):
-        new_queryset = super().filter_queryset(request, queryset, view)
-        ordering = request.GET.get("ordering", "").split(",")
+        ordering = [arg for arg in request.GET.get("ordering", "").strip().split(",") if arg]
+        if not ordering and hasattr(view, "ordering"):
+            ordering = [view.ordering]
 
         if "featured" in ordering:
             if queryset.model == Club:
                 return queryset.order_by("-rank", "-favorite_count", "-id")
             return queryset.order_by("-club__rank", "-club__favorite_count", "-club__id")
+        else:
+            # prevent invalid SQL lookups from custom ordering properties
+            if hasattr(view, "ordering") and view.ordering in {
+                "featured",
+                "alphabetical",
+                "random",
+            }:
+                old_ordering = view.ordering
+                view.ordering = "-id"
+            else:
+                old_ordering = None
+
+            new_queryset = super().filter_queryset(request, queryset, view)
+
+            # restore ordering property
+            if old_ordering is not None:
+                view.ordering = old_ordering
 
         if "alphabetical" in ordering:
             new_queryset = new_queryset.order_by(Lower("name"))
@@ -453,7 +471,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
     search_fields = ["name", "subtitle", "code"]
     ordering_fields = ["favorite_count", "name"]
-    ordering = "-favorite_count"
+    ordering = "featured"
 
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
