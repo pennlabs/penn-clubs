@@ -332,7 +332,7 @@ const Splash = (props: SplashProps): ReactElement => {
         </SearchBar>
 
         <SearchbarRightContainer>
-          <WideContainer background={SNOW}>
+          <WideContainer background={SNOW} fullHeight>
             <div style={{ padding: '30px 0' }}>
               <DisplayButtons switchDisplay={setDisplay} />
 
