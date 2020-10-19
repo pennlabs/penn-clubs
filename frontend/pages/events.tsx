@@ -9,7 +9,6 @@ import EventCard from '../components/EventPage/EventCard'
 import { MEETING_REGEX } from '../components/EventPage/EventModal'
 import { FuseTag } from '../components/FilterSearch'
 import SearchBar, {
-  getInitialSearch,
   SearchBarCheckboxItem,
   SearchbarRightContainer,
   SearchBarTagItem,
@@ -97,10 +96,8 @@ function EventPage({
     randomizeEvents(initialLiveEvents),
   )
 
-  const [searchInput, setSearchInput] = useState<SearchInput>(
-    getInitialSearch(),
-  )
-  const currentSearch = useRef<SearchInput>(getInitialSearch())
+  const [searchInput, setSearchInput] = useState<SearchInput>({})
+  const currentSearch = useRef<SearchInput>({})
   const [isLoading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {

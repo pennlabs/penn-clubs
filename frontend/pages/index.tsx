@@ -9,7 +9,6 @@ import DisplayButtons from '../components/DisplayButtons'
 import { FuseTag } from '../components/FilterSearch'
 import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
 import SearchBar, {
-  getInitialSearch,
   SearchBarCheckboxItem,
   SearchBarOptionItem,
   SearchbarRightContainer,
@@ -167,13 +166,11 @@ const Splash = (props: SplashProps): ReactElement => {
   const fairIsOpen = useSetting('FAIR_OPEN')
   const preFair = useSetting('PRE_FAIR')
   const renewalBanner = useSetting('CLUB_REGISTRATION')
-  const currentSearch = useRef<SearchInput>(getInitialSearch())
+  const currentSearch = useRef<SearchInput>({})
 
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
   const [isLoading, setLoading] = useState<boolean>(false)
-  const [searchInput, setSearchInput] = useState<SearchInput>(
-    getInitialSearch(),
-  )
+  const [searchInput, setSearchInput] = useState<SearchInput>({})
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {

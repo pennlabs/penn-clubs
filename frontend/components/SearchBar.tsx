@@ -41,10 +41,6 @@ const MobileSearchBarSpacer = s.div`
   }
 `
 
-export const getInitialSearch = (): SearchInput => {
-  return { ordering: 'featured' }
-}
-
 export const SearchbarRightContainer = s.div`
   width: 80vw;
   margin-left: 20vw;
@@ -186,9 +182,7 @@ const SearchBarContext = React.createContext<
   null | ((modifier: SetStateAction<SearchInput>) => void)
 >(null)
 
-const SearchBarValueContext = React.createContext<SearchInput>(
-  getInitialSearch(),
-)
+const SearchBarValueContext = React.createContext<SearchInput>({})
 
 type SearchBarTagItemProps = {
   param: string
