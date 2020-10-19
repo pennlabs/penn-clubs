@@ -1,75 +1,87 @@
-import { ReactElement, useState, useEffect } from 'react'
-import {useLoadScript} from "@react-google-maps/api"
-import usePlacesAutocomplete from "use-places-autocomplete"
+import { LoadScript } from '@react-google-maps/api'
 import { Libraries } from '@react-google-maps/api/dist/utils/make-load-script-url'
-import Autosuggest from "react-autosuggest"
+import { ReactElement, useEffect } from 'react'
+import Autosuggest from 'react-autosuggest'
+import usePlacesAutocomplete from 'use-places-autocomplete'
 
+type AddressProps = {
+  addressValue: string
+  changeAddress: (state: any) => void
+}
 
-type addressProps = React.PropsWithChildren<{
-    addressValue : string,
-    changeAddress : (state: any) => void,
-    selectAddress : () => void
-  }>
+const AddressTypeaheadField = ({
+  changeAddress,
+  addressValue,
+}: AddressProps): ReactElement => {
+  const {
+    ready,
+    value,
+    suggestions: { status, data },
+    setValue,
+    clearSuggestions,
+  } = usePlacesAutocomplete({
+    requestOptions: {},
+  })
 
- const AddressField =  ({
-    changeAddress, addressValue}: addressProps):  ReactElement => {
-    const apiKey : string = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "";
-    const [libraries, changeLibraries] = useState<Libraries> (["places"]);
-    
-    const {isLoaded} = useLoadScript({
-        googleMapsApiKey : apiKey,
-        libraries
-    })
+  useEffect(() => {
+    if (addressValue) setValue(addressValue)
+  }, [])
 
-    const {
-        ready,
-        value,
-        suggestions: { status, data },
-        setValue,
-        clearSuggestions,
-      } = usePlacesAutocomplete({
-        requestOptions: {
-        },
-      });
+  const handleChange = (e, { newValue }) => {
+    setValue(newValue)
+    changeAddress(newValue)
+  }
 
-      useEffect (()=>{
-       if (addressValue) setValue(addressValue);
-      },[])
+  const getSuggestionValue = (suggestion) => suggestion.description
 
-      
-      const handleChange = (e, {newValue}) => {
-        setValue(newValue)
-        changeAddress (newValue);
-      }
+  const renderSuggestion = (suggestion) => {
+    return <div className="input">{suggestion.description}</div>
+  }
 
-      const getSuggestionValue = suggestion => suggestion.description;
+  const inputProps = {
+    placeholder: '',
+    value,
+    className: 'input',
+    onChange: handleChange,
+  }
+  return (
+    <Autosuggest
+      suggestions={data}
+      onSuggestionsFetchRequested={() => {}}
+      onSuggestionsClearRequested={() => {}}
+      getSuggestionValue={getSuggestionValue}
+      renderSuggestion={renderSuggestion}
+      inputProps={inputProps}
+    />
+  )
+}
 
-      const renderSuggestion = suggestion => {
-       return ( <div className = "input">
-          {suggestion.description}
-        </div>);
-      }
+const LIBRARIES: Libraries = ['places']
 
-      const inputProps = {
-        placeholder: '',
-        value,
-        className: "input",
-        onChange: handleChange
-      };
-    if (!isLoaded && ready) return <> </>
-    else 
-        return(
-        <>
-        <div > 
-         <Autosuggest
-        suggestions={data}
-        onSuggestionsFetchRequested={()=>{}}
-        onSuggestionsClearRequested={()=>{}}
-        getSuggestionValue={getSuggestionValue}
-        renderSuggestion={renderSuggestion}
-        inputProps={inputProps}
+const AddressField = ({
+  changeAddress,
+  addressValue,
+}: AddressProps): ReactElement => {
+  const apiKey: string = process.env.NEXT_PUBLIC_GOOGLE_API_KEY ?? ''
+
+  if (apiKey.length <= 0) {
+    return (
+      <input
+        className="input"
+        value={addressValue}
+        onChange={(e) => changeAddress(e.target.value)}
       />
-      </ div>
-        </>)}
+    )
+  }
 
-    export default AddressField;
+  return (
+    <LoadScript googleMapsApiKey={apiKey} libraries={LIBRARIES}>
+      <AddressTypeaheadField
+        changeAddress={changeAddress}
+        addressValue={addressValue}
+      />
+    </LoadScript>
+  )
+}
+
+export default AddressField
