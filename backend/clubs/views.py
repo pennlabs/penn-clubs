@@ -403,10 +403,22 @@ class ClubsOrderingFilter(RandomOrderingFilter):
                 return queryset.order_by("-rank", "-favorite_count", "-id")
             return queryset.order_by("-club__rank", "-club__favorite_count", "-club__id")
         else:
-            old_ordering = view.ordering
-            view.ordering = "-id"
+            # prevent invalid SQL lookups from custom ordering properties
+            if hasattr(view, "ordering") and view.ordering in {
+                "featured",
+                "alphabetical",
+                "random",
+            }:
+                old_ordering = view.ordering
+                view.ordering = "-id"
+            else:
+                old_ordering = None
+
             new_queryset = super().filter_queryset(request, queryset, view)
-            view.ordering = old_ordering
+
+            # restore ordering property
+            if old_ordering is not None:
+                view.ordering = old_ordering
 
         if "alphabetical" in ordering:
             new_queryset = new_queryset.order_by(Lower("name"))
