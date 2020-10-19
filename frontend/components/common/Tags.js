@@ -2,9 +2,7 @@ import Color from 'color'
 import s from 'styled-components'
 
 import {
-  CLUBS_BLUE,
   CLUBS_DEEP_BLUE,
-  CLUBS_LIGHT_BLUE,
   DARK_GRAY,
   FOCUS_GRAY,
   PRIMARY_TAG_BG,
@@ -39,7 +37,7 @@ export const BlueTag = s(Tag)`
 `
 
 export const SelectedTag = s(Tag)`
-  background-color: ${CLUBS_DEEP_BLUE} !important;
+  background-color: ${PRIMARY_TAG_BG} !important;
   color: ${WHITE} !important;
 `
 

@@ -2,8 +2,8 @@ import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import s from 'styled-components'
 
 import {
+  ADD_BUTTON,
   BORDER,
-  CLUBS_BLUE,
   FOCUS_GRAY,
   MEDIUM_GRAY,
 } from '../constants/colors'
@@ -67,7 +67,7 @@ const OrderingWrapper = s.div`
 
   
   & .dropdown-item.is-active {
-    background: ${CLUBS_BLUE};
+    background: ${ADD_BUTTON};
   }
 
   & button, a {
