@@ -50,7 +50,7 @@ const Logo = s.img`
   transition: all ${ANIMATION_DURATION}ms ease;
 
   &:hover {
-    transform: scale(1.1);
+    transform: scale(${parseFloat(LOGO_SCALE) * 1.1});
   }
 
   ${mediaMaxWidth(MD)} {
