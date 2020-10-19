@@ -25,6 +25,9 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.text import slugify
 from django_redis import get_redis_connection
+from ics import Calendar as ICSCal
+from ics import Event as ICSEvent
+from ics import parse as ICSParse
 from rest_framework import filters, generics, mixins, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -299,12 +302,18 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
         def parse_boolean(field, value, operation, queryset):
             value = value.strip().lower()
 
+            if operation == "in":
+                if set(value.split(",")) == {"true", "false"}:
+                    return
+
             if value in {"true", "yes"}:
                 boolval = True
             elif value in {"false", "no"}:
                 boolval = False
             elif value in {"null", "none"}:
                 boolval = None
+            else:
+                return
 
             if boolval is None:
                 return {f"{field}__isnull": True}
@@ -312,20 +321,21 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             return {f"{field}": boolval}
 
         fields = {
-            "founded": parse_year,
-            "favorite_count": parse_int,
-            "size": parse_int,
             "accepting_members": parse_boolean,
-            "enables_subscription": parse_boolean,
-            "application_required": parse_int,
-            "tags": parse_tags,
-            "badges": parse_badges,
-            "target_schools": parse_tags,
-            "target_majors": parse_tags,
-            "target_years": parse_tags,
             "active": parse_boolean,
+            "application_required": parse_int,
+            "appointment_needed": parse_boolean,
             "approved": parse_boolean,
-            "accepting_members": parse_boolean,
+            "available_virtually": parse_boolean,
+            "badges": parse_badges,
+            "enables_subscription": parse_boolean,
+            "favorite_count": parse_int,
+            "founded": parse_year,
+            "size": parse_int,
+            "tags": parse_tags,
+            "target_majors": parse_tags,
+            "target_schools": parse_tags,
+            "target_years": parse_tags,
         }
 
         if not queryset.model == Club:
@@ -391,13 +401,31 @@ class ClubsOrderingFilter(RandomOrderingFilter):
         return super().get_valid_fields(queryset, view, context)
 
     def filter_queryset(self, request, queryset, view):
-        new_queryset = super().filter_queryset(request, queryset, view)
-        ordering = request.GET.get("ordering", "").split(",")
+        ordering = [arg for arg in request.GET.get("ordering", "").strip().split(",") if arg]
+        if not ordering and hasattr(view, "ordering"):
+            ordering = [view.ordering]
 
         if "featured" in ordering:
             if queryset.model == Club:
                 return queryset.order_by("-rank", "-favorite_count", "-id")
             return queryset.order_by("-club__rank", "-club__favorite_count", "-club__id")
+        else:
+            # prevent invalid SQL lookups from custom ordering properties
+            if hasattr(view, "ordering") and view.ordering in {
+                "featured",
+                "alphabetical",
+                "random",
+            }:
+                old_ordering = view.ordering
+                view.ordering = "-id"
+            else:
+                old_ordering = None
+
+            new_queryset = super().filter_queryset(request, queryset, view)
+
+            # restore ordering property
+            if old_ordering is not None:
+                view.ordering = old_ordering
 
         if "alphabetical" in ordering:
             new_queryset = new_queryset.order_by(Lower("name"))
@@ -447,11 +475,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         .order_by("-favorite_count", "name")
     )
     permission_classes = [ClubPermission | IsSuperuser]
-
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
     search_fields = ["name", "subtitle", "code"]
     ordering_fields = ["favorite_count", "name"]
-    ordering = "-favorite_count"
+    ordering = "featured"
 
     lookup_field = "code"
     http_method_names = ["get", "post", "put", "patch", "delete"]
@@ -1553,6 +1580,31 @@ class BadgeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Badge.objects.filter(Q(purpose="fair") | Q(label="SAC"))
+
+
+class FavoriteCalendarAPIView(APIView):
+    """
+        get: Return a .ics file of the user's favorite clubs' events.
+    """
+
+    def get(self, request, *args, **kwargs):
+        calendar = ICSCal()
+        calendar.extra.append(ICSParse.ContentLine(name="X-WR-CALNAME", value="Penn Clubs Events"))
+
+        all_events = Event.objects.filter(
+            club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"]
+        ).distinct()
+        for event in all_events:
+            e = ICSEvent()
+            e.name = "{} - {}".format(event.club.name, event.name)
+            e.begin = event.start_time
+            e.end = event.end_time
+            e.location = event.location
+            e.description = "{}\n\n{}".format(event.url or "", event.description)
+            calendar.events.add(e)
+        response = HttpResponse(calendar, content_type="text/calendar")
+        response["Content-Disposition"] = "attachment; filename=favorite_events.ics"
+        return response
 
 
 class UserPermissionAPIView(APIView):

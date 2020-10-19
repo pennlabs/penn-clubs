@@ -72,7 +72,7 @@ type SearchProps = {
   recommendedTags: SearchOption[]
   updateTag: (tag: FuseTag, name: string) => void
   clearTags: () => void
-  name: 'Tags' | 'Badges'
+  name: string
 }
 
 const Search = ({
@@ -175,7 +175,7 @@ const selectInitial = (name: string, tags: FuseTag[] = []) => {
   ]
 }
 
-type FuseTag = {
+export type FuseTag = {
   value: number | string
   label: string | ReactElement
   text?: string
@@ -186,7 +186,7 @@ type FuseTag = {
 }
 
 type FilterProps = {
-  name: 'Tags' | 'Badges'
+  name: string
   tags: FuseTag[]
   updateTag: (tag: FuseTag, name: string) => void
   selected: FuseTag[]

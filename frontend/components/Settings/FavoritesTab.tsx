@@ -13,7 +13,7 @@ type FavoritesTabProps = {
   keyword: 'bookmark' | 'subscription'
 }
 
-export default ({ keyword }: FavoritesTabProps): ReactElement => {
+const FavoritesTab = ({ keyword }: FavoritesTabProps): ReactElement => {
   const [favorites, setFavorites] = useState<Club[]>([])
   const [isLoading, setLoading] = useState<boolean>(true)
 
@@ -58,3 +58,5 @@ export default ({ keyword }: FavoritesTabProps): ReactElement => {
     </div>
   )
 }
+
+export default FavoritesTab

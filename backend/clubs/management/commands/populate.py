@@ -8,6 +8,7 @@ from django.utils import timezone
 from options.models import Option
 
 from clubs.models import (
+    Advisor,
     Badge,
     Club,
     Event,
@@ -240,6 +241,7 @@ class Command(BaseCommand):
             for field in custom_fields:
                 if field in partial:
                     del partial[field]
+
             club, _ = Club.objects.get_or_create(code=info["code"], defaults=partial)
 
             if "image" in info:
@@ -281,7 +283,17 @@ class Command(BaseCommand):
                     "description": "This is a generic test club.",
                     "approved": True,
                     "active": True,
+                    "email": "example@example.com",
                 },
+            )
+
+            Advisor.objects.create(
+                club=club,
+                name="John Doe",
+                title="Faculty Advisor",
+                email="example@example.com",
+                phone="+12158985000",
+                public=True,
             )
 
             club.tags.add(tag_undergrad)

@@ -26,8 +26,48 @@ const sites = {
     OBJECT_URL_SLUG: 'club',
     OBJECT_TAB_MEMBERSHIP_LABEL: 'Membership',
     OBJECT_TAB_RECRUITMENT_LABEL: 'Recruitment',
+    OBJECT_TAB_ADMISSION_LABEL: 'Admission',
 
     CONTACT_EMAIL: 'contact@pennclubs.com',
+    FEEDBACK_URL: 'https://airtable.com/shrCsYFWxCwfwE7cf',
+
+    CLUB_FIELDS: [
+      'size',
+      'founded',
+      'github',
+      'linkedin',
+      'listserv',
+      'application_required',
+      'accepting_members',
+    ],
+    SHOW_MEMBERS: true,
+    SHOW_MEMBERSHIP_REQUEST: true,
+
+    PARTNER_LOGOS: [
+      {
+        name: 'Student Activities Council',
+        image: '/static/img/collaborators/sac.png',
+        url: 'https://sacfunded.net/',
+      },
+      {
+        name: 'Undergraduate Assembly',
+        image: '/static/img/collaborators/ua.png',
+        url: 'https://pennua.org/',
+        height: 80,
+      },
+      {
+        name: 'Office of Student Affairs',
+        image: '/static/img/collaborators/osa.png',
+        url: 'https://www.vpul.upenn.edu/osa/',
+        className: 'mr-4',
+      },
+      {
+        name: 'Engineering Student Activities Council',
+        image: '/static/img/collaborators/esac.png',
+        url: 'https://esac.squarespace.com/',
+        height: 80,
+      },
+    ],
   },
   fyh: {
     SITE_NAME: 'Hub@Penn',
@@ -44,7 +84,8 @@ const sites = {
 
     SITE_LOGO: '/static/img/penn_shield.png',
     SITE_FAVICON: '/static/penn_favicon.ico',
-    SITE_TAGLINE: 'Find resources at the University of Pennsylvania!',
+    SITE_TAGLINE:
+      "Find the support resources you need on and around Penn's campus!",
 
     APPROVAL_AUTHORITY: 'Office of Student Affairs',
     APPROVAL_AUTHORITY_URL: 'https://osa.vpul.upenn.edu/',
@@ -54,8 +95,27 @@ const sites = {
     OBJECT_URL_SLUG: 'org',
     OBJECT_TAB_MEMBERSHIP_LABEL: 'Admins',
     OBJECT_TAB_RECRUITMENT_LABEL: 'Mailing List',
+    OBJECT_TAB_ADMISSION_LABEL: 'Usage',
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
+    FEEDBACK_URL: 'https://airtable.com/shrm3UcvjpPEl0qXq',
+
+    CLUB_FIELDS: [
+      'appointment_needed',
+      'available_virtually',
+      'signature_events',
+    ],
+    SHOW_MEMBERS: false,
+    SHOW_MEMBERSHIP_REQUEST: false,
+
+    PARTNER_LOGOS: [
+      {
+        name: 'Office of Student Affairs',
+        image: '/static/img/collaborators/osa.png',
+        url: 'https://www.vpul.upenn.edu/osa/',
+        className: 'mr-4',
+      },
+    ],
   },
 }
 
@@ -66,6 +126,7 @@ export const SITE_TAGLINE = sites[site].SITE_TAGLINE
 export const SCHOOL_NAME = sites[site].SCHOOL_NAME
 export const DOMAIN = sites[site].DOMAIN
 export const CONTACT_EMAIL = sites[site].CONTACT_EMAIL
+export const FEEDBACK_URL = sites[site].FEEDBACK_URL
 
 export const OBJECT_NAME_PLURAL = sites[site].OBJECT_NAME_PLURAL
 export const OBJECT_NAME_LONG_PLURAL = sites[site].OBJECT_NAME_LONG_PLURAL
@@ -86,3 +147,16 @@ export const OBJECT_TAB_MEMBERSHIP_LABEL =
   sites[site].OBJECT_TAB_MEMBERSHIP_LABEL
 export const OBJECT_TAB_RECRUITMENT_LABEL =
   sites[site].OBJECT_TAB_RECRUITMENT_LABEL
+export const OBJECT_TAB_ADMISSION_LABEL = sites[site].OBJECT_TAB_ADMISSION_LABEL
+
+export const SHOW_MEMBERS = sites[site].SHOW_MEMBERS
+export const SHOW_MEMBERSHIP_REQUEST = sites[site].SHOW_MEMBERSHIP_REQUEST
+
+export const PARTNER_LOGOS = sites[site].PARTNER_LOGOS
+
+export const CLUB_FIELDS = new Set(sites[site].CLUB_FIELDS)
+export const ALL_CLUB_FIELDS = new Set(
+  Object.values(sites)
+    .map(({ CLUB_FIELDS }) => CLUB_FIELDS)
+    .flat(),
+)
