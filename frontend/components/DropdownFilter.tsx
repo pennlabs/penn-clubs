@@ -8,6 +8,7 @@ import {
   CLUBS_GREY_LIGHT,
   CLUBS_NAVY,
   CLUBS_RED,
+  H1_TEXT,
   LIGHT_GRAY,
   WHITE,
 } from '../constants/colors'

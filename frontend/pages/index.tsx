@@ -24,6 +24,7 @@ import {
   CLUBS_PURPLE,
   CLUBS_RED,
   FOCUS_GRAY,
+  H1_TEXT,
   SNOW,
 } from '../constants/colors'
 import { PaginatedClubPage, renderListPage } from '../renderPage'
@@ -295,7 +296,7 @@ const Splash = (props: SplashProps): ReactElement => {
             <div style={{ padding: '30px 0' }}>
               <DisplayButtons switchDisplay={setDisplay} />
 
-              <Title className="title" style={{ color: CLUBS_GREY }}>
+              <Title className="title" style={{ color: H1_TEXT }}>
                 Browse {OBJECT_NAME_TITLE}
               </Title>
               <p

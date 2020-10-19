@@ -2,12 +2,17 @@ import Link from 'next/link'
 import { ReactElement, useState } from 'react'
 import s from 'styled-components'
 
-import { BORDER, CLUBS_NAVY, WHITE } from '../../constants/colors'
+import { BANNER_BG, BANNER_TEXT, BORDER } from '../../constants/colors'
 import {
   ANIMATION_DURATION,
+  HEADER_SHADOW,
+  LOGO_SCALE,
   MD,
   mediaMaxWidth,
   NAV_HEIGHT,
+  TITLE_MARGIN,
+  TITLE_SIZE,
+  TITLE_WEIGHT,
 } from '../../constants/measurements'
 import { HOME_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
@@ -19,12 +24,13 @@ import Links from './Links'
 
 const Nav = s.nav`
   height: ${NAV_HEIGHT};
-  background-color: ${WHITE} !important;
+  background-color: ${BANNER_BG} !important;
   border-bottom: 1px solid ${BORDER};
   box-shadow: 0 1px 4px 0 ${BORDER};
   width: 100%;
   position: fixed;
   z-index: 1001;
+  box-shadow: ${HEADER_SHADOW};
 
   ${mediaMaxWidth(MD)} {
     box-shadow: none;
@@ -40,7 +46,7 @@ const NavSpacer = s.div`
 const Logo = s.img`
   padding-left: 20px;
   height: 100%;
-  transform: scale(1);
+  transform: scale(${LOGO_SCALE});
   transition: all ${ANIMATION_DURATION}ms ease;
 
   &:hover {
@@ -53,9 +59,11 @@ const Logo = s.img`
 `
 
 const Title = s.h1`
-  color: ${CLUBS_NAVY};
-  padding-left: 15px;
+  color: ${BANNER_TEXT};
+  padding-left: ${TITLE_MARGIN};
   margin-bottom: 0 !important;
+  font-size: ${TITLE_SIZE};
+  font-weight: ${TITLE_WEIGHT};
 `
 
 type HeaderProps = {
@@ -79,7 +87,7 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
           <Link href={HOME_ROUTE}>
             <a className="navbar-item" style={{ padding: 0 }}>
               <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
-              <Title className="title is-size-4">{SITE_NAME}</Title>
+              <Title>{SITE_NAME}</Title>
             </a>
           </Link>
 
