@@ -403,7 +403,10 @@ class ClubsOrderingFilter(RandomOrderingFilter):
                 return queryset.order_by("-rank", "-favorite_count", "-id")
             return queryset.order_by("-club__rank", "-club__favorite_count", "-club__id")
         else:
+            old_ordering = view.ordering
+            view.ordering = "-id"
             new_queryset = super().filter_queryset(request, queryset, view)
+            view.ordering = old_ordering
 
         if "alphabetical" in ordering:
             new_queryset = new_queryset.order_by(Lower("name"))
