@@ -17,14 +17,13 @@ import SearchBar, {
   SearchInput,
 } from '../components/SearchBar'
 import {
-  CLUBS_BLUE,
-  CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   CLUBS_NAVY,
   CLUBS_PURPLE,
   CLUBS_RED,
   FOCUS_GRAY,
   H1_TEXT,
+  PRIMARY_TAG_BG,
   SNOW,
 } from '../constants/colors'
 import { PaginatedClubPage, renderListPage } from '../renderPage'
@@ -33,7 +32,7 @@ import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_TITLE, SITE_TAGLINE } from '../utils/branding'
 
 const colorMap = {
-  tags__in: CLUBS_BLUE,
+  tags__in: PRIMARY_TAG_BG,
   size__in: CLUBS_NAVY,
   application_required__in: CLUBS_RED,
   badges__in: CLUBS_PURPLE,
