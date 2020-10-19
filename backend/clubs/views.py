@@ -1212,24 +1212,6 @@ class EventViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
-    """"
-    def get_queryset(self):
-        qs = Event.objects.all()
-        if self.kwargs.get("club_code") is not None:
-            qs = qs.filter(club__code=self.kwargs["club_code"])
-
-        now = timezone.now()
-        if self.action in ["list"]:
-            qs = qs.filter(end_time__gte=now)
-
-        return (
-            qs.select_related("club", "creator",)
-            .prefetch_related("club__badges")
-            .order_by("start_time")
-        )
-    """
-
-
 class TestimonialViewSet(viewsets.ModelViewSet):
     """
     list:
