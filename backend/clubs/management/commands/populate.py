@@ -241,6 +241,7 @@ class Command(BaseCommand):
             for field in custom_fields:
                 if field in partial:
                     del partial[field]
+
             club, _ = Club.objects.get_or_create(code=info["code"], defaults=partial)
 
             if "image" in info:

@@ -72,7 +72,11 @@ const sites = {
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
 
-    CLUB_FIELDS: [],
+    CLUB_FIELDS: [
+      'appointment_needed',
+      'available_virtually',
+      'signature_events',
+    ],
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,
   },

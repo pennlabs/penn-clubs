@@ -284,8 +284,23 @@ export default function ClubEditCard({
           type: 'checkbox',
         },
         {
+          name: 'available_virtually',
+          label: `Is your ${OBJECT_NAME_SINGULAR} available virtually?`,
+          type: 'checkbox',
+        },
+        {
+          name: 'appointment_needed',
+          label: `Is an appointment necessary to interact with your ${OBJECT_NAME_SINGULAR}?`,
+          type: 'checkbox',
+        },
+        {
           name: 'how_to_get_involved',
           label: FIELD_PARTICIPATION_LABEL,
+          type: 'textarea',
+        },
+        {
+          name: 'signature_events',
+          label: 'Signature Events',
           type: 'textarea',
         },
         {
