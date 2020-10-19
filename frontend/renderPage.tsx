@@ -7,7 +7,7 @@ import { AuthCheckContext } from './components/contexts'
 import Footer from './components/Footer'
 import Header from './components/Header'
 import LoginModal from './components/LoginModal'
-import { SNOW } from './constants/colors'
+import { WHITE } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
 import { Club, ClubEvent, ExtendedUserInfo, Tag, UserInfo } from './types'
@@ -22,7 +22,7 @@ const Wrapper = s.div`
 const RenderPageWrapper = s.div`
   display: flex;
   flex-direction: column;
-  background-color: ${SNOW};
+  background-color: ${WHITE};
   font-family: ${BODY_FONT};
 `
 
