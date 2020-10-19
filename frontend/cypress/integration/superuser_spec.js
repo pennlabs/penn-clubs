@@ -28,7 +28,7 @@ describe('Permissioned (superuser) user tests', () => {
     cy.contains('button:visible', 'Manage Club').scrollIntoView().click()
 
     // wait additional time for manage club page to compile
-    cy.url({ timeout: 60 * 1000 }).should('contain', 'edit')
+    cy.url({ timeout: 30 * 1000 }).should('contain', 'edit')
     
     // change club name
     cy.contains('.field', 'Name')
@@ -41,12 +41,12 @@ describe('Permissioned (superuser) user tests', () => {
     cy.contains('saved')
 
     // go back to club page, ensure edits are shown
-    cy.contains('View Club').scrollIntoView().click()
+    cy.contains('View Club').scrollIntoView().click({ force: true })
     cy.contains('Penn Pre-Professional Juggling Organization - Edited')
 
     // revert edits
     cy.contains('button:visible', 'Manage Club').scrollIntoView().click()
-    cy.url({ timeout: 60 * 1000 }).should('contain', 'edit')
+    cy.url({ timeout: 30 * 1000 }).should('contain', 'edit')
     cy.contains('.field', 'Name')
       .find('input')
       .clear()
