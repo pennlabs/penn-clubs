@@ -239,46 +239,42 @@ const Flyer = ({ query }): ReactElement => {
         }
         const { image_url: image } = club
         return (
-          <>
-            <PrintPage>
-              <div className="columns is-mobile is-marginless">
-                <div className="column is-paddingless">
-                  <CenterContainer>
-                    <Margin>
-                      {image && <LogoImage src={image} />}
-                      <BigTitle>
-                        {truncate(club.name, image ? 52 : 100)}
-                      </BigTitle>
-                    </Margin>
-                  </CenterContainer>
-                </div>
-                <div className="column is-paddingless">
-                  <CenterContainer>
-                    <Margin>
-                      <Center>
-                        <MediumTitle>
-                          For more info, or to bookmark or subscribe to the{' '}
-                          {truncate(club.name)} mailing list:
-                        </MediumTitle>
-                        <Gradient>
-                          <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} />
-                        </Gradient>
-                        <Text style={{ color: CLUBS_NAVY }}>
-                          <b>Or visit:</b>
-                          <br />
-                          <i>
-                            https://{DOMAIN}/${OBJECT_URL_SLUG}/{club.code}
-                            /fair/
-                          </i>
-                        </Text>
-                      </Center>
-                    </Margin>
-                  </CenterContainer>
-                </div>
+          <PrintPage key={club.code}>
+            <div className="columns is-mobile is-marginless">
+              <div className="column is-paddingless">
+                <CenterContainer>
+                  <Margin>
+                    {image && <LogoImage src={image} />}
+                    <BigTitle>{truncate(club.name, image ? 52 : 100)}</BigTitle>
+                  </Margin>
+                </CenterContainer>
               </div>
-              <AboutText>Powered by Penn Labs</AboutText>
-            </PrintPage>
-          </>
+              <div className="column is-paddingless">
+                <CenterContainer>
+                  <Margin>
+                    <Center>
+                      <MediumTitle>
+                        For more info, or to bookmark or subscribe to the{' '}
+                        {truncate(club.name)} mailing list:
+                      </MediumTitle>
+                      <Gradient>
+                        <Image src={getApiUrl(`/clubs/${club.code}/qr/`)} />
+                      </Gradient>
+                      <Text style={{ color: CLUBS_NAVY }}>
+                        <b>Or visit:</b>
+                        <br />
+                        <i>
+                          https://{DOMAIN}/${OBJECT_URL_SLUG}/{club.code}
+                          /fair/
+                        </i>
+                      </Text>
+                    </Center>
+                  </Margin>
+                </CenterContainer>
+              </div>
+            </div>
+            <AboutText>Powered by Penn Labs</AboutText>
+          </PrintPage>
         )
       })}
     </>

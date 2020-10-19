@@ -3,6 +3,7 @@ import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import {
+  ADD_BUTTON,
   ALLBIRDS_GRAY,
   BLACK_ALPHA,
   CLUBS_BLUE,
@@ -26,7 +27,7 @@ const DisplayButtonsTag = s.div`
 `
 
 const AddClubButton = s.a`
-  background-color: ${CLUBS_BLUE};
+  background-color: ${ADD_BUTTON};
   color: ${WHITE_ALPHA(0.8)} !important;
 `
 

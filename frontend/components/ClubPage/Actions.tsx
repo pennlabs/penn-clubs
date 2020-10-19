@@ -17,6 +17,7 @@ import {
   FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
+  SHOW_MEMBERSHIP_REQUEST,
   SITE_NAME,
 } from '../../utils/branding'
 import { logException, logMessage } from '../../utils/sentry'
@@ -146,7 +147,7 @@ const Actions = ({
     <>
       <div className={className} style={style}>
         <Wrapper>
-          {!inClub && club.members.length > 0 && (
+          {SHOW_MEMBERSHIP_REQUEST && !inClub && club.members.length > 0 && (
             <ActionButton
               className="button is-success"
               onClick={requestMembership}

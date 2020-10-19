@@ -33,6 +33,7 @@ import {
   OBJECT_NAME_TITLE_SINGULAR,
   OBJECT_TAB_MEMBERSHIP_LABEL,
   OBJECT_TAB_RECRUITMENT_LABEL,
+  SHOW_MEMBERSHIP_REQUEST,
   SITE_NAME,
 } from '../utils/branding'
 import AdvisorCard from './ClubEditPage/AdvisorCard'
@@ -259,21 +260,23 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
           content: (
             <>
               <InviteCard club={club} />
-              <PotentialMemberCard
-                club={club}
-                source="membershiprequests"
-                actions={[
-                  {
-                    name: 'Accept',
-                    onClick: (id: string): Promise<void> => {
-                      return doApiRequest(
-                        `/clubs/${club.code}/membershiprequests/${id}/accept/?format=json`,
-                        { method: 'POST' },
-                      ).then(() => undefined)
+              {SHOW_MEMBERSHIP_REQUEST && (
+                <PotentialMemberCard
+                  club={club}
+                  source="membershiprequests"
+                  actions={[
+                    {
+                      name: 'Accept',
+                      onClick: (id: string): Promise<void> => {
+                        return doApiRequest(
+                          `/clubs/${club.code}/membershiprequests/${id}/accept/?format=json`,
+                          { method: 'POST' },
+                        ).then(() => undefined)
+                      },
                     },
-                  },
-                ]}
-              />
+                  ]}
+                />
+              )}
               <MembersCard club={club} />
               <AdvisorCard club={club} schools={schools} />
             </>

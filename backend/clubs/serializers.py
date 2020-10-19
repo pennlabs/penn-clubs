@@ -656,6 +656,7 @@ class ClubListSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     image_url = serializers.SerializerMethodField("get_image_url")
     favorite_count = serializers.IntegerField(read_only=True)
+    membership_count = serializers.IntegerField(read_only=True)
 
     is_favorite = serializers.SerializerMethodField("get_is_favorite")
     is_subscribe = serializers.SerializerMethodField("get_is_subscribe")
@@ -766,18 +767,21 @@ class ClubListSerializer(serializers.ModelSerializer):
         model = Club
         fields = [
             "accepting_members",
-            "enables_subscription",
             "active",
             "application_required",
+            "appointment_needed",
             "approved",
+            "available_virtually",
             "code",
             "email",
+            "enables_subscription",
             "favorite_count",
             "founded",
             "image_url",
             "is_favorite",
             "is_member",
             "is_subscribe",
+            "membership_count",
             "name",
             "size",
             "subtitle",
@@ -1102,6 +1106,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "linkedin",
             "listserv",
             "members",
+            "signature_events",
             "target_majors",
             "target_schools",
             "target_years",

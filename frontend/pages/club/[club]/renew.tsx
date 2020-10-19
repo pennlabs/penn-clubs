@@ -226,7 +226,7 @@ const RenewPage = ({
               <a target="_blank" href={APPROVAL_AUTHORITY_URL}>
                 {APPROVAL_AUTHORITY}
               </a>{' '}
-              requires clubs to renew their approval status to ensure that the
+              requires clubs to renew their approval status to ensure that the{' '}
               {APPROVAL_AUTHORITY} has the <b>most up to date information</b>{' '}
               and that club members are <b>aware of university policies</b>.
               This process must be performed once a year by the current

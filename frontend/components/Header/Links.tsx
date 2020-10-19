@@ -5,14 +5,23 @@ import s from 'styled-components'
 
 import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
 import {
+  BANNER_TEXT,
   BORDER,
   CLUBS_NAVY,
   CLUBS_RED,
   CLUBS_RED_DARK,
+  LOGIN_BACKGROUND,
   WHITE,
   WHITE_ALPHA,
 } from '../../constants/colors'
-import { MD, mediaMaxWidth } from '../../constants/measurements'
+import {
+  LINK_MARGIN,
+  LINK_SPACING,
+  LOGIN_MARGIN,
+  LOGIN_OPACITY,
+  MD,
+  mediaMaxWidth,
+} from '../../constants/measurements'
 import { SETTINGS_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
 import { LOGIN_URL } from '../../utils'
@@ -26,9 +35,11 @@ const StyledIcon = s(Icon)`
 
 const LoginButton = s.a`
   border: 0;
-  background-color: ${CLUBS_RED};
+  background-color: ${LOGIN_BACKGROUND};
   padding: 14px 20px;
   margin: auto;
+  margin-bottom: ${LOGIN_MARGIN};
+  opacity: ${LOGIN_OPACITY};
   color: ${WHITE_ALPHA(0.8)} !important;
   transition: color ${SHORT_ANIMATION_DURATION}ms ease,
               background ${SHORT_ANIMATION_DURATION}ms ease;
@@ -36,7 +47,7 @@ const LoginButton = s.a`
   &:hover,
   &:focus,
   &:active {
-    background-color: ${CLUBS_RED_DARK};
+    background-color: ${LOGIN_BACKGROUND};
     color: ${WHITE} !important;
   }
 
@@ -48,8 +59,8 @@ const LoginButton = s.a`
 `
 
 const StyledLinkAnchor = s.a`
-  padding: 14px 20px;
-  color: ${CLUBS_NAVY} !important;
+  padding: ${LINK_MARGIN} 20px;
+  color: ${BANNER_TEXT} !important;
   display: inline-block;
   cursor: pointer;
 `

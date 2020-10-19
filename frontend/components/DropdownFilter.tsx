@@ -8,7 +8,9 @@ import {
   CLUBS_GREY_LIGHT,
   CLUBS_NAVY,
   CLUBS_RED,
+  H1_TEXT,
   LIGHT_GRAY,
+  PRIMARY_TAG_BG,
   WHITE,
 } from '../constants/colors'
 import {
@@ -22,7 +24,7 @@ import { logEvent } from '../utils/analytics'
 import { Icon } from './common'
 
 const checkboxColorMap = {
-  Tags: CLUBS_BLUE,
+  Tags: PRIMARY_TAG_BG,
   Size: CLUBS_NAVY,
   Application: CLUBS_RED,
 }

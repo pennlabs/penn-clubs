@@ -1,4 +1,4 @@
-describe('Permissioned user tests', () => {
+describe('Permissioned (superuser) user tests', () => {
   before(() => {
     cy.login('bfranklin', 'test')
   })
@@ -17,13 +17,20 @@ describe('Permissioned user tests', () => {
   })
 
   it('Edits a club page', () => {
+    // visit club page
     cy.visit('/club/pppjo')
-    cy.contains('Benjamin Franklin').should('be.visible')
 
-    cy.contains('button:visible', 'Manage Club').click({ force: true })
+    // ensure critical page elements exist
+    cy.contains('Benjamin Franklin').should('be.visible')
+    cy.contains('Penn Pre-Professional Juggling Organization').should('be.visible')
+
+    // navigate to club edit page
+    cy.contains('button:visible', 'Manage Club').scrollIntoView().click()
 
     // wait additional time for manage club page to compile
-    cy.url({ timeout: 60000 }).should('contain', 'edit')
+    cy.url({ timeout: 30 * 1000 }).should('contain', 'edit')
+    
+    // change club name
     cy.contains('.field', 'Name')
       .should('be.visible')
       .find('input')
@@ -32,11 +39,14 @@ describe('Permissioned user tests', () => {
       .blur()
     cy.contains('Submit').click()
     cy.contains('saved')
-    cy.contains('View Club').click({ force: true })
+
+    // go back to club page, ensure edits are shown
+    cy.contains('View Club').scrollIntoView().click({ force: true })
     cy.contains('Penn Pre-Professional Juggling Organization - Edited')
 
-    cy.contains('button:visible', 'Manage Club').click({ force: true })
-    cy.url({ timeout: 15000 }).should('contain', 'edit')
+    // revert edits
+    cy.contains('button:visible', 'Manage Club').scrollIntoView().click()
+    cy.url({ timeout: 30 * 1000 }).should('contain', 'edit')
     cy.contains('.field', 'Name')
       .find('input')
       .clear()

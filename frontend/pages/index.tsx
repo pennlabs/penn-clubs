@@ -1,37 +1,41 @@
 import equal from 'deep-equal'
-import { ReactElement, useEffect, useRef, useState } from 'react'
+import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import s from 'styled-components'
 
 import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
 import LiveEventsDialog from '../components/ClubPage/LiveEventsDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
+import { FuseTag } from '../components/FilterSearch'
 import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
 import SearchBar, {
-  getInitialSearch,
+  SearchBarCheckboxItem,
+  SearchBarOptionItem,
   SearchbarRightContainer,
+  SearchBarTagItem,
+  SearchBarTextItem,
   SearchInput,
 } from '../components/SearchBar'
 import {
-  CLUBS_BLUE,
-  CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   CLUBS_NAVY,
   CLUBS_PURPLE,
   CLUBS_RED,
   FOCUS_GRAY,
+  H1_TEXT,
+  PRIMARY_TAG_BG,
   SNOW,
 } from '../constants/colors'
 import { PaginatedClubPage, renderListPage } from '../renderPage'
-import { Badge, Tag, UserInfo } from '../types'
-import { doApiRequest, useSetting } from '../utils'
+import { Badge, School, Tag, UserInfo, Year } from '../types'
+import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_TITLE, SITE_TAGLINE } from '../utils/branding'
 
 const colorMap = {
-  Tags: CLUBS_BLUE,
-  Size: CLUBS_NAVY,
-  Application: CLUBS_RED,
-  Badges: CLUBS_PURPLE,
+  tags__in: PRIMARY_TAG_BG,
+  size__in: CLUBS_NAVY,
+  application_required__in: CLUBS_RED,
+  badges__in: CLUBS_PURPLE,
 }
 
 const ClearAllLink = s.span`
@@ -60,6 +64,8 @@ type SplashProps = {
   clubs: PaginatedClubPage
   tags: Tag[]
   badges: Badge[]
+  schools: School[]
+  years: Year[]
   clubCount: number
   liveEventCount: number
 }
@@ -72,22 +78,104 @@ export const ListLoadIndicator = (): ReactElement => {
   )
 }
 
+const SearchTags = ({
+  searchInput,
+  setSearchInput,
+  optionMapping,
+}): ReactElement => {
+  const tags = Object.keys(optionMapping)
+    .map((param) => {
+      return (searchInput[param] ?? '')
+        .trim()
+        .split(',')
+        .filter((val) => val.length > 0)
+        .map((value) =>
+          optionMapping[param].find((tag) => tag.value.toString() === value),
+        )
+        .filter((tag) => tag !== undefined)
+        .map((tag) => {
+          tag.name = param
+          return tag
+        })
+    })
+    .flat()
+
+  return (
+    <>
+      {!!tags.length && (
+        <div style={{ padding: '0 30px 30px 0' }}>
+          {tags.map((tag) => {
+            return (
+              <span
+                key={tag.value}
+                className="tag is-rounded has-text-white"
+                style={{
+                  backgroundColor: colorMap[tag.name],
+                  fontWeight: 600,
+                  margin: 3,
+                }}
+              >
+                {tag.label}
+                <button
+                  className="delete is-small"
+                  onClick={() => {
+                    const newTags = searchInput[tag.name]
+                      .split(',')
+                      .filter((t) => t.value === tag.value)
+                      .join(',')
+                    if (newTags.length > 0) {
+                      setSearchInput((inpt) => ({
+                        ...inpt,
+                        [tag.name]: newTags,
+                      }))
+                    } else {
+                      setSearchInput((inpt) => {
+                        const newInpt = { ...inpt }
+                        delete newInpt[tag.name]
+                        return newInpt
+                      })
+                    }
+                  }}
+                />
+              </span>
+            )
+          })}
+          <ClearAllLink
+            className="tag is-rounded"
+            onClick={() =>
+              setSearchInput((inpt) => {
+                const newInpt = { ...inpt }
+                Object.keys(newInpt)
+                  .filter((param) => param in optionMapping)
+                  .forEach((key) => {
+                    if (key in newInpt) {
+                      delete newInpt[key]
+                    }
+                  })
+                return newInpt
+              })
+            }
+          >
+            Clear All
+          </ClearAllLink>
+        </div>
+      )}
+    </>
+  )
+}
+
 const Splash = (props: SplashProps): ReactElement => {
   const fairIsOpen = useSetting('FAIR_OPEN')
   const preFair = useSetting('PRE_FAIR')
   const renewalBanner = useSetting('CLUB_REGISTRATION')
-  const currentSearch = useRef<SearchInput>(getInitialSearch())
+  const currentSearch = useRef<SearchInput>({})
 
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
   const [isLoading, setLoading] = useState<boolean>(false)
-  const [searchInput, setSearchInput] = useState<SearchInput>(
-    getInitialSearch(),
-  )
+  const [searchInput, setSearchInput] = useState<SearchInput>({})
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {
-    const { nameInput, selectedTags, order } = searchInput
-
     if (equal(searchInput, currentSearch.current)) {
       return
     }
@@ -96,68 +184,13 @@ const Splash = (props: SplashProps): ReactElement => {
 
     setLoading(true)
 
-    const tagSelected = selectedTags
-      .filter((tag) => tag.name === 'Tags')
-      .map((tag) => tag.value)
-    const badgesSelected = selectedTags
-      .filter((tag) => tag.name === 'Badges')
-      .map((tag) => tag.value)
-    const sizeSelected = selectedTags
-      .filter((tag) => tag.name === 'Size')
-      .map((tag) => tag.value)
-
-    const requiredApplication =
-      selectedTags.findIndex(
-        (tag) => tag.name === 'Application' && tag.value === 1,
-      ) !== -1
-    const noRequiredApplication =
-      selectedTags.findIndex(
-        (tag) => tag.name === 'Application' && tag.value === 2,
-      ) !== -1
-    const acceptingMembers =
-      selectedTags.findIndex(
-        (tag) => tag.name === 'Application' && tag.value === 3,
-      ) !== -1
-
     const params = new URLSearchParams()
     params.set('format', 'json')
     params.set('page', '1')
 
-    if (nameInput) {
-      params.set('search', nameInput)
-    }
-    if (tagSelected.length > 0) {
-      params.set('tags', tagSelected.join(','))
-    }
-    if (badgesSelected.length > 0) {
-      params.set('badges', badgesSelected.join(','))
-    }
-    if (sizeSelected.length > 0) {
-      params.set('size__in', sizeSelected.join(','))
-    }
-
-    if (order === 'random') {
-      const seed = new Date().getTime()
-      params.set('seed', seed.toString())
-    }
-
-    if (order.length > 0) {
-      params.set('ordering', order)
-    }
-
-    // XOR here, if both are yes they cancel out, if both are no
-    // we do no filtering
-    if (noRequiredApplication !== requiredApplication) {
-      if (noRequiredApplication) {
-        params.set('application_required__in', '1')
-      } else {
-        params.set('application_required__in', '2,3')
-      }
-    }
-
-    if (acceptingMembers) {
-      params.set('accepting_members', 'true')
-    }
+    Object.entries(searchInput).forEach(([key, value]) => {
+      params.set(key, value)
+    })
 
     doApiRequest(`/clubs/?${params.toString()}`, {
       method: 'GET',
@@ -171,23 +204,138 @@ const Splash = (props: SplashProps): ReactElement => {
       })
   }, [searchInput])
 
+  const tagOptions = useMemo<FuseTag[]>(
+    () =>
+      props.tags.map(({ id, name, clubs }) => ({
+        value: id,
+        label: name,
+        count: clubs,
+      })),
+    [props.tags],
+  )
+
+  const badgeOptions = useMemo<FuseTag[]>(
+    () =>
+      props.badges.map(({ id, label, color, description }) => ({
+        value: id,
+        label,
+        color,
+        description,
+      })),
+    [props.badges],
+  )
+
+  const applicationRequiredOptions = [
+    { value: 1, label: 'No Application Required', name: 'app' },
+    {
+      value: 2,
+      label: 'Required for Some Positions',
+      name: 'app',
+    },
+    {
+      value: 3,
+      label: 'Required for All Positions',
+      name: 'app',
+    },
+  ]
+
+  const sizeOptions = [
+    { value: 1, label: 'less than 20 members', name: 'size' },
+    { value: 2, label: '20 to 50 members', name: 'size' },
+    { value: 3, label: '50 to 100 members', name: 'size' },
+    { value: 4, label: 'more than 100', name: 'size' },
+  ]
+
   return (
     <>
       <Metadata />
       <div style={{ backgroundColor: SNOW }}>
-        <SearchBar
-          tags={props.tags}
-          badges={props.badges}
-          updateSearch={setSearchInput}
-          searchValue={searchInput}
-        />
+        <SearchBar updateSearch={setSearchInput} searchInput={searchInput}>
+          <SearchBarTextItem param="search" />
+          <SearchBarTagItem
+            param="tags__in"
+            label="Tags"
+            options={tagOptions}
+          />
+          <SearchBarTagItem
+            param="badges__in"
+            label="Badges"
+            options={badgeOptions}
+          />
+          <SearchBarOptionItem param="ordering" label="Ordering" />
+          {isClubFieldShown('application_required') && (
+            <SearchBarCheckboxItem
+              param="application_required__in"
+              label="Application Required"
+              options={applicationRequiredOptions}
+            />
+          )}
+          {isClubFieldShown('size') && (
+            <SearchBarCheckboxItem
+              param="size__in"
+              label="Size"
+              options={sizeOptions}
+            />
+          )}
+          {isClubFieldShown('accepting_members') && (
+            <SearchBarCheckboxItem
+              param="accepting_members"
+              label="Accepting Members"
+              options={[
+                {
+                  value: 'true',
+                  label: 'Is Accepting Members',
+                  name: 'accept',
+                },
+              ]}
+            />
+          )}
+          {isClubFieldShown('available_virtually') && (
+            <SearchBarCheckboxItem
+              param="available_virtually__in"
+              label="Available Virtually"
+              options={[
+                { value: 'true', label: 'Yes', name: 'virtual' },
+                { value: 'false', label: 'No', name: 'virtual' },
+              ]}
+            />
+          )}
+          {isClubFieldShown('appointment_needed') && (
+            <SearchBarCheckboxItem
+              param="appointment_needed__in"
+              label="Appointment Needed"
+              options={[
+                { value: 'true', label: 'Yes', name: 'virtual' },
+                { value: 'false', label: 'No', name: 'virtual' },
+              ]}
+            />
+          )}
+          <SearchBarCheckboxItem
+            param="target_schools__in"
+            label="School"
+            options={props.schools.map(({ id, name }) => ({
+              value: id,
+              label: name,
+              name: 'school',
+            }))}
+          />
+          <SearchBarCheckboxItem
+            param="target_years__in"
+            label="School Year"
+            options={props.years.map(({ id, name }) => ({
+              value: id,
+              label: name,
+              name: 'year',
+            }))}
+          />
+        </SearchBar>
 
         <SearchbarRightContainer>
-          <WideContainer background={SNOW}>
+          <WideContainer background={SNOW} fullHeight>
             <div style={{ padding: '30px 0' }}>
               <DisplayButtons switchDisplay={setDisplay} />
 
-              <Title className="title" style={{ color: CLUBS_GREY }}>
+              <Title className="title" style={{ color: H1_TEXT }}>
                 Browse {OBJECT_NAME_TITLE}
               </Title>
               <p
@@ -202,45 +350,17 @@ const Splash = (props: SplashProps): ReactElement => {
               {clubs.count} result{clubs.count === 1 ? '' : 's'}
             </ResultsText>
 
-            {!!searchInput.selectedTags.length && (
-              <div style={{ padding: '0 30px 30px 0' }}>
-                {searchInput.selectedTags.map((tag) => (
-                  <span
-                    key={tag.label}
-                    className="tag is-rounded has-text-white"
-                    style={{
-                      backgroundColor: colorMap[tag.name],
-                      fontWeight: 600,
-                      margin: 3,
-                    }}
-                  >
-                    {tag.label}
-                    <button
-                      className="delete is-small"
-                      onClick={() =>
-                        setSearchInput((inpt) => ({
-                          ...inpt,
-                          selectedTags: inpt.selectedTags.filter(
-                            (oth) =>
-                              !(
-                                tag.name === oth.name && tag.value === oth.value
-                              ),
-                          ),
-                        }))
-                      }
-                    />
-                  </span>
-                ))}
-                <ClearAllLink
-                  className="tag is-rounded"
-                  onClick={() =>
-                    setSearchInput((inpt) => ({ ...inpt, selectedTags: [] }))
-                  }
-                >
-                  Clear All
-                </ClearAllLink>
-              </div>
-            )}
+            <SearchTags
+              searchInput={searchInput}
+              setSearchInput={setSearchInput}
+              optionMapping={{
+                tags__in: tagOptions,
+                badges__in: badgeOptions,
+                application_required__in: applicationRequiredOptions,
+                size__in: sizeOptions,
+              }}
+            />
+
             {(preFair || fairIsOpen) && (
               <LiveEventsDialog
                 isPreFair={!!preFair}

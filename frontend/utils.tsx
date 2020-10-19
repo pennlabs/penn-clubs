@@ -2,7 +2,7 @@ import fetch from 'isomorphic-unfetch'
 import { createContext, ReactElement, useContext } from 'react'
 
 import { MembershipRank } from './types'
-import { DOMAIN } from './utils/branding'
+import { ALL_CLUB_FIELDS, CLUB_FIELDS, DOMAIN } from './utils/branding'
 
 export function stripTags(val: string): string {
   if (!val) {
@@ -195,4 +195,31 @@ export function formatResponse(
         ))}
     </>
   )
+}
+
+/**
+ * Indicates whether a field is shown on the edit page
+ * and the club information page.
+ *
+ * Looks up information from current branding to see which
+ * fields should be displayed.
+ */
+export function isClubFieldShown(name: string): boolean {
+  if (ALL_CLUB_FIELDS.has(name) && !CLUB_FIELDS.has(name)) {
+    return false
+  }
+  return true
+}
+
+/**
+ * Attempt to format a phone number in US phone number format.
+ */
+export function formatPhoneNumber(phone: string): string {
+  const cleaned = ('' + phone).replace(/\D/g, '')
+  const match = cleaned.match(/^(1|)?(\d{3})(\d{3})(\d{4})$/)
+  if (match) {
+    const intlCode = match[1] ? '+1 ' : ''
+    return [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('')
+  }
+  return phone
 }
