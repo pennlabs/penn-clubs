@@ -5,6 +5,7 @@ import s from 'styled-components'
 import { BANNER_BG, BANNER_TEXT, BORDER } from '../../constants/colors'
 import {
   ANIMATION_DURATION,
+  HEADER_SHADOW,
   LOGO_SCALE,
   MD,
   mediaMaxWidth,
@@ -29,7 +30,7 @@ const Nav = s.nav`
   width: 100%;
   position: fixed;
   z-index: 1001;
-  box-shadow: 2px 0px 5px black;
+  box-shadow: ${HEADER_SHADOW};
 
   ${mediaMaxWidth(MD)} {
     box-shadow: none;

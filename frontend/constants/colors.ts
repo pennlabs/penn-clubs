@@ -9,7 +9,8 @@ const COLOR_SCHEME = {
     ADD_BUTTON: '#4954f4',
     PRIMARY_TAG_BG: '#e1e3ff',
     PRIMARY_TAG_TEXT: '#4954f4',
-    FEEDBACK_BG: '$4954f4',
+    FEEDBACK_BG: '#4954f4',
+    SNOW: '#fafcff',
   },
   fyh: {
     BANNER_BG: '#000f3a',
@@ -20,6 +21,7 @@ const COLOR_SCHEME = {
     PRIMARY_TAG_BG: '#95001a',
     PRIMARY_TAG_TEXT: '#ffffff',
     FEEDBACK_BG: '#000f3a',
+    SNOW: '#f2f2f3',
   },
 }
 
@@ -31,12 +33,12 @@ export const ADD_BUTTON = COLOR_SCHEME[SITE_ID].ADD_BUTTON
 export const PRIMARY_TAG_BG = COLOR_SCHEME[SITE_ID].PRIMARY_TAG_BG
 export const PRIMARY_TAG_TEXT = COLOR_SCHEME[SITE_ID].PRIMARY_TAG_TEXT
 export const FEEDBACK_BG = COLOR_SCHEME[SITE_ID].FEEDBACK_BG
+export const SNOW = COLOR_SCHEME[SITE_ID].SNOW
 
 export const WHITE = '#fff'
 export const WHITE_ALPHA = (alpha: number): string =>
   `rgba(255, 255, 255, ${alpha})`
 export const SHADOW = 'rgba(0, 0, 0, 0.07)'
-export const SNOW = '#fafcff'
 export const SNOW_ALPHA = 'rgba(244, 246, 249, 0.75)'
 export const ALLBIRDS_GRAY = '#EAEAEA'
 export const BLACK = '#000'
