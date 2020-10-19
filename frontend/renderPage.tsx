@@ -237,22 +237,39 @@ export function renderListPage(Page) {
       tagsRequest,
       badgesRequest,
       liveEventRequest,
+      schoolRequest,
+      yearRequest,
     ] = await Promise.all([
       doApiRequest('/clubs/?page=1&ordering=featured&format=json', data),
       doApiRequest('/tags/?format=json', data),
-      doApiRequest('/badges/?format=json'),
+      doApiRequest('/badges/?format=json', data),
       doApiRequest('/events/live/', data),
+      doApiRequest('/schools/?format=json', data),
+      doApiRequest('/years/?format=json', data),
     ])
 
-    const clubsResponse = await clubsRequest.json()
-    const tagsResponse = await tagsRequest.json()
-    const badgesResponse = await badgesRequest.json()
-    const liveEventResponse = (await liveEventRequest.json()) as ClubEvent[]
+    const [
+      clubsResponse,
+      tagsResponse,
+      badgesResponse,
+      liveEventResponse,
+      schoolResponse,
+      yearResponse,
+    ] = await Promise.all([
+      clubsRequest.json(),
+      tagsRequest.json(),
+      badgesRequest.json(),
+      liveEventRequest.json(),
+      schoolRequest.json(),
+      yearRequest.json(),
+    ])
 
     return {
       tags: tagsResponse,
       badges: badgesResponse,
       clubs: clubsResponse,
+      schools: schoolResponse,
+      years: yearResponse,
       liveEventCount: liveEventResponse.length,
     }
   }

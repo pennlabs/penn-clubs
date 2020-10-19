@@ -27,7 +27,7 @@ import {
   SNOW,
 } from '../constants/colors'
 import { PaginatedClubPage, renderListPage } from '../renderPage'
-import { Badge, Tag, UserInfo } from '../types'
+import { Badge, School, Tag, UserInfo, Year } from '../types'
 import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_TITLE, SITE_TAGLINE } from '../utils/branding'
 
@@ -64,6 +64,8 @@ type SplashProps = {
   clubs: PaginatedClubPage
   tags: Tag[]
   badges: Badge[]
+  schools: School[]
+  years: Year[]
   clubCount: number
   liveEventCount: number
 }
@@ -288,6 +290,44 @@ const Splash = (props: SplashProps): ReactElement => {
               ]}
             />
           )}
+          {isClubFieldShown('available_virtually') && (
+            <SearchBarCheckboxItem
+              param="available_virtually__in"
+              label="Available Virtually"
+              options={[
+                { value: 'true', label: 'Yes', name: 'virtual' },
+                { value: 'false', label: 'No', name: 'virtual' },
+              ]}
+            />
+          )}
+          {isClubFieldShown('appointment_needed') && (
+            <SearchBarCheckboxItem
+              param="appointment_needed__in"
+              label="Appointment Needed"
+              options={[
+                { value: 'true', label: 'Yes', name: 'virtual' },
+                { value: 'false', label: 'No', name: 'virtual' },
+              ]}
+            />
+          )}
+          <SearchBarCheckboxItem
+            param="target_schools__in"
+            label="School"
+            options={props.schools.map(({ id, name }) => ({
+              value: id,
+              label: name,
+              name: 'school',
+            }))}
+          />
+          <SearchBarCheckboxItem
+            param="target_years__in"
+            label="School Year"
+            options={props.years.map(({ id, name }) => ({
+              value: id,
+              label: name,
+              name: 'year',
+            }))}
+          />
         </SearchBar>
 
         <SearchbarRightContainer>

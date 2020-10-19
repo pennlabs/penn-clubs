@@ -733,12 +733,14 @@ class ClubListSerializer(serializers.ModelSerializer):
         model = Club
         fields = [
             "accepting_members",
-            "enables_subscription",
             "active",
             "application_required",
+            "appointment_needed",
             "approved",
+            "available_virtually",
             "code",
             "email",
+            "enables_subscription",
             "favorite_count",
             "founded",
             "image_url",
@@ -1070,6 +1072,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "linkedin",
             "listserv",
             "members",
+            "signature_events",
             "target_majors",
             "target_schools",
             "target_years",

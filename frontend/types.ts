@@ -106,17 +106,19 @@ export interface Advisor {
 
 export interface Club {
   accepting_members: boolean
-  enables_subscription: boolean
   active: boolean
   advisor_set: Advisor[]
   application_required: ClubApplicationRequired
+  appointment_needed: boolean
   approved: boolean | null
   approved_by: string | null
   approved_comment: string | null
+  available_virtually: boolean
   badges: [Badge]
   code: string
   description: string
   email: string
+  enables_subscription: boolean
   events: [ClubEvent]
   facebook: string
   fair: boolean
@@ -127,15 +129,16 @@ export interface Club {
   image_url: string
   instagram: string
   is_favorite: boolean
+  is_ghost: boolean
   is_member: MembershipRank | false
   is_request: boolean
   is_subscribe: boolean
-  is_ghost: boolean
   linkedin: string
   listserv: string
   members: [Membership]
   membership_count: number
   name: string
+  signature_events: string
   size: ClubSize
   subtitle: string
   tags: [Tag]

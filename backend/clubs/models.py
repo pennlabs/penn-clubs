@@ -188,6 +188,12 @@ class Club(models.Model):
     target_schools = models.ManyToManyField("School", blank=True)
     target_majors = models.ManyToManyField("Major", blank=True)
 
+    # Hub@Penn fields
+    available_virtually = models.BooleanField(default=False)
+    appointment_needed = models.BooleanField(default=False)
+    signature_events = models.TextField(blank=True)
+
+    # cache club rankings
     rank = models.IntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)

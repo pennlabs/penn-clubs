@@ -58,7 +58,7 @@ const sites = {
     SITE_LOGO: '/static/img/penn_shield.png',
     SITE_FAVICON: '/static/penn_favicon.ico',
     SITE_TAGLINE:
-      'Find the support resources you need on and around Penn’s campus!',
+      "Find the support resources you need on and around Penn's campus!",
 
     APPROVAL_AUTHORITY: 'Office of Student Affairs',
     APPROVAL_AUTHORITY_URL: 'https://osa.vpul.upenn.edu/',
@@ -72,7 +72,11 @@ const sites = {
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
 
-    CLUB_FIELDS: [],
+    CLUB_FIELDS: [
+      'appointment_needed',
+      'available_virtually',
+      'signature_events',
+    ],
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,
   },
