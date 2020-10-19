@@ -5,10 +5,10 @@ export const BASE =
 
 const BODY = {
   clubs: {
-    BODY_FONT: `Inter, "Inter", ${BASE}`,
+    BODY_FONT: `'Inter', sans-serif`,
   },
   fyh: {
-    BODY_FONT: `OpenSans, "OpenSans", ${BASE}`,
+    BODY_FONT: `'Open Sans', sans-serif`,
   },
 }
 
