@@ -4,7 +4,21 @@ import pytz
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from clubs.models import Advisor, Badge, Club, Event, Favorite, Membership, Note, Tag
+from clubs.models import Advisor, Badge, Club, Event, Favorite, Membership, Note, Tag, Year
+
+
+class YearTestCase(TestCase):
+    def test_offset_conversion(self):
+        titles = ["Freshman", "Sophomore", "Junior", "Senior", "First-year", "Second-year"]
+        for title in titles:
+            Year.objects.bulk_create([Year(name=title) for title in titles])
+
+        this_year = datetime.datetime.now().year
+
+        # ensure graduation years are in a reasonable range
+        for title in titles:
+            year = Year.objects.get(name=title).year
+            self.assertLessEqual(abs(year - this_year), 10)
 
 
 class ClubTestCase(TestCase):
