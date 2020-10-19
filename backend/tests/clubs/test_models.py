@@ -11,7 +11,7 @@ class YearTestCase(TestCase):
     def test_offset_conversion(self):
         titles = ["Freshman", "Sophomore", "Junior", "Senior", "First-year", "Second-year"]
         for title in titles:
-            Year.objects.bulk_create([Year(name=title) for title in titles])
+            Year.objects.create(name=title)
 
         this_year = datetime.datetime.now().year
 
