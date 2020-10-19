@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 import uuid
 
 import requests
@@ -843,7 +844,14 @@ class Year(models.Model):
         year = now.year
         if now.month > 6:
             year += 1
-        offset = {"freshman": 3, "sophomore": 2, "junior": 1, "senior": 0}.get(self.name.lower(), 0)
+        offset = {
+            "freshman": 3,
+            "sophomore": 2,
+            "junior": 1,
+            "senior": 0,
+            "firstyear": 3,
+            "secondyear": 2,
+        }.get(re.sub(r"[^a-zA-Z]", "", self.name.lower()), 0)
         return year + offset
 
     def __str__(self):
