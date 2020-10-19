@@ -33,6 +33,7 @@ type DetailsProps = {
 const Details = ({ club }: DetailsProps): ReactElement => {
   const {
     size,
+    membership_count: membershipCount,
     application_required: applicationRequired,
     accepting_members: acceptingMembers,
   } = club

@@ -46,6 +46,7 @@ uvloop = {version = "*", sys_platform = "== 'linux'"}
 uvicorn = "*"
 gunicorn = "*"
 httptools = "*"
+ics = "*"
 
 [requires]
 python_version = "3"

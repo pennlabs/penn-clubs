@@ -20,7 +20,7 @@ type ClubTabTableProps = {
   memberships: UserMembership[]
 }
 
-export default ({
+const RenewTabTable = ({
   className,
   memberships,
 }: ClubTabTableProps): ReactElement => (
@@ -72,3 +72,5 @@ export default ({
     </tbody>
   </Table>
 )
+
+export default RenewTabTable

@@ -567,14 +567,14 @@ class MembershipRequest(models.Model):
 
 class Advisor(models.Model):
     """
-    Represents one faculty advisor for a club.
+    Represents one faculty advisor or point of contact for a club.
     """
 
     name = models.CharField(max_length=255)
     title = models.CharField(max_length=255, blank=True, null=True)
     school = models.ManyToManyField("School", blank=True)
     email = models.CharField(max_length=255, blank=True, null=True, validators=[validate_email])
-    phone = PhoneNumberField(null=False, blank=False, unique=True)
+    phone = PhoneNumberField(null=False, blank=False)
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     public = models.BooleanField()
@@ -873,6 +873,7 @@ class Profile(models.Model):
 
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, primary_key=True)
     image = models.ImageField(upload_to=get_user_file_name, null=True, blank=True)
+    uuid_secret = models.UUIDField(default=uuid.uuid4)
 
     has_been_prompted = models.BooleanField(default=False)
     share_bookmarks = models.BooleanField(default=False)

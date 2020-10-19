@@ -6,7 +6,7 @@ import { M2, M3, mediaMinWidth, PHONE } from '../../constants/measurements'
 import { Membership } from '../../types'
 import { Card, ProfilePic } from '../common'
 
-const StyledCard = s(Card)`
+export const StyledCard = s(Card)`
   text-align: left;
   box-sizing: border-box;
   width: 100%;
