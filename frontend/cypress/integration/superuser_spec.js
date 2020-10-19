@@ -1,4 +1,4 @@
-describe('Permissioned user tests', () => {
+describe('Permissioned (superuser) user tests', () => {
   before(() => {
     cy.login('bfranklin', 'test')
   })
@@ -23,7 +23,7 @@ describe('Permissioned user tests', () => {
     cy.contains('button:visible', 'Manage Club').click({ force: true })
 
     // wait additional time for manage club page to compile
-    cy.url({ timeout: 2 * 60 * 1000 }).should('contain', 'edit')
+    cy.url({ timeout: 3 * 60 * 1000 }).should('contain', 'edit')
     cy.contains('.field', 'Name')
       .should('be.visible')
       .find('input')
