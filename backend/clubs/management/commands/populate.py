@@ -283,6 +283,7 @@ class Command(BaseCommand):
                     "description": "This is a generic test club.",
                     "approved": True,
                     "active": True,
+                    "email": "example@example.com",
                 },
             )
 

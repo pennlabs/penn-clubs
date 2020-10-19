@@ -17,9 +17,11 @@ import renderPage from '../renderPage'
 import {
   APPROVAL_AUTHORITY,
   APPROVAL_AUTHORITY_URL,
+  FEEDBACK_URL,
   OBJECT_NAME_LONG_PLURAL,
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
+  PARTNER_LOGOS,
   SCHOOL_NAME,
   SITE_ID,
   SITE_NAME,
@@ -58,9 +60,7 @@ const GENERIC_TEMPLATE = (data) => (
       We’re so excited to let everyone at the {SCHOOL_NAME} contribute to the
       development of {SITE_NAME}! Your feedback is incredibly important to us.
       Have any questions or comments? Find any bugs?{' '}
-      <a href="https://airtable.com/shrCsYFWxCwfwE7cf">
-        Please let us know on our feedback form.
-      </a>
+      <a href={FEEDBACK_URL}>Please let us know on our feedback form.</a>
     </Question>
     <Line />
     <Question title="Why do I have to log in?">
@@ -163,9 +163,7 @@ const GENERIC_TEMPLATE = (data) => (
       for details about our {OBJECT_NAME_SINGULAR} recommendation algorithm.
     </Question>
     <Question title="I have another question!">
-      <a href="https://airtable.com/shrCsYFWxCwfwE7cf">
-        Please let us know on our feedback form :)
-      </a>
+      <a href={FEEDBACK_URL}>Please let us know on our feedback form :)</a>
     </Question>
     <Line />
     <Question title="Special Thanks">
@@ -175,31 +173,7 @@ const GENERIC_TEMPLATE = (data) => (
       <br />
       <br />
       <div>
-        {[
-          {
-            name: 'Student Activities Council',
-            image: '/static/img/collaborators/sac.png',
-            url: 'https://sacfunded.net/',
-          },
-          {
-            name: 'Undergraduate Assembly',
-            image: '/static/img/collaborators/ua.png',
-            url: 'https://pennua.org/',
-            height: 80,
-          },
-          {
-            name: 'Office of Student Affairs',
-            image: '/static/img/collaborators/osa.png',
-            url: 'https://www.vpul.upenn.edu/osa/',
-            className: 'mr-4',
-          },
-          {
-            name: 'Engineering Student Activities Council',
-            image: '/static/img/collaborators/esac.png',
-            url: 'https://esac.squarespace.com/',
-            height: 80,
-          },
-        ].map(({ name, url, image, height, className }) => (
+        {PARTNER_LOGOS.map(({ name, url, image, height, className }) => (
           <a href={url} target="_blank" key={name} className={className}>
             <img
               style={{

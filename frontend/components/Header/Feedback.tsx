@@ -1,13 +1,10 @@
 import { ReactElement } from 'react'
 import s from 'styled-components'
 
-import {
-  CLUBS_BLUE,
-  CLUBS_DEEP_BLUE,
-  FEEDBACK_BG,
-} from '../../constants/colors'
+import { FEEDBACK_BG } from '../../constants/colors'
 import { ANIMATION_DURATION } from '../../constants/measurements'
 import { logEvent } from '../../utils/analytics'
+import { FEEDBACK_URL } from '../../utils/branding'
 import { Icon } from '../common'
 
 const DIAMETER = '3rem'
@@ -36,7 +33,7 @@ const FeedbackLink = s.a`
 
 const Feedback = (): ReactElement => (
   <FeedbackLink
-    href="https://airtable.com/shrCsYFWxCwfwE7cf"
+    href={FEEDBACK_URL}
     title="Feedback"
     target="_blank"
     onClick={() => logEvent('feedback', 'clicked')}
