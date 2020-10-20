@@ -35,12 +35,12 @@ const AddressTypeaheadField = ({
 }: AddressProps): ReactElement => {
   const {
     value,
-    suggestions: { _, data },
+    suggestions: { data },
     setValue,
   } = usePlacesAutocomplete({
     requestOptions: {
       location: { lat: () => 39.952104, lng: () => -75.193739 },
-      radius: 2 * 1000,
+      radius: 4 * 1000,
     },
   })
 

@@ -211,6 +211,11 @@ export default function ClubEditCard({
       ),
       fields: [
         {
+          name: 'address',
+          required: false,
+          type: 'address',
+        },
+        {
           name: 'email',
           required: true,
           type: 'email',
@@ -220,12 +225,6 @@ export default function ClubEditCard({
           name: 'email_public',
           type: 'checkbox',
           label: `Show this contact email to the public. If you do not check this box, your contact email will only be visible to internal ${OBJECT_NAME_SINGULAR} members.`,
-        },
-        {
-          name: 'address',
-          required: false,
-          type: 'address',
-          help: `You can add the address of your ${OBJECT_NAME_SINGULAR} to be publicly shown.`,
         },
         {
           name: 'website',
