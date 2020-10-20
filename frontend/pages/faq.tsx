@@ -51,13 +51,22 @@ const UnorderedList = s.ul`
 const GENERIC_TEMPLATE = (data) => (
   <p>
     <Question title={`What is ${SITE_NAME}?`}>
-      {SITE_NAME} is meant to be your central source of information about
-      {OBJECT_NAME_LONG_PLURAL} at the {SCHOOL_NAME}. Keep discovering new{' '}
-      {OBJECT_NAME_PLURAL} throughout the year, not just at{' '}
-      {data.primaryMeeting}.
+      {SITE_ID === 'fyh' ? (
+        <>
+          {SITE_NAME} is a place for the Penn community to find and connect with
+          support resources.
+        </>
+      ) : (
+        <>
+          {SITE_NAME} is meant to be your central source of information about
+          {OBJECT_NAME_LONG_PLURAL} at the {SCHOOL_NAME}. Keep discovering new{' '}
+          {OBJECT_NAME_PLURAL} throughout the year, not just at{' '}
+          {data.primaryMeeting}.
+        </>
+      )}
     </Question>
     <Question title="How can I provide feedback?">
-      We’re so excited to let everyone at the {SCHOOL_NAME} contribute to the
+      We're so excited to let everyone at the {SCHOOL_NAME} contribute to the
       development of {SITE_NAME}! Your feedback is incredibly important to us.
       Have any questions or comments? Find any bugs?{' '}
       <a href={FEEDBACK_URL}>Please let us know on our feedback form.</a>
