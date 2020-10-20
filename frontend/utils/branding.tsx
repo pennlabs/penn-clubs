@@ -110,16 +110,16 @@ const sites = {
 
     PARTNER_LOGOS: [
       {
-        name: 'Office of The Provost',
-        image: '/static/img/collaborators/provost.svg',
-        url: 'https://provost.upenn.edu/',
-        className: 'is-block mb-4',
+        name: 'Vice Provost for University Life',
+        image: '/static/img/collaborators/vpul.png',
+        url: 'https://home.vpul.upenn.edu/',
+        className: 'mr-4 mb-4',
       },
       {
         name: 'New Student Orientation and Academic Initatives',
         image: '/static/img/collaborators/nsoai.png',
         url: 'https://www.nso.upenn.edu/',
-        className: 'is-block mb-4 has-text-centered',
+        className: 'mr-4 mb-4',
       },
     ],
   },
