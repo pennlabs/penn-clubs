@@ -1,8 +1,28 @@
 import { LoadScript } from '@react-google-maps/api'
 import { Libraries } from '@react-google-maps/api/dist/utils/make-load-script-url'
 import { ReactElement, useEffect } from 'react'
-import Autosuggest from 'react-autosuggest'
+import CreatbleSelect from 'react-select/creatable'
 import usePlacesAutocomplete from 'use-places-autocomplete'
+
+import { BORDER, CLUBS_GREY, FOCUS_GRAY } from '../../constants/colors'
+
+const styles = {
+  control: ({ background, ...base }) => {
+    return {
+      ...base,
+      border: `1px solid ${BORDER}`,
+      boxShadow: 'none',
+    }
+  },
+  option: ({ background, ...base }, { isFocused, isSelected }) => {
+    const isEmphasized = isFocused || isSelected
+    return {
+      ...base,
+      background: isEmphasized ? FOCUS_GRAY : background,
+      color: CLUBS_GREY,
+    }
+  },
+}
 
 type AddressProps = {
   addressValue: string
@@ -14,44 +34,47 @@ const AddressTypeaheadField = ({
   addressValue,
 }: AddressProps): ReactElement => {
   const {
-    ready,
     value,
-    suggestions: { status, data },
+    suggestions: { _, data },
     setValue,
-    clearSuggestions,
   } = usePlacesAutocomplete({
-    requestOptions: {},
+    requestOptions: {
+      location: { lat: () => 39.952104, lng: () => -75.193739 },
+      radius: 2 * 1000,
+    },
   })
 
   useEffect(() => {
-    if (addressValue) setValue(addressValue)
+    if (addressValue.length > 0) setValue(addressValue)
   }, [])
 
-  const handleChange = (e, { newValue }) => {
+  const handleChange = (newValue) => {
     setValue(newValue)
-    changeAddress(newValue)
+    if (newValue) changeAddress(newValue.value)
   }
 
-  const getSuggestionValue = (suggestion) => suggestion.description
-
-  const renderSuggestion = (suggestion) => {
-    return <div className="input">{suggestion.description}</div>
+  const components = {
+    IndicatorSeparator: () => null,
+    DropdownIndicator: () => null,
   }
 
-  const inputProps = {
-    placeholder: '',
-    value,
-    className: 'input',
-    onChange: handleChange,
-  }
   return (
-    <Autosuggest
-      suggestions={data}
-      onSuggestionsFetchRequested={() => {}}
-      onSuggestionsClearRequested={() => {}}
-      getSuggestionValue={getSuggestionValue}
-      renderSuggestion={renderSuggestion}
-      inputProps={inputProps}
+    <CreatbleSelect
+      isClearable
+      components={components}
+      styles={styles}
+      value={value}
+      onInputChange={(newVal) => {
+        if (newVal.length > 0) setValue(newVal)
+      }}
+      onChange={handleChange}
+      placeholder=""
+      allowCreateWhileLoading={false}
+      createOptionPosition="first"
+      formatCreateLabel={(inputValue) => inputValue}
+      options={data.map((suggestion) => {
+        return { value: suggestion.description, label: suggestion.description }
+      })}
     />
   )
 }
