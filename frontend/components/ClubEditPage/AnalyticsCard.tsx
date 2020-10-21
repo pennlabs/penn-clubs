@@ -175,7 +175,7 @@ export default function AnalyticsCard({
   const [pieChartData, setPieChartData] = useState<PieChartData | null>(null)
   const [metric, setMetric] = useState(METRICS[0])
   const [category, setCategory] = useState(CATEGORIES[0])
-  const [group, setGroup] = useState(GROUPS[1])
+  const [group, setGroup] = useState(GROUPS[0])
 
   const endDate = new Date(endRange.getTime() + 24 * 60 * 60 * 1000)
 
@@ -301,10 +301,10 @@ export default function AnalyticsCard({
                     return moment(date).format('D')
                   } else if (group.value === Group.Week) {
                     // We need to round down for Week values
-                    return (parseInt(moment(date).format('W')) - 1).toString()
+                    return moment(date).format('M/D')
                   } else if (group.value === Group.Month) {
                     // We need to round down for Month values
-                    return (parseInt(moment(date).format('M')) - 1).toString()
+                    return moment(date).add(-1, 'months').format('MMM')
                   }
                 }}
               />
@@ -358,7 +358,10 @@ export default function AnalyticsCard({
                     items={parsePie(
                       pieChartData[category.value][metric.value].content,
                     ).map((item) => ({
-                      title: `${item.label} (${item.angle})`,
+                      title:
+                        item.label !== 'None'
+                          ? `${item.label} (${item.angle})`
+                          : `Other (${item.angle})`,
                       strokeWidth: 6,
                       color: item.color,
                     }))}
