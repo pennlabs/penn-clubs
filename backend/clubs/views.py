@@ -469,7 +469,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 "membership_set",
                 queryset=Membership.objects.order_by(
                     "role", "person__first_name", "person__last_name"
-                ),
+                ).prefetch_related("person__profile"),
             ),
         )
         .order_by("-favorite_count", "name")
