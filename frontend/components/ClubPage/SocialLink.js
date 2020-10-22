@@ -15,7 +15,6 @@ const SocialLink = ({ club, item, type }) => {
   } else if (type === 'address') {
     return club[item.name]
   } else {
-    console.log(type)
     url = club[item.name]
     text = stripUrl(url)
   }
