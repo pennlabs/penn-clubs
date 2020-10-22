@@ -12,7 +12,10 @@ const SocialLink = ({ club, item, type }) => {
     }
     url = `mailto:${email}`
     text = email
+  } else if (type === 'address') {
+    return club[item.name]
   } else {
+    console.log(type)
     url = club[item.name]
     text = stripUrl(url)
   }

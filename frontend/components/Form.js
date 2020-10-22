@@ -480,7 +480,7 @@ class Form extends Component {
           {label}
         </label>
       )
-    } else if (type === 'address') {
+    } else if (type === 'location') {
       inpt = (
         <AddressField
           addressValue={value}

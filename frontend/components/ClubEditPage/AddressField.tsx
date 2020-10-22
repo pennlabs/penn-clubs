@@ -1,7 +1,7 @@
 import { LoadScript } from '@react-google-maps/api'
 import { Libraries } from '@react-google-maps/api/dist/utils/make-load-script-url'
 import { ReactElement, useEffect } from 'react'
-import CreatbleSelect from 'react-select/creatable'
+import CreatableSelect from 'react-select/creatable'
 import usePlacesAutocomplete from 'use-places-autocomplete'
 
 import { BORDER, CLUBS_GREY, FOCUS_GRAY } from '../../constants/colors'
@@ -26,7 +26,7 @@ const styles = {
 
 type AddressProps = {
   addressValue: string
-  changeAddress: (state: any) => void
+  changeAddress: (state: string) => void
 }
 
 const AddressTypeaheadField = ({
@@ -59,7 +59,7 @@ const AddressTypeaheadField = ({
   }
 
   return (
-    <CreatbleSelect
+    <CreatableSelect
       isClearable
       components={components}
       styles={styles}

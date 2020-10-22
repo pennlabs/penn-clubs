@@ -76,11 +76,7 @@ const SocialIcons = ({ club }: SocialIconsProps): ReactElement => (
       .map((item) => (
         <SocialLine key={item.name}>
           <Icon style={iconStyles} name={item.icon} alt={item.icon} />{' '}
-          {item.name === 'address' ? (
-            <span>{club[item.name]}</span>
-          ) : (
-            <SocialLink club={club} item={item} type={item.name} />
-          )}
+          <SocialLink club={club} item={item} type={item.name} />
         </SocialLine>
       ))}
   </>
