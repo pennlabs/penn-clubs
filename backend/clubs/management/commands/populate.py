@@ -17,6 +17,7 @@ from clubs.models import (
     Profile,
     QuestionAnswer,
     School,
+    StudentType,
     Tag,
     Testimonial,
     Year,
@@ -218,6 +219,17 @@ class Command(BaseCommand):
             ]
         ]
 
+        # create student types
+        [
+            StudentType.objects.get_or_create(name=types)
+            for types in [
+                "Transfer Student",
+                "Full-Time Student",
+                "Online Student",
+                "International Student",
+            ]
+        ]
+
         image_cache = {}
 
         def get_image(url):
@@ -287,6 +299,8 @@ class Command(BaseCommand):
                     "email": "example@example.com",
                 },
             )
+            if i < 5:
+                [club.student_types.add(type) for type in StudentType.objects.filter(id__lte=i)]
 
             Advisor.objects.create(
                 club=club,
