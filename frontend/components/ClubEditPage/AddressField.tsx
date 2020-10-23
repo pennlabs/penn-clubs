@@ -1,6 +1,6 @@
 import { LoadScript } from '@react-google-maps/api'
 import { Libraries } from '@react-google-maps/api/dist/utils/make-load-script-url'
-import { ReactElement, useEffect } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import CreatableSelect from 'react-select/creatable'
 import usePlacesAutocomplete from 'use-places-autocomplete'
 
@@ -34,7 +34,6 @@ const AddressTypeaheadField = ({
   addressValue,
 }: AddressProps): ReactElement => {
   const {
-    value,
     suggestions: { data },
     setValue,
   } = usePlacesAutocomplete({
@@ -44,14 +43,14 @@ const AddressTypeaheadField = ({
     },
   })
 
-  useEffect(() => {
-    if (addressValue.length > 0) setValue(addressValue)
-  }, [])
+  const [searchInput, setSearchInput] = useState<string>('')
 
   const handleChange = (newValue) => {
     if (newValue) {
       changeAddress(newValue.value)
       setValue(newValue.value)
+    } else {
+      changeAddress('')
     }
   }
 
@@ -65,9 +64,10 @@ const AddressTypeaheadField = ({
       isClearable
       components={components}
       styles={styles}
-      inputValue={value}
-      value={value}
+      inputValue={searchInput}
+      value={addressValue ? { label: addressValue, value: addressValue } : null}
       onInputChange={(newVal) => {
+        setSearchInput(newVal)
         setValue(newVal)
       }}
       onChange={handleChange}
