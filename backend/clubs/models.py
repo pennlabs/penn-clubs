@@ -639,7 +639,10 @@ class Note(models.Model):
 
 
 class StudentType(models.Model):
-
+    """
+    Represents a student type that the club is intended for.
+    For example, "International Students", "Transfer Students", or "Online Students".
+    """
     name = models.CharField(max_length=255)
 
     def __str__(self):
