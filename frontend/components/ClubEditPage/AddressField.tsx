@@ -1,6 +1,6 @@
 import { LoadScript } from '@react-google-maps/api'
 import { Libraries } from '@react-google-maps/api/dist/utils/make-load-script-url'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useState } from 'react'
 import CreatableSelect from 'react-select/creatable'
 import usePlacesAutocomplete from 'use-places-autocomplete'
 
@@ -45,13 +45,18 @@ const AddressTypeaheadField = ({
 
   const [searchInput, setSearchInput] = useState<string>('')
 
-  const handleChange = (newValue) => {
+  const handleValueChange = (newValue) => {
     if (newValue) {
       changeAddress(newValue.value)
       setValue(newValue.value)
     } else {
       changeAddress('')
     }
+  }
+
+  const handleSearchChange = (newValue) => {
+    setSearchInput(newValue)
+    setValue(newValue)
   }
 
   const components = {
@@ -65,12 +70,9 @@ const AddressTypeaheadField = ({
       components={components}
       styles={styles}
       inputValue={searchInput}
+      onInputChange={handleSearchChange}
       value={addressValue ? { label: addressValue, value: addressValue } : null}
-      onInputChange={(newVal) => {
-        setSearchInput(newVal)
-        setValue(newVal)
-      }}
-      onChange={handleChange}
+      onChange={handleValueChange}
       placeholder=""
       allowCreateWhileLoading={false}
       createOptionPosition="first"
@@ -88,9 +90,7 @@ const AddressField = ({
   changeAddress,
   addressValue,
 }: AddressProps): ReactElement => {
-  const apiKey: string =
-    process.env.NEXT_PUBLIC_GOOGLE_API_KEY ??
-    'AIzaSyDHF4MnEo8LwlB3ERDttQni0JcoBu34w1k'
+  const apiKey: string = process.env.NEXT_PUBLIC_GOOGLE_API_KEY ?? ''
 
   if (apiKey.length <= 0) {
     return (
