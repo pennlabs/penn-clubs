@@ -211,7 +211,7 @@ export default function ClubEditCard({
       ),
       fields: [
         {
-          name: 'location',
+          name: 'address',
           required: false,
           type: 'location',
           help:

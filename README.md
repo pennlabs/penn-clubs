@@ -44,6 +44,9 @@ When installing locally for development, run:
 
 Running the frontend requires [Node.js](https://nodejs.org/en/) and [Yarn](https://yarnpkg.com/getting-started/install).
 
+You will need to set the following Environmental Variables:
+- `NEXT_PUBLIC_GOOGLE_API_KEY`
+
 1. Enter the `frontend` directory with a **new terminal window**. Don't kill your backend server!
 2. Install dependencies using `yarn install` in the project directory.
 3. Run application using `yarn dev`.

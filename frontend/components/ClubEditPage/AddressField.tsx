@@ -49,8 +49,10 @@ const AddressTypeaheadField = ({
   }, [])
 
   const handleChange = (newValue) => {
-    setValue(newValue)
-    if (newValue) changeAddress(newValue.value)
+    if (newValue) {
+      changeAddress(newValue.value)
+      setValue(newValue.value)
+    }
   }
 
   const components = {
@@ -63,9 +65,10 @@ const AddressTypeaheadField = ({
       isClearable
       components={components}
       styles={styles}
+      inputValue={value}
       value={value}
       onInputChange={(newVal) => {
-        if (newVal.length > 0) setValue(newVal)
+        setValue(newVal)
       }}
       onChange={handleChange}
       placeholder=""
@@ -85,7 +88,9 @@ const AddressField = ({
   changeAddress,
   addressValue,
 }: AddressProps): ReactElement => {
-  const apiKey: string = process.env.NEXT_PUBLIC_GOOGLE_API_KEY ?? ''
+  const apiKey: string =
+    process.env.NEXT_PUBLIC_GOOGLE_API_KEY ??
+    'AIzaSyDHF4MnEo8LwlB3ERDttQni0JcoBu34w1k'
 
   if (apiKey.length <= 0) {
     return (
