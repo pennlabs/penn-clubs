@@ -792,7 +792,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     events = serializers.SerializerMethodField("get_events")
     is_request = serializers.SerializerMethodField("get_is_request")
     fair = serializers.BooleanField(default=False)
-    student_types = StudentTypeSerializer(many=True)
+    student_types = StudentTypeSerializer(many=True, required=False)
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
