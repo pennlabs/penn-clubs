@@ -1,11 +1,13 @@
 import ReactGA from 'react-ga'
 
+import { GA_TRACKING_CODE } from './branding'
+
 const dev = process.env.NODE_ENV !== 'production'
 
 export const initGA = (): void => {
   if (!dev) {
     console.log('GA init') // eslint-disable-line
-    ReactGA.initialize('UA-21029575-14')
+    ReactGA.initialize(GA_TRACKING_CODE)
   }
 }
 export const logPageView = (): void => {
