@@ -120,6 +120,7 @@ Internal Transfer from the college?
 Drop out and re-apply as an MBA?
 Whatever your path to Wharton-hood is, we want you (if you make it to round three)!""",
         "image": "https://i.imgur.com/nADYD8u.png",
+        "address": "The Wharton School",
         "active": False,
         "approved": True,
         "tags": [{"name": "Social"}, {"name": "Undergraduate"}],

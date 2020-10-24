@@ -132,6 +132,7 @@ def merge_clubs(one, two):
         "name",
         "subtitle",
         "description",
+        "address",
         "email",
         "facebook",
         "website",

@@ -4,6 +4,7 @@
     "@babel/core": "^7.3.4",
     "@babel/helper-create-regexp-features-plugin": "^7.7.4",
     "@babel/plugin-syntax-jsx": "^7.7.4",
+    "@react-google-maps/api": "^1.13.0",
     "@sentry/browser": "^5.11.0",
     "@sentry/node": "^5.11.0",
     "@svgr/webpack": "^5.1.0",
@@ -38,12 +39,14 @@
     "react-ga": "^2.6.0",
     "react-lazy-load": "^3.1.13",
     "react-linkify": "^1.0.0-alpha",
+    "react-places-autocomplete": "^7.3.0",
     "react-select": "^3.0.8",
     "react-timeago": "^4.4.0",
     "react-tooltip": "^3.11.1",
     "react-vis": "^1.11.7",
     "showdown": "^1.9.1",
-    "styled-components": "^4.4.1"
+    "styled-components": "^4.4.1",
+    "use-places-autocomplete": "^1.5.7"
   },
   "scripts": {
     "lint": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\"",

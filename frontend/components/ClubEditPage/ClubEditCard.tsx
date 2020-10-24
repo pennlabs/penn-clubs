@@ -211,6 +211,14 @@ export default function ClubEditCard({
       ),
       fields: [
         {
+          name: 'address',
+          label: 'Location',
+          required: false,
+          type: 'location',
+          help:
+            'Remember, this will be available to the public. Please only include information you feel comfortable sharing.',
+        },
+        {
           name: 'email',
           required: true,
           type: 'email',

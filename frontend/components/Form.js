@@ -14,6 +14,7 @@ import {
   getRoleDisplay,
   titleize,
 } from '../utils'
+import AddressField from './ClubEditPage/AddressField'
 import { Icon, Loading } from './common'
 import EmbedOption, {
   blockRendererFunction,
@@ -478,6 +479,17 @@ class Form extends Component {
           &nbsp;
           {label}
         </label>
+      )
+    } else if (type === 'location') {
+      inpt = (
+        <AddressField
+          addressValue={value}
+          changeAddress={(address) => {
+            this.setState({ [`field-${name}`]: address }, () =>
+              this.onChange(address),
+            )
+          }}
+        ></AddressField>
       )
     } else {
       inpt = (
