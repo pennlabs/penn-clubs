@@ -78,9 +78,9 @@ const LogoBackground = s.div<{ use?: boolean }>`
   background-size: auto 100%;
   width: 500px;
   background-repeat: no-repeat;
-  `
-      : ''}
   padding: 1em;
+  `
+      : `padding: 0.5em;`}
 `
 
 type HeaderProps = {
