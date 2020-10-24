@@ -68,6 +68,8 @@ const sites = {
         height: 80,
       },
     ],
+
+    GA_TRACKING_CODE: 'UA-21029575-14',
   },
   fyh: {
     SITE_NAME: 'Hub@Penn',
@@ -122,6 +124,8 @@ const sites = {
         className: 'mr-4 mb-4',
       },
     ],
+
+    GA_TRACKING_CODE: 'G-08JKZXMTZ4',
   },
 }
 
@@ -166,3 +170,5 @@ export const ALL_CLUB_FIELDS = new Set(
     .map(({ CLUB_FIELDS }) => CLUB_FIELDS)
     .flat(),
 )
+
+export const GA_TRACKING_CODE = sites[site].GA_TRACKING_CODE
