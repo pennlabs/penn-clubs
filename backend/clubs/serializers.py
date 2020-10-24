@@ -746,7 +746,6 @@ class ClubListSerializer(serializers.ModelSerializer):
             "founded",
             "image_url",
             "is_favorite",
-            "favorite_count",
             "is_member",
             "is_subscribe",
             "membership_count",
