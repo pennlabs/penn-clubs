@@ -8,7 +8,7 @@ import SocialLink from './SocialLink'
 const socials = [
   {
     name: 'address',
-    label: 'Address',
+    label: 'Location',
     icon: 'location',
   },
   {
@@ -76,7 +76,7 @@ const SocialIcons = ({ club }: SocialIconsProps): ReactElement => (
       .map((item) => (
         <SocialLine key={item.name}>
           <Icon style={iconStyles} name={item.icon} alt={item.icon} />{' '}
-          <SocialLink club={club} item={item} type={item.name} />
+          <SocialLink club={club} item={item} type={item.label} />
         </SocialLine>
       ))}
   </>

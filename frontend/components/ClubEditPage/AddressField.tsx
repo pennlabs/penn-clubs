@@ -40,6 +40,8 @@ const AddressTypeaheadField = ({
     requestOptions: {
       location: { lat: () => 39.952104, lng: () => -75.193739 },
       radius: 4 * 1000,
+      // Coordinates are for the university of Pennsylvania. This prioritizes the suggestions which
+      // are within a 4Km radius.
     },
   })
 

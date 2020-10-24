@@ -5,14 +5,14 @@ const stripUrl = (url) => {
 const SocialLink = ({ club, item, type }) => {
   let url, text
 
-  if (type === 'email') {
+  if (type === 'Email') {
     const email = club[item.name]
     if (email === 'Hidden') {
       return email
     }
     url = `mailto:${email}`
     text = email
-  } else if (type === 'address') {
+  } else if (type === 'Location') {
     return club[item.name]
   } else {
     url = club[item.name]
