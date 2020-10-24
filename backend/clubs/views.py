@@ -935,6 +935,22 @@ class YearViewSet(viewsets.ModelViewSet):
     queryset = Year.objects.all()
 
 
+class AdvisorSearchFilter(filters.BaseFilterBackend):
+    """
+    A DRF filter to implement custom filtering logic for advisor objects.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        public = request.GET.get("public")
+
+        if public is not None:
+            public = public.strip().lower()
+            if public in {"true", "false"}:
+                queryset = queryset.filter(public=public == "true")
+
+        return queryset
+
+
 class AdvisorViewSet(viewsets.ModelViewSet):
     """
     list:
@@ -958,6 +974,7 @@ class AdvisorViewSet(viewsets.ModelViewSet):
 
     serializer_class = AdvisorSerializer
     permission_classes = [ClubItemPermission | IsSuperuser]
+    filter_backends = [AdvisorSearchFilter]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
