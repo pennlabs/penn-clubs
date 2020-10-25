@@ -3,10 +3,8 @@ import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import {
-  ADD_BUTTON,
   ALLBIRDS_GRAY,
   BLACK_ALPHA,
-  CLUBS_BLUE,
   WHITE,
   WHITE_ALPHA,
 } from '../constants/colors'
@@ -24,11 +22,6 @@ const DisplayButtonsTag = s.div`
   .button {
     margin-left: 8px;
   }
-`
-
-const AddClubButton = s.a`
-  background-color: ${ADD_BUTTON};
-  color: ${WHITE_ALPHA(0.8)} !important;
 `
 
 const iconStyles = {
@@ -68,14 +61,14 @@ const DisplayButtons = ({
       <Icon name="list" alt="switch to list view" style={iconStyles} />
     </button>
     <Link href="/create">
-      <AddClubButton className="button is-small">
+      <a className="button is-small is-primary">
         <Icon
           name="plus"
           alt={`create ${OBJECT_NAME_SINGULAR}`}
           style={iconStylesDark}
         />
         Add {OBJECT_NAME_TITLE_SINGULAR}
-      </AddClubButton>
+      </a>
     </Link>
   </DisplayButtonsTag>
 )

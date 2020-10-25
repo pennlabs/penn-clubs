@@ -8,6 +8,7 @@ import {
   SCHOOL_NAME,
   SITE_FAVICON,
   SITE_NAME,
+  STYLE_URL,
 } from '../../utils/branding'
 
 // Data to populate site metadata
@@ -106,6 +107,8 @@ export const Metadata = ({
       integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
       crossOrigin="anonymous"
     />
+
+    {STYLE_URL && <link href={STYLE_URL} rel="stylesheet" />}
   </Head>
 )
 

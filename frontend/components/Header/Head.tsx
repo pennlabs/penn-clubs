@@ -2,7 +2,7 @@ import Head from 'next/head'
 import { ReactElement, useEffect } from 'react'
 
 import { initGA, logPageView } from '../../utils/analytics'
-import { SITE_FAVICON } from '../../utils/branding'
+import { SITE_FAVICON, STYLE_URL } from '../../utils/branding'
 
 declare global {
   interface Window {
@@ -53,6 +53,8 @@ const Heading = (): ReactElement => {
         integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
         crossOrigin="anonymous"
       />
+
+      {STYLE_URL && <link href={STYLE_URL} rel="stylesheet" />}
     </Head>
   )
 }
