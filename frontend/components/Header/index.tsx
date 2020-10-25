@@ -16,7 +16,11 @@ import {
 } from '../../constants/measurements'
 import { HOME_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
-import { SITE_LOGO, SITE_NAME } from '../../utils/branding'
+import {
+  HEADER_BACKGROUND_IMAGE,
+  SITE_LOGO,
+  SITE_NAME,
+} from '../../utils/branding'
 import Burger from './Burger'
 import Feedback from './Feedback'
 import Heading from './Head'
@@ -66,6 +70,19 @@ const Title = s.h1`
   font-weight: ${TITLE_WEIGHT};
 `
 
+const LogoBackground = s.div<{ use?: boolean }>`
+  ${({ use }) =>
+    use
+      ? `
+  background: url('${HEADER_BACKGROUND_IMAGE}');
+  background-size: auto 100%;
+  width: 500px;
+  background-repeat: no-repeat;
+  padding: 1em;
+  `
+      : `padding: 0.5em;`}
+`
+
 type HeaderProps = {
   authenticated: boolean | null
   userInfo?: UserInfo
@@ -84,12 +101,14 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
 
       <Nav className="navbar" role="navigation" aria-label="main navigation">
         <div className="navbar-brand">
-          <Link href={HOME_ROUTE}>
-            <a className="navbar-item" style={{ padding: 0 }}>
-              <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
-              <Title>{SITE_NAME}</Title>
-            </a>
-          </Link>
+          <LogoBackground use={HEADER_BACKGROUND_IMAGE != null}>
+            <Link href={HOME_ROUTE}>
+              <a className="navbar-item" style={{ padding: 0 }}>
+                <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
+                <Title>{SITE_NAME}</Title>
+              </a>
+            </Link>
+          </LogoBackground>
 
           <Burger toggle={toggle} />
         </div>

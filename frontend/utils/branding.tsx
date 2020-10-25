@@ -15,6 +15,7 @@ const sites = {
     OBJECT_NAME_TITLE_SINGULAR: 'Club',
 
     SITE_LOGO: '/static/img/peoplelogo.png',
+    HEADER_BACKGROUND_IMAGE: null,
     SITE_FAVICON: '/static/favicon.ico',
     SITE_TAGLINE: 'Find your people!',
 
@@ -85,6 +86,7 @@ const sites = {
     OBJECT_NAME_TITLE_SINGULAR: 'Resource',
 
     SITE_LOGO: '/static/img/penn_shield.png',
+    HEADER_BACKGROUND_IMAGE: '/static/img/penn_background.png',
     SITE_FAVICON: '/static/penn_favicon.ico',
     SITE_TAGLINE:
       "Find the support resources you need on and around Penn's campus!",
@@ -150,6 +152,7 @@ export const APPROVAL_AUTHORITY_URL = sites[site].APPROVAL_AUTHORITY_URL
 
 export const SITE_LOGO = sites[site].SITE_LOGO
 export const SITE_FAVICON = sites[site].SITE_FAVICON
+export const HEADER_BACKGROUND_IMAGE = sites[site].HEADER_BACKGROUND_IMAGE
 
 export const FIELD_PARTICIPATION_LABEL = sites[site].FIELD_PARTICIPATION_LABEL
 export const OBJECT_URL_SLUG = sites[site].OBJECT_URL_SLUG
