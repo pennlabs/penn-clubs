@@ -655,7 +655,8 @@ export class ModelForm extends Component {
     this.state = {
       objects: null,
       currentlyEditing: null,
-      createObject: {},
+      createObject:
+        props.defaultObject != null ? { ...props.defaultObject } : {},
       newCount: 0,
     }
 
@@ -678,6 +679,7 @@ export class ModelForm extends Component {
     this.setState(({ objects, newCount }) => {
       objects.push({
         tempId: newCount,
+        ...(this.props.defaultObject ?? {}),
       })
       return { objects, newCount: newCount + 1 }
     })
@@ -813,7 +815,9 @@ export class ModelForm extends Component {
   }
 
   componentDidMount() {
-    doApiRequest(`${this.props.baseUrl}?format=json`)
+    doApiRequest(
+      `${this.props.baseUrl}?format=json${this.props.listParams ?? ''}`,
+    )
       .then((resp) => resp.json())
       .then((resp) => {
         this.setState({ objects: resp })
@@ -954,7 +958,10 @@ export class ModelForm extends Component {
                       this.setState({
                         objects: [...objects],
                         currentlyEditing: obj[keyField],
-                        createObject: {},
+                        createObject:
+                          this.props.defaultObject != null
+                            ? { ...this.props.defaultObject }
+                            : {},
                       })
                     } else {
                       this.setState({
@@ -993,7 +1000,10 @@ export class ModelForm extends Component {
                   getApiUrl,
                   formatResponse,
                   getRoleDisplay,
-                  createObject: {},
+                  createObject:
+                    this.props.defaultObject != null
+                      ? { ...this.props.defaultObject }
+                      : {},
                 })
                 this.onChange({})
               }}
