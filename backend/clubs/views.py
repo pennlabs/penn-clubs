@@ -465,6 +465,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             "target_schools",
             "target_majors",
             "target_years",
+            "student_types",
             Prefetch(
                 "membership_set",
                 queryset=Membership.objects.order_by(

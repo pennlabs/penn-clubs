@@ -174,6 +174,7 @@ class Club(models.Model):
         choices=APPLICATION_CHOICES, default=APPLICATION_REQUIRED_ALL
     )
     accepting_members = models.BooleanField(default=False)
+    student_types = models.ManyToManyField("StudentType", blank=True)
     enables_subscription = models.BooleanField(default=True)
     listserv = models.CharField(blank=True, max_length=255)
     image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
@@ -635,6 +636,18 @@ class Note(models.Model):
         choices=OUTSIDE_CLUB_PERMISSION_CHOICES, default=PERMISSION_SUBJECT_CLUB_MEMBER
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class StudentType(models.Model):
+    """
+    Represents a student type that the club is intended for.
+    For example, "International Students", "Transfer Students", or "Online Students".
+    """
+
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
 
 
 class NoteTag(models.Model):

@@ -31,6 +31,7 @@ from clubs.models import (
     QuestionAnswer,
     Report,
     School,
+    StudentType,
     Subscribe,
     Tag,
     Testimonial,
@@ -623,7 +624,6 @@ class ClubListSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField("get_image_url")
     favorite_count = serializers.IntegerField(read_only=True)
     membership_count = serializers.IntegerField(read_only=True)
-
     is_favorite = serializers.SerializerMethodField("get_is_favorite")
     is_subscribe = serializers.SerializerMethodField("get_is_subscribe")
     is_member = serializers.SerializerMethodField("get_is_member")
@@ -777,6 +777,12 @@ class ClubListSerializer(serializers.ModelSerializer):
         }
 
 
+class StudentTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentType
+        fields = ("id", "name")
+
+
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
@@ -785,9 +791,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     events = serializers.SerializerMethodField("get_events")
     is_request = serializers.SerializerMethodField("get_is_request")
     fair = serializers.BooleanField(default=False)
+    student_types = StudentTypeSerializer(many=True, required=False)
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
-
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
 
     target_schools = SchoolSerializer(many=True, required=False)
@@ -1074,6 +1080,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "listserv",
             "members",
             "signature_events",
+            "student_types",
             "target_majors",
             "target_schools",
             "target_years",
@@ -1086,6 +1093,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "tags",
             "badges",
             "target_schools",
+            "student_types",
             "target_majors",
             "target_years",
             "advisor_set",
