@@ -1,4 +1,4 @@
-describe('Permissioned (superuser) user tests', () => {
+describe('Permissioned (superuser) user tests', { retries: { runMode: 2, openMode: 0 } }, () => {
   before(() => {
     cy.login('bfranklin', 'test')
   })
@@ -16,7 +16,7 @@ describe('Permissioned (superuser) user tests', () => {
     cy.contains('Benjamin Franklin')
   })
 
-  it('Edits a club page', { retries: { runMode: 2, openMode: 0 } }, () => {
+  it('Edits a club page', () => {
     // visit club page
     cy.visit('/club/pppjo')
 
