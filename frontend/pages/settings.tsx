@@ -8,7 +8,7 @@ import FavoritesTab from '../components/Settings/FavoritesTab'
 import MembershipRequestsTab from '../components/Settings/MembershipRequestsTab'
 import ProfileTab from '../components/Settings/ProfileTab'
 import TabView from '../components/TabView'
-import { CLUBS_BLUE, WHITE } from '../constants/colors'
+import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
 import renderPage from '../renderPage'
 import { UserInfo } from '../types'
@@ -101,7 +101,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
     const { name } = this.props.userInfo
 
-    const gradient = 'linear-gradient(to right, #4954f4, #44469a)'
+    const gradient = BG_GRADIENT
 
     return (
       <>
