@@ -16,7 +16,7 @@ describe('Permissioned (superuser) user tests', () => {
     cy.contains('Benjamin Franklin')
   })
 
-  it('Edits a club page', () => {
+  it('Edits a club page', { retries: { runMode: 2, openMode: 0 } }, () => {
     // visit club page
     cy.visit('/club/pppjo')
 
@@ -28,7 +28,7 @@ describe('Permissioned (superuser) user tests', () => {
     cy.contains('button:visible', 'Manage Club').scrollIntoView().click()
 
     // wait additional time for manage club page to compile
-    cy.url({ timeout: 30 * 1000 }).should('contain', 'edit')
+    cy.url({ timeout: 15 * 1000 }).should('contain', 'edit')
     
     // change club name
     cy.contains('.field', 'Name')
@@ -46,7 +46,7 @@ describe('Permissioned (superuser) user tests', () => {
 
     // revert edits
     cy.contains('button:visible', 'Manage Club').scrollIntoView().click()
-    cy.url({ timeout: 30 * 1000 }).should('contain', 'edit')
+    cy.url({ timeout: 15 * 1000 }).should('contain', 'edit')
     cy.contains('.field', 'Name')
       .find('input')
       .clear()
