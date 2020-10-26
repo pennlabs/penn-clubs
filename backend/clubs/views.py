@@ -1325,7 +1325,28 @@ class MembershipViewSet(viewsets.ModelViewSet):
     http_method_names = ["get"]
 
     def get_queryset(self):
-        return Membership.objects.filter(person=self.request.user)
+        queryset = Membership.objects.filter(person=self.request.user).prefetch_related(
+            "club__tags"
+        )
+        person = self.request.user
+        queryset = queryset.prefetch_related(
+            Prefetch(
+                "club__favorite_set",
+                queryset=Favorite.objects.filter(person=person),
+                to_attr="user_favorite_set",
+            ),
+            Prefetch(
+                "club__subscribe_set",
+                queryset=Subscribe.objects.filter(person=person),
+                to_attr="user_subscribe_set",
+            ),
+            Prefetch(
+                "club__membership_set",
+                queryset=Membership.objects.filter(person=person),
+                to_attr="user_membership_set",
+            ),
+        )
+        return queryset
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
@@ -1342,7 +1363,28 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        return Favorite.objects.filter(person=self.request.user)
+        queryset = Favorite.objects.filter(person=self.request.user).prefetch_related("club__tags")
+
+        person = self.request.user
+        queryset = queryset.prefetch_related(
+            Prefetch(
+                "club__favorite_set",
+                queryset=Favorite.objects.filter(person=person),
+                to_attr="user_favorite_set",
+            ),
+            Prefetch(
+                "club__subscribe_set",
+                queryset=Subscribe.objects.filter(person=person),
+                to_attr="user_subscribe_set",
+            ),
+            Prefetch(
+                "club__membership_set",
+                queryset=Membership.objects.filter(person=person),
+                to_attr="user_membership_set",
+            ),
+        )
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -1364,7 +1406,28 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        return Subscribe.objects.filter(person=self.request.user)
+        queryset = Subscribe.objects.filter(person=self.request.user).prefetch_related("club__tags")
+
+        person = self.request.user
+        queryset = queryset.prefetch_related(
+            Prefetch(
+                "club__favorite_set",
+                queryset=Favorite.objects.filter(person=person),
+                to_attr="user_favorite_set",
+            ),
+            Prefetch(
+                "club__subscribe_set",
+                queryset=Subscribe.objects.filter(person=person),
+                to_attr="user_subscribe_set",
+            ),
+            Prefetch(
+                "club__membership_set",
+                queryset=Membership.objects.filter(person=person),
+                to_attr="user_membership_set",
+            ),
+        )
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "create":
