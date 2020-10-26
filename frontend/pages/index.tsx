@@ -27,7 +27,7 @@ import {
   SNOW,
 } from '../constants/colors'
 import { PaginatedClubPage, renderListPage } from '../renderPage'
-import { Badge, School, Tag, UserInfo, Year } from '../types'
+import { Badge, School, StudentType, Tag, UserInfo, Year } from '../types'
 import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_TITLE, SITE_TAGLINE } from '../utils/branding'
 
@@ -66,6 +66,7 @@ type SplashProps = {
   badges: Badge[]
   schools: School[]
   years: Year[]
+  student_types: StudentType[]
   clubCount: number
   liveEventCount: number
 }
@@ -328,6 +329,17 @@ const Splash = (props: SplashProps): ReactElement => {
               name: 'year',
             }))}
           />
+          {isClubFieldShown('student_types') && (
+            <SearchBarCheckboxItem
+              param="student_types__in"
+              label="Student Type"
+              options={props.student_types.map(({ id, name }) => ({
+                value: id,
+                label: name,
+                name: 'student_type',
+              }))}
+            />
+          )}
         </SearchBar>
 
         <SearchbarRightContainer>

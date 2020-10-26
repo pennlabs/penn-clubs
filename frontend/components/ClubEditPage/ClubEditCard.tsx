@@ -7,6 +7,7 @@ import {
   ClubSize,
   Major,
   School,
+  StudentType,
   Tag,
   Year,
 } from '../../types'
@@ -59,6 +60,7 @@ const CLUB_SIZES = [
 type ClubEditCardProps = {
   schools: Readonly<School[]>
   majors: Readonly<Major[]>
+  student_types: Readonly<StudentType[]>
   years: Readonly<Year[]>
   tags: Readonly<Tag[]>
   club: Partial<Club>
@@ -73,6 +75,7 @@ type ClubEditCardProps = {
 export default function ClubEditCard({
   schools,
   majors,
+  student_types,
   years,
   tags,
   club,
@@ -332,6 +335,14 @@ export default function ClubEditCard({
           type: 'multiselect',
           placeholder: `Select majors relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: majors,
+          converter: (a) => ({ value: a.id, label: a.name }),
+          reverser: (a) => ({ id: a.value, name: a.label }),
+        },
+        {
+          name: 'student_types',
+          type: 'multiselect',
+          placeholder: `Select student types relevant to your ${OBJECT_NAME_SINGULAR}!`,
+          choices: student_types,
           converter: (a) => ({ value: a.id, label: a.name }),
           reverser: (a) => ({ id: a.value, name: a.label }),
         },

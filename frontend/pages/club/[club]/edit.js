@@ -2,14 +2,17 @@ import { withRouter } from 'next/router'
 
 import ClubEditPage from '../../../components/ClubEditPage'
 import renderPage from '../../../renderPage'
-import { doApiRequest } from '../../../utils'
+import { doApiRequest, isClubFieldShown } from '../../../utils'
 
 const Edit = (props) => <ClubEditPage {...props} />
 
 Edit.getInitialProps = async ({ query }) => {
-  const endpoints = ['tags', 'schools', 'majors', 'years']
+  const endpoints = ['tags', 'schools', 'majors', 'years', 'student_types']
   return Promise.all(
     endpoints.map(async (item) => {
+      if (!isClubFieldShown(item)) {
+        return [item, []]
+      }
       const request = await doApiRequest(`/${item}/?format=json`)
       const response = await request.json()
       return [item, response]

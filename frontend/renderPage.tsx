@@ -11,7 +11,7 @@ import { WHITE } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
 import { Club, ClubEvent, ExtendedUserInfo, Tag, UserInfo } from './types'
-import { doApiRequest, OptionsContext } from './utils'
+import { doApiRequest, isClubFieldShown, OptionsContext } from './utils'
 import { logEvent } from './utils/analytics'
 import { logException } from './utils/sentry'
 
@@ -239,6 +239,7 @@ export function renderListPage(Page) {
       liveEventRequest,
       schoolRequest,
       yearRequest,
+      studentTypesRequest,
     ] = await Promise.all([
       doApiRequest('/clubs/?page=1&ordering=featured&format=json', data),
       doApiRequest('/tags/?format=json', data),
@@ -246,6 +247,9 @@ export function renderListPage(Page) {
       doApiRequest('/events/live/', data),
       doApiRequest('/schools/?format=json', data),
       doApiRequest('/years/?format=json', data),
+      isClubFieldShown('student_types')
+        ? doApiRequest('/student_types/?format=json', data)
+        : Promise.resolve(null),
     ])
 
     const [
@@ -255,6 +259,7 @@ export function renderListPage(Page) {
       liveEventResponse,
       schoolResponse,
       yearResponse,
+      studentTypesResponse,
     ] = await Promise.all([
       clubsRequest.json(),
       tagsRequest.json(),
@@ -262,6 +267,9 @@ export function renderListPage(Page) {
       liveEventRequest.json(),
       schoolRequest.json(),
       yearRequest.json(),
+      studentTypesRequest != null
+        ? studentTypesRequest.json()
+        : Promise.resolve([]),
     ])
 
     return {
@@ -270,6 +278,7 @@ export function renderListPage(Page) {
       clubs: clubsResponse,
       schools: schoolResponse,
       years: yearResponse,
+      student_types: studentTypesResponse,
       liveEventCount: liveEventResponse.length,
     }
   }

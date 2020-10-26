@@ -199,3 +199,8 @@ export interface Year {
   name: string
   year: number
 }
+
+export interface StudentType {
+  id: number
+  name: string
+}
