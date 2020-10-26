@@ -11,8 +11,16 @@ import AuthPrompt from '../../../components/common/AuthPrompt'
 import { DARK_GRAY, GREEN, MEDIUM_GRAY } from '../../../constants/colors'
 import { CLUB_ROUTE } from '../../../constants/routes'
 import renderPage from '../../../renderPage'
-import { Club, MembershipRank } from '../../../types'
-import { doApiRequest, useSetting } from '../../../utils'
+import {
+  Club,
+  Major,
+  MembershipRank,
+  School,
+  StudentType,
+  Tag,
+  Year,
+} from '../../../types'
+import { doApiRequest, isClubFieldShown, useSetting } from '../../../utils'
 import {
   APPROVAL_AUTHORITY,
   APPROVAL_AUTHORITY_URL,
@@ -26,10 +34,11 @@ import {
 type RenewPageProps = {
   club: Club
   authenticated: boolean | null
-  schools: any[]
-  majors: any[]
-  years: any[]
-  tags: any[]
+  schools: School[]
+  majors: Major[]
+  years: Year[]
+  tags: Tag[]
+  student_types: StudentType[]
 }
 
 const SubTitle = s.h2`
@@ -151,6 +160,7 @@ const RenewPage = ({
   majors,
   years,
   tags,
+  student_types,
 }: RenewPageProps): ReactElement => {
   const [club, setClub] = useState<Club>(initialClub)
   const [step, setStep] = useState<number>(0)
@@ -275,6 +285,7 @@ const RenewPage = ({
             majors={majors}
             years={years}
             tags={tags}
+            student_types={student_types}
             club={club}
             isEdit={true}
             onSubmit={({ club, message }) => {
@@ -498,9 +509,12 @@ RenewPage.getInitialProps = async ({ query, req }: NextPageContext) => {
   const clubReq = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const clubRes = await clubReq.json()
 
-  const endpoints = ['tags', 'schools', 'majors', 'years']
+  const endpoints = ['tags', 'schools', 'majors', 'years', 'student_types']
   return Promise.all(
     endpoints.map(async (item) => {
+      if (!isClubFieldShown(item)) {
+        return [item, []]
+      }
       const request = await doApiRequest(`/${item}/?format=json`, data)
       const response = await request.json()
       return [item, response]

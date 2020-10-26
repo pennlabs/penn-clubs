@@ -56,6 +56,7 @@ from clubs.models import (
     QuestionAnswer,
     Report,
     School,
+    StudentType,
     Subscribe,
     Tag,
     Testimonial,
@@ -95,6 +96,7 @@ from clubs.serializers import (
     QuestionAnswerSerializer,
     ReportSerializer,
     SchoolSerializer,
+    StudentTypeSerializer,
     SubscribeBookmarkSerializer,
     SubscribeSerializer,
     TagSerializer,
@@ -336,6 +338,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             "target_majors": parse_tags,
             "target_schools": parse_tags,
             "target_years": parse_tags,
+            "target_students": parse_tags,
         }
 
         if not queryset.model == Club:
@@ -914,6 +917,26 @@ class MajorViewSet(viewsets.ModelViewSet):
     serializer_class = MajorSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     queryset = Major.objects.all()
+
+
+class StudentTypeViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Retrieve a list of all the student types (ex: Online Student, Transfer Student, etc).
+
+    retrieve:
+    Retrieve a single student type by ID.
+
+    create:
+    Add a new student type to the list of student types.
+
+    destroy:
+    Remove a student type from the list of student types.
+    """
+
+    serializer_class = StudentTypeSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    queryset = StudentType.objects.all()
 
 
 class YearViewSet(viewsets.ModelViewSet):

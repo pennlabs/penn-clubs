@@ -21,6 +21,7 @@ import {
   Major,
   MembershipRank,
   School,
+  StudentType,
   Tag,
   UserInfo,
   Year,
@@ -63,6 +64,7 @@ type ClubFormProps = {
   majors: Major[]
   years: Year[]
   tags: Tag[]
+  student_types: StudentType[]
   router: SingletonRouter
 }
 
@@ -179,14 +181,22 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
   }
 
   render(): ReactElement {
-    const { authenticated, userInfo, schools, years, majors, tags } = this.props
+    const {
+      authenticated,
+      userInfo,
+      schools,
+      years,
+      majors,
+      tags,
+      student_types,
+    } = this.props
     const { club, isEdit, message } = this.state
 
     let metadata
     if (club) {
       metadata = <ClubMetadata club={club} />
     } else {
-      metadata = <Metadata title="Create Club" />
+      metadata = <Metadata title={`Create ${OBJECT_NAME_TITLE_SINGULAR}`} />
     }
 
     if (authenticated === false) {
@@ -249,6 +259,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
               years={years}
               majors={majors}
               tags={tags}
+              student_types={student_types}
               club={club}
               onSubmit={this.submit}
             />
@@ -416,6 +427,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
               majors={majors}
               tags={tags}
               club={club === null ? {} : club}
+              student_types={student_types}
               onSubmit={this.submit}
             />
           </div>

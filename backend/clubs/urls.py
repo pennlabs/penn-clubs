@@ -25,6 +25,7 @@ from clubs.views import (
     QuestionAnswerViewSet,
     ReportViewSet,
     SchoolViewSet,
+    StudentTypeViewSet,
     SubscribeViewSet,
     TagViewSet,
     TestimonialViewSet,
@@ -50,6 +51,7 @@ router.register(r"requests", MembershipRequestViewSet, basename="requests")
 
 router.register(r"schools", SchoolViewSet, basename="schools")
 router.register(r"majors", MajorViewSet, basename="majors")
+router.register(r"student_types", StudentTypeViewSet, basename="student_types"),
 router.register(r"reports", ReportViewSet, basename="reports")
 router.register(r"years", YearViewSet, basename="years")
 router.register(r"users", UserViewSet, basename="users")

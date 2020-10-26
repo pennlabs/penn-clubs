@@ -110,6 +110,7 @@ const sites = {
       'appointment_needed',
       'available_virtually',
       'signature_events',
+      'student_types',
     ],
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,
