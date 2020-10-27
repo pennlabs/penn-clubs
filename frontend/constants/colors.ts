@@ -11,6 +11,7 @@ const COLOR_SCHEME = {
     PRIMARY_TAG_TEXT: '#4954f4',
     FEEDBACK_BG: '#4954f4',
     SNOW: '#fafcff',
+    BG_GRADIENT: 'linear-gradient(to right, #4954f4, #44469a)',
   },
   fyh: {
     BANNER_BG: '#000f3a',
@@ -22,10 +23,12 @@ const COLOR_SCHEME = {
     PRIMARY_TAG_TEXT: '#ffffff',
     FEEDBACK_BG: '#000f3a',
     SNOW: '#f2f2f3',
+    BG_GRADIENT: 'linear-gradient(to right, #004785, #a90533)',
   },
 }
 
 export const BANNER_BG = COLOR_SCHEME[SITE_ID].BANNER_BG
+export const BG_GRADIENT = COLOR_SCHEME[SITE_ID].BG_GRADIENT
 export const BANNER_TEXT = COLOR_SCHEME[SITE_ID].BANNER_TEXT
 export const LOGIN_BACKGROUND = COLOR_SCHEME[SITE_ID].LOGIN_BACKGROUND
 export const H1_TEXT = COLOR_SCHEME[SITE_ID].H1_TEXT
