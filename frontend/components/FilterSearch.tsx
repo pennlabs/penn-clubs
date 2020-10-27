@@ -1,5 +1,5 @@
 import Fuse from 'fuse.js'
-import { ReactElement, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Select from 'react-select/async'
 import s from 'styled-components'
 
@@ -63,6 +63,16 @@ const SearchIcon = s(Icon)`
     right: 24px;
   }
 `
+
+export type FuseTag = {
+  value: number | string
+  label: string | ReactElement
+  text?: string
+  count?: number
+  color?: string
+  name?: string
+  description?: string
+}
 
 type SearchOption = { label: string; options: FuseTag[] }
 
@@ -173,16 +183,6 @@ const selectInitial = (name: string, tags: FuseTag[] = []) => {
       options: tags,
     },
   ]
-}
-
-export type FuseTag = {
-  value: number | string
-  label: string | ReactElement
-  text?: string
-  count?: number
-  color?: string
-  name?: string
-  description?: string
 }
 
 type FilterProps = {

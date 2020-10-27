@@ -3,12 +3,10 @@ import s from 'styled-components'
 
 import {
   BORDER,
-  CLUBS_BLUE,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   CLUBS_NAVY,
   CLUBS_RED,
-  H1_TEXT,
   LIGHT_GRAY,
   PRIMARY_TAG_BG,
   WHITE,
