@@ -2,7 +2,6 @@ import Color from 'color'
 import s from 'styled-components'
 
 import {
-  CLUBS_DEEP_BLUE,
   DARK_GRAY,
   FOCUS_GRAY,
   PRIMARY_TAG_BG,

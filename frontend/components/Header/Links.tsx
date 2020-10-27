@@ -6,17 +6,12 @@ import s from 'styled-components'
 import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
 import {
   BANNER_TEXT,
-  BORDER,
-  CLUBS_NAVY,
-  CLUBS_RED,
-  CLUBS_RED_DARK,
   LOGIN_BACKGROUND,
   WHITE,
   WHITE_ALPHA,
 } from '../../constants/colors'
 import {
   LINK_MARGIN,
-  LINK_SPACING,
   LOGIN_MARGIN,
   LOGIN_OPACITY,
   MD,

@@ -5,7 +5,6 @@ import s from 'styled-components'
 
 import {
   ALLBIRDS_GRAY,
-  CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   H1_TEXT,
   HOVER_GRAY,
@@ -17,7 +16,6 @@ import {
   CARD_HEADING,
   mediaMaxWidth,
   SM,
-  TITLE_WEIGHT,
 } from '../constants/measurements'
 import { CLUB_ROUTE } from '../constants/routes'
 import { Club } from '../types'

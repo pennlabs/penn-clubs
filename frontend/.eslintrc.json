@@ -18,8 +18,11 @@
     "ecmaVersion": 2020,
     "sourceType": "module"
   },
-  "plugins": ["react", "simple-import-sort", "prettier"],
+  "plugins": ["react", "simple-import-sort", "prettier", "unused-imports"],
   "rules": {
+    "no-use-before-define": "off",
+    "react/jsx-uses-vars": "error",
+    "react/jsx-uses-react": "error",
     "comma-dangle": ["error", "always-multiline"],
     "space-before-function-paren": [
       "error",
@@ -29,10 +32,11 @@
         "asyncArrow": "always"
       }
     ],
-    "no-unused-vars": ["warn"],
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "unused-imports/no-unused-imports-ts": "error",
     "camelcase": ["warn", { "ignoreDestructuring": true }],
-    "react/jsx-uses-vars": [2],
-    "no-console": ["warn"],
+    "no-console": "error",
     "simple-import-sort/sort": ["warn"],
     "prettier/prettier": ["error"],
     "linebreak-style": ["error", "unix"]
