@@ -13,6 +13,8 @@ type PotentialMemberCard = {
   actions?: {
     name: string
     onClick: (id: string) => Promise<void>
+    className?: string
+    icon?: string
   }[]
 }
 
@@ -30,6 +32,9 @@ type Student = {
   created_at: string
 }
 
+/**
+ * This card is used to handle displaying subscriptions, bookmarks, and membership requests on the club officer admin dashboard.
+ */
 export default function PotentialMemberCard({
   club,
   source = 'subscription',
@@ -103,19 +108,26 @@ export default function PotentialMemberCard({
               {actions && (
                 <td>
                   <div className="buttons">
-                    {actions.map(({ name, onClick }) => (
-                      <div
-                        key={name}
-                        className="button is-primary is-small"
-                        onClick={() => {
-                          onClick(item.username).then(() => {
-                            reloadList()
-                          })
-                        }}
-                      >
-                        {name}
-                      </div>
-                    ))}
+                    {actions.map(
+                      ({ name, onClick, className = 'is-primary', icon }) => (
+                        <div
+                          key={name}
+                          className={`button ${className} is-small`}
+                          onClick={() => {
+                            onClick(item.username).then(() => {
+                              reloadList()
+                            })
+                          }}
+                        >
+                          {icon && (
+                            <>
+                              <Icon name={icon} alt={name.toLowerCase()} />{' '}
+                            </>
+                          )}
+                          {name}
+                        </div>
+                      ),
+                    )}
                   </div>
                 </td>
               )}

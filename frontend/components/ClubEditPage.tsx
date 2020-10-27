@@ -278,6 +278,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
                   actions={[
                     {
                       name: 'Accept',
+                      icon: 'check',
                       onClick: async (id: string): Promise<void> => {
                         await doApiRequest(
                           `/clubs/${club.code}/membershiprequests/${id}/accept/?format=json`,
@@ -287,6 +288,8 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
                     },
                     {
                       name: 'Delete',
+                      className: 'is-danger',
+                      icon: 'trash',
                       onClick: async (id: string): Promise<void> => {
                         await doApiRequest(
                           `/clubs/${club.code}/membershiprequests/${id}/?format=json`,
