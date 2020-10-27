@@ -225,7 +225,7 @@ const FAQS = {
       <Line />
       <Question title="How do I use this site?">
         The #1 way to use this site is to browse resources at Penn! You can:
-        <ul>
+        <UnorderedList>
           <li>
             Search for a resource by name, and use filters like Tags (tags that
             describe the resource), student type (international, transfer,
@@ -238,7 +238,7 @@ const FAQS = {
             Browse information that resources post: description, how to access,
             events, etc.
           </li>
-        </ul>
+        </UnorderedList>
         If you run a Penn resource, make sure your resource has a page on
         Hub@Penn! This lets students find out about your organization and how to
         get involved.
@@ -253,7 +253,7 @@ const FAQS = {
         Sorry about that! We’re in the process of making Hub@Penn as
         comprehensive as possible, creating the first complete directory of
         resources at Penn.
-        <ul>
+        <UnorderedList>
           <li>
             If you're in charge of a resource and it <b>does not exist</b> on
             Hub@Penn, you can add your resource using the form found{' '}
@@ -267,7 +267,7 @@ const FAQS = {
             Otherwise, if you're not the administrator of the resource but would
             still like for it to be added to Hub@Penn, please email <Contact />.
           </li>
-        </ul>
+        </UnorderedList>
       </Question>
       <Question title="Who is responsible for approving resources on Hub@Penn?">
         Newly created resources require approval from the Hub@Penn

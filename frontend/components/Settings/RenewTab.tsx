@@ -69,9 +69,10 @@ const RenewTab = ({ className }: ClubTabProps): ReactElement => {
           <EmptyState name="button" />
           <Center>
             <Text isGray>
-              You are not listed as an officer for any clubs yet. If you would
-              like to request access for an existing club, please send your
-              name, PennKey, and club to <Contact />.
+              You are not listed as an officer for any {OBJECT_NAME_PLURAL} yet.
+              If you would like to request access for an existing{' '}
+              {OBJECT_NAME_SINGULAR}, please send your name, PennKey, and{' '}
+              {OBJECT_NAME_SINGULAR} name to <Contact />.
             </Text>
           </Center>
         </>

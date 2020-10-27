@@ -264,7 +264,7 @@ const Flyer = ({ query }): ReactElement => {
                         <b>Or visit:</b>
                         <br />
                         <i>
-                          https://{DOMAIN}/${OBJECT_URL_SLUG}/{club.code}
+                          https://{DOMAIN}/{OBJECT_URL_SLUG}/{club.code}
                           /fair/
                         </i>
                       </Text>

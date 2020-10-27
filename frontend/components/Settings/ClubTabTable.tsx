@@ -49,7 +49,7 @@ const ClubTabTable = ({
             alt="?"
             style={{ paddingLeft: 4 }}
           />
-          <ReactTooltip style={{ width: 50 }} />
+          <ReactTooltip />
         </th>
         <th>
           Active
@@ -61,7 +61,7 @@ const ClubTabTable = ({
             alt="?"
             style={{ paddingLeft: 4 }}
           />
-          <ReactTooltip style={{ width: 50 }} />
+          <ReactTooltip />
         </th>
         <th>
           Public
@@ -72,7 +72,7 @@ const ClubTabTable = ({
             alt="?"
             style={{ paddingLeft: 4 }}
           />
-          <ReactTooltip width="50px" />
+          <ReactTooltip />
         </th>
         <th>Actions</th>
       </tr>
