@@ -48,8 +48,34 @@ const UnorderedList = s.ul`
   margin-top: 0.5rem;
 `
 
-const GENERIC_TEMPLATE = (data) => (
-  <p>
+const THANKS_CONTENT = (): ReactElement => (
+  <Question title="Special Thanks">
+    Thank you to the organizations below for their support in launching{' '}
+    {SITE_NAME}! We're excited to continue building this valuable resource
+    together.
+    <br />
+    <br />
+    <div>
+      {PARTNER_LOGOS.map(({ name, url, image, height, className }) => (
+        <a href={url} target="_blank" key={name} className={className}>
+          <img
+            style={{
+              maxHeight: height || 100,
+              verticalAlign: 'middle',
+              margin: 10,
+            }}
+            src={image}
+            alt={name}
+            title={name}
+          />
+        </a>
+      ))}
+    </div>
+  </Question>
+)
+
+const GENERIC_TEMPLATE = (data): ReactElement => (
+  <div>
     <Question title={`What is ${SITE_NAME}?`}>
       {SITE_ID === 'fyh' ? (
         <>
@@ -87,8 +113,8 @@ const GENERIC_TEMPLATE = (data) => (
       <UnorderedList>
         <li>
           Search for {OBJECT_NAME_PLURAL} by name, and use filters like Tags
-          (tags that describe the club), Size (number of members), and
-          Application (if applications are required to join)
+          (tags that describe the ${OBJECT_NAME_SINGULAR}), Size (number of
+          members), and Application (if applications are required to join)
         </li>
         <li>Bookmark {OBJECT_NAME_PLURAL} to keep track of them</li>
         <li>
@@ -175,30 +201,8 @@ const GENERIC_TEMPLATE = (data) => (
       <a href={FEEDBACK_URL}>Please let us know on our feedback form :)</a>
     </Question>
     <Line />
-    <Question title="Special Thanks">
-      Thank you to the organizations below for their support in launching{' '}
-      {SITE_NAME}! We're excited to continue building this valuable resource
-      together.
-      <br />
-      <br />
-      <div>
-        {PARTNER_LOGOS.map(({ name, url, image, height, className }) => (
-          <a href={url} target="_blank" key={name} className={className}>
-            <img
-              style={{
-                maxHeight: height || 100,
-                verticalAlign: 'middle',
-                margin: 10,
-              }}
-              src={image}
-              alt={name}
-              title={name}
-            />
-          </a>
-        ))}
-      </div>
-    </Question>
-  </p>
+    {THANKS_CONTENT()}
+  </div>
 )
 
 const FAQS = {
@@ -206,10 +210,79 @@ const FAQS = {
     primaryMeeting: 'the SAC Fair',
     originalDataSource: 'SAC during Spring 2019',
   }),
-  fyh: GENERIC_TEMPLATE({
-    primaryMeeting: 'New Student Orientation',
-    originalDataSource: 'the Online Learning Initiative during Fall 2020',
-  }),
+  fyh: (
+    <div>
+      <Question title="What is Hub@Penn?">
+        Hub@Penn is a place for the Penn community to find and connect with
+        support resources.
+      </Question>
+      <Question title="How can I provide feedback?">
+        We're so excited to let everyone at Penn contribute to the development
+        of Hub@Penn! Your feedback is incredibly important to us. Have any
+        questions or comments? Find any bugs?{' '}
+        <a href={FEEDBACK_URL}>Please let us know on our feedback form.</a>
+      </Question>
+      <Line />
+      <Question title="How do I use this site?">
+        The #1 way to use this site is to browse resources at Penn! You can:
+        <ul>
+          <li>
+            Search for a resource by name, and use filters like Tags (tags that
+            describe the resource), student type (international, transfer,
+            exchange, First-Generation and/or Lower Income/PennFirstPlus),
+            student class year (first-year, second-year, junior, senior,
+            graduate/professional)
+          </li>
+          <li>Bookmark resources to keep track of them</li>
+          <li>
+            Browse information that resources post: description, how to access,
+            events, etc.
+          </li>
+        </ul>
+        If you run a Penn resource, make sure your resource has a page on
+        Hub@Penn! This lets students find out about your organization and how to
+        get involved.
+      </Question>
+      <Question title="How do I edit a resource's profile?">
+        You'll need to have administrator permission for that organization. If
+        you did not receive administrator permission and you believe you should
+        have, let us know at <Contact /> and we will work with you to verify
+        your request.
+      </Question>
+      <Question title="Why can't I find a certain resource on Hub@Penn?">
+        Sorry about that! We’re in the process of making Hub@Penn as
+        comprehensive as possible, creating the first complete directory of
+        resources at Penn.
+        <ul>
+          <li>
+            If you're in charge of a resource and it <b>does not exist</b> on
+            Hub@Penn, you can add your resource using the form found{' '}
+            <a href={CREATE_ROUTE}>here</a>.
+          </li>
+          <li>
+            If you're in charge of a resource and it <b>already exists</b> on
+            Hub@Penn, email <Contact /> to gain edit access for your resource.
+          </li>
+          <li>
+            Otherwise, if you're not the administrator of the resource but would
+            still like for it to be added to Hub@Penn, please email <Contact />.
+          </li>
+        </ul>
+      </Question>
+      <Question title="Who is responsible for approving resources on Hub@Penn?">
+        Newly created resources require approval from the Hub@Penn
+        administrators in order to comply with university guidelines. When your
+        resource requires review, it will be added to a queue that is
+        periodically checked. You will be notified when your resource has been
+        reviewed.
+      </Question>
+      <Question title="I have another question!">
+        <a href={FEEDBACK_URL}>Please let us know on our feedback form.</a>
+      </Question>
+      <Line />
+      {THANKS_CONTENT()}
+    </div>
+  ),
 }
 
 const FAQ = () => (

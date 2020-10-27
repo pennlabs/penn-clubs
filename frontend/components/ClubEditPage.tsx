@@ -48,6 +48,7 @@ import ClubMetadata from './ClubMetadata'
 import {
   Contact,
   Container,
+  Icon,
   InactiveTag,
   Loading,
   Metadata,
@@ -278,11 +279,23 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
                   actions={[
                     {
                       name: 'Accept',
-                      onClick: (id: string): Promise<void> => {
-                        return doApiRequest(
+                      icon: 'check',
+                      onClick: async (id: string): Promise<void> => {
+                        await doApiRequest(
                           `/clubs/${club.code}/membershiprequests/${id}/accept/?format=json`,
                           { method: 'POST' },
-                        ).then(() => undefined)
+                        )
+                      },
+                    },
+                    {
+                      name: 'Delete',
+                      className: 'is-danger',
+                      icon: 'trash',
+                      onClick: async (id: string): Promise<void> => {
+                        await doApiRequest(
+                          `/clubs/${club.code}/membershiprequests/${id}/?format=json`,
+                          { method: 'DELETE' },
+                        )
                       },
                     },
                   ]}
@@ -315,7 +328,19 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
                 onUpdate={this.componentDidMount.bind(this)}
               />
               {club.enables_subscription && (
-                <PotentialMemberCard club={club} source="subscription" />
+                <PotentialMemberCard
+                  header={
+                    <p className="mb-5">
+                      The table below shows all the users that have subscribed (
+                      <Icon name="bell" />) to your {OBJECT_NAME_SINGULAR}. If
+                      users have elected to share their bookmarks (
+                      <Icon name="bookmark" />) with {OBJECT_NAME_SINGULAR}{' '}
+                      officers, they will also show up in the list below.
+                    </p>
+                  }
+                  club={club}
+                  source="subscription"
+                />
               )}
             </>
           ),

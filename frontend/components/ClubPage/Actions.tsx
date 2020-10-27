@@ -64,7 +64,7 @@ const ActionDiv = s.div`
   margin-top: -1px;
 `
 
-const ActionButton = s.button`
+const ActionButton = s.a`
   font-size: 0.8em;
   margin-right: 20px;
 `
@@ -156,7 +156,7 @@ const Actions = ({
             </ActionButton>
           )}
           {canEdit && (
-            <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
+            <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)} passHref>
               <ActionButton className="button is-success">
                 Manage {OBJECT_NAME_TITLE_SINGULAR}
               </ActionButton>
@@ -189,11 +189,11 @@ const Actions = ({
         <ModalContent>
           <h1>Confirm Membership Request</h1>
           <p>
-            This feature is intended for existing ${OBJECT_NAME_SINGULAR}{' '}
-            members to quickly add themselves to ${SITE_NAME}.
+            This feature is intended for existing {OBJECT_NAME_SINGULAR} members
+            to quickly add themselves to {SITE_NAME}.
           </p>
           <p>
-            If you are not a member, you can read the "$
+            If you are not a member, you can read the "
             {FIELD_PARTICIPATION_LABEL}" section for more details!
           </p>
           <Quote>
@@ -203,20 +203,20 @@ const Actions = ({
             </Linkify>
           </Quote>
           <p>
-            If you are an existing member of this ${OBJECT_NAME_SINGULAR}, use
+            If you are an existing member of this {OBJECT_NAME_SINGULAR}, use
             the button below to confirm your membership request.
           </p>
           <p className="has-text-danger">
-            If you are not an existing member of this ${OBJECT_NAME_SINGULAR},
+            If you are not an existing member of this {OBJECT_NAME_SINGULAR},
             please <b>do not</b> press the button below. This <b>is not</b> the
             application process for {club.name}.
           </p>
           {isSubmitted === true ? (
             <p className="has-text-success">
               <b>Success!</b> Your membership request has been submitted. An
-              email has been sent to ${OBJECT_NAME_SINGULAR} officers asking
-              them to confirm your membership. Click anywhere outside this popup
-              to close it.
+              email has been sent to {OBJECT_NAME_SINGULAR} officers asking them
+              to confirm your membership. Click anywhere outside this popup to
+              close it.
             </p>
           ) : isSubmitted === false ? (
             <p className="has-text-danger">

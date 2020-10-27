@@ -92,8 +92,8 @@ const sites = {
     SITE_TAGLINE:
       "Find the support resources you need on and around Penn's campus!",
 
-    APPROVAL_AUTHORITY: 'Office of Student Affairs',
-    APPROVAL_AUTHORITY_URL: 'https://osa.vpul.upenn.edu/',
+    APPROVAL_AUTHORITY: 'Hub@Penn administrators',
+    APPROVAL_AUTHORITY_URL: '/faq',
 
     FIELD_PARTICIPATION_LABEL: 'Services Offered',
 
