@@ -87,8 +87,8 @@ const GENERIC_TEMPLATE = (data) => (
       <UnorderedList>
         <li>
           Search for {OBJECT_NAME_PLURAL} by name, and use filters like Tags
-          (tags that describe the club), Size (number of members), and
-          Application (if applications are required to join)
+          (tags that describe the ${OBJECT_NAME_SINGULAR}), Size (number of
+          members), and Application (if applications are required to join)
         </li>
         <li>Bookmark {OBJECT_NAME_PLURAL} to keep track of them</li>
         <li>
