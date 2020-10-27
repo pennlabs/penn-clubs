@@ -9,6 +9,7 @@ import BaseCard from './BaseCard'
 
 type PotentialMemberCard = {
   club: Club
+  header?: ReactElement
   source?: 'subscription' | 'membershiprequests'
   actions?: {
     name: string
@@ -36,6 +37,7 @@ type Student = {
  * This card is used to handle displaying subscriptions, bookmarks, and membership requests on the club officer admin dashboard.
  */
 export default function PotentialMemberCard({
+  header,
   club,
   source = 'subscription',
   actions,
@@ -63,13 +65,7 @@ export default function PotentialMemberCard({
 
   return (
     <BaseCard title={title}>
-      <p className="mb-5">
-        The table below shows all the users that have subscribed (
-        <Icon name="bell" />) to your {OBJECT_NAME_SINGULAR}. If users have
-        elected to share their bookmarks (<Icon name="bookmark" />) with{' '}
-        {OBJECT_NAME_SINGULAR} officers, they will also show up in the list
-        below.
-      </p>
+      {header}
       <table className="table is-fullwidth">
         <thead>
           <tr>

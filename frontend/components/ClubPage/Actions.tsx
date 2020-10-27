@@ -64,7 +64,7 @@ const ActionDiv = s.div`
   margin-top: -1px;
 `
 
-const ActionButton = s.button`
+const ActionButton = s.a`
   font-size: 0.8em;
   margin-right: 20px;
 `
@@ -156,7 +156,7 @@ const Actions = ({
             </ActionButton>
           )}
           {canEdit && (
-            <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
+            <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)} passHref>
               <ActionButton className="button is-success">
                 Manage {OBJECT_NAME_TITLE_SINGULAR}
               </ActionButton>
