@@ -247,14 +247,11 @@ const ClubPage = ({
             </StyledCard>
           )}
           <Events data={events} />
-          {isClubFieldShown('signature_events') && (
+          {isClubFieldShown('signature_events') && club.signature_events && (
             <StyledCard bordered>
               <StrongText>Signature Events</StrongText>
               <Text style={{ marginBottom: M0, wordBreak: 'break-word' }}>
-                <Linkify>
-                  {club.signature_events ||
-                    `No Signature events for this for this ${OBJECT_NAME_SINGULAR}`}
-                </Linkify>
+                <Linkify>{club.signature_events}</Linkify>
               </Text>
             </StyledCard>
           )}
