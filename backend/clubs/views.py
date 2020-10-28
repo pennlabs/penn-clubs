@@ -1657,7 +1657,7 @@ class BadgeViewSet(viewsets.ModelViewSet):
     lookup_field = "name"
 
     def get_queryset(self):
-        return Badge.objects.filter(Q(purpose="fair") | Q(label="SAC"))
+        return Badge.objects.filter(Q(purpose="fair") | Q(label__in=["SAC", "Wharton Council"]))
 
 
 class FavoriteCalendarAPIView(APIView):
