@@ -71,6 +71,11 @@ describe('Authenticated user tests', () => {
     cy.contains('Welcome to Penn Clubs!')
   })
 
+  it('Visits the zoom page', () => {
+    cy.visit('/zoom')
+    cy.contains('Zoom Configuration')
+  })
+
   it('Creates and deletes a new club', () => {
     cy.visit('/create')
     cy.contains('Penn Clubs')

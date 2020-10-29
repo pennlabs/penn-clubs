@@ -365,6 +365,7 @@ export const MultiselectField = useFieldWrapper(
 
     return (
       <Select
+        instanceId={name}
         key={name}
         placeholder={placeholder}
         isMulti={isMulti}
