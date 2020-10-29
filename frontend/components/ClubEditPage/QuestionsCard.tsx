@@ -3,7 +3,7 @@ import { ReactElement } from 'react'
 import { Club } from '../../types'
 import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Empty } from '../common'
-import { ModelForm } from '../Form'
+import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
 type QuestionsCardProps = {

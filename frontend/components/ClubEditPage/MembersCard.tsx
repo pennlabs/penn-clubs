@@ -3,7 +3,7 @@ import { ReactElement } from 'react'
 import { Club, MembershipRank, MembershipRole } from '../../types'
 import { getApiUrl, getRoleDisplay } from '../../utils'
 import { Icon } from '../common'
-import { ModelForm } from '../Form'
+import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
 export const MEMBERSHIP_ROLES: MembershipRole[] = [

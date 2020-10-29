@@ -2,7 +2,7 @@ import { ReactElement } from 'react'
 
 import { Club } from '../../types'
 import { Text } from '../common'
-import { ModelForm } from '../Form'
+import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
 type MemberExperiencesCardProps = {

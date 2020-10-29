@@ -7,7 +7,7 @@ import {
   SITE_NAME,
 } from '../../utils/branding'
 import { Text } from '../common'
-import { ModelForm } from '../Form'
+import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
 type Props = {

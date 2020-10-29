@@ -9,7 +9,7 @@ import { stripTags } from '../../utils'
 import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Device, Text } from '../common'
 import EventModal from '../EventPage/EventModal'
-import { ModelForm } from '../Form'
+import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
 const EventBox = s.div<{ type: 'ios' | 'android' }>`
