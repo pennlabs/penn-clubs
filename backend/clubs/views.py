@@ -154,7 +154,12 @@ def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
         return Response(
             {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST,
         )
-    return Response({"detail": "{} image uploaded!".format(obj.__class__.__name__)})
+    return Response(
+        {
+            "detail": "{} image uploaded!".format(obj.__class__.__name__),
+            "url": getattr(obj, field).url,
+        }
+    )
 
 
 def find_relationship_helper(relationship, club_object, found):

@@ -16,6 +16,7 @@ import Select from 'react-select'
 import s from 'styled-components'
 
 import { titleize } from '../utils'
+import AddressField from './ClubEditPage/AddressField'
 import { Icon } from './common'
 import EmbedOption, {
   blockRendererFunction,
@@ -308,6 +309,18 @@ export const FileField = useFieldWrapper(
   },
 )
 
+export const FormikAddressField = useFieldWrapper(
+  (props: BasicFormField & AnyHack): ReactElement => {
+    const { setFieldValue } = useFormikContext()
+    return (
+      <AddressField
+        addressValue={props.value}
+        changeAddress={(val) => setFieldValue(props.name, val)}
+      />
+    )
+  },
+)
+
 export const MultiselectField = useFieldWrapper(
   ({
     name,
@@ -324,15 +337,10 @@ export const MultiselectField = useFieldWrapper(
 
     const actualSerialize = (opt) => {
       if (opt == null) {
-        if (isMulti) {
-          return []
-        }
-        return null
+        return isMulti ? [] : null
       }
       if (serialize != null) {
-        return isMulti && Array.isArray(opt)
-          ? opt.map(serialize)
-          : serialize(opt)
+        return Array.isArray(opt) ? opt.map(serialize) : serialize(opt)
       }
       return opt.map(({ value, label }) => ({
         id: value,
@@ -342,10 +350,10 @@ export const MultiselectField = useFieldWrapper(
 
     const actualDeserialize = (opt) => {
       if (opt == null) {
-        return []
+        return isMulti ? [] : null
       }
       if (deserialize != null) {
-        return opt.map(deserialize)
+        return Array.isArray(opt) ? opt.map(deserialize) : deserialize(opt)
       }
       return opt.map((item) => {
         return {
@@ -360,7 +368,7 @@ export const MultiselectField = useFieldWrapper(
         key={name}
         placeholder={placeholder}
         isMulti={isMulti}
-        value={(valueDeserialize ?? deserialize ?? ((a) => a))(value)}
+        value={(valueDeserialize ?? actualDeserialize ?? ((a) => a))(value)}
         options={actualDeserialize(choices)}
         onChange={(opt) => setFieldValue(name, actualSerialize(opt))}
         onBlur={onBlur}

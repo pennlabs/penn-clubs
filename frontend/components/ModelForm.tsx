@@ -49,6 +49,21 @@ type ModelFormProps = any
 
 type ModelFormState = any
 
+export const doFormikInitialValueFixes = (currentObject: {
+  [key: string]: any
+}): { [key: string]: any } => {
+  return Object.entries(currentObject).reduce((prev, [key, val]) => {
+    if (key.endsWith('_url')) {
+      const otherKey = key.substr(0, key.length - 4)
+      if (!(otherKey in prev)) {
+        prev[otherKey] = val
+      }
+    }
+    prev[key] = val
+    return prev
+  }, {})
+}
+
 /*
  * Creates a form with CRUD (create, read, update, delete)
  * capabilities for a Django model using a provided endpoint.
@@ -343,19 +358,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
               <Formik
                 validate={onChange}
                 key={currentlyEditing}
-                initialValues={Object.entries(currentObject).reduce(
-                  (prev, [key, val]) => {
-                    if (key.endsWith('_url')) {
-                      const otherKey = key.substr(0, key.length - 4)
-                      if (!(otherKey in prev)) {
-                        prev[otherKey] = val
-                      }
-                    }
-                    prev[key] = val
-                    return prev
-                  },
-                  {},
-                )}
+                initialValues={doFormikInitialValueFixes(currentObject)}
                 initialStatus={
                   currentObject &&
                   currentObject._status === false &&
