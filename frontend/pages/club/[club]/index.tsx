@@ -154,6 +154,7 @@ const ClubPage = ({
     how_to_get_involved: involvement,
     events,
     testimonials,
+    signature_events: signatureEvents,
   } = club
 
   return (
@@ -247,14 +248,16 @@ const ClubPage = ({
             </StyledCard>
           )}
           <Events data={events} />
-          {isClubFieldShown('signature_events') && club.signature_events && (
-            <StyledCard bordered>
-              <StrongText>Signature Events</StrongText>
-              <Text style={{ marginBottom: M0, wordBreak: 'break-word' }}>
-                <Linkify>{club.signature_events}</Linkify>
-              </Text>
-            </StyledCard>
-          )}
+          {isClubFieldShown('signature_events') &&
+            signatureEvents &&
+            signatureEvents.length && (
+              <StyledCard bordered>
+                <StrongText>Signature Events</StrongText>
+                <Text style={{ marginBottom: M0, wordBreak: 'break-word' }}>
+                  <Linkify>{signatureEvents}</Linkify>
+                </Text>
+              </StyledCard>
+            )}
           <Testimonials data={testimonials} />
           {userInfo && userInfo.is_superuser && <ChatWidget code={club.code} />}
         </div>
