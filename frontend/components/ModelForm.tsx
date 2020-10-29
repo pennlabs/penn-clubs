@@ -1,4 +1,5 @@
-import { Component } from 'react'
+import { Form, Formik } from 'formik'
+import { Component, ReactElement } from 'react'
 import s from 'styled-components'
 
 import {
@@ -9,7 +10,7 @@ import {
   titleize,
 } from '../utils'
 import { Icon, Loading } from './common'
-import Form from './Form'
+import { FormFieldClassContext } from './FormComponents'
 
 const ModelItem = s.div`
   padding: 15px;
@@ -44,11 +45,15 @@ const Subtitle = s.div`
   margin-bottom: 0.75em;
 `
 
+type ModelFormProps = any
+
+type ModelFormState = any
+
 /*
  * Creates a form with CRUD (create, read, update, delete)
  * capabilities for a Django model using a provided endpoint.
  */
-export class ModelForm extends Component {
+export class ModelForm extends Component<ModelFormProps, ModelFormState> {
   constructor(props) {
     super(props)
 
@@ -85,7 +90,7 @@ export class ModelForm extends Component {
     })
   }
 
-  onDelete(object) {
+  onDelete(object): void {
     const { baseUrl, keyField = 'id' } = this.props
 
     if (typeof object[keyField] !== 'undefined') {
@@ -111,20 +116,8 @@ export class ModelForm extends Component {
    * Called when the form is submitted to save an individual object.
    * @returns a promise with the first argument as the new object values.
    */
-  onSubmit(object, data) {
-    const { baseUrl, fields, keyField = 'id' } = this.props
-
-    // remove file fields
-    const fileFields = fields.filter(
-      (f) => f.type === 'file' || f.type === 'image',
-    )
-    const fileData = {}
-    fileFields.forEach(({ name }) => {
-      if (data[name] !== null) {
-        fileData[name] = data[name]
-        delete data[name]
-      }
-    })
+  onSubmit(object, data): Promise<any> {
+    const { baseUrl, keyField = 'id' } = this.props
 
     // if object was deleted, return
     if (object == null) {
@@ -137,12 +130,26 @@ export class ModelForm extends Component {
       })
     }
 
+    const formData = Object.keys(data).reduce((flt, key) => {
+      if (
+        !(data[key] instanceof File) &&
+        !(
+          this.props.fileFields &&
+          this.props.fileFields.includes(key) &&
+          data[key] !== null
+        )
+      ) {
+        flt[key] = data[key]
+      }
+      return flt
+    }, {})
+
     // create or edit the object, uploading all non-file fields
     const savePromise =
       typeof object[keyField] === 'undefined'
         ? doApiRequest(`${baseUrl}?format=json`, {
             method: 'POST',
-            body: data,
+            body: formData,
           })
             .then((resp) => {
               if (resp.ok) {
@@ -167,7 +174,7 @@ export class ModelForm extends Component {
             })
         : doApiRequest(`${baseUrl}${object[keyField]}/?format=json`, {
             method: 'PATCH',
-            body: data,
+            body: formData,
           })
             .then((resp) => {
               object._status = resp.ok
@@ -192,19 +199,20 @@ export class ModelForm extends Component {
     return savePromise
       .then(() => {
         return Promise.all(
-          fileFields
-            .map(({ name, apiName }) => {
-              const fieldData = fileData[name]
-              if (fieldData && fieldData.get(apiName || name) instanceof File) {
-                return doApiRequest(
-                  `${baseUrl}${object[keyField]}/?format=json`,
-                  {
-                    method: 'PATCH',
-                    body: fieldData,
-                  },
-                )
+          Object.entries(data)
+            .map(([key, value]) => {
+              if (!(value instanceof File)) {
+                return null
               }
-              return null
+              const fieldData = new FormData()
+              fieldData.append(key, value)
+              return doApiRequest(
+                `${baseUrl}${object[keyField]}/?format=json`,
+                {
+                  method: 'PATCH',
+                  body: fieldData,
+                },
+              )
             })
             .filter((a) => a !== null),
         )
@@ -214,7 +222,7 @@ export class ModelForm extends Component {
       })
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     doApiRequest(
       `${this.props.baseUrl}?format=json${this.props.listParams ?? ''}`,
     )
@@ -224,7 +232,7 @@ export class ModelForm extends Component {
       })
   }
 
-  render() {
+  render(): ReactElement {
     const { objects } = this.state
     const {
       fields,
@@ -237,6 +245,7 @@ export class ModelForm extends Component {
       allowDeletion = true,
       confirmDeletion = false,
       keyField = 'id',
+      onChange,
     } = this.props
 
     if (!objects) {
@@ -331,17 +340,23 @@ export class ModelForm extends Component {
                   </span>
                 )}
               </Subtitle>
-              <Form
-                ref="currentForm"
+              <Formik
+                validate={onChange}
                 key={currentlyEditing}
-                fields={fields}
-                defaults={currentObject}
-                onChange={() => {
-                  const data = this.refs.currentForm.getSubmitData()
-                  data._original = currentObject
-                  this.onChange(data)
-                }}
-                errors={
+                initialValues={Object.entries(currentObject).reduce(
+                  (prev, [key, val]) => {
+                    if (key.endsWith('_url')) {
+                      const otherKey = key.substr(0, key.length - 4)
+                      if (!(otherKey in prev)) {
+                        prev[otherKey] = val
+                      }
+                    }
+                    prev[key] = val
+                    return prev
+                  },
+                  {},
+                )}
+                initialStatus={
                   currentObject &&
                   currentObject._status === false &&
                   currentObject._error_message
@@ -350,7 +365,7 @@ export class ModelForm extends Component {
                   if (currentObjectIndex !== -1) {
                     objects[currentObjectIndex] = currentObject
                   }
-                  this.onSubmit(currentObject, data).then((obj) => {
+                  this.onSubmit(currentObject, data).then((obj: any) => {
                     if (obj._status) {
                       if (currentlyEditing === null) {
                         objects.push(obj)
@@ -370,12 +385,12 @@ export class ModelForm extends Component {
                     }
                   })
                 }}
-                submitButton={
-                  <>
-                    <span
-                      className="button is-primary"
-                      disabled={currentObject == null}
-                    >
+                enableReinitialize
+              >
+                <Form>
+                  <FormFieldClassContext.Provider value="is-horizontal">
+                    {fields}
+                    <button type="submit" className="button is-primary">
                       {currentlyEditing !== null ? (
                         <>
                           <Icon name="edit" alt="save" /> Save
@@ -385,42 +400,43 @@ export class ModelForm extends Component {
                           <Icon name="plus" alt="create" /> Create
                         </>
                       )}
-                    </span>
-                  </>
-                }
-              />
+                    </button>
+
+                    {currentlyEditing !== null && (
+                      <span
+                        onClick={() => {
+                          this.setState({
+                            currentlyEditing: null,
+                            getApiUrl,
+                            formatResponse,
+                            getRoleDisplay,
+                            createObject:
+                              this.props.defaultObject != null
+                                ? { ...this.props.defaultObject }
+                                : {},
+                          })
+                          this.onChange({})
+                        }}
+                        className="button is-primary is-pulled-right"
+                      >
+                        {allowCreation ? (
+                          <>
+                            <Icon name="plus" alt="create" /> Create New
+                          </>
+                        ) : (
+                          <>
+                            <Icon name="x" alt="close" /> Close
+                          </>
+                        )}
+                      </span>
+                    )}
+                    <ModelStatus status={currentObject?._status} />
+                  </FormFieldClassContext.Provider>
+                </Form>
+              </Formik>
             </>
           )}
 
-          {currentlyEditing !== null && (
-            <span
-              onClick={() => {
-                this.setState({
-                  currentlyEditing: null,
-                  getApiUrl,
-                  formatResponse,
-                  getRoleDisplay,
-                  createObject:
-                    this.props.defaultObject != null
-                      ? { ...this.props.defaultObject }
-                      : {},
-                })
-                this.onChange({})
-              }}
-              className="button is-primary is-pulled-right"
-            >
-              {allowCreation ? (
-                <>
-                  <Icon name="plus" alt="create" /> Create New
-                </>
-              ) : (
-                <>
-                  <Icon name="x" alt="close" /> Close
-                </>
-              )}
-            </span>
-          )}
-          <ModelStatus status={currentObject?._status} />
           {currentObject?._error_message && (
             <div style={{ color: 'red', marginTop: '1rem' }}>
               <Icon name="alert-circle" />{' '}
@@ -443,27 +459,31 @@ export class ModelForm extends Component {
                 : object.id
             }
           >
-            <Form
-              fields={fields}
-              defaults={object}
-              errors={
+            <Formik
+              initialValues={object}
+              initialStatus={
                 object && object._status === false && object._error_message
               }
-              submitButton={
-                <span className="button is-primary">
-                  <Icon name="edit" alt="save" /> Save
-                </span>
-              }
               onSubmit={(data) => this.onSubmit(object, data)}
-            />
-            <span
-              className="button is-danger"
-              style={{ marginLeft: '0.5em' }}
-              onClick={() => this.onDelete(object)}
+              enableReinitialize
             >
-              <Icon name="trash" alt="trash" /> Delete
-            </span>
-            <ModelStatus status={object._status} />
+              <Form>
+                <FormFieldClassContext.Provider value="is-horizontal">
+                  {fields}
+                  <button type="submit" className="button is-primary">
+                    <Icon name="edit" alt="save" /> Save
+                  </button>
+                  <span
+                    className="button is-danger"
+                    style={{ marginLeft: '0.5em' }}
+                    onClick={() => this.onDelete(object)}
+                  >
+                    <Icon name="trash" alt="trash" /> Delete
+                  </span>
+                  <ModelStatus status={object._status} />
+                </FormFieldClassContext.Provider>
+              </Form>
+            </Formik>
           </ModelItem>
         ))}
         {allowCreation && (

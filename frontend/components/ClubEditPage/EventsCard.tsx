@@ -1,3 +1,4 @@
+import { Field } from 'formik'
 import moment from 'moment'
 import React, { ReactElement, useState } from 'react'
 import TimeAgo from 'react-timeago'
@@ -9,6 +10,13 @@ import { stripTags } from '../../utils'
 import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Device, Text } from '../common'
 import EventModal from '../EventPage/EventModal'
+import {
+  DateTimeField,
+  FileField,
+  MultiselectField,
+  RichTextField,
+  TextField,
+} from '../FormComponents'
 import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
@@ -271,56 +279,50 @@ const eventTableFields = [
   },
 ]
 
-const eventFields = [
-  {
-    name: 'name',
-    type: 'text',
-    required: true,
-    help: 'Provide a descriptive name for the planned event.',
-  },
-  {
-    name: 'url',
-    type: 'url',
-    placeholder:
-      'Provide a videoconference link to join the event (Zoom, Google Meet, etc)',
-    label: 'Meeting Link',
-  },
-  // TODO: Un-comment location field when campus re-opens.
-  // {
-  //   name: 'location',
-  //   placeholder: 'Provide the event location',
-  //   type: 'text',
-  // },
-  {
-    name: 'image',
-    type: 'file',
-  },
-  {
-    name: 'start_time',
-    required: true,
-    placeholder: 'Provide a start time for the event',
-    type: 'datetime-local',
-  },
-  {
-    name: 'end_time',
-    required: true,
-    placeholder: 'Provide an end time for the event',
-    type: 'datetime-local',
-  },
-  {
-    name: 'type',
-    type: 'select',
-    required: true,
-    choices: types,
-    converter: (a) => types.find((x) => x.value === a),
-    reverser: (a) => a.value,
-  },
-  {
-    name: 'description',
-    placeholder: 'Type your event description here!',
-    type: 'html',
-  },
-]
+const eventFields = (
+  <>
+    <Field
+      name="name"
+      as={TextField}
+      required
+      helpText="Provide a descriptive name for the planned event."
+    />
+    <Field
+      name="url"
+      as={TextField}
+      type="url"
+      helpText="Provide a videoconference link to join the event (Zoom, Google Meet, etc)."
+      label="Meeting Link"
+    />
+    <Field name="image" as={FileField} isImage />
+    <Field
+      name="type"
+      as={MultiselectField}
+      required
+      choices={types}
+      serialize={({ value }) => value}
+      isMulti={false}
+      valueDeserialize={(val) => types.find((x) => x.value === val)}
+    />
+    <Field
+      name="start_time"
+      required
+      placeholder="Provide a start time for the event"
+      as={DateTimeField}
+    />
+    <Field
+      name="end_time"
+      required
+      placeholder="Provide a end time for the event"
+      as={DateTimeField}
+    />
+    <Field
+      name="description"
+      placeholder="Type your event description here!"
+      as={RichTextField}
+    />
+  </>
+)
 
 const EventPreviewContainer = s.div`
   display: flex;
@@ -361,8 +363,8 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
     ...deviceContents,
     club_name: club.name,
     image_url:
-      (deviceContents.image && deviceContents.image.get('image') instanceof File
-        ? URL.createObjectURL(deviceContents.image.get('image'))
+      (deviceContents.image && deviceContents.image instanceof File
+        ? URL.createObjectURL(deviceContents.image)
         : false) || deviceContents.image_url,
   } as ClubEvent
 
@@ -372,10 +374,13 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
       <ModelForm
         baseUrl={`/clubs/${club.code}/events/`}
         fields={eventFields}
+        fileFields={['image']}
         tableFields={eventTableFields}
         noun="Event"
         currentTitle={(obj) => (obj != null ? obj.name : 'Deleted Event')}
-        onChange={(obj) => setDeviceContents(obj)}
+        onChange={(obj) => {
+          setDeviceContents(obj)
+        }}
       />
       <EventPreview event={event} />
     </BaseCard>
