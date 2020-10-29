@@ -1,10 +1,11 @@
+import { Field, Form, Formik } from 'formik'
 import { ReactElement, useState } from 'react'
 import TimeAgo from 'react-timeago'
 
 import { Club, File } from '../../types'
 import { doApiRequest } from '../../utils'
 import { Icon } from '../common'
-import Form from '../Form'
+import { FileField } from '../FormComponents'
 import BaseCard from './BaseCard'
 
 type FilesCardProps = {
@@ -18,6 +19,23 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
     doApiRequest(`/clubs/${club.code}/assets/?format=json`)
       .then((resp) => resp.json())
       .then(setFiles)
+  }
+
+  const submitForm = (data, { setSubmitting, resetForm }) => {
+    const formData = new FormData()
+    formData.append('file', data.file)
+    doApiRequest(`/clubs/${club.code}/upload_file/?format=json`, {
+      method: 'POST',
+      body: formData,
+    })
+      .then((resp) => resp.json())
+      .then((resp) => {
+        reloadFiles()
+      })
+      .finally(() => {
+        setSubmitting(false)
+        resetForm()
+      })
   }
 
   return (
@@ -73,19 +91,20 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
           )}
         </tbody>
       </table>
-      <Form
-        fields={[{ name: 'file', type: 'file' }]}
-        onSubmit={(data) => {
-          doApiRequest(`/clubs/${club.code}/upload_file/?format=json`, {
-            method: 'POST',
-            body: data.file,
-          })
-            .then((resp) => resp.json())
-            .then((resp) => {
-              reloadFiles()
-            })
-        }}
-      />
+      <Formik initialValues={{}} onSubmit={submitForm}>
+        {(props) => (
+          <Form>
+            <Field name="file" as={FileField} />
+            <button
+              type="submit"
+              disabled={!props.dirty}
+              className="button is-success"
+            >
+              Upload File
+            </button>
+          </Form>
+        )}
+      </Formik>
     </BaseCard>
   )
 }

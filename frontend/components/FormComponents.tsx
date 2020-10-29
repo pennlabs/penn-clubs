@@ -88,6 +88,8 @@ export const FileField = useFieldWrapper(
     placeholder,
     onBlur,
     value,
+    isImage = false,
+    canDelete = false,
   }: BasicFormField & AnyHack): ReactElement => {
     const { setFieldValue } = useFormikContext()
 
@@ -99,12 +101,16 @@ export const FileField = useFieldWrapper(
         setImageUrl(null)
         setNewlyUploaded(false)
       } else if (value instanceof File) {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          setImageUrl(e.target?.result as string)
+        if (isImage) {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            setImageUrl(e.target?.result as string)
+          }
+          reader.readAsDataURL(value)
+          setNewlyUploaded(true)
+        } else {
+          setImageUrl(`FILE:${value.name}`)
         }
-        reader.readAsDataURL(value)
-        setNewlyUploaded(true)
       } else {
         setImageUrl(value)
         setNewlyUploaded(false)
@@ -113,7 +119,14 @@ export const FileField = useFieldWrapper(
 
     return (
       <>
-        {imageUrl && <img style={{ width: 300 }} src={imageUrl} />}
+        {imageUrl &&
+          (imageUrl.startsWith('FILE:') ? (
+            <div className="mb-3">
+              <Icon name="file" alt="file" /> {imageUrl.substr(5)}
+            </div>
+          ) : (
+            <img style={{ width: 300 }} src={imageUrl} />
+          ))}
         <div className="file">
           <label className="file-label">
             <input
@@ -127,17 +140,19 @@ export const FileField = useFieldWrapper(
               placeholder={placeholder}
             />
             <span className="file-cta">
-              <span className="file-label">Choose a file...</span>
+              <span className="file-label">
+                Choose a {isImage ? 'image' : 'file'}...
+              </span>
             </span>
           </label>
-          {imageUrl && (
+          {imageUrl && (canDelete || isImage) && (
             <button
               onClick={() => {
                 setFieldValue(name, null)
               }}
               className="ml-3 button is-danger"
             >
-              <Icon name="trash" /> Remove Image
+              <Icon name="trash" /> Remove {isImage ? 'Image' : 'File'}
             </button>
           )}
         </div>
