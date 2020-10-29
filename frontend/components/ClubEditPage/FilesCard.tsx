@@ -4,7 +4,12 @@ import TimeAgo from 'react-timeago'
 
 import { Club, File } from '../../types'
 import { doApiRequest } from '../../utils'
-import { Icon } from '../common'
+import {
+  OBJECT_NAME_SINGULAR,
+  OBJECT_TAB_FILES_DESCRIPTION,
+  SITE_NAME,
+} from '../../utils/branding'
+import { Icon, Text } from '../common'
 import { FileField } from '../FormComponents'
 import BaseCard from './BaseCard'
 
@@ -40,6 +45,10 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
 
   return (
     <BaseCard title="Files">
+      <Text>
+        Files that are uploaded here will only be visible to club members and{' '}
+        {SITE_NAME} administrators. {OBJECT_TAB_FILES_DESCRIPTION}
+      </Text>
       <table className="table is-fullwidth">
         <thead>
           <tr>
@@ -85,7 +94,7 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
           ) : (
             <tr>
               <td colSpan={3} className="has-text-grey">
-                There are no uploaded files for this club.
+                There are no uploaded files for this {OBJECT_NAME_SINGULAR}.
               </td>
             </tr>
           )}
@@ -98,9 +107,9 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
             <button
               type="submit"
               disabled={!props.dirty}
-              className="button is-success"
+              className="button is-primary"
             >
-              Upload File
+              <Icon name="upload" alt="upload" /> Upload File
             </button>
           </Form>
         )}
