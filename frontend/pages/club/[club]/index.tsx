@@ -36,7 +36,7 @@ import { CLUBS_RED, SNOW, WHITE } from '../../../constants/colors'
 import { M0, M2, M3 } from '../../../constants/measurements'
 import renderPage from '../../../renderPage'
 import { Club, QuestionAnswer, UserInfo } from '../../../types'
-import { doApiRequest } from '../../../utils'
+import { doApiRequest, isClubFieldShown } from '../../../utils'
 import { logEvent } from '../../../utils/analytics'
 import {
   APPROVAL_AUTHORITY,
@@ -154,6 +154,7 @@ const ClubPage = ({
     how_to_get_involved: involvement,
     events,
     testimonials,
+    signature_events: signatureEvents,
   } = club
 
   return (
@@ -247,6 +248,16 @@ const ClubPage = ({
             </StyledCard>
           )}
           <Events data={events} />
+          {isClubFieldShown('signature_events') &&
+            signatureEvents &&
+            signatureEvents.length && (
+              <StyledCard bordered>
+                <StrongText>Signature Events</StrongText>
+                <Text style={{ marginBottom: M0, wordBreak: 'break-word' }}>
+                  <Linkify>{signatureEvents}</Linkify>
+                </Text>
+              </StyledCard>
+            )}
           <Testimonials data={testimonials} />
           {userInfo && userInfo.is_superuser && <ChatWidget code={club.code} />}
         </div>
