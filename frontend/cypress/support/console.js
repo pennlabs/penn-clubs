@@ -10,6 +10,7 @@ const CONSOLE_ERROR_WHITELIST = [
   "Warning: validateDOMNesting(...):",
   "Warning: Expected server HTML to contain a matching ",
   "Warning: Text content did not match. ",
+  "Warning: Prop %s did not match. ",
 ]
 
 afterEach(() => {
