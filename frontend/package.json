@@ -25,6 +25,7 @@
     "draftjs-to-html": "^0.9.1",
     "express": "^4.17.1",
     "find-cache-dir": "^3.3.1",
+    "formik": "^2.2.1",
     "fuse.js": "^6.4.1",
     "html-to-draftjs": "^1.4.0",
     "http-proxy-middleware": "^1.0.6",
