@@ -390,52 +390,58 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
                 }}
                 enableReinitialize
               >
-                <Form>
-                  <FormFieldClassContext.Provider value="is-horizontal">
-                    {fields}
-                    <button type="submit" className="button is-primary">
-                      {currentlyEditing !== null ? (
-                        <>
-                          <Icon name="edit" alt="save" /> Save
-                        </>
-                      ) : (
-                        <>
-                          <Icon name="plus" alt="create" /> Create
-                        </>
-                      )}
-                    </button>
-
-                    {currentlyEditing !== null && (
-                      <span
-                        onClick={() => {
-                          this.setState({
-                            currentlyEditing: null,
-                            getApiUrl,
-                            formatResponse,
-                            getRoleDisplay,
-                            createObject:
-                              this.props.defaultObject != null
-                                ? { ...this.props.defaultObject }
-                                : {},
-                          })
-                          this.onChange({})
-                        }}
-                        className="button is-primary is-pulled-right"
+                {({ isSubmitting }) => (
+                  <Form>
+                    <FormFieldClassContext.Provider value="is-horizontal">
+                      {fields}
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="button is-primary"
                       >
-                        {allowCreation ? (
+                        {currentlyEditing !== null ? (
                           <>
-                            <Icon name="plus" alt="create" /> Create New
+                            <Icon name="edit" alt="save" /> Save
                           </>
                         ) : (
                           <>
-                            <Icon name="x" alt="close" /> Close
+                            <Icon name="plus" alt="create" /> Create
                           </>
                         )}
-                      </span>
-                    )}
-                    <ModelStatus status={currentObject?._status} />
-                  </FormFieldClassContext.Provider>
-                </Form>
+                      </button>
+
+                      {currentlyEditing !== null && (
+                        <span
+                          onClick={() => {
+                            this.setState({
+                              currentlyEditing: null,
+                              getApiUrl,
+                              formatResponse,
+                              getRoleDisplay,
+                              createObject:
+                                this.props.defaultObject != null
+                                  ? { ...this.props.defaultObject }
+                                  : {},
+                            })
+                            this.onChange({})
+                          }}
+                          className="button is-primary is-pulled-right"
+                        >
+                          {allowCreation ? (
+                            <>
+                              <Icon name="plus" alt="create" /> Create New
+                            </>
+                          ) : (
+                            <>
+                              <Icon name="x" alt="close" /> Close
+                            </>
+                          )}
+                        </span>
+                      )}
+                      <ModelStatus status={currentObject?._status} />
+                    </FormFieldClassContext.Provider>
+                  </Form>
+                )}
               </Formik>
             </>
           )}
@@ -470,22 +476,28 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
               onSubmit={(data) => this.onSubmit(object, data)}
               enableReinitialize
             >
-              <Form>
-                <FormFieldClassContext.Provider value="is-horizontal">
-                  {fields}
-                  <button type="submit" className="button is-primary">
-                    <Icon name="edit" alt="save" /> Save
-                  </button>
-                  <span
-                    className="button is-danger"
-                    style={{ marginLeft: '0.5em' }}
-                    onClick={() => this.onDelete(object)}
-                  >
-                    <Icon name="trash" alt="trash" /> Delete
-                  </span>
-                  <ModelStatus status={object._status} />
-                </FormFieldClassContext.Provider>
-              </Form>
+              {({ isSubmitting }) => (
+                <Form>
+                  <FormFieldClassContext.Provider value="is-horizontal">
+                    {fields}
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="button is-primary"
+                    >
+                      <Icon name="edit" alt="save" /> Save
+                    </button>
+                    <span
+                      className="button is-danger"
+                      style={{ marginLeft: '0.5em' }}
+                      onClick={() => this.onDelete(object)}
+                    >
+                      <Icon name="trash" alt="trash" /> Delete
+                    </span>
+                    <ModelStatus status={object._status} />
+                  </FormFieldClassContext.Provider>
+                </Form>
+              )}
             </Formik>
           </ModelItem>
         ))}
