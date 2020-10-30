@@ -91,7 +91,7 @@ describe('Authenticated user tests', () => {
       },
       {
         label: 'Is an application required to join your club?',
-        value: 'No Application Required',
+        value: 'Open Membership',
         pressEnter: true,
       },
     ]

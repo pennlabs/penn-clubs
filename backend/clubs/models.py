@@ -175,9 +175,7 @@ class Club(models.Model):
     github = models.URLField(blank=True, null=True)
     youtube = models.URLField(blank=True, null=True)
     how_to_get_involved = models.TextField(blank=True)
-    application_required = models.IntegerField(
-        choices=APPLICATION_CHOICES, default=APPLICATION
-    )
+    application_required = models.IntegerField(choices=APPLICATION_CHOICES, default=APPLICATION)
     accepting_members = models.BooleanField(default=False)
     enables_subscription = models.BooleanField(default=True)
     listserv = models.CharField(blank=True, max_length=255)
