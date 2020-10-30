@@ -52,7 +52,27 @@ interface AnyHack {
   [key: string]: any
 }
 
-export const FormFieldClassContext = React.createContext<string>('')
+const FormFieldClassContext = React.createContext<string>('')
+
+/**
+ * To style all fields inside of a Formik form, wrap all fields with this component.
+ *
+ * @param isHorizontal Use the Bulma horizontal layout for form fields.
+ */
+export const FormStyle = ({
+  children,
+  isHorizontal,
+}: React.PropsWithChildren<{ isHorizontal?: boolean }>): ReactElement => {
+  if (!isHorizontal) {
+    return <>{children}</>
+  }
+
+  return (
+    <FormFieldClassContext.Provider value="is-horizontal">
+      {children}
+    </FormFieldClassContext.Provider>
+  )
+}
 
 /**
  * This field wrapper is used to automatically add labels and help texts

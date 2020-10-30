@@ -25,8 +25,8 @@ import { Contact, Text } from '../common'
 import {
   CheckboxField,
   FileField,
-  FormFieldClassContext,
   FormikAddressField,
+  FormStyle,
   MultiselectField,
   RichTextField,
   TextField,
@@ -424,7 +424,7 @@ export default function ClubEditCard({
       enableReinitialize
     >
       {({ dirty, isSubmitting }) => (
-        <FormFieldClassContext.Provider value="is-horizontal">
+        <FormStyle isHorizontal>
           <Form>
             {fields.map(({ name, description, fields }, i) => {
               return (
@@ -474,7 +474,7 @@ export default function ClubEditCard({
               {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
           </Form>
-        </FormFieldClassContext.Provider>
+        </FormStyle>
       )}
     </Formik>
   )

@@ -7,7 +7,7 @@ import { Icon } from '../common'
 import {
   CheckboxField,
   FileField,
-  FormFieldClassContext,
+  FormStyle,
   MultiselectField,
   TextField,
 } from '../FormComponents'
@@ -86,7 +86,7 @@ const ProfileForm = ({
       >
         {(props) => (
           <Form>
-            <FormFieldClassContext.Provider value="is-horizontal">
+            <FormStyle isHorizontal>
               <Field
                 name="image"
                 as={FileField}
@@ -109,7 +109,7 @@ const ProfileForm = ({
                 <Icon alt="save" name={props.dirty ? 'edit' : 'check-circle'} />
                 {props.dirty ? 'Save' : 'Saved!'}
               </button>
-            </FormFieldClassContext.Provider>
+            </FormStyle>
           </Form>
         )}
       </Formik>

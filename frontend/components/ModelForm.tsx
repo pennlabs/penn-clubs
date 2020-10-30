@@ -10,7 +10,7 @@ import {
   titleize,
 } from '../utils'
 import { Icon, Loading } from './common'
-import { FormFieldClassContext } from './FormComponents'
+import { FormStyle } from './FormComponents'
 
 const ModelItem = s.div`
   padding: 15px;
@@ -392,7 +392,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
               >
                 {({ isSubmitting }) => (
                   <Form>
-                    <FormFieldClassContext.Provider value="is-horizontal">
+                    <FormStyle isHorizontal>
                       {fields}
                       <button
                         type="submit"
@@ -439,7 +439,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
                         </span>
                       )}
                       <ModelStatus status={currentObject?._status} />
-                    </FormFieldClassContext.Provider>
+                    </FormStyle>
                   </Form>
                 )}
               </Formik>

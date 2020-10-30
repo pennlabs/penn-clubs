@@ -155,7 +155,7 @@ def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
             {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST,
         )
     return Response(
-        {"detail": f"{obj.__class__.__name__} image uploaded!", "url": getattr(obj, field).url,}
+        {"detail": f"{obj.__class__.__name__} image uploaded!", "url": getattr(obj, field).url}
     )
 
 

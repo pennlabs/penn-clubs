@@ -17,6 +17,9 @@ type FilesCardProps = {
   club: Club
 }
 
+/**
+ * A card that allows club officers to view, download, delete, and add files to the club.
+ */
 export default function FilesCard({ club }: FilesCardProps): ReactElement {
   const [files, setFiles] = useState<File[]>(club.files)
 
