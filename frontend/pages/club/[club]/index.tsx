@@ -13,6 +13,7 @@ import ChatWidget from '../../../components/ClubPage/ChatWidget'
 import ClubApprovalDialog from '../../../components/ClubPage/ClubApprovalDialog'
 import Description from '../../../components/ClubPage/Description'
 import Events from '../../../components/ClubPage/Events'
+import FilesList from '../../../components/ClubPage/FilesList'
 import Header from '../../../components/ClubPage/Header'
 import InfoBox from '../../../components/ClubPage/InfoBox'
 import MemberList from '../../../components/ClubPage/MemberList'
@@ -212,6 +213,14 @@ const ClubPage = ({
             <StrongText ref={questionsScrollRef}>FAQ</StrongText>
             <QuestionList club={club} questions={questions} />
           </div>
+          {club.is_member !== false && club.files && club.files.length && (
+            <div className="mt-4">
+              <StrongText> Uploaded Files </StrongText>
+              <StyledCard bordered>
+                <FilesList club={club} />
+              </StyledCard>
+            </div>
+          )}
           {SHOW_MEMBERS && (
             <>
               <StrongText>Members</StrongText>
