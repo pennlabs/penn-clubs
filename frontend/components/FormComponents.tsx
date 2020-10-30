@@ -24,6 +24,11 @@ import EmbedOption, {
   htmlToEntity,
 } from './EmbedOption'
 
+/**
+ * All form fields should accept these properties.
+ *
+ * The form fields should render with Bulma styling in mind.
+ */
 interface BasicFormField {
   name: string
   label?: string
@@ -32,13 +37,29 @@ interface BasicFormField {
   noLabel?: boolean
 }
 
+/**
+ * This interface allows for completely arbitrary props
+ * to be passed to any of the form inputs.
+ *
+ * The ideal solution would be to explicitly define what
+ * props each form field accepts.
+ *
+ * This is used for now so that we can at least guarantee
+ * that a form field has the basic properties expected
+ * of all form fields.
+ */
 interface AnyHack {
   [key: string]: any
 }
 
 export const FormFieldClassContext = React.createContext<string>('')
 
-export const useFieldWrapper = (Element): ((props: any) => ReactElement) => {
+/**
+ * This field wrapper is used to automatically add labels and help texts
+ * for most components. The components that use this wrapper only need
+ * to specify the input itself.
+ */
+const useFieldWrapper = (Element): ((props: any) => ReactElement) => {
   return (props: React.PropsWithChildren<BasicFormField & AnyHack>) => {
     const { label, noLabel, helpText, ...other } = props
     const { status } = useFormikContext()
@@ -85,6 +106,10 @@ export const useFieldWrapper = (Element): ((props: any) => ReactElement) => {
   }
 }
 
+/**
+ * We can only initialize these properties on the client side.
+ * Disable them for server side rendering or errors will be thrown.
+ */
 let htmlToDraft: any = null
 let Editor: ((props: any) => ReactElement) | null = null
 if (process.browser) {
@@ -94,6 +119,9 @@ if (process.browser) {
   Editor = require('react-draft-wysiwyg').Editor
 }
 
+/**
+ * A rich text editor that accepts and outputs HTML.
+ */
 export const RichTextField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
     const { setFieldValue } = useFormikContext()
@@ -182,6 +210,9 @@ const DatePickerWrapper = s.span`
   }
 `
 
+/**
+ * A datetime field that allows the user to choose a date and a time.
+ */
 export const DateTimeField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
     const { name, value, placeholder, ...other } = props
@@ -205,6 +236,10 @@ export const DateTimeField = useFieldWrapper(
   },
 )
 
+/**
+ * A field that allows the user to type in text.
+ * @param type This can be used to override the type of the text input (for example, you can specify "email" or "date"). If you specify "textarea", a textarea will be rendered instead.
+ */
 export const TextField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
     const { type = 'text', isError, value, ...other } = props
@@ -226,6 +261,13 @@ export const TextField = useFieldWrapper(
   },
 )
 
+/**
+ * A field that allows the user to upload a file.
+ * If an image is uploaded, the image will be shown as a preview.
+ *
+ * @param isImage Whether or not this file upload field is intended to accept images.
+ * @param canDelete Whether or not images can be deleted instead of just replaced.
+ */
 export const FileField = useFieldWrapper(
   ({
     name,
@@ -309,6 +351,11 @@ export const FileField = useFieldWrapper(
   },
 )
 
+/**
+ * A field that provides autosuggestions for address completion.
+ *
+ * If no Google API key is set, this will fall back to a text field.
+ */
 export const FormikAddressField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
     const { setFieldValue } = useFormikContext()
@@ -321,6 +368,12 @@ export const FormikAddressField = useFieldWrapper(
   },
 )
 
+/**
+ * A field where you can select one or more tags from a list of tags.
+ *
+ * @param choices The choices that the user is allowed to select from.
+ * @param isMulti If set to true, you can select more than one tag. Otherwise, you can only select one tag.
+ */
 export const MultiselectField = useFieldWrapper(
   ({
     name,
@@ -379,6 +432,9 @@ export const MultiselectField = useFieldWrapper(
   },
 )
 
+/**
+ * A field that renders a single checkbox with a label.
+ */
 export const CheckboxField = (
   props: BasicFormField & AnyHack,
 ): ReactElement => {

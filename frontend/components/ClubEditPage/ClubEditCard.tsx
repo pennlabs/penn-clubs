@@ -98,6 +98,31 @@ const Card = ({
   )
 }
 
+/**
+ * Remove fields in an object that are not part of a whitelist.
+ *
+ * Accounts for how some fields have _url appended as a suffix and allows these fields through.
+ */
+const removeNonFieldAttributes = (
+  object: { [key: string]: any },
+  validFields: Set<string>,
+): { [key: string]: any } => {
+  return Object.entries(object).reduce((acc, [key, value]) => {
+    if (
+      validFields.has(key) ||
+      (key.endsWith('_url') && validFields.has(key.substr(0, key.length - 4)))
+    ) {
+      acc[key] = value
+    }
+    return acc
+  }, {})
+}
+
+/**
+ * A card that can show and edit the basic properties of a Club object.
+ *
+ * Consists of a group of cards, with each card representing a subset of fields on the Club object grouped by category.
+ */
 export default function ClubEditCard({
   schools,
   majors,
@@ -381,7 +406,7 @@ export default function ClubEditCard({
     accepting_members: false,
   }
 
-  const editingFields = new Set()
+  const editingFields = new Set<string>()
   fields.forEach(({ fields }) =>
     fields.forEach(({ name }) => editingFields.add(name)),
   )
@@ -391,16 +416,7 @@ export default function ClubEditCard({
       initialValues={
         Object.keys(club).length
           ? doFormikInitialValueFixes(
-              Object.entries(club).reduce((acc, [key, value]) => {
-                if (
-                  editingFields.has(key) ||
-                  (key.endsWith('_url') &&
-                    editingFields.has(key.substr(0, key.length - 4)))
-                ) {
-                  acc[key] = value
-                }
-                return acc
-              }, {}),
+              removeNonFieldAttributes(club, editingFields),
             )
           : creationDefaults
       }

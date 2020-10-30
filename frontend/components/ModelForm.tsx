@@ -49,6 +49,11 @@ type ModelFormProps = any
 
 type ModelFormState = any
 
+/**
+ * The initial values returned by Django usually have a "field_url" attribute for some field,
+ * instead of "field", where field is a file or image field. In these cases, we modify
+ * the field to remove this suffix if the field does not exist in the data.
+ */
 export const doFormikInitialValueFixes = (currentObject: {
   [key: string]: any
 }): { [key: string]: any } => {
@@ -79,23 +84,18 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
         props.defaultObject != null ? { ...props.defaultObject } : {},
       newCount: 0,
     }
-
-    this.onSubmit = this.onSubmit.bind(this)
-    this.onDelete = this.onDelete.bind(this)
-    this.onCreate = this.onCreate.bind(this)
-    this.onChange = this.onChange.bind(this)
   }
 
   /**
    * This is called when the create/edit form has its contents changed.
    */
-  onChange(obj) {
+  onChange = (obj): void => {
     if (this.props.onChange) {
       this.props.onChange(obj)
     }
   }
 
-  onCreate() {
+  onCreate = (): void => {
     this.setState(({ objects, newCount }) => {
       objects.push({
         tempId: newCount,
@@ -105,7 +105,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
     })
   }
 
-  onDelete(object): void {
+  onDelete = (object): void => {
     const { baseUrl, keyField = 'id' } = this.props
 
     if (typeof object[keyField] !== 'undefined') {
@@ -131,7 +131,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
    * Called when the form is submitted to save an individual object.
    * @returns a promise with the first argument as the new object values.
    */
-  onSubmit(object, data): Promise<any> {
+  onSubmit = (object, data): Promise<any> => {
     const { baseUrl, keyField = 'id' } = this.props
 
     // if object was deleted, return

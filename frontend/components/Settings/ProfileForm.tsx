@@ -37,7 +37,7 @@ const ProfileForm = ({
       .then(setMajors)
   }, [])
 
-  function submit(data, { setSubmitting, setStatus }) {
+  function submit(data, { setSubmitting, setStatus }): Promise<void> {
     const infoSubmit = () => {
       setErrorMessage(null)
       if (data.image !== null) {
@@ -66,14 +66,14 @@ const ProfileForm = ({
       const formData = new FormData()
       formData.append('image', data.image)
 
-      doApiRequest('/settings/?format=json', {
+      return doApiRequest('/settings/?format=json', {
         method: 'PATCH',
         body: formData,
       })
         .then(infoSubmit)
         .finally(() => setSubmitting(false))
     } else {
-      infoSubmit().finally(() => setSubmitting(false))
+      return infoSubmit().finally(() => setSubmitting(false))
     }
   }
 
