@@ -14,11 +14,13 @@ const infoStyles = {
 }
 
 const applicationTextMap = {
-  3: 'Application Required for All Roles',
-  2: 'Application Required for Some',
-  1: 'No Application Required',
+  5: 'Application and Interview Required',
+  4: 'Application Required',
+  3: 'Audition Required',
+  2: 'Tryout Required',
+  1: 'Open Membership',
 }
-const defaultApplicationText = 'No Application Required'
+const defaultApplicationText = 'Open Membership'
 
 type InfoBoxProps = {
   club: Club

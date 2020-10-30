@@ -24,16 +24,24 @@ import Form from '../Form'
 
 const CLUB_APPLICATIONS = [
   {
-    value: ClubApplicationRequired.None,
-    label: 'No Application Required',
+    value: ClubApplicationRequired.Open,
+    label: 'Open Membership',
   },
   {
-    value: ClubApplicationRequired.Some,
-    label: 'Application Required For Some Positions',
+    value: ClubApplicationRequired.Tryout,
+    label: 'Tryout Required',
   },
   {
-    value: ClubApplicationRequired.All,
-    label: 'Application Required For All Positions',
+    value: ClubApplicationRequired.Audition,
+    label: 'Audition Required',
+  },
+  {
+    value: ClubApplicationRequired.Application,
+    label: 'Application Required',
+  },
+  {
+    value: ClubApplicationRequired.ApplicationAndInterview,
+    label: 'Application and Interview Required',
   },
 ]
 

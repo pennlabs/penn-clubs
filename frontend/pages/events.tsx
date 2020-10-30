@@ -197,15 +197,25 @@ function EventPage({
               param="club__application_required__in"
               label="Application Required"
               options={[
-                { value: 1, label: 'No Application Required', name: 'app' },
+                { value: 1, label: 'Open Membership', name: 'app' },
                 {
                   value: 2,
-                  label: 'Required for Some Positions',
+                  label: 'Tryout Required',
                   name: 'app',
                 },
                 {
                   value: 3,
-                  label: 'Required for All Positions',
+                  label: 'Audition Required',
+                  name: 'app',
+                },
+                {
+                  value: 4,
+                  label: 'Application Required',
+                  name: 'app',
+                },
+                {
+                  value: 5,
+                  label: 'Application and Interview Required',
                   name: 'app',
                 },
               ]}
