@@ -32,7 +32,7 @@ from rest_framework import filters, generics, mixins, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError as DRFValidationError
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.utils.serializer_helpers import ReturnList
 from rest_framework.views import APIView
@@ -1687,27 +1687,59 @@ class FavoriteCalendarAPIView(APIView):
         return response
 
 
+class FakeView(object):
+    """
+    Dummy view used for permissions checking by the UserPermissionAPIView.
+    """
+
+    def __init__(self, action):
+        self.action = action
+
+
 class UserPermissionAPIView(APIView):
     """
-    get: Check if a user has a specific permission, or return a list of all user permissions.
+    get: Check if a user has a specific permission or list of permissions separated by commas,
+    or return a list of all user permissions.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
-        perm = request.GET.get("perm", None)
-
-        if perm is not None:
-            if not request.user.is_authenticated:
-                return Response({"allowed": False})
-            return Response({"allowed": request.user.has_perm(perm)})
-
         if not request.user.is_authenticated:
-            return Response({"permissions": []})
+            return Response({"permissions": {}})
 
-        return Response(
-            {"permissions": list(request.user.user_permissions.values_list("codename", flat=True))}
-        )
+        raw_perms = [
+            perm.strip() for perm in request.GET.get("perm", "").strip().split(",") if perm
+        ]
+        general_perms = [p for p in raw_perms if ":" not in p]
+        object_perms = [p for p in raw_perms if ":" in p]
+
+        perms = request.user.user_permissions
+
+        if raw_perms:
+            perms = perms.filter(codename__in=general_perms)
+
+        ret = {k: True for k, v in perms.values_list("codename", flat=True)}
+        for perm in general_perms:
+            if perm not in ret:
+                ret[perm] = request.user.is_superuser
+
+        for perm in object_perms:
+            key, value = perm.split(":", 1)
+            if key == "clubs.manage_club":
+                perm_checker = ClubPermission()
+                view = FakeView("update")
+                obj = Club.objects.filter(code=value).first()
+                if obj is not None:
+                    ret[perm] = perm_checker.has_permission(
+                        request, view
+                    ) and perm_checker.has_object_permission(request, view, obj)
+                else:
+                    ret[perm] = None
+            else:
+                ret[perm] = None
+
+        return Response({"permissions": ret})
 
 
 def zoom_api_call(user, verb, url, *args, **kwargs):

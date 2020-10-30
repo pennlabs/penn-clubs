@@ -16,17 +16,8 @@ import {
   DIRECTORY_ROUTE,
   HOME_ROUTE,
 } from '../constants/routes'
-import {
-  Club,
-  Major,
-  MembershipRank,
-  School,
-  StudentType,
-  Tag,
-  UserInfo,
-  Year,
-} from '../types'
-import { doApiRequest, formatResponse } from '../utils'
+import { Club, Major, School, StudentType, Tag, UserInfo, Year } from '../types'
+import { doApiRequest, formatResponse, PermissionsContext } from '../utils'
 import {
   APPROVAL_AUTHORITY,
   OBJECT_NAME_SINGULAR,
@@ -76,6 +67,8 @@ type ClubFormState = {
 }
 
 class ClubForm extends Component<ClubFormProps, ClubFormState> {
+  static contextType = PermissionsContext
+
   constructor(props: ClubFormProps) {
     super(props)
 
@@ -204,12 +197,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
       return <AuthPrompt>{metadata}</AuthPrompt>
     }
 
-    const isOfficer =
-      club &&
-      club.code &&
-      (club.is_member === false
-        ? false
-        : club.is_member <= MembershipRank.Officer)
+    const canManageClub = this.context[`clubs.manage_club:${club?.code}`]
 
     if (authenticated === null || (isEdit && club === null)) {
       return <Loading />
@@ -230,7 +218,7 @@ class ClubForm extends Component<ClubFormProps, ClubFormState> {
       )
     }
 
-    if (authenticated && isEdit && !userInfo.is_superuser && !isOfficer) {
+    if (authenticated && isEdit && !canManageClub) {
       return (
         <AuthPrompt title="Oh no!" hasLogin={false}>
           {metadata}

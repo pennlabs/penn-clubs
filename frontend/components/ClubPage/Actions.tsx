@@ -11,8 +11,8 @@ import s from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
-import { Club, MembershipRank, UserInfo } from '../../types'
-import { doApiRequest } from '../../utils'
+import { Club, UserInfo } from '../../types'
+import { apiCheckPermission, doApiRequest } from '../../utils'
 import {
   FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_SINGULAR,
@@ -118,9 +118,7 @@ const Actions = ({
 
   // a user can edit a club if they are either a superuser or in the club and
   // at least an officer
-  const canEdit =
-    (inClub && inClub.role <= MembershipRank.Officer) ||
-    (userInfo && userInfo.is_superuser)
+  const canEdit = apiCheckPermission(`clubs.manage_club:${code}`)
 
   const [favCount, setFavCount] = useState<number>(favoriteCount ?? 0)
   const [showModal, setShowModal] = useState<boolean>(false)

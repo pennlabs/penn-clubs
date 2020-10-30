@@ -213,7 +213,10 @@ const Rank = (): ReactElement => (
               on your {OBJECT_NAME_SINGULAR}.
             </>
           ),
-          points: [[5, 'Has a subtitle']],
+          points: [
+            [5, 'Has a subtitle'],
+            [-10, 'Did not change default subtitle'],
+          ],
         },
         {
           name: `${OBJECT_NAME_TITLE} Description`,
@@ -234,14 +237,17 @@ const Rank = (): ReactElement => (
           ],
         },
         {
-          name: 'Testimonials',
+          name: 'Student Experiences',
           description: (
             <>
               Adding some testimonials help students gain perspective on what
               participating in the {OBJECT_NAME_SINGULAR} is like.
             </>
           ),
-          points: [[10, 'At least one testimonial']],
+          points: [
+            [10, 'At least one testimonial'],
+            [5, 'At least 3 testimonials'],
+          ],
         },
         {
           name: FIELD_PARTICIPATION_LABEL,
@@ -257,8 +263,8 @@ const Rank = (): ReactElement => (
           name: `Is ${OBJECT_NAME_TITLE_SINGULAR} Active`,
           description: (
             <>
-              ${OBJECT_NAME_TITLE} that are marked as inactive will be shifted
-              to the very bottom of the list. You can easily renew your{' '}
+              {OBJECT_NAME_TITLE} that are marked as inactive will be shifted to
+              the very bottom of the list. You can easily renew your{' '}
               {OBJECT_NAME_SINGULAR} from the settings tab in the manage{' '}
               {OBJECT_NAME_SINGULAR} page.
             </>

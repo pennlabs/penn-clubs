@@ -51,7 +51,10 @@ class Command(BaseCommand):
                 ranking += 15
 
             # points for subtitle
-            if club.subtitle.strip():
+            subtitle = club.subtitle.strip()
+            if subtitle.lower() == "your subtitle here":
+                ranking -= 10
+            elif len(subtitle) > 3:
                 ranking += 5
 
             # images in description? awesome
@@ -107,7 +110,7 @@ class Command(BaseCommand):
                 if any(short_events):
                     ranking += 5
                     if all(
-                        len(e.description) >= 3
+                        len(e.description) > 3
                         and e.description not in {"Replace this description!"}
                         and e.image is not None
                         for e in close_events
@@ -143,8 +146,11 @@ class Command(BaseCommand):
                 ranking -= 10
 
             # points for testimonials
-            if club.testimonials.count() >= 1:
+            num_testimonials = club.testimonials.count()
+            if num_testimonials >= 1:
                 ranking += 10
+            if num_testimonials >= 3:
+                ranking += 5
 
             # rng
             ranking += random.random() * 10
