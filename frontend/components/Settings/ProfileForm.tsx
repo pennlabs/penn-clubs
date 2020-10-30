@@ -84,7 +84,7 @@ const ProfileForm = ({
         onSubmit={submit}
         enableReinitialize
       >
-        {(props) => (
+        {({ dirty, isSubmitting }) => (
           <Form>
             <FormStyle isHorizontal>
               <Field
@@ -103,11 +103,11 @@ const ProfileForm = ({
               />
               <button
                 type="submit"
-                disabled={!props.dirty}
+                disabled={!dirty || isSubmitting}
                 className="button is-success"
               >
-                <Icon alt="save" name={props.dirty ? 'edit' : 'check-circle'} />
-                {props.dirty ? 'Save' : 'Saved!'}
+                <Icon alt="save" name={dirty ? 'edit' : 'check-circle'} />
+                {dirty ? 'Save' : 'Saved!'}
               </button>
             </FormStyle>
           </Form>

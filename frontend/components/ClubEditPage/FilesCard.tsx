@@ -23,26 +23,29 @@ type FilesCardProps = {
 export default function FilesCard({ club }: FilesCardProps): ReactElement {
   const [files, setFiles] = useState<File[]>(club.files)
 
-  const reloadFiles = () => {
-    doApiRequest(`/clubs/${club.code}/assets/?format=json`)
+  const reloadFiles = async (): Promise<void> => {
+    await doApiRequest(`/clubs/${club.code}/assets/?format=json`)
       .then((resp) => resp.json())
       .then(setFiles)
   }
 
-  const submitForm = (data, { setSubmitting, resetForm }) => {
+  const submitForm = (data, { setSubmitting, resetForm, setStatus }) => {
     const formData = new FormData()
     formData.append('file', data.file)
     doApiRequest(`/clubs/${club.code}/upload_file/?format=json`, {
       method: 'POST',
       body: formData,
     })
-      .then((resp) => resp.json())
       .then((resp) => {
-        reloadFiles()
+        if (resp.ok) {
+          reloadFiles()
+          resetForm()
+        } else {
+          setStatus({ file: 'An error occured while uploading your file.' })
+        }
       })
       .finally(() => {
         setSubmitting(false)
-        resetForm()
       })
   }
 
@@ -104,15 +107,16 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
         </tbody>
       </table>
       <Formik initialValues={{}} onSubmit={submitForm}>
-        {(props) => (
+        {({ dirty, isSubmitting }) => (
           <Form>
             <Field name="file" as={FileField} />
             <button
               type="submit"
-              disabled={!props.dirty}
+              disabled={!dirty || isSubmitting}
               className="button is-primary"
             >
-              <Icon name="upload" alt="upload" /> Upload File
+              <Icon name="upload" alt="upload" />{' '}
+              {isSubmitting ? 'Uploading File...' : 'Upload File'}
             </button>
           </Form>
         )}
