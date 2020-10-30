@@ -210,7 +210,7 @@ function EventPage({
                 },
                 {
                   value: 4,
-                  label: 'Application Required',
+                  label: 'General Membership Process',
                   name: 'app',
                 },
                 {
