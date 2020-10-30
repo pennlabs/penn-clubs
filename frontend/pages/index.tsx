@@ -239,7 +239,7 @@ const Splash = (props: SplashProps): ReactElement => {
     },
     {
       value: 4,
-      label: 'General Membership Process',
+      label: 'Application Required',
       name: 'app',
     },
     {

@@ -15,7 +15,7 @@ const infoStyles = {
 
 const applicationTextMap = {
   5: 'Application and Interview Required',
-  4: 'General Membership Process',
+  4: 'Application Required',
   3: 'Audition Required',
   2: 'Tryout Required',
   1: 'Open Membership',

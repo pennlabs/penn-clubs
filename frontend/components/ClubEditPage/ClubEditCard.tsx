@@ -37,7 +37,7 @@ const CLUB_APPLICATIONS = [
   },
   {
     value: ClubApplicationRequired.Application,
-    label: 'General Membership Process',
+    label: 'Application Required',
   },
   {
     value: ClubApplicationRequired.ApplicationAndInterview,
