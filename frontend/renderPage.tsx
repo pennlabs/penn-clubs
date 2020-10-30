@@ -11,7 +11,12 @@ import { WHITE } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
 import { Club, Tag, UserInfo } from './types'
-import { doApiRequest, isClubFieldShown, OptionsContext } from './utils'
+import {
+  doApiRequest,
+  isClubFieldShown,
+  OptionsContext,
+  PermissionsContext,
+} from './utils'
 import { logException } from './utils/sentry'
 
 const Wrapper = s.div`
@@ -29,6 +34,7 @@ type RenderPageProps = {
   authenticated: boolean | null
   userInfo?: UserInfo
   options: { [key: string]: string | number | boolean | null }
+  permissions: { [key: string]: boolean | null }
 }
 
 type RenderPageState = {
@@ -73,14 +79,16 @@ function renderPage(Page) {
         return (
           <OptionsContext.Provider value={this.props.options}>
             <AuthCheckContext.Provider value={this.checkAuth}>
-              <RenderPageWrapper>
-                <LoginModal show={modal} closeModal={closeModal} />
-                <Header authenticated={authenticated} userInfo={userInfo} />
-                <Wrapper>
-                  <Page {...props} {...state} />
-                </Wrapper>
-                <Footer />
-              </RenderPageWrapper>
+              <PermissionsContext.Provider value={this.props.permissions}>
+                <RenderPageWrapper>
+                  <LoginModal show={modal} closeModal={closeModal} />
+                  <Header authenticated={authenticated} userInfo={userInfo} />
+                  <Wrapper>
+                    <Page {...props} {...state} />
+                  </Wrapper>
+                  <Footer />
+                </RenderPageWrapper>
+              </PermissionsContext.Provider>
             </AuthCheckContext.Provider>
           </OptionsContext.Provider>
         )
@@ -154,7 +162,8 @@ function renderPage(Page) {
       if (Page.getInitialProps) {
         pageProps = await Page.getInitialProps(ctx)
       }
-      return pageProps
+      const perms = await fetchPermissions()
+      return [pageProps, perms]
     }
 
     const data = {
@@ -179,7 +188,30 @@ function renderPage(Page) {
       }
     }
 
-    const [res, pageProps, options] = await Promise.all([
+    const fetchPermissions = async () => {
+      if (Page.permissions && Page.permissions.length > 0) {
+        const resp = await doApiRequest(
+          `/settings/permissions/?perm=${Page.permissions.join(
+            ',',
+          )}&format=json`,
+          data,
+        )
+
+        // return all false permissions if not logged in
+        if (!resp.ok) {
+          return Page.permissions.reduce((acc, perm) => {
+            acc[perm] = false
+            return acc
+          }, {})
+        }
+
+        return (await resp.json()).permissions
+      } else {
+        return {}
+      }
+    }
+
+    const [res, [pageProps, permissions], options] = await Promise.all([
       fetchSettings(),
       originalPageProps(),
       fetchOptions(),
@@ -190,7 +222,7 @@ function renderPage(Page) {
       auth.userInfo = await res.json()
       auth.authenticated = true
     }
-    return { ...pageProps, ...auth, options }
+    return { ...pageProps, ...auth, options, permissions }
   }
 
   return RenderPage
@@ -214,6 +246,8 @@ export function renderListPage(Page) {
     static getInitialProps: (
       ctx: NextPageContext,
     ) => Promise<{ tags: Tag[]; clubs: PaginatedClubPage }>
+
+    static permissions: string[]
 
     render(): ReactElement {
       const { authenticated } = this.props
@@ -281,6 +315,8 @@ export function renderListPage(Page) {
       liveEventCount: liveEventResponse.length,
     }
   }
+
+  RenderListPage.permissions = Page.permissions
 
   return renderPage(RenderListPage)
 }

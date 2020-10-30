@@ -41,4 +41,6 @@ function UserRenewal({ userInfo, authenticated }): ReactElement {
   )
 }
 
+UserRenewal.permissions = ['clubs.approve_club']
+
 export default renderPage(UserRenewal)

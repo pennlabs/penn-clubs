@@ -279,6 +279,8 @@ ClubPage.getInitialProps = async (
   ctx: NextPageContext,
 ): Promise<{ club: Club; questions: QuestionAnswer[] }> => {
   const { query, req } = ctx
+  ClubPage.permissions.push(`clubs.manage_club:${query.club}`)
+
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
@@ -290,5 +292,11 @@ ClubPage.getInitialProps = async (
   )
   return { club, questions }
 }
+
+ClubPage.permissions = [
+  'clubs.approve_club',
+  'clubs.see_fair_status',
+  'clubs.delete_club',
+]
 
 export default renderPage(ClubPage)

@@ -1,5 +1,5 @@
 import fetch from 'isomorphic-unfetch'
-import { createContext, ReactElement, useContext } from 'react'
+import React, { createContext, ReactElement, useContext } from 'react'
 
 import { MembershipRank } from './types'
 import { ALL_CLUB_FIELDS, CLUB_FIELDS, DOMAIN } from './utils/branding'
@@ -82,20 +82,49 @@ export function getApiUrl(path: string): string {
   return API_BASE_URL + path
 }
 
+export const PermissionsContext = React.createContext<{
+  [key: string]: boolean | null
+}>({})
+
 /**
- * Check if the user has a Django permission set.
- * If you were checking for the "clubs.approve_club" permission, pass the
- * string "clubs.approve_club".
+ * Prefetch some permissions for the current page.
+ * Should be executed at the start of each page with permissions.
  */
-export async function apiCheckPermission(permission: string): Promise<boolean> {
+export async function preloadPermissions(
+  permissions: string[],
+): Promise<{ [key: string]: boolean | null }> {
   const resp = await doApiRequest(
-    `/settings/permissions/?perm=${encodeURIComponent(permission)}&format=json`,
+    `/settings/permissions/?perm=${encodeURIComponent(
+      permissions.join(','),
+    )}&format=json`,
   )
   if (!resp.ok) {
-    return false
+    return {}
   }
-  const json = await resp.json()
-  return json.allowed
+  return (await resp.json()).permissions
+}
+
+/**
+ * Check if the user has a Django permission.
+ * If you were checking for the "clubs.approve_club" permission, pass the
+ * string "clubs.approve_club".
+ *
+ * If you are checking for a permission that is object based, separate the
+ * object identiifer with a colon. For example, "permission:object_id".
+ */
+export async function apiCheckPermission(
+  permission: string,
+): Promise<boolean | null> {
+  const perms = useContext(PermissionsContext)
+  if (permission in perms) {
+    return perms[permission]
+  }
+
+  throw new Error(
+    `The permission '${permission}' was not preloaded on this page. You should preload this permission for efficiency purposes. Loaded permissions: ${JSON.stringify(
+      perms,
+    )}`,
+  )
 }
 
 /**

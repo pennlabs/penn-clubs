@@ -90,28 +90,25 @@ const SmallTitle = s.div`
 `
 
 const QueueTab = (): ReactElement => {
-  const [canApprove, setCanApprove] = useState<boolean>(false)
   const [clubs, setClubs] = useState<Club[] | null>(null)
   const [rejectedClubs, setRejectedClubs] = useState<Club[] | null>(null)
   const [allClubs, setAllClubs] = useState<boolean[] | null>(null)
+  const canApprove = apiCheckPermission('clubs.approve_club')
 
   useEffect(() => {
-    apiCheckPermission('clubs.approve_club').then((approved) => {
-      setCanApprove(approved)
-      if (approved) {
-        doApiRequest('/clubs/?active=true&approved=none&format=json')
-          .then((resp) => resp.json())
-          .then(setClubs)
+    if (canApprove) {
+      doApiRequest('/clubs/?active=true&approved=none&format=json')
+        .then((resp) => resp.json())
+        .then(setClubs)
 
-        doApiRequest('/clubs/?active=true&approved=false&format=json')
-          .then((resp) => resp.json())
-          .then(setRejectedClubs)
+      doApiRequest('/clubs/?active=true&approved=false&format=json')
+        .then((resp) => resp.json())
+        .then(setRejectedClubs)
 
-        doApiRequest('/clubs/directory/?format=json')
-          .then((resp) => resp.json())
-          .then((data) => setAllClubs(data.map((club) => club.approved)))
-      }
-    })
+      doApiRequest('/clubs/directory/?format=json')
+        .then((resp) => resp.json())
+        .then((data) => setAllClubs(data.map((club) => club.approved)))
+    }
   }, [])
 
   if (!canApprove) {

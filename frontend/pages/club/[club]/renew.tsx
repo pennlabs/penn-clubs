@@ -11,16 +11,13 @@ import AuthPrompt from '../../../components/common/AuthPrompt'
 import { DARK_GRAY, GREEN, MEDIUM_GRAY } from '../../../constants/colors'
 import { CLUB_ROUTE } from '../../../constants/routes'
 import renderPage from '../../../renderPage'
+import { Club, Major, School, StudentType, Tag, Year } from '../../../types'
 import {
-  Club,
-  Major,
-  MembershipRank,
-  School,
-  StudentType,
-  Tag,
-  Year,
-} from '../../../types'
-import { doApiRequest, isClubFieldShown, useSetting } from '../../../utils'
+  apiCheckPermission,
+  doApiRequest,
+  isClubFieldShown,
+  useSetting,
+} from '../../../utils'
 import {
   APPROVAL_AUTHORITY,
   APPROVAL_AUTHORITY_URL,
@@ -188,7 +185,7 @@ const RenewPage = ({
     )
   }
 
-  if (club.is_member === false || club.is_member > MembershipRank.Officer) {
+  if (!apiCheckPermission(`clubs.manage_club:${club.code}`)) {
     return (
       <AuthPrompt title="Oh no!" hasLogin={false}>
         <ClubMetadata club={club} />
@@ -508,6 +505,8 @@ RenewPage.getInitialProps = async ({ query, req }: NextPageContext) => {
   }
   const clubReq = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const clubRes = await clubReq.json()
+
+  RenewPage.permissions = [`clubs.manage_club:${query.club}`]
 
   const endpoints = ['tags', 'schools', 'majors', 'years', 'student_types']
   return Promise.all(

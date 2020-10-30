@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useState } from 'react'
 import s from 'styled-components'
 
 import { FAIR_INFO, MEDIUM_GRAY } from '../../constants'
@@ -47,26 +47,18 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   const year = new Date().getFullYear()
   const [comment, setComment] = useState<string>(club.approved_comment || '')
   const [loading, setLoading] = useState<boolean>(false)
-  const [seeFairStatus, setSeeFairStatus] = useState<boolean>(false)
-  const [canDeleteClub, setCanDeleteClub] = useState<boolean>(false)
   const [confirmModal, setConfirmModal] = useState<ConfirmParams | null>(null)
   const fairInProgress = useSetting('FAIR_OPEN') || useSetting('PRE_FAIR')
   const fairName = useSetting('FAIR_NAME')
   const fairInfo = FAIR_INFO[fairName as string]
 
-  const [canApprove, setCanApprove] = useState<boolean>(
-    userInfo && userInfo.is_superuser,
-  )
+  const canApprove = apiCheckPermission('clubs.approve_club')
+  const seeFairStatus = apiCheckPermission('clubs.see_fair_status')
+  const canDeleteClub = apiCheckPermission('clubs.delete_club')
 
   const doConfirm = (params: ConfirmParams): void => {
     setConfirmModal(params)
   }
-
-  useEffect(() => {
-    apiCheckPermission('clubs.approve_club').then(setCanApprove)
-    apiCheckPermission('clubs.see_fair_status').then(setSeeFairStatus)
-    apiCheckPermission('clubs.delete_club').then(setCanDeleteClub)
-  }, [])
 
   return (
     <>

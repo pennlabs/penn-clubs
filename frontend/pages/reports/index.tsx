@@ -128,7 +128,7 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
 
   const [reports, setReports] = useState<Report[]>([])
   const [reportFlag, updateReportFlag] = useState(false)
-  const [permission, setPermission] = useState<boolean | null>(null)
+  const permission = apiCheckPermission('clubs.generate_reports')
 
   const [isEdit, setIsEdit] = useState(false)
 
@@ -137,10 +137,6 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
       .then((resp) => (resp.ok ? resp.json() : []))
       .then((data) => setReports(data))
   }, [reportFlag])
-
-  useEffect(() => {
-    apiCheckPermission('clubs.generate_reports').then(setPermission)
-  }, [])
 
   const [includedFields, setIncludedFields] = useState(() => {
     const initial = {}
@@ -348,5 +344,7 @@ Reports.getInitialProps = async () => {
 
   return { nameToCode: fieldsRes }
 }
+
+Reports.permissions = ['clubs.generate_reports']
 
 export default renderPage(Reports)

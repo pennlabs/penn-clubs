@@ -331,7 +331,7 @@ export const FileField = useFieldWrapper(
               <Icon name="file" alt="file" /> {imageUrl.substr(5)}
             </div>
           ) : (
-            <img style={{ width: 300 }} src={imageUrl} />
+            <img style={{ maxWidth: 300 }} src={imageUrl} />
           ))}
         <div className="file">
           <label className="file-label">

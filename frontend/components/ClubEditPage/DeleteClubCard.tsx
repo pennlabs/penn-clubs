@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement } from 'react'
 
 import { Club } from '../../types'
 import { apiCheckPermission, doApiRequest, formatResponse } from '../../utils'
@@ -21,13 +21,7 @@ const DeleteClubCard = ({
   notify = () => undefined,
   onDelete = () => undefined,
 }: Props): ReactElement => {
-  const [canDelete, setCanDelete] = useState<boolean>(club && !club.active)
-
-  useEffect(() => {
-    apiCheckPermission('clubs.delete_club').then((perm) =>
-      setCanDelete((canDelete) => canDelete || perm),
-    )
-  }, [])
+  const canDelete = apiCheckPermission('clubs.delete_club')
 
   const deleteClub = (): void => {
     if (club === null) {
