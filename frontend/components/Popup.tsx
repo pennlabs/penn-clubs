@@ -25,11 +25,7 @@ interface Props {
   style?: CSSProperties
 }
 
-<<<<<<< HEAD
 const Popup = (props: Props): ReactElement | null => {
-=======
-const Popup = (props: Props): ReactElement => {
->>>>>>> Popup component for Events
   const {
     anchorElement,
     preferredPosition = PopupPosition.TOP,

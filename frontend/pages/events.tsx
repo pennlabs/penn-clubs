@@ -6,6 +6,8 @@ import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
+import Popup from '../components/Popup'
+
 import {
   Metadata,
   Modal,
