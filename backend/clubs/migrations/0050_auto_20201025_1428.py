@@ -16,8 +16,8 @@ class Migration(migrations.Migration):
             field=models.IntegerField(
                 choices=[
                     (1, "Open Membership"),
-                    (3, "Auditions Required"),
-                    (2, "Tryouts Required"),
+                    (3, "Audition Required"),
+                    (2, "Tryout Required"),
                     (4, "Application Required"),
                     (5, "Application and Intereview Required"),
                 ],
@@ -30,8 +30,8 @@ class Migration(migrations.Migration):
             field=models.IntegerField(
                 choices=[
                     (1, "Open Membership"),
-                    (3, "Auditions Required"),
-                    (2, "Tryouts Required"),
+                    (3, "Audition Required"),
+                    (2, "Tryout Required"),
                     (4, "Application Required"),
                     (5, "Application and Intereview Required"),
                 ],

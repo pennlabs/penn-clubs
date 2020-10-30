@@ -130,14 +130,14 @@ class Club(models.Model):
     )
 
     OPEN_MEMBERSHIP = 1
-    TRYOUTS = 2
-    AUDITIONS = 3
+    TRYOUT = 2
+    AUDITION = 3
     APPLICATION = 4
     APPLICATION_AND_INTERVIEW = 5
     APPLICATION_CHOICES = (
         (OPEN_MEMBERSHIP, "Open Membership"),
-        (AUDITIONS, "Auditions Required"),
-        (TRYOUTS, "Tryouts Required"),
+        (AUDITION, "Audition Required"),
+        (TRYOUT, "Tryout Required"),
         (APPLICATION, "Application Required"),
         (APPLICATION_AND_INTERVIEW, "Application and Intereview Required"),
     )
