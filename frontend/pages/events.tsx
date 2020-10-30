@@ -6,6 +6,8 @@ import { ReactElement, useEffect, useRef, useState } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
+import Popup from '../components/Popup'
+
 import {
   Metadata,
   SegmentedButton,
@@ -53,7 +55,25 @@ const CalendarEvent = ({
 }: {
   event: { resource: ClubEvent }
 }) => {
-  return resource.name
+  const [showPopup, setShowPopup] = useState<boolean>(false)
+  const cellRef = useRef<HTMLDivElement>(null)
+  return (
+    <>
+      <div
+        className=""
+        onClick={() => {
+          setShowPopup(true)
+        }}
+      >
+        {resource.name} - {resource.club_name}
+      </div>
+      {cellRef.current && (
+        <Popup anchorElement={cellRef.current} show={showPopup}>
+          <EventCard event={resource} isHappening={false} />
+        </Popup>
+      )}
+    </>
+  )
 }
 
 enum CalendarNavigation {
