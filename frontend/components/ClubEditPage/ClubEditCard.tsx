@@ -287,7 +287,7 @@ export default function ClubEditCard({
       fields: [
         {
           name: 'application_required',
-          label: `Is an application required to join your ${OBJECT_NAME_SINGULAR}?`,
+          label: `What the membership process to join your ${OBJECT_NAME_SINGULAR}?`,
           required: true,
           type: 'select',
           choices: CLUB_APPLICATIONS,

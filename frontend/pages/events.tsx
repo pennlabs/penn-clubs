@@ -195,7 +195,7 @@ function EventPage({
           {isClubFieldShown('application_required') && (
             <SearchBarCheckboxItem
               param="club__application_required__in"
-              label="Application Required"
+              label="General Membership Process"
               options={[
                 { value: 1, label: 'Open Membership', name: 'app' },
                 {

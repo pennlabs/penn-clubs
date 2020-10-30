@@ -276,7 +276,7 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('application_required') && (
             <SearchBarCheckboxItem
               param="application_required__in"
-              label="Application Required"
+              label="General Membership Process"
               options={applicationRequiredOptions}
             />
           )}
