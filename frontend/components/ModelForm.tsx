@@ -45,7 +45,34 @@ const Subtitle = s.div`
   margin-bottom: 0.75em;
 `
 
-type ModelFormProps = any
+type ModelObject = { [key: string]: any }
+
+type TableField = {
+  label?: string
+  name: string
+  converter?: (field: any, object: ModelObject) => any
+}
+
+type ModelFormProps = {
+  listParams?: string
+  initialData?: ModelObject[]
+  baseUrl: string
+  keyField?: string
+  onChange?: (object: ModelObject) => void
+  defaultObject?: ModelObject
+  fileFields?: string[]
+  empty?: ReactElement | string
+  fields: any
+  tableFields?: TableField[]
+  currentTitle?: (object: ModelObject) => ReactElement | string
+
+  noun?: string
+  deleteVerb?: string
+  allowCreation?: boolean
+  allowEditing?: boolean
+  allowDeletion?: boolean
+  confirmDeletion?: boolean
+}
 
 type ModelFormState = any
 
@@ -67,6 +94,100 @@ export const doFormikInitialValueFixes = (currentObject: {
     prev[key] = val
     return prev
   }, {})
+}
+
+type ModelTableProps = {
+  tableFields: TableField[]
+  objects: ModelObject[]
+  allowEditing?: boolean
+  allowDeletion?: boolean
+  confirmDeletion?: boolean
+  noun?: string
+  deleteVerb?: string
+  onEdit?: (object: ModelObject) => void
+  onDelete?: (object: ModelObject) => void
+}
+
+/**
+ * Render a list of objects as a table.
+ */
+export const ModelTable = ({
+  tableFields,
+  objects,
+  allowEditing = false,
+  allowDeletion = false,
+  confirmDeletion = false,
+  noun = 'Object',
+  deleteVerb = 'Delete',
+  onEdit = () => undefined,
+  onDelete = () => undefined,
+}: ModelTableProps): ReactElement => {
+  return (
+    <table className="table is-fullwidth">
+      <thead>
+        <tr>
+          {tableFields.map((a, i) => (
+            <th key={i}>{a.label || titleize(a.name)}</th>
+          ))}
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {objects.length === 0 && (
+          <tr>
+            <td colSpan={tableFields.length + 1}>
+              There are no {noun.toLowerCase()}s to display.
+            </td>
+          </tr>
+        )}
+        {objects.map(
+          (object, i: number): ReactElement => (
+            <tr key={i}>
+              {tableFields.map((a, i) => (
+                <td key={i}>
+                  {a.converter
+                    ? a.converter(object[a.name], object)
+                    : object[a.name]}
+                </td>
+              ))}
+              <td>
+                <div className="buttons">
+                  {allowEditing && (
+                    <button
+                      onClick={() => onEdit(object)}
+                      className="button is-primary is-small"
+                    >
+                      <Icon name="edit" alt="edit" /> Edit
+                    </button>
+                  )}
+                  {allowDeletion && (
+                    <button
+                      onClick={() => {
+                        if (confirmDeletion) {
+                          if (
+                            confirm(
+                              `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
+                            )
+                          ) {
+                            onDelete(object)
+                          }
+                        } else {
+                          onDelete(object)
+                        }
+                      }}
+                      className="button is-danger is-small"
+                    >
+                      <Icon name="trash" alt="delete" /> {deleteVerb}
+                    </button>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ),
+        )}
+      </tbody>
+    </table>
+  )
 }
 
 /*
@@ -95,6 +216,10 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
     }
   }
 
+  /**
+   * Called when the user wants to create a new object.
+   * Does not save the object to the database.
+   */
   onCreate = (): void => {
     this.setState(({ objects, newCount }) => {
       objects.push({
@@ -105,6 +230,10 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
     })
   }
 
+  /**
+   * Called when the user requests for an object to be deleted.
+   * @param object The object that should be deleted.
+   */
   onDelete = (object): void => {
     const { baseUrl, keyField = 'id' } = this.props
 
@@ -237,6 +366,9 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
       })
   }
 
+  /**
+   * Download the latest list of objects when the component is mounted.
+   */
   componentDidMount(): void {
     doApiRequest(
       `${this.props.baseUrl}?format=json${this.props.listParams ?? ''}`,
@@ -278,73 +410,22 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
 
       return (
         <>
-          <table className="table is-fullwidth">
-            <thead>
-              <tr>
-                {tableFields.map((a, i) => (
-                  <th key={i}>{a.label || titleize(a.name)}</th>
-                ))}
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {objects.length === 0 && (
-                <tr>
-                  <td colSpan={tableFields.length + 1}>
-                    There are no {noun.toLowerCase()}s to display.
-                  </td>
-                </tr>
-              )}
-              {objects.map((object, i) => (
-                <tr key={i}>
-                  {tableFields.map((a, i) => (
-                    <td key={i}>
-                      {a.converter
-                        ? a.converter(object[a.name], object)
-                        : object[a.name]}
-                    </td>
-                  ))}
-                  <td>
-                    <div className="buttons">
-                      {allowEditing && (
-                        <button
-                          onClick={() => {
-                            this.setState({
-                              currentlyEditing: object[keyField],
-                            })
-                            this.onChange(object)
-                          }}
-                          className="button is-primary is-small"
-                        >
-                          <Icon name="edit" alt="edit" /> Edit
-                        </button>
-                      )}
-                      {allowDeletion && (
-                        <button
-                          onClick={() => {
-                            if (confirmDeletion) {
-                              if (
-                                confirm(
-                                  `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
-                                )
-                              ) {
-                                this.onDelete(object)
-                              }
-                            } else {
-                              this.onDelete(object)
-                            }
-                          }}
-                          className="button is-danger is-small"
-                        >
-                          <Icon name="trash" alt="delete" /> {deleteVerb}
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ModelTable
+            onEdit={(object): void => {
+              this.setState({
+                currentlyEditing: object[keyField],
+              })
+              this.onChange(object)
+            }}
+            onDelete={this.onDelete}
+            deleteVerb={deleteVerb}
+            noun={noun}
+            tableFields={tableFields}
+            objects={objects}
+            allowDeletion={allowDeletion}
+            confirmDeletion={confirmDeletion}
+            allowEditing={allowEditing}
+          />
           {(allowCreation || currentlyEditing !== null) && (
             <>
               <Subtitle>
@@ -478,7 +559,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
             >
               {({ isSubmitting }) => (
                 <Form>
-                  <FormFieldClassContext.Provider value="is-horizontal">
+                  <FormStyle isHorizontal>
                     {fields}
                     <button
                       type="submit"
@@ -495,7 +576,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
                       <Icon name="trash" alt="trash" /> Delete
                     </span>
                     <ModelStatus status={object._status} />
-                  </FormFieldClassContext.Provider>
+                  </FormStyle>
                 </Form>
               )}
             </Formik>
