@@ -128,13 +128,18 @@ class Club(models.Model):
         (SIZE_LARGE, "51-100"),
         (SIZE_VERY_LARGE, "101+"),
     )
-    APPLICATION_REQUIRED_NONE = 1
-    APPLICATION_REQUIRED_SOME = 2
-    APPLICATION_REQUIRED_ALL = 3
+
+    OPEN_MEMBERSHIP = 1
+    TRYOUT = 2
+    AUDITION = 3
+    APPLICATION = 4
+    APPLICATION_AND_INTERVIEW = 5
     APPLICATION_CHOICES = (
-        (APPLICATION_REQUIRED_NONE, "No Application Required"),
-        (APPLICATION_REQUIRED_SOME, "Application Required For Some Positions"),
-        (APPLICATION_REQUIRED_ALL, "Application Required For All Positions"),
+        (OPEN_MEMBERSHIP, "Open Membership"),
+        (AUDITION, "Audition Required"),
+        (TRYOUT, "Tryout Required"),
+        (APPLICATION, "Application Required"),
+        (APPLICATION_AND_INTERVIEW, "Application and Intereview Required"),
     )
 
     approved = models.BooleanField(null=True, default=None)
@@ -170,9 +175,7 @@ class Club(models.Model):
     github = models.URLField(blank=True, null=True)
     youtube = models.URLField(blank=True, null=True)
     how_to_get_involved = models.TextField(blank=True)
-    application_required = models.IntegerField(
-        choices=APPLICATION_CHOICES, default=APPLICATION_REQUIRED_ALL
-    )
+    application_required = models.IntegerField(choices=APPLICATION_CHOICES, default=APPLICATION)
     accepting_members = models.BooleanField(default=False)
     student_types = models.ManyToManyField("StudentType", blank=True)
     enables_subscription = models.BooleanField(default=True)

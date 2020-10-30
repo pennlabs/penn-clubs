@@ -35,16 +35,24 @@ import { doFormikInitialValueFixes } from '../ModelForm'
 
 const CLUB_APPLICATIONS = [
   {
-    value: ClubApplicationRequired.None,
-    label: 'No Application Required',
+    value: ClubApplicationRequired.Open,
+    label: 'Open Membership',
   },
   {
-    value: ClubApplicationRequired.Some,
-    label: 'Application Required For Some Positions',
+    value: ClubApplicationRequired.Tryout,
+    label: 'Tryout Required',
   },
   {
-    value: ClubApplicationRequired.All,
-    label: 'Application Required For All Positions',
+    value: ClubApplicationRequired.Audition,
+    label: 'Audition Required',
+  },
+  {
+    value: ClubApplicationRequired.Application,
+    label: 'Application Required',
+  },
+  {
+    value: ClubApplicationRequired.ApplicationAndInterview,
+    label: 'Application and Interview Required',
   },
 ]
 
@@ -340,7 +348,7 @@ export default function ClubEditCard({
       fields: [
         {
           name: 'application_required',
-          label: `Is an application required to join your ${OBJECT_NAME_SINGULAR}?`,
+          label: `What is the membership process to join your ${OBJECT_NAME_SINGULAR}?`,
           required: true,
           type: 'select',
           choices: CLUB_APPLICATIONS,

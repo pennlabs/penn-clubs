@@ -66,9 +66,11 @@ export enum ClubSize {
 }
 
 export enum ClubApplicationRequired {
-  None = 1,
-  Some = 2,
-  All = 3,
+  Open = 1,
+  Tryout = 2,
+  Audition = 3,
+  Application = 4,
+  ApplicationAndInterview = 5,
 }
 
 export interface Tag {
