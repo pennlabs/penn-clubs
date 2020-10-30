@@ -1,8 +1,10 @@
+import { Field } from 'formik'
 import { ReactElement } from 'react'
 
 import { Club } from '../../types'
 import { Text } from '../common'
-import { ModelForm } from '../Form'
+import { TextField } from '../FormComponents'
+import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
 type MemberExperiencesCardProps = {
@@ -21,13 +23,7 @@ export default function MemberExperiencesCard({
       <ModelForm
         baseUrl={`/clubs/${club.code}/testimonials/`}
         initialData={club.testimonials}
-        fields={[
-          {
-            name: 'text',
-            type: 'textarea',
-            hasLabel: false,
-          },
-        ]}
+        fields={<Field name="text" as={TextField} type="textarea" noLabel />}
       />
     </BaseCard>
   )

@@ -1,9 +1,11 @@
+import { Field } from 'formik'
 import { ReactElement } from 'react'
 
 import { Club } from '../../types'
 import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Empty } from '../common'
-import { ModelForm } from '../Form'
+import { CheckboxField, TextField } from '../FormComponents'
+import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
 type QuestionsCardProps = {
@@ -29,23 +31,18 @@ export default function QuestionsCard({
         }
         baseUrl={`/clubs/${club.code}/questions/`}
         allowCreation={false}
-        fields={[
-          {
-            name: 'question',
-            type: 'textarea',
-            disabled: true,
-          },
-          {
-            name: 'answer',
-            type: 'textarea',
-          },
-          {
-            name: 'approved',
-            type: 'checkbox',
-            disabled: true,
-            label: 'Is this question and response shown to the public?',
-          },
-        ]}
+        fields={
+          <>
+            <Field name="question" as={TextField} type="textarea" disabled />
+            <Field name="answer" as={TextField} type="textarea" />
+            <Field
+              name="approved"
+              label="Is this question and response shown to the public?"
+              as={CheckboxField}
+              disabled
+            />
+          </>
+        }
       />
     </BaseCard>
   )

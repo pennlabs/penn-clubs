@@ -1,3 +1,4 @@
+import { Field } from 'formik'
 import { ReactElement } from 'react'
 
 import { Club, School } from '../../types'
@@ -7,7 +8,8 @@ import {
   SITE_NAME,
 } from '../../utils/branding'
 import { Text } from '../common'
-import { ModelForm } from '../Form'
+import { CheckboxField, MultiselectField, TextField } from '../FormComponents'
+import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
 type Props = {
@@ -16,26 +18,25 @@ type Props = {
 }
 
 export default function AdvisorCard({ club, schools }: Props): ReactElement {
-  const fields = [
-    { name: 'name', type: 'text' },
-    { name: 'title', type: 'text' },
-    {
-      name: 'school',
-      type: 'multiselect',
-      placeholder:
-        'Select schools or departments that this point of contact belongs under',
-      choices: schools,
-      converter: (a) => ({ value: a.id, label: a.name }),
-      reverser: (a) => ({ id: a.value, name: a.label }),
-    },
-    { name: 'email', type: 'email' },
-    { name: 'phone', type: 'text' },
-    {
-      name: 'public',
-      type: 'checkbox',
-      label: 'Show contact information to the public?',
-    },
-  ]
+  const fields = (
+    <>
+      <Field name="name" as={TextField} />
+      <Field name="title" as={TextField} />
+      <Field
+        name="school"
+        as={MultiselectField}
+        choices={schools}
+        placeholder="Select schools or departments that this point of contact belongs under"
+      />
+      <Field name="email" as={TextField} type="email" />
+      <Field name="phone" as={TextField} />
+      <Field
+        name="public"
+        as={CheckboxField}
+        label="Show contact information to the public?"
+      />
+    </>
+  )
 
   return (
     <>

@@ -5,8 +5,8 @@ import { ModalContent } from './ClubPage/Actions'
 import { Contact, Icon, Modal } from './common'
 
 type Props = {
-  editorState: EditorState
-  onChange: (state: any) => void
+  editorState?: EditorState
+  onChange?: (state: any) => void
 }
 
 type Entity = {
@@ -142,12 +142,13 @@ const EmbedOption = (props: Props): ReactElement => {
       entityKey,
       ' ',
     )
-    onChange(
-      EditorState.forceSelection(
-        newState,
-        newState.getCurrentContent().getSelectionAfter(),
-      ),
-    )
+    onChange != null &&
+      onChange(
+        EditorState.forceSelection(
+          newState,
+          newState.getCurrentContent().getSelectionAfter(),
+        ),
+      )
     return true
   }
 
@@ -289,6 +290,7 @@ const EmbedOption = (props: Props): ReactElement => {
           )}
           <div className="mt-3">
             <button
+              type="button"
               className="button is-success"
               style={{ height: 24 }}
               onClick={() => {

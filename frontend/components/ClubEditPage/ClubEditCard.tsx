@@ -1,3 +1,4 @@
+import { Field, Form, Formik } from 'formik'
 import Link from 'next/link'
 import { ReactElement } from 'react'
 
@@ -21,7 +22,16 @@ import {
   SITE_NAME,
 } from '../../utils/branding'
 import { Contact, Text } from '../common'
-import Form from '../Form'
+import {
+  CheckboxField,
+  FileField,
+  FormikAddressField,
+  FormStyle,
+  MultiselectField,
+  RichTextField,
+  TextField,
+} from '../FormComponents'
+import { doFormikInitialValueFixes } from '../ModelForm'
 
 const CLUB_APPLICATIONS = [
   {
@@ -72,6 +82,47 @@ type ClubEditCardProps = {
   }) => void
 }
 
+const Card = ({
+  title,
+  children,
+}: React.PropsWithChildren<{
+  title?: string | ReactElement
+}>): ReactElement => {
+  return (
+    <div className="card mb-5">
+      <div className="card-header">
+        <div className="card-header-title">{title}</div>
+      </div>
+      <div className="card-content">{children}</div>
+    </div>
+  )
+}
+
+/**
+ * Remove fields in an object that are not part of a whitelist.
+ *
+ * Accounts for how some fields have _url appended as a suffix and allows these fields through.
+ */
+const removeNonFieldAttributes = (
+  object: { [key: string]: any },
+  validFields: Set<string>,
+): { [key: string]: any } => {
+  return Object.entries(object).reduce((acc, [key, value]) => {
+    if (
+      validFields.has(key) ||
+      (key.endsWith('_url') && validFields.has(key.substr(0, key.length - 4)))
+    ) {
+      acc[key] = value
+    }
+    return acc
+  }, {})
+}
+
+/**
+ * A card that can show and edit the basic properties of a Club object.
+ *
+ * Consists of a group of cards, with each card representing a subset of fields on the Club object grouped by category.
+ */
 export default function ClubEditCard({
   schools,
   majors,
@@ -82,7 +133,7 @@ export default function ClubEditCard({
   isEdit,
   onSubmit = () => undefined,
 }: ClubEditCardProps): ReactElement {
-  const submit = (data): void => {
+  const submit = (data, { setSubmitting }): void => {
     const photo = data.image
     if (photo !== null) {
       delete data.image
@@ -113,23 +164,34 @@ export default function ClubEditCard({
             ? `${OBJECT_NAME_TITLE_SINGULAR} has been successfully saved.`
             : `${OBJECT_NAME_TITLE_SINGULAR} has been successfully created.`
 
-          if (photo && photo.get('file') instanceof File) {
-            doApiRequest(`/clubs/${clubCode}/upload/?format=json`, {
-              method: 'POST',
-              body: photo,
-            }).then((resp) => {
+          const finishUpload = async () => {
+            if (photo && photo instanceof File) {
+              const formData = new FormData()
+              formData.append('file', photo)
+              const resp = await doApiRequest(
+                `/clubs/${clubCode}/upload/?format=json`,
+                {
+                  method: 'POST',
+                  body: formData,
+                },
+              )
               if (resp.ok) {
                 msg += ` ${OBJECT_NAME_TITLE_SINGULAR} image also saved.`
+                const { url } = await resp.json()
+                info.image_url = url
               } else {
                 msg += ` However, failed to upload ${OBJECT_NAME_SINGULAR} image file!`
               }
-            })
+            }
+            onSubmit({ isEdit: true, club: info, message: msg })
+            setSubmitting(false)
           }
-          onSubmit({ isEdit: true, club: info, message: msg })
+          finishUpload()
         })
       } else {
         resp.json().then((err) => {
           onSubmit({ message: formatResponse(err) })
+          setSubmitting(false)
         })
       }
     })
@@ -176,14 +238,10 @@ export default function ClubEditCard({
           type: 'multiselect',
           placeholder: `Select tags relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: tags,
-          converter: (a) => ({ value: a.id, label: a.name }),
-          reverser: (a) => ({ id: a.value, name: a.label }),
         },
         {
           name: 'image',
           help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
-          value: club.image_url,
-          apiName: 'file',
           accept: 'image/*',
           type: 'image',
           label: `${OBJECT_NAME_TITLE_SINGULAR} Logo`,
@@ -193,8 +251,8 @@ export default function ClubEditCard({
           type: 'select',
           required: true,
           choices: CLUB_SIZES,
-          converter: (a) => CLUB_SIZES.find((x) => x.value === a),
-          reverser: (a) => a.value,
+          valueDeserialize: (a) => CLUB_SIZES.find((x) => x.value === a),
+          serialize: (a) => a.value,
         },
         {
           name: 'founded',
@@ -286,8 +344,8 @@ export default function ClubEditCard({
           required: true,
           type: 'select',
           choices: CLUB_APPLICATIONS,
-          converter: (a) => CLUB_APPLICATIONS.find((x) => x.value === a),
-          reverser: (a) => a.value,
+          valueDeserialize: (a) => CLUB_APPLICATIONS.find((x) => x.value === a),
+          serialize: (a) => a.value,
         },
         {
           name: 'accepting_members',
@@ -319,32 +377,24 @@ export default function ClubEditCard({
           type: 'multiselect',
           placeholder: `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: years,
-          converter: (a) => ({ value: a.id, label: a.name }),
-          reverser: (a) => ({ id: a.value, name: a.label }),
         },
         {
           name: 'target_schools',
           type: 'multiselect',
           placeholder: `Select schools relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: schools,
-          converter: (a) => ({ value: a.id, label: a.name }),
-          reverser: (a) => ({ id: a.value, name: a.label }),
         },
         {
           name: 'target_majors',
           type: 'multiselect',
           placeholder: `Select majors relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: majors,
-          converter: (a) => ({ value: a.id, label: a.name }),
-          reverser: (a) => ({ id: a.value, name: a.label }),
         },
         {
           name: 'student_types',
           type: 'multiselect',
           placeholder: `Select student types relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: student_types,
-          converter: (a) => ({ value: a.id, label: a.name }),
-          reverser: (a) => ({ id: a.value, name: a.label }),
         },
       ].filter(({ name }) => isClubFieldShown(name)),
     },
@@ -353,14 +403,79 @@ export default function ClubEditCard({
   const creationDefaults = {
     subtitle: 'Your Subtitle Here',
     email_public: true,
+    accepting_members: false,
   }
 
+  const editingFields = new Set<string>()
+  fields.forEach(({ fields }) =>
+    fields.forEach(({ name }) => editingFields.add(name)),
+  )
+
   return (
-    <Form
-      fields={fields}
-      defaults={Object.keys(club).length ? club : creationDefaults}
+    <Formik
+      initialValues={
+        Object.keys(club).length
+          ? doFormikInitialValueFixes(
+              removeNonFieldAttributes(club, editingFields),
+            )
+          : creationDefaults
+      }
       onSubmit={submit}
-      enableSubmitWithoutEdit={true}
-    />
+      enableReinitialize
+    >
+      {({ dirty, isSubmitting }) => (
+        <FormStyle isHorizontal>
+          <Form>
+            {fields.map(({ name, description, fields }, i) => {
+              return (
+                <Card title={name} key={i}>
+                  {description}
+                  {(fields as any[]).map(
+                    (props: any, i): ReactElement => {
+                      const { ...other } = props
+                      if (other.help) {
+                        other.helpText = other.help
+                        delete other.help
+                      }
+                      if (props.type === 'select') {
+                        other.isMulti = false
+                      } else if (props.type === 'multiselect') {
+                        other.isMulti = true
+                      }
+                      if (props.type === 'image') {
+                        other.isImage = true
+                      }
+                      return (
+                        <Field
+                          key={i}
+                          as={
+                            {
+                              checkbox: CheckboxField,
+                              html: RichTextField,
+                              multiselect: MultiselectField,
+                              select: MultiselectField,
+                              image: FileField,
+                              address: FormikAddressField,
+                            }[props.type] ?? TextField
+                          }
+                          {...other}
+                        />
+                      )
+                    },
+                  )}
+                </Card>
+              )
+            })}
+            <button
+              disabled={!dirty || isSubmitting}
+              type="submit"
+              className="button is-primary is-large"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </button>
+          </Form>
+        </FormStyle>
+      )}
+    </Formik>
   )
 }

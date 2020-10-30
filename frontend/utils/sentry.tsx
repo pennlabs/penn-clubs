@@ -21,7 +21,10 @@ export function logException(ex: Error, context?: any): void {
   Sentry.captureException(ex, {
     extra: context,
   })
-  window.console && console.error && console.error(ex) // eslint-disable-line no-console
+  typeof window !== 'undefined' &&
+    window.console &&
+    console.error && // eslint-disable-line no-console
+    console.error(ex) // eslint-disable-line no-console
 }
 
 export function logMessage(msg: string): void {

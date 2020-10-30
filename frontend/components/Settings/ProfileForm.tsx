@@ -1,9 +1,16 @@
+import { Field, Form, Formik } from 'formik'
 import { ReactElement, useEffect, useState } from 'react'
 
 import { UserInfo } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
-import { Icon } from '../common/Icon'
-import Form from '../Form'
+import { Icon } from '../common'
+import {
+  CheckboxField,
+  FileField,
+  FormStyle,
+  MultiselectField,
+  TextField,
+} from '../FormComponents'
 
 type Props = {
   settings: UserInfo
@@ -30,94 +37,83 @@ const ProfileForm = ({
       .then(setMajors)
   }, [])
 
-  function submit(data) {
+  function submit(data, { setSubmitting, setStatus }): Promise<void> {
     const infoSubmit = () => {
       setErrorMessage(null)
       if (data.image !== null) {
         delete data.image
       }
-      doApiRequest('/settings/?format=json', {
+      return doApiRequest('/settings/?format=json', {
         method: 'PATCH',
         body: data,
       }).then((resp) => {
         if (resp.ok) {
           resp.json().then(onUpdate)
         } else {
-          resp.json().then((resp) => setErrorMessage(formatResponse(resp)))
+          resp.json().then((resp) => {
+            setStatus(resp)
+            setErrorMessage(
+              <div className="has-text-danger mt-3">
+                {formatResponse(resp)}
+              </div>,
+            )
+          })
         }
       })
     }
 
-    if (data.image && data.image.get('image') instanceof File) {
-      doApiRequest('/settings/?format=json', {
+    if (data.image && data.image instanceof File) {
+      const formData = new FormData()
+      formData.append('image', data.image)
+
+      return doApiRequest('/settings/?format=json', {
         method: 'PATCH',
-        body: data.image,
-      }).then(infoSubmit)
+        body: formData,
+      })
+        .then(infoSubmit)
+        .finally(() => setSubmitting(false))
     } else {
-      infoSubmit()
+      return infoSubmit().finally(() => setSubmitting(false))
     }
   }
 
-  const fields = [
-    {
-      name: 'image',
-      type: 'image',
-      value: settings.image_url,
-      label: 'Profile Picture',
-    },
-    {
-      name: 'graduation_year',
-      type: 'number',
-      converter: (a) => {
-        if (typeof a === 'number') return a
-        if (typeof a === 'string' && a.length) return a.replace(/\D/g, '')
-        return null
-      },
-    },
-    {
-      name: 'school',
-      type: 'multiselect',
-      choices: schools,
-      converter: (a) => ({ value: a.id, label: a.name }),
-      reverser: (a) => ({ id: a.value, name: a.label }),
-    },
-    {
-      name: 'major',
-      type: 'multiselect',
-      choices: majors,
-      converter: (a) => ({ value: a.id, label: a.name }),
-      reverser: (a) => ({ id: a.value, name: a.label }),
-    },
-    {
-      name: 'share_bookmarks',
-      type: 'checkbox',
-      label:
-        'Share my user information with the clubs that I have bookmarked. By default, this information is not visible to club officers.',
-    },
-  ]
-
   return (
     <>
-      <Form
-        fields={fields}
-        defaults={settings}
+      <Formik
+        initialValues={{ ...settings, image: settings.image_url }}
         onSubmit={submit}
-        submitButton={
-          <button className="button is-success">
-            <Icon alt="save" name="edit" />
-            Save
-          </button>
-        }
-        disabledSubmitButton={
-          <button className="button is-success" disabled={true}>
-            <Icon alt="save" name="check-circle" />
-            Saved!
-          </button>
-        }
-      />
-      {errorMessage && (
-        <div className="has-text-danger mt-3">{errorMessage}</div>
-      )}
+        enableReinitialize
+      >
+        {({ dirty, isSubmitting }) => (
+          <Form>
+            <FormStyle isHorizontal>
+              <Field
+                name="image"
+                as={FileField}
+                label="Profile Picture"
+                isImage
+              />
+              <Field name="graduation_year" as={TextField} type="number" />
+              <Field name="school" as={MultiselectField} choices={schools} />
+              <Field name="major" as={MultiselectField} choices={majors} />
+              <Field
+                name="share_bookmarks"
+                as={CheckboxField}
+                label="Share my user information with the clubs that I have bookmarked. By default, this information is not visible to club officers."
+              />
+              <button
+                type="submit"
+                disabled={!dirty || isSubmitting}
+                className="button is-success"
+              >
+                <Icon alt="save" name={dirty ? 'edit' : 'check-circle'} />
+                {dirty ? 'Save' : 'Saved!'}
+              </button>
+            </FormStyle>
+          </Form>
+        )}
+      </Formik>
+      {errorMessage}
     </>
   )
 }

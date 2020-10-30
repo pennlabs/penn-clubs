@@ -1,3 +1,4 @@
+import { Field, Form, Formik } from 'formik'
 import { ReactElement, useState } from 'react'
 import Linkify from 'react-linkify'
 import s from 'styled-components'
@@ -5,7 +6,7 @@ import s from 'styled-components'
 import { Club, QuestionAnswer } from '../../types'
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../utils/branding'
-import Form from '../Form'
+import { CheckboxField, TextField } from '../FormComponents'
 
 const Question = s.div`
   margin-bottom: 15px;
@@ -36,10 +37,8 @@ const QuestionList = ({
   questions,
 }: QuestionListProps): ReactElement => {
   const [formSubmitted, setFormSubmitted] = useState(false)
-  const [formErrors, setFormErrors] = useState(null)
 
-  const handleSubmit = (data) => {
-    setFormErrors(null)
+  const handleSubmit = (data, { setSubmitting, setStatus }) => {
     doApiRequest(`/clubs/${code}/questions/?format=json`, {
       method: 'POST',
       body: data,
@@ -49,8 +48,11 @@ const QuestionList = ({
         if ('id' in data) {
           setFormSubmitted(true)
         } else {
-          setFormErrors(data)
+          setStatus(data)
         }
+      })
+      .finally(() => {
+        setSubmitting(false)
       })
   }
 
@@ -100,20 +102,22 @@ const QuestionList = ({
       ) : (
         <>
           <b>Have a question about {name}?</b>
-          <Form
-            submitButtonAttributes="button is-primary is-small"
-            errors={formErrors}
-            isHorizontal={false}
-            fields={[
-              { name: 'question', type: 'textarea', hasLabel: false },
-              {
-                name: 'is_anonymous',
-                type: 'checkbox',
-                label: 'Post this question anonymously.',
-              },
-            ]}
+          <Formik
+            initialValues={{ is_anonymous: false }}
             onSubmit={handleSubmit}
-          />
+          >
+            <Form>
+              <Field name="question" as={TextField} type="textarea" noLabel />
+              <Field
+                name="is_anonymous"
+                as={CheckboxField}
+                label="Post this question anonymously."
+              />
+              <button type="submit" className="button is-primary is-small">
+                Submit
+              </button>
+            </Form>
+          </Formik>
         </>
       )}
     </>

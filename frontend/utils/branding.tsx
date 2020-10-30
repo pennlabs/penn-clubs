@@ -28,6 +28,8 @@ const sites = {
     OBJECT_TAB_MEMBERSHIP_LABEL: 'Membership',
     OBJECT_TAB_RECRUITMENT_LABEL: 'Recruitment',
     OBJECT_TAB_ADMISSION_LABEL: 'Admission',
+    OBJECT_TAB_FILES_DESCRIPTION:
+      'You can upload club constitutions here. Please upload your club constitution in pdf or docx format.',
 
     CONTACT_EMAIL: 'contact@pennclubs.com',
     FEEDBACK_URL: 'https://airtable.com/shrCsYFWxCwfwE7cf',
@@ -101,6 +103,7 @@ const sites = {
     OBJECT_TAB_MEMBERSHIP_LABEL: 'Admins',
     OBJECT_TAB_RECRUITMENT_LABEL: 'Mailing List',
     OBJECT_TAB_ADMISSION_LABEL: 'Usage',
+    OBJECT_TAB_FILES_DESCRIPTION: null,
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
     FEEDBACK_URL: 'https://airtable.com/shrm3UcvjpPEl0qXq',
@@ -165,6 +168,8 @@ export const OBJECT_TAB_MEMBERSHIP_LABEL =
 export const OBJECT_TAB_RECRUITMENT_LABEL =
   sites[site].OBJECT_TAB_RECRUITMENT_LABEL
 export const OBJECT_TAB_ADMISSION_LABEL = sites[site].OBJECT_TAB_ADMISSION_LABEL
+export const OBJECT_TAB_FILES_DESCRIPTION =
+  sites[site].OBJECT_TAB_FILES_DESCRIPTION
 
 export const SHOW_MEMBERS = sites[site].SHOW_MEMBERS
 export const SHOW_MEMBERSHIP_REQUEST = sites[site].SHOW_MEMBERSHIP_REQUEST
