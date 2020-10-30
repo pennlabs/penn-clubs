@@ -527,4 +527,6 @@ RenewPage.getInitialProps = async ({ query, req }: NextPageContext) => {
   })
 }
 
+RenewPage.permissions = []
+
 export default renderPage(RenewPage)

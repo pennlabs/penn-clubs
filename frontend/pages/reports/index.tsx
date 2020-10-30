@@ -197,7 +197,7 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
     )}`
   }
 
-  if (authenticated === false || permission === false) {
+  if (authenticated === false || !permission) {
     return (
       <AuthPrompt title="Oh no!" hasLogin={!authenticated}>
         <Metadata title={`${OBJECT_NAME_TITLE_SINGULAR} Reports`} />
