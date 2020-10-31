@@ -1049,6 +1049,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         obj = super().save()
 
+        # remove small version if large one is gone
+        if not obj.image and obj.image_small:
+            obj.image_small.delete()
+
         # if accepted or rejected, send email with reason
         if approval_email_required:
             obj.send_approval_email(change=has_approved_version)

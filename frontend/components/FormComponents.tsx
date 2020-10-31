@@ -297,13 +297,16 @@ export const FileField = useFieldWrapper(
     isImage = false,
     canDelete = false,
   }: BasicFormField & AnyHack): ReactElement => {
-    const { setFieldValue } = useFormikContext()
+    const { setFieldValue, initialValues } = useFormikContext()
 
     const [imageUrl, setImageUrl] = useState<string | null>(null)
     const [newlyUploaded, setNewlyUploaded] = useState<boolean>(false)
 
     useEffect(() => {
-      if (value == null) {
+      if (value === undefined) {
+        setImageUrl((initialValues as any)[name])
+        setNewlyUploaded(false)
+      } else if (value === null) {
         setImageUrl(null)
         setNewlyUploaded(false)
       } else if (value instanceof File) {
@@ -340,7 +343,9 @@ export const FileField = useFieldWrapper(
               type="file"
               name={name}
               onChange={(e) => {
-                setFieldValue(name, e.target.files ? e.target.files[0] : null)
+                if (e.target.files) {
+                  setFieldValue(name, e.target.files[0])
+                }
               }}
               onBlur={onBlur}
               placeholder={placeholder}
