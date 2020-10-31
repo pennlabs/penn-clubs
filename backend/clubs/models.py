@@ -51,15 +51,15 @@ def get_club_small_file_name(instance, fname):
 
 
 def get_event_file_name(instance, fname):
-    return os.path.join("events", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
+    return os.path.join("events", "{}.{}".format(instance.id, fname.rsplit(".", 1)[-1]))
 
 
 def get_event_small_file_name(instance, fname):
-    return os.path.join("events_small", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
+    return os.path.join("events_small", "{}.{}".format(instance.id, fname.rsplit(".", 1)[-1]))
 
 
 def get_user_file_name(instance, fname):
-    return os.path.join("users", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
+    return os.path.join("users", "{}.{}".format(instance.user.username, fname.rsplit(".", 1)[-1]))
 
 
 class Report(models.Model):
