@@ -2,7 +2,7 @@ import { NextPageContext } from 'next'
 import { ReactElement } from 'react'
 import s from 'styled-components'
 
-import { Container, Metadata, Title } from '../components/common'
+import { Container, InfoPageTitle, Metadata } from '../components/common'
 import { SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { Club } from '../types'
@@ -35,16 +35,12 @@ const DirectoryList = s.ul`
   }
 `
 
-const DirectoryTitle = s(Title)`
-  padding-top: 2.5vw;
-`
-
 const Directory = ({ clubs }: Props): ReactElement => {
   return (
     <>
       <Container fullHeight background={SNOW}>
         <Metadata title={`${OBJECT_NAME_TITLE} Directory`} />
-        <DirectoryTitle>{OBJECT_NAME_TITLE} Directory</DirectoryTitle>
+        <InfoPageTitle>{OBJECT_NAME_TITLE} Directory</InfoPageTitle>
         <p className="mb-5 has-text-grey">
           The directory is an alphabetically sorted list of all {clubs.length}{' '}
           {OBJECT_NAME_PLURAL} on {SITE_NAME}, including the{' '}

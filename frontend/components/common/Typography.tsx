@@ -34,8 +34,8 @@ export const Title = s.h1.attrs((props) => ({
 `
 
 export const InfoPageTitle = s(Title)`
-  padding-top: 2.5vw;
-  padding-bottom: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 `
 
 export const Empty = s(Text)`

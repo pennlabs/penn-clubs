@@ -41,9 +41,9 @@ import {
   Container,
   Icon,
   InactiveTag,
+  InfoPageTitle,
   Loading,
   Metadata,
-  Title,
 } from './common'
 import AuthPrompt from './common/AuthPrompt'
 import TabView from './TabView'
@@ -323,7 +323,7 @@ const ClubForm = (props: ClubFormProps): ReactElement => {
   return (
     <Container>
       {metadata}
-      <Title>
+      <InfoPageTitle>
         {nameOrDefault}
         {showInactiveTag && <InactiveTag />}
         {
@@ -339,7 +339,7 @@ const ClubForm = (props: ClubFormProps): ReactElement => {
             </a>
           </Link>
         }
-      </Title>
+      </InfoPageTitle>
       {!isEdit && (
         <>
           <p className="mb-3">
