@@ -9,10 +9,12 @@ import {
   CLUBS_GREY_LIGHT,
   FOCUS_GRAY,
   MEDIUM_GRAY,
+  TAG_BACKGROUND_COLOR_MAP,
+  TAG_TEXT_COLOR_MAP,
   WHITE,
 } from '../constants/colors'
 import { MD, mediaMaxWidth } from '../constants/measurements'
-import { Icon, SelectedTag } from './common'
+import { Icon, SelectedTag, Tag } from './common'
 
 const SearchWrapper = s.div`
   margin-bottom: 30px;
@@ -83,9 +85,11 @@ type SearchProps = {
   updateTag: (tag: FuseTag, name: string) => void
   clearTags: () => void
   name: string
+  param: string
 }
 
 const Search = ({
+  param,
   name,
   selected = [],
   searchTags,
@@ -122,8 +126,24 @@ const Search = ({
     IndicatorSeparator: () => null,
     DropdownIndicator: () => <SearchIcon name="tag" />,
     MultiValueContainer: ({ innerProps, children }) => {
+      const backgroundColor = TAG_BACKGROUND_COLOR_MAP[param]
+      const foregroundColor = TAG_TEXT_COLOR_MAP[param] ?? 'white'
+
+      if (backgroundColor != null) {
+        return (
+          <Tag
+            {...innerProps}
+            color={backgroundColor}
+            foregroundColor={foregroundColor}
+            className="tag is-rounded"
+          >
+            {children}
+          </Tag>
+        )
+      }
+
       return (
-        <SelectedTag {...innerProps} className="tag is-rounded has-text-white">
+        <SelectedTag {...innerProps} className="tag is-rounded">
           {children}
         </SelectedTag>
       )
@@ -186,6 +206,7 @@ const selectInitial = (name: string, tags: FuseTag[] = []) => {
 }
 
 type FilterProps = {
+  param: string
   name: string
   tags: FuseTag[]
   updateTag: (tag: FuseTag, name: string) => void
@@ -194,6 +215,7 @@ type FilterProps = {
 }
 
 const Filter = ({
+  param,
   name,
   tags,
   updateTag,
@@ -211,7 +233,7 @@ const Filter = ({
       text: label as string,
       label: (
         <>
-          {color != null && <ColorPreview color={color}> </ColorPreview>}
+          {color != null && <ColorPreview color={color} />}
           {`${label}${count != null ? ` (${count})` : ''}`}
           {!!description && <SubLabel>{description}</SubLabel>}
         </>
@@ -249,6 +271,7 @@ const Filter = ({
     <>
       <SearchWrapper>
         <Search
+          param={param}
           name={name}
           selected={selected}
           searchTags={searchTags}

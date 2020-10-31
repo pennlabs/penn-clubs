@@ -110,3 +110,14 @@ export const PROPIC_TEXT = [
   '#541625',
   '#280A42',
 ]
+
+export const TAG_TEXT_COLOR_MAP = {
+  tags__in: PRIMARY_TAG_TEXT,
+}
+
+export const TAG_BACKGROUND_COLOR_MAP = {
+  tags__in: PRIMARY_TAG_BG,
+  size__in: CLUBS_NAVY,
+  application_required__in: CLUBS_RED,
+  badges__in: CLUBS_PURPLE,
+}

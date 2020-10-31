@@ -18,25 +18,17 @@ import SearchBar, {
 } from '../components/SearchBar'
 import {
   CLUBS_GREY_LIGHT,
-  CLUBS_NAVY,
   CLUBS_PURPLE,
-  CLUBS_RED,
   FOCUS_GRAY,
   H1_TEXT,
-  PRIMARY_TAG_BG,
   SNOW,
+  TAG_BACKGROUND_COLOR_MAP,
+  TAG_TEXT_COLOR_MAP,
 } from '../constants/colors'
 import { PaginatedClubPage, renderListPage } from '../renderPage'
 import { Badge, School, StudentType, Tag, UserInfo, Year } from '../types'
 import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_TITLE, SITE_TAGLINE } from '../utils/branding'
-
-const colorMap = {
-  tags__in: PRIMARY_TAG_BG,
-  size__in: CLUBS_NAVY,
-  application_required__in: CLUBS_RED,
-  badges__in: CLUBS_PURPLE,
-}
 
 const ClearAllLink = s.span`
   cursor: pointer;
@@ -108,10 +100,12 @@ const SearchTags = ({
           {tags.map((tag) => {
             return (
               <span
-                key={tag.value}
-                className="tag is-rounded has-text-white"
+                key={`${tag.value} ${tag.label}`}
+                className="tag is-rounded"
                 style={{
-                  backgroundColor: colorMap[tag.name],
+                  color: TAG_TEXT_COLOR_MAP[tag.name] ?? 'white',
+                  backgroundColor:
+                    TAG_BACKGROUND_COLOR_MAP[tag.name] ?? CLUBS_PURPLE,
                   fontWeight: 600,
                   margin: 3,
                 }}
@@ -257,6 +251,24 @@ const Splash = (props: SplashProps): ReactElement => {
     { value: 4, label: 'more than 100', name: 'size' },
   ]
 
+  const schoolOptions = props.schools.map(({ id, name }) => ({
+    value: id,
+    label: name,
+    name: 'school',
+  }))
+
+  const yearOptions = props.years.map(({ id, name }) => ({
+    value: id,
+    label: name,
+    name: 'year',
+  }))
+
+  const studentTypeOptions = props.student_types.map(({ id, name }) => ({
+    value: id,
+    label: name,
+    name: 'student_type',
+  }))
+
   return (
     <>
       <Metadata />
@@ -324,30 +336,18 @@ const Splash = (props: SplashProps): ReactElement => {
           <SearchBarCheckboxItem
             param="target_schools__in"
             label="School"
-            options={props.schools.map(({ id, name }) => ({
-              value: id,
-              label: name,
-              name: 'school',
-            }))}
+            options={schoolOptions}
           />
           <SearchBarCheckboxItem
             param="target_years__in"
             label="School Year"
-            options={props.years.map(({ id, name }) => ({
-              value: id,
-              label: name,
-              name: 'year',
-            }))}
+            options={yearOptions}
           />
           {isClubFieldShown('student_types') && (
             <SearchBarCheckboxItem
               param="student_types__in"
               label="Student Type"
-              options={props.student_types.map(({ id, name }) => ({
-                value: id,
-                label: name,
-                name: 'student_type',
-              }))}
+              options={studentTypeOptions}
             />
           )}
         </SearchBar>
@@ -380,6 +380,9 @@ const Splash = (props: SplashProps): ReactElement => {
                 badges__in: badgeOptions,
                 application_required__in: applicationRequiredOptions,
                 size__in: sizeOptions,
+                target_schools__in: schoolOptions,
+                target_years__in: yearOptions,
+                student_types__in: studentTypeOptions,
               }}
             />
 
