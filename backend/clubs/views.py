@@ -1008,6 +1008,28 @@ class AdvisorViewSet(viewsets.ModelViewSet):
         return Advisor.objects.filter(club__code=self.kwargs.get("club_code")).order_by("name")
 
 
+class ValidEventFilter(filters.BaseFilterBackend):
+    """
+    A DRF filter to implement custom filtering logic for the frontend.
+    Filter events that are current and are not created by unapproved clubs.
+    """
+    def filter_queryset(self, request, queryset, view):
+        if view.kwargs.get("club_code") is not None:
+            queryset = queryset.filter(club__code=self.kwargs["club_code"])
+
+        queryset = queryset.filter(club__approved=True)
+
+        now = timezone.now()
+        if view.action in ["list"]:
+            queryset = queryset.filter(end_time__gte=now)
+
+        return (
+            queryset.select_related("club", "creator", )
+                .prefetch_related("club__badges")
+                .order_by("start_time")
+        )
+
+
 class EventViewSet(viewsets.ModelViewSet):
     """
     list:
@@ -1021,7 +1043,7 @@ class EventViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = [EventPermission | IsSuperuser]
-    filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
+    filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter, ValidEventFilter]
     search_fields = [
         "name",
         "club__name",
@@ -1032,6 +1054,7 @@ class EventViewSet(viewsets.ModelViewSet):
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
     pagination_class = RandomPageNumberPagination
+    queryset = Event.objects.all()
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
@@ -1230,21 +1253,6 @@ class EventViewSet(viewsets.ModelViewSet):
             )
 
         return super().destroy(request, *args, **kwargs)
-
-    def get_queryset(self):
-        qs = Event.objects.all()
-        if self.kwargs.get("club_code") is not None:
-            qs = qs.filter(club__code=self.kwargs["club_code"])
-
-        now = timezone.now()
-        if self.action in ["list"]:
-            qs = qs.filter(end_time__gte=now)
-
-        return (
-            qs.select_related("club", "creator",)
-            .prefetch_related("club__badges")
-            .order_by("start_time")
-        )
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):
