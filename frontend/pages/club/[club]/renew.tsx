@@ -6,7 +6,12 @@ import s from 'styled-components'
 import ClubEditCard from '../../../components/ClubEditPage/ClubEditCard'
 import FormProgressIndicator from '../../../components/ClubEditPage/FormProgressIndicator'
 import ClubMetadata from '../../../components/ClubMetadata'
-import { Contact, Container, Icon, Title } from '../../../components/common'
+import {
+  Contact,
+  Container,
+  Icon,
+  InfoPageTitle,
+} from '../../../components/common'
 import AuthPrompt from '../../../components/common/AuthPrompt'
 import { DARK_GRAY, GREEN, MEDIUM_GRAY } from '../../../constants/colors'
 import { CLUB_ROUTE } from '../../../constants/routes'
@@ -454,7 +459,9 @@ const RenewPage = ({
       <ClubMetadata club={club} />
       <div className="is-clearfix mb-5">
         <div className="is-pulled-left">
-          <Title>Renew {OBJECT_NAME_TITLE_SINGULAR} Approval</Title>
+          <InfoPageTitle>
+            Renew {OBJECT_NAME_TITLE_SINGULAR} Approval
+          </InfoPageTitle>
           <SubTitle>
             <b>{club.name}</b>
           </SubTitle>
@@ -464,7 +471,7 @@ const RenewPage = ({
         </div>
         <PartnerLogo
           src="/static/img/collaborators/osa.png"
-          className="is-pulled-right"
+          className="mt-5 is-pulled-right"
         />
       </div>
       <FormProgressIndicator

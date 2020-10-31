@@ -27,8 +27,8 @@ import {
   FileField,
   FormikAddressField,
   FormStyle,
-  MultiselectField,
   RichTextField,
+  SelectField,
   TextField,
 } from '../FormComponents'
 import { doFormikInitialValueFixes } from '../ModelForm'
@@ -461,8 +461,8 @@ export default function ClubEditCard({
                             {
                               checkbox: CheckboxField,
                               html: RichTextField,
-                              multiselect: MultiselectField,
-                              select: MultiselectField,
+                              multiselect: SelectField,
+                              select: SelectField,
                               image: FileField,
                               address: FormikAddressField,
                             }[props.type] ?? TextField

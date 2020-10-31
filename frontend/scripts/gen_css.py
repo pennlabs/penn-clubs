@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import io
+import os
 
 colors = {
     "is-primary": "#95001a",
     "is-link": "#82afd3",
     "is-info": "#01256e",
     "is-success": "#00b050",
-    "is-warning": "#ed7d31",
+    "is-warning": "#f2c100",
     "is-danger": "#ff0000",
 }
 
@@ -54,7 +55,8 @@ class CssWriter(object):
 
 
 if __name__ == "__main__":
-    with open("../public/static/css/fyh.css", "w") as f:
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(script_dir, "../public/static/css/fyh.css"), "w") as f:
         writer = CssWriter()
         for name, color in colors.items():
             writer.add_rule(

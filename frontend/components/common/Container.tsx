@@ -48,10 +48,11 @@ const Wrapper = s.div<WrapperProps>`
 export const Container = ({
   background = WHITE,
   fullHeight = false,
+  paddingTop = false,
   style,
   children,
 }: ContainerProps): ReactElement => (
-  <div style={{ background }}>
+  <div style={{ background, paddingTop: paddingTop ? 46 : undefined }}>
     <Wrapper fullHeight={fullHeight} style={style}>
       {children}
     </Wrapper>
@@ -61,6 +62,7 @@ export const Container = ({
 type ContainerProps = React.PropsWithChildren<{
   background?: string
   fullHeight?: boolean
+  paddingTop?: boolean
   style?: CSSProperties
 }>
 

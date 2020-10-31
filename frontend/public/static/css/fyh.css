@@ -68,19 +68,19 @@
 }
 
 .button.is-warning, .button.is-warning[disabled], .notification.is-warning {
-    background-color: #ed7d31;
+    background-color: #f2c100;
 }
 
 .button.is-warning:hover {
-    background-color: #d5702c;
+    background-color: #d9ad00;
 }
 
 .button.is-warning:focus:not(:active) {
-    box-shadow: 0 0 0 0.125em rgba(237, 125, 49, 0.25);
+    box-shadow: 0 0 0 0.125em rgba(242, 193, 0, 0.25);
 }
 
 .has-text-warning {
-    color: #ed7d31 !important;
+    color: #f2c100 !important;
 }
 
 .button.is-danger, .button.is-danger[disabled], .notification.is-danger {

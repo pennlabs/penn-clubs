@@ -1,7 +1,12 @@
 import React, { ReactElement } from 'react'
 import s from 'styled-components'
 
-import { LIGHT_GREEN, LIGHT_YELLOW, MEDIUM_GRAY } from '../../constants/colors'
+import {
+  PROGRESS_INDICATOR_PRIMARY,
+  PROGRESS_INDICATOR_SECONDARY,
+  PROGRESS_INDICATOR_SEP,
+  PROGRESS_INDICATOR_TEXT,
+} from '../../constants/colors'
 
 type FormProgressIndicatorProps = {
   step: number
@@ -14,13 +19,15 @@ const StepBubbleContainer = s.span`
 `
 
 const StepText = s.span`
-  color: ${MEDIUM_GRAY};
+  color: ${PROGRESS_INDICATOR_SEP};
   font-size: 0.9em;
   line-height: 0.9em;
 `
 
 const StepBubble = s.div<{ passed: boolean }>`
-  background-color: ${({ passed }) => (passed ? LIGHT_GREEN : LIGHT_YELLOW)};
+  background-color: ${({ passed }) =>
+    passed ? PROGRESS_INDICATOR_PRIMARY : PROGRESS_INDICATOR_SECONDARY};
+  color: ${PROGRESS_INDICATOR_TEXT};
   width: 48px;
   height: 48px;
   font-size: 24px;
@@ -32,7 +39,7 @@ const StepBubble = s.div<{ passed: boolean }>`
 `
 
 const StepArrow = s.span`
-  border-top: 5px dotted ${MEDIUM_GRAY};
+  border-top: 5px dotted ${PROGRESS_INDICATOR_SEP};
   margin-left: 10px;
   margin-right: 10px;
   width: 48px;

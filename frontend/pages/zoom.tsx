@@ -202,7 +202,7 @@ const ZoomPage = ({
   return (
     <Container background={SNOW}>
       <Metadata title="Zoom Configuration" />
-      <InfoPageTitle className="mb-0">Zoom Configuration</InfoPageTitle>
+      <InfoPageTitle>Zoom Configuration</InfoPageTitle>
       <p
         className="subtitle is-size-5 mb-3"
         style={{ color: CLUBS_GREY_LIGHT }}

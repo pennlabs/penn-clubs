@@ -4,7 +4,7 @@ import { ReactElement } from 'react'
 import { Club, MembershipRank, MembershipRole } from '../../types'
 import { getApiUrl, getRoleDisplay } from '../../utils'
 import { Icon } from '../common'
-import { MultiselectField, TextField } from '../FormComponents'
+import { SelectField, TextField } from '../FormComponents'
 import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
@@ -42,7 +42,7 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
             <Field name="title" as={TextField} />
             <Field
               name="role"
-              as={MultiselectField}
+              as={SelectField}
               choices={MEMBERSHIP_ROLES}
               serialize={({ value }) => value}
               valueDeserialize={(val) =>
