@@ -614,53 +614,31 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         club = self.get_object()
         lower_bound = timezone.now() - datetime.timedelta(days=30 * 6)
+        category = self.request.query_params.get("category")
+        metric = self.request.query_params.get("metric")
 
-        def get_graduation_year_breakdown(obj, title):
+        def get_breakdown(category, metric):
+            if category == "graduation_year":
+                category_join = "person__profile__graduation_year"
+            else:
+                category_join = "person__profile__school__name"
+
+            if metric == "favorite":
+                    obj = Favorite
+            elif metric == "subscribe":
+                obj = Subscribe
+            else:
+                obj = ClubVisit
+
             return {
-                "title": title,
                 "content": list(
                     obj.objects.filter(club=club, created_at__gte=lower_bound)
-                    .values("person__profile__graduation_year")
-                    .annotate(count=Count("id"))
-                ),
-            }
-
-        def get_school_breakdown(obj, title):
-            return {
-                "title": title,
-                "content": list(
-                    obj.objects.filter(club=club, created_at__gte=lower_bound)
-                    .values("person__profile__school__name")
+                    .values(category_join)
                     .annotate(count=Count("id"))
                 ),
             }
             
-        return Response(
-            {
-                "school": {
-                    "favorite": get_school_breakdown(
-                        Favorite, "School - Bookmarks"
-                    ),
-                    "subscribe": get_school_breakdown(
-                        Subscribe, "School - Subscriptions"
-                    ),
-                    "visit": get_school_breakdown(
-                        ClubVisit, "School - Page Views"
-                    ),
-                },
-                "graduation_year": {
-                    "favorite": get_graduation_year_breakdown(
-                        Favorite, "Graduation Year - Bookmarks"
-                    ),
-                    "subscribe": get_graduation_year_breakdown(
-                        Subscribe, "Graduation Year - Subscriptions"
-                    ),
-                    "visit": get_graduation_year_breakdown(
-                        ClubVisit, "Graduation Year - Page Views"
-                    ),
-                }
-            }
-        )
+        return Response(get_breakdown(category, metric))
 
     @action(detail=True, methods=["get"])
     def analytics(self, request, *args, **kwargs):

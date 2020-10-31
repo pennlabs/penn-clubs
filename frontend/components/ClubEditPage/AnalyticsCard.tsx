@@ -27,7 +27,6 @@ type AnalyticsCardProps = {
 
 type PieChartData = {
   [key: string]: {
-    title: string
     content: {
       person__profile__graduation_year: number | null
       count: number
@@ -109,16 +108,21 @@ function parse(obj, startRange: Date, endRange: Date, group: Group): LineData {
     exists[new Date(item.group).getTime()] = item.count
   })
   const output: LineData = []
-  if (group === Group.Week) {
-    startRange.setDate(startRange.getDate() - startRange.getDay() + 1)
-  } else if (group === Group.Month) {
-    startRange = new Date(startRange.getFullYear(), startRange.getMonth(), 1)
-  }
   let current = startRange
+  // If we are grouping by week or month, we need to make sure our start
+  // day is the same as the start day on the backend, so we do this
+  // logic to ensure they line up
+  if (group === Group.Week) {
+    current = new Date(current.getDate() - current.getDay() + 1)
+  } else if (group === Group.Month) {
+    current = new Date(current.getFullYear(), current.getMonth(), 1)
+  }
+
   for (let i = startRange.getTime(); i <= endRange.getTime(); ) {
     current = new Date(i)
     output.push({ x: current, y: exists[i] ?? 0 })
 
+    // Increment by the groupBy interval
     if (group === Group.Hour) {
       i += 60 * 60 * 1000
     } else if (group === Group.Day) {
@@ -203,12 +207,12 @@ export default function AnalyticsCard({
   }, [date, endRange, group])
 
   useEffect(() => {
-    doApiRequest(`/clubs/${club.code}/analytics_pie_charts/?format=json`)
+    doApiRequest(`/clubs/${club.code}/analytics_pie_charts/?format=json&category=${category.value}&metric=${metric.value}`)
       .then((resp) => resp.json())
       .then((resp) => {
         setPieChartData(resp)
       })
-  }, [])
+  }, [metric, category])
 
   const legendItems = [
     {
@@ -301,10 +305,10 @@ export default function AnalyticsCard({
                     return moment(date).format('D')
                   } else if (group.value === Group.Week) {
                     // We need to round down for Week values
-                    return moment(date).format('M/D')
+                    return moment(date).add(-1, 'weeks').format('MM/DD')
                   } else if (group.value === Group.Month) {
                     // We need to round down for Month values
-                    return moment(date).add(-1, 'months').format('MMM')
+                    return moment(date).add(-1, 'months').format('MM/DD')
                   }
                 }}
               />
@@ -353,11 +357,9 @@ export default function AnalyticsCard({
             <div className="is-clearfix">
               <div className="columns">
                 <div className="column">
-                  <b>{pieChartData[category.value][metric.value].title}</b>
+                <b>{category.label} by {metric.label}</b>
                   <DiscreteColorLegend
-                    items={parsePie(
-                      pieChartData[category.value][metric.value].content,
-                    ).map((item) => ({
+                    items={parsePie(pieChartData.content).map((item) => ({
                       title:
                         item.label !== 'None'
                           ? `${item.label} (${item.angle})`
@@ -369,9 +371,7 @@ export default function AnalyticsCard({
                 </div>
                 <div className="column is-8">
                   <RadialChart
-                    data={parsePie(
-                      pieChartData[category.value][metric.value].content,
-                    )}
+                    data={parsePie(pieChartData.content)}
                     width={400}
                     height={400}
                     colorType="literal"
