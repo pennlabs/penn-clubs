@@ -1,42 +1,8 @@
 import { SITE_ID } from '../utils/branding'
 
-const COLOR_SCHEME = {
-  clubs: {
-    BANNER_BG: '#ffffff',
-    BANNER_TEXT: '#1f2049',
-    LOGIN_BACKGROUND: '#ef4c5f',
-    H1_TEXT: '#414654',
-    ADD_BUTTON: '#4954f4',
-    PRIMARY_TAG_BG: '#e1e3ff',
-    PRIMARY_TAG_TEXT: '#4954f4',
-    FEEDBACK_BG: '#4954f4',
-    SNOW: '#fafcff',
-    BG_GRADIENT: 'linear-gradient(to right, #4954f4, #44469a)',
-  },
-  fyh: {
-    BANNER_BG: '#000f3a',
-    BANNER_TEXT: '#ffffff',
-    LOGIN_BACKGROUND: '#000f3a',
-    H1_TEXT: '#000f3a',
-    ADD_BUTTON: '#95001a',
-    PRIMARY_TAG_BG: '#95001a',
-    PRIMARY_TAG_TEXT: '#ffffff',
-    FEEDBACK_BG: '#000f3a',
-    SNOW: '#f2f2f3',
-    BG_GRADIENT: 'linear-gradient(to right, #004785, #a90533)',
-  },
-}
-
-export const BANNER_BG = COLOR_SCHEME[SITE_ID].BANNER_BG
-export const BG_GRADIENT = COLOR_SCHEME[SITE_ID].BG_GRADIENT
-export const BANNER_TEXT = COLOR_SCHEME[SITE_ID].BANNER_TEXT
-export const LOGIN_BACKGROUND = COLOR_SCHEME[SITE_ID].LOGIN_BACKGROUND
-export const H1_TEXT = COLOR_SCHEME[SITE_ID].H1_TEXT
-export const ADD_BUTTON = COLOR_SCHEME[SITE_ID].ADD_BUTTON
-export const PRIMARY_TAG_BG = COLOR_SCHEME[SITE_ID].PRIMARY_TAG_BG
-export const PRIMARY_TAG_TEXT = COLOR_SCHEME[SITE_ID].PRIMARY_TAG_TEXT
-export const FEEDBACK_BG = COLOR_SCHEME[SITE_ID].FEEDBACK_BG
-export const SNOW = COLOR_SCHEME[SITE_ID].SNOW
+/**
+ * Constant Colors
+ */
 
 export const WHITE = '#fff'
 export const WHITE_ALPHA = (alpha: number): string =>
@@ -110,6 +76,52 @@ export const PROPIC_TEXT = [
   '#541625',
   '#280A42',
 ]
+
+/**
+ * Branding Switch Colors
+ */
+
+const COLOR_SCHEME = {
+  clubs: {
+    ADD_BUTTON: CLUBS_BLUE,
+    BANNER_BG: WHITE,
+    BANNER_TEXT: CLUBS_NAVY,
+    BG_GRADIENT: 'linear-gradient(to right, #4954f4, #44469a)',
+    FEEDBACK_BG: CLUBS_BLUE,
+    H1_TEXT: CLUBS_GREY,
+    LOGIN_BACKGROUND: CLUBS_RED,
+    PRIMARY_TAG_BG: CLUBS_LIGHT_BLUE,
+    PRIMARY_TAG_TEXT: CLUBS_BLUE,
+    SNOW: '#fafcff',
+  },
+  fyh: {
+    ADD_BUTTON: HUB_RED,
+    BANNER_BG: HUB_NAVY,
+    BANNER_TEXT: HUB_WHITE,
+    BG_GRADIENT: 'linear-gradient(to right, #004785, #a90533)',
+    FEEDBACK_BG: HUB_NAVY,
+    H1_TEXT: HUB_NAVY,
+    LOGIN_BACKGROUND: HUB_NAVY,
+    PRIMARY_TAG_BG: HUB_RED,
+    PRIMARY_TAG_TEXT: HUB_WHITE,
+    SNOW: '#f2f2f3',
+  },
+}
+
+export const ADD_BUTTON = COLOR_SCHEME[SITE_ID].ADD_BUTTON
+export const BANNER_BG = COLOR_SCHEME[SITE_ID].BANNER_BG
+export const BANNER_TEXT = COLOR_SCHEME[SITE_ID].BANNER_TEXT
+export const BG_GRADIENT = COLOR_SCHEME[SITE_ID].BG_GRADIENT
+export const FEEDBACK_BG = COLOR_SCHEME[SITE_ID].FEEDBACK_BG
+export const H1_TEXT = COLOR_SCHEME[SITE_ID].H1_TEXT
+export const LOGIN_BACKGROUND = COLOR_SCHEME[SITE_ID].LOGIN_BACKGROUND
+export const PRIMARY_TAG_BG = COLOR_SCHEME[SITE_ID].PRIMARY_TAG_BG
+export const PRIMARY_TAG_TEXT = COLOR_SCHEME[SITE_ID].PRIMARY_TAG_TEXT
+export const SNOW = COLOR_SCHEME[SITE_ID].SNOW
+
+/**
+ * Select Tag Colors
+ */
 
 export const TAG_TEXT_COLOR_MAP = {
   tags__in: PRIMARY_TAG_TEXT,
