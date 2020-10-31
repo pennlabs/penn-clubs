@@ -27,10 +27,10 @@ import {
   Container,
   Flex,
   Icon,
+  InfoPageTitle,
   Metadata,
   StrongText,
   Text,
-  Title,
   WideContainer,
 } from '../../../components/common'
 import { CLUBS_RED, SNOW, WHITE } from '../../../constants/colors'
@@ -126,7 +126,7 @@ const ClubPage = ({
       <Container>
         <Metadata />
         <div className="has-text-centered">
-          <Title>404 Not Found</Title>
+          <InfoPageTitle>404 Not Found</InfoPageTitle>
           <div className="mt-5 mb-5">
             <Image src="/static/img/button.svg" alt="page not found" />
           </div>
@@ -213,7 +213,7 @@ const ClubPage = ({
             <StrongText ref={questionsScrollRef}>FAQ</StrongText>
             <QuestionList club={club} questions={questions} />
           </div>
-          {club.is_member !== false && club.files && club.files.length && (
+          {club.is_member !== false && club.files && !!club.files.length && (
             <div className="mt-4">
               <StrongText> Uploaded Files </StrongText>
               <StyledCard bordered>
@@ -248,7 +248,7 @@ const ClubPage = ({
             <StrongText>Contact</StrongText>
             <SocialIcons club={club} />
           </StyledCard>
-          {involvement && (
+          {involvement && !!involvement.length && (
             <StyledCard bordered>
               <StrongText>{FIELD_PARTICIPATION_LABEL}</StrongText>
               <Text style={{ marginBottom: M0, wordBreak: 'break-word' }}>
@@ -259,7 +259,7 @@ const ClubPage = ({
           <Events data={events} />
           {isClubFieldShown('signature_events') &&
             signatureEvents &&
-            signatureEvents.length && (
+            !!signatureEvents.length && (
               <StyledCard bordered>
                 <StrongText>Signature Events</StrongText>
                 <Text style={{ marginBottom: M0, wordBreak: 'break-word' }}>

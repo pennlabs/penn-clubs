@@ -16,7 +16,7 @@ import {
   DIRECTORY_ROUTE,
   HOME_ROUTE,
 } from '../constants/routes'
-import { Club, Major, School, StudentType, Tag, UserInfo, Year } from '../types'
+import { Club, Major, School, StudentType, Tag, Year } from '../types'
 import { apiCheckPermission, doApiRequest } from '../utils'
 import {
   APPROVAL_AUTHORITY,
@@ -51,7 +51,6 @@ import TabView from './TabView'
 type ClubFormProps = {
   clubId: string | undefined
   authenticated: boolean | null
-  userInfo: UserInfo
   schools: School[]
   majors: Major[]
   years: Year[]
@@ -59,22 +58,18 @@ type ClubFormProps = {
   student_types: StudentType[]
 }
 
-const ClubForm = (props: ClubFormProps): ReactElement => {
-  const {
-    authenticated,
-    userInfo,
-    schools,
-    years,
-    majors,
-    tags,
-    student_types,
-  } = props
-
+const ClubForm = ({
+  authenticated,
+  schools,
+  years,
+  majors,
+  tags,
+  student_types,
+  clubId,
+}: ClubFormProps): ReactElement => {
   const [message, setMessage] = useState<ReactElement | string | null>(null)
   const [club, setClub] = useState<Club | null>(null)
-  const [isEdit, setIsEdit] = useState<boolean>(
-    typeof props.clubId !== 'undefined',
-  )
+  const [isEdit, setIsEdit] = useState<boolean>(typeof clubId !== 'undefined')
 
   const router = useRouter()
 
@@ -117,8 +112,8 @@ const ClubForm = (props: ClubFormProps): ReactElement => {
 
   const reloadClub = (): void => {
     if (isEdit) {
-      const clubId = club !== null && club.code ? club.code : props.clubId
-      doApiRequest(`/clubs/${clubId}/?format=json`)
+      const actualClubId = club !== null && club.code ? club.code : clubId
+      doApiRequest(`/clubs/${actualClubId}/?format=json`)
         .then((resp) => resp.json())
         .then((data) => setClub(data))
     }

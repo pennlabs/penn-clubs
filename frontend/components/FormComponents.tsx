@@ -460,8 +460,8 @@ export const MultiselectField = useFieldWrapper(
 export const CheckboxField = (
   props: BasicFormField & AnyHack,
 ): ReactElement => {
-  const { label, value, ...other } = props
-  const { status } = useFormikContext()
+  const { label, value, onChange, ...other } = props
+  const { status, setFieldValue } = useFormikContext()
   const errorMessage = status && status[props.name]
   const fieldContext = useContext(FormFieldClassContext)
   const isHorizontal = fieldContext.includes('is-horizontal')
@@ -470,7 +470,15 @@ export const CheckboxField = (
     <>
       <div className="control">
         <label className="checkbox">
-          <input type="checkbox" checked={value} {...other} /> {label}
+          <input
+            type="checkbox"
+            checked={value}
+            onChange={(e) => {
+              setFieldValue(props.name, e.target.checked)
+            }}
+            {...other}
+          />{' '}
+          {label}
         </label>
       </div>
       {errorMessage && <p className="help is-danger">{errorMessage}</p>}
