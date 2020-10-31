@@ -1,12 +1,10 @@
 import { Form, Formik } from 'formik'
-import { Component, ReactElement } from 'react'
+import { useEffect, useState, ReactElement } from 'react'
 import s from 'styled-components'
 
 import {
   doApiRequest,
   formatResponse,
-  getApiUrl,
-  getRoleDisplay,
   titleize,
 } from '../utils'
 import { Icon, Loading } from './common'
@@ -190,29 +188,30 @@ export const ModelTable = ({
   )
 }
 
+
+type Props = {
+  ModelFormProps : any,
+  ModelFormState : boolean
+}
+
 /*
  * Creates a form with CRUD (create, read, update, delete)
  * capabilities for a Django model using a provided endpoint.
  */
-export class ModelForm extends Component<ModelFormProps, ModelFormState> {
-  constructor(props) {
-    super(props)
+ export const ModelForm = (props : ModelFormProps) => {
+  
+  const [objects, changeObjects] = useState <any| null>(null);
+  const [currentlyEditing, changeCurrentlyEditing] = useState<boolean | null> (null);
+  const [newCount, changeNewCount] = useState<number>(0);
+  const [createObject, changeCreateObject] = useState<any | null>(props.defaultObject != null ? { ...props.defaultObject } : {});
 
-    this.state = {
-      objects: null,
-      currentlyEditing: null,
-      createObject:
-        props.defaultObject != null ? { ...props.defaultObject } : {},
-      newCount: 0,
-    }
-  }
 
   /**
    * This is called when the create/edit form has its contents changed.
    */
-  onChange = (obj): void => {
-    if (this.props.onChange) {
-      this.props.onChange(obj)
+  const onChange = (obj): void => {
+    if (props.onChange) {
+      props.onChange(obj)
     }
   }
 
@@ -220,22 +219,20 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
    * Called when the user wants to create a new object.
    * Does not save the object to the database.
    */
-  onCreate = (): void => {
-    this.setState(({ objects, newCount }) => {
-      objects.push({
-        tempId: newCount,
-        ...(this.props.defaultObject ?? {}),
-      })
-      return { objects, newCount: newCount + 1 }
-    })
+  const onCreate = (): void => {
+      changeObjects( objects.push({
+      tempId: newCount,
+      ...(props.defaultObject ?? {}),
+    }))
+    changeNewCount(newCount+1)
   }
 
   /**
    * Called when the user requests for an object to be deleted.
    * @param object The object that should be deleted.
    */
-  onDelete = (object): void => {
-    const { baseUrl, keyField = 'id' } = this.props
+  const onDelete = (object): void => {
+    const { baseUrl, keyField = 'id' } = props
 
     if (typeof object[keyField] !== 'undefined') {
       doApiRequest(`${baseUrl}${object[keyField]}/?format=json`, {
@@ -260,8 +257,8 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
    * Called when the form is submitted to save an individual object.
    * @returns a promise with the first argument as the new object values.
    */
-  onSubmit = (object, data): Promise<any> => {
-    const { baseUrl, keyField = 'id' } = this.props
+  const onSubmit = (object, data): Promise<any> => {
+    const { baseUrl, keyField = 'id' } = props
 
     // if object was deleted, return
     if (object == null) {
@@ -278,8 +275,8 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
       if (
         !(data[key] instanceof File) &&
         !(
-          this.props.fileFields &&
-          this.props.fileFields.includes(key) &&
+          props.fileFields &&
+          props.fileFields.includes(key) &&
           data[key] !== null
         )
       ) {
@@ -312,9 +309,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
               }
             })
             .then(() => {
-              this.setState(({ objects }) => ({
-                objects: [...objects],
-              }))
+              changeObjects ([...objects])
             })
         : doApiRequest(`${baseUrl}${object[keyField]}/?format=json`, {
             method: 'PATCH',
@@ -369,7 +364,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
   /**
    * Download the latest list of objects when the component is mounted.
    */
-  componentDidMount(): void {
+  useEffect(()=>{
     doApiRequest(
       `${this.props.baseUrl}?format=json${this.props.listParams ?? ''}`,
     )
@@ -377,10 +372,9 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
       .then((resp) => {
         this.setState({ objects: resp })
       })
-  }
+  },[]);
 
-  render(): ReactElement {
-    const { objects } = this.state
+  
     const {
       fields,
       tableFields,
@@ -392,15 +386,14 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
       allowDeletion = true,
       confirmDeletion = false,
       keyField = 'id',
-      onChange,
-    } = this.props
+      onChange : parentComponentChange,
+    } = props
 
     if (!objects) {
       return <Loading />
     }
 
     if (tableFields) {
-      const { currentlyEditing, createObject } = this.state
       const currentObjectIndex =
         currentlyEditing === null
           ? -1
@@ -412,12 +405,10 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
         <>
           <ModelTable
             onEdit={(object): void => {
-              this.setState({
-                currentlyEditing: object[keyField],
-              })
-              this.onChange(object)
+              changeCurrentlyEditing(object[keyField])
+              onChange(object)
             }}
-            onDelete={this.onDelete}
+            onDelete={onDelete}
             deleteVerb={deleteVerb}
             noun={noun}
             tableFields={tableFields}
@@ -438,7 +429,6 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
               </Subtitle>
               <Formik
                 validate={onChange}
-                key={currentlyEditing}
                 initialValues={doFormikInitialValueFixes(currentObject)}
                 initialStatus={
                   currentObject &&
@@ -449,23 +439,18 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
                   if (currentObjectIndex !== -1) {
                     objects[currentObjectIndex] = currentObject
                   }
-                  this.onSubmit(currentObject, data).then((obj: any) => {
+                  onSubmit(currentObject, data).then((obj: any) => {
                     if (obj._status) {
                       if (currentlyEditing === null) {
                         objects.push(obj)
                       }
-                      this.setState({
-                        objects: [...objects],
-                        currentlyEditing: obj[keyField],
-                        createObject:
-                          this.props.defaultObject != null
-                            ? { ...this.props.defaultObject }
-                            : {},
-                      })
+                      changeObjects([...objects])
+                      changeCurrentlyEditing (obj[keyField])
+                      changeCreateObject(this.props.defaultObject != null
+                        ? { ...this.props.defaultObject }
+                        : {})
                     } else {
-                      this.setState({
-                        createObject: obj,
-                      })
+                      changeCreateObject(obj)
                     }
                   })
                 }}
@@ -494,16 +479,10 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
                       {currentlyEditing !== null && (
                         <span
                           onClick={() => {
-                            this.setState({
-                              currentlyEditing: null,
-                              getApiUrl,
-                              formatResponse,
-                              getRoleDisplay,
-                              createObject:
-                                this.props.defaultObject != null
-                                  ? { ...this.props.defaultObject }
-                                  : {},
-                            })
+                            changeCreateObject(props.defaultObject != null
+                              ? { ...props.defaultObject }
+                              : {})
+                              changeCurrentlyEditing(null);
                             this.onChange({})
                           }}
                           className="button is-primary is-pulled-right"
@@ -554,7 +533,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
               initialStatus={
                 object && object._status === false && object._error_message
               }
-              onSubmit={(data) => this.onSubmit(object, data)}
+              onSubmit={(data) => onSubmit(object, data)}
               enableReinitialize
             >
               {({ isSubmitting }) => (
@@ -571,7 +550,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
                     <span
                       className="button is-danger"
                       style={{ marginLeft: '0.5em' }}
-                      onClick={() => this.onDelete(object)}
+                      onClick={() => onDelete(object)}
                     >
                       <Icon name="trash" alt="trash" /> Delete
                     </span>
@@ -583,14 +562,14 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
           </ModelItem>
         ))}
         {allowCreation && (
-          <span onClick={this.onCreate} className="button is-primary">
+          <span onClick={onCreate} className="button is-primary">
             <Icon name="plus" alt="create" /> Create
           </span>
         )}
-        {objects.length === 0 && this.props.empty}
+        {objects.length === 0 && props.empty}
       </>
     )
   }
-}
+
 
 export default ModelForm
