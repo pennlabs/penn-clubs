@@ -1021,7 +1021,7 @@ class EventViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = [EventPermission | IsSuperuser]
-    filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter, ValidEventFilter]
+    filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
     search_fields = [
         "name",
         "club__name",
@@ -1032,7 +1032,6 @@ class EventViewSet(viewsets.ModelViewSet):
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
     pagination_class = RandomPageNumberPagination
-    queryset = Event.objects.all()
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
