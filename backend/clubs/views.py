@@ -1255,6 +1255,7 @@ class EventViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
+
 class TestimonialViewSet(viewsets.ModelViewSet):
     """
     list:
