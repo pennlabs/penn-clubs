@@ -12,8 +12,11 @@ import {
   SITE_NAME,
 } from '../utils/branding'
 import ClubCard from './ClubCard'
+import AdvisorCard from './ClubEditPage/AdvisorCard'
 import ClubEditCard from './ClubEditPage/ClubEditCard'
+import EnableSubscriptionCard from './ClubEditPage/EnableSubscriptionCard'
 import FormProgressIndicator from './ClubEditPage/FormProgressIndicator'
+import MemberExperiencesCard from './ClubEditPage/MemberExperiencesCard'
 import {
   Center,
   Contact,
@@ -23,6 +26,7 @@ import {
   Line,
   Loading,
   Metadata,
+  Subtitle,
   Text,
   Title,
 } from './common'
@@ -104,7 +108,7 @@ const ResourceCreationPage = ({
       ),
     },
     {
-      name: `${OBJECT_NAME_TITLE_SINGULAR} Info`,
+      name: 'Basic Info',
       content: (): ReactElement => (
         <>
           <Title>{OBJECT_NAME_TITLE_SINGULAR} Information</Title>
@@ -138,6 +142,53 @@ const ResourceCreationPage = ({
             Your {OBJECT_NAME_SINGULAR} will not be submitted for approval until
             you complete all steps of the {OBJECT_NAME_SINGULAR} creation
             process.
+          </Text>
+        </>
+      ),
+      disabled: club === null,
+    },
+    {
+      name: 'Details',
+      content: (): ReactElement => (
+        <>
+          <Title>{OBJECT_NAME_TITLE_SINGULAR} Details</Title>
+          <Text>
+            You can fill out additional details that pertain to your{' '}
+            {OBJECT_NAME_SINGULAR} using the form below. All of these fields are
+            optional, but you should fill out the ones that are applicable to
+            your {OBJECT_NAME_SINGULAR}.
+          </Text>
+          <Subtitle>Points of Contact</Subtitle>
+          <Text>
+            You can specify the points of contact for your{' '}
+            {OBJECT_NAME_SINGULAR} in the forms below. Public points of contact
+            will be shown publicly on the website, while private points of
+            contact will only be available to {SITE_NAME} administrators.
+          </Text>
+          {club !== null && <AdvisorCard club={club} schools={schools} />}
+          <Subtitle>Mailing List Features</Subtitle>
+          <Text>
+            You can enable or disable the subscription feature below. The
+            subscription feature will allow you to view the emails of everyone
+            who has clicked the subscribe (<Icon name="bell" />) button and add
+            these emails to your mailing list.
+          </Text>
+          <Text>
+            If you do not have a mailing list or do not plan on sending out any
+            emails, please disable this feature.
+          </Text>
+          {club !== null && <EnableSubscriptionCard club={club} />}
+          <Subtitle>Student Experiences</Subtitle>
+          <Text>
+            If you have any student experiences or testimonials, you can put
+            them in the form below. These student experiences will be shown
+            publicly on your {OBJECT_NAME_SINGULAR} page.
+          </Text>
+          {club !== null && <MemberExperiencesCard club={club} />}
+          <Line />
+          <Text>
+            After you have saved the applicable forms, hit the continue button
+            below to move on to the next step.
           </Text>
         </>
       ),

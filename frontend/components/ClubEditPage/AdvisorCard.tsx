@@ -27,6 +27,7 @@ export default function AdvisorCard({ club, schools }: Props): ReactElement {
         as={MultiselectField}
         choices={schools}
         placeholder="Select schools or departments that this point of contact belongs under"
+        isMulti
       />
       <Field name="email" as={TextField} type="email" />
       <Field name="phone" as={TextField} />

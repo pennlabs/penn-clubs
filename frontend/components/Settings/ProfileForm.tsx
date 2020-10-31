@@ -94,8 +94,18 @@ const ProfileForm = ({
                 isImage
               />
               <Field name="graduation_year" as={TextField} type="number" />
-              <Field name="school" as={MultiselectField} choices={schools} />
-              <Field name="major" as={MultiselectField} choices={majors} />
+              <Field
+                name="school"
+                as={MultiselectField}
+                choices={schools}
+                isMulti
+              />
+              <Field
+                name="major"
+                as={MultiselectField}
+                choices={majors}
+                isMulti
+              />
               <Field
                 name="share_bookmarks"
                 as={CheckboxField}

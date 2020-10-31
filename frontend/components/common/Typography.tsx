@@ -33,6 +33,14 @@ export const Title = s.h1.attrs((props) => ({
   font-weight: bold;
 `
 
+export const Subtitle = s.h2.attrs((props) => ({
+  ...props,
+  className: `subtitle ${props.className ?? ''}`,
+}))`
+  font-size: 1.5rem;
+  font-weight: bold;
+`
+
 export const InfoPageTitle = s(Title)`
   margin-top: 2rem;
   margin-bottom: 2rem;

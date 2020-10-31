@@ -414,28 +414,28 @@ export const MultiselectField = useFieldWrapper(
       if (opt == null) {
         return isMulti ? [] : null
       }
-      if (serialize != null) {
-        return Array.isArray(opt) ? opt.map(serialize) : serialize(opt)
+      if (serialize == null) {
+        serialize = ({ value, label }) => ({
+          id: value,
+          name: label,
+        })
       }
-      return opt.map(({ value, label }) => ({
-        id: value,
-        name: label,
-      }))
+      return Array.isArray(opt) ? opt.map(serialize) : serialize(opt)
     }
 
     const actualDeserialize = (opt) => {
       if (opt == null) {
         return isMulti ? [] : null
       }
-      if (deserialize != null) {
-        return Array.isArray(opt) ? opt.map(deserialize) : deserialize(opt)
-      }
-      return opt.map((item) => {
-        return {
-          value: item.id ?? item.value,
-          label: item.name ?? item.label,
+      if (deserialize == null) {
+        deserialize = (item) => {
+          return {
+            value: item.id ?? item.value,
+            label: item.name ?? item.label,
+          }
         }
-      })
+      }
+      return Array.isArray(opt) ? opt.map(deserialize) : deserialize(opt)
     }
 
     return (
@@ -444,7 +444,7 @@ export const MultiselectField = useFieldWrapper(
         key={name}
         placeholder={placeholder}
         isMulti={isMulti}
-        value={(valueDeserialize ?? actualDeserialize ?? ((a) => a))(value)}
+        value={(valueDeserialize ?? actualDeserialize)(value)}
         options={actualDeserialize(choices)}
         onChange={(opt) => setFieldValue(name, actualSerialize(opt))}
         onBlur={onBlur}
