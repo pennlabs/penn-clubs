@@ -29,8 +29,19 @@ def send_mail_helper(name, subject, emails, context):
     if not all(isinstance(email, str) for email in emails):
         raise ValueError("The to email argument must be a list of strings!")
 
+    # load email template
     prefix = {"fyh": "fyh_emails"}.get(settings.BRANDING, "emails")
     html_content = render_to_string(f"{prefix}/{name}.html", context)
+
+    # use subject from template if it exists
+    # subject should match: <!-- SUBJECT: (subject) --> and be the first line
+    subject_regex = re.compile(r"\s*<!--\s*SUBJECT:\s*(.*?)\s*-->", re.I)
+    match = subject_regex.match(html_content)
+    if match is not None:
+        subject = match.group(1)
+        html_content = subject_regex.sub("", html_content, count=1)
+
+    # generate text alternative
     text_content = html_to_text(html_content)
 
     msg = EmailMultiAlternatives(subject, text_content, settings.FROM_EMAIL, list(set(emails)))

@@ -44,8 +44,10 @@ When installing locally for development, run:
 
 Running the frontend requires [Node.js](https://nodejs.org/en/) and [Yarn](https://yarnpkg.com/getting-started/install).
 
-You will need to set the following Environmental Variables:
+You will need to set the following environment variables on the frontend:
 - `NEXT_PUBLIC_GOOGLE_API_KEY`
+- `NEXT_PUBLIC_SITE_NAME` (Optional)
+  - Specify `clubs` to show Penn Clubs and `fyh` to show Hub@Penn.
 
 1. Enter the `frontend` directory with a **new terminal window**. Don't kill your backend server!
 2. Install dependencies using `yarn install` in the project directory.
@@ -54,7 +56,8 @@ You will need to set the following Environmental Variables:
 
 ### Development
 
-Click `Login` to log in as a test user.
+Click `Login` to log in as a test user. The `./manage.py populate` command creates a test user for you with username `bfranklin` and password `test`. Go to `/api/admin` to login to this account.
+
 To grant all users in the database superuser privileges for development:
 ```bash
 cd backend
