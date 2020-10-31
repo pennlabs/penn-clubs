@@ -1,0 +1,52 @@
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+codecov = "*"
+black = "==19.10b0"
+unittest-xml-reporting = ">=3.0.2"
+flake8 = "*"
+flake8-isort = "*"
+isort = "<5"
+flake8-quotes = "*"
+django-debug-toolbar = "*"
+django-extensions = "*"
+
+[packages]
+dj-database-url = "*"
+djangorestframework = "*"
+mysqlclient = "*"
+sentry-sdk = "*"
+django = "*"
+django-labs-accounts = "*"
+drf-nested-routers = "*"
+"bs4" = "*"
+bleach = "*"
+django-cors-headers = "*"
+uritemplate = "*"
+pyyaml = "*"
+django-storages = "*"
+pillow = "*"
+"boto3" = "*"
+django-phonenumber-field = "*"
+phonenumbers = "*"
+qrcode = "*"
+drf-renderer-xlsx = "*"
+python-dateutil = "*"
+psycopg2 = "*"
+django-simple-history = "*"
+channels = "*"
+django-runtime-options = "*"
+social-auth-app-django = "*"
+django-redis = "*"
+channels-redis = "*"
+uwsgi = {version = "*", sys_platform = "== 'linux'"}
+uvloop = {version = "*", sys_platform = "== 'linux'"}
+uvicorn = "*"
+gunicorn = "*"
+httptools = "*"
+ics = "*"
+
+[requires]
+python_version = "3"
