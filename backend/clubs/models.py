@@ -29,7 +29,8 @@ def send_mail_helper(name, subject, emails, context):
     if not all(isinstance(email, str) for email in emails):
         raise ValueError("The to email argument must be a list of strings!")
 
-    html_content = render_to_string("emails/{}.html".format(name), context)
+    prefix = {"fyh": "fyh_emails"}.get(settings.BRANDING, "emails")
+    html_content = render_to_string(f"{prefix}/{name}.html", context)
     text_content = html_to_text(html_content)
 
     msg = EmailMultiAlternatives(subject, text_content, settings.FROM_EMAIL, list(set(emails)))
