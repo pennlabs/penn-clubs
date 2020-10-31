@@ -396,7 +396,7 @@ export const FormikAddressField = useFieldWrapper(
  * @param choices The choices that the user is allowed to select from.
  * @param isMulti If set to true, you can select more than one tag. Otherwise, you can only select one tag.
  */
-export const MultiselectField = useFieldWrapper(
+export const SelectField = useFieldWrapper(
   ({
     name,
     choices,

@@ -13,8 +13,8 @@ import EventModal from '../EventPage/EventModal'
 import {
   DateTimeField,
   FileField,
-  MultiselectField,
   RichTextField,
+  SelectField,
   TextField,
 } from '../FormComponents'
 import { ModelForm } from '../ModelForm'
@@ -297,7 +297,7 @@ const eventFields = (
     <Field name="image" as={FileField} isImage />
     <Field
       name="type"
-      as={MultiselectField}
+      as={SelectField}
       required
       choices={types}
       serialize={({ value }) => value}

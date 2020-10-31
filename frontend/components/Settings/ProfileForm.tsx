@@ -8,7 +8,7 @@ import {
   CheckboxField,
   FileField,
   FormStyle,
-  MultiselectField,
+  SelectField,
   TextField,
 } from '../FormComponents'
 
@@ -94,18 +94,8 @@ const ProfileForm = ({
                 isImage
               />
               <Field name="graduation_year" as={TextField} type="number" />
-              <Field
-                name="school"
-                as={MultiselectField}
-                choices={schools}
-                isMulti
-              />
-              <Field
-                name="major"
-                as={MultiselectField}
-                choices={majors}
-                isMulti
-              />
+              <Field name="school" as={SelectField} choices={schools} isMulti />
+              <Field name="major" as={SelectField} choices={majors} isMulti />
               <Field
                 name="share_bookmarks"
                 as={CheckboxField}

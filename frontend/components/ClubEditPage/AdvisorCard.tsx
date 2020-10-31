@@ -8,7 +8,7 @@ import {
   SITE_NAME,
 } from '../../utils/branding'
 import { Text } from '../common'
-import { CheckboxField, MultiselectField, TextField } from '../FormComponents'
+import { CheckboxField, SelectField, TextField } from '../FormComponents'
 import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
@@ -24,7 +24,7 @@ export default function AdvisorCard({ club, schools }: Props): ReactElement {
       <Field name="title" as={TextField} />
       <Field
         name="school"
-        as={MultiselectField}
+        as={SelectField}
         choices={schools}
         placeholder="Select schools or departments that this point of contact belongs under"
         isMulti
