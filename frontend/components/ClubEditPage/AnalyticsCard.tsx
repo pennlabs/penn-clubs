@@ -1,4 +1,3 @@
-import Color from 'color'
 import moment from 'moment'
 import Head from 'next/head'
 import { ReactElement, useEffect, useState } from 'react'
@@ -15,7 +14,6 @@ import {
   YAxis,
 } from 'react-vis'
 
-import { CLUBS_BLUE } from '../../constants'
 import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
 import { Loading, Text } from '../common'
@@ -139,13 +137,7 @@ function parse(obj, startRange: Date, endRange: Date, group: Group): LineData {
 }
 
 function parsePie(obj): PieData {
-  const colors = [
-    Color('#E24A5E'),
-    Color('#4954F4'),
-    Color('#9E49F4'),
-    Color('#F4A549'),
-    Color('#A9F449'),
-  ]
+  const colors = ['#E24A5E', '#4954F4', '#9E49F4', '#F4A549', '#A9F449']
   let colorIndex = 0
 
   const output: PieData = []
@@ -159,7 +151,7 @@ function parsePie(obj): PieData {
     output.push({
       angle: item.count,
       label,
-      color: colors[colorIndex++].rgb().string(),
+      color: colors[colorIndex++],
     })
   })
   return output
