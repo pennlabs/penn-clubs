@@ -426,6 +426,7 @@ export const SearchBarTagItem = ({
   return (
     <Collapsible name={label}>
       <FilterSearch
+        param={param}
         name={label}
         tags={options}
         updateTag={updateTag}
