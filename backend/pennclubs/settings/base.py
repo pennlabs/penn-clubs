@@ -190,6 +190,7 @@ ASGI_APPLICATION = "pennclubs.routing.application"
 
 
 # Social Auth settings
+
 SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.social_details",
     "social_core.pipeline.social_auth.social_uid",
@@ -207,5 +208,11 @@ ZOOM_VERIFICATION_TOKEN = os.environ.get("ZOOM_VERIFICATION_TOKEN")
 
 
 # Phone number field
+
 PHONENUMBER_DB_FORMAT = "NATIONAL"
 PHONENUMBER_DEFAULT_REGION = "US"
+
+
+# Branding switch
+
+BRANDING = os.environ.get("NEXT_PUBLIC_SITE_NAME", "clubs")

@@ -23,6 +23,8 @@ from clubs.utils import get_django_minified_image, get_domain, html_to_text
 def send_mail_helper(name, subject, emails, context):
     """
     A helper to send out an email given the template name, subject, to emails, and context.
+
+    All emails should go through this function.
     """
     if not all(isinstance(email, str) for email in emails):
         raise ValueError("The to email argument must be a list of strings!")
