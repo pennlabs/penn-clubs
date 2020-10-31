@@ -87,7 +87,7 @@ type ClubEditCardProps = {
     message: ReactElement | string | null
     club?: Club
     isEdit?: boolean
-  }) => void
+  }) => Promise<void>
 }
 
 const Card = ({
@@ -139,9 +139,9 @@ export default function ClubEditCard({
   tags,
   club,
   isEdit,
-  onSubmit = () => undefined,
+  onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement {
-  const submit = (data, { setSubmitting }): void => {
+  const submit = (data, { setSubmitting, setStatus }): Promise<void> => {
     const photo = data.image
     if (photo !== null) {
       delete data.image
@@ -158,9 +158,9 @@ export default function ClubEditCard({
             body: data,
           })
 
-    req.then((resp) => {
+    return req.then((resp) => {
       if (resp.ok) {
-        resp.json().then((info) => {
+        return resp.json().then((info) => {
           let clubCode: string | null = null
           if (!isEdit) {
             clubCode = info.code
@@ -191,14 +191,16 @@ export default function ClubEditCard({
                 msg += ` However, failed to upload ${OBJECT_NAME_SINGULAR} image file!`
               }
             }
-            onSubmit({ isEdit: true, club: info, message: msg })
+            await onSubmit({ isEdit: true, club: info, message: msg })
+            setStatus({})
             setSubmitting(false)
           }
-          finishUpload()
+          return finishUpload()
         })
       } else {
-        resp.json().then((err) => {
-          onSubmit({ message: formatResponse(err) })
+        return resp.json().then(async (err) => {
+          await onSubmit({ message: formatResponse(err) })
+          setStatus(err)
           setSubmitting(false)
         })
       }
@@ -236,7 +238,6 @@ export default function ClubEditCard({
         },
         {
           name: 'description',
-          required: true,
           help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
           placeholder: `Type your ${OBJECT_NAME_SINGULAR} description here!`,
           type: 'html',
@@ -244,6 +245,9 @@ export default function ClubEditCard({
         {
           name: 'tags',
           type: 'multiselect',
+          required: true,
+          help:
+            'You will need to at least specify either the Undergraduate or Graduate tag.',
           placeholder: `Select tags relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: tags,
         },
@@ -412,6 +416,8 @@ export default function ClubEditCard({
     subtitle: 'Your Subtitle Here',
     email_public: true,
     accepting_members: false,
+    size: CLUB_SIZES[0].value,
+    application_required: CLUB_APPLICATIONS[0].value,
   }
 
   const editingFields = new Set<string>()
@@ -419,21 +425,15 @@ export default function ClubEditCard({
     fields.forEach(({ name }) => editingFields.add(name)),
   )
 
+  const initialValues = Object.keys(club).length
+    ? doFormikInitialValueFixes(removeNonFieldAttributes(club, editingFields))
+    : creationDefaults
+
   return (
-    <Formik
-      initialValues={
-        Object.keys(club).length
-          ? doFormikInitialValueFixes(
-              removeNonFieldAttributes(club, editingFields),
-            )
-          : creationDefaults
-      }
-      onSubmit={submit}
-      enableReinitialize
-    >
+    <Formik initialValues={initialValues} onSubmit={submit} enableReinitialize>
       {({ dirty, isSubmitting }) => (
-        <FormStyle isHorizontal>
-          <Form>
+        <Form>
+          <FormStyle isHorizontal>
             {fields.map(({ name, description, fields }, i) => {
               return (
                 <Card title={name} key={i}>
@@ -452,6 +452,7 @@ export default function ClubEditCard({
                       }
                       if (props.type === 'image') {
                         other.isImage = true
+                        delete other.type
                       }
                       return (
                         <Field
@@ -481,8 +482,8 @@ export default function ClubEditCard({
             >
               {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
-          </Form>
-        </FormStyle>
+          </FormStyle>
+        </Form>
       )}
     </Formik>
   )

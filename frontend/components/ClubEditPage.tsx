@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { SingletonRouter } from 'next/router'
-import React, { Component, ReactElement } from 'react'
+import { useRouter } from 'next/router'
+import React, { ReactElement, useEffect, useState } from 'react'
 
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
@@ -17,7 +17,7 @@ import {
   HOME_ROUTE,
 } from '../constants/routes'
 import { Club, Major, School, StudentType, Tag, UserInfo, Year } from '../types'
-import { doApiRequest, formatResponse, PermissionsContext } from '../utils'
+import { apiCheckPermission, doApiRequest } from '../utils'
 import {
   APPROVAL_AUTHORITY,
   OBJECT_NAME_SINGULAR,
@@ -57,397 +57,332 @@ type ClubFormProps = {
   years: Year[]
   tags: Tag[]
   student_types: StudentType[]
-  router: SingletonRouter
 }
 
-type ClubFormState = {
-  club: Club | null
-  isEdit: boolean
-  message: ReactElement | string | null
-}
+const ClubForm = (props: ClubFormProps): ReactElement => {
+  const {
+    authenticated,
+    userInfo,
+    schools,
+    years,
+    majors,
+    tags,
+    student_types,
+  } = props
 
-class ClubForm extends Component<ClubFormProps, ClubFormState> {
-  static contextType = PermissionsContext
+  const [message, setMessage] = useState<ReactElement | string | null>(null)
+  const [club, setClub] = useState<Club | null>(null)
+  const [isEdit, setIsEdit] = useState<boolean>(
+    typeof props.clubId !== 'undefined',
+  )
 
-  constructor(props: ClubFormProps) {
-    super(props)
+  const router = useRouter()
 
-    const isEdit = typeof this.props.clubId !== 'undefined'
-
-    this.state = {
-      club: null,
-      isEdit: isEdit,
-      message: null,
-    }
-    this.submit = this.submit.bind(this)
-    this.notify = this.notify.bind(this)
+  const notify = (msg: string | ReactElement): void => {
+    setMessage(msg)
+    window.scrollTo(0, 0)
   }
 
-  notify(msg: string | ReactElement): void {
-    this.setState(
-      {
-        message: msg,
-      },
-      () => window.scrollTo(0, 0),
-    )
-  }
-
-  toggleClubActive(): void {
-    const { club } = this.state
-
-    if (club === null) {
-      return
-    }
-
-    doApiRequest(`/clubs/${club.code}/?format=json`, {
-      method: 'PATCH',
-      body: {
-        active: !club.active,
-      },
-    }).then((resp) => {
-      if (resp.ok) {
-        this.notify(
-          `Successfully ${
-            club.active ? 'deactivated' : 'activated'
-          } this club.`,
-        )
-        this.componentDidMount()
-      } else {
-        resp.json().then((err) => {
-          this.notify(formatResponse(err))
-        })
-      }
-    })
-  }
-
-  submit({
+  const submit = async ({
     message,
     club,
-    isEdit,
+    isEdit: isEditNew,
   }: {
     message: ReactElement | string | null
     club?: Club
     isEdit?: boolean
-  }): void {
-    if (typeof club !== 'undefined' && typeof isEdit !== 'undefined') {
-      if (!this.state.isEdit && isEdit) {
+  }): Promise<void> => {
+    if (typeof club !== 'undefined' && typeof isEditNew !== 'undefined') {
+      if (!isEdit && isEditNew) {
         // if the club is not active, redirect to the renewal page instead of the edit page
         if (!club.active) {
-          this.props.router.push(
-            CLUB_RENEW_ROUTE(),
-            CLUB_RENEW_ROUTE(club.code),
-          )
-          return
+          router.push(CLUB_RENEW_ROUTE(), CLUB_RENEW_ROUTE(club.code))
+          notify(`${message} Redirecting you to the renewal page...`)
+          return Promise.resolve(undefined)
         } else {
-          this.props.router.push(
-            CLUB_EDIT_ROUTE(),
-            CLUB_EDIT_ROUTE(club.code),
-            {
-              shallow: true,
-            },
-          )
+          router.push(CLUB_EDIT_ROUTE(), CLUB_EDIT_ROUTE(club.code), {
+            shallow: true,
+          })
         }
       }
-      this.setState({
-        isEdit: isEdit,
-        club: club,
-      })
+      setClub(club)
+      if (isEdit !== isEditNew) {
+        setIsEdit(isEditNew)
+      }
     }
     if (message) {
-      this.notify(message)
+      notify(message)
     }
   }
 
-  componentDidMount(): void {
-    if (this.state.isEdit) {
-      const clubId =
-        this.state.club !== null && this.state.club.code
-          ? this.state.club.code
-          : this.props.clubId
+  const reloadClub = (): void => {
+    if (isEdit) {
+      const clubId = club !== null && club.code ? club.code : props.clubId
       doApiRequest(`/clubs/${clubId}/?format=json`)
         .then((resp) => resp.json())
-        .then((data) =>
-          this.setState({
-            club: data,
-          }),
-        )
+        .then((data) => setClub(data))
     }
   }
 
-  render(): ReactElement {
-    const {
-      authenticated,
-      userInfo,
-      schools,
-      years,
-      majors,
-      tags,
-      student_types,
-    } = this.props
-    const { club, isEdit, message } = this.state
+  useEffect(reloadClub, [])
 
-    let metadata
-    if (club) {
-      metadata = <ClubMetadata club={club} />
-    } else {
-      metadata = <Metadata title={`Create ${OBJECT_NAME_TITLE_SINGULAR}`} />
-    }
+  let metadata
+  if (club) {
+    metadata = <ClubMetadata club={club} />
+  } else {
+    metadata = <Metadata title={`Create ${OBJECT_NAME_TITLE_SINGULAR}`} />
+  }
 
-    if (authenticated === false) {
-      return <AuthPrompt>{metadata}</AuthPrompt>
-    }
+  const canManageClub = apiCheckPermission(
+    `clubs.manage_club:${club?.code}`,
+    true,
+  )
 
-    const canManageClub = this.context[`clubs.manage_club:${club?.code}`]
+  if (authenticated === false) {
+    return <AuthPrompt>{metadata}</AuthPrompt>
+  }
 
-    if (authenticated === null || (isEdit && club === null)) {
-      return <Loading />
-    }
+  if (authenticated === null || (isEdit && club === null)) {
+    return <Loading />
+  }
 
-    if (isEdit && (!club || !club.code)) {
-      return (
-        <div className="has-text-centered" style={{ margin: 30 }}>
-          <div className="title is-h1">404 Not Found</div>
-          <p>
-            The {OBJECT_NAME_SINGULAR} you are looking for does not exist.
-            Perhaps it was recently moved or deleted?
-          </p>
-          <p>
-            If you believe this is an error, please contact <Contact />.
-          </p>
-        </div>
-      )
-    }
-
-    if (authenticated && isEdit && !canManageClub) {
-      return (
-        <AuthPrompt title="Oh no!" hasLogin={false}>
-          {metadata}
-          You do not have permission to edit the page for{' '}
-          {(club && club.name) || `this ${OBJECT_NAME_SINGULAR}`}. To get
-          access, contact <Contact />.
-        </AuthPrompt>
-      )
-    }
-
-    let tabs: {
-      name: string
-      label: string
-      content: ReactElement
-      disabled?: boolean
-    }[] = []
-
-    if (club && club.code) {
-      tabs = [
-        {
-          name: 'info',
-          label: `Edit ${OBJECT_NAME_TITLE_SINGULAR} Page`,
-          content: (
-            <ClubEditCard
-              isEdit={this.state.isEdit}
-              schools={schools}
-              years={years}
-              majors={majors}
-              tags={tags}
-              student_types={student_types}
-              club={club}
-              onSubmit={this.submit}
-            />
-          ),
-        },
-        {
-          name: 'member',
-          label: OBJECT_TAB_MEMBERSHIP_LABEL,
-          content: (
-            <>
-              <InviteCard club={club} />
-              {SHOW_MEMBERSHIP_REQUEST && (
-                <PotentialMemberCard
-                  club={club}
-                  source="membershiprequests"
-                  actions={[
-                    {
-                      name: 'Accept',
-                      icon: 'check',
-                      onClick: async (id: string): Promise<void> => {
-                        await doApiRequest(
-                          `/clubs/${club.code}/membershiprequests/${id}/accept/?format=json`,
-                          { method: 'POST' },
-                        )
-                      },
-                    },
-                    {
-                      name: 'Delete',
-                      className: 'is-danger',
-                      icon: 'trash',
-                      onClick: async (id: string): Promise<void> => {
-                        await doApiRequest(
-                          `/clubs/${club.code}/membershiprequests/${id}/?format=json`,
-                          { method: 'DELETE' },
-                        )
-                      },
-                    },
-                  ]}
-                />
-              )}
-              <MembersCard club={club} />
-              <AdvisorCard club={club} schools={schools} />
-            </>
-          ),
-          disabled: !isEdit,
-        },
-        {
-          name: 'events',
-          label: 'Events',
-          content: (
-            <>
-              <EventsCard club={club} />
-            </>
-          ),
-        },
-        {
-          name: 'recruitment',
-          label: OBJECT_TAB_RECRUITMENT_LABEL,
-          content: (
-            <>
-              <QRCodeCard club={club} />
-              <EnableSubscriptionCard
-                notify={this.notify}
-                club={club}
-                onUpdate={this.componentDidMount.bind(this)}
-              />
-              {club.enables_subscription && (
-                <PotentialMemberCard
-                  header={
-                    <p className="mb-5">
-                      The table below shows all the users that have subscribed (
-                      <Icon name="bell" />) to your {OBJECT_NAME_SINGULAR}. If
-                      users have elected to share their bookmarks (
-                      <Icon name="bookmark" />) with {OBJECT_NAME_SINGULAR}{' '}
-                      officers, they will also show up in the list below.
-                    </p>
-                  }
-                  club={club}
-                  source="subscription"
-                />
-              )}
-            </>
-          ),
-        },
-        {
-          name: 'resources',
-          label: 'Resources',
-          content: (
-            <>
-              <MemberExperiencesCard club={club} />
-              <FilesCard club={club} />
-            </>
-          ),
-        },
-        {
-          name: 'questions',
-          label: 'Questions',
-          content: <QuestionsCard club={club} />,
-        },
-        {
-          name: 'settings',
-          label: 'Settings',
-          content: (
-            <>
-              <RenewCard club={club} />
-              <DeleteClubCard
-                onDelete={this.componentDidMount.bind(this)}
-                notify={this.notify}
-                club={club}
-              />
-            </>
-          ),
-          disabled: !isEdit,
-        },
-        {
-          name: 'analytics',
-          label: 'Analytics',
-          content: (
-            <>
-              <AnalyticsCard club={club} />
-            </>
-          ),
-        },
-      ]
-    }
-
-    const nameOrDefault =
-      (club && club.name) || `New ${OBJECT_NAME_TITLE_SINGULAR}`
-    const showInactiveTag = !(club && club.active) && isEdit
-
-    const isViewButton = isEdit && club
-
+  if (isEdit && (!club || !club.code)) {
     return (
-      <Container>
-        {metadata}
-        <Title>
-          {nameOrDefault}
-          {showInactiveTag && <InactiveTag />}
-          {
-            <Link
-              href={isViewButton ? CLUB_ROUTE() : HOME_ROUTE}
-              as={isViewButton && club ? CLUB_ROUTE(club.code) : HOME_ROUTE}
-            >
-              <a
-                className="button is-pulled-right is-secondary is-medium"
-                style={{ fontWeight: 'normal' }}
-              >
-                {isViewButton ? `View ${OBJECT_NAME_TITLE_SINGULAR}` : 'Back'}
-              </a>
-            </Link>
-          }
-        </Title>
-        {!isEdit && (
-          <>
-            <p className="mb-3">
-              {OBJECT_NAME_TITLE} that you create from this form will enter an
-              approval process before being displayed to the public. After your
-              {OBJECT_NAME_SINGULAR} has been approved by the{' '}
-              {APPROVAL_AUTHORITY}, it will appear on the {SITE_NAME} website.
-            </p>
-            <p>
-              <b>Before creating your {OBJECT_NAME_SINGULAR},</b> please check
-              to see if it already exists on the{' '}
-              <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
-                <a>directory page</a>
-              </Link>
-              . If your {OBJECT_NAME_SINGULAR} already exists, please email{' '}
-              <Contact /> to gain access instead of filling out this form.
-            </p>
-          </>
-        )}
-        {message && (
-          <div className="notification is-primary">
-            <button
-              className="delete"
-              onClick={() => this.setState({ message: null })}
-            />
-            {message}
-          </div>
-        )}
-        {isEdit ? (
-          <TabView tabs={tabs} />
-        ) : (
-          <div style={{ marginTop: '1em' }}>
-            <ClubEditCard
-              isEdit={this.state.isEdit}
-              schools={schools}
-              years={years}
-              majors={majors}
-              tags={tags}
-              club={club === null ? {} : club}
-              student_types={student_types}
-              onSubmit={this.submit}
-            />
-          </div>
-        )}
-      </Container>
+      <div className="has-text-centered" style={{ margin: 30 }}>
+        <div className="title is-h1">404 Not Found</div>
+        <p>
+          The {OBJECT_NAME_SINGULAR} you are looking for does not exist. Perhaps{' '}
+          it was recently moved or deleted?
+        </p>
+        <p>
+          If you believe this is an error, please contact <Contact />.
+        </p>
+      </div>
     )
   }
+
+  if (authenticated && isEdit && !canManageClub) {
+    return (
+      <AuthPrompt title="Oh no!" hasLogin={false}>
+        {metadata}
+        You do not have permission to edit the page for{' '}
+        {(club && club.name) || `this ${OBJECT_NAME_SINGULAR}`}. To get access,{' '}
+        contact <Contact />.
+      </AuthPrompt>
+    )
+  }
+
+  let tabs: {
+    name: string
+    label: string
+    content: ReactElement
+    disabled?: boolean
+  }[] = []
+
+  if (club && club.code) {
+    tabs = [
+      {
+        name: 'info',
+        label: `Edit ${OBJECT_NAME_TITLE_SINGULAR} Page`,
+        content: (
+          <ClubEditCard
+            isEdit={isEdit}
+            schools={schools}
+            years={years}
+            majors={majors}
+            tags={tags}
+            student_types={student_types}
+            club={club}
+            onSubmit={submit}
+          />
+        ),
+      },
+      {
+        name: 'member',
+        label: OBJECT_TAB_MEMBERSHIP_LABEL,
+        content: (
+          <>
+            <InviteCard club={club} />
+            {SHOW_MEMBERSHIP_REQUEST && (
+              <PotentialMemberCard
+                club={club}
+                source="membershiprequests"
+                actions={[
+                  {
+                    name: 'Accept',
+                    icon: 'check',
+                    onClick: async (id: string): Promise<void> => {
+                      await doApiRequest(
+                        `/clubs/${club.code}/membershiprequests/${id}/accept/?format=json`,
+                        { method: 'POST' },
+                      )
+                    },
+                  },
+                  {
+                    name: 'Delete',
+                    className: 'is-danger',
+                    icon: 'trash',
+                    onClick: async (id: string): Promise<void> => {
+                      await doApiRequest(
+                        `/clubs/${club.code}/membershiprequests/${id}/?format=json`,
+                        { method: 'DELETE' },
+                      )
+                    },
+                  },
+                ]}
+              />
+            )}
+            <MembersCard club={club} />
+            <AdvisorCard club={club} schools={schools} />
+          </>
+        ),
+        disabled: !isEdit,
+      },
+      {
+        name: 'events',
+        label: 'Events',
+        content: (
+          <>
+            <EventsCard club={club} />
+          </>
+        ),
+      },
+      {
+        name: 'recruitment',
+        label: OBJECT_TAB_RECRUITMENT_LABEL,
+        content: (
+          <>
+            <QRCodeCard club={club} />
+            <EnableSubscriptionCard
+              notify={notify}
+              club={club}
+              onUpdate={reloadClub}
+            />
+            {club.enables_subscription && (
+              <PotentialMemberCard
+                header={
+                  <p className="mb-5">
+                    The table below shows all the users that have subscribed (
+                    <Icon name="bell" />) to your {OBJECT_NAME_SINGULAR}. If
+                    users have elected to share their bookmarks (
+                    <Icon name="bookmark" />) with {OBJECT_NAME_SINGULAR}{' '}
+                    officers, they will also show up in the list below.
+                  </p>
+                }
+                club={club}
+                source="subscription"
+              />
+            )}
+          </>
+        ),
+      },
+      {
+        name: 'resources',
+        label: 'Resources',
+        content: (
+          <>
+            <MemberExperiencesCard club={club} />
+            <FilesCard club={club} />
+          </>
+        ),
+      },
+      {
+        name: 'questions',
+        label: 'Questions',
+        content: <QuestionsCard club={club} />,
+      },
+      {
+        name: 'settings',
+        label: 'Settings',
+        content: (
+          <>
+            <RenewCard club={club} />
+            <DeleteClubCard onDelete={reloadClub} notify={notify} club={club} />
+          </>
+        ),
+        disabled: !isEdit,
+      },
+      {
+        name: 'analytics',
+        label: 'Analytics',
+        content: (
+          <>
+            <AnalyticsCard club={club} />
+          </>
+        ),
+      },
+    ]
+  }
+
+  const nameOrDefault =
+    (club && club.name) || `New ${OBJECT_NAME_TITLE_SINGULAR}`
+  const showInactiveTag = !(club && club.active) && isEdit
+
+  const isViewButton = isEdit && club
+
+  return (
+    <Container>
+      {metadata}
+      <Title>
+        {nameOrDefault}
+        {showInactiveTag && <InactiveTag />}
+        {
+          <Link
+            href={isViewButton ? CLUB_ROUTE() : HOME_ROUTE}
+            as={isViewButton && club ? CLUB_ROUTE(club.code) : HOME_ROUTE}
+          >
+            <a
+              className="button is-pulled-right is-secondary is-medium"
+              style={{ fontWeight: 'normal' }}
+            >
+              {isViewButton ? `View ${OBJECT_NAME_TITLE_SINGULAR}` : 'Back'}
+            </a>
+          </Link>
+        }
+      </Title>
+      {!isEdit && (
+        <>
+          <p className="mb-3">
+            {OBJECT_NAME_TITLE} that you create from this form will enter an
+            approval process before being displayed to the public. After your{' '}
+            {OBJECT_NAME_SINGULAR} has been approved by the {APPROVAL_AUTHORITY}
+            , it will appear on the {SITE_NAME} website.
+          </p>
+          <p>
+            <b>Before creating your {OBJECT_NAME_SINGULAR},</b> please check to{' '}
+            see if it already exists on the{' '}
+            <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
+              <a>directory page</a>
+            </Link>
+            . If your {OBJECT_NAME_SINGULAR} already exists, please email{' '}
+            <Contact /> to gain access instead of filling out this form.
+          </p>
+        </>
+      )}
+      {message && (
+        <div className="notification is-primary">
+          <button className="delete" onClick={() => setMessage(null)} />
+          {message}
+        </div>
+      )}
+      {isEdit ? (
+        <TabView tabs={tabs} />
+      ) : (
+        <div style={{ marginTop: '1em' }}>
+          <ClubEditCard
+            isEdit={isEdit}
+            schools={schools}
+            years={years}
+            majors={majors}
+            tags={tags}
+            club={club === null ? {} : club}
+            student_types={student_types}
+            onSubmit={submit}
+          />
+        </div>
+      )}
+    </Container>
+  )
 }
 
 export default ClubForm

@@ -303,7 +303,7 @@ export const FileField = useFieldWrapper(
     const [newlyUploaded, setNewlyUploaded] = useState<boolean>(false)
 
     useEffect(() => {
-      if (value == null) {
+      if (value === null) {
         setImageUrl(null)
         setNewlyUploaded(false)
       } else if (value instanceof File) {
@@ -340,7 +340,9 @@ export const FileField = useFieldWrapper(
               type="file"
               name={name}
               onChange={(e) => {
-                setFieldValue(name, e.target.files ? e.target.files[0] : null)
+                if (e.target.files) {
+                  setFieldValue(name, e.target.files[0])
+                }
               }}
               onBlur={onBlur}
               placeholder={placeholder}

@@ -1,5 +1,3 @@
-import { withRouter } from 'next/router'
-
 import ClubEditPage from '../components/ClubEditPage'
 import renderPage from '../renderPage'
 import { doApiRequest, isClubFieldShown } from '../utils'
@@ -26,4 +24,4 @@ Create.getInitialProps = async () => {
   })
 }
 
-export default withRouter(renderPage(Create))
+export default renderPage(Create)

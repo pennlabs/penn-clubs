@@ -926,12 +926,14 @@ def asset_delete_cleanup(sender, instance, **kwargs):
 def club_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
+        instance.image_small.delete(save=True)
 
 
 @receiver(models.signals.post_delete, sender=Event)
 def event_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
+        instance.image_small.delete(save=True)
 
 
 @receiver(models.signals.post_save, sender=get_user_model())

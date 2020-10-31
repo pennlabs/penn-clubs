@@ -114,10 +114,15 @@ export async function preloadPermissions(
  */
 export async function apiCheckPermission(
   permission: string,
+  failSilently?: boolean,
 ): Promise<boolean | null> {
   const perms = useContext(PermissionsContext)
   if (permission in perms) {
     return perms[permission]
+  }
+
+  if (failSilently) {
+    return false
   }
 
   throw new Error(
