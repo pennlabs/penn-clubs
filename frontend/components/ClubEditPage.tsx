@@ -86,17 +86,18 @@ const ClubForm = (props: ClubFormProps): ReactElement => {
   const submit = async ({
     message,
     club,
-    isEditNew,
+    isEdit: isEditNew,
   }: {
     message: ReactElement | string | null
     club?: Club
-    isEditNew?: boolean
+    isEdit?: boolean
   }): Promise<void> => {
     if (typeof club !== 'undefined' && typeof isEditNew !== 'undefined') {
       if (!isEdit && isEditNew) {
         // if the club is not active, redirect to the renewal page instead of the edit page
         if (!club.active) {
           router.push(CLUB_RENEW_ROUTE(), CLUB_RENEW_ROUTE(club.code))
+          notify(`${message} Redirecting you to the renewal page...`)
           return Promise.resolve(undefined)
         } else {
           router.push(CLUB_EDIT_ROUTE(), CLUB_EDIT_ROUTE(club.code), {

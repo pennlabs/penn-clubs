@@ -141,7 +141,7 @@ export default function ClubEditCard({
   isEdit,
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement {
-  const submit = (data, { setSubmitting }): Promise<void> => {
+  const submit = (data, { setSubmitting, setStatus }): Promise<void> => {
     const photo = data.image
     if (photo !== null) {
       delete data.image
@@ -192,6 +192,7 @@ export default function ClubEditCard({
               }
             }
             await onSubmit({ isEdit: true, club: info, message: msg })
+            setStatus({})
             setSubmitting(false)
           }
           return finishUpload()
@@ -199,6 +200,7 @@ export default function ClubEditCard({
       } else {
         return resp.json().then(async (err) => {
           await onSubmit({ message: formatResponse(err) })
+          setStatus(err)
           setSubmitting(false)
         })
       }
@@ -236,7 +238,6 @@ export default function ClubEditCard({
         },
         {
           name: 'description',
-          required: true,
           help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
           placeholder: `Type your ${OBJECT_NAME_SINGULAR} description here!`,
           type: 'html',
@@ -244,6 +245,9 @@ export default function ClubEditCard({
         {
           name: 'tags',
           type: 'multiselect',
+          required: true,
+          help:
+            'You will need to at least specify either the Undergraduate or Graduate tag.',
           placeholder: `Select tags relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: tags,
         },
@@ -412,6 +416,8 @@ export default function ClubEditCard({
     subtitle: 'Your Subtitle Here',
     email_public: true,
     accepting_members: false,
+    size: CLUB_SIZES[0].value,
+    application_required: CLUB_APPLICATIONS[0].value,
   }
 
   const editingFields = new Set<string>()
