@@ -93,9 +93,10 @@ const shorten = (desc: string): string => {
 
 type ClubCardProps = {
   club: Club
+  fullWidth?: boolean
 }
 
-const ClubCard = ({ club }: ClubCardProps): ReactElement => {
+const ClubCard = ({ club, fullWidth }: ClubCardProps): ReactElement => {
   const {
     name,
     active,
@@ -109,7 +110,7 @@ const ClubCard = ({ club }: ClubCardProps): ReactElement => {
   const textDescription = shorten(subtitle || 'This club has no description.')
 
   return (
-    <CardWrapper className="column is-half-desktop">
+    <CardWrapper className={fullWidth ? '' : 'column is-half-desktop'}>
       <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
         <a target="_blank">
           <Card className="card">

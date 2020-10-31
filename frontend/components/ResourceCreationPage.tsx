@@ -201,11 +201,11 @@ const ResourceCreationPage = ({
           <Title>{OBJECT_NAME_TITLE_SINGULAR} Created</Title>
           <Text>
             <b className="has-text-success">Success!</b> Your{' '}
-            {OBJECT_NAME_SINGULAR} has been created! This is what your{' '}
+            {OBJECT_NAME_SINGULAR} has been created. This is what your{' '}
             {OBJECT_NAME_SINGULAR} will look like on the home page.
           </Text>
           <div className="mb-3">
-            {club !== null && <ClubCard club={club} />}
+            {club !== null && <ClubCard fullWidth club={club} />}
           </div>
           <Text>
             Your {OBJECT_NAME_SINGULAR} has been placed into the approval queue.
@@ -230,7 +230,11 @@ const ResourceCreationPage = ({
   ]
 
   return (
-    <Container background={SNOW} fullHeight>
+    <Container
+      background={SNOW}
+      fullHeight
+      style={{ maxWidth: 960, margin: '0 auto' }}
+    >
       {metadata}
       <Center>
         <InfoPageTitle>Create a New {OBJECT_NAME_TITLE_SINGULAR}</InfoPageTitle>
