@@ -1242,9 +1242,9 @@ class EventViewSet(viewsets.ModelViewSet):
             qs = qs.filter(end_time__gte=now)
 
         return (
-            qs.select_related("club", "creator",)
-            .prefetch_related("club__badges")
-            .order_by("start_time")
+            qs.select_related("club", "creator", )
+                .prefetch_related("club__badges")
+                .order_by("start_time")
         )
 
 
