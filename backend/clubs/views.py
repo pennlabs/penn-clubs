@@ -624,7 +624,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 category_join = "person__profile__school__name"
 
             if metric == "favorite":
-                    obj = Favorite
+                obj = Favorite
             elif metric == "subscribe":
                 obj = Subscribe
             else:
@@ -637,7 +637,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     .annotate(count=Count("id"))
                 ),
             }
-            
+
         return Response(get_breakdown(category, metric))
 
     @action(detail=True, methods=["get"])

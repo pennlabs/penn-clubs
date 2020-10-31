@@ -139,7 +139,15 @@ function parse(obj, startRange: Date, endRange: Date, group: Group): LineData {
 }
 
 function parsePie(obj): PieData {
-  let color = Color(CLUBS_BLUE)
+  const colors = [
+    Color('#E24A5E'),
+    Color('#4954F4'),
+    Color('#9E49F4'),
+    Color('#F4A549'),
+    Color('#A9F449'),
+  ]
+  let colorIndex = 0
+
   const output: PieData = []
   obj.forEach((item) => {
     const label =
@@ -151,9 +159,8 @@ function parsePie(obj): PieData {
     output.push({
       angle: item.count,
       label,
-      color: color.rgb().string(),
+      color: colors[colorIndex++].rgb().string(),
     })
-    color = color.rotate(360 / obj.length)
   })
   return output
 }
@@ -207,7 +214,9 @@ export default function AnalyticsCard({
   }, [date, endRange, group])
 
   useEffect(() => {
-    doApiRequest(`/clubs/${club.code}/analytics_pie_charts/?format=json&category=${category.value}&metric=${metric.value}`)
+    doApiRequest(
+      `/clubs/${club.code}/analytics_pie_charts/?format=json&category=${category.value}&metric=${metric.value}`,
+    )
       .then((resp) => resp.json())
       .then((resp) => {
         setPieChartData(resp)
@@ -357,7 +366,9 @@ export default function AnalyticsCard({
             <div className="is-clearfix">
               <div className="columns">
                 <div className="column">
-                <b>{category.label} by {metric.label}</b>
+                  <b>
+                    {category.label} by {metric.label}
+                  </b>
                   <DiscreteColorLegend
                     items={parsePie(pieChartData.content).map((item) => ({
                       title:
