@@ -285,7 +285,7 @@ const RenewPage = ({
             student_types={student_types}
             club={club}
             isEdit={true}
-            onSubmit={({ club, message }) => {
+            onSubmit={({ club, message }): Promise<void> => {
               if (club !== undefined) {
                 setClub(club)
                 setSubmitted(true)
@@ -293,6 +293,7 @@ const RenewPage = ({
               if (message !== undefined) {
                 setSubmitMessage(message)
               }
+              return Promise.resolve(undefined)
             }}
           />
           {submitMessage !== null && (
