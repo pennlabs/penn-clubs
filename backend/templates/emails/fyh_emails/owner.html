@@ -1,0 +1,18 @@
+{% extends 'fyh_emails/base.html' %}
+
+{% block content %}
+    <h2>Manage <b>{{ name }}</b> on Hub@Penn</h2>
+    <p style="font-size: 1.2em">
+        Welcome to Hub@Penn! Hub@Penn is the central source of information about student resources at Penn. We hope students will use Hub@Penn to find communities that matter to them.
+    </p>
+    <p style="font-size: 1.2em">
+    You've been invited to join the <b>{{ name }}</b> page! You are an Owner of the <b>{{ name }}</b> page, which means you have administrative access to edit the page. This lets you update the information that will be displayed <a href="{{ view_url }}">here</a>. You can also invite others to join as Owners, Officers, or Members.
+    </p>
+    <p style="font-size: 1.2em">
+        Click the button below to join. You will need to sign in with your PennKey in order to complete the process. We hope you'll help us keep the platform updated for students to explore all the resources at Penn!
+    </p>
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: #000f3a; border-radius: 3px; font-weight: bold" href="{{ url }}">Join {{ name }}</a>
+    <p style="font-size: 1.2em">
+        If you have any questions, feel free to respond to this email.
+    </p>
+{% endblock %}
