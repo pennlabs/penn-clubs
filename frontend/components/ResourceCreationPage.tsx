@@ -233,7 +233,7 @@ const ResourceCreationPage = ({
     <Container
       background={SNOW}
       fullHeight
-      style={{ maxWidth: 720, margin: '0 auto' }}
+      style={{ maxWidth: 720, margin: '0 auto', padding: '1rem' }}
     >
       {metadata}
       <Center>
