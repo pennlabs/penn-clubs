@@ -21,6 +21,7 @@ import { UserInfo } from '../../types'
 import {
   HEADER_BACKGROUND_IMAGE,
   HEADER_OVERLAY,
+  LOGO_BACKGROUND_IMAGE,
   SITE_ID,
   SITE_LOGO,
   SITE_NAME,
@@ -110,17 +111,13 @@ const Title = s.h1`
   font-weight: ${TITLE_WEIGHT};
 `
 
-const LogoBackground = s.div<{ use?: boolean }>`
-  ${({ use }) =>
-    use
-      ? `
-  background: url('${HEADER_BACKGROUND_IMAGE}');
+const LogoBackground = s.div`
+  background: url('${LOGO_BACKGROUND_IMAGE}');
   background-size: auto 100%;
   width: 500px;
   background-repeat: no-repeat;
-  padding: 1em;
-  `
-      : `padding: 0.5em;`}
+  height: ${NAV_HEIGHT};
+  position: fixed;
 `
 
 type HeaderProps = {
@@ -128,21 +125,28 @@ type HeaderProps = {
   userInfo?: UserInfo
 }
 
-const FadingOverlay = (): ReactElement => {
-  const [opacity, setOpacity] = useState<number>(1)
+function withFading(Element, invert) {
+  return (props): ReactElement => {
+    const [opacity, setOpacity] = useState<number>(1)
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setOpacity(Math.min(Math.max(0, (150 - window.scrollY) / 150), 1))
-    }
+    useEffect(() => {
+      const handleScroll = () => {
+        setOpacity(Math.min(Math.max(0, (150 - window.scrollY) / 150), 1))
+      }
 
-    window.addEventListener('scroll', handleScroll)
+      window.addEventListener('scroll', handleScroll)
 
-    return () => window.removeEventListener('scroll', handleScroll)
-  })
+      return () => window.removeEventListener('scroll', handleScroll)
+    })
 
-  return <Overlay style={{ opacity }} />
+    return (
+      <Element style={{ opacity: invert ? 1 - opacity : opacity }} {...props} />
+    )
+  }
 }
+
+const FadingLogoBackground = withFading(LogoBackground, true)
+const FadingOverlay = withFading(Overlay, false)
 
 const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
   const [show, setShow] = useState(false)
@@ -157,6 +161,7 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
 
       <Nav className="navbar" role="navigation" aria-label="main navigation">
         <div className="navbar-brand">
+          {LOGO_BACKGROUND_IMAGE != null && <FadingLogoBackground />}
           <Link href={HOME_ROUTE}>
             <a className="navbar-item" style={{ padding: 0 }}>
               <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />

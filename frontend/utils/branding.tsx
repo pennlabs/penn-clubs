@@ -15,6 +15,7 @@ const sites = {
     OBJECT_NAME_TITLE_SINGULAR: 'Club',
 
     SITE_LOGO: '/static/img/peoplelogo.png',
+    LOGO_BACKGROUND_IMAGE: null,
     HEADER_BACKGROUND_IMAGE: null,
     HEADER_OVERLAY: null,
     SITE_FAVICON: '/static/favicon.ico',
@@ -90,6 +91,7 @@ const sites = {
     OBJECT_NAME_TITLE_SINGULAR: 'Resource',
 
     SITE_LOGO: '/static/img/penn_shield.png',
+    LOGO_BACKGROUND_IMAGE: '/static/img/penn_header_fade.png',
     HEADER_BACKGROUND_IMAGE: '/static/img/penn_background.png',
     HEADER_OVERLAY: '/static/img/platform-start-point.png',
     SITE_FAVICON: '/static/penn_favicon.ico',
@@ -161,6 +163,7 @@ export const APPROVAL_AUTHORITY_URL = sites[site].APPROVAL_AUTHORITY_URL
 
 export const SITE_LOGO = sites[site].SITE_LOGO
 export const SITE_FAVICON = sites[site].SITE_FAVICON
+export const LOGO_BACKGROUND_IMAGE = sites[site].LOGO_BACKGROUND_IMAGE
 export const HEADER_BACKGROUND_IMAGE = sites[site].HEADER_BACKGROUND_IMAGE
 export const HEADER_OVERLAY = sites[site].HEADER_OVERLAY
 
