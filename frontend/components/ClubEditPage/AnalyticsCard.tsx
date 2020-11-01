@@ -1,22 +1,19 @@
-import Color from 'color'
 import moment from 'moment'
 import Head from 'next/head'
 import { ReactElement, useEffect, useState } from 'react'
 import DatePicker from 'react-datepicker'
+import Select from 'react-select'
 import {
   ChartLabel,
   DiscreteColorLegend,
-  HorizontalGridLines,
   LineMarkSeries,
   makeWidthFlexible,
   RadialChart,
-  VerticalGridLines,
   XAxis,
   XYPlot,
   YAxis,
 } from 'react-vis'
 
-import { CLUBS_BLUE } from '../../constants'
 import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
 import { Loading, Text } from '../common'
@@ -28,7 +25,6 @@ type AnalyticsCardProps = {
 
 type PieChartData = {
   [key: string]: {
-    title: string
     content: {
       person__profile__graduation_year: number | null
       count: number
@@ -41,25 +37,109 @@ type PieData = { angle: number; label: string; color?: string }[]
 
 const FlexibleXYPlot = makeWidthFlexible(XYPlot)
 
-function parse(
-  obj,
-  startRange: Date,
-  endRange: Date,
-  interval: number,
-): LineData {
+enum Metric {
+  Bookmark = 'favorite',
+  Subscription = 'subscribe',
+  Visit = 'visit',
+}
+
+enum Category {
+  School = 'school',
+  Graduation_Year = 'graduation_year',
+}
+
+enum Group {
+  Hour = 'hour',
+  Day = 'day',
+  Week = 'week',
+  Month = 'month',
+}
+
+const METRICS = [
+  {
+    value: Metric.Bookmark,
+    label: 'Bookmarks',
+  },
+  {
+    value: Metric.Subscription,
+    label: 'Subscriptions',
+  },
+  {
+    value: Metric.Visit,
+    label: 'Visits',
+  },
+]
+
+const CATEGORIES = [
+  {
+    value: Category.School,
+    label: 'School',
+  },
+  {
+    value: Category.Graduation_Year,
+    label: 'Graduation Year',
+  },
+]
+
+const GROUPS = [
+  {
+    value: Group.Hour,
+    label: 'Hour',
+  },
+  {
+    value: Group.Day,
+    label: 'Day',
+  },
+  {
+    value: Group.Week,
+    label: 'Week',
+  },
+  {
+    value: Group.Month,
+    label: 'Month',
+  },
+]
+
+function parse(obj, startRange: Date, endRange: Date, group: Group): LineData {
   const exists = {}
   obj.forEach((item) => {
-    exists[new Date(item.hour).getTime()] = item.count
+    exists[new Date(item.group).getTime()] = item.count
   })
   const output: LineData = []
-  for (let i = startRange.getTime(); i <= endRange.getTime(); i += interval) {
-    output.push({ x: new Date(i), y: exists[i] ?? 0 })
+  let current = startRange
+  // If we are grouping by week or month, we need to make sure our start
+  // day is the same as the start day on the backend, so we do this
+  // logic to ensure they line up
+  if (group === Group.Week) {
+    current = new Date(current.getDate() - current.getDay() + 1)
+  } else if (group === Group.Month) {
+    current = new Date(current.getFullYear(), current.getMonth(), 1)
+  }
+
+  for (let i = startRange.getTime(); i <= endRange.getTime(); ) {
+    current = new Date(i)
+    output.push({ x: current, y: exists[i] ?? 0 })
+
+    // Increment by the groupBy interval
+    if (group === Group.Hour) {
+      i += 60 * 60 * 1000
+    } else if (group === Group.Day) {
+      i += 24 * 60 * 60 * 1000
+    } else if (group === Group.Week) {
+      i += 7 * 24 * 60 * 60 * 1000
+    } else if (group === Group.Month) {
+      // There is not a standardized interval between months
+      current = new Date(current.setMonth(current.getMonth() + 1))
+      i = current.getTime()
+    }
   }
   return output
 }
 
 function parsePie(obj): PieData {
-  let color = Color(CLUBS_BLUE)
+  const colors = ['#E24A5E', '#4954F4', '#9E49F4', '#F4A549', '#A9F449']
+  let colorIndex = 0
+
   const output: PieData = []
   obj.forEach((item) => {
     const label =
@@ -71,9 +151,8 @@ function parsePie(obj): PieData {
     output.push({
       angle: item.count,
       label,
-      color: color.rgb().string(),
+      color: colors[colorIndex++],
     })
-    color = color.rotate(360 / obj.length)
   })
   return output
 }
@@ -97,36 +176,44 @@ export default function AnalyticsCard({
   const [max, setMax] = useState<number>(1)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [pieChartData, setPieChartData] = useState<PieChartData | null>(null)
+  const [metric, setMetric] = useState(METRICS[0])
+  const [category, setCategory] = useState(CATEGORIES[0])
+  const [group, setGroup] = useState(GROUPS[0])
 
   const endDate = new Date(endRange.getTime() + 24 * 60 * 60 * 1000)
-  const interval = 60 * 60 * 1000
 
   useEffect(() => {
     setLoading(true)
     doApiRequest(
       `/clubs/${club.code}/analytics?format=json&start=${moment(
         date,
-      ).toISOString()}&end=${moment(endDate).toISOString()}`,
+      ).toISOString()}&end=${moment(endDate).toISOString()}&group=${
+        group.value
+      }`,
     )
       .then((request) => request.json())
       .then((response) => {
-        setVisits(parse(response.visits, date, endDate, interval))
-        setFavorites(parse(response.favorites, date, endDate, interval))
-        setSubscriptions(parse(response.subscriptions, date, endDate, interval))
+        setVisits(parse(response.visits, date, endDate, group.value))
+        setFavorites(parse(response.favorites, date, endDate, group.value))
+        setSubscriptions(
+          parse(response.subscriptions, date, endDate, group.value),
+        )
         if (response.max > 1) {
           setMax(response.max)
         }
         setLoading(false)
       })
-  }, [date, endRange])
+  }, [date, endRange, group])
 
   useEffect(() => {
-    doApiRequest(`/clubs/${club.code}/analytics_pie_charts/?format=json`)
+    doApiRequest(
+      `/clubs/${club.code}/analytics_pie_charts/?format=json&category=${category.value}&metric=${metric.value}`,
+    )
       .then((resp) => resp.json())
       .then((resp) => {
         setPieChartData(resp)
       })
-  }, [])
+  }, [metric, category])
 
   const legendItems = [
     {
@@ -164,29 +251,32 @@ export default function AnalyticsCard({
           the last day.
         </Text>
         <div className="is-clearfix">
-          <div className="is-pulled-left mr-3">
-            <small>Start Range</small>
-            <br />
-            <DatePicker
-              className="input"
-              format="MM'/'dd'/'y"
-              selected={date}
-              onChange={(val) => {
-                setDate(val)
-              }}
-            />
-          </div>
-          <div className="is-pulled-left">
-            <small>End Range</small>
-            <br />
-            <DatePicker
-              className="input"
-              format="MM'/'dd'/'y"
-              selected={endRange}
-              onChange={(val) => {
-                setEndRange(val)
-              }}
-            />
+          <div className="columns">
+            <div className="column is-2">
+              <label>Start Range</label>
+              <br />
+              <DatePicker
+                className="input"
+                format="MM'/'dd'/'y"
+                selected={date}
+                onChange={setDate}
+              />
+            </div>
+            <div className="column is-2">
+              <label>End Range</label>
+              <br />
+              <DatePicker
+                className="input"
+                format="MM'/'dd'/'y"
+                selected={endRange}
+                onChange={setEndRange}
+              />
+            </div>
+            <div className="column is-8">
+              <label>Group By</label>
+              <br />
+              <Select options={GROUPS} value={group} onChange={setGroup} />
+            </div>
           </div>
         </div>
         <br></br>
@@ -207,19 +297,32 @@ export default function AnalyticsCard({
               height={350}
               margin={{ bottom: 60 }}
             >
-              <XAxis tickFormat={(date) => moment(date).format('H')} />
+              <XAxis
+                tickValues={visits.map((visit) => visit.x)}
+                tickFormat={(date) => {
+                  if (group.value === Group.Hour) {
+                    return moment(date).format('H')
+                  } else if (group.value === Group.Day) {
+                    return moment(date).format('D')
+                  } else if (group.value === Group.Week) {
+                    // We need to round down for Week values
+                    return moment(date).add(-1, 'weeks').format('MM/DD')
+                  } else if (group.value === Group.Month) {
+                    // We need to round down for Month values
+                    return moment(date).add(-1, 'months').format('MM/DD')
+                  }
+                }}
+              />
               <YAxis />
               <ChartLabel
-                text="Time (Hour)"
+                text={`Time (${group.label})`}
                 includeMargin={true}
                 xPercent={0.5}
                 yPercent={0.85}
               />
-              <HorizontalGridLines />
-              <VerticalGridLines />
-              <LineMarkSeries data={visits} />
-              <LineMarkSeries data={favorites} />
-              <LineMarkSeries data={subscriptions} />
+              <LineMarkSeries size={1} data={visits} />
+              <LineMarkSeries size={1} data={favorites} />
+              <LineMarkSeries size={1} data={subscriptions} />
             </FlexibleXYPlot>
           </>
         )}
@@ -230,32 +333,56 @@ export default function AnalyticsCard({
           subscribed, or visited the club. Students with multiple schools are
           counted twice for applicable graphs.
         </Text>
+        <div className="columns">
+          <div className="column">
+            <label>Category</label>
+            <br />
+            <Select
+              options={CATEGORIES}
+              value={category}
+              onChange={setCategory}
+            />
+          </div>
+          <div className="column">
+            <label>Metric</label>
+            <br />
+            <Select options={METRICS} value={metric} onChange={setMetric} />
+          </div>
+        </div>
+        <br></br>
+        <br></br>
         {pieChartData == null ? (
           <Loading />
         ) : (
-          <div className="is-clearfix">
-            {Object.entries(pieChartData).map(([key, value]) => {
-              const pieData = parsePie(value.content)
-              const pieLegend = pieData.map((item) => ({
-                title: `${item.label} (${item.angle})`,
-                strokeWidth: 6,
-                color: item.color,
-              }))
-              return (
-                <div key={key} className="is-pulled-left mr-3 mb-3">
-                  <b>{value.title}</b>
-                  <br />
+          <>
+            <div className="is-clearfix">
+              <div className="columns">
+                <div className="column">
+                  <b>
+                    {category.label} by {metric.label}
+                  </b>
+                  <DiscreteColorLegend
+                    items={parsePie(pieChartData.content).map((item) => ({
+                      title:
+                        item.label !== 'None'
+                          ? `${item.label} (${item.angle})`
+                          : `Other (${item.angle})`,
+                      strokeWidth: 6,
+                      color: item.color,
+                    }))}
+                  />
+                </div>
+                <div className="column is-8">
                   <RadialChart
-                    data={pieData}
-                    width={300}
-                    height={300}
+                    data={parsePie(pieChartData.content)}
+                    width={400}
+                    height={400}
                     colorType="literal"
                   />
-                  <DiscreteColorLegend items={pieLegend} />
                 </div>
-              )
-            })}
-          </div>
+              </div>
+            </div>
+          </>
         )}
       </BaseCard>
     </>

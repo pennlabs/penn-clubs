@@ -650,43 +650,31 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         club = self.get_object()
         lower_bound = timezone.now() - datetime.timedelta(days=30 * 6)
+        category = self.request.query_params.get("category")
+        metric = self.request.query_params.get("metric")
 
-        def get_graduation_year_breakdown(obj, title):
+        def get_breakdown(category, metric):
+            if category == "graduation_year":
+                category_join = "person__profile__graduation_year"
+            else:
+                category_join = "person__profile__school__name"
+
+            if metric == "favorite":
+                obj = Favorite
+            elif metric == "subscribe":
+                obj = Subscribe
+            else:
+                obj = ClubVisit
+
             return {
-                "title": title,
                 "content": list(
                     obj.objects.filter(club=club, created_at__gte=lower_bound)
-                    .values("person__profile__graduation_year")
+                    .values(category_join)
                     .annotate(count=Count("id"))
                 ),
             }
 
-        def get_school_breakdown(obj, title):
-            return {
-                "title": title,
-                "content": list(
-                    obj.objects.filter(club=club, created_at__gte=lower_bound)
-                    .values("person__profile__school__name")
-                    .annotate(count=Count("id"))
-                ),
-            }
-
-        return Response(
-            {
-                "favorite_graduation_year": get_graduation_year_breakdown(
-                    Favorite, "Graduation Year - Bookmarks"
-                ),
-                "subscribe_graduation_year": get_graduation_year_breakdown(
-                    Subscribe, "Graduation Year - Subscriptions"
-                ),
-                "visit_graduation_year": get_graduation_year_breakdown(
-                    ClubVisit, "Graduation Year - Page Views"
-                ),
-                "favorite_school": get_school_breakdown(Favorite, "School - Bookmarks"),
-                "subscribe_school": get_school_breakdown(Subscribe, "School - Subscriptions"),
-                "visit_school": get_school_breakdown(ClubVisit, "School - Page Views"),
-            }
-        )
+        return Response(get_breakdown(category, metric))
 
     @action(detail=True, methods=["get"])
     def analytics(self, request, *args, **kwargs):
@@ -695,6 +683,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         subscriptions) for a club.
         """
         club = self.get_object()
+        group = self.request.query_params.get("group")
         if "date" in request.query_params:
             date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
         else:
@@ -714,16 +703,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # retrieve data
         def get_count(obj):
             """
-            Return a json serializable hourly aggregation of analytics data for a specific model.
+            Return a json serializable aggregation of analytics data for a specific model.
             """
             objs = (
                 obj.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
-                .annotate(hour=Trunc("created_at", "hour"))
-                .values("hour")
+                .annotate(group=Trunc("created_at", group))
+                .values("group")
                 .annotate(count=Count("id"))
             )
             for item in objs:
-                item["hour"] = item["hour"].isoformat()
+                item["group"] = item["group"].isoformat()
             return list(objs)
 
         visits_data = get_count(ClubVisit)
