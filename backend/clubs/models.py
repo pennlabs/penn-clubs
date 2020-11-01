@@ -368,10 +368,11 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="approval_status",
-                subject="{}{} {} on Penn Clubs".format(
+                subject="{}{} {} on {}".format(
                     "Changes to " if change else "",
                     self.name,
                     "accepted" if self.approved else "not approved",
+                    settings.BRANDING_SITE_NAME,
                 ),
                 emails=emails,
                 context=context,
@@ -776,7 +777,7 @@ class MembershipInvite(models.Model):
             "club_id": self.club.code,
             "sender": request.user
             if request is not None
-            else {"username": "Penn Clubs", "email": "contact@pennclubs.com"},
+            else {"username": settings.BRANDING_SITE_NAME, "email": settings.BRANDING_SITE_EMAIL},
             "role": self.role,
             "title": self.title,
             "url": settings.INVITE_URL.format(
@@ -811,7 +812,10 @@ class MembershipInvite(models.Model):
         }
 
         send_mail_helper(
-            name="owner", subject="Welcome to Penn Clubs!", emails=[self.email], context=context,
+            name="owner",
+            subject=f"Welcome to {settings.BRANDING_SITE_NAME}!",
+            emails=[self.email],
+            context=context,
         )
 
 

@@ -157,12 +157,23 @@ REST_FRAMEWORK = {
 }
 
 
+# Branding switch
+
+BRANDING = os.environ.get("NEXT_PUBLIC_SITE_NAME", "clubs")
+BRANDING_SITE_NAME = "Hub@Penn" if BRANDING == "fyh" else "Penn Clubs"
+BRANDING_SITE_EMAIL = "hub.provost@upenn.edu" if BRANDING == "fyh" else "info@pennclubs.com"
+
+
 # Email Settings
 
-FROM_EMAIL = "Penn Clubs <info@pennclubs.com>"
-EMAIL_SUBJECT_PREFIX = "[Penn Clubs] "
+FROM_EMAIL = (
+    f"Hub at Penn <{BRANDING_SITE_EMAIL}>"
+    if BRANDING == "fyh"
+    else f"Penn Clubs <{BRANDING_SITE_EMAIL}>"
+)
+EMAIL_SUBJECT_PREFIX = f"[{BRANDING_SITE_NAME}] "
 INVITE_URL = "https://{domain}/invite/{club}/{id}/{token}"
-DEFAULT_DOMAIN = "pennclubs.com"
+DEFAULT_DOMAIN = "hub.provost.upenn.edu" if BRANDING == "fyh" else "pennclubs.com"
 
 VIEW_URL = "https://{domain}/club/{club}"
 EDIT_URL = "https://{domain}/club/{club}/edit"
@@ -211,8 +222,3 @@ ZOOM_VERIFICATION_TOKEN = os.environ.get("ZOOM_VERIFICATION_TOKEN")
 
 PHONENUMBER_DB_FORMAT = "NATIONAL"
 PHONENUMBER_DEFAULT_REGION = "US"
-
-
-# Branding switch
-
-BRANDING = os.environ.get("NEXT_PUBLIC_SITE_NAME", "clubs")
