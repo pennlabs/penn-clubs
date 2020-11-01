@@ -1,28 +1,28 @@
 {% extends 'fyh_emails/base.html' %}
 
 {% block content %}
-    <h2><b>{{ name }}</b> {% if change %}changes{% else %}renewal{% endif %} marked as {% if approved %}approved{% else %}not approved{% endif %} on Hub@Penn</h2>
+    <h2><b>{{ name }}</b> {% if change %}changes{% endif %} marked as {% if approved %}approved{% else %}not approved{% endif %} on Hub@Penn</h2>
     {% if approved %}
     <p style="font-size: 1.2em; color: #228B22">
-        <b>🎉 Congratulations!</b> Your resource {% if change %}changes have{% else %}has{% endif %} been approved by the <b>____</b> for the {{ year }} school year! 
+        <b>🎉 Congratulations!</b> Your resource {% if change %}changes have{% else %}has{% endif %} been approved by the Hub@Penn administrators! 
         Your {% if change %}updated{% else %}new{% endif %} resource information is now open to the public on Hub@Penn.
     </p>
     {% if approved_comment %}
         <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc; white-space: pre-wrap;">{{ approved_comment }}</p>
     {% endif %}
     <p style="font-size: 1.2em">
-        You do not need to perform any further actions.
+        You do not need to perform any further actions at this time.
     </p>
     <p style="font-size: 1.2em">
         You can view your resource <a href="{{ view_url }}">here</a> and make further edits <a href="{{ view_url }}">here</a>.
-        If you have any feedback about the resource renewal process, you can respond to this email or fill out <a href="/tbd">this form</a>.
+        If you have any feedback about the resource approval process, you can respond to this email.
     </p>
     <p style="font-size: 1.2em">
         Thank you for using Hub@Penn!
     </p>
     {% else %}
     <p style="font-size: 1.2em; color: #8B2222">
-        <b>Oh no!</b> Your resource {% if change %}updates have{% else %}renewal has{% endif %} <b>not been approved</b> by the <b>___</b>. You will need to make changes to your resource information before gaining approval.
+        <b>Oh no!</b> Your resource {% if change %}updates have{% else %}has{% endif %} <b>not been approved</b> by the Hub@Penn administrators. You will need to make changes to your resource information before gaining approval.
     </p>
     <p style="font-size: 1.2em">The reason your resource was not approved is shown below:</p>
     <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc;">{{ approved_comment }}</p>
