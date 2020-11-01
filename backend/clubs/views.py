@@ -2296,7 +2296,11 @@ def email_preview(request):
     """
     Debug endpoint used for previewing how email templates will look.
     """
-    email_templates = os.listdir(os.path.join(settings.BASE_DIR, "templates", "emails"))
+    email_templates = os.listdir(
+        os.path.join(
+            settings.BASE_DIR, "templates", "fyh_emails" if settings.BRANDING == "fyh" else "emails"
+        )
+    )
     email_templates = [e.rsplit(".", 1)[0] for e in email_templates if e.endswith(".html")]
 
     email = None

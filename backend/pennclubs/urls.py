@@ -10,7 +10,17 @@ admin.site.site_header = "Clubs Backend Admin"
 
 urlpatterns = [
     path("", include("clubs.urls")),
-    path("", TemplateView.as_view(template_name="splash.html"), name="homepage"),
+    path(
+        "",
+        TemplateView.as_view(
+            template_name="splash.html",
+            extra_context={
+                "BRANDING_SITE_NAME": settings.BRANDING_SITE_NAME,
+                "DOMAIN": settings.DEFAULT_DOMAIN,
+            },
+        ),
+        name="homepage",
+    ),
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls", namespace="accounts")),
     path(

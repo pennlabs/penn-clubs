@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Penn Clubs API</title>
+    <title>{{ BRANDING_SITE_NAME }} API</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   </head>
@@ -15,10 +15,10 @@
             Welcome!
           </h1>
           <h2 class="subtitle">
-            This is the <strong>Penn Clubs REST API</strong>, the backend service that keeps track of clubs at the University of Pennsylvania.
+            This is the <strong>{{ BRANDING_SITE_NAME }} REST API</strong>, the backend service that keeps track of organizations at the University of Pennsylvania.
           </h2>
           <div class="content">
-            <a class="button is-info" href="https://pennclubs.com">Penn Clubs Site</a>
+            <a class="button is-info" href="https://{{ DOMAIN }}">{{ BRANDING_SITE_NAME }} Site</a>
             <a class="button" href="/api/documentation">Routes</a>
             <a class="button" href="/api/emailpreview">Emails</a>
             <a class="button" href="https://github.com/pennlabs/penn-clubs">Source</a>
