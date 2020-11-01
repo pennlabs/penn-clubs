@@ -19,10 +19,10 @@ import {
 } from '../constants/colors'
 import {
   BORDER_RADIUS,
+  FULL_NAV_HEIGHT,
   MD,
   mediaMaxWidth,
   mediaMinWidth,
-  NAV_HEIGHT,
   SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import { BODY_FONT } from '../constants/styles'
@@ -59,7 +59,7 @@ const Wrapper = s.div`
   overflow-y: auto;
   position: fixed;
   top: 0;
-  padding-top: ${NAV_HEIGHT};
+  padding-top: ${FULL_NAV_HEIGHT};
   color: ${H1_TEXT};
 
   ${mediaMaxWidth(MD)} {
