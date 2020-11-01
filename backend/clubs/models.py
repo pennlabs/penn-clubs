@@ -132,6 +132,18 @@ class Club(models.Model):
     Represents a club at the University of Pennsylvania.
     """
 
+    RECRUITING_UNKNOWN = 1
+    RECRUITING_FALL = 2
+    RECRUITING_SPRING = 3
+    RECRUITING_BOTH = 4
+    RECRUITING_OPEN = 5
+    RECRUITING_CYCLES = (
+        (RECRUITING_UNKNOWN, "Unknown"),
+        (RECRUITING_FALL, "Fall"),
+        (RECRUITING_SPRING, "Spring"),
+        (RECRUITING_BOTH, "Both"),
+        (RECRUITING_OPEN, "Open"),
+    )
     SIZE_SMALL = 1
     SIZE_MEDIUM = 2
     SIZE_LARGE = 3
@@ -153,7 +165,7 @@ class Club(models.Model):
         (AUDITION, "Audition Required"),
         (TRYOUT, "Tryout Required"),
         (APPLICATION, "Application Required"),
-        (APPLICATION_AND_INTERVIEW, "Application and Intereview Required"),
+        (APPLICATION_AND_INTERVIEW, "Application and Interview Required"),
     )
 
     approved = models.BooleanField(null=True, default=None)
@@ -192,6 +204,7 @@ class Club(models.Model):
     application_required = models.IntegerField(choices=APPLICATION_CHOICES, default=APPLICATION)
     accepting_members = models.BooleanField(default=False)
     student_types = models.ManyToManyField("StudentType", blank=True)
+    recruiting_cycle = models.IntegerField(choices=RECRUITING_CYCLES, default=RECRUITING_UNKNOWN)
     enables_subscription = models.BooleanField(default=True)
     listserv = models.CharField(blank=True, max_length=255)
     image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
