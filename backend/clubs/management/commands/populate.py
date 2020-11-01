@@ -301,6 +301,8 @@ class Command(BaseCommand):
             )
             if i < 5:
                 [club.student_types.add(type) for type in StudentType.objects.filter(id__lte=i)]
+            club.recruiting_cycle = Club.RECRUITING_CYCLES[(i - 1) % len(Club.RECRUITING_CYCLES)][0]
+            club.save()
 
             Advisor.objects.create(
                 club=club,

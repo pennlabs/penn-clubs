@@ -155,6 +155,7 @@ class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
         "application_required",
         "accepting_members",
         "enables_subscription",
+        "recruiting_cycle",
         "active",
         "approved",
         "fair",
