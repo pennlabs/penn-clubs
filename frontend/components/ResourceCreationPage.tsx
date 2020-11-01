@@ -108,7 +108,7 @@ const ResourceCreationPage = ({
       ),
     },
     {
-      name: 'Basic Info',
+      name: 'Basic',
       content: (): ReactElement => (
         <>
           <Title>{OBJECT_NAME_TITLE_SINGULAR} Information</Title>
@@ -233,7 +233,7 @@ const ResourceCreationPage = ({
     <Container
       background={SNOW}
       fullHeight
-      style={{ maxWidth: 960, margin: '0 auto' }}
+      style={{ maxWidth: 720, margin: '0 auto' }}
     >
       {metadata}
       <Center>

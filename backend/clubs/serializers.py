@@ -856,8 +856,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             person=self.context["request"].user, club=obj, role=Membership.ROLE_OWNER
         )
 
-        # send a renewal email prompting the user to approve their club
-        obj.send_renewal_email()
+        if not settings.BRANDING == "fyh":
+            # send a renewal email prompting the user to apply for approval for their club
+            obj.send_renewal_email()
 
         return obj
 
