@@ -4,8 +4,8 @@ import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
 import { Icon, TransparentButtonLink } from '../../components/common'
-import { CLUB_ROUTE, CLUBS_BLUE, M2, ZOOM_BLUE } from '../../constants'
-import { MEDIUM_GRAY } from '../../constants/colors'
+import { CLUB_ROUTE, M2, ZOOM_BLUE } from '../../constants'
+import { ADD_BUTTON, MEDIUM_GRAY } from '../../constants/colors'
 import { ClubEvent } from '../../types'
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_TITLE_SINGULAR } from '../../utils/branding'
@@ -144,7 +144,7 @@ const EventModal = (props: {
           <RightAlign>
             <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)} passHref>
               <TransparentButtonLink
-                backgroundColor={CLUBS_BLUE}
+                backgroundColor={ADD_BUTTON}
                 onClick={(e) => {
                   if (!event.club) {
                     e.preventDefault()

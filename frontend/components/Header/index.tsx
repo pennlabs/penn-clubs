@@ -89,7 +89,7 @@ const Logo = s.img`
   padding-left: 20px;
   height: 100%;
   transform: scale(${LOGO_SCALE});
-  transition: all ${ANIMATION_DURATION}ms ease;
+  transition: transform ${ANIMATION_DURATION} ease;
 
   &:hover {
     transform: scale(${parseFloat(LOGO_SCALE) * 1.1});
