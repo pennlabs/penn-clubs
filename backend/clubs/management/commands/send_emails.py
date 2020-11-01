@@ -3,14 +3,12 @@ import datetime
 import os
 
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Count, Q
-from django.template.loader import render_to_string
 from django.utils import timezone
 
-from clubs.models import Club, Event, Membership, MembershipInvite
-from clubs.utils import fuzzy_lookup_club, html_to_text
+from clubs.models import Club, Event, Membership, MembershipInvite, send_mail_helper
+from clubs.utils import fuzzy_lookup_club
 
 
 def send_fair_email(club, email, template="fair"):
@@ -24,14 +22,7 @@ def send_fair_email(club, email, template="fair"):
         "flyer_url": settings.FLYER_URL.format(domain=domain, club=club.code),
     }
 
-    html_content = render_to_string("emails/{}.html".format(template), context)
-    text_content = html_to_text(html_content)
-
-    msg = EmailMultiAlternatives(
-        "Making the SAC Fair Easier for You", text_content, settings.FROM_EMAIL, [email]
-    )
-    msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)
+    send_mail_helper(template, "Making the SAC Fair Easier for You", [email], context)
 
 
 class Command(BaseCommand):

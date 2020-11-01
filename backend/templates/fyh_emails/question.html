@@ -2,9 +2,9 @@
 
 {% block content %}
     <h2>New Question for <b>{{ name }}</b></h2>
-    <p>A student posted a new question for {{ name }} on Hub@Penn:</p>
+    <p style="font-size: 1.2em">A student posted a new question for {{ name }} on Hub@Penn:</p>
     <div style="border-left:5px solid #ccc;padding:5px 8px">{{ question }}</div>
-    <p>As an officer of {{ name }}, you are able to respond to this question. You can do so using the button below.</p>
+    <p style="font-size: 1.2em">As a member of {{ name }}, you are able to respond to this question. You can do so using the button below.</p>
     <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: #000f3a; border-radius: 3px; font-weight: bold"
         href="{{ url }}">Provide an answer</a>
 {% endblock %}

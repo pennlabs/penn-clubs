@@ -23,11 +23,25 @@ from clubs.utils import get_django_minified_image, get_domain, html_to_text
 def send_mail_helper(name, subject, emails, context):
     """
     A helper to send out an email given the template name, subject, to emails, and context.
+
+    All emails should go through this function.
     """
     if not all(isinstance(email, str) for email in emails):
         raise ValueError("The to email argument must be a list of strings!")
 
-    html_content = render_to_string("emails/{}.html".format(name), context)
+    # load email template
+    prefix = {"fyh": "fyh_emails"}.get(settings.BRANDING, "emails")
+    html_content = render_to_string(f"{prefix}/{name}.html", context)
+
+    # use subject from template if it exists
+    # subject should match: <!-- SUBJECT: (subject) --> and be the first line
+    subject_regex = re.compile(r"\s*<!--\s*SUBJECT:\s*(.*?)\s*-->", re.I)
+    match = subject_regex.match(html_content)
+    if match is not None:
+        subject = match.group(1)
+        html_content = subject_regex.sub("", html_content, count=1)
+
+    # generate text alternative
     text_content = html_to_text(html_content)
 
     msg = EmailMultiAlternatives(subject, text_content, settings.FROM_EMAIL, list(set(emails)))
@@ -49,15 +63,15 @@ def get_club_small_file_name(instance, fname):
 
 
 def get_event_file_name(instance, fname):
-    return os.path.join("events", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
+    return os.path.join("events", "{}.{}".format(instance.id, fname.rsplit(".", 1)[-1]))
 
 
 def get_event_small_file_name(instance, fname):
-    return os.path.join("events_small", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
+    return os.path.join("events_small", "{}.{}".format(instance.id, fname.rsplit(".", 1)[-1]))
 
 
 def get_user_file_name(instance, fname):
-    return os.path.join("users", "{}.{}".format(uuid.uuid4().hex, fname.rsplit(".", 1)[-1]))
+    return os.path.join("users", "{}.{}".format(instance.user.username, fname.rsplit(".", 1)[-1]))
 
 
 class Report(models.Model):
@@ -354,10 +368,11 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="approval_status",
-                subject="{}{} {} on Penn Clubs".format(
+                subject="{}{} {} on {}".format(
                     "Changes to " if change else "",
                     self.name,
                     "accepted" if self.approved else "not approved",
+                    settings.BRANDING_SITE_NAME,
                 ),
                 emails=emails,
                 context=context,
@@ -762,7 +777,7 @@ class MembershipInvite(models.Model):
             "club_id": self.club.code,
             "sender": request.user
             if request is not None
-            else {"username": "Penn Clubs", "email": "contact@pennclubs.com"},
+            else {"username": settings.BRANDING_SITE_NAME, "email": settings.BRANDING_SITE_EMAIL},
             "role": self.role,
             "title": self.title,
             "url": settings.INVITE_URL.format(
@@ -797,7 +812,10 @@ class MembershipInvite(models.Model):
         }
 
         send_mail_helper(
-            name="owner", subject="Welcome to Penn Clubs!", emails=[self.email], context=context,
+            name="owner",
+            subject=f"Welcome to {settings.BRANDING_SITE_NAME}!",
+            emails=[self.email],
+            context=context,
         )
 
 

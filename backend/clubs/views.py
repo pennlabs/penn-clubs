@@ -2296,7 +2296,8 @@ def email_preview(request):
     """
     Debug endpoint used for previewing how email templates will look.
     """
-    email_templates = os.listdir(os.path.join(settings.BASE_DIR, "templates", "emails"))
+    prefix = "fyh_emails" if settings.BRANDING == "fyh" else "emails"
+    email_templates = os.listdir(os.path.join(settings.BASE_DIR, "templates", prefix))
     email_templates = [e.rsplit(".", 1)[0] for e in email_templates if e.endswith(".html")]
 
     email = None
@@ -2329,7 +2330,7 @@ def email_preview(request):
                 initial_context[param] = value
 
         context = EmailPreviewContext(initial_context)
-        email = render_to_string("emails/{}.html".format(email_path), context)
+        email = render_to_string(f"{prefix}/{email_path}.html", context)
         text_email = html_to_text(email)
 
     return render(

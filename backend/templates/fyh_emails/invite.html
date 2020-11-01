@@ -1,0 +1,10 @@
+{% extends 'fyh_emails/base.html' %}
+
+{% block content %}
+    <h2>Join <b>{{ name }}</b> on Hub@Penn</h2>
+    <p style="font-size: 1.2em">You've been invited by <b>{{ sender.get_full_name }}</b> (<i>{{ sender.email }}</i>) to join <b>{{ name }}</b> on Penn Clubs! Click the button below to join the club. You will need a valid PennKey in order to complete the process.</p>
+    {% if role <= 10 %}
+        <p style="font-size: 1.2em">You have administrator permissions, which means you can edit the <b>{{ name }}</b> page.</p>
+    {% endif %}
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 20px; color: white; background-color: black; border-radius: 3px; font-weight: bold" href="{{ url }}">Join {{ name }}</a>
+{% endblock %}
