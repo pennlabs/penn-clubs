@@ -5,6 +5,8 @@ import s from 'styled-components'
 import { BANNER_BG, BANNER_TEXT, BORDER } from '../../constants/colors'
 import {
   ANIMATION_DURATION,
+  BANNER_HEIGHT,
+  FULL_NAV_HEIGHT,
   HEADER_SHADOW,
   LOGO_SCALE,
   MD,
@@ -18,6 +20,7 @@ import { HOME_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
 import {
   HEADER_BACKGROUND_IMAGE,
+  HEADER_OVERLAY,
   SITE_LOGO,
   SITE_NAME,
 } from '../../utils/branding'
@@ -41,10 +44,45 @@ const Nav = s.nav`
   }
 `
 
+const ImageHead = s.div`
+  height: ${BANNER_HEIGHT};
+  background-color: ${BANNER_BG};
+  background-image: url('${HEADER_BACKGROUND_IMAGE}');
+  box-shadow: 0 1px 4px 0 ${BORDER};
+  width: 100%;
+  position: fixed;
+  top:${NAV_HEIGHT};
+  z-index: 999;
+  background-size: auto 100%;
+  background-repeat: no-repeat center center fixed;
+  padding: 1em;
+
+  ${mediaMaxWidth(MD)} {
+    box-shadow: none;
+  }
+`
+
+const Overlay = s.div`
+  background: url('${HEADER_OVERLAY}');
+  width: 50%;
+  height:12rem;
+  position: fixed;
+  z-index: 999;
+  background-size: auto 100%;
+  background-repeat: no-repeat;
+  padding: 1em;
+  left: 16rem;
+  top: -1.5em;
+
+  ${mediaMaxWidth(MD)} {
+    box-shadow: none;
+  }
+`
+
 const NavSpacer = s.div`
   width: 100%;
   display: block;
-  height: ${NAV_HEIGHT};
+  height: ${FULL_NAV_HEIGHT};
 `
 
 const Logo = s.img`
@@ -101,14 +139,14 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
 
       <Nav className="navbar" role="navigation" aria-label="main navigation">
         <div className="navbar-brand">
-          <LogoBackground use={HEADER_BACKGROUND_IMAGE != null}>
-            <Link href={HOME_ROUTE}>
-              <a className="navbar-item" style={{ padding: 0 }}>
-                <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
-                <Title>{SITE_NAME}</Title>
-              </a>
-            </Link>
-          </LogoBackground>
+          <Link href={HOME_ROUTE}>
+            <a className="navbar-item" style={{ padding: 0 }}>
+              <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
+              <Title>{SITE_NAME}</Title>
+            </a>
+          </Link>
+          {SITE_NAME === 'Hub@Penn' && <ImageHead />}
+          {SITE_NAME === 'Hub@Penn' && <Overlay />}
 
           <Burger toggle={toggle} />
         </div>
