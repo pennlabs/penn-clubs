@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ReactElement, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
 import { BANNER_BG, BANNER_TEXT, BORDER } from '../../constants/colors'
@@ -21,6 +21,7 @@ import { UserInfo } from '../../types'
 import {
   HEADER_BACKGROUND_IMAGE,
   HEADER_OVERLAY,
+  SITE_ID,
   SITE_LOGO,
   SITE_NAME,
 } from '../../utils/branding'
@@ -50,11 +51,12 @@ const ImageHead = s.div`
   background-image: url('${HEADER_BACKGROUND_IMAGE}');
   box-shadow: 0 1px 4px 0 ${BORDER};
   width: 100%;
-  position: fixed;
+  position: absolute;
   top:${NAV_HEIGHT};
   z-index: 999;
-  background-size: auto 100%;
-  background-repeat: no-repeat center center fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
   padding: 1em;
 
   ${mediaMaxWidth(MD)} {
@@ -126,6 +128,22 @@ type HeaderProps = {
   userInfo?: UserInfo
 }
 
+const FadingOverlay = (): ReactElement => {
+  const [opacity, setOpacity] = useState<number>(1)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setOpacity(Math.min(Math.max(0, (150 - window.scrollY) / 150), 1))
+    }
+
+    window.addEventListener('scroll', handleScroll)
+
+    return () => window.removeEventListener('scroll', handleScroll)
+  })
+
+  return <Overlay style={{ opacity }} />
+}
+
 const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
   const [show, setShow] = useState(false)
 
@@ -145,14 +163,14 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
               <Title>{SITE_NAME}</Title>
             </a>
           </Link>
-          {SITE_NAME === 'Hub@Penn' && <ImageHead />}
-          {SITE_NAME === 'Hub@Penn' && <Overlay />}
+          {SITE_ID === 'fyh' && <FadingOverlay />}
 
           <Burger toggle={toggle} />
         </div>
 
         <Links userInfo={userInfo} authenticated={authenticated} show={show} />
       </Nav>
+      {SITE_ID === 'fyh' && <ImageHead />}
 
       <Feedback />
     </>
