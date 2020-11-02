@@ -21,7 +21,10 @@ const DeleteClubCard = ({
   notify = () => undefined,
   onDelete = () => undefined,
 }: Props): ReactElement => {
-  const canDelete = apiCheckPermission('clubs.delete_club')
+  const canDelete = apiCheckPermission([
+    'clubs.delete_club',
+    `clubs.delete_club:{club.code}`,
+  ])
 
   const deleteClub = (): void => {
     if (club === null) {

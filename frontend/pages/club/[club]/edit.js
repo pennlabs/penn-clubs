@@ -27,7 +27,10 @@ Edit.getInitialProps = async ({ query }) => {
 }
 
 Edit.getAdditionalPermissions = (ctx) => {
-  return [`clubs.manage_club:${ctx.query.club}`]
+  return [
+    `clubs.manage_club:${ctx.query.club}`,
+    `clubs.delete_club:${ctx.query.club}`,
+  ]
 }
 
 Edit.permissions = ['clubs.delete_club']

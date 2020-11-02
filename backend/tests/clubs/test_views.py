@@ -1721,6 +1721,7 @@ class ClubTestCase(TestCase):
     def test_permission_lookup(self):
         permissions = [
             "clubs.delete_club",
+            "clubs.generate_reports",
             f"clubs.manage_club:{self.club1.code}",
         ]
 
@@ -1735,8 +1736,14 @@ class ClubTestCase(TestCase):
             for perm in permissions:
                 self.assertIn(perm, data["permissions"])
 
+            return data["permissions"]
+
         # check as unauthenticated user
-        check()
+        data = check()
+
+        # ensure unauthenticated user does not have access to anything
+        for perm in permissions:
+            self.assertFalse(data[perm], perm)
 
         # login to officer account
         self.client.login(username=self.user4.username, password="test")
@@ -1748,4 +1755,8 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password="test")
 
         # check as superuser
-        check()
+        data = check()
+
+        # ensure superuser has access to everything
+        for perm in permissions:
+            self.assertTrue(data[perm], perm)

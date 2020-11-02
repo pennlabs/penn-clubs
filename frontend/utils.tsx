@@ -113,10 +113,15 @@ export async function preloadPermissions(
  * object identiifer with a colon. For example, "permission:object_id".
  */
 export function apiCheckPermission(
-  permission: string,
+  permission: string | string[],
   failSilently?: boolean,
 ): boolean | null {
   const perms = useContext(PermissionsContext)
+
+  if (Array.isArray(permission)) {
+    return permission.some((perm) => perm in perms && perms[perm])
+  }
+
   if (permission in perms) {
     return perms[permission]
   }

@@ -1728,9 +1728,9 @@ class UserPermissionAPIView(APIView):
             lookups[key].append(value)
 
         for key, values in lookups.items():
-            if key == "clubs.manage_club":
+            if key in {"clubs.manage_club", "clubs.delete_club"}:
                 perm_checker = ClubPermission()
-                view = FakeView("update")
+                view = FakeView("destroy" if key == "clubs.delete_club" else "update")
                 objs = Club.objects.filter(code__in=values)
                 global_perm = perm_checker.has_permission(request, view)
                 for obj in objs:
