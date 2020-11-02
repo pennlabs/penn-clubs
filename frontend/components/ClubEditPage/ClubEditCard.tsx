@@ -19,6 +19,7 @@ import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   OBJECT_TAB_ADMISSION_LABEL,
+  SHOW_RANK_ALGORITHM,
   SITE_NAME,
 } from '../../utils/branding'
 import { Contact, Text } from '../common'
@@ -339,7 +340,7 @@ export default function ClubEditCard({
     {
       name: OBJECT_TAB_ADMISSION_LABEL,
       type: 'group',
-      description: (
+      description: SHOW_RANK_ALGORITHM ? (
         <Text>
           Some of these fields will be used to adjust {OBJECT_NAME_SINGULAR}{' '}
           ordering on the home page. Click{' '}
@@ -347,6 +348,11 @@ export default function ClubEditCard({
             <a>here</a>
           </Link>{' '}
           for more details.
+        </Text>
+      ) : (
+        <Text>
+          This information will help students learn more about your{' '}
+          {OBJECT_NAME_SINGULAR}.
         </Text>
       ),
       fields: [

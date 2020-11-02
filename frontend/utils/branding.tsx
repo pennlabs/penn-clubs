@@ -48,6 +48,7 @@ const sites = {
     ],
     SHOW_MEMBERS: true,
     SHOW_MEMBERSHIP_REQUEST: true,
+    SHOW_RANK_ALGORITHM: true,
 
     PARTNER_LOGOS: [
       {
@@ -121,6 +122,7 @@ const sites = {
     ],
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,
+    SHOW_RANK_ALGORITHM: false,
 
     PARTNER_LOGOS: [
       {
@@ -179,6 +181,7 @@ export const OBJECT_TAB_FILES_DESCRIPTION =
 
 export const SHOW_MEMBERS = sites[site].SHOW_MEMBERS
 export const SHOW_MEMBERSHIP_REQUEST = sites[site].SHOW_MEMBERSHIP_REQUEST
+export const SHOW_RANK_ALGORITHM = sites[site].SHOW_RANK_ALGORITHM
 
 export const PARTNER_LOGOS = sites[site].PARTNER_LOGOS
 
