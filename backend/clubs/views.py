@@ -465,20 +465,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             favorite_count=Count("favorite", distinct=True),
             membership_count=Count("membership", distinct=True, filter=Q(active=True)),
         )
-        .prefetch_related(
-            "tags",
-            "badges",
-            "target_schools",
-            "target_majors",
-            "target_years",
-            "student_types",
-            Prefetch(
-                "membership_set",
-                queryset=Membership.objects.order_by(
-                    "role", "person__first_name", "person__last_name"
-                ).prefetch_related("person__profile"),
-            ),
-        )
+        .prefetch_related("tags",)
         .order_by("-favorite_count", "name")
     )
     permission_classes = [ClubPermission | IsSuperuser]
@@ -519,7 +506,21 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             )
 
             if self.action in {"retrieve"}:
-                queryset = queryset.prefetch_related("testimonials", "asset_set")
+                queryset = queryset.prefetch_related(
+                    "asset_set",
+                    "badges",
+                    "student_types",
+                    "target_majors",
+                    "target_schools",
+                    "target_years",
+                    "testimonials",
+                    Prefetch(
+                        "membership_set",
+                        queryset=Membership.objects.order_by(
+                            "role", "person__first_name", "person__last_name"
+                        ).prefetch_related("person__profile"),
+                    ),
+                )
 
         # select subset of clubs if requested
         subset = self.request.query_params.get("in", None)
