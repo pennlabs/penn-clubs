@@ -1761,7 +1761,10 @@ class ClubTestCase(TestCase):
 
         # login to superuser account
         self.client.login(username=self.user5.username, password="test")
-        self.assertTrue(self.user5.is_superuser)
+        if not self.user5.is_superuser:
+            self.user5.is_staff = True
+            self.user5.is_superuser = True
+            self.user5.save()
 
         # check as superuser
         data = check()

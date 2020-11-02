@@ -23,7 +23,7 @@ const DeleteClubCard = ({
 }: Props): ReactElement => {
   const canDelete = apiCheckPermission([
     'clubs.delete_club',
-    `clubs.delete_club:{club.code}`,
+    `clubs.delete_club:${club.code}`,
   ])
 
   const deleteClub = (): void => {
