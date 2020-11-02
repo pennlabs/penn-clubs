@@ -465,7 +465,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             favorite_count=Count("favorite", distinct=True),
             membership_count=Count("membership", distinct=True, filter=Q(active=True)),
         )
-        .prefetch_related("tags",)
+        .prefetch_related("tags")
         .order_by("-favorite_count", "name")
     )
     permission_classes = [ClubPermission | IsSuperuser]
