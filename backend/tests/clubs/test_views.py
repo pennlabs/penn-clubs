@@ -1723,6 +1723,7 @@ class ClubTestCase(TestCase):
             "clubs.delete_club",
             "clubs.generate_reports",
             f"clubs.manage_club:{self.club1.code}",
+            f"clubs.delete_club:{self.club1.code}",
         ]
 
         # check permissions checker endpoint
@@ -1745,14 +1746,22 @@ class ClubTestCase(TestCase):
         for perm in permissions:
             self.assertFalse(data[perm], perm)
 
+        # add officer to club
+        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+
         # login to officer account
         self.client.login(username=self.user4.username, password="test")
+        self.assertTrue(Membership.objects.filter(club=self.club1, person=self.user4).exists())
 
         # check as authenticated user
-        check()
+        data = check()
+
+        # ensure officer account has manage club permissions
+        self.assertTrue(data[f"clubs.manage_club:{self.club1.code}"], data)
 
         # login to superuser account
         self.client.login(username=self.user5.username, password="test")
+        self.assertTrue(self.user5.is_superuser)
 
         # check as superuser
         data = check()

@@ -1734,6 +1734,7 @@ class UserPermissionAPIView(APIView):
                 objs = Club.objects.filter(code__in=values)
                 global_perm = perm_checker.has_permission(request, view)
                 for obj in objs:
+                    perm = f"{key}:{obj.code}"
                     ret[perm] = global_perm and perm_checker.has_object_permission(
                         request, view, obj
                     )
