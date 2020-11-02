@@ -1717,3 +1717,35 @@ class ClubTestCase(TestCase):
         # hit analytics endpoint
         resp = self.client.get(reverse("clubs-analytics", args=(club.code,)))
         self.assertIn(resp.status_code, [200], resp.content)
+
+    def test_permission_lookup(self):
+        permissions = [
+            "clubs.delete_club",
+            f"clubs.manage_club:{self.club1.code}",
+        ]
+
+        # check permissions checker endpoint
+        def check():
+            resp = self.client.get(reverse("users-permission"), {"perm": ",".join(permissions)})
+            self.assertIn(resp.status_code, [200], resp.content)
+
+            data = resp.json()
+            self.assertIn("permissions", data)
+
+            for perm in permissions:
+                self.assertIn(perm, data["permissions"])
+
+        # check as unauthenticated user
+        check()
+
+        # login to officer account
+        self.client.login(username=self.user4.username, password="test")
+
+        # check as authenticated user
+        check()
+
+        # login to superuser account
+        self.client.login(username=self.user5.username, password="test")
+
+        # check as superuser
+        check()
