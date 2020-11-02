@@ -1717,3 +1717,58 @@ class ClubTestCase(TestCase):
         # hit analytics endpoint
         resp = self.client.get(reverse("clubs-analytics", args=(club.code,)))
         self.assertIn(resp.status_code, [200], resp.content)
+
+    def test_permission_lookup(self):
+        permissions = [
+            "clubs.delete_club",
+            "clubs.generate_reports",
+            f"clubs.manage_club:{self.club1.code}",
+            f"clubs.delete_club:{self.club1.code}",
+        ]
+
+        # check permissions checker endpoint
+        def check():
+            resp = self.client.get(reverse("users-permission"), {"perm": ",".join(permissions)})
+            self.assertIn(resp.status_code, [200], resp.content)
+
+            data = resp.json()
+            self.assertIn("permissions", data)
+
+            for perm in permissions:
+                self.assertIn(perm, data["permissions"])
+
+            return data["permissions"]
+
+        # check as unauthenticated user
+        data = check()
+
+        # ensure unauthenticated user does not have access to anything
+        for perm in permissions:
+            self.assertFalse(data[perm], perm)
+
+        # add officer to club
+        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+
+        # login to officer account
+        self.client.login(username=self.user4.username, password="test")
+        self.assertTrue(Membership.objects.filter(club=self.club1, person=self.user4).exists())
+
+        # check as authenticated user
+        data = check()
+
+        # ensure officer account has manage club permissions
+        self.assertTrue(data[f"clubs.manage_club:{self.club1.code}"], data)
+
+        # login to superuser account
+        self.client.login(username=self.user5.username, password="test")
+        if not self.user5.is_superuser:
+            self.user5.is_staff = True
+            self.user5.is_superuser = True
+            self.user5.save()
+
+        # check as superuser
+        data = check()
+
+        # ensure superuser has access to everything
+        for perm in permissions:
+            self.assertTrue(data[perm], perm)

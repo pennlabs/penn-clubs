@@ -1698,12 +1698,13 @@ class UserPermissionAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        if not request.user.is_authenticated:
-            return Response({"permissions": {}})
-
         raw_perms = [
             perm.strip() for perm in request.GET.get("perm", "").strip().split(",") if perm
         ]
+
+        if not request.user.is_authenticated:
+            return Response({"permissions": {k: False for k in raw_perms}})
+
         general_perms = [p for p in raw_perms if ":" not in p]
         object_perms = [p for p in raw_perms if ":" in p]
 
@@ -1717,20 +1718,26 @@ class UserPermissionAPIView(APIView):
             if perm not in ret:
                 ret[perm] = request.user.is_superuser
 
+        lookups = {}
+
         for perm in object_perms:
             key, value = perm.split(":", 1)
-            if key == "clubs.manage_club":
+            if key not in lookups:
+                lookups[key] = []
+            ret[perm] = None
+            lookups[key].append(value)
+
+        for key, values in lookups.items():
+            if key in {"clubs.manage_club", "clubs.delete_club"}:
                 perm_checker = ClubPermission()
-                view = FakeView("update")
-                obj = Club.objects.filter(code=value).first()
-                if obj is not None:
-                    ret[perm] = perm_checker.has_permission(
-                        request, view
-                    ) and perm_checker.has_object_permission(request, view, obj)
-                else:
-                    ret[perm] = None
-            else:
-                ret[perm] = None
+                view = FakeView("destroy" if key == "clubs.delete_club" else "update")
+                objs = Club.objects.filter(code__in=values)
+                global_perm = perm_checker.has_permission(request, view)
+                for obj in objs:
+                    perm = f"{key}:{obj.code}"
+                    ret[perm] = global_perm and perm_checker.has_object_permission(
+                        request, view, obj
+                    )
 
         return Response({"permissions": ret})
 
