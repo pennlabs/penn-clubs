@@ -16,6 +16,7 @@ Questions? Check out our [extended guide](https://github.com/pennlabs/penn-clubs
 Running the backend requires [Python 3](https://www.python.org/downloads/).
 
 In production, you will need to set the following environment variables:
+- `NEXT_PUBLIC_SITE_NAME` (optional, defaults to `clubs`)
 - `SECRET_KEY`
 - `SENTRY_URL`
 - `AWS_ACCESS_KEY_ID`

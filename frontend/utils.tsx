@@ -112,10 +112,10 @@ export async function preloadPermissions(
  * If you are checking for a permission that is object based, separate the
  * object identiifer with a colon. For example, "permission:object_id".
  */
-export async function apiCheckPermission(
+export function apiCheckPermission(
   permission: string,
   failSilently?: boolean,
-): Promise<boolean | null> {
+): boolean | null {
   const perms = useContext(PermissionsContext)
   if (permission in perms) {
     return perms[permission]

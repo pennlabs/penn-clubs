@@ -279,7 +279,6 @@ ClubPage.getInitialProps = async (
   ctx: NextPageContext,
 ): Promise<{ club: Club; questions: QuestionAnswer[] }> => {
   const { query, req } = ctx
-  ClubPage.permissions.push(`clubs.manage_club:${query.club}`)
 
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
@@ -291,6 +290,10 @@ ClubPage.getInitialProps = async (
     ].map(async (url) => (await doApiRequest(url, data)).json()),
   )
   return { club, questions }
+}
+
+ClubPage.getAdditionalPermissions = (ctx: NextPageContext): string[] => {
+  return [`clubs.manage_club:${ctx.query.club}`]
 }
 
 ClubPage.permissions = [

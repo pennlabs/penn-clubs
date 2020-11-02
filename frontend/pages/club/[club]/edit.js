@@ -7,8 +7,6 @@ import { doApiRequest, isClubFieldShown } from '../../../utils'
 const Edit = (props) => <ClubEditPage {...props} />
 
 Edit.getInitialProps = async ({ query }) => {
-  Edit.permissions.push(`clubs.manage_club:${query.club}`)
-
   const endpoints = ['tags', 'schools', 'majors', 'years', 'student_types']
   return Promise.all(
     endpoints.map(async (item) => {
@@ -26,6 +24,10 @@ Edit.getInitialProps = async ({ query }) => {
     })
     return output
   })
+}
+
+Edit.getAdditionalPermissions = (ctx) => {
+  return [`clubs.manage_club:${ctx.query.club}`]
 }
 
 Edit.permissions = ['clubs.delete_club']

@@ -190,16 +190,22 @@ function renderPage(Page) {
 
     const fetchPermissions = async () => {
       if (Page.permissions && Page.permissions.length > 0) {
+        let otherPermissions: string[] = []
+
+        if (typeof Page.getAdditionalPermissions !== 'undefined') {
+          otherPermissions = Page.getAdditionalPermissions(ctx)
+        }
+
         const resp = await doApiRequest(
-          `/settings/permissions/?perm=${Page.permissions.join(
-            ',',
-          )}&format=json`,
+          `/settings/permissions/?perm=${Page.permissions
+            .concat(otherPermissions)
+            .join(',')}&format=json`,
           data,
         )
 
         // return all false permissions if not logged in
         if (!resp.ok) {
-          return Page.permissions.reduce((acc, perm) => {
+          return permissions.reduce((acc, perm) => {
             acc[perm] = false
             return acc
           }, {})

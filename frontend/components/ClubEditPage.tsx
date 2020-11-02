@@ -129,7 +129,7 @@ const ClubForm = ({
   }
 
   const canManageClub = apiCheckPermission(
-    `clubs.manage_club:${club?.code}`,
+    `clubs.manage_club:${club?.code ?? clubId}`,
     true,
   )
 
