@@ -873,9 +873,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         tag_names = [tag.get("name") for tag in value]
         necessary_tags = {"Undergraduate", "Graduate"}
         if not any(tag in necessary_tags for tag in tag_names):
-            raise serializers.ValidationError(
-                "You must specify either the 'Undegraduate' or 'Graduate' tag in this list or both."
-            )
+            if Tag.objects.filter(name__in=list(necessary_tags)).count() >= len(necessary_tags):
+                raise serializers.ValidationError(
+                    "You must specify either the 'Undergraduate' or 'Graduate' tag in this list."
+                )
         return value
 
     def validate_description(self, value):

@@ -18,6 +18,7 @@ import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
   OBJECT_NAME_TITLE_SINGULAR,
+  SHOW_RANK_ALGORITHM,
   SITE_NAME,
 } from '../utils/branding'
 
@@ -102,6 +103,14 @@ const Rank = (): ReactElement => (
     <InfoPageTitle>
       {OBJECT_NAME_TITLE_SINGULAR} Recommendation Algorithm
     </InfoPageTitle>
+    {SHOW_RANK_ALGORITHM || (
+      <div className="notification is-info">
+        <Icon name="alert-circle" /> The {OBJECT_NAME_SINGULAR} recommendation
+        algorithm is not fully configured for {SITE_NAME}. The categories listed
+        below may or may not be taken into consideration when ordering{' '}
+        {OBJECT_NAME_PLURAL} on the home page.
+      </div>
+    )}
     <StrongText>How are {OBJECT_NAME_PLURAL} ordered?</StrongText>
     <Text>
       The order that {OBJECT_NAME_PLURAL} appear on the home page for the
@@ -303,7 +312,7 @@ const Rank = (): ReactElement => (
           description: (
             <>
               Adding target schools will cause the {OBJECT_NAME_SINGULAR} to
-              appear higher on the home page for students in those schools.
+              appear higher on the home page for students in those schools.{' '}
               {OBJECT_NAME_TITLE} that have specified fewer schools are more
               likely to appear higher than {OBJECT_NAME_PLURAL} that have
               specified more schools, for relevant students. Specifying all of

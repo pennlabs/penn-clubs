@@ -3,6 +3,7 @@ import { ReactElement, useEffect, useState } from 'react'
 
 import { UserInfo } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
+import { OBJECT_NAME_PLURAL, OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Icon } from '../common'
 import {
   CheckboxField,
@@ -99,7 +100,7 @@ const ProfileForm = ({
               <Field
                 name="share_bookmarks"
                 as={CheckboxField}
-                label="Share my user information with the clubs that I have bookmarked. By default, this information is not visible to club officers."
+                label={`Share my user information with the ${OBJECT_NAME_PLURAL} that I have bookmarked. By default, this information is not visible to ${OBJECT_NAME_SINGULAR} administrators.`}
               />
               <button
                 type="submit"

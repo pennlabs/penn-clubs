@@ -23,6 +23,7 @@ import {
   OBJECT_NAME_SINGULAR,
   PARTNER_LOGOS,
   SCHOOL_NAME,
+  SHOW_RANK_ALGORITHM,
   SITE_ID,
   SITE_NAME,
 } from '../utils/branding'
@@ -190,13 +191,17 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
       by the {APPROVAL_AUTHORITY}. You will be notified when your{' '}
       {OBJECT_NAME_SINGULAR} has been reviewed.
     </Question>
-    <Question title={`How are ${OBJECT_NAME_PLURAL} ordered on ${SITE_NAME}?`}>
-      Click{' '}
-      <Link href="/rank">
-        <a>here</a>
-      </Link>{' '}
-      for details about our {OBJECT_NAME_SINGULAR} recommendation algorithm.
-    </Question>
+    {SHOW_RANK_ALGORITHM && (
+      <Question
+        title={`How are ${OBJECT_NAME_PLURAL} ordered on ${SITE_NAME}?`}
+      >
+        Click{' '}
+        <Link href="/rank">
+          <a>here</a>
+        </Link>{' '}
+        for details about our {OBJECT_NAME_SINGULAR} recommendation algorithm.
+      </Question>
+    )}
     <Question title="I have another question!">
       <a href={FEEDBACK_URL}>Please let us know on our feedback form :)</a>
     </Question>
