@@ -1709,16 +1709,17 @@ class UserPermissionAPIView(APIView):
         general_perms = [p for p in raw_perms if ":" not in p]
         object_perms = [p for p in raw_perms if ":" in p]
 
-        perms = request.user.user_permissions
-
+        # process general permissions
+        ret = {}
+        all_perms = request.user.get_all_permissions()
         if raw_perms:
-            perms = perms.filter(codename__in=general_perms)
+            for perm in general_perms:
+                ret[perm] = request.user.is_superuser or perm in all_perms
+        else:
+            for perm in all_perms:
+                ret[perm] = True
 
-        ret = {k: True for k, v in perms.values_list("codename", flat=True)}
-        for perm in general_perms:
-            if perm not in ret:
-                ret[perm] = request.user.is_superuser
-
+        # process object specific permissions
         lookups = {}
 
         for perm in object_perms:

@@ -1720,6 +1720,7 @@ class ClubTestCase(TestCase):
 
     def test_permission_lookup(self):
         permissions = [
+            "clubs.approve_club",
             "clubs.delete_club",
             "clubs.generate_reports",
             f"clubs.manage_club:{self.club1.code}",
@@ -1749,6 +1750,11 @@ class ClubTestCase(TestCase):
         # add officer to club
         Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
 
+        # add special permission to user
+        content_type = ContentType.objects.get_for_model(Club)
+        perm = Permission.objects.get(codename="approve_club", content_type=content_type)
+        self.user4.user_permissions.add(perm)
+
         # login to officer account
         self.client.login(username=self.user4.username, password="test")
         self.assertTrue(Membership.objects.filter(club=self.club1, person=self.user4).exists())
@@ -1758,6 +1764,9 @@ class ClubTestCase(TestCase):
 
         # ensure officer account has manage club permissions
         self.assertTrue(data[f"clubs.manage_club:{self.club1.code}"], data)
+
+        # ensure added permission has taken effect
+        self.assertTrue(data["clubs.approve_club"], data)
 
         # login to superuser account
         self.client.login(username=self.user5.username, password="test")

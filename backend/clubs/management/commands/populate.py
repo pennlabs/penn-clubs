@@ -209,15 +209,37 @@ class Command(BaseCommand):
         ]
 
         # create majors
-        [
-            Major.objects.get_or_create(name=major)
+        major_names = [
+            f"{prefix} {major}".strip()
             for major in [
+                "Accounting",
+                "Basket Weaving",
+                "Biology",
+                "Chemistry",
+                "Computer Design",
+                "Computer Engineering",
                 "Computer Science",
-                "Computer Engineering",
                 "Digital Media Design",
-                "Computer Engineering",
+                "Finance",
+                "Marketing",
+                "Statistics",
+            ]
+            for prefix in [
+                "",
+                "Airborne",
+                "Applied",
+                "Atomic",
+                "Fancy",
+                "Nuclear",
+                "Quantum",
+                "Theoretical",
+                "Underwater",
             ]
         ]
+        existing = set(Major.objects.filter(name__in=major_names).values_list("name", flat=True))
+        Major.objects.bulk_create(
+            [Major(name=name) for name in major_names if name not in existing]
+        )
 
         # create student types
         [
@@ -289,7 +311,7 @@ class Command(BaseCommand):
         tag_generic, _ = Tag.objects.get_or_create(name="Generic")
 
         for i in range(1, 50):
-            club, _ = Club.objects.get_or_create(
+            club, created = Club.objects.get_or_create(
                 code="z-club-{}".format(i),
                 defaults={
                     "name": "Z-Club {}".format(i),
@@ -299,18 +321,39 @@ class Command(BaseCommand):
                     "email": "example@example.com",
                 },
             )
+
+            if created:
+                club.available_virtually = i % 2 == 0
+                club.appointment_needed = i % 3 == 0
+                club.signature_events = (
+                    f"Z-Club {i} offers {i % 8 + 1} signature events every year."
+                )
+
+                for school in School.objects.all():
+                    club.target_schools.add(school)
+
+                for major in Major.objects.all():
+                    club.target_majors.add(major)
+
+                Testimonial.objects.bulk_create(
+                    [
+                        Testimonial(club=club, text=f"Z-Club {i} is a {adj} club!")
+                        for adj in ["great", "fantastic", "awesome", "amazing"]
+                    ]
+                )
+
             if i < 5:
                 [club.student_types.add(type) for type in StudentType.objects.filter(id__lte=i)]
             club.recruiting_cycle = Club.RECRUITING_CYCLES[(i - 1) % len(Club.RECRUITING_CYCLES)][0]
             club.save()
 
-            Advisor.objects.create(
+            Advisor.objects.get_or_create(
                 club=club,
                 name="John Doe",
                 title="Faculty Advisor",
                 email="example@example.com",
                 phone="+12158985000",
-                public=True,
+                defaults={"public": True},
             )
 
             club.tags.add(tag_undergrad)
