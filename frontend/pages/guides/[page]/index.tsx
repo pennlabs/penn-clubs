@@ -86,7 +86,15 @@ const completePage = renderPage(GuidePage)
 const initialProps = completePage.getInitialProps
 completePage.getInitialProps = undefined
 
-export const getServerSideProps = async (ctx: NextPageContext) => {
+export const getServerSideProps = async (
+  ctx: NextPageContext,
+): Promise<{
+  props: {
+    title: string
+    contents: string | null
+    toc: { title: string; id: string }[]
+  }
+}> => {
   const fetchProps = async () => {
     return await (initialProps ?? (() => undefined))(ctx)
   }

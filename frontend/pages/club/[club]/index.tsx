@@ -69,7 +69,7 @@ const InactiveCard = s(Card)`
 
 type ClubPageProps = {
   club: Club
-  userInfo: UserInfo
+  userInfo?: UserInfo
   questions: QuestionAnswer[]
 }
 
@@ -161,7 +161,9 @@ const ClubPage = ({
   return (
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
-      <ClubApprovalDialog club={club} userInfo={userInfo} />
+      {userInfo != null && (
+        <ClubApprovalDialog club={club} userInfo={userInfo} />
+      )}
       <div className="columns">
         <div className="column">
           {isActive || (
@@ -195,11 +197,13 @@ const ClubPage = ({
             </div>
           )}
 
-          <MobileActions
-            club={club}
-            userInfo={userInfo}
-            updateRequests={updateRequests}
-          />
+          {userInfo != null && (
+            <MobileActions
+              club={club}
+              userInfo={userInfo}
+              updateRequests={updateRequests}
+            />
+          )}
           <StyledCard bordered>
             <Description club={club} />
           </StyledCard>
@@ -229,11 +233,13 @@ const ClubPage = ({
           )}
         </div>
         <div className="column is-one-third">
-          <DesktopActions
-            club={club}
-            userInfo={userInfo}
-            updateRequests={updateRequests}
-          />
+          {userInfo && (
+            <DesktopActions
+              club={club}
+              userInfo={userInfo}
+              updateRequests={updateRequests}
+            />
+          )}
           <QAButton onClick={scrollToQuestions}>
             {questions.length > 0
               ? `Click here to see the ${questions.length} question${

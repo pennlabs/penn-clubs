@@ -2,13 +2,7 @@ import { Form, Formik } from 'formik'
 import { Component, ReactElement } from 'react'
 import s from 'styled-components'
 
-import {
-  doApiRequest,
-  formatResponse,
-  getApiUrl,
-  getRoleDisplay,
-  titleize,
-} from '../utils'
+import { doApiRequest, formatResponse, titleize } from '../utils'
 import { Icon, Loading } from './common'
 import { FormStyle } from './FormComponents'
 
@@ -62,7 +56,7 @@ type ModelFormProps = {
   defaultObject?: ModelObject
   fileFields?: string[]
   empty?: ReactElement | string
-  fields: any
+  fields: ReactElement
   tableFields?: TableField[]
   currentTitle?: (object: ModelObject) => ReactElement | string
 
@@ -74,7 +68,12 @@ type ModelFormProps = {
   confirmDeletion?: boolean
 }
 
-type ModelFormState = any
+type ModelFormState = {
+  objects: ModelObject[]
+  currentlyEditing: ModelObject | null
+  createObject: ModelObject
+  newCount: number
+}
 
 /**
  * The initial values returned by Django usually have a "field_url" attribute for some field,
@@ -195,11 +194,11 @@ export const ModelTable = ({
  * capabilities for a Django model using a provided endpoint.
  */
 export class ModelForm extends Component<ModelFormProps, ModelFormState> {
-  constructor(props) {
+  constructor(props: ModelFormProps) {
     super(props)
 
     this.state = {
-      objects: null,
+      objects: [],
       currentlyEditing: null,
       createObject:
         props.defaultObject != null ? { ...props.defaultObject } : {},
@@ -210,7 +209,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
   /**
    * This is called when the create/edit form has its contents changed.
    */
-  onChange = (obj): void => {
+  onChange = (obj: ModelObject): void => {
     if (this.props.onChange) {
       this.props.onChange(obj)
     }
@@ -234,7 +233,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
    * Called when the user requests for an object to be deleted.
    * @param object The object that should be deleted.
    */
-  onDelete = (object): void => {
+  onDelete = (object: ModelObject): void => {
     const { baseUrl, keyField = 'id' } = this.props
 
     if (typeof object[keyField] !== 'undefined') {
@@ -260,7 +259,7 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
    * Called when the form is submitted to save an individual object.
    * @returns a promise with the first argument as the new object values.
    */
-  onSubmit = (object, data): Promise<any> => {
+  onSubmit = (object: ModelObject, data): Promise<any> => {
     const { baseUrl, keyField = 'id' } = this.props
 
     // if object was deleted, return
@@ -438,7 +437,6 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
               </Subtitle>
               <Formik
                 validate={onChange}
-                key={currentlyEditing}
                 initialValues={doFormikInitialValueFixes(currentObject)}
                 initialStatus={
                   currentObject &&
@@ -496,9 +494,6 @@ export class ModelForm extends Component<ModelFormProps, ModelFormState> {
                           onClick={() => {
                             this.setState({
                               currentlyEditing: null,
-                              getApiUrl,
-                              formatResponse,
-                              getRoleDisplay,
                               createObject:
                                 this.props.defaultObject != null
                                   ? { ...this.props.defaultObject }

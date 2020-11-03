@@ -159,13 +159,16 @@ const Fair = ({ authenticated, club }: FairProps): ReactElement | null => {
   )
 }
 
-Fair.getInitialProps = async ({ req, query }: NextPageContext) => {
+Fair.getInitialProps = async ({
+  req,
+  query,
+}: NextPageContext): Promise<{ club: Club }> => {
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
   const resp = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const club = await resp.json()
-  return { query, club }
+  return { club }
 }
 
 export default renderPage(Fair)

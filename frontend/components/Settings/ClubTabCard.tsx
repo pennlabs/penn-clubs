@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import {
@@ -14,7 +15,10 @@ import {
 } from '../../constants/colors'
 import { BORDER_RADIUS } from '../../constants/measurements'
 import { CLUB_EDIT_ROUTE, CLUB_ROUTE } from '../../constants/routes'
+import { Club } from '../../types'
+import { getRoleDisplay } from '../../utils'
 import { Icon } from '../common'
+import { UserMembership } from './ClubTab'
 import Toggle from './Toggle'
 
 const Card = s.div`
@@ -92,16 +96,23 @@ const RightWrapper = s.div`
   justify-content: flex-start;
 `
 
-const ClubTabCard = ({ club, toggleActive, togglePublic, leaveClub }) => {
-  const {
-    code,
-    name,
-    role_display: role,
-    title,
-    active,
-    public: isPublic,
-  } = club
-  const canManage = role === 'Owner' || role === 'Officer'
+type ClubTabCardProps = {
+  membership: UserMembership
+  toggleActive: (club: Club) => void
+  togglePublic: (club: Club) => void
+  leaveClub: (club: Club) => void
+}
+
+const ClubTabCard = ({
+  membership,
+  toggleActive,
+  togglePublic,
+  leaveClub,
+}: ClubTabCardProps): ReactElement => {
+  const { club, role, title, active, public: isPublic } = membership
+  const { code, name } = club
+  const roleDisplay = getRoleDisplay(role)
+  const canManage = role <= 10
 
   return (
     <Card className="card">
@@ -134,7 +145,7 @@ const ClubTabCard = ({ club, toggleActive, togglePublic, leaveClub }) => {
       <CardRow>
         <RowIcon name="key" />
         Permission:
-        <RightWrapper>{role}</RightWrapper>
+        <RightWrapper>{roleDisplay}</RightWrapper>
       </CardRow>
       <CardDivider />
       <CardRow>

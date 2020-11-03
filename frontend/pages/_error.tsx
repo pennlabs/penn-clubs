@@ -15,6 +15,11 @@ const Image = s.img`
   margin-bottom: 1.5rem;
 `
 
+type ErrorProps = {
+  statusCode?: number
+  message?: string
+}
+
 const Error = ({
   statusCode = 500,
   message = 'Something went wrong',
@@ -39,7 +44,10 @@ const Error = ({
   </Container>
 )
 
-Error.getInitialProps = ({ res, err }: NextPageContext) => {
+Error.getInitialProps = ({
+  res,
+  err,
+}: NextPageContext): Promise<ErrorProps> => {
   const statusCode = (res && res.statusCode) || (err && err.statusCode) || 404
   let message = (err && err.message) || undefined
 
@@ -57,12 +65,7 @@ Error.getInitialProps = ({ res, err }: NextPageContext) => {
     }
   }
 
-  return { statusCode, message }
-}
-
-type ErrorProps = {
-  statusCode?: number
-  message?: string
+  return Promise.resolve({ statusCode, message })
 }
 
 export default renderPage(Error)

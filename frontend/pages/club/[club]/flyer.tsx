@@ -1,3 +1,4 @@
+import { NextPageContext } from 'next'
 import { ReactElement, useEffect, useState } from 'react'
 import s from 'styled-components'
 
@@ -106,7 +107,7 @@ const AboutText = s.div`
   -webkit-print-color-adjust: exact;
 `
 
-const truncate = (str, len = 54) => {
+const truncate = (str: string, len = 54): string => {
   if (str.length <= len + 3) {
     return str
   }
@@ -145,7 +146,7 @@ const truncate = (str, len = 54) => {
   return `${str.substring(0, len)}...`
 }
 
-const Flyer = ({ query }): ReactElement => {
+const Flyer = ({ club }: { club: string }): ReactElement => {
   const [clubs, setClubs] = useState<Club[] | null>(null)
   const [count, setCount] = useState<number>(0)
   const [failedClubs, setFailedClubs] = useState<string[]>([])
@@ -174,12 +175,12 @@ const Flyer = ({ query }): ReactElement => {
       })
     }
 
-    Promise.all(
-      query.club.split(',').map((c) => fetchClub(c, 3)),
-    ).then((clubs) => setClubs(clubs.filter((c) => c != null) as Club[]))
-  }, [query])
+    Promise.all(club.split(',').map((c) => fetchClub(c, 3))).then((clubs) =>
+      setClubs(clubs.filter((c) => c != null) as Club[]),
+    )
+  }, [club])
 
-  const totalClubCount = query.club.split(',').length
+  const totalClubCount = club.split(',').length
 
   if (clubs === null) {
     return (
@@ -281,8 +282,10 @@ const Flyer = ({ query }): ReactElement => {
   )
 }
 
-Flyer.getInitialProps = async ({ query }) => {
-  return { query }
+Flyer.getInitialProps = async ({
+  query,
+}: NextPageContext): Promise<{ club: string }> => {
+  return { club: typeof query.club === 'string' ? query.club : '' }
 }
 
 export default Flyer

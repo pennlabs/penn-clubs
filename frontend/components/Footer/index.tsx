@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { PINK, SNOW } from '../../constants/colors'
@@ -15,7 +16,7 @@ const Foot = s.footer`
   padding: 4rem;
 `
 
-const Footer = () => (
+const Footer = (): ReactElement => (
   <Foot className="footer">
     <SmallText style={{ marginBottom: '0rem' }}>
       Made with{' '}

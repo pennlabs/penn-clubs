@@ -10,7 +10,7 @@ import LoginModal from './components/LoginModal'
 import { WHITE } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
-import { Club, Tag, UserInfo } from './types'
+import { Badge, Club, School, StudentType, Tag, UserInfo, Year } from './types'
 import {
   doApiRequest,
   isClubFieldShown,
@@ -42,13 +42,30 @@ type RenderPageState = {
   userInfo: UserInfo | undefined
 }
 
-function renderPage(Page) {
-  class RenderPage extends Component<RenderPageProps, RenderPageState> {
+type PageComponentProps = RenderPageProps & RenderPageState
+
+type StaticPageProps<T> = {
+  getInitialProps?: (ctx: NextPageContext) => Promise<T>
+  getAdditionalPermissions?: (ctx: NextPageContext) => string[]
+  permissions?: string[]
+}
+
+type PageComponent<T> = React.ComponentType<
+  Omit<PageComponentProps, keyof T> & T
+> &
+  StaticPageProps<T>
+
+function renderPage<T>(
+  Page: PageComponent<T>,
+): React.ComponentType & {
+  getInitialProps?: (ctx: NextPageContext) => Promise<T & RenderPageProps>
+} {
+  class RenderPage extends Component<RenderPageProps & T, RenderPageState> {
     static getInitialProps?: (
       ctx: NextPageContext,
-    ) => Promise<{ authenticated: boolean; userInfo: undefined }>
+    ) => Promise<T & RenderPageProps>
 
-    constructor(props: RenderPageProps) {
+    constructor(props: RenderPageProps & T) {
       super(props)
 
       this.state = {
@@ -241,19 +258,30 @@ export type PaginatedClubPage = {
 }
 
 type ListPageProps = {
+  badges: Badge[]
   clubs: PaginatedClubPage
+  liveEventCount: number
+  schools: School[]
+  studentTypes: StudentType[]
   tags: Tag[]
-  authenticated: boolean | null
-  userInfo: UserInfo
+  years: Year[]
 }
 
-export function renderListPage(Page) {
-  class RenderListPage extends Component<ListPageProps> {
-    static getInitialProps: (
-      ctx: NextPageContext,
-    ) => Promise<{ tags: Tag[]; clubs: PaginatedClubPage }>
+type ListPageComponent<T> = React.ComponentType<
+  ListPageProps & PageComponentProps & T
+> &
+  StaticPageProps<T>
 
-    static permissions: string[]
+export function renderListPage<T>(
+  Page: ListPageComponent<T>,
+): React.ComponentType {
+  class RenderListPage extends Component<
+    ListPageProps & PageComponentProps & T
+  > {
+    static getInitialProps: (ctx: NextPageContext) => Promise<ListPageProps & T>
+
+    static permissions?: string[]
+    static getAdditionalPermissions?: (ctx: NextPageContext) => string[]
 
     render(): ReactElement {
       const { authenticated } = this.props
@@ -266,10 +294,18 @@ export function renderListPage(Page) {
     }
   }
 
-  RenderListPage.getInitialProps = async ({ req }) => {
+  RenderListPage.getInitialProps = async (
+    ctx: NextPageContext,
+  ): Promise<T & ListPageProps> => {
+    const { req } = ctx
     const data = {
       headers: req ? { cookie: req.headers.cookie } : undefined,
     }
+
+    const fetchOriginalProps = async (): Promise<T> =>
+      Page.getInitialProps ? await Page.getInitialProps(ctx) : ({} as T)
+
+    const initialProps = await fetchOriginalProps()
 
     const [
       clubsRequest,
@@ -312,17 +348,19 @@ export function renderListPage(Page) {
     ])
 
     return {
-      tags: tagsResponse,
-      badges: badgesResponse,
-      clubs: clubsResponse,
-      schools: schoolResponse,
-      years: yearResponse,
-      student_types: studentTypesResponse,
+      ...initialProps,
+      badges: badgesResponse as Badge[],
+      clubs: clubsResponse as PaginatedClubPage,
       liveEventCount: liveEventResponse.length,
+      schools: schoolResponse as School[],
+      studentTypes: studentTypesResponse as StudentType[],
+      tags: tagsResponse as Tag[],
+      years: yearResponse as Year[],
     }
   }
 
   RenderListPage.permissions = Page.permissions
+  RenderListPage.getAdditionalPermissions = Page.getAdditionalPermissions
 
   return renderPage(RenderListPage)
 }

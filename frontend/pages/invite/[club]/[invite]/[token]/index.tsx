@@ -161,7 +161,9 @@ const Invite = ({ club, query }: InviteProps): ReactElement => {
   )
 }
 
-Invite.getInitialProps = async (ctx: NextPageContext) => {
+Invite.getInitialProps = async (
+  ctx: NextPageContext,
+): Promise<{ query: Query; club: Club }> => {
   const { query } = ctx
 
   const clubRequest = await doApiRequest(
@@ -169,7 +171,7 @@ Invite.getInitialProps = async (ctx: NextPageContext) => {
   )
   const clubResponse = await clubRequest.json()
 
-  return { query, club: clubResponse }
+  return { query: query as Query, club: clubResponse }
 }
 
 export default renderPage(Invite)

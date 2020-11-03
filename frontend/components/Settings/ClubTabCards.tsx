@@ -20,10 +20,10 @@ const ClubTabCards = ({
   leaveClub,
 }: ClubTabCardProps): ReactElement => (
   <div className={className}>
-    {memberships.map(({ club }) => (
+    {memberships.map((mship) => (
       <ClubTabCard
-        key={club.code}
-        club={club}
+        key={mship.club.code}
+        membership={mship}
         togglePublic={togglePublic}
         toggleActive={toggleActive}
         leaveClub={leaveClub}

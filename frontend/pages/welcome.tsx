@@ -50,9 +50,9 @@ const markWelcome = () => {
 }
 
 type WelcomeProps = {
-  authenticated: boolean
-  userInfo: UserInfo
-  nextUrl: string | undefined
+  authenticated: boolean | null
+  userInfo?: UserInfo
+  nextUrl?: string
 }
 
 const Welcome = ({
@@ -60,7 +60,9 @@ const Welcome = ({
   userInfo: initialUserInfo,
   nextUrl,
 }: WelcomeProps): ReactElement => {
-  const [userInfo, setUserInfo] = useState<UserInfo>(initialUserInfo)
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(
+    initialUserInfo ?? null,
+  )
 
   if (authenticated === false) {
     return <AuthPrompt />
@@ -153,8 +155,10 @@ const Welcome = ({
   )
 }
 
-Welcome.getInitialProps = async ({ query }: NextPageContext) => {
-  return { nextUrl: query.next }
+Welcome.getInitialProps = async ({
+  query,
+}: NextPageContext): Promise<{ nextUrl?: string }> => {
+  return { nextUrl: !Array.isArray(query.next) ? query.next : undefined }
 }
 
 export default renderPage(Welcome)
