@@ -81,8 +81,8 @@ const SearchTags = ({
       return (searchInput[param] ?? '')
         .trim()
         .split(',')
-        .filter((val) => val.length > 0)
-        .map((value) =>
+        .filter((val: string): number => val.length > 0)
+        .map((value: string) =>
           optionMapping[param].find((tag) => tag.value.toString() === value),
         )
         .filter((tag) => tag !== undefined)
@@ -263,7 +263,7 @@ const Splash = (props: SplashProps): ReactElement => {
     name: 'year',
   }))
 
-  const studentTypeOptions = props.student_types.map(({ id, name }) => ({
+  const studentTypeOptions = props.studentTypes.map(({ id, name }) => ({
     value: id,
     label: name,
     name: 'student_type',

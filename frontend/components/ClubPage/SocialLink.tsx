@@ -1,8 +1,18 @@
-const stripUrl = (url) => {
+import { ReactElement } from 'react'
+
+import { Club } from '../../types'
+
+const stripUrl = (url: string): string => {
   return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').replace(/\/$/, '')
 }
 
-const SocialLink = ({ club, item, type }) => {
+type SocialLinkProps = {
+  club: Club
+  item: { name: string }
+  type: string
+}
+
+const SocialLink = ({ club, item, type }: SocialLinkProps): ReactElement => {
   let url, text
 
   if (type === 'Email') {

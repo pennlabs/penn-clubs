@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { BLACK } from '../../constants/colors'
@@ -22,7 +23,7 @@ const Icons = s.div`
   }
 `
 
-const Social = () => (
+const Social = (): ReactElement => (
   <Icons>
     <a href="https://github.com/pennlabs/" aria-label="GitHub">
       <Icon name="github" alt="github" />

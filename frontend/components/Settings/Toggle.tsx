@@ -3,8 +3,6 @@ import { Component, ReactElement } from 'react'
 import s from 'styled-components'
 
 import { CLUBS_BLUE, LIGHT_GRAY, MEDIUM_GRAY } from '../../constants/colors'
-import { Club } from '../../types'
-
 const HEIGHT = 0.875
 const WIDTH = 2.25
 
@@ -59,8 +57,8 @@ const Circle = s.div<{ active?: boolean }>`
  * @param {string} filterOffText: text rendered when the filter is off
  * @param {string} filterOnText text rendered when filter is on
  */
-class Toggle extends Component<ToggleProps, ToggleState> {
-  constructor(props: ToggleProps) {
+class Toggle<T> extends Component<ToggleProps<T>, ToggleState> {
+  constructor(props: ToggleProps<T>) {
     super(props)
     this.state = {
       active: props.active ?? false,
@@ -105,9 +103,9 @@ type ToggleState = {
   active: boolean
 }
 
-type ToggleProps = {
-  club: Club
-  toggle: (club: Club) => void
+type ToggleProps<T> = {
+  club: T
+  toggle: (club: T) => void
   filter?: boolean
   filterOffText?: string
   filterOnText?: string

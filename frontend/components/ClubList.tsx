@@ -1,9 +1,11 @@
 import Link from 'next/link'
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
 import { CLUB_ROUTE } from '../constants/routes'
+import { Club } from '../types'
 import { getDefaultClubImageURL } from '../utils'
 import { BlueTag, Card, InactiveTag } from './common'
 
@@ -20,9 +22,11 @@ const Image = s.img`
   border-radius: ${BORDER_RADIUS};
 `
 
-// TODO simplify this component further
+type ClubListProps = {
+  club: Club
+}
 
-const ClubList = ({ club, updateFavorites, favorite }) => {
+const ClubList = ({ club }: ClubListProps): ReactElement => {
   const { name, subtitle, tags, code } = club
   const img = club.image_url || getDefaultClubImageURL()
 

@@ -1,3 +1,4 @@
+import { ReactElement } from 'react'
 import s from 'styled-components'
 
 import { BLACK_ALPHA, DARK_GRAY } from '../../constants/colors'
@@ -15,4 +16,4 @@ const Span = s.span`
   font-weight: 500;
 `
 
-export const InactiveTag = () => <Span>Inactive</Span>
+export const InactiveTag = (): ReactElement => <Span>Inactive</Span>

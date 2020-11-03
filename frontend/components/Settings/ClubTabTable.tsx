@@ -78,14 +78,14 @@ const ClubTabTable = ({
       </tr>
     </thead>
     <tbody>
-      {memberships.map(({ club, active, public: isPublic, role }) => (
+      {memberships.map(({ club, active, public: isPublic, role, title }) => (
         <tr key={club.code}>
           <td>
             <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
               <a>{club.name}</a>
             </Link>
           </td>
-          <td>{club.name}</td>
+          <td>{title}</td>
           <td>{getRoleDisplay(role)}</td>
           <td>
             <Toggle
