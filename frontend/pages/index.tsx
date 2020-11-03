@@ -58,7 +58,7 @@ type SplashProps = {
   badges: Badge[]
   schools: School[]
   years: Year[]
-  student_types: StudentType[]
+  studentTypes: StudentType[]
   clubCount: number
   liveEventCount: number
 }
@@ -81,7 +81,7 @@ const SearchTags = ({
       return (searchInput[param] ?? '')
         .trim()
         .split(',')
-        .filter((val: string): number => val.length > 0)
+        .filter((val: string): boolean => val.length > 0)
         .map((value: string) =>
           optionMapping[param].find((tag) => tag.value.toString() === value),
         )

@@ -45,7 +45,7 @@ enum Metric {
 
 enum Category {
   School = 'school',
-  Graduation_Year = 'graduation_year',
+  GraduationYear = 'graduation_year',
 }
 
 enum Group {
@@ -76,7 +76,7 @@ const CATEGORIES = [
     label: 'School',
   },
   {
-    value: Category.Graduation_Year,
+    value: Category.GraduationYear,
     label: 'Graduation Year',
   },
 ]

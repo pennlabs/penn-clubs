@@ -98,7 +98,11 @@ const OrderingChevronWrapper = s.div`
   }
 `
 
-const OrderInput = ({ onChange }): ReactElement => {
+const OrderInput = ({
+  onChange,
+}: {
+  onChange: (key: string) => void
+}): ReactElement => {
   const [ordering, setOrdering] = useState<string>('featured')
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const selectedOrdering = ORDERINGS.find((order) => order.key === ordering)

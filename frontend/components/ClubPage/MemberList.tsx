@@ -3,6 +3,7 @@ import s from 'styled-components'
 
 import { DARK_GRAY } from '../../constants/colors'
 import { M1 } from '../../constants/measurements'
+import { Club } from '../../types'
 import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../utils/branding'
 import { Center, Col, EmptyState, Icon, Row, Text } from '../common'
 import MemberCard from './MemberCard'
@@ -12,7 +13,7 @@ const Toggle = s.div`
   cursor: pointer;
 `
 
-const MemberList = ({ club: { members } }): ReactElement => {
+const MemberList = ({ club: { members } }: { club: Club }): ReactElement => {
   const [expanded, setExpanded] = useState(false)
   const hasMembers = members.length > 0
   return hasMembers ? (
