@@ -152,4 +152,5 @@ export const TAG_BACKGROUND_COLOR_MAP = {
   size__in: CLUBS_NAVY,
   application_required__in: CLUBS_RED,
   badges__in: CLUBS_PURPLE,
+  recruiting_cycle__in: CLUBS_RED_DARK,
 }

@@ -73,6 +73,14 @@ export enum ClubApplicationRequired {
   ApplicationAndInterview = 5,
 }
 
+export enum ClubRecruitingCycle {
+  Unknown = 1,
+  Fall = 2,
+  Spring = 3,
+  Both = 4,
+  Open = 5,
+}
+
 export interface Tag {
   id: number
   name: string
