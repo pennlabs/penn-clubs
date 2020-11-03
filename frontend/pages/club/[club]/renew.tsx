@@ -33,14 +33,17 @@ import {
   SITE_NAME,
 } from '../../../utils/branding'
 
-type RenewPageProps = {
+type InitialRenewPageProps = {
   club: Club
-  authenticated: boolean | null
   schools: School[]
   majors: Major[]
   years: Year[]
   tags: Tag[]
   student_types: StudentType[]
+}
+
+type RenewPageProps = InitialRenewPageProps & {
+  authenticated: boolean | null
 }
 
 const SubTitle = s.h2`
@@ -162,7 +165,7 @@ const RenewPage = ({
   majors,
   years,
   tags,
-  student_types,
+  student_types: studentTypes,
 }: RenewPageProps): ReactElement => {
   const [club, setClub] = useState<Club>(initialClub)
   const [step, setStep] = useState<number>(0)
@@ -287,7 +290,7 @@ const RenewPage = ({
             majors={majors}
             years={years}
             tags={tags}
-            student_types={student_types}
+            student_types={studentTypes}
             club={club}
             isEdit={true}
             onSubmit={({ club, message }): Promise<void> => {
@@ -507,7 +510,10 @@ const RenewPage = ({
   )
 }
 
-RenewPage.getInitialProps = async ({ query, req }: NextPageContext) => {
+RenewPage.getInitialProps = async ({
+  query,
+  req,
+}: NextPageContext): Promise<InitialRenewPageProps> => {
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
@@ -532,7 +538,7 @@ RenewPage.getInitialProps = async ({ query, req }: NextPageContext) => {
       output[item[0]] = item[1]
     })
     return output
-  })
+  }) as Promise<InitialRenewPageProps>
 }
 
 RenewPage.permissions = []
