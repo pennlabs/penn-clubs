@@ -1,23 +1,18 @@
-import { ReactElement, useState } from 'react'
+import moment from 'moment'
+import {
+  Dispatch,
+  ReactElement,
+  SetStateAction,
+  useEffect,
+  useState,
+} from 'react'
 import styled from 'styled-components'
-import { Club, MembershipRank, MembershipRole } from '../../types'
-import { Card, Loading } from '../common'
+import { Club } from '../../types'
+import { M2 } from '../../constants/measurements'
+import { WHITE } from '../../constants/colors'
+import { doApiRequest } from '../../utils'
+import { BlueTag, Card, Loading, Text } from '../common'
 import BaseCard from './BaseCard'
-
-export const MEMBERSHIP_ROLES: MembershipRole[] = [
-  {
-    value: MembershipRank.Member,
-    label: 'Member',
-  },
-  {
-    value: MembershipRank.Officer,
-    label: 'Officer',
-  },
-  {
-    value: MembershipRank.Owner,
-    label: 'Owner',
-  },
-]
 
 type Note = {
   creator: string
@@ -35,68 +30,160 @@ type NoteTag = {
 
 type NoteProps = {
   note: Note
+  setDisplayNote: Dispatch<SetStateAction<Note | null>>
 }
 
 type NotesCardProps = {
   club: Club
 }
 
+const NoteDashboardContainer = styled.div`
+  height: 400px;
+`
+
 const Row = styled.div`
   display: flex;
   justify-content: space-between;
 `
 
-const Header = styled.span`
-  font-family: HelveticaNeue;
+const NoteHeader = styled.span`
   font-size: 14px;
   font-wegiht: 500;
   color: #3a3a3a;
 `
 
+const DisplayNoteHeader = styled.span`
+  font-size: 28px;
+  font-wegiht: 500;
+  color: #3a3a3a;
+`
+
 const Date = styled.span`
-  font-family: HelveticaNeue;
   font-size: 12px;
   font-weight: 500;
   color: #959595;
 `
 
-const Name = styled.span`
+const Subheader = styled.p`
   font-family: HelveticaNeue;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   color: #959595;
+  line-height: 1em;
 `
 
-function Note({ note }: NoteProps): ReactElement {
+const Content = styled(Text)`
+  font-size: 14px;
+  margin-top: 5px;
+  margin-bottom: 8px;
+`
+
+const StyledCard = styled(Card)`
+  background-color: ${WHITE};
+  margin-bottom: ${M2};
+  padding-left: ${M2};
+`
+function Note({ note, setDisplayNote }: NoteProps): ReactElement {
   return (
-    <Card>
+    <StyledCard hoverable bordered onClick={() => setDisplayNote(note)}>
       <Row>
-        <Header>{note.title}</Header>
+        <div>
+          <NoteHeader>{note.title}</NoteHeader>
+          <Subheader>{note.creator}</Subheader>
+        </div>
         <Date>{note.modified}</Date>
       </Row>
-      <Name>{note.creator}</Name>
-      <p>{note.content}</p>
-    </Card>
+
+      <Content>{note.content}</Content>
+      {note.noteTags.map((noteTag, index) => {
+        return (
+          <BlueTag key={index} className="tag is-rounded has-text-white">
+            {noteTag.name}
+          </BlueTag>
+        )
+      })}
+    </StyledCard>
   )
 }
 
 export default function NotesCard({ club }: NotesCardProps): ReactElement {
-  const [loadingNotes, setLoadingNotes] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(false)
   const [notes, setNotes] = useState<Note[]>([])
+  const [displayNote, setDisplayNote] = useState<Note | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    doApiRequest(`/clubs/${club.code}/notes/?format=json&start=`)
+      .then((request) => request.json())
+      .then((response) => {
+        setNotes(
+          response.map((note) => {
+            return {
+              creator: note.creator_full_name,
+              title: note.title,
+              content: note.content,
+              modified: moment(note.updated_at).format('D/M/YYYY'),
+              creatingClub: note.creating_club,
+              subjectClub: note.subject_club,
+              noteTags: note.note_tags.map((noteTag) => {
+                return {
+                  name: noteTag.name,
+                }
+              }),
+            }
+          }),
+        )
+        if (notes.length > 0) {
+          console.log(notes)
+          setDisplayNote(notes[0])
+        }
+        setLoading(false)
+      })
+  }, [])
 
   return (
     <BaseCard title="Notes">
-      {loadingNotes ? (
+      {loading ? (
         <Loading />
       ) : (
-        <>
-          <div className="column is-3">
-            {notes.map((note) => {
-              return <Note note={note} />
+        <NoteDashboardContainer className="columns">
+          <div className="column is-4" style={{ overflow: 'scroll' }}>
+            {notes.map((note, index) => {
+              return (
+                <Note key={index} note={note} setDisplayNote={setDisplayNote} />
+              )
             })}
           </div>
-          <div className="column is-9"></div>
-        </>
+          <StyledCard
+            className="column is-8"
+            style={{ marginTop: '12px' }}
+            bordered
+          >
+            {displayNote == null ? (
+              <></>
+            ) : (
+              <>
+                <DisplayNoteHeader>{displayNote.title}</DisplayNoteHeader>
+                <Subheader>{`Last updated ${displayNote.modified} by ${displayNote.creator}`}</Subheader>
+                <hr />
+                <Text>{displayNote.content}</Text>
+                <Subheader>
+                  <span style={{ marginRight: '5px' }}>Tagged: </span>
+                  {displayNote.noteTags.map((noteTag, index) => {
+                    return (
+                      <BlueTag
+                        key={index}
+                        className="tag is-rounded has-text-white"
+                      >
+                        {noteTag.name}
+                      </BlueTag>
+                    )
+                  })}
+                </Subheader>
+              </>
+            )}
+          </StyledCard>
+        </NoteDashboardContainer>
       )}
     </BaseCard>
   )

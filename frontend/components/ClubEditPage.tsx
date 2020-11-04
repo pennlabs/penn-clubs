@@ -32,6 +32,7 @@ import AdvisorCard from './ClubEditPage/AdvisorCard'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
 import EnableSubscriptionCard from './ClubEditPage/EnableSubscriptionCard'
+import NotesCard from './ClubEditPage/NotesCard'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import QuestionsCard from './ClubEditPage/QuestionsCard'
 import RenewCard from './ClubEditPage/RenewCard'
@@ -278,6 +279,7 @@ const ClubForm = ({
           <>
             <MemberExperiencesCard club={club} />
             <FilesCard club={club} />
+            <NotesCard club={club} />
           </>
         ),
       },
