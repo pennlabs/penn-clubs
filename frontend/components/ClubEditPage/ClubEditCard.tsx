@@ -5,6 +5,7 @@ import { ReactElement } from 'react'
 import {
   Club,
   ClubApplicationRequired,
+  ClubRecruitingCycle,
   ClubSize,
   Major,
   School,
@@ -54,6 +55,29 @@ const CLUB_APPLICATIONS = [
   {
     value: ClubApplicationRequired.ApplicationAndInterview,
     label: 'Application and Interview Required',
+  },
+]
+
+export const CLUB_RECRUITMENT_CYCLES = [
+  {
+    value: ClubRecruitingCycle.Unknown,
+    label: 'Unknown',
+  },
+  {
+    value: ClubRecruitingCycle.Fall,
+    label: 'Fall Semester',
+  },
+  {
+    value: ClubRecruitingCycle.Spring,
+    label: 'Spring Semester',
+  },
+  {
+    value: ClubRecruitingCycle.Both,
+    label: 'Both Semesters',
+  },
+  {
+    value: ClubRecruitingCycle.Open,
+    label: 'Open',
   },
 ]
 
@@ -366,6 +390,16 @@ export default function ClubEditCard({
           serialize: (a) => a.value,
         },
         {
+          name: 'recruiting_cycle',
+          label: `When do you recruit your members?`,
+          required: true,
+          type: 'select',
+          choices: CLUB_RECRUITMENT_CYCLES,
+          valueDeserialize: (a) =>
+            CLUB_RECRUITMENT_CYCLES.find((x) => x.value === a),
+          serialize: (a) => a.value,
+        },
+        {
           name: 'accepting_members',
           label: 'Are you currently accepting applications at this time?',
           type: 'checkbox',
@@ -424,6 +458,7 @@ export default function ClubEditCard({
     accepting_members: false,
     size: CLUB_SIZES[0].value,
     application_required: CLUB_APPLICATIONS[0].value,
+    recruiting_cycle: CLUB_RECRUITMENT_CYCLES[0].value,
   }
 
   const editingFields = new Set<string>()

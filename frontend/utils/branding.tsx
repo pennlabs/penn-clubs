@@ -38,13 +38,14 @@ const sites = {
     STYLE_URL: null,
 
     CLUB_FIELDS: [
-      'size',
+      'accepting_members',
+      'application_required',
       'founded',
       'github',
       'linkedin',
       'listserv',
-      'application_required',
-      'accepting_members',
+      'recruiting_cycle',
+      'size',
     ],
     SHOW_MEMBERS: true,
     SHOW_MEMBERSHIP_REQUEST: true,

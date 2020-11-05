@@ -2,6 +2,7 @@ import equal from 'deep-equal'
 import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import s from 'styled-components'
 
+import { CLUB_RECRUITMENT_CYCLES } from '../components/ClubEditPage/ClubEditCard'
 import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
 import LiveEventsDialog from '../components/ClubPage/LiveEventsDialog'
 import { Metadata, Title, WideContainer } from '../components/common'
@@ -269,6 +270,11 @@ const Splash = (props: SplashProps): ReactElement => {
     name: 'student_type',
   }))
 
+  const recruitingCycleOptions = CLUB_RECRUITMENT_CYCLES.map((item) => ({
+    ...item,
+    name: 'cycle',
+  }))
+
   return (
     <>
       <Metadata />
@@ -311,6 +317,13 @@ const Splash = (props: SplashProps): ReactElement => {
                   name: 'accept',
                 },
               ]}
+            />
+          )}
+          {isClubFieldShown('recruiting_cycle') && (
+            <SearchBarCheckboxItem
+              param="recruiting_cycle__in"
+              label="Recruiting Cycle"
+              options={recruitingCycleOptions}
             />
           )}
           {isClubFieldShown('available_virtually') && (
@@ -383,6 +396,7 @@ const Splash = (props: SplashProps): ReactElement => {
                 target_schools__in: schoolOptions,
                 target_years__in: yearOptions,
                 student_types__in: studentTypeOptions,
+                recruiting_cycle__in: recruitingCycleOptions,
               }}
             />
 
