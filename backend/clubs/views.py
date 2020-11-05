@@ -1198,6 +1198,7 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Do not let non-superusers create events with the FAIR type through the API.
         """
+        print(request.data)
         type = request.data.get("type", 0)
         if type == Event.FAIR and not self.request.user.is_superuser:
             raise DRFValidationError(
@@ -1205,6 +1206,27 @@ class EventViewSet(viewsets.ModelViewSet):
                 "See above for events to edit, and "
                 "please email contact@pennclubs.com if this is en error."
             )
+
+        if request.data.get("is_recurring", None) is not None:
+            event_data = request.data.copy()
+            print(event_data)
+            start_time = event_data.pop('start_time')
+            end_time = event_data.pop('end_time')
+            offset = event_data.pop('offset')
+            end_date = event_data.pop('end_date')
+            event_data.pop('is_recurring')
+            print("new", event_data)
+            event_data.pop('image_url')
+            event_data.pop('large_image_url')
+            event_data.pop('club_name')
+            event_data.pop('badges')
+
+            #print("new", event_data)
+
+            while start_time < end_date:
+                Event.objects.create(**event_data, start_time=start_time, end_time=end_time)
+                start_time = start_time + datetime.timedelta(days=offset)
+                end_time = end_time + datetime.timedelta(days=offset)
 
         return super().create(request, *args, **kwargs)
 
@@ -1226,7 +1248,6 @@ class EventViewSet(viewsets.ModelViewSet):
         qs = Event.objects.all()
         if self.kwargs.get("club_code") is not None:
             qs = qs.filter(club__code=self.kwargs["club_code"])
-
         qs = qs.filter(club__approved=True)
 
         now = timezone.now()
