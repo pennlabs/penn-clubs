@@ -8,6 +8,7 @@ import { CLUB_EDIT_ROUTE, CLUB_ROUTE } from '../../constants/routes'
 import { BODY_FONT } from '../../constants/styles'
 import { Club, MembershipRank } from '../../types'
 import { getRoleDisplay } from '../../utils'
+import { MEMBERSHIP_ROLE_NAMES } from '../../utils/branding'
 import { Icon } from '../common'
 import { UserMembership } from './ClubTab'
 import Toggle from './Toggle'
@@ -42,7 +43,11 @@ const ClubTabTable = ({
         <th>
           Permissions
           <Icon
-            data-tip="Shows your level of access to club management tools. Can be a Member, Officer, or Owner."
+            data-tip={`Shows your level of access to club management tools. Can be a ${
+              MEMBERSHIP_ROLE_NAMES[MembershipRank.Member]
+            }, ${MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer]}, or ${
+              MEMBERSHIP_ROLE_NAMES[MembershipRank.Owner]
+            }.`}
             data-effect="solid"
             data-multiline="true"
             name="info"

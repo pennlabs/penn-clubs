@@ -6,6 +6,7 @@ import { DARK_GRAY } from '../../constants/colors'
 import { CLUB_RENEW_ROUTE, CLUB_ROUTE } from '../../constants/routes'
 import { BODY_FONT } from '../../constants/styles'
 import { MembershipRank, UserMembership } from '../../types'
+import { MEMBERSHIP_ROLE_NAMES } from '../../utils/branding'
 import { Icon } from '../common'
 
 const Table = s.table`
@@ -50,7 +51,8 @@ const RenewTabTable = ({
                 </Link>
               ) : (
                 <span className="has-text-info">
-                  <Icon name="alert-triangle" /> Not Officer
+                  <Icon name="alert-triangle" /> Not{' '}
+                  {MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer]}
                 </span>
               )
             ) : club.approved ? (

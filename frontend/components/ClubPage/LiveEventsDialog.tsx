@@ -10,7 +10,9 @@ import {
   M2,
   M4,
 } from '../../constants'
+import { MembershipRank } from '../../types'
 import { useSetting } from '../../utils'
+import { MEMBERSHIP_ROLE_NAMES } from '../../utils/branding'
 
 const LiveBanner = s.div`
   padding: 20px;
@@ -79,7 +81,9 @@ const LiveEventsDialog = ({
           as={FAIR_OFFICER_GUIDE_ROUTE}
           passHref
         >
-          <WhiteButton>Officer Setup</WhiteButton>
+          <WhiteButton>
+            {MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer]} Setup
+          </WhiteButton>
         </Link>
       )}
       {isFair && (

@@ -3,6 +3,10 @@ import { ReactElement } from 'react'
 
 import { Club, MembershipRank, MembershipRole } from '../../types'
 import { getApiUrl, getRoleDisplay } from '../../utils'
+import {
+  MEMBERSHIP_ROLE_NAMES,
+  OBJECT_MEMBERSHIP_LABEL,
+} from '../../utils/branding'
 import { Icon } from '../common'
 import { SelectField, TextField } from '../FormComponents'
 import { ModelForm } from '../ModelForm'
@@ -11,15 +15,15 @@ import BaseCard from './BaseCard'
 export const MEMBERSHIP_ROLES: MembershipRole[] = [
   {
     value: MembershipRank.Member,
-    label: 'Member',
+    label: MEMBERSHIP_ROLE_NAMES[MembershipRank.Member],
   },
   {
     value: MembershipRank.Officer,
-    label: 'Officer',
+    label: MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer],
   },
   {
     value: MembershipRank.Owner,
-    label: 'Owner',
+    label: MEMBERSHIP_ROLE_NAMES[MembershipRank.Owner],
   },
 ]
 
@@ -29,7 +33,7 @@ type MembersCardProps = {
 
 export default function MembersCard({ club }: MembersCardProps): ReactElement {
   return (
-    <BaseCard title="Members">
+    <BaseCard title={OBJECT_MEMBERSHIP_LABEL}>
       <ModelForm
         keyField="username"
         deleteVerb="Kick"
@@ -72,7 +76,8 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
           href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)}
           className="button is-link is-small"
         >
-          <Icon alt="download" name="download" /> Download Member List
+          <Icon alt="download" name="download" /> Download{' '}
+          {OBJECT_MEMBERSHIP_LABEL} List
         </a>
       </div>
     </BaseCard>

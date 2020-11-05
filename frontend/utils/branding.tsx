@@ -50,6 +50,8 @@ const sites = {
     SHOW_MEMBERS: true,
     SHOW_MEMBERSHIP_REQUEST: true,
     SHOW_RANK_ALGORITHM: true,
+    MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
+    OBJECT_MEMBERSHIP_LABEL: 'Members',
 
     PARTNER_LOGOS: [
       {
@@ -124,6 +126,8 @@ const sites = {
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,
     SHOW_RANK_ALGORITHM: false,
+    MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor', 20: 'Viewer' },
+    OBJECT_MEMBERSHIP_LABEL: 'Staff',
 
     PARTNER_LOGOS: [
       {
@@ -183,6 +187,8 @@ export const OBJECT_TAB_FILES_DESCRIPTION =
 export const SHOW_MEMBERS = sites[site].SHOW_MEMBERS
 export const SHOW_MEMBERSHIP_REQUEST = sites[site].SHOW_MEMBERSHIP_REQUEST
 export const SHOW_RANK_ALGORITHM = sites[site].SHOW_RANK_ALGORITHM
+export const MEMBERSHIP_ROLE_NAMES = sites[site].MEMBERSHIP_ROLE_NAMES
+export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
 
 export const PARTNER_LOGOS = sites[site].PARTNER_LOGOS
 
