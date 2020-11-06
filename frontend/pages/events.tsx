@@ -17,10 +17,17 @@ import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
 import { EVENT_TYPES } from '../components/ClubEditPage/EventsCard'
-import { Icon, Metadata, Modal, Title, WideWrapper } from '../components/common'
+import {
+  Icon,
+  Metadata,
+  Modal,
+  Title,
+  WideContainer,
+} from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import EventCard from '../components/EventPage/EventCard'
-import EventModal, { MEETING_REGEX } from '../components/EventPage/EventModal'
+import { MEETING_REGEX } from '../components/EventPage/EventModal'
+import SyncModal from '../components/EventPage/SyncModal'
 import { FuseTag } from '../components/FilterSearch'
 import SearchBar, {
   SearchBarCheckboxItem,
@@ -30,11 +37,13 @@ import SearchBar, {
   SearchInput,
 } from '../components/SearchBar'
 import {
+  CLUBS_BLUE,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   EVENT_TYPE_COLORS,
   FULL_NAV_HEIGHT,
   SNOW,
+  WHITE_ALPHA,
 } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, ClubEventType, Tag } from '../types'
@@ -220,6 +229,19 @@ const CalendarHeader = ({
     </StyledHeader>
   )
 }
+
+const SyncButton = styled.a`
+  background-color: ${CLUBS_BLUE};
+  color: ${WHITE_ALPHA(0.8)} !important;
+  float: right;
+  padding: 8px;
+`
+
+const iconStylesDark = {
+  transform: 'translateY(0px)',
+  opacity: 0.6,
+  color: `${WHITE_ALPHA(0.8)} !important`,
+}
 /**
  * Randomize the order the events are shown in.
  * First prioritize the events with an earlier start date.
@@ -290,6 +312,10 @@ function EventPage({
   )
   const currentSearch = useRef<SearchInput>({})
   const [isLoading, setLoading] = useState<boolean>(false)
+  const [syncModalVisible, setSyncModalVisible] = useState<boolean>(false)
+
+  const showSyncModal = () => setSyncModalVisible(true)
+  const hideSyncModal = () => setSyncModalVisible(false)
 
   const [viewOption, setViewOption] = useState<EventsViewOption>(
     isFair ? EventsViewOption.LIST : EventsViewOption.CALENDAR,
@@ -489,14 +515,31 @@ function EventPage({
           )}
         </SearchBar>
         <SearchbarRightContainer>
-          <WideWrapper
-            fullHeight
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              background: SNOW,
-            }}
-          >
+          <WideContainer background={SNOW} fullHeight>
+            <SyncButton onClick={showSyncModal}>
+              <Icon name="plus" alt="create club" style={iconStylesDark} />
+              Sync To Calendar
+            </SyncButton>
+            {!!liveEvents.length && (
+              <>
+                <Title
+                  className="title"
+                  style={{ color: CLUBS_GREY, marginTop: '30px' }}
+                >
+                  Live Events
+                </Title>
+                {isLoading && <ListLoadIndicator />}
+                <CardList>
+                  {liveEvents.map((e) => (
+                    <EventCard key={e.id} event={e} />
+                  ))}
+                </CardList>
+                <br />
+              </>
+            )}
+            <Title className="title" style={{ color: CLUBS_GREY }}>
+              Upcoming Events
+            </Title>
             {isLoading && <ListLoadIndicator />}
             <ViewContext.Provider value={[viewOption, setViewOption]}>
               {viewOption === EventsViewOption.LIST ? (
@@ -614,12 +657,12 @@ function EventPage({
                 </div>
               )}
             </ViewContext.Provider>
-          </WideWrapper>
+          </WideContainer>
         </SearchbarRightContainer>
       </div>
-      {previewEvent && (
-        <Modal show={true} closeModal={hideModal} width="45%">
-          <EventModal event={previewEvent} showDetailsButton={true} />
+      {syncModalVisible && (
+        <Modal show={syncModalVisible} closeModal={hideSyncModal} width="45%">
+          <SyncModal />
         </Modal>
       )}
     </>
