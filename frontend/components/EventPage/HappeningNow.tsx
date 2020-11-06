@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import { css, keyframes } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 
 import { RED } from '../../constants/colors'
 

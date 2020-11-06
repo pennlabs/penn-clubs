@@ -1,5 +1,5 @@
 import { ReactElement, useEffect, useState } from 'react'
-import { keyframes } from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 
 import { ALLBIRDS_GRAY, BLUE, BORDER } from '../../constants/colors'
 
