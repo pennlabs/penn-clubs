@@ -1,17 +1,17 @@
 import { ReactElement, useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { DARK_GRAY } from '../constants/colors'
 import { getCurrentRelativePath, LOGIN_URL } from '../utils'
 import { SITE_LOGO, SITE_NAME } from '../utils/branding'
 import { Loading, Modal } from './common'
 
-const Logo = s.img`
+const Logo = styled.img`
   width: 100px;
   margin-top: 12%;
 `
 
-const ModalTitle = s.h1`
+const ModalTitle = styled.h1`
   color: ${DARK_GRAY};
   font-size: 2rem;
   font-weight: 600;

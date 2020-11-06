@@ -1,7 +1,7 @@
 import Router from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import TimeAgo from 'react-timeago'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   Checkbox,
@@ -28,7 +28,7 @@ import { API_BASE_URL, apiCheckPermission, doApiRequest } from '../../utils'
 import { OBJECT_NAME_TITLE_SINGULAR, SITE_NAME } from '../../utils/branding'
 import Edit from './edit'
 
-const GroupLabel = s.h4`
+const GroupLabel = styled.h4`
   font-size: 32px;
   color: #626572;
 
@@ -37,7 +37,7 @@ const GroupLabel = s.h4`
   }
 `
 
-const ColoredHeader = s.div`
+const ColoredHeader = styled.div`
   background: linear-gradient(to right, ${CLUBS_RED}, ${CLUBS_BLUE});
   height: 7em;
   line-height: normal;
@@ -47,7 +47,7 @@ const ColoredHeader = s.div`
   justify-content: space-between;
 `
 
-const TransparentTitle = s.span`
+const TransparentTitle = styled.span`
   width: 9em;
   height: 2em;
   line-height: 2em;
@@ -55,7 +55,7 @@ const TransparentTitle = s.span`
   border: 0;
   background: ${WHITE_ALPHA(0.32)};
   font-size: 15px;
-  text-align: center; 
+  text-align: center;
   color: ${WHITE};
   vertical-align: middle;
   margin-left: 2em;
@@ -63,7 +63,7 @@ const TransparentTitle = s.span`
   display: inline-block;
 `
 
-const TransparentButton = s.button`
+const TransparentButton = styled.button`
   width: 12.5em;
   height: 2.5em;
   border-radius: 17px;
@@ -74,9 +74,9 @@ const TransparentButton = s.button`
   text-align: center;
   color: ${WHITE};
   cursor: pointer;
-  `
+`
 
-const ActionButton = s.button`
+const ActionButton = styled.button`
   width: 4.5em;
   height: 2em;
   border-radius: 0.2em;
@@ -91,19 +91,19 @@ const ActionButton = s.button`
   cursor: pointer;
 `
 
-const TableHeader = s.th`
+const TableHeader = styled.th`
   font-weight: 550;
   color: ${CLUBS_GREY};
 `
 
-const TableData = s.td`
+const TableData = styled.td`
   color: ${CLUBS_GREY_LIGHT};
   line-height: 1.4em;
   vertical-align: middle;
   padding: 0;
 `
 
-const TableHeadDivider = s.thead`
+const TableHeadDivider = styled.thead`
   width: 1px;
   border-bottom: 1px solid ${LIGHT_GRAY};
 `

@@ -1,10 +1,10 @@
 import { CSSProperties, ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { Club } from '../../types'
 import { InactiveTag, TagGroup, Title } from '../common'
 
-const Wrapper = s.div`
+const Wrapper = styled.div`
   display: flex;
   justify-content: space-between;
   flex-direction: row;

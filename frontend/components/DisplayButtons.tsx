@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   ALLBIRDS_GRAY,
@@ -15,7 +15,7 @@ import {
 } from '../utils/branding'
 import { Icon } from './common'
 
-const DisplayButtonsTag = s.div`
+const DisplayButtonsTag = styled.div`
   float: right;
   font-family: ${BODY_FONT};
 

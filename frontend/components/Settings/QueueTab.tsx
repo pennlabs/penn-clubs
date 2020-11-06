@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { CLUB_ROUTE } from '../../constants'
 import { Club } from '../../types'
@@ -66,7 +66,7 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
   )
 }
 
-const MultiProgressBar = s.div`
+const MultiProgressBar = styled.div`
   height: 1rem;
   border-radius: 2rem;
   display: block;
@@ -74,13 +74,13 @@ const MultiProgressBar = s.div`
   width: 100%;
 `
 
-const ProgressBarSegment = s.div<{ size: number }>`
+const ProgressBarSegment = styled.div<{ size: number }>`
   height: 1rem;
   width: ${({ size }) => size * 100}%;
   float: left;
 `
 
-const SmallTitle = s.div`
+const SmallTitle = styled.div`
   font-weight: bold;
   font-size: 1.2em;
 

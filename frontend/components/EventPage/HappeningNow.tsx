@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import s, { css, keyframes } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 
 import { RED } from '../../constants/colors'
 
@@ -27,7 +27,7 @@ const UrgentText = css`
   }
 `
 
-export default s(HappeningNow)<{ urgent?: boolean; floatRight?: boolean }>`
+export default styled(HappeningNow)<{ urgent?: boolean; floatRight?: boolean }>`
   font-size: 14px;
   font-weight: 500;
   ${({ floatRight }) => (floatRight ? 'float: right;' : '')}

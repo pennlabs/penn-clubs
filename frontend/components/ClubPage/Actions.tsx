@@ -7,7 +7,7 @@ import {
   useState,
 } from 'react'
 import Linkify from 'react-linkify'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
@@ -24,7 +24,7 @@ import { logException, logMessage } from '../../utils/sentry'
 import { BookmarkIcon, Contact, Modal, SubscribeIcon } from '../common'
 import { AuthCheckContext } from '../contexts'
 
-const Wrapper = s.span`
+const Wrapper = styled.span`
   display: flex;
   flex-direction: row;
   align-items: right;
@@ -33,12 +33,12 @@ const Wrapper = s.span`
   line-height: 1;
 `
 
-const BookmarkCountWrapper = s.div`
+const BookmarkCountWrapper = styled.div`
   margin-left: 2px;
   color: ${MEDIUM_GRAY};
 `
 
-const ActionWrapper = s.div`
+const ActionWrapper = styled.div`
   display: flex;
   flex-direction: row;
   align-items: flex-start;
@@ -55,7 +55,7 @@ const ActionWrapper = s.div`
   height: 30px;
 `
 
-const ActionDiv = s.div`
+const ActionDiv = styled.div`
   display: inline-block;
   opacity: 0.1;
   margin-left: 0.5rem;
@@ -64,7 +64,7 @@ const ActionDiv = s.div`
   margin-top: -1px;
 `
 
-const ActionButton = s.a`
+const ActionButton = styled.a`
   font-size: 0.8em;
   margin-right: 20px;
 `
@@ -77,7 +77,7 @@ type ActionsProps = {
   updateRequests: (code: string) => Promise<void>
 }
 
-export const ModalContent = s.div`
+export const ModalContent = styled.div`
   text-align: left;
   padding: 15px;
 
@@ -95,7 +95,7 @@ export const ModalContent = s.div`
   }
 `
 
-const Quote = s.p`
+const Quote = styled.p`
   border-left: 3px solid #ccc;
   padding: 3px 12px;
   font-style: italic;
@@ -260,13 +260,13 @@ const Actions = ({
   )
 }
 
-export const DesktopActions = s(Actions)`
+export const DesktopActions = styled(Actions)`
   @media (max-width: 768px) {
     display: none !important;
   }
 `
 
-export const MobileActions = s(Actions)`
+export const MobileActions = styled(Actions)`
   @media (min-width: 769px) {
     display: none !important;
   }

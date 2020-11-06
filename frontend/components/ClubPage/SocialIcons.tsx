@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { Club } from '../../types'
 import { Icon } from '../common'
@@ -54,7 +54,7 @@ const socials = [
   },
 ]
 
-const SocialLine = s.div`
+const SocialLine = styled.div`
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

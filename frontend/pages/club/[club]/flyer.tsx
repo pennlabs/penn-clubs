@@ -1,6 +1,6 @@
 import { NextPageContext } from 'next'
 import { ReactElement, useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   Center,
@@ -14,17 +14,17 @@ import { Club } from '../../../types'
 import { doApiRequest, getApiUrl } from '../../../utils'
 import { DOMAIN, OBJECT_URL_SLUG } from '../../../utils/branding'
 
-const Image = s.img`
+const Image = styled.img`
   padding: 0;
   margin: 0;
   object-fit: contain;
 `
 
-const LogoImage = s(Image)`
+const LogoImage = styled(Image)`
   max-height: 500px;
 `
 
-const ErrorPane = s.div`
+const ErrorPane = styled.div`
   position: fixed;
   top: 15px;
   right: 15px;
@@ -42,7 +42,7 @@ const ErrorPane = s.div`
   }
 `
 
-const BigTitle = s.h1`
+const BigTitle = styled.h1`
   font-size: 50px;
   font-weight: 600;
   margin-top: 1rem;
@@ -50,24 +50,24 @@ const BigTitle = s.h1`
   color: ${CLUBS_NAVY};
 `
 
-const MediumTitle = s.h2`
+const MediumTitle = styled.h2`
   font-size: 32px;
   font-weight: 500;
   color: ${CLUBS_NAVY};
 `
 
-const Gradient = s.div`
+const Gradient = styled.div`
   width: 370px;
   height: 370px;
   padding: 1.5rem;
   margin: 1rem auto;
 `
 
-const Margin = s.div`
+const Margin = styled.div`
   margin: 4rem;
 `
 
-const CenterContainer = s.div`
+const CenterContainer = styled.div`
   width: 100%;
   height: 100%;
   display: flex;
@@ -76,7 +76,7 @@ const CenterContainer = s.div`
   text-align: center;
 `
 
-const PrintPage = s.div`
+const PrintPage = styled.div`
   margin: 3rem auto;
   @media print {
     margin: 0px;
@@ -98,7 +98,7 @@ const PrintPage = s.div`
   }
 `
 
-const AboutText = s.div`
+const AboutText = styled.div`
   position: absolute;
   bottom: 7px;
   right: 7px;

@@ -1,5 +1,5 @@
 import Color from 'color'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { WHITE, WHITE_ALPHA } from '../../constants/colors'
 
@@ -7,7 +7,7 @@ interface TransparentButtonProps {
   backgroundColor?: string
   textColor?: string
 }
-export const TransparentButton = s.button<TransparentButtonProps>`
+export const TransparentButton = styled.button<TransparentButtonProps>`
   width: 12.5em;
   height: 2.5em;
   border-radius: 17px;
@@ -18,9 +18,9 @@ export const TransparentButton = s.button<TransparentButtonProps>`
   text-align: center;
   color: ${({ textColor }) => textColor || WHITE};
   cursor: pointer;
-  `
+`
 
-export const TransparentButtonLink = s.a<TransparentButtonProps>`
+export const TransparentButtonLink = styled.a<TransparentButtonProps>`
   width: 12.5em;
   height: 2.5em;
   line-height: 2.5em;
@@ -41,4 +41,4 @@ export const TransparentButtonLink = s.a<TransparentButtonProps>`
         .whiten(0.4)
         .hex()};
   }
-  `
+`

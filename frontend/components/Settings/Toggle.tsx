@@ -1,12 +1,12 @@
 // Modified from basics
 import { Component, ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { CLUBS_BLUE, LIGHT_GRAY, MEDIUM_GRAY } from '../../constants/colors'
 const HEIGHT = 0.875
 const WIDTH = 2.25
 
-const Label = s.span<{ active?: boolean }>`
+const Label = styled.span<{ active?: boolean }>`
   display: inline-block;
   margin-bottom: 0;
   color: ${MEDIUM_GRAY};
@@ -21,7 +21,7 @@ const Label = s.span<{ active?: boolean }>`
   `}
 `
 
-const ToggleWrapper = s.div`
+const ToggleWrapper = styled.div`
   width: ${WIDTH}rem;
   position: relative;
   display: inline-block;
@@ -29,7 +29,7 @@ const ToggleWrapper = s.div`
   margin-right: 0.625em;
 `
 
-const Bar = s.div<{ active?: boolean }>`
+const Bar = styled.div<{ active?: boolean }>`
   transition: all 0.2s ease;
   width: 100%;
   height: ${HEIGHT}rem;
@@ -39,7 +39,7 @@ const Bar = s.div<{ active?: boolean }>`
   cursor: pointer;
 `
 
-const Circle = s.div<{ active?: boolean }>`
+const Circle = styled.div<{ active?: boolean }>`
   transition: all 0.2s ease;
   height: ${HEIGHT + 0.4}rem;
   width: ${HEIGHT + 0.4}rem;

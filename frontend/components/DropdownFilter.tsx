@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   BORDER,
@@ -27,7 +27,7 @@ const checkboxColorMap = {
   Application: CLUBS_RED,
 }
 
-const Line = s.hr`
+const Line = styled.hr`
   background-color: ${BORDER};
   height: 2px;
   margin: 0;
@@ -39,7 +39,7 @@ const Line = s.hr`
   }
 `
 
-const DropdownHeader = s.div`
+const DropdownHeader = styled.div`
   display: flex;
   justify-content: space-between;
   padding: 7px 3px;
@@ -55,12 +55,12 @@ const DropdownHeader = s.div`
   }
 `
 
-const TableRow = s.tr`
+const TableRow = styled.tr`
   padding-top: 3px;
   cursor: pointer;
 `
 
-const TableWrapper = s.div`
+const TableWrapper = styled.div`
   max-height: 0;
   opacity: 0;
   overflow: hidden;
@@ -75,18 +75,18 @@ const TableWrapper = s.div`
     top: calc(${SEARCH_BAR_MOBILE_HEIGHT} + ${NAV_HEIGHT});
     background: ${WHITE};
     height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
-      overflow-y: auto;
-      max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
+    overflow-y: auto;
+    max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
   }
 `
 
-const TableContainer = s.div`
+const TableContainer = styled.div`
   ${mediaMaxWidth(MD)} {
     padding: 1rem;
   }
 `
 
-const Chevron = s(Icon)<{ open?: boolean }>`
+const Chevron = styled(Icon)<{ open?: boolean }>`
   cursor: pointer;
   color: ${CLUBS_GREY};
   transform: rotate(0deg) translateY(0);
@@ -94,14 +94,14 @@ const Chevron = s(Icon)<{ open?: boolean }>`
   ${({ open }) => open && 'transform: rotate(180deg) translateY(-4px);'}
 
   ${mediaMaxWidth(MD)} {
-    margin-top: .1em !important;
-    margin-left: .1em !important;
+    margin-top: 0.1em !important;
+    margin-left: 0.1em !important;
     color: ${LIGHT_GRAY};
     ${({ open }) => open && 'transform: rotate(180deg)'}
   }
 `
 
-const DropdownHeaderText = s.p`
+const DropdownHeaderText = styled.p`
   opacity: 0.8;
   font-weight: 600;
   margin-bottom: 0;

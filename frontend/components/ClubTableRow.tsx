@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import React, { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
 import {
@@ -17,7 +17,7 @@ import { TagGroup } from './common'
 
 const ROW_PADDING = 0.8
 
-const Row = s.div`
+const Row = styled.div`
   cursor: pointer;
   border-radius: 4px;
   border-width: 1px;
@@ -41,15 +41,15 @@ const Row = s.div`
   }
 `
 
-const Content = s.div`
+const Content = styled.div`
   ${mediaMinWidth(LG)} {
     padding: 0 0.75rem;
   }
 `
 
-const Subtitle = s.p`
+const Subtitle = styled.p`
   color: ${CLUBS_GREY_LIGHT};
-  font-size: .8rem;
+  font-size: 0.8rem;
 `
 
 const Name = ({ children }) => (

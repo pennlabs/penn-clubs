@@ -1,12 +1,12 @@
 import { ReactElement, useEffect } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import ClubCard from '../components/ClubCard'
 import ClubTableRow from '../components/ClubTableRow'
 import { mediaMaxWidth, SM } from '../constants/measurements'
 import { Club, Tag } from '../types'
 
-const ClubTableRowWrapper = s.div`
+const ClubTableRowWrapper = styled.div`
   ${mediaMaxWidth(SM)} {
     margin-left: -1rem;
     margin-right: 1rem;

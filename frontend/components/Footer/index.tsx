@@ -1,11 +1,11 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { PINK, SNOW } from '../../constants/colors'
 import { Icon, SmallText } from '../common'
 import Social from './Social'
 
-const Foot = s.footer`
+const Foot = styled.footer`
   height: 8rem;
   background-color: ${SNOW};
   display: flex;

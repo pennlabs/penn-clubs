@@ -1,6 +1,6 @@
 import { NextPageContext } from 'next'
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { Container, InfoPageTitle, Metadata } from '../components/common'
 import { SNOW } from '../constants'
@@ -18,7 +18,7 @@ type Props = {
   clubs: Club[]
 }
 
-const DirectoryList = s.ul`
+const DirectoryList = styled.ul`
   list-style-type: circle;
   -webkit-column-count: 2;
   -moz-column-count: 2;

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { mediaMaxWidth, mediaMinWidth, SM } from '../../constants/measurements'
 import { Club, MembershipRank, UserInfo } from '../../types'
@@ -10,13 +10,13 @@ import { Center, EmptyState, Loading, Text } from '../common'
 import ClubTabCards from './ClubTabCards'
 import ClubTabTable from './ClubTabTable'
 
-const ClubTable = s(ClubTabTable)`
+const ClubTable = styled(ClubTabTable)`
   ${mediaMaxWidth(SM)} {
     display: none !important;
   }
 `
 
-const ClubCards = s(ClubTabCards)`
+const ClubCards = styled(ClubTabCards)`
   ${mediaMinWidth(SM)} {
     display: none !important;
   }

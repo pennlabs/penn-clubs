@@ -1,5 +1,5 @@
 import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   ADD_BUTTON,
@@ -34,7 +34,7 @@ const ORDERINGS = [
   },
 ]
 
-const OrderingWrapper = s.div`
+const OrderingWrapper = styled.div`
   width: 100%;
 
   & .dropdown-trigger,
@@ -65,18 +65,19 @@ const OrderingWrapper = s.div`
     border-radius: ${BORDER_RADIUS};
   }
 
-  
   & .dropdown-item.is-active {
     background: ${ADD_BUTTON};
   }
 
-  & button, a {
+  & button,
+  a {
     padding: 8px 10px;
     color: ${MEDIUM_GRAY};
     font-family: ${BODY_FONT};
   }
 
-  & button:focus, button:hover {
+  & button:focus,
+  button:hover {
     outline: none !important;
     box-shadow: none !important;
     border: 1px solid ${BORDER};
@@ -85,7 +86,7 @@ const OrderingWrapper = s.div`
   }
 `
 
-const OrderingChevronWrapper = s.div`
+const OrderingChevronWrapper = styled.div`
   cursor: pointer;
   color: ${MEDIUM_GRAY};
   opacity: 0.5;

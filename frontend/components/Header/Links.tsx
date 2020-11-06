@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
 import {
@@ -23,12 +23,12 @@ import { LOGIN_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'
 import { Icon } from '../common'
 
-const StyledIcon = s(Icon)`
+const StyledIcon = styled(Icon)`
   opacity: 0.5;
   margin-right: 4px;
 `
 
-const LoginButton = s.a`
+const LoginButton = styled.a`
   border: 0;
   background-color: ${LOGIN_BACKGROUND};
   padding: 14px 20px;
@@ -37,7 +37,7 @@ const LoginButton = s.a`
   opacity: ${LOGIN_OPACITY};
   color: ${WHITE_ALPHA(0.8)} !important;
   transition: color ${SHORT_ANIMATION_DURATION}ms ease,
-              background ${SHORT_ANIMATION_DURATION}ms ease;
+    background ${SHORT_ANIMATION_DURATION}ms ease;
 
   &:hover,
   &:focus,
@@ -53,7 +53,7 @@ const LoginButton = s.a`
   }
 `
 
-const StyledLinkAnchor = s.a`
+const StyledLinkAnchor = styled.a`
   padding: ${LINK_MARGIN} 20px;
   color: ${BANNER_TEXT} !important;
   display: inline-block;
@@ -68,7 +68,7 @@ const StyledLink = (props) => {
   )
 }
 
-const Menu = s.div<{ show?: boolean }>`
+const Menu = styled.div<{ show?: boolean }>`
   ${mediaMaxWidth(MD)} {
     ${({ show }) => show && 'display: block;'}
   }

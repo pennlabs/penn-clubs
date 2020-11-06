@@ -1,6 +1,6 @@
 import { NextPageContext } from 'next'
 import React, { Component, ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { Loading } from './components/common'
 import { AuthCheckContext } from './components/contexts'
@@ -19,11 +19,11 @@ import {
 } from './utils'
 import { logException } from './utils/sentry'
 
-const Wrapper = s.div`
+const Wrapper = styled.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
 `
 
-const RenderPageWrapper = s.div`
+const RenderPageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   background-color: ${WHITE};

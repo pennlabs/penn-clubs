@@ -1,7 +1,7 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   Center,
@@ -26,12 +26,12 @@ import {
   SITE_NAME,
 } from '../utils/branding'
 
-const Subtitle = s(Title)`
+const Subtitle = styled(Title)`
   font-size: 1.3rem;
   margin-bottom: 1rem;
 `
 
-const TitleHeader = s.div`
+const TitleHeader = styled.div`
   margin-top: 1rem;
   text-align: center;
 

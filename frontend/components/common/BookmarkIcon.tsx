@@ -1,5 +1,5 @@
 import { ReactElement, useContext, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { BLACK, MEDIUM_GRAY } from '../../constants/colors'
 import { Club } from '../../types'
@@ -12,7 +12,7 @@ type BookmarkIconTagProps = {
   favorite?: boolean
 }
 
-const BookmarkIconTag = s.span<BookmarkIconTagProps>`
+const BookmarkIconTag = styled.span<BookmarkIconTagProps>`
   padding: ${({ padding }) => padding || '15px 10px 0 0'};
   cursor: pointer;
 

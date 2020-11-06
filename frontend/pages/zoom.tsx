@@ -2,7 +2,7 @@ import moment from 'moment'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   Contact,
@@ -55,7 +55,7 @@ type ZoomMeeting = {
   extra_details: any
 }
 
-const SmallEvent = s.div`
+const SmallEvent = styled.div`
   padding: 10px;
   display: block;
   vertical-align: top;
@@ -65,7 +65,7 @@ const SmallEvent = s.div`
   border-radius: 3px;
 
   & .has-text-warning {
-    color: #FFA500 !important;
+    color: #ffa500 !important;
   }
 `
 

@@ -1,10 +1,10 @@
 import { createRef, ReactElement, useEffect, useRef, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { CLUBS_GREY_LIGHT, WHITE } from '../../constants'
 import { StrongText } from '../common'
 
-const ChatMessages = s.div`
+const ChatMessages = styled.div`
   max-height: 300px;
   min-height: 100px;
   overflow-y: auto;

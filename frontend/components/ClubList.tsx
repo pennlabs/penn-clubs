@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_GREY_LIGHT } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
@@ -9,13 +9,13 @@ import { Club } from '../types'
 import { getDefaultClubImageURL } from '../utils'
 import { BlueTag, Card, InactiveTag } from './common'
 
-const Subtitle = s.p`
+const Subtitle = styled.p`
   color: ${CLUBS_GREY_LIGHT} !important;
-  font-size: .8rem;
+  font-size: 0.8rem;
   padding-left: 10px;
 `
 
-const Image = s.img`
+const Image = styled.img`
   height: 60px;
   width: 90px;
   object-fit: contain;

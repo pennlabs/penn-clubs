@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   Contact,
@@ -22,7 +22,7 @@ import {
   SITE_NAME,
 } from '../utils/branding'
 
-const RankItem = s.div`
+const RankItem = styled.div`
   padding: 0.75em;
   margin-top: 15px;
   display: flex;
@@ -38,12 +38,12 @@ const RankItem = s.div`
   }
 `
 
-const LargeIconWrapper = s.div`
+const LargeIconWrapper = styled.div`
   flex-basis: 80px;
   margin-right: 10px;
 `
 
-const LargeIcon = s(Icon)`
+const LargeIcon = styled(Icon)`
   width: 75px;
   height: 75px;
   padding: 5px;

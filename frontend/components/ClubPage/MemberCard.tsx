@@ -1,12 +1,12 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
 import { M2, M3, mediaMinWidth, PHONE } from '../../constants/measurements'
 import { Membership } from '../../types'
 import { Card, ProfilePic } from '../common'
 
-export const StyledCard = s(Card)`
+export const StyledCard = styled(Card)`
   text-align: left;
   box-sizing: border-box;
   width: 100%;
@@ -22,13 +22,13 @@ export const StyledCard = s(Card)`
   }
 `
 
-const Label = s.div`
+const Label = styled.div`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `
 
-const MemberInfo = s.div`
+const MemberInfo = styled.div`
   margin-left: 15px;
 
   ${mediaMinWidth(PHONE)} {

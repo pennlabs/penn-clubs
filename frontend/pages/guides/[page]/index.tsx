@@ -1,7 +1,7 @@
 import cheerio from 'cheerio'
 import { NextPageContext } from 'next'
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { Contact, Container, Metadata } from '../../../components/common'
 import {
@@ -14,7 +14,7 @@ import renderPage from '../../../renderPage'
 import { SITE_NAME } from '../../../utils/branding'
 import { fetchMarkdown } from '../../../utils/server'
 
-const MarkdownContent = s.div.attrs({ className: 'content' })`
+const MarkdownContent = styled.div.attrs({ className: 'content' })`
   & h1 {
     margin-top: 2.5vw;
     margin-bottom: 2rem;

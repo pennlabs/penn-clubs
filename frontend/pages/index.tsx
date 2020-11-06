@@ -1,6 +1,6 @@
 import equal from 'deep-equal'
 import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { CLUB_RECRUITMENT_CYCLES } from '../components/ClubEditPage/ClubEditCard'
 import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
@@ -31,12 +31,12 @@ import { Badge, School, StudentType, Tag, UserInfo, Year } from '../types'
 import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_TITLE, SITE_TAGLINE } from '../utils/branding'
 
-const ClearAllLink = s.span`
+const ClearAllLink = styled.span`
   cursor: pointer;
   color: ${CLUBS_GREY_LIGHT};
   text-decoration: none !important;
   background: transparent !important;
-  fontSize: .7em;
+  fontsize: 0.7em;
   margin: 5px;
 
   &:hover {
@@ -44,11 +44,11 @@ const ClearAllLink = s.span`
   }
 `
 
-const ResultsText = s.div`
+const ResultsText = styled.div`
   color: ${CLUBS_GREY_LIGHT};
   text-decoration: none !important;
   background: transparent !important;
-  fontSize: .7em;
+  fontsize: 0.7em;
   margin: 5px;
 `
 

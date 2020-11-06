@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import s, { CSSProperties } from 'styled-components'
+import styled, { CSSProperties } from 'styled-components'
 
 import { PROPIC_BACKGROUND, PROPIC_TEXT } from '../../constants/colors'
 import { mediaMinWidth, PHONE } from '../../constants/measurements'
@@ -18,7 +18,7 @@ const hashCode = (content: string): number => {
 const [DEFAULT_BG_COLOR] = PROPIC_BACKGROUND
 const [DEFAULT_TXT_COLOR] = PROPIC_TEXT
 
-const Placeholder = s.div<{
+const Placeholder = styled.div<{
   fontSize?: string
   isRound?: boolean
   backgroundColor?: string
@@ -37,7 +37,7 @@ const Placeholder = s.div<{
   color: ${({ textColor }) => textColor || DEFAULT_TXT_COLOR};
 `
 
-const Avatar = s.img<{ isRound?: boolean }>`
+const Avatar = styled.img<{ isRound?: boolean }>`
   object-fit: cover;
 
   .image & {
@@ -48,7 +48,7 @@ const Avatar = s.img<{ isRound?: boolean }>`
   ${({ isRound }) => isRound && 'border-radius: 50%;'}
 `
 
-const AvatarWrapper = s.div<{ isCentered?: boolean }>`
+const AvatarWrapper = styled.div<{ isCentered?: boolean }>`
   border-radius: 50%;
   margin: 5px 15px;
   ${({ isCentered }) =>
