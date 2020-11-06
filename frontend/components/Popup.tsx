@@ -39,6 +39,7 @@ const Popup = (props: Props): ReactElement | null => {
 
   useEffect(() => {
     setShow(props.show)
+    console.log(props.show)
   }, [props.show])
 
   if (!parent || !show) return null
