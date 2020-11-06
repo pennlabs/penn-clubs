@@ -1227,7 +1227,7 @@ class EventViewSet(viewsets.ModelViewSet):
         if self.kwargs.get("club_code") is not None:
             qs = qs.filter(club__code=self.kwargs["club_code"])
 
-        qs = qs.filter(club__approved=True)
+        qs = qs.filter(Q(club__approved=True) | Q(club__ghost=True))
 
         now = timezone.now()
         if self.action in ["list"]:
