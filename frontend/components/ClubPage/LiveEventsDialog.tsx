@@ -15,7 +15,24 @@ import { useSetting } from '../../utils'
 const LiveBanner = styled.div`
   padding: 20px;
   border-radius: 5px;
-  background-image: radial-gradient(circle at 15% 0, rgba(216, 127, 200, 0.5), rgba(73, 84, 244, 0.4) 36%), radial-gradient(circle at 55% 130%, #ff8a97, rgba(73, 84, 244, 0.23) 62%), radial-gradient(circle at 93% 24%, rgba(239, 76, 95, 0.76), rgba(73, 84, 244, 0.27) 41%), linear-gradient(171deg, #626bf3 -13%, #b24f95 104%, rgba(239, 76, 95, 0.96) 104%), linear-gradient(to bottom, #4954f4, #4954f4);
+  background-image: radial-gradient(
+      circle at 15% 0,
+      rgba(216, 127, 200, 0.5),
+      rgba(73, 84, 244, 0.4) 36%
+    ),
+    radial-gradient(circle at 55% 130%, #ff8a97, rgba(73, 84, 244, 0.23) 62%),
+    radial-gradient(
+      circle at 93% 24%,
+      rgba(239, 76, 95, 0.76),
+      rgba(73, 84, 244, 0.27) 41%
+    ),
+    linear-gradient(
+      171deg,
+      #626bf3 -13%,
+      #b24f95 104%,
+      rgba(239, 76, 95, 0.96) 104%
+    ),
+    linear-gradient(to bottom, #4954f4, #4954f4);
   margin-bottom: 10px;
 `
 

@@ -25,7 +25,7 @@ const StyledCheckbox = styled.div`
   height: 16px;
   transition: all 150ms;
   cursor: pointer;
-  fill: ${(props) => props.color || CLUBS_RED}
+  fill: ${(props) => props.color || CLUBS_RED};
 `
 
 const CheckboxContainer = styled.div`

@@ -32,7 +32,7 @@ const OrgChildWrapper = styled.div`
   }
 
   & .entry:hover {
-    background-color: #eee;  
+    background-color: #eee;
   }
 `
 

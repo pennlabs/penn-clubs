@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import s, { CSSProperties } from 'styled-components'
+import { CSSProperties } from 'styled-components'
 
 import { PROPIC_BACKGROUND, PROPIC_TEXT } from '../../constants/colors'
 import { mediaMinWidth, PHONE } from '../../constants/measurements'

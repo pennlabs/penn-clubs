@@ -65,18 +65,19 @@ const OrderingWrapper = styled.div`
     border-radius: ${BORDER_RADIUS};
   }
 
-  
   & .dropdown-item.is-active {
     background: ${ADD_BUTTON};
   }
 
-  & button, a {
+  & button,
+  a {
     padding: 8px 10px;
     color: ${MEDIUM_GRAY};
     font-family: ${BODY_FONT};
   }
 
-  & button:focus, button:hover {
+  & button:focus,
+  button:hover {
     outline: none !important;
     box-shadow: none !important;
     border: 1px solid ${BORDER};

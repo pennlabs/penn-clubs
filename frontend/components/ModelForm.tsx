@@ -7,15 +7,15 @@ import { Icon, Loading } from './common'
 import { FormStyle } from './FormComponents'
 
 const ModelItem = styled.div`
- padding: 15px;
- border: 1px solid #dbdbdb;
- border-radius: 3px;
- margin-bottom: 1em;
+  padding: 15px;
+  border: 1px solid #dbdbdb;
+  border-radius: 3px;
+  margin-bottom: 1em;
 `
 
 const ModelStatusWrapper = styled.span`
- display: inline-block;
- margin: 0.375em 0.75em;
+  display: inline-block;
+  margin: 0.375em 0.75em;
 `
 
 const ModelStatus = ({ status }) => (
@@ -34,9 +34,9 @@ const ModelStatus = ({ status }) => (
 )
 
 const Subtitle = styled.div`
- font-weight: bold;
- font-size: 1.2em;
- margin-bottom: 0.75em;
+  font-weight: bold;
+  font-size: 1.2em;
+  margin-bottom: 0.75em;
 `
 
 type ModelObject = { [key: string]: any }

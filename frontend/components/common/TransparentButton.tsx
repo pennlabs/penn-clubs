@@ -18,7 +18,7 @@ export const TransparentButton = styled.button<TransparentButtonProps>`
   text-align: center;
   color: ${({ textColor }) => textColor || WHITE};
   cursor: pointer;
-  `
+`
 
 export const TransparentButtonLink = styled.a<TransparentButtonProps>`
   width: 12.5em;
@@ -41,4 +41,4 @@ export const TransparentButtonLink = styled.a<TransparentButtonProps>`
         .whiten(0.4)
         .hex()};
   }
-  `
+`

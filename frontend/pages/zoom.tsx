@@ -65,7 +65,7 @@ const SmallEvent = styled.div`
   border-radius: 3px;
 
   & .has-text-warning {
-    color: #FFA500 !important;
+    color: #ffa500 !important;
   }
 `
 

@@ -37,7 +37,7 @@ const LoginButton = styled.a`
   opacity: ${LOGIN_OPACITY};
   color: ${WHITE_ALPHA(0.8)} !important;
   transition: color ${SHORT_ANIMATION_DURATION}ms ease,
-              background ${SHORT_ANIMATION_DURATION}ms ease;
+    background ${SHORT_ANIMATION_DURATION}ms ease;
 
   &:hover,
   &:focus,

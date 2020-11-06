@@ -55,7 +55,7 @@ const TransparentTitle = styled.span`
   border: 0;
   background: ${WHITE_ALPHA(0.32)};
   font-size: 15px;
-  text-align: center; 
+  text-align: center;
   color: ${WHITE};
   vertical-align: middle;
   margin-left: 2em;
@@ -74,7 +74,7 @@ const TransparentButton = styled.button`
   text-align: center;
   color: ${WHITE};
   cursor: pointer;
-  `
+`
 
 const ActionButton = styled.button`
   width: 4.5em;

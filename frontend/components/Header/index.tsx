@@ -53,7 +53,7 @@ const ImageHead = styled.div`
   box-shadow: 0 1px 4px 0 ${BORDER};
   width: 100%;
   position: absolute;
-  top:${NAV_HEIGHT};
+  top: ${NAV_HEIGHT};
   z-index: 999;
   background-size: cover;
   background-repeat: no-repeat;
@@ -68,7 +68,7 @@ const ImageHead = styled.div`
 const Overlay = styled.div`
   background: url('${HEADER_OVERLAY}');
   width: 50%;
-  height:12rem;
+  height: 12rem;
   position: fixed;
   z-index: 999;
   background-size: auto 100%;

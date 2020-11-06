@@ -11,7 +11,7 @@ import { BlueTag, Card, InactiveTag } from './common'
 
 const Subtitle = styled.p`
   color: ${CLUBS_GREY_LIGHT} !important;
-  font-size: .8rem;
+  font-size: 0.8rem;
   padding-left: 10px;
 `
 

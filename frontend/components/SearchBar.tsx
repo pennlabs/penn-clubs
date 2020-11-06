@@ -53,7 +53,7 @@ export const SearchbarRightContainer = styled.div`
 `
 
 const Wrapper = styled.div`
-  height:100vh;
+  height: 100vh;
   width: 20vw;
   overflow-x: hidden;
   overflow-y: auto;
@@ -132,10 +132,10 @@ const SearchIcon = styled.span`
 `
 
 const MobileLine = styled.hr`
-  display: none;  
+  display: none;
   ${mediaMaxWidth(MD)} {
     display: block;
-    margin: 1.0em 0 0 0;
+    margin: 1em 0 0 0;
     border-color: ${CLUBS_GREY};
   }
 `

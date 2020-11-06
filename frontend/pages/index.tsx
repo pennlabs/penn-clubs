@@ -36,7 +36,7 @@ const ClearAllLink = styled.span`
   color: ${CLUBS_GREY_LIGHT};
   text-decoration: none !important;
   background: transparent !important;
-  fontSize: .7em;
+  fontsize: 0.7em;
   margin: 5px;
 
   &:hover {
@@ -48,7 +48,7 @@ const ResultsText = styled.div`
   color: ${CLUBS_GREY_LIGHT};
   text-decoration: none !important;
   background: transparent !important;
-  fontSize: .7em;
+  fontsize: 0.7em;
   margin: 5px;
 `
 

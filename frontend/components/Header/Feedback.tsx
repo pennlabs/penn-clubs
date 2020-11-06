@@ -21,7 +21,7 @@ const FeedbackLink = styled.a`
   bottom: ${OFFSET};
   right: ${OFFSET};
   text-align: center;
-  box-shadow: 0 2px 8px rgba(25, 89, 130, .4);
+  box-shadow: 0 2px 8px rgba(25, 89, 130, 0.4);
   cursor: pointer;
   z-index: 10;
   transition: background-color ${ANIMATION_DURATION}ms ease;

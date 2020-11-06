@@ -75,8 +75,8 @@ const TableWrapper = styled.div`
     top: calc(${SEARCH_BAR_MOBILE_HEIGHT} + ${NAV_HEIGHT});
     background: ${WHITE};
     height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
-      overflow-y: auto;
-      max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
+    overflow-y: auto;
+    max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
   }
 `
 
@@ -94,8 +94,8 @@ const Chevron = styled(Icon)<{ open?: boolean }>`
   ${({ open }) => open && 'transform: rotate(180deg) translateY(-4px);'}
 
   ${mediaMaxWidth(MD)} {
-    margin-top: .1em !important;
-    margin-left: .1em !important;
+    margin-top: 0.1em !important;
+    margin-left: 0.1em !important;
     color: ${LIGHT_GRAY};
     ${({ open }) => open && 'transform: rotate(180deg)'}
   }

@@ -22,8 +22,8 @@ const Wrapper = styled.span`
 const Quote = styled.div`
   float: left;
   padding: 1rem;
-  color: #4954F4;
-  background-color: #E1E2FF;
+  color: #4954f4;
+  background-color: #e1e2ff;
   border-radius: 10px;
   margin-bottom: 1em;
   margin-right: -1rem;

@@ -49,7 +49,7 @@ const Content = styled.div`
 
 const Subtitle = styled.p`
   color: ${CLUBS_GREY_LIGHT};
-  font-size: .8rem;
+  font-size: 0.8rem;
 `
 
 const Name = ({ children }) => (

@@ -55,12 +55,12 @@ export const Center = styled.div`
 `
 export const AlertText = styled.h1`
   font-size: 120%;
-  font-weight:bold;
-  marginLeft: 3px;
+  font-weight: bold;
+  marginleft: 3px;
   color: ${WHITE};
 `
 
-export const AlertDesc = styled.h1`  
+export const AlertDesc = styled.h1`
   font-size: 80%;
   color: ${WHITE};
 

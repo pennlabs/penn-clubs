@@ -63,7 +63,7 @@ const ColWrapper = styled.div<ColWrapperProps>`
   ${({ flex }) => flex && 'display: flex;'}
 `
 
-const ColContainer = style.div<{
+const ColContainer = styled.div<{
   background?: string
   flex?: boolean
   margin?: string
