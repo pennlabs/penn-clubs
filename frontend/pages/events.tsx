@@ -2,11 +2,19 @@ import equal from 'deep-equal'
 import moment from 'moment'
 import { NextPageContext } from 'next'
 import Head from 'next/head'
-import { ReactElement, useEffect, useRef, useState } from 'react'
+import {
+  cloneElement,
+  ReactChildren,
+  ReactElement,
+  SyntheticEvent,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
-import Popup from '../components/Popup'
+import Popup, { PopupAlignment, PopupPosition } from '../components/Popup'
 
 import {
   Metadata,
@@ -55,23 +63,9 @@ const CalendarEvent = ({
 }: {
   event: { resource: ClubEvent }
 }) => {
-  const [showPopup, setShowPopup] = useState<boolean>(false)
-  const cellRef = useRef<HTMLDivElement>(null)
   return (
     <>
-      <div
-        className=""
-        onClick={() => {
-          setShowPopup(true)
-        }}
-      >
-        {resource.name} - {resource.club_name}
-      </div>
-      {cellRef.current && (
-        <Popup anchorElement={cellRef.current} show={showPopup}>
-          <EventCard event={resource} isHappening={false} />
-        </Popup>
-      )}
+      {resource.name} - {resource.club_name}
     </>
   )
 }
@@ -389,6 +383,7 @@ function EventPage({
               background: SNOW,
             }}
           >
+<<<<<<< HEAD
             {/* {!!liveEvents.length && (
               <>
                 <Title
@@ -406,12 +401,21 @@ function EventPage({
                 <br />
               </>
             )} */}
+=======
+>>>>>>> Better trigger and placement for popups
             {isLoading && <ListLoadIndicator />}
             <Calendar
               localizer={localizer}
               components={{
                 event: CalendarEvent,
                 toolbar: CalendarHeader,
+              }}
+              onSelectEvent={(
+                event: { resource: ClubEvent },
+                e: SyntheticEvent,
+              ) => {
+                setPopupPreview(event.resource)
+                setPopupAnchor(e.target as HTMLDivElement)
               }}
               events={[...liveEvents, ...upcomingEvents].map((e) => ({
                 title: e.name,
@@ -420,17 +424,7 @@ function EventPage({
                 allDay: false,
                 resource: e,
               }))}
-              eventPropGetter={({
-                resource,
-                start,
-                end,
-              }: {
-                resource: ClubEvent
-                start: Date
-                end: Date
-              }) => {
-                // const now = new Date()
-                // const live = start <= now && end >= now
+              eventPropGetter={({ resource }: { resource: ClubEvent }) => {
                 const color = EVENT_TYPE_COLORS[resource.type] || CLUBS_GREY
                 return {
                   style: {
@@ -442,7 +436,7 @@ function EventPage({
               }}
               style={{ flex: '1' }}
             />
-            {!upcomingEvents.length && (
+            {/* {!upcomingEvents.length && (
               <div className="notification is-info is-clearfix">
                 <img
                   className="is-pulled-left mr-5 mb-3"
@@ -455,10 +449,19 @@ function EventPage({
                   events on the manage {OBJECT_NAME_SINGULAR} page.
                 </div>
               </div>
-            )}
+            )} */}
           </WideWrapper>
         </SearchbarRightContainer>
       </div>
+      {!!popupPreview && !!popupAnchor && (
+        <Popup
+          anchorElement={popupAnchor}
+          show={true}
+          align={PopupAlignment.START}
+        >
+          <EventCard event={popupPreview} isHappening={false} />
+        </Popup>
+      )}
     </>
   )
 }
