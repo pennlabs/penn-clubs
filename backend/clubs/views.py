@@ -1717,7 +1717,7 @@ class UserPermissionAPIView(APIView):
         if raw_perms:
             for perm in general_perms:
                 ret[perm] = request.user.is_superuser or perm in all_perms
-    else:
+        else:
             for perm in all_perms:
                 ret[perm] = True
 
