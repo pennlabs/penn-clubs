@@ -292,7 +292,6 @@ function EventPage({
   liveEvents: initialLiveEvents,
   tags,
   badges,
-  calendarURL,
 }: EventPageProps): ReactElement {
   const [upcomingEvents, setUpcomingEvents] = useState<ClubEvent[]>(() =>
     randomizeEvents(initialUpcomingEvents),
@@ -663,7 +662,7 @@ function EventPage({
       </div>
       {syncModalVisible && (
         <Modal show={syncModalVisible} closeModal={hideSyncModal} width="45%">
-          <SyncModal calendarURL={calendarURL} />
+          <SyncModal />
         </Modal>
       )}
     </>
