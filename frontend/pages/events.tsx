@@ -6,7 +6,7 @@ import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
-import Popup from '../components/Popup'
+import Popup, { PopupAlignment, PopupPosition } from '../components/Popup'
 
 import {
   Metadata,
@@ -509,7 +509,7 @@ function EventPage({
               }}
               style={{ flex: '1' }}
             />
-            {!upcomingEvents.length && (
+            {/* {!upcomingEvents.length && (
               <div className="notification is-info is-clearfix">
                 <img
                   className="is-pulled-left mr-5 mb-3"
@@ -522,7 +522,7 @@ function EventPage({
                   events on the manage {OBJECT_NAME_SINGULAR} page.
                 </div>
               </div>
-            )}
+            )} */}
           </WideWrapper>
         </SearchbarRightContainer>
       </div>
