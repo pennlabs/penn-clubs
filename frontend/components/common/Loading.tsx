@@ -11,7 +11,7 @@ type LoadingWrapperProps = {
   hide: boolean
 }
 
-const LoadingWrapper = s.div<LoadingWrapperProps>`
+const LoadingWrapper = styled.div<LoadingWrapperProps>`
   width: 100%;
   padding: calc(1rem + 5vh) 0;
   text-align: center;
@@ -24,7 +24,7 @@ const spin = keyframes`
   to { transform: rotate(360deg); }
 `
 
-const LoadingCircle = s.span`
+const LoadingCircle = styled.span`
   display: inline-block;
   width: ${SIZE};
   height: ${SIZE};

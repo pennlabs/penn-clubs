@@ -1,12 +1,12 @@
 import { ReactElement, useContext, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { BLACK, MEDIUM_GRAY } from '../../constants/colors'
 import { Club } from '../../types'
 import { apiSetSubscribeStatus } from '../../utils'
 import { AuthCheckContext } from '../contexts'
 
-const SubscribeIconTag = s.span<{
+const SubscribeIconTag = styled.span<{
   padding?: string
   absolute?: boolean
   subscribe?: boolean

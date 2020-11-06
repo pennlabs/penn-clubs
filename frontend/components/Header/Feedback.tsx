@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { FEEDBACK_BG } from '../../constants/colors'
 import { ANIMATION_DURATION } from '../../constants/measurements'
@@ -11,7 +11,7 @@ const DIAMETER = '3rem'
 const ICON_SIZE = '1.5rem'
 const OFFSET = '18px'
 
-const FeedbackLink = s.a`
+const FeedbackLink = styled.a`
   display: inline-block;
   width: ${DIAMETER};
   height: ${DIAMETER};

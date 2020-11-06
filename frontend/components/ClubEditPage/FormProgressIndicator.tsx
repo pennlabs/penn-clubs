@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   PROGRESS_INDICATOR_PRIMARY,
@@ -14,17 +14,17 @@ type FormProgressIndicatorProps = {
   onStepClick?: (step: number) => void
 }
 
-const StepBubbleContainer = s.span`
+const StepBubbleContainer = styled.span`
   text-align: center;
 `
 
-const StepText = s.span`
+const StepText = styled.span`
   color: ${PROGRESS_INDICATOR_SEP};
   font-size: 0.9em;
   line-height: 0.9em;
 `
 
-const StepBubble = s.div<{ passed: boolean }>`
+const StepBubble = styled.div<{ passed: boolean }>`
   background-color: ${({ passed }) =>
     passed ? PROGRESS_INDICATOR_PRIMARY : PROGRESS_INDICATOR_SECONDARY};
   color: ${PROGRESS_INDICATOR_TEXT};
@@ -38,7 +38,7 @@ const StepBubble = s.div<{ passed: boolean }>`
   cursor: ${({ passed }) => (passed ? 'pointer' : 'default')};
 `
 
-const StepArrow = s.span`
+const StepArrow = styled.span`
   border-top: 5px dotted ${PROGRESS_INDICATOR_SEP};
   margin-left: 10px;
   margin-right: 10px;
@@ -46,7 +46,7 @@ const StepArrow = s.span`
   margin-bottom: 1em;
 `
 
-const StepContainer = s.div`
+const StepContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;

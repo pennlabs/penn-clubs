@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { Container, Metadata, Title } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
@@ -14,7 +14,7 @@ import renderPage from '../renderPage'
 import { UserInfo } from '../types'
 import { OBJECT_NAME_TITLE } from '../utils/branding'
 
-const Notification = s.span`
+const Notification = styled.span`
   border-radius: ${BORDER_RADIUS};
   background-color: ${CLUBS_BLUE};
   color: ${WHITE};

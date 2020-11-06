@@ -1,7 +1,7 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import ClubEditCard from '../../../components/ClubEditPage/ClubEditCard'
 import FormProgressIndicator from '../../../components/ClubEditPage/FormProgressIndicator'
@@ -46,12 +46,12 @@ type RenewPageProps = InitialRenewPageProps & {
   authenticated: boolean | null
 }
 
-const SubTitle = s.h2`
+const SubTitle = styled.h2`
   font-size: 1.5rem;
   color: ${DARK_GRAY};
 `
 
-const TextInfoBox = s.div`
+const TextInfoBox = styled.div`
   margin: 15px auto;
 
   & p {
@@ -59,11 +59,11 @@ const TextInfoBox = s.div`
   }
 `
 
-const PartnerLogo = s.img`
+const PartnerLogo = styled.img`
   max-width: 160px;
 `
 
-const FinishedText = s.div`
+const FinishedText = styled.div`
   color: ${GREEN};
   text-align: center;
   margin-top: 30px;
@@ -71,7 +71,7 @@ const FinishedText = s.div`
   font-weight: bold;
 `
 
-const Policy = s.div`
+const Policy = styled.div`
   margin-bottom: 2em;
 
   & blockquote {

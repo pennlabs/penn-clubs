@@ -1,5 +1,5 @@
 import { ReactElement, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { DARK_GRAY } from '../../constants/colors'
 import { M1 } from '../../constants/measurements'
@@ -8,7 +8,7 @@ import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../utils/branding'
 import { Center, Col, EmptyState, Icon, Row, Text } from '../common'
 import MemberCard from './MemberCard'
 
-const Toggle = s.div`
+const Toggle = styled.div`
   color: ${DARK_GRAY};
   cursor: pointer;
 `

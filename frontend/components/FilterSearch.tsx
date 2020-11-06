@@ -1,7 +1,7 @@
 import Fuse from 'fuse.js'
 import { ReactElement, useEffect, useState } from 'react'
 import Select from 'react-select/async'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   BORDER,
@@ -16,7 +16,7 @@ import {
 import { MD, mediaMaxWidth } from '../constants/measurements'
 import { Icon, SelectedTag, Tag } from './common'
 
-const SearchWrapper = s.div`
+const SearchWrapper = styled.div`
   margin-bottom: 30px;
   overflow: visible;
 
@@ -35,7 +35,7 @@ const SearchWrapper = s.div`
   }
 `
 
-const SubLabel = s.div`
+const SubLabel = styled.div`
   font-size: 0.9em;
   color: ${CLUBS_GREY_LIGHT};
 
@@ -44,7 +44,7 @@ const SubLabel = s.div`
   }
 `
 
-const ColorPreview = s.div<{ color: string }>`
+const ColorPreview = styled.div<{ color: string }>`
   display: inline-block;
   width: 1em;
   height: 1em;
@@ -55,7 +55,7 @@ const ColorPreview = s.div<{ color: string }>`
   vertical-align: middle;
 `
 
-const SearchIcon = s(Icon)`
+const SearchIcon = styled(Icon)`
   cursor: pointer;
   color: ${MEDIUM_GRAY};
   opacity: 0.5;

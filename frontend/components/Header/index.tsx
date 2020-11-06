@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { BANNER_BG, BANNER_TEXT, BORDER } from '../../constants/colors'
 import {
@@ -31,7 +31,7 @@ import Feedback from './Feedback'
 import Heading from './Head'
 import Links from './Links'
 
-const Nav = s.nav`
+const Nav = styled.nav`
   height: ${NAV_HEIGHT};
   background-color: ${BANNER_BG} !important;
   border-bottom: 1px solid ${BORDER};
@@ -46,7 +46,7 @@ const Nav = s.nav`
   }
 `
 
-const ImageHead = s.div`
+const ImageHead = styled.div`
   height: ${BANNER_HEIGHT};
   background-color: ${BANNER_BG};
   background-image: url('${HEADER_BACKGROUND_IMAGE}');
@@ -65,7 +65,7 @@ const ImageHead = s.div`
   }
 `
 
-const Overlay = s.div`
+const Overlay = styled.div`
   background: url('${HEADER_OVERLAY}');
   width: 50%;
   height:12rem;
@@ -82,13 +82,13 @@ const Overlay = s.div`
   }
 `
 
-const NavSpacer = s.div`
+const NavSpacer = styled.div`
   width: 100%;
   display: block;
   height: ${FULL_NAV_HEIGHT};
 `
 
-const Logo = s.img`
+const Logo = styled.img`
   padding-left: 20px;
   height: 100%;
   transform: scale(${LOGO_SCALE});
@@ -103,7 +103,7 @@ const Logo = s.img`
   }
 `
 
-const Title = s.h1`
+const Title = styled.h1`
   color: ${BANNER_TEXT};
   padding-left: ${TITLE_MARGIN};
   margin-bottom: 0 !important;
@@ -111,7 +111,7 @@ const Title = s.h1`
   font-weight: ${TITLE_WEIGHT};
 `
 
-const LogoBackground = s.div`
+const LogoBackground = styled.div`
   background: url('${LOGO_BACKGROUND_IMAGE}');
   background-size: auto 100%;
   width: 500px;

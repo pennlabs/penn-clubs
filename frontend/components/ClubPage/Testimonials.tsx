@@ -1,11 +1,11 @@
 import { ReactElement, useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { DARK_GRAY } from '../../constants/colors'
 import { Testimonial } from '../../types'
 import { Icon, StrongText } from '../common'
 
-const Wrapper = s.span`
+const Wrapper = styled.span`
   display: inline-block;
   position: relative;
   width: 100%;
@@ -19,7 +19,7 @@ const Wrapper = s.span`
   }
 `
 
-const Quote = s.div`
+const Quote = styled.div`
   float: left;
   padding: 1rem;
   color: #4954F4;
@@ -30,7 +30,7 @@ const Quote = s.div`
   width: 98%;
 `
 
-const Toggle = s.div`
+const Toggle = styled.div`
   color: ${DARK_GRAY};
   cursor: pointer;
 `

@@ -1,12 +1,12 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { CLUBS_GREY } from '../constants/colors'
 import { Club } from '../types'
 import { getSizeDisplay, isClubFieldShown } from '../utils'
 import { BookmarkIcon, Icon, SubscribeIcon } from './common'
 
-const Wrapper = s.div`
+const Wrapper = styled.div`
   margin-top: 0.25rem;
   padding-top: 0.25rem;
   border-top: 1.5px solid rgba(0, 0, 0, 0.05);

@@ -1,7 +1,7 @@
 import { CSSProperties, ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
-const Image = s.img<{ size?: string }>`
+const Image = styled.img<{ size?: string }>`
   ${({ size }) => `width: ${size || '25%'};`}
   display: block;
   margin: 7.5%;

@@ -1,28 +1,28 @@
 import { Field, Form, Formik } from 'formik'
 import { ReactElement, useState } from 'react'
 import Linkify from 'react-linkify'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { Club, QuestionAnswer } from '../../types'
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../utils/branding'
 import { CheckboxField, TextField } from '../FormComponents'
 
-const Question = s.div`
+const Question = styled.div`
   margin-bottom: 15px;
 `
 
-const UnansweredText = s.span`
+const UnansweredText = styled.span`
   color: #666;
 `
 
-const AnswerText = s.div`
+const AnswerText = styled.div`
   margin: 5px 0;
   padding: 3px 8px;
   border-left: 5px solid #ccc;
 `
 
-const QuoteAuthor = s.i`
+const QuoteAuthor = styled.i`
   color: #666;
   font-size: 0.8em;
 `

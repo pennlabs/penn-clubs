@@ -1,11 +1,11 @@
 import { ReactElement, useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { BLACK, WHITE, WHITE_ALPHA } from '../constants/colors'
 import { titleize } from '../utils'
 import { Container } from './common'
 
-const BackgroundTabs = s.div`
+const BackgroundTabs = styled.div`
   ul {
     border-bottom-width: 0;
 
@@ -37,10 +37,10 @@ const BackgroundTabs = s.div`
   }
 `
 
-const Div = s.div`
+const Div = styled.div`
   padding: 1rem 0;
 `
-const Tabs = s.div``
+const Tabs = styled.div``
 
 type Props = {
   background?: string | false

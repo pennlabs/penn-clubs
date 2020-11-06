@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router'
 import { ReactElement, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { FAIR_INFO, MEDIUM_GRAY } from '../../constants'
 import { Club, MembershipRank, UserInfo } from '../../types'
@@ -15,7 +15,7 @@ import {
 import { Contact, Icon, Modal, Text } from '../common'
 import { ModalContent } from './Actions'
 
-const ReviewQuote = s.span`
+const ReviewQuote = styled.span`
   white-space: pre-wrap;
   display: block;
   margin-top: 12px;

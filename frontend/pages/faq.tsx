@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   Contact,
@@ -43,7 +43,7 @@ const Question = ({ title, children }: QuestionProps): ReactElement => (
   </>
 )
 
-const UnorderedList = s.ul`
+const UnorderedList = styled.ul`
   list-style-type: disc;
   margin-left: 2rem;
   margin-top: 0.5rem;

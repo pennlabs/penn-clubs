@@ -1,9 +1,9 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { BLACK_ALPHA, DARK_GRAY } from '../../constants/colors'
 
-const Span = s.span`
+const Span = styled.span`
   display: inline-block;
   margin-left: 0.5rem;
   font-size: 1rem;

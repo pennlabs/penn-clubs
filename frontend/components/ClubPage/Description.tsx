@@ -1,11 +1,11 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { Club } from '../../types'
 import { EMPTY_DESCRIPTION } from '../../utils'
 import { StrongText } from '../common'
 
-const Wrapper = s.div`
+const Wrapper = styled.div`
   display: flex;
   justify-content: space-between;
   flex-direction: row;

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { DARK_GRAY } from '../../constants/colors'
 import { CLUB_RENEW_ROUTE, CLUB_ROUTE } from '../../constants/routes'
@@ -8,7 +8,7 @@ import { BODY_FONT } from '../../constants/styles'
 import { MembershipRank, UserMembership } from '../../types'
 import { Icon } from '../common'
 
-const Table = s.table`
+const Table = styled.table`
   font-family: ${BODY_FONT};
   font-size: 16px;
   overflow: scroll;

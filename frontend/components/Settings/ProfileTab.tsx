@@ -1,5 +1,5 @@
 import { ReactElement, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { MEDIUM_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
@@ -9,27 +9,27 @@ import { logEvent } from '../../utils/analytics'
 import { Contact, Icon, ProfilePic, SmallText } from '../common'
 import ProfileForm from './ProfileForm'
 
-const Wrapper = s.div`
+const Wrapper = styled.div`
   font-family: ${BODY_FONT};
   font-size: 18px;
 `
 
-const LogoutIcon = s(Icon)`
+const LogoutIcon = styled(Icon)`
   opacity: 0.5;
   margin-right: 4px;
 `
 
-const LogoutLink = s.a`
+const LogoutLink = styled.a`
   color: ${MEDIUM_GRAY} !important;
   display: inline-block;
   margin-bottom: 12px;
 `
 
-const Empty = s.span`
+const Empty = styled.span`
   color: ${MEDIUM_GRAY};
 `
 
-const ProfilePicWrapper = s.div`
+const ProfilePicWrapper = styled.div`
   margin-top: 0.5em;
   margin-left: 0.5em;
 `

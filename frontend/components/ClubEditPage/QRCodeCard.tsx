@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { CLUB_FLYER_ROUTE } from '../../constants/routes'
 import { Club } from '../../types'
@@ -9,7 +9,7 @@ import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Icon, Text } from '../common'
 import BaseCard from './BaseCard'
 
-const QRCode = s.img`
+const QRCode = styled.img`
   display: block;
   width: 150px;
   padding: 15px;

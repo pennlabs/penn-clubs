@@ -1,12 +1,12 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { CLUBS_RED } from '../../constants/colors'
 import { Icon } from './Icon'
 
 // Hide checkbox visually but remain accessible to screen readers.
 // Source: https://polished.js.org/docs/#hidevisually
-const HiddenCheckbox = s.input.attrs({ type: 'checkbox' })`
+const HiddenCheckbox = styled.input.attrs({ type: 'checkbox' })`
   border: 0;
   clip: rect(0 0 0 0);
   clippath: inset(50%);
@@ -19,7 +19,7 @@ const HiddenCheckbox = s.input.attrs({ type: 'checkbox' })`
   width: 1px;
 `
 
-const StyledCheckbox = s.div`
+const StyledCheckbox = styled.div`
   display: inline-block;
   width: 16px;
   height: 16px;
@@ -28,12 +28,12 @@ const StyledCheckbox = s.div`
   fill: ${(props) => props.color || CLUBS_RED}
 `
 
-const CheckboxContainer = s.div`
+const CheckboxContainer = styled.div`
   display: inline-block;
   vertical-align: middle;
 `
 
-export const CheckboxLabel = s.label`
+export const CheckboxLabel = styled.label`
   cursor: pointer;
 `
 

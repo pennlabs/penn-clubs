@@ -1,5 +1,5 @@
 import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   ADD_BUTTON,
@@ -34,7 +34,7 @@ const ORDERINGS = [
   },
 ]
 
-const OrderingWrapper = s.div`
+const OrderingWrapper = styled.div`
   width: 100%;
 
   & .dropdown-trigger,
@@ -85,7 +85,7 @@ const OrderingWrapper = s.div`
   }
 `
 
-const OrderingChevronWrapper = s.div`
+const OrderingChevronWrapper = styled.div`
   cursor: pointer;
   color: ${MEDIUM_GRAY};
   opacity: 0.5;

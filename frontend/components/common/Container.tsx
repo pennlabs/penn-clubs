@@ -1,5 +1,5 @@
 import { CSSProperties, ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { WHITE } from '../../constants/colors'
 import {
@@ -19,7 +19,7 @@ type WrapperProps = {
   fullHeight?: boolean
 }
 
-const Wrapper = s.div<WrapperProps>`
+const Wrapper = styled.div<WrapperProps>`
   width: 100%;
   padding-top: 1rem;
   padding-bottom: 1rem;
@@ -66,7 +66,7 @@ type ContainerProps = React.PropsWithChildren<{
   style?: CSSProperties
 }>
 
-const WideWrapper = s(Wrapper)`
+const WideWrapper = styled(Wrapper)`
   ${mediaMinWidth(MD)} {
     ${getPadding(2.5)}
   }
@@ -90,7 +90,7 @@ export const WideContainer = ({
   </div>
 )
 
-export const PhoneContainer = s.div`
+export const PhoneContainer = styled.div`
   margin: 15px auto;
   padding: 15px;
   max-width: 420px;

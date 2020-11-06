@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   BLACK_ALPHA,
@@ -21,7 +21,7 @@ import { Icon } from '../common'
 import { UserMembership } from './ClubTab'
 import Toggle from './Toggle'
 
-const Card = s.div`
+const Card = styled.div`
   color: ${CLUBS_NAVY}
   border-radius: ${BORDER_RADIUS};
   box-shadow: 0 2px 19px 0 ${BLACK_ALPHA(0.25)};
@@ -31,25 +31,25 @@ const Card = s.div`
   padding-top: 3%;
 `
 
-const CardRow = s.span`
+const CardRow = styled.span`
   display: flex;
   flex-direction: row;
   width: 100%;
   margin-bottom: 6px;
 `
 
-const CardDivider = s.hr`
+const CardDivider = styled.hr`
   margin: 0.4rem;
 `
 
-const CardTitle = s.p`
+const CardTitle = styled.p`
   font-size: 1.25rem;
   font-weight: bold;
   margin-right: auto;
   width: 70%;
 `
 
-const ManageButton = s.a`
+const ManageButton = styled.a`
   border: 0;
   border-radius: ${BORDER_RADIUS};
   background-color: ${CLUBS_BLUE};
@@ -64,7 +64,7 @@ const ManageButton = s.a`
   }
 `
 
-const LeaveButton = s.a`
+const LeaveButton = styled.a`
   border: 0;
   border-radius: ${BORDER_RADIUS};
   background-color: ${CLUBS_RED};
@@ -79,17 +79,17 @@ const LeaveButton = s.a`
   }
 `
 
-const ButtonIcon = s(Icon)`
+const ButtonIcon = styled(Icon)`
   margin-left: 0;
   margin-right: 5px;
   margin-bottom: 0.4rem;
 `
 
-const RowIcon = s(Icon)`
+const RowIcon = styled(Icon)`
   margin-right: 5px;
 `
 
-const RightWrapper = s.div`
+const RightWrapper = styled.div`
   color: ${LIGHT_GRAY}
   margin-left: auto;
   text-align: right;

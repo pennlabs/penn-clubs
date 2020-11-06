@@ -1,12 +1,12 @@
 import { ReactElement, useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { CLUBS_BLUE } from '../../constants/colors'
 import { getCurrentRelativePath, LOGIN_URL } from '../../utils'
 import { OBJECT_NAME_PLURAL, SITE_LOGO, SITE_NAME } from '../../utils/branding'
 import { Center, Icon, PhoneContainer, SmallText, Text, Title } from '.'
 
-const Image = s.img`
+const Image = styled.img`
   height: 86px;
   width: auto;
   max-width: 242px;
@@ -14,11 +14,11 @@ const Image = s.img`
   object-fit: contain;
 `
 
-const Margin = s.div`
+const Margin = styled.div`
   margin: 1rem;
 `
 
-const TitleHeader = s.div`
+const TitleHeader = styled.div`
   margin-top: 1rem;
   text-align: center;
 

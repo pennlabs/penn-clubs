@@ -1,7 +1,7 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement, useContext, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
 import InfoBox from '../../../components/ClubPage/InfoBox'
@@ -29,7 +29,7 @@ import {
 } from '../../../utils'
 import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../../utils/branding'
 
-const Image = s.img`
+const Image = styled.img`
   height: 86px;
   width: auto;
   max-width: 242px;
@@ -37,11 +37,11 @@ const Image = s.img`
   object-fit: contain;
 `
 
-const Margin = s.div`
+const Margin = styled.div`
   margin: 1rem;
 `
 
-const ClubHeader = s.div`
+const ClubHeader = styled.div`
   margin-top: 1rem;
 
   h1 {

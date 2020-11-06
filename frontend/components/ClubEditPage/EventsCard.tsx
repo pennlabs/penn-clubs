@@ -2,7 +2,7 @@ import { Field } from 'formik'
 import moment from 'moment'
 import React, { ReactElement, useState } from 'react'
 import TimeAgo from 'react-timeago'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { LIGHT_GRAY } from '../../constants'
 import { Club, ClubEvent } from '../../types'
@@ -20,7 +20,7 @@ import {
 import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
-const EventBox = s.div<{ type: 'ios' | 'android' }>`
+const EventBox = styled.div<{ type: 'ios' | 'android' }>`
   text-align: left;
   font-family: 'HelveticaNeue', 'Helvetica';
   user-select: none;
@@ -137,7 +137,7 @@ const EventBox = s.div<{ type: 'ios' | 'android' }>`
   }
 `
 
-const DevicesWrapper = s.div`
+const DevicesWrapper = styled.div`
   margin-top: 1em;
   & .marvel-device {
     margin: 0 auto;
@@ -324,18 +324,18 @@ const eventFields = (
   </>
 )
 
-const EventPreviewContainer = s.div`
+const EventPreviewContainer = styled.div`
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
 `
 
-const EventPreviewDescriptionContainer = s.div`
+const EventPreviewDescriptionContainer = styled.div`
   display: grid;
   margin: auto 0;
   width: 40%;
 `
-const PreviewContainer = s.div`
+const PreviewContainer = styled.div`
   margin-top: 2rem;
   max-width: 40%;
   box-shadow: 2px 2px 10px ${LIGHT_GRAY};

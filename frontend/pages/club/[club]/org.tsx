@@ -1,7 +1,7 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
 import { Icon, Loading, Title, WideContainer } from '../../../components/common'
@@ -9,14 +9,14 @@ import { CLUB_ORG_ROUTE, CLUB_ROUTE } from '../../../constants'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
 
-const Subtitle = s(Title)`
+const Subtitle = styled(Title)`
   font-size: 1.5em;
   font-weight: normal;
   margin-top: 1em;
   margin-bottom: 0.5em;
 `
 
-const OrgChildWrapper = s.div`
+const OrgChildWrapper = styled.div`
   margin-left: 1em;
 
   & .entry {
@@ -36,7 +36,7 @@ const OrgChildWrapper = s.div`
   }
 `
 
-const ErrorText = s.p`
+const ErrorText = styled.p`
   color: red;
 `
 

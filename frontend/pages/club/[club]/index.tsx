@@ -1,7 +1,7 @@
 import { NextPageContext } from 'next'
 import { ReactElement, useEffect, useRef, useState } from 'react'
 import Linkify from 'react-linkify'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
 import {
@@ -47,7 +47,7 @@ import {
   SITE_NAME,
 } from '../../../utils/branding'
 
-const Image = s.img`
+const Image = styled.img`
   height: 86px;
   width: auto;
   max-width: 242px;
@@ -55,13 +55,13 @@ const Image = s.img`
   object-fit: contain;
 `
 
-const StyledCard = s(Card)`
+const StyledCard = styled(Card)`
   background-color: ${WHITE};
   margin-bottom: ${M3};
   padding-left: ${M2};
 `
 
-const InactiveCard = s(Card)`
+const InactiveCard = styled(Card)`
   background-color: ${CLUBS_RED};
   margin-bottom: ${M3};
   padding-left: ${M2};
@@ -73,7 +73,7 @@ type ClubPageProps = {
   questions: QuestionAnswer[]
 }
 
-const QAButton = s.button.attrs({ className: 'button is-primary' })`
+const QAButton = styled.button.attrs({ className: 'button is-primary' })`
   font-size: 0.8em;
   margin-bottom: 1rem;
   padding: 1.5rem;

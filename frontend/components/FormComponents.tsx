@@ -13,7 +13,7 @@ import React, {
 } from 'react'
 import DatePicker from 'react-datepicker'
 import Select from 'react-select'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { titleize } from '../utils'
 import AddressField from './ClubEditPage/AddressField'
@@ -224,7 +224,7 @@ export const RichTextField = useFieldWrapper(
   },
 )
 
-const DatePickerWrapper = s.span`
+const DatePickerWrapper = styled.span`
   & .react-datepicker-wrapper {
     width: 100%;
   }

@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   ALLBIRDS_GRAY,
@@ -31,7 +31,7 @@ import DropdownFilter, { FilterHeader, SelectableTag } from './DropdownFilter'
 import FilterSearch, { FuseTag } from './FilterSearch'
 import OrderInput from './OrderInput'
 
-const MobileSearchBarSpacer = s.div`
+const MobileSearchBarSpacer = styled.div`
   display: block;
   width: 100%;
   height: ${SEARCH_BAR_MOBILE_HEIGHT};
@@ -41,7 +41,7 @@ const MobileSearchBarSpacer = s.div`
   }
 `
 
-export const SearchbarRightContainer = s.div`
+export const SearchbarRightContainer = styled.div`
   width: 80vw;
   margin-left: 20vw;
   padding: 0;
@@ -52,7 +52,7 @@ export const SearchbarRightContainer = s.div`
   }
 `
 
-const Wrapper = s.div`
+const Wrapper = styled.div`
   height:100vh;
   width: 20vw;
   overflow-x: hidden;
@@ -71,7 +71,7 @@ const Wrapper = s.div`
   }
 `
 
-const SearchWrapper = s.div`
+const SearchWrapper = styled.div`
   margin-bottom: 30px;
 
   ${mediaMaxWidth(MD)} {
@@ -79,7 +79,7 @@ const SearchWrapper = s.div`
   }
 `
 
-const Content = s.div`
+const Content = styled.div`
   padding: 36px 17px 12px 17px;
   width: 100%;
 
@@ -100,7 +100,7 @@ const Content = s.div`
   }
 `
 
-const Input = s.input`
+const Input = styled.input`
   border: 1px solid ${ALLBIRDS_GRAY};
   outline: none;
   color: ${CLUBS_GREY};
@@ -118,7 +118,7 @@ const Input = s.input`
   }
 `
 
-const SearchIcon = s.span`
+const SearchIcon = styled.span`
   cursor: pointer;
   color: ${MEDIUM_GRAY};
   opacity: 0.5;
@@ -131,7 +131,7 @@ const SearchIcon = s.span`
   }
 `
 
-const MobileLine = s.hr`
+const MobileLine = styled.hr`
   display: none;  
   ${mediaMaxWidth(MD)} {
     display: block;

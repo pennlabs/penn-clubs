@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
 import LazyLoad from 'react-lazy-load'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   ALLBIRDS_GRAY,
@@ -22,14 +22,14 @@ import { Club } from '../types'
 import ClubDetails from './ClubDetails'
 import { InactiveTag, TagGroup } from './common'
 
-const CardWrapper = s.div`
+const CardWrapper = styled.div`
   ${mediaMaxWidth(SM)} {
     padding-top: 0;
     padding-bottom: 1rem;
   }
 `
 
-const Description = s.p`
+const Description = styled.p`
   margin-top: 0.2rem;
   color: ${CLUBS_GREY_LIGHT};
   width: 100%;
@@ -40,7 +40,7 @@ type CardProps = {
   className?: string
 }
 
-const Card = s.div<CardProps>`
+const Card = styled.div<CardProps>`
   padding: 10px;
   box-shadow: 0 0 0 transparent;
   transition: all ${ANIMATION_DURATION}ms ease;
@@ -64,7 +64,7 @@ const Card = s.div<CardProps>`
   }
 `
 
-const Image = s.img`
+const Image = styled.img`
   height: 100%;
   max-width: 150px;
   border-radius: ${BORDER_RADIUS};
@@ -72,14 +72,14 @@ const Image = s.img`
   overflow: hidden;
 `
 
-const CardHeader = s.div`
+const CardHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin: 0 3px;
 `
 
-const CardTitle = s.strong`
+const CardTitle = styled.strong`
   line-height: 1.2;
   color: ${H1_TEXT};
   margin-bottom: 0.5rem;

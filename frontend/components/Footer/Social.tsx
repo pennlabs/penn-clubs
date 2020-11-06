@@ -1,10 +1,10 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { BLACK } from '../../constants/colors'
 import { Icon } from '../common'
 
-const Icons = s.div`
+const Icons = styled.div`
   display: flex;
   justify-content: center;
   width: 100%;

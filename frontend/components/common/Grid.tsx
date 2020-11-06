@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   mediaMaxWidth,
@@ -10,12 +10,12 @@ import {
 
 const percent = (numCols: number): string => (numCols / 12) * 100 + '%'
 
-export const Flex = s.div`
+export const Flex = styled.div`
   width: 100%;
   display: flex;
 `
 
-export const Row = s.div<{ alwaysFlex?: boolean; margin?: string }>`
+export const Row = styled.div<{ alwaysFlex?: boolean; margin?: string }>`
   display: flex;
   flex-direction: row;
   width: 100%;
@@ -43,7 +43,7 @@ interface ColWrapperProps {
   flex?: boolean
 }
 
-const ColWrapper = s.div<ColWrapperProps>`
+const ColWrapper = styled.div<ColWrapperProps>`
   flex: ${({ width }) => (width ? 'none' : 1)};
   width: ${({ width }) => width || 'auto'};
   overflow-y: ${({ overflowY }) => overflowY || 'visible'};
@@ -63,7 +63,7 @@ const ColWrapper = s.div<ColWrapperProps>`
   ${({ flex }) => flex && 'display: flex;'}
 `
 
-const ColContainer = s.div<{
+const ColContainer = style.div<{
   background?: string
   flex?: boolean
   margin?: string

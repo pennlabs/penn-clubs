@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
 import ReactTooltip from 'react-tooltip'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { DARK_GRAY } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE, CLUB_ROUTE } from '../../constants/routes'
@@ -12,7 +12,7 @@ import { Icon } from '../common'
 import { UserMembership } from './ClubTab'
 import Toggle from './Toggle'
 
-const Table = s.table`
+const Table = styled.table`
   font-family: ${BODY_FONT};
   font-size: 16px;
   overflow: scroll;

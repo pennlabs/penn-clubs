@@ -1,16 +1,16 @@
 import { ReactElement, useState } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import { Flex, Icon } from '../../components/common'
 import { BACKGROUND_GRAY, CLUBS_GREY, LIGHT_GRAY } from '../../constants/colors'
 import { API_BASE_URL } from '../../utils'
 
-const TallTextArea = s.textarea`
+const TallTextArea = styled.textarea`
   height: 6em;
   background-color: ${BACKGROUND_GRAY};
   box-shadow: none;
 `
-const TransparentButton = s.button`
+const TransparentButton = styled.button`
   width: 12.5em;
   height: 2.5em;
   border-radius: 17px;
@@ -23,12 +23,12 @@ const TransparentButton = s.button`
   margin: 2em;
 `
 
-const MainContainer = s.div`
+const MainContainer = styled.div`
   display: flex;
   flex-wrap: nowrap;
 `
 
-const ReportsContainer = s.div`
+const ReportsContainer = styled.div`
   flex: 2 0 75%;
   margin: 2em;
 `

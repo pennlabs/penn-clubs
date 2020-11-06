@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
-import s from 'styled-components'
+import styled from 'styled-components'
 
 import {
   FAIR_INFO,
@@ -12,27 +12,27 @@ import {
 } from '../../constants'
 import { useSetting } from '../../utils'
 
-const LiveBanner = s.div`
+const LiveBanner = styled.div`
   padding: 20px;
   border-radius: 5px;
   background-image: radial-gradient(circle at 15% 0, rgba(216, 127, 200, 0.5), rgba(73, 84, 244, 0.4) 36%), radial-gradient(circle at 55% 130%, #ff8a97, rgba(73, 84, 244, 0.23) 62%), radial-gradient(circle at 93% 24%, rgba(239, 76, 95, 0.76), rgba(73, 84, 244, 0.27) 41%), linear-gradient(171deg, #626bf3 -13%, #b24f95 104%, rgba(239, 76, 95, 0.96) 104%), linear-gradient(to bottom, #4954f4, #4954f4);
   margin-bottom: 10px;
 `
 
-const LiveTitle = s.div`
+const LiveTitle = styled.div`
   font-size: ${M4};
   font-weight: bold;
   color: white;
 `
 
-const LiveSub = s.div`
+const LiveSub = styled.div`
   margin-top: -3px;
   margin-bottom: 3px;
   font-size: ${M2};
   color: white;
 `
 
-const WhiteButton = s.a`
+const WhiteButton = styled.a`
   padding: 7px;
   width: 140px;
   text-align: center;
