@@ -25,7 +25,7 @@ interface Props {
   style?: CSSProperties
 }
 
-const Popup = (props: Props): ReactElement => {
+const Popup = (props: Props): ReactElement | null => {
   const {
     anchorElement,
     preferredPosition = PopupPosition.TOP,
@@ -35,15 +35,17 @@ const Popup = (props: Props): ReactElement => {
     style = {},
   } = props
 
-  const [show, setShow] = useState<boolean>(props.show)
+  const [show, setShow] = useState(props.show)
 
   useEffect(() => {
     setShow(props.show)
   }, [props.show])
 
+  if (!parent || !show) return null
+
   const coordinates: CSSProperties = (() => {
     const c: CSSProperties = {}
-    const {
+    let {
       top,
       bottom,
       left,
@@ -51,7 +53,14 @@ const Popup = (props: Props): ReactElement => {
       width,
       height,
     } = anchorElement.getBoundingClientRect()
-    if (preferredPosition === PopupPosition.TOP) c.bottom = top
+
+    top += window.scrollY
+    bottom += window.scrollY
+    left += window.scrollX
+    right += window.scrollX
+
+    if (preferredPosition === PopupPosition.TOP)
+      c.bottom = window.innerHeight - bottom
     if (preferredPosition === PopupPosition.BOTTOM) c.top = bottom
     if (preferredPosition === PopupPosition.LEFT) c.right = left
     if (preferredPosition === PopupPosition.RIGHT) c.left = right
@@ -79,17 +88,17 @@ const Popup = (props: Props): ReactElement => {
   })()
 
   return createPortal(
-    parent,
     <div
       style={{
         ...coordinates,
         ...style,
         position: 'absolute',
-        display: show ? 'block' : 'none',
+        zIndex: 1000,
       }}
     >
       {children}
     </div>,
+    parent,
   )
 }
 
