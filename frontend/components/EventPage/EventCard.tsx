@@ -3,12 +3,7 @@ import LazyLoad from 'react-lazy-load'
 import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
-<<<<<<< HEAD
-import { Icon, TransparentButtonLink } from '../../components/common'
-import { CLUB_ROUTE, CLUBS_BLUE } from '../../constants'
-=======
 import { Icon, Modal } from '../../components/common'
->>>>>>> revert to modal based cards
 import { MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import {
   mediaMaxWidth,
