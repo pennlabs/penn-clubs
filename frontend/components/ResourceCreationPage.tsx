@@ -9,6 +9,7 @@ import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
   OBJECT_NAME_TITLE_SINGULAR,
+  SCHOOL_NAME,
   SITE_NAME,
 } from '../utils/branding'
 import ClubCard from './ClubCard'
@@ -89,6 +90,13 @@ const ResourceCreationPage = ({
       content: (): ReactElement => (
         <>
           <Title>Introduction</Title>
+          <Text>
+            {SITE_NAME} is a central location for resources{' '}
+            <b>directly associated with the {SCHOOL_NAME}</b> that are available
+            to students at no cost. {SITE_NAME} is not a location to advertise
+            outside resources. Only such resources will be approved for listing
+            on {SITE_NAME}.
+          </Text>
           <Text>
             {OBJECT_NAME_TITLE} that you create from this form will enter an
             approval process before being displayed to the public. After your{' '}
