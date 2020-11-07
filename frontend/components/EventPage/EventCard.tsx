@@ -1,11 +1,9 @@
-import Link from 'next/link'
 import { ReactElement, useState } from 'react'
 import LazyLoad from 'react-lazy-load'
 import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
-import { Icon, TransparentButtonLink } from '../../components/common'
-import { CLUB_ROUTE, CLUBS_BLUE, M2, ZOOM_BLUE } from '../../constants'
+import { Icon, Modal } from '../../components/common'
 import { MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import {
   mediaMaxWidth,
@@ -17,10 +15,12 @@ import { Card } from '../common/Card'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
+import EventModal, { MEETING_REGEX } from './EventModal'
 import HappeningNow from './HappeningNow'
 
 const EventCardContainer = styled.div`
   cursor: pointer;
+
   ${mediaMinWidth(PHONE)} {
     max-width: 18em;
     margin: 1rem;
@@ -33,15 +33,6 @@ const TimeLeft = styled(TimeAgo)<{ date: Date }>`
   color: ${MEDIUM_GRAY};
   font-size: 12px;
 `
-
-const RightAlign = styled.div`
-  & > * {
-    margin-top: 10px;
-    float: right;
-  }
-`
-const MEETING_REGEX = /^https?:\/\/(?:[\w-]+\.)?zoom\.us\//i
-
 const clipLink = (s: string) => (s.length > 32 ? `${s.slice(0, 35)}...` : s)
 
 const EventCard = (props: { event: ClubEvent }): ReactElement => {
@@ -69,7 +60,7 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
   return (
     <>
       <EventCardContainer className="event">
-        <Card bordered background={WHITE} style={{ display: 'inline-block' }}>
+        <Card bordered hoverable background={WHITE} onClick={showModal}>
           <LazyLoad offset={800}>
             <CoverPhoto
               image={imageUrl}
@@ -95,23 +86,13 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
             ) : (
               <EventLink href={url}>{clipLink(url)}</EventLink>
             ))}
-          <RightAlign>
-            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)} passHref>
-              <TransparentButtonLink
-                backgroundColor={CLUBS_BLUE}
-                onClick={(e) => {
-                  if (!event.club) {
-                    e.preventDefault()
-                  }
-                }}
-              >
-                See Club Details{' '}
-                <Icon name="chevrons-right" alt="chevrons-right" />
-              </TransparentButtonLink>
-            </Link>
-          </RightAlign>
         </Card>
       </EventCardContainer>
+      {modalVisible && (
+        <Modal show={modalVisible} closeModal={hideModal} width="45%">
+          <EventModal {...props} />
+        </Modal>
+      )}
     </>
   )
 }
