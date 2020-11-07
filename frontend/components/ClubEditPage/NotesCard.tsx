@@ -1,4 +1,5 @@
 import moment from 'moment'
+import { Field, Form, Formik } from 'formik'
 import {
   Dispatch,
   ReactElement,
@@ -15,6 +16,7 @@ import { BlueTag, Card, Loading, Text } from '../common'
 import BaseCard from './BaseCard'
 
 type Note = {
+  id: number
   creator: string
   modified: string
   title: string
@@ -119,6 +121,7 @@ export default function NotesCard({ club }: NotesCardProps): ReactElement {
         setNotes(
           response.map((note) => {
             return {
+              id: note.id,
               creator: note.creator_full_name,
               title: note.title,
               content: note.content,

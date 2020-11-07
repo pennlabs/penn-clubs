@@ -1505,17 +1505,28 @@ class NoteTagSerializer(serializers.ModelSerializer):
 
 class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    creator_full_name = serializers.SerializerMethodField("get_creator_full_name")
+    updated_by = serializers.SerializerMethodField("get_updated_by")
     creating_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     subject_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     title = serializers.CharField(max_length=255, default="Note")
     content = serializers.CharField(required=False)
     note_tags = NoteTagSerializer(many=True, required=False)
 
+    def get_creator_full_name(self, obj):
+        return obj.creator.get_full_name()
+
+    def get_updated_by(self, obj):
+        if obj.updated_by is None:
+            return obj.creator.get_full_name()
+        return obj.updated_by.get_full_name()
+
     class Meta:
         model = Note
         fields = (
             "id",
             "creator",
+            "creator_full_name",
             "creating_club",
             "subject_club",
             "title",
@@ -1523,5 +1534,7 @@ class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
             "note_tags",
             "creating_club_permission",
             "outside_club_permission",
+            "updated_at",
+            "updated_by"
         )
         save_related_fields = [{"field": "note_tags", "mode": "create"}]

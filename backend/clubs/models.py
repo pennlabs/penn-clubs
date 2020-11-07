@@ -629,7 +629,9 @@ class Note(models.Model):
     constituient club
     """
 
-    creator = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    creator = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="created_notes"
+    )
     creating_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="note_by_club")
     subject_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="note_of_club")
     note_tags = models.ManyToManyField("NoteTag")
@@ -666,7 +668,16 @@ class Note(models.Model):
     outside_club_permission = models.IntegerField(
         choices=OUTSIDE_CLUB_PERMISSION_CHOICES, default=PERMISSION_SUBJECT_CLUB_MEMBER
     )
+
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        get_user_model(),
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="updated_notes",
+        blank=True,
+    )
 
 
 class StudentType(models.Model):
