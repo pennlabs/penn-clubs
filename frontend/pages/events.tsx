@@ -3,28 +3,25 @@ import moment from 'moment'
 import { NextPageContext } from 'next'
 import Head from 'next/head'
 import {
-  cloneElement,
-  ReactChildren,
   ReactElement,
   SyntheticEvent,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
-import Popup, { PopupAlignment, PopupPosition } from '../components/Popup'
-
 import {
   Metadata,
+  Modal,
   SegmentedButton,
   Title,
   WideWrapper,
 } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
-import EventCard from '../components/EventPage/EventCard'
-import { MEETING_REGEX } from '../components/EventPage/EventModal'
+import EventModal, { MEETING_REGEX } from '../components/EventPage/EventModal'
 import { FuseTag } from '../components/FilterSearch'
 import SearchBar, {
   SearchBarCheckboxItem,
@@ -37,7 +34,6 @@ import { CLUBS_GREY, EVENT_TYPE_COLORS, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, Tag } from '../types'
 import { doApiRequest, isClubFieldShown } from '../utils'
-import { OBJECT_NAME_SINGULAR } from '../utils/branding'
 import { ListLoadIndicator } from '.'
 
 interface EventPageProps {
@@ -47,14 +43,6 @@ interface EventPageProps {
   tags: Tag[]
   badges: Badge[]
 }
-
-const CardList = styled.div`
-  & .event {
-    display: inline-block;
-    vertical-align: top;
-    width: 400px;
-  }
-`
 
 const localizer = momentLocalizer(moment)
 
@@ -225,6 +213,9 @@ function EventPage({
   const [searchInput, setSearchInput] = useState<SearchInput>({})
   const currentSearch = useRef<SearchInput>({})
   const [isLoading, setLoading] = useState<boolean>(false)
+
+  const [previewEvent, setPreviewEvent] = useState<ClubEvent | null>(null)
+  const hideModal = () => setPreviewEvent(null)
 
   useEffect(() => {
     if (equal(searchInput, currentSearch.current)) {
@@ -411,8 +402,7 @@ function EventPage({
                 event: { resource: ClubEvent },
                 e: SyntheticEvent,
               ) => {
-                setPopupPreview(event.resource)
-                setPopupAnchor(e.target as HTMLDivElement)
+                setPreviewEvent(event)
               }}
               events={[...liveEvents, ...upcomingEvents].map((e) => ({
                 title: e.name,
@@ -433,31 +423,13 @@ function EventPage({
               }}
               style={{ flex: '1' }}
             />
-            {/* {!upcomingEvents.length && (
-              <div className="notification is-info is-clearfix">
-                <img
-                  className="is-pulled-left mr-5 mb-3"
-                  style={{ width: 100 }}
-                  src="/static/img/events_calendar.png"
-                />
-                <div>
-                  There are no upcoming events that match your search query. If
-                  you are a member of a {OBJECT_NAME_SINGULAR}, you can add new
-                  events on the manage {OBJECT_NAME_SINGULAR} page.
-                </div>
-              </div>
-            )} */}
           </WideWrapper>
         </SearchbarRightContainer>
       </div>
-      {!!popupPreview && !!popupAnchor && (
-        <Popup
-          anchorElement={popupAnchor}
-          show={true}
-          align={PopupAlignment.START}
-        >
-          <EventCard event={popupPreview} isHappening={false} />
-        </Popup>
+      {previewEvent && (
+        <Modal show={true} closeModal={hideModal} width="45%">
+          <EventModal event={previewEvent} isHappening={true} />
+        </Modal>
       )}
     </>
   )
