@@ -109,6 +109,7 @@ from clubs.serializers import (
     UserSerializer,
     UserSubscribeSerializer,
     UserSubscribeWriteSerializer,
+    UserUUIDSerializer,
     YearSerializer,
 )
 from clubs.utils import html_to_text
@@ -1385,6 +1386,21 @@ class FavoriteViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             return FavoriteWriteSerializer
         return FavoriteSerializer
+
+
+class UserUUIDAPIView(generics.RetrieveAPIView):
+    """
+    get: Retrieve the uuid for the given user.
+    """
+
+    queryset = get_user_model().objects.all()
+    serializer_class = UserUUIDSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["get"]
+
+    def get_object(self):
+        user = self.request.user
+        return user
 
 
 class SubscribeViewSet(viewsets.ModelViewSet):

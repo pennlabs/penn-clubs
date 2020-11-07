@@ -1143,6 +1143,21 @@ class UserMembershipSerializer(serializers.ModelSerializer):
         fields = ("club", "role", "title", "active", "public")
 
 
+class UserUUIDSerializer(serializers.ModelSerializer):
+    """
+    Used to get the uuid of a user (for ICS Calendar export)
+    """
+
+    url = serializers.SerializerMethodField("get_calendar_url")
+
+    def get_calendar_url(self, obj):
+        return f"{settings.DEFAULT_DOMAIN}/api/calendar/{str(obj.profile.uuid_secret)}"
+
+    class Meta:
+        model = get_user_model()
+        fields = ("url",)
+
+
 class UserSubscribeSerializer(serializers.ModelSerializer):
     """
     Used by users to get a list of clubs that they have subscribed to.
@@ -1311,7 +1326,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField("get_full_name")
     image_url = serializers.SerializerMethodField("get_image_url")
     clubs = serializers.SerializerMethodField("get_clubs")
-
     graduation_year = serializers.IntegerField(source="profile.graduation_year")
     school = SchoolSerializer(many=True, source="profile.school")
     major = MajorSerializer(many=True, source="profile.major")
@@ -1375,7 +1389,6 @@ class UserSerializer(serializers.ModelSerializer):
     is_superuser = serializers.BooleanField(read_only=True)
     image = serializers.ImageField(source="profile.image", write_only=True, allow_null=True)
     image_url = serializers.SerializerMethodField("get_image_url")
-
     has_been_prompted = serializers.BooleanField(source="profile.has_been_prompted")
     share_bookmarks = serializers.BooleanField(source="profile.share_bookmarks")
     graduation_year = serializers.IntegerField(source="profile.graduation_year", allow_null=True)
