@@ -72,11 +72,7 @@ const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
       </Wrapper>
       {show && (
         <Modal show={show} closeModal={hideModal} marginBottom={false}>
-          <EventModal
-            event={entry}
-            isHappening={false}
-            showDetailsButton={false}
-          />
+          <EventModal event={entry} showDetailsButton={false} />
         </Modal>
       )}
     </>
