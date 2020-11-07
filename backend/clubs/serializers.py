@@ -1143,6 +1143,21 @@ class UserMembershipSerializer(serializers.ModelSerializer):
         fields = ("club", "role", "title", "active", "public")
 
 
+class UserUUIDSerializer(serializers.ModelSerializer):
+    """
+    Used to get the uuid of a user (for ICS Calendar export)
+    """
+
+    uuid = serializers.SerializerMethodField("get_uuid")
+
+    def get_uuid(self, obj):
+        return f"{settings.DEFAULT_DOMAIN}/api/calendar/{str(obj.profile.uuid_secret)}"
+
+    class Meta:
+        model = get_user_model()
+        fields = ("uuid",)
+
+
 class UserSubscribeSerializer(serializers.ModelSerializer):
     """
     Used by users to get a list of clubs that they have subscribed to.
