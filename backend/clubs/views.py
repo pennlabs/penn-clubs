@@ -2122,21 +2122,6 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
         return user
 
 
-class UserUUIDAPIView(generics.RetrieveAPIView):
-    """
-    get: Retrieve the uuid for the given user.
-    """
-
-    queryset = get_user_model().objects.all()
-    serializer_class = UserUUIDSerializer
-    permission_classes = [IsAuthenticated]
-    http_method_names = ["get"]
-
-    def get_object(self):
-        user = self.request.user
-        return user
-
-
 class MemberInviteViewSet(viewsets.ModelViewSet):
     """
     update:
