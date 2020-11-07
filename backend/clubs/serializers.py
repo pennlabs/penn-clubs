@@ -1148,14 +1148,14 @@ class UserUUIDSerializer(serializers.ModelSerializer):
     Used to get the uuid of a user (for ICS Calendar export)
     """
 
-    uuid = serializers.SerializerMethodField("get_uuid")
+    url = serializers.SerializerMethodField("get_calendar_url")
 
-    def get_uuid(self, obj):
+    def get_calendar_url(self, obj):
         return f"{settings.DEFAULT_DOMAIN}/api/calendar/{str(obj.profile.uuid_secret)}"
 
     class Meta:
         model = get_user_model()
-        fields = ("uuid",)
+        fields = ("url",)
 
 
 class UserSubscribeSerializer(serializers.ModelSerializer):
