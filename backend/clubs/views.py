@@ -1210,23 +1210,21 @@ class EventViewSet(viewsets.ModelViewSet):
         if request.data.get("is_recurring", None) is not None:
             event_data = request.data.copy()
             print(event_data)
-            start_time = event_data.pop('start_time')
-            end_time = event_data.pop('end_time')
+            start_time = datetime.datetime.strptime(event_data.pop('start_time'), '%Y-%m-%d %H:%M:%S')
+            end_time = datetime.datetime.strptime(event_data.pop('end_time'), '%Y-%m-%d %H:%M:%S')
             offset = event_data.pop('offset')
-            end_date = event_data.pop('end_date')
+            end_date = datetime.datetime.strptime(event_data.pop('end_date'), '%Y-%m-%d %H:%M:%S')
             event_data.pop('is_recurring')
+            club_code = event_data.pop('club')
             print("new", event_data)
-            event_data.pop('image_url')
-            event_data.pop('large_image_url')
-            event_data.pop('club_name')
-            event_data.pop('badges')
 
-            #print("new", event_data)
-
+            club = Club.objects.get(code=club_code)
             while start_time < end_date:
-                Event.objects.create(**event_data, start_time=start_time, end_time=end_time)
+                event_to_return= Event.objects.create(**event_data, club=club, start_time=start_time, end_time=end_time)
                 start_time = start_time + datetime.timedelta(days=offset)
                 end_time = end_time + datetime.timedelta(days=offset)
+
+            return Response({"success": True})
 
         return super().create(request, *args, **kwargs)
 
