@@ -2,14 +2,7 @@ import equal from 'deep-equal'
 import moment from 'moment'
 import { NextPageContext } from 'next'
 import Head from 'next/head'
-import {
-  ReactElement,
-  SyntheticEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
@@ -407,10 +400,7 @@ function EventPage({
                 event: CalendarEvent,
                 toolbar: CalendarHeader,
               }}
-              onSelectEvent={(
-                event: { resource: ClubEvent },
-                e: SyntheticEvent,
-              ) => {
+              onSelectEvent={(event: { resource: ClubEvent }) => {
                 setPreviewEvent(event)
               }}
               events={[...liveEvents, ...upcomingEvents].map((e) => ({
