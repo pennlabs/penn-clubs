@@ -1387,7 +1387,6 @@ class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(read_only=True)
     name = serializers.SerializerMethodField("get_full_name")
     is_superuser = serializers.BooleanField(read_only=True)
-    calendar_url = serializers.SerializerMethodField("get_calendar_url")
     image = serializers.ImageField(source="profile.image", write_only=True, allow_null=True)
     image_url = serializers.SerializerMethodField("get_image_url")
     has_been_prompted = serializers.BooleanField(source="profile.has_been_prompted")
@@ -1412,8 +1411,6 @@ class UserSerializer(serializers.ModelSerializer):
             )
         return value
 
-    def get_calendar_url(self, obj):
-        return f"{settings.DEFAULT_DOMAIN}/api/calendar/{str(obj.profile.uuid_secret)}"
 
     def get_image_url(self, obj):
         if not obj.profile.image:
@@ -1453,7 +1450,6 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "graduation_year",
             "has_been_prompted",
-            "calendar_url",
             "image",
             "image_url",
             "is_superuser",
