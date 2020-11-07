@@ -349,7 +349,7 @@ const EventPreview = ({ event }: { event: ClubEvent }) => (
       <p>This is how your event will appear to students on the event page.</p>
     </EventPreviewDescriptionContainer>
     <PreviewContainer>
-      <EventModal event={event} isHappening={false} />
+      <EventModal event={event} />
     </PreviewContainer>
     {/* TODO: uncomment device preview when we have mobile integration. */}
     {/* <Devices contents={event} /> */}

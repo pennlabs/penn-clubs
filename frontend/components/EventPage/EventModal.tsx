@@ -68,10 +68,9 @@ export const MEETING_REGEX = /^https?:\/\/(?:[\w-]+\.)?zoom\.us\//i
 
 const EventModal = (props: {
   event: ClubEvent
-  isHappening: boolean
   showDetailsButton?: boolean
 }): ReactElement => {
-  const { event, isHappening, showDetailsButton } = props
+  const { event, showDetailsButton } = props
   const {
     large_image_url,
     image_url,
@@ -83,6 +82,11 @@ const EventModal = (props: {
     description,
   } = event
   const [userCount, setUserCount] = useState<number>(0)
+
+  const now = new Date()
+  const startDate = new Date(start_time)
+  const endDate = new Date(end_time)
+  const isHappening = now >= startDate && now <= endDate
 
   useEffect(() => {
     if (url && MEETING_REGEX.test(url)) {

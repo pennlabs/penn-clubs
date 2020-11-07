@@ -260,7 +260,7 @@ function EventPage({
                 {isLoading && <ListLoadIndicator />}
                 <CardList>
                   {liveEvents.map((e) => (
-                    <EventCard key={e.id} event={e} isHappening={true} />
+                    <EventCard key={e.id} event={e} />
                   ))}
                 </CardList>
                 <br />
@@ -272,7 +272,7 @@ function EventPage({
             {isLoading && <ListLoadIndicator />}
             <CardList>
               {upcomingEvents.map((e) => (
-                <EventCard key={e.id} event={e} isHappening={false} />
+                <EventCard key={e.id} event={e} />
               ))}
             </CardList>
             {!upcomingEvents.length && (

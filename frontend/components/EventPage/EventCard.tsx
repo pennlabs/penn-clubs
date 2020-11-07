@@ -35,11 +35,7 @@ const TimeLeft = styled(TimeAgo)<{ date: Date }>`
 `
 const clipLink = (s: string) => (s.length > 32 ? `${s.slice(0, 35)}...` : s)
 
-const EventCard = (props: {
-  event: ClubEvent
-  isHappening: boolean
-}): ReactElement => {
-  const { event, isHappening } = props
+const EventCard = (props: { event: ClubEvent }): ReactElement => {
   const {
     image_url: imageUrl,
     club_name: clubName,
@@ -47,14 +43,16 @@ const EventCard = (props: {
     end_time,
     name,
     url,
-  } = event
+  } = props.event
   const [modalVisible, setModalVisible] = useState(false)
 
   const showModal = () => setModalVisible(true)
   const hideModal = () => setModalVisible(false)
 
+  const now = new Date()
   const startDate = new Date(start_time)
   const endDate = new Date(end_time)
+  const isHappening = now >= startDate && now <= endDate
 
   const hoursBetween =
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60)
