@@ -2,9 +2,14 @@ import { ReactElement, useEffect, useState } from 'react'
 import Select from 'react-select'
 import TimeAgo from 'react-timeago'
 
-import { Club, MembershipRole } from '../../types'
+import { Club, MembershipRank, MembershipRole } from '../../types'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../../utils'
-import { OBJECT_NAME_SINGULAR, SCHOOL_NAME } from '../../utils/branding'
+import {
+  MEMBERSHIP_ROLE_NAMES,
+  OBJECT_MEMBERSHIP_LABEL,
+  OBJECT_NAME_SINGULAR,
+  SCHOOL_NAME,
+} from '../../utils/branding'
 import { Icon, Text } from '../common'
 import BaseCard from './BaseCard'
 import { MEMBERSHIP_ROLES } from './MembersCard'
@@ -190,16 +195,19 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
           </table>
         </BaseCard>
       )}
-      <BaseCard title="Invite Members">
+      <BaseCard title={`Invite ${OBJECT_MEMBERSHIP_LABEL}`}>
         <Text>
           Enter an email address or a list of email addresses separated by
-          commas or newlines in the box below. All emails listed will be sent an
-          invite to join the {OBJECT_NAME_SINGULAR}. The invite process will go
-          more smoothly if you use {SCHOOL_NAME} email addresses, but normal
-          email addresses will work provided that the recipient has a valid
-          PennKey account. We will not send an invite if the account associated
-          with an email is already in the {OBJECT_NAME_SINGULAR} or if an invite
-          associated with that email already exists.
+          commas or newlines in the box below.
+        </Text>
+        <Text>
+          All emails listed will be sent an invite to join the{' '}
+          {OBJECT_NAME_SINGULAR}. The invite process will go more smoothly if
+          you use {SCHOOL_NAME} email addresses, but normal email addresses will
+          work provided that the recipient has a valid PennKey account. We will
+          not send an invite if the account associated with an email is already
+          in the {OBJECT_NAME_SINGULAR} or if an invite associated with that
+          email already exists.
         </Text>
         <div className="field">
           <textarea
@@ -220,8 +228,11 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
             />
           </div>
           <p className="help">
-            Owners have full control over the {OBJECT_NAME_SINGULAR}, officers
-            can perform editing, and members have read-only permissions.
+            {MEMBERSHIP_ROLE_NAMES[MembershipRank.Owner]}s have full control
+            over the {OBJECT_NAME_SINGULAR},{' '}
+            {MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer]}s can perform
+            editing, and {MEMBERSHIP_ROLE_NAMES[MembershipRank.Member]}s have
+            read-only permissions.
           </p>
         </div>
         <div className="field">
@@ -234,8 +245,8 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
             />
           </div>
           <p className="help">
-            The title is shown on the member listing and will not affect user
-            permissions.
+            The title is shown on the {OBJECT_MEMBERSHIP_LABEL.toLowerCase()}{' '}
+            listing and will not affect user permissions.
           </p>
         </div>
         {invitePercentage !== null && (
