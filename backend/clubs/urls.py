@@ -76,7 +76,7 @@ urlpatterns = [
     path(r"settings/zoom/meetings/", MeetingZoomAPIView.as_view(), name="users-zoom-meeting"),
     path(r"settings/permissions/", UserPermissionAPIView.as_view(), name="users-permission"),
     path(r"clubs/<slug:club_code>/invite/", MassInviteAPIView.as_view(), name="club-invite"),
-    path(r"settings/calendar_url", UserUUIDAPIView.as_view(), name="user-uuid"),
+    path(r"settings/calendar_url/", UserUUIDAPIView.as_view(), name="user-uuid"),
     path(
         r"calendar/<slug:user_secretuuid>/",
         FavoriteCalendarAPIView.as_view(),
