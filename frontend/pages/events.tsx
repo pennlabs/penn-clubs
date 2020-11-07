@@ -373,7 +373,6 @@ function EventPage({
               background: SNOW,
             }}
           >
-<<<<<<< HEAD
             {/* {!!liveEvents.length && (
               <>
                 <Title
@@ -391,8 +390,6 @@ function EventPage({
                 <br />
               </>
             )} */}
-=======
->>>>>>> Better trigger and placement for popups
             {isLoading && <ListLoadIndicator />}
             <Calendar
               localizer={localizer}
