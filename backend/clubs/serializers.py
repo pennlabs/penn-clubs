@@ -1411,7 +1411,6 @@ class UserSerializer(serializers.ModelSerializer):
             )
         return value
 
-
     def get_image_url(self, obj):
         if not obj.profile.image:
             return None
