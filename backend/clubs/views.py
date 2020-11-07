@@ -109,6 +109,7 @@ from clubs.serializers import (
     UserSerializer,
     UserSubscribeSerializer,
     UserSubscribeWriteSerializer,
+    UserUUIDSerializer,
     YearSerializer,
 )
 from clubs.utils import html_to_text
