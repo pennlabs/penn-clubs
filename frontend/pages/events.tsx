@@ -292,6 +292,7 @@ function EventPage({
   liveEvents: initialLiveEvents,
   tags,
   badges,
+  calendarURL,
 }: EventPageProps): ReactElement {
   const [upcomingEvents, setUpcomingEvents] = useState<ClubEvent[]>(() =>
     randomizeEvents(initialUpcomingEvents),
@@ -662,7 +663,7 @@ function EventPage({
       </div>
       {syncModalVisible && (
         <Modal show={syncModalVisible} closeModal={hideSyncModal} width="45%">
-          <SyncModal />
+          <SyncModal calendarURL={calendarURL} />
         </Modal>
       )}
     </>
@@ -675,16 +676,25 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
 
-  const [liveEvents, upcomingEvents, tags, badges] = await Promise.all([
+  const [
+    liveEvents,
+    upcomingEvents,
+    tags,
+    badges,
+    calendar,
+  ] = await Promise.all([
     doApiRequest('/events/live/?format=json', data).then((resp) => resp.json()),
     doApiRequest('/events/upcoming/?format=json', data).then((resp) =>
       resp.json(),
     ),
     doApiRequest('/tags/?format=json', data).then((resp) => resp.json()),
     doApiRequest('/badges/?format=json', data).then((resp) => resp.json()),
+    doApiRequest('/settings/calendar_url/?format=json', data).then((resp) =>
+      resp.json(),
+    ),
   ])
 
-  return { liveEvents, upcomingEvents, tags, badges }
+  return { liveEvents, upcomingEvents, tags, badges, calendarURL: calendar.url }
 }
 
 export default renderPage(EventPage)
