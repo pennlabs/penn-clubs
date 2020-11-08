@@ -392,7 +392,7 @@ function EventPage({
                 toolbar: CalendarHeader,
               }}
               onSelectEvent={(event: { resource: ClubEvent }) => {
-                setPreviewEvent(event)
+                setPreviewEvent(event.resource)
               }}
               events={[...liveEvents, ...upcomingEvents].map((e) => ({
                 title: e.name,
@@ -418,7 +418,7 @@ function EventPage({
       </div>
       {previewEvent && (
         <Modal show={true} closeModal={hideModal} width="45%">
-          <EventModal event={previewEvent} isHappening={true} />
+          <EventModal event={previewEvent} showDetailsButton={true} />
         </Modal>
       )}
     </>
