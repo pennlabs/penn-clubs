@@ -96,7 +96,7 @@ const sites = {
 
     SITE_LOGO: '/static/img/penn_shield.png',
     LOGO_BACKGROUND_IMAGE: '/static/img/penn_header_fade.png',
-    HEADER_BACKGROUND_IMAGE: '/static/img/penn_background.png',
+    HEADER_BACKGROUND_IMAGE: '/static/img/hub_banner.png',
     HEADER_OVERLAY: '/static/img/platform-start-point.png',
     SITE_FAVICON: '/static/penn_favicon.ico',
     SITE_TAGLINE:
