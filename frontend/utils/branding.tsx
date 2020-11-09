@@ -40,6 +40,7 @@ const sites = {
     CLUB_FIELDS: [
       'accepting_members',
       'application_required',
+      'email_public',
       'founded',
       'github',
       'linkedin',

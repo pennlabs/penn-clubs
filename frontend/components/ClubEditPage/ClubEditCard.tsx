@@ -8,6 +8,7 @@ import {
   ClubRecruitingCycle,
   ClubSize,
   Major,
+  MembershipRank,
   School,
   StudentType,
   Tag,
@@ -17,10 +18,12 @@ import { doApiRequest, formatResponse, isClubFieldShown } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   FIELD_PARTICIPATION_LABEL,
+  MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   OBJECT_TAB_ADMISSION_LABEL,
   SHOW_RANK_ALGORITHM,
+  SITE_ID,
   SITE_NAME,
 } from '../../utils/branding'
 import { Contact, Text } from '../common'
@@ -320,7 +323,12 @@ export default function ClubEditCard({
           name: 'email',
           required: true,
           type: 'email',
-          help: `Along with your ${OBJECT_NAME_SINGULAR} officers, this email will receive important notifications from ${SITE_NAME}. It will also be shown on your ${OBJECT_NAME_SINGULAR} page unless otherwise specified.`,
+          help:
+            SITE_ID === 'fyh'
+              ? `This can be a specific or general email that will serve as the main point of contact for ${SITE_NAME} users. The email associated with the owner of this resource page will be used by ${SITE_NAME} administrators as a point of contact for resource management and renewal.`
+              : `Along with your ${OBJECT_NAME_SINGULAR} ${
+                  MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer]
+                }s, this email will receive important notifications from ${SITE_NAME}. It will also be shown on your ${OBJECT_NAME_SINGULAR} page unless otherwise specified.`,
         },
         {
           name: 'email_public',
