@@ -1628,6 +1628,12 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+        # ensure a confirmation email was sent
+        self.assertEqual(len(mail.outbox), mail_count + 1, mail.outbox)
+
+        # reinit the count
+        mail_count = len(mail.outbox)
+
         # add approve privileges to account
         content_type = ContentType.objects.get_for_model(Club)
         self.user3.user_permissions.add(
