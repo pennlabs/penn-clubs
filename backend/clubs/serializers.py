@@ -1036,6 +1036,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # if approved, update who and when club was approved
         new_approval_status = self.validated_data.get("approved")
 
+        # check if was active before
+        was_active = self.instance and self.instance.active
+
         if self.instance and self.instance.approved is None and new_approval_status is not None:
             self.validated_data["approved_by"] = self.context["request"].user
             self.validated_data["approved_on"] = timezone.now()
@@ -1055,6 +1058,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # remove small version if large one is gone
         if not obj.image and obj.image_small:
             obj.image_small.delete()
+
+        # if we queued for approval, send a confirmation email
+        if not was_active and obj.active:
+            obj.send_confirmation_email()
 
         # if accepted or rejected, send email with reason
         if approval_email_required:

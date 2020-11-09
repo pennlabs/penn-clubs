@@ -1,0 +1,20 @@
+{% extends 'fyh_emails/base.html' %}
+
+{% block content %}
+    <h2>Welcome to Hub@Penn!/h2>
+    <p style="font-size: 1.2em">
+    	Dear <b>{{ name }}</b> staff,
+    </p>
+    <p style="font-size: 1.2em">
+        Thank you for registering your resource on Hub@Penn! The {{ name }} page is currently under review by administration. Once approved, your resource will be listed on the 
+        front page of Hub@Penn and will be searchable for students on the site.
+    </p>
+
+    <p style="font-size: 1.2em">
+        You will receive an email within the next few days regarding the status of the review.
+    </p>
+
+    <p style="font-size: 1.2em">
+        If you have any questions, feel free to respond to this email.
+    </p>
+{% endblock %}
