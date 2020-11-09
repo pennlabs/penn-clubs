@@ -109,9 +109,13 @@ type HeaderProps = {
   userInfo?: UserInfo
 }
 
-function withFading(Element, invert) {
+function withFading<T>(
+  Element: React.ComponentType<T>,
+  invert: boolean,
+  max: number,
+): React.ComponentType<T> {
   return (props): ReactElement => {
-    const [opacity, setOpacity] = useState<number>(1)
+    const [opacity, setOpacity] = useState<number>(invert ? 1 : 0)
 
     useEffect(() => {
       const handleScroll = () => {
@@ -124,12 +128,15 @@ function withFading(Element, invert) {
     })
 
     return (
-      <Element style={{ opacity: invert ? 1 - opacity : opacity }} {...props} />
+      <Element
+        style={{ opacity: (invert ? 1 - opacity : opacity) * max }}
+        {...props}
+      />
     )
   }
 }
 
-const FadingLogoBackground = withFading(LogoBackground, true)
+const FadingLogoBackground = withFading(LogoBackground, true, 0.6)
 
 const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
   const [show, setShow] = useState(false)
