@@ -693,7 +693,13 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
     ),
   ])
 
-  return { liveEvents, upcomingEvents, tags, badges, calendarURL: calendar.url }
+  return {
+    liveEvents,
+    upcomingEvents,
+    tags,
+    badges,
+    calendarURL: calendar.url,
+  }
 }
 
 export default renderPage(EventPage)
