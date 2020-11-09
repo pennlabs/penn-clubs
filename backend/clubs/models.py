@@ -363,7 +363,32 @@ class Club(models.Model):
 
         return emails
 
+    def send_confirmation_email(self, request=None):
+        """
+        Send an email to the club officers confirming that their club has been queued for approval.
+        """
+        domain = get_domain(request)
+
+        emails = self.get_officer_emails()
+
+        context = {
+            "name": self.name,
+            "view_url": settings.VIEW_URL.format(domain=domain, club=self.code),
+        }
+
+        if emails:
+            send_mail_helper(
+                name="confirmation",
+                subject=f"{self.name} has been queued for approval",
+                emails=emails,
+                context=context,
+            )
+
     def send_approval_email(self, request=None, change=False):
+        """
+        Send either an approval or rejection email to the club officers
+        after their club has been reviewed.
+        """
         domain = get_domain(request)
 
         context = {
