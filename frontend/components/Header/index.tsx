@@ -112,6 +112,10 @@ const LogoBackground = styled.div`
 const LogoItem = styled.a<{ isHub?: boolean }>`
   padding: 0;
 
+  &:hover {
+    background-color: transparent !important;
+  }
+
   ${({ isHub }) =>
     isHub
       ? `
