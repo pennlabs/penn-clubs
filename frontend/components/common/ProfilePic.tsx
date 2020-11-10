@@ -50,7 +50,9 @@ const Avatar = styled.img<{ isRound?: boolean }>`
 
 const AvatarWrapper = styled.div<{ isCentered?: boolean }>`
   border-radius: 50%;
-  margin: 5px 15px;
+  ${mediaMinWidth(PHONE)} {
+    margin: 5px 15px;
+  }
   ${({ isCentered }) =>
     isCentered
       ? `

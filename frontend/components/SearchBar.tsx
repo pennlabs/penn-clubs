@@ -10,7 +10,6 @@ import styled from 'styled-components'
 
 import {
   ALLBIRDS_GRAY,
-  BORDER,
   CLUBS_GREY,
   FOCUS_GRAY,
   H1_TEXT,
@@ -23,6 +22,7 @@ import {
   MD,
   mediaMaxWidth,
   mediaMinWidth,
+  NAV_HEIGHT,
   SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import { BODY_FONT } from '../constants/styles'
@@ -52,14 +52,15 @@ export const SearchbarRightContainer = styled.div`
   }
 `
 
-const Wrapper = styled.div`
+const Wrapper = styled.div<{ isScrolled?: boolean }>`
   height: 100vh;
   width: 20vw;
   overflow-x: hidden;
   overflow-y: auto;
   position: fixed;
   top: 0;
-  padding-top: ${FULL_NAV_HEIGHT};
+  padding-top: ${({ isScrolled }) =>
+    isScrolled ? NAV_HEIGHT : FULL_NAV_HEIGHT};
   color: ${H1_TEXT};
 
   ${mediaMaxWidth(MD)} {
@@ -88,15 +89,15 @@ const Content = styled.div`
   }
 
   ${mediaMaxWidth(MD)} {
-    height: auto;
-    overflow: visible;
+    overflow-x: hidden;
     width: 100%;
     margin: 0;
-    padding: 8px 1rem;
-    border-bottom: 1px solid ${BORDER};
+    padding: 16px 1rem;
     position: fixed;
     z-index: 1000;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.075);
+    background: ${WHITE};
+    top: ${NAV_HEIGHT};
   }
 `
 
@@ -155,16 +156,26 @@ const Collapsible = ({
   active,
   name,
 }: CollapsibleProps): ReactElement => {
-  const [isActive, setActive] = useState<boolean>(active ?? true)
+  const [isActive, setActive] = useState<boolean | null>(active ?? null)
+  const [defaultActive, setDefaultActive] = useState<boolean>(true)
+
+  useEffect(() => {
+    const onResize = () => {
+      setDefaultActive(window.innerWidth >= parseInt(MD))
+    }
+    onResize()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   return (
     <>
       <FilterHeader
-        active={isActive}
+        active={isActive ?? defaultActive}
         name={name}
         toggleActive={() => setActive((active) => !active)}
       />
-      {isActive && children}
+      {(isActive ?? defaultActive) && children}
     </>
   )
 }
@@ -245,7 +256,7 @@ export const SearchBarCheckboxItem = ({
   }, [searchValue])
 
   return (
-    <Collapsible name={label} key={param}>
+    <Collapsible name={label}>
       <DropdownFilter
         name={param}
         options={options}
@@ -447,9 +458,20 @@ const SearchBar = ({
   searchInput,
   children,
 }: SearchBarProps): ReactElement => {
+  const [isScrolled, setScrolled] = useState<boolean>(false)
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY >= 150)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
     <>
-      <Wrapper>
+      <Wrapper isScrolled={isScrolled}>
         <Content>
           <SearchBarValueContext.Provider value={searchInput}>
             <SearchBarContext.Provider value={updateSearch}>

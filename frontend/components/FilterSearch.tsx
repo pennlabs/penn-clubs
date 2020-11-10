@@ -21,17 +21,11 @@ const SearchWrapper = styled.div`
   overflow: visible;
 
   ${mediaMaxWidth(MD)} {
-    height: auto;
-    overflow: visible;
     width: 100%;
     margin: 0;
-    padding: 8px 1rem;
+    padding-bottom: 16px;
     border-bottom: 1px solid ${BORDER};
-    position: fixed;
-    left: 0;
-    z-index: 1000;
     background: ${WHITE};
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.075);
   }
 `
 
