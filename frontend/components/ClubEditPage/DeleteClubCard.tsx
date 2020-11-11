@@ -46,7 +46,7 @@ const DeleteClubCard = ({
   }
 
   return (
-    <BaseCard title="Delete Club">
+    <BaseCard title={`Delete ${OBJECT_NAME_TITLE_SINGULAR}`}>
       <Text>
         Remove this {OBJECT_NAME_SINGULAR} entry from {SITE_NAME}.{' '}
         <b className="has-text-danger">
