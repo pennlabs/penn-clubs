@@ -7,7 +7,12 @@ import {
   FOCUS_GRAY,
   MEDIUM_GRAY,
 } from '../constants/colors'
-import { BORDER_RADIUS, MD, mediaMaxWidth } from '../constants/measurements'
+import {
+  BORDER_RADIUS,
+  MD,
+  mediaMaxWidth,
+  PHONE,
+} from '../constants/measurements'
 import { BODY_FONT } from '../constants/styles'
 import { Icon } from './common'
 
@@ -83,6 +88,10 @@ const OrderingWrapper = styled.div`
     border: 1px solid ${BORDER};
     color: ${MEDIUM_GRAY};
     background: ${FOCUS_GRAY};
+  }
+
+  ${mediaMaxWidth(PHONE)} {
+    padding-bottom: 16px;
   }
 `
 

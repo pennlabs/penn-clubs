@@ -9,14 +9,11 @@ import {
   CLUBS_RED,
   LIGHT_GRAY,
   PRIMARY_TAG_BG,
-  WHITE,
 } from '../constants/colors'
 import {
   ANIMATION_DURATION,
   MD,
   mediaMaxWidth,
-  NAV_HEIGHT,
-  SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import { logEvent } from '../utils/analytics'
 import { Icon } from './common'
@@ -61,22 +58,13 @@ const TableRow = styled.tr`
 `
 
 const TableWrapper = styled.div`
-  max-height: 0;
-  opacity: 0;
   overflow: hidden;
 
   max-height: 150vh;
   opacity: 1;
 
   ${mediaMaxWidth(MD)} {
-    position: fixed;
-    left: 0;
     width: 100%;
-    top: calc(${SEARCH_BAR_MOBILE_HEIGHT} + ${NAV_HEIGHT});
-    background: ${WHITE};
-    height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
-    overflow-y: auto;
-    max-height: calc(100vh - ${SEARCH_BAR_MOBILE_HEIGHT} - ${NAV_HEIGHT});
   }
 `
 

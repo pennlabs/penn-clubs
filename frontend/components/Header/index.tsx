@@ -12,6 +12,7 @@ import {
   MD,
   mediaMaxWidth,
   NAV_HEIGHT,
+  PHONE,
   TITLE_MARGIN,
   TITLE_SIZE,
   TITLE_SPACING,
@@ -102,6 +103,27 @@ const LogoBackground = styled.div`
   background-repeat: no-repeat;
   height: ${NAV_HEIGHT};
   position: fixed;
+
+  ${mediaMaxWidth(PHONE)} {
+    display: none;
+  }
+`
+
+const LogoItem = styled.a<{ isHub?: boolean }>`
+  padding: 0;
+
+  &:hover {
+    background-color: transparent !important;
+  }
+
+  ${({ isHub }) =>
+    isHub
+      ? `
+    ${mediaMaxWidth(MD)} {
+      margin-top: 1rem;
+    }
+  `
+      : ''}
 `
 
 type HeaderProps = {
@@ -137,6 +159,7 @@ function withFading<T>(
 }
 
 const FadingLogoBackground = withFading(LogoBackground, true, 0.6)
+const isHub = SITE_ID === 'fyh'
 
 const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
   const [show, setShow] = useState(false)
@@ -149,14 +172,18 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
 
       <NavSpacer />
 
-      <Nav className="navbar" role="navigation" aria-label="main navigation">
+      <Nav
+        className={`navbar ${isHub ? 'is-dark' : ''}`}
+        role="navigation"
+        aria-label="main navigation"
+      >
         <div className="navbar-brand">
           {LOGO_BACKGROUND_IMAGE != null && <FadingLogoBackground />}
           <Link href={HOME_ROUTE}>
-            <a className="navbar-item" style={{ padding: 0 }}>
+            <LogoItem className="navbar-item" isHub={isHub}>
               <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
               <Title>{SITE_NAME}</Title>
-            </a>
+            </LogoItem>
           </Link>
 
           <Burger toggle={toggle} />
@@ -164,7 +191,7 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
 
         <Links userInfo={userInfo} authenticated={authenticated} show={show} />
       </Nav>
-      {SITE_ID === 'fyh' && <ImageHead />}
+      {isHub && <ImageHead />}
 
       <Feedback />
     </>

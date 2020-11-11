@@ -13,6 +13,14 @@ const percent = (numCols: number): string => (numCols / 12) * 100 + '%'
 export const Flex = styled.div`
   width: 100%;
   display: flex;
+
+  ${mediaMaxWidth(PHONE)} {
+    display: block;
+
+    & img {
+      margin: 0;
+    }
+  }
 `
 
 export const Row = styled.div<{ alwaysFlex?: boolean; margin?: string }>`
