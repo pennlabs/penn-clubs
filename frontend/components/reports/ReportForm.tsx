@@ -1,9 +1,11 @@
-import { ReactElement, useState } from 'react'
+import { Field, Form, Formik } from 'formik'
+import { ReactElement } from 'react'
 import styled from 'styled-components'
 
 import { Flex, Icon, Text } from '../../components/common'
 import { Report } from '../../types'
 import { API_BASE_URL } from '../../utils'
+import { CheckboxField, TextField } from '../FormComponents'
 
 const ReportContainer = styled.div`
   margin: 15px auto;
@@ -26,14 +28,19 @@ const ReportForm = ({
   onSubmit,
   initial,
 }: Props): ReactElement => {
-  const [nameInput, setNameInput] = useState(initial?.name ?? '')
-  const [descInput, setDescInput] = useState(initial?.description ?? '')
+  const handleGenerateReport = (data: {
+    name: string
+    description: string
+    public: boolean
+  }): void => {
+    const params = new URLSearchParams({
+      name: data.name ?? '',
+      desc: data.description ?? '',
+      public: data.public?.toString() ?? 'false',
+    }).toString()
 
-  const handleGenerateReport = (): void => {
     window.open(
-      `${API_BASE_URL}/clubs/?format=xlsx&name=${encodeURIComponent(
-        nameInput,
-      )}&desc=${encodeURIComponent(descInput)}&fields=${encodeURIComponent(
+      `${API_BASE_URL}/clubs/?format=xlsx&${params}&fields=${encodeURIComponent(
         query.fields.join(','),
       )}`,
       '_blank',
@@ -43,62 +50,63 @@ const ReportForm = ({
 
   return (
     <ReportContainer>
-      <div className="box">
-        <h3 className="title is-4">Report Details</h3>
-        <Text>
-          All report detail fields are optional. If you do not specify a report
-          name, a temporary report will be generated and you will not be able to
-          rerun the report.
-        </Text>
-        <div>
-          <div className="field">
-            <label className="label">Name</label>
-            <div className="control">
-              <input
+      <Formik
+        initialValues={initial ?? {}}
+        onSubmit={handleGenerateReport}
+        enableReinitialize
+      >
+        <Form>
+          <div className="box">
+            <h3 className="title is-4">Report Details</h3>
+            <Text>
+              All report detail fields are optional. If you do not specify a
+              report name, a temporary report will be generated and you will not
+              be able to rerun the report.
+            </Text>
+            <div>
+              <Field
                 name="name"
-                className="input"
-                type="text"
-                placeholder='e.g. "Owner emails"'
-                value={nameInput}
+                as={TextField}
                 disabled={!!initial?.name}
-                onChange={(e) => setNameInput(e.target.value)}
+                helpText="This will be shown in the table view on the list of reports."
               />
-            </div>
-          </div>
-          <div className="field">
-            <label className="label">Description</label>
-            <div className="control">
-              <textarea
+              <Field
                 name="description"
-                className="input textarea"
-                placeholder='e.g. "Pulls all clubs, the emails from club owners, and names of owners"'
-                value={descInput}
-                onChange={(e) => setDescInput(e.target.value)}
+                as={TextField}
+                type="textarea"
+                helpText="Use this field to note down additional information about this generated report."
+              />
+              <Field
+                name="public"
+                as={CheckboxField}
+                label="Show this report to other users that can generate reports."
               />
             </div>
           </div>
-        </div>
-      </div>
-      <div className="box">
-        <h3 className="title is-4">Included Fields</h3>
-        <Text>
-          Select the fields you want to include below as columns in the
-          generated spreadsheet file.
-        </Text>
-        <div>
-          {fields ? (
-            <Flex>
-              {Object.keys(fields).map((group) =>
-                generateCheckboxGroup(group, fields[group]),
-              )}
-            </Flex>
-          ) : null}
-        </div>
-      </div>
-      <button className="button is-info" onClick={() => handleGenerateReport()}>
-        <Icon name="paperclip" alt="report" />
-        Generate Report
-      </button>
+          <div className="box">
+            <h3 className="title is-4">Included Fields</h3>
+            <Text>
+              Select the fields you want to include below as columns in the
+              generated spreadsheet file.
+            </Text>
+            <div>
+              {fields ? (
+                <Flex>
+                  {Object.keys(fields)
+                    .sort()
+                    .map((group) =>
+                      generateCheckboxGroup(group, fields[group]),
+                    )}
+                </Flex>
+              ) : null}
+            </div>
+          </div>
+          <button className="button is-info" type="submit">
+            <Icon name="paperclip" alt="report" />
+            Generate Report
+          </button>
+        </Form>
+      </Formik>
     </ReportContainer>
   )
 }

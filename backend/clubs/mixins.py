@@ -195,7 +195,15 @@ class XLSXFormatterMixin(object):
             for lookup in source_lookup[:-1]:
                 field_object = model._meta.get_field(lookup)
                 model = field_object.related_model
-            field_object = model._meta.get_field(source_lookup[-1])
+
+            # handle edge case where the _set suffix may not be included
+            try:
+                field_object = model._meta.get_field(source_lookup[-1])
+            except FieldDoesNotExist as e:
+                if source_lookup[-1].endswith("_set"):
+                    field_object = model._meta.get_field(source_lookup[-1][:-4])
+                else:
+                    raise e
 
         # format based on field type
         if isinstance(field_object, (ManyToManyField, ManyToOneRel)):

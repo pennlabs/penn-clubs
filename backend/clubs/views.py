@@ -834,6 +834,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def fields(self, request, *args, **kwargs):
         """
         Return the list of fields that can be exported in the Excel file.
+        The list of fields is taken from the associated serializer, with model names overriding
+        the serializer names if they exist.
         """
         name_to_title = {
             f.name: f.verbose_name.title() for f in Club._meta._get_fields(reverse=False)

@@ -1,3 +1,4 @@
+import { NextPageContext } from 'next'
 import { ReactElement, useEffect, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
@@ -222,7 +223,13 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
             <tbody>
               {reports.map((report, i) => (
                 <tr key={i}>
-                  <TableData>{report.name || <span>None</span>}</TableData>
+                  <TableData>
+                    <Icon
+                      name={report.public ? 'globe' : 'user'}
+                      alt={report.public ? 'public' : 'private'}
+                    />{' '}
+                    {report.name || <span>None</span>}
+                  </TableData>
                   <TableData>{report.creator || <span>None</span>}</TableData>
                   <TableData>
                     {report.created_at ? (
@@ -300,8 +307,12 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
   )
 }
 
-Reports.getInitialProps = async () => {
-  const fieldsReq = await doApiRequest('/clubs/fields/?format=json')
+Reports.getInitialProps = async (ctx: NextPageContext) => {
+  const data = {
+    headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
+  }
+
+  const fieldsReq = await doApiRequest('/clubs/fields/?format=json', data)
   const fieldsRes = await fieldsReq.json()
 
   return { nameToCode: fieldsRes }
