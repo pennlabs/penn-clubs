@@ -66,6 +66,7 @@ from clubs.permissions import (
     AssetPermission,
     ClubItemPermission,
     ClubPermission,
+    DjangoPermission,
     EventPermission,
     InvitePermission,
     IsSuperuser,
@@ -227,14 +228,11 @@ class ReportViewSet(viewsets.ModelViewSet):
     Return a list of reports that can be generated.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [DjangoPermission("clubs.generate_reports") | IsSuperuser]
     serializer_class = ReportSerializer
     http_method_names = ["get", "delete"]
 
     def get_queryset(self):
-        if not self.request.user.has_perm("clubs.generate_reports"):
-            return Report.objects.none()
-
         return Report.objects.filter(Q(creator=self.request.user) | Q(public=True))
 
 
@@ -801,7 +799,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 request.user.is_authenticated
                 and request.user.has_perm("clubs.generate_reports")
                 and request.query_params.get("name")
-                and not request.query_params.get("existing")
             ):
                 name = request.query_params.get("name")
                 desc = request.query_params.get("desc")
@@ -813,12 +810,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     if field in parameters:
                         del parameters[field]
 
-                Report.objects.create(
+                Report.objects.update_or_create(
                     name=name,
-                    description=desc,
-                    parameters=json.dumps(parameters),
                     creator=request.user,
-                    public=public,
+                    defaults={
+                        "description": desc,
+                        "parameters": json.dumps(parameters),
+                        "public": public,
+                    },
                 )
 
         return super().list(request, *args, **kwargs)
@@ -835,6 +834,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def fields(self, request, *args, **kwargs):
         """
         Return the list of fields that can be exported in the Excel file.
+        The list of fields is taken from the associated serializer, with model names overriding
+        the serializer names if they exist.
         """
         name_to_title = {
             f.name: f.verbose_name.title() for f in Club._meta._get_fields(reverse=False)

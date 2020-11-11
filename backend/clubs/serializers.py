@@ -235,6 +235,7 @@ class ReportSerializer(serializers.ModelSerializer):
             "parameters",
             "created_at",
             "updated_at",
+            "public",
         )
 
 
@@ -699,6 +700,10 @@ class ClubListSerializer(serializers.ModelSerializer):
             return image.url
 
     def get_fields(self):
+        """
+        Override the fields that are returned if the "fields" GET parameter is specified.
+        Acts as a filter on the returned fields.
+        """
         all_fields = super().get_fields()
         fields_param = getattr(self.context.get("request", dict()), "GET", {}).get("fields", "")
         if fields_param:

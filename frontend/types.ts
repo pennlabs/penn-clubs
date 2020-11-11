@@ -15,8 +15,10 @@ export interface Report {
   name: string
   creator: string
   description: string
+  public: boolean
   created_at: string
   updated_at: string
+  parameters: string
 }
 
 export interface Membership {

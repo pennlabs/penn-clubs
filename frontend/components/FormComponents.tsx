@@ -473,10 +473,10 @@ export const CheckboxField = (
           <input
             type="checkbox"
             checked={value}
+            {...other}
             onChange={(e) => {
               setFieldValue(props.name, e.target.checked)
             }}
-            {...other}
           />{' '}
           {label}
         </label>
