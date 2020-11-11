@@ -178,6 +178,18 @@ class IsSuperuser(permissions.BasePermission):
         return request.user.is_authenticated and request.user.is_superuser
 
 
+def DjangoPermission(perm):
+    """
+    Returns a permission class that grants full access to the users with the specified permission.
+    """
+
+    class DjangoPermissionInstance(permissions.BasePermission):
+        def has_permission(self, request, view):
+            return request.user.is_authenticated and request.user.has_perm(perm)
+
+    return DjangoPermissionInstance
+
+
 class MemberPermission(permissions.BasePermission):
     """
     Members of a higher role can update/delete members of equal or lower roles, except ordinary

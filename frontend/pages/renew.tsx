@@ -32,7 +32,7 @@ function UserRenewal({ userInfo, authenticated }): ReactElement {
     <>
       <Metadata title={`Renew ${OBJECT_NAME_TITLE}`} />
       <Container background={gradient}>
-        <Title style={{ marginTop: '2.5vw', color: WHITE, opacity: 0.95 }}>
+        <Title style={{ marginTop: '2.5rem', color: WHITE, opacity: 0.95 }}>
           Renew {OBJECT_NAME_TITLE}
         </Title>
       </Container>

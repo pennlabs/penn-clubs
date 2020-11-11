@@ -43,7 +43,7 @@ const Div = styled.div`
 const Tabs = styled.div``
 
 type Props = {
-  background?: string | false
+  background?: string
   tabClassName?: string
   tabs: {
     name: string
@@ -56,7 +56,7 @@ type Props = {
 const TabView = ({
   tabs,
   tabClassName = '',
-  background = false,
+  background,
 }: Props): ReactElement => {
   // the server side rendering does not have a window object
   const [currentTab, setCurrentTab] = useState<string>(tabs[0].name)
@@ -85,8 +85,8 @@ const TabView = ({
   return (
     <>
       <ContainerComponent
-        background={background || WHITE}
-        style={{ paddingBottom: 0 }}
+        background={background ?? WHITE}
+        style={{ paddingBottom: 0, paddingTop: background ? 0 : undefined }}
       >
         <TabComponent className={`tabs ${tabClassName}`}>
           <ul>

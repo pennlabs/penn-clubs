@@ -17,6 +17,7 @@ export interface Report {
   description: string
   created_at: string
   updated_at: string
+  parameters: string
 }
 
 export interface Membership {

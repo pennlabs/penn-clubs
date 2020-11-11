@@ -31,6 +31,7 @@ export const Title = styled.h1.attrs((props) => ({
 }))`
   font-size: 2rem;
   font-weight: bold;
+  margin-bottom: 1.5rem;
 `
 
 export const Subtitle = styled.h2.attrs((props) => ({

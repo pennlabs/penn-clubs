@@ -101,17 +101,15 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
     const { name } = this.props.userInfo
 
-    const gradient = BG_GRADIENT
-
     return (
       <>
         <Metadata title="Your Profile" />
-        <Container background={gradient}>
-          <Title style={{ marginTop: '2.5vw', color: WHITE, opacity: 0.95 }}>
+        <Container background={BG_GRADIENT}>
+          <Title style={{ marginTop: '2.5rem', color: WHITE, opacity: 0.95 }}>
             Welcome, {name}
           </Title>
         </Container>
-        <TabView background={gradient} tabs={tabs} tabClassName="is-boxed" />
+        <TabView background={BG_GRADIENT} tabs={tabs} tabClassName="is-boxed" />
 
         {message != null && (
           <Container>

@@ -1,4 +1,3 @@
-import Router from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
@@ -7,26 +6,25 @@ import {
   Checkbox,
   CheckboxLabel,
   Contact,
+  Container,
   Empty,
   Icon,
   Metadata,
+  Title,
 } from '../../components/common'
 import AuthPrompt from '../../components/common/AuthPrompt'
+import ReportForm from '../../components/reports/ReportForm'
 import {
-  CLUBS_BLUE,
+  BG_GRADIENT,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
-  CLUBS_NAVY,
-  CLUBS_RED,
   LIGHT_GRAY,
   WHITE,
-  WHITE_ALPHA,
 } from '../../constants/colors'
 import renderPage from '../../renderPage'
 import { Report } from '../../types'
 import { API_BASE_URL, apiCheckPermission, doApiRequest } from '../../utils'
 import { OBJECT_NAME_TITLE_SINGULAR, SITE_NAME } from '../../utils/branding'
-import Edit from './edit'
 
 const GroupLabel = styled.h4`
   font-size: 32px;
@@ -35,60 +33,6 @@ const GroupLabel = styled.h4`
   &:not(:last-child) {
     margin-bottom: 0;
   }
-`
-
-const ColoredHeader = styled.div`
-  background: linear-gradient(to right, ${CLUBS_RED}, ${CLUBS_BLUE});
-  height: 7em;
-  line-height: normal;
-  vertical-align: middle;
-  padding: 2em;
-  display: flex;
-  justify-content: space-between;
-`
-
-const TransparentTitle = styled.span`
-  width: 9em;
-  height: 2em;
-  line-height: 2em;
-  border-radius: 17px;
-  border: 0;
-  background: ${WHITE_ALPHA(0.32)};
-  font-size: 15px;
-  text-align: center;
-  color: ${WHITE};
-  vertical-align: middle;
-  margin-left: 2em;
-  margin-bottom: 1em;
-  display: inline-block;
-`
-
-const TransparentButton = styled.button`
-  width: 12.5em;
-  height: 2.5em;
-  border-radius: 17px;
-  border: 0;
-  background: ${WHITE_ALPHA(0.32)};
-  font-size: 15px;
-  font-weight: 600;
-  text-align: center;
-  color: ${WHITE};
-  cursor: pointer;
-`
-
-const ActionButton = styled.button`
-  width: 4.5em;
-  height: 2em;
-  border-radius: 0.2em;
-  border: 0;
-  box-shadow: 0 2px 4px 0 rgba(161, 161, 161, 0.5);
-  line-height: 0.6em;
-  vertical-align: middle;
-  color: ${WHITE};
-  margin-left: 0.4em;
-  margin-right: 0.4em;
-  font-weight: 500;
-  cursor: pointer;
 `
 
 const TableHeader = styled.th`
@@ -108,7 +52,7 @@ const TableHeadDivider = styled.thead`
   border-bottom: 1px solid ${LIGHT_GRAY};
 `
 
-const serializeParams = (params) => {
+const serializeParams = (params: { [key: string]: string }): string => {
   return Object.keys(params)
     .map(
       (key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`,
@@ -127,21 +71,22 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
   }
 
   const [reports, setReports] = useState<Report[]>([])
-  const [reportFlag, updateReportFlag] = useState(false)
   const permission = apiCheckPermission('clubs.generate_reports')
 
-  const [isEdit, setIsEdit] = useState(false)
+  const [isEdit, setIsEdit] = useState<Report | boolean>(false)
 
-  useEffect(() => {
+  const reloadReports = (): void => {
     doApiRequest('/reports/?format=json')
       .then((resp) => (resp.ok ? resp.json() : []))
       .then((data) => setReports(data))
-  }, [reportFlag])
+  }
+
+  useEffect(reloadReports, [])
 
   const [includedFields, setIncludedFields] = useState(() => {
-    const initial = {}
+    const initial: { [key: string]: boolean } = {}
     Object.keys(fields).forEach((group) =>
-      fields[group].forEach((f) => {
+      fields[group].forEach((f: string): void => {
         initial[f] = false
       }),
     )
@@ -156,7 +101,10 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
       .filter((e) => e !== undefined),
   }
 
-  const generateCheckboxGroup = (groupName, fields) => {
+  const generateCheckboxGroup = (
+    groupName: string,
+    fields: string[],
+  ): ReactElement => {
     return (
       <div key={groupName} style={{ flexBasis: '50%', flexShrink: 0 }}>
         <GroupLabel
@@ -186,13 +134,13 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
     )
   }
 
-  const handleBack = () => {
+  const handleBack = (): void => {
+    reloadReports()
     setIsEdit(false)
-    Router.push('/reports')
   }
 
-  const handleDownload = (report) => {
-    window.location.href = `${API_BASE_URL}/clubs/?bypass=true&existing=true&${serializeParams(
+  const handleDownload = (report: Report): void => {
+    window.location.href = `${API_BASE_URL}/clubs/?bypass=true&${serializeParams(
       JSON.parse(report.parameters),
     )}`
   }
@@ -216,122 +164,136 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
   return (
     <>
       <Metadata title={`${OBJECT_NAME_TITLE_SINGULAR} Reports`} />
-      {isEdit ? (
-        <div>
-          <ColoredHeader>
-            <span className="title is-2" style={{ color: 'white' }}>
-              Create a new report
-            </span>
-          </ColoredHeader>
-          <Edit
-            fields={fields}
-            generateCheckboxGroup={generateCheckboxGroup}
-            query={query}
-            updateReportFlag={updateReportFlag}
-            reportFlag={reportFlag}
-            handleBack={handleBack}
-          />
+      <Container background={BG_GRADIENT}>
+        <div
+          className="is-clearfix"
+          style={{ marginTop: '2.5rem', marginBottom: '1rem' }}
+        >
+          <Title
+            style={{
+              color: WHITE,
+              opacity: 0.95,
+              float: 'left',
+            }}
+          >
+            {isEdit
+              ? isEdit === true
+                ? 'Create New Report'
+                : `Edit Report: ${isEdit.name}`
+              : 'Reports'}
+          </Title>
+          {isEdit ? (
+            <button
+              className="button is-link is-pulled-right"
+              onClick={() => handleBack()}
+            >
+              <Icon name="chevrons-left" alt="back" /> Back to Reports
+            </button>
+          ) : (
+            <button
+              className="button is-link is-pulled-right"
+              onClick={() => setIsEdit(true)}
+            >
+              <Icon name="plus" alt="plus" /> Create New Report
+            </button>
+          )}
         </div>
+      </Container>
+      {isEdit ? (
+        <ReportForm
+          fields={fields}
+          generateCheckboxGroup={generateCheckboxGroup}
+          query={query}
+          onSubmit={handleBack}
+          initial={typeof isEdit !== 'boolean' ? isEdit : undefined}
+        />
       ) : (
-        <div>
-          <ColoredHeader>
-            <div>
-              <span className="title is-2" style={{ color: 'white' }}>
-                Reports
-              </span>
-              <TransparentTitle>Admin Dashboard</TransparentTitle>
-            </div>
-            <TransparentButton onClick={() => setIsEdit(true)}>
-              Create New Report <Icon name="plus" alt="plus" />
-            </TransparentButton>
-          </ColoredHeader>
-          <div style={{ padding: '2em' }}>
-            <table className="table" style={{ width: '100%' }}>
-              <TableHeadDivider>
-                <tr>
-                  <TableHeader>
-                    Report Name{' '}
-                    <Icon name="chevron-down" alt="filter-reports-by-name" />
-                  </TableHeader>
-                  <TableHeader>
-                    Created By{' '}
-                    <Icon name="chevron-down" alt="filter-reports-by-name" />
-                  </TableHeader>
-                  <TableHeader>
-                    Description{' '}
-                    <Icon name="chevron-down" alt="filter-reports-by-desc" />
-                  </TableHeader>
-                  <TableHeader>
-                    Date Created{' '}
-                    <Icon name="chevron-down" alt="filter-reports-by-date" />
-                  </TableHeader>
-                  <TableHeader>
-                    Last Report{' '}
-                    <Icon name="chevron-down" alt="filter-reports-by-last" />
-                  </TableHeader>
-                  <TableHeader>Perform Actions</TableHeader>
+        <div style={{ padding: '2em' }}>
+          <table className="table" style={{ width: '100%' }}>
+            <TableHeadDivider>
+              <tr>
+                <TableHeader>Name</TableHeader>
+                <TableHeader>Author</TableHeader>
+                <TableHeader>Date Created</TableHeader>
+                <TableHeader>Last Report</TableHeader>
+                <TableHeader>Actions</TableHeader>
+              </tr>
+            </TableHeadDivider>
+            <tbody>
+              {reports.map((report, i) => (
+                <tr key={i}>
+                  <TableData>{report.name || <span>None</span>}</TableData>
+                  <TableData>{report.creator || <span>None</span>}</TableData>
+                  <TableData>
+                    {report.created_at ? (
+                      <TimeAgo date={report.created_at} />
+                    ) : (
+                      <span>None</span>
+                    )}
+                  </TableData>
+                  <TableData>
+                    {report.updated_at ? (
+                      <TimeAgo date={report.updated_at} />
+                    ) : (
+                      <span>None</span>
+                    )}
+                  </TableData>
+                  <TableData>
+                    <div className="buttons">
+                      <button
+                        onClick={() => handleDownload(report)}
+                        className="button is-small is-success"
+                      >
+                        <Icon name="play" /> Run
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEdit(report)
+                          const params = JSON.parse(report.parameters)
+                          const codeToName = {}
+                          Object.entries(nameToCode).forEach(([key, value]) => {
+                            codeToName[value] = key
+                          })
+                          setIncludedFields((fields) => {
+                            const newFields = { ...fields }
+                            params.fields
+                              .split(',')
+                              .forEach((key: string): void => {
+                                const name = codeToName[key]
+                                if (name in newFields) {
+                                  newFields[name] = true
+                                }
+                              })
+                            return newFields
+                          })
+                        }}
+                        className="button is-small is-info"
+                      >
+                        <Icon name="edit" /> Edit
+                      </button>
+                      <button
+                        className="button is-small is-danger"
+                        onClick={() => {
+                          doApiRequest(`/reports/${report.id}/?format=json`, {
+                            method: 'DELETE',
+                          }).then(reloadReports)
+                        }}
+                      >
+                        <Icon name="trash" /> Delete
+                      </button>
+                    </div>
+                  </TableData>
                 </tr>
-              </TableHeadDivider>
-              <tbody>
-                {reports.map((report, i) => (
-                  <tr key={i}>
-                    <TableData>{report.name || <span>None</span>}</TableData>
-                    <TableData>{report.creator || <span>None</span>}</TableData>
-                    <TableData>
-                      {report.description || <span>None</span>}
-                    </TableData>
-                    <TableData>
-                      {report.created_at ? (
-                        <TimeAgo date={report.created_at} />
-                      ) : (
-                        <span>None</span>
-                      )}
-                    </TableData>
-                    <TableData>
-                      {report.updated_at ? (
-                        <TimeAgo date={report.updated_at} />
-                      ) : (
-                        <span>None</span>
-                      )}
-                    </TableData>
-                    <TableData>
-                      <div className="buttons">
-                        <ActionButton
-                          onClick={() => handleDownload(report)}
-                          style={{ backgroundColor: CLUBS_BLUE }}
-                        >
-                          Run
-                        </ActionButton>
-                        <ActionButton style={{ backgroundColor: CLUBS_NAVY }}>
-                          Edit
-                        </ActionButton>
-                        <ActionButton
-                          onClick={() => {
-                            doApiRequest(`/reports/${report.id}/?format=json`, {
-                              method: 'DELETE',
-                            }).then(() => {
-                              updateReportFlag(!reportFlag)
-                            })
-                          }}
-                          style={{ backgroundColor: CLUBS_RED }}
-                        >
-                          Delete
-                        </ActionButton>
-                      </div>
-                    </TableData>
-                  </tr>
-                ))}
-                {!reports.length && (
-                  <tr>
-                    <TableData colSpan={3}>
-                      <Empty>There are no existing reports.</Empty>
-                    </TableData>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <br />
+              ))}
+              {!reports.length && (
+                <tr>
+                  <TableData colSpan={3}>
+                    <Empty>There are no existing reports.</Empty>
+                  </TableData>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
     </>
