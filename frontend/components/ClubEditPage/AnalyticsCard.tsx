@@ -16,6 +16,7 @@ import {
 
 import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
+import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Loading, Text } from '../common'
 import BaseCard from './BaseCard'
 
@@ -246,9 +247,9 @@ export default function AnalyticsCard({
       </Head>
       <BaseCard title="Time Series Analytics">
         <Text>
-          Analyze the traffic that your club has recieved on a specific date
-          range. Displays data between the start of the first day and the end of
-          the last day.
+          Analyze the traffic that your {OBJECT_NAME_SINGULAR} has recieved on a
+          specific date range. Displays data between the start of the first day
+          and the end of the last day.
         </Text>
         <div className="is-clearfix">
           <div className="columns">
@@ -330,8 +331,8 @@ export default function AnalyticsCard({
       <BaseCard title="Pie Chart Analytics">
         <Text>
           Show demographic information about people who have bookmarked,
-          subscribed, or visited the club. Students with multiple schools are
-          counted twice for applicable graphs.
+          subscribed, or visited the {OBJECT_NAME_SINGULAR}. Students with
+          multiple schools are counted twice for applicable graphs.
         </Text>
         <div className="columns">
           <div className="column">
