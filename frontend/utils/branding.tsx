@@ -115,7 +115,7 @@ const sites = {
     OBJECT_TAB_FILES_DESCRIPTION: null,
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
-    FEEDBACK_URL: 'https://airtable.com/shrm3UcvjpPEl0qXq',
+    FEEDBACK_URL: 'https://airtable.com/shrv4RfYIddU1i9o6',
     STYLE_URL: '/static/css/fyh.css',
 
     CLUB_FIELDS: [
