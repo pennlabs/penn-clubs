@@ -792,34 +792,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a list of all clubs.
         Note that some fields are removed in order to improve response time.
         """
-        # custom handling for spreadsheet format
-        if request.accepted_renderer.format == "xlsx":
-            # save request as new report if name is set
-            if (
-                request.user.is_authenticated
-                and request.user.has_perm("clubs.generate_reports")
-                and request.query_params.get("name")
-            ):
-                name = request.query_params.get("name")
-                desc = request.query_params.get("desc")
-                public = request.query_params.get("public", "false").lower().strip() == "true"
-                parameters = request.query_params.dict()
-
-                # avoid storing redundant data
-                for field in {"name", "desc", "public"}:
-                    if field in parameters:
-                        del parameters[field]
-
-                Report.objects.update_or_create(
-                    name=name,
-                    creator=request.user,
-                    defaults={
-                        "description": desc,
-                        "parameters": json.dumps(parameters),
-                        "public": public,
-                    },
-                )
-
         return super().list(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
