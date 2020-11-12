@@ -1,5 +1,6 @@
 import Fuse from 'fuse.js'
 import { ReactElement, useEffect, useState } from 'react'
+import { Styles } from 'react-select'
 import Select from 'react-select/async'
 import styled from 'styled-components'
 
@@ -92,9 +93,9 @@ const Search = ({
   clearTags,
 }: SearchProps): ReactElement => {
   // Custom styles for the react-select
-  const styles = {
-    control: ({ background, ...base }, { isFocused, isSelected }) => {
-      const isEmphasized = isFocused || isSelected
+  const styles: Styles = {
+    control: ({ background, ...base }, { isFocused }) => {
+      const isEmphasized = isFocused
       return {
         ...base,
         border: `1px solid ${BORDER}`,
@@ -177,7 +178,7 @@ const Search = ({
       onChange={(_, selectEvent): void => {
         const { action, option, removedValue } = selectEvent
         if (action === 'select-option') {
-          updateTag(option, name)
+          updateTag(option as FuseTag, name)
         } else if (action === 'pop-value') {
           // pop-value events contain removedValue = undefined if no tags are selected
           removedValue && updateTag(removedValue, name)
