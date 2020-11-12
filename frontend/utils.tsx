@@ -203,7 +203,7 @@ export function apiSetSubscribeStatus(
 export function titleize(str: string): string {
   if (!str) return str
   return str
-    .replace(/_/g, ' ')
+    .replace(/_+/g, ' ')
     .split(' ')
     .map((a) => a[0].toUpperCase() + a.substr(1).toLowerCase())
     .join(' ')
