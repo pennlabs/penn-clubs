@@ -23,7 +23,7 @@ import {
   WHITE,
 } from '../../constants/colors'
 import renderPage from '../../renderPage'
-import { Report } from '../../types'
+import { Badge, Report } from '../../types'
 import { API_BASE_URL, apiCheckPermission, doApiRequest } from '../../utils'
 import { OBJECT_NAME_TITLE_SINGULAR, SITE_NAME } from '../../utils/branding'
 
@@ -64,9 +64,14 @@ const serializeParams = (params: { [key: string]: string }): string => {
 type ReportsProps = {
   nameToCode: { [key: string]: string }
   authenticated: boolean | null
+  badges: Badge[]
 }
 
-const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
+const Reports = ({
+  nameToCode,
+  authenticated,
+  badges,
+}: ReportsProps): ReactElement => {
   const fields = {
     Fields: Object.keys(nameToCode),
   }
@@ -115,7 +120,7 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
         >
           {groupName}
         </GroupLabel>
-        {fields.map((field, idx) => (
+        {fields.sort().map((field, idx) => (
           <div key={idx}>
             <Checkbox
               id={field}
@@ -202,6 +207,7 @@ const Reports = ({ nameToCode, authenticated }: ReportsProps): ReactElement => {
       </Container>
       {isEdit ? (
         <ReportForm
+          badges={badges}
           fields={fields}
           generateCheckboxGroup={generateCheckboxGroup}
           query={query}
@@ -312,10 +318,17 @@ Reports.getInitialProps = async (ctx: NextPageContext) => {
     headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
   }
 
-  const fieldsReq = await doApiRequest('/clubs/fields/?format=json', data)
-  const fieldsRes = await fieldsReq.json()
+  const [fieldsReq, badgesReq] = await Promise.all([
+    doApiRequest('/clubs/fields/?format=json', data),
+    doApiRequest('/badges/?format=json', data),
+  ])
 
-  return { nameToCode: fieldsRes }
+  const [fieldsRes, badgesRes] = await Promise.all([
+    fieldsReq.json(),
+    badgesReq.json(),
+  ])
+
+  return { nameToCode: fieldsRes, badges: badgesRes }
 }
 
 Reports.permissions = ['clubs.generate_reports']
