@@ -748,7 +748,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         For excel spreadsheets, return the user-specified filename if it exists
         or the default filename otherwise.
         """
-        name = self.request.query_params.get("name")
+        name = self.request.query_params.get("xlsx_name")
         if name:
             return "{}.xlsx".format(slugify(name))
         return super().get_filename()

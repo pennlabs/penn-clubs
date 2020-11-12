@@ -10,7 +10,7 @@ import {
   Text,
 } from '../../components/common'
 import { CLUBS_GREY } from '../../constants/colors'
-import { Badge, Report } from '../../types'
+import { Badge, Report, Tag } from '../../types'
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_PLURAL } from '../../utils/branding'
 import { CheckboxField, SelectField, TextField } from '../FormComponents'
@@ -46,6 +46,7 @@ type Props = {
   fields: { [key: string]: [string, string][] }
   initial?: Report
   badges: Badge[]
+  tags: Tag[]
   onSubmit: (report: Report) => void
 }
 
@@ -54,6 +55,7 @@ const ReportForm = ({
   onSubmit,
   initial,
   badges,
+  tags,
 }: Props): ReactElement => {
   const generateCheckboxGroup = (
     groupName: string,
@@ -112,12 +114,14 @@ const ReportForm = ({
       public: boolean
       fields: string[]
       badges__in: { id: number }[]
+      tags__in: { id: number }[]
     }>,
   ): Promise<void> => {
     const parameters: { [key: string]: string | undefined } = {
       format: 'xlsx',
       fields: data.fields?.join(','),
       badges__in: serializeParameter(data.badges__in ?? []),
+      tags__in: serializeParameter(data.tags__in ?? []),
     }
 
     Object.keys(parameters).forEach(
@@ -140,6 +144,29 @@ const ReportForm = ({
     const params = JSON.parse(report.parameters)
     params.fields = params.fields?.split(',') ?? []
     return { ...params, ...report }
+  }
+
+  const fixDeserialize = (
+    options: { id: number; label?: string; name?: string }[],
+  ) => (value): { id: number; label: string }[] => {
+    if (typeof value === 'string') {
+      return value
+        .trim()
+        .split(',')
+        .filter((tag) => tag.length > 0)
+        .map((tag) => {
+          const id = parseInt(tag)
+          const trueVal = options.find((oth) => oth.id === id)
+          if (trueVal != null) {
+            trueVal.label = trueVal.label ?? trueVal.name ?? 'Unknown'
+          }
+          return trueVal != null ? trueVal : { id, label: 'Unknown' }
+        }) as { id: number; label: string }[]
+    }
+    if (Array.isArray(value)) {
+      return value.map(({ id, name }) => ({ id, label: name }))
+    }
+    return []
   }
 
   return (
@@ -184,29 +211,20 @@ const ReportForm = ({
               will not be applied as filters.
             </Text>
             <Field
+              name="tags__in"
+              label="Tags"
+              as={SelectField}
+              choices={tags}
+              valueDeserialize={fixDeserialize(tags)}
+              isMulti
+              helpText={`Select only ${OBJECT_NAME_PLURAL} with all of the specified tags.`}
+            />
+            <Field
               name="badges__in"
               label="Badges"
               as={SelectField}
               choices={badges}
-              valueDeserialize={(value) => {
-                if (typeof value === 'string') {
-                  return value
-                    .trim()
-                    .split(',')
-                    .filter((tag) => tag.length > 0)
-                    .map((tag) => {
-                      const id = parseInt(tag)
-                      const trueVal = badges.find((oth) => oth.id === id)
-                      return trueVal != null
-                        ? trueVal
-                        : { id, label: 'Unknown' }
-                    })
-                }
-                if (Array.isArray(value)) {
-                  return value.map(({ id, name }) => ({ id, label: name }))
-                }
-                return []
-              }}
+              valueDeserialize={fixDeserialize(badges)}
               isMulti
               helpText={`Select only ${OBJECT_NAME_PLURAL} with all of the specified badges.`}
             />
