@@ -4,8 +4,6 @@ import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
 import {
-  Checkbox,
-  CheckboxLabel,
   Contact,
   Container,
   Empty,
@@ -26,15 +24,6 @@ import renderPage from '../../renderPage'
 import { Badge, Report } from '../../types'
 import { API_BASE_URL, apiCheckPermission, doApiRequest } from '../../utils'
 import { OBJECT_NAME_TITLE_SINGULAR, SITE_NAME } from '../../utils/branding'
-
-const GroupLabel = styled.h4`
-  font-size: 32px;
-  color: #626572;
-
-  &:not(:last-child) {
-    margin-bottom: 0;
-  }
-`
 
 const TableHeader = styled.th`
   font-weight: 550;
@@ -69,7 +58,7 @@ const Reports = ({
   badges,
 }: ReportsProps): ReactElement => {
   const fields = {
-    Fields: Object.keys(nameToCode),
+    Fields: Object.entries(nameToCode),
   }
 
   const [reports, setReports] = useState<Report[]>([])
@@ -84,57 +73,6 @@ const Reports = ({
   }
 
   useEffect(reloadReports, [])
-
-  const [includedFields, setIncludedFields] = useState(() => {
-    const initial: { [key: string]: boolean } = {}
-    Object.keys(fields).forEach((group) =>
-      fields[group].forEach((f: string): void => {
-        initial[f] = false
-      }),
-    )
-    return initial
-  })
-
-  const query = {
-    format: 'xlsx',
-    fields: Object.keys(includedFields)
-      .filter((field) => includedFields[field])
-      .map((name) => nameToCode[name])
-      .filter((e) => e !== undefined),
-  }
-
-  const generateCheckboxGroup = (
-    groupName: string,
-    fields: string[],
-  ): ReactElement => {
-    return (
-      <div key={groupName} style={{ flexBasis: '50%', flexShrink: 0 }}>
-        <GroupLabel
-          key={groupName}
-          className="subtitle is-4"
-          style={{ color: CLUBS_GREY }}
-        >
-          {groupName}
-        </GroupLabel>
-        {fields.sort().map((field, idx) => (
-          <div key={idx}>
-            <Checkbox
-              id={field}
-              checked={includedFields[field]}
-              onChange={() => {
-                setIncludedFields((prev) => ({
-                  ...prev,
-                  [field]: !prev[field],
-                }))
-              }}
-            />
-            {'  '}
-            <CheckboxLabel htmlFor={field}>{field}</CheckboxLabel>
-          </div>
-        ))}
-      </div>
-    )
-  }
 
   const handleBack = (): void => {
     reloadReports()
@@ -208,8 +146,6 @@ const Reports = ({
         <ReportForm
           badges={badges}
           fields={fields}
-          generateCheckboxGroup={generateCheckboxGroup}
-          query={query}
           onSubmit={(report: Report): void => {
             handleDownload(report)
             handleBack()
@@ -264,23 +200,6 @@ const Reports = ({
                       <button
                         onClick={() => {
                           setIsEdit(report)
-                          const params = JSON.parse(report.parameters)
-                          const codeToName = {}
-                          Object.entries(nameToCode).forEach(([key, value]) => {
-                            codeToName[value] = key
-                          })
-                          setIncludedFields((fields) => {
-                            const newFields = { ...fields }
-                            params.fields
-                              .split(',')
-                              .forEach((key: string): void => {
-                                const name = codeToName[key]
-                                if (name in newFields) {
-                                  newFields[name] = true
-                                }
-                              })
-                            return newFields
-                          })
                         }}
                         className="button is-small is-info"
                       >
