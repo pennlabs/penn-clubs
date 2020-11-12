@@ -1724,6 +1724,38 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("clubs-analytics", args=(club.code,)))
         self.assertIn(resp.status_code, [200], resp.content)
 
+    def test_report_saving(self):
+        # login as superuser
+        self.client.login(username=self.user5.username, password="test")
+        self.assertTrue(self.user5.is_superuser)
+
+        # fetch reports
+        resp = self.client.get(reverse("reports-list"))
+        self.assertIn(resp.status_code, [200], resp.content)
+
+        name = "Test Report 123"
+
+        # add new report twice
+        for i in range(2):
+            resp = self.client.post(
+                reverse("reports-list"),
+                {
+                    "name": name,
+                    "description": "This is a test report!",
+                    "parameters": json.dumps({"format": "xlsx", "fields": "code,name"}),
+                    "public": False,
+                },
+            )
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure only one version of report exists at end
+        resp = self.client.get(reverse("reports-list"))
+        self.assertIn(resp.status_code, [200], resp.content)
+
+        data = resp.json()
+        report_names = [rep["name"] for rep in data if rep["name"] == name]
+        self.assertEqual(report_names, [name])
+
     def test_permission_lookup(self):
         permissions = [
             "clubs.approve_club",

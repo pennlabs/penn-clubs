@@ -54,11 +54,7 @@ const TableHeadDivider = styled.thead`
 `
 
 const serializeParams = (params: { [key: string]: string }): string => {
-  return Object.keys(params)
-    .map(
-      (key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`,
-    )
-    .join('&')
+  return new URLSearchParams(params).toString()
 }
 
 type ReportsProps = {
@@ -146,9 +142,12 @@ const Reports = ({
   }
 
   const handleDownload = (report: Report): void => {
-    window.location.href = `${API_BASE_URL}/clubs/?bypass=true&${serializeParams(
-      JSON.parse(report.parameters),
-    )}`
+    window.open(
+      `${API_BASE_URL}/clubs/?bypass=true&${serializeParams(
+        JSON.parse(report.parameters),
+      )}`,
+      '_blank',
+    )
   }
 
   if (authenticated === false || !permission) {
@@ -211,7 +210,10 @@ const Reports = ({
           fields={fields}
           generateCheckboxGroup={generateCheckboxGroup}
           query={query}
-          onSubmit={handleBack}
+          onSubmit={(report: Report): void => {
+            handleDownload(report)
+            handleBack()
+          }}
           initial={typeof isEdit !== 'boolean' ? isEdit : undefined}
         />
       ) : (

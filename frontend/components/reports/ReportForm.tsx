@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import { Flex, Icon, Text } from '../../components/common'
 import { Badge, Report } from '../../types'
-import { API_BASE_URL } from '../../utils'
+import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_PLURAL } from '../../utils/branding'
 import { CheckboxField, SelectField, TextField } from '../FormComponents'
 
@@ -31,8 +31,8 @@ type Props = {
   generateCheckboxGroup: (key: string, fields: string[]) => ReactElement
   query: { fields: string[] }
   initial?: Report
-  onSubmit: () => void
   badges: Badge[]
+  onSubmit: (report: Report) => void
 }
 
 const ReportForm = ({
@@ -43,39 +43,54 @@ const ReportForm = ({
   initial,
   badges,
 }: Props): ReactElement => {
-  const handleGenerateReport = (
+  const serializeParameter = (param): string | undefined => {
+    if (typeof param === 'string') {
+      return param
+    }
+    if (typeof param === 'boolean') {
+      return param.toString()
+    }
+    if (Array.isArray(param)) {
+      if (param.length <= 0) {
+        return undefined
+      }
+      return param
+        .map((item) => {
+          return typeof item === 'string' ? item : item.id
+        })
+        .join(',')
+    }
+    return undefined
+  }
+
+  const handleGenerateReport = async (
     data: Partial<{
       name: string
       description: string
       public: boolean
       badges__in: { id: number }[]
     }>,
-  ): void => {
-    const formattedParamsDict: { [key: string]: string } = {
-      name: data.name ?? '',
-      desc: data.description ?? '',
-      public: data.public?.toString() ?? 'false',
+  ): Promise<void> => {
+    const parameters: { [key: string]: string | undefined } = {
+      format: 'xlsx',
+      fields: query.fields.join(','),
+      badges__in: serializeParameter(data.badges__in),
     }
 
-    if (data.badges__in && data.badges__in.length) {
-      if (typeof data.badges__in === 'string') {
-        formattedParamsDict.badges__in = data.badges__in
-      } else {
-        formattedParamsDict.badges__in = data.badges__in
-          .map(({ id }) => id.toString())
-          .join(',')
-      }
-    }
-
-    const params = new URLSearchParams(formattedParamsDict).toString()
-
-    window.open(
-      `${API_BASE_URL}/clubs/?format=xlsx&${params}&fields=${encodeURIComponent(
-        query.fields.join(','),
-      )}`,
-      '_blank',
+    Object.keys(parameters).forEach(
+      (key) => parameters[key] === undefined && delete parameters[key],
     )
-    onSubmit()
+
+    const body = {
+      name: data.name ?? 'Last Report',
+      description: data.description ?? '',
+      public: serializeParameter(data.public ?? false),
+      parameters: JSON.stringify(parameters),
+    }
+
+    const resp = await doApiRequest('/reports/', { method: 'POST', body })
+    const report = await resp.json()
+    onSubmit(report)
   }
 
   return (
@@ -92,9 +107,10 @@ const ReportForm = ({
         <Form>
           <ReportBox title="Report Details">
             <Text>
-              All report detail fields are optional. If you do not specify a
-              report name, a temporary report will be generated and you will not
-              be able to rerun the report.
+              All report detail fields are optional. If you specify a report
+              name that already exists, it will overwrite that report. If you do
+              not specify a report name, your report will be saved as "Last
+              Report".
             </Text>
             <div>
               <Field

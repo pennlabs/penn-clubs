@@ -230,7 +230,7 @@ class ReportViewSet(viewsets.ModelViewSet):
 
     permission_classes = [DjangoPermission("clubs.generate_reports") | IsSuperuser]
     serializer_class = ReportSerializer
-    http_method_names = ["get", "delete"]
+    http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
         return Report.objects.filter(Q(creator=self.request.user) | Q(public=True))
