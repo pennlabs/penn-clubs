@@ -1,4 +1,5 @@
 import fetch from 'isomorphic-unfetch'
+import { NextPageContext } from 'next'
 import React, { createContext, ReactElement, useContext } from 'react'
 
 import { MembershipRank } from './types'
@@ -135,6 +136,32 @@ export function apiCheckPermission(
       perms,
     )}`,
   )
+}
+
+/**
+ * Lookup a lot of endpoints asynchronously.
+ * Should be used primarily by getInitialProps methods.
+ */
+export async function doBulkLookup(
+  paths: [string, string][],
+  ctx: NextPageContext,
+): Promise<{ [key: string]: any }> {
+  const data = {
+    headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
+  }
+
+  const resps = await Promise.all(
+    paths.map((item) =>
+      doApiRequest(item[1], data).then((resp) => resp.json()),
+    ),
+  )
+
+  const output = {}
+  for (let i = 0; i < paths.length; i++) {
+    output[paths[i][0]] = resps[i]
+  }
+
+  return output
 }
 
 /**

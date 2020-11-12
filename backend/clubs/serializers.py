@@ -225,6 +225,17 @@ class ReportSerializer(serializers.ModelSerializer):
     def get_creator(self, obj):
         return obj.creator.get_full_name()
 
+    def create(self, validated_data):
+        """
+        Set the creator of the report to the current user.
+        If a report with the same name and creator exists, overwrite that report instead.
+        """
+        return Report.objects.update_or_create(
+            name=validated_data.pop("name"),
+            creator=self.context["request"].user,
+            defaults=validated_data,
+        )[0]
+
     class Meta:
         model = Report
         fields = (

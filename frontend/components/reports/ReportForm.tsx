@@ -2,9 +2,16 @@ import { Field, Form, Formik } from 'formik'
 import { ReactElement } from 'react'
 import styled from 'styled-components'
 
-import { Flex, Icon, Text } from '../../components/common'
-import { Badge, Report } from '../../types'
-import { API_BASE_URL } from '../../utils'
+import {
+  Checkbox,
+  CheckboxLabel,
+  Flex,
+  Icon,
+  Text,
+} from '../../components/common'
+import { CLUBS_GREY } from '../../constants/colors'
+import { Badge, Report, Tag } from '../../types'
+import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_PLURAL } from '../../utils/branding'
 import { CheckboxField, SelectField, TextField } from '../FormComponents'
 
@@ -12,6 +19,15 @@ const ReportContainer = styled.div`
   margin: 15px auto;
   padding: 15px;
   max-width: 800px;
+`
+
+const GroupLabel = styled.h4`
+  font-size: 32px;
+  color: #626572;
+
+  &:not(:last-child) {
+    margin-bottom: 0;
+  }
 `
 
 const ReportBox = ({
@@ -27,74 +43,146 @@ const ReportBox = ({
 }
 
 type Props = {
-  fields: { [key: string]: string[] }
-  generateCheckboxGroup: (key: string, fields: string[]) => ReactElement
-  query: { fields: string[] }
+  fields: { [key: string]: [string, string][] }
   initial?: Report
-  onSubmit: () => void
   badges: Badge[]
+  tags: Tag[]
+  onSubmit: (report: Report) => void
 }
 
 const ReportForm = ({
   fields,
-  generateCheckboxGroup,
-  query,
   onSubmit,
   initial,
   badges,
+  tags,
 }: Props): ReactElement => {
-  const handleGenerateReport = (
+  const generateCheckboxGroup = (
+    groupName: string,
+    fields: [string, string][],
+  ): ReactElement => {
+    return (
+      <div key={groupName}>
+        <GroupLabel className="subtitle is-4" style={{ color: CLUBS_GREY }}>
+          {groupName}
+        </GroupLabel>
+        {fields
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([field, encoded], idx) => (
+            <div key={idx}>
+              <Field
+                type="checkbox"
+                as={Checkbox}
+                id={field}
+                value={encoded}
+                name="fields"
+              />
+              {'  '}
+              <CheckboxLabel htmlFor={field}>{field}</CheckboxLabel>
+            </div>
+          ))}
+      </div>
+    )
+  }
+
+  const serializeParameter = (
+    param: string | boolean | (string | { id: string | number })[],
+  ): string | undefined => {
+    if (typeof param === 'string') {
+      return param
+    }
+    if (typeof param === 'boolean') {
+      return param.toString()
+    }
+    if (Array.isArray(param)) {
+      if (param.length <= 0) {
+        return undefined
+      }
+      return param
+        .map((item: string | { id: string | number }): string => {
+          return typeof item === 'string' ? item : item.id.toString()
+        })
+        .join(',')
+    }
+    return undefined
+  }
+
+  const handleGenerateReport = async (
     data: Partial<{
       name: string
       description: string
       public: boolean
+      fields: string[]
       badges__in: { id: number }[]
+      tags__in: { id: number }[]
     }>,
-  ): void => {
-    const formattedParamsDict: { [key: string]: string } = {
-      name: data.name ?? '',
-      desc: data.description ?? '',
-      public: data.public?.toString() ?? 'false',
+  ): Promise<void> => {
+    const parameters: { [key: string]: string | undefined } = {
+      format: 'xlsx',
+      fields: data.fields?.join(','),
+      badges__in: serializeParameter(data.badges__in ?? []),
+      tags__in: serializeParameter(data.tags__in ?? []),
     }
 
-    if (data.badges__in && data.badges__in.length) {
-      if (typeof data.badges__in === 'string') {
-        formattedParamsDict.badges__in = data.badges__in
-      } else {
-        formattedParamsDict.badges__in = data.badges__in
-          .map(({ id }) => id.toString())
-          .join(',')
-      }
-    }
-
-    const params = new URLSearchParams(formattedParamsDict).toString()
-
-    window.open(
-      `${API_BASE_URL}/clubs/?format=xlsx&${params}&fields=${encodeURIComponent(
-        query.fields.join(','),
-      )}`,
-      '_blank',
+    Object.keys(parameters).forEach(
+      (key) => parameters[key] === undefined && delete parameters[key],
     )
-    onSubmit()
+
+    const body = {
+      name: data.name ?? 'Last Report',
+      description: data.description ?? '',
+      public: serializeParameter(data.public ?? false),
+      parameters: JSON.stringify(parameters),
+    }
+
+    const resp = await doApiRequest('/reports/', { method: 'POST', body })
+    const report = await resp.json()
+    onSubmit(report)
+  }
+
+  const unpackReportParameters = (report: Report) => {
+    const params = JSON.parse(report.parameters)
+    params.fields = params.fields?.split(',') ?? []
+    return { ...params, ...report }
+  }
+
+  const fixDeserialize = (
+    options: { id: number; label?: string; name?: string }[],
+  ) => (value): { id: number; label: string }[] => {
+    if (typeof value === 'string') {
+      return value
+        .trim()
+        .split(',')
+        .filter((tag) => tag.length > 0)
+        .map((tag) => {
+          const id = parseInt(tag)
+          const trueVal = options.find((oth) => oth.id === id)
+          if (trueVal != null) {
+            trueVal.label = trueVal.label ?? trueVal.name ?? 'Unknown'
+          }
+          return trueVal != null ? trueVal : { id, label: 'Unknown' }
+        }) as { id: number; label: string }[]
+    }
+    if (Array.isArray(value)) {
+      return value.map(({ id, name }) => ({ id, label: name }))
+    }
+    return []
   }
 
   return (
     <ReportContainer>
       <Formik
-        initialValues={
-          initial != null
-            ? { ...JSON.parse(initial.parameters), ...initial }
-            : {}
-        }
+        initialValues={initial != null ? unpackReportParameters(initial) : {}}
         onSubmit={handleGenerateReport}
         enableReinitialize
       >
         <Form>
           <ReportBox title="Report Details">
             <Text>
-              All report detail fields are optional. If you do not specify a
-              report name, a temporary report will be generated and you will not
-              be able to rerun the report.
+              All report detail fields are optional. If you specify a report
+              name that already exists, it will overwrite that report. If you do
+              not specify a report name, your report will be saved as "Last
+              Report".
             </Text>
             <div>
               <Field
@@ -123,29 +211,20 @@ const ReportForm = ({
               will not be applied as filters.
             </Text>
             <Field
+              name="tags__in"
+              label="Tags"
+              as={SelectField}
+              choices={tags}
+              valueDeserialize={fixDeserialize(tags)}
+              isMulti
+              helpText={`Select only ${OBJECT_NAME_PLURAL} with all of the specified tags.`}
+            />
+            <Field
               name="badges__in"
               label="Badges"
               as={SelectField}
               choices={badges}
-              valueDeserialize={(value) => {
-                if (typeof value === 'string') {
-                  return value
-                    .trim()
-                    .split(',')
-                    .filter((tag) => tag.length > 0)
-                    .map((tag) => {
-                      const id = parseInt(tag)
-                      const trueVal = badges.find((oth) => oth.id === id)
-                      return trueVal != null
-                        ? trueVal
-                        : { id, label: 'Unknown' }
-                    })
-                }
-                if (Array.isArray(value)) {
-                  return value.map(({ id, name }) => ({ id, label: name }))
-                }
-                return []
-              }}
+              valueDeserialize={fixDeserialize(badges)}
               isMulti
               helpText={`Select only ${OBJECT_NAME_PLURAL} with all of the specified badges.`}
             />
