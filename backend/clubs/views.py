@@ -1663,7 +1663,11 @@ class FavoriteCalendarAPIView(APIView):
             e = ICSEvent()
             e.name = "{} - {}".format(event.club.name, event.name)
             e.begin = event.start_time
-            e.end = event.end_time
+            e.end = (
+                event.end_time + datetime.timedelta(seconds=1)
+                if event.start_time == event.end_time
+                else event.end_time
+            )
             e.location = event.location
             e.description = "{}\n\n{}".format(event.url or "", event.description)
             calendar.events.add(e)
