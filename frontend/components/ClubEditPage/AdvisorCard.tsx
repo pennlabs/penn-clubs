@@ -1,11 +1,13 @@
 import { Field } from 'formik'
-import { ReactElement } from 'react'
-
-import { Club } from '../../types'
+import { ReactElement, useState } from 'react'
+import styled from 'styled-components'
+import { RED } from '../../constants/colors'
+import { Club} from '../../types'
 import {
   OBJECT_NAME_SINGULAR,
   SHOW_MEMBERS,
   SITE_NAME,
+  SITE_ID
 } from '../../utils/branding'
 import { Text } from '../common'
 import { CheckboxField, TextField } from '../FormComponents'
@@ -14,9 +16,35 @@ import BaseCard from './BaseCard'
 
 type Props = {
   club: Club
+  validateAdvisors?: (valid : boolean) => void
 }
 
-export default function AdvisorCard({ club }: Props): ReactElement {
+const RequireText = styled.p`
+  color: ${RED};
+  margin-top: 1rem;
+`
+
+export default function AdvisorCard({
+  club,
+  validateAdvisors,
+}: Props): ReactElement {
+  const [advisorsCount, setAdvisorsCount] = useState<number>(
+    club.advisor_set.length || 1,
+  )
+  const updateAdvisors = (newAdvisors) => {
+    let validCount = 0
+    if (newAdvisors.length) {
+      validCount = newAdvisors.filter(
+        (advisor) => !advisor._error_message && advisor.public,
+      ).length
+    }
+    if (validateAdvisors) {
+      if (validCount > 0) validateAdvisors(true)
+      else validateAdvisors(false)
+    }
+    setAdvisorsCount(validCount)
+  }
+
   const fields = (
     <>
       <Field name="name" as={TextField} />
@@ -49,6 +77,7 @@ export default function AdvisorCard({ club }: Props): ReactElement {
           )}
         </Text>
         <ModelForm
+          onUpdate={updateAdvisors}
           baseUrl={`/clubs/${club.code}/advisors/`}
           listParams="&public=true"
           defaultObject={{ public: true }}
@@ -57,13 +86,19 @@ export default function AdvisorCard({ club }: Props): ReactElement {
           )}
           fields={fields}
         />
+        {SITE_ID === 'Hub@Penn' && (
+          <RequireText>At least one public contact is required*</RequireText>
+        )}
       </BaseCard>
+
       <BaseCard title="Internal Points of Contact">
         <Text>
           These private points of contact will be shown to only {SITE_NAME}{' '}
           administrators.
         </Text>
         <ModelForm
+          onUpdate={updateAdvisors}
+          requireOne={advisorsCount === 1}
           baseUrl={`/clubs/${club.code}/advisors/`}
           listParams="&public=false"
           defaultObject={{ public: false }}
