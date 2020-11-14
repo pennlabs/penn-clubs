@@ -597,7 +597,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                   >
                     <Icon name="edit" alt="save" /> Save
                   </button>
-                  {!requireOne && (
+                  {allowDeletion && (
                     <span
                       className="button is-danger"
                       style={{ marginLeft: '0.5em' }}
