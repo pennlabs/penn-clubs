@@ -403,12 +403,13 @@ class Command(BaseCommand):
         now = timezone.now()
 
         # Create an event for right now so cypress can test current events
+        live_event_club = Club.objects.all()[0]
         event, created = Event.objects.get_or_create(
-            club=club,
-            code="test-event-for-club-now".format(Club.objects.all()[0]),
+            club=live_event_club,
+            code="test-event-for-club-now",
             defaults={
                 "creator": ben,
-                "name": f"Test Event now for {club.name}",
+                "name": f"Test Event now for {live_event_club.name}",
                 "description": "This is the description for this event.",
                 "start_time": now,
                 "end_time": now + datetime.timedelta(hours=1),
