@@ -21,7 +21,7 @@ const MEASUREMENTS = {
     NAV_HEIGHT: '5.25rem',
     LOGO_SCALE: '1.7',
     HEADER_SHADOW: '2px 0px 5px black',
-    TITLE_CLASS: '2.2rem',
+    TITLE_CLASS: '2.4rem',
     TITLE_MARGIN: '35px',
     TITLE_SPACING: '-0.1rem',
     TITLE_WEIGHT: '300',

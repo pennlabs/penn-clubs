@@ -244,6 +244,7 @@ export default function ClubEditCard({
           name: 'name',
           type: 'text',
           required: true,
+          label: `${OBJECT_NAME_TITLE_SINGULAR} Name`,
           help: isEdit ? (
             <>
               If you would like to change your {OBJECT_NAME_SINGULAR} URL in
@@ -262,6 +263,7 @@ export default function ClubEditCard({
         {
           name: 'subtitle',
           type: 'text',
+          label: `${OBJECT_NAME_TITLE_SINGULAR} Subtitle`,
           help: `This text will be shown next to your ${OBJECT_NAME_SINGULAR} name in list and card views.`,
         },
         {
