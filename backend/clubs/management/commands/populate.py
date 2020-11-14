@@ -399,29 +399,46 @@ class Command(BaseCommand):
 
         # create test events
         event_image_url = "https://i.imgur.com/IBCoKE3.jpg"
-        now = timezone.now()
 
-        for i, club in enumerate(Club.objects.all()[:20]):
-            event, created = Event.objects.get_or_create(
-                club=club,
-                code="test-event-for-club-{}".format(club),
-                defaults={
-                    "creator": ben,
-                    "name": f"Test Event for {club.name}",
-                    "description": "This is the description for this event.",
-                    "start_time": now,
-                    "end_time": now,
-                },
-            )
-            if created:
-                contents = get_image(event_image_url)
-                event.image.save("image.png", ContentFile(contents))
-            if i <= 10:
-                event.start_time = now + datetime.timedelta(days=1) + datetime.timedelta(hours=i)
-            else:
-                event.start_time = now - datetime.timedelta(minutes=1)
-            event.end_time = event.start_time + datetime.timedelta(hours=1)
-            event.save(update_fields=["start_time", "end_time"])
+        # 10am today
+        even_base = timezone.now().replace(hour=10, minute=0, second=0, microsecond=0)
+
+        # 2pm today
+        odd_base = timezone.now().replace(hour=14, minute=0, second=0, microsecond=0)
+
+        for j in range(-14, 15):
+            for i, club in enumerate(Club.objects.all()[:10]):
+                # When even we start at 10am and overlap, when odd we start at 3pm and no overlap
+                if j % 2 == 0:
+                    start_time = (
+                        even_base + datetime.timedelta(days=j) + datetime.timedelta(minutes=30 * i)
+                    )
+                    end_time = (
+                        even_base
+                        + datetime.timedelta(days=j)
+                        + datetime.timedelta(hours=1, minutes=30 * i)
+                    )
+                else:
+                    start_time = odd_base + datetime.timedelta(days=j) + datetime.timedelta(hours=i)
+                    end_time = (
+                        odd_base + datetime.timedelta(days=j) + datetime.timedelta(hours=i + 1)
+                    )
+
+                event, created = Event.objects.get_or_create(
+                    club=club,
+                    code="test-event-for-club-{}-{}".format(club, j),
+                    defaults={
+                        "creator": ben,
+                        "name": f"Test Event #{j} for {club.name}",
+                        "description": "This is the description for this event.",
+                        "start_time": start_time,
+                        "end_time": end_time,
+                    },
+                )
+
+                if created:
+                    contents = get_image(event_image_url)
+                    event.image.save("image.png", ContentFile(contents))
 
         # dismiss welcome prompt for all users
         Profile.objects.all().update(has_been_prompted=True)
