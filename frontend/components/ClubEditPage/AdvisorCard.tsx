@@ -98,7 +98,7 @@ export default function AdvisorCard({
         </Text>
         <ModelForm
           onUpdate={updateAdvisors}
-          requireOne={advisorsCount === 1}
+          allowDeletion={!(advisorsCount === 1)}
           baseUrl={`/clubs/${club.code}/advisors/`}
           listParams="&public=false"
           defaultObject={{ public: false }}
