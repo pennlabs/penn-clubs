@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -13,15 +14,21 @@ class Command(BaseCommand):
 
         # only send notifications if it is currently a weekday
         if now.isoweekday() in range(1, 6):
-            queued_clubs = Club.objects.filter(active=True, approved__isnull=True)
-            if queued_clubs.exists():
-                context = {
-                    "num_clubs": queued_clubs.count(),
-                    "url": "https://pennclubs.com/renew#Queue",
-                }
-                send_mail_helper(
-                    "osa_queue_reminder",
-                    "{} clubs awaiting review on Penn Clubs".format(queued_clubs.count()),
-                    ["rodneyr@upenn.edu"],
-                    context,
-                )
+            # get users in group to send notification to
+            group = Group.objects.filter(name="OSA").first()
+            if group is not None:
+                emails = list(group.user_set.all().values_list("email", flat=True))
+
+                # get clubs that need approval
+                queued_clubs = Club.objects.filter(active=True, approved__isnull=True)
+                if queued_clubs.exists():
+                    context = {
+                        "num_clubs": queued_clubs.count(),
+                        "url": "https://pennclubs.com/renew#Queue",
+                    }
+                    send_mail_helper(
+                        "osa_queue_reminder",
+                        "{} clubs awaiting review on Penn Clubs".format(queued_clubs.count()),
+                        emails,
+                        context,
+                    )

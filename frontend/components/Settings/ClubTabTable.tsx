@@ -43,11 +43,12 @@ const ClubTabTable = ({
         <th>
           Permissions
           <Icon
-            data-tip={`Shows your level of access to club management tools. Can be a ${
-              MEMBERSHIP_ROLE_NAMES[MembershipRank.Member]
-            }, ${MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer]}, or ${
-              MEMBERSHIP_ROLE_NAMES[MembershipRank.Owner]
-            }.`}
+            data-tip={`Shows your level of access to club management tools. Can be one of the following: ${Object.entries(
+              MEMBERSHIP_ROLE_NAMES,
+            )
+              .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+              .map((role) => role[1])
+              .join(', ')}.`}
             data-effect="solid"
             data-multiline="true"
             name="info"

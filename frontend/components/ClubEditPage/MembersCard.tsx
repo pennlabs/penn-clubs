@@ -15,15 +15,15 @@ import BaseCard from './BaseCard'
 export const MEMBERSHIP_ROLES: MembershipRole[] = [
   {
     value: MembershipRank.Member,
-    label: MEMBERSHIP_ROLE_NAMES[MembershipRank.Member],
+    label: MEMBERSHIP_ROLE_NAMES[MembershipRank.Member] ?? 'Unknown',
   },
   {
     value: MembershipRank.Officer,
-    label: MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer],
+    label: MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer] ?? 'Unknown',
   },
   {
     value: MembershipRank.Owner,
-    label: MEMBERSHIP_ROLE_NAMES[MembershipRank.Owner],
+    label: MEMBERSHIP_ROLE_NAMES[MembershipRank.Owner] ?? 'Unknown',
   },
 ]
 
@@ -47,9 +47,11 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
             <Field
               name="role"
               as={SelectField}
-              choices={MEMBERSHIP_ROLES}
+              choices={MEMBERSHIP_ROLES.filter(
+                ({ value }) => value in MEMBERSHIP_ROLE_NAMES,
+              )}
               serialize={({ value }) => value}
-              valueDeserialize={(val) =>
+              valueDeserialize={(val: number) =>
                 MEMBERSHIP_ROLES.find((x) => x.value === val)
               }
               isMulti={false}
