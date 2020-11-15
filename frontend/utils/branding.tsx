@@ -53,6 +53,14 @@ const sites = {
     SHOW_RANK_ALGORITHM: true,
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
     OBJECT_MEMBERSHIP_LABEL: 'Members',
+    OBJECT_MEMBERSHIP_LABEL_LOWERCASE: "member's",
+    OBJECT_INVITE_LABEL: 'Members',
+
+    FORM_DESCRIPTION_EXAMPLES: 'Penn Labs',
+    FORM_TAG_DESCRIPTION:
+      'You will need to at least specify either the Undergraduate or Graduate tag',
+    FORM_LOGO_DESCRIPTION:
+      'Changing this field will require reapproval from the Office of Student Affairs',
 
     PARTNER_LOGOS: [
       {
@@ -129,6 +137,14 @@ const sites = {
     SHOW_RANK_ALGORITHM: false,
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
+    OBJECT_MEMBERSHIP_LABEL_LOWERCASE: 'staff',
+    OBJECT_INVITE_LABEL: 'Editor',
+
+    FORM_DESCRIPTION_EXAMPLES:
+      'Office of New Student Orientation & Academic Initiative - NSOAI',
+    FORM_TAG_DESCRIPTION:
+      'Tags will allow students to find your resource while filtering Hub@Penn. Select as many as apply. You will need to at least specify one tag.',
+    FORM_LOGO_DESCRIPTION: 'Upload your approved Penn logo.',
 
     PARTNER_LOGOS: [
       {
@@ -191,6 +207,8 @@ export const SHOW_RANK_ALGORITHM = sites[site].SHOW_RANK_ALGORITHM
 export const MEMBERSHIP_ROLE_NAMES: { [key: number]: string } =
   sites[site].MEMBERSHIP_ROLE_NAMES
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
+export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
+  sites[site].OBJECT_MEMBERSHIP_LABEL_LOWERCASE
 
 export const PARTNER_LOGOS = sites[site].PARTNER_LOGOS
 
@@ -202,3 +220,9 @@ export const ALL_CLUB_FIELDS = new Set(
 )
 
 export const GA_TRACKING_CODE = sites[site].GA_TRACKING_CODE
+
+export const FORM_DESCRIPTION_EXAMPLES = sites[site].FORM_DESCRIPTION_EXAMPLES
+export const FORM_TAG_DESCRIPTION = sites[site].FORM_TAG_DESCRIPTION
+export const FORM_LOGO_DESCRIPTION = sites[site].FORM_LOGO_DESCRIPTION
+
+export const OBJECT_INVITE_LABEL = sites[site].OBJECT_INVITE_LABEL
