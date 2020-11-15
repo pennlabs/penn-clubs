@@ -5,7 +5,6 @@ import simple_history
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import TabularInline
-from django.contrib.auth.models import Group
 from django.db.models import Count, Exists, OuterRef
 from django.utils.safestring import mark_safe
 
@@ -353,9 +352,6 @@ class QuestionAnswerAdmin(admin.ModelAdmin):
     search_fields = ("question", "answer")
     list_display = ("club", "question", "answer", "approved")
     list_filter = ("approved", "updated_at")
-
-
-admin.site.unregister(Group)
 
 
 admin.site.register(Asset)
