@@ -1665,7 +1665,7 @@ class FavoriteCalendarAPIView(APIView):
             e.name = "{} - {}".format(event.club.name, event.name)
             e.begin = event.start_time
             e.end = (
-                (event.end_time + datetime.timedelta(minutes=15))
+                (event.start_time + datetime.timedelta(minutes=15))
                 if event.start_time >= event.end_time
                 else event.end_time
             )
