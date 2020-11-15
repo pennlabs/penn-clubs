@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react'
+import React, { ReactNode, useState } from 'react'
 import styled from 'styled-components'
 
 import { Container, Metadata, Title } from '../components/common'
@@ -33,98 +33,74 @@ type SettingsProps = {
   authenticated: boolean | null
 }
 
-type SettingsState = {
-  message: ReactElement | string | null
-}
-
-class Settings extends React.Component<SettingsProps, SettingsState> {
-  constructor(props) {
-    super(props)
-    this.state = {
-      message: null,
-    }
-    this.notify = this.notify.bind(this)
-  }
+const Settings = ({ userInfo, authenticated }: SettingsProps) => {
+  const [message, setMessage] = useState<ReactNode>(null)
 
   /**
    * Display the message and scroll the user to the top of the page.
    * @param The message to show to the user.
    */
-  notify(msg: ReactElement | string): void {
-    this.setState(
-      {
-        message: msg,
-      },
-      () => window.scrollTo(0, 0),
-    )
+  const notify = (msg: ReactNode): void => {
+    setMessage(msg)
+    window.scrollTo(0, 0)
   }
 
-  render() {
-    const { userInfo, authenticated } = this.props
-    if (authenticated === null) {
-      return <div></div>
-    }
+  if (authenticated === null) {
+    return <div></div>
+  }
 
-    if (!userInfo) {
-      return <AuthPrompt />
-    }
+  if (!userInfo) {
+    return <AuthPrompt />
+  }
 
-    const { message } = this.state
+  const tabs = [
+    {
+      name: OBJECT_NAME_TITLE,
+      icon: 'peoplelogo',
+      content: <ClubTab notify={notify} userInfo={userInfo} />,
+    },
+    {
+      name: 'Bookmarks',
+      icon: 'heart',
+      content: <FavoritesTab key="bookmark" keyword="bookmark" />,
+    },
+    {
+      name: 'Subscriptions',
+      icon: 'bookmark',
+      content: <FavoritesTab key="subscription" keyword="subscription" />,
+    },
+    {
+      name: 'Requests',
+      icon: 'user-check',
+      content: <MembershipRequestsTab />,
+    },
+    {
+      name: 'Profile',
+      icon: 'user',
+      content: <ProfileTab defaults={userInfo} />,
+    },
+  ]
 
-    const tabs = [
-      {
-        name: OBJECT_NAME_TITLE,
-        icon: 'peoplelogo',
-        content: <ClubTab notify={this.notify} userInfo={userInfo} />,
-      },
-      {
-        name: 'Bookmarks',
-        icon: 'heart',
-        content: <FavoritesTab key="bookmark" keyword="bookmark" />,
-      },
-      {
-        name: 'Subscriptions',
-        icon: 'bookmark',
-        content: <FavoritesTab key="subscription" keyword="subscription" />,
-      },
-      {
-        name: 'Requests',
-        icon: 'user-check',
-        content: <MembershipRequestsTab />,
-      },
-      {
-        name: 'Profile',
-        icon: 'user',
-        content: <ProfileTab defaults={userInfo} />,
-      },
-    ]
+  return (
+    <>
+      <Metadata title="Your Profile" />
+      <Container background={BG_GRADIENT}>
+        <Title style={{ marginTop: '2.5rem', color: WHITE, opacity: 0.95 }}>
+          Welcome, {userInfo.name}
+        </Title>
+      </Container>
+      <TabView background={BG_GRADIENT} tabs={tabs} tabClassName="is-boxed" />
 
-    const { name } = this.props.userInfo
-
-    return (
-      <>
-        <Metadata title="Your Profile" />
-        <Container background={BG_GRADIENT}>
-          <Title style={{ marginTop: '2.5rem', color: WHITE, opacity: 0.95 }}>
-            Welcome, {name}
-          </Title>
+      {message != null && (
+        <Container>
+          <Notification className="notification">
+            <button className="delete" onClick={() => setMessage(null)} />
+            {message}
+          </Notification>
         </Container>
-        <TabView background={BG_GRADIENT} tabs={tabs} tabClassName="is-boxed" />
-
-        {message != null && (
-          <Container>
-            <Notification className="notification">
-              <button
-                className="delete"
-                onClick={() => this.setState({ message: null })}
-              />
-              {message}
-            </Notification>
-          </Container>
-        )}
-      </>
-    )
-  }
+      )}
+    </>
+  )
 }
 
 export default renderPage(Settings)
