@@ -3,7 +3,12 @@ import { NextPageContext } from 'next'
 import React, { createContext, ReactElement, useContext } from 'react'
 
 import { MembershipRank } from './types'
-import { ALL_CLUB_FIELDS, CLUB_FIELDS, DOMAIN } from './utils/branding'
+import {
+  ALL_CLUB_FIELDS,
+  CLUB_FIELDS,
+  DOMAIN,
+  MEMBERSHIP_ROLE_NAMES,
+} from './utils/branding'
 
 export function stripTags(val: string): string {
   if (!val) {
@@ -70,9 +75,7 @@ export function getSizeDisplay(size: number, showMembersLabel = true): string {
 }
 
 export function getRoleDisplay(role: MembershipRank): string {
-  if (role <= 0) return 'Owner'
-  else if (role <= 10) return 'Officer'
-  else return 'Member'
+  return MEMBERSHIP_ROLE_NAMES[role] ?? 'Unknown'
 }
 
 export function getApiUrl(path: string): string {
