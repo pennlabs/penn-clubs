@@ -1224,6 +1224,7 @@ class ClubTestCase(TestCase):
             {
                 "emails": "one@pennlabs.org, two@pennlabs.org, three@pennlabs.org",
                 "role": Membership.ROLE_OFFICER,
+                "title": "Member",
             },
             content_type="application/json",
         )
@@ -1294,7 +1295,11 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("club-invite", args=(self.club1.code,)),
-            {"emails": "test@example.upenn.edu", "role": Membership.ROLE_OFFICER},
+            {
+                "emails": "test@example.upenn.edu",
+                "role": Membership.ROLE_OFFICER,
+                "title": "Member",
+            },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -1317,7 +1322,7 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("club-invite", args=(self.club1.code,)),
-            {"emails": "test@example.upenn.edu", "role": Membership.ROLE_MEMBER},
+            {"emails": "test@example.upenn.edu", "role": Membership.ROLE_MEMBER, "title": "Member"},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
