@@ -7,6 +7,7 @@ import { doApiRequest, formatResponse, getRoleDisplay } from '../../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_INVITE_LABEL,
+  OBJECT_MEMBERSHIP_DEFAULT_TITLE,
   OBJECT_MEMBERSHIP_LABEL,
   OBJECT_MEMBERSHIP_LABEL_LOWERCASE,
   OBJECT_NAME_SINGULAR,
@@ -30,7 +31,9 @@ type Invite = {
 
 export default function InviteCard({ club }: InviteCardProps): ReactElement {
   const [invites, setInvites] = useState<Invite[]>([])
-  const [inviteTitle, setInviteTitle] = useState<string>('Member')
+  const [inviteTitle, setInviteTitle] = useState<string>(
+    OBJECT_MEMBERSHIP_DEFAULT_TITLE,
+  )
   const [inviteRole, setInviteRole] = useState<MembershipRole>(
     () =>
       MEMBERSHIP_ROLES.find(({ value }) => value in MEMBERSHIP_ROLE_NAMES) ??

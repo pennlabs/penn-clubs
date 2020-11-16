@@ -12,7 +12,7 @@ import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
 import renderPage from '../renderPage'
 import { UserInfo } from '../types'
-import { OBJECT_NAME_TITLE } from '../utils/branding'
+import { OBJECT_NAME_TITLE, SHOW_MEMBERSHIP_REQUEST } from '../utils/branding'
 
 const Notification = styled.span`
   border-radius: ${BORDER_RADIUS};
@@ -73,6 +73,7 @@ const Settings = ({ userInfo, authenticated }: SettingsProps) => {
       name: 'Requests',
       icon: 'user-check',
       content: <MembershipRequestsTab />,
+      disabled: !SHOW_MEMBERSHIP_REQUEST,
     },
     {
       name: 'Profile',
