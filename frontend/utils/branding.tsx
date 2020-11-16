@@ -58,9 +58,9 @@ const sites = {
 
     FORM_DESCRIPTION_EXAMPLES: 'Penn Labs',
     FORM_TAG_DESCRIPTION:
-      'You will need to at least specify either the Undergraduate or Graduate tag',
+      'You will need to at least specify either the Undergraduate or Graduate tag.',
     FORM_LOGO_DESCRIPTION:
-      'Changing this field will require reapproval from the Office of Student Affairs',
+      'Changing this field will require reapproval from the Office of Student Affairs.',
 
     PARTNER_LOGOS: [
       {

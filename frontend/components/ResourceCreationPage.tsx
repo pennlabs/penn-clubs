@@ -96,7 +96,7 @@ const ResourceCreationPage = ({
             to students at no cost. {SITE_NAME} is not a location to advertise
             outside resources. Only such resources will be approved for listing
             on {SITE_NAME}. If you're unsure if your resource can be listed on
-            Hub@Penn, please email email <Contact />.
+            {SITE_NAME}, please email email <Contact />.
           </Text>
           <Text>
             {OBJECT_NAME_TITLE} that you create from this form will enter an
@@ -110,8 +110,9 @@ const ResourceCreationPage = ({
             <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
               <a>directory page</a>
             </Link>
-            . If your {OBJECT_NAME_SINGULAR} already exists on Hub@Penn, please
-            email <Contact /> to gain access instead of filling out this form.
+            . If your {OBJECT_NAME_SINGULAR} already exists on {SITE_NAME},
+            please email <Contact /> to gain access instead of filling out this
+            form.
           </Text>
         </>
       ),
