@@ -10,7 +10,8 @@ import { Club, MembershipRank } from '../../types'
 import { getRoleDisplay } from '../../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
-  OBJECT_NAME_TITLE_SINGULAR, OBJECT_NAME_SINGULAR
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
 } from '../../utils/branding'
 import { Icon } from '../common'
 import { UserMembership } from './ClubTab'
