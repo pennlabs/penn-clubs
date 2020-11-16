@@ -55,7 +55,7 @@ const ResourceCreationPage = ({
   years,
   majors,
   tags,
-  student_types,
+  student_types: studentTypes,
 }: ResourceCreationPageProps): ReactElement => {
   const metadata = <Metadata title={`Create ${OBJECT_NAME_TITLE_SINGULAR}`} />
   const [step, setStep] = useState<number>(0)
@@ -133,7 +133,7 @@ const ResourceCreationPage = ({
             majors={majors}
             tags={tags}
             club={club === null ? {} : club}
-            student_types={student_types}
+            student_types={studentTypes}
             onSubmit={({ message, club }): Promise<void> => {
               setClub(club ?? null)
               setMessage(message)
@@ -142,6 +142,22 @@ const ResourceCreationPage = ({
           />
           {message && (
             <div className="mb-3 mt-3 notification is-primary">{message}</div>
+          )}
+          <Line />
+          <Subtitle>Points of Contact</Subtitle>
+          <Text>
+            You can specify the points of contact for your{' '}
+            {OBJECT_NAME_SINGULAR} in the forms below. Public points of contact
+            will be shown publicly on the website, while private points of
+            contact will only be available to {SITE_NAME} administrators.
+          </Text>
+          <Text>You should specify at least one public point of contact.</Text>
+          {club !== null ? (
+            <AdvisorCard club={club} schools={schools} />
+          ) : (
+            <Text>
+              Fill out the form above before filling out this section.
+            </Text>
           )}
           <Line />
           <Text>
@@ -168,14 +184,13 @@ const ResourceCreationPage = ({
             optional, but you should fill out the ones that are applicable to
             your {OBJECT_NAME_SINGULAR}.
           </Text>
-          <Subtitle>Points of Contact</Subtitle>
+          <Subtitle>Student Experiences</Subtitle>
           <Text>
-            You can specify the points of contact for your{' '}
-            {OBJECT_NAME_SINGULAR} in the forms below. Public points of contact
-            will be shown publicly on the website, while private points of
-            contact will only be available to {SITE_NAME} administrators.
+            If you have any student experiences or testimonials, you can put
+            them in the form below. These student experiences will be shown
+            publicly on your {OBJECT_NAME_SINGULAR} page.
           </Text>
-          {club !== null && <AdvisorCard club={club} schools={schools} />}
+          {club !== null && <MemberExperiencesCard club={club} />}
           <Subtitle>Mailing List Features</Subtitle>
           <Text>
             You can enable or disable the subscription feature below. The
@@ -188,13 +203,6 @@ const ResourceCreationPage = ({
             emails, please disable this feature.
           </Text>
           {club !== null && <EnableSubscriptionCard club={club} />}
-          <Subtitle>Student Experiences</Subtitle>
-          <Text>
-            If you have any student experiences or testimonials, you can put
-            them in the form below. These student experiences will be shown
-            publicly on your {OBJECT_NAME_SINGULAR} page.
-          </Text>
-          {club !== null && <MemberExperiencesCard club={club} />}
           <Line />
           <Text>
             After you have saved the applicable forms, hit the continue button
