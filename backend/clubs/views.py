@@ -2180,7 +2180,16 @@ class MassInviteAPIView(APIView):
             )
 
         role = request.data.get("role", Membership.ROLE_MEMBER)
-        title = request.data.get("title", "Member")
+        title = request.data.get("title")
+
+        if not title:
+            return Response(
+                {
+                    "detail": "You must enter a title for the members that you are inviting.",
+                    "success": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if mem and mem.role > role and not request.user.is_superuser:
             return Response(

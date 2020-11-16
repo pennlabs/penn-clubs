@@ -61,6 +61,7 @@ const sites = {
       'You will need to at least specify either the Undergraduate or Graduate tag.',
     FORM_LOGO_DESCRIPTION:
       'Changing this field will require reapproval from the Office of Student Affairs.',
+    OBJECT_MEMBERSHIP_DEFAULT_TITLE: 'Member',
 
     PARTNER_LOGOS: [
       {
@@ -145,6 +146,7 @@ const sites = {
     FORM_TAG_DESCRIPTION:
       'Tags will allow students to find your resource while filtering Hub@Penn. Select as many as apply. You will need to at least specify one tag.',
     FORM_LOGO_DESCRIPTION: 'Upload your approved Penn logo.',
+    OBJECT_MEMBERSHIP_DEFAULT_TITLE: '',
 
     PARTNER_LOGOS: [
       {
@@ -209,6 +211,8 @@ export const MEMBERSHIP_ROLE_NAMES: { [key: number]: string } =
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
 export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
   sites[site].OBJECT_MEMBERSHIP_LABEL_LOWERCASE
+export const OBJECT_MEMBERSHIP_DEFAULT_TITLE =
+  sites[site].OBJECT_MEMBERSHIP_DEFAULT_TITLE
 
 export const PARTNER_LOGOS = sites[site].PARTNER_LOGOS
 
