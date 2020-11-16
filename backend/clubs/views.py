@@ -740,7 +740,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Custom return endpoint for the directory page, allows the page to load faster.
         """
-        serializer = ClubMinimalSerializer(Club.objects.all().order_by("name"), many=True)
+        serializer = ClubMinimalSerializer(
+            Club.objects.all().exclude(approved=False).order_by("name"), many=True
+        )
         return Response(serializer.data)
 
     def get_filename(self):
