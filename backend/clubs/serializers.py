@@ -886,13 +886,19 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Check for required tags before saving the club.
         """
-        tag_names = [tag.get("name") for tag in value]
-        necessary_tags = {"Undergraduate", "Graduate"}
-        if not any(tag in necessary_tags for tag in tag_names):
-            if Tag.objects.filter(name__in=list(necessary_tags)).count() >= len(necessary_tags):
-                raise serializers.ValidationError(
-                    "You must specify either the 'Undergraduate' or 'Graduate' tag in this list."
-                )
+        if settings.BRANDING == "fyh":
+            if len(value) < 1:
+                raise serializers.ValidationError("You must specify at least one tag in this list.")
+        else:
+            tag_names = [tag.get("name") for tag in value]
+            necessary_tags = {"Undergraduate", "Graduate"}
+            if not any(tag in necessary_tags for tag in tag_names):
+                if Tag.objects.filter(name__in=list(necessary_tags)).count() >= len(necessary_tags):
+                    raise serializers.ValidationError(
+                        "You must specify either the {} tag in this list.".format(
+                            " or ".join(f"'{tag}'" for tag in necessary_tags)
+                        )
+                    )
         return value
 
     def validate_description(self, value):
