@@ -18,6 +18,9 @@ import { doApiRequest, formatResponse, isClubFieldShown } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   FIELD_PARTICIPATION_LABEL,
+  FORM_DESCRIPTION_EXAMPLES,
+  FORM_LOGO_DESCRIPTION,
+  FORM_TAG_DESCRIPTION,
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -244,6 +247,7 @@ export default function ClubEditCard({
           name: 'name',
           type: 'text',
           required: true,
+          label: `${OBJECT_NAME_TITLE_SINGULAR} Name`,
           help: isEdit ? (
             <>
               If you would like to change your {OBJECT_NAME_SINGULAR} URL in
@@ -256,12 +260,14 @@ export default function ClubEditCard({
               Your {OBJECT_NAME_SINGULAR} URL will be generated from your{' '}
               {OBJECT_NAME_SINGULAR} name, and cannot be changed upon creation.
               Your {OBJECT_NAME_SINGULAR} name can still be changed afterwards.
+              (Ex: {FORM_DESCRIPTION_EXAMPLES})
             </>
           ),
         },
         {
           name: 'subtitle',
           type: 'text',
+          label: `${OBJECT_NAME_TITLE_SINGULAR} Subtitle`,
           help: `This text will be shown next to your ${OBJECT_NAME_SINGULAR} name in list and card views.`,
         },
         {
@@ -275,14 +281,13 @@ export default function ClubEditCard({
           name: 'tags',
           type: 'multiselect',
           required: true,
-          help:
-            'You will need to at least specify either the Undergraduate or Graduate tag.',
+          help: `${FORM_TAG_DESCRIPTION}`,
           placeholder: `Select tags relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: tags,
         },
         {
           name: 'image',
-          help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
+          help: `${FORM_LOGO_DESCRIPTION}`,
           accept: 'image/*',
           type: 'image',
           label: `${OBJECT_NAME_TITLE_SINGULAR} Logo`,
@@ -307,8 +312,8 @@ export default function ClubEditCard({
       type: 'group',
       description: (
         <Text>
-          Contact information entered here will be shown on your{' '}
-          {OBJECT_NAME_SINGULAR} page.
+          Contact information entered here will be shown{' '}
+          <strong>on your {OBJECT_NAME_SINGULAR} page</strong>.
         </Text>
       ),
       fields: [

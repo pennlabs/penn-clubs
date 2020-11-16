@@ -87,7 +87,9 @@ export default function RenewCard({ club }: RenewCardProps): ReactElement {
           Click on the button below to do so.
           <div className="mt-3">
             <Link href={CLUB_RENEW_ROUTE()} as={CLUB_RENEW_ROUTE(club.code)}>
-              <a className="button is-primary">Renew Club</a>
+              <a className="button is-primary">
+                Renew {OBJECT_NAME_TITLE_SINGULAR}
+              </a>
             </Link>
           </div>
         </>

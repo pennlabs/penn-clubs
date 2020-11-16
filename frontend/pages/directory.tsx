@@ -9,7 +9,6 @@ import { Club } from '../types'
 import { doApiRequest } from '../utils'
 import {
   OBJECT_NAME_PLURAL,
-  OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
   SITE_NAME,
 } from '../utils/branding'
@@ -43,10 +42,8 @@ const Directory = ({ clubs }: Props): ReactElement => {
         <InfoPageTitle>{OBJECT_NAME_TITLE} Directory</InfoPageTitle>
         <p className="mb-5 has-text-grey">
           The directory is an alphabetically sorted list of all {clubs.length}{' '}
-          {OBJECT_NAME_PLURAL} on {SITE_NAME}, including the{' '}
-          {clubs.filter((club) => !club.approved).length} {OBJECT_NAME_PLURAL}{' '}
-          that have not yet been approved. If a {OBJECT_NAME_SINGULAR} exists
-          but has not been approved, it is shown in grey in the list below.
+          {OBJECT_NAME_PLURAL} on {SITE_NAME}. {OBJECT_NAME_TITLE} pending
+          approval are displayed in grey.
         </p>
         <DirectoryList>
           {clubs.map((club) => (

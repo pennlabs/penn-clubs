@@ -8,7 +8,11 @@ import { CLUB_EDIT_ROUTE, CLUB_ROUTE } from '../../constants/routes'
 import { BODY_FONT } from '../../constants/styles'
 import { Club, MembershipRank } from '../../types'
 import { getRoleDisplay } from '../../utils'
-import { MEMBERSHIP_ROLE_NAMES } from '../../utils/branding'
+import {
+  MEMBERSHIP_ROLE_NAMES,
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
+} from '../../utils/branding'
 import { Icon } from '../common'
 import { UserMembership } from './ClubTab'
 import Toggle from './Toggle'
@@ -38,7 +42,7 @@ const ClubTabTable = ({
   <Table className={`table is-fullwidth ${className}`}>
     <thead>
       <tr>
-        <th>Club</th>
+        <th>{OBJECT_NAME_TITLE_SINGULAR}</th>
         <th>Position</th>
         <th>
           Permissions
@@ -60,7 +64,7 @@ const ClubTabTable = ({
         <th>
           Active
           <Icon
-            data-tip="Toggle whether you’re currently an active member of the club"
+            data-tip={`Toggle whether you’re currently an active member of this ${OBJECT_NAME_SINGULAR}.`}
             data-effect="solid"
             data-multiline="true"
             name="info"
@@ -72,7 +76,7 @@ const ClubTabTable = ({
         <th>
           Public
           <Icon
-            data-tip="Toggle if you would like to be listed as a member on the club’s page"
+            data-tip={`Toggle whether you want to be listed on the ${OBJECT_NAME_SINGULAR} page.`}
             data-effect="solid"
             name="info"
             alt="?"

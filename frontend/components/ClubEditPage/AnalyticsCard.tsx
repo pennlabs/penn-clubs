@@ -247,7 +247,7 @@ export default function AnalyticsCard({
       </Head>
       <BaseCard title="Time Series Analytics">
         <Text>
-          Analyze the traffic that your {OBJECT_NAME_SINGULAR} has recieved on a
+          Analyze the traffic that your {OBJECT_NAME_SINGULAR} has received on a
           specific date range. Displays data between the start of the first day
           and the end of the last day.
         </Text>
