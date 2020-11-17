@@ -1,3 +1,5 @@
+import { ClubEventType } from '../types'
+
 const site = process.env.NEXT_PUBLIC_SITE_NAME || 'clubs'
 
 const sites = {
@@ -55,6 +57,13 @@ const sites = {
     OBJECT_MEMBERSHIP_LABEL: 'Members',
     OBJECT_MEMBERSHIP_LABEL_LOWERCASE: "member's",
     OBJECT_INVITE_LABEL: 'Members',
+    OBJECT_EVENT_TYPES: [
+      ClubEventType.RECRUITMENT,
+      ClubEventType.GBM,
+      ClubEventType.SPEAKER,
+      ClubEventType.FAIR,
+      ClubEventType.OTHER,
+    ],
 
     FORM_DESCRIPTION_EXAMPLES: 'Penn Labs',
     FORM_TAG_DESCRIPTION:
@@ -122,6 +131,13 @@ const sites = {
     OBJECT_TAB_RECRUITMENT_LABEL: 'Mailing List',
     OBJECT_TAB_ADMISSION_LABEL: 'Usage',
     OBJECT_TAB_FILES_DESCRIPTION: null,
+    OBJECT_EVENT_TYPES: [
+      ClubEventType.SOCIAL,
+      ClubEventType.CAREER,
+      ClubEventType.SPEAKER,
+      ClubEventType.FAIR,
+      ClubEventType.OTHER,
+    ],
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
     FEEDBACK_URL: 'https://airtable.com/shrv4RfYIddU1i9o6',
@@ -213,6 +229,7 @@ export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
   sites[site].OBJECT_MEMBERSHIP_LABEL_LOWERCASE
 export const OBJECT_MEMBERSHIP_DEFAULT_TITLE =
   sites[site].OBJECT_MEMBERSHIP_DEFAULT_TITLE
+export const OBJECT_EVENT_TYPES = new Set(sites[site].OBJECT_EVENT_TYPES)
 
 export const PARTNER_LOGOS = sites[site].PARTNER_LOGOS
 

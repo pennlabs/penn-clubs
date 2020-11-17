@@ -38,10 +38,13 @@ export interface Testimonial {
 }
 
 export enum ClubEventType {
+  OTHER = 0,
   RECRUITMENT = 1,
   GBM = 2,
   SPEAKER = 3,
   FAIR = 4,
+  SOCIAL = 5,
+  CAREER = 6,
 }
 
 export interface ClubEvent {

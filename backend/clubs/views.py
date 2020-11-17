@@ -1179,7 +1179,7 @@ class EventViewSet(viewsets.ModelViewSet):
             raise DRFValidationError(
                 detail="Approved activities fair events have already been created. "
                 "See above for events to edit, and "
-                "please email contact@pennclubs.com if this is en error."
+                f"please email {settings.FROM_EMAIL} if this is en error."
             )
 
         return super().create(request, *args, **kwargs)
@@ -1193,7 +1193,7 @@ class EventViewSet(viewsets.ModelViewSet):
         if event.type == Event.FAIR and not self.request.user.is_superuser:
             raise DRFValidationError(
                 detail="You cannot delete activities fair events. "
-                "If you would like to do this, email contact@pennclubs.com."
+                f"If you would like to do this, email {settings.FROM_EMAIL}."
             )
 
         return super().destroy(request, *args, **kwargs)
