@@ -504,17 +504,21 @@ class Event(models.Model):
     image_small = models.ImageField(upload_to=get_event_small_file_name, null=True, blank=True)
     description = models.TextField(blank=True)
 
+    OTHER = 0
     RECRUITMENT = 1
     GBM = 2
     SPEAKER = 3
-    OTHER = 0
     FAIR = 4
+    SOCIAL = 5
+    CAREER = 6
     TYPES = (
+        (OTHER, "Other"),
         (RECRUITMENT, "Recruitment"),
         (GBM, "GBM"),
         (SPEAKER, "Speaker"),
-        (OTHER, "Other"),
         (FAIR, "Activities Fair"),
+        (SOCIAL, "Social"),
+        (CAREER, "Career"),
     )
 
     type = models.IntegerField(choices=TYPES, default=RECRUITMENT)
