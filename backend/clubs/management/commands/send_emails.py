@@ -1,3 +1,4 @@
+import collections
 import csv
 import datetime
 import os
@@ -25,6 +26,14 @@ def send_fair_email(club, email, template="fair"):
     send_mail_helper(template, "Making the SAC Fair Easier for You", [email], context)
 
 
+def send_hap_intro_email(email, resources):
+    """
+    Send the Hub@Penn introduction email given the email and the list of resources.
+    """
+
+    send_mail_helper("intro", None, [email], {"resources": resources})
+
+
 class Command(BaseCommand):
     help = "Send out invites to clubs without owners."
 
@@ -40,6 +49,7 @@ class Command(BaseCommand):
                 "virtual_fair",
                 "urgent_virtual_fair",
                 "post_virtual_fair",
+                "hap_intro",
             ),
         )
         parser.add_argument(
@@ -98,6 +108,30 @@ class Command(BaseCommand):
         include_staff = kwargs["include_staff"]
         role = kwargs["role"]
         role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
+
+        # handle custom Hub@Penn intro email
+        if action == "hap_intro":
+            email_file = kwargs["emails"]
+            people = collections.defaultdict(list)
+            with open(email_file, "r") as f:
+                reader = csv.DictReader(f)
+                try:
+                    for line in reader:
+                        name = line["name"].strip()
+                        email = line["email"].strip()
+                        if name and email:
+                            people[email].append(name)
+                except KeyError as e:
+                    raise ValueError(
+                        "Ensure the spreadsheet has a header with the 'name' and 'email' columns."
+                    ) from e
+            for email, resources in people.items():
+                if not dry_run:
+                    send_hap_intro_email(email, resources)
+                    print(f"Sent email to {email} for groups: {resources}")
+                else:
+                    print(f"Would have sent email to {email} for groups: {resources}")
+            return
 
         # get club whitelist
         clubs_whitelist = [club.strip() for club in (kwargs.get("clubs") or "").split(",")]

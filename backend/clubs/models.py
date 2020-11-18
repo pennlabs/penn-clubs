@@ -41,6 +41,9 @@ def send_mail_helper(name, subject, emails, context):
         subject = match.group(1)
         html_content = subject_regex.sub("", html_content, count=1)
 
+    if subject is None:
+        raise ValueError("You must specify a subject as an argument or in the template!")
+
     # generate text alternative
     text_content = html_to_text(html_content)
 
