@@ -153,7 +153,7 @@ const ResourceCreationPage = ({
           </Text>
           <Text>You should specify at least one public point of contact.</Text>
           {club !== null ? (
-            <AdvisorCard club={club} schools={schools} />
+            <AdvisorCard club={club} />
           ) : (
             <Text>
               Fill out the form above before filling out this section.

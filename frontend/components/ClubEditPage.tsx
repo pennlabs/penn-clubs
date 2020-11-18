@@ -228,7 +228,7 @@ const ClubForm = ({
               />
             )}
             <MembersCard club={club} />
-            <AdvisorCard club={club} schools={schools} />
+            <AdvisorCard club={club} />
           </>
         ),
         disabled: !isEdit,

@@ -113,7 +113,7 @@ export interface Advisor {
   id: number
   name: string
   title: string
-  school: School[]
+  department: string
   email: string
   phone: string
   public: boolean
