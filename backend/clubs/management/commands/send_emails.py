@@ -98,6 +98,12 @@ class Command(BaseCommand):
             help="The comma separated list of club codes to send emails to. "
             "Helpful for previewing the email before it is sent.",
         )
+        parser.add_argument(
+            "--test",
+            type=str,
+            help="Send all emails to test email instead of for real. "
+            "Does not work with all email types.",
+        )
         parser.set_defaults(include_staff=False, dry_run=False, only_sheet=False, only_active=True)
 
     def handle(self, *args, **kwargs):
@@ -111,6 +117,7 @@ class Command(BaseCommand):
 
         # handle custom Hub@Penn intro email
         if action == "hap_intro":
+            test_email = kwargs.get("test", None)
             email_file = kwargs["emails"]
             people = collections.defaultdict(list)
             with open(email_file, "r") as f:
@@ -119,6 +126,8 @@ class Command(BaseCommand):
                     for line in reader:
                         name = line["name"].strip()
                         email = line["email"].strip()
+                        if test_email is not None:
+                            email = test_email
                         if name and email:
                             people[email].append(name)
                 except KeyError as e:
