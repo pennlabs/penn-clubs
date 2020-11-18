@@ -506,7 +506,7 @@ export default function ClubEditCard({
                     (props: any, i): ReactElement => {
                       const { ...other } = props
                       if (props.type === 'content') {
-                        return props.content
+                        return <div key={i}>props.content</div>
                       }
                       if (other.help) {
                         other.helpText = other.help
