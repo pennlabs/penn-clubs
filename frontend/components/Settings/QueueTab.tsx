@@ -121,7 +121,7 @@ const QueueTab = (): ReactElement => {
   const pendingClubs = clubs?.length ?? 0
   const approvedClubs =
     allClubs?.filter((status) => status === true).length ?? 0
-  const totalClubs = allClubs?.length ?? 0
+  const totalClubs = allClubs?.length ?? 0 + (rejectedClubs?.length ?? 0)
 
   return (
     <>
