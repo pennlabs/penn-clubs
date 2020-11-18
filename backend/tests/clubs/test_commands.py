@@ -74,6 +74,23 @@ class SendInvitesTestCase(TestCase):
 
         self.assertEqual(len(mail.outbox), 3)
 
+    def test_send_hap_intro(self):
+        data = [
+            ["email", "name"],
+            ["example@example.com", "Resource One"],
+            ["example@example.com", "Resource Two"],
+        ]
+
+        with tempfile.TemporaryDirectory() as d:
+            tmpname = os.path.join(d, "temp.csv")
+            with open(tmpname, "w") as f:
+                writer = csv.writer(f)
+                for row in data:
+                    writer.writerow(row)
+            call_command("send_emails", "hap_intro", tmpname)
+
+        self.assertEqual(len(mail.outbox), 1)
+
     def test_send_virtual_fair(self):
         Club.objects.filter(code__in=["one", "two", "three"]).update(fair=True)
 
