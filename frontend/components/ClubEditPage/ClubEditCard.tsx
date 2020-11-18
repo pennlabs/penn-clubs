@@ -21,6 +21,7 @@ import {
   FORM_DESCRIPTION_EXAMPLES,
   FORM_LOGO_DESCRIPTION,
   FORM_TAG_DESCRIPTION,
+  FORM_TARGET_DESCRIPTION,
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -439,6 +440,10 @@ export default function ClubEditCard({
           type: 'textarea',
         },
         {
+          type: 'content',
+          content: <Text>{FORM_TARGET_DESCRIPTION}</Text>,
+        },
+        {
           name: 'target_years',
           type: 'multiselect',
           placeholder: `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
@@ -462,7 +467,7 @@ export default function ClubEditCard({
           placeholder: `Select student types relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: student_types,
         },
-      ].filter(({ name }) => isClubFieldShown(name)),
+      ].filter(({ name }) => name == null || isClubFieldShown(name)),
     },
   ]
 
@@ -477,7 +482,11 @@ export default function ClubEditCard({
 
   const editingFields = new Set<string>()
   fields.forEach(({ fields }) =>
-    fields.forEach(({ name }) => editingFields.add(name)),
+    fields.forEach((args) => {
+      if (args.name != null) {
+        editingFields.add(args.name)
+      }
+    }),
   )
 
   const initialValues = Object.keys(club).length
@@ -496,6 +505,9 @@ export default function ClubEditCard({
                   {(fields as any[]).map(
                     (props: any, i): ReactElement => {
                       const { ...other } = props
+                      if (props.type === 'content') {
+                        return props.content
+                      }
                       if (other.help) {
                         other.helpText = other.help
                         delete other.help
