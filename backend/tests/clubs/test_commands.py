@@ -87,7 +87,8 @@ class SendInvitesTestCase(TestCase):
                 writer = csv.writer(f)
                 for row in data:
                     writer.writerow(row)
-            call_command("send_emails", "hap_intro", tmpname)
+            with self.settings(BRANDING="fyh"):
+                call_command("send_emails", "hap_intro", tmpname)
 
         self.assertEqual(len(mail.outbox), 1)
 

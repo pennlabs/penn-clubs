@@ -39,8 +39,11 @@ export const CheckboxLabel = styled.label`
 
 type CheckboxProps = {
   id?: string
+  name?: string
   className?: string
   checked: boolean
+  value?: string
+  onBlur: () => void
   onChange: () => void
 }
 
@@ -48,11 +51,22 @@ export const Checkbox = ({
   className,
   checked,
   onChange,
-  ...props
+  onBlur,
+  value,
+  id,
+  name,
 }: CheckboxProps): ReactElement => {
   return (
     <CheckboxContainer className={className}>
-      <HiddenCheckbox checked={checked} onChange={onChange} {...props} />
+      <HiddenCheckbox
+        checked={checked}
+        onChange={onChange}
+        value={value}
+        onBlur={onBlur}
+        id={id}
+        name={name}
+        type="checkbox"
+      />
       <StyledCheckbox onClick={onChange}>
         <Icon
           alt={checked ? 'checked' : 'unchecked'}
