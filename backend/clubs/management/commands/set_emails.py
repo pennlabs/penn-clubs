@@ -6,7 +6,8 @@ from clubs.models import Club
 
 class Command(BaseCommand):
     help = (
-        "Set emails for all fields that do not have an email set. "
+        "Set emails for all active clubs that do not have an email set. "
+        "Mark newly set emails as private. "
         "Use the officer email if it exists."
     )
 

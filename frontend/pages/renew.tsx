@@ -5,7 +5,7 @@ import AuthPrompt from '../components/common/AuthPrompt'
 import QueueTab from '../components/Settings/QueueTab'
 import RenewTab from '../components/Settings/RenewTab'
 import TabView from '../components/TabView'
-import { WHITE } from '../constants/colors'
+import { BG_GRADIENT, WHITE } from '../constants/colors'
 import renderPage from '../renderPage'
 import { OBJECT_NAME_TITLE } from '../utils/branding'
 
@@ -26,17 +26,15 @@ function UserRenewal({ userInfo, authenticated }): ReactElement {
     { name: 'Queue', content: <QueueTab /> },
   ]
 
-  const gradient = 'linear-gradient(to right, #4954f4, #44469a)'
-
   return (
     <>
       <Metadata title={`Renew ${OBJECT_NAME_TITLE}`} />
-      <Container background={gradient}>
+      <Container background={BG_GRADIENT}>
         <Title style={{ marginTop: '2.5rem', color: WHITE, opacity: 0.95 }}>
           Renew {OBJECT_NAME_TITLE}
         </Title>
       </Container>
-      <TabView background={gradient} tabs={tabs} tabClassName="is-boxed" />
+      <TabView background={BG_GRADIENT} tabs={tabs} tabClassName="is-boxed" />
     </>
   )
 }
