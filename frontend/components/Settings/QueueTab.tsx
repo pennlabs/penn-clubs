@@ -76,7 +76,7 @@ const MultiProgressBar = styled.div`
 
 const ProgressBarSegment = styled.div<{ size: number }>`
   height: 1rem;
-  width: ${({ size }) => size * 100}%;
+  width: ${({ size }) => Math.floor(size * 10000) / 100}%;
   float: left;
 `
 
@@ -115,13 +115,18 @@ const QueueTab = (): ReactElement => {
     return <div>Nothing to see here!</div>
   }
 
-  const inactiveClubs =
+  const inactiveClubsCount =
     (allClubs?.filter((status) => status === null).length ?? 0) -
     (clubs?.length ?? 0)
-  const pendingClubs = clubs?.length ?? 0
-  const approvedClubs =
+  const pendingClubsCount = clubs?.length ?? 0
+  const approvedClubsCount =
     allClubs?.filter((status) => status === true).length ?? 0
-  const totalClubs = allClubs?.length ?? 0 + (rejectedClubs?.length ?? 0)
+  const rejectedClubsCount = rejectedClubs?.length ?? 0
+  const totalClubsCount =
+    approvedClubsCount +
+    rejectedClubsCount +
+    inactiveClubsCount +
+    pendingClubsCount
 
   return (
     <>
@@ -131,47 +136,48 @@ const QueueTab = (): ReactElement => {
         all {OBJECT_NAME_PLURAL} across {SITE_NAME}.
       </div>
       <MultiProgressBar className="has-background-light mb-3 is-clearfix">
-        {totalClubs > 0 && (
+        {totalClubsCount > 0 && (
           <>
             <ProgressBarSegment
               className="has-background-info"
-              size={inactiveClubs / totalClubs}
+              size={inactiveClubsCount / totalClubsCount}
             />
             <ProgressBarSegment
               className="has-background-warning"
-              size={pendingClubs / totalClubs}
+              size={pendingClubsCount / totalClubsCount}
             />
             <ProgressBarSegment
               className="has-background-danger"
-              size={(rejectedClubs?.length ?? 0) / totalClubs}
+              size={rejectedClubsCount / totalClubsCount}
             />
             <ProgressBarSegment
               className="has-background-success"
-              size={approvedClubs / totalClubs}
+              size={approvedClubsCount / totalClubsCount}
             />
           </>
         )}
       </MultiProgressBar>
       <ul>
         <li className="has-text-info">
-          {inactiveClubs} Inactive {OBJECT_NAME_TITLE}
+          {inactiveClubsCount} Inactive {OBJECT_NAME_TITLE}
         </li>
         <li className="has-text-warning-dark">
-          {pendingClubs} Pending {OBJECT_NAME_TITLE}
+          {pendingClubsCount} Pending {OBJECT_NAME_TITLE}
         </li>
         <li className="has-text-danger">
           {rejectedClubs?.length ?? 0} Rejected {OBJECT_NAME_TITLE}
         </li>
         <li className="has-text-success">
-          {approvedClubs} Approved {OBJECT_NAME_TITLE}
+          {approvedClubsCount} Approved {OBJECT_NAME_TITLE}
         </li>
       </ul>
       <SmallTitle>Pending Clubs</SmallTitle>
       <div className="mb-3">
         As an administrator of {SITE_NAME}, you can approve and reject{' '}
         {OBJECT_NAME_SINGULAR} approval requests. The table below contains a
-        list of {pendingClubs} {OBJECT_NAME_PLURAL} pending your approval. Click
-        on the {OBJECT_NAME_SINGULAR} name to view the {OBJECT_NAME_SINGULAR}.
+        list of {pendingClubsCount} {OBJECT_NAME_PLURAL} pending your approval.
+        Click on the {OBJECT_NAME_SINGULAR} name to view the{' '}
+        {OBJECT_NAME_SINGULAR}.
       </div>
       <QueueTable clubs={clubs} />
       <SmallTitle>Rejected Clubs</SmallTitle>
