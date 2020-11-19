@@ -1,34 +1,27 @@
 import { Field } from 'formik'
 import { ReactElement } from 'react'
 
-import { Club, School } from '../../types'
+import { Club } from '../../types'
 import {
   OBJECT_NAME_SINGULAR,
   SHOW_MEMBERS,
   SITE_NAME,
 } from '../../utils/branding'
 import { Text } from '../common'
-import { CheckboxField, SelectField, TextField } from '../FormComponents'
+import { CheckboxField, TextField } from '../FormComponents'
 import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
 type Props = {
   club: Club
-  schools: School[]
 }
 
-export default function AdvisorCard({ club, schools }: Props): ReactElement {
+export default function AdvisorCard({ club }: Props): ReactElement {
   const fields = (
     <>
       <Field name="name" as={TextField} />
       <Field name="title" as={TextField} />
-      <Field
-        name="school"
-        as={SelectField}
-        choices={schools}
-        placeholder="Select schools or departments that this point of contact belongs under"
-        isMulti
-      />
+      <Field name="department" as={TextField} />
       <Field name="email" as={TextField} type="email" />
       <Field name="phone" as={TextField} />
       <Field

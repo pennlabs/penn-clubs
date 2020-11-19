@@ -260,12 +260,9 @@ class YearSerializer(serializers.ModelSerializer):
 
 
 class AdvisorSerializer(ClubRouteMixin, ManyToManySaveMixin, serializers.ModelSerializer):
-    school = SchoolSerializer(many=True)
-
     class Meta:
         model = Advisor
-        fields = ("id", "name", "title", "school", "email", "phone", "public")
-        save_related_fields = ["school"]
+        fields = ("id", "name", "title", "department", "email", "phone", "public")
 
 
 class ClubEventSerializer(serializers.ModelSerializer):

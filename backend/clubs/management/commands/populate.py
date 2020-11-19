@@ -351,6 +351,7 @@ class Command(BaseCommand):
                 club=club,
                 name="John Doe",
                 title="Faculty Advisor",
+                department="Accounting Department",
                 email="example@example.com",
                 phone="+12158985000",
                 defaults={"public": True},

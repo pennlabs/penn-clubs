@@ -644,8 +644,8 @@ class Advisor(models.Model):
 
     name = models.CharField(max_length=255)
     title = models.CharField(max_length=255, blank=True, null=True)
-    school = models.ManyToManyField("School", blank=True)
-    email = models.CharField(max_length=255, blank=True, null=True, validators=[validate_email])
+    department = models.CharField(max_length=255, blank=True, null=True)
+    email = models.CharField(max_length=320, blank=True, null=True, validators=[validate_email])
     phone = PhoneNumberField(null=False, blank=True)
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
