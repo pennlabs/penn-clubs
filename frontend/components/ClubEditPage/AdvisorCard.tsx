@@ -6,8 +6,12 @@ import { Club} from '../../types'
 import {
   OBJECT_NAME_SINGULAR,
   SHOW_MEMBERS,
+<<<<<<< HEAD
   SITE_NAME,
   SITE_ID
+=======
+  SITE_ID,
+>>>>>>> cleanup
 } from '../../utils/branding'
 import { Text } from '../common'
 import { CheckboxField, TextField } from '../FormComponents'
@@ -16,7 +20,17 @@ import BaseCard from './BaseCard'
 
 type Props = {
   club: Club
+<<<<<<< HEAD
   validateAdvisors?: (valid : boolean) => void
+=======
+<<<<<<< HEAD
+}
+
+export default function AdvisorCard({ club }: Props): ReactElement {
+=======
+  schools: School[]
+  validateAdvisors?: (valid: boolean) => void
+>>>>>>> cleanup
 }
 
 const RequireText = styled.p`
@@ -29,7 +43,7 @@ export default function AdvisorCard({
   validateAdvisors,
 }: Props): ReactElement {
   const [advisorsCount, setAdvisorsCount] = useState<number>(
-    club.advisor_set.length || 1,
+    club.advisor_set.length || 0,
   )
   const updateAdvisors = (newAdvisors) => {
     let validCount = 0
@@ -93,12 +107,11 @@ export default function AdvisorCard({
 
       <BaseCard title="Internal Points of Contact">
         <Text>
-          These private points of contact will be shown to only {SITE_NAME}{' '}
+          These private points of contact will be shown to only {SITE_ID}{' '}
           administrators.
         </Text>
         <ModelForm
           onUpdate={updateAdvisors}
-          allowDeletion={!(advisorsCount === 1 && SITE_NAME === 'Hub@Penn')}
           baseUrl={`/clubs/${club.code}/advisors/`}
           listParams="&public=false"
           defaultObject={{ public: false }}

@@ -64,7 +64,6 @@ type ModelFormProps = {
 
   noun?: string
   deleteVerb?: string
-  requireOne?: boolean
   allowCreation?: boolean
   allowEditing?: boolean
   allowDeletion?: boolean
@@ -96,7 +95,7 @@ type ModelTableProps = {
   objects: ModelObject[]
   allowEditing?: boolean
   allowDeletion?: boolean
-  requireOne?: boolean
+  minimumRequired?: number
   confirmDeletion?: boolean
   noun?: string
   deleteVerb?: string
@@ -113,7 +112,7 @@ export const ModelTable = ({
   allowEditing = false,
   allowDeletion = false,
   confirmDeletion = false,
-  requireOne = false,
+  minimumRequired = 0,
   noun = 'Object',
   deleteVerb = 'Delete',
   onEdit = () => undefined,
@@ -255,7 +254,6 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     noun = 'Object',
     deleteVerb = 'Delete',
     allowCreation = true,
-    requireOne = false,
     allowEditing = true,
     allowDeletion = true,
     confirmDeletion = false,
@@ -456,7 +454,6 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           onDelete={onDelete}
           deleteVerb={deleteVerb}
           noun={noun}
-          requireOne={requireOne}
           tableFields={tableFields}
           objects={objects}
           allowDeletion={allowDeletion}
@@ -601,7 +598,9 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                     <span
                       className="button is-danger"
                       style={{ marginLeft: '0.5em' }}
-                      onClick={() => onDelete(object)}
+                      onClick={() => {
+                        onDelete(object)
+                      }}
                     >
                       <Icon name="trash" alt="trash" /> Delete
                     </span>
