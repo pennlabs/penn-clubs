@@ -6,9 +6,10 @@ import { getApiUrl, getRoleDisplay } from '../../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_MEMBERSHIP_LABEL,
+  OBJECT_NAME_SINGULAR,
 } from '../../utils/branding'
 import { Icon } from '../common'
-import { SelectField, TextField } from '../FormComponents'
+import { CheckboxField, SelectField, TextField } from '../FormComponents'
 import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
@@ -37,7 +38,7 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
       <ModelForm
         keyField="username"
         deleteVerb="Kick"
-        noun="Member"
+        noun={OBJECT_MEMBERSHIP_LABEL}
         allowCreation={false}
         confirmDeletion={true}
         baseUrl={`/clubs/${club.code}/members/`}
@@ -56,6 +57,11 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
               }
               isMulti={false}
             />
+            <Field
+              name="active"
+              as={CheckboxField}
+              label={`Is this person an active member of your ${OBJECT_NAME_SINGULAR}? Uncheck this box for alumni or retired members.`}
+            />
           </>
         }
         tableFields={[
@@ -65,7 +71,15 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
           {
             name: 'title',
             label: 'Title (Permissions)',
-            converter: (a, all) => `${a} (${getRoleDisplay(all.role)})`,
+            converter: (a, all) => (
+              <>
+                {a} ({getRoleDisplay(all.role)}){' '}
+                <Icon
+                  name={all.active ? 'check' : 'x'}
+                  className={`has-text-${all.active ? 'success' : 'danger'}`}
+                />
+              </>
+            ),
           },
           {
             name: 'email',
