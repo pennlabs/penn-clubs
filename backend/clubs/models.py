@@ -576,11 +576,25 @@ class Subscribe(models.Model):
 
 class ClubVisit(models.Model):
     """
-    Stores user visits to club pages to be used later in analytics
+    Stores user visits to different club pages to be used later in analytics
     """
 
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
+
+    CLUB_PAGE = 1
+    EVENT_MODEL = 2
+    EVENT_LINK = 3
+    MANAGE_PAGE = 4
+    FAIR_PAGE = 5
+    APPLICATION_CHOICES = (
+        (CLUB_PAGE, "Club Page Visit"),
+        (EVENT_MODEL, "Event Model Visit"),
+        (EVENT_LINK, "Event Link Clicked"),
+        (MANAGE_PAGE, "Manage Page Visit"),
+        (FAIR_PAGE, "Fair Page Visit"),
+    )
+    visit_type = models.IntegerField(choices=APPLICATION_CHOICES, default=CLUB_PAGE)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -1270,10 +1270,10 @@ class UserClubVisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ClubVisit
-        fields = ("club", "person")
+        fields = ("club", "visit_type", "person")
 
 
-class UserClubVisitWriteSerializer(UserSubscribeSerializer):
+class UserClubVisitWriteSerializer(UserClubVisitSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
 
     class Meta(UserClubVisitSerializer.Meta):
