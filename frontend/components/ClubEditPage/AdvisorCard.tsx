@@ -11,7 +11,11 @@ import {
   SITE_ID
 =======
   SITE_ID,
+<<<<<<< HEAD
 >>>>>>> cleanup
+=======
+  SITE_NAME,
+>>>>>>> fix name
 } from '../../utils/branding'
 import { Text } from '../common'
 import { CheckboxField, TextField } from '../FormComponents'
@@ -107,7 +111,7 @@ export default function AdvisorCard({
 
       <BaseCard title="Internal Points of Contact">
         <Text>
-          These private points of contact will be shown to only {SITE_ID}{' '}
+          These private points of contact will be shown to only {SITE_NAME}{' '}
           administrators.
         </Text>
         <ModelForm
