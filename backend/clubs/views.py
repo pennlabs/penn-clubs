@@ -1657,11 +1657,11 @@ class FavoriteCalendarAPIView(APIView):
     def get(self, request, *args, **kwargs):
         calendar = ICSCal()
         calendar.extra.append(ICSParse.ContentLine(name="X-WR-CALNAME", value="Penn Clubs Events"))
-        one_month_ago = datetime.datetime.now() - datetime.timedelta(minutes=43200)
+        one_month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
         all_events = Event.objects.filter(
             club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"],
             start_time__gte=one_month_ago,
-        ).distinct()
+        ).distinct().select_related('club')
         for event in all_events:
             e = ICSEvent()
             e.name = "{} - {}".format(event.club.name, event.name)

@@ -80,7 +80,7 @@ urlpatterns = [
     path(
         r"calendar/<slug:user_secretuuid>/",
         FavoriteCalendarAPIView.as_view(),
-        name="favoritescalendar",
+        name="favorites-calendar",
     ),
     path(r"emailpreview/", email_preview, name="email-preview"),
     path(r"options/", include("options.urls", namespace="options")),
