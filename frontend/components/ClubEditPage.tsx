@@ -16,7 +16,15 @@ import {
   DIRECTORY_ROUTE,
   HOME_ROUTE,
 } from '../constants/routes'
-import { Club, Major, School, StudentType, Tag, Year } from '../types'
+import {
+  Club,
+  Major,
+  School,
+  StudentType,
+  Tag,
+  VisitType,
+  Year,
+} from '../types'
 import { apiCheckPermission, doApiRequest } from '../utils'
 import {
   APPROVAL_AUTHORITY,
@@ -120,6 +128,18 @@ const ClubForm = ({
   }
 
   useEffect(reloadClub, [])
+
+  useEffect(() => {
+    if (club != null) {
+      doApiRequest('/clubvisits/?format=json', {
+        method: 'POST',
+        body: {
+          club: club.code,
+          visit_type: VisitType.ManagePage,
+        },
+      })
+    }
+  }, [club])
 
   let metadata
   if (club) {

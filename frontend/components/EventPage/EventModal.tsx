@@ -69,8 +69,9 @@ export const MEETING_REGEX = /^https?:\/\/(?:[\w-]+\.)?zoom\.us\//i
 const EventModal = (props: {
   event: ClubEvent
   showDetailsButton?: boolean
+  eventClicked: () => void
 }): ReactElement => {
-  const { event, showDetailsButton } = props
+  const { event, showDetailsButton, eventClicked } = props
   const {
     large_image_url,
     image_url,
@@ -130,13 +131,16 @@ const EventModal = (props: {
               style={{ backgroundColor: ZOOM_BLUE }}
               href={url}
               target="_blank"
+              onClick={eventClicked}
             >
               <Icon name="video" /> Join Meeting
             </a>
           ) : /^\(.*\)$/.test(url) ? (
             url
           ) : (
-            <EventLink href={url}>{url}</EventLink>
+            <EventLink onClick={eventClicked} href={url}>
+              {url}
+            </EventLink>
           ))}{' '}
         {userCount > 0 && (
           <span className="mt-3 ml-2 is-inline-block has-text-info">

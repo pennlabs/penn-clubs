@@ -36,7 +36,7 @@ import {
 import { CLUBS_RED, SNOW, WHITE } from '../../../constants/colors'
 import { M0, M2, M3 } from '../../../constants/measurements'
 import renderPage from '../../../renderPage'
-import { Club, QuestionAnswer, UserInfo } from '../../../types'
+import { Club, QuestionAnswer, UserInfo, VisitType } from '../../../types'
 import { doApiRequest, isClubFieldShown } from '../../../utils'
 import { logEvent } from '../../../utils/analytics'
 import {
@@ -116,6 +116,7 @@ const ClubPage = ({
       method: 'POST',
       body: {
         club: code,
+        visit_type: VisitType.ClubPage,
       },
     })
   }, [])

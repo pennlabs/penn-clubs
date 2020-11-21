@@ -219,3 +219,11 @@ export interface StudentType {
   id: number
   name: string
 }
+
+export enum VisitType {
+  ClubPage = 1,
+  EventModel = 2,
+  EventLink = 3,
+  ManagePage = 4,
+  FairPage = 5,
+}
