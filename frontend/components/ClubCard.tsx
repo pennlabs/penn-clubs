@@ -65,7 +65,7 @@ const Card = styled.div<CardProps>`
 `
 
 const Image = styled.img`
-  height: 100%;
+  max-height: 100%;
   max-width: 150px;
   border-radius: ${BORDER_RADIUS};
   border-radius: 4px;

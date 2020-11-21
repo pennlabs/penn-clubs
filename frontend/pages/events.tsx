@@ -14,6 +14,8 @@ import {
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
+
+import { EVENT_TYPES } from '../components/ClubEditPage/EventsCard'
 import {
   Metadata,
   Modal,
@@ -368,13 +370,7 @@ function EventPage({
           <SearchBarCheckboxItem
             param="type__in"
             label="Event Type"
-            options={[
-              { value: 2, label: 'General Body Meeting (GBM)', name: 'type' },
-              { value: 1, label: 'Recruitment', name: 'type' },
-              { value: 3, label: 'Speaker', name: 'type' },
-              { value: 4, label: 'Activities Fair', name: 'type' },
-              { value: 0, label: 'Other', name: 'type' },
-            ]}
+            options={EVENT_TYPES.map((obj) => ({ ...obj, name: 'type' }))}
           />
           {isClubFieldShown('application_required') && (
             <SearchBarCheckboxItem

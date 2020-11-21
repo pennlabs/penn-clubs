@@ -225,6 +225,17 @@ class ReportSerializer(serializers.ModelSerializer):
     def get_creator(self, obj):
         return obj.creator.get_full_name()
 
+    def create(self, validated_data):
+        """
+        Set the creator of the report to the current user.
+        If a report with the same name and creator exists, overwrite that report instead.
+        """
+        return Report.objects.update_or_create(
+            name=validated_data.pop("name"),
+            creator=self.context["request"].user,
+            defaults=validated_data,
+        )[0]
+
     class Meta:
         model = Report
         fields = (
@@ -235,6 +246,7 @@ class ReportSerializer(serializers.ModelSerializer):
             "parameters",
             "created_at",
             "updated_at",
+            "public",
         )
 
 
@@ -248,12 +260,9 @@ class YearSerializer(serializers.ModelSerializer):
 
 
 class AdvisorSerializer(ClubRouteMixin, ManyToManySaveMixin, serializers.ModelSerializer):
-    school = SchoolSerializer(many=True)
-
     class Meta:
         model = Advisor
-        fields = ("id", "name", "title", "school", "email", "phone", "public")
-        save_related_fields = ["school"]
+        fields = ("id", "name", "title", "department", "email", "phone", "public")
 
 
 class ClubEventSerializer(serializers.ModelSerializer):
@@ -699,6 +708,10 @@ class ClubListSerializer(serializers.ModelSerializer):
             return image.url
 
     def get_fields(self):
+        """
+        Override the fields that are returned if the "fields" GET parameter is specified.
+        Acts as a filter on the returned fields.
+        """
         all_fields = super().get_fields()
         fields_param = getattr(self.context.get("request", dict()), "GET", {}).get("fields", "")
         if fields_param:
@@ -870,13 +883,19 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Check for required tags before saving the club.
         """
-        tag_names = [tag.get("name") for tag in value]
-        necessary_tags = {"Undergraduate", "Graduate"}
-        if not any(tag in necessary_tags for tag in tag_names):
-            if Tag.objects.filter(name__in=list(necessary_tags)).count() >= len(necessary_tags):
-                raise serializers.ValidationError(
-                    "You must specify either the 'Undergraduate' or 'Graduate' tag in this list."
-                )
+        if settings.BRANDING == "fyh":
+            if len(value) < 1:
+                raise serializers.ValidationError("You must specify at least one tag in this list.")
+        else:
+            tag_names = [tag.get("name") for tag in value]
+            necessary_tags = {"Undergraduate", "Graduate"}
+            if not any(tag in necessary_tags for tag in tag_names):
+                if Tag.objects.filter(name__in=list(necessary_tags)).count() >= len(necessary_tags):
+                    raise serializers.ValidationError(
+                        "You must specify either the {} tag in this list.".format(
+                            " or ".join(f"'{tag}'" for tag in necessary_tags)
+                        )
+                    )
         return value
 
     def validate_description(self, value):
@@ -1036,6 +1055,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # if approved, update who and when club was approved
         new_approval_status = self.validated_data.get("approved")
 
+        # check if was active before
+        was_active = self.instance and self.instance.active
+
         if self.instance and self.instance.approved is None and new_approval_status is not None:
             self.validated_data["approved_by"] = self.context["request"].user
             self.validated_data["approved_on"] = timezone.now()
@@ -1055,6 +1077,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # remove small version if large one is gone
         if not obj.image and obj.image_small:
             obj.image_small.delete()
+
+        # if we queued for approval, send a confirmation email
+        if not was_active and obj.active:
+            obj.send_confirmation_email()
 
         # if accepted or rejected, send email with reason
         if approval_email_required:
@@ -1141,6 +1167,21 @@ class UserMembershipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Membership
         fields = ("club", "role", "title", "active", "public")
+
+
+class UserUUIDSerializer(serializers.ModelSerializer):
+    """
+    Used to get the uuid of a user (for ICS Calendar export)
+    """
+
+    url = serializers.SerializerMethodField("get_calendar_url")
+
+    def get_calendar_url(self, obj):
+        return f"{settings.DEFAULT_DOMAIN}/api/calendar/{str(obj.profile.uuid_secret)}"
+
+    class Meta:
+        model = get_user_model()
+        fields = ("url",)
 
 
 class UserSubscribeSerializer(serializers.ModelSerializer):
@@ -1311,7 +1352,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField("get_full_name")
     image_url = serializers.SerializerMethodField("get_image_url")
     clubs = serializers.SerializerMethodField("get_clubs")
-
     graduation_year = serializers.IntegerField(source="profile.graduation_year")
     school = SchoolSerializer(many=True, source="profile.school")
     major = MajorSerializer(many=True, source="profile.major")
@@ -1375,7 +1415,6 @@ class UserSerializer(serializers.ModelSerializer):
     is_superuser = serializers.BooleanField(read_only=True)
     image = serializers.ImageField(source="profile.image", write_only=True, allow_null=True)
     image_url = serializers.SerializerMethodField("get_image_url")
-
     has_been_prompted = serializers.BooleanField(source="profile.has_been_prompted")
     share_bookmarks = serializers.BooleanField(source="profile.share_bookmarks")
     graduation_year = serializers.IntegerField(source="profile.graduation_year", allow_null=True)

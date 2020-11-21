@@ -41,6 +41,9 @@ def send_mail_helper(name, subject, emails, context):
         subject = match.group(1)
         html_content = subject_regex.sub("", html_content, count=1)
 
+    if subject is None:
+        raise ValueError("You must specify a subject as an argument or in the template!")
+
     # generate text alternative
     text_content = html_to_text(html_content)
 
@@ -363,7 +366,32 @@ class Club(models.Model):
 
         return emails
 
+    def send_confirmation_email(self, request=None):
+        """
+        Send an email to the club officers confirming that their club has been queued for approval.
+        """
+        domain = get_domain(request)
+
+        emails = self.get_officer_emails()
+
+        context = {
+            "name": self.name,
+            "view_url": settings.VIEW_URL.format(domain=domain, club=self.code),
+        }
+
+        if emails:
+            send_mail_helper(
+                name="confirmation",
+                subject=f"{self.name} has been queued for approval",
+                emails=emails,
+                context=context,
+            )
+
     def send_approval_email(self, request=None, change=False):
+        """
+        Send either an approval or rejection email to the club officers
+        after their club has been reviewed.
+        """
         domain = get_domain(request)
 
         context = {
@@ -479,17 +507,21 @@ class Event(models.Model):
     image_small = models.ImageField(upload_to=get_event_small_file_name, null=True, blank=True)
     description = models.TextField(blank=True)
 
+    OTHER = 0
     RECRUITMENT = 1
     GBM = 2
     SPEAKER = 3
-    OTHER = 0
     FAIR = 4
+    SOCIAL = 5
+    CAREER = 6
     TYPES = (
+        (OTHER, "Other"),
         (RECRUITMENT, "Recruitment"),
         (GBM, "GBM"),
         (SPEAKER, "Speaker"),
-        (OTHER, "Other"),
         (FAIR, "Activities Fair"),
+        (SOCIAL, "Social"),
+        (CAREER, "Career"),
     )
 
     type = models.IntegerField(choices=TYPES, default=RECRUITMENT)
@@ -612,8 +644,8 @@ class Advisor(models.Model):
 
     name = models.CharField(max_length=255)
     title = models.CharField(max_length=255, blank=True, null=True)
-    school = models.ManyToManyField("School", blank=True)
-    email = models.CharField(max_length=255, blank=True, null=True, validators=[validate_email])
+    department = models.CharField(max_length=255, blank=True, null=True)
+    email = models.CharField(max_length=320, blank=True, null=True, validators=[validate_email])
     phone = PhoneNumberField(null=False, blank=True)
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)

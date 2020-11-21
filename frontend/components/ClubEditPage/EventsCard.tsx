@@ -5,9 +5,9 @@ import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
 import { LIGHT_GRAY } from '../../constants'
-import { Club, ClubEvent } from '../../types'
+import { Club, ClubEvent, ClubEventType } from '../../types'
 import { stripTags } from '../../utils'
-import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
+import { OBJECT_EVENT_TYPES, OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Device, Text } from '../common'
 import EventModal from '../EventPage/EventModal'
 import {
@@ -242,24 +242,36 @@ type EventsCardProps = {
   club: Club
 }
 
-const types = [
+export const EVENT_TYPES = [
   {
-    value: 1,
+    value: ClubEventType.RECRUITMENT,
     label: 'Recruitment',
   },
   {
-    value: 2,
+    value: ClubEventType.GBM,
     label: 'General Body Meeting (GBM)',
   },
   {
-    value: 3,
+    value: ClubEventType.SOCIAL,
+    label: 'Social',
+  },
+  {
+    value: ClubEventType.CAREER,
+    label: 'Career',
+  },
+  {
+    value: ClubEventType.SPEAKER,
     label: 'Speaker Event',
   },
   {
-    value: 4,
+    value: ClubEventType.FAIR,
     label: 'Activities Fair',
   },
-]
+  {
+    value: ClubEventType.OTHER,
+    label: 'Other',
+  },
+].filter(({ value }) => OBJECT_EVENT_TYPES.has(value))
 
 const eventTableFields = [
   {
@@ -275,7 +287,7 @@ const eventTableFields = [
     name: 'type',
     label: 'Type',
     converter: (a) =>
-      (types.find((v) => v.value === a) || { label: 'Unknown' }).label,
+      (EVENT_TYPES.find((v) => v.value === a) || { label: 'Unknown' }).label,
   },
 ]
 
@@ -299,10 +311,10 @@ const eventFields = (
       name="type"
       as={SelectField}
       required
-      choices={types}
+      choices={EVENT_TYPES}
       serialize={({ value }) => value}
       isMulti={false}
-      valueDeserialize={(val) => types.find((x) => x.value === val)}
+      valueDeserialize={(val) => EVENT_TYPES.find((x) => x.value === val)}
     />
     <Field
       name="start_time"

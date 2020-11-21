@@ -1,3 +1,7 @@
+import { ReactNode } from 'react'
+
+import { ClubEventType } from '../types'
+
 const site = process.env.NEXT_PUBLIC_SITE_NAME || 'clubs'
 
 const sites = {
@@ -40,18 +44,44 @@ const sites = {
     CLUB_FIELDS: [
       'accepting_members',
       'application_required',
+      'email_public',
       'founded',
       'github',
       'linkedin',
       'listserv',
       'recruiting_cycle',
       'size',
+      'target_majors',
     ],
     SHOW_MEMBERS: true,
     SHOW_MEMBERSHIP_REQUEST: true,
     SHOW_RANK_ALGORITHM: true,
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
     OBJECT_MEMBERSHIP_LABEL: 'Members',
+    OBJECT_MEMBERSHIP_LABEL_LOWERCASE: "member's",
+    OBJECT_INVITE_LABEL: 'Members',
+    OBJECT_EVENT_TYPES: [
+      ClubEventType.RECRUITMENT,
+      ClubEventType.GBM,
+      ClubEventType.SPEAKER,
+      ClubEventType.FAIR,
+      ClubEventType.OTHER,
+    ],
+
+    FORM_DESCRIPTION_EXAMPLES: 'Penn Labs',
+    FORM_TAG_DESCRIPTION:
+      'You will need to at least specify either the Undergraduate or Graduate tag.',
+    FORM_LOGO_DESCRIPTION:
+      'Changing this field will require reapproval from the Office of Student Affairs.',
+    FORM_TARGET_DESCRIPTION: (
+      <>
+        <b>Does your club restrict membership to certain student groups?</b> If
+        you are only looking for certain student groups during your recruitment
+        process, please specify those groups here. Otherwise, we will assume
+        that you are targeting the general student population.
+      </>
+    ),
+    OBJECT_MEMBERSHIP_DEFAULT_TITLE: 'Member',
 
     PARTNER_LOGOS: [
       {
@@ -96,7 +126,7 @@ const sites = {
 
     SITE_LOGO: '/static/img/penn_shield.png',
     LOGO_BACKGROUND_IMAGE: '/static/img/penn_header_fade.png',
-    HEADER_BACKGROUND_IMAGE: '/static/img/penn_background.png',
+    HEADER_BACKGROUND_IMAGE: '/static/img/hub_banner.png',
     HEADER_OVERLAY: '/static/img/platform-start-point.png',
     SITE_FAVICON: '/static/penn_favicon.ico',
     SITE_TAGLINE:
@@ -112,9 +142,16 @@ const sites = {
     OBJECT_TAB_RECRUITMENT_LABEL: 'Mailing List',
     OBJECT_TAB_ADMISSION_LABEL: 'Usage',
     OBJECT_TAB_FILES_DESCRIPTION: null,
+    OBJECT_EVENT_TYPES: [
+      ClubEventType.SOCIAL,
+      ClubEventType.CAREER,
+      ClubEventType.SPEAKER,
+      ClubEventType.FAIR,
+      ClubEventType.OTHER,
+    ],
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
-    FEEDBACK_URL: 'https://airtable.com/shrm3UcvjpPEl0qXq',
+    FEEDBACK_URL: 'https://airtable.com/shrv4RfYIddU1i9o6',
     STYLE_URL: '/static/css/fyh.css',
 
     CLUB_FIELDS: [
@@ -126,8 +163,25 @@ const sites = {
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,
     SHOW_RANK_ALGORITHM: false,
-    MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor', 20: 'Viewer' },
+    MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
+    OBJECT_MEMBERSHIP_LABEL_LOWERCASE: 'staff',
+    OBJECT_INVITE_LABEL: 'Editor',
+
+    FORM_DESCRIPTION_EXAMPLES:
+      'Office of New Student Orientation & Academic Initiative - NSOAI',
+    FORM_TAG_DESCRIPTION:
+      'Tags will allow students to find your resource while filtering Hub@Penn. Select as many as apply. You will need to at least specify one tag.',
+    FORM_LOGO_DESCRIPTION: 'Upload your approved Penn logo.',
+    FORM_TARGET_DESCRIPTION: (
+      <>
+        <b>Do you offer specialized services for particular student groups?</b>{' '}
+        It is assumed that all resources at Penn are available to all Penn
+        students. However, if you offer specialized resources, please designate
+        the groups that receive those resources here.
+      </>
+    ),
+    OBJECT_MEMBERSHIP_DEFAULT_TITLE: '',
 
     PARTNER_LOGOS: [
       {
@@ -187,8 +241,14 @@ export const OBJECT_TAB_FILES_DESCRIPTION =
 export const SHOW_MEMBERS = sites[site].SHOW_MEMBERS
 export const SHOW_MEMBERSHIP_REQUEST = sites[site].SHOW_MEMBERSHIP_REQUEST
 export const SHOW_RANK_ALGORITHM = sites[site].SHOW_RANK_ALGORITHM
-export const MEMBERSHIP_ROLE_NAMES = sites[site].MEMBERSHIP_ROLE_NAMES
+export const MEMBERSHIP_ROLE_NAMES: { [key: number]: string } =
+  sites[site].MEMBERSHIP_ROLE_NAMES
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
+export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
+  sites[site].OBJECT_MEMBERSHIP_LABEL_LOWERCASE
+export const OBJECT_MEMBERSHIP_DEFAULT_TITLE =
+  sites[site].OBJECT_MEMBERSHIP_DEFAULT_TITLE
+export const OBJECT_EVENT_TYPES = new Set(sites[site].OBJECT_EVENT_TYPES)
 
 export const PARTNER_LOGOS = sites[site].PARTNER_LOGOS
 
@@ -200,3 +260,13 @@ export const ALL_CLUB_FIELDS = new Set(
 )
 
 export const GA_TRACKING_CODE = sites[site].GA_TRACKING_CODE
+
+export const FORM_DESCRIPTION_EXAMPLES: ReactNode =
+  sites[site].FORM_DESCRIPTION_EXAMPLES
+export const FORM_TAG_DESCRIPTION: ReactNode = sites[site].FORM_TAG_DESCRIPTION
+export const FORM_LOGO_DESCRIPTION: ReactNode =
+  sites[site].FORM_LOGO_DESCRIPTION
+export const FORM_TARGET_DESCRIPTION: ReactNode =
+  sites[site].FORM_TARGET_DESCRIPTION
+
+export const OBJECT_INVITE_LABEL = sites[site].OBJECT_INVITE_LABEL

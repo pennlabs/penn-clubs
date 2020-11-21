@@ -15,8 +15,6 @@ import os
 import dj_database_url
 
 
-DOMAIN = os.environ.get("DOMAIN", "example.com")
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -174,6 +172,7 @@ FROM_EMAIL = (
 EMAIL_SUBJECT_PREFIX = f"[{BRANDING_SITE_NAME}] "
 INVITE_URL = "https://{domain}/invite/{club}/{id}/{token}"
 DEFAULT_DOMAIN = "hub.provost.upenn.edu" if BRANDING == "fyh" else "pennclubs.com"
+DOMAIN = os.environ.get("DOMAIN", DEFAULT_DOMAIN)
 
 VIEW_URL = "https://{domain}/club/{club}"
 EDIT_URL = "https://{domain}/club/{club}/edit"

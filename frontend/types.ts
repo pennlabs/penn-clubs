@@ -15,8 +15,10 @@ export interface Report {
   name: string
   creator: string
   description: string
+  public: boolean
   created_at: string
   updated_at: string
+  parameters: string
 }
 
 export interface Membership {
@@ -36,10 +38,13 @@ export interface Testimonial {
 }
 
 export enum ClubEventType {
+  OTHER = 0,
   RECRUITMENT = 1,
   GBM = 2,
   SPEAKER = 3,
   FAIR = 4,
+  SOCIAL = 5,
+  CAREER = 6,
 }
 
 export interface ClubEvent {
@@ -108,7 +113,7 @@ export interface Advisor {
   id: number
   name: string
   title: string
-  school: School[]
+  department: string
   email: string
   phone: string
   public: boolean

@@ -66,6 +66,7 @@ from clubs.permissions import (
     AssetPermission,
     ClubItemPermission,
     ClubPermission,
+    DjangoPermission,
     EventPermission,
     InvitePermission,
     IsSuperuser,
@@ -109,6 +110,7 @@ from clubs.serializers import (
     UserSerializer,
     UserSubscribeSerializer,
     UserSubscribeWriteSerializer,
+    UserUUIDSerializer,
     YearSerializer,
 )
 from clubs.utils import html_to_text
@@ -226,14 +228,11 @@ class ReportViewSet(viewsets.ModelViewSet):
     Return a list of reports that can be generated.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [DjangoPermission("clubs.generate_reports") | IsSuperuser]
     serializer_class = ReportSerializer
-    http_method_names = ["get", "delete"]
+    http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        if not self.request.user.has_perm("clubs.generate_reports"):
-            return Report.objects.none()
-
         return Report.objects.filter(Q(creator=self.request.user) | Q(public=True))
 
 
@@ -741,7 +740,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Custom return endpoint for the directory page, allows the page to load faster.
         """
-        serializer = ClubMinimalSerializer(Club.objects.all().order_by("name"), many=True)
+        serializer = ClubMinimalSerializer(
+            Club.objects.all().exclude(approved=False).order_by("name"), many=True
+        )
         return Response(serializer.data)
 
     def get_filename(self):
@@ -749,7 +750,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         For excel spreadsheets, return the user-specified filename if it exists
         or the default filename otherwise.
         """
-        name = self.request.query_params.get("name")
+        name = self.request.query_params.get("xlsx_name")
         if name:
             return "{}.xlsx".format(slugify(name))
         return super().get_filename()
@@ -793,33 +794,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return a list of all clubs.
         Note that some fields are removed in order to improve response time.
         """
-        # custom handling for spreadsheet format
-        if request.accepted_renderer.format == "xlsx":
-            # save request as new report if name is set
-            if (
-                request.user.is_authenticated
-                and request.user.has_perm("clubs.generate_reports")
-                and request.query_params.get("name")
-                and not request.query_params.get("existing")
-            ):
-                name = request.query_params.get("name")
-                desc = request.query_params.get("desc")
-                public = request.query_params.get("public", "false").lower().strip() == "true"
-                parameters = request.query_params.dict()
-
-                # avoid storing redundant data
-                for field in {"name", "desc", "public"}:
-                    if field in parameters:
-                        del parameters[field]
-
-                Report.objects.create(
-                    name=name,
-                    description=desc,
-                    parameters=json.dumps(parameters),
-                    creator=request.user,
-                    public=public,
-                )
-
         return super().list(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
@@ -834,6 +808,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def fields(self, request, *args, **kwargs):
         """
         Return the list of fields that can be exported in the Excel file.
+        The list of fields is taken from the associated serializer, with model names overriding
+        the serializer names if they exist.
         """
         name_to_title = {
             f.name: f.verbose_name.title() for f in Club._meta._get_fields(reverse=False)
@@ -1203,7 +1179,7 @@ class EventViewSet(viewsets.ModelViewSet):
             raise DRFValidationError(
                 detail="Approved activities fair events have already been created. "
                 "See above for events to edit, and "
-                "please email contact@pennclubs.com if this is en error."
+                f"please email {settings.FROM_EMAIL} if this is en error."
             )
 
         return super().create(request, *args, **kwargs)
@@ -1217,7 +1193,7 @@ class EventViewSet(viewsets.ModelViewSet):
         if event.type == Event.FAIR and not self.request.user.is_superuser:
             raise DRFValidationError(
                 detail="You cannot delete activities fair events. "
-                "If you would like to do this, email contact@pennclubs.com."
+                f"If you would like to do this, email {settings.FROM_EMAIL}."
             )
 
         return super().destroy(request, *args, **kwargs)
@@ -1385,6 +1361,21 @@ class FavoriteViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             return FavoriteWriteSerializer
         return FavoriteSerializer
+
+
+class UserUUIDAPIView(generics.RetrieveAPIView):
+    """
+    get: Retrieve the uuid for the given user.
+    """
+
+    queryset = get_user_model().objects.all()
+    serializer_class = UserUUIDSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["get"]
+
+    def get_object(self):
+        user = self.request.user
+        return user
 
 
 class SubscribeViewSet(viewsets.ModelViewSet):
@@ -1666,15 +1657,20 @@ class FavoriteCalendarAPIView(APIView):
     def get(self, request, *args, **kwargs):
         calendar = ICSCal()
         calendar.extra.append(ICSParse.ContentLine(name="X-WR-CALNAME", value="Penn Clubs Events"))
-
+        one_month_ago = datetime.datetime.now() - datetime.timedelta(minutes=43200)
         all_events = Event.objects.filter(
-            club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"]
+            club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"],
+            start_time__gte=one_month_ago,
         ).distinct()
         for event in all_events:
             e = ICSEvent()
             e.name = "{} - {}".format(event.club.name, event.name)
             e.begin = event.start_time
-            e.end = event.end_time
+            e.end = (
+                (event.start_time + datetime.timedelta(minutes=15))
+                if event.start_time >= event.end_time
+                else event.end_time
+            )
             e.location = event.location
             e.description = "{}\n\n{}".format(event.url or "", event.description)
             calendar.events.add(e)
@@ -2184,7 +2180,16 @@ class MassInviteAPIView(APIView):
             )
 
         role = request.data.get("role", Membership.ROLE_MEMBER)
-        title = request.data.get("title", "Member")
+        title = request.data.get("title")
+
+        if not title:
+            return Response(
+                {
+                    "detail": "You must enter a title for the members that you are inviting.",
+                    "success": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if mem and mem.role > role and not request.user.is_superuser:
             return Response(

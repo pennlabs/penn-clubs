@@ -6,7 +6,10 @@ import { Club, MembershipRank, MembershipRole } from '../../types'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
+  OBJECT_INVITE_LABEL,
+  OBJECT_MEMBERSHIP_DEFAULT_TITLE,
   OBJECT_MEMBERSHIP_LABEL,
+  OBJECT_MEMBERSHIP_LABEL_LOWERCASE,
   OBJECT_NAME_SINGULAR,
   SCHOOL_NAME,
 } from '../../utils/branding'
@@ -28,9 +31,13 @@ type Invite = {
 
 export default function InviteCard({ club }: InviteCardProps): ReactElement {
   const [invites, setInvites] = useState<Invite[]>([])
-  const [inviteTitle, setInviteTitle] = useState<string>('Member')
+  const [inviteTitle, setInviteTitle] = useState<string>(
+    OBJECT_MEMBERSHIP_DEFAULT_TITLE,
+  )
   const [inviteRole, setInviteRole] = useState<MembershipRole>(
-    MEMBERSHIP_ROLES[0],
+    () =>
+      MEMBERSHIP_ROLES.find(({ value }) => value in MEMBERSHIP_ROLE_NAMES) ??
+      MEMBERSHIP_ROLES[0],
   )
   const [invitePercentage, setInvitePercentage] = useState<number | null>(null)
   const [inviteEmails, setInviteEmails] = useState<string>('')
@@ -195,10 +202,10 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
           </table>
         </BaseCard>
       )}
-      <BaseCard title={`Invite ${OBJECT_MEMBERSHIP_LABEL}`}>
+      <BaseCard title={`Invite ${OBJECT_INVITE_LABEL}`}>
         <Text>
-          Enter an email address or a list of email addresses separated by
-          commas or newlines in the box below.
+          Enter a {OBJECT_MEMBERSHIP_LABEL_LOWERCASE} email address or a list of
+          email addresses separated by commas or newlines in the box below.
         </Text>
         <Text>
           All emails listed will be sent an invite to join the{' '}
@@ -222,17 +229,26 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
           <label className="label">Permissions</label>
           <div className="control">
             <Select
-              options={MEMBERSHIP_ROLES}
+              options={MEMBERSHIP_ROLES.filter(
+                ({ value }) => value in MEMBERSHIP_ROLE_NAMES,
+              )}
               value={inviteRole}
               onChange={updatePermissions}
             />
           </div>
           <p className="help">
-            {MEMBERSHIP_ROLE_NAMES[MembershipRank.Owner]}s have full control
-            over the {OBJECT_NAME_SINGULAR},{' '}
-            {MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer]}s can perform
-            editing, and {MEMBERSHIP_ROLE_NAMES[MembershipRank.Member]}s have
-            read-only permissions.
+            {Object.keys(MEMBERSHIP_ROLE_NAMES)
+              .sort((role) => MembershipRank[role])
+              .map((role) => {
+                return `${MEMBERSHIP_ROLE_NAMES[role]}s ${
+                  {
+                    [MembershipRank.Owner]: `have full control over the ${OBJECT_NAME_SINGULAR}`,
+                    [MembershipRank.Officer]: 'can perform editing',
+                    [MembershipRank.Member]: 'have read-only permissions',
+                  }[role]
+                }`
+              })
+              .join(', ')}
           </p>
         </div>
         <div className="field">

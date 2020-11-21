@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 import bleach
 import requests
-from bs4 import BeautifulSoup, NavigableString
+from bs4 import BeautifulSoup, Comment, NavigableString
 from django.conf import settings
 from django.core.files.images import ImageFile
 from django.db.models import CharField, F, Q, Value
@@ -34,6 +34,8 @@ def html_to_text(html):
     Cleans up HTML and converts into a text-only format,
     trying to preserve links and other objects.
 
+    Removes any HTML comments in the text.
+
     Used for the text-only version of emails.
     """
     if html is None:
@@ -42,6 +44,11 @@ def html_to_text(html):
     def traverse(children):
         output = ""
         for child in children:
+            # skip over html comments
+            if isinstance(child, Comment):
+                continue
+
+            # format links, lists, and images
             if child.name:
                 if child.name.startswith("h"):
                     continue
@@ -57,19 +64,24 @@ def html_to_text(html):
                             output += f"- {traverse([item]).strip()}\n"
                         else:
                             output += traverse([item])
+                    output += "\n"
                     continue
                 elif child.name == "img":
                     if "alt" in child:
                         output += f"[{child['alt']}]"
-                    else:
-                        output += "[Image]"
                     continue
+
+            # add strings and traverse children recursively
             if isinstance(child, NavigableString):
-                output += re.sub(r"([\t ])[\t ]*", r"\1", str(child))
+                text = re.sub(r"\n", r" ", str(child))
+                output += re.sub(r"([\t ])[\t ]*", r"\1", text)
             elif child.children:
-                output += traverse(child.children)
+                child_contents = traverse(child.children)
+                output += child_contents
+
+            # add newlines for p and br elements
             if child.name == "p":
-                output += "\n"
+                output += "\n\n"
             if child.name == "br":
                 output += "\n"
         return "\n".join(line.strip() for line in output.strip().split("\n"))

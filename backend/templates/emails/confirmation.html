@@ -1,0 +1,20 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>Welcome to Penn Clubs!</h2>
+    <p style="font-size: 1.2em">
+    	Dear <b>{{ name }}</b> officers,
+    </p>
+    <p style="font-size: 1.2em">
+        Thank you for registering your club on Penn Clubs! The {{ name }} page is currently under review by the Office of Student Affairs. Once approved, your resource will be listed on the 
+        front page of Penn Clubs and will be searchable for students on the site. 
+    </p>
+
+    <p style="font-size: 1.2em">
+        You will receive an email within the next few days regarding the status of the review.
+    </p>
+    
+    <p style="font-size: 1.2em">
+        If you have any questions, feel free to respond to this email.
+    </p>
+{% endblock %}

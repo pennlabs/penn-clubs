@@ -2,7 +2,7 @@ import { ReactElement } from 'react'
 
 import { Advisor, Club } from '../../types'
 import { formatPhoneNumber } from '../../utils'
-import { ProfilePic, TagGroup } from '../common'
+import { ProfilePic } from '../common'
 import { StyledCard } from './MemberCard'
 
 type Props = {
@@ -26,9 +26,13 @@ const AdvisorCard = ({ info }: AdvisorCardProps): ReactElement => {
         </div>
         <div className="column has-text-left">
           <b className="is-block is-size-5">{info.name}</b>
-          <TagGroup tags={info.school} />
           <div>
-            <i>{info.title}</i> -{' '}
+            <i>{info.title}</i>
+            {info.department && info.department.length > 0 && (
+              <> - {info.department}</>
+            )}
+          </div>
+          <div>
             {info.email && info.email.length ? (
               <a href={`mailto:${info.email}`}>{info.email}</a>
             ) : (

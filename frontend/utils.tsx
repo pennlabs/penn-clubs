@@ -1,8 +1,14 @@
 import fetch from 'isomorphic-unfetch'
+import { NextPageContext } from 'next'
 import React, { createContext, ReactElement, useContext } from 'react'
 
 import { MembershipRank } from './types'
-import { ALL_CLUB_FIELDS, CLUB_FIELDS, DOMAIN } from './utils/branding'
+import {
+  ALL_CLUB_FIELDS,
+  CLUB_FIELDS,
+  DOMAIN,
+  MEMBERSHIP_ROLE_NAMES,
+} from './utils/branding'
 
 export function stripTags(val: string): string {
   if (!val) {
@@ -69,9 +75,7 @@ export function getSizeDisplay(size: number, showMembersLabel = true): string {
 }
 
 export function getRoleDisplay(role: MembershipRank): string {
-  if (role <= 0) return 'Owner'
-  else if (role <= 10) return 'Officer'
-  else return 'Member'
+  return MEMBERSHIP_ROLE_NAMES[role] ?? 'Unknown'
 }
 
 export function getApiUrl(path: string): string {
@@ -135,6 +139,32 @@ export function apiCheckPermission(
       perms,
     )}`,
   )
+}
+
+/**
+ * Lookup a lot of endpoints asynchronously.
+ * Should be used primarily by getInitialProps methods.
+ */
+export async function doBulkLookup(
+  paths: [string, string][],
+  ctx: NextPageContext,
+): Promise<{ [key: string]: any }> {
+  const data = {
+    headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
+  }
+
+  const resps = await Promise.all(
+    paths.map((item) =>
+      doApiRequest(item[1], data).then((resp) => resp.json()),
+    ),
+  )
+
+  const output = {}
+  for (let i = 0; i < paths.length; i++) {
+    output[paths[i][0]] = resps[i]
+  }
+
+  return output
 }
 
 /**
@@ -203,7 +233,7 @@ export function apiSetSubscribeStatus(
 export function titleize(str: string): string {
   if (!str) return str
   return str
-    .replace(/_/g, ' ')
+    .replace(/_+/g, ' ')
     .split(' ')
     .map((a) => a[0].toUpperCase() + a.substr(1).toLowerCase())
     .join(' ')

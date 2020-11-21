@@ -31,6 +31,7 @@ import EmbedOption, {
  */
 interface BasicFormField {
   name: string
+  required?: boolean
   label?: string
   helpText?: string
   placeholder?: string
@@ -74,13 +75,17 @@ export const FormStyle = ({
   )
 }
 
+type FieldWrapperProps = BasicFormField & { isError?: boolean }
+
 /**
  * This field wrapper is used to automatically add labels and help texts
  * for most components. The components that use this wrapper only need
  * to specify the input itself.
  */
-const useFieldWrapper = (Element): ((props: any) => ReactElement) => {
-  return (props: React.PropsWithChildren<BasicFormField & AnyHack>) => {
+function useFieldWrapper<T extends FieldWrapperProps>(
+  Element: React.ComponentType<Omit<T, 'label' | 'noLabel' | 'helpText'>>,
+): (props: T) => ReactElement {
+  return (props: T) => {
     const { label, noLabel, helpText, ...other } = props
     const { status } = useFormikContext()
     const actualLabel = label ?? titleize(props.name)
@@ -390,6 +395,20 @@ export const FormikAddressField = useFieldWrapper(
   },
 )
 
+type SelectFieldProps<T> = {
+  name: string
+  choices: T[]
+  placeholder?: string
+  value: string | T | T[]
+  onBlur: () => void
+  serialize?: (inpt: { value: string; label: string }) => T
+  deserialize?: (inpt: T) => { value: string; label: string }
+  valueDeserialize?: (
+    inpt: string | T | T[],
+  ) => typeof inpt extends Array<T> ? T[] : T
+  isMulti?: boolean
+}
+
 /**
  * A field where you can select one or more tags from a list of tags.
  *
@@ -407,7 +426,8 @@ export const SelectField = useFieldWrapper(
     deserialize,
     valueDeserialize,
     isMulti,
-  }: BasicFormField & AnyHack): ReactElement => {
+  }: BasicFormField &
+    SelectFieldProps<{ [key: string]: string | number }>): ReactElement => {
     const { setFieldValue } = useFormikContext()
 
     const actualSerialize = (opt) => {
@@ -430,8 +450,8 @@ export const SelectField = useFieldWrapper(
       if (deserialize == null) {
         deserialize = (item) => {
           return {
-            value: item.id ?? item.value,
-            label: item.name ?? item.label,
+            value: (item.id ?? item.value) as string,
+            label: (item.name ?? item.label) as string,
           }
         }
       }
@@ -445,8 +465,10 @@ export const SelectField = useFieldWrapper(
         placeholder={placeholder}
         isMulti={isMulti}
         value={(valueDeserialize ?? actualDeserialize)(value)}
-        options={actualDeserialize(choices)}
-        onChange={(opt) => setFieldValue(name, actualSerialize(opt))}
+        options={
+          actualDeserialize(choices) as { label: string; value: string }[]
+        }
+        onChange={(opt): void => setFieldValue(name, actualSerialize(opt))}
         onBlur={onBlur}
         styles={{ container: (style) => ({ ...style, width: '100%' }) }}
       />
@@ -473,10 +495,10 @@ export const CheckboxField = (
           <input
             type="checkbox"
             checked={value}
+            {...other}
             onChange={(e) => {
               setFieldValue(props.name, e.target.checked)
             }}
-            {...other}
           />{' '}
           {label}
         </label>

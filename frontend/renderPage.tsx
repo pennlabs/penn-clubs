@@ -17,6 +17,7 @@ import {
   OptionsContext,
   PermissionsContext,
 } from './utils'
+import { SITE_ID } from './utils/branding'
 import { logException } from './utils/sentry'
 
 const Wrapper = styled.div`
@@ -141,19 +142,21 @@ function renderPage<T>(
       const { userInfo } = this.state
 
       // redirect to welcome page if user hasn't seen it before
-      if (
-        typeof window !== 'undefined' &&
-        userInfo &&
-        userInfo.has_been_prompted === false &&
-        window.location.pathname !== '/welcome'
-      ) {
-        window.location.href =
-          '/welcome?next=' +
-          encodeURIComponent(
-            window.location.pathname +
-              window.location.search +
-              window.location.hash,
-          )
+      if (SITE_ID === 'clubs') {
+        if (
+          typeof window !== 'undefined' &&
+          userInfo &&
+          userInfo.has_been_prompted === false &&
+          window.location.pathname !== '/welcome'
+        ) {
+          window.location.href =
+            '/welcome?next=' +
+            encodeURIComponent(
+              window.location.pathname +
+                window.location.search +
+                window.location.hash,
+            )
+        }
       }
     }
 

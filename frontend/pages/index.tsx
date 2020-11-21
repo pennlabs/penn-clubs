@@ -17,6 +17,7 @@ import SearchBar, {
   SearchBarTextItem,
   SearchInput,
 } from '../components/SearchBar'
+import { mediaMaxWidth, PHONE } from '../constants'
 import {
   CLUBS_GREY_LIGHT,
   CLUBS_PURPLE,
@@ -50,6 +51,10 @@ const ResultsText = styled.div`
   background: transparent !important;
   fontsize: 0.7em;
   margin: 5px;
+
+  ${mediaMaxWidth(PHONE)} {
+    margin-bottom: 1rem;
+  }
 `
 
 type SplashProps = {

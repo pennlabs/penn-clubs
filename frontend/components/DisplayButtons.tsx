@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ReactElement } from 'react'
 import styled from 'styled-components'
 
+import { mediaMaxWidth, PHONE } from '../constants'
 import {
   ALLBIRDS_GRAY,
   BLACK_ALPHA,
@@ -21,6 +22,12 @@ const DisplayButtonsTag = styled.div`
 
   .button {
     margin-left: 8px;
+  }
+
+  ${mediaMaxWidth(PHONE)} {
+    float: none;
+    text-align: right;
+    margin-bottom: 1rem;
   }
 `
 

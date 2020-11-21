@@ -12,15 +12,16 @@ import {
   MD,
   mediaMaxWidth,
   NAV_HEIGHT,
+  PHONE,
   TITLE_MARGIN,
   TITLE_SIZE,
+  TITLE_SPACING,
   TITLE_WEIGHT,
 } from '../../constants/measurements'
 import { HOME_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
 import {
   HEADER_BACKGROUND_IMAGE,
-  HEADER_OVERLAY,
   LOGO_BACKGROUND_IMAGE,
   SITE_ID,
   SITE_LOGO,
@@ -65,23 +66,6 @@ const ImageHead = styled.div`
   }
 `
 
-const Overlay = styled.div`
-  background: url('${HEADER_OVERLAY}');
-  width: 50%;
-  height: 12rem;
-  position: fixed;
-  z-index: 999;
-  background-size: auto 100%;
-  background-repeat: no-repeat;
-  padding: 1em;
-  left: 16rem;
-  top: -1.5em;
-
-  ${mediaMaxWidth(MD)} {
-    box-shadow: none;
-  }
-`
-
 const NavSpacer = styled.div`
   width: 100%;
   display: block;
@@ -109,6 +93,7 @@ const Title = styled.h1`
   margin-bottom: 0 !important;
   font-size: ${TITLE_SIZE};
   font-weight: ${TITLE_WEIGHT};
+  letter-spacing: ${TITLE_SPACING};
 `
 
 const LogoBackground = styled.div`
@@ -118,6 +103,27 @@ const LogoBackground = styled.div`
   background-repeat: no-repeat;
   height: ${NAV_HEIGHT};
   position: fixed;
+
+  ${mediaMaxWidth(PHONE)} {
+    display: none;
+  }
+`
+
+const LogoItem = styled.a<{ isHub?: boolean }>`
+  padding: 0;
+
+  &:hover {
+    background-color: transparent !important;
+  }
+
+  ${({ isHub }) =>
+    isHub
+      ? `
+    ${mediaMaxWidth(MD)} {
+      margin-top: 1rem;
+    }
+  `
+      : ''}
 `
 
 type HeaderProps = {
@@ -125,9 +131,13 @@ type HeaderProps = {
   userInfo?: UserInfo
 }
 
-function withFading(Element, invert) {
+function withFading<T>(
+  Element: React.ComponentType<T>,
+  invert: boolean,
+  max: number,
+): React.ComponentType<T> {
   return (props): ReactElement => {
-    const [opacity, setOpacity] = useState<number>(1)
+    const [opacity, setOpacity] = useState<number>(invert ? 1 : 0)
 
     useEffect(() => {
       const handleScroll = () => {
@@ -140,13 +150,16 @@ function withFading(Element, invert) {
     })
 
     return (
-      <Element style={{ opacity: invert ? 1 - opacity : opacity }} {...props} />
+      <Element
+        style={{ opacity: (invert ? 1 - opacity : opacity) * max }}
+        {...props}
+      />
     )
   }
 }
 
-const FadingLogoBackground = withFading(LogoBackground, true)
-const FadingOverlay = withFading(Overlay, false)
+const FadingLogoBackground = withFading(LogoBackground, true, 0.6)
+const isHub = SITE_ID === 'fyh'
 
 const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
   const [show, setShow] = useState(false)
@@ -159,23 +172,26 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
 
       <NavSpacer />
 
-      <Nav className="navbar" role="navigation" aria-label="main navigation">
+      <Nav
+        className={`navbar ${isHub ? 'is-dark' : ''}`}
+        role="navigation"
+        aria-label="main navigation"
+      >
         <div className="navbar-brand">
           {LOGO_BACKGROUND_IMAGE != null && <FadingLogoBackground />}
           <Link href={HOME_ROUTE}>
-            <a className="navbar-item" style={{ padding: 0 }}>
+            <LogoItem className="navbar-item" isHub={isHub}>
               <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
               <Title>{SITE_NAME}</Title>
-            </a>
+            </LogoItem>
           </Link>
-          {SITE_ID === 'fyh' && <FadingOverlay />}
 
           <Burger toggle={toggle} />
         </div>
 
         <Links userInfo={userInfo} authenticated={authenticated} show={show} />
       </Nav>
-      {SITE_ID === 'fyh' && <ImageHead />}
+      {isHub && <ImageHead />}
 
       <Feedback />
     </>

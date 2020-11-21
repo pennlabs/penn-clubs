@@ -8,6 +8,7 @@ import {
   ClubRecruitingCycle,
   ClubSize,
   Major,
+  MembershipRank,
   School,
   StudentType,
   Tag,
@@ -17,10 +18,16 @@ import { doApiRequest, formatResponse, isClubFieldShown } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   FIELD_PARTICIPATION_LABEL,
+  FORM_DESCRIPTION_EXAMPLES,
+  FORM_LOGO_DESCRIPTION,
+  FORM_TAG_DESCRIPTION,
+  FORM_TARGET_DESCRIPTION,
+  MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   OBJECT_TAB_ADMISSION_LABEL,
   SHOW_RANK_ALGORITHM,
+  SITE_ID,
   SITE_NAME,
 } from '../../utils/branding'
 import { Contact, Text } from '../common'
@@ -241,6 +248,7 @@ export default function ClubEditCard({
           name: 'name',
           type: 'text',
           required: true,
+          label: `${OBJECT_NAME_TITLE_SINGULAR} Name`,
           help: isEdit ? (
             <>
               If you would like to change your {OBJECT_NAME_SINGULAR} URL in
@@ -253,16 +261,19 @@ export default function ClubEditCard({
               Your {OBJECT_NAME_SINGULAR} URL will be generated from your{' '}
               {OBJECT_NAME_SINGULAR} name, and cannot be changed upon creation.
               Your {OBJECT_NAME_SINGULAR} name can still be changed afterwards.
+              (Ex: {FORM_DESCRIPTION_EXAMPLES})
             </>
           ),
         },
         {
           name: 'subtitle',
           type: 'text',
+          label: `${OBJECT_NAME_TITLE_SINGULAR} Subtitle`,
           help: `This text will be shown next to your ${OBJECT_NAME_SINGULAR} name in list and card views.`,
         },
         {
           name: 'description',
+          required: true,
           help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
           placeholder: `Type your ${OBJECT_NAME_SINGULAR} description here!`,
           type: 'html',
@@ -271,14 +282,13 @@ export default function ClubEditCard({
           name: 'tags',
           type: 'multiselect',
           required: true,
-          help:
-            'You will need to at least specify either the Undergraduate or Graduate tag.',
+          help: `${FORM_TAG_DESCRIPTION}`,
           placeholder: `Select tags relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: tags,
         },
         {
           name: 'image',
-          help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
+          help: `${FORM_LOGO_DESCRIPTION}`,
           accept: 'image/*',
           type: 'image',
           label: `${OBJECT_NAME_TITLE_SINGULAR} Logo`,
@@ -303,8 +313,8 @@ export default function ClubEditCard({
       type: 'group',
       description: (
         <Text>
-          Contact information entered here will be shown on your{' '}
-          {OBJECT_NAME_SINGULAR} page.
+          Contact information entered here will be shown{' '}
+          <strong>on your {OBJECT_NAME_SINGULAR} page</strong>.
         </Text>
       ),
       fields: [
@@ -320,7 +330,12 @@ export default function ClubEditCard({
           name: 'email',
           required: true,
           type: 'email',
-          help: `Along with your ${OBJECT_NAME_SINGULAR} officers, this email will receive important notifications from ${SITE_NAME}. It will also be shown on your ${OBJECT_NAME_SINGULAR} page unless otherwise specified.`,
+          help:
+            SITE_ID === 'fyh'
+              ? `This can be a specific or general email that will serve as the main point of contact for ${SITE_NAME} users. The email associated with the owner of this resource page will be used by ${SITE_NAME} administrators as a point of contact for resource management and renewal.`
+              : `Along with your ${OBJECT_NAME_SINGULAR} ${
+                  MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer]
+                }s, this email will receive important notifications from ${SITE_NAME}. It will also be shown on your ${OBJECT_NAME_SINGULAR} page unless otherwise specified.`,
         },
         {
           name: 'email_public',
@@ -425,6 +440,10 @@ export default function ClubEditCard({
           type: 'textarea',
         },
         {
+          type: 'content',
+          content: <Text>{FORM_TARGET_DESCRIPTION}</Text>,
+        },
+        {
           name: 'target_years',
           type: 'multiselect',
           placeholder: `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
@@ -448,7 +467,7 @@ export default function ClubEditCard({
           placeholder: `Select student types relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: student_types,
         },
-      ].filter(({ name }) => isClubFieldShown(name)),
+      ].filter(({ name }) => name == null || isClubFieldShown(name)),
     },
   ]
 
@@ -463,7 +482,11 @@ export default function ClubEditCard({
 
   const editingFields = new Set<string>()
   fields.forEach(({ fields }) =>
-    fields.forEach(({ name }) => editingFields.add(name)),
+    fields.forEach((args) => {
+      if (args.name != null) {
+        editingFields.add(args.name)
+      }
+    }),
   )
 
   const initialValues = Object.keys(club).length
@@ -482,6 +505,9 @@ export default function ClubEditCard({
                   {(fields as any[]).map(
                     (props: any, i): ReactElement => {
                       const { ...other } = props
+                      if (props.type === 'content') {
+                        return <div key={i}>{props.content}</div>
+                      }
                       if (other.help) {
                         other.helpText = other.help
                         delete other.help

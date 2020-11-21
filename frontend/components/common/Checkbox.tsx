@@ -1,4 +1,4 @@
-import { ReactElement } from 'react'
+import { ChangeEvent, createRef, ReactElement } from 'react'
 import styled from 'styled-components'
 
 import { CLUBS_RED } from '../../constants/colors'
@@ -39,21 +39,38 @@ export const CheckboxLabel = styled.label`
 
 type CheckboxProps = {
   id?: string
+  name?: string
   className?: string
   checked: boolean
-  onChange: () => void
+  value?: string
+  onBlur: () => void
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void
 }
 
 export const Checkbox = ({
   className,
   checked,
   onChange,
-  ...props
+  onBlur,
+  value,
+  id,
+  name,
 }: CheckboxProps): ReactElement => {
+  const checkboxRef = createRef<HTMLInputElement>()
+
   return (
     <CheckboxContainer className={className}>
-      <HiddenCheckbox checked={checked} onChange={onChange} {...props} />
-      <StyledCheckbox onClick={onChange}>
+      <HiddenCheckbox
+        ref={checkboxRef}
+        checked={checked}
+        onChange={onChange}
+        value={value}
+        onBlur={onBlur}
+        id={id}
+        name={name}
+        type="checkbox"
+      />
+      <StyledCheckbox onClick={() => checkboxRef.current?.click()}>
         <Icon
           alt={checked ? 'checked' : 'unchecked'}
           name={checked ? 'check-box' : 'box'}

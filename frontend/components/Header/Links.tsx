@@ -5,6 +5,7 @@ import styled from 'styled-components'
 
 import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
 import {
+  BANNER_BG,
   BANNER_TEXT,
   LOGIN_BACKGROUND,
   WHITE,
@@ -58,9 +59,14 @@ const StyledLinkAnchor = styled.a`
   color: ${BANNER_TEXT} !important;
   display: inline-block;
   cursor: pointer;
+
+  ${mediaMaxWidth(MD)} {
+    padding: 14px 0px;
+    padding-right: 20px;
+  }
 `
 
-const StyledLink = (props) => {
+const StyledLink = (props): ReactElement => {
   return (
     <Link href={props.href}>
       <StyledLinkAnchor {...props} />
@@ -72,6 +78,8 @@ const Menu = styled.div<{ show?: boolean }>`
   ${mediaMaxWidth(MD)} {
     ${({ show }) => show && 'display: block;'}
   }
+
+  background-color: ${BANNER_BG};
 `
 
 type Props = {

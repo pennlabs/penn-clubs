@@ -52,8 +52,9 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
   return (
     <BaseCard title="Files">
       <Text>
-        Files that are uploaded here will only be visible to club members and{' '}
-        {SITE_NAME} administrators. {OBJECT_TAB_FILES_DESCRIPTION}
+        Files that are uploaded here will only be visible to{' '}
+        {OBJECT_NAME_SINGULAR} members and {SITE_NAME} administrators.{' '}
+        {OBJECT_TAB_FILES_DESCRIPTION}
       </Text>
       <table className="table is-fullwidth">
         <thead>
