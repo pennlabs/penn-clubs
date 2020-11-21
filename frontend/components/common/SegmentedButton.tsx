@@ -8,7 +8,7 @@ interface InnerButtonProps extends ButtonHTMLAttributes {
   icon?: string
   label?: string
   selected?: boolean
-  key?: any
+  key: string
 }
 
 interface SegmentedButtonProps {
@@ -44,8 +44,8 @@ export const SegmentedButton = ({
 }: SegmentedButtonProps): ReactElement => {
   return (
     <Segment>
-      {buttons.map(({ label, selected, icon, ...rest }) => (
-        <InnerButton selected={selected} {...rest}>
+      {buttons.map(({ label, selected, icon, key, ...rest }) => (
+        <InnerButton selected={selected} {...rest} id={key} key={key}>
           {icon && <Icon name={icon} />}
           {label}
         </InnerButton>
