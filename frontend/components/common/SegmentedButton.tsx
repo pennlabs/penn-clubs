@@ -1,11 +1,14 @@
 import { ButtonHTMLAttributes, ReactElement } from 'react'
 import s from 'styled-components'
 
+import { Icon } from '../../components/common'
 import { ANIMATION_DURATION } from '../../constants'
 
 interface InnerButtonProps extends ButtonHTMLAttributes {
-  label: string
+  icon?: string
+  label?: string
   selected?: boolean
+  key?: any
 }
 
 interface SegmentedButtonProps {
@@ -41,8 +44,9 @@ export const SegmentedButton = ({
 }: SegmentedButtonProps): ReactElement => {
   return (
     <Segment>
-      {buttons.map(({ label, selected, ...rest }) => (
+      {buttons.map(({ label, selected, icon, ...rest }) => (
         <InnerButton selected={selected} {...rest}>
+          {icon && <Icon name={icon} />}
           {label}
         </InnerButton>
       ))}

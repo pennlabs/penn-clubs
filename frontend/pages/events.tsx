@@ -2,7 +2,15 @@ import equal from 'deep-equal'
 import moment from 'moment'
 import { NextPageContext } from 'next'
 import Head from 'next/head'
-import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  createContext,
+  ReactElement,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
@@ -14,6 +22,7 @@ import {
   WideWrapper,
 } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
+import EventCard from '../components/EventPage/EventCard'
 import EventModal, { MEETING_REGEX } from '../components/EventPage/EventModal'
 import { FuseTag } from '../components/FilterSearch'
 import SearchBar, {
@@ -27,6 +36,7 @@ import { CLUBS_GREY, EVENT_TYPE_COLORS, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, Tag } from '../types'
 import { doApiRequest, isClubFieldShown } from '../utils'
+import { OBJECT_NAME_SINGULAR } from '../utils/branding'
 import { ListLoadIndicator } from '.'
 
 interface EventPageProps {
@@ -36,6 +46,14 @@ interface EventPageProps {
   tags: Tag[]
   badges: Badge[]
 }
+
+const CardList = styled.div`
+  & .event {
+    display: inline-block;
+    vertical-align: top;
+    width: 400px;
+  }
+`
 
 const localizer = momentLocalizer(moment)
 
@@ -49,6 +67,11 @@ const CalendarEvent = ({
       {resource.name} - {resource.club_name}
     </>
   )
+}
+
+enum EventsViewOption {
+  LIST = 'LIST',
+  CALENDAR = 'CALENDAR',
 }
 
 enum CalendarNavigation {
@@ -93,6 +116,33 @@ const StyledHeader = styled.div`
   }
 `
 
+const ViewContext = createContext<
+  [option: EventsViewOption, setOption?: (args?: any) => any]
+>([EventsViewOption.CALENDAR])
+
+const EventsViewSwitcher = ({ viewOption, setViewOption }) => (
+  <SegmentedButton
+    buttons={[
+      {
+        key: 'list',
+        icon: 'grid',
+        selected: viewOption === EventsViewOption.LIST,
+        onClick: () => {
+          setViewOption(EventsViewOption.LIST)
+        },
+      },
+      {
+        key: 'calendar',
+        icon: 'calendar',
+        selected: viewOption === EventsViewOption.CALENDAR,
+        onClick: () => {
+          setViewOption(EventsViewOption.CALENDAR)
+        },
+      },
+    ]}
+  />
+)
+
 const CalendarHeader = ({
   // date,
   label,
@@ -100,6 +150,7 @@ const CalendarHeader = ({
   onView,
   view,
 }: CalendarHeaderProps) => {
+  const [viewOption, setViewOption] = useContext(ViewContext)
   const _views: CalendarView[] = [
     CalendarView.DAY,
     CalendarView.WEEK,
@@ -139,6 +190,10 @@ const CalendarHeader = ({
               onView(key)
             },
           }))}
+        />
+        <EventsViewSwitcher
+          viewOption={viewOption}
+          setViewOption={setViewOption}
         />
       </div>
     </StyledHeader>
@@ -301,6 +356,10 @@ function EventPage({
   const currentSearch = useRef<SearchInput>({})
   const [isLoading, setLoading] = useState<boolean>(false)
 
+  const [viewOption, setViewOption] = useState<EventsViewOption>(
+    EventsViewOption.CALENDAR,
+  )
+
   const [previewEvent, setPreviewEvent] = useState<ClubEvent | null>(null)
   const hideModal = () => setPreviewEvent(null)
 
@@ -379,6 +438,14 @@ function EventPage({
         />
       </Head>
       <Metadata title="Events" />
+      <style jsx global>
+        {`
+          .rbc-month-view,
+          .rbc-time-view {
+            background: white;
+          }
+        `}
+      </style>
       <div style={{ backgroundColor: SNOW }}>
         <SearchBar updateSearch={setSearchInput} searchInput={searchInput}>
           <SearchBarTextItem param="search" />
@@ -461,52 +528,100 @@ function EventPage({
               background: SNOW,
             }}
           >
-            {/* {!!liveEvents.length && (
-              <>
-                <Title
-                  className="title"
-                  style={{ color: CLUBS_GREY, marginTop: '30px' }}
-                >
-                  Live Events
-                </Title>
-                {isLoading && <ListLoadIndicator />}
-                <CardList>
-                  {liveEvents.map((e) => (
-                    <EventCard key={e.id} event={e} />
-                  ))}
-                </CardList>
-                <br />
-              </>
-            )} */}
             {isLoading && <ListLoadIndicator />}
-            <Calendar
-              localizer={localizer}
-              components={{
-                event: CalendarEvent,
-                toolbar: CalendarHeader,
-              }}
-              onSelectEvent={(event: { resource: ClubEvent }) => {
-                setPreviewEvent(event.resource)
-              }}
-              events={[...liveEvents, ...upcomingEvents].map((e) => ({
-                title: e.name,
-                start: new Date(e.start_time),
-                end: new Date(e.end_time),
-                allDay: false,
-                resource: e,
-              }))}
-              eventPropGetter={({ resource }: { resource: ClubEvent }) => {
-                const color = EVENT_TYPE_COLORS[resource.type] || CLUBS_GREY
-                return {
-                  style: {
-                    backgroundColor: color,
-                    color: '#6F6F6F',
-                    border: 'none',
-                  },
-                }
-              }}
-              style={{ flex: '1' }}
-            />
+            <ViewContext.Provider value={[viewOption, setViewOption]}>
+              {viewOption === EventsViewOption.LIST ? (
+                <>
+                  {!!liveEvents.length && (
+                    <>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Title
+                          className="title"
+                          style={{ color: CLUBS_GREY, marginTop: '30px' }}
+                        >
+                          Live Events
+                        </Title>
+                        <EventsViewSwitcher
+                          viewOption={viewOption}
+                          setViewOption={setViewOption}
+                        />
+                      </div>
+                      <CardList>
+                        {liveEvents.map((e) => (
+                          <EventCard key={e.id} event={e} />
+                        ))}
+                      </CardList>
+                      <br />
+                    </>
+                  )}
+                  <Title className="title" style={{ color: CLUBS_GREY }}>
+                    Upcoming Events
+                  </Title>
+                  <CardList>
+                    {upcomingEvents.map((e) => (
+                      <EventCard key={e.id} event={e} />
+                    ))}
+                  </CardList>
+                  {!upcomingEvents.length && (
+                    <div className="notification is-info is-clearfix">
+                      <img
+                        className="is-pulled-left mr-5 mb-3"
+                        style={{ width: 100 }}
+                        src="/static/img/events_calendar.png"
+                      />
+                      <div>
+                        There are no upcoming events that match your search
+                        query. If you are a member of a {OBJECT_NAME_SINGULAR},
+                        you can add new events on the manage{' '}
+                        {OBJECT_NAME_SINGULAR} page.
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Calendar
+                    localizer={localizer}
+                    components={{
+                      event: CalendarEvent,
+                      toolbar: CalendarHeader,
+                    }}
+                    onSelectEvent={(event: { resource: ClubEvent }) => {
+                      setPreviewEvent(event.resource)
+                    }}
+                    events={[...liveEvents, ...upcomingEvents].map((e) => ({
+                      title: e.name,
+                      start: new Date(e.start_time),
+                      end: new Date(e.end_time),
+                      allDay: false,
+                      resource: e,
+                    }))}
+                    eventPropGetter={({
+                      resource,
+                    }: {
+                      resource: ClubEvent
+                    }) => {
+                      const color =
+                        EVENT_TYPE_COLORS[resource.type] || CLUBS_GREY
+                      return {
+                        style: {
+                          backgroundColor: color,
+                          color: '#6F6F6F',
+                          border: 'none',
+                        },
+                      }
+                    }}
+                    style={{ flex: '1' }}
+                  />
+                </>
+              )}
+            </ViewContext.Provider>
           </WideWrapper>
         </SearchbarRightContainer>
       </div>
