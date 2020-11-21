@@ -22,6 +22,9 @@ const Subtitle = styled.div`
 `
 
 const SyncModal = (props: { calendarURL: string }): ReactElement => {
+  const url = props.calendarURL
+    ? `${window?.location.protocol ?? 'https:'}//${props.calendarURL}`
+    : ''
   return (
     <ModalContainer>
       <Title>Sync To Calendar</Title>
@@ -35,12 +38,18 @@ const SyncModal = (props: { calendarURL: string }): ReactElement => {
               className="input"
               type="text"
               readOnly
-              value={props.calendarURL}
+              value={url}
               style={{ border: `solid ${CLUBS_BLUE} 1px` }}
             />
           </div>
           <div className="control">
-            <a className="button is-info" style={{ background: CLUBS_BLUE }}>
+            <a
+              className="button is-info"
+              style={{ background: CLUBS_BLUE }}
+              onClick={() => {
+                navigator.clipboard.writeText(url)
+              }}
+            >
               Copy
             </a>
           </div>
@@ -49,7 +58,7 @@ const SyncModal = (props: { calendarURL: string }): ReactElement => {
       <Subtitle>Import to Google Calendar</Subtitle>
       <p>Copy and paste the URL above to import to Google Calendar.</p>
       <Subtitle>Import to iCal</Subtitle>
-      <p>Copy and paste the URL above to import to iCal.</p>
+      <p>Copy and paste the URL above to import to iCal</p>
     </ModalContainer>
   )
 }
