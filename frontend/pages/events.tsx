@@ -14,7 +14,6 @@ import {
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
-
 import { EVENT_TYPES } from '../components/ClubEditPage/EventsCard'
 import {
   Metadata,
