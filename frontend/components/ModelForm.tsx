@@ -1,5 +1,6 @@
 import { Form, Formik } from 'formik'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect, useMemo, useState } from 'react'
+import { usePagination, useTable } from 'react-table'
 import styled from 'styled-components'
 
 import { doApiRequest, formatResponse, titleize } from '../utils'
@@ -114,84 +115,124 @@ export const ModelTable = ({
   onEdit = () => undefined,
   onDelete = () => undefined,
 }: ModelTableProps): ReactElement => {
+  const columns = useMemo(
+    () =>
+      tableFields.map(({ label, name }) => ({
+        Header: label ?? name,
+        accessor: name,
+      })),
+    [tableFields],
+  )
+
+  const {
+    getTableProps,
+    page,
+    getTableBodyProps,
+    gotoPage,
+    pageOptions,
+    state: { pageIndex, pageSize },
+  } = useTable(
+    {
+      columns: columns,
+      data: objects,
+    },
+    usePagination,
+  )
+
   return (
-    <table className="table is-fullwidth">
-      <thead>
-        <tr>
-          {tableFields.map((a, i) => (
-            <th key={i}>{a.label || titleize(a.name)}</th>
-          ))}
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {objects.length === 0 && (
+    <>
+      <table className="table is-fullwidth" {...getTableProps()}>
+        <thead>
           <tr>
-            <td colSpan={tableFields.length + 1}>
-              There are no {noun.toLowerCase()}s to display.
-            </td>
+            {tableFields.map((a, i) => (
+              <th key={i}>{a.label || titleize(a.name)}</th>
+            ))}
+            <th>Actions</th>
           </tr>
-        )}
-        {objects.map(
-          (object, i: number): ReactElement => (
-            <tr key={i}>
-              {tableFields.map((a, i) => (
-                <td key={i}>
-                  {a.converter
-                    ? a.converter(object[a.name], object)
-                    : object[a.name]}
-                </td>
-              ))}
-              <td>
-                <div className="buttons">
-                  {allowEditing && (
-                    <button
-                      onClick={() => onEdit(object)}
-                      className="button is-primary is-small"
-                    >
-                      <Icon name="edit" alt="edit" /> Edit
-                    </button>
-                  )}
-                  {allowDeletion && (
-                    <button
-                      onClick={() => {
-                        if (confirmDeletion) {
-                          if (
-                            confirm(
-                              `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
-                            )
-                          ) {
-                            onDelete(object)
-                          }
-                        } else {
-                          onDelete(object)
-                        }
-                      }}
-                      className="button is-danger is-small"
-                    >
-                      <Icon name="trash" alt="delete" /> {deleteVerb}
-                    </button>
-                  )}
-                </div>
+        </thead>
+        <tbody {...getTableBodyProps()}>
+          {objects.length === 0 && (
+            <tr>
+              <td colSpan={tableFields.length + 1}>
+                There are no {noun.toLowerCase()}s to display.
               </td>
             </tr>
-          ),
-        )}
-      </tbody>
-    </table>
+          )}
+          {page.map(
+            ({ original: object }, i: number): ReactElement => (
+              <tr key={i}>
+                {tableFields.map((a, i) => (
+                  <td key={i}>
+                    {a.converter
+                      ? a.converter(object[a.name], object)
+                      : object[a.name]}
+                  </td>
+                ))}
+                <td>
+                  <div className="buttons">
+                    {allowEditing && (
+                      <button
+                        onClick={() => onEdit(object)}
+                        className="button is-primary is-small"
+                      >
+                        <Icon name="edit" alt="edit" /> Edit
+                      </button>
+                    )}
+                    {allowDeletion && (
+                      <button
+                        onClick={() => {
+                          if (confirmDeletion) {
+                            if (
+                              confirm(
+                                `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
+                              )
+                            ) {
+                              onDelete(object)
+                            }
+                          } else {
+                            onDelete(object)
+                          }
+                        }}
+                        className="button is-danger is-small"
+                      >
+                        <Icon name="trash" alt="delete" /> {deleteVerb}
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ),
+          )}
+        </tbody>
+      </table>
+      {pageOptions.length > 1 && (
+        <div className="is-clearfix">
+          <select
+            value={pageIndex}
+            onChange={(e) => gotoPage(Number(e.target.value))}
+            className="input is-small"
+            style={{ maxWidth: 150 }}
+          >
+            {pageOptions.map(
+              (idx: number): ReactElement => (
+                <option value={idx}>Page {idx + 1}</option>
+              ),
+            )}
+          </select>
+          <span className="is-pulled-right">
+            {objects.length} total entries, {pageSize} entries per page
+          </span>
+        </div>
+      )}
+    </>
   )
-}
-
-type Props = {
-  ModelFormProps: any
-  ModelFormState: boolean
 }
 
 /*
  * Creates a form with CRUD (create, read, update, delete)
  * capabilities for a Django model using a provided endpoint.
  */
-export const ModelForm = (props: ModelFormProps) => {
+export const ModelForm = (props: ModelFormProps): ReactElement => {
   const [objects, changeObjects] = useState<ModelObject[]>([])
   const [
     currentlyEditing,

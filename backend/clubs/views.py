@@ -1538,8 +1538,10 @@ class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     lookup_field = "person__username"
 
     def get_queryset(self):
-        return Membership.objects.filter(club__code=self.kwargs["club_code"]).select_related(
-            "person", "person__profile"
+        return (
+            Membership.objects.filter(club__code=self.kwargs["club_code"])
+            .order_by("-active", "role")
+            .select_related("person", "person__profile")
         )
 
     def get_serializer_class(self):
