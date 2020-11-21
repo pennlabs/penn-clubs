@@ -530,53 +530,67 @@ class ClubTestCase(TestCase):
         Club.objects.bulk_create(
             [
                 Club(code=f"club-{i}", name=f"Club #{i}", active=True, approved=True)
-                for i in range(1,7)
+                for i in range(1, 7)
             ]
         )
         # add 4 clubs to user 1's favorite set
         Favorite.objects.bulk_create(
-            [Favorite(person=self.user1, club=Club.objects.get(code=f"club-{i+1}"))
-                for i in range(4)]
+            [
+                Favorite(person=self.user1, club=Club.objects.get(code=f"club-{i+1}"))
+                for i in range(4)
+            ]
         )
-
 
         # add 2, different clubs to user 2's favorite set
         Favorite.objects.bulk_create(
-            [Favorite(person=self.user2, club=Club.objects.get(code=f"club-{i+4+1}"))
-                for i in range(2)]
+            [
+                Favorite(person=self.user2, club=Club.objects.get(code=f"club-{i+4+1}"))
+                for i in range(2)
+            ]
         )
 
         st = timezone.now() + timezone.timedelta(days=2)
         et = timezone.now() + timezone.timedelta(days=3)
         # add one event for every club
         Event.objects.bulk_create(
-                [
-                    Event(code=f"{i}", name=f"Test Event for #{i}", club=
-                    Club.objects.get(code=f"club-{i}"),
-                          start_time=st, end_time=et)
-                    for i in range(1, 7)
-                ]
-            )
+            [
+                Event(
+                    code=f"{i}",
+                    name=f"Test Event for #{i}",
+                    club=Club.objects.get(code=f"club-{i}"),
+                    start_time=st,
+                    end_time=et,
+                )
+                for i in range(1, 7)
+            ]
+        )
 
         # add an event outside the 30-day window
-        Event.objects.create(code="test-event-6", name="Test Bad Event for Club 1",
-                             club=Club.objects.get(code=f"club-1"),
-                             start_time=timezone.now() - timezone.timedelta(days=33), end_time =
-                             timezone.now() - timezone.timedelta(days=32))
+        Event.objects.create(
+            code="test-event-6",
+            name="Test Bad Event for Club 1",
+            club=Club.objects.get(code="club-1"),
+            start_time=timezone.now() - timezone.timedelta(days=33),
+            end_time=timezone.now() - timezone.timedelta(days=32),
+        )
 
         # get user1's favorite set and compare results
         self.client.login(username=self.user1.username, password="test")
 
         expected = [f"Test Event for #{i}" for i in range(1, 5)]
         one_month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
-        actual = [event.name for event in Event.objects.filter(
-            club__favorite__person__profile__uuid_secret=self.user1.profile.uuid_secret,
-            start_time__gte=one_month_ago,
-        )]
+        actual = [
+            event.name
+            for event in Event.objects.filter(
+                club__favorite__person__profile__uuid_secret=self.user1.profile.uuid_secret,
+                start_time__gte=one_month_ago,
+            )
+        ]
         self.assertEqual(expected, actual)
-        resp = self.client.get(reverse("favorites-calendar", args=(self.user1.profile.uuid_secret,)))
+        resp = self.client.get(
+            reverse("favorites-calendar", args=(self.user1.profile.uuid_secret,))
+        )
         self.assertIn(resp.status_code, [200, 201], resp.content)
-
 
     def test_event_create_update_delete(self):
         """
