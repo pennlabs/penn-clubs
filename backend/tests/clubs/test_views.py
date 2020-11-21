@@ -12,6 +12,7 @@ from django.core.management import call_command
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
+from ics import Calendar
 
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
@@ -577,20 +578,16 @@ class ClubTestCase(TestCase):
         # get user1's favorite set and compare results
         self.client.login(username=self.user1.username, password="test")
 
-        expected = [f"Test Event for #{i}" for i in range(1, 5)]
-        one_month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
-        actual = [
-            event.name
-            for event in Event.objects.filter(
-                club__favorite__person__profile__uuid_secret=self.user1.profile.uuid_secret,
-                start_time__gte=one_month_ago,
-            )
-        ]
-        self.assertEqual(expected, actual)
         resp = self.client.get(
             reverse("favorites-calendar", args=(self.user1.profile.uuid_secret,))
         )
+
         self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        cal = Calendar(resp.content.decode("utf8"))
+        actual = [ev.name for ev in cal.events]
+        expected = [f"Club #{k+1} - Test Event for #{k+1}" for k in range(4)]
+        self.assertEqual(actual.sort(), expected.sort())
 
     def test_event_create_update_delete(self):
         """
