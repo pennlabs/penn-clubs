@@ -130,7 +130,7 @@ export const ModelTable = ({
     getTableBodyProps,
     gotoPage,
     pageOptions,
-    state: { pageIndex },
+    state: { pageIndex, pageSize },
   } = useTable(
     {
       columns: columns,
@@ -206,11 +206,12 @@ export const ModelTable = ({
         </tbody>
       </table>
       {pageOptions.length > 1 && (
-        <div>
+        <div className="is-clearfix">
           <select
             value={pageIndex}
-            onChange={(e) => gotoPage(Number(e.target.value) - 1)}
+            onChange={(e) => gotoPage(Number(e.target.value))}
             className="input is-small"
+            style={{ maxWidth: 150 }}
           >
             {pageOptions.map(
               (idx: number): ReactElement => (
@@ -218,6 +219,9 @@ export const ModelTable = ({
               ),
             )}
           </select>
+          <span className="is-pulled-right">
+            {objects.length} total entries, {pageSize} entries per page
+          </span>
         </div>
       )}
     </>
