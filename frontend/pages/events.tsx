@@ -124,7 +124,7 @@ const EventsViewSwitcher = ({ viewOption, setViewOption }) => (
   <SegmentedButton
     buttons={[
       {
-        key: 'list',
+        key: 'segmentbutton-list',
         icon: 'grid',
         selected: viewOption === EventsViewOption.LIST,
         onClick: () => {
@@ -132,7 +132,7 @@ const EventsViewSwitcher = ({ viewOption, setViewOption }) => (
         },
       },
       {
-        key: 'calendar',
+        key: 'segmentbutton-calendar',
         icon: 'calendar',
         selected: viewOption === EventsViewOption.CALENDAR,
         onClick: () => {
