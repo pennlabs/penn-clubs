@@ -12,6 +12,7 @@ from django.core.management import call_command
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
+from ics import Calendar
 
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
@@ -521,6 +522,72 @@ class ClubTestCase(TestCase):
         resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, e2.pk)))
         self.assertIn(resp.status_code, [400, 401, 403], resp.data)
         self.assertTrue(Event.objects.filter(pk=e2.pk).exists())
+
+    def test_event_favorited_users(self):
+        """
+        Test retrieving the correct set of events from the ICS endpoint.
+        """
+        # create 6 clubs
+        Club.objects.bulk_create(
+            [
+                Club(code=f"club-{i}", name=f"Club #{i}", active=True, approved=True)
+                for i in range(1, 7)
+            ]
+        )
+        # add 4 clubs to user 1's favorite set
+        Favorite.objects.bulk_create(
+            [
+                Favorite(person=self.user1, club=Club.objects.get(code=f"club-{i+1}"))
+                for i in range(4)
+            ]
+        )
+
+        # add 2, different clubs to user 2's favorite set
+        Favorite.objects.bulk_create(
+            [
+                Favorite(person=self.user2, club=Club.objects.get(code=f"club-{i+4+1}"))
+                for i in range(2)
+            ]
+        )
+
+        st = timezone.now() + timezone.timedelta(days=2)
+        et = timezone.now() + timezone.timedelta(days=3)
+        # add one event for every club
+        Event.objects.bulk_create(
+            [
+                Event(
+                    code=f"{i}",
+                    name=f"Test Event for #{i}",
+                    club=Club.objects.get(code=f"club-{i}"),
+                    start_time=st,
+                    end_time=et,
+                )
+                for i in range(1, 7)
+            ]
+        )
+
+        # add an event outside the 30-day window
+        Event.objects.create(
+            code="test-event-6",
+            name="Test Bad Event for Club 1",
+            club=Club.objects.get(code="club-1"),
+            start_time=timezone.now() - timezone.timedelta(days=33),
+            end_time=timezone.now() - timezone.timedelta(days=32),
+        )
+
+        # get user1's favorite set and compare results
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.get(
+            reverse("favorites-calendar", args=(self.user1.profile.uuid_secret,))
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        cal = Calendar(resp.content.decode("utf8"))
+        actual = [ev.name for ev in cal.events]
+        expected = [f"Club #{k+1} - Test Event for #{k+1}" for k in range(4)]
+        self.assertEqual(actual.sort(), expected.sort())
 
     def test_event_create_update_delete(self):
         """
