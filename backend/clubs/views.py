@@ -1541,7 +1541,7 @@ class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return (
             Membership.objects.filter(club__code=self.kwargs["club_code"])
             .order_by("-active", "role")
-            .select_related("person", "person__profile")
+            .select_related("person", "person__profile", "person__last_name", "person__first_name")
         )
 
     def get_serializer_class(self):
