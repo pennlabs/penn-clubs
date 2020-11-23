@@ -161,6 +161,7 @@ const OrderInput = ({
           {ORDERINGS.map((order) => (
             <a
               key={order.key}
+              role="menuitem"
               className={`dropdown-item ${
                 order.key === ordering ? 'is-active' : ''
               }`}
