@@ -112,3 +112,8 @@ cronjobs:
     image: pennlabs/penn-clubs-backend
     secret: penn-clubs
     cmd: ["python", "manage.py", "daily_notifications"]
+  - name: hub-daily-notifications
+    schedule: "0 13 * * *"
+    image: pennlabs/first-year-hub-backend
+    secret: first-year-hub
+    cmd: ["python", "manage.py", "daily_notifications"]
