@@ -21,18 +21,18 @@ const app = next({
 
 const handle = app.getRequestHandler()
 
-let server
 app
   .prepare()
   .then(() => {
-    server = express()
+    const server = express()
 
-    // Set up the proxy.
+    // Set up the development proxy to the backend
     if (dev && devProxy) {
       const { createProxyMiddleware } = require('http-proxy-middleware')
       Object.keys(devProxy).forEach(function (context) {
         const proxy = createProxyMiddleware(context, devProxy[context])
-        server.use(proxy)
+        server.use(context, proxy)
+        console.log(`-> Using proxy middleware for route ${context}`)
       })
     }
 
@@ -43,10 +43,10 @@ app
       if (err) {
         throw err
       }
-      console.log(`> Ready on port ${port} [${env}]`)
+      console.log(`-> Ready on port ${port} [${env || 'development'}]`)
     })
   })
   .catch((err) => {
-    console.log('An error occurred, unable to start the server')
-    console.log(err)
+    console.log('-> An error occurred, unable to start the server')
+    throw err
   })

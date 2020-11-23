@@ -1540,7 +1540,7 @@ class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         return (
             Membership.objects.filter(club__code=self.kwargs["club_code"])
-            .order_by("-active", "role")
+            .order_by("-active", "role", "person__last_name", "person__first_name")
             .select_related("person", "person__profile")
         )
 
