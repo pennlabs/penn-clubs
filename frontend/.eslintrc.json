@@ -37,7 +37,8 @@
     "unused-imports/no-unused-imports-ts": "error",
     "camelcase": ["warn", { "ignoreDestructuring": true }],
     "no-console": "error",
-    "simple-import-sort/sort": ["warn"],
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error",
     "prettier/prettier": ["error"],
     "linebreak-style": ["error", "unix"]
   }
