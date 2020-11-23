@@ -168,15 +168,20 @@ const Collapsible = ({
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
+  const groupLabelId = `collapsible-group-${name
+    .replace(/\s/g, '-')
+    .toLowerCase()}`
+
   return (
-    <>
+    <div role="group" aria-labelledby={groupLabelId}>
       <FilterHeader
         active={isActive ?? defaultActive}
         name={name}
+        id={groupLabelId}
         toggleActive={() => setActive((active) => !active)}
       />
       {(isActive ?? defaultActive) && children}
-    </>
+    </div>
   )
 }
 
