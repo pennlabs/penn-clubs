@@ -1,7 +1,7 @@
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from django.conf import settings
 
 from clubs.models import Club, send_mail_helper
 
