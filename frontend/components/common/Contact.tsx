@@ -1,6 +1,6 @@
 import { ReactElement } from 'react'
 
-import { CONTACT_EMAIL } from '../../utils/branding'
+import { CONTACT_EMAIL, SITE_ID } from '../../utils/branding'
 
 type ContactProps = {
   email?: string
@@ -13,10 +13,12 @@ export function Contact({
 }: ContactProps): ReactElement {
   let finalEmail = email || CONTACT_EMAIL
 
-  if (point === 'osa') {
-    finalEmail = 'rodneyr@upenn.edu'
-  } else if (point === 'sac') {
-    finalEmail = 'sac@sacfunded.net'
+  if (SITE_ID === 'clubs') {
+    if (point === 'osa') {
+      finalEmail = 'rodneyr@upenn.edu'
+    } else if (point === 'sac') {
+      finalEmail = 'sac@sacfunded.net'
+    }
   }
 
   return <a href={`mailto:${finalEmail}`}>{finalEmail}</a>
