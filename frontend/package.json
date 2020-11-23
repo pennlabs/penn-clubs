@@ -83,7 +83,7 @@
     "eslint": "^7.4.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-config-prettier": "^6.15.0",
-    "eslint-config-standard": "^16.0.1",
+    "eslint-config-standard": "^16.0.2",
     "eslint-plugin-import": "^2.20.0",
     "eslint-plugin-jsx-a11y": "^6.2.0",
     "eslint-plugin-node": "^11.1.0",
