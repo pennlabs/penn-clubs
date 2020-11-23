@@ -3,6 +3,10 @@ import { ReactElement } from 'react'
 
 import { CLUB_RENEW_ROUTE } from '../../constants/routes'
 import { Club, MembershipRank } from '../../types'
+import {
+  MEMBERSHIP_ROLE_NAMES,
+  OBJECT_NAME_SINGULAR,
+} from '../../utils/branding'
 import { AlertDesc, AlertText, Contact, Icon } from '../common'
 
 const iconStyles = {
@@ -29,7 +33,8 @@ const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement => {
         club.is_member <= MembershipRank.Officer ? (
           <>
             <p className="mb-2">
-              You are an officer of this club, so you can start the renewal
+              You are an {MEMBERSHIP_ROLE_NAMES[club.is_member].toLowerCase()}{' '}
+              of this {OBJECT_NAME_SINGULAR}, so you can start the renewal
               process by clicking the button below.
             </p>
             <Link href={CLUB_RENEW_ROUTE()} as={CLUB_RENEW_ROUTE(club.code)}>
@@ -38,8 +43,10 @@ const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement => {
           </>
         ) : (
           <>
-            If you are an officer for this club and require access, please send
-            an email with your PennKey and club name to <Contact />.
+            If you are an{' '}
+            {MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer].toLowerCase()} for
+            this {OBJECT_NAME_SINGULAR} and require access, please send an email
+            with your PennKey and {OBJECT_NAME_SINGULAR} name to <Contact />.
           </>
         )}
       </AlertDesc>

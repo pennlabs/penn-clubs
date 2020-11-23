@@ -164,30 +164,37 @@ const Search = ({
       )
     },
   }
+  const selectId = `club-search-${name.toLowerCase()}`
+
   return (
-    <Select
-      instanceId={`club-search-${name}`}
-      isMulti
-      cacheOptions
-      styles={styles}
-      components={components}
-      loadOptions={searchTags}
-      defaultOptions={recommendedTags}
-      value={selected}
-      backspaceRemovesValue
-      onChange={(_, selectEvent): void => {
-        const { action, option, removedValue } = selectEvent
-        if (action === 'select-option') {
-          updateTag(option as FuseTag, name)
-        } else if (action === 'pop-value') {
-          // pop-value events contain removedValue = undefined if no tags are selected
-          removedValue && updateTag(removedValue, name)
-        } else if (action === 'clear') {
-          clearTags()
-        }
-      }}
-      placeholder={`Search for ${name.toLowerCase()}`}
-    />
+    <>
+      <label className="is-sr-only" htmlFor={`react-select-${selectId}-input`}>
+        select {name} to filter by
+      </label>
+      <Select
+        instanceId={selectId}
+        isMulti
+        cacheOptions
+        styles={styles}
+        components={components}
+        loadOptions={searchTags}
+        defaultOptions={recommendedTags}
+        value={selected}
+        backspaceRemovesValue
+        onChange={(_, selectEvent): void => {
+          const { action, option, removedValue } = selectEvent
+          if (action === 'select-option') {
+            updateTag(option as FuseTag, name)
+          } else if (action === 'pop-value') {
+            // pop-value events contain removedValue = undefined if no tags are selected
+            removedValue && updateTag(removedValue, name)
+          } else if (action === 'clear') {
+            clearTags()
+          }
+        }}
+        placeholder={`Search for ${name.toLowerCase()}`}
+      />
+    </>
   )
 }
 

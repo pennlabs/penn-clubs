@@ -1,15 +1,7 @@
 import { ReactElement } from 'react'
 import styled from 'styled-components'
 
-import {
-  BORDER,
-  CLUBS_GREY,
-  CLUBS_GREY_LIGHT,
-  CLUBS_NAVY,
-  CLUBS_RED,
-  LIGHT_GRAY,
-  PRIMARY_TAG_BG,
-} from '../constants/colors'
+import { BORDER, CLUBS_GREY, LIGHT_GRAY } from '../constants/colors'
 import {
   ANIMATION_DURATION,
   MD,
@@ -17,12 +9,6 @@ import {
 } from '../constants/measurements'
 import { logEvent } from '../utils/analytics'
 import { Icon } from './common'
-
-const checkboxColorMap = {
-  Tags: PRIMARY_TAG_BG,
-  Size: CLUBS_NAVY,
-  Application: CLUBS_RED,
-}
 
 const Line = styled.hr`
   background-color: ${BORDER};
@@ -52,9 +38,20 @@ const DropdownHeader = styled.div`
   }
 `
 
-const TableRow = styled.tr`
+const CheckboxRow = styled.div<{ color?: string }>`
   padding-top: 3px;
-  cursor: pointer;
+
+  & label {
+    cursor: pointer;
+  }
+
+  & span {
+    color: ${({ color }) => color ?? CLUBS_GREY};
+  }
+
+  & span[role='checkbox'] {
+    float: left;
+  }
 `
 
 const TableWrapper = styled.div`
@@ -98,6 +95,7 @@ const DropdownHeaderText = styled.p`
 type FilterHeaderProps = {
   active: boolean
   name: string
+  id?: string
   toggleActive: () => void
 }
 
@@ -105,12 +103,13 @@ type FilterHeaderProps = {
 export const FilterHeader = ({
   active,
   name,
+  id,
   toggleActive,
 }: FilterHeaderProps): ReactElement => (
   <>
     <Line />
     <DropdownHeader onClick={() => toggleActive()}>
-      <DropdownHeaderText>{name}</DropdownHeaderText>
+      <DropdownHeaderText id={id}>{name}</DropdownHeaderText>
       <Chevron
         name="chevron-down"
         alt="toggle dropdown"
@@ -130,6 +129,7 @@ export type SelectableTag = {
 
 type DropdownFilterProps = {
   name: string
+  color?: string
   selected: SelectableTag[]
   options: SelectableTag[]
   updateTag: (tag: SelectableTag, name: string) => void
@@ -138,6 +138,7 @@ type DropdownFilterProps = {
 const DropdownFilter = ({
   selected,
   name,
+  color,
   options,
   updateTag,
 }: DropdownFilterProps): ReactElement => {
@@ -151,50 +152,44 @@ const DropdownFilter = ({
     return Boolean(selected.find((tag) => tag.value === value))
   }
 
-  const color = checkboxColorMap[name]
-
   return (
-    <>
-      <TableWrapper>
-        <TableContainer>
-          <table>
-            <tbody>
-              {options.map((tag: SelectableTag) => (
-                <TableRow
-                  key={tag.label}
-                  onClick={() => {
-                    logEvent('filter', name)
-                    updateTag(tag, name)
-                  }}
-                >
-                  <td
-                    className="icon"
-                    style={{
-                      color: color || CLUBS_GREY_LIGHT,
-                    }}
-                  >
-                    <Icon
-                      style={{ transform: 'none', fill: color }}
-                      name={isSelected(tag) ? 'check-box' : 'box'}
-                      alt={isSelected(tag) ? 'selected' : 'not selected'}
-                    />
-                    &nbsp;
-                  </td>
-                  <td style={{ color: CLUBS_GREY_LIGHT }}>
-                    <p style={{ marginBottom: '3px' }}>
-                      {tag.label}
-                      {typeof tag.count !== 'undefined' && (
-                        <span className="has-text-grey"> ({tag.count})</span>
-                      )}
-                    </p>
-                  </td>
-                </TableRow>
-              ))}
-            </tbody>
-          </table>
-        </TableContainer>
-      </TableWrapper>
-    </>
+    <TableWrapper>
+      <TableContainer>
+        {options.map((tag: SelectableTag) => (
+          <CheckboxRow
+            key={tag.label}
+            color={color}
+            onClick={() => {
+              logEvent('filter', name)
+              updateTag(tag, name)
+            }}
+          >
+            <label>
+              <span
+                role="checkbox"
+                tabIndex={0}
+                aria-checked={isSelected(tag) ? 'true' : 'false'}
+              >
+                <Icon
+                  style={{ fill: color }}
+                  name={isSelected(tag) ? 'check-box' : 'box'}
+                  alt={isSelected(tag) ? 'selected' : 'not selected'}
+                />
+                &nbsp;
+              </span>
+              <span>
+                <p>
+                  {tag.label}
+                  {typeof tag.count !== 'undefined' && (
+                    <span className="has-text-grey"> ({tag.count})</span>
+                  )}
+                </p>
+              </span>
+            </label>
+          </CheckboxRow>
+        ))}
+      </TableContainer>
+    </TableWrapper>
   )
 }
 
