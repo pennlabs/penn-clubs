@@ -63,7 +63,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@cypress/code-coverage": "^3.8.2",
+    "@cypress/code-coverage": "^3.8.4",
     "@storybook/addon-actions": "^6.0.28",
     "@storybook/addon-links": "^6.0.28",
     "@storybook/addons": "^6.1.2",
