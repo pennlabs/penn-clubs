@@ -6,7 +6,7 @@
     "@babel/plugin-syntax-jsx": "^7.7.4",
     "@react-google-maps/api": "^1.13.0",
     "@sentry/browser": "^5.27.2",
-    "@sentry/node": "^5.27.2",
+    "@sentry/node": "^5.27.4",
     "@svgr/webpack": "^5.1.0",
     "@zeit/next-source-maps": "0.0.4-canary.1",
     "babel-loader": "^8.0.5",
