@@ -34,6 +34,7 @@ import {
 import AuthPrompt from './common/AuthPrompt'
 
 type ResourceCreationPageProps = {
+  club?: Club
   authenticated: boolean | null
   schools: School[]
   years: Year[]
@@ -50,6 +51,7 @@ type TabItem = {
 }
 
 const ResourceCreationPage = ({
+  club: initialClub,
   authenticated,
   schools,
   years,
@@ -57,9 +59,16 @@ const ResourceCreationPage = ({
   tags,
   student_types: studentTypes,
 }: ResourceCreationPageProps): ReactElement => {
-  const metadata = <Metadata title={`Create ${OBJECT_NAME_TITLE_SINGULAR}`} />
+  const isResuming = initialClub != null
+  const metadata = (
+    <Metadata
+      title={`${
+        isResuming ? 'Continue Creating' : 'Create'
+      } ${OBJECT_NAME_TITLE_SINGULAR}`}
+    />
+  )
   const [step, setStep] = useState<number>(0)
-  const [club, setClub] = useState<Club | null>(null)
+  const [club, setClub] = useState<Club | null>(initialClub ?? null)
   const [message, setMessage] = useState<ReactElement | string | null>(null)
 
   if (authenticated === false) {
@@ -90,6 +99,14 @@ const ResourceCreationPage = ({
       content: (): ReactElement => (
         <>
           <Title>Introduction</Title>
+          {isResuming && (
+            <div className="notification is-warning">
+              <Icon name="alert-triangle" /> It doesn't look like you have
+              finished the {OBJECT_NAME_SINGULAR} creation process for{' '}
+              <b>{club?.name}</b>. We have saved what you have entered so far so
+              that you can continue from where you left off.
+            </div>
+          )}
           <Text>
             {SITE_NAME} is a central location for resources{' '}
             <b>directly associated with the {SCHOOL_NAME}</b> that are available
@@ -255,7 +272,10 @@ const ResourceCreationPage = ({
     >
       {metadata}
       <Center>
-        <InfoPageTitle>Create a New {OBJECT_NAME_TITLE_SINGULAR}</InfoPageTitle>
+        <InfoPageTitle>
+          {isResuming ? 'Continue Creating' : 'Create a New'}{' '}
+          {OBJECT_NAME_TITLE_SINGULAR}
+        </InfoPageTitle>
         <FormProgressIndicator
           step={step}
           steps={steps}
