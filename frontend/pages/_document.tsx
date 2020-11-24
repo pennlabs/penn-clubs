@@ -9,7 +9,7 @@ import Document, {
 import { ReactElement } from 'react'
 import { ServerStyleSheet } from 'styled-components'
 
-export default class BaseDocument extends Document {
+class BaseDocument extends Document {
   static async getInitialProps(
     ctx: DocumentContext,
   ): Promise<DocumentInitialProps> {
@@ -50,3 +50,5 @@ export default class BaseDocument extends Document {
     )
   }
 }
+
+export default BaseDocument

@@ -116,7 +116,7 @@ const ResourceCreationPage = ({
             to students at no cost. {SITE_NAME} is not a location to advertise
             outside resources. Only such resources will be approved for listing
             on {SITE_NAME}. If you're unsure if your resource can be listed on
-            {SITE_NAME}, please email email <Contact />.
+            {SITE_NAME}, please email <Contact />.
           </Text>
           <Text>
             {OBJECT_NAME_TITLE} that you create from this form will enter an

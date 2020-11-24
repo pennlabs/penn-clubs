@@ -2,8 +2,9 @@ import { ReactElement } from 'react'
 import styled from 'styled-components'
 
 import { CLUBS_GREY } from '../constants/colors'
-import { Club } from '../types'
+import { Club, ClubApplicationRequired } from '../types'
 import { getSizeDisplay, isClubFieldShown } from '../utils'
+import { CLUB_APPLICATIONS } from './ClubEditPage/ClubEditCard'
 import { BookmarkIcon, Icon, SubscribeIcon } from './common'
 
 const Wrapper = styled.div`
@@ -95,13 +96,12 @@ const Details = ({ club }: DetailsProps): ReactElement => {
               size="0.8rem"
               style={iconStyles}
             />
-            {'Apps for '}
-            {{
-              1: 'No',
-              2: 'Some',
-              3: 'All',
-            }[applicationRequired] || 'Unknown If'}
-            {' Roles'}
+            {applicationRequired ===
+            ClubApplicationRequired.ApplicationAndInterview
+              ? 'Application & Interview'
+              : CLUB_APPLICATIONS.find(
+                  ({ value }) => value === applicationRequired,
+                )?.label ?? 'Unknown'}
           </>
         )}
         {isClubFieldShown('accepting_members') && (
