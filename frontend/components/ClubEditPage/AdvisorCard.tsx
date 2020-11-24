@@ -1,21 +1,14 @@
 import { Field } from 'formik'
 import { ReactElement, useState } from 'react'
 import styled from 'styled-components'
+
 import { RED } from '../../constants/colors'
-import { Club} from '../../types'
+import { Club } from '../../types'
 import {
   OBJECT_NAME_SINGULAR,
   SHOW_MEMBERS,
-<<<<<<< HEAD
-  SITE_NAME,
-  SITE_ID
-=======
   SITE_ID,
-<<<<<<< HEAD
->>>>>>> cleanup
-=======
   SITE_NAME,
->>>>>>> fix name
 } from '../../utils/branding'
 import { Text } from '../common'
 import { CheckboxField, TextField } from '../FormComponents'
@@ -24,17 +17,7 @@ import BaseCard from './BaseCard'
 
 type Props = {
   club: Club
-<<<<<<< HEAD
-  validateAdvisors?: (valid : boolean) => void
-=======
-<<<<<<< HEAD
-}
-
-export default function AdvisorCard({ club }: Props): ReactElement {
-=======
-  schools: School[]
   validateAdvisors?: (valid: boolean) => void
->>>>>>> cleanup
 }
 
 const RequireText = styled.p`

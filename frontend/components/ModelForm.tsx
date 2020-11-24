@@ -95,7 +95,6 @@ type ModelTableProps = {
   objects: ModelObject[]
   allowEditing?: boolean
   allowDeletion?: boolean
-  minimumRequired?: number
   confirmDeletion?: boolean
   noun?: string
   deleteVerb?: string
@@ -112,7 +111,6 @@ export const ModelTable = ({
   allowEditing = false,
   allowDeletion = false,
   confirmDeletion = false,
-  minimumRequired = 0,
   noun = 'Object',
   deleteVerb = 'Delete',
   onEdit = () => undefined,
