@@ -3,7 +3,7 @@ import { ReactElement, useState } from 'react'
 import styled from 'styled-components'
 
 import { RED } from '../../constants/colors'
-import { Club } from '../../types'
+import { Advisor, Club } from '../../types'
 import {
   OBJECT_NAME_SINGULAR,
   SHOW_MEMBERS,
@@ -32,7 +32,9 @@ export default function AdvisorCard({
   const [advisorsCount, setAdvisorsCount] = useState<number>(
     club.advisor_set.length || 0,
   )
-  const updateAdvisors = (newAdvisors) => {
+  const updateAdvisors = (
+    newAdvisors: (Advisor & { _error_message?: string })[],
+  ): void => {
     let validCount = 0
     if (newAdvisors.length) {
       validCount = newAdvisors.filter(
@@ -87,7 +89,7 @@ export default function AdvisorCard({
           )}
           fields={fields}
         />
-        {SITE_ID === 'Hub@Penn' && (
+        {SITE_ID === 'fyh' && advisorsCount <= 0 && (
           <RequireText>At least one public contact is required*</RequireText>
         )}
       </BaseCard>
