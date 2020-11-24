@@ -68,8 +68,10 @@ const ResourceCreationPage = ({
     />
   )
   const [step, setStep] = useState<number>(0)
-  const [advisorsValid, validateAdvisors] = useState<boolean>(false)
-  const [club, setClub] = useState<Club | null>(null)
+  const [advisorsValid, validateAdvisors] = useState<boolean>(
+    (initialClub?.advisor_set.length ?? 0) > 0,
+  )
+  const [club, setClub] = useState<Club | null>(initialClub ?? null)
   const [message, setMessage] = useState<ReactElement | string | null>(null)
 
   if (authenticated === false) {

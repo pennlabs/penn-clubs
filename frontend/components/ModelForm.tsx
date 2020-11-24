@@ -61,7 +61,6 @@ type ModelFormProps = {
   fields: any
   tableFields?: TableField[]
   currentTitle?: (object: ModelObject) => ReactElement | string
-
   noun?: string
   deleteVerb?: string
   allowCreation?: boolean
