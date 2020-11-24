@@ -68,6 +68,9 @@ const ResourceCreationPage = ({
     />
   )
   const [step, setStep] = useState<number>(0)
+  const [advisorsValid, validateAdvisors] = useState<boolean>(
+    (initialClub?.advisor_set.length ?? 0) > 0,
+  )
   const [club, setClub] = useState<Club | null>(initialClub ?? null)
   const [message, setMessage] = useState<ReactElement | string | null>(null)
 
@@ -170,7 +173,7 @@ const ResourceCreationPage = ({
           </Text>
           <Text>You should specify at least one public point of contact.</Text>
           {club !== null ? (
-            <AdvisorCard club={club} />
+            <AdvisorCard validateAdvisors={validateAdvisors} club={club} />
           ) : (
             <Text>
               Fill out the form above before filling out this section.
@@ -188,7 +191,7 @@ const ResourceCreationPage = ({
           </Text>
         </>
       ),
-      disabled: club === null,
+      disabled: club === null || !advisorsValid,
     },
     {
       name: 'Details',

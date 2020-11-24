@@ -53,6 +53,7 @@ type ModelFormProps = {
   initialData?: ModelObject[]
   baseUrl: string
   keyField?: string
+  onUpdate?: (objects: ModelObject[]) => void
   onChange?: (object: ModelObject) => void
   defaultObject?: ModelObject
   fileFields?: string[]
@@ -60,7 +61,6 @@ type ModelFormProps = {
   fields: any
   tableFields?: TableField[]
   currentTitle?: (object: ModelObject) => ReactElement | string
-
   noun?: string
   deleteVerb?: string
   allowCreation?: boolean
@@ -243,6 +243,21 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     props.defaultObject != null ? { ...props.defaultObject } : {},
   )
 
+  const {
+    fields,
+    tableFields,
+    onUpdate,
+    currentTitle,
+    noun = 'Object',
+    deleteVerb = 'Delete',
+    allowCreation = true,
+    allowEditing = true,
+    allowDeletion = true,
+    confirmDeletion = false,
+    keyField = 'id',
+    onChange: parentComponentChange,
+  } = props
+
   /**
    * This is called when the create/edit form has its contents changed.
    */
@@ -281,12 +296,14 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           const newObjects: ModelObject[] = [...objects]
           newObjects.splice(objects.indexOf(object), 1)
           changeObjects(newObjects)
+          if (onUpdate) onUpdate(newObjects)
         }
       })
     } else {
       const newObjects: ModelObject[] = [...objects]
       newObjects.splice(objects.indexOf(object), 1)
       changeObjects(newObjects)
+      if (onUpdate) onUpdate(newObjects)
     }
   }
 
@@ -347,6 +364,9 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
             })
             .then(() => {
               changeObjects([...objects])
+              if (onUpdate) {
+                onUpdate(objects)
+              }
             })
         : doApiRequest(`${baseUrl}${object[keyField]}/?format=json`, {
             method: 'PATCH',
@@ -367,6 +387,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                 object._error_message = resp
               }
               changeObjects([...objects])
+              if (onUpdate) onUpdate(objects)
             })
 
     // upload all files in the form
@@ -404,22 +425,9 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
       .then((resp) => resp.json())
       .then((resp) => {
         changeObjects(resp)
+        if (onUpdate) onUpdate(resp)
       })
   }, [])
-
-  const {
-    fields,
-    tableFields,
-    currentTitle,
-    noun = 'Object',
-    deleteVerb = 'Delete',
-    allowCreation = true,
-    allowEditing = true,
-    allowDeletion = true,
-    confirmDeletion = false,
-    keyField = 'id',
-    onChange: parentComponentChange,
-  } = props
 
   if (!objects) {
     return <Loading />
@@ -477,6 +485,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                       objects.push(obj)
                     }
                     changeObjects([...objects])
+                    if (onUpdate) onUpdate(objects)
                     changeCurrentlyEditing(obj[keyField])
                     changeCreateObject(
                       props.defaultObject != null
@@ -553,7 +562,6 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
       </>
     )
   }
-
   return (
     <>
       {objects.map((object) => (
@@ -583,13 +591,17 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                   >
                     <Icon name="edit" alt="save" /> Save
                   </button>
-                  <span
-                    className="button is-danger"
-                    style={{ marginLeft: '0.5em' }}
-                    onClick={() => onDelete(object)}
-                  >
-                    <Icon name="trash" alt="trash" /> Delete
-                  </span>
+                  {allowDeletion && (
+                    <span
+                      className="button is-danger"
+                      style={{ marginLeft: '0.5em' }}
+                      onClick={() => {
+                        onDelete(object)
+                      }}
+                    >
+                      <Icon name="trash" alt="trash" /> Delete
+                    </span>
+                  )}
                   <ModelStatus status={object._status} />
                 </FormStyle>
               </Form>
