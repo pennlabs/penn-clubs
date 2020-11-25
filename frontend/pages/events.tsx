@@ -450,6 +450,9 @@ function EventPage({
           .rbc-event {
             border: solid white 1px !important;
           }
+          .rbc-event-content {
+            font-size: 14px;
+          }
         `}
       </style>
       <div style={{ backgroundColor: SNOW }}>
