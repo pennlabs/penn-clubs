@@ -23,7 +23,9 @@ SENTRY_URL = os.environ.get("SENTRY_URL", "")
 sentry_sdk.init(dsn=SENTRY_URL, integrations=[DjangoIntegration()])
 
 # DLA settings
-PLATFORM_ACCOUNTS = {"ADMIN_PERMISSION": "clubs_admin"}
+PLATFORM_ACCOUNTS = {
+    "ADMIN_PERMISSION": "hub_admin" if BRANDING == "fyh" else "clubs_admin"  # noqa: F405
+}
 
 # Email client information
 EMAIL_HOST = os.getenv("EMAIL_HOST")
