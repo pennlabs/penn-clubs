@@ -145,7 +145,6 @@ const EventsViewSwitcher = ({ viewOption, setViewOption }) => (
 )
 
 const CalendarHeader = ({
-  // date,
   label,
   onNavigate,
   onView,
@@ -350,6 +349,12 @@ function EventPage({
           .rbc-month-view,
           .rbc-time-view {
             background: white;
+          }
+          .rbc-time-view {
+            height: 200vh;
+          }
+          .rbc-event {
+            border: solid white 1px !important;
           }
         `}
       </style>
