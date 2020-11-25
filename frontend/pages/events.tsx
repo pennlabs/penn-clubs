@@ -4,7 +4,9 @@ import { NextPageContext } from 'next'
 import Head from 'next/head'
 import {
   createContext,
+  Dispatch,
   ReactElement,
+  SetStateAction,
   useContext,
   useEffect,
   useMemo,
@@ -15,13 +17,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
 import { EVENT_TYPES } from '../components/ClubEditPage/EventsCard'
-import {
-  Metadata,
-  Modal,
-  SegmentedButton,
-  Title,
-  WideWrapper,
-} from '../components/common'
+import { Icon, Metadata, Modal, Title, WideWrapper } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import EventCard from '../components/EventPage/EventCard'
 import EventModal, { MEETING_REGEX } from '../components/EventPage/EventModal'
@@ -118,30 +114,35 @@ const StyledHeader = styled.div`
 `
 
 const ViewContext = createContext<
-  [option: EventsViewOption, setOption?: (args?: any) => any]
+  [
+    option: EventsViewOption,
+    setOption?: Dispatch<SetStateAction<EventsViewOption>>,
+  ]
 >([EventsViewOption.CALENDAR])
 
 const EventsViewSwitcher = ({ viewOption, setViewOption }) => (
-  <SegmentedButton
-    buttons={[
-      {
-        key: 'segmentbutton-list',
-        icon: 'grid',
-        selected: viewOption === EventsViewOption.LIST,
-        onClick: () => {
-          setViewOption(EventsViewOption.LIST)
-        },
-      },
-      {
-        key: 'segmentbutton-calendar',
-        icon: 'calendar',
-        selected: viewOption === EventsViewOption.CALENDAR,
-        onClick: () => {
-          setViewOption(EventsViewOption.CALENDAR)
-        },
-      },
-    ]}
-  />
+  <div className="buttons has-addons mt-0 mb-0">
+    <button
+      className={`button is-medium ${
+        viewOption === EventsViewOption.LIST ? 'is-selected is-info' : ''
+      }`}
+      onClick={() => {
+        setViewOption(EventsViewOption.LIST)
+      }}
+    >
+      <Icon name="grid" />
+    </button>
+    <button
+      className={`button is-medium ${
+        viewOption === EventsViewOption.CALENDAR ? 'is-selected is-info' : ''
+      }`}
+      onClick={() => {
+        setViewOption(EventsViewOption.CALENDAR)
+      }}
+    >
+      <Icon name="calendar" />
+    </button>
+  </div>
 )
 
 const CalendarHeader = ({
@@ -163,34 +164,39 @@ const CalendarHeader = ({
       </Title>
       <div className="tools">
         <div className="view-label">{label}</div>
-        <SegmentedButton
-          buttons={[
-            {
-              key: 'prev',
-              label: '<',
-              onClick: () => {
-                onNavigate(CalendarNavigation.PREVIOUS)
-              },
-            },
-            {
-              key: 'next',
-              label: '>',
-              onClick: () => {
-                onNavigate(CalendarNavigation.NEXT)
-              },
-            },
-          ]}
-        />
-        <SegmentedButton
-          buttons={_views.map((key) => ({
-            key,
-            label: key[0].toUpperCase() + key.slice(1),
-            selected: key === view,
-            onClick: () => {
-              onView(key)
-            },
-          }))}
-        />
+        <div className="buttons has-addons mt-0 mb-0">
+          <button
+            className={`button is-medium`}
+            onClick={() => {
+              onNavigate(CalendarNavigation.PREVIOUS)
+            }}
+          >
+            <Icon name="chevrons-left" />
+          </button>
+          <button
+            className={`button is-medium`}
+            onClick={() => {
+              onNavigate(CalendarNavigation.NEXT)
+            }}
+          >
+            <Icon name="chevrons-right" />
+          </button>
+        </div>
+        <div className="buttons has-addons mt-0 mb-0">
+          {_views.map((key) => (
+            <button
+              className={`button is-medium ${
+                view === key ? 'is-selected is-info' : ''
+              }`}
+              onClick={() => {
+                onView(key)
+              }}
+              key={key}
+            >
+              {key[0].toUpperCase() + key.slice(1)}
+            </button>
+          ))}
+        </div>
         <EventsViewSwitcher
           viewOption={viewOption}
           setViewOption={setViewOption}
