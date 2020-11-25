@@ -146,7 +146,7 @@ export function apiCheckPermission(
  * Should be used primarily by getInitialProps methods.
  */
 export async function doBulkLookup(
-  paths: [string, string][],
+  paths: ([string, string] | string)[],
   ctx: NextPageContext,
 ): Promise<{ [key: string]: any }> {
   const data = {
@@ -155,13 +155,17 @@ export async function doBulkLookup(
 
   const resps = await Promise.all(
     paths.map((item) =>
-      doApiRequest(item[1], data).then((resp) => resp.json()),
+      doApiRequest(
+        typeof item === 'string' ? `/${item}/?format=json` : item[1],
+        data,
+      ).then((resp) => resp.json()),
     ),
   )
 
   const output = {}
   for (let i = 0; i < paths.length; i++) {
-    output[paths[i][0]] = resps[i]
+    output[typeof paths[i] === 'string' ? (paths[i] as string) : paths[i][0]] =
+      resps[i]
   }
 
   return output

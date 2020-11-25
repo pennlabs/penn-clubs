@@ -90,7 +90,7 @@ const SmallTitle = styled.div`
 `
 
 const QueueTab = (): ReactElement => {
-  const [clubs, setClubs] = useState<Club[] | null>(null)
+  const [pendingClubs, setPendingClubs] = useState<Club[] | null>(null)
   const [rejectedClubs, setRejectedClubs] = useState<Club[] | null>(null)
   const [allClubs, setAllClubs] = useState<boolean[] | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club')
@@ -99,7 +99,7 @@ const QueueTab = (): ReactElement => {
     if (canApprove) {
       doApiRequest('/clubs/?active=true&approved=none&format=json')
         .then((resp) => resp.json())
-        .then(setClubs)
+        .then(setPendingClubs)
 
       doApiRequest('/clubs/?active=true&approved=false&format=json')
         .then((resp) => resp.json())
@@ -117,8 +117,8 @@ const QueueTab = (): ReactElement => {
 
   const inactiveClubsCount =
     (allClubs?.filter((status) => status === null).length ?? 0) -
-    (clubs?.length ?? 0)
-  const pendingClubsCount = clubs?.length ?? 0
+    (pendingClubs?.length ?? 0)
+  const pendingClubsCount = pendingClubs?.length ?? 0
   const approvedClubsCount =
     allClubs?.filter((status) => status === true).length ?? 0
   const rejectedClubsCount = rejectedClubs?.length ?? 0
@@ -179,7 +179,7 @@ const QueueTab = (): ReactElement => {
         Click on the {OBJECT_NAME_SINGULAR} name to view the{' '}
         {OBJECT_NAME_SINGULAR}.
       </div>
-      <QueueTable clubs={clubs} />
+      <QueueTable clubs={pendingClubs} />
       <SmallTitle>Rejected Clubs</SmallTitle>
       <div className="mt-3 mb-3">
         The table below shows a list of {rejectedClubs?.length ?? 0}{' '}

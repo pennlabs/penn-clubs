@@ -844,7 +844,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def get_advisor_set(self, obj):
         return AdvisorSerializer(
-            obj.advisor_set.filter(public=True).order_by("name").prefetch_related("school"),
+            obj.advisor_set.filter(public=True).order_by("name"),
             many=True,
             read_only=True,
             context=self.context,

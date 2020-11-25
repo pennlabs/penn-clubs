@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -15,7 +16,7 @@ class Command(BaseCommand):
         # only send notifications if it is currently a weekday
         if now.isoweekday() in range(1, 6):
             # get users in group to send notification to
-            group = Group.objects.filter(name="OSA").first()
+            group = Group.objects.filter(name="Approvers").first()
             if group is not None:
                 emails = list(group.user_set.all().values_list("email", flat=True))
 
@@ -27,8 +28,10 @@ class Command(BaseCommand):
                         "url": "https://pennclubs.com/renew#Queue",
                     }
                     send_mail_helper(
-                        "osa_queue_reminder",
-                        "{} clubs awaiting review on Penn Clubs".format(queued_clubs.count()),
+                        "approval_queue_reminder",
+                        "{} clubs awaiting review on {}".format(
+                            queued_clubs.count(), settings.BRANDING_SITE_NAME
+                        ),
                         emails,
                         context,
                     )

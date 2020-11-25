@@ -153,6 +153,7 @@ export interface Club {
   members: [Membership]
   membership_count: number
   name: string
+  recruiting_cycle: ClubRecruitingCycle
   signature_events: string
   size: ClubSize
   subtitle: string
