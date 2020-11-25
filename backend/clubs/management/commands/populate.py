@@ -468,7 +468,9 @@ class Command(BaseCommand):
         count = 0
         for club in Club.objects.exclude(code="empty-club")[:50]:
             for obj in user_objs[:count]:
-                Membership.objects.get_or_create(club=club, person=obj)
+                Membership.objects.get_or_create(
+                    club=club, person=obj, defaults={"active": True, "public": count % 2 == 0}
+                )
             first_mship = club.membership_set.first()
             if first_mship is not None:
                 first_mship.role = Membership.ROLE_OWNER

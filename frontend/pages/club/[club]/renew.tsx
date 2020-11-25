@@ -13,6 +13,7 @@ import {
   InfoPageTitle,
 } from '../../../components/common'
 import AuthPrompt from '../../../components/common/AuthPrompt'
+import ResourceCreationPage from '../../../components/ResourceCreationPage'
 import { DARK_GRAY, GREEN, MEDIUM_GRAY } from '../../../constants/colors'
 import { CLUB_ROUTE } from '../../../constants/routes'
 import renderPage from '../../../renderPage'
@@ -30,6 +31,7 @@ import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   SCHOOL_NAME,
+  SITE_ID,
   SITE_NAME,
 } from '../../../utils/branding'
 
@@ -158,15 +160,21 @@ const PolicyBox = ({ onChecked = () => undefined }: Props): ReactElement => {
   )
 }
 
-const RenewPage = ({
-  club: initialClub,
-  authenticated,
-  schools,
-  majors,
-  years,
-  tags,
-  student_types: studentTypes,
-}: RenewPageProps): ReactElement => {
+const RenewPage = (props: RenewPageProps): ReactElement => {
+  if (SITE_ID === 'fyh') {
+    return <ResourceCreationPage {...props} />
+  }
+
+  const {
+    club: initialClub,
+    authenticated,
+    schools,
+    majors,
+    years,
+    tags,
+    student_types: studentTypes,
+  } = props
+
   const [club, setClub] = useState<Club>(initialClub)
   const [step, setStep] = useState<number>(0)
   const [changeStatus, setChangeStatus] = useState<boolean>(false)

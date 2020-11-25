@@ -57,15 +57,17 @@ const DisplayButtons = ({
       onClick={() => switchDisplay('cards')}
       className="button is-small"
       style={buttonStyles}
+      aria-label="switch to grid view"
     >
-      <Icon name="grid" alt="switch to grid view" style={iconStyles} />
+      <Icon name="grid" alt="grid icon" style={iconStyles} />
     </button>
     <button
       onClick={() => switchDisplay('list')}
       className="button is-small"
       style={buttonStyles}
+      aria-label="switch to list view"
     >
-      <Icon name="list" alt="switch to list view" style={iconStyles} />
+      <Icon name="list" alt="list icon" style={iconStyles} />
     </button>
     <Link href="/create">
       <a className="button is-small is-primary">

@@ -17,7 +17,7 @@ pushd ../backend
 time pipenv install --dev || echo "Failed to install all dependencies, continuing anyways..."
 pipenv run python manage.py migrate
 pipenv run python manage.py populate
-pipenv run python manage.py runserver &
+pipenv run python manage.py runserver --noasgi &
 popd
 
 # Setup frontend server

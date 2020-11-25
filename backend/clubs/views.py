@@ -1538,8 +1538,10 @@ class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     lookup_field = "person__username"
 
     def get_queryset(self):
-        return Membership.objects.filter(club__code=self.kwargs["club_code"]).select_related(
-            "person", "person__profile"
+        return (
+            Membership.objects.filter(club__code=self.kwargs["club_code"])
+            .order_by("-active", "role", "person__last_name", "person__first_name")
+            .select_related("person", "person__profile")
         )
 
     def get_serializer_class(self):
@@ -1657,11 +1659,15 @@ class FavoriteCalendarAPIView(APIView):
     def get(self, request, *args, **kwargs):
         calendar = ICSCal()
         calendar.extra.append(ICSParse.ContentLine(name="X-WR-CALNAME", value="Penn Clubs Events"))
-        one_month_ago = datetime.datetime.now() - datetime.timedelta(minutes=43200)
-        all_events = Event.objects.filter(
-            club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"],
-            start_time__gte=one_month_ago,
-        ).distinct()
+        one_month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
+        all_events = (
+            Event.objects.filter(
+                club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"],
+                start_time__gte=one_month_ago,
+            )
+            .distinct()
+            .select_related("club")
+        )
         for event in all_events:
             e = ICSEvent()
             e.name = "{} - {}".format(event.club.name, event.name)

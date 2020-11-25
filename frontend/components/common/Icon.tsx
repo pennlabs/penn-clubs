@@ -28,6 +28,7 @@ type IconProps = {
   alt?: string
   size?: string
   style?: CSSProperties
+  className?: string
   show?: boolean
   onClick?: () => void
   noMargin?: boolean

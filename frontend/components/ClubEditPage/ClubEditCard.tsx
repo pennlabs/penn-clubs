@@ -42,7 +42,7 @@ import {
 } from '../FormComponents'
 import { doFormikInitialValueFixes } from '../ModelForm'
 
-const CLUB_APPLICATIONS = [
+export const CLUB_APPLICATIONS = [
   {
     value: ClubApplicationRequired.Open,
     label: 'Open Membership',
