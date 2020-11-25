@@ -123,6 +123,7 @@ const ViewContext = createContext<
 const EventsViewSwitcher = ({ viewOption, setViewOption }) => (
   <div className="buttons has-addons mt-0 mb-0">
     <button
+      id="event-view-list"
       className={`button is-medium ${
         viewOption === EventsViewOption.LIST ? 'is-selected is-info' : ''
       }`}
@@ -133,6 +134,7 @@ const EventsViewSwitcher = ({ viewOption, setViewOption }) => (
       <Icon name="grid" />
     </button>
     <button
+      id="event-view-calendar"
       className={`button is-medium ${
         viewOption === EventsViewOption.CALENDAR ? 'is-selected is-info' : ''
       }`}

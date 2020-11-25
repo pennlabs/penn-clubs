@@ -64,7 +64,7 @@ describe('Authenticated user tests', () => {
   it('Visits the events page', () => {
     cy.visit('/events')
     cy.contains(new Date().getFullYear())
-    cy.get('#segmentbutton-list').click()
+    cy.get('#event-view-list').click()
     cy.contains('Live Events')
   })
 
