@@ -112,7 +112,7 @@ send_edit_reminder.short_description = "Send edit page reminder"
 
 
 def mark_approved(modeladmin, request, queryset):
-    if not request.user.has_perm("approve_club"):
+    if not request.user.has_perm("clubs.approve_club"):
         modeladmin.message_user(
             request, "You do not have permission to approve clubs!", level=messages.ERROR
         )
