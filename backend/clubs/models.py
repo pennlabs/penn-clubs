@@ -583,18 +583,18 @@ class ClubVisit(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
 
     CLUB_PAGE = 1
-    EVENT_MODEL = 2
+    EVENT_MODAL = 2
     EVENT_LINK = 3
     MANAGE_PAGE = 4
     FAIR_PAGE = 5
-    APPLICATION_CHOICES = (
+    VISIT_TYPES = (
         (CLUB_PAGE, "Club Page Visit"),
-        (EVENT_MODEL, "Event Model Visit"),
+        (EVENT_MODAL, "Event Modal Visit"),
         (EVENT_LINK, "Event Link Clicked"),
         (MANAGE_PAGE, "Manage Page Visit"),
         (FAIR_PAGE, "Fair Page Visit"),
     )
-    visit_type = models.IntegerField(choices=APPLICATION_CHOICES, default=CLUB_PAGE)
+    visit_type = models.IntegerField(choices=VISIT_TYPES, default=CLUB_PAGE)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

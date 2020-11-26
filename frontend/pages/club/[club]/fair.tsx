@@ -1,6 +1,6 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
-import { ReactElement, useContext, useState } from 'react'
+import { ReactElement, useContext, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
@@ -21,7 +21,7 @@ import AuthPrompt from '../../../components/common/AuthPrompt'
 import { AuthCheckContext } from '../../../components/contexts'
 import { CLUB_ROUTE } from '../../../constants/routes'
 import renderPage from '../../../renderPage'
-import { Club } from '../../../types'
+import { Club, VisitType } from '../../../types'
 import {
   apiSetFavoriteStatus,
   apiSetSubscribeStatus,
@@ -86,6 +86,18 @@ const Fair = ({ authenticated, club }: FairProps): ReactElement | null => {
       apiSetSubscribeStatus(club.code, true).then(() => setSubscribe(true)),
     )
   }
+
+  useEffect(() => {
+    if (club != null) {
+      doApiRequest('/clubvisits/?format=json', {
+        method: 'POST',
+        body: {
+          club: club.code,
+          visit_type: VisitType.FairPage,
+        },
+      })
+    }
+  }, [club])
 
   if (authenticated === null) {
     return <Loading />

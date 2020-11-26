@@ -222,7 +222,7 @@ export interface StudentType {
 
 export enum VisitType {
   ClubPage = 1,
-  EventModel = 2,
+  EventModal = 2,
   EventLink = 3,
   ManagePage = 4,
   FairPage = 5,

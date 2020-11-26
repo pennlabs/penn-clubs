@@ -48,7 +48,10 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
   } = props.event
   const [modalVisible, setModalVisible] = useState(false)
 
-  const showModal = () => setModalVisible(true)
+  const showModal = () => {
+    eventModelClicked()
+    setModalVisible(true)
+  }
   const hideModal = () => setModalVisible(false)
 
   const now = new Date()
@@ -65,6 +68,16 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
       body: {
         club: club,
         visit_type: VisitType.EventLink,
+      },
+    })
+  }
+
+  const eventModelClicked = () => {
+    doApiRequest('/clubvisits/?format=json', {
+      method: 'POST',
+      body: {
+        club: club,
+        visit_type: VisitType.EventModal,
       },
     })
   }
