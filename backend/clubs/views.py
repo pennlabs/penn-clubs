@@ -1698,6 +1698,10 @@ class UserPermissionAPIView(APIView):
     """
     get: Check if a user has a specific permission or list of permissions separated by commas,
     or return a list of all user permissions.
+
+    This endpoint can accept general Django permissions or per object Django permissions, with the
+    permission name and lookup key for the object separated by a colon. A general Django permission
+    will grant access to the per object version if the user has the general permission.
     """
 
     permission_classes = [AllowAny]
@@ -1728,11 +1732,19 @@ class UserPermissionAPIView(APIView):
 
         for perm in object_perms:
             key, value = perm.split(":", 1)
+
+            # if user has the global permission for all objects
+            if request.user.is_superuser or key in all_perms:
+                ret[perm] = True
+                continue
+
+            # otherwise, add permission to individual lookup queue
             if key not in lookups:
                 lookups[key] = []
             ret[perm] = None
             lookups[key].append(value)
 
+        # lookup individual permissions grouped by permission
         for key, values in lookups.items():
             if key in {"clubs.manage_club", "clubs.delete_club"}:
                 perm_checker = ClubPermission()

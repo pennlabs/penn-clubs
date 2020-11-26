@@ -1036,6 +1036,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                     needs_reapproval = True
                     break
 
+        # if the editing user has approval permissions, skip the approval process
+        request = self.context.get("request", None)
+        if request and request.user.has_perm("clubs.approve_club"):
+            needs_reapproval = False
+
         has_approved_version = (
             self.instance and self.instance.history.filter(approved=True).exists()
         )

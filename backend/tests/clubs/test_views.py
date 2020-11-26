@@ -1603,6 +1603,21 @@ class ClubTestCase(TestCase):
             club.approved = True
             club.save(update_fields=["approved"])
 
+        # login to superuser account
+        self.client.login(username=self.user5.username, password="test")
+
+        # ensure editing works with skipping approval
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {field: "New Club Name/Description #2"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure club is still marked as approved
+        club.refresh_from_db()
+        self.assertTrue(club.approved)
+
     def test_club_detail_endpoints_unauth(self):
         """
         Ensure that club based endpoints are not usable by unauthenticated users.
