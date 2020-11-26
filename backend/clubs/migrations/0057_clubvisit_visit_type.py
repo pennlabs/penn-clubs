@@ -6,13 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0056_auto_20201118_1849'),
+        ("clubs", "0056_auto_20201118_1849"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='clubvisit',
-            name='visit_type',
-            field=models.IntegerField(choices=[(1, 'Club Page Visit'), (2, 'Event Model Visit'), (3, 'Event Link Clicked'), (4, 'Manage Page Visit'), (5, 'Fair Page Visit')], default=1),
+            model_name="clubvisit",
+            name="visit_type",
+            field=models.IntegerField(
+                choices=[
+                    (1, "Club Page Visit"),
+                    (2, "Event Model Visit"),
+                    (3, "Event Link Clicked"),
+                    (4, "Manage Page Visit"),
+                    (5, "Fair Page Visit"),
+                ],
+                default=1,
+            ),
         ),
     ]
