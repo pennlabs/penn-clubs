@@ -669,7 +669,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
             return {
                 "content": list(
-                    obj.objects.filter(club=club, created_at__gte=lower_bound)
+                    obj.objects.filter(club=club, created_at__gte=lower_bound, visit_type=1)
                     .values(category_join)
                     .annotate(count=Count("id"))
                 ),
@@ -707,7 +707,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             Return a json serializable aggregation of analytics data for a specific model.
             """
             objs = (
-                obj.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
+                obj.objects.filter(
+                    club=club, created_at__gte=start, created_at__lte=end, visit_type=1
+                )
                 .annotate(group=Trunc("created_at", group))
                 .values("group")
                 .annotate(count=Count("id"))
