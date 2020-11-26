@@ -207,101 +207,6 @@ const CalendarHeader = ({
     </StyledHeader>
   )
 }
-
-enum CalendarNavigation {
-  PREVIOUS = 'PREV',
-  NEXT = 'NEXT',
-  TODAY = 'TODAY',
-  DATE = 'DATE',
-}
-
-enum CalendarView {
-  MONTH = 'month',
-  WEEK = 'week',
-  WORK_WEEK = 'work_week',
-  DAY = 'day',
-  AGENDA = 'agenda',
-}
-interface CalendarHeaderProps {
-  date: Date
-  label: string
-  onNavigate(action: CalendarNavigation, newDate?: Date): void
-  onView(view: CalendarView): void
-  view: string
-  views: CalendarView[]
-}
-
-const StyledHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 20px 0;
-  .tools {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0;
-    .view-label {
-      font-size: 18px;
-    }
-    & > *:not(:first-child) {
-      margin-left: 20px;
-    }
-  }
-`
-
-const CalendarHeader = ({
-  // date,
-  label,
-  onNavigate,
-  onView,
-  view,
-}: CalendarHeaderProps) => {
-  const _views: CalendarView[] = [
-    CalendarView.DAY,
-    CalendarView.WEEK,
-    CalendarView.MONTH,
-  ]
-  return (
-    <StyledHeader>
-      <Title className="title" style={{ color: CLUBS_GREY, margin: 0 }}>
-        Events
-      </Title>
-      <div className="tools">
-        <div className="view-label">{label}</div>
-        <SegmentedButton
-          buttons={[
-            {
-              key: 'prev',
-              label: '<',
-              onClick: () => {
-                onNavigate(CalendarNavigation.PREVIOUS)
-              },
-            },
-            {
-              key: 'next',
-              label: '>',
-              onClick: () => {
-                onNavigate(CalendarNavigation.NEXT)
-              },
-            },
-          ]}
-        />
-        <SegmentedButton
-          buttons={_views.map((key) => ({
-            key,
-            label: key[0].toUpperCase() + key.slice(1),
-            selected: key === view,
-            onClick: () => {
-              onView(key)
-            },
-          }))}
-        />
-      </div>
-    </StyledHeader>
-  )
-}
-
 /**
  * Randomize the order the events are shown in.
  * First prioritize the events with an earlier start date.
@@ -577,9 +482,29 @@ function EventPage({
                       <br />
                     </>
                   )}
-                  <Title className="title" style={{ color: CLUBS_GREY }}>
-                    Upcoming Events
-                  </Title>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Title
+                      className="title"
+                      style={{
+                        color: CLUBS_GREY,
+                        marginTop: !liveEvents.length ? '30px' : 'unset',
+                      }}
+                    >
+                      Upcoming Events
+                    </Title>
+                    {!liveEvents.length && (
+                      <EventsViewSwitcher
+                        viewOption={viewOption}
+                        setViewOption={setViewOption}
+                      />
+                    )}
+                  </div>
                   <CardList>
                     {upcomingEvents.map((e) => (
                       <EventCard key={e.id} event={e} />
