@@ -10,7 +10,8 @@ import {
   mediaMinWidth,
   PHONE,
 } from '../../constants/measurements'
-import { ClubEvent } from '../../types'
+import { ClubEvent, VisitType } from '../../types'
+import { doApiRequest } from '../../utils'
 import { Card } from '../common/Card'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
@@ -43,10 +44,14 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
     end_time,
     name,
     url,
+    club,
   } = props.event
   const [modalVisible, setModalVisible] = useState(false)
 
-  const showModal = () => setModalVisible(true)
+  const showModal = () => {
+    eventModelClicked()
+    setModalVisible(true)
+  }
   const hideModal = () => setModalVisible(false)
 
   const now = new Date()
@@ -56,6 +61,26 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
 
   const hoursBetween =
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60)
+
+  const eventClicked = () => {
+    doApiRequest('/clubvisits/?format=json', {
+      method: 'POST',
+      body: {
+        club: club,
+        visit_type: VisitType.EventLink,
+      },
+    })
+  }
+
+  const eventModelClicked = () => {
+    doApiRequest('/clubvisits/?format=json', {
+      method: 'POST',
+      body: {
+        club: club,
+        visit_type: VisitType.EventModal,
+      },
+    })
+  }
 
   return (
     <>
@@ -84,13 +109,15 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
             (/^\(.*\)$/.test(url) ? (
               url
             ) : (
-              <EventLink href={url}>{clipLink(url)}</EventLink>
+              <EventLink onClick={eventClicked} href={url}>
+                {clipLink(url)}
+              </EventLink>
             ))}
         </Card>
       </EventCardContainer>
       {modalVisible && (
         <Modal show={modalVisible} closeModal={hideModal} width="45%">
-          <EventModal {...props} />
+          <EventModal {...props} eventClicked={eventClicked} />
         </Modal>
       )}
     </>

@@ -661,18 +661,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 category_join = "person__profile__school__name"
 
             if metric == "favorite":
-                obj = Favorite
+                queryset = Favorite.objects.filter(club=club, created_at__gte=lower_bound)
             elif metric == "subscribe":
-                obj = Subscribe
+                queryset = Subscribe.objects.filter(club=club, created_at__gte=lower_bound)
             else:
-                obj = ClubVisit
+                queryset = ClubVisit.objects.filter(
+                    club=club, created_at__gte=lower_bound, visit_type=1
+                )
 
             return {
-                "content": list(
-                    obj.objects.filter(club=club, created_at__gte=lower_bound)
-                    .values(category_join)
-                    .annotate(count=Count("id"))
-                ),
+                "content": list(queryset.values(category_join).annotate(count=Count("id"))),
             }
 
         return Response(get_breakdown(category, metric))
@@ -702,13 +700,12 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             end = start + datetime.timedelta(days=1)
 
         # retrieve data
-        def get_count(obj):
+        def get_count(queryset):
             """
             Return a json serializable aggregation of analytics data for a specific model.
             """
             objs = (
-                obj.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
-                .annotate(group=Trunc("created_at", group))
+                queryset.annotate(group=Trunc("created_at", group))
                 .values("group")
                 .annotate(count=Count("id"))
             )
@@ -716,9 +713,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 item["group"] = item["group"].isoformat()
             return list(objs)
 
-        visits_data = get_count(ClubVisit)
-        favorites_data = get_count(Favorite)
-        subscriptions_data = get_count(Subscribe)
+        visits_data = get_count(
+            ClubVisit.objects.filter(
+                club=club, created_at__gte=start, created_at__lte=end, visit_type=1
+            )
+        )
+        favorites_data = get_count(
+            Favorite.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
+        )
+        subscriptions_data = get_count(
+            Subscribe.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
+        )
 
         max_value = max(
             max([v["count"] for v in visits_data], default=0),
