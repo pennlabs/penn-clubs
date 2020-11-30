@@ -320,7 +320,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
         resolve({
           _status: false,
           _error_message:
-            'This object hass already been deleted and cannot be saved.',
+            'This object has already been deleted and cannot be saved.',
         })
       })
     }
@@ -349,6 +349,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
             .then((resp) => {
               if (resp.ok) {
                 object._status = true
+                object._error_message = null
                 return resp.json().then((resp) => {
                   Object.keys(resp).forEach((key) => {
                     object[key] = resp[key]

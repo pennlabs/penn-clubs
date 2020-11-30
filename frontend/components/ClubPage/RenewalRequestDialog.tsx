@@ -3,6 +3,7 @@ import { ReactElement } from 'react'
 
 import { CLUB_RENEW_ROUTE } from '../../constants/routes'
 import { Club, MembershipRank } from '../../types'
+import { apiCheckPermission } from '../../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
@@ -22,6 +23,8 @@ type RenewalRequestProps = {
 }
 
 const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement => {
+  const canRenew = apiCheckPermission(`clubs.manage_club:${club.code}`)
+
   const textMapping = {
     clubs: {
       TITLE: (
@@ -53,15 +56,22 @@ const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement => {
         {text.TITLE}
       </AlertText>
       <AlertDesc>
-        {club.is_member !== false &&
-        club.is_member <= MembershipRank.Officer ? (
+        {canRenew ? (
           <>
-            <p className="mb-2">
-              You are an {MEMBERSHIP_ROLE_NAMES[club.is_member].toLowerCase()}{' '}
-              of this {OBJECT_NAME_SINGULAR}, so you can {text.PROCESS_ACTION}{' '}
-              by clicking the button below. Your {OBJECT_NAME_SINGULAR} will not
-              be queued for approval until this process is complete.
-            </p>
+            {club.is_member !== false ? (
+              <p className="mb-2">
+                You are an {MEMBERSHIP_ROLE_NAMES[club.is_member].toLowerCase()}{' '}
+                of this {OBJECT_NAME_SINGULAR}, so you can {text.PROCESS_ACTION}{' '}
+                by clicking the button below. Your {OBJECT_NAME_SINGULAR} will
+                not be queued for approval until this process is complete.
+              </p>
+            ) : (
+              <p className="mb-2">
+                Although you are not a part of this {OBJECT_NAME_SINGULAR}, you
+                have permissions to {text.PROCESS_ACTION} for this club. You can
+                do so using the button below.
+              </p>
+            )}
             <Link href={CLUB_RENEW_ROUTE()} as={CLUB_RENEW_ROUTE(club.code)}>
               <a className="button is-danger is-light">{text.BUTTON_TEXT}</a>
             </Link>

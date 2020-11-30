@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import React, { ReactElement, useState } from 'react'
 
-import { CLUB_ROUTE, DIRECTORY_ROUTE, SNOW } from '../constants'
+import { CLUB_ROUTE, DIRECTORY_ROUTE, RED, SNOW } from '../constants'
 import { Club, Major, School, StudentType, Tag, Year } from '../types'
 import { doApiRequest } from '../utils'
 import {
@@ -156,6 +156,9 @@ const ResourceCreationPage = ({
             student_types={studentTypes}
             onSubmit={({ message, club }): Promise<void> => {
               setClub(club ?? null)
+              if (club) {
+                message = `The initial information for this ${OBJECT_NAME_SINGULAR} has been saved. Continue with the steps below to finish the ${OBJECT_NAME_SINGULAR} creation process.`
+              }
               setMessage(message)
               return Promise.resolve(undefined)
             }}
@@ -171,7 +174,6 @@ const ResourceCreationPage = ({
             will be shown publicly on the website, while private points of
             contact will only be available to {SITE_NAME} administrators.
           </Text>
-          <Text>You should specify at least one public point of contact.</Text>
           {club !== null ? (
             <AdvisorCard validateAdvisors={validateAdvisors} club={club} />
           ) : (
@@ -184,6 +186,32 @@ const ResourceCreationPage = ({
             After you are finished with creating your {OBJECT_NAME_SINGULAR},
             press the continue button below to move on to the next step.
           </Text>
+          {club === null || !advisorsValid ? (
+            <>
+              <Text>
+                You still need to complete the following items on this page to
+                continue:
+              </Text>
+              <div className="content" style={{ color: RED }}>
+                <ul>
+                  {club === null && (
+                    <li>
+                      Filling out and submitting the basic club information
+                      form.
+                    </li>
+                  )}
+                  {!advisorsValid && (
+                    <li>Filling out at least one public point of contact.</li>
+                  )}
+                </ul>
+              </div>
+            </>
+          ) : (
+            <Text>
+              You have completed all required steps on this page. Press continue
+              to move on to the next step.
+            </Text>
+          )}
           <Text>
             Your {OBJECT_NAME_SINGULAR} will not be submitted for approval until
             you complete all steps of the {OBJECT_NAME_SINGULAR} creation
@@ -293,7 +321,10 @@ const ResourceCreationPage = ({
       <div className="has-text-right">
         {step < steps.length - 1 ? (
           <button
-            onClick={nextStep}
+            onClick={() => {
+              nextStep()
+              window.scrollTo(0, 0)
+            }}
             disabled={steps[step].disabled}
             className="button is-primary"
           >

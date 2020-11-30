@@ -58,7 +58,13 @@ const THANKS_CONTENT = (): ReactElement => (
     <br />
     <div>
       {PARTNER_LOGOS.map(({ name, url, image, height, className }) => (
-        <a href={url} target="_blank" key={name} className={className}>
+        <a
+          href={url}
+          target="_blank"
+          key={name}
+          className={className}
+          rel="noopener noreferrer"
+        >
           <img
             style={{
               maxHeight: height || 100,
@@ -67,7 +73,6 @@ const THANKS_CONTENT = (): ReactElement => (
             }}
             src={image}
             alt={name}
-            title={name}
           />
         </a>
       ))}
@@ -96,7 +101,9 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
       We're so excited to let everyone at the {SCHOOL_NAME} contribute to the
       development of {SITE_NAME}! Your feedback is incredibly important to us.
       Have any questions or comments? Find any bugs?{' '}
-      <a href={FEEDBACK_URL}>Please let us know on our feedback form.</a>
+      <a rel="noopener noreferrer" href={FEEDBACK_URL}>
+        Please let us know on our feedback form.
+      </a>
     </Question>
     <Line />
     <Question title="Why do I have to log in?">
@@ -203,7 +210,9 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
       </Question>
     )}
     <Question title="I have another question!">
-      <a href={FEEDBACK_URL}>Please let us know on our feedback form :)</a>
+      <a rel="noopener noreferrer" href={FEEDBACK_URL}>
+        Please let us know on our feedback form :)
+      </a>
     </Question>
     <Line />
     {THANKS_CONTENT()}
@@ -225,7 +234,9 @@ const FAQS = {
         We're so excited to let everyone at Penn contribute to the development
         of Hub@Penn! Your feedback is incredibly important to us. Have any
         questions or comments? Find any bugs?{' '}
-        <a href={FEEDBACK_URL}>Please let us know on our feedback form.</a>
+        <a rel="noopener noreferrer" href={FEEDBACK_URL}>
+          Please let us know on our feedback form.
+        </a>
       </Question>
       <Line />
       <Question title="How do I use this site?">
@@ -282,7 +293,9 @@ const FAQS = {
         reviewed.
       </Question>
       <Question title="I have another question!">
-        <a href={FEEDBACK_URL}>Please let us know on our feedback form.</a>
+        <a rel="noopener noreferrer" href={FEEDBACK_URL}>
+          Please let us know on our feedback form.
+        </a>
       </Question>
       <Line />
       {THANKS_CONTENT()}

@@ -33,17 +33,17 @@ export default function AdvisorCard({
     club.advisor_set.length || 0,
   )
   const updateAdvisors = (
-    newAdvisors: (Advisor & { _error_message?: string })[],
+    newAdvisors: (Advisor & { _status?: boolean; _error_message?: string })[],
   ): void => {
     let validCount = 0
     if (newAdvisors.length) {
       validCount = newAdvisors.filter(
-        (advisor) => !advisor._error_message && advisor.public,
+        (advisor) =>
+          (advisor._status || !advisor._error_message) && advisor.public,
       ).length
     }
     if (validateAdvisors) {
-      if (validCount > 0) validateAdvisors(true)
-      else validateAdvisors(false)
+      validateAdvisors(validCount > 0)
     }
     setAdvisorsCount(validCount)
   }
@@ -90,7 +90,9 @@ export default function AdvisorCard({
           fields={fields}
         />
         {SITE_ID === 'fyh' && advisorsCount <= 0 && (
-          <RequireText>At least one public contact is required*</RequireText>
+          <RequireText>
+            * At least one public point of contact is required.
+          </RequireText>
         )}
       </BaseCard>
 
@@ -100,7 +102,6 @@ export default function AdvisorCard({
           administrators.
         </Text>
         <ModelForm
-          onUpdate={updateAdvisors}
           baseUrl={`/clubs/${club.code}/advisors/`}
           listParams="&public=false"
           defaultObject={{ public: false }}
