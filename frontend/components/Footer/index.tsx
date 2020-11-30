@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 import { PINK, SNOW } from '../../constants/colors'
 import { SHOW_ACCESSIBILITY } from '../../utils/branding'
-import { Icon, SmallText } from '../common'
+import { Icon, SmallLink, SmallText } from '../common'
 import Social from './Social'
 
 const Foot = styled.footer`
@@ -29,16 +29,16 @@ const Footer = (): ReactElement => (
           fill: 'currentColor',
         }}
       />{' '}
-      by <a href="https://pennlabs.org/">Penn Labs</a>
+      by <SmallLink href="https://pennlabs.org/">Penn Labs</SmallLink>
     </SmallText>
     {SHOW_ACCESSIBILITY && (
       <SmallText style={{ marginBottom: '0rem' }}>
-        <a
+        <SmallLink
           rel="noopener noreferrer"
           href="https://accessibility.web-resources.upenn.edu/get-help"
         >
           Report Accessibility Issues and Get Help
-        </a>
+        </SmallLink>
       </SmallText>
     )}
     <Social />

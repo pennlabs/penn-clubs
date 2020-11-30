@@ -18,6 +18,14 @@ export const Text = styled.p<{ isGray?: boolean; color?: string }>`
 export const SmallText = styled(Text)`
   font-size: 80%;
 `
+export const SmallLink = styled.a`
+  font-size: 100%;
+  color: red;
+
+  ${SmallText} & {
+    color: red;
+  }
+`
 
 export const StrongText = styled(Text)`
   margin-bottom: 0.5rem;
