@@ -20,11 +20,6 @@ export const SmallText = styled(Text)`
 `
 export const SmallLink = styled.a`
   font-size: 100%;
-  color: red;
-
-  ${SmallText} & {
-    color: red;
-  }
 `
 
 export const StrongText = styled(Text)`

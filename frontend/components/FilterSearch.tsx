@@ -114,6 +114,10 @@ const Search = ({
         color: CLUBS_GREY,
       }
     },
+    placeholder: (base) => {
+      // darker placeholder text color to meet AA accessibility guidelines
+      return { ...base, color: '#757575' }
+    },
   }
 
   // Overriding specific components of the react-select

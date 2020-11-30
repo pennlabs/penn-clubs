@@ -3,7 +3,7 @@ import moment from 'moment'
 import { ReactElement } from 'react'
 import styled from 'styled-components'
 
-import { LIGHT_GRAY } from '../../constants'
+import { CLUBS_GREY } from '../../constants'
 
 const dateIntervalString = (startDate: Date, endDate: Date): string => {
   const [start, end] = [startDate, endDate].map((d) => moment(d))
@@ -45,6 +45,6 @@ const DateInterval = ({
 )
 
 export default styled(DateInterval)`
-  color: ${LIGHT_GRAY};
+  color: ${CLUBS_GREY};
   font-size: 14px;
 `

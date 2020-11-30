@@ -29,7 +29,12 @@ import SearchBar, {
   SearchBarTextItem,
   SearchInput,
 } from '../components/SearchBar'
-import { CLUBS_GREY, EVENT_TYPE_COLORS, SNOW } from '../constants'
+import {
+  CLUBS_GREY,
+  CLUBS_GREY_LIGHT,
+  EVENT_TYPE_COLORS,
+  SNOW,
+} from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, Tag } from '../types'
 import { doApiRequest, isClubFieldShown } from '../utils'
@@ -120,29 +125,34 @@ const ViewContext = createContext<
   ]
 >([EventsViewOption.CALENDAR])
 
-const EventsViewSwitcher = ({ viewOption, setViewOption }) => (
+/**
+ * Component used to display a method to switch between the event grid and calendar views.
+ */
+const EventsViewSwitcher = ({ viewOption, setViewOption }): ReactElement => (
   <div className="buttons has-addons mt-0 mb-0">
     <button
       id="event-view-list"
       className={`button is-medium ${
         viewOption === EventsViewOption.LIST ? 'is-selected is-info' : ''
       }`}
+      aria-label="switch to grid view"
       onClick={() => {
         setViewOption(EventsViewOption.LIST)
       }}
     >
-      <Icon name="grid" />
+      <Icon name="grid" alt="grid view" />
     </button>
     <button
       id="event-view-calendar"
       className={`button is-medium ${
         viewOption === EventsViewOption.CALENDAR ? 'is-selected is-info' : ''
       }`}
+      aria-label="switch to calendar view"
       onClick={() => {
         setViewOption(EventsViewOption.CALENDAR)
       }}
     >
-      <Icon name="calendar" />
+      <Icon name="calendar" alt="calendar view" />
     </button>
   </div>
 )
@@ -168,20 +178,22 @@ const CalendarHeader = ({
         <div className="view-label">{label}</div>
         <div className="buttons has-addons mt-0 mb-0">
           <button
-            className={`button is-medium`}
+            className="button is-medium"
+            aria-label="go to previous page"
             onClick={() => {
               onNavigate(CalendarNavigation.PREVIOUS)
             }}
           >
-            <Icon name="chevrons-left" />
+            <Icon name="chevrons-left" alt="previous" />
           </button>
           <button
-            className={`button is-medium`}
+            className="button is-medium"
+            aria-label="go to next page"
             onClick={() => {
               onNavigate(CalendarNavigation.NEXT)
             }}
           >
-            <Icon name="chevrons-right" />
+            <Icon name="chevrons-right" alt="next" />
           </button>
         </div>
         <div className="buttons has-addons mt-0 mb-0">
@@ -554,7 +566,7 @@ function EventPage({
                       return {
                         style: {
                           backgroundColor: color,
-                          color: '#6F6F6F',
+                          color: CLUBS_GREY_LIGHT,
                           border: 'none',
                         },
                       }
