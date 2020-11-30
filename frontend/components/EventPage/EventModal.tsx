@@ -69,7 +69,7 @@ export const MEETING_REGEX = /^https?:\/\/(?:[\w-]+\.)?zoom\.us\//i
 const EventModal = (props: {
   event: ClubEvent
   showDetailsButton?: boolean
-  eventClicked: () => void
+  eventClicked?: () => void
 }): ReactElement => {
   const { event, showDetailsButton, eventClicked } = props
   const {
