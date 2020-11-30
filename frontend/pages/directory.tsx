@@ -42,8 +42,8 @@ const Directory = ({ clubs }: Props): ReactElement => {
         <InfoPageTitle>{OBJECT_NAME_TITLE} Directory</InfoPageTitle>
         <p className="mb-5 has-text-grey">
           The directory is an alphabetically sorted list of all {clubs.length}{' '}
-          {OBJECT_NAME_PLURAL} on {SITE_NAME}. {OBJECT_NAME_TITLE} pending
-          approval are displayed in grey.
+          {OBJECT_NAME_PLURAL} on {SITE_NAME}. {OBJECT_NAME_TITLE} that are
+          either inactive or pending approval are displayed in grey.
         </p>
         <DirectoryList>
           {clubs.map((club) => (

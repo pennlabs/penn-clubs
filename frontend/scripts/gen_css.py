@@ -87,5 +87,6 @@ if __name__ == "__main__":
             writer.add_rule(f".{text_name}", {"color": f"{color} !important"})
     
         writer.add_rule("a", {"color": "#256ADA"})
+        writer.add_rule(".has-text-grey", {"color": f"#6E6E6E !important"})
 
         f.write(writer.get_value())

@@ -33,6 +33,7 @@ import {
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   EVENT_TYPE_COLORS,
+  FULL_NAV_HEIGHT,
   SNOW,
 } from '../constants'
 import renderPage from '../renderPage'
@@ -539,7 +540,9 @@ function EventPage({
                   )}
                 </>
               ) : (
-                <>
+                <div
+                  style={{ height: `calc(100vh - ${FULL_NAV_HEIGHT} - 25px)` }}
+                >
                   <Calendar
                     localizer={localizer}
                     components={{
@@ -573,7 +576,7 @@ function EventPage({
                     }}
                     style={{ flex: '1' }}
                   />
-                </>
+                </div>
               )}
             </ViewContext.Provider>
           </WideWrapper>
