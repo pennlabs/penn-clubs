@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+This script generates a CSS file for Hub@Penn that overrides some default Bulma styles.
+
+The file is imported after Bulma, so any CSS rules generated here will take priority.
+"""
+
 import io
 import os
 
@@ -14,6 +20,9 @@ colors = {
 
 
 class Color(object):
+    """
+    A color class for doing some simple color transformations and returning the hex value of a color.
+    """
     def __init__(self, hex):
         hexstr = hex.strip("#")
         r, g, b = int(hexstr[:2], 16), int(hexstr[2:4], 16), int(hexstr[4:], 16)
@@ -35,6 +44,9 @@ class Color(object):
 
 
 class CssWriter(object):
+    """
+    A writer that converts CSS selectors and rules into a stylesheet.
+    """
     def __init__(self):
         self.rules = []
 
@@ -56,7 +68,7 @@ class CssWriter(object):
 
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    with open(os.path.join(script_dir, "../public/static/css/fyh.css"), "w") as f:
+    with open(os.path.join(script_dir, "../public/static/css/fyh.css"), "w", newline="\n") as f:
         writer = CssWriter()
         for name, color in colors.items():
             writer.add_rule(
@@ -73,4 +85,8 @@ if __name__ == "__main__":
 
             text_name = "has-text-{}".format(name[3:])
             writer.add_rule(f".{text_name}", {"color": f"{color} !important"})
+    
+        writer.add_rule("a", {"color": "#256ADA"})
+        writer.add_rule(".has-text-grey", {"color": f"#6E6E6E !important"})
+
         f.write(writer.get_value())

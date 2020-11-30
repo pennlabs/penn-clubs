@@ -42,7 +42,7 @@ export const LIGHTER_RED = '#f7e6e6'
 
 export const CLUBS_PURPLE = '#834fa0'
 export const CLUBS_GREY = '#414654'
-export const CLUBS_GREY_LIGHT = '#979797'
+export const CLUBS_GREY_LIGHT = '#4f4f4f'
 export const CLUBS_NAVY = '#1f2049'
 export const CLUBS_RED = '#ef4c5f'
 export const CLUBS_RED_DARK = '#e03a4e'

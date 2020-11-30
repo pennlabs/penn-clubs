@@ -52,15 +52,14 @@ export const SearchbarRightContainer = styled.div`
   }
 `
 
-const Wrapper = styled.div<{ isScrolled?: boolean }>`
+const Wrapper = styled.div`
   height: 100vh;
   width: 20vw;
   overflow-x: hidden;
   overflow-y: auto;
   position: fixed;
   top: 0;
-  padding-top: ${({ isScrolled }) =>
-    isScrolled ? NAV_HEIGHT : FULL_NAV_HEIGHT};
+  padding-top: ${NAV_HEIGHT};
   color: ${H1_TEXT};
 
   ${mediaMaxWidth(MD)} {
@@ -463,11 +462,15 @@ const SearchBar = ({
   searchInput,
   children,
 }: SearchBarProps): ReactElement => {
-  const [isScrolled, setScrolled] = useState<boolean>(false)
+  const [scrollAmount, setScrollAmount] = useState<number>(0)
 
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY >= 150)
+      const scrollPercent = 1 - Math.max(0, Math.min(window.scrollY / 150, 1))
+      const topDistance =
+        scrollPercent * (parseFloat(FULL_NAV_HEIGHT) - parseFloat(NAV_HEIGHT)) +
+        parseFloat(NAV_HEIGHT)
+      setScrollAmount(topDistance)
     }
     onScroll()
     window.addEventListener('scroll', onScroll)
@@ -476,7 +479,7 @@ const SearchBar = ({
 
   return (
     <>
-      <Wrapper isScrolled={isScrolled}>
+      <Wrapper style={{ paddingTop: `${scrollAmount}rem` }}>
         <Content>
           <SearchBarValueContext.Provider value={searchInput}>
             <SearchBarContext.Provider value={updateSearch}>
