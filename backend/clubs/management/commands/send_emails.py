@@ -26,12 +26,12 @@ def send_fair_email(club, email, template="fair"):
     send_mail_helper(template, "Making the SAC Fair Easier for You", [email], context)
 
 
-def send_hap_intro_email(email, resources):
+def send_hap_intro_email(email, resources, template="intro"):
     """
     Send the Hub@Penn introduction email given the email and the list of resources.
     """
 
-    send_mail_helper("intro", None, [email], {"resources": resources})
+    send_mail_helper(template, None, [email], {"resources": resources})
 
 
 class Command(BaseCommand):
@@ -50,6 +50,7 @@ class Command(BaseCommand):
                 "urgent_virtual_fair",
                 "post_virtual_fair",
                 "hap_intro",
+                "hap_intro_remind",
             ),
         )
         parser.add_argument(
@@ -116,10 +117,12 @@ class Command(BaseCommand):
         role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
 
         # handle custom Hub@Penn intro email
-        if action == "hap_intro":
+        if action in {"hap_intro", "hap_intro_remind"}:
             test_email = kwargs.get("test", None)
             email_file = kwargs["emails"]
             people = collections.defaultdict(list)
+
+            # read recipients from csv file
             with open(email_file, "r") as f:
                 reader = csv.DictReader(f)
                 try:
@@ -134,12 +137,18 @@ class Command(BaseCommand):
                     raise ValueError(
                         "Ensure the spreadsheet has a header with the 'name' and 'email' columns."
                     ) from e
+
+            # send emails grouped by recipients
             for email, resources in people.items():
                 if not dry_run:
-                    send_hap_intro_email(email, resources)
-                    print(f"Sent email to {email} for groups: {resources}")
+                    send_hap_intro_email(
+                        email,
+                        resources,
+                        template="intro" if action == "hap_intro" else "intro_remind",
+                    )
+                    print(f"Sent {action} email to {email} for groups: {resources}")
                 else:
-                    print(f"Would have sent email to {email} for groups: {resources}")
+                    print(f"Would have sent {action} email to {email} for groups: {resources}")
             return
 
         # get club whitelist
