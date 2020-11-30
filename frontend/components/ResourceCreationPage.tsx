@@ -321,7 +321,10 @@ const ResourceCreationPage = ({
       <div className="has-text-right">
         {step < steps.length - 1 ? (
           <button
-            onClick={nextStep}
+            onClick={() => {
+              nextStep()
+              window.scrollTo(0, 0)
+            }}
             disabled={steps[step].disabled}
             className="button is-primary"
           >
