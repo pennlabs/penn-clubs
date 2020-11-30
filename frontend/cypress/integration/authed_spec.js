@@ -63,7 +63,7 @@ describe('Authenticated user tests', () => {
 
   it('Visits the events page', () => {
     cy.visit('/events')
-    cy.contains('Live Events')
+    cy.contains(new Date().getFullYear())
   })
 
   it('Visits the fair page', () => {
@@ -125,17 +125,17 @@ describe('Authenticated user tests', () => {
     cy.contains('Submit').click()
 
     // wait for club to be created, should be redirected to renewal page
-    cy.contains('Renew Club').should('be.visible') 
+    cy.contains('Renew Club').should('be.visible')
 
     // test membership invites
-    const fakeEmails = [];
+    const fakeEmails = []
     for (var i = 0; i < 50; i++) {
-      fakeEmails.push(`test${i}@example.com`);
+      fakeEmails.push(`test${i}@example.com`)
     }
 
     cy.visit('/club/test-new-club/edit#member')
     cy.contains('Invite Members').scrollIntoView()
-    cy.get('[data-testid="invite-emails-input"]').type(fakeEmails.join(","))
+    cy.get('[data-testid="invite-emails-input"]').type(fakeEmails.join(','))
     cy.get('[data-testid="invite-emails-submit"]').click()
     cy.contains(/Sent invites? to 50 emails?/).should('be.visible')
 
