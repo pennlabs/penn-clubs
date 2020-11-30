@@ -161,10 +161,6 @@ const PolicyBox = ({ onChecked = () => undefined }: Props): ReactElement => {
 }
 
 const RenewPage = (props: RenewPageProps): ReactElement => {
-  if (SITE_ID === 'fyh') {
-    return <ResourceCreationPage {...props} />
-  }
-
   const {
     club: initialClub,
     authenticated,
@@ -186,6 +182,8 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
   const [isSacChecked, setSacChecked] = useState<boolean>(club.fair)
   const isFairOpen = useSetting('FAIR_REGISTRATION_OPEN')
 
+  const hasPermission = apiCheckPermission(`clubs.manage_club:${club.code}`)
+
   if (authenticated === false) {
     return <AuthPrompt />
   }
@@ -201,7 +199,7 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
     )
   }
 
-  if (!apiCheckPermission(`clubs.manage_club:${club.code}`)) {
+  if (!hasPermission) {
     return (
       <AuthPrompt title="Oh no!" hasLogin={false}>
         <ClubMetadata club={club} />
@@ -218,6 +216,10 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
         )}
       </AuthPrompt>
     )
+  }
+
+  if (SITE_ID === 'fyh') {
+    return <ResourceCreationPage {...props} />
   }
 
   const year = new Date().getFullYear()

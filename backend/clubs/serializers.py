@@ -996,11 +996,19 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         Only officers, owners, and superusers may change the active status of a club.
         """
         user = self.context["request"].user
+
+        # people with approve permissions can also change the active status of the club
+        if user.has_perm("clubs.approve_club"):
+            return value
+
+        # check if at least an officer
         club_code = self.context["view"].kwargs.get("code")
         club = Club.objects.get(code=club_code)
         membership = Membership.objects.filter(person=user, club=club).first()
-        if (membership and membership.role <= Membership.ROLE_OFFICER) or user.is_superuser:
+        if membership and membership.role <= Membership.ROLE_OFFICER:
             return value
+
+        # otherwise, can't edit this field
         raise serializers.ValidationError(
             "You do not have permissions to change the active status of the club."
         )

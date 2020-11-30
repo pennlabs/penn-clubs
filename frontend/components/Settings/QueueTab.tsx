@@ -48,15 +48,23 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
               </Link>
             </td>
             <td>
-              {club.approved === null && (
-                <span className="has-text-info">
-                  <Icon name="clock" /> Pending Approval
-                </span>
-              )}
-              {club.approved === false && (
+              {club.active === false ? (
                 <span className="has-text-danger">
-                  <Icon name="x" /> Rejected
+                  <Icon name="x" /> Inactive
                 </span>
+              ) : (
+                <>
+                  {club.approved === null && (
+                    <span className="has-text-info">
+                      <Icon name="clock" /> Pending Approval
+                    </span>
+                  )}
+                  {club.approved === false && (
+                    <span className="has-text-danger">
+                      <Icon name="x" /> Rejected
+                    </span>
+                  )}
+                </>
               )}
             </td>
           </tr>
@@ -92,6 +100,7 @@ const SmallTitle = styled.div`
 const QueueTab = (): ReactElement => {
   const [pendingClubs, setPendingClubs] = useState<Club[] | null>(null)
   const [rejectedClubs, setRejectedClubs] = useState<Club[] | null>(null)
+  const [inactiveClubs, setInactiveClubs] = useState<Club[] | null>(null)
   const [allClubs, setAllClubs] = useState<boolean[] | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club')
 
@@ -105,6 +114,10 @@ const QueueTab = (): ReactElement => {
         .then((resp) => resp.json())
         .then(setRejectedClubs)
 
+      doApiRequest('/clubs/?active=false&format=json')
+        .then((resp) => resp.json())
+        .then(setInactiveClubs)
+
       doApiRequest('/clubs/directory/?format=json')
         .then((resp) => resp.json())
         .then((data) => setAllClubs(data.map((club) => club.approved)))
@@ -115,9 +128,7 @@ const QueueTab = (): ReactElement => {
     return <div>Nothing to see here!</div>
   }
 
-  const inactiveClubsCount =
-    (allClubs?.filter((status) => status === null).length ?? 0) -
-    (pendingClubs?.length ?? 0)
+  const inactiveClubsCount = inactiveClubs?.length ?? 0
   const pendingClubsCount = pendingClubs?.length ?? 0
   const approvedClubsCount =
     allClubs?.filter((status) => status === true).length ?? 0
@@ -165,7 +176,7 @@ const QueueTab = (): ReactElement => {
           {pendingClubsCount} Pending {OBJECT_NAME_TITLE}
         </li>
         <li className="has-text-danger">
-          {rejectedClubs?.length ?? 0} Rejected {OBJECT_NAME_TITLE}
+          {rejectedClubsCount} Rejected {OBJECT_NAME_TITLE}
         </li>
         <li className="has-text-success">
           {approvedClubsCount} Approved {OBJECT_NAME_TITLE}
@@ -182,10 +193,17 @@ const QueueTab = (): ReactElement => {
       <QueueTable clubs={pendingClubs} />
       <SmallTitle>Rejected Clubs</SmallTitle>
       <div className="mt-3 mb-3">
-        The table below shows a list of {rejectedClubs?.length ?? 0}{' '}
+        The table below shows a list of {rejectedClubsCount}{' '}
         {OBJECT_NAME_PLURAL} that have been marked as not approved.
       </div>
       <QueueTable clubs={rejectedClubs} />
+      <SmallTitle>Inactive Clubs</SmallTitle>
+      <div className="mt-3 mb-3">
+        The table below shows a list of {inactiveClubsCount}{' '}
+        {OBJECT_NAME_PLURAL} that have not finished the creation or renewal
+        process.
+      </div>
+      <QueueTable clubs={inactiveClubs} />
     </>
   )
 }

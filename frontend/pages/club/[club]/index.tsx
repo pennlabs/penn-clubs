@@ -17,7 +17,7 @@ import Header from '../../../components/ClubPage/Header'
 import InfoBox from '../../../components/ClubPage/InfoBox'
 import MemberList from '../../../components/ClubPage/MemberList'
 import QuestionList from '../../../components/ClubPage/QuestionList'
-import RenewalRequest from '../../../components/ClubPage/RenewalRequest'
+import RenewalRequest from '../../../components/ClubPage/RenewalRequestDialog'
 import SocialIcons from '../../../components/ClubPage/SocialIcons'
 import Testimonials from '../../../components/ClubPage/Testimonials'
 import {
