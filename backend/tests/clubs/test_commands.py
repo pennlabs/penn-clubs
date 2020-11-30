@@ -79,18 +79,22 @@ class SendInvitesTestCase(TestCase):
             ["email", "name"],
             ["example@example.com", "Resource One"],
             ["example@example.com", "Resource Two"],
+            ["example2@example.com", "Resource Three"],
         ]
 
-        with tempfile.TemporaryDirectory() as d:
-            tmpname = os.path.join(d, "temp.csv")
-            with open(tmpname, "w") as f:
-                writer = csv.writer(f)
-                for row in data:
-                    writer.writerow(row)
-            with self.settings(BRANDING="fyh"):
-                call_command("send_emails", "hap_intro", tmpname)
+        for template in {"hap_intro", "hap_intro_remind"}:
+            old_count = len(mail.outbox)
 
-        self.assertEqual(len(mail.outbox), 1)
+            with tempfile.TemporaryDirectory() as d:
+                tmpname = os.path.join(d, "temp.csv")
+                with open(tmpname, "w") as f:
+                    writer = csv.writer(f)
+                    for row in data:
+                        writer.writerow(row)
+                with self.settings(BRANDING="fyh"):
+                    call_command("send_emails", template, tmpname)
+
+            self.assertEqual(len(mail.outbox), old_count + 2)
 
     def test_send_virtual_fair(self):
         Club.objects.filter(code__in=["one", "two", "three"]).update(fair=True)
