@@ -345,6 +345,7 @@ export default function ClubEditCard({
         {
           name: 'website',
           type: 'url',
+          help: 'Ensure that your URL starts with either http:// or https://.',
         },
         {
           name: 'facebook',

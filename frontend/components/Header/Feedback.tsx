@@ -33,6 +33,7 @@ const FeedbackLink = styled.a`
 
 const Feedback = (): ReactElement => (
   <FeedbackLink
+    rel="noopener noreferrer"
     href={FEEDBACK_URL}
     title="Feedback"
     target="_blank"

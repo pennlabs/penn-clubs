@@ -56,6 +56,7 @@ const sites = {
     SHOW_MEMBERS: true,
     SHOW_MEMBERSHIP_REQUEST: true,
     SHOW_RANK_ALGORITHM: true,
+    SHOW_ACCESSIBILITY: false,
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
     OBJECT_MEMBERSHIP_LABEL: 'Members',
     OBJECT_MEMBERSHIP_LABEL_LOWERCASE: "member's",
@@ -163,6 +164,7 @@ const sites = {
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,
     SHOW_RANK_ALGORITHM: false,
+    SHOW_ACCESSIBILITY: true,
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
     OBJECT_MEMBERSHIP_LABEL_LOWERCASE: 'staff',
@@ -243,6 +245,7 @@ export const SHOW_MEMBERSHIP_REQUEST = sites[site].SHOW_MEMBERSHIP_REQUEST
 export const SHOW_RANK_ALGORITHM = sites[site].SHOW_RANK_ALGORITHM
 export const MEMBERSHIP_ROLE_NAMES: { [key: number]: string } =
   sites[site].MEMBERSHIP_ROLE_NAMES
+export const SHOW_ACCESSIBILITY = sites[site].SHOW_ACCESSIBILITY
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
 export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
   sites[site].OBJECT_MEMBERSHIP_LABEL_LOWERCASE

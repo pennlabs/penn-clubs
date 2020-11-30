@@ -2,6 +2,7 @@ import { ReactElement } from 'react'
 import styled from 'styled-components'
 
 import { PINK, SNOW } from '../../constants/colors'
+import { SHOW_ACCESSIBILITY } from '../../utils/branding'
 import { Icon, SmallText } from '../common'
 import Social from './Social'
 
@@ -30,6 +31,16 @@ const Footer = (): ReactElement => (
       />{' '}
       by <a href="https://pennlabs.org/">Penn Labs</a>
     </SmallText>
+    {SHOW_ACCESSIBILITY && (
+      <SmallText style={{ marginBottom: '0rem' }}>
+        <a
+          rel="noopener noreferrer"
+          href="https://accessibility.web-resources.upenn.edu/get-help"
+        >
+          Report Accessibility Issues and Get Help
+        </a>
+      </SmallText>
+    )}
     <Social />
   </Foot>
 )
