@@ -1357,20 +1357,31 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
         fields = ("club", "club_name", "person")
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class MinimalUserProfileSerializer(serializers.ModelSerializer):
+    """
+    A profile serializer used for the list view of users.
+    """
+
+    name = serializers.SerializerMethodField("get_full_name")
+
+    def get_full_name(self, obj):
+        return obj.get_full_name()
+
+    class Meta:
+        model = get_user_model()
+        fields = ["name", "username", "email"]
+
+
+class UserProfileSerializer(MinimalUserProfileSerializer):
     """
     A profile serializer used to display user information to other users.
     """
 
-    name = serializers.SerializerMethodField("get_full_name")
     image_url = serializers.SerializerMethodField("get_image_url")
     clubs = serializers.SerializerMethodField("get_clubs")
     graduation_year = serializers.IntegerField(source="profile.graduation_year")
     school = SchoolSerializer(many=True, source="profile.school")
     major = MajorSerializer(many=True, source="profile.major")
-
-    def get_full_name(self, obj):
-        return obj.get_full_name()
 
     def get_image_url(self, obj):
         if not obj.profile.image:
@@ -1407,12 +1418,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         serializer = ClubListSerializer(instance=queryset, many=True, context=self.context)
         return serializer.data
 
-    class Meta:
-        model = get_user_model()
-        fields = [
-            "name",
-            "username",
-            "email",
+    class Meta(MinimalUserProfileSerializer.Meta):
+        fields = MinimalUserProfileSerializer.Meta.fields + [
             "image_url",
             "graduation_year",
             "school",

@@ -93,6 +93,7 @@ from clubs.serializers import (
     MembershipInviteSerializer,
     MembershipRequestSerializer,
     MembershipSerializer,
+    MinimalUserProfileSerializer,
     NoteSerializer,
     QuestionAnswerSerializer,
     ReportSerializer,
@@ -2172,16 +2173,29 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
         return MembershipInvite.objects.filter(club__code=self.kwargs["club_code"], active=True)
 
 
-class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     """
+    list: Retrieve a list of users.
+
     get: Retrieve the profile information for given user.
     """
 
     queryset = get_user_model().objects.all()
     permission_classes = [IsSuperuser]
-    serializer_class = UserProfileSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        "email",
+        "first_name",
+        "last_name",
+        "username",
+    ]
     http_method_names = ["get"]
     lookup_field = "username"
+
+    def get_serializer_class(self):
+        if self.action in {"list"}:
+            return MinimalUserProfileSerializer
+        return UserProfileSerializer
 
 
 class MassInviteAPIView(APIView):
