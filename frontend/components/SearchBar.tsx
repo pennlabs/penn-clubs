@@ -327,7 +327,17 @@ export const SearchBarTextItem = ({
     timeout !== null && clearTimeout(timeout)
     storeTimeout(
       setTimeout(
-        () => searchCallback((inpt) => ({ ...inpt, [param]: nameInput })),
+        () =>
+          searchCallback((inpt) => {
+            if (nameInput.length <= 0) {
+              const newInpt = { ...inpt }
+              if (param in newInpt) {
+                delete newInpt[param]
+              }
+              return newInpt
+            }
+            return { ...inpt, [param]: nameInput }
+          }),
         200,
       ),
     )
