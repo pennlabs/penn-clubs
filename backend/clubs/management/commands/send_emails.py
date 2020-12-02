@@ -124,7 +124,8 @@ class Command(BaseCommand):
 
             # read recipients from csv file
             with open(email_file, "r") as f:
-                reader = csv.DictReader(f)
+                header = [h.lower().strip() for h in f.readline().split(",")]
+                reader = csv.DictReader(f, fieldnames=header)
                 try:
                     for line in reader:
                         name = line["name"].strip()

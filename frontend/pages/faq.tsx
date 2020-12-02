@@ -14,10 +14,12 @@ import {
 import { CREATE_ROUTE } from '../constants'
 import { SNOW } from '../constants/colors'
 import renderPage from '../renderPage'
+import { MembershipRank } from '../types'
 import {
   APPROVAL_AUTHORITY,
   APPROVAL_AUTHORITY_URL,
   FEEDBACK_URL,
+  MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_LONG_PLURAL,
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
@@ -121,7 +123,7 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
       <UnorderedList>
         <li>
           Search for {OBJECT_NAME_PLURAL} by name, and use filters like Tags
-          (tags that describe the ${OBJECT_NAME_SINGULAR}), Size (number of
+          (tags that describe the {OBJECT_NAME_SINGULAR}), Size (number of
           members), and Application (if applications are required to join)
         </li>
         <li>Bookmark {OBJECT_NAME_PLURAL} to keep track of them</li>
@@ -136,9 +138,9 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
       organization and how to get involved.
     </Question>
     <Question title="How do I edit an organization’s profile?">
-      You’ll need to have administrator permission for that organization. We’ve
-      invited people as administrators based on information submitted by{' '}
-      {OBJECT_NAME_PLURAL} to {data.originalDataSource}.
+      You’ll need to have administrator permission for that organization. We
+      originally invited people as administrators based on information submitted
+      by {OBJECT_NAME_PLURAL} to {data.originalDataSource}.
       <UnorderedList>
         <li>
           If you did not receive administrator permission and you believe you
@@ -154,10 +156,13 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
         </li>
       </UnorderedList>
       <br />
-      Note that there are 2 levels of administrators: Officers and Owners.
-      Officers are able to edit the page, invite other members, and grant
-      administrator permissions. In addition to those abilities, Owners are able
-      to deactivate or delete the {OBJECT_NAME_SINGULAR} page.
+      Note that there are 2 levels of administrators:{' '}
+      {MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer]}s and{' '}
+      {MEMBERSHIP_ROLE_NAMES[MembershipRank.Owner]}s.{' '}
+      {MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer]}s are able to edit the
+      page, invite other members, and grant administrator permissions. In
+      addition to those abilities, {MEMBERSHIP_ROLE_NAMES[MembershipRank.Owner]}
+      s are able to deactivate or delete the {OBJECT_NAME_SINGULAR} page.
     </Question>
     <Question title={`Why I can't find an organization on ${SITE_NAME}?`}>
       Sorry about that! We’re in the process of making {SITE_NAME} as
@@ -195,7 +200,7 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
       <a href={APPROVAL_AUTHORITY_URL}>{APPROVAL_AUTHORITY}</a> in order to
       comply with university guidelines. When your {OBJECT_NAME_SINGULAR}{' '}
       requires review, it will be added to a queue that is periodically checked
-      by the {APPROVAL_AUTHORITY}. You will be notified when your{' '}
+      by the {APPROVAL_AUTHORITY}. You will be notified via email when your{' '}
       {OBJECT_NAME_SINGULAR} has been reviewed.
     </Question>
     {SHOW_RANK_ALGORITHM && (

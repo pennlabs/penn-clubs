@@ -268,8 +268,9 @@ export default function ClubEditCard({
         {
           name: 'subtitle',
           type: 'text',
+          placeholder: 'Your Subtitle Here',
           label: `${OBJECT_NAME_TITLE_SINGULAR} Subtitle`,
-          help: `This text will be shown next to your ${OBJECT_NAME_SINGULAR} name in list and card views.`,
+          help: `This text will be shown next to your ${OBJECT_NAME_SINGULAR} name in list and card views. Enter a one sentence description of your ${OBJECT_NAME_SINGULAR}.`,
         },
         {
           name: 'description',
@@ -473,7 +474,7 @@ export default function ClubEditCard({
   ]
 
   const creationDefaults = {
-    subtitle: 'Your Subtitle Here',
+    subtitle: '',
     email_public: true,
     accepting_members: false,
     size: CLUB_SIZES[0].value,

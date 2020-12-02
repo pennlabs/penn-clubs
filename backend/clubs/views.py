@@ -28,7 +28,7 @@ from django_redis import get_redis_connection
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics import parse as ICSParse
-from rest_framework import filters, generics, mixins, parsers, status, viewsets
+from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -93,6 +93,7 @@ from clubs.serializers import (
     MembershipInviteSerializer,
     MembershipRequestSerializer,
     MembershipSerializer,
+    MinimalUserProfileSerializer,
     NoteSerializer,
     QuestionAnswerSerializer,
     ReportSerializer,
@@ -2172,16 +2173,29 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
         return MembershipInvite.objects.filter(club__code=self.kwargs["club_code"], active=True)
 
 
-class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     """
+    list: Retrieve a list of users.
+
     get: Retrieve the profile information for given user.
     """
 
     queryset = get_user_model().objects.all()
     permission_classes = [IsSuperuser]
-    serializer_class = UserProfileSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        "email",
+        "first_name",
+        "last_name",
+        "username",
+    ]
     http_method_names = ["get"]
     lookup_field = "username"
+
+    def get_serializer_class(self):
+        if self.action in {"list"}:
+            return MinimalUserProfileSerializer
+        return UserProfileSerializer
 
 
 class MassInviteAPIView(APIView):
