@@ -102,28 +102,29 @@ const ResourceCreationPage = ({
       content: (): ReactElement => (
         <>
           <Title>Introduction</Title>
-          {isResuming && club?.active ? (
-            <div className="notification is-success">
-              <Icon name="check" /> You have finished the {OBJECT_NAME_SINGULAR}{' '}
-              creation process for {club?.name}. You do not need to fill out
-              this form, but any changes you make here will be reflected on your{' '}
-              {OBJECT_NAME_SINGULAR}.
-              <div className="mt-3">
-                <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-                  <a className="button is-success is-light">
-                    Back to {OBJECT_NAME_TITLE_SINGULAR}
-                  </a>
-                </Link>
+          {isResuming &&
+            (club?.active ? (
+              <div className="notification is-success">
+                <Icon name="check" /> You have finished the{' '}
+                {OBJECT_NAME_SINGULAR} creation process for {club?.name}. You do
+                not need to fill out this form, but any changes you make here
+                will be reflected on your {OBJECT_NAME_SINGULAR}.
+                <div className="mt-3">
+                  <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+                    <a className="button is-success is-light">
+                      Back to {OBJECT_NAME_TITLE_SINGULAR}
+                    </a>
+                  </Link>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="notification is-warning">
-              <Icon name="alert-triangle" /> It doesn't look like you have
-              finished the {OBJECT_NAME_SINGULAR} creation process for{' '}
-              <b>{club?.name}</b>. We have saved what you have entered so far so
-              that you can continue from where you left off.
-            </div>
-          )}
+            ) : (
+              <div className="notification is-warning">
+                <Icon name="alert-triangle" /> It doesn't look like you have
+                finished the {OBJECT_NAME_SINGULAR} creation process for{' '}
+                <b>{club?.name}</b>. We have saved what you have entered so far
+                so that you can continue from where you left off.
+              </div>
+            ))}
           <Text>
             {SITE_NAME} is a central location for resources{' '}
             <b>directly associated with the {SCHOOL_NAME}</b> that are available
@@ -210,8 +211,8 @@ const ResourceCreationPage = ({
                 <ul>
                   {club === null && (
                     <li>
-                      Filling out and submitting the basic club information
-                      form.
+                      Filling out and submitting the basic{' '}
+                      {OBJECT_NAME_SINGULAR} information form.
                     </li>
                   )}
                   {!advisorsValid && (

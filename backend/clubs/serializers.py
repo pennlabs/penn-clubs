@@ -926,9 +926,12 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         if value:
             parsed = urlparse(value)
-            return "https://www.facebook.com{}".format(
-                parsed.path if parsed.path.startswith("/") else "/groups/{}/".format(parsed.path)
-            )
+            path = parsed.path
+            if parsed.path.startswith("@"):
+                path = "/{}/".format(parsed.path[1:])
+            elif not parsed.path.startswith("/"):
+                path = "/groups/{}/".format(parsed.path)
+            return "https://www.facebook.com{}".format(path)
         return value
 
     def validate_twitter(self, value):
@@ -937,9 +940,12 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         if value:
             parsed = urlparse(value)
-            return "https://twitter.com{}".format(
-                parsed.path if parsed.path.startswith("/") else "/{}".format(parsed.path)
-            )
+            path = parsed.path
+            if parsed.path.startswith("@"):
+                path = "/{}/".format(parsed.path[1:])
+            elif not parsed.path.startswith("/"):
+                path = "/{}/".format(parsed.path)
+            return "https://twitter.com{}".format(path)
         return value
 
     def validate_instagram(self, value):
@@ -948,9 +954,12 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         if value:
             parsed = urlparse(value)
-            return "https://www.instagram.com{}".format(
-                parsed.path if parsed.path.startswith("/") else "/{}/".format(parsed.path)
-            )
+            path = parsed.path
+            if parsed.path.startswith("@"):
+                path = "/{}/".format(parsed.path[1:])
+            elif not parsed.path.startswith("/"):
+                path = "/{}/".format(parsed.path)
+            return "https://www.instagram.com{}".format(path)
         return value
 
     def validate_linkedin(self, value):
