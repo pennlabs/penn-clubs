@@ -62,11 +62,19 @@ class ClubPermission(permissions.BasePermission):
     Only club owners should be able to delete.
     Club owners and officers should be able to update.
     Anyone with permission should be able to create.
+
+    Anyone should be able to view, if the club is approved.
+    Otherwise, only members or people with permission should be able to view.
     """
 
     def has_object_permission(self, request, view, obj):
         if view.action in ["retrieve", "children"]:
-            return True
+            if obj.approved or obj.ghost:
+                return True
+            return request.user.is_authenticated and (
+                request.user.has_perm("clubs.see_pending_clubs")
+                or find_membership_helper(request.user, obj) is not None
+            )
 
         if not request.user.is_authenticated:
             return False
