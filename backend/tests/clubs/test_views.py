@@ -881,7 +881,7 @@ class ClubTestCase(TestCase):
         """
         Test creating a club with empty fields.
         """
-        self.client.login(username=self.user5.username, password="test")
+        self.client.login(username=self.user4.username, password="test")
 
         resp = self.client.post(
             reverse("clubs-list"),
@@ -901,6 +901,26 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # continue these tests as not a superuser but still logged in
+        self.assertFalse(self.user4.is_superuser)
+
+        # club should start inactive
+        club = Club.objects.get(code="penn-labs")
+        self.assertFalse(club.active)
+
+        # fetching the club should work
+        resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertIn("code", resp.data)
+        self.assertEqual(resp.data["code"], "penn-labs")
+
+        # continue without user, make sure club is not visible
+        self.client.logout()
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertIn(resp.status_code, [200], resp.content)
+        codes = [club["code"] for club in resp.data]
+        self.assertNotIn(club.code, codes)
 
     def test_club_approve(self):
         """

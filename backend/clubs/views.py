@@ -544,7 +544,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if (
             self.request.user.has_perm("clubs.see_pending_clubs")
             or self.request.query_params.get("bypass", "").lower() == "true"
-            or self.action in {"retrieve", "children"}
+            or self.action not in {"list"}
         ):
             return queryset
         else:
