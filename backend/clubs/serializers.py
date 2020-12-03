@@ -797,6 +797,32 @@ class StudentTypeSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
+def social_validation_helper(value, domain, prefix="", at_prefix=None):
+    """
+    Help format and validate social URLs.
+    Be lenient on the format and try to correct inputs where possible.
+    """
+    if not value:
+        return value
+
+    value = value.strip()
+
+    parsed = urlparse(value)
+    path = parsed.path
+    if parsed.path.startswith("@"):
+        path = "{}/{}/".format(at_prefix if at_prefix is not None else prefix, parsed.path[1:])
+    elif not parsed.path.startswith("/"):
+        path = "{}/{}/".format(prefix, parsed.path)
+    if parsed.query:
+        path = "{}?{}".format(path, parsed.query)
+    if isinstance(domain, list):
+        if parsed.netloc in domain:
+            domain = parsed.netloc
+        else:
+            domain = domain[0]
+    return "https://{}{}".format(domain, path)
+
+
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
@@ -817,6 +843,15 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     subtitle = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
     is_ghost = serializers.SerializerMethodField("get_is_ghost")
+
+    # don't use url fields so we can allow for more lax inputs
+    website = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    facebook = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    instagram = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    twitter = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    linkedin = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    github = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    youtube = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     def get_events(self, obj):
         now = timezone.now()
@@ -920,85 +955,66 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             )
         return value
 
+    def validate_website(self, value):
+        """
+        Ensure that the URL is actually a website.
+        If no schema is specified, add the https:// schema for them by default.
+        """
+        # blank is ok
+        if not value:
+            return value
+
+        value = value.strip()
+
+        # add schema if not exists
+        if not re.match(r"^\w+://", value):
+            value = f"https://{value}"
+
+        validate = URLValidator()
+        try:
+            validate(value)
+        except DjangoValidationError:
+            raise serializers.ValidationError(
+                "The URL you entered does not appear to be valid. "
+                "Please check your URL and try again."
+            )
+
     def validate_facebook(self, value):
         """
         Ensure that URL is actually a Facebook link.
         """
-        if value:
-            parsed = urlparse(value)
-            path = parsed.path
-            if parsed.path.startswith("@"):
-                path = "/{}/".format(parsed.path[1:])
-            elif not parsed.path.startswith("/"):
-                path = "/groups/{}/".format(parsed.path)
-            return "https://www.facebook.com{}".format(path)
-        return value
+        return social_validation_helper(value, "facebook.com", prefix="/groups", at_prefix="")
 
     def validate_twitter(self, value):
         """
         Ensure that URL is actually a Twitter link.
         """
-        if value:
-            parsed = urlparse(value)
-            path = parsed.path
-            if parsed.path.startswith("@"):
-                path = "/{}/".format(parsed.path[1:])
-            elif not parsed.path.startswith("/"):
-                path = "/{}/".format(parsed.path)
-            return "https://twitter.com{}".format(path)
-        return value
+        return social_validation_helper(value, "twitter.com")
 
     def validate_instagram(self, value):
         """
         Ensure that the URL is actually a instagram link.
         """
-        if value:
-            parsed = urlparse(value)
-            path = parsed.path
-            if parsed.path.startswith("@"):
-                path = "/{}/".format(parsed.path[1:])
-            elif not parsed.path.startswith("/"):
-                path = "/{}/".format(parsed.path)
-            return "https://www.instagram.com{}".format(path)
-        return value
+        return social_validation_helper(value, "instagram.com")
 
     def validate_linkedin(self, value):
         """
         Ensure that URL is actually a LinkedIn URL. Attempt to convert into correct format with
         limited information.
         """
-        if value:
-            parsed = urlparse(value)
-            return "https://www.linkedin.com{}".format(
-                parsed.path if parsed.path.startswith("/") else "/company/{}/".format(parsed.path)
-            )
-        return value
+        return social_validation_helper(value, "linkedin.com", prefix="/company")
 
     def validate_github(self, value):
         """
         Ensure that URL is actually a GitHub URL.
         """
-        if value:
-            parsed = urlparse(value)
-            return "https://github.com{}".format(
-                parsed.path if parsed.path.startswith("/") else "/{}".format(parsed.path)
-            )
-        return value
+        return social_validation_helper(value, "github.com")
 
     def validate_youtube(self, value):
         """
         Ensure that URL is actually a YouTube URL.
         """
-        if value:
-            parsed = urlparse(value)
-            path = parsed.path if parsed.path.startswith("/") else "/{}".format(parsed.path)
-            if parsed.query:
-                path = "{}?{}".format(path, parsed.query)
-            if parsed.netloc == "youtu.be":
-                return "https://youtu.be{}".format(path)
-            else:
-                return "https://youtube.com{}".format(path)
-        return value
+        return social_validation_helper(value, ["youtube.com", "youtu.be"])
 
     def validate_active(self, value):
         """

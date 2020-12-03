@@ -695,7 +695,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         subscriptions) for a club.
         """
         club = self.get_object()
-        group = self.request.query_params.get("group")
+        group = self.request.query_params.get("group", "hour")
         if "date" in request.query_params:
             date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
         else:
@@ -728,7 +728,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         visits_data = get_count(
             ClubVisit.objects.filter(
-                club=club, created_at__gte=start, created_at__lte=end, visit_type=1
+                club=club,
+                created_at__gte=start,
+                created_at__lte=end,
+                visit_type=ClubVisit.CLUB_PAGE,
             )
         )
         favorites_data = get_count(

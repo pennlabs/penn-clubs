@@ -183,7 +183,6 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
   const [club, setClub] = useState<Club>(initialClub)
   const [step, setStep] = useState<number>(0)
   const [changeStatus, setChangeStatus] = useState<boolean>(false)
-  const [hasSubmitted, setSubmitted] = useState<boolean>(false)
   const [submitMessage, setSubmitMessage] = useState<
     string | ReactElement | null
   >(null)
@@ -316,7 +315,6 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
             onSubmit={({ club, message }): Promise<void> => {
               if (club !== undefined) {
                 setClub(club)
-                setSubmitted(true)
               }
               if (message !== undefined) {
                 setSubmitMessage(message)
@@ -329,9 +327,13 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
               {submitMessage}
             </div>
           )}
+          <p className="mt-3">
+            If you have made any changes to your {OBJECT_NAME_SINGULAR}, please
+            make sure you have pressed the "Submit" button above before pressing
+            the "Continue" button below.
+          </p>
         </>
       ),
-      disabled: !hasSubmitted,
     },
     {
       name: 'Policies',
