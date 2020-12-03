@@ -9,6 +9,11 @@ import { CLUB_ROUTE } from '../../../../../constants/routes'
 import renderPage from '../../../../../renderPage'
 import { Club } from '../../../../../types'
 import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils'
+import {
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
+  SHOW_MEMBERS,
+} from '../../../../../utils/branding'
 
 type Query = {
   club: string
@@ -36,6 +41,11 @@ const Invite = ({ club, query }: InviteProps): ReactElement => {
   const [error, setError] = useState<Error | null>(null)
 
   const accept = (isPublic: boolean) => {
+    if (query.invite === 'example') {
+      router.push(CLUB_ROUTE(), CLUB_ROUTE(query.club))
+      return
+    }
+
     doApiRequest(`/clubs/${query.club}/invites/${query.invite}/?format=json`, {
       method: 'PATCH',
       body: {
@@ -88,7 +98,7 @@ const Invite = ({ club, query }: InviteProps): ReactElement => {
           className="has-text-centered"
           style={{ margin: 30, marginTop: 60 }}
         >
-          <Metadata title="Club Invite" />
+          <Metadata title={`${OBJECT_NAME_TITLE_SINGULAR} Invite`} />
           <h1 className="title is-2">404 Not Found</h1>
           <p>
             The invite you are looking for does not exist. Perhaps it was
@@ -137,19 +147,22 @@ const Invite = ({ club, query }: InviteProps): ReactElement => {
       )}
       <p style={{ marginBottom: 15 }}>
         By accepting this invitation, you will be able to view the contact
-        information of other members and internal club documents.
+        information of other members and internal {OBJECT_NAME_SINGULAR}{' '}
+        documents.
       </p>
-      <p>
-        <label>
-          <input
-            type="checkbox"
-            checked={isPublic}
-            onChange={() => setIsPublic(!isPublic)}
-          />{' '}
-          Make my membership to this club public. Outsiders will be able to see
-          my name and role in {name}.
-        </label>
-      </p>
+      {SHOW_MEMBERS && (
+        <p>
+          <label>
+            <input
+              type="checkbox"
+              checked={isPublic}
+              onChange={() => setIsPublic(!isPublic)}
+            />{' '}
+            Make my membership to this club public. Outsiders will be able to
+            see my name and role in {name}.
+          </label>
+        </p>
+      )}
       <br />
       <button
         className="button is-large is-success"

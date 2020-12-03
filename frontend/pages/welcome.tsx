@@ -23,6 +23,8 @@ import {
   OBJECT_NAME_LONG_PLURAL,
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
+  SCHOOL_NAME,
+  SITE_ID,
   SITE_NAME,
 } from '../utils/branding'
 
@@ -85,25 +87,25 @@ const Welcome = ({
       <Metadata title="Welcome!" />
       <Container>
         <TitleHeader>
-          <LogoWithText></LogoWithText>
+          {SITE_ID === 'clubs' && <LogoWithText></LogoWithText>}
           <Title>Welcome to {SITE_NAME}!</Title>
         </TitleHeader>
         <hr />
         <Center>
           <Text>
             {SITE_NAME} is your central source of information about{' '}
-            {OBJECT_NAME_LONG_PLURAL} at Penn.
+            {OBJECT_NAME_LONG_PLURAL} at the {SCHOOL_NAME}.
           </Text>
         </Center>
         <hr />
         <Center>
           <Subtitle>1. Tell us about yourself</Subtitle>
           <Text>
-            The info below helps us tailor your {SITE_NAME} experience to find
+            The info below helps us tailor your {SITE_NAME} experience to find{' '}
             {OBJECT_NAME_PLURAL} that you're likely to be interested in. It will
             also be shared with {OBJECT_NAME_PLURAL} that you choose to
             subscribe to. Feel free to leave fields blank if you'd prefer not
-            the share this info.
+            the share this information.
           </Text>
         </Center>
         <ProfileForm settings={userInfo} onUpdate={setUserInfo} />
