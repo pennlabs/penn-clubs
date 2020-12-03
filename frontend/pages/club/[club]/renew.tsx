@@ -17,7 +17,15 @@ import ResourceCreationPage from '../../../components/ResourceCreationPage'
 import { DARK_GRAY, GREEN, MEDIUM_GRAY } from '../../../constants/colors'
 import { CLUB_ROUTE } from '../../../constants/routes'
 import renderPage from '../../../renderPage'
-import { Club, Major, School, StudentType, Tag, Year } from '../../../types'
+import {
+  Club,
+  Major,
+  MembershipRank,
+  School,
+  StudentType,
+  Tag,
+  Year,
+} from '../../../types'
 import {
   apiCheckPermission,
   doApiRequest,
@@ -27,6 +35,7 @@ import {
 import {
   APPROVAL_AUTHORITY,
   APPROVAL_AUTHORITY_URL,
+  MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -231,8 +240,9 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
         <>
           {club.active && (
             <div className="notification is-primary">
-              You or another {OBJECT_NAME_SINGULAR} officer has already
-              completed this form and started the renewal process for{' '}
+              You or another {OBJECT_NAME_SINGULAR}{' '}
+              {MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer].toLowerCase()} has
+              already completed this form and started the renewal process for{' '}
               <b>{club.name}</b> for the {year}-{year + 1} school year! You do
               not have to complete this form, and completing it for a second
               time will not do anything.

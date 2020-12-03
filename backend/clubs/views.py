@@ -324,6 +324,16 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
 
             return {f"{field}": boolval}
 
+        def parse_datetime(field, value, operation, queryset):
+            try:
+                value = parse(value.strip())
+            except (ValueError, OverflowError):
+                return
+
+            if operation in {"gt", "lt", "gte", "lte"}:
+                return {f"{field}__{operation}": value}
+            return
+
         fields = {
             "accepting_members": parse_boolean,
             "active": parse_boolean,
@@ -348,7 +358,9 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             fields = {f"club__{k}": v for k, v in fields.items()}
 
         if queryset.model == Event:
-            fields.update({"type": parse_int})
+            fields.update(
+                {"type": parse_int, "start_time": parse_datetime, "end_time": parse_datetime}
+            )
 
         query = {}
 
@@ -1210,10 +1222,6 @@ class EventViewSet(viewsets.ModelViewSet):
             qs = qs.filter(club__code=self.kwargs["club_code"])
 
         qs = qs.filter(Q(club__approved=True) | Q(club__ghost=True))
-
-        now = timezone.now()
-        if self.action in ["list"]:
-            qs = qs.filter(end_time__gte=now)
 
         return (
             qs.select_related("club", "creator",)

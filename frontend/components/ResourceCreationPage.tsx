@@ -102,7 +102,21 @@ const ResourceCreationPage = ({
       content: (): ReactElement => (
         <>
           <Title>Introduction</Title>
-          {isResuming && (
+          {isResuming && club?.active ? (
+            <div className="notification is-success">
+              <Icon name="check" /> You have finished the {OBJECT_NAME_SINGULAR}{' '}
+              creation process for {club?.name}. You do not need to fill out
+              this form, but any changes you make here will be reflected on your{' '}
+              {OBJECT_NAME_SINGULAR}.
+              <div className="mt-3">
+                <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+                  <a className="button is-success is-light">
+                    Back to {OBJECT_NAME_TITLE_SINGULAR}
+                  </a>
+                </Link>
+              </div>
+            </div>
+          ) : (
             <div className="notification is-warning">
               <Icon name="alert-triangle" /> It doesn't look like you have
               finished the {OBJECT_NAME_SINGULAR} creation process for{' '}

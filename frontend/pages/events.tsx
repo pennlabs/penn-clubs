@@ -277,6 +277,10 @@ function EventPage({
   const [liveEvents, setLiveEvents] = useState<ClubEvent[]>(() =>
     randomizeEvents(initialLiveEvents),
   )
+  const [calendarEvents, setCalendarEvents] = useState<ClubEvent[]>(() => [
+    ...initialLiveEvents,
+    ...initialUpcomingEvents,
+  ])
 
   const [searchInput, setSearchInput] = useState<SearchInput>({})
   const currentSearch = useRef<SearchInput>({})
@@ -353,6 +357,31 @@ function EventPage({
       })),
     [badges],
   )
+
+  /**
+   * Given a date range from big calendar, fetch the events associated with that date range.
+   */
+  const fetchForDateRange = (
+    range: Date[] | { start: Date; end: Date },
+  ): void => {
+    if (Array.isArray(range)) {
+      if (range.length === 1) {
+        range = {
+          start: range[0],
+          end: new Date(range[0].getTime() + 60 * 60 * 24 * 1000),
+        }
+      } else {
+        const max = new Date(Math.max(...((range as unknown) as number[])))
+        const min = new Date(Math.min(...((range as unknown) as number[])))
+        range = { start: min, end: max }
+      }
+    }
+    doApiRequest(
+      `/events/?format=json&start_time__gte=${range.start.toISOString()}&end_time__lte=${range.end.toISOString()}`,
+    )
+      .then((resp) => resp.json())
+      .then(setCalendarEvents)
+  }
 
   return (
     <>
@@ -552,7 +581,8 @@ function EventPage({
                     onSelectEvent={(event: { resource: ClubEvent }) => {
                       setPreviewEvent(event.resource)
                     }}
-                    events={[...liveEvents, ...upcomingEvents].map((e) => ({
+                    onRangeChange={fetchForDateRange}
+                    events={calendarEvents.map((e) => ({
                       title: e.name,
                       start: new Date(e.start_time),
                       end: new Date(e.end_time),

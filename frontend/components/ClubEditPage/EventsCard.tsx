@@ -385,6 +385,7 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
       <Text>Manage events for this {OBJECT_NAME_SINGULAR}.</Text>
       <ModelForm
         baseUrl={`/clubs/${club.code}/events/`}
+        listParams={`&end_time__gte=${new Date().toISOString()}`}
         fields={eventFields}
         fileFields={['image']}
         tableFields={eventTableFields}
