@@ -9,7 +9,7 @@ describe('Page load tests', () => {
     cy.contains('Penn Clubs')
   })
 
-  it('Vists the rank page', () => {
+  it('Visits the rank page', () => {
     cy.visit('/rank')
     cy.contains('Penn Clubs')
   })

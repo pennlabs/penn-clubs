@@ -421,12 +421,14 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
+        e2_start = timezone.now() - timezone.timedelta(days=3)
+        e2_end = timezone.now() - timezone.timedelta(days=2)
         e2 = Event.objects.create(
             code="test-event-2",
             club=self.club1,
             name="Past Test Event 2",
-            start_time=timezone.now() - timezone.timedelta(days=3),
-            end_time=timezone.now() - timezone.timedelta(days=2),
+            start_time=e2_start,
+            end_time=e2_end,
             type=Event.FAIR,
         )
         e3 = Event.objects.create(
@@ -441,7 +443,10 @@ class ClubTestCase(TestCase):
         self.event1.save()
 
         # list events without a club to namespace.
-        resp = self.client.get(reverse("events-list"), content_type="application/json",)
+        now = timezone.now()
+        resp = self.client.get(
+            reverse("events-list"), {"end_time__gte": now}, content_type="application/json"
+        )
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertEquals(2, len(resp.data), resp.data)
 
@@ -469,6 +474,15 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertEquals(1, len(resp.data), resp.data)
         self.assertEquals(e2.id, resp.data[0]["id"], resp.data)
+
+        # list events with a filter
+        resp = self.client.get(
+            reverse("events-list"),
+            {"start_time__gte": e2_start.isoformat(), "end_time__lte": e2_end.isoformat()},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertEquals(1, len(resp.data), resp.data)
 
     def test_event_update_fair(self):
         Membership.objects.create(person=self.user1, club=self.club1, role=Membership.ROLE_OWNER)
@@ -1036,6 +1050,9 @@ class ClubTestCase(TestCase):
                 "name": "Penn Labs",
                 "description": "We code stuff.",
                 "email": "contact@pennlabs.org",
+                "facebook": "966590693376781",
+                "twitter": "@Penn",
+                "instagram": "@uofpenn",
                 "tags": [],
             },
             content_type="application/json",

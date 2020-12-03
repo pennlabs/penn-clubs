@@ -2,6 +2,7 @@ import collections
 import csv
 import datetime
 import os
+import re
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -124,7 +125,10 @@ class Command(BaseCommand):
 
             # read recipients from csv file
             with open(email_file, "r") as f:
-                header = [h.lower().strip() for h in f.readline().split(",")]
+                header = [
+                    re.sub(r"\W+", "", h.lower().strip().replace(" ", "_"))
+                    for h in f.readline().split(",")
+                ]
                 reader = csv.DictReader(f, fieldnames=header)
                 try:
                     for line in reader:

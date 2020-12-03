@@ -269,6 +269,14 @@ export const TextField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
     const { type = 'text', isError, value, ...other } = props
 
+    // It turns out that URL fields confuse people because Chrome doesn't let you submit unless its a valid URL.
+    // People don't include the https:// schema or enter something that isn't a URL, causing Chrome to reject these URLs.
+    // We have some server side processing that is more flexible, so just turn URL fields into text fields for now.
+    let actualType = type
+    if (type === 'url') {
+      actualType = 'text'
+    }
+
     return type === 'textarea' ? (
       <textarea
         className={`textarea ${isError ? 'is-danger' : ''}`}
@@ -278,7 +286,7 @@ export const TextField = useFieldWrapper(
     ) : (
       <input
         className={`input ${isError ? 'is-danger' : ''}`}
-        type={type}
+        type={actualType}
         value={value != null ? value.toString() : ''}
         {...other}
       />

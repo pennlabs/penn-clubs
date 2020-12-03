@@ -324,6 +324,16 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
 
             return {f"{field}": boolval}
 
+        def parse_datetime(field, value, operation, queryset):
+            try:
+                value = parse(value.strip())
+            except (ValueError, OverflowError):
+                return
+
+            if operation in {"gt", "lt", "gte", "lte"}:
+                return {f"{field}__{operation}": value}
+            return
+
         fields = {
             "accepting_members": parse_boolean,
             "active": parse_boolean,
@@ -348,7 +358,9 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             fields = {f"club__{k}": v for k, v in fields.items()}
 
         if queryset.model == Event:
-            fields.update({"type": parse_int})
+            fields.update(
+                {"type": parse_int, "start_time": parse_datetime, "end_time": parse_datetime}
+            )
 
         query = {}
 
@@ -683,7 +695,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         subscriptions) for a club.
         """
         club = self.get_object()
-        group = self.request.query_params.get("group")
+        group = self.request.query_params.get("group", "hour")
         if "date" in request.query_params:
             date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
         else:
@@ -716,7 +728,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         visits_data = get_count(
             ClubVisit.objects.filter(
-                club=club, created_at__gte=start, created_at__lte=end, visit_type=1
+                club=club,
+                created_at__gte=start,
+                created_at__lte=end,
+                visit_type=ClubVisit.CLUB_PAGE,
             )
         )
         favorites_data = get_count(
@@ -1210,10 +1225,6 @@ class EventViewSet(viewsets.ModelViewSet):
             qs = qs.filter(club__code=self.kwargs["club_code"])
 
         qs = qs.filter(Q(club__approved=True) | Q(club__ghost=True))
-
-        now = timezone.now()
-        if self.action in ["list"]:
-            qs = qs.filter(end_time__gte=now)
 
         return (
             qs.select_related("club", "creator",)
