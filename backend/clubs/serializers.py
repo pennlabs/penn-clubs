@@ -727,12 +727,18 @@ class ClubListSerializer(serializers.ModelSerializer):
         return fields_subset if len(fields_subset) > 0 else all_fields
 
     def to_representation(self, instance):
-        if instance.ghost:
+        """
+        Return the previous approved version of a club for users
+        that should not see unapproved content.
+        """
+        if instance.ghost and not instance.approved:
             user = self.context["request"].user
 
-            if not user.has_perm("clubs.see_pending_clubs") and not (
+            can_see_pending = user.has_perm("clubs.see_pending_clubs")
+            is_member = (
                 user.is_authenticated and instance.membership_set.filter(person=user).exists()
-            ):
+            )
+            if not can_see_pending and not is_member:
                 historical_club = (
                     instance.history.filter(approved=True).order_by("-approved_on").first()
                 )
