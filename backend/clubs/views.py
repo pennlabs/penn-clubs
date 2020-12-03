@@ -548,7 +548,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return queryset
         elif self.request.user.is_authenticated:
             # Show approved clubs along with clubs that the logged-in user is a member of.
-            return queryset.filter(Q(approved=True) | Q(members=self.request.user) | Q(ghost=True))
+            return queryset.filter(
+                Q(approved=True) | Q(membership__person=self.request.user) | Q(ghost=True)
+            ).distinct()
         else:
             return queryset.filter(Q(approved=True) | Q(ghost=True))
 
