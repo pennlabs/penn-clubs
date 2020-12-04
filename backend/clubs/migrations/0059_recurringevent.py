@@ -6,14 +6,12 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0058_badge_visible'),
+        ("clubs", "0058_badge_visible"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='RecurringEvent',
-            fields=[
-                ('recurring_event_id', models.AutoField(primary_key=True, serialize=False)),
-            ],
+            name="RecurringEvent",
+            fields=[("recurring_event_id", models.AutoField(primary_key=True, serialize=False)),],
         ),
     ]

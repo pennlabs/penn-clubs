@@ -1615,27 +1615,24 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         if type == Event.FAIR and not self.request.user.is_superuser:
             raise DRFValidationError(
                 detail="Approved activities fair events have already been created. "
-                       "See above for events to edit, and "
-                       "please email contact@pennclubs.com if this is en error."
+                "See above for events to edit, and "
+                "please email contact@pennclubs.com if this is en error."
             )
 
         if request.data.get("is_recurring", None) is not None:
             parent_recurring_event = RecurringEvent.objects.create()
             event_data = request.data.copy()
-            start_time = datetime.datetime.strptime(event_data.pop('start_time'), '%Y-%m-%d %H:%M:%S')
-            end_time = datetime.datetime.strptime(event_data.pop('end_time'), '%Y-%m-%d %H:%M:%S')
-            offset = event_data.pop('offset')
-            end_date = datetime.datetime.strptime(event_data.pop('end_date'), '%Y-%m-%d %H:%M:%S')
-            event_data.pop('is_recurring')
-            club_code = event_data.pop('club')
+            start_time = datetime.datetime.strptime(
+                event_data.pop("start_time"), "%Y-%m-%d %H:%M:%S"
+            )
+            end_time = datetime.datetime.strptime(event_data.pop("end_time"), "%Y-%m-%d %H:%M:%S")
+            offset = event_data.pop("offset")
+            end_date = datetime.datetime.strptime(event_data.pop("end_date"), "%Y-%m-%d %H:%M:%S")
+            event_data.pop("is_recurring")
+            club_code = event_data.pop("club")
 
             club = Club.objects.get(code=club_code)
             while start_time < end_date:
-                event_to_return = Event.objects.create(**event_data,
-                                                       club=club,
-                                                       start_time=start_time,
-                                                       end_time=end_time,
-                                                       parent_recurring_event=parent_recurring_event)
                 start_time = start_time + datetime.timedelta(days=offset)
                 end_time = end_time + datetime.timedelta(days=offset)
 

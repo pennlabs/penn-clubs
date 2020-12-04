@@ -669,6 +669,9 @@ class Event(models.Model):
     ics_uuid = models.UUIDField(default=uuid.uuid4)
     is_ics_event = models.BooleanField(default=False, blank=True)
     parent_recurring_event = models.ForeignKey(RecurringEvent, on_delete=models.CASCADE, blank=True, null=True)
+    parent_recurring_event = models.ForeignKey(
+        RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
+    )
 
     OTHER = 0
     RECRUITMENT = 1
