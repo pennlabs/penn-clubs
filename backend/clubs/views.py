@@ -886,7 +886,7 @@ class SchoolViewSet(viewsets.ModelViewSet):
 
     serializer_class = SchoolSerializer
     permission_classes = [ReadOnly | IsSuperuser]
-    queryset = School.objects.all()
+    queryset = School.objects.all().order_by("is_graduate", "name")
 
 
 class MajorViewSet(viewsets.ModelViewSet):

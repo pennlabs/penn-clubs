@@ -203,6 +203,7 @@ export interface ExtendedUserInfo extends UserInfo {
 export interface School {
   id: number
   name: string
+  is_graduate: boolean
 }
 
 export interface Major {

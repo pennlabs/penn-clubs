@@ -193,7 +193,7 @@ class Command(BaseCommand):
 
         # create schools
         [
-            School.objects.get_or_create(name=school)
+            School.objects.get_or_create(name=school, defaults={"is_graduate": False})
             for school in [
                 "The Wharton School",
                 "School of Engineering and Applied Science",
@@ -201,6 +201,10 @@ class Command(BaseCommand):
                 "School of Arts & Sciences",
             ]
         ]
+
+        School.objects.get_or_create(
+            name="Perelman School of Medicine", defaults={"is_graduate": True}
+        )
 
         # create majors
         major_names = [

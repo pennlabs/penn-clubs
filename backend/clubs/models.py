@@ -985,6 +985,7 @@ class School(models.Model):
     """
 
     name = models.TextField()
+    is_graduate = models.BooleanField()
 
     def __str__(self):
         return self.name
