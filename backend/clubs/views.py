@@ -28,6 +28,7 @@ from django_redis import get_redis_connection
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics import parse as ICSParse
+from options.models import Option
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -45,6 +46,7 @@ from clubs.models import (
     Asset,
     Badge,
     Club,
+    ClubFair,
     ClubVisit,
     Event,
     Favorite,
@@ -2350,6 +2352,39 @@ class EmailPreviewContext(dict):
 
     def get_used_variables(self):
         return sorted(self._called)
+
+
+class OptionListView(APIView):
+    """
+    Return a list of options, with some options dynamically generated.
+    This response is intended for site-wide global variables.
+    """
+
+    def get(self, request):
+        # compute base django options
+        options = {k: v for k, v in Option.objects.filter(public=True).values_list("key", "value")}
+
+        # add in activities fair information
+        now = timezone.now()
+
+        fairs = ClubFair.objects.filter(
+            end_time__gte=now, start_time__gte=now - datetime.timedelta(weeks=1)
+        ).order_by("start_time")
+
+        fair = fairs.first()
+        if fair:
+            happening = fair.start_time <= now - datetime.timedelta(minutes=3)
+            options["FAIR_NAME"] = fair.name
+            options["FAIR_ORG_NAME"] = fair.organization
+            options["FAIR_CONTACT"] = fair.contact
+            options["FAIR_TIME"] = fair.time
+            options["FAIR_INFO"] = fair.information
+            if happening:
+                options["FAIR_OPEN"] = True
+            else:
+                options["PRE_FAIR"] = True
+
+        return Response(options)
 
 
 def email_preview(request):

@@ -178,17 +178,11 @@ class Command(BaseCommand):
             raise CommandError("You probably do not want to run this script in production!")
 
         # create options
-        bool_options = ["FAIR_OPEN", "FAIR_REGISTRATION_OPEN", "CLUB_REGISTRATION", "PRE_FAIR"]
+        bool_options = ["FAIR_REGISTRATION_OPEN", "CLUB_REGISTRATION"]
         for option in bool_options:
             Option.objects.get_or_create(
                 key=option,
                 defaults={"value": "false", "value_type": Option.TYPE_BOOL, "public": True},
-            )
-
-        string_options = [("FAIR_NAME", "sac")]
-        for key, value in string_options:
-            Option.objects.get_or_create(
-                key=key, defaults={"value": value, "value_type": Option.TYPE_TXT, "public": True}
             )
 
         # create years

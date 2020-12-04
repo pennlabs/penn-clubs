@@ -490,6 +490,25 @@ class Testimonial(models.Model):
         return self.text
 
 
+class ClubFair(models.Model):
+    """
+    Represents an activities fair with multiple clubs as participants.
+    """
+
+    name = models.TextField()
+    organization = models.TextField()
+    contact = models.TextField()
+    time = models.TextField()
+    information = models.TextField()
+
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+
+    def __str__(self):
+        fmt = "%b %d, %Y"
+        return f"{self.name} ({self.start_time.strftime(fmt)} - {self.end_time.strftime(fmt)})"
+
+
 class Event(models.Model):
     """
     Represents an event hosted by a club.

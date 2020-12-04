@@ -2,7 +2,7 @@ import { useRouter } from 'next/router'
 import { ReactElement, useState } from 'react'
 import styled from 'styled-components'
 
-import { FAIR_INFO, MEDIUM_GRAY } from '../../constants'
+import { MEDIUM_GRAY } from '../../constants'
 import { Club, MembershipRank, UserInfo } from '../../types'
 import { apiCheckPermission, doApiRequest, useSetting } from '../../utils'
 import {
@@ -50,7 +50,6 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   const [confirmModal, setConfirmModal] = useState<ConfirmParams | null>(null)
   const fairInProgress = useSetting('FAIR_OPEN') || useSetting('PRE_FAIR')
   const fairName = useSetting('FAIR_NAME')
-  const fairInfo = FAIR_INFO[fairName as string]
 
   const canApprove = apiCheckPermission('clubs.approve_club')
   const seeFairStatus = apiCheckPermission('clubs.see_fair_status')
@@ -331,12 +330,12 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
           {club.fair ? (
             <>
               <Icon name="check" /> <b>{club.name}</b> is signed up for the{' '}
-              {fairInfo.name}.
+              {fairName}.
             </>
           ) : (
             <>
               <Icon name="x" /> <b>{club.name}</b> is not signed up for the{' '}
-              {fairInfo.name}.
+              {fairName}.
             </>
           )}
         </div>

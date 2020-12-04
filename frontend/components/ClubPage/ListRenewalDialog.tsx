@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
 
-import { DIRECTORY_ROUTE, FAIR_INFO, USER_RENEWAL } from '../../constants'
+import { DIRECTORY_ROUTE, USER_RENEWAL } from '../../constants'
 import { useSetting } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
@@ -15,7 +15,6 @@ const ListRenewalDialog = (): ReactElement => {
   const year = new Date().getFullYear()
   const isFairOpen = useSetting('FAIR_REGISTRATION_OPEN')
   const fairName = useSetting('FAIR_NAME')
-  const fairInfo = FAIR_INFO[fairName as string]
 
   return (
     <div className="notification is-info is-clearfix">
@@ -33,7 +32,7 @@ const ListRenewalDialog = (): ReactElement => {
           {isFairOpen && (
             <>
               During this process, you will also have the option to register for
-              the {fairInfo.name}.
+              the {fairName}.
             </>
           )}{' '}
           For a complete list of {OBJECT_NAME_PLURAL}, see{' '}

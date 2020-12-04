@@ -22,6 +22,7 @@ from clubs.views import (
     MembershipViewSet,
     MemberViewSet,
     NoteViewSet,
+    OptionListView,
     QuestionAnswerViewSet,
     ReportViewSet,
     SchoolViewSet,
@@ -83,7 +84,7 @@ urlpatterns = [
         name="favorites-calendar",
     ),
     path(r"emailpreview/", email_preview, name="email-preview"),
-    path(r"options/", include("options.urls", namespace="options")),
+    path(r"options/", OptionListView.as_view(), name="options"),
     path(r"social/", include("social_django.urls", namespace="social")),
     path(r"webhook/meeting/", MeetingZoomWebhookAPIView.as_view(), name="webhooks-meeting"),
 ]

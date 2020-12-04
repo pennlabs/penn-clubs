@@ -15,6 +15,7 @@ from clubs.models import (
     Asset,
     Badge,
     Club,
+    ClubFair,
     ClubVisit,
     Event,
     Favorite,
@@ -358,6 +359,7 @@ class QuestionAnswerAdmin(admin.ModelAdmin):
 admin.site.register(Asset)
 admin.site.register(Advisor, AdvisorAdmin)
 admin.site.register(Club, ClubAdmin)
+admin.site.register(ClubFair)
 admin.site.register(ClubVisit)
 admin.site.register(Badge, BadgeAdmin)
 admin.site.register(Event, EventAdmin)
