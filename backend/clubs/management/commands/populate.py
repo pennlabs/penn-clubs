@@ -42,9 +42,9 @@ hone your skills in time for recruiting season!""",
         "enables_subscription": True,
         "tags": [{"name": "Professional"}, {"name": "Athletics"}, {"name": "Undergraduate"}],
         "badges": [
-            {"label": "Red Badge", "color": "ff0000"},
-            {"label": "Green Badge", "color": "00ff00"},
-            {"label": "Blue Badge", "color": "0000ff"},
+            {"label": "Red Badge", "color": "ff0000", "visible": True},
+            {"label": "Green Badge", "color": "00ff00", "visible": True},
+            {"label": "Blue Badge", "color": "0000ff", "visible": True},
         ],
         "testimonials": [
             {"text": "Great club!"},
@@ -303,7 +303,10 @@ class Command(BaseCommand):
 
         # create badges
         badge, _ = Badge.objects.get_or_create(
-            label="TAC", description="Testing Activities Council", org=Club.objects.get(code="tac")
+            label="TAC",
+            description="Testing Activities Council",
+            org=Club.objects.get(code="tac"),
+            visible=True,
         )
 
         # create additional clubs

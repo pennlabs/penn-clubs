@@ -1660,10 +1660,7 @@ class BadgeViewSet(viewsets.ModelViewSet):
     lookup_field = "name"
 
     def get_queryset(self):
-        if self.request.user.is_authenticated and self.request.user.is_superuser:
-            return Badge.objects.all()
-
-        return Badge.objects.filter(Q(purpose="fair") | Q(label__in=["SAC", "Wharton Council"]))
+        return Badge.objects.filter(visible=True)
 
 
 class FavoriteCalendarAPIView(APIView):

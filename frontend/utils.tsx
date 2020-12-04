@@ -147,11 +147,14 @@ export function apiCheckPermission(
  */
 export async function doBulkLookup(
   paths: ([string, string] | string)[],
-  ctx: NextPageContext,
+  ctx?: NextPageContext,
 ): Promise<{ [key: string]: any }> {
-  const data = {
-    headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
-  }
+  const data =
+    ctx != null
+      ? {
+          headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
+        }
+      : undefined
 
   const resps = await Promise.all(
     paths.map((item) =>
@@ -176,7 +179,13 @@ export async function doBulkLookup(
  * @param path The path to the REST endpoint, excluding the /api/ component.
  * @param data Additional fetch data to be passed in the request.
  */
-export function doApiRequest(path: string, data?: any): Promise<Response> {
+export function doApiRequest(
+  path: string,
+  data?: Omit<RequestInit, 'body' | 'headers'> & {
+    body?: FormData | any
+    headers?: { [key: string]: string | null | void }
+  },
+): Promise<Response> {
   if (!data) {
     data = {}
   }
@@ -194,7 +203,7 @@ export function doApiRequest(path: string, data?: any): Promise<Response> {
   if (data.body && !(data.body instanceof FormData)) {
     data.body = JSON.stringify(data.body)
   }
-  return fetch(getApiUrl(path), data)
+  return fetch(getApiUrl(path), data as RequestInit)
 }
 
 export function apiSetFavoriteStatus(
