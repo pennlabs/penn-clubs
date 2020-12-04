@@ -187,7 +187,7 @@ const ZoomPage = ({
     initialUserMeetings,
   )
   const [createResp, setCreateResp] = useState<any>(null)
-  const fairName = useSetting('FAIR_NAME')
+  const fairName = useSetting('FAIR_NAME') ?? 'Upcoming Fair'
 
   useEffect(() => {
     setNextUrl(window.location.pathname)

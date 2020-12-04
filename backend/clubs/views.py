@@ -2377,8 +2377,12 @@ class OptionListView(APIView):
             happening = fair.start_time <= now - datetime.timedelta(minutes=3)
             options["FAIR_NAME"] = fair.name
             options["FAIR_ORG_NAME"] = fair.organization
-            options["FAIR_CONTACT"] = fair.contact
-            options["FAIR_TIME"] = fair.time
+            options["FAIR_CONTACT"] = fair.contact or settings.FROM_EMAIL
+            options["FAIR_TIME"] = fair.time or (
+                "{} - {}".format(
+                    fair.start_time.strftime("%b %d, %Y"), fair.end_time.strftime("%b %d, %Y")
+                )
+            )
             options["FAIR_INFO"] = fair.information
             options["FAIR_OPEN"] = happening
             options["PRE_FAIR"] = not happening

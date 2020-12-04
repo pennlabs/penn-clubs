@@ -136,7 +136,6 @@ If you have any questions, please don't hesitate to reach out to contact@pennclu
 
 ## 📝 Feedback
 
-This is all a new process, even for us, and we're always looking for ways
-to improve our products. If you have any feedback, whether it be bugs,
+We're always looking for ways to improve our products. If you have any feedback, whether it be bugs,
 improvements, new features, or anything else, please let us know by
-filling out our [feedback form] (https://airtable.com/shrCsYFWxCwfwE7cf)!
+filling out our [feedback form](https://airtable.com/shrCsYFWxCwfwE7cf)!
