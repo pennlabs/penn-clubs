@@ -34,26 +34,25 @@ type FairPageProps = {
 
 const FairPage = ({ events }: FairPageProps): ReactElement => {
   const isFairOpen = useSetting('FAIR_OPEN')
-  const fairName = useSetting('FAIR_NAME')
-  const fairOrgName = useSetting('FAIR_ORG_NAME')
-  const fairContact = useSetting('FAIR_CONTACT')
-  const fairTime = useSetting('FAIR_TIME')
-  const fairAdditionalInfo = useSetting('FAIR_INFO')
-
-  if (isFairOpen && fairName == null) {
-    return (
-      <p className="has-text-danger">
-        Fair setup is not configured correctly. Contact <Contact /> for
-        assistance.
-      </p>
-    )
-  }
+  const isPreFair = useSetting('PRE_FAIR')
+  const fairName = useSetting('FAIR_NAME') ?? 'Upcoming Fair'
+  const fairOrgName = useSetting('FAIR_ORG_NAME') ?? 'partner organization'
+  const fairContact = useSetting('FAIR_CONTACT') ?? 'the partner organization'
+  const fairTime = useSetting('FAIR_TIME') ?? 'TBD'
+  const fairAdditionalInfo = useSetting('FAIR_INFO') ?? ''
 
   return (
     <Container background={SNOW}>
       <Metadata title={fairName as string} />
       <InfoPageTitle>{fairName} – Student Guide</InfoPageTitle>
       <div className="content">
+        {!isPreFair && !isFairOpen && (
+          <div className="notification is-warning">
+            <Icon name="alert-triangle" /> There is currently no activities fair
+            that is currently occuring or upcoming. If you believe this is an
+            error, please contact <Contact />.
+          </div>
+        )}
         <p>
           <b>Hi there! Welcome to {SITE_NAME}!</b> We are the official platform
           for {OBJECT_NAME_LONG_PLURAL} on campus, and we are excited to get you

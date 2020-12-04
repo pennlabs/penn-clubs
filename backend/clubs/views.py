@@ -2368,7 +2368,8 @@ class OptionListView(APIView):
         now = timezone.now()
 
         fairs = ClubFair.objects.filter(
-            end_time__gte=now, start_time__gte=now - datetime.timedelta(weeks=1)
+            end_time__gte=now - datetime.timedelta(minutes=15),
+            start_time__lte=now + datetime.timedelta(weeks=1),
         ).order_by("start_time")
 
         fair = fairs.first()
