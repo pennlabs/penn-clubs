@@ -1633,6 +1633,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
             club = Club.objects.get(code=club_code)
             while start_time < end_date:
+                Event.objects.create(
+                    **event_data,
+                    club=club,
+                    start_time=start_time,
+                    end_time=end_time,
+                    parent_recurring_event=parent_recurring_event,
+                )
                 start_time = start_time + datetime.timedelta(days=offset)
                 end_time = end_time + datetime.timedelta(days=offset)
 
