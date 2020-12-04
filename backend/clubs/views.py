@@ -2379,10 +2379,11 @@ class OptionListView(APIView):
             options["FAIR_CONTACT"] = fair.contact
             options["FAIR_TIME"] = fair.time
             options["FAIR_INFO"] = fair.information
-            if happening:
-                options["FAIR_OPEN"] = True
-            else:
-                options["PRE_FAIR"] = True
+            options["FAIR_OPEN"] = happening
+            options["PRE_FAIR"] = not happening
+        else:
+            options["FAIR_OPEN"] = False
+            options["PRE_FAIR"] = False
 
         return Response(options)
 

@@ -40,7 +40,7 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
   const fairTime = useSetting('FAIR_TIME')
   const fairAdditionalInfo = useSetting('FAIR_INFO')
 
-  if (fairName == null) {
+  if (isFairOpen && fairName == null) {
     return (
       <p className="has-text-danger">
         Fair setup is not configured correctly. Contact <Contact /> for
