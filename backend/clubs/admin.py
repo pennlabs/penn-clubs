@@ -329,7 +329,8 @@ class BadgeAdmin(admin.ModelAdmin):
         )
 
     search_fields = ("label",)
-    list_display = ("label", "org", "club_count", "badge_color")
+    list_display = ("label", "org", "club_count", "badge_color", "visible")
+    list_filter = ("visible",)
     actions = [do_merge_tags]
 
 
