@@ -92,6 +92,13 @@ const Welcome = ({
         </TitleHeader>
         <hr />
         <Center>
+          {nextUrl && !!nextUrl.length && nextUrl !== '/' && (
+            <div className="notification is-primary">
+              You're seeing this page because it is the first time you have
+              logged into {SITE_NAME}. To skip this page, scroll down to the
+              bottom and click "Continue".
+            </div>
+          )}
           <Text>
             {SITE_NAME} is your central source of information about{' '}
             {OBJECT_NAME_LONG_PLURAL} at the {SCHOOL_NAME}.

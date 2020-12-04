@@ -160,7 +160,7 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
             platform, please contact <Contact />.
           </li>
         </ul>
-        {fairAdditionalInfo && fairAdditionalInfo.length && (
+        {fairAdditionalInfo && !!fairAdditionalInfo.length && (
           <p>{fairAdditionalInfo}</p>
         )}
         <p>
