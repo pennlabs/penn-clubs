@@ -72,6 +72,7 @@ class BadgeSerializer(serializers.ModelSerializer):
 
 class SchoolSerializer(serializers.ModelSerializer):
     name = serializers.CharField()
+    is_graduate = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = School
