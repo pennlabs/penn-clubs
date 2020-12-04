@@ -890,6 +890,11 @@ class Tag(models.Model):
 
 
 class Badge(models.Model):
+    """
+    Represents a category that a club could fall under.
+    Clubs do not select badges, these are designated by an external authority.
+    """
+
     label = models.CharField(max_length=255)
     purpose = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -900,6 +905,9 @@ class Badge(models.Model):
     # The organization that this badge represents (If this is the "SAC Funded" badge,
     # then this would link to SAC)
     org = models.ForeignKey(Club, on_delete=models.CASCADE, blank=True, null=True)
+
+    # whether or not users can view and filter by this badge
+    visible = models.BooleanField(default=False)
 
     def __str__(self):
         return self.label

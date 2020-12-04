@@ -1,3 +1,4 @@
+import LRU from 'lru-cache'
 import { NextPageContext } from 'next'
 import React, { Component, ReactElement } from 'react'
 import styled from 'styled-components'
@@ -56,6 +57,12 @@ type PageComponent<T> = React.ComponentType<
 > &
   StaticPageProps<T>
 
+const cache = new LRU()
+
+/**
+ * A wrapper that goes around any page that requires authentication.
+ * Passes in useful properties with regard to authentication and global site variables.
+ */
 function renderPage<T>(
   Page: PageComponent<T>,
 ): React.ComponentType & {
@@ -200,9 +207,15 @@ function renderPage<T>(
     }
 
     const fetchOptions = async () => {
+      let val = cache.get('base:options')
+      if (val != null) {
+        return val
+      }
       try {
-        const resp = await doApiRequest('/options/?format=json', data)
-        return await resp.json()
+        const resp = await doApiRequest('/options/?format=json')
+        val = await resp.json()
+        cache.set('base:options', val, 1000 * 60)
+        return val
       } catch (e) {
         return {}
       }
@@ -275,6 +288,64 @@ type ListPageComponent<T> = React.ComponentType<
 > &
   StaticPageProps<T>
 
+/**
+ * Fetch content that should be the same for all users.
+ * This content is applicable for the list page.
+ * Cache this content for future requests.
+ */
+const getPublicCachedContent = async () => {
+  const val = cache.get('list:props')
+  if (val != null) {
+    return val
+  }
+
+  const [
+    tagsRequest,
+    badgesRequest,
+    schoolRequest,
+    yearRequest,
+    studentTypesRequest,
+  ] = await Promise.all([
+    doApiRequest('/tags/?format=json'),
+    doApiRequest('/badges/?format=json'),
+    doApiRequest('/schools/?format=json'),
+    doApiRequest('/years/?format=json'),
+    isClubFieldShown('student_types')
+      ? doApiRequest('/student_types/?format=json')
+      : Promise.resolve(null),
+  ])
+
+  const [
+    tagsResponse,
+    badgesResponse,
+    schoolResponse,
+    yearResponse,
+    studentTypesResponse,
+  ] = await Promise.all([
+    tagsRequest.json(),
+    badgesRequest.json(),
+    schoolRequest.json(),
+    yearRequest.json(),
+    studentTypesRequest != null
+      ? studentTypesRequest.json()
+      : Promise.resolve([]),
+  ])
+
+  const out = {
+    badges: badgesResponse as Badge[],
+    schools: schoolResponse as School[],
+    studentTypes: studentTypesResponse as StudentType[],
+    tags: tagsResponse as Tag[],
+    years: yearResponse as Year[],
+  }
+  cache.set('list:props', out, 1000 * 60)
+  return out
+}
+
+/**
+ * A wrapper to pass in properties to the React component suitable for a list of clubs.
+ * This wrapper is used for the homepage.
+ */
 export function renderListPage<T>(
   Page: ListPageComponent<T>,
 ): React.ComponentType {
@@ -310,55 +381,22 @@ export function renderListPage<T>(
 
     const initialProps = await fetchOriginalProps()
 
-    const [
-      clubsRequest,
-      tagsRequest,
-      badgesRequest,
-      liveEventRequest,
-      schoolRequest,
-      yearRequest,
-      studentTypesRequest,
-    ] = await Promise.all([
+    const [clubsRequest, liveEventRequest, cached] = await Promise.all([
       doApiRequest('/clubs/?page=1&ordering=featured&format=json', data),
-      doApiRequest('/tags/?format=json', data),
-      doApiRequest('/badges/?format=json', data),
       doApiRequest('/events/live/', data),
-      doApiRequest('/schools/?format=json', data),
-      doApiRequest('/years/?format=json', data),
-      isClubFieldShown('student_types')
-        ? doApiRequest('/student_types/?format=json', data)
-        : Promise.resolve(null),
+      getPublicCachedContent(),
     ])
 
-    const [
-      clubsResponse,
-      tagsResponse,
-      badgesResponse,
-      liveEventResponse,
-      schoolResponse,
-      yearResponse,
-      studentTypesResponse,
-    ] = await Promise.all([
+    const [clubsResponse, liveEventResponse] = await Promise.all([
       clubsRequest.json(),
-      tagsRequest.json(),
-      badgesRequest.json(),
       liveEventRequest.json(),
-      schoolRequest.json(),
-      yearRequest.json(),
-      studentTypesRequest != null
-        ? studentTypesRequest.json()
-        : Promise.resolve([]),
     ])
 
     return {
       ...initialProps,
-      badges: badgesResponse as Badge[],
+      ...cached,
       clubs: clubsResponse as PaginatedClubPage,
       liveEventCount: liveEventResponse.length,
-      schools: schoolResponse as School[],
-      studentTypes: studentTypesResponse as StudentType[],
-      tags: tagsResponse as Tag[],
-      years: yearResponse as Year[],
     }
   }
 
