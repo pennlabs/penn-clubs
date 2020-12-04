@@ -14,6 +14,7 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
+from ics import Calendar
 from phonenumber_field.modelfields import PhoneNumberField
 from simple_history.models import HistoricalRecords
 
@@ -207,6 +208,7 @@ class Club(models.Model):
     recruiting_cycle = models.IntegerField(choices=RECRUITING_CYCLES, default=RECRUITING_UNKNOWN)
     enables_subscription = models.BooleanField(default=True)
     listserv = models.CharField(blank=True, max_length=255)
+    ics_import_url = models.URLField(max_length=200, blank=True, null=True)
     image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
     image_small = models.ImageField(upload_to=get_club_small_file_name, null=True, blank=True)
     tags = models.ManyToManyField("Tag")
@@ -240,6 +242,20 @@ class Club(models.Model):
 
     def create_thumbnail(self, request=None):
         return create_thumbnail_helper(self, request, 200)
+
+    def add_ics_events(self):
+        url = self.ics_import_url
+        if url is not None:
+            calendar = Calendar(requests.get(url).text)
+            for event in calendar.events:
+                ev = Event.objects.create(
+                    club=self,
+                    name=event.name,
+                    start_time=event.begin.datetime,
+                    end_time=event.end.datetime,
+                    description=event.description,
+                )
+                ev.save()
 
     def send_virtual_fair_email(self, request=None, email="setup"):
         """
