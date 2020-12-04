@@ -639,6 +639,17 @@ class ClubFairRegistration(models.Model):
         return f"{self.club.name} registration for {self.fair.name}"
 
 
+class RecurringEvent(models.Model):
+    """
+    Represents a recurring event hosted by a club.
+    """
+
+    recurring_event_id = models.AutoField(primary_key=True)
+
+    def __str__(self):
+        return self.recurring_event_id
+
+
 class Event(models.Model):
     """
     Represents an event hosted by a club.
@@ -657,6 +668,7 @@ class Event(models.Model):
     description = models.TextField(blank=True)  # rich html
     ics_uuid = models.UUIDField(default=uuid.uuid4)
     is_ics_event = models.BooleanField(default=False, blank=True)
+    parent_recurring_event = models.ForeignKey(RecurringEvent, on_delete=models.CASCADE, blank=True, null=True)
 
     OTHER = 0
     RECRUITMENT = 1
