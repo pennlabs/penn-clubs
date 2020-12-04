@@ -1198,7 +1198,6 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         Do not let non-superusers create events with the FAIR type through the API.
         """
-        print(request.data)
         type = request.data.get("type", 0)
         if type == Event.FAIR and not self.request.user.is_superuser:
             raise DRFValidationError(
@@ -1209,18 +1208,17 @@ class EventViewSet(viewsets.ModelViewSet):
 
         if request.data.get("is_recurring", None) is not None:
             event_data = request.data.copy()
-            print(event_data)
             start_time = datetime.datetime.strptime(event_data.pop('start_time'), '%Y-%m-%d %H:%M:%S')
             end_time = datetime.datetime.strptime(event_data.pop('end_time'), '%Y-%m-%d %H:%M:%S')
             offset = event_data.pop('offset')
             end_date = datetime.datetime.strptime(event_data.pop('end_date'), '%Y-%m-%d %H:%M:%S')
             event_data.pop('is_recurring')
             club_code = event_data.pop('club')
-            print("new", event_data)
 
             club = Club.objects.get(code=club_code)
             while start_time < end_date:
-                event_to_return= Event.objects.create(**event_data, club=club, start_time=start_time, end_time=end_time)
+                event_to_return= Event.objects.create(**event_data, club=club,
+                                                      start_time=start_time, end_time=end_time)
                 start_time = start_time + datetime.timedelta(days=offset)
                 end_time = end_time + datetime.timedelta(days=offset)
 
