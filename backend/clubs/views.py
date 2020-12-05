@@ -1615,8 +1615,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         if type == Event.FAIR and not self.request.user.is_superuser:
             raise DRFValidationError(
                 detail="Approved activities fair events have already been created. "
-                       "See above for events to edit, and "
-                       f"please email {settings.FROM_EMAIL} if this is en error."
+                "See above for events to edit, and "
+                f"please email {settings.FROM_EMAIL} if this is en error."
             )
 
         if request.data.get("is_recurring", None) is not None:
@@ -1627,7 +1627,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             offset = event_data.pop("offset")
             end_date = parse(event_data.pop("end_date"))
             event_data.pop("is_recurring")
-            club_code = kwargs['club_code']
+            club_code = kwargs["club_code"]
 
             club = Club.objects.get(code=club_code)
             while start_time < end_date:

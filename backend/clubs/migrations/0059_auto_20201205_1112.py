@@ -7,19 +7,29 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0058_badge_visible'),
+        ("clubs", "0058_badge_visible"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='RecurringEvent',
+            name="RecurringEvent",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='event',
-            name='parent_recurring_event',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='clubs.recurringevent'),
+            model_name="event",
+            name="parent_recurring_event",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="clubs.recurringevent",
+            ),
         ),
     ]
