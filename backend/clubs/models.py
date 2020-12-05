@@ -499,10 +499,15 @@ class ClubFair(models.Model):
     organization = models.TextField()
     contact = models.TextField()
     time = models.TextField()
+
+    # these fields are rendered as raw html
     information = models.TextField()
+    registration_information = models.TextField()
 
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
+
+    participating_clubs = models.ManyToManyField(Club)
 
     def __str__(self):
         fmt = "%b %d, %Y"

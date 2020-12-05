@@ -6,6 +6,7 @@ from clubs.views import (
     AdvisorViewSet,
     AssetViewSet,
     BadgeViewSet,
+    ClubFairViewSet,
     ClubViewSet,
     ClubVisitViewSet,
     EventViewSet,
@@ -42,6 +43,7 @@ from clubs.views import (
 
 router = routers.SimpleRouter()
 router.register(r"clubs", ClubViewSet, basename="clubs")
+router.register(r"clubfairs", ClubFairViewSet, basename="clubfairs")
 router.register(r"events", EventViewSet, basename="events")
 router.register(r"tags", TagViewSet, basename="tags")
 router.register(r"badges", BadgeViewSet, basename="badges")

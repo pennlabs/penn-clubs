@@ -11,6 +11,7 @@ from clubs.models import (
     Advisor,
     Badge,
     Club,
+    ClubFair,
     Event,
     Major,
     Membership,
@@ -168,6 +169,37 @@ you can procrastinate on the application and ultimately miss the deadline!""",
         "tags": [{"name": "Umbrella Organization"}, {"name": "Undergraduate"}],
     },
 ]
+
+fair_registration_text = """
+<p>
+    Every year, the
+    <a href="https://sacfunded.net/" target="_blank">
+    Student Activities Council
+    </a>
+    hosts a Fall Activities Fair. This year, the SAC Fair will be held
+    virtually during the first few days of school. In addition to Penn
+    Clubs, which now has an anonymous Q &amp; A feature, clubs will be
+    designated one of three days to host a live Zoom session for a
+    couple of hours. All submitted zoom links will be featured on Penn
+    Clubs.
+</p>
+<p>
+    Like the in-person SAC Fair, clubs are encouraged to have a few
+    members present on Zoom to introduce their club to prospective
+    members and to answer questions.
+</p>
+<p>
+    If you would like to particpate in the Fall 2020 SAC fair, check
+    the box below. If you check the box below, your club information
+    will be shared with the Student Activites Council and more details
+    will be sent to you at a later date.
+</p>
+<p>
+    Note that this SAC Fair is for <b>Undergraduate Organizations</b>
+    only. If you are not an undergraduate organization, please do not
+    sign up for the SAC fair.
+</p>
+"""
 
 
 class Command(BaseCommand):
@@ -415,6 +447,22 @@ class Command(BaseCommand):
                 "description": "This is the description for this event.",
                 "start_time": now,
                 "end_time": now + datetime.timedelta(hours=1),
+            },
+        )
+
+        # create a club fair one month from now
+        ClubFair.objects.update_or_create(
+            name="Sample Fair",
+            defaults={
+                "organization": "Student Activities Council",
+                "contact": "sac@sacfunded.net",
+                "start_time": now + datetime.timedelta(days=30),
+                "end_time": now + datetime.timedelta(days=33),
+                "information": "<p>This information is shown to students participating in the fair!"
+                " <b>Formatting is supported here!</b></p>",
+                "registration_information": "<p>This information is shown when registering!"
+                " Display registration information here."
+                " <b>Formatting is supported here!</b></p>" + fair_registration_text,
             },
         )
 

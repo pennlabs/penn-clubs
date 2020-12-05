@@ -161,7 +161,11 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
           </li>
         </ul>
         {fairAdditionalInfo && !!(fairAdditionalInfo as string).length && (
-          <p>{fairAdditionalInfo}</p>
+          <p>
+            <div
+              dangerouslySetInnerHTML={{ __html: fairAdditionalInfo as string }}
+            />
+          </p>
         )}
         <p>
           You can find the schedule for the activities fair in the table below.

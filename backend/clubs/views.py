@@ -68,6 +68,7 @@ from clubs.permissions import (
     AssetPermission,
     ClubItemPermission,
     ClubPermission,
+    ClubFairPermission,
     DjangoPermission,
     EventPermission,
     InvitePermission,
@@ -77,6 +78,7 @@ from clubs.permissions import (
     NotePermission,
     QuestionAnswerPermission,
     ReadOnly,
+    find_membership_helper,
 )
 from clubs.serializers import (
     AdvisorSerializer,
@@ -84,6 +86,7 @@ from clubs.serializers import (
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
+    ClubFairSerializer,
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
@@ -451,6 +454,53 @@ class ClubsOrderingFilter(RandomOrderingFilter):
             new_queryset = new_queryset.order_by(Lower("name"))
 
         return new_queryset
+
+
+class ClubFairViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of ongoing and upcoming club fairs.
+    """
+
+    http_method_names = ["get", "post"]
+    serializer_class = ClubFairSerializer
+    permission_classes = [ClubFairPermission | IsSuperuser]
+
+    @action(detail=True, methods=["post"])
+    def register(self, request, *args, **kwargs):
+        """
+        Register a club for this club fair.
+        Pass in a "club" string parameter with the club code
+        and a "status" parameter that is true to register the club, or false to unregister.
+        """
+        fair = self.get_object()
+
+        if not request.user.is_authenticated:
+            raise PermissionDenied
+
+        club = get_object_or_404(Club, code=request.data.get("club"))
+
+        # get register/unregister action status
+        status = request.data.get("status")
+        if isinstance(status, str):
+            status = status.strip().lower() == "true"
+        elif not isinstance(status, bool):
+            status = True
+
+        # check if user can actually register club
+        mship = find_membership_helper(request.user, club)
+        if mship is not None and mship.role <= Membership.ROLE_OFFICER or request.user.is_superuser:
+            if status:
+                fair.participating_clubs.add(club)
+            else:
+                fair.participating_clubs.remove(club)
+            return Response({"success": True})
+        else:
+            raise PermissionDenied
+
+    def get_queryset(self):
+        now = timezone.now()
+        return ClubFair.objects.filter(end_time__gte=now).order_by("start_time")
 
 
 class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):

@@ -18,6 +18,7 @@ from clubs.models import (
     Asset,
     Badge,
     Club,
+    ClubFair,
     ClubVisit,
     Event,
     Favorite,
@@ -837,7 +838,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     testimonials = TestimonialSerializer(many=True, read_only=True)
     events = serializers.SerializerMethodField("get_events")
     is_request = serializers.SerializerMethodField("get_is_request")
-    fair = serializers.BooleanField(default=False)
     student_types = StudentTypeSerializer(many=True, required=False)
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
@@ -859,6 +859,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     linkedin = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     github = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     youtube = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+    def get_fairs(self, obj):
+        return list(obj.clubfair_set.values_list("id", flat=True))
 
     def get_events(self, obj):
         now = timezone.now()
@@ -1147,7 +1150,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "description",
             "events",
             "facebook",
-            "fair",
             "github",
             "how_to_get_involved",
             "image",
@@ -1579,14 +1581,14 @@ class AuthenticatedClubSerializer(ClubSerializer):
 
     members = AuthenticatedMembershipSerializer(many=True, source="membership_set", read_only=True)
     files = AssetSerializer(many=True, source="asset_set", read_only=True)
-    fair = serializers.BooleanField(default=False)
+    fairs = serializers.SerializerMethodField("get_fairs")
     fair_on = serializers.DateTimeField(read_only=True)
     email = serializers.EmailField()
     email_public = serializers.BooleanField(default=True)
     advisor_set = AdvisorSerializer(many=True, required=False)
 
     class Meta(ClubSerializer.Meta):
-        fields = ClubSerializer.Meta.fields + ["email_public", "files", "fair_on"]
+        fields = ClubSerializer.Meta.fields + ["email_public", "files", "fair_on", "fairs"]
 
 
 class NoteTagSerializer(serializers.ModelSerializer):
@@ -1617,3 +1619,26 @@ class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
             "outside_club_permission",
         )
         save_related_fields = [{"field": "note_tags", "mode": "create"}]
+
+
+class ClubFairSerializer(serializers.ModelSerializer):
+    time = serializers.SerializerMethodField("get_time")
+
+    def get_time(self, obj):
+        if obj.time:
+            return obj.time
+        return "{} to {}".format(
+            obj.start_time.strftime("%b %d, %Y"), obj.end_time.strftime("%b %d, %Y")
+        )
+
+    class Meta:
+        model = ClubFair
+        fields = (
+            "contact",
+            "id",
+            "information",
+            "name",
+            "organization",
+            "registration_information",
+            "time",
+        )

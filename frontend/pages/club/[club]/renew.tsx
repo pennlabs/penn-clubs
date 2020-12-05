@@ -4,6 +4,8 @@ import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import ClubEditCard from '../../../components/ClubEditPage/ClubEditCard'
+import ClubFairCard from '../../../components/ClubEditPage/ClubFairCard'
+import FilesCard from '../../../components/ClubEditPage/FilesCard'
 import FormProgressIndicator from '../../../components/ClubEditPage/FormProgressIndicator'
 import ClubMetadata from '../../../components/ClubMetadata'
 import {
@@ -30,7 +32,6 @@ import {
   apiCheckPermission,
   doApiRequest,
   isClubFieldShown,
-  useSetting,
 } from '../../../utils'
 import {
   APPROVAL_AUTHORITY,
@@ -187,8 +188,6 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
     string | ReactElement | null
   >(null)
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
-  const [isSacChecked, setSacChecked] = useState<boolean>(club.fair)
-  const isFairOpen = useSetting('FAIR_REGISTRATION_OPEN')
 
   const hasPermission = apiCheckPermission(`clubs.manage_club:${club.code}`)
 
@@ -327,7 +326,7 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
               {submitMessage}
             </div>
           )}
-          <p className="mt-3">
+          <p className="mt-3 mb-3">
             If you have made any changes to your {OBJECT_NAME_SINGULAR}, please
             make sure you have pressed the "Submit" button above before pressing
             the "Continue" button below.
@@ -351,65 +350,28 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
       disabled: !arePoliciesAccepted,
     },
     {
-      name: 'SAC Fair',
+      name: 'Fairs',
       content: () => {
         return (
-          <TextInfoBox>
-            <p>
-              Every year, the{' '}
-              <a href="https://sacfunded.net/" target="_blank">
-                Student Activities Council
-              </a>{' '}
-              hosts a Fall Activities Fair. This year, the SAC Fair will be held
-              virtually during the first few days of school. In addition to Penn
-              Clubs, which now has an anonymous Q &amp; A feature, clubs will be
-              designated one of three days to host a live Zoom session for a
-              couple of hours. All submitted zoom links will be featured on Penn
-              Clubs.
-            </p>
-            <p>
-              Like the in-person SAC Fair, clubs are encouraged to have a few
-              members present on Zoom to introduce their club to prospective
-              members and to answer questions.
-            </p>
-            <p>
-              If you would like to particpate in the Fall {year} SAC fair, check
-              the box below. If you check the box below, your club information
-              will be shared with the Student Activites Council and more details
-              will be sent to you at a later date.
-            </p>
-            <p>
-              Note that this SAC Fair is for <b>Undergraduate Organizations</b>{' '}
-              only. If you are not an undergraduate organization, please do not
-              sign up for the SAC fair.
-            </p>
-            {isFairOpen ? (
-              <label>
-                <input
-                  type="checkbox"
-                  checked={isSacChecked}
-                  onChange={(e) => {
-                    const checked = e.target.checked
-                    doApiRequest(`/clubs/${club.code}/?format=json`, {
-                      method: 'PATCH',
-                      body: {
-                        fair: checked,
-                      },
-                    })
-                    setSacChecked(checked)
-                    e.persist()
-                  }}
-                />{' '}
-                Yes, <b>{club.name}</b> would like to participate in the Fall{' '}
-                {year} SAC Fair.
-              </label>
-            ) : (
-              <p className="has-text-danger">
-                SAC Fair registration is now closed. If you have any questions,
-                please contact <Contact point="sac" />.
+          <>
+            <TextInfoBox>
+              <p>
+                You will be able to update your registration or register for new
+                activity fairs at any time through the {OBJECT_NAME_SINGULAR}{' '}
+                management page.
               </p>
-            )}
-          </TextInfoBox>
+            </TextInfoBox>
+            <ClubFairCard club={club} />
+            <hr />
+            <TextInfoBox>
+              <p>
+                Please upload any files required by the {APPROVAL_AUTHORITY}{' '}
+                here. You can upload new files at any time from the management
+                page.
+              </p>
+            </TextInfoBox>
+            <FilesCard club={club} />
+          </>
         )
       },
     },
