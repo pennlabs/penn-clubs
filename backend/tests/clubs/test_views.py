@@ -668,7 +668,6 @@ class ClubTestCase(TestCase):
                 "type": Event.RECRUITMENT,
                 "start_time": start_time.isoformat(),
                 "end_time": end_time.isoformat(),
-                "club": self.club1.code,
                 "is_recurring": "True",
                 "offset": 7,
                 "end_date": end_date.isoformat(),
