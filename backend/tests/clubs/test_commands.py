@@ -7,16 +7,69 @@ import csv
 import datetime
 import os
 import tempfile
+from unittest import mock
 
+from dateutil.tz import tzutc
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 from django.utils import timezone
+from ics import Calendar
+from ics import Event as Ev
 
 from clubs.models import Club, ClubFair, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.utils import fuzzy_lookup_club
+
+
+def mocked_requests_get(*args):
+    class MockResponse:
+        def __init__(self, content, status_code):
+            self.text = str(content)
+            self.status_code = status_code
+
+        def text(self):
+            return self.text
+
+    cal = Calendar()
+    event = Ev()
+    event.name = "A test event"
+    event.description = "A test description"
+    event.begin = datetime.datetime(2020, 1, 2, 3, 4, 5)
+    event.end = datetime.datetime(2020, 1, 2, 3, 4, 5) + datetime.timedelta(minutes=60)
+    cal.events.add(event)
+    if args[0] == "http://xyz.com/test.ics":
+        return MockResponse(cal, 200)
+
+    return MockResponse(None, 404)
+
+
+class ImportCalendarTestCase(TestCase):
+    def setUp(self):
+        self.club1 = Club.objects.create(
+            code="one",
+            name="Club One",
+            active=True,
+            email="test@example.com",
+            ics_import_url="http://xyz.com/test.ics",
+        )
+
+    @mock.patch("requests.get", side_effect=mocked_requests_get)
+    def test_import_calendar_events(self, mock_get):
+        call_command("import_calendar_events")
+
+        desired = self.club1.events.get(id=1)
+
+        self.assertEqual(desired.name, "A test event")
+        self.assertEqual(desired.description, "A test description")
+        self.assertEqual(desired.start_time, datetime.datetime(2020, 1, 2, 3, 4, 5, tzinfo=tzutc()))
+        self.assertEqual(
+            desired.end_time,
+            datetime.datetime(2020, 1, 2, 3, 4, 5, tzinfo=tzutc()) + datetime.timedelta(minutes=60),
+        )
+
+        self.assertIn(mock.call("http://xyz.com/test.ics"), mock_get.call_args_list)
 
 
 class SendInvitesTestCase(TestCase):
