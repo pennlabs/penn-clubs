@@ -1634,7 +1634,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             while start_time < end_date:
                 Event.objects.create(
                     **event_data,
-                    creator = request.user,
+                    creator=request.user,
                     club=club,
                     start_time=start_time,
                     end_time=end_time,

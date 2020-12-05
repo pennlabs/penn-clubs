@@ -671,7 +671,7 @@ class ClubTestCase(TestCase):
                 "club": self.club1.code,
                 "is_recurring": "True",
                 "offset": 7,
-                "end_date": end_date.isoformat()
+                "end_date": end_date.isoformat(),
             },
             content_type="application/json",
         )
@@ -680,7 +680,9 @@ class ClubTestCase(TestCase):
 
         # ensure event exists
         self.assertEqual(Event.objects.filter(name="Interest Recurring Meeting").count(), 3)
-        self.assertEqual(Event.objects.filter(name="Interest Recurring Meeting").first().creator, self.user4)
+        self.assertEqual(
+            Event.objects.filter(name="Interest Recurring Meeting").first().creator, self.user4
+        )
 
     def test_testimonials(self):
         """
