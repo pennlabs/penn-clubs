@@ -66,9 +66,9 @@ from clubs.models import (
 )
 from clubs.permissions import (
     AssetPermission,
+    ClubFairPermission,
     ClubItemPermission,
     ClubPermission,
-    ClubFairPermission,
     DjangoPermission,
     EventPermission,
     InvitePermission,
