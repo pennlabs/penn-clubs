@@ -646,6 +646,42 @@ class ClubTestCase(TestCase):
         resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, id)))
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
+    def test_recurring_event_create(self):
+        self.client.login(username=self.user4.username, password="test")
+        self.assertFalse(self.user4.is_superuser)
+
+        # add user as officer
+        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+
+        # set event start and end dates
+        start_time = datetime.datetime.now() - datetime.timedelta(days=3)
+        end_time = start_time + datetime.timedelta(hours=2)
+        end_date = start_time + datetime.timedelta(days=15)
+
+        # add recurring event
+        resp = self.client.post(
+            reverse("club-events-list", args=(self.club1.code,)),
+            {
+                "name": "Interest Recurring Meeting",
+                "description": "Interest Meeting on every Friday!",
+                "location": "JMHH G06",
+                "type": Event.RECRUITMENT,
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat(),
+                "club": self.club1.code,
+                "is_recurring": "True",
+                "offset": 7,
+                "end_date": end_date.isoformat()
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertTrue(json.loads(resp.content)["success"])
+
+        # ensure event exists
+        self.assertEqual(Event.objects.filter(name="Interest Recurring Meeting").count(), 3)
+        self.assertEqual(Event.objects.filter(name="Interest Recurring Meeting").first().creator, self.user4)
+
     def test_testimonials(self):
         """
         Test creating, listing, and deleting testimonials.

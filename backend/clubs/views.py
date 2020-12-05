@@ -1622,19 +1622,19 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         if request.data.get("is_recurring", None) is not None:
             parent_recurring_event = RecurringEvent.objects.create()
             event_data = request.data.copy()
-            start_time = datetime.datetime.strptime(
-                event_data.pop("start_time"), "%Y-%m-%d %H:%M:%S"
-            )
-            end_time = datetime.datetime.strptime(event_data.pop("end_time"), "%Y-%m-%d %H:%M:%S")
+            start_time = parse(event_data.pop("start_time"))
+            end_time = parse(event_data.pop("end_time"))
             offset = event_data.pop("offset")
-            end_date = datetime.datetime.strptime(event_data.pop("end_date"), "%Y-%m-%d %H:%M:%S")
+            end_date = parse(event_data.pop("end_date"))
             event_data.pop("is_recurring")
             club_code = event_data.pop("club")
 
             club = Club.objects.get(code=club_code)
+            print(event_data)
             while start_time < end_date:
                 Event.objects.create(
                     **event_data,
+                    creator = request.user,
                     club=club,
                     start_time=start_time,
                     end_time=end_time,
