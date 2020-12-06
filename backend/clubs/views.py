@@ -487,6 +487,11 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         elif not isinstance(status, bool):
             status = True
 
+        # check if deadline has passed
+        now = timezone.now()
+        if fair.registration_end_time < now:
+            return Response({"success": False})
+
         # check if user can actually register club
         mship = find_membership_helper(request.user, club)
         if mship is not None and mship.role <= Membership.ROLE_OFFICER or request.user.is_superuser:

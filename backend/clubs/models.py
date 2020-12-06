@@ -498,7 +498,7 @@ class ClubFair(models.Model):
     name = models.TextField()
     organization = models.TextField()
     contact = models.TextField()
-    time = models.TextField()
+    time = models.TextField(blank=True)
 
     # these fields are rendered as raw html
     information = models.TextField()
@@ -507,7 +507,9 @@ class ClubFair(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
 
-    participating_clubs = models.ManyToManyField(Club)
+    registration_end_time = models.DateTimeField()
+
+    participating_clubs = models.ManyToManyField(Club, blank=True)
 
     def __str__(self):
         fmt = "%b %d, %Y"

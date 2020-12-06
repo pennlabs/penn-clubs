@@ -458,6 +458,7 @@ class Command(BaseCommand):
                 "contact": "sac@sacfunded.net",
                 "start_time": now + datetime.timedelta(days=30),
                 "end_time": now + datetime.timedelta(days=33),
+                "registration_end_time": now + datetime.timedelta(days=15),
                 "information": "<p>This information is shown to students participating in the fair!"
                 " <b>Formatting is supported here!</b></p>",
                 "registration_information": "<p>This information is shown when registering!"

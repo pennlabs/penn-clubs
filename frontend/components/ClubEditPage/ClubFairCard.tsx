@@ -1,4 +1,5 @@
 import React, { ReactElement, useEffect, useState } from 'react'
+import TimeAgo from 'react-timeago'
 
 import { Club, ClubFair } from '../../types'
 import { doApiRequest } from '../../utils'
@@ -54,6 +55,8 @@ const ClubFairCard = ({ club }: ClubFairCardProps): ReactElement => {
       </Text>
       {fairs.map((fair) => {
         const isRegistered = fairStatuses.indexOf(fair.id) !== -1
+        const registrationEnd = new Date(fair.registration_end_time)
+        const isEnded = new Date().getTime() > registrationEnd.getTime()
 
         return (
           <div key={fair.id} className="box">
@@ -78,24 +81,42 @@ const ClubFairCard = ({ club }: ClubFairCardProps): ReactElement => {
               >
                 {isRegistered ? 'registered' : 'not registered'}
               </b>{' '}
-              for this {OBJECT_NAME_SINGULAR} fair.
+              for this {OBJECT_NAME_SINGULAR} fair.{' '}
+              {!isEnded && (
+                <>
+                  Registration will close on{' '}
+                  <b>{registrationEnd.toLocaleString()}</b> (
+                  <TimeAgo date={registrationEnd} />
+                  ). You can change your status any time before that date.
+                </>
+              )}
             </Text>
-            {isRegistered ? (
-              <button
-                onClick={() => register(fair.id, false)}
-                className="button is-danger"
-                disabled={isLoading}
-              >
-                <Icon name="x" /> Unregister
-              </button>
+            {isEnded ? (
+              <Text>
+                Registration for this {OBJECT_NAME_SINGULAR} fair is now closed.
+                If you have any questions, please contact{' '}
+                <Contact email={fair.contact} />.
+              </Text>
             ) : (
-              <button
-                onClick={() => register(fair.id, true)}
-                className="button is-primary"
-                disabled={isLoading}
-              >
-                <Icon name="edit" /> Register
-              </button>
+              <>
+                {isRegistered ? (
+                  <button
+                    onClick={() => register(fair.id, false)}
+                    className="button is-danger"
+                    disabled={isLoading}
+                  >
+                    <Icon name="x" /> Unregister
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => register(fair.id, true)}
+                    className="button is-primary"
+                    disabled={isLoading}
+                  >
+                    <Icon name="edit" /> Register
+                  </button>
+                )}
+              </>
             )}
           </div>
         )

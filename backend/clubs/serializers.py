@@ -1639,6 +1639,7 @@ class ClubFairSerializer(serializers.ModelSerializer):
             "information",
             "name",
             "organization",
+            "registration_end_time",
             "registration_information",
             "time",
         )
