@@ -1892,6 +1892,7 @@ class ClubTestCase(TestCase):
             name="SAC Fair",
             start_time=now - datetime.timedelta(days=1),
             end_time=now + datetime.timedelta(days=1),
+            registration_end_time=now - datetime.timedelta(weeks=1),
         )
 
         resp = self.client.get(reverse("options"))
