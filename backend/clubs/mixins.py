@@ -112,11 +112,24 @@ class XLSXFormatterMixin(object):
     Changes the default column header to be bolded.
     """
 
-    def _format_header_value(self, key):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._column_cache = {}
+
+    def get_xlsx_column_name(self, key):
         """
         Format the text displayed in the column header.
         """
-        return key.replace("_", " ").title()
+        if key in self._column_cache:
+            return self._column_cache[key]
+        serializer_class = self.get_serializer_class()
+        if hasattr(serializer_class, "get_xlsx_column_name"):
+            val = serializer_class.get_xlsx_column_name(key)
+        if val is None:
+            val = key.replace("_", " ").title()
+        self._column_cache[key] = val
+        return val
 
     def _many_to_many_individual_formatter(self, value):
         """
@@ -228,7 +241,7 @@ class XLSXFormatterMixin(object):
         Returns (new column name, new cell value). Looks up formatting information using
         the modal obtained from the serializer.
         """
-        new_key = self._format_header_value(key)
+        new_key = self.get_xlsx_column_name(key)
         # cache column formatter by column name
         if key not in self._field_dict:
             self._field_dict[key] = self._lookup_field_formatter(key)

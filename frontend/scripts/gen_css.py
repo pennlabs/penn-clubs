@@ -70,9 +70,7 @@ class CssWriter(object):
 
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    with open(
-        os.path.join(script_dir, "../public/static/css/fyh.css"), "w", newline="\n"
-    ) as f:
+    with open(os.path.join(script_dir, "../public/static/css/fyh.css"), "w", newline="\n") as f:
         writer = CssWriter()
         for name, color in colors.items():
             writer.add_rule(
@@ -80,8 +78,7 @@ if __name__ == "__main__":
                 {"background-color": color},
             )
             writer.add_rule(
-                f".button.{name}:hover",
-                {"background-color": Color(color).scale(0.9).hex()},
+                f".button.{name}:hover", {"background-color": Color(color).scale(0.9).hex()},
             )
             writer.add_rule(
                 f".button.{name}:focus:not(:active)",

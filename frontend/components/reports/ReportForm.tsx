@@ -2,13 +2,7 @@ import { Field, Form, Formik } from 'formik'
 import { ReactElement } from 'react'
 import styled from 'styled-components'
 
-import {
-  Checkbox,
-  CheckboxLabel,
-  Flex,
-  Icon,
-  Text,
-} from '../../components/common'
+import { Checkbox, CheckboxLabel, Icon, Text } from '../../components/common'
 import { CLUBS_GREY } from '../../constants/colors'
 import { Badge, Report, Tag } from '../../types'
 import { doApiRequest } from '../../utils'
@@ -43,7 +37,7 @@ const ReportBox = ({
 }
 
 type Props = {
-  fields: { [key: string]: [string, string][] }
+  fields: [string, [string, string][]][]
   initial?: Report
   badges: Badge[]
   tags: Tag[]
@@ -63,7 +57,7 @@ const ReportForm = ({
     setFieldValue: (field: string, value: string[]) => void,
   ): ReactElement => {
     return (
-      <div key={groupName}>
+      <div className="column" key={groupName}>
         <GroupLabel className="subtitle is-4" style={{ color: CLUBS_GREY }}>
           {groupName}
         </GroupLabel>
@@ -259,17 +253,13 @@ const ReportForm = ({
                 generated spreadsheet file.
               </Text>
               {fields ? (
-                <Flex>
-                  {Object.keys(fields)
+                <div className="columns">
+                  {fields
                     .sort()
-                    .map((group) =>
-                      generateCheckboxGroup(
-                        group,
-                        fields[group],
-                        setFieldValue,
-                      ),
+                    .map(([a, b]) =>
+                      generateCheckboxGroup(a, b, setFieldValue),
                     )}
-                </Flex>
+                </div>
               ) : null}
             </ReportBox>
             <button

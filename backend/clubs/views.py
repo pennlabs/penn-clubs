@@ -886,17 +886,39 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return the list of fields that can be exported in the Excel file.
         The list of fields is taken from the associated serializer, with model names overriding
-        the serializer names if they exist.
+        the serializer names if they exist. Custom fields are also available with certain permission
+        levels.
         """
-        name_to_title = {
-            f.name: f.verbose_name.title() for f in Club._meta._get_fields(reverse=False)
-        }
-        return Response(
+        # use the title given in the models.py if it exists, fallback to the field name otherwise
+        name_to_title = {}
+        name_to_relation = {}
+        for f in Club._meta._get_fields(reverse=False):
+            name_to_title[f.name] = f.verbose_name.title()
+            name_to_relation[f.name] = f.is_relation
+
+        # return a list of fields
+        serializer_class = self.get_serializer_class()
+        if hasattr(serializer_class, "get_additional_fields"):
+            fields = serializer_class.get_additional_fields()
+        else:
+            fields = {}
+
+        fields.update(
             {
-                name_to_title.get(f, f.replace("_", " ").title()): f
-                for f in self.get_serializer_class().Meta.fields
+                "basic": {
+                    name_to_title.get(f, f.replace("_", " ").title()): f
+                    for f in serializer_class.Meta.fields
+                    if not name_to_relation.get(f, False)
+                },
+                "related": {
+                    name_to_title.get(f, f.replace("_", " ").title()): f
+                    for f in serializer_class.Meta.fields
+                    if name_to_relation.get(f, False)
+                },
             }
         )
+
+        return Response(fields)
 
     def get_serializer_class(self):
         if self.action == "upload":

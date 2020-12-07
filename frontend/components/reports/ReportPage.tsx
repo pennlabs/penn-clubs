@@ -3,7 +3,7 @@ import React, { ReactElement, ReactNode } from 'react'
 
 import { BG_GRADIENT, REPORT_LIST_ROUTE, WHITE } from '../../constants'
 import { Badge, Report, Tag } from '../../types'
-import { API_BASE_URL, apiCheckPermission } from '../../utils'
+import { API_BASE_URL, apiCheckPermission, titleize } from '../../utils'
 import { OBJECT_NAME_TITLE_SINGULAR, SITE_NAME } from '../../utils/branding'
 import { Contact, Container, Icon, Metadata, Title } from '../common'
 import AuthPrompt from '../common/AuthPrompt'
@@ -76,7 +76,7 @@ export const ReportsPageContainer = ({
 }
 
 type EditReportPageProps = {
-  nameToCode: { [key: string]: string }
+  nameToCode: { [cat: string]: { [key: string]: string } }
   report: Report | null
   authenticated: boolean | null
   badges: Badge[]
@@ -90,9 +90,11 @@ export const EditReportPage = ({
   badges,
   tags,
 }: EditReportPageProps): ReactElement => {
-  const fields = {
-    Fields: Object.entries(nameToCode),
-  }
+  const fields = Object.entries(nameToCode).map(([key, value]) => [
+    titleize(key),
+    Object.entries(value),
+  ]) as [string, [string, string][]][]
+  fields.sort((a, b) => a[0].localeCompare(b[0]))
 
   const router = useRouter()
 
