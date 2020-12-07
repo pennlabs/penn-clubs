@@ -982,7 +982,7 @@ class StudentTypeViewSet(viewsets.ModelViewSet):
 
     serializer_class = StudentTypeSerializer
     permission_classes = [ReadOnly | IsSuperuser]
-    queryset = StudentType.objects.all()
+    queryset = StudentType.objects.all().order_by("name")
 
 
 class YearViewSet(viewsets.ModelViewSet):
@@ -1003,6 +1003,15 @@ class YearViewSet(viewsets.ModelViewSet):
     serializer_class = YearSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     queryset = Year.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        """
+        Sort items by reverse year. Since this calculation is done in Python, we need to apply
+        it after the SQL query has been processed.
+        """
+        queryset = self.get_queryset()
+        serializer = self.get_serializer_class()(queryset, many=True)
+        return Response(sorted(serializer.data, key=lambda k: k["year"], reverse=True))
 
 
 class AdvisorSearchFilter(filters.BaseFilterBackend):

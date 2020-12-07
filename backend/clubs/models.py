@@ -980,14 +980,24 @@ class Year(models.Model):
         year = now.year
         if now.month > 6:
             year += 1
-        offset = {
+
+        # get offset associated with graduation year
+        key = re.sub(r"[^a-zA-Z]", "", self.name.lower())
+        offsets = {
             "freshman": 3,
             "sophomore": 2,
             "junior": 1,
             "senior": 0,
+            "graduate": -1,
             "firstyear": 3,
             "secondyear": 2,
-        }.get(re.sub(r"[^a-zA-Z]", "", self.name.lower()), 0)
+        }
+        offset = 0
+        for k, v in offsets.items():
+            if key.startswith(k):
+                offset = v
+                break
+
         return year + offset
 
     def __str__(self):
