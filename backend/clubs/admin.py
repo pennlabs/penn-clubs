@@ -149,7 +149,7 @@ class ClubChildrenInline(TabularInline):
 
 class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
     search_fields = ("name", "subtitle", "email", "code")
-    list_display = ("name", "email", "has_owner", "has_invite", "active", "approved", "fair")
+    list_display = ("name", "email", "has_owner", "has_invite", "active", "approved")
     list_filter = (
         "size",
         "application_required",
@@ -158,7 +158,6 @@ class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
         "recruiting_cycle",
         "active",
         "approved",
-        "fair",
         HasOwnerListFilter,
         HasInviteListFilter,
     )
@@ -185,6 +184,12 @@ class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
         return obj.has_owner
 
     has_owner.boolean = True
+
+
+class ClubFairAdmin(admin.ModelAdmin):
+    list_display = ("name", "organization", "contact", "start_time")
+    search_fields = ("name", "organization", "contact")
+    list_filter = ("start_time", "end_time")
 
 
 class EventAdmin(admin.ModelAdmin):
@@ -359,7 +364,7 @@ class QuestionAnswerAdmin(admin.ModelAdmin):
 admin.site.register(Asset)
 admin.site.register(Advisor, AdvisorAdmin)
 admin.site.register(Club, ClubAdmin)
-admin.site.register(ClubFair)
+admin.site.register(ClubFair, ClubFairAdmin)
 admin.site.register(ClubVisit)
 admin.site.register(Badge, BadgeAdmin)
 admin.site.register(Event, EventAdmin)

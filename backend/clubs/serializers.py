@@ -1115,11 +1115,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             if new_approval_status is True:
                 self.validated_data["ghost"] = False
 
-        # if fair interest was indicated, set the earliest indication of interest
-        if "fair" in self.validated_data and self.validated_data["fair"] is True:
-            if not self.instance or self.instance.fair_on is None:
-                self.validated_data["fair_on"] = timezone.now()
-
         obj = super().save()
 
         # remove small version if large one is gone
@@ -1582,13 +1577,12 @@ class AuthenticatedClubSerializer(ClubSerializer):
     members = AuthenticatedMembershipSerializer(many=True, source="membership_set", read_only=True)
     files = AssetSerializer(many=True, source="asset_set", read_only=True)
     fairs = serializers.SerializerMethodField("get_fairs")
-    fair_on = serializers.DateTimeField(read_only=True)
     email = serializers.EmailField()
     email_public = serializers.BooleanField(default=True)
     advisor_set = AdvisorSerializer(many=True, required=False)
 
     class Meta(ClubSerializer.Meta):
-        fields = ClubSerializer.Meta.fields + ["email_public", "files", "fair_on", "fairs"]
+        fields = ClubSerializer.Meta.fields + ["email_public", "files", "fairs"]
 
 
 class NoteTagSerializer(serializers.ModelSerializer):

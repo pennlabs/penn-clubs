@@ -182,10 +182,6 @@ class Club(models.Model):
     approved_comment = models.TextField(null=True, blank=True)
     approved_on = models.DateTimeField(null=True, blank=True)
 
-    # indicates whether or not the club has expressed interest in this year's SAC fair
-    fair = models.BooleanField(default=False)
-    fair_on = models.DateTimeField(null=True, blank=True)
-
     code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
@@ -509,11 +505,23 @@ class ClubFair(models.Model):
 
     registration_end_time = models.DateTimeField()
 
-    participating_clubs = models.ManyToManyField(Club, blank=True)
+    participating_clubs = models.ManyToManyField(Club, through="ClubFairRegistration", blank=True)
 
     def __str__(self):
         fmt = "%b %d, %Y"
         return f"{self.name} ({self.start_time.strftime(fmt)} - {self.end_time.strftime(fmt)})"
+
+
+class ClubFairRegistration(models.Model):
+    """
+    Represents a registration between a club and a club fair.
+    """
+
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    fair = models.ForeignKey(ClubFair, on_delete=models.CASCADE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Event(models.Model):

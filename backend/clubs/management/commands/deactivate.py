@@ -62,7 +62,7 @@ class Command(BaseCommand):
 
         # deactivate all clubs
         if deactivate_clubs:
-            clubs.update(active=False, approved=None, approved_by=None, fair=False, fair_on=None)
+            clubs.update(active=False, approved=None, approved_by=None)
 
             # allow existing approved version to stay on penn clubs website for now
             ghosted = 0
