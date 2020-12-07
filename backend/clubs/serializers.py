@@ -1585,6 +1585,15 @@ class AuthenticatedClubSerializer(ClubSerializer):
         fields = ClubSerializer.Meta.fields + ["email_public", "files", "fairs"]
 
 
+class ReportClubSerializer(AuthenticatedClubSerializer):
+    """
+    Provides additional fields that can be used to generate club reports.
+    """
+
+    class Meta(AuthenticatedClubSerializer.Meta):
+        pass
+
+
 class NoteTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = NoteTag

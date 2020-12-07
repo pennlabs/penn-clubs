@@ -102,6 +102,7 @@ from clubs.serializers import (
     NoteSerializer,
     QuestionAnswerSerializer,
     ReportSerializer,
+    ReportClubSerializer,
     SchoolSerializer,
     StudentTypeSerializer,
     SubscribeBookmarkSerializer,
@@ -907,7 +908,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 self.request.accepted_renderer.format == "xlsx" or self.action == "fields"
             ):
                 if self.request.user.has_perm("clubs.generate_reports"):
-                    return AuthenticatedClubSerializer
+                    return ReportClubSerializer
                 else:
                     return ClubSerializer
             return ClubListSerializer

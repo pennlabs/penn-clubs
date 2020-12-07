@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Count, Q
 from django.utils import timezone
 
-from clubs.models import Club, Event, Membership, MembershipInvite, send_mail_helper
+from clubs.models import Club, ClubFair, Event, Membership, MembershipInvite, send_mail_helper
 from clubs.utils import fuzzy_lookup_club
 
 
@@ -169,10 +169,14 @@ class Command(BaseCommand):
 
         # handle sending out virtual fair emails
         if action == "virtual_fair":
-            clubs = Club.objects.filter(fair=True)
+            now = timezone.now()
+            fair = ClubFair.objects.filter(end_time__gte=now).order_by("start_time").first()
+            if fair is None:
+                raise CommandError("Could not find an upcoming activities fair!")
+            clubs = fair.participating_clubs.all()
             if clubs_whitelist:
                 clubs = clubs.filter(code__in=clubs_whitelist)
-            self.stdout.write(f"Found {clubs.count()} clubs participating in the fair.")
+            self.stdout.write(f"Found {clubs.count()} clubs participating in the {fair.name} fair.")
             for club in clubs:
                 self.stdout.write(f"Sending virtual fair setup email to {club.name}...")
                 if not dry_run:

@@ -10,7 +10,7 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 from django.utils import timezone
 
-from clubs.models import Club, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import Club, ClubFair, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.utils import fuzzy_lookup_club
 
 
@@ -97,7 +97,18 @@ class SendInvitesTestCase(TestCase):
             self.assertEqual(len(mail.outbox), old_count + 2)
 
     def test_send_virtual_fair(self):
-        Club.objects.filter(code__in=["one", "two", "three"]).update(fair=True)
+        now = timezone.now()
+        fair = ClubFair.objects.create(
+            name="Test Club Fair",
+            organization="Activities Council",
+            contact="example@example.com",
+            registration_end_time=now - datetime.timedelta(10),
+            start_time=now + datetime.timedelta(1),
+            end_time=now + datetime.timedelta(3),
+        )
+
+        for club in Club.objects.filter(code__in=["one", "two", "three"]):
+            fair.participating_clubs.add(club)
 
         # send initial virtual fair email
         call_command("send_emails", "virtual_fair")
