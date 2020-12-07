@@ -120,10 +120,13 @@ class XLSXFormatterMixin(object):
     def get_xlsx_column_name(self, key):
         """
         Format the text displayed in the column header.
+        Cache the column name if obtained from the serializer, as this method is called once for
+        every cell.
         """
         if key in self._column_cache:
             return self._column_cache[key]
         serializer_class = self.get_serializer_class()
+        val = None
         if hasattr(serializer_class, "get_xlsx_column_name"):
             val = serializer_class.get_xlsx_column_name(key)
         if val is None:
