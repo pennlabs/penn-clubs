@@ -26,7 +26,7 @@ import {
 } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import EventCard from '../components/EventPage/EventCard'
-import { MEETING_REGEX } from '../components/EventPage/EventModal'
+import EventModal, { MEETING_REGEX } from '../components/EventPage/EventModal'
 import SyncModal from '../components/EventPage/SyncModal'
 import { FuseTag } from '../components/FilterSearch'
 import SearchBar, {
@@ -57,6 +57,7 @@ interface EventPageProps {
   upcomingEvents: ClubEvent[]
   tags: Tag[]
   badges: Badge[]
+  calendarURL: string
 }
 
 const CardList = styled.div`
@@ -292,6 +293,7 @@ function EventPage({
   liveEvents: initialLiveEvents,
   tags,
   badges,
+  calendarURL,
 }: EventPageProps): ReactElement {
   const [upcomingEvents, setUpcomingEvents] = useState<ClubEvent[]>(() =>
     randomizeEvents(initialUpcomingEvents),
@@ -559,10 +561,26 @@ function EventPage({
                         >
                           Live Events
                         </Title>
-                        <EventsViewSwitcher
-                          viewOption={viewOption}
-                          setViewOption={setViewOption}
-                        />
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <SyncButton onClick={showSyncModal}>
+                            <Icon
+                              name="plus"
+                              alt="create club"
+                              style={iconStylesDark}
+                            />
+                            Sync To Calendar
+                          </SyncButton>
+                          <EventsViewSwitcher
+                            viewOption={viewOption}
+                            setViewOption={setViewOption}
+                          />
+                        </div>
                       </div>
                       <CardList>
                         {liveEvents.map((e) => (
@@ -662,7 +680,12 @@ function EventPage({
       </div>
       {syncModalVisible && (
         <Modal show={syncModalVisible} closeModal={hideSyncModal} width="45%">
-          <SyncModal />
+          <SyncModal calendarURL={calendarURL} />
+        </Modal>
+      )}
+      {previewEvent && (
+        <Modal show={true} closeModal={hideModal} width="45%">
+          <EventModal event={previewEvent} showDetailsButton={true} />
         </Modal>
       )}
     </>
