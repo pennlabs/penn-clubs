@@ -42,6 +42,7 @@ import AnalyticsCard from './ClubEditPage/AnalyticsCard'
 import ClubFairCard from './ClubEditPage/ClubFairCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
 import EnableSubscriptionCard from './ClubEditPage/EnableSubscriptionCard'
+import EventsImportCard from './ClubEditPage/EventsImportCard'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import QuestionsCard from './ClubEditPage/QuestionsCard'
 import RenewCard from './ClubEditPage/RenewCard'
@@ -274,6 +275,7 @@ const ClubForm = ({
         label: 'Events',
         content: (
           <>
+            <EventsImportCard club={club} />
             <EventsCard club={club} />
           </>
         ),
