@@ -208,8 +208,12 @@ const Actions = ({
             </Linkify>
           </Quote>
           <p>
-            If you are a member of this {OBJECT_NAME_SINGULAR}, use the button
-            below to confirm your membership request.
+            If you{' '}
+            {club.application_required !== ClubApplicationRequired.Open
+              ? 'are a member of'
+              : 'would like to join'}{' '}
+            this {OBJECT_NAME_SINGULAR}, use the button below to confirm your
+            membership request.
           </p>
           {club.application_required !== ClubApplicationRequired.Open && (
             <p className="has-text-danger">
