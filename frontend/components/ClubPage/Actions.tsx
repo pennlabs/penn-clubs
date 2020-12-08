@@ -11,7 +11,7 @@ import styled from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
-import { Club, UserInfo } from '../../types'
+import { Club, ClubApplicationRequired, UserInfo } from '../../types'
 import { apiCheckPermission, doApiRequest } from '../../utils'
 import {
   FIELD_PARTICIPATION_LABEL,
@@ -186,13 +186,20 @@ const Actions = ({
       >
         <ModalContent>
           <h1>Confirm Membership Request</h1>
+          {club.application_required === ClubApplicationRequired.Open ? (
+            <p>
+              You can use this feature to request to be added on {SITE_NAME} for
+              this {OBJECT_NAME_SINGULAR}.
+            </p>
+          ) : (
+            <p>
+              This feature is intended for existing {OBJECT_NAME_SINGULAR}{' '}
+              members to quickly add themselves to {SITE_NAME}.
+            </p>
+          )}
           <p>
-            This feature is intended for existing {OBJECT_NAME_SINGULAR} members
-            to quickly add themselves to {SITE_NAME}.
-          </p>
-          <p>
-            If you are not a member, you can read the "
-            {FIELD_PARTICIPATION_LABEL}" section for more details!
+            If you would like to join this {OBJECT_NAME_SINGULAR}, you can read
+            the "{FIELD_PARTICIPATION_LABEL}" section for more details!
           </p>
           <Quote>
             <Linkify>
@@ -201,14 +208,16 @@ const Actions = ({
             </Linkify>
           </Quote>
           <p>
-            If you are an existing member of this {OBJECT_NAME_SINGULAR}, use
-            the button below to confirm your membership request.
+            If you are a member of this {OBJECT_NAME_SINGULAR}, use the button
+            below to confirm your membership request.
           </p>
-          <p className="has-text-danger">
-            If you are not an existing member of this {OBJECT_NAME_SINGULAR},
-            please <b>do not</b> press the button below. This <b>is not</b> the
-            application process for {club.name}.
-          </p>
+          {club.application_required !== ClubApplicationRequired.Open && (
+            <p className="has-text-danger">
+              If you are not an existing member of this {OBJECT_NAME_SINGULAR},
+              please <b>do not</b> press the button below. This <b>is not</b>{' '}
+              the application process for {club.name}.
+            </p>
+          )}
           {isSubmitted === true ? (
             <p className="has-text-success">
               <b>Success!</b> Your membership request has been submitted. An
