@@ -133,37 +133,55 @@ const ViewContext = createContext<
   [
     option: EventsViewOption,
     setOption?: Dispatch<SetStateAction<EventsViewOption>>,
+    showSyncModal?: () => void,
   ]
 >([EventsViewOption.CALENDAR])
 
 /**
  * Component used to display a method to switch between the event grid and calendar views.
  */
-const EventsViewSwitcher = ({ viewOption, setViewOption }): ReactElement => (
-  <div className="buttons has-addons mt-0 mb-0">
+const EventsViewToolbar = ({
+  viewOption,
+  setViewOption,
+  showSyncModal,
+}): ReactElement => (
+  <div style={{ display: 'flex' }}>
+    <div className="buttons has-addons mt-0 mb-0">
+      <button
+        id="event-view-list"
+        className={`button is-medium ${
+          viewOption === EventsViewOption.LIST ? 'is-selected is-info' : ''
+        }`}
+        aria-label="switch to grid view"
+        onClick={() => {
+          setViewOption(EventsViewOption.LIST)
+        }}
+      >
+        <Icon name="grid" alt="grid view" />
+      </button>
+      <button
+        id="event-view-calendar"
+        className={`button is-medium ${
+          viewOption === EventsViewOption.CALENDAR ? 'is-selected is-info' : ''
+        }`}
+        aria-label="switch to calendar view"
+        onClick={() => {
+          setViewOption(EventsViewOption.CALENDAR)
+        }}
+      >
+        <Icon name="calendar" alt="calendar view" />
+      </button>
+    </div>
+    {/* margins are for matching vertical alignments with grouped buttons */}
     <button
-      id="event-view-list"
-      className={`button is-medium ${
-        viewOption === EventsViewOption.LIST ? 'is-selected is-info' : ''
-      }`}
-      aria-label="switch to grid view"
       onClick={() => {
-        setViewOption(EventsViewOption.LIST)
+        showSyncModal && showSyncModal()
       }}
+      className="button is-medium"
+      style={{ marginLeft: '20px', marginBottom: '8px' }}
     >
-      <Icon name="grid" alt="grid view" />
-    </button>
-    <button
-      id="event-view-calendar"
-      className={`button is-medium ${
-        viewOption === EventsViewOption.CALENDAR ? 'is-selected is-info' : ''
-      }`}
-      aria-label="switch to calendar view"
-      onClick={() => {
-        setViewOption(EventsViewOption.CALENDAR)
-      }}
-    >
-      <Icon name="calendar" alt="calendar view" />
+      <Icon name="plus" />
+      Sync
     </button>
   </div>
 )
@@ -174,7 +192,7 @@ const CalendarHeader = ({
   onView,
   view,
 }: CalendarHeaderProps) => {
-  const [viewOption, setViewOption] = useContext(ViewContext)
+  const [viewOption, setViewOption, showSyncModal] = useContext(ViewContext)
   const _views: CalendarView[] = [
     CalendarView.DAY,
     CalendarView.WEEK,
@@ -222,9 +240,10 @@ const CalendarHeader = ({
             </button>
           ))}
         </div>
-        <EventsViewSwitcher
+        <EventsViewToolbar
           viewOption={viewOption}
           setViewOption={setViewOption}
+          showSyncModal={showSyncModal}
         />
       </div>
     </StyledHeader>
@@ -543,7 +562,9 @@ function EventPage({
               Upcoming Events
             </Title>
             {isLoading && <ListLoadIndicator />}
-            <ViewContext.Provider value={[viewOption, setViewOption]}>
+            <ViewContext.Provider
+              value={[viewOption, setViewOption, showSyncModal]}
+            >
               {viewOption === EventsViewOption.LIST ? (
                 <>
                   {!!liveEvents.length && (
@@ -561,26 +582,11 @@ function EventPage({
                         >
                           Live Events
                         </Title>
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <SyncButton onClick={showSyncModal}>
-                            <Icon
-                              name="plus"
-                              alt="create club"
-                              style={iconStylesDark}
-                            />
-                            Sync To Calendar
-                          </SyncButton>
-                          <EventsViewSwitcher
-                            viewOption={viewOption}
-                            setViewOption={setViewOption}
-                          />
-                        </div>
+                        <EventsViewToolbar
+                          viewOption={viewOption}
+                          setViewOption={setViewOption}
+                          showSyncModal={showSyncModal}
+                        />
                       </div>
                       <CardList>
                         {liveEvents.map((e) => (
@@ -607,9 +613,10 @@ function EventPage({
                       Upcoming Events
                     </Title>
                     {!liveEvents.length && (
-                      <EventsViewSwitcher
+                      <EventsViewToolbar
                         viewOption={viewOption}
                         setViewOption={setViewOption}
+                        showSyncModal={showSyncModal}
                       />
                     )}
                   </div>
