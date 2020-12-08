@@ -37,7 +37,6 @@ import SearchBar, {
   SearchInput,
 } from '../components/SearchBar'
 import {
-  CLUBS_BLUE,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   EVENT_TYPE_COLORS,
