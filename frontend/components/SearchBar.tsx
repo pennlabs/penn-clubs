@@ -218,7 +218,7 @@ type SearchBarOptionItemProps = {
 type SearchBarCheckboxItemProps = {
   param: string
   label: string
-  options: SearchTag[]
+  options: (SearchTag & { color?: string })[]
 }
 
 /**

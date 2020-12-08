@@ -29,7 +29,9 @@ def codes_extract_helper(obj, key):
 def find_membership_helper(user, obj):
     """
     Finds the membership instance in the family tree of a club
-    with the most authority
+    with the most authority.
+
+    Returns None if there is no membership between the specified club and user.
     """
     from clubs.views import find_relationship_helper
 
@@ -55,6 +57,19 @@ class ReadOnly(permissions.BasePermission):
             return True
         else:
             return False
+
+
+class ClubFairPermission(permissions.BasePermission):
+    """
+    Permission for club fairs.
+
+    Everyone should be able to view club fairs but not do much else.
+    """
+
+    def has_permission(self, request, view):
+        if view.action in {"list", "retrieve", "register"}:
+            return True
+        return False
 
 
 class ClubPermission(permissions.BasePermission):

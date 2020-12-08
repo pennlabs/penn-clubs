@@ -11,6 +11,7 @@ from clubs.models import (
     Advisor,
     Badge,
     Club,
+    ClubFair,
     Event,
     Major,
     Membership,
@@ -169,6 +170,37 @@ you can procrastinate on the application and ultimately miss the deadline!""",
     },
 ]
 
+fair_registration_text = """
+<p>
+    Every year, the
+    <a href="https://sacfunded.net/" target="_blank">
+    Student Activities Council
+    </a>
+    hosts a Fall Activities Fair. This year, the SAC Fair will be held
+    virtually during the first few days of school. In addition to Penn
+    Clubs, which now has an anonymous Q &amp; A feature, clubs will be
+    designated one of three days to host a live Zoom session for a
+    couple of hours. All submitted zoom links will be featured on Penn
+    Clubs.
+</p>
+<p>
+    Like the in-person SAC Fair, clubs are encouraged to have a few
+    members present on Zoom to introduce their club to prospective
+    members and to answer questions.
+</p>
+<p>
+    If you would like to particpate in the Fall 2020 SAC fair, check
+    the box below. If you check the box below, your club information
+    will be shared with the Student Activites Council and more details
+    will be sent to you at a later date.
+</p>
+<p>
+    Note that this SAC Fair is for <b>Undergraduate Organizations</b>
+    only. If you are not an undergraduate organization, please do not
+    sign up for the SAC fair.
+</p>
+"""
+
 
 class Command(BaseCommand):
     help = "Populates the development environment with dummy data."
@@ -178,17 +210,11 @@ class Command(BaseCommand):
             raise CommandError("You probably do not want to run this script in production!")
 
         # create options
-        bool_options = ["FAIR_OPEN", "FAIR_REGISTRATION_OPEN", "CLUB_REGISTRATION", "PRE_FAIR"]
+        bool_options = ["FAIR_REGISTRATION_OPEN", "CLUB_REGISTRATION"]
         for option in bool_options:
             Option.objects.get_or_create(
                 key=option,
                 defaults={"value": "false", "value_type": Option.TYPE_BOOL, "public": True},
-            )
-
-        string_options = [("FAIR_NAME", "sac")]
-        for key, value in string_options:
-            Option.objects.get_or_create(
-                key=key, defaults={"value": value, "value_type": Option.TYPE_TXT, "public": True}
             )
 
         # create years
@@ -199,7 +225,7 @@ class Command(BaseCommand):
 
         # create schools
         [
-            School.objects.get_or_create(name=school)
+            School.objects.get_or_create(name=school, defaults={"is_graduate": False})
             for school in [
                 "The Wharton School",
                 "School of Engineering and Applied Science",
@@ -207,6 +233,10 @@ class Command(BaseCommand):
                 "School of Arts & Sciences",
             ]
         ]
+
+        School.objects.get_or_create(
+            name="Perelman School of Medicine", defaults={"is_graduate": True}
+        )
 
         # create majors
         major_names = [
@@ -417,6 +447,23 @@ class Command(BaseCommand):
                 "description": "This is the description for this event.",
                 "start_time": now,
                 "end_time": now + datetime.timedelta(hours=1),
+            },
+        )
+
+        # create a club fair one month from now
+        ClubFair.objects.update_or_create(
+            name="Sample Fair",
+            defaults={
+                "organization": "Student Activities Council",
+                "contact": "sac@sacfunded.net",
+                "start_time": now + datetime.timedelta(days=30),
+                "end_time": now + datetime.timedelta(days=33),
+                "registration_end_time": now + datetime.timedelta(days=15),
+                "information": "<p>This information is shown to students participating in the fair!"
+                " <b>Formatting is supported here!</b></p>",
+                "registration_information": "<p>This information is shown when registering!"
+                " Display registration information here."
+                " <b>Formatting is supported here!</b></p>" + fair_registration_text,
             },
         )
 

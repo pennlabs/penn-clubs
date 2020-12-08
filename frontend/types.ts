@@ -136,7 +136,7 @@ export interface Club {
   enables_subscription: boolean
   events: [ClubEvent]
   facebook: string
-  fair: boolean
+  fairs: number[]
   favorite_count: number
   files: File[]
   github: string
@@ -161,6 +161,18 @@ export interface Club {
   testimonials: [Testimonial]
   twitter: string
   website: string
+}
+
+export interface ClubFair {
+  id: number
+  name: string
+  organization: string
+  contact: string
+  time: string
+
+  information: string
+  registration_information: string
+  registration_end_time: string
 }
 
 export interface File {
@@ -203,6 +215,7 @@ export interface ExtendedUserInfo extends UserInfo {
 export interface School {
   id: number
   name: string
+  is_graduate: boolean
 }
 
 export interface Major {

@@ -28,6 +28,7 @@ from django_redis import get_redis_connection
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics import parse as ICSParse
+from options.models import Option
 from rest_framework import filters, generics, parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -45,6 +46,7 @@ from clubs.models import (
     Asset,
     Badge,
     Club,
+    ClubFair,
     ClubVisit,
     Event,
     Favorite,
@@ -64,6 +66,7 @@ from clubs.models import (
 )
 from clubs.permissions import (
     AssetPermission,
+    ClubFairPermission,
     ClubItemPermission,
     ClubPermission,
     DjangoPermission,
@@ -75,6 +78,7 @@ from clubs.permissions import (
     NotePermission,
     QuestionAnswerPermission,
     ReadOnly,
+    find_membership_helper,
 )
 from clubs.serializers import (
     AdvisorSerializer,
@@ -82,6 +86,7 @@ from clubs.serializers import (
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
+    ClubFairSerializer,
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
@@ -96,6 +101,7 @@ from clubs.serializers import (
     MinimalUserProfileSerializer,
     NoteSerializer,
     QuestionAnswerSerializer,
+    ReportClubSerializer,
     ReportSerializer,
     SchoolSerializer,
     StudentTypeSerializer,
@@ -449,6 +455,58 @@ class ClubsOrderingFilter(RandomOrderingFilter):
             new_queryset = new_queryset.order_by(Lower("name"))
 
         return new_queryset
+
+
+class ClubFairViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of ongoing and upcoming club fairs.
+    """
+
+    http_method_names = ["get", "post"]
+    serializer_class = ClubFairSerializer
+    permission_classes = [ClubFairPermission | IsSuperuser]
+
+    @action(detail=True, methods=["post"])
+    def register(self, request, *args, **kwargs):
+        """
+        Register a club for this club fair.
+        Pass in a "club" string parameter with the club code
+        and a "status" parameter that is true to register the club, or false to unregister.
+        """
+        fair = self.get_object()
+
+        if not request.user.is_authenticated:
+            raise PermissionDenied
+
+        club = get_object_or_404(Club, code=request.data.get("club"))
+
+        # get register/unregister action status
+        status = request.data.get("status")
+        if isinstance(status, str):
+            status = status.strip().lower() == "true"
+        elif not isinstance(status, bool):
+            status = True
+
+        # check if deadline has passed
+        now = timezone.now()
+        if fair.registration_end_time < now:
+            return Response({"success": False})
+
+        # check if user can actually register club
+        mship = find_membership_helper(request.user, club)
+        if mship is not None and mship.role <= Membership.ROLE_OFFICER or request.user.is_superuser:
+            if status:
+                fair.participating_clubs.add(club)
+            else:
+                fair.participating_clubs.remove(club)
+            return Response({"success": True})
+        else:
+            raise PermissionDenied
+
+    def get_queryset(self):
+        now = timezone.now()
+        return ClubFair.objects.filter(end_time__gte=now).order_by("start_time")
 
 
 class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
@@ -828,17 +886,39 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return the list of fields that can be exported in the Excel file.
         The list of fields is taken from the associated serializer, with model names overriding
-        the serializer names if they exist.
+        the serializer names if they exist. Custom fields are also available with certain permission
+        levels.
         """
-        name_to_title = {
-            f.name: f.verbose_name.title() for f in Club._meta._get_fields(reverse=False)
-        }
-        return Response(
+        # use the title given in the models.py if it exists, fallback to the field name otherwise
+        name_to_title = {}
+        name_to_relation = {}
+        for f in Club._meta._get_fields(reverse=False):
+            name_to_title[f.name] = f.verbose_name.title()
+            name_to_relation[f.name] = f.is_relation
+
+        # return a list of fields
+        serializer_class = self.get_serializer_class()
+        if hasattr(serializer_class, "get_additional_fields"):
+            fields = serializer_class.get_additional_fields()
+        else:
+            fields = {}
+
+        fields.update(
             {
-                name_to_title.get(f, f.replace("_", " ").title()): f
-                for f in self.get_serializer_class().Meta.fields
+                "basic": {
+                    name_to_title.get(f, f.replace("_", " ").title()): f
+                    for f in serializer_class.Meta.fields
+                    if not name_to_relation.get(f, False)
+                },
+                "related": {
+                    name_to_title.get(f, f.replace("_", " ").title()): f
+                    for f in serializer_class.Meta.fields
+                    if name_to_relation.get(f, False)
+                },
             }
         )
+
+        return Response(fields)
 
     def get_serializer_class(self):
         if self.action == "upload":
@@ -850,7 +930,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 self.request.accepted_renderer.format == "xlsx" or self.action == "fields"
             ):
                 if self.request.user.has_perm("clubs.generate_reports"):
-                    return AuthenticatedClubSerializer
+                    return ReportClubSerializer
                 else:
                     return ClubSerializer
             return ClubListSerializer
@@ -884,7 +964,7 @@ class SchoolViewSet(viewsets.ModelViewSet):
 
     serializer_class = SchoolSerializer
     permission_classes = [ReadOnly | IsSuperuser]
-    queryset = School.objects.all()
+    queryset = School.objects.all().order_by("is_graduate", "name")
 
 
 class MajorViewSet(viewsets.ModelViewSet):
@@ -924,7 +1004,7 @@ class StudentTypeViewSet(viewsets.ModelViewSet):
 
     serializer_class = StudentTypeSerializer
     permission_classes = [ReadOnly | IsSuperuser]
-    queryset = StudentType.objects.all()
+    queryset = StudentType.objects.all().order_by("name")
 
 
 class YearViewSet(viewsets.ModelViewSet):
@@ -945,6 +1025,15 @@ class YearViewSet(viewsets.ModelViewSet):
     serializer_class = YearSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     queryset = Year.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        """
+        Sort items by reverse year. Since this calculation is done in Python, we need to apply
+        it after the SQL query has been processed.
+        """
+        queryset = self.get_queryset()
+        serializer = self.get_serializer_class()(queryset, many=True)
+        return Response(sorted(serializer.data, key=lambda k: k["year"], reverse=True))
 
 
 class AdvisorSearchFilter(filters.BaseFilterBackend):
@@ -2350,6 +2439,45 @@ class EmailPreviewContext(dict):
 
     def get_used_variables(self):
         return sorted(self._called)
+
+
+class OptionListView(APIView):
+    """
+    Return a list of options, with some options dynamically generated.
+    This response is intended for site-wide global variables.
+    """
+
+    def get(self, request):
+        # compute base django options
+        options = {k: v for k, v in Option.objects.filter(public=True).values_list("key", "value")}
+
+        # add in activities fair information
+        now = timezone.now()
+
+        fairs = ClubFair.objects.filter(
+            end_time__gte=now - datetime.timedelta(minutes=15),
+            start_time__lte=now + datetime.timedelta(weeks=1),
+        ).order_by("start_time")
+
+        fair = fairs.first()
+        if fair:
+            happening = fair.start_time <= now - datetime.timedelta(minutes=3)
+            options["FAIR_NAME"] = fair.name
+            options["FAIR_ORG_NAME"] = fair.organization
+            options["FAIR_CONTACT"] = fair.contact or settings.FROM_EMAIL
+            options["FAIR_TIME"] = fair.time or (
+                "{} - {}".format(
+                    fair.start_time.strftime("%b %d, %Y"), fair.end_time.strftime("%b %d, %Y")
+                )
+            )
+            options["FAIR_INFO"] = fair.information
+            options["FAIR_OPEN"] = happening
+            options["PRE_FAIR"] = not happening
+        else:
+            options["FAIR_OPEN"] = False
+            options["PRE_FAIR"] = False
+
+        return Response(options)
 
 
 def email_preview(request):

@@ -10,7 +10,7 @@ import {
   InfoPageTitle,
   Metadata,
 } from '../components/common'
-import { CLUB_ROUTE, FAIR_INFO, LIVE_EVENTS, SNOW } from '../constants'
+import { CLUB_ROUTE, LIVE_EVENTS, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { doApiRequest, useSetting } from '../utils'
 import {
@@ -34,38 +34,39 @@ type FairPageProps = {
 
 const FairPage = ({ events }: FairPageProps): ReactElement => {
   const isFairOpen = useSetting('FAIR_OPEN')
-  const fairName = useSetting('FAIR_NAME')
-
-  if (fairName == null) {
-    return (
-      <p className="has-text-danger">
-        Fair setup is not configured correctly. Contact <Contact /> for
-        assistance.
-      </p>
-    )
-  }
-
-  const fairInfo = FAIR_INFO[fairName as string]
+  const isPreFair = useSetting('PRE_FAIR')
+  const fairName = useSetting('FAIR_NAME') ?? 'Upcoming Fair'
+  const fairOrgName = useSetting('FAIR_ORG_NAME') ?? 'partner organization'
+  const fairContact = useSetting('FAIR_CONTACT') ?? 'the partner organization'
+  const fairTime = useSetting('FAIR_TIME') ?? 'TBD'
+  const fairAdditionalInfo = useSetting('FAIR_INFO') ?? ''
 
   return (
     <Container background={SNOW}>
-      <Metadata title={fairInfo.name} />
-      <InfoPageTitle>{fairInfo.name} – Student Guide</InfoPageTitle>
+      <Metadata title={fairName as string} />
+      <InfoPageTitle>{fairName} – Student Guide</InfoPageTitle>
       <div className="content">
+        {!isPreFair && !isFairOpen && (
+          <div className="notification is-warning">
+            <Icon name="alert-triangle" /> There is currently no activities fair
+            that is currently occuring or upcoming. If you believe this is an
+            error, please contact <Contact />.
+          </div>
+        )}
         <p>
           <b>Hi there! Welcome to {SITE_NAME}!</b> We are the official platform
           for {OBJECT_NAME_LONG_PLURAL} on campus, and we are excited to get you
           connected to clubs on our platform this year. In collaboration with
-          the {fairInfo.organization}, we will be hosting the virtual fair for
-          this semester. Below is some important information that will set you
-          up for a successful experience.
+          the {fairOrgName}, we will be hosting the virtual fair for this
+          semester. Below is some important information that will set you up for
+          a successful experience.
         </p>
         <p>
-          <b>How the {fairInfo.name} will be run:</b>
+          <b>How the {fairName} will be run:</b>
         </p>
         <ul>
           <li>
-            The {fairInfo.name} will be held on <b>{fairInfo.time}</b>.
+            The {fairName} will be held on <b>{fairTime}</b>.
           </li>
           <li>
             The main fair functionality is each {OBJECT_NAME_SINGULAR}'s
@@ -112,7 +113,6 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
             </ul>
           </li>
         </ul>
-
         <p>
           <b>Configuring Zoom:</b>
         </p>
@@ -152,21 +152,24 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
         </p>
         <ul>
           <li>
-            If you have any questions or concerns regarding the {fairInfo.name},
-            please contact <Contact email={fairInfo.contact} />.
+            If you have any questions or concerns regarding the {fairName},
+            please contact <Contact email={fairContact as string} />.
           </li>
           <li>
             If you have any questions or concerns regarding the {SITE_NAME}{' '}
             platform, please contact <Contact />.
           </li>
         </ul>
-
-        {fairInfo.additionalInformation && fairInfo.additionalInformation()}
-
+        {fairAdditionalInfo && !!(fairAdditionalInfo as string).length && (
+          <p>
+            <div
+              dangerouslySetInnerHTML={{ __html: fairAdditionalInfo as string }}
+            />
+          </p>
+        )}
         <p>
           You can find the schedule for the activities fair in the table below.
         </p>
-
         {isFairOpen && (
           <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
             <a className="button is-primary">

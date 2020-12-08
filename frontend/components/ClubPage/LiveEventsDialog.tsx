@@ -3,7 +3,6 @@ import { ReactElement } from 'react'
 import styled from 'styled-components'
 
 import {
-  FAIR_INFO,
   FAIR_INFO_ROUTE,
   FAIR_OFFICER_GUIDE_ROUTE,
   LIVE_EVENTS,
@@ -88,8 +87,6 @@ const LiveEventsDialog = ({
     return null
   }
 
-  const fairInfo = FAIR_INFO[fairName as string]
-
   return (
     <LiveBanner>
       {isPreFair && (
@@ -111,7 +108,7 @@ const LiveEventsDialog = ({
       <Link href={FAIR_INFO_ROUTE} as={FAIR_INFO_ROUTE} passHref>
         <WhiteButton>Fair Information</WhiteButton>
       </Link>
-      <LiveTitle>{fairInfo.name}</LiveTitle>
+      <LiveTitle>{fairName}</LiveTitle>
       <LiveSub>
         {liveEventCount === 0 ? (
           'Get ready for the virtual activities fair!'

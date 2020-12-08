@@ -7,7 +7,7 @@ import { Badge, Report, Tag } from '../../../types'
 import { doBulkLookup } from '../../../utils'
 
 type CreateReportPageProps = {
-  nameToCode: { [key: string]: string }
+  nameToCode: { [cat: string]: { [key: string]: string } }
   authenticated: boolean | null
   badges: Badge[]
   tags: Tag[]

@@ -182,10 +182,6 @@ class Club(models.Model):
     approved_comment = models.TextField(null=True, blank=True)
     approved_on = models.DateTimeField(null=True, blank=True)
 
-    # indicates whether or not the club has expressed interest in this year's SAC fair
-    fair = models.BooleanField(default=False)
-    fair_on = models.DateTimeField(null=True, blank=True)
-
     code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
@@ -488,6 +484,44 @@ class Testimonial(models.Model):
 
     def __str__(self):
         return self.text
+
+
+class ClubFair(models.Model):
+    """
+    Represents an activities fair with multiple clubs as participants.
+    """
+
+    name = models.TextField()
+    organization = models.TextField()
+    contact = models.TextField()
+    time = models.TextField(blank=True)
+
+    # these fields are rendered as raw html
+    information = models.TextField()
+    registration_information = models.TextField()
+
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+
+    registration_end_time = models.DateTimeField()
+
+    participating_clubs = models.ManyToManyField(Club, through="ClubFairRegistration", blank=True)
+
+    def __str__(self):
+        fmt = "%b %d, %Y"
+        return f"{self.name} ({self.start_time.strftime(fmt)} - {self.end_time.strftime(fmt)})"
+
+
+class ClubFairRegistration(models.Model):
+    """
+    Represents a registration between a club and a club fair.
+    """
+
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    fair = models.ForeignKey(ClubFair, on_delete=models.CASCADE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Event(models.Model):
@@ -946,14 +980,24 @@ class Year(models.Model):
         year = now.year
         if now.month > 6:
             year += 1
-        offset = {
+
+        # get offset associated with graduation year
+        key = re.sub(r"[^a-zA-Z]", "", self.name.lower())
+        offsets = {
             "freshman": 3,
             "sophomore": 2,
             "junior": 1,
             "senior": 0,
+            "graduate": -1,
             "firstyear": 3,
             "secondyear": 2,
-        }.get(re.sub(r"[^a-zA-Z]", "", self.name.lower()), 0)
+        }
+        offset = 0
+        for k, v in offsets.items():
+            if key.startswith(k):
+                offset = v
+                break
+
         return year + offset
 
     def __str__(self):
@@ -966,6 +1010,7 @@ class School(models.Model):
     """
 
     name = models.TextField()
+    is_graduate = models.BooleanField()
 
     def __str__(self):
         return self.name

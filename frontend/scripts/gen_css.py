@@ -23,6 +23,7 @@ class Color(object):
     """
     A color class for doing some simple color transformations and returning the hex value of a color.
     """
+
     def __init__(self, hex):
         hexstr = hex.strip("#")
         r, g, b = int(hexstr[:2], 16), int(hexstr[2:4], 16), int(hexstr[4:], 16)
@@ -47,6 +48,7 @@ class CssWriter(object):
     """
     A writer that converts CSS selectors and rules into a stylesheet.
     """
+
     def __init__(self):
         self.rules = []
 
@@ -76,7 +78,7 @@ if __name__ == "__main__":
                 {"background-color": color},
             )
             writer.add_rule(
-                f".button.{name}:hover", {"background-color": Color(color).scale(0.9).hex()}
+                f".button.{name}:hover", {"background-color": Color(color).scale(0.9).hex()},
             )
             writer.add_rule(
                 f".button.{name}:focus:not(:active)",
@@ -85,7 +87,7 @@ if __name__ == "__main__":
 
             text_name = "has-text-{}".format(name[3:])
             writer.add_rule(f".{text_name}", {"color": f"{color} !important"})
-    
+
         writer.add_rule("a", {"color": "#256ADA"})
         writer.add_rule(".has-text-grey", {"color": f"#6E6E6E !important"})
 

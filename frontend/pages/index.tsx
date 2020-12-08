@@ -19,6 +19,7 @@ import SearchBar, {
 } from '../components/SearchBar'
 import { mediaMaxWidth, PHONE } from '../constants'
 import {
+  CLUBS_BLUE,
   CLUBS_GREY_LIGHT,
   CLUBS_PURPLE,
   FOCUS_GRAY,
@@ -257,10 +258,11 @@ const Splash = (props: SplashProps): ReactElement => {
     { value: 4, label: 'more than 100', name: 'size' },
   ]
 
-  const schoolOptions = props.schools.map(({ id, name }) => ({
+  const schoolOptions = props.schools.map(({ id, name, is_graduate }) => ({
     value: id,
     label: name,
     name: 'school',
+    color: is_graduate ? CLUBS_BLUE : undefined,
   }))
 
   const yearOptions = props.years.map(({ id, name }) => ({

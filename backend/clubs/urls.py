@@ -6,6 +6,7 @@ from clubs.views import (
     AdvisorViewSet,
     AssetViewSet,
     BadgeViewSet,
+    ClubFairViewSet,
     ClubViewSet,
     ClubVisitViewSet,
     EventViewSet,
@@ -22,6 +23,7 @@ from clubs.views import (
     MembershipViewSet,
     MemberViewSet,
     NoteViewSet,
+    OptionListView,
     QuestionAnswerViewSet,
     ReportViewSet,
     SchoolViewSet,
@@ -41,6 +43,7 @@ from clubs.views import (
 
 router = routers.SimpleRouter()
 router.register(r"clubs", ClubViewSet, basename="clubs")
+router.register(r"clubfairs", ClubFairViewSet, basename="clubfairs")
 router.register(r"events", EventViewSet, basename="events")
 router.register(r"tags", TagViewSet, basename="tags")
 router.register(r"badges", BadgeViewSet, basename="badges")
@@ -83,7 +86,7 @@ urlpatterns = [
         name="favorites-calendar",
     ),
     path(r"emailpreview/", email_preview, name="email-preview"),
-    path(r"options/", include("options.urls", namespace="options")),
+    path(r"options/", OptionListView.as_view(), name="options"),
     path(r"social/", include("social_django.urls", namespace="social")),
     path(r"webhook/meeting/", MeetingZoomWebhookAPIView.as_view(), name="webhooks-meeting"),
 ]

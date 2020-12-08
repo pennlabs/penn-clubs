@@ -21,5 +21,9 @@ export function Contact({
     }
   }
 
+  if (!/@/.test(finalEmail)) {
+    return <>{finalEmail}</>
+  }
+
   return <a href={`mailto:${finalEmail}`}>{finalEmail}</a>
 }

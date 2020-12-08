@@ -37,8 +37,8 @@ import {
   SNOW,
 } from '../constants'
 import renderPage from '../renderPage'
-import { Badge, ClubEvent, Tag } from '../types'
-import { doApiRequest, isClubFieldShown } from '../utils'
+import { Badge, ClubEvent, ClubEventType, Tag } from '../types'
+import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_SINGULAR } from '../utils/branding'
 import { ListLoadIndicator } from '.'
 
@@ -282,12 +282,17 @@ function EventPage({
     ...initialUpcomingEvents,
   ])
 
-  const [searchInput, setSearchInput] = useState<SearchInput>({})
+  const isFair = useSetting('FAIR_OPEN')
+
+  // during an activities fair, use list view and filter fair events by default
+  const [searchInput, setSearchInput] = useState<SearchInput>(
+    isFair ? { type__in: ClubEventType.FAIR.toString() } : {},
+  )
   const currentSearch = useRef<SearchInput>({})
   const [isLoading, setLoading] = useState<boolean>(false)
 
   const [viewOption, setViewOption] = useState<EventsViewOption>(
-    EventsViewOption.CALENDAR,
+    isFair ? EventsViewOption.LIST : EventsViewOption.CALENDAR,
   )
 
   const [previewEvent, setPreviewEvent] = useState<ClubEvent | null>(null)

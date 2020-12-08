@@ -18,6 +18,7 @@ from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
     Badge,
     Club,
+    ClubFair,
     Event,
     Favorite,
     Membership,
@@ -284,8 +285,8 @@ class ClubTestCase(TestCase):
         Favorite.objects.create(person=self.user5, club=self.club1)
 
         # add some schools
-        School.objects.create(name="Wharton")
-        School.objects.create(name="Engineering")
+        School.objects.create(name="Wharton", is_graduate=False)
+        School.objects.create(name="Engineering", is_graduate=False)
 
         # retrieve user
         resp = self.client.get(reverse("users-detail"))
@@ -1087,7 +1088,7 @@ class ClubTestCase(TestCase):
         tag2 = Tag.objects.create(name="Engineering")
 
         badge1 = Badge.objects.create(label="SAC Funded", purpose="org")
-        school1 = School.objects.create(name="Engineering")
+        school1 = School.objects.create(name="Engineering", is_graduate=False)
 
         self.client.login(username=self.user5.username, password="test")
 
@@ -1879,6 +1880,24 @@ class ClubTestCase(TestCase):
         data = resp.json()
         report_names = [rep["name"] for rep in data if rep["name"] == name]
         self.assertEqual(report_names, [name])
+
+    def test_list_options(self):
+        # test normal operating conditions
+        resp = self.client.get(reverse("options"))
+        self.assertIn(resp.status_code, [200], resp.content)
+
+        # test with club fair
+        now = timezone.now()
+        ClubFair.objects.create(
+            name="SAC Fair",
+            start_time=now - datetime.timedelta(days=1),
+            end_time=now + datetime.timedelta(days=1),
+            registration_end_time=now - datetime.timedelta(weeks=1),
+        )
+
+        resp = self.client.get(reverse("options"))
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertTrue(resp.data["FAIR_OPEN"])
 
     def test_permission_lookup(self):
         permissions = [

@@ -18,6 +18,7 @@ from clubs.models import (
     Asset,
     Badge,
     Club,
+    ClubFair,
     ClubVisit,
     Event,
     Favorite,
@@ -72,10 +73,11 @@ class BadgeSerializer(serializers.ModelSerializer):
 
 class SchoolSerializer(serializers.ModelSerializer):
     name = serializers.CharField()
+    is_graduate = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = School
-        fields = ("id", "name")
+        fields = ("id", "name", "is_graduate")
 
 
 class MajorSerializer(serializers.ModelSerializer):
@@ -713,6 +715,13 @@ class ClubListSerializer(serializers.ModelSerializer):
         Acts as a filter on the returned fields.
         """
         all_fields = super().get_fields()
+
+        # add in additional report fields
+        if hasattr(self.__class__, "get_additional_fields"):
+            for fields in self.__class__.get_additional_fields().values():
+                for field in fields.values():
+                    all_fields[field] = ReportClubField(field, read_only=True)
+
         fields_param = getattr(self.context.get("request", dict()), "GET", {}).get("fields", "")
         if fields_param:
             fields_param = fields_param.split(",")
@@ -836,7 +845,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     testimonials = TestimonialSerializer(many=True, read_only=True)
     events = serializers.SerializerMethodField("get_events")
     is_request = serializers.SerializerMethodField("get_is_request")
-    fair = serializers.BooleanField(default=False)
     student_types = StudentTypeSerializer(many=True, required=False)
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
@@ -858,6 +866,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     linkedin = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     github = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     youtube = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+    def get_fairs(self, obj):
+        return list(obj.clubfair_set.values_list("id", flat=True))
 
     def get_events(self, obj):
         now = timezone.now()
@@ -1111,11 +1122,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             if new_approval_status is True:
                 self.validated_data["ghost"] = False
 
-        # if fair interest was indicated, set the earliest indication of interest
-        if "fair" in self.validated_data and self.validated_data["fair"] is True:
-            if not self.instance or self.instance.fair_on is None:
-                self.validated_data["fair_on"] = timezone.now()
-
         obj = super().save()
 
         # remove small version if large one is gone
@@ -1146,7 +1152,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "description",
             "events",
             "facebook",
-            "fair",
             "github",
             "how_to_get_involved",
             "image",
@@ -1578,14 +1583,79 @@ class AuthenticatedClubSerializer(ClubSerializer):
 
     members = AuthenticatedMembershipSerializer(many=True, source="membership_set", read_only=True)
     files = AssetSerializer(many=True, source="asset_set", read_only=True)
-    fair = serializers.BooleanField(default=False)
-    fair_on = serializers.DateTimeField(read_only=True)
+    fairs = serializers.SerializerMethodField("get_fairs")
     email = serializers.EmailField()
     email_public = serializers.BooleanField(default=True)
     advisor_set = AdvisorSerializer(many=True, required=False)
 
     class Meta(ClubSerializer.Meta):
-        fields = ClubSerializer.Meta.fields + ["email_public", "files", "fair_on"]
+        fields = ClubSerializer.Meta.fields + ["email_public", "files", "fairs"]
+
+
+class ReportClubField(serializers.Field):
+    """
+    A custom field used when generating club reports.
+    Used to dynamically generate fields based on model objects.
+    """
+
+    def __init__(self, field, *args, **kwargs):
+        self._actual_field = field
+        self._cached_values = {}
+        self._default_value = "Unknown"
+
+        # handle activities fair case
+        fair_match = re.search(r"^custom_fair_(\d+)_(.*)$", self._actual_field)
+        if fair_match:
+            fair = ClubFair.objects.filter(id=fair_match.group(1)).first()
+            if fair:
+                if fair_match.group(2) == "reg_time":
+                    self._default_value = None
+                    reg = fair.clubfairregistration_set.values_list("club__code", "created_at")
+                    for code, time in reg:
+                        self._cached_values[code] = time.astimezone(
+                            timezone.get_current_timezone()
+                        ).strftime("%b %d, %Y %I:%M %p %Z")
+                else:
+                    self._default_value = False
+                    self._cached_values = {
+                        k: True for k in fair.participating_clubs.values_list("code", flat=True)
+                    }
+
+        super().__init__(*args, **kwargs)
+
+    def get_attribute(self, instance):
+        return instance.code
+
+    def to_representation(self, value):
+        return self._cached_values.get(value, self._default_value)
+
+
+class ReportClubSerializer(AuthenticatedClubSerializer):
+    """
+    Provides additional fields that can be used to generate club reports.
+    """
+
+    @staticmethod
+    def get_additional_fields():
+        fields = {}
+        now = timezone.now()
+        for fair in ClubFair.objects.filter(end_time__gte=now):
+            fields[f"Is participating in {fair.name}"] = f"custom_fair_{fair.id}_reg"
+            fields[f"Registration time for {fair.name}"] = f"custom_fair_{fair.id}_reg_time"
+        return {"virtual_fair": fields}
+
+    @staticmethod
+    def get_xlsx_column_name(key):
+        fair_match = re.search(r"^custom_fair_(\d+)_(.*)$", key)
+        if fair_match:
+            fair = ClubFair.objects.filter(id=fair_match.group(1)).first()
+            if fair:
+                if fair_match.group(2) == "reg_time":
+                    return f"{fair.name} Registration Time"
+                return f"Registered for {fair.name}"
+
+    class Meta(AuthenticatedClubSerializer.Meta):
+        pass
 
 
 class NoteTagSerializer(serializers.ModelSerializer):
@@ -1616,3 +1686,27 @@ class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
             "outside_club_permission",
         )
         save_related_fields = [{"field": "note_tags", "mode": "create"}]
+
+
+class ClubFairSerializer(serializers.ModelSerializer):
+    time = serializers.SerializerMethodField("get_time")
+
+    def get_time(self, obj):
+        if obj.time:
+            return obj.time
+        return "{} to {}".format(
+            obj.start_time.strftime("%b %d, %Y"), obj.end_time.strftime("%b %d, %Y")
+        )
+
+    class Meta:
+        model = ClubFair
+        fields = (
+            "contact",
+            "id",
+            "information",
+            "name",
+            "organization",
+            "registration_end_time",
+            "registration_information",
+            "time",
+        )

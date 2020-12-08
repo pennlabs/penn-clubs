@@ -38,6 +38,7 @@ import {
 } from '../utils/branding'
 import AdvisorCard from './ClubEditPage/AdvisorCard'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
+import ClubFairCard from './ClubEditPage/ClubFairCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
 import EnableSubscriptionCard from './ClubEditPage/EnableSubscriptionCard'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
@@ -312,6 +313,7 @@ const ClubForm = ({
         content: (
           <>
             <RenewCard club={club} />
+            <ClubFairCard club={club} />
             <DeleteClubCard onDelete={reloadClub} notify={notify} club={club} />
           </>
         ),

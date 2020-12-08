@@ -131,7 +131,7 @@ type DropdownFilterProps = {
   name: string
   color?: string
   selected: SelectableTag[]
-  options: SelectableTag[]
+  options: (SelectableTag & { color?: string })[]
   updateTag: (tag: SelectableTag, name: string) => void
 }
 
@@ -155,7 +155,7 @@ const DropdownFilter = ({
   return (
     <TableWrapper>
       <TableContainer>
-        {options.map((tag: SelectableTag) => (
+        {options.map((tag: SelectableTag & { color?: string }) => (
           <CheckboxRow
             key={tag.label}
             color={color}
@@ -171,7 +171,7 @@ const DropdownFilter = ({
                 aria-checked={isSelected(tag) ? 'true' : 'false'}
               >
                 <Icon
-                  style={{ fill: color }}
+                  style={{ fill: tag.color ?? color }}
                   name={isSelected(tag) ? 'check-box' : 'box'}
                   alt={isSelected(tag) ? 'selected' : 'not selected'}
                 />

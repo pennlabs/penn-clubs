@@ -6,7 +6,7 @@ import bleach
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from clubs.models import Club, Membership
+from clubs.models import Club, ClubFair, Membership
 
 
 class Command(BaseCommand):
@@ -76,11 +76,11 @@ class Command(BaseCommand):
                 ranking += 10
 
             # points for fair
-            if club.fair:
+            now = timezone.now()
+            if ClubFair.objects.filter(end_time__gte=now, participating_clubs=club).exists():
                 ranking += 10
 
             # points for events
-            now = timezone.now()
             today_events = club.events.filter(
                 end_time__gte=now, start_time__lte=now + datetime.timedelta(days=1)
             )

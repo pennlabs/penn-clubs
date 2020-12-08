@@ -1,10 +1,10 @@
 import { useRouter } from 'next/router'
-import { ReactElement, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
-import { FAIR_INFO, MEDIUM_GRAY } from '../../constants'
-import { Club, MembershipRank, UserInfo } from '../../types'
-import { apiCheckPermission, doApiRequest, useSetting } from '../../utils'
+import { MEDIUM_GRAY } from '../../constants'
+import { Club, ClubFair, MembershipRank, UserInfo } from '../../types'
+import { apiCheckPermission, doApiRequest } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   APPROVAL_AUTHORITY_URL,
@@ -48,9 +48,7 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   const [comment, setComment] = useState<string>(club.approved_comment || '')
   const [loading, setLoading] = useState<boolean>(false)
   const [confirmModal, setConfirmModal] = useState<ConfirmParams | null>(null)
-  const fairInProgress = useSetting('FAIR_OPEN') || useSetting('PRE_FAIR')
-  const fairName = useSetting('FAIR_NAME')
-  const fairInfo = FAIR_INFO[fairName as string]
+  const [fairs, setFairs] = useState<ClubFair[]>([])
 
   const canApprove = apiCheckPermission('clubs.approve_club')
   const seeFairStatus = apiCheckPermission('clubs.see_fair_status')
@@ -59,6 +57,14 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   const doConfirm = (params: ConfirmParams): void => {
     setConfirmModal(params)
   }
+
+  useEffect(() => {
+    if (seeFairStatus) {
+      doApiRequest('/clubfairs/?format=json')
+        .then((resp) => resp.json())
+        .then(setFairs)
+    }
+  }, [])
 
   return (
     <>
@@ -324,21 +330,24 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
             )}
         </div>
       ) : null}
-      {seeFairStatus && fairInProgress && (
-        <div
-          className={`notification ${club.fair ? 'is-success' : 'is-warning'}`}
-        >
-          {club.fair ? (
-            <>
-              <Icon name="check" /> <b>{club.name}</b> is signed up for the{' '}
-              {fairInfo.name}.
-            </>
-          ) : (
-            <>
-              <Icon name="x" /> <b>{club.name}</b> is not signed up for the{' '}
-              {fairInfo.name}.
-            </>
-          )}
+      {seeFairStatus && fairs.length > 0 && (
+        <div className="notification is-info is-light">
+          <p>
+            {club.name} is registered for the following {OBJECT_NAME_SINGULAR}{' '}
+            activity fairs:
+          </p>
+          {fairs.map((fair) => {
+            const inFair = club.fairs.indexOf(fair.id) !== -1
+            return (
+              <li key={fair.id}>
+                <span
+                  className={inFair ? 'has-text-success' : 'has-text-danger'}
+                >
+                  <Icon name={inFair ? 'check' : 'x'} /> {fair.name}
+                </span>
+              </li>
+            )
+          })}
         </div>
       )}
     </>
