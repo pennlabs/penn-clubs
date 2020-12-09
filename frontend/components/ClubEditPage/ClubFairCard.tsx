@@ -121,9 +121,9 @@ const ClubFairCard = ({ club }: ClubFairCardProps): ReactElement => {
           </div>
         )
       })}
-      {fairs.length < 0 && (
+      {fairs.length <= 0 && (
         <div className="has-text-grey">
-          There are no upcoming fairs at this time.
+          There are no upcoming {OBJECT_NAME_SINGULAR} fairs at this time.
         </div>
       )}
     </BaseCard>
