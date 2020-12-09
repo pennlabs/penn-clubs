@@ -141,6 +141,9 @@ const Actions = ({
     }
   }, [showModal])
 
+  const isMembershipOpen =
+    club.application_required === ClubApplicationRequired.Open
+
   return (
     <>
       <div className={className} style={style}>
@@ -150,7 +153,11 @@ const Actions = ({
               className="button is-success"
               onClick={requestMembership}
             >
-              {isRequested ? 'Withdraw Request' : "I'm a Member"}
+              {isRequested
+                ? 'Withdraw Request'
+                : isMembershipOpen
+                ? 'Request Membership'
+                : "I'm a Member"}
             </ActionButton>
           )}
           {canEdit && (
@@ -186,7 +193,7 @@ const Actions = ({
       >
         <ModalContent>
           <h1>Confirm Membership Request</h1>
-          {club.application_required === ClubApplicationRequired.Open ? (
+          {isMembershipOpen ? (
             <p>
               You can use this feature to request to be added on {SITE_NAME} for
               this {OBJECT_NAME_SINGULAR}.
@@ -209,13 +216,11 @@ const Actions = ({
           </Quote>
           <p>
             If you{' '}
-            {club.application_required !== ClubApplicationRequired.Open
-              ? 'are a member of'
-              : 'would like to join'}{' '}
-            this {OBJECT_NAME_SINGULAR}, use the button below to confirm your
+            {!isMembershipOpen ? 'are a member of' : 'would like to join'} this{' '}
+            {OBJECT_NAME_SINGULAR}, use the button below to confirm your
             membership request.
           </p>
-          {club.application_required !== ClubApplicationRequired.Open && (
+          {!isMembershipOpen && (
             <p className="has-text-danger">
               If you are not an existing member of this {OBJECT_NAME_SINGULAR},
               please <b>do not</b> press the button below. This <b>is not</b>{' '}
