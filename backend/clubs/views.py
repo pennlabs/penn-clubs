@@ -490,11 +490,15 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             status = True
 
         # get answers to questions
+        num_questions = len(json.loads(fair.questions)) if fair.questions else 0
         answer_objects = request.data.get("answers", [])
         answers = json.dumps(answer_objects)
 
         # make sure questions are answered
-        if answer_objects and not all(ans is not None for ans in answer_objects):
+        if num_questions > 0 and (
+            not all(ans is not None for ans in answer_objects)
+            or len(answer_objects) < num_questions
+        ):
             return Response(
                 {"success": False, "message": "Please fill out all of the questions in the form."}
             )

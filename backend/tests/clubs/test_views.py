@@ -19,6 +19,7 @@ from clubs.models import (
     Badge,
     Club,
     ClubFair,
+    ClubFairRegistration,
     Event,
     Favorite,
     Membership,
@@ -1898,6 +1899,44 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("options"))
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertTrue(resp.data["FAIR_OPEN"])
+
+    def test_club_fair_registration(self):
+        # create a fair
+        now = timezone.now()
+        fair = ClubFair.objects.create(
+            name="SAC Fair",
+            start_time=now + datetime.timedelta(days=7),
+            end_time=now + datetime.timedelta(days=14),
+            registration_start_time=now - datetime.timedelta(days=1),
+            registration_end_time=now + datetime.timedelta(days=1),
+            questions=json.dumps(
+                [
+                    {
+                        "name": "fav_color",
+                        "label": "What is your favorite color?",
+                        "type": "radio",
+                        "choices": [{"id": "red", "label": "Red"}, {"id": "blue", "label": "Blue"}],
+                    }
+                ]
+            ),
+        )
+
+        # add officer to club
+        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+
+        # login to officer account
+        self.client.login(username=self.user4.username, password="test")
+
+        # register for the fair
+        resp = self.client.post(
+            reverse("clubfairs-register", args=(fair.id,)),
+            {"status": True, "club": self.club1.code, "answers": ["red"]},
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertTrue(resp.data["success"], resp.content)
+
+        # ensure registration was processed
+        self.assertTrue(ClubFairRegistration.objects.filter(club=self.club1, fair=fair).exists())
 
     def test_permission_lookup(self):
         permissions = [
