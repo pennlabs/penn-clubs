@@ -282,7 +282,7 @@ const EmbedOption = (props: Props): ReactElement => {
               onChange={(e) => setEmbedHeight(e.target.value)}
             />
             <p className="help">
-              You can sepcify this in pixel units (ex: 1000px).
+              You can specify this in pixel units (ex: 1000px).
             </p>
           </div>
           {errorMessage !== null && (
