@@ -1,20 +1,32 @@
+import Link from 'next/link'
 import React, { ReactElement, useEffect, useState } from 'react'
 import TimeAgo from 'react-timeago'
 
-import { Club, ClubFair } from '../../types'
+import { CLUB_EDIT_ROUTE } from '../../constants'
+import { Club, ClubFair, MembershipRank, UserMembership } from '../../types'
 import { doApiRequest } from '../../utils'
-import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
+import { OBJECT_NAME_PLURAL, OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Contact, Icon, Text } from '../common'
 import BaseCard from './BaseCard'
 
 type ClubFairCardProps = {
-  club: Club
+  club?: Club
+  fairs?: ClubFair[]
+  memberships?: UserMembership[]
 }
 
-const ClubFairCard = ({ club }: ClubFairCardProps): ReactElement => {
-  const [fairs, setFairs] = useState<ClubFair[]>([])
-  const [fairStatuses, setFairStatuses] = useState<number[]>(club.fairs)
+const ClubFairCard = ({
+  club,
+  fairs: initialFairs,
+  memberships: initialMemberships,
+}: ClubFairCardProps): ReactElement => {
+  const [fairs, setFairs] = useState<ClubFair[]>(initialFairs ?? [])
+  const [fairStatuses, setFairStatuses] = useState<number[]>(club?.fairs ?? [])
   const [isLoading, setLoading] = useState<boolean>(false)
+
+  const [clubList, setClubList] = useState<UserMembership[]>(
+    initialMemberships ?? [],
+  )
 
   const fetchFairs = (): void => {
     doApiRequest('/clubfairs/?format=json')
@@ -26,7 +38,7 @@ const ClubFairCard = ({ club }: ClubFairCardProps): ReactElement => {
     setLoading(true)
     doApiRequest(
       `/clubfairs/${encodeURIComponent(fairId)}/register/?format=json`,
-      { method: 'POST', body: { club: club.code, status } },
+      { method: 'POST', body: { club: club?.code, status } },
     )
       .then((resp) => resp.json())
       .then((data) => {
@@ -44,7 +56,20 @@ const ClubFairCard = ({ club }: ClubFairCardProps): ReactElement => {
       .finally(() => setLoading(false))
   }
 
-  useEffect(fetchFairs, [])
+  useEffect((): void => {
+    initialFairs || fetchFairs()
+
+    // in the case where no specific club is passed, show a list of eligible clubs
+    if (club == null || !initialMemberships) {
+      doApiRequest('/memberships/?format=json')
+        .then((resp) => resp.json())
+        .then(setClubList)
+    }
+  }, [])
+
+  const availableClubs = clubList.filter(
+    ({ role }) => role <= MembershipRank.Officer,
+  )
 
   return (
     <BaseCard title="Activity Fairs">
@@ -72,32 +97,34 @@ const ClubFairCard = ({ club }: ClubFairCardProps): ReactElement => {
                 }}
               />
             </div>
-            <Text>
-              {club.name} is{' '}
-              <b
-                className={
-                  isRegistered ? 'has-text-success' : 'has-text-danger'
-                }
-              >
-                {isRegistered ? 'registered' : 'not registered'}
-              </b>{' '}
-              for this {OBJECT_NAME_SINGULAR} fair.{' '}
-              {!isEnded && (
-                <>
-                  Registration will close on{' '}
-                  <b>{registrationEnd.toLocaleString()}</b> (
-                  <TimeAgo date={registrationEnd} />
-                  ). You can change your status any time before that date.
-                </>
-              )}
-            </Text>
+            {club != null && (
+              <Text>
+                {club.name} is{' '}
+                <b
+                  className={
+                    isRegistered ? 'has-text-success' : 'has-text-danger'
+                  }
+                >
+                  {isRegistered ? 'registered' : 'not registered'}
+                </b>{' '}
+                for this {OBJECT_NAME_SINGULAR} fair.{' '}
+                {!isEnded && (
+                  <>
+                    Registration will close on{' '}
+                    <b>{registrationEnd.toLocaleString()}</b> (
+                    <TimeAgo date={registrationEnd} />
+                    ). You can change your status any time before that date.
+                  </>
+                )}
+              </Text>
+            )}
             {isEnded ? (
               <Text>
                 Registration for this {OBJECT_NAME_SINGULAR} fair is now closed.
                 If you have any questions, please contact{' '}
                 <Contact email={fair.contact} />.
               </Text>
-            ) : (
+            ) : club != null ? (
               <>
                 {isRegistered ? (
                   <button
@@ -116,6 +143,41 @@ const ClubFairCard = ({ club }: ClubFairCardProps): ReactElement => {
                     <Icon name="edit" /> Register
                   </button>
                 )}
+              </>
+            ) : (
+              <>
+                <table className="table is-fullwidth">
+                  <thead>
+                    <tr>
+                      <th>Club</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {availableClubs.length > 0 ? (
+                      availableClubs.map((item) => (
+                        <tr>
+                          <td>{item.club.name}</td>
+                          <td>
+                            <Link
+                              href={CLUB_EDIT_ROUTE()}
+                              as={CLUB_EDIT_ROUTE(item.club.code) + '#settings'}
+                            >
+                              <a className="button is-small">Register</a>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={2}>
+                          There are no {OBJECT_NAME_PLURAL} that you can
+                          register.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </>
             )}
           </div>
