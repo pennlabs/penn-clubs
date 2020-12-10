@@ -172,7 +172,10 @@ export interface ClubFair {
 
   information: string
   registration_information: string
+  registration_start_time: string | null
   registration_end_time: string
+
+  questions: string
 }
 
 export interface File {

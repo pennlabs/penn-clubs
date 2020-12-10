@@ -1,3 +1,4 @@
+import json
 import re
 from urllib.parse import parse_qs, urlparse
 
@@ -1596,6 +1597,15 @@ class ReportClubField(serializers.Field):
     """
     A custom field used when generating club reports.
     Used to dynamically generate fields based on model objects.
+
+    To add a new dynamically generated report field, perform the following steps:
+    - Add the code to generate the field values below.
+    - Add the field in the `get_additional_fields` and `get_xlsx_column_name`
+      methods in the serializer.
+
+    The field caches the query result for every club and looks up the value from the
+    cache when it is requested. If you do not do this, there will be one SQL query
+    for each club and report generation will be extremely slow.
     """
 
     def __init__(self, field, *args, **kwargs):
@@ -1608,13 +1618,20 @@ class ReportClubField(serializers.Field):
         if fair_match:
             fair = ClubFair.objects.filter(id=fair_match.group(1)).first()
             if fair:
-                if fair_match.group(2) == "reg_time":
+                suffix = fair_match.group(2)
+                if suffix == "reg_time":
                     self._default_value = None
                     reg = fair.clubfairregistration_set.values_list("club__code", "created_at")
                     for code, time in reg:
                         self._cached_values[code] = time.astimezone(
                             timezone.get_current_timezone()
                         ).strftime("%b %d, %Y %I:%M %p %Z")
+                elif suffix.startswith("q_"):
+                    index = int(suffix.rsplit("_")[-1])
+                    reg = fair.clubfairregistration_set.values_list("club__code", "answers")
+                    self._default_value = None
+                    for code, ans in reg:
+                        self._cached_values[code] = json.loads(ans)[index]
                 else:
                     self._default_value = False
                     self._cached_values = {
@@ -1624,9 +1641,16 @@ class ReportClubField(serializers.Field):
         super().__init__(*args, **kwargs)
 
     def get_attribute(self, instance):
+        """
+        Return the club code, which we can use to identify which cell row to return.
+        """
         return instance.code
 
     def to_representation(self, value):
+        """
+        This is called to get the value for a partcular cell, given the club code.
+        The entire field object can be though of as a column in the spreadsheet.
+        """
         return self._cached_values.get(value, self._default_value)
 
 
@@ -1642,6 +1666,8 @@ class ReportClubSerializer(AuthenticatedClubSerializer):
         for fair in ClubFair.objects.filter(end_time__gte=now):
             fields[f"Is participating in {fair.name}"] = f"custom_fair_{fair.id}_reg"
             fields[f"Registration time for {fair.name}"] = f"custom_fair_{fair.id}_reg_time"
+            for i, question in enumerate(json.loads(fair.questions)):
+                fields[f"[{fair.name}] {question['label']}"] = f"custom_fair_{fair.id}_q_{i}"
         return {"virtual_fair": fields}
 
     @staticmethod
@@ -1650,8 +1676,13 @@ class ReportClubSerializer(AuthenticatedClubSerializer):
         if fair_match:
             fair = ClubFair.objects.filter(id=fair_match.group(1)).first()
             if fair:
-                if fair_match.group(2) == "reg_time":
+                suffix = fair_match.group(2)
+                if suffix == "reg_time":
                     return f"{fair.name} Registration Time"
+                elif suffix.startswith("q_"):
+                    index = int(suffix.rsplit("_")[-1])
+                    label = json.loads(fair.questions)[index]["label"]
+                    return f"[{fair.name}] {label}"
                 return f"Registered for {fair.name}"
 
     class Meta(AuthenticatedClubSerializer.Meta):
@@ -1706,7 +1737,9 @@ class ClubFairSerializer(serializers.ModelSerializer):
             "information",
             "name",
             "organization",
+            "questions",
             "registration_end_time",
             "registration_information",
+            "registration_start_time",
             "time",
         )

@@ -6,6 +6,7 @@ import { useFormikContext } from 'formik'
 import Head from 'next/head'
 import React, {
   ReactElement,
+  ReactNode,
   useContext,
   useEffect,
   useRef,
@@ -269,6 +270,8 @@ export const TextField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
     const { type = 'text', isError, value, ...other } = props
 
+    const { setFieldValue } = useFormikContext()
+
     // It turns out that URL fields confuse people because Chrome doesn't let you submit unless its a valid URL.
     // People don't include the https:// schema or enter something that isn't a URL, causing Chrome to reject these URLs.
     // We have some server side processing that is more flexible, so just turn URL fields into text fields for now.
@@ -277,13 +280,41 @@ export const TextField = useFieldWrapper(
       actualType = 'text'
     }
 
-    return type === 'textarea' ? (
-      <textarea
-        className={`textarea ${isError ? 'is-danger' : ''}`}
-        value={value ?? ''}
-        {...other}
-      ></textarea>
-    ) : (
+    if (type === 'textarea') {
+      return (
+        <textarea
+          className={`textarea ${isError ? 'is-danger' : ''}`}
+          value={value ?? ''}
+          {...other}
+        ></textarea>
+      )
+    }
+
+    if (type === 'radio') {
+      return (
+        <>
+          {other.choices
+            .map(({ id, label }) => (
+              <label key={id} className="radio">
+                <input
+                  type="radio"
+                  name={other.name}
+                  value={id}
+                  onChange={() => setFieldValue(other.name, id)}
+                />{' '}
+                {label}
+              </label>
+            ))
+            .map((item: ReactNode, i: number) => [
+              item,
+              <br key={`break-${i}`} />,
+            ])
+            .flat()}
+        </>
+      )
+    }
+
+    return (
       <input
         className={`input ${isError ? 'is-danger' : ''}`}
         type={actualType}

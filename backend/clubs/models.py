@@ -503,8 +503,10 @@ class ClubFair(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
 
+    registration_start_time = models.DateTimeField(null=True, blank=True)
     registration_end_time = models.DateTimeField()
 
+    questions = models.TextField(default="[]")
     participating_clubs = models.ManyToManyField(Club, through="ClubFairRegistration", blank=True)
 
     def __str__(self):
@@ -520,8 +522,13 @@ class ClubFairRegistration(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     fair = models.ForeignKey(ClubFair, on_delete=models.CASCADE)
 
+    answers = models.TextField(blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.club.name} registration for {self.fair.name}"
 
 
 class Event(models.Model):

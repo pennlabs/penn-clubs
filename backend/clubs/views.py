@@ -47,6 +47,7 @@ from clubs.models import (
     Badge,
     Club,
     ClubFair,
+    ClubFairRegistration,
     ClubVisit,
     Event,
     Favorite,
@@ -488,6 +489,9 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         elif not isinstance(status, bool):
             status = True
 
+        # get answers to questions
+        answers = json.dumps(request.data.get("answers", []))
+
         # check if deadline has passed
         now = timezone.now()
         if fair.registration_end_time < now:
@@ -496,8 +500,9 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         # check if user can actually register club
         mship = find_membership_helper(request.user, club)
         if mship is not None and mship.role <= Membership.ROLE_OFFICER or request.user.is_superuser:
+            # register or unregister club
             if status:
-                fair.participating_clubs.add(club)
+                ClubFairRegistration.objects.create(club=club, fair=fair, answers=answers)
             else:
                 fair.participating_clubs.remove(club)
             return Response({"success": True})
