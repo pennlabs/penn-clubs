@@ -1590,7 +1590,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
     advisor_set = AdvisorSerializer(many=True, required=False)
 
     class Meta(ClubSerializer.Meta):
-        fields = ClubSerializer.Meta.fields + ["email_public", "files", "fairs"]
+        fields = ClubSerializer.Meta.fields + ["email_public", "files", "fairs", "terms"]
 
 
 class ReportClubField(serializers.Field):

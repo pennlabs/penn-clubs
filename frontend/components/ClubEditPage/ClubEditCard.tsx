@@ -273,6 +273,12 @@ export default function ClubEditCard({
           help: `This text will be shown next to your ${OBJECT_NAME_SINGULAR} name in list and card views. Enter a one sentence description of your ${OBJECT_NAME_SINGULAR}.`,
         },
         {
+          name: 'terms',
+          type: 'text',
+          label: 'Alt Names',
+          help: `Enter alternative names for your ${OBJECT_NAME_SINGULAR} here, separated by commas. For example, this could be an acronym or abbreviation that your ${OBJECT_NAME_SINGULAR} goes by. Your ${OBJECT_NAME_SINGULAR} will show up when these terms are entered into the search bar.`,
+        },
+        {
           name: 'description',
           required: true,
           help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
