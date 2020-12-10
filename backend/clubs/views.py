@@ -545,7 +545,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     )
     permission_classes = [ClubPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
-    search_fields = ["name", "subtitle", "code"]
+    search_fields = ["name", "subtitle", "code", "terms"]
     ordering_fields = ["favorite_count", "name"]
     ordering = "featured"
 

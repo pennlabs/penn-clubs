@@ -186,6 +186,7 @@ class Club(models.Model):
     active = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
+    terms = models.CharField(blank=True, max_length=1024)
     description = models.TextField(blank=True)
     address = models.TextField(blank=True)
     founded = models.DateField(blank=True, null=True)
