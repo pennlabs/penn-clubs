@@ -490,19 +490,43 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             status = True
 
         # get answers to questions
-        answers = json.dumps(request.data.get("answers", []))
+        answer_objects = request.data.get("answers", [])
+        answers = json.dumps(answer_objects)
+
+        # make sure questions are answered
+        if answer_objects and not all(ans is not None for ans in answer_objects):
+            return Response(
+                {"success": False, "message": "Please fill out all of the questions in the form."}
+            )
+
+        # check if registration has started
+        now = timezone.now()
+        if fair.registration_start_time is not None and fair.registration_start_time > now:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Registration for this activities fair has not opened yet.",
+                }
+            )
 
         # check if deadline has passed
-        now = timezone.now()
         if fair.registration_end_time < now:
-            return Response({"success": False})
+            return Response(
+                {
+                    "success": False,
+                    "message": "The deadline has passed for this activities fair. "
+                    f"Please email {fair.contact} for assistance.",
+                }
+            )
 
         # check if user can actually register club
         mship = find_membership_helper(request.user, club)
         if mship is not None and mship.role <= Membership.ROLE_OFFICER or request.user.is_superuser:
             # register or unregister club
             if status:
-                ClubFairRegistration.objects.create(club=club, fair=fair, answers=answers)
+                ClubFairRegistration.objects.create(
+                    club=club, fair=fair, answers=answers, registrant=request.user
+                )
             else:
                 fair.participating_clubs.remove(club)
             return Response({"success": True})

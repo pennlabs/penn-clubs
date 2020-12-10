@@ -522,6 +522,7 @@ class ClubFairRegistration(models.Model):
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     fair = models.ForeignKey(ClubFair, on_delete=models.CASCADE)
+    registrant = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
 
     answers = models.TextField(blank=True)
 

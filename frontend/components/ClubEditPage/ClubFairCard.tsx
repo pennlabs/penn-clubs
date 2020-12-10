@@ -46,6 +46,7 @@ const ClubFairCard = ({
   const [fairs, setFairs] = useState<ClubFair[]>(initialFairs ?? [])
   const [fairStatuses, setFairStatuses] = useState<number[]>(club?.fairs ?? [])
   const [isLoading, setLoading] = useState<boolean>(false)
+  const [message, setMessage] = useState<[number, string] | null>(null)
 
   const [clubList, setClubList] = useState<UserMembership[]>(
     initialMemberships ?? [],
@@ -86,6 +87,11 @@ const ClubFairCard = ({
             newStatuses.splice(newStatuses.indexOf(fairId), 1)
             setFairStatuses(newStatuses)
           }
+        }
+        if (data.message) {
+          setMessage([fairId, data.message])
+        } else {
+          setMessage(null)
         }
       })
       .then(fetchFairs)
@@ -160,6 +166,9 @@ const ClubFairCard = ({
                   </>
                 )}
               </Text>
+            )}
+            {message != null && message[0] === fair.id && (
+              <div className="notification is-info">{message[1]}</div>
             )}
             {isEnded ? (
               <Text>
