@@ -69,7 +69,7 @@ class ClubFairPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if view.action in {"list", "retrieve", "register"}:
             return True
-        return False
+        return request.user.is_authenticated and request.user.has_perm("clubs.see_fair_status")
 
 
 class ClubPermission(permissions.BasePermission):

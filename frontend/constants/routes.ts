@@ -23,6 +23,8 @@ export const DIRECTORY_ROUTE = '/directory'
 export const LIVE_EVENTS = '/events'
 export const FAIR_INFO_ROUTE = '/fair'
 export const FAIR_OFFICER_GUIDE_ROUTE = '/sacfairguide'
+export const GUIDE_ROUTE = (slug?: string): string =>
+  slug ? `/guides/${slug}` : '/guides/[page]'
 
 export const REPORT_LIST_ROUTE = '/reports'
 export const REPORT_CREATE_ROUTE = '/reports/create'
