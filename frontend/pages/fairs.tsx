@@ -75,8 +75,24 @@ function FairsPage({ userInfo, fairs, memberships }): ReactElement {
                   type="email"
                   helpText="The email address that students should contact for questions related to this activities fair."
                 />
-                <Field name="start_time" as={DateTimeField} required />
-                <Field name="end_time" as={DateTimeField} required />
+                <Field
+                  name="start_time"
+                  as={DateTimeField}
+                  helpText="When your activities fair will start. If you have multiple time slots, this should be the beginning of the earliest slot."
+                  required
+                />
+                <Field
+                  name="end_time"
+                  as={DateTimeField}
+                  helpText="When your activities fair will end. If you have multiple time slots, this should be the end of the latest slot."
+                  required
+                />
+                <Field
+                  name="time"
+                  label="Display Time"
+                  as={TextField}
+                  helpText="If you do not specify this field, it will automatically be generated from the start and end time. This field exists so that you can specify a more accurate description of the start and end times."
+                />
                 <Field
                   name="registration_start_time"
                   as={DateTimeField}
@@ -85,6 +101,7 @@ function FairsPage({ userInfo, fairs, memberships }): ReactElement {
                 <Field
                   name="registration_end_time"
                   as={DateTimeField}
+                  helpText="After this time, registrations will no longer be accepted."
                   required
                 />
                 <Field
@@ -102,7 +119,7 @@ function FairsPage({ userInfo, fairs, memberships }): ReactElement {
                 <Field
                   name="questions"
                   as={DynamicQuestionField}
-                  helpText="The questions required during fair registration."
+                  helpText="The questions you enter here will be required during fair registration."
                 />
               </>
             }
