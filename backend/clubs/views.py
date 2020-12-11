@@ -512,7 +512,10 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             and fair.organization == "Student Activities Council"
             and club.badges.filter(label="SAC").exists()
         ):
-            if club.asset_set.count() <= 0:
+            if club.asset_set.count() <= 0 or not any(
+                asset.name.lower().endswith((".pdf", ".doc", ".docx"))
+                for asset in club.asset_set.all()
+            ):
                 return Response(
                     {
                         "success": False,
