@@ -88,6 +88,7 @@ from clubs.serializers import (
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
     ClubFairSerializer,
+    WritableClubFairSerializer,
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
@@ -464,8 +465,12 @@ class ClubFairViewSet(viewsets.ModelViewSet):
     Return a list of ongoing and upcoming club fairs.
     """
 
-    serializer_class = ClubFairSerializer
     permission_classes = [ClubFairPermission | IsSuperuser]
+
+    def get_serializer_class(self):
+        if self.action in {"create", "update", "partial_update"}:
+            return WritableClubFairSerializer
+        return ClubFairSerializer
 
     @action(detail=True, methods=["post"])
     def register(self, request, *args, **kwargs):

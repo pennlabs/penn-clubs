@@ -1745,3 +1745,10 @@ class ClubFairSerializer(serializers.ModelSerializer):
             "start_time",
             "time",
         )
+
+
+class WritableClubFairSerializer(ClubFairSerializer):
+    time = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta(ClubFairSerializer.Meta):
+        pass
