@@ -4,7 +4,13 @@ import React, { ReactElement, useEffect, useState } from 'react'
 import TimeAgo from 'react-timeago'
 
 import { CLUB_EDIT_ROUTE } from '../../constants'
-import { Club, ClubFair, MembershipRank, UserMembership } from '../../types'
+import {
+  Club,
+  ClubFair,
+  DynamicQuestion,
+  MembershipRank,
+  UserMembership,
+} from '../../types'
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_PLURAL, OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Contact, Icon, Text } from '../common'
@@ -15,13 +21,6 @@ type ClubFairCardProps = {
   club?: Club
   fairs?: ClubFair[]
   memberships?: UserMembership[]
-}
-
-type DynamicQuestion = {
-  name: string
-  label: string
-  type: string
-  choices?: string[]
 }
 
 const DynamicQuestions = ({
@@ -221,7 +220,7 @@ const ClubFairCard = ({
                     <tbody>
                       {availableClubs.length > 0 ? (
                         availableClubs.map((item) => (
-                          <tr>
+                          <tr key={item.club.code}>
                             <td>{item.club.name}</td>
                             <td>
                               <Link

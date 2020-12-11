@@ -1,14 +1,22 @@
+import { Field } from 'formik'
 import { NextPageContext } from 'next'
 import React, { ReactElement } from 'react'
 
 import ClubFairCard from '../components/ClubEditPage/ClubFairCard'
 import { Contact, Container, Metadata, Text, Title } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
+import {
+  DateTimeField,
+  DynamicQuestionField,
+  RichTextField,
+  TextField,
+} from '../components/FormComponents'
+import { ModelForm } from '../components/ModelForm'
 import TabView from '../components/TabView'
 import { BG_GRADIENT, WHITE } from '../constants'
 import renderPage from '../renderPage'
 import { MembershipRank } from '../types'
-import { doBulkLookup } from '../utils'
+import { apiCheckPermission, doBulkLookup } from '../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_PLURAL,
@@ -21,10 +29,12 @@ function FairsPage({ userInfo, fairs, memberships }): ReactElement {
     return <AuthPrompt />
   }
 
+  const canSeeFairStatus = apiCheckPermission('clubs.see_fair_status')
+
   const tabs = [
     {
       name: 'Register',
-      content: (
+      content: () => (
         <>
           <Text>
             You can use this page to register your {OBJECT_NAME_SINGULAR} for{' '}
@@ -41,6 +51,70 @@ function FairsPage({ userInfo, fairs, memberships }): ReactElement {
           <ClubFairCard fairs={fairs} memberships={memberships} />
         </>
       ),
+    },
+    {
+      name: 'Management',
+      content: () => (
+        <>
+          <Text>
+            You can use this page to manage {OBJECT_NAME_SINGULAR} fairs. Since
+            your account has the required permissions, you are able to view this
+            page.
+          </Text>
+          <ModelForm
+            baseUrl="/clubfairs/"
+            initialData={fairs}
+            fields={
+              <>
+                <Field name="name" as={TextField} required />
+                <Field name="organization" as={TextField} required />
+                <Field
+                  name="contact"
+                  as={TextField}
+                  required
+                  type="email"
+                  helpText="The email address that students should contact for questions related to this activities fair."
+                />
+                <Field name="start_time" as={DateTimeField} required />
+                <Field name="end_time" as={DateTimeField} required />
+                <Field
+                  name="registration_start_time"
+                  as={DateTimeField}
+                  helpText="If this is not specified, registration will be open immediately."
+                />
+                <Field
+                  name="registration_end_time"
+                  as={DateTimeField}
+                  required
+                />
+                <Field
+                  name="information"
+                  as={RichTextField}
+                  helpText="This will be shown to students on the fair page."
+                />
+                <Field
+                  name="registration_information"
+                  as={RichTextField}
+                  helpText={`This will be shown to ${OBJECT_NAME_SINGULAR} ${MEMBERSHIP_ROLE_NAMES[
+                    MembershipRank.Officer
+                  ].toLowerCase()}s on the registration page.`}
+                />
+                <Field
+                  name="questions"
+                  as={DynamicQuestionField}
+                  helpText="The questions required during fair registration."
+                />
+              </>
+            }
+            tableFields={[
+              { name: 'name', label: 'Name' },
+              { name: 'organization', label: 'Organization' },
+            ]}
+            noun="Fair"
+          />
+        </>
+      ),
+      disabled: !canSeeFairStatus,
     },
   ]
 
@@ -63,5 +137,7 @@ FairsPage.getInitialProps = async (ctx: NextPageContext) => {
     ctx,
   )
 }
+
+FairsPage.permissions = ['clubs.see_fair_status']
 
 export default renderPage(FairsPage)

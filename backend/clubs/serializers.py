@@ -1733,6 +1733,7 @@ class ClubFairSerializer(serializers.ModelSerializer):
         model = ClubFair
         fields = (
             "contact",
+            "end_time",
             "id",
             "information",
             "name",
@@ -1741,5 +1742,6 @@ class ClubFairSerializer(serializers.ModelSerializer):
             "registration_end_time",
             "registration_information",
             "registration_start_time",
+            "start_time",
             "time",
         )

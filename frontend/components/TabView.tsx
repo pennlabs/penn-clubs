@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, ReactNode, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import { BLACK, WHITE, WHITE_ALPHA } from '../constants/colors'
@@ -47,7 +47,7 @@ type Props = {
   tabClassName?: string
   tabs: {
     name: string
-    content: ReactElement | string
+    content: ReactNode | (() => ReactNode)
     disabled?: boolean
     label?: string
   }[]
@@ -65,17 +65,16 @@ const TabView = ({
     setCurrentTab(window.location.hash.substring(1) || currentTab)
   }, [])
 
-  const getTabContent = (): ReactElement => (
-    <div key={currentTab}>
-      {
-        (
-          tabs.find((a) => a.name === currentTab) ?? {
-            content: <>Invalid tab selected.</>,
-          }
-        ).content
-      }
-    </div>
-  )
+  const getTabContent = (): ReactElement => {
+    const tab = tabs.find((a) => a.name === currentTab) ?? {
+      content: <>Invalid tab selected.</>,
+    }
+    return (
+      <div key={currentTab}>
+        {typeof tab.content === 'function' ? tab.content() : tab.content}
+      </div>
+    )
+  }
 
   const enabledTabs = tabs.filter((tab) => !tab.disabled)
 

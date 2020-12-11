@@ -464,7 +464,6 @@ class ClubFairViewSet(viewsets.ModelViewSet):
     Return a list of ongoing and upcoming club fairs.
     """
 
-    http_method_names = ["get", "post"]
     serializer_class = ClubFairSerializer
     permission_classes = [ClubFairPermission | IsSuperuser]
 
@@ -495,13 +494,32 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         answers = json.dumps(answer_objects)
 
         # make sure questions are answered
-        if num_questions > 0 and (
-            not all(ans is not None for ans in answer_objects)
-            or len(answer_objects) < num_questions
+        if (
+            status
+            and num_questions > 0
+            and (
+                not all(ans is not None for ans in answer_objects)
+                or len(answer_objects) < num_questions
+            )
         ):
             return Response(
                 {"success": False, "message": "Please fill out all of the questions in the form."}
             )
+
+        # make sure club constitution is uploaded for SAC clubs
+        if (
+            status
+            and fair.organization == "Student Activities Council"
+            and club.badges.filter(label="SAC").exists()
+        ):
+            if club.asset_set.count() <= 0:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "As a SAC affiliated club, "
+                        "you must upload a club constitution before registering for this fair.",
+                    }
+                )
 
         # check if registration has started
         now = timezone.now()
