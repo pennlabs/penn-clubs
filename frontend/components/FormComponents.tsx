@@ -15,7 +15,9 @@ import React, {
 import DatePicker from 'react-datepicker'
 import Select from 'react-select'
 import styled from 'styled-components'
+import uuid from 'uuid'
 
+import { DynamicQuestion } from '../types'
 import { titleize } from '../utils'
 import AddressField from './ClubEditPage/AddressField'
 import { Icon } from './common'
@@ -258,6 +260,108 @@ export const DateTimeField = useFieldWrapper(
           }}
         />
       </DatePickerWrapper>
+    )
+  },
+)
+
+/**
+ * A field that allows the user to specify a radio input field.
+ */
+const RadioEditField = ({ field, setField }): ReactElement => {
+  return (
+    <div className="mb-3">
+      <input
+        type="text"
+        className="input"
+        value={field.label}
+        placeholder="Add your question here!"
+        onChange={(e) => setField({ ...field, label: e.target.value })}
+      />
+      <div className="content">
+        <ul>
+          {field.choices?.map(
+            (choice: { id: string; label: string }, i: number) => (
+              <li key={i}>
+                [
+                <input
+                  type="text"
+                  value={choice.id}
+                  onChange={(e) => {
+                    const newChoices = [...field.choices]
+                    newChoices[i].id = e.target.value
+                    setField({ ...field, choices: newChoices })
+                  }}
+                />
+                ]{' '}
+                <input
+                  type="text"
+                  value={choice.label}
+                  onChange={(e) => {
+                    const newChoices = [...field.choices]
+                    newChoices[i].label = e.target.value
+                    setField({ ...field, choices: newChoices })
+                  }}
+                />
+              </li>
+            ),
+          )}
+          <li>
+            <button
+              type="button"
+              className="button is-success is-small"
+              onClick={() => {
+                const newChoices = [...field.choices]
+                newChoices.push({ id: '', label: '' })
+                setField({ ...field, choices: newChoices })
+              }}
+            >
+              <Icon name="plus" /> Add Choice
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * A field that allows users to make form fields.
+ * Accepts and returns form fields in a serialized JSON format.
+ */
+export const DynamicQuestionField = useFieldWrapper(
+  ({ name, value }: BasicFormField & AnyHack): ReactElement => {
+    const { setFieldValue } = useFormikContext()
+
+    const values: DynamicQuestion[] = JSON.parse(value ?? '[]') ?? []
+
+    return (
+      <>
+        {values.map((field: DynamicQuestion, i: number) => (
+          <RadioEditField
+            key={i}
+            field={field}
+            setField={(field) => {
+              values[i] = field
+              setFieldValue(name, JSON.stringify(values))
+            }}
+          />
+        ))}
+        <button
+          type="button"
+          className="button is-success is-small"
+          onClick={() => {
+            values.push({
+              name: uuid.v4(),
+              label: '',
+              type: 'radio',
+              choices: [],
+            })
+            setFieldValue(name, JSON.stringify(values))
+          }}
+        >
+          <Icon name="plus" /> Add Field
+        </button>
+      </>
     )
   },
 )

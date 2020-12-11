@@ -464,7 +464,6 @@ class ClubFairViewSet(viewsets.ModelViewSet):
     Return a list of ongoing and upcoming club fairs.
     """
 
-    http_method_names = ["get", "post"]
     serializer_class = ClubFairSerializer
     permission_classes = [ClubFairPermission | IsSuperuser]
 

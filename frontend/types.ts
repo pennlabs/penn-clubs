@@ -244,3 +244,10 @@ export enum VisitType {
   ManagePage = 4,
   FairPage = 5,
 }
+
+export type DynamicQuestion = {
+  name: string
+  label: string
+  type: string
+  choices?: { id: string; label: string }[]
+}

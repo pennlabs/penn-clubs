@@ -276,7 +276,11 @@ export default function AnalyticsCard({
             <div className="column is-8">
               <label>Group By</label>
               <br />
-              <Select options={GROUPS} value={group} onChange={setGroup} />
+              <Select
+                options={GROUPS}
+                value={group}
+                onChange={(v) => v != null && setGroup(v)}
+              />
             </div>
           </div>
         </div>
@@ -341,13 +345,17 @@ export default function AnalyticsCard({
             <Select
               options={CATEGORIES}
               value={category}
-              onChange={setCategory}
+              onChange={(v) => v != null && setCategory(v)}
             />
           </div>
           <div className="column">
             <label>Metric</label>
             <br />
-            <Select options={METRICS} value={metric} onChange={setMetric} />
+            <Select
+              options={METRICS}
+              value={metric}
+              onChange={(v) => v != null && setMetric(v)}
+            />
           </div>
         </div>
         <br></br>

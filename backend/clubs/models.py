@@ -498,8 +498,8 @@ class ClubFair(models.Model):
     time = models.TextField(blank=True)
 
     # these fields are rendered as raw html
-    information = models.TextField()
-    registration_information = models.TextField()
+    information = models.TextField(blank=True)
+    registration_information = models.TextField(blank=True)
 
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
