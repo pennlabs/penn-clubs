@@ -54,12 +54,15 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
   const seeFairStatus = apiCheckPermission('clubs.see_fair_status')
   const canDeleteClub = apiCheckPermission('clubs.delete_club')
 
+  const isOfficer =
+    club.is_member !== false && club.is_member <= MembershipRank.Officer
+
   const doConfirm = (params: ConfirmParams): void => {
     setConfirmModal(params)
   }
 
   useEffect(() => {
-    if (seeFairStatus) {
+    if (seeFairStatus || isOfficer) {
       doApiRequest('/clubfairs/?format=json')
         .then((resp) => resp.json())
         .then(setFairs)
@@ -303,38 +306,36 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
               </div>
             </>
           )}
-          {club.approved === false &&
-            club.is_member !== false &&
-            club.is_member <= MembershipRank.Officer && (
-              <>
-                <div className="mb-3">
-                  You can edit your {OBJECT_NAME_SINGULAR} details using the{' '}
-                  <b>Manage {OBJECT_NAME_TITLE_SINGULAR}</b> button on this
-                  page. After you have addressed the issues mentioned above, you
-                  can request renewal again using the button below.
-                </div>
-                <button
-                  className="button is-warning is-light"
-                  onClick={() => {
-                    doApiRequest(`/clubs/${club.code}/?format=json`, {
-                      method: 'PATCH',
-                      body: {
-                        approved: null,
-                      },
-                    }).then(() => router.reload())
-                  }}
-                >
-                  Request Review
-                </button>
-              </>
-            )}
+          {club.approved === false && isOfficer && (
+            <>
+              <div className="mb-3">
+                You can edit your {OBJECT_NAME_SINGULAR} details using the{' '}
+                <b>Manage {OBJECT_NAME_TITLE_SINGULAR}</b> button on this page.
+                After you have addressed the issues mentioned above, you can
+                request renewal again using the button below.
+              </div>
+              <button
+                className="button is-warning is-light"
+                onClick={() => {
+                  doApiRequest(`/clubs/${club.code}/?format=json`, {
+                    method: 'PATCH',
+                    body: {
+                      approved: null,
+                    },
+                  }).then(() => router.reload())
+                }}
+              >
+                Request Review
+              </button>
+            </>
+          )}
         </div>
       ) : null}
-      {seeFairStatus && fairs.length > 0 && (
+      {(seeFairStatus || isOfficer) && fairs.length > 0 && (
         <div className="notification is-info is-light">
           <p>
-            {club.name} is registered for the following {OBJECT_NAME_SINGULAR}{' '}
-            activity fairs:
+            {club.name} has the following status for these{' '}
+            {OBJECT_NAME_SINGULAR} activity fairs:
           </p>
           {fairs.map((fair) => {
             const inFair = club.fairs.indexOf(fair.id) !== -1
@@ -343,7 +344,11 @@ const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
                 <span
                   className={inFair ? 'has-text-success' : 'has-text-danger'}
                 >
-                  <Icon name={inFair ? 'check' : 'x'} /> {fair.name}
+                  <Icon
+                    name={inFair ? 'check' : 'x'}
+                    alt={inFair ? 'registered' : 'not registered'}
+                  />{' '}
+                  {fair.name}
                 </span>
               </li>
             )
