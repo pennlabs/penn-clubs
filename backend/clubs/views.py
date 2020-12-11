@@ -88,7 +88,6 @@ from clubs.serializers import (
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
     ClubFairSerializer,
-    WritableClubFairSerializer,
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
@@ -120,6 +119,7 @@ from clubs.serializers import (
     UserSubscribeSerializer,
     UserSubscribeWriteSerializer,
     UserUUIDSerializer,
+    WritableClubFairSerializer,
     YearSerializer,
 )
 from clubs.utils import html_to_text
