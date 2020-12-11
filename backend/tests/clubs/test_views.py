@@ -16,6 +16,7 @@ from ics import Calendar
 
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
+    Asset,
     Badge,
     Club,
     ClubFair,
@@ -1905,6 +1906,7 @@ class ClubTestCase(TestCase):
         now = timezone.now()
         fair = ClubFair.objects.create(
             name="SAC Fair",
+            organization="Student Activities Council",
             start_time=now + datetime.timedelta(days=7),
             end_time=now + datetime.timedelta(days=14),
             registration_start_time=now - datetime.timedelta(days=1),
@@ -1920,6 +1922,13 @@ class ClubTestCase(TestCase):
                 ]
             ),
         )
+
+        # add the SAC badge to the club
+        badge, _ = Badge.objects.get_or_create(label="SAC")
+        self.club1.badges.add(badge)
+
+        # add a file to the club
+        Asset.objects.create(name="constitution.pdf", club=self.club1)
 
         # add officer to club
         Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
