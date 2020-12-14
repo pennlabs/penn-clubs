@@ -2532,9 +2532,15 @@ class OptionListView(APIView):
             options["FAIR_INFO"] = fair.information
             options["FAIR_OPEN"] = happening
             options["PRE_FAIR"] = not happening
+            options["FAIR_REGISTRATION_OPEN"] = (
+                fair.registration_start_time <= now <= fair.registration_end_time
+                if fair.registration_start_time is not None
+                else now <= fair.registration_end_time
+            )
         else:
             options["FAIR_OPEN"] = False
             options["PRE_FAIR"] = False
+            options["FAIR_REGISTRATION_OPEN"] = False
 
         return Response(options)
 
