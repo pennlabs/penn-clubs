@@ -265,11 +265,52 @@ export const DateTimeField = useFieldWrapper(
 )
 
 /**
+ * A field that allows the user to enter an arbitrary line of text.
+ */
+const TextEditField = ({ field, setField }): ReactElement => {
+  return (
+    <div className="mb-3 box">
+      <div className="mb-2">
+        <b>Text Field:</b> The user can enter arbitrary text.
+      </div>
+      <input
+        type="text"
+        className="input"
+        value={field.label}
+        placeholder="Add your question here!"
+        onChange={(e) => setField({ ...field, label: e.target.value })}
+      />
+      {['Text', 'Textarea', 'HTML'].map((type) => {
+        const value = type.toLowerCase()
+
+        return (
+          <div>
+            <label>
+              <input
+                type="radio"
+                value={value}
+                checked={value === field.type}
+                onChange={(e) => setField({ ...field, type: e.target.value })}
+              />{' '}
+              {type}
+            </label>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
  * A field that allows the user to specify a radio input field.
  */
 const RadioEditField = ({ field, setField }): ReactElement => {
   return (
-    <div className="mb-3">
+    <div className="mb-3 box">
+      <div className="mb-2">
+        <b>Radio Field:</b> The user can select a single choice from a list of
+        choices.
+      </div>
       <input
         type="text"
         className="input"
@@ -282,26 +323,36 @@ const RadioEditField = ({ field, setField }): ReactElement => {
           {field.choices?.map(
             (choice: { id: string; label: string }, i: number) => (
               <li key={i}>
-                [
-                <input
-                  type="text"
-                  value={choice.id}
-                  onChange={(e) => {
-                    const newChoices = [...field.choices]
-                    newChoices[i].id = e.target.value
-                    setField({ ...field, choices: newChoices })
-                  }}
-                />
-                ]{' '}
-                <input
-                  type="text"
-                  value={choice.label}
-                  onChange={(e) => {
-                    const newChoices = [...field.choices]
-                    newChoices[i].label = e.target.value
-                    setField({ ...field, choices: newChoices })
-                  }}
-                />
+                <div className="level">
+                  <div className="level-left">
+                    [
+                    <input
+                      type="text"
+                      className="input is-small"
+                      value={choice.id}
+                      placeholder="Value"
+                      onChange={(e) => {
+                        const newChoices = [...field.choices]
+                        newChoices[i].id = e.target.value
+                        setField({ ...field, choices: newChoices })
+                      }}
+                    />
+                    ]{' '}
+                  </div>
+                  <div className="level-item">
+                    <input
+                      type="text"
+                      className="input is-small"
+                      value={choice.label}
+                      placeholder="Label"
+                      onChange={(e) => {
+                        const newChoices = [...field.choices]
+                        newChoices[i].label = e.target.value
+                        setField({ ...field, choices: newChoices })
+                      }}
+                    />
+                  </div>
+                </div>
               </li>
             ),
           )}
@@ -332,35 +383,53 @@ export const DynamicQuestionField = useFieldWrapper(
   ({ name, value }: BasicFormField & AnyHack): ReactElement => {
     const { setFieldValue } = useFormikContext()
 
-    const values: DynamicQuestion[] = JSON.parse(value ?? '[]') ?? []
+    const values: DynamicQuestion[] =
+      (typeof value === 'string' ? JSON.parse(value) : value) ?? []
+
+    const addField = (type: string): void => {
+      values.push({
+        name: uuid.v4(),
+        label: '',
+        type: type,
+        choices: [],
+      })
+      setFieldValue(name, JSON.stringify(values))
+    }
 
     return (
       <>
-        {values.map((field: DynamicQuestion, i: number) => (
-          <RadioEditField
-            key={i}
-            field={field}
-            setField={(field) => {
-              values[i] = field
-              setFieldValue(name, JSON.stringify(values))
-            }}
-          />
-        ))}
-        <button
-          type="button"
-          className="button is-success is-small"
-          onClick={() => {
-            values.push({
-              name: uuid.v4(),
-              label: '',
-              type: 'radio',
-              choices: [],
-            })
-            setFieldValue(name, JSON.stringify(values))
-          }}
-        >
-          <Icon name="plus" /> Add Field
-        </button>
+        {values.map((field: DynamicQuestion, i: number) => {
+          let Class = TextEditField
+          if (field.type === 'radio') {
+            Class = RadioEditField
+          }
+          return (
+            <Class
+              key={i}
+              field={field}
+              setField={(field) => {
+                values[i] = field
+                setFieldValue(name, JSON.stringify(values))
+              }}
+            />
+          )
+        })}
+        <div className="buttons">
+          <button
+            type="button"
+            className="button is-success is-small"
+            onClick={() => addField('radio')}
+          >
+            <Icon name="plus" /> Add Radio Field
+          </button>
+          <button
+            type="button"
+            className="button is-success is-small"
+            onClick={() => addField('text')}
+          >
+            <Icon name="plus" /> Add Text Field
+          </button>
+        </div>
       </>
     )
   },

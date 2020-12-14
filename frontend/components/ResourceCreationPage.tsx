@@ -149,6 +149,17 @@ const ResourceCreationPage = ({
             please email <Contact /> to gain access instead of filling out this
             form.
           </Text>
+          <div className="notification is-info mb-4">
+            Student groups who would like to be listed are directed to{' '}
+            <a
+              rel="noopener noreferrer"
+              target="_blank"
+              href="https://pennclubs.com/"
+            >
+              Penn Clubs
+            </a>
+            , a resource page specifically tailored for student organizations.
+          </div>
         </>
       ),
     },
