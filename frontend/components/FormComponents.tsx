@@ -284,15 +284,17 @@ const TextEditField = ({ field, setField }): ReactElement => {
         const value = type.toLowerCase()
 
         return (
-          <label>
-            <input
-              type="radio"
-              value={value}
-              checked={value === field.type}
-              onChange={(e) => setField({ ...field, type: e.target.value })}
-            />{' '}
-            {type}
-          </label>
+          <div>
+            <label>
+              <input
+                type="radio"
+                value={value}
+                checked={value === field.type}
+                onChange={(e) => setField({ ...field, type: e.target.value })}
+              />{' '}
+              {type}
+            </label>
+          </div>
         )
       })}
     </div>
