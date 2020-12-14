@@ -14,7 +14,7 @@ import {
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_PLURAL, OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Contact, Icon, Text } from '../common'
-import { TextField } from '../FormComponents'
+import { RichTextField, TextField } from '../FormComponents'
 import BaseCard from './BaseCard'
 
 type ClubFairCardProps = {
@@ -31,7 +31,11 @@ const DynamicQuestions = ({
   return (
     <>
       {questions.map((question) => (
-        <Field key={question.name} as={TextField} {...question} />
+        <Field
+          key={question.name}
+          as={question.type === 'html' ? RichTextField : TextField}
+          {...question}
+        />
       ))}
     </>
   )

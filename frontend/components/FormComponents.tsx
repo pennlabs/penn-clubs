@@ -271,7 +271,7 @@ const TextEditField = ({ field, setField }): ReactElement => {
   return (
     <div className="mb-3 box">
       <div className="mb-2">
-        <b>Text Field:</b> The user can enter one line of arbitrary text.
+        <b>Text Field:</b> The user can enter arbitrary text.
       </div>
       <input
         type="text"
@@ -280,6 +280,21 @@ const TextEditField = ({ field, setField }): ReactElement => {
         placeholder="Add your question here!"
         onChange={(e) => setField({ ...field, label: e.target.value })}
       />
+      {['Text', 'Textarea', 'HTML'].map((type) => {
+        const value = type.toLowerCase()
+
+        return (
+          <label>
+            <input
+              type="radio"
+              value={value}
+              checked={value === field.type}
+              onChange={(e) => setField({ ...field, type: e.target.value })}
+            />{' '}
+            {type}
+          </label>
+        )
+      })}
     </div>
   )
 }
