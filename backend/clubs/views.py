@@ -2549,6 +2549,7 @@ class OptionListView(APIView):
         fair = fairs.first()
         if fair:
             happening = fair.start_time <= now - datetime.timedelta(minutes=3)
+            close = fair.start_time <= now - datetime.timedelta(weeks=1)
             options["FAIR_NAME"] = fair.name
             options["FAIR_ORG_NAME"] = fair.organization
             options["FAIR_CONTACT"] = fair.contact or settings.FROM_EMAIL
@@ -2559,16 +2560,10 @@ class OptionListView(APIView):
             )
             options["FAIR_INFO"] = fair.information
             options["FAIR_OPEN"] = happening
-            options["PRE_FAIR"] = not happening
-            options["FAIR_REGISTRATION_OPEN"] = (
-                fair.registration_start_time <= now <= fair.registration_end_time
-                if fair.registration_start_time is not None
-                else now <= fair.registration_end_time
-            )
+            options["PRE_FAIR"] = not happening and close
         else:
             options["FAIR_OPEN"] = False
             options["PRE_FAIR"] = False
-            options["FAIR_REGISTRATION_OPEN"] = False
 
         return Response(options)
 
