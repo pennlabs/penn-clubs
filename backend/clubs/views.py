@@ -877,7 +877,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Custom return endpoint for the directory page, allows the page to load faster.
         """
         serializer = ClubMinimalSerializer(
-            Club.objects.all().exclude(approved=False).order_by("name"), many=True
+            Club.objects.all().exclude(approved=False).order_by(Lower("name")), many=True
         )
         return Response(serializer.data)
 
