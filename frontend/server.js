@@ -9,6 +9,11 @@ const devProxy = {
     changeOrigin: true,
     ws: true,
   },
+  '/__debug__': {
+    // this allows django debug toolbar to work properly
+    target: 'http://localhost:8000',
+    changeOrigin: true,
+  },
 }
 
 const port = parseInt(process.env.PORT, 10) || 3000

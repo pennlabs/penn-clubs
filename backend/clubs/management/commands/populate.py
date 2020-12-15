@@ -339,6 +339,10 @@ class Command(BaseCommand):
             visible=True,
         )
 
+        badge2, _ = Badge.objects.get_or_create(
+            label="SAC", description="Student Activities Council", visible=True
+        )
+
         # create additional clubs
         tag_undergrad, _ = Tag.objects.get_or_create(name="Undergraduate")
         tag_generic, _ = Tag.objects.get_or_create(name="Generic")
@@ -393,6 +397,7 @@ class Command(BaseCommand):
             club.tags.add(tag_undergrad)
             club.tags.add(tag_generic)
             club.badges.add(badge)
+            club.badges.add(badge2)
 
         # create users
         count = 0
