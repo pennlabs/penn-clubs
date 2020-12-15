@@ -87,6 +87,7 @@ from clubs.serializers import (
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
+    ClubConstitutionSerializer,
     ClubFairSerializer,
     ClubListSerializer,
     ClubMinimalSerializer,
@@ -880,6 +881,25 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             Club.objects.all().exclude(approved=False).order_by(Lower("name")), many=True
         )
         return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def constitutions(self, request, *args, **kwargs):
+        """
+        A special endpoint for SAC affilaited clubs to check if
+        they have uploaded a club constitution.
+        """
+        badge = Badge.objects.filter(label="SAC").first()
+        if badge:
+            serializer = ClubConstitutionSerializer(
+                Club.objects.filter(badges=badge)
+                .order_by(Lower("name"))
+                .prefetch_related(Prefetch("asset_set", to_attr="prefetch_asset_set")),
+                many=True,
+                context={"request": request},
+            )
+            return Response(serializer.data)
+        else:
+            return Response({"error": "The SAC badge does not exist in the database."})
 
     def get_filename(self):
         """

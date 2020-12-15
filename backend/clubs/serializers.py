@@ -624,6 +624,27 @@ class ClubMinimalSerializer(serializers.ModelSerializer):
         fields = ["name", "code", "approved"]
 
 
+class ClubConstitutionSerializer(ClubMinimalSerializer):
+    """
+    Return the minimal information, as well as the files that the club has uploaded.
+    """
+
+    files = serializers.SerializerMethodField("get_constitution")
+
+    def get_constitution(self, obj):
+        user = self.context["request"].user
+        perm = user.is_authenticated and user.has_perm("clubs.see_pending_clubs")
+        if hasattr(obj, "prefetch_asset_set"):
+            return [
+                {"name": asset.name, "url": asset.file.url if perm else None}
+                for asset in obj.prefetch_asset_set
+            ]
+        return None
+
+    class Meta(ClubMinimalSerializer.Meta):
+        fields = ClubMinimalSerializer.Meta.fields + ["files"]
+
+
 class ClubListSerializer(serializers.ModelSerializer):
     """
     The club list serializer returns a subset of the information that the full serializer returns.
