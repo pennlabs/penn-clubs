@@ -28,6 +28,14 @@ describe('Page load tests', () => {
     cy.visit('/reports')
     cy.contains('Penn Clubs')
   })
+
+  it('Visits the directory and constitution pages', () => {
+    cy.visit('/directory')
+    cy.contains('Penn Clubs')
+
+    cy.visit('/constitutions')
+    cy.contains('Penn Clubs')
+  })
 })
 
 describe('Individual club page tests', () => {

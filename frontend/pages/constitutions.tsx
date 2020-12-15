@@ -12,7 +12,7 @@ import {
 import { CLUB_ROUTE, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { MembershipRank } from '../types'
-import { doApiRequest } from '../utils'
+import { doApiRequest, intersperse } from '../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_PLURAL,
@@ -27,7 +27,7 @@ type Props = {
     name: string
     code: string
     approved: boolean | null
-    files: { name: string; url: string | null }[]
+    files: { name: string | null; url: string | null }[]
   }[]
 }
 
@@ -63,17 +63,7 @@ const ConstitutionDirectory = ({ clubs }: Props): ReactElement => {
             </thead>
             <tbody>
               {clubs.map((club) => {
-                const constitutionFiles =
-                  club.files &&
-                  club.files.filter(
-                    ({ name }) =>
-                      name.toLowerCase().indexOf('constitution') !== -1 ||
-                      name.endsWith('.docx') ||
-                      name.endsWith('.pdf') ||
-                      name.endsWith('.doc'),
-                  )
-                const hasConstitution =
-                  constitutionFiles && constitutionFiles.length
+                const hasConstitution = club.files && club.files.length
 
                 return (
                   <tr key={club.code}>
@@ -101,15 +91,17 @@ const ConstitutionDirectory = ({ clubs }: Props): ReactElement => {
                       {hasConstitution ? (
                         <span className="has-text-info">
                           <Icon name="file" /> Exists -{' '}
-                          {constitutionFiles[0].url != null ? (
-                            <a
-                              href={constitutionFiles[0].url}
-                              rel="noopener noreferrer"
-                            >
-                              {constitutionFiles[0].name}
-                            </a>
-                          ) : (
-                            constitutionFiles[0].name
+                          {intersperse(
+                            club.files.map((file) =>
+                              file.url != null ? (
+                                <a href={file.url} rel="noopener noreferrer">
+                                  {file.name}
+                                </a>
+                              ) : (
+                                file.name ?? 'Hidden'
+                              ),
+                            ),
+                            ', ',
                           )}
                         </span>
                       ) : (

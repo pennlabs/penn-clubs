@@ -890,13 +890,20 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         badge = Badge.objects.filter(label="SAC").first()
         if badge:
-            serializer = ClubConstitutionSerializer(
+            query = (
                 Club.objects.filter(badges=badge)
                 .order_by(Lower("name"))
-                .prefetch_related(Prefetch("asset_set", to_attr="prefetch_asset_set")),
-                many=True,
-                context={"request": request},
+                .prefetch_related(Prefetch("asset_set", to_attr="prefetch_asset_set"),)
             )
+            if request.user.is_authenticated:
+                query = query.prefetch_related(
+                    Prefetch(
+                        "membership_set",
+                        queryset=Membership.objects.filter(person=request.user),
+                        to_attr="user_membership_set",
+                    )
+                )
+            serializer = ClubConstitutionSerializer(query, many=True, context={"request": request})
             return Response(serializer.data)
         else:
             return Response({"error": "The SAC badge does not exist in the database."})

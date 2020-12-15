@@ -305,3 +305,24 @@ export function formatPhoneNumber(phone: string): string {
   }
   return phone
 }
+
+/**
+ * Add an element between each element in an array.
+ * @param arr The array of elements to join together.
+ * @param sep A string or function that accepts a key argument (for react lists), inserted between each element in the array.
+ */
+export function intersperse<T, U>(
+  arr: T[],
+  sep: string | ((idx: number) => U),
+): (T | U | string)[] {
+  if (arr.length === 0) {
+    return []
+  }
+
+  return arr.slice(1).reduce(
+    (xs: (T | U | string)[], x: T, idx: number) => {
+      return xs.concat([typeof sep !== 'string' ? sep(idx) : sep, x])
+    },
+    [arr[0]],
+  )
+}

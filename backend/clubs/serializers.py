@@ -634,10 +634,19 @@ class ClubConstitutionSerializer(ClubMinimalSerializer):
     def get_constitution(self, obj):
         user = self.context["request"].user
         perm = user.is_authenticated and user.has_perm("clubs.see_pending_clubs")
+        if hasattr(obj, "user_membership_set"):
+            has_member = bool(obj.user_membership_set)
+        else:
+            has_member = False
         if hasattr(obj, "prefetch_asset_set"):
             return [
-                {"name": asset.name, "url": asset.file.url if perm else None}
+                {
+                    "name": asset.name if perm or has_member else None,
+                    "url": asset.file.url if perm or has_member else None,
+                }
                 for asset in obj.prefetch_asset_set
+                if asset.name.endswith((".docx", ".doc", ".pdf"))
+                or "constitution" in asset.name.lower()
             ]
         return None
 
