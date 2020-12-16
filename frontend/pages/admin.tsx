@@ -91,7 +91,7 @@ function FairsPage({ userInfo, tags, badges }): ReactElement {
                     disabled={isSubmitting}
                     onClick={(e) => {
                       setFieldValue('action', 'remove')
-                      handleSubmit(e)
+                      handleSubmit()
                     }}
                   >
                     <Icon name="x" /> Bulk Remove
