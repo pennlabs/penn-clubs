@@ -171,17 +171,16 @@ const EventsViewToolbar = ({
         <Icon name="calendar" alt="calendar view" />
       </button>
     </div>
-    {/* margins are for matching vertical alignments with grouped buttons */}
-    <button
-      onClick={() => {
-        showSyncModal && showSyncModal()
-      }}
-      className="button is-medium"
-      style={{ marginLeft: '20px', marginBottom: '8px' }}
-    >
-      <Icon name="refresh" style={{ marginRight: '10px' }} />
-      Export
-    </button>
+    <div className="buttons has-addons mt-0 mb-0 ml-5">
+      <button
+        onClick={() => {
+          showSyncModal && showSyncModal()
+        }}
+        className="button is-medium"
+      >
+        <Icon name="refresh" className="mr-1" /> Export
+      </button>
+    </div>
   </div>
 )
 
