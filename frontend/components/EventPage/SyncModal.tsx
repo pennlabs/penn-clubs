@@ -1,4 +1,5 @@
 import React, { ReactElement } from 'react'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { CLUBS_BLUE, CLUBS_GREY, CLUBS_NAVY } from '../../constants/colors'
@@ -46,8 +47,22 @@ const SyncModal = (props: { calendarURL: string }): ReactElement => {
             <a
               className="button is-info"
               style={{ background: CLUBS_BLUE }}
-              onClick={() => {
-                navigator.clipboard.writeText(url)
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(url)
+                  toast('Copied!', {
+                    hideProgressBar: true,
+                    type: 'info',
+                  })
+                } catch (error) {
+                  toast(
+                    'Failed to Copy! You might have to manually copy the URL.',
+                    {
+                      hideProgressBar: true,
+                      type: 'error',
+                    },
+                  )
+                }
               }}
             >
               Copy
