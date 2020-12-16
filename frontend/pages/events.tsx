@@ -179,8 +179,8 @@ const EventsViewToolbar = ({
       className="button is-medium"
       style={{ marginLeft: '20px', marginBottom: '8px' }}
     >
-      <Icon name="plus" />
-      Sync
+      <Icon name="refresh" style={{ marginRight: '10px' }} />
+      Export
     </button>
   </div>
 )
