@@ -99,8 +99,9 @@ class ClubPermission(permissions.BasePermission):
             return True
 
         # club approvers can update the club
-        if view.action in ["update", "partial_update"] and request.user.has_perm(
-            "clubs.approve_club"
+        if view.action in ["update", "partial_update"] and (
+            request.user.has_perm("clubs.approve_club")
+            or request.user.has_perm("clubs.manage_club")
         ):
             return True
 
@@ -142,6 +143,8 @@ class EventPermission(permissions.BasePermission):
                 return False
             if not request.user.is_authenticated:
                 return False
+            if request.user.has_perm("clubs.manage_club"):
+                return True
             obj = Club.objects.get(code=view.kwargs["club_code"])
             membership = find_membership_helper(request.user, obj)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
@@ -182,6 +185,8 @@ class ClubItemPermission(permissions.BasePermission):
                 return False
             if not request.user.is_authenticated:
                 return False
+            if request.user.has_perm("clubs.manage_club"):
+                return True
             obj = Club.objects.get(code=view.kwargs["club_code"])
             membership = find_membership_helper(request.user, obj)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
@@ -223,6 +228,9 @@ class MemberPermission(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
+        if request.user.has_perm("clubs.manage_club"):
+            return True
+
         membership = find_membership_helper(request.user, obj.club)
         if membership is None:
             return False
@@ -253,6 +261,8 @@ class MemberPermission(permissions.BasePermission):
                 return False
             if "club_code" not in view.kwargs:
                 return False
+            if request.user.has_perm("clubs.manage_club"):
+                return True
             obj = Club.objects.get(code=view.kwargs["club_code"])
             membership = find_membership_helper(request.user, obj)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
@@ -291,6 +301,8 @@ class InvitePermission(permissions.BasePermission):
                 return False
             if "club_code" not in view.kwargs:
                 return False
+            if request.user.has_perm("clubs.manage_club"):
+                return True
             obj = Club.objects.get(code=view.kwargs["club_code"])
             membership = find_membership_helper(request.user, obj)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
@@ -310,6 +322,8 @@ class AssetPermission(permissions.BasePermission):
                 return False
             if "club_code" not in view.kwargs:
                 return False
+            if request.user.has_perm("clubs.manage_club"):
+                return True
             obj = Club.objects.get(code=view.kwargs["club_code"])
             membership = find_membership_helper(request.user, obj)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
@@ -328,6 +342,10 @@ class QuestionAnswerPermission(permissions.BasePermission):
 
             # only allow original user to edit and delete if the question has not been answered
             if obj.author == request.user and obj.answer is None:
+                return True
+
+            # people with club management permissions can edit
+            if request.user.has_perm("clubs.manage_club"):
                 return True
 
             # otherwise, allow club officers to edit and delete comments

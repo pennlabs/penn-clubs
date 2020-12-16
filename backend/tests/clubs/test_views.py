@@ -1947,6 +1947,33 @@ class ClubTestCase(TestCase):
         # ensure registration was processed
         self.assertTrue(ClubFairRegistration.objects.filter(club=self.club1, fair=fair).exists())
 
+    def test_bulk_edit(self):
+        """
+        Test the club bulk editing endpoint.
+        """
+        # login to superuser account
+        self.client.login(username=self.user5.username, password="test")
+
+        # perform bulk add
+        tag = Tag.objects.create(name="Bulk Tag")
+        tag2 = Tag.objects.create(name="Bulk Tag #2")
+
+        resp = self.client.post(
+            reverse("clubs-bulk"),
+            {
+                "action": "add",
+                "clubs": "\n".join(Club.objects.values_list("code", flat=True)),
+                "tags": [{"id": tag.id}, {"id": tag2.id}],
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertTrue("success" in resp.data, resp.content)
+
+        # enure tags were added
+        self.assertEqual(tag.club_set.count(), Club.objects.count())
+        self.assertEqual(tag2.club_set.count(), Club.objects.count())
+
     def test_permission_lookup(self):
         permissions = [
             "clubs.approve_club",

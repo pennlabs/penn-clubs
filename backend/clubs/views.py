@@ -908,6 +908,56 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         else:
             return Response({"error": "The SAC badge does not exist in the database."})
 
+    @action(detail=False, methods=["post"])
+    def bulk(self, request, *args, **kwargs):
+        """
+        An endpoint to perform certain club edit operations in bulk.
+        """
+        if not request.user.is_authenticated or not request.user.has_perm("clubs.manage_club"):
+            return Response({"error": "You do not have permission to perform this action."})
+
+        action = request.data.get("action")
+        if action is None:
+            return Response({"error": "You must specify the action to perform!"})
+
+        clubs = [
+            code.strip() for code in re.split(r",\t\n ", request.data.get("clubs", "").strip())
+        ]
+        clubs = [code for code in clubs if code]
+        if not clubs:
+            return Response(
+                {"error": "You must specify the list of codes you want to apply this action to."}
+            )
+        club_objs = Club.objects.filter(code__in=clubs)
+
+        if not club_objs.exists():
+            clubs_str = ", ".join(clubs)
+            return Response(
+                {"error": f"No objects were found matching those codes. Codes tried: {clubs_str}"}
+            )
+
+        tags = request.data.get("tags", [])
+        badges = request.data.get("badges", [])
+
+        if not tags and not badges:
+            return Response({"error": "You must specify some tags or badges to manipulate!"})
+
+        tags = Tag.objects.filter(id__in=[tag["id"] for tag in tags])
+        badges = Badge.objects.filter(id__in=[badge["id"] for badge in badges])
+
+        count = 0
+        for club in club_objs:
+            if action == "add":
+                club.tags.add(*tags)
+                club.badges.add(*badges)
+                count += 1
+            elif action == "remove":
+                club.tags.remove(*tags)
+                club.badges.remove(*badges)
+                count += 1
+
+        return Response({"success": True, "message": f"{count} object(s) have been updated!"})
+
     def get_filename(self):
         """
         For excel spreadsheets, return the user-specified filename if it exists
