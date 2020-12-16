@@ -42,7 +42,6 @@ import {
   EVENT_TYPE_COLORS,
   FULL_NAV_HEIGHT,
   SNOW,
-  WHITE_ALPHA,
 } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, ClubEventType, Tag } from '../types'
