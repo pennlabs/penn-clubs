@@ -81,7 +81,10 @@ const ReportForm = ({
     groupName: string,
     fields: [string, string][],
     setFieldValue: (field: string, value: string[]) => void,
+    initialValues: string[],
   ): ReactElement => {
+    const fieldsInGroup = fields.map((field) => field[1])
+
     return (
       <div className="column" key={groupName}>
         <GroupLabel className="subtitle is-4" style={{ color: CLUBS_GREY }}>
@@ -92,13 +95,29 @@ const ReportForm = ({
             onClick={() =>
               setFieldValue(
                 'fields',
-                fields.map((field) => field[1]),
+                initialValues.concat(
+                  fieldsInGroup.filter(
+                    (field) => initialValues.indexOf(field) === -1,
+                  ),
+                ),
               )
             }
           >
             Select All
           </a>{' '}
-          - <a onClick={() => setFieldValue('fields', [])}>Select None</a>
+          -{' '}
+          <a
+            onClick={() =>
+              setFieldValue(
+                'fields',
+                initialValues.filter(
+                  (field) => fieldsInGroup.indexOf(field) === -1,
+                ),
+              )
+            }
+          >
+            Select None
+          </a>
         </small>
         {fields
           .sort((a, b) => a[0].localeCompare(b[0]))
@@ -190,7 +209,7 @@ const ReportForm = ({
         onSubmit={handleGenerateReport}
         enableReinitialize
       >
-        {({ isSubmitting, setFieldValue }) => (
+        {({ isSubmitting, setFieldValue, values }) => (
           <Form>
             <ReportBox title="Report Details">
               <Text>
@@ -260,7 +279,7 @@ const ReportForm = ({
                   {fields
                     .sort()
                     .map(([a, b]) =>
-                      generateCheckboxGroup(a, b, setFieldValue),
+                      generateCheckboxGroup(a, b, setFieldValue, values.fields),
                     )}
                 </div>
               ) : null}
