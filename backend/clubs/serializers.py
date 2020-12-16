@@ -1656,6 +1656,12 @@ class ReportClubField(serializers.Field):
                         self._cached_values[code] = time.astimezone(
                             timezone.get_current_timezone()
                         ).strftime("%b %d, %Y %I:%M %p %Z")
+                elif suffix == "email":
+                    self._default_value = None
+                    reg = fair.clubfairregistration_set.values_list(
+                        "club__code", "registrant__email"
+                    )
+                    self._cached_values = dict(reg)
                 elif suffix.startswith("q_"):
                     index = int(suffix.rsplit("_")[-1])
                     reg = fair.clubfairregistration_set.values_list("club__code", "answers")
@@ -1696,6 +1702,7 @@ class ReportClubSerializer(AuthenticatedClubSerializer):
         for fair in ClubFair.objects.filter(end_time__gte=now):
             fields[f"Is participating in {fair.name}"] = f"custom_fair_{fair.id}_reg"
             fields[f"Registration time for {fair.name}"] = f"custom_fair_{fair.id}_reg_time"
+            fields[f"Contact email for {fair.name}"] = f"custom_fair_{fair.id}_email"
             for i, question in enumerate(json.loads(fair.questions)):
                 fields[f"[{fair.name}] {question['label']}"] = f"custom_fair_{fair.id}_q_{i}"
         return {"virtual_fair": fields}
@@ -1709,6 +1716,8 @@ class ReportClubSerializer(AuthenticatedClubSerializer):
                 suffix = fair_match.group(2)
                 if suffix == "reg_time":
                     return f"{fair.name} Registration Time"
+                elif suffix == "email":
+                    return f"{fair.name} Contact Email"
                 elif suffix.startswith("q_"):
                     index = int(suffix.rsplit("_")[-1])
                     label = json.loads(fair.questions)[index]["label"]
