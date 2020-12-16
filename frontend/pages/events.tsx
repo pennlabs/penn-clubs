@@ -37,17 +37,18 @@ import SearchBar, {
   SearchInput,
 } from '../components/SearchBar'
 import {
+  CLUBS_BLUE,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   EVENT_TYPE_COLORS,
   FULL_NAV_HEIGHT,
   SNOW,
+  WHITE_ALPHA,
 } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, ClubEventType, Tag } from '../types'
 import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_SINGULAR } from '../utils/branding'
-import { ListLoadIndicator } from '.'
 
 interface EventPageProps {
   authenticated: boolean | null
@@ -535,31 +536,6 @@ function EventPage({
         </SearchBar>
         <SearchbarRightContainer>
           <WideContainer background={SNOW} fullHeight>
-            <SyncButton onClick={showSyncModal}>
-              <Icon name="plus" alt="create club" style={iconStylesDark} />
-              Sync To Calendar
-            </SyncButton>
-            {!!liveEvents.length && (
-              <>
-                <Title
-                  className="title"
-                  style={{ color: CLUBS_GREY, marginTop: '30px' }}
-                >
-                  Live Events
-                </Title>
-                {isLoading && <ListLoadIndicator />}
-                <CardList>
-                  {liveEvents.map((e) => (
-                    <EventCard key={e.id} event={e} />
-                  ))}
-                </CardList>
-                <br />
-              </>
-            )}
-            <Title className="title" style={{ color: CLUBS_GREY }}>
-              Upcoming Events
-            </Title>
-            {isLoading && <ListLoadIndicator />}
             <ViewContext.Provider
               value={[viewOption, setViewOption, showSyncModal]}
             >
@@ -684,7 +660,12 @@ function EventPage({
         </SearchbarRightContainer>
       </div>
       {syncModalVisible && (
-        <Modal show={syncModalVisible} closeModal={hideSyncModal} width="45%">
+        <Modal
+          show={syncModalVisible}
+          closeModal={hideSyncModal}
+          width="45%"
+          marginBottom={false}
+        >
           <SyncModal calendarURL={calendarURL} />
         </Modal>
       )}
