@@ -29,7 +29,7 @@ from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics import parse as ICSParse
 from options.models import Option
-from rest_framework import filters, generics, parsers, status, viewsets
+from rest_framework import filters, generics, parsers, status, viewsets, serializers
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -1032,12 +1032,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             name_to_title[f.name] = f.verbose_name.title()
             name_to_relation[f.name] = f.is_relation
 
-        # return a list of fields
+        # return a list of additional dynamically generated fields
         serializer_class = self.get_serializer_class()
         if hasattr(serializer_class, "get_additional_fields"):
             fields = serializer_class.get_additional_fields()
         else:
             fields = {}
+
+        # compute list of fields on Club
+        club_fields = serializer_class().get_fields()
+        for field, obj in club_fields.items():
+            if isinstance(obj, (serializers.ModelSerializer, serializers.ListSerializer)):
+                name_to_relation[field] = True
 
         fields.update(
             {
