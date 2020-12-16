@@ -83,11 +83,13 @@ class ClubPermission(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
+        # handle case where club is approved but newer version may not be
         if view.action in ["retrieve", "children"]:
             if obj.approved or obj.ghost:
                 return True
             return request.user.is_authenticated and (
                 request.user.has_perm("clubs.see_pending_clubs")
+                or request.user.has_perm("clubs.manage_club")
                 or find_membership_helper(request.user, obj) is not None
             )
 
@@ -101,8 +103,10 @@ class ClubPermission(permissions.BasePermission):
         # club approvers can update the club
         if view.action in ["update", "partial_update"] and (
             request.user.has_perm("clubs.approve_club")
-            or request.user.has_perm("clubs.manage_club")
         ):
+            return True
+
+        if request.user.has_perm("clubs.manage_club"):
             return True
 
         # user must be in club or parent club to perform non-view actions
@@ -281,6 +285,9 @@ class MembershipRequestPermission(permissions.BasePermission):
 
         if "club_code" not in view.kwargs:
             return False
+
+        if request.user.has_perm("clubs.manage_club"):
+            return True
 
         obj = Club.objects.get(code=view.kwargs["club_code"])
         membership = find_membership_helper(request.user, obj)

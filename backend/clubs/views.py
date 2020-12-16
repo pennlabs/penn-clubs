@@ -1063,6 +1063,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return Response(fields)
 
     def get_serializer_class(self):
+        """
+        Return a serializer class that is appropriate for the action being performed.
+        Some serializer classes return less information, either for permission reasons or
+        to improve performance.
+        """
         if self.action == "upload":
             return AssetSerializer
         if self.action == "subscription":
@@ -1078,13 +1083,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return ClubListSerializer
         if self.request is not None and self.request.user.is_authenticated:
             see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
+            manage_club = self.request.user.has_perm("clubs.manage_club")
             is_member = (
                 "code" in self.kwargs
                 and Membership.objects.filter(
                     person=self.request.user, club__code=self.kwargs["code"]
                 ).exists()
             )
-            if see_pending or is_member:
+            if see_pending or manage_club or is_member:
                 return AuthenticatedClubSerializer
         return ClubSerializer
 

@@ -528,6 +528,7 @@ export default function ClubEditCard({
                         other.isImage = true
                         delete other.type
                       }
+
                       return (
                         <Field
                           key={i}

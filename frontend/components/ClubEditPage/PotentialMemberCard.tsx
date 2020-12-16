@@ -52,7 +52,7 @@ export default function PotentialMemberCard({
 
   useEffect(reloadList, [])
 
-  if (students === null) {
+  if (students == null) {
     return <Loading />
   }
 

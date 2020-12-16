@@ -774,7 +774,9 @@ class ClubListSerializer(serializers.ModelSerializer):
         if instance.ghost and not instance.approved:
             user = self.context["request"].user
 
-            can_see_pending = user.has_perm("clubs.see_pending_clubs")
+            can_see_pending = user.has_perm("clubs.see_pending_clubs") or user.has_perm(
+                "clubs.manage_club"
+            )
             is_member = (
                 user.is_authenticated and instance.membership_set.filter(person=user).exists()
             )
