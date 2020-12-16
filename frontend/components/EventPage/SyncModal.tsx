@@ -56,9 +56,25 @@ const SyncModal = (props: { calendarURL: string }): ReactElement => {
         </div>
       </div>
       <Subtitle>Import to Google Calendar</Subtitle>
-      <p>Copy and paste the URL above to import to Google Calendar.</p>
-      <Subtitle>Import to iCal</Subtitle>
-      <p>Copy and paste the URL above to import to iCal</p>
+      <p>
+        Use the URL above to import to Google Calendar. Need help?{' '}
+        <a
+          href="https://support.google.com/calendar/answer/37118"
+          target="_blank"
+        >
+          Check out this guide!
+        </a>
+      </p>
+      <Subtitle>Import to macOS Calendar</Subtitle>
+      <p>
+        Use the URL above to import to Calendar app. Need help?{' '}
+        <a
+          href="https://support.apple.com/guide/calendar/subscribe-to-calendars-icl1022/mac"
+          target="_blank"
+        >
+          Check out this guide!
+        </a>
+      </p>
     </ModalContainer>
   )
 }
