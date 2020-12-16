@@ -29,7 +29,7 @@ from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics import parse as ICSParse
 from options.models import Option
-from rest_framework import filters, generics, parsers, status, viewsets, serializers
+from rest_framework import filters, generics, parsers, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError as DRFValidationError
