@@ -1,9 +1,15 @@
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { CLUBS_GREY, CLUBS_NAVY } from '../../constants'
-import { OBJECT_NAME_PLURAL, SITE_NAME } from '../../utils/branding'
+import { Club } from '../../types'
+import { doApiRequest, intersperse } from '../../utils'
+import {
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_SINGULAR,
+  SITE_NAME,
+} from '../../utils/branding'
 import { Icon, Text } from '../common'
 
 const ModalContainer = styled.div`
@@ -24,6 +30,16 @@ const Subtitle = styled.div`
 `
 
 const SyncModal = (props: { calendarURL: string }): ReactElement => {
+  const [subscriptions, setSubscriptions] = useState<{ club: Club }[] | null>(
+    null,
+  )
+
+  useEffect(() => {
+    doApiRequest('/subscriptions/?format=json')
+      .then((resp) => resp.json())
+      .then(setSubscriptions)
+  }, [])
+
   const url = props.calendarURL
     ? `${window?.location.protocol ?? 'https:'}//${props.calendarURL}`
     : ''
@@ -75,6 +91,31 @@ const SyncModal = (props: { calendarURL: string }): ReactElement => {
           </div>
         </div>
       </div>
+      {subscriptions != null && (
+        <Text className="mt-3">
+          {subscriptions.length > 0 ? (
+            <>
+              You will see calendar events for <b>{subscriptions.length}</b>{' '}
+              {subscriptions.length > 1
+                ? OBJECT_NAME_PLURAL
+                : OBJECT_NAME_SINGULAR}
+              , including{' '}
+              {intersperse(
+                subscriptions
+                  .slice(0, 3)
+                  .map(({ club }) => <b key={club.code}>{club.name}</b>),
+                ', ',
+              )}
+              .
+            </>
+          ) : (
+            <>
+              You have not subscribed to any {OBJECT_NAME_PLURAL} yet. Your
+              calendar will be empty until you do so.
+            </>
+          )}
+        </Text>
+      )}
       <hr />
       <div className="columns has-text-centered">
         <div className="column">
