@@ -247,16 +247,32 @@ class Club(models.Model):
         url = self.ics_import_url
         if url:
             calendar = Calendar(requests.get(url).text)
+            event_list = Event.objects.filter(is_ics_event=True, club=self)
+            modified_events = []
             for event in calendar.events:
-                if Event.objects.get(uuid=event.uid):
-                    ev = Event.objects.create(
-                        club=self,
-                        name=event.name,
-                        start_time=event.begin.datetime,
-                        end_time=event.end.datetime,
-                        description=event.description,
-                    )
-                ev.save()
+                tries = [
+                    Event.objects.get(ics_uuid=event.uid),
+                    Event.objects.filter(
+                        club=self, start_time=event.begin.datetime, end_time=event.end.datetime
+                    ).first(),
+                    Event.objects.create()
+                ]
+                for ev in tries:
+                    if ev:
+                        ev.club = self
+                        ev.name = event.name
+                        ev.start_time = event.begin.datetime
+                        ev.end_time = event.end.datetime
+                        ev.description = event.description
+                        ev.is_ics_event = True
+                        ev.ics_uuid = event.uid
+                        ev.save()
+                        modified_events.append(ev)
+                        break
+
+            for event in event_list:
+                if event not in modified_events:
+                    event.delete()
 
     def send_virtual_fair_email(self, request=None, email="setup"):
         """
@@ -568,6 +584,7 @@ class Event(models.Model):
     image_small = models.ImageField(upload_to=get_event_small_file_name, null=True, blank=True)
     description = models.TextField(blank=True)
     ics_uuid = models.UUIDField(default=uuid.uuid4)
+    is_ics_event = models.BooleanField(default=False, blank=True)
 
     OTHER = 0
     RECRUITMENT = 1
