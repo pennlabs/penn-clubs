@@ -17,7 +17,7 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 from django.utils import timezone
 from ics import Calendar
-from ics import Event as Ev
+from ics import Event as ICSEvent
 
 from clubs.models import Club, ClubFair, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.utils import fuzzy_lookup_club
@@ -33,7 +33,7 @@ def mocked_requests_get(*args):
             return self.text
 
     cal = Calendar()
-    event = Ev()
+    event = ICSEvent()
     event.name = "A test event"
     event.description = "A test description"
     event.begin = datetime.datetime(2020, 1, 2, 3, 4, 5)
