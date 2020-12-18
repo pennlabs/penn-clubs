@@ -6,7 +6,7 @@ import styled from 'styled-components'
 import { mediaMaxWidth, mediaMinWidth, SM } from '../../constants/measurements'
 import { Club, MembershipRank, UserInfo } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
-import { OBJECT_NAME_PLURAL } from '../../utils/branding'
+import { OBJECT_NAME_PLURAL, OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Center, EmptyState, Loading, Text } from '../common'
 import ClubTabCards from './ClubTabCards'
 import ClubTabTable from './ClubTabTable'
@@ -100,7 +100,7 @@ const ClubTab = ({
     const { username } = userInfo
     if (
       confirm(
-        `Are you sure you want to leave ${club.name}? You cannot add yourself back into the club.`,
+        `Are you sure you want to leave ${club.name}? You cannot add yourself back into the ${OBJECT_NAME_SINGULAR}.`,
       )
     ) {
       doApiRequest(`/clubs/${club.code}/members/${username}`, {

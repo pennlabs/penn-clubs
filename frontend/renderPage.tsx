@@ -80,40 +80,54 @@ const GlobalStyle = createGlobalStyle`
   }
 `
 
+/**
+ * Override the Bulma styles here if the site is not Penn Clubs.
+ * Otherwise, don't do any overrides to interfere with Bulma as little as possible.
+ */
 const RenderPageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   background-color: ${WHITE};
   font-family: ${BODY_FONT};
 
-  ${Object.entries({
-    primary: BULMA_PRIMARY,
-    link: BULMA_LINK,
-    info: BULMA_INFO,
-    success: BULMA_SUCCESS,
-    warning: BULMA_WARNING,
-    danger: BULMA_DANGER,
-  })
-    .map(([className, color]) => {
-      return `
-    & .button.is-${className}, & .button.is-${className}[disabled], & .notification.is-${className} {
+  ${SITE_ID !== 'clubs'
+    ? Object.entries({
+        primary: BULMA_PRIMARY,
+        link: BULMA_LINK,
+        info: BULMA_INFO,
+        success: BULMA_SUCCESS,
+        warning: BULMA_WARNING,
+        danger: BULMA_DANGER,
+      })
+        .map(([className, color]) => {
+          return `
+    .button.is-${className}, .button.is-${className}[disabled], .notification.is-${className} {
       background-color: ${color};
     }
 
-    & .button.is-${className}:hover {
-      background-color: ${Color(color).darken(0.05).hex()};
+    .notification.is-${className}.is-light, .button.is-${className}.is-light {
+      background-color: ${Color(color).lightness(96).string()};
     }
 
-    & .button.is-${className}:focus:not(:active) {
+    .button.is-${className}:hover {
+      background-color: ${Color(color).darken(0.05).string()};
+    }
+
+    .button.is-${className}.is-light:hover {
+      background-color: ${Color(color).lightness(96).darken(0.05).string()};
+    }
+
+    .button.is-${className}:focus:not(:active) {
       box-shadow: 0 0 0 0.125em ${Color(color).fade(0.25).string()};
     }
 
-    & .has-text-${className} {
+    .has-text-${className} {
       color: ${color} !important;
     }
     `
-    })
-    .join('\n')}
+        })
+        .join('\n')
+    : ''}
 `
 
 type RenderPageProps = {

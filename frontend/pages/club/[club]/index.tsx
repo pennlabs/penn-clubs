@@ -184,7 +184,7 @@ const ClubPage = ({
             }}
           >
             <Flex>
-              {image && <Image src={image} />}
+              {image && <Image alt="" src={image} />}
               <Header club={club} style={{ flex: 1 }} />
             </Flex>
           </StyledCard>

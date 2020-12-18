@@ -100,25 +100,25 @@ const QuestionList = ({
           </button>
         </div>
       ) : (
-        <>
-          <b>Have a question about {name}?</b>
-          <Formik
-            initialValues={{ is_anonymous: false }}
-            onSubmit={handleSubmit}
-          >
-            <Form>
-              <Field name="question" as={TextField} type="textarea" noLabel />
-              <Field
-                name="is_anonymous"
-                as={CheckboxField}
-                label="Post this question anonymously."
-              />
-              <button type="submit" className="button is-primary is-small">
-                Submit
-              </button>
-            </Form>
-          </Formik>
-        </>
+        <Formik initialValues={{ is_anonymous: false }} onSubmit={handleSubmit}>
+          <Form>
+            <Field
+              name="question"
+              as={TextField}
+              type="textarea"
+              label={`Have a question about ${name}?`}
+              id="question"
+            />
+            <Field
+              name="is_anonymous"
+              as={CheckboxField}
+              label="Post this question anonymously."
+            />
+            <button type="submit" className="button is-primary is-small">
+              Submit
+            </button>
+          </Form>
+        </Formik>
       )}
     </>
   )

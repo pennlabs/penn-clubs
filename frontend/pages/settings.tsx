@@ -39,7 +39,7 @@ const Settings = ({ userInfo, authenticated }: SettingsProps) => {
    * Display the message to the user in the form of a toast.
    * @param The message to show to the user.
    */
-  const notify = (msg: ReactNode, type?: TypeOptions = 'info'): void => {
+  const notify = (msg: ReactNode, type: TypeOptions = 'info'): void => {
     toast[type](msg)
   }
 
