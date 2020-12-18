@@ -325,22 +325,21 @@ export const SearchBarTextItem = ({
 
   useEffect(() => {
     timeout !== null && clearTimeout(timeout)
-    storeTimeout(
-      setTimeout(
-        () =>
-          searchCallback((inpt) => {
-            if (nameInput.length <= 0) {
-              const newInpt = { ...inpt }
-              if (param in newInpt) {
-                delete newInpt[param]
-              }
-              return newInpt
+    const timeoutId: number = window.setTimeout(
+      () =>
+        searchCallback((inpt) => {
+          if (nameInput.length <= 0) {
+            const newInpt = { ...inpt }
+            if (param in newInpt) {
+              delete newInpt[param]
             }
-            return { ...inpt, [param]: nameInput }
-          }),
-        200,
-      ),
+            return newInpt
+          }
+          return { ...inpt, [param]: nameInput }
+        }),
+      200,
     )
+    storeTimeout(timeoutId)
   }, [nameInput])
 
   const focus = () => inputRef.current && inputRef.current.focus()
