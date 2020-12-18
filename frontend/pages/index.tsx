@@ -31,7 +31,7 @@ import {
 import { PaginatedClubPage, renderListPage } from '../renderPage'
 import { Badge, School, StudentType, Tag, UserInfo, Year } from '../types'
 import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
-import { OBJECT_NAME_TITLE, SITE_TAGLINE } from '../utils/branding'
+import { OBJECT_NAME_TITLE, SITE_ID, SITE_TAGLINE } from '../utils/branding'
 
 const ClearAllLink = styled.span`
   cursor: pointer;
@@ -262,7 +262,7 @@ const Splash = (props: SplashProps): ReactElement => {
     value: id,
     label: name,
     name: 'school',
-    color: is_graduate ? CLUBS_BLUE : undefined,
+    color: is_graduate && SITE_ID === 'clubs' ? CLUBS_BLUE : undefined,
   }))
 
   const yearOptions = props.years.map(({ id, name }) => ({
