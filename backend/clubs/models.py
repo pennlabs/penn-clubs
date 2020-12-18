@@ -265,7 +265,7 @@ class Club(models.Model):
                         ev.end_time = event.end.datetime
                         ev.description = event.description
                         ev.is_ics_event = True
-                        ev.ics_uuid = event.uid
+                        ev.ics_uuid = event.uid[:37]
                         ev.save()
                         modified_events.append(ev)
                         break
