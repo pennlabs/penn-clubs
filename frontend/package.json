@@ -46,6 +46,7 @@
     "react-select": "^3.0.8",
     "react-table": "^7.6.2",
     "react-timeago": "^5.2.0",
+    "react-toastify": "^6.2.0",
     "react-tooltip": "^4.2.10",
     "react-vis": "^1.11.7",
     "showdown": "^1.9.1",

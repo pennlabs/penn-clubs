@@ -17,10 +17,17 @@ import { Calendar, momentLocalizer } from 'react-big-calendar'
 import styled from 'styled-components'
 
 import { EVENT_TYPES } from '../components/ClubEditPage/EventsCard'
-import { Icon, Metadata, Modal, Title, WideWrapper } from '../components/common'
+import {
+  Icon,
+  Metadata,
+  Modal,
+  Title,
+  WideContainer,
+} from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import EventCard from '../components/EventPage/EventCard'
 import EventModal, { MEETING_REGEX } from '../components/EventPage/EventModal'
+import SyncModal from '../components/EventPage/SyncModal'
 import { FuseTag } from '../components/FilterSearch'
 import SearchBar, {
   SearchBarCheckboxItem,
@@ -30,17 +37,18 @@ import SearchBar, {
   SearchInput,
 } from '../components/SearchBar'
 import {
+  CLUBS_BLUE,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   EVENT_TYPE_COLORS,
   FULL_NAV_HEIGHT,
   SNOW,
+  WHITE_ALPHA,
 } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, ClubEventType, Tag } from '../types'
 import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_SINGULAR } from '../utils/branding'
-import { ListLoadIndicator } from '.'
 
 interface EventPageProps {
   authenticated: boolean | null
@@ -48,6 +56,7 @@ interface EventPageProps {
   upcomingEvents: ClubEvent[]
   tags: Tag[]
   badges: Badge[]
+  calendarURL: string
 }
 
 const CardList = styled.div`
@@ -123,38 +132,55 @@ const ViewContext = createContext<
   [
     option: EventsViewOption,
     setOption?: Dispatch<SetStateAction<EventsViewOption>>,
+    showSyncModal?: () => void,
   ]
 >([EventsViewOption.CALENDAR])
 
 /**
  * Component used to display a method to switch between the event grid and calendar views.
  */
-const EventsViewSwitcher = ({ viewOption, setViewOption }): ReactElement => (
-  <div className="buttons has-addons mt-0 mb-0">
-    <button
-      id="event-view-list"
-      className={`button is-medium ${
-        viewOption === EventsViewOption.LIST ? 'is-selected is-info' : ''
-      }`}
-      aria-label="switch to grid view"
-      onClick={() => {
-        setViewOption(EventsViewOption.LIST)
-      }}
-    >
-      <Icon name="grid" alt="grid view" />
-    </button>
-    <button
-      id="event-view-calendar"
-      className={`button is-medium ${
-        viewOption === EventsViewOption.CALENDAR ? 'is-selected is-info' : ''
-      }`}
-      aria-label="switch to calendar view"
-      onClick={() => {
-        setViewOption(EventsViewOption.CALENDAR)
-      }}
-    >
-      <Icon name="calendar" alt="calendar view" />
-    </button>
+const EventsViewToolbar = ({
+  viewOption,
+  setViewOption,
+  showSyncModal,
+}): ReactElement => (
+  <div style={{ display: 'flex' }}>
+    <div className="buttons has-addons mt-0 mb-0">
+      <button
+        id="event-view-list"
+        className={`button is-medium ${
+          viewOption === EventsViewOption.LIST ? 'is-selected is-info' : ''
+        }`}
+        aria-label="switch to grid view"
+        onClick={() => {
+          setViewOption(EventsViewOption.LIST)
+        }}
+      >
+        <Icon name="grid" alt="grid view" />
+      </button>
+      <button
+        id="event-view-calendar"
+        className={`button is-medium ${
+          viewOption === EventsViewOption.CALENDAR ? 'is-selected is-info' : ''
+        }`}
+        aria-label="switch to calendar view"
+        onClick={() => {
+          setViewOption(EventsViewOption.CALENDAR)
+        }}
+      >
+        <Icon name="calendar" alt="calendar view" />
+      </button>
+    </div>
+    <div className="buttons has-addons mt-0 mb-0 ml-5">
+      <button
+        onClick={() => {
+          showSyncModal && showSyncModal()
+        }}
+        className="button is-medium"
+      >
+        <Icon name="refresh" className="mr-1" /> Export
+      </button>
+    </div>
   </div>
 )
 
@@ -164,7 +190,7 @@ const CalendarHeader = ({
   onView,
   view,
 }: CalendarHeaderProps) => {
-  const [viewOption, setViewOption] = useContext(ViewContext)
+  const [viewOption, setViewOption, showSyncModal] = useContext(ViewContext)
   const _views: CalendarView[] = [
     CalendarView.DAY,
     CalendarView.WEEK,
@@ -212,13 +238,27 @@ const CalendarHeader = ({
             </button>
           ))}
         </div>
-        <EventsViewSwitcher
+        <EventsViewToolbar
           viewOption={viewOption}
           setViewOption={setViewOption}
+          showSyncModal={showSyncModal}
         />
       </div>
     </StyledHeader>
   )
+}
+
+const SyncButton = styled.a`
+  background-color: ${CLUBS_BLUE};
+  color: ${WHITE_ALPHA(0.8)} !important;
+  float: right;
+  padding: 8px;
+`
+
+const iconStylesDark = {
+  transform: 'translateY(0px)',
+  opacity: 0.6,
+  color: `${WHITE_ALPHA(0.8)} !important`,
 }
 /**
  * Randomize the order the events are shown in.
@@ -270,6 +310,7 @@ function EventPage({
   liveEvents: initialLiveEvents,
   tags,
   badges,
+  calendarURL,
 }: EventPageProps): ReactElement {
   const [upcomingEvents, setUpcomingEvents] = useState<ClubEvent[]>(() =>
     randomizeEvents(initialUpcomingEvents),
@@ -290,6 +331,10 @@ function EventPage({
   )
   const currentSearch = useRef<SearchInput>({})
   const [isLoading, setLoading] = useState<boolean>(false)
+  const [syncModalVisible, setSyncModalVisible] = useState<boolean>(false)
+
+  const showSyncModal = () => setSyncModalVisible(true)
+  const hideSyncModal = () => setSyncModalVisible(false)
 
   const [viewOption, setViewOption] = useState<EventsViewOption>(
     isFair ? EventsViewOption.LIST : EventsViewOption.CALENDAR,
@@ -489,16 +534,10 @@ function EventPage({
           )}
         </SearchBar>
         <SearchbarRightContainer>
-          <WideWrapper
-            fullHeight
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              background: SNOW,
-            }}
-          >
-            {isLoading && <ListLoadIndicator />}
-            <ViewContext.Provider value={[viewOption, setViewOption]}>
+          <WideContainer background={SNOW} fullHeight>
+            <ViewContext.Provider
+              value={[viewOption, setViewOption, showSyncModal]}
+            >
               {viewOption === EventsViewOption.LIST ? (
                 <>
                   {!!liveEvents.length && (
@@ -516,9 +555,10 @@ function EventPage({
                         >
                           Live Events
                         </Title>
-                        <EventsViewSwitcher
+                        <EventsViewToolbar
                           viewOption={viewOption}
                           setViewOption={setViewOption}
+                          showSyncModal={showSyncModal}
                         />
                       </div>
                       <CardList>
@@ -546,9 +586,10 @@ function EventPage({
                       Upcoming Events
                     </Title>
                     {!liveEvents.length && (
-                      <EventsViewSwitcher
+                      <EventsViewToolbar
                         viewOption={viewOption}
                         setViewOption={setViewOption}
+                        showSyncModal={showSyncModal}
                       />
                     )}
                   </div>
@@ -614,9 +655,19 @@ function EventPage({
                 </div>
               )}
             </ViewContext.Provider>
-          </WideWrapper>
+          </WideContainer>
         </SearchbarRightContainer>
       </div>
+      {syncModalVisible && (
+        <Modal
+          show={syncModalVisible}
+          closeModal={hideSyncModal}
+          width="45%"
+          marginBottom={false}
+        >
+          <SyncModal calendarURL={calendarURL} />
+        </Modal>
+      )}
       {previewEvent && (
         <Modal show={true} closeModal={hideModal} width="45%">
           <EventModal event={previewEvent} showDetailsButton={true} />
@@ -632,16 +683,31 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
 
-  const [liveEvents, upcomingEvents, tags, badges] = await Promise.all([
+  const [
+    liveEvents,
+    upcomingEvents,
+    tags,
+    badges,
+    calendar,
+  ] = await Promise.all([
     doApiRequest('/events/live/?format=json', data).then((resp) => resp.json()),
     doApiRequest('/events/upcoming/?format=json', data).then((resp) =>
       resp.json(),
     ),
     doApiRequest('/tags/?format=json', data).then((resp) => resp.json()),
     doApiRequest('/badges/?format=json', data).then((resp) => resp.json()),
+    doApiRequest('/settings/calendar_url/?format=json', data).then((resp) =>
+      resp.json(),
+    ),
   ])
 
-  return { liveEvents, upcomingEvents, tags, badges }
+  return {
+    liveEvents,
+    upcomingEvents,
+    tags,
+    badges,
+    calendarURL: calendar.url,
+  }
 }
 
 export default renderPage(EventPage)

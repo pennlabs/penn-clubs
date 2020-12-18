@@ -1,3 +1,5 @@
+import 'react-toastify/dist/ReactToastify.css'
+
 import Head from 'next/head'
 import { ReactElement, useEffect } from 'react'
 
