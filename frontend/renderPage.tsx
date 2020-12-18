@@ -1,6 +1,7 @@
 import LRU from 'lru-cache'
 import { NextPageContext } from 'next'
 import React, { Component, ReactElement } from 'react'
+import { ToastContainer } from 'react-toastify'
 import styled from 'styled-components'
 
 import { Loading } from './components/common'
@@ -20,6 +21,39 @@ import {
 } from './utils'
 import { SITE_ID } from './utils/branding'
 import { logException } from './utils/sentry'
+
+const ToastStyle = styled.div`
+  & .Toastify__toast-container {
+    font-family: inherit;
+  }
+
+  & .Toastify__toast {
+    border-radius: 8px;
+    font-family: inherit;
+  }
+
+  & .Toastify__toast-body {
+    padding: 0px 4px;
+    font-family: inherit;
+  }
+
+  & .Toastify__toast--info {
+    background-color: hsl(204, 86%, 53%);
+  }
+
+  & .Toastify__toast--warning {
+    background-color: hsl(48, 100%, 67%);
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  & .Toastify_toast--success {
+    background-color: hsl(141, 53%, 53%);
+  }
+
+  & .Toastify__toast--error {
+    background-color: hsl(348, 100%, 61%);
+  }
+`
 
 const Wrapper = styled.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
@@ -102,20 +136,25 @@ function renderPage<T>(
         const { modal } = state
         const { authenticated, userInfo } = props
         return (
-          <OptionsContext.Provider value={this.props.options}>
-            <AuthCheckContext.Provider value={this.checkAuth}>
-              <PermissionsContext.Provider value={this.props.permissions}>
-                <RenderPageWrapper>
-                  <LoginModal show={modal} closeModal={closeModal} />
-                  <Header authenticated={authenticated} userInfo={userInfo} />
-                  <Wrapper>
-                    <Page {...props} {...state} />
-                  </Wrapper>
-                  <Footer />
-                </RenderPageWrapper>
-              </PermissionsContext.Provider>
-            </AuthCheckContext.Provider>
-          </OptionsContext.Provider>
+          <>
+            <OptionsContext.Provider value={this.props.options}>
+              <AuthCheckContext.Provider value={this.checkAuth}>
+                <PermissionsContext.Provider value={this.props.permissions}>
+                  <RenderPageWrapper>
+                    <LoginModal show={modal} closeModal={closeModal} />
+                    <Header authenticated={authenticated} userInfo={userInfo} />
+                    <Wrapper>
+                      <Page {...props} {...state} />
+                    </Wrapper>
+                    <Footer />
+                  </RenderPageWrapper>
+                </PermissionsContext.Provider>
+              </AuthCheckContext.Provider>
+            </OptionsContext.Provider>
+            <ToastStyle>
+              <ToastContainer position="bottom-center" />
+            </ToastStyle>
+          </>
         )
       } catch (ex) {
         logException(ex)

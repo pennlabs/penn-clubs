@@ -1,4 +1,5 @@
-import React, { ReactNode, useState } from 'react'
+import React, { ReactNode } from 'react'
+import { toast, TypeOptions } from 'react-toastify'
 import styled from 'styled-components'
 
 import { Container, Metadata, Title } from '../components/common'
@@ -34,15 +35,12 @@ type SettingsProps = {
 }
 
 const Settings = ({ userInfo, authenticated }: SettingsProps) => {
-  const [message, setMessage] = useState<ReactNode>(null)
-
   /**
-   * Display the message and scroll the user to the top of the page.
+   * Display the message to the user in the form of a toast.
    * @param The message to show to the user.
    */
-  const notify = (msg: ReactNode): void => {
-    setMessage(msg)
-    window.scrollTo(0, 0)
+  const notify = (msg: ReactNode, type?: TypeOptions = 'info'): void => {
+    toast[type](msg)
   }
 
   if (authenticated === null) {
@@ -91,15 +89,6 @@ const Settings = ({ userInfo, authenticated }: SettingsProps) => {
         </Title>
       </Container>
       <TabView background={BG_GRADIENT} tabs={tabs} tabClassName="is-boxed" />
-
-      {message != null && (
-        <Container>
-          <Notification className="notification">
-            <button className="delete" onClick={() => setMessage(null)} />
-            {message}
-          </Notification>
-        </Container>
-      )}
     </>
   )
 }

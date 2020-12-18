@@ -2453,7 +2453,9 @@ class MassInviteAPIView(APIView):
 
         mem = Membership.objects.filter(club=club, person=request.user).first()
 
-        if not request.user.is_superuser and (not mem or not mem.role <= Membership.ROLE_OFFICER):
+        if not request.user.has_perm("clubs.manage_club") and (
+            not mem or not mem.role <= Membership.ROLE_OFFICER
+        ):
             return Response(
                 {"detail": "You do not have permission to invite new members!", "success": False},
                 status=status.HTTP_403_FORBIDDEN,

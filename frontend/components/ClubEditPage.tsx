@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import React, { ReactElement, useEffect, useState } from 'react'
+import { toast, TypeOptions } from 'react-toastify'
 
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
@@ -76,15 +77,16 @@ const ClubForm = ({
   student_types,
   clubId,
 }: ClubFormProps): ReactElement => {
-  const [message, setMessage] = useState<ReactElement | string | null>(null)
   const [club, setClub] = useState<Club | null>(null)
   const [isEdit, setIsEdit] = useState<boolean>(typeof clubId !== 'undefined')
 
   const router = useRouter()
 
-  const notify = (msg: string | ReactElement): void => {
-    setMessage(msg)
-    window.scrollTo(0, 0)
+  const notify = (
+    msg: string | ReactElement,
+    type: TypeOptions = 'info',
+  ): void => {
+    toast[type](msg, { hideProgressBar: true })
   }
 
   const submit = async ({
@@ -101,7 +103,7 @@ const ClubForm = ({
         // if the club is not active, redirect to the renewal page instead of the edit page
         if (!club.active) {
           router.push(CLUB_RENEW_ROUTE(), CLUB_RENEW_ROUTE(club.code))
-          notify(`${message} Redirecting you to the renewal page...`)
+          notify(`${message} Redirecting you to the renewal page...`, 'success')
           return Promise.resolve(undefined)
         } else {
           router.push(CLUB_EDIT_ROUTE(), CLUB_EDIT_ROUTE(club.code), {
@@ -115,7 +117,20 @@ const ClubForm = ({
       }
     }
     if (message) {
-      notify(message)
+      notify(
+        club != null ? (
+          message
+        ) : (
+          <>
+            <div>
+              You must fix the following errors before saving your{' '}
+              {OBJECT_NAME_SINGULAR}:
+            </div>
+            {message}
+          </>
+        ),
+        club != null ? 'success' : 'error',
+      )
     }
   }
 
@@ -375,12 +390,6 @@ const ClubForm = ({
             <Contact /> to gain access instead of filling out this form.
           </p>
         </>
-      )}
-      {message && (
-        <div className="notification is-primary">
-          <button className="delete" onClick={() => setMessage(null)} />
-          {message}
-        </div>
       )}
       {isEdit ? (
         <TabView tabs={tabs} />

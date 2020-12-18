@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
+import { TypeOptions } from 'react-toastify'
 import styled from 'styled-components'
 
 import { mediaMaxWidth, mediaMinWidth, SM } from '../../constants/measurements'
@@ -25,7 +26,7 @@ const ClubCards = styled(ClubTabCards)`
 type ClubTabProps = {
   className?: string
   userInfo: UserInfo
-  notify: (msg: ReactElement | string) => void
+  notify: (msg: ReactElement | string, type?: TypeOptions) => void
 }
 
 export type UserMembership = {
@@ -60,10 +61,13 @@ const ClubTab = ({
       },
     }).then((resp) => {
       if (resp.ok) {
-        notify(`Your privacy setting for ${club.name} has been changed.`)
+        notify(
+          `Your privacy setting for ${club.name} has been changed.`,
+          'success',
+        )
       } else {
         resp.json().then((err) => {
-          notify(formatResponse(err))
+          notify(formatResponse(err), 'error')
         })
       }
     })
@@ -80,10 +84,13 @@ const ClubTab = ({
       },
     }).then((resp) => {
       if (resp.ok) {
-        notify(`Your activity setting for ${club.name} has been changed.`)
+        notify(
+          `Your activity setting for ${club.name} has been changed.`,
+          'success',
+        )
       } else {
         resp.json().then((err) => {
-          notify(formatResponse(err))
+          notify(formatResponse(err), 'error')
         })
       }
     })
@@ -101,10 +108,10 @@ const ClubTab = ({
       }).then((resp) => {
         if (!resp.ok) {
           resp.json().then((err) => {
-            notify(formatResponse(err))
+            notify(formatResponse(err), 'error')
           })
         } else {
-          notify(`You have left ${club.name}.`)
+          notify(`You have left ${club.name}.`, 'success')
           reloadMemberships()
         }
       })
