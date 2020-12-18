@@ -255,7 +255,7 @@ class Club(models.Model):
                     Event.objects.filter(
                         club=self, start_time=event.begin.datetime, end_time=event.end.datetime
                     ).first(),
-                    Event.objects.create()
+                    Event.objects.create(),
                 ]
                 for ev in tries:
                     if ev:
