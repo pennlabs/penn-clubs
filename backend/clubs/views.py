@@ -464,6 +464,18 @@ class ClubFairViewSet(viewsets.ModelViewSet):
     """
     list:
     Return a list of ongoing and upcoming club fairs.
+
+    create:
+    Schedule a new club fair.
+
+    update:
+    Update some attributes related to an existing club fair. All fields must be specified.
+
+    partial_update:
+    Update some attributes related to an existing club fair. Only specified fields are updated.
+
+    destroy:
+    Delete a club fair.
     """
 
     permission_classes = [ClubFairPermission | IsSuperuser]
@@ -576,6 +588,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     list:
     Return a list of clubs with partial information for each club.
+
+    create:
+    Add a new club record. After creation, the club will need to go through the approval process.
 
     update:
     Update all fields in the club.
@@ -1740,7 +1755,10 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
 class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     list:
-    Return a list of users who have sent membership request to the club
+    Return a list of users who have sent membership request to the club.
+
+    destroy:
+    Delete a membership request for a specific user.
     """
 
     serializer_class = MembershipRequestSerializer

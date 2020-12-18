@@ -1,3 +1,7 @@
+"""
+Test cases related to models and their fields in the clubs models.py.
+"""
+
 import datetime
 
 import pytz
