@@ -245,16 +245,17 @@ class Club(models.Model):
 
     def add_ics_events(self):
         url = self.ics_import_url
-        if url is not None:
+        if url:
             calendar = Calendar(requests.get(url).text)
             for event in calendar.events:
-                ev = Event.objects.create(
-                    club=self,
-                    name=event.name,
-                    start_time=event.begin.datetime,
-                    end_time=event.end.datetime,
-                    description=event.description,
-                )
+                if Event.objects.get(uuid=event.uid):
+                    ev = Event.objects.create(
+                        club=self,
+                        name=event.name,
+                        start_time=event.begin.datetime,
+                        end_time=event.end.datetime,
+                        description=event.description,
+                    )
                 ev.save()
 
     def send_virtual_fair_email(self, request=None, email="setup"):
@@ -566,6 +567,7 @@ class Event(models.Model):
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
     image_small = models.ImageField(upload_to=get_event_small_file_name, null=True, blank=True)
     description = models.TextField(blank=True)
+    ics_uuid = models.UUIDField(default=uuid.uuid4)
 
     OTHER = 0
     RECRUITMENT = 1
