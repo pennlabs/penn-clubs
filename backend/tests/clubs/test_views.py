@@ -611,7 +611,7 @@ class ClubTestCase(TestCase):
         Test retrieving the ICS URL from the endpoint.
         """
         self.client.login(username=self.user1.username, password="test")
-        
+
         resp = self.client.get(reverse("user-uuid"))
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertIn("url", resp.data, resp.content)
