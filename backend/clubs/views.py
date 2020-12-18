@@ -1617,7 +1617,7 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
 class UserUUIDAPIView(generics.RetrieveAPIView):
     """
-    get: Retrieve the uuid for the given user.
+    get: Retrieve the calendar URL with the appropriate uuid for the given user.
     """
 
     queryset = get_user_model().objects.all()
@@ -1798,7 +1798,7 @@ class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.request is not None and self.request.user.is_authenticated:
-            if self.request.user.is_superuser or (
+            if self.request.user.has_perm("clubs.manage_club") or (
                 "club_code" in self.kwargs
                 and Membership.objects.filter(
                     person=self.request.user, club__code=self.kwargs["club_code"]
@@ -1906,8 +1906,12 @@ class FavoriteCalendarAPIView(APIView):
     """
 
     def get(self, request, *args, **kwargs):
-        calendar = ICSCal()
-        calendar.extra.append(ICSParse.ContentLine(name="X-WR-CALNAME", value="Penn Clubs Events"))
+        calendar = ICSCal(creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAIN})")
+        calendar.extra.append(
+            ICSParse.ContentLine(name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events")
+        )
+
+        # only fetch events newer than the past month
         one_month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
         all_events = (
             Event.objects.filter(
@@ -1917,18 +1921,26 @@ class FavoriteCalendarAPIView(APIView):
             .distinct()
             .select_related("club")
         )
+
         for event in all_events:
             e = ICSEvent()
             e.name = "{} - {}".format(event.club.name, event.name)
             e.begin = event.start_time
+
+            # ensure event is at least 15 minutes for display purposes
             e.end = (
                 (event.start_time + datetime.timedelta(minutes=15))
                 if event.start_time >= event.end_time
                 else event.end_time
             )
-            e.location = event.location
-            e.description = "{}\n\n{}".format(event.url or "", event.description)
+
+            # put url in location if location does not exist, otherwise put url in body
+            e.location = event.location or event.url
+            e.description = "{}\n\n{}".format(
+                event.url or "" if not event.location else "", event.description
+            ).strip()
             calendar.events.add(e)
+
         response = HttpResponse(calendar, content_type="text/calendar")
         response["Content-Disposition"] = "attachment; filename=favorite_events.ics"
         return response
@@ -2453,7 +2465,9 @@ class MassInviteAPIView(APIView):
 
         mem = Membership.objects.filter(club=club, person=request.user).first()
 
-        if not request.user.is_superuser and (not mem or not mem.role <= Membership.ROLE_OFFICER):
+        if not request.user.has_perm("clubs.manage_club") and (
+            not mem or not mem.role <= Membership.ROLE_OFFICER
+        ):
             return Response(
                 {"detail": "You do not have permission to invite new members!", "success": False},
                 status=status.HTTP_403_FORBIDDEN,

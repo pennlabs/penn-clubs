@@ -54,7 +54,7 @@ describe('Permissioned (superuser) user tests', { retries: { runMode: 2, openMod
     cy.contains('Submit').click()
   })
 
-  it('Vists edit page tabs', () => {
+  it('Visits edit page tabs', () => {
     cy.visit('/club/pppjo/edit')
 
     const tabs = [
@@ -74,5 +74,11 @@ describe('Permissioned (superuser) user tests', { retries: { runMode: 2, openMod
     tabs.forEach(tab => {
       cy.get('.tabs').contains(tab).click()
     })
+  })
+
+  it('Visits the reports page', () => {
+    cy.visit('/reports')
+    cy.contains('Reports')
+    cy.contains('.button', 'Create New Report').click()
   })
 })

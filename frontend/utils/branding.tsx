@@ -39,7 +39,6 @@ const sites = {
 
     CONTACT_EMAIL: 'contact@pennclubs.com',
     FEEDBACK_URL: 'https://airtable.com/shrCsYFWxCwfwE7cf',
-    STYLE_URL: null,
 
     CLUB_FIELDS: [
       'accepting_members',
@@ -153,7 +152,6 @@ const sites = {
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
     FEEDBACK_URL: 'https://airtable.com/shrv4RfYIddU1i9o6',
-    STYLE_URL: '/static/css/fyh.css',
 
     CLUB_FIELDS: [
       'appointment_needed',
@@ -212,7 +210,6 @@ export const SCHOOL_NAME = sites[site].SCHOOL_NAME
 export const DOMAIN = sites[site].DOMAIN
 export const CONTACT_EMAIL = sites[site].CONTACT_EMAIL
 export const FEEDBACK_URL = sites[site].FEEDBACK_URL
-export const STYLE_URL = sites[site].STYLE_URL
 
 export const OBJECT_NAME_PLURAL = sites[site].OBJECT_NAME_PLURAL
 export const OBJECT_NAME_LONG_PLURAL = sites[site].OBJECT_NAME_LONG_PLURAL

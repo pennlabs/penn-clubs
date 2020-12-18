@@ -1,14 +1,13 @@
+/**
+ * This file is necessary in order to perform CSS imports.
+ */
 import 'react-toastify/dist/ReactToastify.min.css'
 
-import { ToastContainer } from 'react-toastify'
+import { AppProps } from 'next/app'
+import { ReactElement } from 'react'
 
-const App = ({ Component, pageProps }) => {
-  return (
-    <>
-      <Component {...pageProps} />
-      <ToastContainer position={'bottom-center'} />
-    </>
-  )
+const App = ({ Component, pageProps }: AppProps): ReactElement => {
+  return <Component {...pageProps} />
 }
 
 export default App

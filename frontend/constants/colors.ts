@@ -147,6 +147,22 @@ export const PROGRESS_INDICATOR_SEP =
   COLOR_SCHEME[SITE_ID].PROGRESS_INDICATOR_SEP
 
 /**
+ * Bulma Colors and Overrides
+ */
+export const BULMA_PRIMARY =
+  SITE_ID === 'fyh' ? '#95001a' : 'hsl(171, 100%, 41%)'
+export const BULMA_LINK = SITE_ID === 'fyh' ? '#82afd3' : 'hsl(217, 71%, 53%)'
+export const BULMA_INFO = SITE_ID === 'fyh' ? '#01256e' : 'hsl(204, 86%, 53%)'
+export const BULMA_SUCCESS =
+  SITE_ID === 'fyh' ? '#00b050' : 'hsl(141, 53%, 53%)'
+export const BULMA_WARNING =
+  SITE_ID === 'fyh' ? '#f2c100' : 'hsl(48, 100%, 67%)'
+export const BULMA_DANGER =
+  SITE_ID === 'fyh' ? '#ff0000' : 'hsl(348, 100%, 61%)'
+export const BULMA_A = SITE_ID === 'fyh' ? '#256ADA' : '#3273dc'
+export const BULMA_GREY = SITE_ID === 'fyh' ? '#6E6E6E' : 'hsl(0, 0%, 48%)'
+
+/**
  * Select Tag Colors
  */
 

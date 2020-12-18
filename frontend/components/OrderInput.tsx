@@ -161,6 +161,7 @@ const OrderInput = ({
           {ORDERINGS.map((order) => (
             <a
               key={order.key}
+              tabIndex={0}
               role="menuitem"
               className={`dropdown-item ${
                 order.key === ordering ? 'is-active' : ''
@@ -170,6 +171,13 @@ const OrderInput = ({
                 setOrdering(order.key)
                 onChange(order.key)
                 setIsOpen(false)
+              }}
+              onKeyPress={(e) => {
+                if (e.code === 'Space' || e.code === 'Enter') {
+                  setOrdering(order.key)
+                  onChange(order.key)
+                  setIsOpen(false)
+                }
               }}
             >
               <Icon name={order.icon} /> {order.name}

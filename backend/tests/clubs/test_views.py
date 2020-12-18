@@ -606,6 +606,16 @@ class ClubTestCase(TestCase):
         expected = [f"Club #{k+1} - Test Event for #{k+1}" for k in range(4)]
         self.assertEqual(actual.sort(), expected.sort())
 
+    def test_retrieve_ics_url(self):
+        """
+        Test retrieving the ICS URL from the endpoint.
+        """
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.get(reverse("user-uuid"))
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertIn("url", resp.data, resp.content)
+
     def test_event_create_update_delete(self):
         """
         Test creating, updating, and deleting a club event as a normal user.

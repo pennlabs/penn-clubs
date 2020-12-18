@@ -1259,7 +1259,10 @@ class UserUUIDSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField("get_calendar_url")
 
     def get_calendar_url(self, obj):
-        return f"{settings.DEFAULT_DOMAIN}/api/calendar/{str(obj.profile.uuid_secret)}"
+        request = self.context["request"]
+        scheme = request.scheme
+        domain = request.META.get("HTTP_HOST", settings.DEFAULT_DOMAIN)
+        return f"{scheme}://{domain}/api/calendar/{str(obj.profile.uuid_secret)}"
 
     class Meta:
         model = get_user_model()

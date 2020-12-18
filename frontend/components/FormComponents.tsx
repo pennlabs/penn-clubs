@@ -33,6 +33,7 @@ import EmbedOption, {
  * The form fields should render with Bulma styling in mind.
  */
 interface BasicFormField {
+  id?: string
   name: string
   required?: boolean
   label?: string
@@ -97,7 +98,7 @@ function useFieldWrapper<T extends FieldWrapperProps>(
     const isHorizontal = fieldContext.includes('is-horizontal')
 
     const fieldLabel = (
-      <label className="label">
+      <label className="label" htmlFor={other.id}>
         {actualLabel}
         {props.required && <span style={{ color: 'red' }}>*</span>}
       </label>

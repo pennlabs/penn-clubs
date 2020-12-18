@@ -41,8 +41,7 @@ const SyncModal = (props: { calendarURL: string }): ReactElement => {
   }, [])
 
   const url = props.calendarURL
-    ? `${window?.location.protocol ?? 'https:'}//${props.calendarURL}`
-    : ''
+
   return (
     <ModalContainer>
       <Title>Sync To Calendar</Title>
@@ -104,7 +103,7 @@ const SyncModal = (props: { calendarURL: string }): ReactElement => {
                 subscriptions
                   .slice(0, 3)
                   .map(({ club }) => <b key={club.code}>{club.name}</b>),
-                ', ',
+                (idx: number) => (idx === 1 ? ', and ' : ', '),
               )}
               .
             </>

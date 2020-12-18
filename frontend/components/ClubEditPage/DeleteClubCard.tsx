@@ -12,7 +12,7 @@ import BaseCard from './BaseCard'
 
 type Props = {
   club: Club
-  notify?: (message: ReactElement | string) => void
+  notify?: (message: ReactElement | string, type?: string) => void
   onDelete?: () => void
 }
 
@@ -35,11 +35,11 @@ const DeleteClubCard = ({
       method: 'DELETE',
     }).then((resp) => {
       if (resp.ok) {
-        notify(`Successfully deleted ${OBJECT_NAME_SINGULAR}.`)
+        notify(`Successfully deleted ${OBJECT_NAME_SINGULAR}.`, 'success')
         onDelete()
       } else {
         resp.json().then((err) => {
-          notify(formatResponse(err))
+          notify(formatResponse(err), 'error')
         })
       }
     })

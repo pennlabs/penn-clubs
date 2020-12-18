@@ -9,7 +9,7 @@ import BaseCard from './BaseCard'
 
 type Props = {
   club: Club
-  notify?: (message: ReactElement | string) => void
+  notify?: (message: ReactElement | string, type?: string) => void
   onUpdate?: () => void
 }
 
@@ -31,11 +31,12 @@ export default function EnableSubscriptionCard({
           `Successfully ${
             !club.enables_subscription ? 'enabled' : 'disabled'
           } subscriptions feature for ${club.name}.`,
+          'success',
         )
         onUpdate()
       } else {
         resp.json().then((err) => {
-          notify(formatResponse(err))
+          notify(formatResponse(err), 'error')
         })
       }
     })

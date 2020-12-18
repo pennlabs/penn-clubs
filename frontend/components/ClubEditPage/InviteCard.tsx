@@ -1,6 +1,7 @@
 import { ReactElement, useEffect, useState } from 'react'
 import Select from 'react-select'
 import TimeAgo from 'react-timeago'
+import { toast, TypeOptions } from 'react-toastify'
 
 import { Club, MembershipRank, MembershipRole } from '../../types'
 import { doApiRequest, formatResponse, getRoleDisplay } from '../../utils'
@@ -43,7 +44,12 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
   const [inviteEmails, setInviteEmails] = useState<string>('')
   const [isInviting, setInviting] = useState<boolean>(false)
 
-  const [message, notify] = useState<ReactElement | string | null>(null)
+  const notify = (
+    msg: ReactElement | string,
+    type: TypeOptions = 'info',
+  ): void => {
+    toast[type](msg, { hideProgressBar: true })
+  }
 
   const reloadInvites = (): void => {
     doApiRequest(`/clubs/${club.code}/invites/?format=json`)
@@ -56,11 +62,11 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
       method: 'DELETE',
     }).then((resp) => {
       if (resp.ok) {
-        notify('Invitation has been removed!')
+        notify('Invitation has been removed!', 'success')
         reloadInvites()
       } else {
         resp.json().then((err) => {
-          notify(formatResponse(err))
+          notify(formatResponse(err), 'error')
         })
       }
     })
@@ -104,7 +110,10 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
         if (data.success) {
           setInviteEmails('')
         }
-        notify(formatResponse(data))
+        notify(
+          'detail' in data ? data.detail : formatResponse(data),
+          data.success ? 'success' : 'error',
+        )
       } finally {
         reloadInvites()
         setInviting(false)
@@ -120,7 +129,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
       for (let i = 0; i < chunks.length; i++) {
         const data = await sendInviteBatch(chunks[i])
         if (!data.success) {
-          notify(formatResponse(data))
+          notify(formatResponse(data), 'error')
           reloadInvites()
           setInviting(false)
           setInvitePercentage(null)
@@ -138,6 +147,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
           {responses.map((resp) => resp.skipped).reduce((a, b) => a + b, 0)}{' '}
           emails were skipped because they are already invited or a member.
         </>,
+        'success',
       )
       setInviteEmails('')
       reloadInvites()
@@ -158,9 +168,6 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
 
   return (
     <>
-      {message !== null && (
-        <div className="notification is-primary">{message}</div>
-      )}
       {invites && !!invites.length && (
         <BaseCard title={`Pending Invites (${invites.length})`}>
           <table className="table is-fullwidth">

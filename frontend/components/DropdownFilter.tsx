@@ -169,6 +169,10 @@ const DropdownFilter = ({
                 role="checkbox"
                 tabIndex={0}
                 aria-checked={isSelected(tag) ? 'true' : 'false'}
+                onKeyPress={(e) =>
+                  (e.code === 'Space' || e.code === 'Enter') &&
+                  updateTag(tag, name)
+                }
               >
                 <Icon
                   style={{ fill: tag.color ?? color }}
