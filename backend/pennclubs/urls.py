@@ -5,6 +5,8 @@ from django.urls import include, path
 from django.views.generic import TemplateView
 from rest_framework.schemas import get_schema_view
 
+from .doc_settings import CustomJSONOpenAPIRenderer
+
 
 admin.site.site_header = "Clubs Backend Admin"
 
@@ -25,7 +27,11 @@ urlpatterns = [
     path("accounts/", include("accounts.urls", namespace="accounts")),
     path(
         "openapi/",
-        get_schema_view(title="Penn Clubs Documentation", public=True),
+        get_schema_view(
+            title="Penn Clubs Documentation",
+            public=True,
+            renderer_classes=[CustomJSONOpenAPIRenderer],
+        ),
         name="openapi-schema",
     ),
     path(

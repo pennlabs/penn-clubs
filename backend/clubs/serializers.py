@@ -546,7 +546,7 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "club_code", self.context["view"].kwargs.get("code")
         )
         membership = Membership.objects.filter(person=user, club__code=club_code).first()
-        if user.is_superuser:
+        if user.has_perm("clubs.manage_club"):
             return value
         if membership is None:
             raise serializers.ValidationError("You must be a member of this club to modify roles!")
