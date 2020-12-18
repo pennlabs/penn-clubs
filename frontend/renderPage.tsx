@@ -1,15 +1,26 @@
+import Color from 'color'
 import LRU from 'lru-cache'
 import { NextPageContext } from 'next'
 import React, { Component, ReactElement } from 'react'
 import { ToastContainer } from 'react-toastify'
-import styled from 'styled-components'
+import styled, { createGlobalStyle } from 'styled-components'
 
 import { Loading } from './components/common'
 import { AuthCheckContext } from './components/contexts'
 import Footer from './components/Footer'
 import Header from './components/Header'
 import LoginModal from './components/LoginModal'
-import { WHITE } from './constants/colors'
+import {
+  BULMA_A,
+  BULMA_DANGER,
+  BULMA_GREY,
+  BULMA_INFO,
+  BULMA_LINK,
+  BULMA_PRIMARY,
+  BULMA_SUCCESS,
+  BULMA_WARNING,
+  WHITE,
+} from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
 import { Badge, Club, School, StudentType, Tag, UserInfo, Year } from './types'
@@ -38,20 +49,20 @@ const ToastStyle = styled.div`
   }
 
   & .Toastify__toast--info {
-    background-color: hsl(204, 86%, 53%);
+    background-color: ${BULMA_INFO};
   }
 
   & .Toastify__toast--warning {
-    background-color: hsl(48, 100%, 67%);
+    background-color: ${BULMA_WARNING};
     color: rgba(0, 0, 0, 0.7);
   }
 
   & .Toastify_toast--success {
-    background-color: hsl(141, 53%, 53%);
+    background-color: ${BULMA_SUCCESS};
   }
 
   & .Toastify__toast--error {
-    background-color: hsl(348, 100%, 61%);
+    background-color: ${BULMA_DANGER};
   }
 `
 
@@ -59,11 +70,50 @@ const Wrapper = styled.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
 `
 
+const GlobalStyle = createGlobalStyle`
+  a {
+    color: ${BULMA_A};
+  }
+
+  .has-text-grey {
+    color: ${BULMA_GREY} !important;
+  }
+`
+
 const RenderPageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   background-color: ${WHITE};
   font-family: ${BODY_FONT};
+
+  ${Object.entries({
+    primary: BULMA_PRIMARY,
+    link: BULMA_LINK,
+    info: BULMA_INFO,
+    success: BULMA_SUCCESS,
+    warning: BULMA_WARNING,
+    danger: BULMA_DANGER,
+  })
+    .map(([className, color]) => {
+      return `
+    & .button.is-${className}, & .button.is-${className}[disabled], & .notification.is-${className} {
+      background-color: ${color};
+    }
+
+    & .button.is-${className}:hover {
+      background-color: ${Color(color).darken(0.05).hex()};
+    }
+
+    & .button.is-${className}:focus:not(:active) {
+      box-shadow: 0 0 0 0.125em ${Color(color).fade(0.25).string()};
+    }
+
+    & .has-text-${className} {
+      color: ${color} !important;
+    }
+    `
+    })
+    .join('\n')}
 `
 
 type RenderPageProps = {
@@ -154,6 +204,7 @@ function renderPage<T>(
             <ToastStyle>
               <ToastContainer position="bottom-center" />
             </ToastStyle>
+            <GlobalStyle />
           </>
         )
       } catch (ex) {
