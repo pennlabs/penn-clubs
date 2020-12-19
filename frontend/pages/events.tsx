@@ -275,7 +275,9 @@ const parseDateRange = (
         end: new Date(range[0].getTime() + 60 * 60 * 24 * 1000),
       }
     } else {
-      const max = new Date(Math.max(...((range as unknown) as number[])))
+      const max = new Date(
+        Math.max(...((range as unknown) as number[])) + 24 * 60 * 60 * 1000,
+      )
       const min = new Date(Math.min(...((range as unknown) as number[])))
       range = { start: min, end: max }
     }
@@ -394,8 +396,8 @@ function EventPage({
       viewOption === EventsViewOption.CALENDAR
         ? parseDateRange(dateRange)
         : { start: now.toISOString(), end: endDate.toISOString() }
-    params.set('start_time__gte', start)
-    params.set('end_time__lte', end)
+    params.set('end_time__gte', start)
+    params.set('start_time__lte', end)
     doApiRequest(`/events/?${params.toString()}`)
       .then((resp) => resp.json())
       .then((data) => isCurrent && setCalendarEvents(data) && setLoading(false))
@@ -440,14 +442,26 @@ function EventPage({
   // split events into live events and upcoming events for the list view
   let liveEvents: ClubEvent[] = []
   let upcomingEvents: ClubEvent[] = []
+
+  let minHour = 9
+  let maxHour = 22
+
   const now = new Date()
   calendarEvents.forEach((event) => {
-    if (new Date(event.end_time) >= now) {
-      if (new Date(event.start_time) <= now) {
+    const endTime = new Date(event.end_time)
+    const startTime = new Date(event.start_time)
+    if (endTime >= now) {
+      if (startTime <= now) {
         liveEvents.push(event)
       } else {
         upcomingEvents.push(event)
       }
+    }
+    if (startTime.getHours() < minHour) {
+      minHour = startTime.getHours()
+    }
+    if (endTime.getHours() > maxHour) {
+      maxHour = endTime.getHours()
     }
   })
 
@@ -640,6 +654,8 @@ function EventPage({
                   style={{ height: `calc(100vh - ${FULL_NAV_HEIGHT} - 25px)` }}
                 >
                   <Calendar
+                    min={new Date(0, 0, 0, minHour, 0, 0)}
+                    max={new Date(0, 0, 0, maxHour, 0, 0)}
                     localizer={localizer}
                     components={{
                       event: CalendarEvent,
