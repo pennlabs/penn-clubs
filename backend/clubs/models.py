@@ -14,6 +14,7 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
+from ics import Calendar
 from phonenumber_field.modelfields import PhoneNumberField
 from simple_history.models import HistoricalRecords
 
@@ -207,6 +208,7 @@ class Club(models.Model):
     recruiting_cycle = models.IntegerField(choices=RECRUITING_CYCLES, default=RECRUITING_UNKNOWN)
     enables_subscription = models.BooleanField(default=True)
     listserv = models.CharField(blank=True, max_length=255)
+    ics_import_url = models.URLField(max_length=200, blank=True, null=True)
     image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
     image_small = models.ImageField(upload_to=get_club_small_file_name, null=True, blank=True)
     tags = models.ManyToManyField("Tag")
@@ -240,6 +242,37 @@ class Club(models.Model):
 
     def create_thumbnail(self, request=None):
         return create_thumbnail_helper(self, request, 200)
+
+    def add_ics_events(self):
+        url = self.ics_import_url
+        if url:
+            calendar = Calendar(requests.get(url).text)
+            event_list = Event.objects.filter(is_ics_event=True, club=self)
+            modified_events = []
+            for event in calendar.events:
+                tries = [
+                    Event.objects.filter(ics_uuid=uuid.UUID(event.uid[:36])).first(),
+                    Event.objects.filter(
+                        club=self, start_time=event.begin.datetime, end_time=event.end.datetime
+                    ).first(),
+                    Event(),
+                ]
+                for ev in tries:
+                    if ev:
+                        ev.club = self
+                        ev.name = event.name
+                        ev.start_time = event.begin.datetime
+                        ev.end_time = event.end.datetime
+                        ev.description = event.description
+                        ev.is_ics_event = True
+                        ev.ics_uuid = uuid.UUID(event.uid[:36])
+                        ev.save()
+                        modified_events.append(ev)
+                        break
+
+            for event in event_list:
+                if event not in modified_events:
+                    event.delete()
 
     def send_virtual_fair_email(self, request=None, email="setup"):
         """
@@ -550,6 +583,8 @@ class Event(models.Model):
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
     image_small = models.ImageField(upload_to=get_event_small_file_name, null=True, blank=True)
     description = models.TextField(blank=True)
+    ics_uuid = models.UUIDField(default=uuid.uuid4)
+    is_ics_event = models.BooleanField(default=False, blank=True)
 
     OTHER = 0
     RECRUITMENT = 1

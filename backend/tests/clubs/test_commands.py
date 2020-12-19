@@ -7,6 +7,8 @@ import csv
 import datetime
 import os
 import tempfile
+import uuid
+from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.core import mail
@@ -14,9 +16,145 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 from django.utils import timezone
+from ics import Calendar
+from ics import Event as ICSEvent
 
 from clubs.models import Club, ClubFair, Event, Favorite, Membership, MembershipInvite, Tag
 from clubs.utils import fuzzy_lookup_club
+
+
+def mocked_requests_get(time):
+    """
+    Mock an ICS calendar http request with a single event, starting at the specified start time.
+    """
+
+    def fake_request(url, *args):
+        class MockResponse:
+            def __init__(self, content, status_code):
+                self.text = str(content)
+                self.status_code = status_code
+
+            def text(self):
+                return self.text
+
+        cal = Calendar()
+        event = ICSEvent()
+        event.name = "A test event"
+        event.description = "A test description"
+        event.begin = time
+        event.end = time + datetime.timedelta(minutes=60)
+        cal.events.add(event)
+        if url == "http://xyz.com/test.ics":
+            return MockResponse(cal, 200)
+
+        return MockResponse(None, 404)
+
+    return fake_request
+
+
+SAMPLE_ICS = """
+BEGIN:VCALENDAR
+PRODID:-//Mozilla.org/NONSGML Mozilla Calendar V1.1//EN
+VERSION:2.0
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+X-LIC-LOCATION:Europe/Berlin
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+CREATED:20140107T092011Z
+LAST-MODIFIED:20140107T121503Z
+DTSTAMP:20140107T121503Z
+UID:20f78720-d755-4de7-92e5-e41af487e4db
+SUMMARY:Just a Test
+DTSTART;TZID=Europe/Berlin:20140102T110000
+DTEND;TZID=Europe/Berlin:20140102T120000
+X-MOZ-GENERATION:4
+DESCRIPTION:This is a sample \\n two line description file.
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+class ImportCalendarTestCase(TestCase):
+    def setUp(self):
+        self.club1 = Club.objects.create(
+            code="one",
+            name="Club One",
+            active=True,
+            email="test@example.com",
+            ics_import_url="http://xyz.com/test.ics",
+        )
+
+    def test_import_nonstandard_ics(self):
+        """
+        Test importing a random nonstandard ICS file from the internet.
+        """
+        with mock.patch("requests.get", return_value=mock.Mock(text=SAMPLE_ICS, status_code=200)):
+            call_command("import_calendar_events")
+
+        ev = self.club1.events.first()
+
+        self.assertIsNotNone(ev)
+        self.assertEqual(ev.name, "Just a Test")
+
+    def test_import_calendar_events(self):
+        """
+        Test importing a standard ICS file generated from the ICS python library.
+        """
+        # mock the ICS calendar http request
+        now = timezone.now()
+        with mock.patch("requests.get", side_effect=mocked_requests_get(now)) as m:
+            call_command("import_calendar_events")
+
+            m.assert_called_with(self.club1.ics_import_url)
+
+        desired = self.club1.events.first()
+
+        # ensure event exists with right values
+        self.assertIsNotNone(desired)
+        self.assertEqual(desired.name, "A test event")
+        self.assertEqual(desired.description, "A test description")
+
+        # ensure difference between calendar date and imported date is less than one second
+        self.assertLessEqual(abs(desired.start_time - now), datetime.timedelta(seconds=1))
+        self.assertLessEqual(
+            desired.end_time - (now + datetime.timedelta(minutes=60)), datetime.timedelta(seconds=1)
+        )
+
+        # run the script again, make sure still only one event
+        with mock.patch("requests.get", side_effect=mocked_requests_get(now)) as m:
+            call_command("import_calendar_events")
+
+            m.assert_called_with(self.club1.ics_import_url)
+
+        # ensure that only one event exists
+        self.assertEqual(self.club1.events.count(), 1)
+
+        # screw up the uuid
+        desired.ics_uuid = uuid.uuid4()
+
+        # run the script again, make sure still only one event
+        with mock.patch("requests.get", side_effect=mocked_requests_get(now)) as m:
+            call_command("import_calendar_events")
+
+            m.assert_called_with(self.club1.ics_import_url)
+
+        # ensure that only one event exists
+        self.assertEqual(self.club1.events.count(), 1)
 
 
 class SendInvitesTestCase(TestCase):
