@@ -37,13 +37,11 @@ import SearchBar, {
   SearchInput,
 } from '../components/SearchBar'
 import {
-  CLUBS_BLUE,
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   EVENT_TYPE_COLORS,
   FULL_NAV_HEIGHT,
   SNOW,
-  WHITE_ALPHA,
 } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, ClubEventType, Tag } from '../types'
@@ -248,18 +246,8 @@ const CalendarHeader = ({
   )
 }
 
-const SyncButton = styled.a`
-  background-color: ${CLUBS_BLUE};
-  color: ${WHITE_ALPHA(0.8)} !important;
-  float: right;
-  padding: 8px;
-`
+type CalendarDateRange = Date[] | { start: Date; end: Date }
 
-const iconStylesDark = {
-  transform: 'translateY(0px)',
-  opacity: 0.6,
-  color: `${WHITE_ALPHA(0.8)} !important`,
-}
 /**
  * Randomize the order the events are shown in.
  * First prioritize the events with an earlier start date.
@@ -340,6 +328,8 @@ function EventPage({
     isFair ? EventsViewOption.LIST : EventsViewOption.CALENDAR,
   )
 
+  const [dateRange, setDateRange] = useState<CalendarDateRange | null>(null)
+
   const [previewEvent, setPreviewEvent] = useState<ClubEvent | null>(null)
   const hideModal = () => setPreviewEvent(null)
 
@@ -368,6 +358,7 @@ function EventPage({
           if (isCurrent) {
             setLiveEvents(randomizeEvents(resp))
           }
+          return resp
         }),
       doApiRequest(`/events/upcoming/?${params.toString()}`)
         .then((resp) => resp.json())
@@ -375,8 +366,23 @@ function EventPage({
           if (isCurrent) {
             setUpcomingEvents(randomizeEvents(resp))
           }
+          return resp
         }),
-    ]).then(() => setLoading(false))
+    ]).then(([live, upcoming]) => {
+      setLoading(false)
+      if (dateRange == null) {
+        setCalendarEvents([...live, ...upcoming])
+      }
+    })
+
+    if (dateRange != null) {
+      const { start, end } = parseDateRange(dateRange)
+      params.set('start_time__gte', start)
+      params.set('end_time__lte', end)
+      doApiRequest(`/events/?${params.toString()}`)
+        .then((resp) => resp.json())
+        .then(setCalendarEvents)
+    }
 
     return () => {
       isCurrent = false
@@ -408,12 +414,9 @@ function EventPage({
     [badges],
   )
 
-  /**
-   * Given a date range from big calendar, fetch the events associated with that date range.
-   */
-  const fetchForDateRange = (
-    range: Date[] | { start: Date; end: Date },
-  ): void => {
+  const parseDateRange = (
+    range: CalendarDateRange,
+  ): { start: string; end: string } => {
     if (Array.isArray(range)) {
       if (range.length === 1) {
         range = {
@@ -426,8 +429,17 @@ function EventPage({
         range = { start: min, end: max }
       }
     }
+    return { start: range.start.toISOString(), end: range.end.toISOString() }
+  }
+
+  /**
+   * Given a date range from big calendar, fetch the events associated with that date range.
+   */
+  const fetchForDateRange = (range: CalendarDateRange): void => {
+    setDateRange(range)
+    const { start, end } = parseDateRange(range)
     doApiRequest(
-      `/events/?format=json&start_time__gte=${range.start.toISOString()}&end_time__lte=${range.end.toISOString()}`,
+      `/events/?format=json&start_time__gte=${start}&end_time__lte=${end}`,
     )
       .then((resp) => resp.json())
       .then(setCalendarEvents)

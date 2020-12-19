@@ -403,6 +403,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
             "id",
             "image",
             "image_url",
+            "is_ics_event",
             "large_image_url",
             "location",
             "name",

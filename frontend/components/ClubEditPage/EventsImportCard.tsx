@@ -10,10 +10,12 @@ import BaseCard from './BaseCard'
 
 type EventsImportCardProps = {
   club: Club
+  onFetchEvents?: () => void
 }
 
 export default function EventsImportCard({
   club,
+  onFetchEvents,
 }: EventsImportCardProps): ReactElement {
   const [isFetching, setFetching] = useState<boolean>(false)
 
@@ -23,6 +25,12 @@ export default function EventsImportCard({
       .then((resp) => resp.json())
       .then((data) => {
         toast[data.success ? 'success' : 'error'](data.message, {
+          hideProgressBar: true,
+        })
+        onFetchEvents && onFetchEvents()
+      })
+      .catch(() => {
+        toast.error('Failed to fetch events, an unknown error occured.', {
           hideProgressBar: true,
         })
       })
@@ -106,7 +114,8 @@ export default function EventsImportCard({
                 className="button is-info"
                 onClick={fetchEvents}
               >
-                <Icon name="download" /> Fetch Events
+                <Icon name="download" />{' '}
+                {isFetching ? 'Fetching Events...' : 'Fetch Events'}
               </button>
             </div>
           </Form>

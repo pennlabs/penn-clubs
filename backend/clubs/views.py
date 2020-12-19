@@ -893,6 +893,15 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Fetch the ICS calendar events from the club's ICS calendar URL.
         """
         club = self.get_object()
+
+        if not club.ics_import_url:
+            return Response(
+                {
+                    "success": False,
+                    "message": "No ICS calendar URL set, so no events were imported.",
+                }
+            )
+
         try:
             num_events = club.add_ics_events()
         except requests.exceptions.RequestException:
@@ -1973,7 +1982,7 @@ class FavoriteCalendarAPIView(APIView):
             # put url in location if location does not exist, otherwise put url in body
             e.location = event.location or event.url
             e.description = "{}\n\n{}".format(
-                event.url or "" if not event.location else "", event.description
+                event.url or "" if not event.location else "", html_to_text(event.description)
             ).strip()
             calendar.events.add(e)
 
