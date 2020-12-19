@@ -426,7 +426,7 @@ class ClubTestCase(TestCase):
 
         e2_start = timezone.now() - timezone.timedelta(days=3)
         e2_end = timezone.now() - timezone.timedelta(days=2)
-        e2 = Event.objects.create(
+        Event.objects.create(
             code="test-event-2",
             club=self.club1,
             name="Past Test Event 2",
@@ -434,7 +434,7 @@ class ClubTestCase(TestCase):
             end_time=e2_end,
             type=Event.FAIR,
         )
-        e3 = Event.objects.create(
+        Event.objects.create(
             code="test-event-3",
             club=self.club1,
             name="Present Test Event 3",
@@ -452,31 +452,6 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertEquals(2, len(resp.data), resp.data)
-
-        # list events currently happening.
-        resp = self.client.get(
-            reverse("club-events-live", args=(self.club1.code,)), content_type="application/json",
-        )
-        self.assertIn(resp.status_code, [200], resp.content)
-        self.assertEquals(1, len(resp.data), resp.data)
-        self.assertEquals(e3.id, resp.data[0]["id"], resp.data)
-
-        # upcoming events.
-        resp = self.client.get(
-            reverse("club-events-upcoming", args=(self.club1.code,)),
-            content_type="application/json",
-        )
-        self.assertIn(resp.status_code, [200], resp.content)
-        self.assertEquals(1, len(resp.data), resp.data)
-        self.assertEquals(self.event1.id, resp.data[0]["id"], resp.data)
-
-        # events that have ended.
-        resp = self.client.get(
-            reverse("club-events-ended", args=(self.club1.code,)), content_type="application/json",
-        )
-        self.assertIn(resp.status_code, [200], resp.content)
-        self.assertEquals(1, len(resp.data), resp.data)
-        self.assertEquals(e2.id, resp.data[0]["id"], resp.data)
 
         # list events with a filter
         resp = self.client.get(
