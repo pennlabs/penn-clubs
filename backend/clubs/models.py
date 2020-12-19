@@ -301,21 +301,27 @@ class Club(models.Model):
                                     break
 
                         # extract urls from description
-                        urls = extractor.find_urls(ev.description)
-                        urls.sort(
-                            key=lambda url: any(
-                                domain in url
-                                for domain in {"zoom.us", "bluejeans.com", "hangouts.google.com"}
-                            ),
-                            reverse=True,
-                        )
-                        if urls:
-                            ev.url = urls[0]
+                        if ev.description:
+                            urls = extractor.find_urls(ev.description)
+                            urls.sort(
+                                key=lambda url: any(
+                                    domain in url
+                                    for domain in {
+                                        "zoom.us",
+                                        "bluejeans.com",
+                                        "hangouts.google.com",
+                                    }
+                                ),
+                                reverse=True,
+                            )
+                            if urls:
+                                ev.url = urls[0]
 
                         # extract url from location
-                        location_urls = extractor.find_urls(ev.location)
-                        if location_urls:
-                            ev.url = location_urls[0]
+                        if ev.location:
+                            location_urls = extractor.find_urls(ev.location)
+                            if location_urls:
+                                ev.url = location_urls[0]
 
                         # format url properly with schema
                         if ev.url:
