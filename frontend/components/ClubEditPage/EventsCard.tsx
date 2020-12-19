@@ -8,7 +8,7 @@ import { LIGHT_GRAY } from '../../constants'
 import { Club, ClubEvent, ClubEventType } from '../../types'
 import { stripTags } from '../../utils'
 import { OBJECT_EVENT_TYPES, OBJECT_NAME_SINGULAR } from '../../utils/branding'
-import { Device, Text } from '../common'
+import { Device, Icon, Text } from '../common'
 import EventModal from '../EventPage/EventModal'
 import {
   DateTimeField,
@@ -289,6 +289,11 @@ const eventTableFields = [
     converter: (a) =>
       (EVENT_TYPES.find((v) => v.value === a) || { label: 'Unknown' }).label,
   },
+  {
+    name: 'is_ics_event',
+    label: 'ICS',
+    converter: (a) => <Icon name={a ? 'check' : 'x'} />,
+  },
 ]
 
 const eventFields = (
@@ -359,6 +364,13 @@ const EventPreview = ({ event }: { event: ClubEvent }) => (
     <EventPreviewDescriptionContainer>
       <h3 className="subtitle">Event Preview</h3>
       <p>This is how your event will appear to students on the event page.</p>
+      {event.is_ics_event && (
+        <p className="mt-3">
+          This event was automatically imported from your ICS calendar. Any
+          changes you make to this event may be overwritten if you update your
+          calendar.
+        </p>
+      )}
     </EventPreviewDescriptionContainer>
     <PreviewContainer>
       <EventModal event={event} />

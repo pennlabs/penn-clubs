@@ -47,6 +47,7 @@ uvicorn = "*"
 gunicorn = "*"
 httptools = "*"
 ics = "*"
+urlextract = "*"
 
 [requires]
 python_version = "3"

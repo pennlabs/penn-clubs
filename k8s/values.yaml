@@ -117,3 +117,13 @@ cronjobs:
     image: pennlabs/first-year-hub-backend
     secret: first-year-hub
     cmd: ["python", "manage.py", "daily_notifications"]
+  - name: calendar-import
+    schedule: "0 12 * * *"
+    image: pennlabs/penn-clubs-backend
+    secret: penn-clubs
+    cmd: ["python", "manage.py", "import_calendar_events"]
+  - name: hub-calendar-import
+    schedule: "0 12 * * *"
+    image: pennlabs/penn-clubs-backend
+    secret: first-year-hub
+    cmd: ["python", "manage.py", "import_calendar_events"]

@@ -2,6 +2,7 @@ import datetime
 import os
 import re
 import uuid
+from urllib.parse import urlparse
 
 import requests
 from django.conf import settings
@@ -17,8 +18,9 @@ from django.utils.crypto import get_random_string
 from ics import Calendar
 from phonenumber_field.modelfields import PhoneNumberField
 from simple_history.models import HistoricalRecords
+from urlextract import URLExtract
 
-from clubs.utils import get_django_minified_image, get_domain, html_to_text
+from clubs.utils import clean, get_django_minified_image, get_domain, html_to_text
 
 
 def send_mail_helper(name, subject, emails, context):
@@ -188,7 +190,7 @@ class Club(models.Model):
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
     terms = models.CharField(blank=True, max_length=1024)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True)  # rich html
     address = models.TextField(blank=True)
     founded = models.DateField(blank=True, null=True)
     size = models.IntegerField(choices=SIZE_CHOICES, default=SIZE_SMALL)
@@ -244,6 +246,14 @@ class Club(models.Model):
         return create_thumbnail_helper(self, request, 200)
 
     def add_ics_events(self):
+        """
+        Fetch the ICS events from the club's calendar URL and return the number of modified events.
+        """
+        # random but consistent uuid used to generate uuid5s from invalid uuids
+        ics_import_uuid_namespace = uuid.UUID("8f37c140-3775-42e8-91d4-fda7a2e44152")
+
+        extractor = URLExtract()
+
         url = self.ics_import_url
         if url:
             calendar = Calendar(requests.get(url).text)
@@ -251,28 +261,88 @@ class Club(models.Model):
             modified_events = []
             for event in calendar.events:
                 tries = [
-                    Event.objects.filter(ics_uuid=uuid.UUID(event.uid[:36])).first(),
                     Event.objects.filter(
                         club=self, start_time=event.begin.datetime, end_time=event.end.datetime
                     ).first(),
                     Event(),
                 ]
+
+                # try matching using uuid if it is valid
+                if event.uid:
+                    try:
+                        event_uuid = uuid.UUID(event.uid[:36])
+                    except ValueError:
+                        # generate uuid from malformed/invalid uuids
+                        event_uuid = uuid.uuid5(ics_import_uuid_namespace, event.uid)
+
+                    tries.insert(0, Event.objects.filter(ics_uuid=event_uuid).first())
+                else:
+                    event_uuid = None
+
                 for ev in tries:
                     if ev:
                         ev.club = self
-                        ev.name = event.name
+                        ev.name = event.name.strip()
                         ev.start_time = event.begin.datetime
                         ev.end_time = event.end.datetime
-                        ev.description = event.description
+                        ev.description = clean(event.description.strip())
+                        ev.location = event.location
                         ev.is_ics_event = True
-                        ev.ics_uuid = uuid.UUID(event.uid[:36])
+
+                        # very simple type detection, only perform on first time
+                        if ev.pk is None:
+                            ev.type = Event.OTHER
+                            for val, lbl in Event.TYPES:
+                                if (
+                                    lbl.lower() in ev.name.lower()
+                                    or lbl.lower() in ev.description.lower()
+                                ):
+                                    ev.type = val
+                                    break
+
+                        # extract urls from description
+                        if ev.description:
+                            urls = extractor.find_urls(ev.description)
+                            urls.sort(
+                                key=lambda url: any(
+                                    domain in url
+                                    for domain in {
+                                        "zoom.us",
+                                        "bluejeans.com",
+                                        "hangouts.google.com",
+                                    }
+                                ),
+                                reverse=True,
+                            )
+                            if urls:
+                                ev.url = urls[0]
+
+                        # extract url from location
+                        if ev.location:
+                            location_urls = extractor.find_urls(ev.location)
+                            if location_urls:
+                                ev.url = location_urls[0]
+
+                        # format url properly with schema
+                        if ev.url:
+                            parsed = urlparse(ev.url)
+                            if not parsed.netloc:
+                                parsed = parsed._replace(netloc=parsed.path, path="")
+                            if not parsed.scheme:
+                                parsed = parsed._replace(scheme="https")
+                            ev.url = parsed.geturl()
+
+                        # add uuid if it exists, otherwise will be autogenerated
+                        if event_uuid:
+                            ev.ics_uuid = event_uuid
+
                         ev.save()
                         modified_events.append(ev)
                         break
 
-            for event in event_list:
-                if event not in modified_events:
-                    event.delete()
+            event_list.exclude(pk__in=[e.pk for e in modified_events]).delete()
+            return len(modified_events)
+        return 0
 
     def send_virtual_fair_email(self, request=None, email="setup"):
         """
@@ -582,7 +652,7 @@ class Event(models.Model):
     url = models.URLField(max_length=2048, null=True, blank=True)
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
     image_small = models.ImageField(upload_to=get_event_small_file_name, null=True, blank=True)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True)  # rich html
     ics_uuid = models.UUIDField(default=uuid.uuid4)
     is_ics_event = models.BooleanField(default=False, blank=True)
 
