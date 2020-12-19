@@ -1,5 +1,6 @@
 import { Field, Form, Formik } from 'formik'
-import { ReactElement } from 'react'
+import { ReactElement, useState } from 'react'
+import { toast } from 'react-toastify'
 
 import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
@@ -14,17 +15,32 @@ type EventsImportCardProps = {
 export default function EventsImportCard({
   club,
 }: EventsImportCardProps): ReactElement {
+  const [isFetching, setFetching] = useState<boolean>(false)
+
   const fetchEvents = (): void => {
-    doApiRequest(`/clubs/${club.code}/fetch?format=json`)
+    setFetching(true)
+    doApiRequest(`/clubs/${club.code}/fetch/?format=json`, { method: 'POST' })
+      .then((resp) => resp.json())
+      .then((data) => {
+        toast[data.success ? 'success' : 'error'](data.message, {
+          hideProgressBar: true,
+        })
+      })
+      .finally(() => setFetching(false))
   }
 
   const submit = (data: { url: string }, { setSubmitting }): void => {
     doApiRequest(`/clubs/${club.code}/?format=json`, {
       method: 'PATCH',
-      body: { url: data.url },
+      body: { ics_import_url: data.url },
     })
       .then(() => {
-        fetchEvents()
+        toast.success('Calendar ICS URL has been saved!', {
+          hideProgressBar: true,
+        })
+        if (!isFetching) {
+          fetchEvents()
+        }
       })
       .finally(() => {
         setSubmitting(false)
@@ -67,7 +83,7 @@ export default function EventsImportCard({
           </ul>
         </span>
       </Text>
-      <Formik initialValues={{ url: '' }} onSubmit={submit}>
+      <Formik initialValues={{ url: club.ics_import_url }} onSubmit={submit}>
         {({ isSubmitting }) => (
           <Form>
             <Field
@@ -86,8 +102,9 @@ export default function EventsImportCard({
               </button>
               <button
                 type="button"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isFetching}
                 className="button is-info"
+                onClick={fetchEvents}
               >
                 <Icon name="download" /> Fetch Events
               </button>

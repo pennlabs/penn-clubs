@@ -1625,7 +1625,13 @@ class AuthenticatedClubSerializer(ClubSerializer):
     advisor_set = AdvisorSerializer(many=True, required=False)
 
     class Meta(ClubSerializer.Meta):
-        fields = ClubSerializer.Meta.fields + ["email_public", "files", "fairs", "terms"]
+        fields = ClubSerializer.Meta.fields + [
+            "email_public",
+            "fairs",
+            "files",
+            "ics_import_url",
+            "terms",
+        ]
 
 
 class ReportClubField(serializers.Field):

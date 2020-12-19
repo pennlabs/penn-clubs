@@ -141,6 +141,7 @@ export interface Club {
   files: File[]
   github: string
   how_to_get_involved: string
+  ics_import_url: string
   image_url: string
   instagram: string
   is_favorite: boolean

@@ -887,6 +887,24 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         return Response(analytics_dict)
 
+    @action(detail=True, methods=["post"])
+    def fetch(self, request, *args, **kwargs):
+        """
+        Fetch the ICS calendar events from the club's ICS calendar URL.
+        """
+        club = self.get_object()
+        try:
+            num_events = club.add_ics_events()
+        except requests.exceptions.RequestException:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Failed to fetch events from server, "
+                    "are you sure your URL is correct?",
+                }
+            )
+        return Response({"success": True, "message": f"Fetched {num_events} events!"})
+
     @action(detail=False, methods=["get"])
     def directory(self, request, *args, **kwargs):
         """

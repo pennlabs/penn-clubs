@@ -244,6 +244,12 @@ class Club(models.Model):
         return create_thumbnail_helper(self, request, 200)
 
     def add_ics_events(self):
+        """
+        Fetch the ICS events from the club's calendar URL and return the number of modified events.
+        """
+        # random but consistent uuid used to generate uuid5s from invalid uuids
+        ics_import_uuid_namespace = uuid.UUID("8f37c140-3775-42e8-91d4-fda7a2e44152")
+
         url = self.ics_import_url
         if url:
             calendar = Calendar(requests.get(url).text)
@@ -251,28 +257,38 @@ class Club(models.Model):
             modified_events = []
             for event in calendar.events:
                 tries = [
-                    Event.objects.filter(ics_uuid=uuid.UUID(event.uid[:36])).first(),
                     Event.objects.filter(
                         club=self, start_time=event.begin.datetime, end_time=event.end.datetime
                     ).first(),
                     Event(),
                 ]
+                if event.uid:
+                    try:
+                        event_uuid = uuid.UUID(event.uid[:36])
+                    except ValueError:
+                        # generate uuid from malformed/invalid uuids
+                        event_uuid = uuid.uuid5(ics_import_uuid_namespace, event.uid)
+
+                    tries.insert(0, Event.objects.filter(ics_uuid=event_uuid).first())
+                else:
+                    event_uuid = None
                 for ev in tries:
                     if ev:
                         ev.club = self
-                        ev.name = event.name
+                        ev.name = event.name.strip()
                         ev.start_time = event.begin.datetime
                         ev.end_time = event.end.datetime
-                        ev.description = event.description
+                        ev.description = event.description.strip()
                         ev.is_ics_event = True
-                        ev.ics_uuid = uuid.UUID(event.uid[:36])
+                        if event_uuid:
+                            ev.ics_uuid = event_uuid
                         ev.save()
                         modified_events.append(ev)
                         break
 
-            for event in event_list:
-                if event not in modified_events:
-                    event.delete()
+            event_list.exclude(pk__in=[e.pk for e in modified_events]).delete()
+            return len(modified_events)
+        return 0
 
     def send_virtual_fair_email(self, request=None, email="setup"):
         """
