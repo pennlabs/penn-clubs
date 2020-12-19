@@ -23,6 +23,7 @@ class SecurityTestCase(TestCase):
         """
         factory = RequestFactory()
         request = factory.post("/test")
+        request.data = {}
         request.user = AnonymousUser()
 
         for name, obj in inspect.getmembers(club_permissions, inspect.isclass):
@@ -30,14 +31,17 @@ class SecurityTestCase(TestCase):
                 continue
 
             perm = obj()
-            for action in {"update", "partial_update", "destroy"}:
+            for action in {"create", "update", "partial_update", "destroy"}:
                 view = Mock()
                 view.action = action
                 view.kwargs = {}
                 self.assertFalse(
                     perm.has_permission(request, view),
                     f"The permission {name} ({obj}) allows edit and delete access for anonymous "
-                    f"users, but it really should not do this. In particular, {action} is allowed.",
+                    f"users, but it *really* should never allow this to happen. "
+                    f"In particular, {action} is allowed. "
+                    f"To fix this, ensure that all permission classes deny {action} access for "
+                    "anonymous (not logged in) users.",
                 )
 
     def test_check_permissions_set(self):
@@ -150,7 +154,7 @@ class SecurityTestCase(TestCase):
                             self.fail(
                                 f"Function {node.name} in class {name} has an @action(detail=True) "
                                 "decorator but does not call self.check_object_permissions "
-                                "anywhere in the method body.\n\n"
+                                "or self.get_object anywhere in the method body.\n\n"
                                 "*** This is most likely a security issue! ***\n"
                                 "Do not whitelist this method or disable this test unless you know "
                                 "exactly what you are trying to do."

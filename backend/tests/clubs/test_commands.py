@@ -1,3 +1,8 @@
+"""
+Test management commands that are under the clubs app here.
+These management commands can be executed with "./manage.py <command>".
+"""
+
 import csv
 import datetime
 import os

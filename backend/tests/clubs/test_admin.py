@@ -79,13 +79,15 @@ class AdminTestCase(TestCase):
 
         # ensure that a certain percentage of the api is documented
         percent_missing = len(missing_descriptions) / total_routes
-        required_percent = 0.25
-        if percent_missing > required_percent:
+        required_percent = 0.75
+        if (1 - percent_missing) < required_percent:
             formatted_missing = "\n".join("\t{1} {0}".format(*x) for x in missing_descriptions)
             self.fail(
-                "Too many endpoints missing API descriptions ({}% > {}%):\n{}".format(
-                    round(percent_missing * 100, 2),
-                    round(required_percent * 100, 2),
-                    formatted_missing,
-                )
+                "Too many endpoints are missing API descriptions "
+                f"({(1 - percent_missing):.2%} < minimum {required_percent:.2%}):\n\n"
+                f"{formatted_missing}"
+                f"\n\nThis is an automated test to ensure that at least {required_percent:.2%} of "
+                "the Penn Clubs API is properly documented. \n"
+                "If you are below this threshold, please add some descriptions to the new routes "
+                "that you have added. \nYou can do this by adding a docstring to your ViewSet.",
             )
