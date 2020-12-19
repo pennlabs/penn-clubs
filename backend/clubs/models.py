@@ -251,7 +251,7 @@ class Club(models.Model):
             modified_events = []
             for event in calendar.events:
                 tries = [
-                    Event.objects.get(ics_uuid=uuid.UUID(event.uid[:36])),
+                    Event.objects.filter(ics_uuid=uuid.UUID(event.uid[:36])).first(),
                     Event.objects.filter(
                         club=self, start_time=event.begin.datetime, end_time=event.end.datetime
                     ).first(),
