@@ -29,18 +29,21 @@ const Subtitle = styled.div`
   font-weight: bold;
 `
 
-const SyncModal = (props: { calendarURL: string }): ReactElement => {
+const SyncModal = (): ReactElement | null => {
   const [subscriptions, setSubscriptions] = useState<{ club: Club }[] | null>(
     null,
   )
+  const [url, setUrl] = useState<string>('')
 
   useEffect(() => {
+    doApiRequest('/settings/calendar_url/?format=json')
+      .then((resp) => resp.json())
+      .then(({ url }) => setUrl(url))
+
     doApiRequest('/subscriptions/?format=json')
       .then((resp) => resp.json())
       .then(setSubscriptions)
   }, [])
-
-  const url = props.calendarURL
 
   return (
     <ModalContainer>

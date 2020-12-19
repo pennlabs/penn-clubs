@@ -15,7 +15,22 @@ const blink = keyframes`
   }
 `
 
-const HappeningNow = (): ReactElement => <p>HAPPENING NOW</p>
+const HappeningNowContainer = styled.p<{
+  urgent?: boolean
+  floatRight?: boolean
+}>`
+  font-size: 14px;
+  font-weight: 500;
+  ${({ floatRight }) => (floatRight ? 'float: right;' : '')}
+  ${({ urgent }) => (urgent ? UrgentText : '')}
+`
+
+const HappeningNow = (props: {
+  urgent?: boolean
+  floatRight?: boolean
+}): ReactElement => (
+  <HappeningNowContainer {...props}>HAPPENING NOW</HappeningNowContainer>
+)
 
 const UrgentText = css`
   color: ${RED};
@@ -27,9 +42,4 @@ const UrgentText = css`
   }
 `
 
-export default styled(HappeningNow)<{ urgent?: boolean; floatRight?: boolean }>`
-  font-size: 14px;
-  font-weight: 500;
-  ${({ floatRight }) => (floatRight ? 'float: right;' : '')}
-  ${({ urgent }) => (urgent ? UrgentText : '')}
-`
+export default HappeningNow

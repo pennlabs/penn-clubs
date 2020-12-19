@@ -98,7 +98,7 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
           </LazyLoad>
           <DateInterval start={startDate} end={endDate} />
           {isHappening ? (
-            <HappeningNow urgent={true} />
+            <HappeningNow urgent={hoursBetween <= 8} />
           ) : (
             <TimeLeft date={new Date(startDate)} />
           )}

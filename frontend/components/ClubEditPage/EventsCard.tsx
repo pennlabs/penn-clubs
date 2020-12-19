@@ -394,7 +394,10 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
 
   return (
     <BaseCard title="Events">
-      <Text>Manage events for this {OBJECT_NAME_SINGULAR}.</Text>
+      <Text>
+        Manage events for this {OBJECT_NAME_SINGULAR}. Events that have already
+        passed are hidden by default.
+      </Text>
       <ModelForm
         baseUrl={`/clubs/${club.code}/events/`}
         listParams={`&end_time__gte=${new Date().toISOString()}`}

@@ -48,13 +48,14 @@ import { Badge, ClubEvent, ClubEventType, Tag } from '../types'
 import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_SINGULAR } from '../utils/branding'
 
+type CalendarDateRange = Date[] | { start: Date; end: Date }
+
 interface EventPageProps {
   authenticated: boolean | null
-  liveEvents: ClubEvent[]
-  upcomingEvents: ClubEvent[]
+  events: ClubEvent[]
+  dateRange: CalendarDateRange
   tags: Tag[]
   badges: Badge[]
-  calendarURL: string
 }
 
 const CardList = styled.div`
@@ -67,6 +68,9 @@ const CardList = styled.div`
 
 const localizer = momentLocalizer(moment)
 
+/**
+ * Render how the event is shown on the calendar view.
+ */
 const CalendarEvent = ({
   event: { resource },
 }: {
@@ -182,6 +186,9 @@ const EventsViewToolbar = ({
   </div>
 )
 
+/**
+ * Renders the controls used to navigate through the calendar view.
+ */
 const CalendarHeader = ({
   label,
   onNavigate,
@@ -210,6 +217,15 @@ const CalendarHeader = ({
             }}
           >
             <Icon name="chevrons-left" alt="previous" />
+          </button>
+          <button
+            className="button is-medium"
+            aria-label="go to today"
+            onClick={() => {
+              onNavigate(CalendarNavigation.TODAY)
+            }}
+          >
+            Today
           </button>
           <button
             className="button is-medium"
@@ -246,7 +262,32 @@ const CalendarHeader = ({
   )
 }
 
-type CalendarDateRange = Date[] | { start: Date; end: Date }
+/**
+ * Convert all of the possible formats of date ranges that Big Calendar provides into one consistent format.
+ */
+const parseDateRange = (
+  range: CalendarDateRange,
+): { start: string; end: string } => {
+  if (Array.isArray(range)) {
+    if (range.length === 1) {
+      range = {
+        start: range[0],
+        end: new Date(range[0].getTime() + 60 * 60 * 24 * 1000),
+      }
+    } else {
+      const max = new Date(
+        Math.max(...((range as unknown) as number[])) + 24 * 60 * 60 * 1000,
+      )
+      const min = new Date(Math.min(...((range as unknown) as number[])))
+      range = { start: min, end: max }
+    }
+  }
+  return {
+    start:
+      typeof range.start === 'string' ? range.start : range.start.toISOString(),
+    end: typeof range.end === 'string' ? range.end : range.end.toISOString(),
+  }
+}
 
 /**
  * Randomize the order the events are shown in.
@@ -259,11 +300,7 @@ const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
     if (event.image_url) {
       rank += 2
     }
-    if (
-      event.description &&
-      event.description.length > 3 &&
-      event.description !== 'Replace this description!'
-    ) {
+    if (event.description && event.description.length > 3) {
       rank += 2
     }
     if (event.url) {
@@ -294,22 +331,14 @@ const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
 
 function EventPage({
   authenticated,
-  upcomingEvents: initialUpcomingEvents,
-  liveEvents: initialLiveEvents,
+  events: initialEvents,
+  dateRange: initialDateRange,
   tags,
   badges,
-  calendarURL,
 }: EventPageProps): ReactElement {
-  const [upcomingEvents, setUpcomingEvents] = useState<ClubEvent[]>(() =>
-    randomizeEvents(initialUpcomingEvents),
+  const [calendarEvents, setCalendarEvents] = useState<ClubEvent[]>(
+    initialEvents,
   )
-  const [liveEvents, setLiveEvents] = useState<ClubEvent[]>(() =>
-    randomizeEvents(initialLiveEvents),
-  )
-  const [calendarEvents, setCalendarEvents] = useState<ClubEvent[]>(() => [
-    ...initialLiveEvents,
-    ...initialUpcomingEvents,
-  ])
 
   const isFair = useSetting('FAIR_OPEN')
 
@@ -317,7 +346,6 @@ function EventPage({
   const [searchInput, setSearchInput] = useState<SearchInput>(
     isFair ? { type__in: ClubEventType.FAIR.toString() } : {},
   )
-  const currentSearch = useRef<SearchInput>({})
   const [isLoading, setLoading] = useState<boolean>(false)
   const [syncModalVisible, setSyncModalVisible] = useState<boolean>(false)
 
@@ -328,17 +356,26 @@ function EventPage({
     isFair ? EventsViewOption.LIST : EventsViewOption.CALENDAR,
   )
 
-  const [dateRange, setDateRange] = useState<CalendarDateRange | null>(null)
+  const [dateRange, setDateRange] = useState<CalendarDateRange>(
+    initialDateRange,
+  )
+
+  const currentSearch = useRef<
+    [SearchInput, EventsViewOption, CalendarDateRange]
+  >([{}, viewOption, dateRange])
 
   const [previewEvent, setPreviewEvent] = useState<ClubEvent | null>(null)
   const hideModal = () => setPreviewEvent(null)
 
+  /**
+   * When the search parameters or the view is changed, refetch the events from the server.
+   */
   useEffect(() => {
     if (equal(searchInput, currentSearch.current)) {
       return
     }
 
-    currentSearch.current = searchInput
+    currentSearch.current = [searchInput, viewOption, dateRange]
 
     let isCurrent = true
 
@@ -351,43 +388,24 @@ function EventPage({
 
     setLoading(true)
 
-    Promise.all([
-      doApiRequest(`/events/live/?${params.toString()}`)
-        .then((resp) => resp.json())
-        .then((resp) => {
-          if (isCurrent) {
-            setLiveEvents(randomizeEvents(resp))
-          }
-          return resp
-        }),
-      doApiRequest(`/events/upcoming/?${params.toString()}`)
-        .then((resp) => resp.json())
-        .then((resp) => {
-          if (isCurrent) {
-            setUpcomingEvents(randomizeEvents(resp))
-          }
-          return resp
-        }),
-    ]).then(([live, upcoming]) => {
-      setLoading(false)
-      if (dateRange == null) {
-        setCalendarEvents([...live, ...upcoming])
-      }
-    })
-
-    if (dateRange != null) {
-      const { start, end } = parseDateRange(dateRange)
-      params.set('start_time__gte', start)
-      params.set('end_time__lte', end)
-      doApiRequest(`/events/?${params.toString()}`)
-        .then((resp) => resp.json())
-        .then(setCalendarEvents)
-    }
+    // fetch appropriate range for calendar, or one month starting from now for list
+    const now = new Date()
+    let endDate = new Date()
+    endDate = new Date(endDate.setMonth(endDate.getMonth() + 1))
+    const { start, end } =
+      viewOption === EventsViewOption.CALENDAR
+        ? parseDateRange(dateRange)
+        : { start: now.toISOString(), end: endDate.toISOString() }
+    params.set('end_time__gte', start)
+    params.set('start_time__lte', end)
+    doApiRequest(`/events/?${params.toString()}`)
+      .then((resp) => resp.json())
+      .then((data) => isCurrent && setCalendarEvents(data) && setLoading(false))
 
     return () => {
       isCurrent = false
     }
-  }, [searchInput])
+  }, [searchInput, viewOption, dateRange])
 
   if (!authenticated) {
     return <AuthPrompt />
@@ -414,36 +432,41 @@ function EventPage({
     [badges],
   )
 
-  const parseDateRange = (
-    range: CalendarDateRange,
-  ): { start: string; end: string } => {
-    if (Array.isArray(range)) {
-      if (range.length === 1) {
-        range = {
-          start: range[0],
-          end: new Date(range[0].getTime() + 60 * 60 * 24 * 1000),
-        }
-      } else {
-        const max = new Date(Math.max(...((range as unknown) as number[])))
-        const min = new Date(Math.min(...((range as unknown) as number[])))
-        range = { start: min, end: max }
-      }
-    }
-    return { start: range.start.toISOString(), end: range.end.toISOString() }
-  }
-
   /**
    * Given a date range from big calendar, fetch the events associated with that date range.
    */
   const fetchForDateRange = (range: CalendarDateRange): void => {
     setDateRange(range)
-    const { start, end } = parseDateRange(range)
-    doApiRequest(
-      `/events/?format=json&start_time__gte=${start}&end_time__lte=${end}`,
-    )
-      .then((resp) => resp.json())
-      .then(setCalendarEvents)
   }
+
+  // split events into live events and upcoming events for the list view
+  let liveEvents: ClubEvent[] = []
+  let upcomingEvents: ClubEvent[] = []
+
+  let minHour = 9
+  let maxHour = 22
+
+  const now = new Date()
+  calendarEvents.forEach((event) => {
+    const endTime = new Date(event.end_time)
+    const startTime = new Date(event.start_time)
+    if (endTime >= now) {
+      if (startTime <= now) {
+        liveEvents.push(event)
+      } else {
+        upcomingEvents.push(event)
+      }
+    }
+    if (startTime.getHours() < minHour) {
+      minHour = startTime.getHours()
+    }
+    if (endTime.getHours() > maxHour) {
+      maxHour = endTime.getHours()
+    }
+  })
+
+  liveEvents = randomizeEvents(liveEvents)
+  upcomingEvents = randomizeEvents(upcomingEvents)
 
   return (
     <>
@@ -631,6 +654,8 @@ function EventPage({
                   style={{ height: `calc(100vh - ${FULL_NAV_HEIGHT} - 25px)` }}
                 >
                   <Calendar
+                    min={new Date(0, 0, 0, minHour, 0, 0)}
+                    max={new Date(0, 0, 0, maxHour, 0, 0)}
                     localizer={localizer}
                     components={{
                       event: CalendarEvent,
@@ -677,7 +702,7 @@ function EventPage({
           width="45%"
           marginBottom={false}
         >
-          <SyncModal calendarURL={calendarURL} />
+          <SyncModal />
         </Modal>
       )}
       {previewEvent && (
@@ -695,30 +720,26 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
 
-  const [
-    liveEvents,
-    upcomingEvents,
-    tags,
-    badges,
-    calendar,
-  ] = await Promise.all([
-    doApiRequest('/events/live/?format=json', data).then((resp) => resp.json()),
-    doApiRequest('/events/upcoming/?format=json', data).then((resp) =>
-      resp.json(),
-    ),
+  const now = new Date()
+  const dateRange = {
+    start: new Date(now.getFullYear(), now.getMonth(), -6),
+    end: new Date(now.getFullYear(), now.getMonth() + 1, 6),
+  }
+
+  const [events, tags, badges] = await Promise.all([
+    doApiRequest(
+      `/events/?format=json&start_time__gte=${dateRange.start.toISOString()}&end_time__lte=${dateRange.end.toISOString()}`,
+      data,
+    ).then((resp) => resp.json()),
     doApiRequest('/tags/?format=json', data).then((resp) => resp.json()),
     doApiRequest('/badges/?format=json', data).then((resp) => resp.json()),
-    doApiRequest('/settings/calendar_url/?format=json', data).then((resp) =>
-      resp.json(),
-    ),
   ])
 
   return {
-    liveEvents,
-    upcomingEvents,
+    events,
     tags,
     badges,
-    calendarURL: calendar.url,
+    dateRange,
   }
 }
 
