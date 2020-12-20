@@ -11,6 +11,57 @@ from clubs import permissions as club_permissions
 from clubs import views
 
 
+def is_action_detail_decorator(node, is_detail):
+    """
+    Check if a Python AST node is a @action(detail=<is_detail>) decorator.
+    If is_detail is None, then return all of the action decorators.
+    """
+    if not isinstance(node, ast.Call):
+        return False
+
+    if not hasattr(node.func, "id"):
+        return False
+
+    if not node.func.id == "action":
+        return False
+
+    if is_detail is not None:
+        has_detail = any(
+            keyword.arg == "detail" and keyword.value.value for keyword in node.keywords
+        )
+        if not has_detail == is_detail:
+            return False
+
+    return True
+
+
+def all_viewset_actions(is_detail=None):
+    """
+    Return a tuple of (viewset name, viewset object, function ast) for each action function
+    for each ModelViewSet defined in the views.py file.
+    """
+    for name, obj in inspect.getmembers(views, inspect.isclass):
+        # loop through all model view set classes
+        if issubclass(obj, viewsets.ModelViewSet):
+            source = inspect.getsource(obj)
+            tree = ast.parse(source)
+            cls = next(ast.iter_child_nodes(tree))
+            # loop through all methods in class
+            for node in ast.iter_child_nodes(cls):
+                # if class is function that uses @action
+                if isinstance(node, ast.FunctionDef):
+                    if not node.decorator_list:
+                        continue
+
+                    if not any(
+                        is_action_detail_decorator(decorator, is_detail)
+                        for decorator in node.decorator_list
+                    ):
+                        continue
+
+                    yield (name, obj, node)
+
+
 class SecurityTestCase(TestCase):
     """
     Tests to catch common security issues before they become a problem.
@@ -80,82 +131,42 @@ class SecurityTestCase(TestCase):
         Not doing this will most likely result in a security issue.
         """
 
-        def is_action_detail_decorator(node):
-            """
-            Check if a Python AST node is a @action(detail=True) decorator.
-            """
-            if not isinstance(node, ast.Call):
-                return False
-
-            if not hasattr(node.func, "id"):
-                return False
-
-            if not node.func.id == "action":
-                return False
-
-            if not any(
-                keyword.arg == "detail" and keyword.value.value for keyword in node.keywords
-            ):
-                return False
-
-            return True
-
         # Don't put your function here unless it never returns any private information.
         whitelist = set()
 
-        for name, obj in inspect.getmembers(views, inspect.isclass):
-            # loop through all model view set classes
-            if issubclass(obj, viewsets.ModelViewSet):
-                source = inspect.getsource(obj)
-                tree = ast.parse(source)
-                cls = next(ast.iter_child_nodes(tree))
-                # loop through all methods in class
-                for node in ast.iter_child_nodes(cls):
-                    # if class is function that uses @action
-                    if isinstance(node, ast.FunctionDef):
-                        if not node.decorator_list:
-                            continue
+        for name, obj, node in all_viewset_actions(is_detail=True):
+            # check to ensure check_object_permissions called
+            check_object_permissions = False
+            get_object = False
 
-                        if not any(
-                            is_action_detail_decorator(decorator)
-                            for decorator in node.decorator_list
-                        ):
-                            continue
+            for child in ast.walk(node):
+                if isinstance(child, ast.Call) and isinstance(child.func, ast.Attribute):
+                    if not hasattr(child.func.value, "id"):
+                        continue
+                    if not child.func.value.id == "self":
+                        continue
+                    if child.func.attr == "check_object_permissions":
+                        check_object_permissions = True
+                    if child.func.attr == "get_object":
+                        get_object = True
 
-                        # check to ensure check_object_permissions called
-                        check_object_permissions = False
-                        get_object = False
+            if get_object and check_object_permissions:
+                self.fail(
+                    f"Function {node.name} in class {name} has a duplicate check for "
+                    "object permissions. You do not need to call "
+                    "self.check_object_permissions(request, object) if you call "
+                    "self.get_object()."
+                )
 
-                        for child in ast.walk(node):
-                            if isinstance(child, ast.Call) and isinstance(
-                                child.func, ast.Attribute
-                            ):
-                                if not hasattr(child.func.value, "id"):
-                                    continue
-                                if not child.func.value.id == "self":
-                                    continue
-                                if child.func.attr == "check_object_permissions":
-                                    check_object_permissions = True
-                                if child.func.attr == "get_object":
-                                    get_object = True
+            if not (get_object or check_object_permissions):
+                if (name, node.name) in whitelist:
+                    continue
 
-                        if get_object and check_object_permissions:
-                            self.fail(
-                                f"Function {node.name} in class {name} has a duplicate check for "
-                                "object permissions. You do not need to call "
-                                "self.check_object_permissions(request, object) if you call "
-                                "self.get_object()."
-                            )
-
-                        if not (get_object or check_object_permissions):
-                            if (name, node.name) in whitelist:
-                                continue
-
-                            self.fail(
-                                f"Function {node.name} in class {name} has an @action(detail=True) "
-                                "decorator but does not call self.check_object_permissions "
-                                "or self.get_object anywhere in the method body.\n\n"
-                                "*** This is most likely a security issue! ***\n"
-                                "Do not whitelist this method or disable this test unless you know "
-                                "exactly what you are trying to do."
-                            )
+                self.fail(
+                    f"Function {node.name} in class {name} has an @action(detail=True) "
+                    "decorator but does not call self.check_object_permissions "
+                    "or self.get_object anywhere in the method body.\n\n"
+                    "*** This is most likely a security issue! ***\n"
+                    "Do not whitelist this method or disable this test unless you know "
+                    "exactly what you are trying to do."
+                )

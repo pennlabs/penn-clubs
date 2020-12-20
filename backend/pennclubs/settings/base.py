@@ -151,7 +151,8 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
         "drf_renderer_xlsx.renderers.XLSXRenderer",
-    )
+    ),
+    "DEFAULT_SCHEMA_CLASS": "pennclubs.doc_settings.CustomAutoSchema",
 }
 
 
