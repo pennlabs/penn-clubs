@@ -1,6 +1,8 @@
 import ast
+import warnings
 
 import yaml
+from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -16,6 +18,20 @@ class DocumentationTestCase(TestCase):
 
     def setUp(self):
         self.client = Client()
+
+        self.user1 = get_user_model().objects.create_user("jadams", "jadams@sas.upenn.edu", "test")
+        self.user1.first_name = "John"
+        self.user1.last_name = "Adams"
+        self.user1.is_staff = True
+        self.user1.is_superuser = True
+        self.user1.save()
+
+        self.user2 = get_user_model().objects.create_user(
+            "bfranklin", "bfranklin@seas.upenn.edu", "test"
+        )
+        self.user2.first_name = "Benjamin"
+        self.user2.last_name = "Franklin"
+        self.user2.save()
 
     def test_action_parameter_response(self):
         """
@@ -79,7 +95,7 @@ class DocumentationTestCase(TestCase):
 
         if whitelist - all_cases:
             missing_str = "\n".join(
-                f"\t- {cls_name} -> {name}" for cls_name, name in whitelist - good_cases
+                f"\t- {cls_name} -> {name}" for cls_name, name in whitelist - all_cases
             )
             self.fail(
                 "Found one or more whitelist entries that do not exist in the views anymore. "
@@ -92,19 +108,34 @@ class DocumentationTestCase(TestCase):
         """
         Ensure that openapi schema can be generated correctly.
         """
-        # test unauthenticated schema
-        resp = self.client.get(reverse("openapi-schema"))
-        self.assertIn(resp.status_code, [200], resp.content)
+        with warnings.catch_warnings(record=True) as warnings_list:
+            # test unauthenticated schema
+            resp = self.client.get(reverse("openapi-schema"))
+            self.assertIn(resp.status_code, [200], resp.content)
 
-        # test normal user schema
-        self.client.login(username=self.user2.username, password="test")
-        resp = self.client.get(reverse("openapi-schema"))
-        self.assertIn(resp.status_code, [200], resp.content)
+            # test normal user schema
+            self.client.login(username=self.user2.username, password="test")
+            resp = self.client.get(reverse("openapi-schema"))
+            self.assertIn(resp.status_code, [200], resp.content)
 
-        # test superuser schema
-        self.client.login(username=self.user1.username, password="test")
-        resp = self.client.get(reverse("openapi-schema"))
-        self.assertIn(resp.status_code, [200], resp.content)
+            # test superuser schema
+            self.client.login(username=self.user1.username, password="test")
+            resp = self.client.get(reverse("openapi-schema"))
+            self.assertIn(resp.status_code, [200], resp.content)
+
+            if warnings_list:
+                warnings_str = "\n".join(f"\t- {w.message}\n" for w in warnings_list)
+                self.fail(
+                    "OpenAPI schema warnings when generating documentation:"
+                    "\n\n"
+                    f"{warnings_str}"
+                    "\n\n"
+                    "This test case will fail until these warnings are fixed. "
+                    "Please fix all warnings listed above to pass this test case. \n"
+                    "You can fix operationId warnings by adding a "
+                    "`get_operation_id(self, **kwargs)` method to your viewset "
+                    "and returning a custom operation id."
+                )
 
         # test to ensure schema is parsable
         docs = yaml.safe_load(resp.content)
