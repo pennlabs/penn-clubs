@@ -1561,6 +1561,51 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             return EventWriteSerializer
         return EventSerializer
 
+    @action(detail=True, methods=["post"])
+    def upload(self, request, *args, **kwargs):
+        """
+        Upload a picture for the event.
+        ---
+        requestBody:
+            content:
+                multipart/form-data:
+                    schema:
+                        type: object
+                        properties:
+                            file:
+                                type: object
+                                format: binary
+        responses:
+            "200":
+                description: Returned if the file was successfully uploaded.
+                content: &upload_resp
+                    application/json:
+                        schema:
+                            properties:
+                                detail:
+                                    type: string
+                                    description: The status of the file upload.
+                                url:
+                                    type: string
+                                    description: >
+                                        The URL of the newly uploaded file.
+                                        Only exists if the file was successfully uploaded.
+            "400":
+                description: Returned if there was an error while uploading the file.
+                content: *upload_resp
+        ---
+        """
+        event = Event.objects.get(id=kwargs["id"])
+        self.check_object_permissions(request, event)
+
+        resp = upload_endpoint_helper(request, Event, "image", pk=event.pk)
+
+        # if image uploaded, create thumbnail
+        if status.is_success(resp.status_code):
+            event.create_thumbnail(request)
+
+        return resp
+
     def create(self, request, *args, **kwargs):
         """
         Do not let non-superusers create events with the FAIR type through the API.
@@ -1617,51 +1662,6 @@ class EventViewSet(ClubEventViewSet):
 
     def get_operation_id(self, **kwargs):
         return f"{kwargs['operId']} (Global)"
-
-    @action(detail=True, methods=["post"])
-    def upload(self, request, *args, **kwargs):
-        """
-        Upload a picture for the event.
-        ---
-        requestBody:
-            content:
-                multipart/form-data:
-                    schema:
-                        type: object
-                        properties:
-                            file:
-                                type: object
-                                format: binary
-        responses:
-            "200":
-                description: Returned if the file was successfully uploaded.
-                content: &upload_resp
-                    application/json:
-                        schema:
-                            properties:
-                                detail:
-                                    type: string
-                                    description: The status of the file upload.
-                                url:
-                                    type: string
-                                    description: >
-                                        The URL of the newly uploaded file.
-                                        Only exists if the file was successfully uploaded.
-            "400":
-                description: Returned if there was an error while uploading the file.
-                content: *upload_resp
-        ---
-        """
-        event = Event.objects.get(id=kwargs["id"])
-        self.check_object_permissions(request, event)
-
-        resp = upload_endpoint_helper(request, Event, "image", pk=event.pk)
-
-        # if image uploaded, create thumbnail
-        if status.is_success(resp.status_code):
-            event.create_thumbnail(request)
-
-        return resp
 
     @action(detail=False, methods=["get"])
     def fair(self, request, *args, **kwargs):
