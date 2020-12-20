@@ -491,6 +491,41 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         Register a club for this club fair.
         Pass in a "club" string parameter with the club code
         and a "status" parameter that is true to register the club, or false to unregister.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        properties:
+                            status:
+                                type: boolean
+                                description: >
+                                    Whether to register or unregister this club for the fair.
+                                    By default, the endpoint will attempt to register the club.
+                            club:
+                                type: string
+                                description: The code of the club that you are trying to register.
+                            answers:
+                                type: array
+                                description: >
+                                    The answers to the required fair questions.
+                                    Each element in the array is an answer to a fair question,
+                                    in the same order of the related fair questions.
+                        required:
+                            - club
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                success:
+                                    type: boolean
+                                    description: Whether or not this club has been registered.
+                                message:
+                                    type: string
+                                    description: A success or error message.
+        ---
         """
         fair = self.get_object()
 
@@ -689,6 +724,35 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Upload the club logo.
         Marks the club as pending approval since the logo has changed.
         Also create a thumbnail version of the club logo.
+        ---
+        requestBody:
+            content:
+                multipart/form-data:
+                    schema:
+                        type: object
+                        properties:
+                            file:
+                                type: object
+                                format: binary
+        responses:
+            "200":
+                description: Returned if the file was successfully uploaded.
+                content: &upload_resp
+                    application/json:
+                        schema:
+                            properties:
+                                detail:
+                                    type: string
+                                    description: The status of the file upload.
+                                url:
+                                    type: string
+                                    description: >
+                                        The URL of the newly uploaded file.
+                                        Only exists if the file was successfully uploaded.
+            "400":
+                description: Returned if there was an error while uploading the file.
+                content: *upload_resp
+        ---
         """
         # ensure user is allowed to upload image
         club = self.get_object()
@@ -714,6 +778,35 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def upload_file(self, request, *args, **kwargs):
         """
         Upload a file for the club.
+        ---
+        requestBody:
+            content:
+                multipart/form-data:
+                    schema:
+                        type: object
+                        properties:
+                            file:
+                                type: object
+                                format: binary
+        responses:
+            "200":
+                description: Returned if the file was successfully uploaded.
+                content: &upload_resp
+                    application/json:
+                        schema:
+                            properties:
+                                detail:
+                                    type: string
+                                    description: The status of the file upload.
+                                url:
+                                    type: string
+                                    description: >
+                                        The URL of the newly uploaded file.
+                                        Only exists if the file was successfully uploaded.
+            "400":
+                description: Returned if there was an error while uploading the file.
+                content: *upload_resp
+        ---
         """
         # ensure user is allowed to upload file
         club = self.get_object()
@@ -724,6 +817,23 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def children(self, request, *args, **kwargs):
         """
         Return a recursive list of all children that this club is a parent of.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                code:
+                                    type: string
+                                children:
+                                    type: array
+                                    description: >
+                                        An array of clubs containing the fields in this object.
+        ---
         """
         club = self.get_object()
         child_tree = find_relationship_helper("children_orgs", club, {club.code})
@@ -733,6 +843,23 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def parents(self, request, *args, **kwargs):
         """
         Return a recursive list of all parents that this club is a child to.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                code:
+                                    type: string
+                                children:
+                                    type: array
+                                    description: >
+                                        An array of clubs containing the fields in this object.
+        ---
         """
         club = self.get_object()
         parent_tree = find_relationship_helper("parent_orgs", club, {club.code})
@@ -753,6 +880,15 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def qr(self, request, *args, **kwargs):
         """
         Return a QR code png image representing a link to the club on Penn Clubs.
+        ---
+        responses:
+            "200":
+                description: Return a png image representing a QR code to the fair page.
+                content:
+                    image/png:
+                        schema:
+                            type: binary
+        ---
         """
         club = self.get_object()
 
@@ -792,6 +928,23 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def analytics_pie_charts(self, request, *args, **kwargs):
         """
         Returns demographic information about bookmarks and subscriptions in pie chart format.
+        ---
+        parameters:
+            - name: category
+              in: query
+              type: string
+            - name: metric
+              in: query
+              type: string
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                content:
+                                    type: array
+        ---
         """
         club = self.get_object()
         lower_bound = timezone.now() - datetime.timedelta(days=30 * 6)
@@ -824,6 +977,25 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Returns a list of all analytics (club visits, favorites,
         subscriptions) for a club.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                max:
+                                    type: integer
+                                    description: >
+                                        The maximum value among all categories.
+                                        Useful when deciding how tall a line chart should be.
+                                visits:
+                                    type: array
+                                favorites:
+                                    type: array
+                                subscriptions:
+                                    type: array
+        ---
         """
         club = self.get_object()
         group = self.request.query_params.get("group", "hour")
@@ -891,6 +1063,21 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def fetch(self, request, *args, **kwargs):
         """
         Fetch the ICS calendar events from the club's ICS calendar URL.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                success:
+                                    type: boolean
+                                    description: Whether or not events were successfully fetched.
+                                message:
+                                    type: string
+                                    description: A success or error message.
+        ---
         """
         club = self.get_object()
 
@@ -918,6 +1105,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def directory(self, request, *args, **kwargs):
         """
         Custom return endpoint for the directory page, allows the page to load faster.
+        ---
+        name: Club Directory List
+        ---
         """
         serializer = ClubMinimalSerializer(
             Club.objects.all().exclude(approved=False).order_by(Lower("name")), many=True
@@ -929,6 +1119,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         A special endpoint for SAC affilaited clubs to check if
         they have uploaded a club constitution.
+        ---
+        name: List Club Constitutions
+        ---
         """
         badge = Badge.objects.filter(label="SAC").first()
         if badge:
@@ -954,6 +1147,53 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def bulk(self, request, *args, **kwargs):
         """
         An endpoint to perform certain club edit operations in bulk.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        properties:
+                            action:
+                                type: string
+                                description: The bulk action to perform.
+                            clubs:
+                                type: string
+                                description: >
+                                    A list of club codes, separated by
+                                    comma, newline, space, or tab.
+                            tags:
+                                type: array
+                                items:
+                                    type: object
+                                    parameters:
+                                        id:
+                                            type: number
+                            badges:
+                                type: array
+                                items:
+                                    type: object
+                                    parameters:
+                                        id:
+                                            type: number
+                        required:
+                            - action
+                            - clubs
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                success:
+                                    type: boolean
+                                    description: Whether or not this club has been registered.
+                                message:
+                                    type: string
+                                    description: A success message. Only set if operation passes.
+                                error:
+                                    type: string
+                                    description: An error message. Only set if an error occurs.
+        ---
         """
         if not request.user.is_authenticated or not request.user.has_perm("clubs.manage_club"):
             return Response({"error": "You do not have permission to perform this action."})
@@ -1066,6 +1306,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         The list of fields is taken from the associated serializer, with model names overriding
         the serializer names if they exist. Custom fields are also available with certain permission
         levels.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            additionalProperties:
+                                type: object
+                                additionalProperties:
+                                    type: string
+        ---
         """
         # use the title given in the models.py if it exists, fallback to the field name otherwise
         name_to_title = {}
@@ -1114,6 +1366,12 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return AssetSerializer
         if self.action == "subscription":
             return SubscribeSerializer
+        if self.action == "directory":
+            return ClubMinimalSerializer
+        if self.action == "constitutions":
+            return ClubConstitutionSerializer
+        if self.action == "notes_about":
+            return NoteSerializer
         if self.action in {"list", "fields"}:
             if self.request is not None and (
                 self.request.accepted_renderer.format == "xlsx" or self.action == "fields"
@@ -1273,7 +1531,7 @@ class AdvisorViewSet(viewsets.ModelViewSet):
         return Advisor.objects.filter(club__code=self.kwargs.get("club_code")).order_by("name")
 
 
-class EventViewSet(viewsets.ModelViewSet):
+class ClubEventViewSet(viewsets.ModelViewSet):
     """
     list:
     Return a list of events for this club.
@@ -1303,10 +1561,96 @@ class EventViewSet(viewsets.ModelViewSet):
             return EventWriteSerializer
         return EventSerializer
 
+    def create(self, request, *args, **kwargs):
+        """
+        Do not let non-superusers create events with the FAIR type through the API.
+        """
+        type = request.data.get("type", 0)
+        if type == Event.FAIR and not self.request.user.is_superuser:
+            raise DRFValidationError(
+                detail="Approved activities fair events have already been created. "
+                "See above for events to edit, and "
+                f"please email {settings.FROM_EMAIL} if this is en error."
+            )
+
+        return super().create(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Do not let non-superusers delete events with the FAIR type through the API.
+        """
+        event = self.get_object()
+
+        if event.type == Event.FAIR and not self.request.user.is_superuser:
+            raise DRFValidationError(
+                detail="You cannot delete activities fair events. "
+                f"If you would like to do this, email {settings.FROM_EMAIL}."
+            )
+
+        return super().destroy(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = Event.objects.all()
+        if self.kwargs.get("club_code") is not None:
+            qs = qs.filter(club__code=self.kwargs["club_code"])
+
+        qs = qs.filter(Q(club__approved=True) | Q(club__ghost=True))
+
+        return (
+            qs.select_related("club", "creator",)
+            .prefetch_related("club__badges")
+            .order_by("start_time")
+        )
+
+
+class EventViewSet(ClubEventViewSet):
+    """
+    list:
+    Return a list of events for the entire site.
+
+    retrieve:
+    Return a single event.
+
+    destroy:
+    Delete an event.
+    """
+
+    def get_operation_id(self, **kwargs):
+        return f"{kwargs['operId']} (Global)"
+
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
         Upload a picture for the event.
+        ---
+        requestBody:
+            content:
+                multipart/form-data:
+                    schema:
+                        type: object
+                        properties:
+                            file:
+                                type: object
+                                format: binary
+        responses:
+            "200":
+                description: Returned if the file was successfully uploaded.
+                content: &upload_resp
+                    application/json:
+                        schema:
+                            properties:
+                                detail:
+                                    type: string
+                                    description: The status of the file upload.
+                                url:
+                                    type: string
+                                    description: >
+                                        The URL of the newly uploaded file.
+                                        Only exists if the file was successfully uploaded.
+            "400":
+                description: Returned if there was an error while uploading the file.
+                content: *upload_resp
+        ---
         """
         event = Event.objects.get(id=kwargs["id"])
         self.check_object_permissions(request, event)
@@ -1325,6 +1669,47 @@ class EventViewSet(viewsets.ModelViewSet):
         Get the minimal information required for a fair directory listing.
         Groups by the start date of the event, and then the event category.
         Each event's club must have an associated fair badge in order to be displayed.
+        ---
+        parameters:
+            - name: date
+              in: query
+              required: false
+              description: >
+                A date in YYYY-MM-DD format.
+                If specified, will preview how this endpoint looked on the specified date.
+              type: string
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    start_time:
+                                        type: string
+                                        format: date-time
+                                    end_time:
+                                        type: string
+                                        format: date-time
+                                    events:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                category:
+                                                    type: string
+                                                events:
+                                                    type: array
+                                                    items:
+                                                        type: object
+                                                        properties:
+                                                            name:
+                                                                type: string
+                                                            code:
+                                                                type: string
+        ---
         """
         # accept custom date for preview rendering
         date = request.query_params.get("date")
@@ -1397,47 +1782,6 @@ class EventViewSet(viewsets.ModelViewSet):
         )
 
         return Response(EventSerializer(events, many=True).data)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Do not let non-superusers create events with the FAIR type through the API.
-        """
-        type = request.data.get("type", 0)
-        if type == Event.FAIR and not self.request.user.is_superuser:
-            raise DRFValidationError(
-                detail="Approved activities fair events have already been created. "
-                "See above for events to edit, and "
-                f"please email {settings.FROM_EMAIL} if this is en error."
-            )
-
-        return super().create(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Do not let non-superusers delete events with the FAIR type through the API.
-        """
-        event = self.get_object()
-
-        if event.type == Event.FAIR and not self.request.user.is_superuser:
-            raise DRFValidationError(
-                detail="You cannot delete activities fair events. "
-                f"If you would like to do this, email {settings.FROM_EMAIL}."
-            )
-
-        return super().destroy(request, *args, **kwargs)
-
-    def get_queryset(self):
-        qs = Event.objects.all()
-        if self.kwargs.get("club_code") is not None:
-            qs = qs.filter(club__code=self.kwargs["club_code"])
-
-        qs = qs.filter(Q(club__approved=True) | Q(club__ghost=True))
-
-        return (
-            qs.select_related("club", "creator",)
-            .prefetch_related("club__badges")
-            .order_by("start_time")
-        )
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):
@@ -1597,6 +1941,9 @@ class UserUUIDAPIView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     http_method_names = ["get"]
 
+    def get_operation_id(self, **kwargs):
+        return "Retrieve Calendar Url"
+
     def get_object(self):
         user = self.request.user
         return user
@@ -1728,6 +2075,22 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def accept(self, request, *ages, **kwargs):
+        """
+        Accept a membership request as a club officer.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                success:
+                                    type: boolean
+                                    description: >
+                                        Whether or not this request was successfully accepted.
+        ---
+        """
         request_object = self.get_object()
         Membership.objects.create(person=request_object.person, club=request_object.club)
         request_object.delete()
@@ -1876,11 +2239,19 @@ class BadgeViewSet(viewsets.ModelViewSet):
 
 
 class FavoriteCalendarAPIView(APIView):
-    """
-        get: Return a .ics file of the user's favorite clubs' events.
-    """
-
     def get(self, request, *args, **kwargs):
+        """
+        Return a .ics file of the user's favorite club events.
+        ---
+        responses:
+            "200":
+                description: Return a calendar file in ICS format.
+                content:
+                    text/calendar:
+                        schema:
+                            type: string
+        ---
+        """
         calendar = ICSCal(creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAIN})")
         calendar.extra.append(
             ICSParse.ContentLine(name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events")
@@ -2372,6 +2743,11 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
+    def get_operation_id(self, **kwargs):
+        if kwargs["action"] == "get":
+            return "Retrieve Self User"
+        return None
+
     def get_object(self):
         user = self.request.user
         prefetch_related_objects(
@@ -2396,10 +2772,26 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
     serializer_class = MembershipInviteSerializer
     http_method_names = ["get", "put", "patch", "delete"]
 
+    def get_operation_id(self, **kwargs):
+        if kwargs["action"] == "resend":
+            return f"{kwargs['operId']} ({kwargs['method']})"
+        return None
+
     @action(detail=True, methods=["put", "patch"])
     def resend(self, request, *args, **kwargs):
         """
         Resend an email invitation that has already been issued.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            detail:
+                                type: string
+                                description: A success or error message.
+        ---
         """
         invite = self.get_object()
         invite.send_mail(request)
@@ -2588,12 +2980,21 @@ class EmailPreviewContext(dict):
 
 
 class OptionListView(APIView):
-    """
-    Return a list of options, with some options dynamically generated.
-    This response is intended for site-wide global variables.
-    """
-
     def get(self, request):
+        """
+        Return a list of options, with some options dynamically generated.
+        This response is intended for site-wide global variables.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            additionalProperties:
+                                type: string
+        ---
+        """
         # compute base django options
         options = {k: v for k, v in Option.objects.filter(public=True).values_list("key", "value")}
 

@@ -1,6 +1,7 @@
 import json
 import re
 
+import yaml
 from django.conf import settings
 from rest_framework.renderers import JSONOpenAPIRenderer
 from rest_framework.schemas.openapi import AutoSchema
@@ -24,12 +25,49 @@ class CustomAutoSchema(AutoSchema):
     A custom schema to parse documentation from the docstrings of the view, if applicable.
     """
 
+    META_REGEX = re.compile(r"^\s*---\s*$(.*?)^\s*---", re.MULTILINE | re.DOTALL)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def parse_docstring(cls, docstring):
+        docstring = dedent(docstring)
+        match = cls.META_REGEX.search(docstring)
+        if match is not None:
+            meta = yaml.safe_load(match.group(1))
+            docstring = cls.META_REGEX.sub("", docstring).strip()
+        else:
+            meta = None
+        return docstring, meta
+
     def get_operation(self, path, method):
         output = super().get_operation(path, method)
         method_name = getattr(self.view, "action", method.lower())
         docstring = getattr(self.view, method_name, None).__doc__
+
+        # operation id override
+        if hasattr(self.view, "get_operation_id"):
+            output["operationId"] = (
+                self.view.get_operation_id(
+                    action=method_name, method=method, operId=output["operationId"]
+                )
+                or output["operationId"]
+            )
+
+        # parse yaml metadata from docstring
         if docstring:
-            docstring = dedent(docstring)
+            docstring, meta = self.parse_docstring(docstring)
+            if meta:
+                # merge together metadata
+                if "name" in meta:
+                    output["operationId"] = meta["name"]
+                    del meta["name"]
+                if "parameters" in output:
+                    meta["parameters"] = output["parameters"] + meta.get("parameters", [])
+                output.update(meta)
+            if docstring:
+                output["description"] = docstring
         return output
 
 
@@ -69,7 +107,7 @@ class CustomJSONOpenAPIRenderer(JSONOpenAPIRenderer):
             for key in data["paths"][path]:
                 oper_id = data["paths"][path][key]["operationId"]
                 data["paths"][path][key]["operationId"] = re.sub(
-                    r"([A-Z])", r" \1", oper_id
+                    r"(?<!\W)([A-Z])", r" \1", oper_id
                 ).title()
                 data["paths"][path][key]["tags"] = [category]
 
