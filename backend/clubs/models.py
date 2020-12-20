@@ -317,8 +317,10 @@ class Club(models.Model):
                             if urls:
                                 ev.url = urls[0]
 
-                        # extract url from location
-                        if ev.location:
+                        # extract url from url or location
+                        if event.url:
+                            ev.url = event.url
+                        elif ev.location:
                             location_urls = extractor.find_urls(ev.location)
                             if location_urls:
                                 ev.url = location_urls[0]

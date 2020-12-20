@@ -1910,10 +1910,19 @@ class FavoriteCalendarAPIView(APIView):
             )
 
             # put url in location if location does not exist, otherwise put url in body
-            e.location = event.location or event.url
+            if event.location:
+                e.location = event.location
+            else:
+                e.location = event.url
+            e.url = event.url
             e.description = "{}\n\n{}".format(
                 event.url or "" if not event.location else "", html_to_text(event.description)
             ).strip()
+            e.uid = f"{event.ics_uuid}@{settings.DOMAIN}"
+            e.created = event.created_at
+            e.last_modified = event.updated_at
+            e.categories = [event.club.name]
+
             calendar.events.add(e)
 
         response = HttpResponse(calendar, content_type="text/calendar")
