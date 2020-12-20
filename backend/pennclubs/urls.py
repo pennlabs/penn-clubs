@@ -28,7 +28,7 @@ urlpatterns = [
     path(
         "openapi/",
         get_schema_view(
-            title="Penn Clubs Documentation",
+            title=f"{settings.BRANDING_SITE_NAME} Documentation",
             public=True,
             renderer_classes=[CustomJSONOpenAPIRenderer],
         ),

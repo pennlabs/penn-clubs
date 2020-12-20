@@ -3,6 +3,8 @@ import re
 
 from django.conf import settings
 from rest_framework.renderers import JSONOpenAPIRenderer
+from rest_framework.schemas.openapi import AutoSchema
+from rest_framework.utils.formatting import dedent
 
 
 API_DESCRIPTION = """
@@ -17,7 +19,25 @@ falls beneath a certain threshold.
 """
 
 
+class CustomAutoSchema(AutoSchema):
+    """
+    A custom schema to parse documentation from the docstrings of the view, if applicable.
+    """
+
+    def get_operation(self, path, method):
+        output = super().get_operation(path, method)
+        method_name = getattr(self.view, "action", method.lower())
+        docstring = getattr(self.view, method_name, None).__doc__
+        if docstring:
+            docstring = dedent(docstring)
+        return output
+
+
 class CustomJSONOpenAPIRenderer(JSONOpenAPIRenderer):
+    """
+    A custom renderer to add API level metadata to the documentation.
+    """
+
     def render(self, *args, **kwargs):
         output = super().render(*args, **kwargs)
         data = json.loads(output)
