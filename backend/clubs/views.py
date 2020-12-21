@@ -1627,22 +1627,39 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             offset = event_data.pop("offset")
             end_date = parse(event_data.pop("end_date"))
             event_data.pop("is_recurring")
-            club_code = kwargs["club_code"]
+            club = kwargs["club_code"]
+            event_data["club"] = club
+            event_data["parent_recurring_event"] = parent_recurring_event
+            event_data["creator"] = request.user
 
-            club = Club.objects.get(code=club_code)
+            result_data = []
             while start_time < end_date:
-                Event.objects.create(
-                    **event_data,
-                    creator=request.user,
-                    club=club,
-                    start_time=start_time,
-                    end_time=end_time,
-                    parent_recurring_event=parent_recurring_event,
+                event_data["start_time"] = start_time
+                event_data["end_time"] = end_time
+                event_serializer = EventWriteSerializer(
+                    data=event_data, context={"request": request}
                 )
+                if event_serializer.is_valid():
+                    curr_event_data = event_data.copy()
+                    curr_event_data["club"] = Club.objects.get(code=curr_event_data["club"])
+                    Event.objects.create(**curr_event_data)
+
+                    curr_event_data.pop("creator")
+                    curr_event_data["club_name"] = curr_event_data["club"].name
+                    curr_event_data["club"] = curr_event_data["club"].code
+                    curr_event_data.pop("parent_recurring_event")
+                    result_data.append(curr_event_data)
+                else:
+                    return Response(event_serializer.errors)
+
                 start_time = start_time + datetime.timedelta(days=offset)
                 end_time = end_time + datetime.timedelta(days=offset)
 
-            return Response({"success": True})
+            events = self.filter_queryset(self.get_queryset()).filter(
+                parent_recurring_event=parent_recurring_event
+            )
+
+            return Response(result_data)  # Return serialized events created
 
         return super().create(request, *args, **kwargs)
 
