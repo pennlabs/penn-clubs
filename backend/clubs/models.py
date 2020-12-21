@@ -338,6 +338,16 @@ class Club(models.Model):
                         if event_uuid:
                             ev.ics_uuid = event_uuid
 
+                        # ensure length limits are met before saving
+                        if ev.location:
+                            ev.location = ev.location[:255]
+                        if ev.name:
+                            ev.name = ev.name[:255]
+                        if ev.code:
+                            ev.code = ev.code[:255]
+                        if ev.url:
+                            ev.url = ev.url[:2048]
+
                         ev.save()
                         modified_events.append(ev)
                         break

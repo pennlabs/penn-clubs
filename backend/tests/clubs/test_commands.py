@@ -99,9 +99,20 @@ class ImportCalendarTestCase(TestCase):
             ics_import_url="http://xyz.com/test.ics",
         )
 
+    def test_import_common_calendars(self):
+        """
+        Test importing a common standard ICS calendar from the internet.
+        """
+        self.club1.ics_import_url = "https://www.officeholidays.com/ics/usa"
+        self.club1.save()
+
+        call_command("import_calendar_events")
+
+        self.assertGreaterEqual(self.club1.events.count(), 100)
+
     def test_import_nonstandard_ics(self):
         """
-        Test importing a random nonstandard ICS file from the internet.
+        Test importing a random nonstandard ICS file from a file downloaded from the internet.
         """
         with mock.patch("requests.get", return_value=mock.Mock(text=SAMPLE_ICS, status_code=200)):
             call_command("import_calendar_events")
