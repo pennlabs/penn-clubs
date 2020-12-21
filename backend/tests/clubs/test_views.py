@@ -646,6 +646,46 @@ class ClubTestCase(TestCase):
         resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, id)))
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
+    def test_recurring_event_create(self):
+        self.client.login(username=self.user4.username, password="test")
+        self.assertFalse(self.user4.is_superuser)
+
+        # add user as officer
+        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+
+        # set event start and end dates
+        start_time = datetime.datetime.now() - datetime.timedelta(days=3)
+        end_time = start_time + datetime.timedelta(hours=2)
+        end_date = start_time + datetime.timedelta(days=15)
+
+        # add recurring event
+        resp = self.client.post(
+            reverse("club-events-list", args=(self.club1.code,)),
+            {
+                "name": "Interest Recurring Meeting",
+                "description": "Interest Meeting on every Friday!",
+                "location": "JMHH G06",
+                "type": Event.RECRUITMENT,
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat(),
+                "is_recurring": True,
+                "offset": 7,
+                "end_date": end_date.isoformat(),
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        for event in resp.data:
+            self.assertEqual(event["name"], "Interest Recurring Meeting")
+
+        # ensure event exists
+        events = Event.objects.filter(name="Interest Recurring Meeting")
+        self.assertEqual(events.count(), 3)
+        recurring = events.first().parent_recurring_event
+        for event in events:
+            self.assertEqual(event.creator, self.user4)
+            self.assertEqual(event.parent_recurring_event, recurring)
+
     def test_testimonials(self):
         """
         Test creating, listing, and deleting testimonials.

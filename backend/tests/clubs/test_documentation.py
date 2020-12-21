@@ -134,7 +134,8 @@ class DocumentationTestCase(TestCase):
                     "Please fix all warnings listed above to pass this test case. \n"
                     "You can fix operationId warnings by adding a "
                     "`get_operation_id(self, **kwargs)` method to your viewset "
-                    "and returning a custom operation id."
+                    "and returning a custom operation id. For actions, you can \n"
+                    "add a operationId attribute to the YAML section of your docstring."
                 )
 
         # test to ensure schema is parsable

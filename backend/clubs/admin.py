@@ -28,6 +28,7 @@ from clubs.models import (
     NoteTag,
     Profile,
     QuestionAnswer,
+    RecurringEvent,
     Report,
     School,
     StudentType,
@@ -379,6 +380,7 @@ admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(QuestionAnswer, QuestionAnswerAdmin)
+admin.site.register(RecurringEvent)
 admin.site.register(Report, ReportAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Testimonial)

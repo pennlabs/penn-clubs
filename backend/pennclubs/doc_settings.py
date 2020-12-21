@@ -20,6 +20,32 @@ falls beneath a certain threshold.
 """
 
 
+def merge_metadata(original, changes):
+    """
+    Merge together two metadata dictionaries. By default, overwrite any existing values.
+    If the object is a list, concatenate the original and new list instead.
+    If the object is a dict with the $extend property set to true, merge the two
+    dictionaries instead of overwriting. This only works if both parent paths exist up to
+    that point.
+    """
+    if isinstance(changes, dict):
+        if isinstance(original, dict):
+            is_extend = changes.pop("$extend", False)
+            output = original
+            for k, v in changes.items():
+                output[k] = merge_metadata(original.get(k), v)
+            if not is_extend:
+                for k in list(output.keys()):
+                    if k not in changes:
+                        del output[k]
+            return output
+        return {k: merge_metadata(None, v) for k, v in changes.items()}
+    elif isinstance(changes, list):
+        if isinstance(original, list):
+            return original + changes
+    return changes
+
+
 class CustomAutoSchema(AutoSchema):
     """
     A custom schema to parse documentation from the docstrings of the view, if applicable.
@@ -60,12 +86,8 @@ class CustomAutoSchema(AutoSchema):
             docstring, meta = self.parse_docstring(docstring)
             if meta:
                 # merge together metadata
-                if "name" in meta:
-                    output["operationId"] = meta["name"]
-                    del meta["name"]
-                if "parameters" in output:
-                    meta["parameters"] = output["parameters"] + meta.get("parameters", [])
-                output.update(meta)
+                meta["$extend"] = True
+                output = merge_metadata(output, meta)
             if docstring:
                 output["description"] = docstring
         return output
@@ -107,7 +129,7 @@ class CustomJSONOpenAPIRenderer(JSONOpenAPIRenderer):
             for key in data["paths"][path]:
                 oper_id = data["paths"][path][key]["operationId"]
                 data["paths"][path][key]["operationId"] = re.sub(
-                    r"(?<!\W)([A-Z])", r" \1", oper_id
+                    r"(?<=[a-z])([A-Z])", r" \1", oper_id
                 ).title()
                 data["paths"][path][key]["tags"] = [category]
 
