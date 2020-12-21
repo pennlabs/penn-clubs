@@ -1655,10 +1655,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 start_time = start_time + datetime.timedelta(days=offset)
                 end_time = end_time + datetime.timedelta(days=offset)
 
-            events = self.filter_queryset(self.get_queryset()).filter(
-                parent_recurring_event=parent_recurring_event
-            )
-
             return Response(result_data)  # Return serialized events created
 
         return super().create(request, *args, **kwargs)
