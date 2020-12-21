@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    "channels",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -45,7 +46,6 @@ INSTALLED_APPS = [
     "accounts.apps.AccountsConfig",
     "clubs.apps.ClubsConfig",
     "options.apps.OptionsConfig",
-    "channels",
     "social_django",
 ]
 

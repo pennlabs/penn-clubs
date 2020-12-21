@@ -48,8 +48,7 @@
 					"run",
 					"python",
 					"manage.py",
-					"runserver",
-					"--noasgi"
+					"runserver"
 				],
 				"command": "pipenv",
 				"options": {
@@ -91,8 +90,7 @@
 					"run",
 					"python",
 					"manage.py",
-					"runserver",
-					"--noasgi"
+					"runserver"
 				],
 				"command": "pipenv",
 				"options": {

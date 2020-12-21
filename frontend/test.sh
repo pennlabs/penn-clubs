@@ -17,11 +17,14 @@ pushd ../backend
 time pipenv install --dev || echo "Failed to install all dependencies, continuing anyways..."
 pipenv run python manage.py migrate
 pipenv run python manage.py populate
-pipenv run python manage.py runserver --noasgi &
+pipenv run python manage.py runserver &
 popd
 
 # Setup frontend server
 node server.js &
+
+# Check types while we wait
+yarn tsc
 
 # Wait for servers to start
 yarn run wait-on -s 3 -d 500 -t 30000 http://localhost:8000/api
