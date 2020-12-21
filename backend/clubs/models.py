@@ -646,10 +646,14 @@ class RecurringEvent(models.Model):
 
     def __str__(self):
         events = self.event_set.all()
-        first_event = events.first()
-        last_event = events.last()
-        name = first_event.name
-        return f"{name}: {first_event.start_time } - {last_event.end_time} ({len(events)} times)"
+        if events.exists():
+            first_event = events.first()
+            last_event = events.last()
+            name = first_event.name
+            return (
+                f"{name}: {first_event.start_time} - {last_event.end_time} ({events.count()} times)"
+            )
+        return "empty recurring event object"
 
 
 class Event(models.Model):
@@ -670,9 +674,6 @@ class Event(models.Model):
     description = models.TextField(blank=True)  # rich html
     ics_uuid = models.UUIDField(default=uuid.uuid4)
     is_ics_event = models.BooleanField(default=False, blank=True)
-    parent_recurring_event = models.ForeignKey(
-        RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
-    )
     parent_recurring_event = models.ForeignKey(
         RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
     )

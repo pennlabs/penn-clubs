@@ -882,6 +882,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return a QR code png image representing a link to the club on Penn Clubs.
         ---
+        operationId: Generate QR Code for Club
         responses:
             "200":
                 description: Return a png image representing a QR code to the fair page.
@@ -1107,7 +1108,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Custom return endpoint for the directory page, allows the page to load faster.
         ---
-        name: Club Directory List
+        operationId: Club Directory List
         ---
         """
         serializer = ClubMinimalSerializer(
@@ -1121,7 +1122,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         A special endpoint for SAC affilaited clubs to check if
         they have uploaded a club constitution.
         ---
-        name: List Club Constitutions
+        operationId: List Club Constitutions
         ---
         """
         badge = Badge.objects.filter(label="SAC").first()
@@ -1609,8 +1610,38 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        Do not let non-superusers create events with the FAIR type through the API.
+        Has the option to create a recurring event by specifying an offset and an end date.
+        Additionaly, do not let non-superusers create events with the `FAIR` type through the API.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        allOf:
+                            - $ref: "#/components/schemas/EventWrite"
+                            - type: object
+                              properties:
+                                is_recurring:
+                                    type: boolean
+                                    description: >
+                                        If this value is set, then make
+                                        recurring events instead of a single event.
+                                offset:
+                                    type: number
+                                    description: >
+                                        The offset between recurring events, in days.
+                                        Only specify this if the event is recurring.
+                                end_date:
+                                    type: string
+                                    format: date-time
+                                    description: >
+                                        The date when all items in the recurring event
+                                        series should end. Only specify this if the event
+                                        is recurring.
+
+        ---
         """
+        # get event type
         type = request.data.get("type", 0)
         if type == Event.FAIR and not self.request.user.is_superuser:
             raise DRFValidationError(
@@ -1619,6 +1650,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 f"please email {settings.FROM_EMAIL} if this is en error."
             )
 
+        # handle recurring events
         if request.data.get("is_recurring", None) is not None:
             parent_recurring_event = RecurringEvent.objects.create()
             event_data = request.data.copy()
@@ -1627,35 +1659,29 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             offset = event_data.pop("offset")
             end_date = parse(event_data.pop("end_date"))
             event_data.pop("is_recurring")
-            club = kwargs["club_code"]
-            event_data["club"] = club
-            event_data["parent_recurring_event"] = parent_recurring_event
-            event_data["creator"] = request.user
 
             result_data = []
             while start_time < end_date:
                 event_data["start_time"] = start_time
                 event_data["end_time"] = end_time
                 event_serializer = EventWriteSerializer(
-                    data=event_data, context={"request": request}
+                    data=event_data, context={"request": request, "view": self}
                 )
                 if event_serializer.is_valid():
-                    curr_event_data = event_data.copy()
-                    curr_event_data["club"] = Club.objects.get(code=curr_event_data["club"])
-                    Event.objects.create(**curr_event_data)
-
-                    curr_event_data.pop("creator")
-                    curr_event_data["club_name"] = curr_event_data["club"].name
-                    curr_event_data["club"] = curr_event_data["club"].code
-                    curr_event_data.pop("parent_recurring_event")
-                    result_data.append(curr_event_data)
+                    ev = event_serializer.save()
+                    ev.parent_recurring_event = parent_recurring_event
+                    result_data.append(ev)
                 else:
-                    return Response(event_serializer.errors)
+                    return Response(event_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
                 start_time = start_time + datetime.timedelta(days=offset)
                 end_time = end_time + datetime.timedelta(days=offset)
 
-            return Response(result_data)  # Return serialized events created
+            Event.objects.filter(pk__in=[e.pk for e in result_data]).update(
+                parent_recurring_event=parent_recurring_event
+            )
+
+            return Response(EventSerializer(result_data, many=True).data)
 
         return super().create(request, *args, **kwargs)
 

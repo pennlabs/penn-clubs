@@ -668,19 +668,23 @@ class ClubTestCase(TestCase):
                 "type": Event.RECRUITMENT,
                 "start_time": start_time.isoformat(),
                 "end_time": end_time.isoformat(),
-                "is_recurring": "True",
+                "is_recurring": True,
                 "offset": 7,
                 "end_date": end_date.isoformat(),
             },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
+        for event in resp.data:
+            self.assertEqual(event["name"], "Interest Recurring Meeting")
 
         # ensure event exists
-        self.assertEqual(Event.objects.filter(name="Interest Recurring Meeting").count(), 3)
-        self.assertEqual(
-            Event.objects.filter(name="Interest Recurring Meeting").first().creator, self.user4
-        )
+        events = Event.objects.filter(name="Interest Recurring Meeting")
+        self.assertEqual(events.count(), 3)
+        recurring = events.first().parent_recurring_event
+        for event in events:
+            self.assertEqual(event.creator, self.user4)
+            self.assertEqual(event.parent_recurring_event, recurring)
 
     def test_testimonials(self):
         """
