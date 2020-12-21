@@ -59,10 +59,9 @@
     "checkts": "tsc --noemit",
     "test": "./test.sh",
     "dev": "node server.js",
-    "build": "env NODE_ENV=production next build",
+    "build": "build-storybook -o public/storybook && env NODE_ENV=production next build",
     "start": "env NODE_ENV=production node server.js",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "storybook": "start-storybook -p 6006"
   },
   "license": "MIT",
   "devDependencies": {
