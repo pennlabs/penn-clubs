@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, ReactNode, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import { CLUBS_BLUE } from '../../constants/colors'
@@ -27,14 +27,24 @@ const TitleHeader = styled.div`
   }
 `
 
-type AuthPromptProps = React.PropsWithChildren<{
+type AuthPromptProps = {
+  /**
+   * The login prompt title that is shown right below the logo.
+   */
   title?: string
+  /**
+   * If set to true, show the login button. Otherwise, hide the login button.
+   */
   hasLogin?: boolean
-}>
+  /**
+   * A message prompting the user to login.
+   */
+  children?: ReactNode
+}
 
 const AuthPrompt = ({
   title = 'One last step...',
-  children,
+  children = `To make the most of ${SITE_NAME} features, like bookmarking and subscribing to ${OBJECT_NAME_PLURAL}, please login using your PennKey.`,
   hasLogin = true,
 }: AuthPromptProps): ReactElement => {
   const [nextLink, setNextLink] = useState<string>('/')
@@ -51,10 +61,7 @@ const AuthPrompt = ({
           <Title>{title}</Title>
         </TitleHeader>
         <Margin>
-          <Text>
-            {children ||
-              `To make the most of ${SITE_NAME} features, like bookmarking and subscribing to ${OBJECT_NAME_PLURAL}, please login using your PennKey.`}
-          </Text>
+          <Text>{children}</Text>
         </Margin>
         {hasLogin && (
           <>
