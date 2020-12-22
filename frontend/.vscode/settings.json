@@ -16,7 +16,6 @@
         "**/node_modules": true,
         "**/bower_components": true,
         "**/*.code-search": true,
-        "**/coverage": true,
-        "**/.storybook": true
+        "**/coverage": true
     }
 }

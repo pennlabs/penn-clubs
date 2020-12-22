@@ -8,6 +8,7 @@ __pycache__/
 *.pyc
 
 # Distribution
+/frontend/public/storybook/
 build/
 dist/
 *.egg-info/

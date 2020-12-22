@@ -59,15 +59,15 @@
     "checkts": "tsc --noemit",
     "test": "./test.sh",
     "dev": "node server.js",
-    "build": "env NODE_ENV=production next build",
+    "build": "build-storybook -o public/storybook && env NODE_ENV=production next build",
     "start": "env NODE_ENV=production node server.js",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "storybook": "start-storybook -s ./public -p 6006"
   },
   "license": "MIT",
   "devDependencies": {
     "@cypress/code-coverage": "^3.8.5",
     "@storybook/addon-actions": "^6.1.5",
+    "@storybook/addon-docs": "^6.1.11",
     "@storybook/addon-links": "^6.1.5",
     "@storybook/addons": "^6.1.5",
     "@storybook/react": "^6.1.5",
