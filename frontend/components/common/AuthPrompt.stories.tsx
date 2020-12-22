@@ -1,3 +1,5 @@
+import { Story } from '@storybook/react/types-6-0'
+
 import AuthPrompt from './AuthPrompt'
 
 export default {
