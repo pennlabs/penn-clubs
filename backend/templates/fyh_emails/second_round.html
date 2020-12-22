@@ -1,0 +1,39 @@
+<!-- SUBJECT: A Message to Penn Staff about Hub@Penn -->
+{% extends 'fyh_emails/base.html' %}
+
+{% block content %}
+    <h2>A Message to Penn Staff about Hub@Penn</h2>
+    <p style="font-size: 1.2em">We are excited to launch the all-new <a href="https://hub.provost.upenn.edu/">Hub@Penn</a>
+        platform to serve as a place for Penn students to find and connect with support resources. This platform comes at
+        the request of Penn's senior administration and after close collaboration with NSOAI and the VPUL. We look forward
+        to offering Hub@Penn as a resource for Penn students starting in advance of the Spring 2021 semester.</p>
+    <p style="font-size: 1.2em">We are working diligently to ensure that as many appropriate Penn resources are invited to
+        be a part of Hub@Penn as possible. In order to ensure the success of Hub@Penn, we need Penn resources to help
+        populate critical information about the services they offer. Your office has been identified as an essential
+        resource for the Penn community. As such, we invite you to follow the link below to fill out a form and make your
+        resource visible on Hub@Penn.
+    </p>
+    <p style="font-size: 1.2em">To submit your resource, <b>fill out the <a
+                href="https://hub.provost.upenn.edu/create">Hub@Penn Submission Form</a> by January 11</b>.</p>
+    <p style="font-size: 1.2em">You have been designated to populate information for the following resource(s):</p>
+    <ul>{% for resource in resources %}<li><b>{{ resource }}</b></li>{% endfor %}</ul>
+    <p style="font-size: 1.2em">If there is another more appropriate contact to serve as the liaison between your resource
+        and the Hub@Penn administrators, please feel free to forward this message and/or let us know who we should contact
+        in future communications.</p>
+    <p style="font-size: 1.2em">To account for rapid changes throughout 2020 and in preparation for the start of the Spring
+        2021 semester, please feel welcome to provide general information about your office, directing students to your
+        website for the most up-to-date information. Additionally, your listing on Hub@Penn can easily be updated as needed.
+    </p>
+    <p style="font-size: 1.2em">We have recorded a technical demo of Hub@Penn which can be found by clicking the image
+        below. This video includes a bit of information about the development of Hub@Penn as well as step-by-step
+        instructions on how to add your resources to this new platform. Please reach out to us if you have any questions or
+        run into any difficulties.</p>
+    <a href="https://www.youtube.com/watch?v=fsxWKX7vTNU"><img alt="watch video" src="https://i.imgur.com/DJ9ucGI.png"
+            width="100%" /></a>
+    <p style="font-size: 1.2em">Thank you in advance for taking the time to ensure easy access to your resource through
+        Hub@Penn and as always for the resources your office offers our Penn community.</p>
+    <p style="font-size: 1.2em">Thanks again,</p>
+    <p style="font-size: 1.2em">Hub@Penn Planning Committee<br /><a href="https://hub.provost.upenn.edu/">hub.provost.upenn.edu</a></p>
+    <p style="font-size: 1.2em">Office of New Student Orientation & Academic Initiatives (NSOAI)<br />
+        Vice Provost for University Life (VPUL)<br />Online Learning Initiative (OLI)</p>
+{% endblock %}
