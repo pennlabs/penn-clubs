@@ -52,6 +52,7 @@ class Command(BaseCommand):
                 "post_virtual_fair",
                 "hap_intro",
                 "hap_intro_remind",
+                "hap_second_round",
             ),
         )
         parser.add_argument(
@@ -118,7 +119,7 @@ class Command(BaseCommand):
         role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
 
         # handle custom Hub@Penn intro email
-        if action in {"hap_intro", "hap_intro_remind"}:
+        if action in {"hap_intro", "hap_intro_remind", "hap_second_round"}:
             test_email = kwargs.get("test", None)
             email_file = kwargs["emails"]
             people = collections.defaultdict(list)
@@ -149,7 +150,11 @@ class Command(BaseCommand):
                     send_hap_intro_email(
                         email,
                         resources,
-                        template="intro" if action == "hap_intro" else "intro_remind",
+                        template={
+                            "hap_intro": "intro",
+                            "hap_intro_remind": "intro_remind",
+                            "hap_second_round": "second_round",
+                        }[action],
                     )
                     print(f"Sent {action} email to {email} for groups: {resources}")
                 else:
