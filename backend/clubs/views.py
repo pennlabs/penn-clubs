@@ -1177,6 +1177,13 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                     parameters:
                                         id:
                                             type: number
+                            fairs:
+                                type: array
+                                items:
+                                    type: object
+                                    parameters:
+                                        id:
+                                            type: number
                         required:
                             - action
                             - clubs
@@ -1204,6 +1211,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if action is None:
             return Response({"error": "You must specify the action to perform!"})
 
+        # lookup clubs by code
         clubs = [
             code.strip() for code in re.split(r",\t\n ", request.data.get("clubs", "").strip())
         ]
@@ -1213,7 +1221,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 {"error": "You must specify the list of codes you want to apply this action to."}
             )
         club_objs = Club.objects.filter(code__in=clubs)
+        missing_clubs = set(clubs) - set(club_objs.values_list("code", flat=True))
 
+        # abort if none exist
         if not club_objs.exists():
             clubs_str = ", ".join(clubs)
             return Response(
@@ -1222,25 +1232,55 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         tags = request.data.get("tags", [])
         badges = request.data.get("badges", [])
+        fairs = request.data.get("fairs", [])
 
-        if not tags and not badges:
-            return Response({"error": "You must specify some tags or badges to manipulate!"})
+        if not tags and not badges and not fairs:
+            return Response({"error": "You must specify some related objects to manipulate!"})
 
         tags = Tag.objects.filter(id__in=[tag["id"] for tag in tags])
         badges = Badge.objects.filter(id__in=[badge["id"] for badge in badges])
+        fairs = ClubFair.objects.filter(id__in=[fair["id"] for fair in fairs])
 
         count = 0
-        for club in club_objs:
-            if action == "add":
-                club.tags.add(*tags)
-                club.badges.add(*badges)
-                count += 1
-            elif action == "remove":
-                club.tags.remove(*tags)
-                club.badges.remove(*badges)
-                count += 1
+        if tags or badges:
+            for club in club_objs:
+                if action == "add":
+                    club.tags.add(*tags)
+                    club.badges.add(*badges)
+                    count += 1
+                elif action == "remove":
+                    club.tags.remove(*tags)
+                    club.badges.remove(*badges)
+                    count += 1
 
-        return Response({"success": True, "message": f"{count} object(s) have been updated!"})
+        if fairs:
+            for fair in fairs:
+                if action == "add":
+                    registered_clubs = set(
+                        ClubFairRegistration.objects.filter(fair=fair).values_list(
+                            "club__code", flat=True
+                        )
+                    )
+                    unregistered_clubs = [
+                        club for club in club_objs if club.code not in registered_clubs
+                    ]
+                    ClubFairRegistration.objects.bulk_create(
+                        [
+                            ClubFairRegistration(club=club, fair=fair, registrant=request.user)
+                            for club in unregistered_clubs
+                        ]
+                    )
+                    count += len(unregistered_clubs)
+                elif action == "remove":
+                    count += ClubFairRegistration.objects.filter(club__in=club_objs).delete()[0]
+
+        msg = f"{count} object(s) have been updated!"
+        if missing_clubs:
+            msg += (
+                f" Could not find {len(missing_clubs)} club(s) by code: {', '.join(missing_clubs)}"
+            )
+
+        return Response({"success": True, "message": msg})
 
     def get_filename(self):
         """

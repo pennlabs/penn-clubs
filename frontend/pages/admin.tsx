@@ -1,6 +1,7 @@
 import { Field, Form, Formik } from 'formik'
 import { NextPageContext } from 'next'
-import React, { ReactElement, useState } from 'react'
+import React, { ReactElement } from 'react'
+import { toast } from 'react-toastify'
 
 import { Container, Icon, Metadata, Text, Title } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
@@ -14,30 +15,35 @@ import {
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
+  OBJECT_NAME_TITLE_SINGULAR,
 } from '../utils/branding'
 
-function FairsPage({ userInfo, tags, badges }): ReactElement {
-  const [message, setMessage] = useState<string | null>(null)
-
+function FairsPage({ userInfo, tags, badges, clubfairs }): ReactElement {
   if (!userInfo) {
     return <AuthPrompt />
   }
 
   const bulkSubmit = async (data, { setSubmitting }) => {
-    const resp = await doApiRequest('/clubs/bulk/?format=json', {
-      method: 'POST',
-      body: data,
-    })
-    const contents = await resp.json()
-    if (contents.message || contents.error) {
-      setMessage(contents.message ?? contents.error)
+    try {
+      const resp = await doApiRequest('/clubs/bulk/?format=json', {
+        method: 'POST',
+        body: data,
+      })
+      const contents = await resp.json()
+      if (contents.message) {
+        toast.info(contents.message, { hideProgressBar: true })
+      } else if (contents.error) {
+        toast.error(contents.error, { hideProgressBar: true })
+      }
+    } finally {
+      setSubmitting(false)
     }
-    setSubmitting(false)
   }
 
   const tabs = [
     {
-      name: 'Bulk Editing',
+      name: 'bulk',
+      label: 'Bulk Editing',
       content: () => (
         <>
           <Text>
@@ -46,9 +52,6 @@ function FairsPage({ userInfo, tags, badges }): ReactElement {
             codes below, which tags or badges you want to add or remove, and
             then press the action that you desire.
           </Text>
-          {message != null && (
-            <div className="notification is-primary">{message}</div>
-          )}
           <Formik initialValues={{ action: 'add' }} onSubmit={bulkSubmit}>
             {({ setFieldValue, handleSubmit, isSubmitting }) => (
               <Form>
@@ -77,11 +80,25 @@ function FairsPage({ userInfo, tags, badges }): ReactElement {
                   isMulti
                   helpText={`Add or remove all of the specified badges.`}
                 />
+                <Field
+                  name="fairs"
+                  label={`${OBJECT_NAME_TITLE_SINGULAR} Fairs`}
+                  as={SelectField}
+                  choices={clubfairs}
+                  valueDeserialize={fixDeserialize(clubfairs)}
+                  isMulti
+                  helpText={`Register or deregister the ${OBJECT_NAME_SINGULAR} for the selected fairs. Does not take into account any fair questions.`}
+                />
                 <div className="buttons">
                   <button
                     type="submit"
                     disabled={isSubmitting}
                     className="button is-success"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setFieldValue('action', 'add')
+                      handleSubmit()
+                    }}
                   >
                     <Icon name="plus" /> Bulk Add
                   </button>
@@ -90,6 +107,7 @@ function FairsPage({ userInfo, tags, badges }): ReactElement {
                     className="button is-danger"
                     disabled={isSubmitting}
                     onClick={(e) => {
+                      e.preventDefault()
                       setFieldValue('action', 'remove')
                       handleSubmit()
                     }}
@@ -119,7 +137,7 @@ function FairsPage({ userInfo, tags, badges }): ReactElement {
 }
 
 FairsPage.getInitialProps = async (ctx: NextPageContext) => {
-  return doBulkLookup(['tags', 'badges'], ctx)
+  return doBulkLookup(['tags', 'badges', 'clubfairs'], ctx)
 }
 
 FairsPage.permissions = []

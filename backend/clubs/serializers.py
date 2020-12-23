@@ -1679,7 +1679,11 @@ class ReportClubField(serializers.Field):
                     reg = fair.clubfairregistration_set.values_list("club__code", "answers")
                     self._default_value = None
                     for code, ans in reg:
-                        self._cached_values[code] = json.loads(ans)[index]
+                        if ans:
+                            try:
+                                self._cached_values[code] = json.loads(ans)[index]
+                            except IndexError:
+                                pass
                 else:
                     self._default_value = False
                     self._cached_values = {
