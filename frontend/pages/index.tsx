@@ -67,7 +67,6 @@ type SplashProps = {
   years: Year[]
   studentTypes: StudentType[]
   clubCount: number
-  liveEventCount: number
 }
 
 export const ListLoadIndicator = (): ReactElement => {
@@ -408,11 +407,7 @@ const Splash = (props: SplashProps): ReactElement => {
             />
 
             {(preFair || fairIsOpen) && (
-              <LiveEventsDialog
-                isPreFair={!!preFair}
-                isFair={!!fairIsOpen}
-                liveEventCount={props.liveEventCount}
-              />
+              <LiveEventsDialog isPreFair={!!preFair} isFair={!!fairIsOpen} />
             )}
             {renewalBanner && <ListRenewalDialog />}
 

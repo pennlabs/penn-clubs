@@ -1,4 +1,5 @@
 import fetch from 'isomorphic-unfetch'
+import LRU from 'lru-cache'
 import { NextPageContext } from 'next'
 import React, { createContext, ReactElement, useContext } from 'react'
 
@@ -9,6 +10,26 @@ import {
   DOMAIN,
   MEMBERSHIP_ROLE_NAMES,
 } from './utils/branding'
+
+const internalCache = new LRU()
+
+/**
+ * Cache the return value of a function.
+ * This should only be used with publically available information.
+ */
+export async function cache<T>(
+  key: string,
+  func: () => Promise<T>,
+  time: number,
+): Promise<T> {
+  const cached = internalCache.get(key)
+  if (cached != null) {
+    return cached
+  }
+  const val = await func()
+  internalCache.set(key, val, time)
+  return val
+}
 
 export function stripTags(val: string): string {
   if (!val) {

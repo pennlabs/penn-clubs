@@ -1,5 +1,4 @@
 import Color from 'color'
-import LRU from 'lru-cache'
 import { NextPageContext } from 'next'
 import React, { Component, ReactElement } from 'react'
 import { ToastContainer } from 'react-toastify'
@@ -25,6 +24,7 @@ import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
 import { Badge, Club, School, StudentType, Tag, UserInfo, Year } from './types'
 import {
+  cache,
   doApiRequest,
   isClubFieldShown,
   OptionsContext,
@@ -154,8 +154,6 @@ type PageComponent<T> = React.ComponentType<
   Omit<PageComponentProps, keyof T> & T
 > &
   StaticPageProps<T>
-
-const cache = new LRU()
 
 /**
  * A wrapper that goes around any page that requires authentication.
@@ -311,18 +309,14 @@ function renderPage<T>(
     }
 
     const fetchOptions = async () => {
-      let val = cache.get('base:options')
-      if (val != null) {
-        return val
-      }
-      try {
-        const resp = await doApiRequest('/options/?format=json')
-        val = await resp.json()
-        cache.set('base:options', val, 1000 * 60)
-        return val
-      } catch (e) {
-        return {}
-      }
+      return await cache(
+        'base:options',
+        async () => {
+          const resp = await doApiRequest('/options/?format=json')
+          return await resp.json()
+        },
+        1000 * 60,
+      )
     }
 
     const fetchPermissions = async () => {
@@ -380,7 +374,6 @@ export type PaginatedClubPage = {
 type ListPageProps = {
   badges: Badge[]
   clubs: PaginatedClubPage
-  liveEventCount: number
   schools: School[]
   studentTypes: StudentType[]
   tags: Tag[]
@@ -398,52 +391,51 @@ type ListPageComponent<T> = React.ComponentType<
  * Cache this content for future requests.
  */
 const getPublicCachedContent = async () => {
-  const val = cache.get('list:props')
-  if (val != null) {
-    return val
-  }
+  return await cache(
+    'list:props',
+    async () => {
+      const [
+        tagsRequest,
+        badgesRequest,
+        schoolRequest,
+        yearRequest,
+        studentTypesRequest,
+      ] = await Promise.all([
+        doApiRequest('/tags/?format=json'),
+        doApiRequest('/badges/?format=json'),
+        doApiRequest('/schools/?format=json'),
+        doApiRequest('/years/?format=json'),
+        isClubFieldShown('student_types')
+          ? doApiRequest('/student_types/?format=json')
+          : Promise.resolve(null),
+      ])
 
-  const [
-    tagsRequest,
-    badgesRequest,
-    schoolRequest,
-    yearRequest,
-    studentTypesRequest,
-  ] = await Promise.all([
-    doApiRequest('/tags/?format=json'),
-    doApiRequest('/badges/?format=json'),
-    doApiRequest('/schools/?format=json'),
-    doApiRequest('/years/?format=json'),
-    isClubFieldShown('student_types')
-      ? doApiRequest('/student_types/?format=json')
-      : Promise.resolve(null),
-  ])
+      const [
+        tagsResponse,
+        badgesResponse,
+        schoolResponse,
+        yearResponse,
+        studentTypesResponse,
+      ] = await Promise.all([
+        tagsRequest.json(),
+        badgesRequest.json(),
+        schoolRequest.json(),
+        yearRequest.json(),
+        studentTypesRequest != null
+          ? studentTypesRequest.json()
+          : Promise.resolve([]),
+      ])
 
-  const [
-    tagsResponse,
-    badgesResponse,
-    schoolResponse,
-    yearResponse,
-    studentTypesResponse,
-  ] = await Promise.all([
-    tagsRequest.json(),
-    badgesRequest.json(),
-    schoolRequest.json(),
-    yearRequest.json(),
-    studentTypesRequest != null
-      ? studentTypesRequest.json()
-      : Promise.resolve([]),
-  ])
-
-  const out = {
-    badges: badgesResponse as Badge[],
-    schools: schoolResponse as School[],
-    studentTypes: studentTypesResponse as StudentType[],
-    tags: tagsResponse as Tag[],
-    years: yearResponse as Year[],
-  }
-  cache.set('list:props', out, 1000 * 60)
-  return out
+      return {
+        badges: badgesResponse as Badge[],
+        schools: schoolResponse as School[],
+        studentTypes: studentTypesResponse as StudentType[],
+        tags: tagsResponse as Tag[],
+        years: yearResponse as Year[],
+      }
+    },
+    1000 * 60,
+  )
 }
 
 /**
@@ -485,22 +477,18 @@ export function renderListPage<T>(
 
     const initialProps = await fetchOriginalProps()
 
-    const [clubsRequest, liveEventRequest, cached] = await Promise.all([
-      doApiRequest('/clubs/?page=1&ordering=featured&format=json', data),
-      doApiRequest('/events/live/', data),
+    const [clubsResponse, cached] = await Promise.all([
+      doApiRequest(
+        '/clubs/?page=1&ordering=featured&format=json',
+        data,
+      ).then((resp) => resp.json()),
       getPublicCachedContent(),
-    ])
-
-    const [clubsResponse, liveEventResponse] = await Promise.all([
-      clubsRequest.json(),
-      liveEventRequest.json(),
     ])
 
     return {
       ...initialProps,
       ...cached,
       clubs: clubsResponse as PaginatedClubPage,
-      liveEventCount: liveEventResponse.length,
     }
   }
 
