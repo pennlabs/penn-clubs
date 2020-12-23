@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ReactElement } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import {
@@ -10,7 +10,7 @@ import {
   M4,
 } from '../../constants'
 import { MembershipRank } from '../../types'
-import { useSetting } from '../../utils'
+import { doApiRequest, useSetting } from '../../utils'
 import { MEMBERSHIP_ROLE_NAMES } from '../../utils/branding'
 
 const LiveBanner = styled.div`
@@ -71,17 +71,27 @@ const WhiteButton = styled.a`
 `
 
 interface LiveEventsDialogProps {
-  liveEventCount: number
   isPreFair: boolean
   isFair: boolean
 }
 
 const LiveEventsDialog = ({
-  liveEventCount,
   isPreFair,
   isFair,
 }: LiveEventsDialogProps): ReactElement | null => {
   const fairName = useSetting('FAIR_NAME')
+  const [liveEventCount, setLiveEventCount] = useState<number>(0)
+
+  useEffect(() => {
+    if (fairName != null) {
+      const now = new Date().toISOString()
+      doApiRequest(
+        `/events/?format=json&start_time__lte=${now}&end_time__gte=${now}`,
+      )
+        .then((resp) => resp.json())
+        .then((data) => setLiveEventCount(data.length))
+    }
+  }, [])
 
   if (fairName == null) {
     return null

@@ -104,7 +104,6 @@ const Quote = styled.p`
 
 const Actions = ({
   club,
-  userInfo,
   style,
   updateRequests,
   className,
@@ -113,8 +112,8 @@ const Actions = ({
   const { code, favorite_count: favoriteCount } = club
   const isRequested = club.is_request
 
-  // inClub is set to the membership object if the user is in the club, otherwise false
-  const inClub = club.is_member !== false ? { role: club.is_member } : false
+  // inClub is set to true if the user is in the club, otherwise false
+  const inClub = club.is_member !== false
 
   // a user can edit a club if they are either a superuser or in the club and
   // at least an officer

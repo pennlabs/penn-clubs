@@ -1220,10 +1220,7 @@ class ClubTestCase(TestCase):
                 "query": f"size__or={Club.SIZE_MEDIUM},{Club.SIZE_LARGE}",
                 "results": ["pppjo", "lorem-ipsum"],
             },
-            {
-                "query": f"application_required={Club.APPLICATION_AND_INTERVIEW}",
-                "results": ["pppjo"],
-            },
+            {"query": f"application_required={Club.OPEN_MEMBERSHIP}", "results": ["pppjo"]},
         ]
 
         for query in queries:
