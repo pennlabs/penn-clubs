@@ -1213,7 +1213,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         # lookup clubs by code
         clubs = [
-            code.strip() for code in re.split(r",\t\n ", request.data.get("clubs", "").strip())
+            code.strip() for code in re.split(r"[,\t\n]", request.data.get("clubs", "").strip())
         ]
         clubs = [code for code in clubs if code]
         if not clubs:
