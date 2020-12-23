@@ -1221,7 +1221,7 @@ class ClubTestCase(TestCase):
                 "results": ["pppjo", "lorem-ipsum"],
             },
             {
-                "query": f"application_required={Club.APPLICATION_AND_INTERVIEW}",
+                "query": f"application_required={Club.OPEN_MEMBERSHIP}",
                 "results": ["pppjo"],
             },
         ]
