@@ -5,6 +5,11 @@ describe('Membership request tests', () => {
 
     // request membership
     cy.visit('/club/pppjo/')
+
+    // ensure benjamin franklin is a member
+    cy.contains('Benjamin Franklin')
+
+    // click request button
     cy.contains('.button:visible', /(I'm a Member|Request Membership)/).click()
     cy.contains('.button:visible', 'Confirm').click()
 
