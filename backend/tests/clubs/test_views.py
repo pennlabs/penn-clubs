@@ -1342,10 +1342,34 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
+    def test_club_bypass_for_invite(self):
+        """
+        Test the bypass feature for retrieving a single club that is inactive.
+        This is required in order for the invitation page to work correctly.
+        """
+        # ensure that this all works without an active club
+        self.club1.active = False
+        self.club1.approved = None
+        self.club1.save()
+
+        # login to a non superuser
+        self.client.login(username=self.user4.username, password="test")
+        self.assertFalse(self.user4.is_superuser)
+
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)) + "?bypass=true")
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertIn("code", resp.data)
+
     def test_club_invite(self):
         """
         Test the email invitation feature.
         """
+        # ensure that this all works without an active club
+        self.club1.active = False
+        self.club1.approved = None
+        self.club1.save()
+
+        # login to a superuser
         self.client.login(username=self.user5.username, password="test")
 
         resp = self.client.post(
@@ -1406,8 +1430,18 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
         # ensure a second invite can be claimed without toggling on public status
+        # when user is not a superuser
         self.client.login(username=self.user4.username, password="test")
+        self.assertFalse(self.user4.is_superuser)
 
+        # ensure fetching invite information works
+        resp = self.client.get(
+            reverse("club-invites-detail", args=(self.club1.code, ids_and_tokens[2][0]))
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertIn("id", resp.data)
+
+        # ensure redeeming invite works
         resp = self.client.patch(
             reverse("club-invites-detail", args=(self.club1.code, ids_and_tokens[2][0])),
             {"token": ids_and_tokens[2][1], "public": False},

@@ -84,9 +84,17 @@ class ClubPermission(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         # handle case where club is approved but newer version may not be
-        if view.action in ["retrieve", "children"]:
+        if view.action in {"retrieve", "children"}:
+            # anyone can view approved clubs
             if obj.approved or obj.ghost:
                 return True
+
+            # with special bypass flag, anyone can view information
+            # this is used for invitations
+            if request.query_params.get("bypass", "false").lower().strip() == "true":
+                return True
+
+            # otherwise, can view if you have special permissions or is member
             return request.user.is_authenticated and (
                 request.user.has_perm("clubs.see_pending_clubs")
                 or request.user.has_perm("clubs.manage_club")
@@ -120,16 +128,16 @@ class ClubPermission(permissions.BasePermission):
             return membership.role <= Membership.ROLE_OFFICER
 
     def has_permission(self, request, view):
-        if view.action in [
+        if view.action in {
             "children",
             "destroy",
             "partial_update",
             "update",
             "upload",
             "upload_file",
-        ]:
+        }:
             return request.user.is_authenticated
-        elif view.action in ["create"]:
+        elif view.action in {"create"}:
             return request.user.is_authenticated
         else:
             return True
