@@ -82,37 +82,25 @@ const Invite = ({
     )
   }
 
-  if (!inviter || !club.code) {
-    if (error) {
-      return (
-        <div
-          className="has-text-centered"
-          style={{ margin: 30, marginTop: 60 }}
-        >
-          <Metadata title={`${OBJECT_NAME_TITLE_SINGULAR} Invite`} />
-          <h1 className="title is-2">404 Not Found</h1>
+  if (error != null || inviter == null || !club.code) {
+    return (
+      <div className="has-text-centered" style={{ margin: 30, marginTop: 60 }}>
+        <Metadata title={`${OBJECT_NAME_TITLE_SINGULAR} Invite`} />
+        <h1 className="title is-2">404 Not Found</h1>
+        {error != null ? (
+          <p>An error occured while processing your invitation.</p>
+        ) : (
           <p>
-            The invite you are looking for does not exist. Perhaps it was
-            already claimed?
+            The {inviter != null ? 'invite' : OBJECT_NAME_SINGULAR} you are
+            looking for does not exist. Perhaps it was already claimed?
           </p>
-          <p>
-            If you believe that this is an error, please contact <Contact />.
-          </p>
-          <p>{error && formatResponse(error)}</p>
-        </div>
-      )
-    } else {
-      return (
-        <div
-          className="has-text-centered"
-          style={{ margin: 30, marginTop: 60 }}
-        >
-          <ClubMetadata club={club} />
-          <h1 className="title is-2">Loading...</h1>
-          <p>Processing your invitation...</p>
-        </div>
-      )
-    }
+        )}
+        <p>
+          For assistance, please contact <Contact />.
+        </p>
+        <p>{error && formatResponse(error)}</p>
+      </div>
+    )
   }
 
   const { name, code, image_url: image } = club
