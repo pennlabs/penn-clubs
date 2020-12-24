@@ -1,14 +1,15 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useState } from 'react'
 
 import ClubMetadata from '../../../../../components/ClubMetadata'
 import { Contact, Metadata } from '../../../../../components/common'
+import AuthPrompt from '../../../../../components/common/AuthPrompt'
 import { CLUB_ROUTE } from '../../../../../constants/routes'
 import renderPage from '../../../../../renderPage'
 import { Club } from '../../../../../types'
-import { doApiRequest, formatResponse, LOGIN_URL } from '../../../../../utils'
+import { doApiRequest, formatResponse } from '../../../../../utils'
 import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -24,6 +25,8 @@ type Query = {
 type InviteProps = {
   club: Club
   query: Query
+  inviter: Inviter | null
+  error: Error | null
 }
 
 type Inviter = {
@@ -32,13 +35,19 @@ type Inviter = {
   email: string
 }
 
-type Error = { [key: string]: string }
+type Error = { [key: string]: string } | string
 
-const Invite = ({ club, query }: InviteProps): ReactElement => {
+const Invite = ({
+  club,
+  query,
+  inviter: initialInviter,
+  error: initialError,
+  authenticated,
+}: InviteProps & { authenticated: boolean | null }): ReactElement => {
   const router = useRouter()
   const [isPublic, setIsPublic] = useState<boolean>(true)
-  const [inviter, setInviter] = useState<Inviter | null>(null)
-  const [error, setError] = useState<Error | null>(null)
+  const [error, setError] = useState<Error | null>(initialError)
+  const [inviter, setInviter] = useState<Inviter | null>(initialInviter)
 
   const accept = (isPublic: boolean) => {
     if (query.invite === 'example') {
@@ -64,32 +73,14 @@ const Invite = ({ club, query }: InviteProps): ReactElement => {
     })
   }
 
-  useEffect(() => {
-    if (query.invite === 'example' && query.token === 'example') {
-      setInviter({
-        id: -1,
-        name: '[Example name]',
-        email: '[Example email]',
-      })
-    } else {
-      doApiRequest(
-        `/clubs/${query.club}/invites/${query.invite}/?format=json`,
-      ).then((resp) => {
-        resp.json().then((data) => {
-          if (resp.ok) {
-            setInviter(data)
-          } else if (
-            resp.status === 403 &&
-            data.detail === 'Authentication credentials were not provided.'
-          ) {
-            window.location.href = `${LOGIN_URL}?next=${window.location.pathname}`
-          } else {
-            setError(data)
-          }
-        })
-      })
-    }
-  }, [])
+  if (!authenticated) {
+    return (
+      <>
+        <Metadata title={`${OBJECT_NAME_TITLE_SINGULAR} Invite`} />
+        <AuthPrompt />
+      </>
+    )
+  }
 
   if (!inviter || !club.code) {
     if (error) {
@@ -174,17 +165,40 @@ const Invite = ({ club, query }: InviteProps): ReactElement => {
   )
 }
 
-Invite.getInitialProps = async (
-  ctx: NextPageContext,
-): Promise<{ query: Query; club: Club }> => {
-  const { query } = ctx
+Invite.getInitialProps = async (ctx: NextPageContext): Promise<InviteProps> => {
+  const { req, query } = ctx
+  const reqData = {
+    headers: req ? { cookie: req.headers.cookie } : undefined,
+  }
 
   const clubRequest = await doApiRequest(
     `/clubs/${query.club}/?bypass=true&format=json`,
   )
   const clubResponse = await clubRequest.json()
 
-  return { query: query as Query, club: clubResponse }
+  let inviter: Inviter | null = null
+  let error: Error | null = null
+
+  if (query.invite === 'example' && query.token === 'example') {
+    inviter = {
+      id: -1,
+      name: '[Example name]',
+      email: '[Example email]',
+    }
+  } else {
+    const resp = await doApiRequest(
+      `/clubs/${query.club}/invites/${query.invite}/?format=json`,
+      reqData,
+    )
+    const data = await resp.json()
+    if (resp.ok) {
+      inviter = data
+    } else {
+      error = data
+    }
+  }
+
+  return { query: query as Query, club: clubResponse, inviter, error }
 }
 
 export default renderPage(Invite)
