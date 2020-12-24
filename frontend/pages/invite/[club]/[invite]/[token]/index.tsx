@@ -91,7 +91,7 @@ const Invite = ({
           <p>An error occured while processing your invitation.</p>
         ) : (
           <p>
-            The {inviter != null ? 'invite' : OBJECT_NAME_SINGULAR} you are
+            The {inviter == null ? 'invite' : OBJECT_NAME_SINGULAR} you are
             looking for does not exist. Perhaps it was already claimed?
           </p>
         )}
@@ -137,8 +137,8 @@ const Invite = ({
               checked={isPublic}
               onChange={() => setIsPublic(!isPublic)}
             />{' '}
-            Make my membership to this club public. Outsiders will be able to
-            see my name and role in {name}.
+            Make my membership to this ${OBJECT_NAME_SINGULAR} public. Outsiders
+            will be able to see my name and role in {name}.
           </label>
         </p>
       )}
@@ -161,6 +161,7 @@ Invite.getInitialProps = async (ctx: NextPageContext): Promise<InviteProps> => {
 
   const clubRequest = await doApiRequest(
     `/clubs/${query.club}/?bypass=true&format=json`,
+    reqData,
   )
   const clubResponse = await clubRequest.json()
 
