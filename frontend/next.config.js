@@ -18,4 +18,9 @@ module.exports = {
       },
     ]
   },
+  publicRuntimeConfig: {
+    SITE_ORIGIN: process.env.DOMAIN
+      ? `https://${process.env.DOMAIN}`
+      : `http://localhost:${process.env.PORT || 3000}`,
+  },
 }
