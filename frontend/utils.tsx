@@ -1,13 +1,13 @@
 import fetch from 'isomorphic-unfetch'
 import LRU from 'lru-cache'
 import { NextPageContext } from 'next'
+import getConfig from 'next/config'
 import React, { createContext, ReactElement, useContext } from 'react'
 
 import { MembershipRank } from './types'
 import {
   ALL_CLUB_FIELDS,
   CLUB_FIELDS,
-  DOMAIN,
   MEMBERSHIP_ROLE_NAMES,
 } from './utils/branding'
 
@@ -75,10 +75,9 @@ export function getDefaultClubImageURL(): string {
   return '/static/img/hatlogo.png'
 }
 
-export const SITE_ORIGIN =
-  process.env.NODE_ENV === 'production'
-    ? `https://${process.env.DOMAIN || DOMAIN}`
-    : `http://localhost:${process.env.PORT || 3000}`
+const { publicRuntimeConfig } = getConfig()
+
+export const SITE_ORIGIN = publicRuntimeConfig.SITE_ORIGIN
 export const API_BASE_URL = `${SITE_ORIGIN}/api`
 
 export const EMPTY_DESCRIPTION =
