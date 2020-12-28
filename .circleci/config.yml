@@ -23,7 +23,7 @@ workflows:
           project-location: frontend
           image: pennlabs/frontend-test:latest
       - docker/publish:
-          name: publish-clubs-backend
+          name: publish-backend
           requires:
             - django-tools/check
           path: backend
@@ -33,7 +33,7 @@ workflows:
           context: docker-publish
           <<: *branch-filters
       - docker/publish:
-          name: publish-clubs-frontend
+          name: publish-frontend
           requires:
             - react-tools/check
           path: frontend
@@ -42,32 +42,9 @@ workflows:
           tag: "${CIRCLE_SHA1},latest"
           context: docker-publish
           <<: *branch-filters
-      - docker/publish:
-          name: publish-hub-backend
-          requires:
-            - django-tools/check
-          path: backend
-          cache_from: "pennlabs/first-year-hub-backend:latest"
-          image: "pennlabs/first-year-hub-backend"
-          tag: "${CIRCLE_SHA1},latest"
-          context: docker-publish
-          <<: *branch-filters
-      - docker/publish:
-          name: publish-hub-frontend
-          requires:
-            - react-tools/check
-          path: frontend
-          extra_build_args: "--build-arg NEXT_PUBLIC_SITE_NAME=fyh"
-          cache_from: "pennlabs/first-year-hub-frontend:latest"
-          image: "pennlabs/first-year-hub-frontend"
-          tag: "${CIRCLE_SHA1},latest"
-          context: docker-publish
-          <<: *branch-filters
       - helm-tools/deploy:
           requires:
-            - publish-clubs-backend
-            - publish-clubs-frontend
-            - publish-hub-backend
-            - publish-hub-frontend
+            - publish-backend
+            - publish-frontend
           context: k8s-deploy
           <<: *branch-filters

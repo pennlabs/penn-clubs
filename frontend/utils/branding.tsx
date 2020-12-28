@@ -1,8 +1,10 @@
+import getConfig from 'next/config'
 import { ReactNode } from 'react'
 
 import { ClubEventType } from '../types'
 
-const site = process.env.NEXT_PUBLIC_SITE_NAME || 'clubs'
+const { publicRuntimeConfig } = getConfig()
+const site = publicRuntimeConfig.NEXT_PUBLIC_SITE_NAME || 'clubs'
 
 const sites = {
   clubs: {
