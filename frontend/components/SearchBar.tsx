@@ -10,6 +10,7 @@ import styled from 'styled-components'
 
 import {
   ALLBIRDS_GRAY,
+  BLACK_ALPHA,
   CLUBS_GREY,
   FOCUS_GRAY,
   H1_TEXT,
@@ -21,25 +22,13 @@ import {
   FULL_NAV_HEIGHT,
   MD,
   mediaMaxWidth,
-  mediaMinWidth,
   NAV_HEIGHT,
-  SEARCH_BAR_MOBILE_HEIGHT,
 } from '../constants/measurements'
 import { BODY_FONT } from '../constants/styles'
 import { Icon } from './common'
 import DropdownFilter, { FilterHeader, SelectableTag } from './DropdownFilter'
 import FilterSearch, { FuseTag } from './FilterSearch'
 import OrderInput from './OrderInput'
-
-const MobileSearchBarSpacer = styled.div`
-  display: block;
-  width: 100%;
-  height: ${SEARCH_BAR_MOBILE_HEIGHT};
-
-  ${mediaMinWidth(MD)} {
-    display: none !important;
-  }
-`
 
 export const SearchbarRightContainer = styled.div`
   width: 80vw;
@@ -63,6 +52,7 @@ const Wrapper = styled.div`
   color: ${H1_TEXT};
 
   ${mediaMaxWidth(MD)} {
+    padding-top: 0px !important;
     position: relative;
     height: auto;
     overflow: visible;
@@ -79,7 +69,7 @@ const SearchWrapper = styled.div`
   }
 `
 
-const Content = styled.div`
+const Content = styled.div<{ show?: boolean }>`
   padding: 36px 17px 12px 17px;
   width: 100%;
 
@@ -87,7 +77,12 @@ const Content = styled.div`
     display: none;
   }
 
+  .mobile-only {
+    display: none;
+  }
+
   ${mediaMaxWidth(MD)} {
+    display: ${({ show }) => (show ? 'block' : 'none')};
     overflow-x: hidden;
     width: 100%;
     margin: 0;
@@ -97,6 +92,27 @@ const Content = styled.div`
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.075);
     background: ${WHITE};
     top: ${NAV_HEIGHT};
+
+    .mobile-only {
+      display: block;
+    }
+  }
+`
+
+const MobileToggle = styled.button`
+  display: none;
+  ${mediaMaxWidth(MD)} {
+    z-index: 999;
+    display: block;
+    position: fixed;
+    top: ${NAV_HEIGHT};
+    right: 16px;
+    background-color: ${WHITE};
+    padding: 5px 8px;
+    border-radius: 0 0 5px 5px;
+    border: 1px solid ${BLACK_ALPHA(0.1)};
+    border-top: 0;
+    cursor: pointer;
   }
 `
 
@@ -472,6 +488,7 @@ const SearchBar = ({
   children,
 }: SearchBarProps): ReactElement => {
   const [scrollAmount, setScrollAmount] = useState<number>(0)
+  const [mobileShow, setMobileShow] = useState<boolean>(false)
 
   useEffect(() => {
     const onScroll = () => {
@@ -489,16 +506,46 @@ const SearchBar = ({
   return (
     <>
       <Wrapper style={{ paddingTop: `${scrollAmount}rem` }}>
-        <Content>
+        <Content show={mobileShow}>
           <SearchBarValueContext.Provider value={searchInput}>
             <SearchBarContext.Provider value={updateSearch}>
               {children}
             </SearchBarContext.Provider>
           </SearchBarValueContext.Provider>
+          <div className="has-text-centered mobile-only">
+            <button
+              type="button"
+              className="button is-light is-small"
+              onClick={(e) => {
+                e.preventDefault()
+                setMobileShow(false)
+              }}
+              onKeyPress={(e) => {
+                if (e.code === 'Space' || e.code === 'Enter') {
+                  e.preventDefault()
+                  setMobileShow(false)
+                }
+              }}
+            >
+              Hide Menu
+            </button>
+          </div>
         </Content>
+        <MobileToggle
+          onClick={(e) => {
+            e.preventDefault()
+            setMobileShow(true)
+          }}
+          onKeyPress={(e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+              e.preventDefault()
+              setMobileShow(true)
+            }
+          }}
+        >
+          <Icon name="search" />
+        </MobileToggle>
       </Wrapper>
-
-      <MobileSearchBarSpacer />
     </>
   )
 }
