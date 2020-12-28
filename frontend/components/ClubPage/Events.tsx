@@ -10,7 +10,7 @@ import Modal from '../common/Modal'
 import EventModal from '../EventPage/EventModal'
 
 type EventsProps = {
-  data: [ClubEvent]
+  data: ClubEvent[]
 }
 
 const StyledCard = styled(Card)`

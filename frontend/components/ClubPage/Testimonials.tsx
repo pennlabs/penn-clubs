@@ -43,7 +43,7 @@ function shuffleArray<T>(array: T[]): void {
 }
 
 type TestimonialsProps = {
-  data: [Testimonial]
+  data: Testimonial[]
 }
 
 const Testimonials = (props: TestimonialsProps): ReactElement | null => {
