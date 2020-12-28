@@ -7,12 +7,13 @@ describe('Membership request tests', () => {
     cy.visit('/club/pppjo/')
 
     // scroll through page
-    cy.scrollTo('bottom')
-    cy.wait(500)
-    cy.scrollTo('top')
+    cy.scrollTo('bottom', { duration: 500 })
 
     // ensure benjamin franklin is a member
     cy.contains('Benjamin Franklin')
+    
+    // scroll back to top
+    cy.scrollTo('top', { duration: 500 })
 
     // click request button
     cy.contains('.button:visible', /(I'm a Member|Request Membership)/).click()
