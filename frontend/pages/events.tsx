@@ -41,6 +41,8 @@ import {
   CLUBS_GREY_LIGHT,
   EVENT_TYPE_COLORS,
   FULL_NAV_HEIGHT,
+  MD,
+  mediaMaxWidth,
   SNOW,
 } from '../constants'
 import renderPage from '../renderPage'
@@ -63,6 +65,12 @@ const CardList = styled.div`
     display: inline-block;
     vertical-align: top;
     width: 400px;
+  }
+
+  ${mediaMaxWidth(MD)} {
+    & .event {
+      width: 100%;
+    }
   }
 `
 
@@ -111,21 +119,20 @@ interface CalendarHeaderProps {
   views: CalendarView[]
 }
 
-const StyledHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   margin: 20px 0;
+  & > .info {
+    float: left;
+  }
   .tools {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    float: right;
     margin: 0;
-    .view-label {
-      font-size: 18px;
-    }
+    margin-left: auto;
     & > *:not(:first-child) {
       margin-left: 20px;
+    }
+    & > div {
+      display: inline-block;
     }
   }
 `
@@ -146,7 +153,7 @@ const EventsViewToolbar = ({
   setViewOption,
   showSyncModal,
 }): ReactElement => (
-  <div style={{ display: 'flex' }}>
+  <>
     <div className="buttons has-addons mt-0 mb-0">
       <button
         id="event-view-list"
@@ -173,7 +180,7 @@ const EventsViewToolbar = ({
         <Icon name="calendar" alt="calendar view" />
       </button>
     </div>
-    <div className="buttons has-addons mt-0 mb-0 ml-5">
+    <div className="buttons has-addons mt-0 mb-0">
       <button
         onClick={() => {
           showSyncModal && showSyncModal()
@@ -183,7 +190,7 @@ const EventsViewToolbar = ({
         <Icon name="refresh" className="mr-1" /> Export
       </button>
     </div>
-  </div>
+  </>
 )
 
 /**
@@ -203,11 +210,13 @@ const CalendarHeader = ({
   ]
   return (
     <StyledHeader>
-      <Title className="title" style={{ color: CLUBS_GREY, margin: 0 }}>
-        Events
-      </Title>
+      <div className="info">
+        <Title className="title" style={{ color: CLUBS_GREY, margin: 0 }}>
+          Events
+        </Title>
+        <div>{label}</div>
+      </div>
       <div className="tools">
-        <div className="view-label">{label}</div>
         <div className="buttons has-addons mt-0 mb-0">
           <button
             className="button is-medium"
@@ -577,25 +586,16 @@ function EventPage({
                 <>
                   {!!liveEvents.length && (
                     <>
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <Title
-                          className="title"
-                          style={{ color: CLUBS_GREY, marginTop: '30px' }}
-                        >
-                          Live Events
-                        </Title>
-                        <EventsViewToolbar
-                          viewOption={viewOption}
-                          setViewOption={setViewOption}
-                          showSyncModal={showSyncModal}
-                        />
-                      </div>
+                      <StyledHeader>
+                        <Title className="title info">Live Events</Title>
+                        <div className="tools">
+                          <EventsViewToolbar
+                            viewOption={viewOption}
+                            setViewOption={setViewOption}
+                            showSyncModal={showSyncModal}
+                          />
+                        </div>
+                      </StyledHeader>
                       <CardList>
                         {liveEvents.map((e) => (
                           <EventCard key={e.id} event={e} />
@@ -604,30 +604,18 @@ function EventPage({
                       <br />
                     </>
                   )}
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Title
-                      className="title"
-                      style={{
-                        color: CLUBS_GREY,
-                        marginTop: !liveEvents.length ? '30px' : 'unset',
-                      }}
-                    >
-                      Upcoming Events
-                    </Title>
+                  <StyledHeader>
+                    <Title className="title info">Upcoming Events</Title>
                     {!liveEvents.length && (
-                      <EventsViewToolbar
-                        viewOption={viewOption}
-                        setViewOption={setViewOption}
-                        showSyncModal={showSyncModal}
-                      />
+                      <div className="tools">
+                        <EventsViewToolbar
+                          viewOption={viewOption}
+                          setViewOption={setViewOption}
+                          showSyncModal={showSyncModal}
+                        />
+                      </div>
                     )}
-                  </div>
+                  </StyledHeader>
                   <CardList>
                     {upcomingEvents.map((e) => (
                       <EventCard key={e.id} event={e} />
