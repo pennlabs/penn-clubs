@@ -58,11 +58,3 @@ You will need to set the following environment variables on the frontend:
 ### Development
 
 Click `Login` to log in as a test user. The `./manage.py populate` command creates a test user for you with username `bfranklin` and password `test`. Go to `/api/admin` to login to this account.
-
-To grant all users in the database superuser privileges for development:
-```bash
-cd backend
-pipenv shell
-./manage.py shell_plus
->>> User.objects.all().update(is_superuser=True, is_staff=True)
-```

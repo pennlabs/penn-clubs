@@ -130,12 +130,12 @@ export interface Club {
   approved_by: string | null
   approved_comment: string | null
   available_virtually: boolean
-  badges: [Badge]
+  badges: Badge[]
   code: string
   description: string
   email: string
   enables_subscription: boolean
-  events: [ClubEvent]
+  events: ClubEvent[]
   facebook: string
   fairs: number[]
   favorite_count: number
@@ -152,15 +152,15 @@ export interface Club {
   is_subscribe: boolean
   linkedin: string
   listserv: string
-  members: [Membership]
+  members: Membership[]
   membership_count: number
   name: string
   recruiting_cycle: ClubRecruitingCycle
   signature_events: string
   size: ClubSize
   subtitle: string
-  tags: [Tag]
-  testimonials: [Testimonial]
+  tags: Tag[]
+  testimonials: Testimonial[]
   twitter: string
   website: string
 }

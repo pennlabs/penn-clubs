@@ -6,6 +6,11 @@ describe('Membership request tests', () => {
     // request membership
     cy.visit('/club/pppjo/')
 
+    // scroll through page
+    cy.scrollTo('bottom')
+    cy.wait(500)
+    cy.scrollTo('top')
+
     // ensure benjamin franklin is a member
     cy.contains('Benjamin Franklin')
 

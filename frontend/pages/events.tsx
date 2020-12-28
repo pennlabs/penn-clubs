@@ -128,11 +128,15 @@ const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
     float: right;
     margin: 0;
     margin-left: auto;
-    & > *:not(:first-child) {
-      margin-left: 20px;
-    }
     & > div {
+      margin-left: 20px;
       display: inline-block;
+    }
+  }
+
+  ${mediaMaxWidth(MD)} {
+    .tools {
+      margin-top: 20px;
     }
   }
 `
