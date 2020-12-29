@@ -100,6 +100,8 @@ applications:
         value: 80
       - name: DOMAIN
         value: hub.provost.upenn.edu
+      - name: NEXT_PUBLIC_SITE_NAME
+        value: fyh
 
 cronjobs:
   - name: rank-clubs
