@@ -54,7 +54,7 @@ applications:
     tag: "6.0"
     port: 6379
   - name: hub-django-wgsi
-    image: pennlabs/first-year-hub-backend
+    image: pennlabs/penn-clubs-backend
     secret: first-year-hub
     replicas: 3
     ingress:
@@ -71,7 +71,7 @@ applications:
       - name: REDIS_HOST
         value: penn-clubs-hub-redis
   - name: hub-django-asgi
-    image: pennlabs/first-year-hub-backend
+    image: pennlabs/penn-clubs-backend
     secret: first-year-hub
     cmd: ["/usr/local/bin/asgi-run"]
     replicas: 2
@@ -89,7 +89,7 @@ applications:
       - name: REDIS_HOST
         value: penn-clubs-hub-redis
   - name: hub-react
-    image: pennlabs/first-year-hub-frontend
+    image: pennlabs/penn-clubs-frontend
     replicas: 2
     ingress:
       hosts:
@@ -114,7 +114,7 @@ cronjobs:
     cmd: ["python", "manage.py", "daily_notifications"]
   - name: hub-daily-notifications
     schedule: "0 13 * * *"
-    image: pennlabs/first-year-hub-backend
+    image: pennlabs/penn-clubs-backend
     secret: first-year-hub
     cmd: ["python", "manage.py", "daily_notifications"]
   - name: calendar-import
