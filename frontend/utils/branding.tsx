@@ -4,7 +4,7 @@ import { ReactNode } from 'react'
 import { ClubEventType } from '../types'
 
 const { publicRuntimeConfig } = getConfig()
-const site = publicRuntimeConfig.NEXT_PUBLIC_SITE_NAME || 'clubs'
+const site = publicRuntimeConfig.NEXT_PUBLIC_SITE_NAME
 
 const sites = {
   clubs: {

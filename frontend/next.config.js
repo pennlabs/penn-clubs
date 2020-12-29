@@ -22,6 +22,6 @@ module.exports = {
     SITE_ORIGIN: process.env.DOMAIN
       ? `https://${process.env.DOMAIN}`
       : `http://localhost:${process.env.PORT || 3000}`,
-    NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME,
+    NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME || 'clubs',
   },
 }
