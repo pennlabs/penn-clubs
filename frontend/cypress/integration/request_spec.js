@@ -3,6 +3,16 @@ describe('Membership request tests', () => {
     // login to James Madison
     cy.login('jmadison', 'test')
 
+    // see if membership already exists, remove if so
+    cy.visit('/settings')
+    cy.window().then(win => {
+      win.document.querySelectorAll("table tr").forEach((item) => {
+        if (item.textContent.indexOf("Penn Pre-Professional Juggling Organization") !== -1) {
+          item.querySelector(".button").click()
+        }
+      })
+    })
+
     // request membership
     cy.visit('/club/pppjo/')
 
