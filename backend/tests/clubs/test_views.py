@@ -2046,6 +2046,7 @@ class ClubTestCase(TestCase):
 
         resp = self.client.get(reverse("email-invites"))
         self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertIsInstance(resp.data, list)
 
     def test_permission_lookup(self):
         permissions = [
