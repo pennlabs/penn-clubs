@@ -114,6 +114,7 @@ from clubs.serializers import (
     TestimonialSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
+    UserMembershipInviteSerializer,
     UserMembershipRequestSerializer,
     UserMembershipSerializer,
     UserProfileSerializer,
@@ -3036,7 +3037,10 @@ class EmailInvitesAPIView(generics.ListAPIView):
     """
 
     permission_classes = [IsAuthenticated]
-    serializer_class = MembershipInviteSerializer
+    serializer_class = UserMembershipInviteSerializer
+
+    def get_operation_id(self, **kwargs):
+        return "List Email Invitations for Self"
 
     def get_queryset(self):
         return MembershipInvite.objects.filter(email=self.request.user.email, active=True).order_by(

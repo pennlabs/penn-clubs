@@ -450,7 +450,6 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
     id = serializers.CharField(max_length=8, read_only=True)
     email = serializers.EmailField(read_only=True)
     token = serializers.CharField(max_length=128, write_only=True)
-    code = serializers.CharField(source="club.code", read_only=True)
     name = serializers.CharField(source="club.name", read_only=True)
     public = serializers.BooleanField(write_only=True, required=False)
 
@@ -496,7 +495,6 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
     class Meta:
         model = MembershipInvite
         fields = [
-            "code",
             "email",
             "id",
             "name",
@@ -506,6 +504,18 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
             "token",
             "updated_at",
         ]
+
+
+class UserMembershipInviteSerializer(MembershipInviteSerializer):
+    """
+    This serializer is used for listing the email invitations that the current user was sent.
+    """
+
+    token = serializers.CharField(max_length=128)
+    code = serializers.CharField(source="club.code", read_only=True)
+
+    class Meta(MembershipInviteSerializer.Meta):
+        fields = MembershipInviteSerializer.Meta.fields + ["code"]
 
 
 class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
