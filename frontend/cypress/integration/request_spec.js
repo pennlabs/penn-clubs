@@ -4,11 +4,19 @@ describe('Membership request tests', () => {
     cy.login('jmadison', 'test')
 
     // see if membership already exists, remove if so
+    // go to the settings page first
     cy.visit('/settings')
+
+    // wait until table loaded
+    cy.contains('Position')
+
+    // remove membership if exists
     cy.window().then(win => {
       win.document.querySelectorAll("table tr").forEach((item) => {
         if (item.textContent.indexOf("Penn Pre-Professional Juggling Organization") !== -1) {
           item.querySelector(".button").click()
+          cy.log("Removed membership")
+          cy.wait(1000)
         }
       })
     })

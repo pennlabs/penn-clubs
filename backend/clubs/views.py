@@ -114,6 +114,7 @@ from clubs.serializers import (
     TestimonialSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
+    UserMembershipInviteSerializer,
     UserMembershipRequestSerializer,
     UserMembershipSerializer,
     UserProfileSerializer,
@@ -3030,30 +3031,21 @@ class MassInviteAPIView(APIView):
         )
 
 
-class LastEmailInviteTestAPIView(APIView):
+class EmailInvitesAPIView(generics.ListAPIView):
     """
-    get: Return the club code, invite id and token of the last sent email invite
+    get: Return the club code, invite id and token of the email invitations for the current user.
     """
 
     permission_classes = [IsAuthenticated]
+    serializer_class = UserMembershipInviteSerializer
 
-    def get(self, request):
-        latest_email_invite = MembershipInvite.objects.filter(active=True).latest("created_at")
-        club_code = latest_email_invite.club.code
-        email_id = latest_email_invite.id
-        email_token = latest_email_invite.token
+    def get_operation_id(self, **kwargs):
+        return "List Email Invitations for Self"
 
-        if request.user.email == latest_email_invite.email:
-            return Response({"code": club_code, "id": email_id, "token": email_token},)
-        else:
-            return Response(
-                {
-                    "detail": "You can only access tokens for invitations that match your email.",
-                    "email": request.user.email,
-                    "success": False,
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
+    def get_queryset(self):
+        return MembershipInvite.objects.filter(email=self.request.user.email, active=True).order_by(
+            "-created_at"
+        )
 
 
 class EmailPreviewContext(dict):

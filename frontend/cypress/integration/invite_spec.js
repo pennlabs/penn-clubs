@@ -33,11 +33,13 @@ describe('Invitation tests', () => {
 
     cy.login('jmadison', 'test')
 
-    cy.request('GET', '/api/test/lastemail').then((response) => {
+    cy.request('GET', '/api/settings/invites').then((responses) => {
+      const invite = responses.body[0]
+
       cy.logout()
       cy.login('bfranklin', 'test')
 
-      cy.visit(`/invite/${response.body['code']}/${response.body['id']}/${response.body['token']}`)
+      cy.visit(`/invite/${invite['code']}/${invite['id']}/${invite['token']}`)
       cy.contains('Invitation for Penn Pre-Professional Juggling Organization')
     })
   })
@@ -51,15 +53,18 @@ describe('Invitation tests', () => {
   it('Accepts invitation using incorrect and correct token with correct login credentials', () => {
     cy.login('jmadison', 'test')
 
-    cy.request('GET', '/api/test/lastemail').then((response) => {
+    cy.request('GET', '/api/settings/invites/').then((responses) => {
+      // get the latest token
+      const invite = responses.body[0]
+
       // Wrong Token leads to error
-      cy.visit(`/invite/${response.body['code']}/${response.body['id']}/WRONGTOKEN`)
+      cy.visit(`/invite/${invite['code']}/${invite['id']}/WRONGTOKEN`)
 
       cy.contains('Accept Invitation').click()
       cy.contains('Missing or invalid token in request!')
 
       // Correct Token leads to success
-      cy.visit(`/invite/${response.body['code']}/${response.body['id']}/${response.body['token']}`)
+      cy.visit(`/invite/${invite['code']}/${invite['id']}/${invite['token']}`)
 
       cy.contains('Accept Invitation').click()
 
@@ -67,7 +72,7 @@ describe('Invitation tests', () => {
       cy.title().should('eq', 'Penn Pre-Professional Juggling Organization')
       
       // Accessing invitation link after accepting it leads to 404 
-      cy.visit(`/invite/${response.body['code']}/${response.body['id']}/${response.body['token']}`)
+      cy.visit(`/invite/${invite['code']}/${invite['id']}/${invite['token']}`)
       cy.contains('404 Not Found')
     })
   })
