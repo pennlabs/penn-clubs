@@ -10,10 +10,10 @@ from clubs.views import (
     ClubFairViewSet,
     ClubViewSet,
     ClubVisitViewSet,
+    EmailInvitesAPIView,
     EventViewSet,
     FavoriteCalendarAPIView,
     FavoriteViewSet,
-    LastEmailInviteTestAPIView,
     MajorViewSet,
     MassInviteAPIView,
     MeetingZoomAPIView,
@@ -76,6 +76,7 @@ clubs_router.register(r"advisors", AdvisorViewSet, basename="club-advisors")
 
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="users-detail"),
+    path(r"settings/invites/", EmailInvitesAPIView.as_view(), name="email-invites"),
     path(r"settings/zoom/", UserZoomAPIView.as_view(), name="users-zoom"),
     path(r"settings/zoom/meetings/", MeetingZoomAPIView.as_view(), name="users-zoom-meeting"),
     path(r"settings/permissions/", UserPermissionAPIView.as_view(), name="users-permission"),
@@ -91,12 +92,6 @@ urlpatterns = [
     path(r"social/", include("social_django.urls", namespace="social")),
     path(r"webhook/meeting/", MeetingZoomWebhookAPIView.as_view(), name="webhooks-meeting"),
 ]
-
-# Only add the following endpoint if Django is in development/testing
-if settings.DEBUG:
-    urlpatterns.append(
-        path(r"test/lastemail", LastEmailInviteTestAPIView.as_view(), name="last-email")
-    )
 
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls

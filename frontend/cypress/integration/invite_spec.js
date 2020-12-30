@@ -33,7 +33,9 @@ describe('Invitation tests', () => {
 
     cy.login('jmadison', 'test')
 
-    cy.request('GET', '/api/test/lastemail').then((response) => {
+    cy.request('GET', '/api/settings/invites').then((responses) => {
+      const response = responses[0]
+
       cy.logout()
       cy.login('bfranklin', 'test')
 
@@ -51,7 +53,10 @@ describe('Invitation tests', () => {
   it('Accepts invitation using incorrect and correct token with correct login credentials', () => {
     cy.login('jmadison', 'test')
 
-    cy.request('GET', '/api/test/lastemail').then((response) => {
+    cy.request('GET', '/api/settings/invites/').then((responses) => {
+      // get the latest token
+      const response = responses[0]
+
       // Wrong Token leads to error
       cy.visit(`/invite/${response.body['code']}/${response.body['id']}/WRONGTOKEN`)
 

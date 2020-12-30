@@ -2030,6 +2030,23 @@ class ClubTestCase(TestCase):
         self.assertEqual(tag.club_set.count(), Club.objects.count())
         self.assertEqual(tag2.club_set.count(), Club.objects.count())
 
+    def test_email_preview(self):
+        """
+        Ensure that the email preview page can load without any issues.
+        """
+        resp = self.client.get(reverse("email-preview"))
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+    def test_list_email_invites(self):
+        """
+        Ensure that listing the email invitations endpoint works without any issues.
+        """
+        # login to account
+        self.client.login(username=self.user4.username, password="test")
+
+        resp = self.client.get(reverse("email-invites"))
+        self.assertEqual(resp.status_code, 200, resp.content)
+
     def test_permission_lookup(self):
         permissions = [
             "clubs.approve_club",
