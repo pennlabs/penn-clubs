@@ -81,4 +81,9 @@ describe('Permissioned (superuser) user tests', { retries: { runMode: 2, openMod
     cy.contains('Reports')
     cy.contains('.button', 'Create New Report').click()
   })
+
+  it('Visits a user profile page', () => {
+    cy.visit('/user/bfranklin')
+    cy.contains('Benjamin Franklin')
+  })
 })

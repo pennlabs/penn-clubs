@@ -875,6 +875,7 @@ class MembershipClubListSerializer(ClubListSerializer):
 
     Used on the user profile page to show additional information.
     """
+
     membership = serializers.SerializerMethodField("get_membership")
 
     def get_membership(self, obj):
