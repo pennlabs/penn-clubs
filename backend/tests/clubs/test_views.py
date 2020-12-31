@@ -784,13 +784,19 @@ class ClubTestCase(TestCase):
             self.assertIn("email", item)
             self.assertIn("role", item)
 
-        # list member as outsider
+        # list member as outsider, with all users having show profiles off
+        for mship in Membership.objects.filter(club__code="penn-labs"):
+            prof = mship.person.profile
+            prof.show_profile = False
+            prof.save()
+
         self.client.logout()
         resp = self.client.get(reverse("club-members-list", args=("penn-labs",)))
         self.assertIn(resp.status_code, [200], resp.content)
         data = json.loads(resp.content.decode("utf-8"))
+        # ensure emails are hidden
         for item in data:
-            self.assertNotIn("email", item)
+            self.assertFalse(item.get("email", None))
 
         # delete member should fail with insufficient permissions
         self.client.login(username=self.user2.username, password="test")
