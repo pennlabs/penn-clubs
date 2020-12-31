@@ -209,7 +209,9 @@ export interface UserProfile {
   graduation_year: number | null
   school: School[]
   major: Major[]
-  clubs: Club[]
+  clubs: (Club & {
+    membership: { active: boolean; title: string; role: number }
+  })[]
 }
 
 export type UserMembership = {

@@ -65,6 +65,7 @@ const AvatarWrapper = styled.div<{ isCentered?: boolean }>`
 
 type ProfilePicProps = {
   className?: string
+  size?: string
   user: { name: string; image: string | null }
   isRound?: boolean
   style?: CSSProperties
@@ -78,6 +79,7 @@ export const ProfilePic = ({
   isRound = true,
   style,
   fontSize,
+  size = 'is-64x64',
   isCentered = true,
 }: ProfilePicProps): ReactElement => {
   const { name, image } = user
@@ -85,7 +87,7 @@ export const ProfilePic = ({
     return (
       <AvatarWrapper
         isCentered={isCentered}
-        className="has-background-light image is-64x64"
+        className={`has-background-light image ${size}`}
       >
         <Avatar src={image} isRound={isRound} />
       </AvatarWrapper>
@@ -99,7 +101,7 @@ export const ProfilePic = ({
   return (
     <AvatarWrapper
       isCentered={isCentered}
-      className="has-background-light image is-64x64"
+      className={`has-background-light image ${size}`}
     >
       <Placeholder
         style={style}

@@ -82,14 +82,25 @@ class ProfilePermission(permissions.BasePermission):
 
         # show profile if public or if profile is self
         if view.action in {"list", "retrieve"}:
+
+            # admins can see all profiles
+            if request.user.has_perm("clubs.manage_club"):
+                return True
+
             return obj.profile.show_profile or is_self
 
         # deny all by default
         return False
 
     def has_permission(self, request, view):
-        if view.action in {"list", "retrieve"}:
+        # anyone can potentially see a user profile
+        if view.action in {"retrieve"}:
             return True
+
+        # only admins can enumerate users
+        if view.action in {"list"}:
+            return request.user.is_authenticated and request.user.has_perm("clubs.manage_club")
+
         return request.user.is_authenticated
 
 

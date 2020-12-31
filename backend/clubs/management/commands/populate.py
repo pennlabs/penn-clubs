@@ -431,15 +431,20 @@ class Command(BaseCommand):
                 obj.save()
                 user_objs.append(obj)
 
+        # test image files
+        event_image_url = "https://i.imgur.com/IBCoKE3.jpg"
+        profile_image_url = "https://i.imgur.com/xLGqpfN.png"
+
         # make ben franklin a superuser
         ben = user_objs[0]
         ben.is_superuser = True
         ben.is_staff = True
+        ben.profile.image.save("ben.png", ContentFile(get_image(profile_image_url)))
+        ben.profile.school.add(*School.objects.order_by("name")[:2])
+        ben.profile.major.add(*Major.objects.order_by("name")[:3])
         ben.save()
 
         # create test events
-        event_image_url = "https://i.imgur.com/IBCoKE3.jpg"
-
         now = timezone.now()
 
         # Create an event for right now so cypress can test current events
@@ -478,10 +483,10 @@ class Command(BaseCommand):
             event.image.save("image.png", ContentFile(contents))
 
         # 10am today
-        even_base = timezone.now().replace(hour=14, minute=0, second=0, microsecond=0)
+        even_base = now.replace(hour=14, minute=0, second=0, microsecond=0)
 
         # 2pm today
-        odd_base = timezone.now().replace(hour=18, minute=0, second=0, microsecond=0)
+        odd_base = now.replace(hour=18, minute=0, second=0, microsecond=0)
 
         for j in range(-14, 15):
             for i, club in enumerate(Club.objects.all()[:10]):
@@ -519,6 +524,12 @@ class Command(BaseCommand):
 
         # dismiss welcome prompt for all users
         Profile.objects.all().update(has_been_prompted=True)
+
+        # add graduation years for half of the users
+        prof_objs = Profile.objects.order_by("user__username")
+        for i, obj in enumerate(prof_objs[: prof_objs.count() / 2]):
+            obj.graduation_year = now.year + (i % 4)
+            obj.save()
 
         # add memberships
         count = 0

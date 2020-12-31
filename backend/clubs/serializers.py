@@ -868,6 +868,33 @@ class ClubListSerializer(serializers.ModelSerializer):
         }
 
 
+class MembershipClubListSerializer(ClubListSerializer):
+    """
+    The club list serializer, except return more detailed information about the relationship of
+    the club with the authenticated user.
+
+    Used on the user profile page to show additional information.
+    """
+    membership = serializers.SerializerMethodField("get_membership")
+
+    def get_membership(self, obj):
+        mship = obj.profile_membership_set[0]
+        return {
+            "active": mship.active,
+            "title": mship.title,
+            "role": mship.role,
+        }
+
+    def get_is_member(self, obj):
+        """
+        Don't return this information to prevent a N+1 SQL efficiency problem.
+        """
+        return None
+
+    class Meta(ClubListSerializer.Meta):
+        fields = ClubListSerializer.Meta.fields + ["membership"]
+
+
 class StudentTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentType
@@ -1460,7 +1487,7 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
 
 class MinimalUserProfileSerializer(serializers.ModelSerializer):
     """
-    A profile serializer used for the list view of users.
+    A profile serializer used for the list view of all users.
     """
 
     name = serializers.SerializerMethodField("get_full_name")
@@ -1512,11 +1539,13 @@ class UserProfileSerializer(MinimalUserProfileSerializer):
             ),
             Prefetch(
                 "membership_set",
-                queryset=Membership.objects.filter(person=user),
-                to_attr="user_membership_set",
+                queryset=Membership.objects.filter(person=obj),
+                to_attr="profile_membership_set",
             ),
         )
-        serializer = ClubListSerializer(instance=queryset, many=True, context=self.context)
+        serializer = MembershipClubListSerializer(
+            instance=queryset, many=True, context=self.context
+        )
         return serializer.data
 
     class Meta(MinimalUserProfileSerializer.Meta):
