@@ -117,14 +117,18 @@ const UserProfilePage = ({
             {profile.school
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((school) => (
-                <span className="tag is-info">{school.name}</span>
+                <span key={school.id} className="tag is-info">
+                  {school.name}
+                </span>
               ))}
           </div>
           <div className="tags mb-0">
             {profile.major
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((major) => (
-                <span className="tag is-info is-light">{major.name}</span>
+                <span key={major.id} className="tag is-info is-light">
+                  {major.name}
+                </span>
               ))}
           </div>
           <div>
