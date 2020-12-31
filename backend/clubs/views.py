@@ -2199,7 +2199,7 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         ---
         """
         request_object = self.get_object()
-        Membership.objects.create(person=request_object.person, club=request_object.club)
+        Membership.objects.get_or_create(person=request_object.person, club=request_object.club)
         request_object.delete()
         return Response({"success": True})
 

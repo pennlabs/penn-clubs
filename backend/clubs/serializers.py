@@ -624,11 +624,6 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "title",
             "username",
         ]
-        validators = [
-            validators.UniqueTogetherValidator(
-                queryset=Membership.objects.all(), fields=["person", "club"]
-            )
-        ]
 
 
 class AuthenticatedMembershipSerializer(MembershipSerializer):
