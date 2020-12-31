@@ -78,6 +78,7 @@ from clubs.permissions import (
     MemberPermission,
     MembershipRequestPermission,
     NotePermission,
+    ProfilePermission,
     QuestionAnswerPermission,
     ReadOnly,
     find_membership_helper,
@@ -2917,8 +2918,8 @@ class UserViewSet(viewsets.ModelViewSet):
     get: Retrieve the profile information for given user.
     """
 
-    queryset = get_user_model().objects.all()
-    permission_classes = [IsSuperuser]
+    queryset = get_user_model().objects.all().select_related("profile")
+    permission_classes = [ProfilePermission | IsSuperuser]
     filter_backends = [filters.SearchFilter]
     search_fields = [
         "email",

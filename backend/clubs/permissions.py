@@ -72,6 +72,27 @@ class ClubFairPermission(permissions.BasePermission):
         return request.user.is_authenticated and request.user.has_perm("clubs.see_fair_status")
 
 
+class ProfilePermission(permissions.BasePermission):
+    """
+    Permission for user profiles.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        is_self = request.user.is_authenticated and obj == request.user
+
+        # show profile if public or if profile is self
+        if view.action in {"list", "retrieve"}:
+            return obj.profile.show_profile or is_self
+
+        # deny all by default
+        return False
+
+    def has_permission(self, request, view):
+        if view.action in {"list", "retrieve"}:
+            return True
+        return request.user.is_authenticated
+
+
 class ClubPermission(permissions.BasePermission):
     """
     Only club owners should be able to delete.

@@ -1185,6 +1185,7 @@ class Profile(models.Model):
 
     has_been_prompted = models.BooleanField(default=False)
     share_bookmarks = models.BooleanField(default=False)
+    show_profile = models.BooleanField(default=True)
     graduation_year = models.PositiveSmallIntegerField(null=True, blank=True)
     school = models.ManyToManyField(School, blank=True)
     major = models.ManyToManyField(Major, blank=True)

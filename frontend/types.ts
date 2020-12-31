@@ -191,13 +191,25 @@ export interface UserInfo {
   email: string
   graduation_year: number
   has_been_prompted: boolean
+  image_url: string
+  is_superuser: boolean
+  major: Major[]
+  name: string
+  school: School[]
   share_bookmarks: boolean
+  show_profile: boolean
+  username: string
+}
+
+export interface UserProfile {
   name: string
   username: string
-  is_superuser: boolean
-  image_url: string
+  email: string
+  image_url: string | null
+  graduation_year: number | null
   school: School[]
   major: Major[]
+  clubs: Club[]
 }
 
 export type UserMembership = {
