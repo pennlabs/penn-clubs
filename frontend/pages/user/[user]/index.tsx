@@ -11,6 +11,7 @@ import {
   Metadata,
   ProfilePic,
   Subtitle,
+  Text,
   Title,
 } from '../../../components/common'
 import AuthPrompt from '../../../components/common/AuthPrompt'
@@ -25,7 +26,7 @@ import {
 import renderPage from '../../../renderPage'
 import { MembershipRank, UserInfo, UserProfile } from '../../../types'
 import { doApiRequest } from '../../../utils'
-import { OBJECT_NAME_TITLE } from '../../../utils/branding'
+import { OBJECT_NAME_PLURAL, OBJECT_NAME_TITLE } from '../../../utils/branding'
 
 type UserProfilePageProps = {
   profile: UserProfile | { detail: string }
@@ -145,26 +146,34 @@ const UserProfilePage = ({
         </div>
       </div>
       <Subtitle>{OBJECT_NAME_TITLE}</Subtitle>
-      <div className="columns is-multiline is-desktop is-tablet">
-        {profile.clubs
-          .sort((a, b) => a.membership.role - b.membership.role)
-          .map((club) => {
-            return (
-              <div
-                key={club.code}
-                className="column is-half-desktop is-clearfix"
-              >
-                <ClubCard fullWidth club={club} />
-                <ClubCardAddon
-                  active={club.membership.active}
-                  rank={club.membership.role}
+      {profile.clubs.length > 0 ? (
+        <div className="columns is-multiline is-desktop is-tablet">
+          {profile.clubs
+            .sort((a, b) => a.membership.role - b.membership.role)
+            .map((club) => {
+              return (
+                <div
+                  key={club.code}
+                  className="column is-half-desktop is-clearfix"
                 >
-                  {club.membership.active ? club.membership.title : 'Alumni'}
-                </ClubCardAddon>
-              </div>
-            )
-          })}
-      </div>
+                  <ClubCard fullWidth club={club} />
+                  <ClubCardAddon
+                    active={club.membership.active}
+                    rank={club.membership.role}
+                  >
+                    {club.membership.active ? club.membership.title : 'Alumni'}
+                  </ClubCardAddon>
+                </div>
+              )
+            })}
+        </div>
+      ) : (
+        <Text>
+          There are no {OBJECT_NAME_PLURAL} to display. This user may not be a
+          member of any {OBJECT_NAME_PLURAL} or have chosen to hide their
+          memberships.
+        </Text>
+      )}
     </Container>
   )
 }

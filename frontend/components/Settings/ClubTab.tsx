@@ -100,7 +100,7 @@ const ClubTab = ({
     const { username } = userInfo
     if (
       confirm(
-        `Are you sure you want to leave ${club.name}? You cannot add yourself back into the ${OBJECT_NAME_SINGULAR}.`,
+        `Are you sure you want to leave ${club.name}? If you would like to appear on the alumni page of this ${OBJECT_NAME_SINGULAR}, we recommend that you set your membership to inactive instead of leaving the ${OBJECT_NAME_SINGULAR}. You cannot add yourself back into the ${OBJECT_NAME_SINGULAR}.`,
       )
     ) {
       doApiRequest(`/clubs/${club.code}/members/${username}`, {

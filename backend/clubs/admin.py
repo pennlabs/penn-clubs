@@ -251,7 +251,7 @@ class MembershipRequestAdmin(admin.ModelAdmin):
 class MembershipAdmin(admin.ModelAdmin):
     search_fields = ("person__username", "person__email", "club__name", "club__pk", "title")
     list_display = ("person", "club", "role", "title")
-    list_filter = ("role",)
+    list_filter = ("role", "active", "public")
 
     def person(self, obj):
         return obj.person.username
