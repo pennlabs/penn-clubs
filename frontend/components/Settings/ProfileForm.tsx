@@ -1,6 +1,8 @@
 import { Field, Form, Formik } from 'formik'
+import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
 
+import { PROFILE_ROUTE } from '../../constants'
 import { UserInfo } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
 import { OBJECT_NAME_PLURAL, OBJECT_NAME_SINGULAR } from '../../utils/branding'
@@ -101,6 +103,23 @@ const ProfileForm = ({
                 name="share_bookmarks"
                 as={CheckboxField}
                 label={`Share my user information with the ${OBJECT_NAME_PLURAL} that I have bookmarked. By default, this information is not visible to ${OBJECT_NAME_SINGULAR} administrators.`}
+              />
+              <Field
+                name="show_profile"
+                as={CheckboxField}
+                label={
+                  <>
+                    Allow my profile page to be visible to the public. You can
+                    view your profile page{' '}
+                    <Link
+                      href={PROFILE_ROUTE()}
+                      as={PROFILE_ROUTE(settings.username)}
+                    >
+                      <a>here</a>
+                    </Link>
+                    .
+                  </>
+                }
               />
               <button
                 type="submit"

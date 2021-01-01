@@ -523,6 +523,8 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
     Used for listing which users are in a club for members who are not in the club.
     """
 
+    email = serializers.SerializerMethodField("get_email")
+    username = serializers.SerializerMethodField("get_username")
     name = serializers.SerializerMethodField("get_full_name")
     person = serializers.PrimaryKeyRelatedField(
         queryset=get_user_model().objects.all(), write_only=True
@@ -530,10 +532,20 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
     role = serializers.IntegerField(write_only=True, required=False)
     image = serializers.SerializerMethodField("get_image")
 
+    def get_username(self, obj):
+        if not obj.public:
+            return None
+        return obj.person.username
+
     def get_full_name(self, obj):
         if not obj.public:
             return "Anonymous"
         return obj.person.get_full_name()
+
+    def get_email(self, obj):
+        if not obj.public or not obj.person.profile.show_profile:
+            return None
+        return obj.person.email
 
     def get_image(self, obj):
         if not obj.public:
@@ -601,11 +613,16 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Membership
-        fields = ["name", "title", "person", "role", "active", "public", "image"]
-        validators = [
-            validators.UniqueTogetherValidator(
-                queryset=Membership.objects.all(), fields=["person", "club"]
-            )
+        fields = [
+            "active",
+            "email",
+            "image",
+            "name",
+            "person",
+            "public",
+            "role",
+            "title",
+            "username",
         ]
 
 
@@ -622,9 +639,8 @@ class AuthenticatedMembershipSerializer(MembershipSerializer):
     def get_full_name(self, obj):
         return obj.person.get_full_name()
 
-    class Meta:
-        model = Membership
-        fields = MembershipSerializer.Meta.fields + ["email", "username"]
+    class Meta(MembershipSerializer.Meta):
+        pass
 
 
 class ClubMinimalSerializer(serializers.ModelSerializer):
@@ -850,6 +866,34 @@ class ClubListSerializer(serializers.ModelSerializer):
                 "Short description of the club.",
             },
         }
+
+
+class MembershipClubListSerializer(ClubListSerializer):
+    """
+    The club list serializer, except return more detailed information about the relationship of
+    the club with the authenticated user.
+
+    Used on the user profile page to show additional information.
+    """
+
+    membership = serializers.SerializerMethodField("get_membership")
+
+    def get_membership(self, obj):
+        mship = obj.profile_membership_set[0]
+        return {
+            "active": mship.active,
+            "title": mship.title,
+            "role": mship.role,
+        }
+
+    def get_is_member(self, obj):
+        """
+        Don't return this information to prevent a N+1 SQL efficiency problem.
+        """
+        return None
+
+    class Meta(ClubListSerializer.Meta):
+        fields = ClubListSerializer.Meta.fields + ["membership"]
 
 
 class StudentTypeSerializer(serializers.ModelSerializer):
@@ -1444,7 +1488,7 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
 
 class MinimalUserProfileSerializer(serializers.ModelSerializer):
     """
-    A profile serializer used for the list view of users.
+    A profile serializer used for the list view of all users.
     """
 
     name = serializers.SerializerMethodField("get_full_name")
@@ -1496,11 +1540,13 @@ class UserProfileSerializer(MinimalUserProfileSerializer):
             ),
             Prefetch(
                 "membership_set",
-                queryset=Membership.objects.filter(person=user),
-                to_attr="user_membership_set",
+                queryset=Membership.objects.filter(person=obj),
+                to_attr="profile_membership_set",
             ),
         )
-        serializer = ClubListSerializer(instance=queryset, many=True, context=self.context)
+        serializer = MembershipClubListSerializer(
+            instance=queryset, many=True, context=self.context
+        )
         return serializer.data
 
     class Meta(MinimalUserProfileSerializer.Meta):
@@ -1522,6 +1568,7 @@ class UserSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField("get_image_url")
     has_been_prompted = serializers.BooleanField(source="profile.has_been_prompted")
     share_bookmarks = serializers.BooleanField(source="profile.share_bookmarks")
+    show_profile = serializers.BooleanField(source="profile.show_profile")
     graduation_year = serializers.IntegerField(source="profile.graduation_year", allow_null=True)
     school = SchoolSerializer(many=True, source="profile.school")
     major = MajorSerializer(many=True, source="profile.major")
@@ -1587,6 +1634,7 @@ class UserSerializer(serializers.ModelSerializer):
             "name",
             "school",
             "share_bookmarks",
+            "show_profile",
             "username",
         ]
 

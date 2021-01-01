@@ -30,3 +30,6 @@ export const REPORT_LIST_ROUTE = '/reports'
 export const REPORT_CREATE_ROUTE = '/reports/create'
 export const REPORT_EDIT_ROUTE = (slug?: number): string =>
   slug ? `/reports/${slug}` : '/reports/[report]'
+
+export const PROFILE_ROUTE = (slug?: string): string =>
+  slug ? `/user/${slug}` : '/user/[user]'
