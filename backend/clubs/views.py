@@ -1,3 +1,4 @@
+import collections
 import datetime
 import json
 import os
@@ -867,6 +868,44 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
         parent_tree = find_relationship_helper("parent_orgs", club, {club.code})
         return Response(parent_tree)
+
+    @action(detail=True, methods=["get"])
+    def alumni(self, request, *args, **kwargs):
+        """
+        Return the members of this club who are no longer active.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            additionalProperties:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        name:
+                                            type: string
+                                        username:
+                                            type: string
+        ---
+        """
+        club = self.get_object()
+        results = collections.defaultdict(list)
+        for first, last, year, show, username in club.membership_set.filter(
+            active=False, public=True
+        ).values_list(
+            "person__first_name",
+            "person__last_name",
+            "person__profile__graduation_year",
+            "person__profile__show_profile",
+            "person__username",
+        ):
+            results[year].append(
+                {"name": f"{first} {last}".strip(), "username": username if show else None}
+            )
+        return Response(results)
 
     @action(detail=True, methods=["get"], url_path="notes-about")
     def notes_about(self, request, *args, **kwargs):

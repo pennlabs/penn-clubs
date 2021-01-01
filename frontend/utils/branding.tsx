@@ -54,10 +54,17 @@ const sites = {
       'size',
       'target_majors',
     ],
+    // enable showing members for each club
     SHOW_MEMBERS: true,
+    // enable the membership request feature
     SHOW_MEMBERSHIP_REQUEST: true,
+    // show the links to the ranking algorithm from various parts of the site
     SHOW_RANK_ALGORITHM: true,
+    // show the link to the Penn accessibility help page at the bottom of each page
     SHOW_ACCESSIBILITY: false,
+    // show the additional links section on each club
+    SHOW_ADDITIONAL_LINKS: true,
+
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
     OBJECT_MEMBERSHIP_LABEL: 'Members',
     OBJECT_MEMBERSHIP_LABEL_LOWERCASE: "member's",
@@ -165,6 +172,7 @@ const sites = {
     SHOW_MEMBERSHIP_REQUEST: false,
     SHOW_RANK_ALGORITHM: false,
     SHOW_ACCESSIBILITY: true,
+    SHOW_ADDITIONAL_LINKS: false,
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
     OBJECT_MEMBERSHIP_LABEL_LOWERCASE: 'staff',
@@ -245,6 +253,7 @@ export const SHOW_RANK_ALGORITHM = sites[site].SHOW_RANK_ALGORITHM
 export const MEMBERSHIP_ROLE_NAMES: { [key: number]: string } =
   sites[site].MEMBERSHIP_ROLE_NAMES
 export const SHOW_ACCESSIBILITY = sites[site].SHOW_ACCESSIBILITY
+export const SHOW_ADDITIONAL_LINKS = sites[site].SHOW_ADDITIONAL_LINKS
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
 export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
   sites[site].OBJECT_MEMBERSHIP_LABEL_LOWERCASE
