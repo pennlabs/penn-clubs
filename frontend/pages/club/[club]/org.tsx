@@ -4,10 +4,17 @@ import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
-import { Icon, Loading, Title, WideContainer } from '../../../components/common'
+import {
+  Container,
+  Icon,
+  Loading,
+  Text,
+  Title,
+} from '../../../components/common'
 import { CLUB_ORG_ROUTE, CLUB_ROUTE } from '../../../constants'
 import renderPage from '../../../renderPage'
 import { doApiRequest } from '../../../utils'
+import { OBJECT_NAME_PLURAL } from '../../../utils/branding'
 
 const Subtitle = styled(Title)`
   font-size: 1.5em;
@@ -92,7 +99,7 @@ const Organization = ({ query, club }) => {
   return (
     <>
       <ClubMetadata club={club} />
-      <WideContainer>
+      <Container paddingTop>
         <div className="is-clearfix">
           <Title className="is-pulled-left">{club.name}</Title>
           <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
@@ -101,12 +108,16 @@ const Organization = ({ query, club }) => {
             </a>
           </Link>
         </div>
+        <Text>
+          This page shows the parent and child relationships between {club.name}{' '}
+          and other {OBJECT_NAME_PLURAL}.
+        </Text>
         <hr />
         <Subtitle>Children of {club.name}</Subtitle>
         {children ? <OrgChild isParent={true} {...children} /> : <Loading />}
         <Subtitle>Parents of {club.name}</Subtitle>
         {parents ? <OrgChild isParent={true} {...parents} /> : <Loading />}
-      </WideContainer>
+      </Container>
     </>
   )
 }
