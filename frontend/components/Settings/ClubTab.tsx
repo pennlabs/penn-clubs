@@ -6,8 +6,13 @@ import styled from 'styled-components'
 import { mediaMaxWidth, mediaMinWidth, SM } from '../../constants/measurements'
 import { Club, MembershipRank, UserInfo } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
-import { OBJECT_NAME_PLURAL, OBJECT_NAME_SINGULAR } from '../../utils/branding'
-import { Center, EmptyState, Loading, Text } from '../common'
+import {
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
+} from '../../utils/branding'
+import { ModalContent } from '../ClubPage/Actions'
+import { Center, EmptyState, Icon, Loading, Modal, Text } from '../common'
 import ClubTabCards from './ClubTabCards'
 import ClubTabTable from './ClubTabTable'
 
@@ -43,28 +48,45 @@ const ClubTab = ({
   notify,
 }: ClubTabProps): ReactElement => {
   const [memberships, setMemberships] = useState<UserMembership[] | null>(null)
+  const [showModal, setShowModal] = useState<Club | null>(null)
 
-  const reloadMemberships = () => {
-    doApiRequest('/memberships/?format=json')
+  const reloadMemberships = async () => {
+    return doApiRequest('/memberships/?format=json')
       .then((resp) => resp.json())
       .then(setMemberships)
   }
 
-  function togglePublic(club: Club) {
+  async function togglePublic(club: Club) {
     const { username } = userInfo
-    doApiRequest(`/clubs/${club.code}/members/${username}/?format=json`, {
-      method: 'PATCH',
-      body: {
-        public:
-          !memberships?.find((ms) => ms.club.code === club.code)?.public ||
-          false,
+    return doApiRequest(
+      `/clubs/${club.code}/members/${username}/?format=json`,
+      {
+        method: 'PATCH',
+        body: {
+          public:
+            !memberships?.find((ms) => ms.club.code === club.code)?.public ||
+            false,
+        },
       },
-    }).then((resp) => {
+    ).then((resp) => {
       if (resp.ok) {
-        notify(
-          `Your privacy setting for ${club.name} has been changed.`,
-          'success',
-        )
+        resp.json().then((data) => {
+          notify(
+            `Your privacy setting for ${club.name} has been changed to ${
+              data.public ? 'visible' : 'hidden'
+            }.`,
+            'success',
+          )
+          setMemberships((mships): UserMembership[] | null => {
+            return (
+              mships?.map((mship) =>
+                mship.club.code === club.code
+                  ? { ...mship, public: data.public }
+                  : mship,
+              ) ?? null
+            )
+          })
+        })
       } else {
         resp.json().then((err) => {
           notify(formatResponse(err), 'error')
@@ -73,21 +95,36 @@ const ClubTab = ({
     })
   }
 
-  function toggleActive(club: Club) {
+  async function toggleActive(club: Club, state?: boolean) {
     const { username } = userInfo
-    doApiRequest(`/clubs/${club.code}/members/${username}/?format=json`, {
-      method: 'PATCH',
-      body: {
-        active:
-          !memberships?.find((ms) => ms.club.code === club.code)?.active ||
-          false,
+    return doApiRequest(
+      `/clubs/${club.code}/members/${username}/?format=json`,
+      {
+        method: 'PATCH',
+        body: {
+          active:
+            state ??
+            !memberships?.find((ms) => ms.club.code === club.code)?.active ??
+            false,
+        },
       },
-    }).then((resp) => {
+    ).then((resp) => {
       if (resp.ok) {
-        notify(
-          `Your activity setting for ${club.name} has been changed.`,
-          'success',
-        )
+        resp.json().then((data) => {
+          notify(
+            `Your activity setting for ${club.name} has been changed to ${data.active}.`,
+            'success',
+          )
+          setMemberships((mships): UserMembership[] | null => {
+            return (
+              mships?.map((mship) =>
+                mship.club.code === club.code
+                  ? { ...mship, active: data.active }
+                  : mship,
+              ) ?? null
+            )
+          })
+        })
       } else {
         resp.json().then((err) => {
           notify(formatResponse(err), 'error')
@@ -97,15 +134,19 @@ const ClubTab = ({
   }
 
   function leaveClub(club: Club) {
+    setShowModal(club)
+  }
+
+  function actualLeaveClub() {
+    const club = showModal
+    if (club == null) {
+      return
+    }
     const { username } = userInfo
-    if (
-      confirm(
-        `Are you sure you want to leave ${club.name}? You cannot add yourself back into the ${OBJECT_NAME_SINGULAR}.`,
-      )
-    ) {
-      doApiRequest(`/clubs/${club.code}/members/${username}`, {
-        method: 'DELETE',
-      }).then((resp) => {
+    doApiRequest(`/clubs/${club.code}/members/${username}`, {
+      method: 'DELETE',
+    })
+      .then((resp) => {
         if (!resp.ok) {
           resp.json().then((err) => {
             notify(formatResponse(err), 'error')
@@ -115,12 +156,16 @@ const ClubTab = ({
           reloadMemberships()
         }
       })
-    }
+      .finally(() => {
+        setShowModal(null)
+      })
   }
 
-  useEffect(reloadMemberships, [])
+  useEffect(() => {
+    reloadMemberships()
+  }, [])
 
-  if (memberships === null) {
+  if (memberships == null) {
     return <Loading />
   }
 
@@ -140,6 +185,40 @@ const ClubTab = ({
         toggleActive={toggleActive}
         leaveClub={leaveClub}
       />
+      {showModal != null && (
+        <Modal
+          marginBottom={false}
+          show={true}
+          closeModal={() => setShowModal(null)}
+        >
+          <ModalContent className="is-clearfix">
+            <h1>Confirm Leave</h1>
+            <p>
+              Are you sure you want to leave {showModal.name}? You cannot add
+              yourself back into the {OBJECT_NAME_SINGULAR}.
+            </p>
+            <p>
+              If you would like to appear on the alumni page of this{' '}
+              {OBJECT_NAME_SINGULAR}, we recommend that you set your membership
+              to inactive instead of leaving the {OBJECT_NAME_SINGULAR}.
+            </p>
+            <div className="buttons is-pulled-right">
+              <button className="button is-light" onClick={actualLeaveClub}>
+                <Icon name="trash" /> Leave {OBJECT_NAME_TITLE_SINGULAR}
+              </button>
+              <button
+                className="button is-primary"
+                onClick={async () => {
+                  await toggleActive(showModal, false)
+                  setShowModal(null)
+                }}
+              >
+                <Icon name="log-out" /> Set Inactive
+              </button>
+            </div>
+          </ModalContent>
+        </Modal>
+      )}
     </>
   ) : (
     <>

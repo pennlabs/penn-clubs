@@ -16,6 +16,10 @@ export const CLUB_RENEW_ROUTE = (slug?: string): string =>
     : `/${OBJECT_URL_SLUG}/[club]/renew`
 export const CLUB_ORG_ROUTE = (slug?: string): string =>
   slug ? `/${OBJECT_URL_SLUG}/${slug}/org` : `/${OBJECT_URL_SLUG}/[club]/org`
+export const CLUB_ALUMNI_ROUTE = (slug?: string): string =>
+  slug
+    ? `/${OBJECT_URL_SLUG}/${slug}/alumni`
+    : `/${OBJECT_URL_SLUG}/[club]/alumni`
 export const SETTINGS_ROUTE = '/settings'
 export const USER_RENEWAL = '/renew'
 export const CREATE_ROUTE = '/create'

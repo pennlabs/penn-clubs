@@ -116,7 +116,7 @@ class ClubPermission(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         # handle case where club is approved but newer version may not be
-        if view.action in {"retrieve", "children"}:
+        if view.action in {"retrieve", "children", "parents", "alumni"}:
             # anyone can view approved clubs
             if obj.approved or obj.ghost:
                 return True
@@ -161,8 +161,10 @@ class ClubPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if view.action in {
+            "alumni",
             "children",
             "destroy",
+            "parents",
             "partial_update",
             "update",
             "upload",

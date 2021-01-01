@@ -1,4 +1,5 @@
 import { NextPageContext } from 'next'
+import Link from 'next/link'
 import { ReactElement, useEffect, useRef, useState } from 'react'
 import Linkify from 'react-linkify'
 import styled from 'styled-components'
@@ -32,6 +33,7 @@ import {
   Text,
   WideContainer,
 } from '../../../components/common'
+import { CLUB_ALUMNI_ROUTE, CLUB_ORG_ROUTE } from '../../../constants'
 import { CLUBS_RED, SNOW, WHITE } from '../../../constants/colors'
 import { M0, M2, M3 } from '../../../constants/measurements'
 import renderPage from '../../../renderPage'
@@ -42,6 +44,7 @@ import {
   APPROVAL_AUTHORITY,
   FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_SINGULAR,
+  SHOW_ADDITIONAL_LINKS,
   SHOW_MEMBERS,
   SITE_NAME,
 } from '../../../utils/branding'
@@ -274,6 +277,30 @@ const ClubPage = ({
               </StyledCard>
             )}
           <Testimonials data={testimonials} />
+          {SHOW_ADDITIONAL_LINKS && (
+            <div>
+              <StrongText>Additional Pages</StrongText>
+              <ul>
+                <li>
+                  <Link
+                    href={CLUB_ALUMNI_ROUTE()}
+                    as={CLUB_ALUMNI_ROUTE(club.code)}
+                  >
+                    <a>
+                      <Icon name="database" /> Alumni
+                    </a>
+                  </Link>
+                </li>
+                <li>
+                  <Link href={CLUB_ORG_ROUTE()} as={CLUB_ORG_ROUTE(club.code)}>
+                    <a>
+                      <Icon name="git-branch" /> Org Tree
+                    </a>
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </WideContainer>

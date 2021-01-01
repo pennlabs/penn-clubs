@@ -47,7 +47,7 @@ const ModalCard = styled.div<{ width?: string }>`
       : ''}
 `
 
-export const ModalContent = styled.div<{ marginBottom?: boolean }>`
+export const ModalContentWrapper = styled.div<{ marginBottom?: boolean }>`
   margin: auto;
   ${({ marginBottom }) => (marginBottom ? 'margin-bottom: 10%;' : '')}
 `
@@ -103,7 +103,9 @@ export const Modal = ({
       <Shade className="modal-background" onClick={closeModal} show={show} />
       <ModalCard className="card" onClick={noop} width={width}>
         <CloseModalIcon name="x" alt="&#215;" onClick={closeModal} />
-        <ModalContent marginBottom={marginBottom}>{children}</ModalContent>
+        <ModalContentWrapper marginBottom={marginBottom}>
+          {children}
+        </ModalContentWrapper>
       </ModalCard>
     </ModalWrapper>
   )

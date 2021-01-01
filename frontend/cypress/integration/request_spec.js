@@ -15,6 +15,7 @@ describe('Membership request tests', () => {
       win.document.querySelectorAll("table tr").forEach((item) => {
         if (item.textContent.indexOf("Penn Pre-Professional Juggling Organization") !== -1) {
           item.querySelector(".button").click()
+          cy.contains('Leave Club').click()
           cy.log("Removed membership")
           cy.wait(1000)
         }

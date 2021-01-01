@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { CLUBS_NAVY, WHITE } from '../../constants'
 import { SIXTEEN_BY_NINE } from '../../constants/measurements'
 import { Card, CARD_BORDER_RADIUS } from '../common/Card'
-import { ModalContent } from '../common/Modal'
+import { ModalContentWrapper } from '../common/Modal'
 
 const Placeholder = styled.div`
   border-radius: ${CARD_BORDER_RADIUS} ${CARD_BORDER_RADIUS} 0 0;
@@ -20,7 +20,7 @@ const Placeholder = styled.div`
   ${Card} & {
     margin: -0.5rem -0.5rem 0.5rem;
   }
-  ${ModalContent} & {
+  ${ModalContentWrapper} & {
     width: 100%;
     margin: -1.5rem 0 0 0;
   }
@@ -35,7 +35,7 @@ const CoverPhotoImage = styled.div`
   ${Card} & {
     margin: -0.5rem -0.5rem 0.5rem;
   }
-  ${ModalContent} & {
+  ${ModalContentWrapper} & {
     width: 100%;
     margin: -1.5rem 0 0 0;
   }
