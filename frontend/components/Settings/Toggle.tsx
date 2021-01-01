@@ -1,5 +1,5 @@
 // Modified from basics
-import { Component, ReactElement } from 'react'
+import { ReactElement } from 'react'
 import styled from 'styled-components'
 
 import { CLUBS_BLUE, LIGHT_GRAY, MEDIUM_GRAY } from '../../constants/colors'
@@ -57,50 +57,39 @@ const Circle = styled.div<{ active?: boolean }>`
  * @param {string} filterOffText: text rendered when the filter is off
  * @param {string} filterOnText text rendered when filter is on
  */
-class Toggle<T> extends Component<ToggleProps<T>, ToggleState> {
-  constructor(props: ToggleProps<T>) {
-    super(props)
-    this.state = {
-      active: props.active ?? false,
-    }
-    this.handleClick = this.handleClick.bind(this)
+const Toggle = <T,>({
+  filterOffText,
+  filterOnText,
+  active,
+  toggle,
+  club,
+}: ToggleProps<T>): ReactElement => {
+  function handleClick(): void {
+    toggle(club)
   }
 
-  handleClick(): void {
-    this.props.toggle(this.props.club)
-    this.setState({ active: !this.state.active })
-  }
-
-  render(): ReactElement {
-    const { filterOffText, filterOnText } = this.props
-    const { active } = this.state
-    return (
-      <div>
-        <Label onClick={this.handleClick} active>
-          {filterOffText}
-        </Label>
-        <ToggleWrapper>
-          <Circle
-            style={{ background: active ? CLUBS_BLUE : MEDIUM_GRAY }}
-            onClick={this.handleClick}
-            active={active}
-          />
-          <Bar
-            style={{ background: active ? '#D3EBF3' : LIGHT_GRAY }}
-            onClick={this.handleClick}
-            active={active}
-          />
-        </ToggleWrapper>
-        <Label onClick={this.handleClick} active>
-          {filterOnText}
-        </Label>
-      </div>
-    )
-  }
-}
-
-type ToggleState = {
-  active: boolean
+  return (
+    <div>
+      <Label onClick={handleClick} active>
+        {filterOffText}
+      </Label>
+      <ToggleWrapper>
+        <Circle
+          style={{ background: active ? CLUBS_BLUE : MEDIUM_GRAY }}
+          onClick={handleClick}
+          active={active}
+        />
+        <Bar
+          style={{ background: active ? '#D3EBF3' : LIGHT_GRAY }}
+          onClick={handleClick}
+          active={active}
+        />
+      </ToggleWrapper>
+      <Label onClick={handleClick} active>
+        {filterOnText}
+      </Label>
+    </div>
+  )
 }
 
 type ToggleProps<T> = {
