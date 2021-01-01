@@ -1544,6 +1544,13 @@ class UserProfileSerializer(MinimalUserProfileSerializer):
                 to_attr="profile_membership_set",
             ),
         )
+
+        # hide non public memberships if not superuser
+        if user is None or not user.has_perm("clubs.manage_club"):
+            queryset = queryset.filter(
+                membership__person=obj, membership__public=True, approved=True
+            )
+
         serializer = MembershipClubListSerializer(
             instance=queryset, many=True, context=self.context
         )

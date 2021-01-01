@@ -291,11 +291,11 @@ class ClubTestCase(TestCase):
         School.objects.create(name="Engineering", is_graduate=False)
 
         # retrieve user
-        resp = self.client.get(reverse("users-detail"))
+        resp = self.client.get(reverse("settings-detail"))
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # update user
-        resp = self.client.patch(reverse("users-detail"))
+        resp = self.client.patch(reverse("settings-detail"))
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = json.loads(resp.content.decode("utf-8"))
 
@@ -306,7 +306,7 @@ class ClubTestCase(TestCase):
         # user field should not be updated
         given_year = timezone.now().year
         resp = self.client.patch(
-            reverse("users-detail"),
+            reverse("settings-detail"),
             {
                 "user": self.user1.id,
                 "graduation_year": given_year,
@@ -317,7 +317,7 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure fields have been updated
-        resp = self.client.get(reverse("users-detail"))
+        resp = self.client.get(reverse("settings-detail"))
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = json.loads(resp.content.decode("utf-8"))
         self.assertEqual(data["graduation_year"], given_year)
@@ -2053,6 +2053,61 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("email-invites"))
         self.assertEqual(resp.status_code, 200, resp.content)
         self.assertIsInstance(resp.data, list)
+
+    def test_user_profile(self):
+        """
+        Test the user profile endpoint.
+        """
+        # ensure profile endpoint is public
+        profile = self.user4.profile
+        profile.show_profile = True
+        profile.save()
+
+        # create some clubs
+        Club.objects.bulk_create(
+            [
+                Club(
+                    name=f"Public Membership Club {i}",
+                    code=f"pub-mem-club-{i}",
+                    approved=True,
+                    email="test-pub-{i}@example.com",
+                )
+                for i in range(10)
+            ]
+        )
+
+        # create an unapproved club, this should not show up
+        Club.objects.create(
+            name="Unapproved 10",
+            code="pub-mem-club-10",
+            approved=None,
+            active=True,
+            email="test-pub-10@example.com",
+        )
+
+        # add some public and private memberships
+        for i in range(11):
+            Membership.objects.create(
+                club=Club.objects.get(code=f"pub-mem-club-{i}"),
+                person=self.user4,
+                active=True,
+                public=i < 5 or i == 10,
+            )
+
+        resp = self.client.get(reverse("users-detail", kwargs={"username": self.user4.username}))
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        # ensure fields exist
+        self.assertEqual(resp.data["username"], self.user4.username)
+        self.assertIn("clubs", resp.data, resp.content)
+
+        # ensure correct club codes
+        actual_club_codes = set(c["code"] for c in resp.data["clubs"])
+        expected_club_codes = set(f"pub-mem-club-{i}" for i in range(5))
+        self.assertEqual(actual_club_codes, expected_club_codes)
+
+        # make sure there are no duplicate clubs
+        self.assertEqual(len(actual_club_codes), len(resp.data["clubs"]), resp.data["clubs"])
 
     def test_permission_lookup(self):
         permissions = [

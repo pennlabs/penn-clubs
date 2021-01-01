@@ -74,7 +74,7 @@ clubs_router.register(
 clubs_router.register(r"advisors", AdvisorViewSet, basename="club-advisors")
 
 urlpatterns = [
-    path(r"settings/", UserUpdateAPIView.as_view(), name="users-detail"),
+    path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),
     path(r"settings/invites/", EmailInvitesAPIView.as_view(), name="email-invites"),
     path(r"settings/zoom/", UserZoomAPIView.as_view(), name="users-zoom"),
     path(r"settings/zoom/meetings/", MeetingZoomAPIView.as_view(), name="users-zoom-meeting"),

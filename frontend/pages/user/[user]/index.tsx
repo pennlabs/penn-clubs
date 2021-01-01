@@ -146,19 +146,24 @@ const UserProfilePage = ({
       </div>
       <Subtitle>{OBJECT_NAME_TITLE}</Subtitle>
       <div className="columns is-multiline is-desktop is-tablet">
-        {profile.clubs.map((club) => {
-          return (
-            <div key={club.code} className="column is-half-desktop is-clearfix">
-              <ClubCard fullWidth club={club} />
-              <ClubCardAddon
-                active={club.membership.active}
-                rank={club.membership.role}
+        {profile.clubs
+          .sort((a, b) => a.membership.role - b.membership.role)
+          .map((club) => {
+            return (
+              <div
+                key={club.code}
+                className="column is-half-desktop is-clearfix"
               >
-                {club.membership.active ? club.membership.title : 'Alumni'}
-              </ClubCardAddon>
-            </div>
-          )
-        })}
+                <ClubCard fullWidth club={club} />
+                <ClubCardAddon
+                  active={club.membership.active}
+                  rank={club.membership.role}
+                >
+                  {club.membership.active ? club.membership.title : 'Alumni'}
+                </ClubCardAddon>
+              </div>
+            )
+          })}
       </div>
     </Container>
   )
