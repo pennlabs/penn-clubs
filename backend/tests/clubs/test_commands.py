@@ -108,7 +108,7 @@ class ImportCalendarTestCase(TestCase):
 
         call_command("import_calendar_events")
 
-        self.assertGreaterEqual(self.club1.events.count(), 100)
+        self.assertGreaterEqual(self.club1.events.count(), 25)
 
     def test_import_nonstandard_ics(self):
         """
