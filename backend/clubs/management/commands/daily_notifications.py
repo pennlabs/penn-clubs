@@ -8,6 +8,7 @@ from clubs.models import Club, send_mail_helper
 
 class Command(BaseCommand):
     help = "Script that runs at 9AM each day to send out relevant notification emails."
+    web_execute = True
 
     def handle(self, *args, **kwargs):
         # send notification to OSA for clubs pending approval

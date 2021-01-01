@@ -1,6 +1,6 @@
 import { Field, Form, Formik } from 'formik'
 import { NextPageContext } from 'next'
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useState } from 'react'
 import { toast } from 'react-toastify'
 
 import { Container, Icon, Metadata, Text, Title } from '../components/common'
@@ -18,7 +18,45 @@ import {
   OBJECT_NAME_TITLE_SINGULAR,
 } from '../utils/branding'
 
-function FairsPage({ userInfo, tags, badges, clubfairs }): ReactElement {
+const ScriptBox = ({ script }): ReactElement => {
+  const [isLoading, setLoading] = useState<boolean>(false)
+  const [output, setOutput] = useState<string | null>(null)
+
+  return (
+    <div className="box">
+      <div className="is-size-5 is-family-monospace">{script.name}</div>
+      <Text>{script.description}</Text>
+      <button
+        disabled={!script.execute || isLoading}
+        className="button is-primary"
+        onClick={(e) => {
+          e.preventDefault()
+          setLoading(true)
+          doApiRequest('/scripts/?format=json', {
+            method: 'POST',
+            body: { action: script.name },
+          })
+            .then((resp) => resp.json())
+            .then((resp) => {
+              setOutput(resp.output)
+              setLoading(false)
+            })
+        }}
+      >
+        <Icon name="play" /> Execute
+      </button>
+      {output != null && <pre className="mt-3">{output}</pre>}
+    </div>
+  )
+}
+
+function AdminPage({
+  userInfo,
+  tags,
+  badges,
+  clubfairs,
+  scripts,
+}): ReactElement {
   if (!userInfo) {
     return <AuthPrompt />
   }
@@ -121,6 +159,25 @@ function FairsPage({ userInfo, tags, badges, clubfairs }): ReactElement {
         </>
       ),
     },
+    {
+      name: 'scripts',
+      label: 'Scripts',
+      content: () => (
+        <div>
+          {Array.isArray(scripts) ? (
+            scripts
+              .sort((a, b) =>
+                a.execute ? -1 : b.execute ? 1 : a.name.localeCompare(b.name),
+              )
+              .map((script) => <ScriptBox key={script.name} script={script} />)
+          ) : (
+            <Text>
+              You do not have permissions to view the list of available scripts.
+            </Text>
+          )}
+        </div>
+      ),
+    },
   ]
 
   return (
@@ -136,10 +193,10 @@ function FairsPage({ userInfo, tags, badges, clubfairs }): ReactElement {
   )
 }
 
-FairsPage.getInitialProps = async (ctx: NextPageContext) => {
-  return doBulkLookup(['tags', 'badges', 'clubfairs'], ctx)
+AdminPage.getInitialProps = async (ctx: NextPageContext) => {
+  return doBulkLookup(['tags', 'badges', 'clubfairs', 'scripts'], ctx)
 }
 
-FairsPage.permissions = []
+AdminPage.permissions = []
 
-export default renderPage(FairsPage)
+export default renderPage(AdminPage)

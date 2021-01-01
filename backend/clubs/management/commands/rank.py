@@ -12,6 +12,7 @@ from clubs.models import Club, ClubFair, Membership
 class Command(BaseCommand):
     help = "Precomputes ranking information for all clubs on Penn Clubs. \
             This script should be run periodically to keep the rankings fresh."
+    web_execute = True
 
     def handle(self, *args, **kwargs):
         for club in Club.objects.all():

@@ -5,6 +5,7 @@ from clubs.models import Badge, Club
 
 class Command(BaseCommand):
     help = "Synchronizes badges based on parent and child org relationships."
+    web_execute = True
 
     def recursively_add_badge(self, club, badge):
         if club.code in self._visited:

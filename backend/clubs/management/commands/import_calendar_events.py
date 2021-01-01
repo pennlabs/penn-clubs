@@ -7,6 +7,7 @@ from clubs.models import Club
 
 class Command(BaseCommand):
     help = "Imports ICS Calendar events for each club at a set frequency."
+    web_execute = True
 
     def handle(self, *args, **kwargs):
         count = 0

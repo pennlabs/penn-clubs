@@ -278,7 +278,7 @@ const ClubPage = ({
             )}
           <Testimonials data={testimonials} />
           {SHOW_ADDITIONAL_LINKS && (
-            <div>
+            <div className="mb-3">
               <StrongText>Additional Pages</StrongText>
               <ul>
                 <li>
