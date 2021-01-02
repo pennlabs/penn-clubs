@@ -51,6 +51,7 @@ from clubs.models import (
     Asset,
     Badge,
     Club,
+    ClubApplication,
     ClubFair,
     ClubFairRegistration,
     ClubVisit,
@@ -94,6 +95,7 @@ from clubs.serializers import (
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
+    ClubApplicationSerializer,
     ClubConstitutionSerializer,
     ClubFairSerializer,
     ClubListSerializer,
@@ -2977,6 +2979,15 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action in {"list"}:
             return MinimalUserProfileSerializer
         return UserProfileSerializer
+
+
+class ClubApplicationViewSet(viewsets.ModelViewSet):
+    permission_classes = [ProfilePermission | IsSuperuser]
+    serializer_class = ClubApplicationSerializer
+    http_method_names = ["get", "post", "delete"]
+
+    def get_queryset(self):
+        return ClubApplication.objects.filter(club__code=self.kwargs["club_code"])
 
 
 class MassInviteAPIView(APIView):
