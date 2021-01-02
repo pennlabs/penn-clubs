@@ -93,7 +93,7 @@ const ChatWidget = ({ code }: Props): ReactElement => {
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => {
-          if (e.keyCode === 13) {
+          if (e.code === 'Enter') {
             ws.current?.send(JSON.stringify({ message: input }))
             setInput('')
           }

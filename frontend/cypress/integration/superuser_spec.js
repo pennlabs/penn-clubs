@@ -86,4 +86,19 @@ describe('Permissioned (superuser) user tests', { retries: { runMode: 2, openMod
     cy.visit('/user/bfranklin')
     cy.contains('Benjamin Franklin')
   })
+
+  it('Visits the admin page', () => {
+    cy.visit('/admin')
+    cy.contains('Admin Dashboard')
+
+    const tabs = ['Bulk Editing', 'Scripts']
+
+    tabs.forEach(tab => {
+      cy.get('.tabs').contains(tab).should('be.visible')
+    })
+
+    tabs.forEach(tab => {
+      cy.get('.tabs').contains(tab).click()
+    })
+  })
 })

@@ -1,5 +1,6 @@
 import collections
 import datetime
+import io
 import json
 import os
 import re
@@ -16,6 +17,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
+from django.core.management import call_command, get_commands, load_command_class
 from django.core.validators import validate_email
 from django.db.models import Count, Prefetch, Q
 from django.db.models.functions import Lower, Trunc
@@ -3164,6 +3166,81 @@ class OptionListView(APIView):
             options["PRE_FAIR"] = False
 
         return Response(options)
+
+
+class ScriptExecutionView(APIView):
+    """
+    View and execute Django management scripts using these endpoints.
+    """
+
+    permission_classes = [DjangoPermission("clubs.manage_club") | IsSuperuser]
+
+    def get_scripts(self):
+        commands = get_commands()
+        scripts = []
+        for name, path in commands.items():
+            if path.startswith("clubs"):
+                cls = load_command_class(path, name)
+                scripts.append(
+                    {
+                        "name": name,
+                        "description": re.sub(r"\s+", " ", cls.help),
+                        "execute": hasattr(cls, "web_execute") and cls.web_execute,
+                    }
+                )
+        return scripts
+
+    def get(self, request):
+        """
+        Return a list of valid management scripts to execute.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: list
+                            items:
+                                type: object
+                                properties:
+                                    name: string
+                                    description: string
+                                    execute: boolean
+        ---
+        """
+        scripts = self.get_scripts()
+        return Response(scripts)
+
+    def post(self, request):
+        """
+        Execute a management script.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                output: string
+        ---
+        """
+        action = request.data.get("action")
+        scripts = self.get_scripts()
+        script = next((s for s in scripts if s["name"] == action), None)
+
+        # check for validity and permission
+        if script is None:
+            return Response({"output": f"'{action}' is not a valid script to execute."})
+        if not script["execute"]:
+            return Response(
+                {"output": f"You are not allowed to execute '{action}' from the web interface."}
+            )
+
+        # execute command and return output
+        with io.StringIO() as output:
+            call_command(action, stdout=output)
+            return Response({"output": output.getvalue()})
 
 
 def email_preview(request):
