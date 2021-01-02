@@ -3168,27 +3168,31 @@ class OptionListView(APIView):
         return Response(options)
 
 
+def get_scripts():
+    """
+    Return a list of Django management commands and some associated metadata.
+    """
+    commands = get_commands()
+    scripts = []
+    for name, path in commands.items():
+        if path.startswith("clubs"):
+            cls = load_command_class(path, name)
+            scripts.append(
+                {
+                    "name": name,
+                    "description": re.sub(r"\s+", " ", cls.help),
+                    "execute": hasattr(cls, "web_execute") and cls.web_execute,
+                }
+            )
+    return scripts
+
+
 class ScriptExecutionView(APIView):
     """
     View and execute Django management scripts using these endpoints.
     """
 
     permission_classes = [DjangoPermission("clubs.manage_club") | IsSuperuser]
-
-    def get_scripts(self):
-        commands = get_commands()
-        scripts = []
-        for name, path in commands.items():
-            if path.startswith("clubs"):
-                cls = load_command_class(path, name)
-                scripts.append(
-                    {
-                        "name": name,
-                        "description": re.sub(r"\s+", " ", cls.help),
-                        "execute": hasattr(cls, "web_execute") and cls.web_execute,
-                    }
-                )
-        return scripts
 
     def get(self, request):
         """
@@ -3208,7 +3212,7 @@ class ScriptExecutionView(APIView):
                                     execute: boolean
         ---
         """
-        scripts = self.get_scripts()
+        scripts = get_scripts()
         return Response(scripts)
 
     def post(self, request):
@@ -3226,7 +3230,7 @@ class ScriptExecutionView(APIView):
         ---
         """
         action = request.data.get("action")
-        scripts = self.get_scripts()
+        scripts = get_scripts()
         script = next((s for s in scripts if s["name"] == action), None)
 
         # check for validity and permission

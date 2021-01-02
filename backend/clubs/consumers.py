@@ -1,12 +1,16 @@
+import io
 import json
 import sys
 import traceback
 
+from asgiref.sync import async_to_sync, sync_to_async
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.conf import settings
+from django.core.management import call_command
 
 from clubs.models import Club
+from clubs.views import get_scripts
 
 
 def log_errors(func):
@@ -24,6 +28,70 @@ def log_errors(func):
             raise e
 
     return wrapper
+
+
+class ExecuteScriptConsumer(AsyncWebsocketConsumer):
+    @log_errors
+    async def connect(self):
+        user = self.scope["user"]
+        if user.has_perm("clubs.manage_club"):
+            await self.accept()
+        else:
+            await self.close()
+
+    @log_errors
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        action = text_data_json["action"]
+        user = self.scope["user"]
+        scripts = get_scripts()
+        script = next((s for s in scripts if s["name"] == action), None)
+
+        # check for valid script
+        if script is None:
+            await self.send(
+                json.dumps({"output": f"Could not find script matching name: {action}"})
+            )
+            await self.close()
+            return
+
+        # check for web execute
+        if not script["execute"]:
+            await self.send(
+                json.dumps(
+                    {"output": f"The script {action} cannot be executed from the web interface."}
+                )
+            )
+            await self.close()
+            return
+
+        # check user permissions
+        if not user.has_perm("clubs.manage_club"):
+            await self.send(
+                json.dumps({"output": "You do not have permission to execute this script."})
+            )
+            await self.close()
+            return
+
+        # execute the script on a separate thread
+        await sync_to_async(self.execute_script, thread_sensitive=False)(action)
+        await self.close()
+
+    def execute_script(self, action):
+        class LiveIO(io.StringIO):
+            def write(s, data):
+                try:
+                    async_to_sync(self.send)(json.dumps({"output": data}))
+                except Exception:
+                    # ignore send errors, allow script to continue execution
+                    # better to drop output then to abort a script in the middle
+                    pass
+
+        with LiveIO() as out:
+            try:
+                call_command(action, stdout=out)
+            except Exception:
+                async_to_sync(self.send)(json.dumps({"output": traceback.format_exc()}))
 
 
 class ChatConsumer(AsyncWebsocketConsumer):

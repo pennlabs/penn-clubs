@@ -8,7 +8,8 @@ from clubs.models import Club
 
 
 class Command(BaseCommand):
-    help = "List clubs with broken images and delete the image link."
+    help = "List clubs with broken images and delete the image link if broken."
+    web_execute = True
 
     def add_arguments(self, parser):
         parser.add_argument(
