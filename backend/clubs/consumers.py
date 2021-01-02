@@ -80,7 +80,12 @@ class ExecuteScriptConsumer(AsyncWebsocketConsumer):
     def execute_script(self, action):
         class LiveIO(io.StringIO):
             def write(s, data):
-                async_to_sync(self.send)(json.dumps({"output": data}))
+                try:
+                    async_to_sync(self.send)(json.dumps({"output": data}))
+                except Exception:
+                    # ignore send errors, allow script to continue execution
+                    # better to drop output then to abort a script in the middle
+                    pass
 
         with LiveIO() as out:
             try:
