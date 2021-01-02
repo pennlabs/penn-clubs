@@ -1200,7 +1200,7 @@ class ClubApplication(models.Model):
     """
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, blank=True)
     application_start_time = models.DateTimeField()
     application_end_time = models.DateTimeField()
     result_release_time = models.DateTimeField()
