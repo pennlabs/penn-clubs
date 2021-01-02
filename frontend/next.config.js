@@ -24,4 +24,5 @@ module.exports = {
       : `http://localhost:${process.env.PORT || 3000}`,
     NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME || 'clubs',
   },
+  productionBrowserSourceMaps: true,
 }
