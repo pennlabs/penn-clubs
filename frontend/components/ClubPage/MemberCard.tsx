@@ -45,6 +45,7 @@ const MemberInfo = styled.div`
  */
 const ClickableBox = styled.div`
   cursor: pointer;
+  width: 100%;
   & > div {
     margin-bottom: 0;
   }
