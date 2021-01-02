@@ -702,7 +702,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     "testimonials",
                     Prefetch(
                         "membership_set",
-                        queryset=Membership.objects.order_by(
+                        queryset=Membership.objects.filter(active=True).order_by(
                             "role", "person__first_name", "person__last_name"
                         ).prefetch_related("person__profile"),
                     ),
