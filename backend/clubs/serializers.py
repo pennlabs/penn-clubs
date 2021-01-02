@@ -1844,10 +1844,11 @@ class ClubApplicationSerializer(serializers.ModelSerializer):
         model = ClubApplication
         fields = (
             "club",
+            "name",
             "application_start_time",
             "application_end_time",
             "result_release_time",
-            "application_url",
+            "external_url",
         )
 
 

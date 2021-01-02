@@ -1200,16 +1200,18 @@ class ClubApplication(models.Model):
     """
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
     application_start_time = models.DateTimeField()
     application_end_time = models.DateTimeField()
     result_release_time = models.DateTimeField()
-    application_url = models.URLField()
+    external_url = models.URLField()
 
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return "{}: start {}, end {}".format(
-            self.club.name, self.application_start_time, self.application_end_time
+        return "{} created {}: start {}, end {}".format(
+            self.club.name, self.name, self.application_start_time, self.application_end_time
         )
 
 

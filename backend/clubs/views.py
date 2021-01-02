@@ -2982,9 +2982,16 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class ClubApplicationViewSet(viewsets.ModelViewSet):
-    permission_classes = [ProfilePermission | IsSuperuser]
+    """
+    list: Retrieve a list of applications of the club.
+
+    get: Retrieve the details for a given application.
+    """
+
+    permission_classes = [IsSuperuser]
     serializer_class = ClubApplicationSerializer
-    http_method_names = ["get", "post", "delete"]
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+    lookup_field = "name"
 
     def get_queryset(self):
         return ClubApplication.objects.filter(club__code=self.kwargs["club_code"])
