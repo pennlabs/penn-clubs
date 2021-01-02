@@ -2109,6 +2109,17 @@ class ClubTestCase(TestCase):
         # make sure there are no duplicate clubs
         self.assertEqual(len(actual_club_codes), len(resp.data["clubs"]), resp.data["clubs"])
 
+    def test_execute_script(self):
+        self.client.login(username=self.user5.username, password="test")
+
+        resp = self.client.get(reverse("scripts"))
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertIsInstance(resp.data, list, resp.content)
+
+        resp = self.client.post(reverse("scripts"), {"action": "graduate_users"})
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertIn("output", resp.data, resp.content)
+
     def test_permission_lookup(self):
         permissions = [
             "clubs.approve_club",
