@@ -2109,6 +2109,28 @@ class ClubTestCase(TestCase):
         # make sure there are no duplicate clubs
         self.assertEqual(len(actual_club_codes), len(resp.data["clubs"]), resp.data["clubs"])
 
+    def test_alumni_page(self):
+        """
+        Ensure alumni page can be seen, even for users who are not logged in.
+        """
+        now = timezone.now()
+        for i, user in enumerate([self.user1, self.user2, self.user3]):
+            profile = user.profile
+            profile.graduation_year = now.year - 3
+            profile.save()
+            Membership.objects.create(person=user, club=self.club1, public=i <= 1, active=False)
+
+        # fetch alumni page
+        resp = self.client.get(reverse("clubs-alumni", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200], resp.content)
+        data = resp.json()
+
+        # ensure grouped by years
+        self.assertIn(str(now.year - 3), data, resp.content)
+
+        # ensure private memberships not shown
+        self.assertEqual(len(data[str(now.year - 3)]), 2, resp.content)
+
     def test_execute_script(self):
         self.client.login(username=self.user5.username, password="test")
 

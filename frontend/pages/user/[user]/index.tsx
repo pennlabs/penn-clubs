@@ -141,7 +141,12 @@ const UserProfilePage = ({
             <GraduationYearTag year={profile.graduation_year} />
           </div>
           <div>
-            <b>Email:</b> <Contact email={profile.email} />
+            <b>Email:</b>{' '}
+            {profile.email != null && profile.email.length > 0 ? (
+              <Contact email={profile.email} />
+            ) : (
+              'None'
+            )}
           </div>
         </div>
       </div>

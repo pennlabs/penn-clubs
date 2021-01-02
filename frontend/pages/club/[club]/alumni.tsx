@@ -32,37 +32,43 @@ const AlumniPage = ({ club, alumni }: AlumniPageProps): ReactElement => {
           to make their membership public.
         </Text>
         <hr />
-        {Object.keys(alumni)
-          .sort((a, b) =>
-            a == null ? 1 : b == null ? -1 : parseInt(b) - parseInt(a),
-          )
-          .map((year) => (
-            <div key={year} className="content">
-              <StrongText>
-                {year != null ? <>Class of {year}</> : 'Miscellaneous'}
-              </StrongText>
-              <ul>
-                {alumni[year]
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((user) => (
-                    <li>
-                      {user.username ? (
-                        <Link
-                          href={PROFILE_ROUTE()}
-                          as={PROFILE_ROUTE(user.username)}
-                        >
-                          <a>{user.name}</a>
-                        </Link>
-                      ) : (
-                        user.name
-                      )}
-                    </li>
-                  ))}
-              </ul>
-            </div>
-          ))}
-        {Object.keys(alumni).length <= 0 && (
-          <Text>There are no alumni to display for {club.name}.</Text>
+        {'detail' in alumni ? (
+          <Text>{alumni.detail}</Text>
+        ) : (
+          <>
+            {Object.keys(alumni)
+              .sort((a, b) =>
+                a == null ? 1 : b == null ? -1 : parseInt(b) - parseInt(a),
+              )
+              .map((year) => (
+                <div key={year} className="content">
+                  <StrongText>
+                    {year != null ? <>Class of {year}</> : 'Miscellaneous'}
+                  </StrongText>
+                  <ul>
+                    {alumni[year]
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((user) => (
+                        <li>
+                          {user.username ? (
+                            <Link
+                              href={PROFILE_ROUTE()}
+                              as={PROFILE_ROUTE(user.username)}
+                            >
+                              <a>{user.name}</a>
+                            </Link>
+                          ) : (
+                            user.name
+                          )}
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              ))}
+            {Object.keys(alumni).length <= 0 && (
+              <Text>There are no alumni to display for {club.name}.</Text>
+            )}
+          </>
         )}
       </Container>
     </>

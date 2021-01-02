@@ -121,10 +121,11 @@ class ClubPermission(permissions.BasePermission):
             if obj.approved or obj.ghost:
                 return True
 
-            # with special bypass flag, anyone can view information
-            # this is used for invitations
-            if request.query_params.get("bypass", "false").lower().strip() == "true":
-                return True
+            # with special bypass flag, anyone can view information for just the clubs endpoint
+            # this is used for the email invitations page
+            if view.action in {"retrieve"}:
+                if request.query_params.get("bypass", "false").lower().strip() == "true":
+                    return True
 
             # otherwise, can view if you have special permissions or is member
             return request.user.is_authenticated and (
@@ -161,7 +162,6 @@ class ClubPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if view.action in {
-            "alumni",
             "children",
             "destroy",
             "parents",
