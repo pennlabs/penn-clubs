@@ -66,8 +66,11 @@ const ProfileTab = ({ defaults }: ProfileTabProps): ReactElement => {
       <br />
       <br />
       <SmallText>
-        If your information is incorrect, please send an email to <Contact />{' '}
-        detailing your issue.
+        We retrieve basic profile information from the{' '}
+        <a href="https://www.upenn.edu/directories">Penn Directory</a> when you
+        login. If you have opted out of the directory listing, your information
+        may be incorrect. If your information is incorrect, please send an email
+        to <Contact /> detailing your issue.
       </SmallText>
       <hr />
       <div>
