@@ -1,6 +1,6 @@
 import { Field, Form, Formik } from 'formik'
 import { NextPageContext } from 'next'
-import React, { ReactElement, useState } from 'react'
+import React, { ReactElement, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 
 import { Container, Icon, Metadata, Text, Title } from '../components/common'
@@ -19,8 +19,45 @@ import {
 } from '../utils/branding'
 
 const ScriptBox = ({ script }): ReactElement => {
+  const ws = useRef<WebSocket | null>(null)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [output, setOutput] = useState<string | null>(null)
+
+  async function executeScriptHttp() {
+    await doApiRequest('/scripts/?format=json', {
+      method: 'POST',
+      body: { action: script.name },
+    })
+      .then((resp) => resp.json())
+      .then((resp) => {
+        setOutput(resp.output)
+      })
+  }
+
+  async function executeScriptWs() {
+    setLoading(true)
+    setOutput('')
+    const wsUrl = `${location.protocol === 'http:' ? 'ws' : 'wss'}://${
+      location.host
+    }/api/ws/script/`
+    ws.current = new WebSocket(wsUrl)
+    ws.current.onmessage = (e) => {
+      const data = JSON.parse(e.data)
+      if (data.output) {
+        setOutput((output) => output + data.output)
+      }
+    }
+    ws.current.onopen = () => {
+      ws.current?.send(JSON.stringify({ action: script.name }))
+    }
+    return new Promise<void>((resolve) => {
+      if (ws.current != null) {
+        ws.current.onclose = () => {
+          resolve()
+        }
+      }
+    })
+  }
 
   return (
     <div className="box">
@@ -32,20 +69,24 @@ const ScriptBox = ({ script }): ReactElement => {
         onClick={(e) => {
           e.preventDefault()
           setLoading(true)
-          doApiRequest('/scripts/?format=json', {
-            method: 'POST',
-            body: { action: script.name },
-          })
-            .then((resp) => resp.json())
-            .then((resp) => {
-              setOutput(resp.output)
-              setLoading(false)
-            })
+          if ('WebSocket' in window) {
+            executeScriptWs().then(() => setLoading(false))
+          } else {
+            executeScriptHttp().then(() => setLoading(false))
+          }
         }}
       >
         <Icon name="play" /> Execute
       </button>
-      {output != null && <pre className="mt-3">{output}</pre>}
+      {output != null && (
+        <pre className="mt-3">
+          {output.length > 0 ? (
+            output
+          ) : (
+            <span className="has-text-grey">(no output)</span>
+          )}
+        </pre>
+      )}
     </div>
   )
 }

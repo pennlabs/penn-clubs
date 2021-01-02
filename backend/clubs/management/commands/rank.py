@@ -15,6 +15,7 @@ class Command(BaseCommand):
     web_execute = True
 
     def handle(self, *args, **kwargs):
+        count = 0
         for club in Club.objects.all():
             ranking = 0
 
@@ -159,3 +160,6 @@ class Command(BaseCommand):
             club.rank = floor(ranking)
             club.skip_history_when_saving = True
             club.save(update_fields=["rank"])
+            count += 1
+
+        self.stdout.write(self.style.SUCCESS(f"Computed rankings for {count} clubs!"))
