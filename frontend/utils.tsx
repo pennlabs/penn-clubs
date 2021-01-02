@@ -11,6 +11,15 @@ import {
   MEMBERSHIP_ROLE_NAMES,
 } from './utils/branding'
 
+const dev = process.env.NODE_ENV !== 'production'
+
+/**
+ * Returns true if this is a development environment, or false otherwise.
+ */
+export function isDevelopment(): boolean {
+  return dev
+}
+
 const internalCache = new LRU()
 
 /**
@@ -154,11 +163,16 @@ export function apiCheckPermission(
     return false
   }
 
-  throw new Error(
-    `The permission '${permission}' was not preloaded on this page. You should preload this permission for efficiency purposes. Loaded permissions: ${JSON.stringify(
-      perms,
-    )}`,
-  )
+  // warn the developer that they should preload the permission
+  const msg = `The permission '${permission}' was not preloaded on this page. You should preload this permission for efficiency purposes. Loaded permissions: ${JSON.stringify(
+    perms,
+  )}`
+  if (isDevelopment()) {
+    throw new Error(msg)
+  }
+
+  // in production, return false and hope for the best
+  return false
 }
 
 /**
