@@ -5,7 +5,11 @@ import { toast } from 'react-toastify'
 
 import { Container, Icon, Metadata, Text, Title } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
-import { SelectField, TextField } from '../components/FormComponents'
+import {
+  CheckboxField,
+  SelectField,
+  TextField,
+} from '../components/FormComponents'
 import { fixDeserialize } from '../components/reports/ReportForm'
 import TabView from '../components/TabView'
 import { BG_GRADIENT, WHITE } from '../constants'
@@ -16,6 +20,7 @@ import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
   OBJECT_NAME_TITLE_SINGULAR,
+  SITE_NAME,
 } from '../utils/branding'
 
 const ScriptBox = ({ script }): ReactElement => {
@@ -23,10 +28,10 @@ const ScriptBox = ({ script }): ReactElement => {
   const [isLoading, setLoading] = useState<boolean>(false)
   const [output, setOutput] = useState<string | null>(null)
 
-  async function executeScriptHttp() {
+  async function executeScriptHttp(data) {
     await doApiRequest('/scripts/?format=json', {
       method: 'POST',
-      body: { action: script.name },
+      body: { action: script.name, parameters: data },
     })
       .then((resp) => resp.json())
       .then((resp) => {
@@ -34,7 +39,7 @@ const ScriptBox = ({ script }): ReactElement => {
       })
   }
 
-  async function executeScriptWs() {
+  async function executeScriptWs(data) {
     setLoading(true)
     setOutput('')
     const wsUrl = `${location.protocol === 'http:' ? 'ws' : 'wss'}://${
@@ -48,7 +53,9 @@ const ScriptBox = ({ script }): ReactElement => {
       }
     }
     ws.current.onopen = () => {
-      ws.current?.send(JSON.stringify({ action: script.name }))
+      ws.current?.send(
+        JSON.stringify({ action: script.name, parameters: data }),
+      )
     }
     return new Promise<void>((resolve) => {
       if (ws.current != null) {
@@ -59,25 +66,52 @@ const ScriptBox = ({ script }): ReactElement => {
     })
   }
 
+  function execute(data): void {
+    setLoading(true)
+    if ('WebSocket' in window) {
+      executeScriptWs(data).then(() => setLoading(false))
+    } else {
+      executeScriptHttp(data).then(() => setLoading(false))
+    }
+  }
+
   return (
     <div className="box">
       <div className="is-size-5 is-family-monospace">{script.name}</div>
       <Text>{script.description}</Text>
-      <button
-        disabled={!script.execute || isLoading}
-        className="button is-primary"
-        onClick={(e) => {
-          e.preventDefault()
-          setLoading(true)
-          if ('WebSocket' in window) {
-            executeScriptWs().then(() => setLoading(false))
-          } else {
-            executeScriptHttp().then(() => setLoading(false))
-          }
-        }}
+      <Formik
+        initialValues={Object.keys(script.arguments)
+          .map((arg) => [arg, script.arguments[arg].default])
+          .reduce((acc, [k, v]) => {
+            acc[k] = v
+            return acc
+          }, {})}
+        onSubmit={execute}
       >
-        <Icon name="play" /> Execute
-      </button>
+        <Form>
+          {script.execute &&
+            Object.keys(script.arguments).map((arg) => (
+              <Field
+                key={arg}
+                as={
+                  script.arguments[arg].type === 'bool'
+                    ? CheckboxField
+                    : TextField
+                }
+                name={arg}
+                label={arg}
+                helpText={script.arguments[arg].help}
+              />
+            ))}
+          <button
+            type="submit"
+            disabled={!script.execute || isLoading}
+            className="button is-primary"
+          >
+            <Icon name="play" /> Execute
+          </button>
+        </Form>
+      </Formik>
       {output != null && (
         <pre className="mt-3">
           {output.length > 0 ? (
@@ -205,8 +239,13 @@ function AdminPage({
       label: 'Scripts',
       content: () => (
         <div>
+          <Text>
+            As an administrator, you can execute management scripts that affect
+            all of {SITE_NAME}.
+          </Text>
           {Array.isArray(scripts) ? (
             scripts
+              .filter((s) => s.execute)
               .sort((a, b) =>
                 a.execute ? -1 : b.execute ? 1 : a.name.localeCompare(b.name),
               )

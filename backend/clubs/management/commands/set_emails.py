@@ -24,6 +24,6 @@ class Command(BaseCommand):
                 club.email_public = False
                 club._change_reason = "Add email to contact field"
                 club.save(update_fields=["email", "email_public"])
-                print(f"Added email {email} to {club.name}!")
+                self.stdout.write(f"Added email {email} to {club.name}!")
             else:
-                print(f"Could not add email to {club.name}!")
+                self.stdout.write(f"Could not add email to {club.name}!")

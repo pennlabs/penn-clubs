@@ -695,7 +695,7 @@ export const SelectField = useFieldWrapper(
 export const CheckboxField = (
   props: BasicFormField & AnyHack,
 ): ReactElement => {
-  const { label, value, onChange, ...other } = props
+  const { label, value, onChange, helpText, ...other } = props
   const { status, setFieldValue } = useFormikContext()
   const errorMessage = status && status[props.name]
   const fieldContext = useContext(FormFieldClassContext)
@@ -716,6 +716,7 @@ export const CheckboxField = (
           {label}
         </label>
       </div>
+      {helpText && <p className="help">{helpText}</p>}
       {errorMessage && <p className="help is-danger">{errorMessage}</p>}
     </>
   )

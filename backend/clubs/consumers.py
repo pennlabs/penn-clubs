@@ -42,7 +42,8 @@ class ExecuteScriptConsumer(AsyncWebsocketConsumer):
     @log_errors
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        action = text_data_json["action"]
+        action = text_data_json.get("action")
+        parameters = text_data_json.get("parameters", {})
         user = self.scope["user"]
         scripts = get_scripts()
         script = next((s for s in scripts if s["name"] == action), None)
@@ -73,11 +74,23 @@ class ExecuteScriptConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
+        # parse arguments
+        kwargs = {}
+        for arg, details in script["arguments"].items():
+            if arg in parameters:
+                kwargs[arg] = {"str": str, "bool": bool, "int": int}.get(details["type"], str)(
+                    parameters[arg]
+                )
+
         # execute the script on a separate thread
-        await sync_to_async(self.execute_script, thread_sensitive=False)(action)
+        await self.send(
+            json.dumps({"output": f"Executing script '{action}' with parameters: {parameters}\n"})
+        )
+        await sync_to_async(self.execute_script, thread_sensitive=False)(action, kwargs)
+        await self.send(json.dumps({"output": "Script execution finished!"}))
         await self.close()
 
-    def execute_script(self, action):
+    def execute_script(self, action, parameters):
         class LiveIO(io.StringIO):
             def write(s, data):
                 try:
@@ -89,7 +102,7 @@ class ExecuteScriptConsumer(AsyncWebsocketConsumer):
 
         with LiveIO() as out:
             try:
-                call_command(action, stdout=out)
+                call_command(action, **parameters, stdout=out)
             except Exception:
                 async_to_sync(self.send)(json.dumps({"output": traceback.format_exc()}))
 

@@ -156,9 +156,11 @@ class Command(BaseCommand):
                             "hap_second_round": "second_round",
                         }[action],
                     )
-                    print(f"Sent {action} email to {email} for groups: {resources}")
+                    self.stdout.write(f"Sent {action} email to {email} for groups: {resources}")
                 else:
-                    print(f"Would have sent {action} email to {email} for groups: {resources}")
+                    self.stdout.write(
+                        f"Would have sent {action} email to {email} for groups: {resources}"
+                    )
             return
 
         # get club whitelist

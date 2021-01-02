@@ -1,5 +1,7 @@
+import argparse
 import collections
 import datetime
+import functools
 import io
 import json
 import os
@@ -3168,6 +3170,48 @@ class OptionListView(APIView):
         return Response(options)
 
 
+class LoggingArgumentParser(argparse.ArgumentParser):
+    """
+    An argument parser that logs added arguments.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self._arguments = {}
+        super().__init__(*args, **kwargs)
+
+    def add_argument(self, *args, **kwargs):
+        super().add_argument(*args, **kwargs)
+
+        if kwargs.get("default") == "==SUPPRESS==":
+            return
+
+        name = kwargs.get("dest", args[0].strip(" -").replace("-", "_"))
+        default = kwargs.get("default")
+        typ = kwargs.get(
+            "type",
+            bool
+            if kwargs.get("action") == "store_true"
+            else type(default)
+            if default is not None
+            else str,
+        )
+        self._arguments[name] = {
+            "type": typ.__name__ if typ is not None else typ,
+            "help": re.sub(r"\s+", " ", kwargs.get("help", "")) or None,
+            "default": default,
+        }
+
+    def set_defaults(self, *args, **kwargs):
+        super().set_defaults(*args, **kwargs)
+        for arg, value in kwargs.items():
+            if arg in self._arguments:
+                self._arguments[arg]["default"] = value
+
+    def get_arguments(self):
+        return self._arguments
+
+
+@functools.lru_cache
 def get_scripts():
     """
     Return a list of Django management commands and some associated metadata.
@@ -3175,15 +3219,19 @@ def get_scripts():
     commands = get_commands()
     scripts = []
     for name, path in commands.items():
-        if path.startswith("clubs"):
-            cls = load_command_class(path, name)
-            scripts.append(
-                {
-                    "name": name,
-                    "description": re.sub(r"\s+", " ", cls.help),
-                    "execute": hasattr(cls, "web_execute") and cls.web_execute,
-                }
-            )
+        cls = load_command_class(path, name)
+        parser = LoggingArgumentParser()
+        cls.add_arguments(parser)
+        scripts.append(
+            {
+                "name": name,
+                "path": path,
+                "description": re.sub(r"\s+", " ", cls.help),
+                "execute": hasattr(cls, "web_execute") and cls.web_execute,
+                "arguments": parser.get_arguments(),
+            }
+        )
+    scripts.sort(key=lambda s: (not s["execute"], s["name"]))
     return scripts
 
 
@@ -3230,6 +3278,7 @@ class ScriptExecutionView(APIView):
         ---
         """
         action = request.data.get("action")
+        parameters = request.data.get("parameters", {})
         scripts = get_scripts()
         script = next((s for s in scripts if s["name"] == action), None)
 
@@ -3241,9 +3290,16 @@ class ScriptExecutionView(APIView):
                 {"output": f"You are not allowed to execute '{action}' from the web interface."}
             )
 
+        kwargs = {}
+        for arg, details in script["arguments"].items():
+            if arg in parameters:
+                kwargs[arg] = {"str": str, "bool": bool, "int": int}.get(details.type, str)(
+                    parameters[arg]
+                )
+
         # execute command and return output
         with io.StringIO() as output:
-            call_command(action, stdout=output)
+            call_command(action, **kwargs, stdout=output)
             return Response({"output": output.getvalue()})
 
 
