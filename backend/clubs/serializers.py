@@ -1509,6 +1509,7 @@ class UserProfileSerializer(MinimalUserProfileSerializer):
     image_url = serializers.SerializerMethodField("get_image_url")
     clubs = serializers.SerializerMethodField("get_clubs")
     graduation_year = serializers.IntegerField(source="profile.graduation_year")
+    public = serializers.BooleanField(source="profile.show_profile", read_only=True)
     school = SchoolSerializer(many=True, source="profile.school")
     major = MajorSerializer(many=True, source="profile.major")
 
@@ -1558,11 +1559,12 @@ class UserProfileSerializer(MinimalUserProfileSerializer):
 
     class Meta(MinimalUserProfileSerializer.Meta):
         fields = MinimalUserProfileSerializer.Meta.fields + [
-            "image_url",
-            "graduation_year",
-            "school",
-            "major",
             "clubs",
+            "graduation_year",
+            "image_url",
+            "major",
+            "public",
+            "school",
         ]
 
 

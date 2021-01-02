@@ -202,16 +202,17 @@ export interface UserInfo {
 }
 
 export interface UserProfile {
-  name: string
-  username: string
-  email: string
-  image_url: string | null
-  graduation_year: number | null
-  school: School[]
-  major: Major[]
   clubs: (Club & {
     membership: { active: boolean; title: string; role: number }
   })[]
+  email: string
+  graduation_year: number | null
+  image_url: string | null
+  major: Major[]
+  name: string
+  public: boolean
+  school: School[]
+  username: string
 }
 
 export type UserMembership = {

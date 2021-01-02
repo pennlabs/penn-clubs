@@ -81,18 +81,23 @@ const UserProfilePage = ({
 }: UserProfilePageProps): ReactElement => {
   if ('detail' in profile) {
     return (
-      <AuthPrompt title="Oh no!" hasLogin={!authenticated}>
-        You cannot view the profile for this user. This user might not exist or
-        have set their profile to private.{' '}
-        <span className="has-text-grey">{profile.detail}</span>
-      </AuthPrompt>
+      <>
+        <Metadata title="User Profile" />
+        <AuthPrompt title="Oh no!" hasLogin={!authenticated}>
+          You cannot view the profile for this user. This user might not exist
+          or have set their profile to private.{' '}
+          <span className="has-text-grey">{profile.detail}</span>
+        </AuthPrompt>
+      </>
     )
   }
+
+  const isSelf = userInfo?.username === profile.username
 
   return (
     <Container paddingTop>
       <Metadata title={profile.name} />
-      {userInfo?.username === profile.username && (
+      {isSelf && (
         <div className="notification is-info is-light">
           <Icon name="alert-circle" /> This is your profile page. You will
           always be able to see all of the information shown here. Currently,
@@ -104,12 +109,20 @@ const UserProfilePage = ({
           .
         </div>
       )}
+      {!isSelf && !profile.public && (
+        <div className="notification is-warning is-light">
+          <Icon name="alert-circle" /> {profile.name} has not chosen to make
+          their profile public. You can only view this page because you have
+          administrator privileges.
+        </div>
+      )}
       <div className="is-clearfix mb-5">
         <div className="is-pulled-left mr-3">
           <ProfilePic
             size="is-128x128"
             user={{ name: profile.name, image: profile.image_url }}
             isCentered={false}
+            fontSize="2.5em"
           />
         </div>
         <div className="is-pulled-left">
