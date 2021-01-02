@@ -1,8 +1,9 @@
+import getConfig from 'next/config'
 import React from 'react'
 let Sentry
 
-const SENTRY_URL =
-  'https://d24382d743314dadadb80d1eabdb139e@sentry.pennlabs.org/13'
+const { publicRuntimeConfig } = getConfig()
+const SENTRY_URL = publicRuntimeConfig.SENTRY_URL
 const dev = process.env.NODE_ENV !== 'production'
 
 if (process.browser) {

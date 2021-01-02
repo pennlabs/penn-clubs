@@ -20,7 +20,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", None)
 
 # Sentry settings
 SENTRY_URL = os.environ.get("SENTRY_URL", "")
-sentry_sdk.init(dsn=SENTRY_URL, integrations=[DjangoIntegration()])
+sentry_sdk.init(dsn=SENTRY_URL, integrations=[DjangoIntegration()], send_default_pii=True)
 
 # DLA settings
 PLATFORM_ACCOUNTS = {
