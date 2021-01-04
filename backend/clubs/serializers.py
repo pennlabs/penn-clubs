@@ -1822,6 +1822,12 @@ class NoteTagSerializer(serializers.ModelSerializer):
 
 class ClubApplicationSerializer(serializers.ModelSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    name = serializers.SerializerMethodField("get_name")
+
+    def get_name(self, obj):
+        if obj.name:
+            return obj.name
+        return "{}-{}".format(obj.club.name, obj.application_start_time.strftime("%b %d, %Y"))
 
     def validate(self, data):
         application_start_time = data["application_start_time"]
@@ -1850,6 +1856,13 @@ class ClubApplicationSerializer(serializers.ModelSerializer):
             "result_release_time",
             "external_url",
         )
+
+
+class WritableClubApplicationSerializer(ClubApplicationSerializer):
+    name = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta(ClubApplicationSerializer.Meta):
+        pass
 
 
 class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
