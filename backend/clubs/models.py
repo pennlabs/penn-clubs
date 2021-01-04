@@ -1194,6 +1194,27 @@ class Profile(models.Model):
         return self.user.username
 
 
+class ClubApplication(models.Model):
+    """
+    Represents an application to a club.
+    """
+
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    application_start_time = models.DateTimeField()
+    application_end_time = models.DateTimeField()
+    name = models.TextField(blank=True)
+    result_release_time = models.DateTimeField()
+    external_url = models.URLField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "{} created {}: start {}, end {}".format(
+            self.club.name, self.name, self.application_start_time, self.application_end_time
+        )
+
+
 @receiver(models.signals.pre_delete, sender=Asset)
 def asset_delete_cleanup(sender, instance, **kwargs):
     if instance.file:
