@@ -360,3 +360,16 @@ export function intersperse<T, U>(
     [arr[0]],
   )
 }
+
+/**
+ * Return the starting year of the current school year that we are in.
+ * For example, if we are in Fall 2019 or Spring 2020, the current school year should be 2019.
+ */
+export function getCurrentSchoolYear(): number {
+  const now = new Date()
+  let year = now.getFullYear()
+  if (now.getMonth() < 6) {
+    year -= 1
+  }
+  return year
+}

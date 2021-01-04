@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ReactElement } from 'react'
 
 import { DIRECTORY_ROUTE, USER_RENEWAL } from '../../constants'
-import { useSetting } from '../../utils'
+import { getCurrentSchoolYear } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   OBJECT_NAME_PLURAL,
@@ -12,8 +12,7 @@ import {
 } from '../../utils/branding'
 
 const ListRenewalDialog = (): ReactElement => {
-  const year = new Date().getFullYear()
-  const fairName = useSetting('FAIR_NAME')
+  const year = getCurrentSchoolYear()
 
   return (
     <div className="notification is-info is-clearfix">

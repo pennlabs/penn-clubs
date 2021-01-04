@@ -4,7 +4,11 @@ import styled from 'styled-components'
 
 import { MEDIUM_GRAY } from '../../constants'
 import { Club, ClubFair, MembershipRank, UserInfo } from '../../types'
-import { apiCheckPermission, doApiRequest } from '../../utils'
+import {
+  apiCheckPermission,
+  doApiRequest,
+  getCurrentSchoolYear,
+} from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   APPROVAL_AUTHORITY_URL,
@@ -42,9 +46,9 @@ type ConfirmParams = {
   message: ReactElement | string
 }
 
-const ClubApprovalDialog = ({ club, userInfo }: Props): ReactElement | null => {
+const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
   const router = useRouter()
-  const year = new Date().getFullYear()
+  const year = getCurrentSchoolYear()
   const [comment, setComment] = useState<string>(club.approved_comment || '')
   const [loading, setLoading] = useState<boolean>(false)
   const [confirmModal, setConfirmModal] = useState<ConfirmParams | null>(null)
