@@ -31,6 +31,7 @@ import {
 import {
   apiCheckPermission,
   doApiRequest,
+  getCurrentSchoolYear,
   isClubFieldShown,
 } from '../../../utils'
 import {
@@ -229,7 +230,7 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
     return <ResourceCreationPage {...props} />
   }
 
-  const year = new Date().getFullYear()
+  const year = getCurrentSchoolYear()
 
   const steps = [
     {

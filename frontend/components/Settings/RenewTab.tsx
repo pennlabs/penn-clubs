@@ -3,7 +3,7 @@ import { ReactElement, useEffect, useState } from 'react'
 
 import { CREATE_ROUTE, DIRECTORY_ROUTE } from '../../constants'
 import { UserInfo, UserMembership } from '../../types'
-import { doApiRequest } from '../../utils'
+import { doApiRequest, getCurrentSchoolYear } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   OBJECT_NAME_PLURAL,
@@ -32,7 +32,7 @@ const RenewTab = ({ className }: ClubTabProps): ReactElement => {
     return <Loading />
   }
 
-  const year = new Date().getFullYear()
+  const year = getCurrentSchoolYear()
 
   return (
     <>
