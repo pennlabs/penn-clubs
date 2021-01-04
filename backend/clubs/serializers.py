@@ -1827,7 +1827,7 @@ class ClubApplicationSerializer(serializers.ModelSerializer):
     def get_name(self, obj):
         if obj.name:
             return obj.name
-        return "{}-{}".format(obj.club.name, obj.application_start_time.strftime("%b %d, %Y"))
+        return f"{obj.club.name} Application"
 
     def validate(self, data):
         application_start_time = data["application_start_time"]
