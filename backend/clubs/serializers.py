@@ -1409,10 +1409,7 @@ class UserClubVisitSerializer(serializers.ModelSerializer):
 
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = ClubListSerializer(read_only=True)
-    ip = serializers.SerializerMethodField("get_ip")
-
-    def get_ip(self, obj):
-        return self.context["request"].META["REMOTE_ADDR"]
+    ip = serializers.HiddenField(default=None)
 
     class Meta:
         model = ClubVisit
