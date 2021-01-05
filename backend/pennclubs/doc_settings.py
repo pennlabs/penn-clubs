@@ -1,6 +1,6 @@
-import json
 import re
 
+import jsonref
 import yaml
 from django.conf import settings
 from rest_framework.renderers import JSONOpenAPIRenderer
@@ -100,7 +100,7 @@ class CustomJSONOpenAPIRenderer(JSONOpenAPIRenderer):
 
     def render(self, *args, **kwargs):
         output = super().render(*args, **kwargs)
-        data = json.loads(output)
+        data = jsonref.loads(output)
 
         # add api level metadata
         info = data.get("info", {})
@@ -138,4 +138,4 @@ class CustomJSONOpenAPIRenderer(JSONOpenAPIRenderer):
         data["tags"] = [{"name": cat, "description": ""} for cat in categories]
         data["x-tagGroups"] = [{"name": settings.BRANDING_SITE_NAME, "tags": categories}]
 
-        return json.dumps(data, indent=4 if settings.DEBUG else None).encode("utf-8")
+        return jsonref.dumps(data, indent=4 if settings.DEBUG else None).encode("utf-8")
