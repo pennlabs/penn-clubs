@@ -1,6 +1,7 @@
 import json
 import re
 
+import jsonref
 import yaml
 from django.conf import settings
 from rest_framework.renderers import JSONOpenAPIRenderer
@@ -100,7 +101,7 @@ class CustomJSONOpenAPIRenderer(JSONOpenAPIRenderer):
 
     def render(self, *args, **kwargs):
         output = super().render(*args, **kwargs)
-        data = json.loads(output)
+        data = jsonref.loads(output)
 
         # add api level metadata
         info = data.get("info", {})
