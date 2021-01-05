@@ -2161,16 +2161,16 @@ class ClubVisitViewSet(viewsets.ModelViewSet):
             return UserClubVisitWriteSerializer
         return UserClubVisitSerializer
 
-    def perform_create(self,serializer):
+    def perform_create(self, serializer):
         print("Perform create")
         serializer.save(ip=self.get_ip())
 
     def get_ip(self):
-        x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR', None)
+        x_forwarded_for = self.request.META.get("HTTP_X_FORWARDED_FOR", None)
         if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
+            ip = x_forwarded_for.split(",")[0]
         else:
-            ip = self.request.META.get('REMOTE_ADDR', None)
+            ip = self.request.META.get("REMOTE_ADDR", None)
         return ip
 
 
