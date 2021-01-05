@@ -139,4 +139,4 @@ class CustomJSONOpenAPIRenderer(JSONOpenAPIRenderer):
         data["tags"] = [{"name": cat, "description": ""} for cat in categories]
         data["x-tagGroups"] = [{"name": settings.BRANDING_SITE_NAME, "tags": categories}]
 
-        return json.dumps(data, indent=4 if settings.DEBUG else None).encode("utf-8")
+        return jsonref.dumps(data, indent=4 if settings.DEBUG else None).encode("utf-8")
