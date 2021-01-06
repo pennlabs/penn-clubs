@@ -1412,9 +1412,7 @@ class UserClubVisitSerializer(serializers.ModelSerializer):
     ip = serializers.HiddenField(default=None)
 
     def save(self):
-        if not self.instance:
-            if not self.validated_data.get("ip"):
-                self.validated_data["ip"] = self.get_ip()
+        self.validated_data["ip"] = self.get_ip()
         return super().save()
 
     def get_ip(self):
