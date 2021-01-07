@@ -27,12 +27,12 @@ def send_fair_email(club, email, template="fair"):
     send_mail_helper(template, "Making the SAC Fair Easier for You", [email], context)
 
 
-def send_hap_intro_email(email, resources, template="intro"):
+def send_hap_intro_email(email, resources, address_string, template="intro"):
     """
     Send the Hub@Penn introduction email given the email and the list of resources.
     """
 
-    send_mail_helper(template, None, [email], {"resources": resources})
+    send_mail_helper(template, None, [email], {"resources": resources, "address_string": address_string})
 
 
 class Command(BaseCommand):
@@ -122,7 +122,7 @@ class Command(BaseCommand):
         if action in {"hap_intro", "hap_intro_remind", "hap_second_round"}:
             test_email = kwargs.get("test", None)
             email_file = kwargs["emails"]
-            people = collections.defaultdict(list)
+            people = collections.defaultdict(dict)
 
             # read recipients from csv file
             with open(email_file, "r") as f:
@@ -135,31 +135,53 @@ class Command(BaseCommand):
                     for line in reader:
                         name = line["name"].strip()
                         email = line["email"].strip()
+                        if "contact" in line.keys():
+                            contact = line["contact"].strip()
+                        else:
+                            contact = ""
                         if test_email is not None:
                             email = test_email
                         if name and email:
-                            people[email].append(name)
+                            if email in people.keys():
+                                people[email]["resources"].append(name)
+                                people[email]["contacts"].append(contact)
+                            else:
+                                people[email]["resources"] = [name]
+                                people[email]["contacts"] = [contact]
                 except KeyError as e:
                     raise ValueError(
                         "Ensure the spreadsheet has a header with the 'name' and 'email' columns."
                     ) from e
 
             # send emails grouped by recipients
-            for email, resources in people.items():
+            for email, context in people.items():
+                contacts = list(set(context["contacts"])) # No duplicate names
+                contacts = list(filter(lambda x: x != "", contacts)) # No empty string names
+                if len(contacts) == 0:
+                    contacts.append("Staff member")
+
+                # Format names in comma separated form
+                address_string = ""
+                for contact in contacts:
+                    address_string += contact + ", "
+                address_string = address_string[:-2]
+
+                resources = context["resources"]
                 if not dry_run:
                     send_hap_intro_email(
                         email,
                         resources,
+                        address_string,
                         template={
                             "hap_intro": "intro",
                             "hap_intro_remind": "intro_remind",
                             "hap_second_round": "second_round",
                         }[action],
                     )
-                    self.stdout.write(f"Sent {action} email to {email} for groups: {resources}")
+                    self.stdout.write(f"Sent {action} email to {email} (addressed: {address_string}) for groups: {resources}")
                 else:
                     self.stdout.write(
-                        f"Would have sent {action} email to {email} for groups: {resources}"
+                        f"Would have sent {action} email to {email} (addressed: {address_string}) for groups: {resources}"
                     )
             return
 
