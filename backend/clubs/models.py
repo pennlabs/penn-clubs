@@ -669,12 +669,13 @@ class RecurringEvent(models.Model):
 class Event(models.Model):
     """
     Represents an event hosted by a club.
+    If the club is null, this is a global event.
     """
 
     code = models.SlugField(max_length=255, db_index=True)
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=255)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="events")
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="events", null=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     location = models.CharField(max_length=255, null=True, blank=True)

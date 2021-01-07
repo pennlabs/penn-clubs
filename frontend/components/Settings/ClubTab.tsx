@@ -10,6 +10,7 @@ import {
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
+  SHOW_LEAVE_CONFIRMATION,
 } from '../../utils/branding'
 import { ModalContent } from '../ClubPage/Actions'
 import { Center, EmptyState, Icon, Loading, Modal, Text } from '../common'
@@ -134,11 +135,15 @@ const ClubTab = ({
   }
 
   function leaveClub(club: Club) {
-    setShowModal(club)
+    if (SHOW_LEAVE_CONFIRMATION) {
+      setShowModal(club)
+    } else {
+      actualLeaveClub(club)
+    }
   }
 
-  function actualLeaveClub() {
-    const club = showModal
+  function actualLeaveClub(selectedClub?: Club) {
+    const club = selectedClub ?? showModal
     if (club == null) {
       return
     }
@@ -203,7 +208,10 @@ const ClubTab = ({
               to inactive instead of leaving the {OBJECT_NAME_SINGULAR}.
             </p>
             <div className="buttons is-pulled-right">
-              <button className="button is-light" onClick={actualLeaveClub}>
+              <button
+                className="button is-light"
+                onClick={() => actualLeaveClub()}
+              >
                 <Icon name="trash" /> Leave {OBJECT_NAME_TITLE_SINGULAR}
               </button>
               <button

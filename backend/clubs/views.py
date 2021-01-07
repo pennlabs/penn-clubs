@@ -1789,10 +1789,12 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = Event.objects.all()
-        if self.kwargs.get("club_code") is not None:
+        is_club_specific = self.kwargs.get("club_code") is not None
+        if is_club_specific:
             qs = qs.filter(club__code=self.kwargs["club_code"])
-
-        qs = qs.filter(Q(club__approved=True) | Q(club__ghost=True))
+            qs = qs.filter(Q(club__approved=True) | Q(club__ghost=True))
+        else:
+            qs = qs.filter(Q(club__approved=True) | Q(club__ghost=True) | Q(club__isnull=True))
 
         return (
             qs.select_related("club", "creator",)

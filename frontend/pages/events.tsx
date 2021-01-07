@@ -86,7 +86,9 @@ const CalendarEvent = ({
 }) => {
   return (
     <>
-      {resource.name} - {resource.club_name}
+      {resource.club_name == null && <Icon name="globe" className="mr-1" />}
+      {resource.name}
+      {resource.club_name != null && <> - {resource.club_name}</>}
     </>
   )
 }
@@ -460,23 +462,28 @@ function EventPage({
   let maxHour = 22
 
   const now = new Date()
-  calendarEvents.forEach((event) => {
-    const endTime = new Date(event.end_time)
-    const startTime = new Date(event.start_time)
-    if (endTime >= now) {
-      if (startTime <= now) {
-        liveEvents.push(event)
-      } else {
-        upcomingEvents.push(event)
+  calendarEvents
+    .filter((event) => {
+      // remove global events from the list view (calendar view only)
+      return event.club != null
+    })
+    .forEach((event) => {
+      const endTime = new Date(event.end_time)
+      const startTime = new Date(event.start_time)
+      if (endTime >= now) {
+        if (startTime <= now) {
+          liveEvents.push(event)
+        } else {
+          upcomingEvents.push(event)
+        }
       }
-    }
-    if (startTime.getHours() < minHour) {
-      minHour = startTime.getHours()
-    }
-    if (endTime.getHours() > maxHour) {
-      maxHour = endTime.getHours()
-    }
-  })
+      if (startTime.getHours() < minHour) {
+        minHour = startTime.getHours()
+      }
+      if (endTime.getHours() > maxHour) {
+        maxHour = endTime.getHours()
+      }
+    })
 
   liveEvents = randomizeEvents(liveEvents)
   upcomingEvents = randomizeEvents(upcomingEvents)

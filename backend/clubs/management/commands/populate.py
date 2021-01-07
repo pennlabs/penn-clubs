@@ -461,6 +461,19 @@ class Command(BaseCommand):
             },
         )
 
+        # create a global event for testing
+        Event.objects.get_or_create(
+            club=None,
+            code="test-global-event",
+            defaults={
+                "creator": ben,
+                "name": "Test Global Event",
+                "description": "This is a global event that does not belong to any club.",
+                "start_time": now + datetime.timedelta(days=1),
+                "end_time": now + datetime.timedelta(days=1) + datetime.timedelta(hours=1),
+            },
+        )
+
         # create a club fair one month from now
         ClubFair.objects.update_or_create(
             name="Sample Fair",
