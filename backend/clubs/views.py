@@ -2416,7 +2416,8 @@ class FavoriteCalendarAPIView(APIView):
         one_month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
         all_events = (
             Event.objects.filter(
-                club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"],
+                Q(club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"])
+                | Q(club__isnull=True),
                 start_time__gte=one_month_ago,
             )
             .distinct()
