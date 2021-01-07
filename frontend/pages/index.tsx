@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import { CLUB_RECRUITMENT_CYCLES } from '../components/ClubEditPage/ClubEditCard'
 import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
 import LiveEventsDialog from '../components/ClubPage/LiveEventsDialog'
-import { Metadata, Title, WideContainer } from '../components/common'
+import { Icon, Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
 import { FuseTag } from '../components/FilterSearch'
 import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
@@ -19,6 +19,7 @@ import SearchBar, {
 } from '../components/SearchBar'
 import { mediaMaxWidth, PHONE } from '../constants'
 import {
+  BULMA_GREY,
   CLUBS_BLUE,
   CLUBS_GREY_LIGHT,
   CLUBS_PURPLE,
@@ -193,6 +194,45 @@ const TopSearchBar = ({ onChange }): ReactElement => {
         }, 100)
       }}
     />
+  )
+}
+
+const ScrollTopButtonContainer = styled.div`
+  position: fixed;
+  bottom: calc(36px + 3rem);
+  right: 18px;
+  cursor: pointer;
+  z-index: 999;
+
+  &:hover {
+    color: ${BULMA_GREY};
+  }
+`
+
+/**
+ * A scroll to top button at the bottom right corner of the page.
+ */
+const ScrollTopButton = (): ReactElement | null => {
+  const [isTop, setIsTop] = useState<boolean>(true)
+
+  useEffect(() => {
+    const onScroll = () => {
+      const nowTop = window.scrollY < 300
+      setIsTop(nowTop)
+    }
+
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  if (isTop) {
+    return null
+  }
+
+  return (
+    <ScrollTopButtonContainer onClick={() => window.scrollTo(0, 0)}>
+      <Icon name="chevron-up" /> Scroll to Top
+    </ScrollTopButtonContainer>
   )
 }
 
@@ -422,11 +462,14 @@ const Splash = (props: SplashProps): ReactElement => {
               </p>
             </div>
             {SHOW_SEARCHBAR_TOP && (
-              <TopSearchBar
-                onChange={(value) =>
-                  setSearchInput((inpt) => ({ ...inpt, search: value }))
-                }
-              />
+              <>
+                <TopSearchBar
+                  onChange={(value) =>
+                    setSearchInput((inpt) => ({ ...inpt, search: value }))
+                  }
+                />
+                <ScrollTopButton />
+              </>
             )}
             <ResultsText>
               {' '}
