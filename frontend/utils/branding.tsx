@@ -64,6 +64,10 @@ const sites = {
     SHOW_ACCESSIBILITY: false,
     // show the additional links section on each club
     SHOW_ADDITIONAL_LINKS: true,
+    // prompt the user to set inactive instead of leaving the club
+    SHOW_LEAVE_CONFIRMATION: true,
+    // show the searchbar at the top of the page instead of the sidebar
+    SHOW_SEARCHBAR_TOP: false,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
     OBJECT_MEMBERSHIP_LABEL: 'Members',
@@ -173,6 +177,8 @@ const sites = {
     SHOW_RANK_ALGORITHM: false,
     SHOW_ACCESSIBILITY: true,
     SHOW_ADDITIONAL_LINKS: false,
+    SHOW_LEAVE_CONFIRMATION: false,
+    SHOW_SEARCHBAR_TOP: true,
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
     OBJECT_MEMBERSHIP_LABEL_LOWERCASE: 'staff',
@@ -254,6 +260,9 @@ export const MEMBERSHIP_ROLE_NAMES: { [key: number]: string } =
   sites[site].MEMBERSHIP_ROLE_NAMES
 export const SHOW_ACCESSIBILITY = sites[site].SHOW_ACCESSIBILITY
 export const SHOW_ADDITIONAL_LINKS = sites[site].SHOW_ADDITIONAL_LINKS
+export const SHOW_LEAVE_CONFIRMATION = sites[site].SHOW_LEAVE_CONFIRMATION
+export const SHOW_SEARCHBAR_TOP = sites[site].SHOW_SEARCHBAR_TOP
+
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
 export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
   sites[site].OBJECT_MEMBERSHIP_LABEL_LOWERCASE

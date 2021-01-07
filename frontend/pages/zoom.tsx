@@ -426,7 +426,10 @@ const ZoomPage = ({
               <SmallEvent key={event.id}>
                 <b>{event.name}</b>
                 <div>
-                  <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
+                  <Link
+                    href={CLUB_ROUTE()}
+                    as={CLUB_ROUTE(event.club as string)}
+                  >
                     <a>{event.club_name}</a>
                   </Link>
                   <div>
@@ -616,7 +619,7 @@ const ZoomPage = ({
                   </button>
                   <Link
                     href={CLUB_EDIT_ROUTE() + '#events'}
-                    as={CLUB_EDIT_ROUTE(event.club) + '#events'}
+                    as={CLUB_EDIT_ROUTE(event.club as string) + '#events'}
                   >
                     <a className="button is-small is-info" target="_blank">
                       <Icon name="edit" /> Edit Event

@@ -49,8 +49,8 @@ export enum ClubEventType {
 
 export interface ClubEvent {
   badges: Badge[]
-  club: string
-  club_name: string
+  club: string | null
+  club_name: string | null
   description: string
   end_time: string
   id: number

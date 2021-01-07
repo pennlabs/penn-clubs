@@ -426,6 +426,8 @@ class EventSerializer(ClubEventSerializer):
     badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
 
     def get_club_name(self, obj):
+        if obj.club is None:
+            return None
         return obj.club.name
 
     class Meta:

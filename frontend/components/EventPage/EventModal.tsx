@@ -148,7 +148,7 @@ const EventModal = (props: {
           </span>
         )}
         <StyledDescription contents={description} />
-        {showDetailsButton !== false && (
+        {showDetailsButton !== false && event.club != null && (
           <RightAlign>
             <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)} passHref>
               <TransparentButtonLink
