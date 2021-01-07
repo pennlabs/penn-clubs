@@ -70,7 +70,7 @@ const SearchWrapper = styled.div`
 `
 
 const Content = styled.div<{ show?: boolean }>`
-  padding: 36px 17px 12px 17px;
+  padding: 12px 17px 12px 17px;
   width: 100%;
 
   &::-webkit-scrollbar {
@@ -193,7 +193,7 @@ const Collapsible = ({
         active={isActive ?? defaultActive}
         name={name}
         id={groupLabelId}
-        toggleActive={() => setActive((active) => !active)}
+        toggleActive={() => setActive((active) => !(active ?? defaultActive))}
       />
       {(isActive ?? defaultActive) && children}
     </div>

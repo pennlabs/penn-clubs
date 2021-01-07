@@ -31,7 +31,13 @@ import {
 import { PaginatedClubPage, renderListPage } from '../renderPage'
 import { Badge, School, StudentType, Tag, UserInfo, Year } from '../types'
 import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
-import { OBJECT_NAME_TITLE, SITE_ID, SITE_TAGLINE } from '../utils/branding'
+import {
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_TITLE,
+  SHOW_SEARCHBAR_TOP,
+  SITE_ID,
+  SITE_TAGLINE,
+} from '../utils/branding'
 
 const ClearAllLink = styled.span`
   cursor: pointer;
@@ -165,6 +171,31 @@ const SearchTags = ({
   )
 }
 
+/**
+ * The top bar search input, used for Hub@Penn.
+ */
+const TopSearchBar = ({ onChange }): ReactElement => {
+  const searchTimeout = useRef<number | null>(null)
+  const [searchValue, setSearchValue] = useState<string>('')
+  return (
+    <input
+      className="input mb-5"
+      placeholder={`Search for ${OBJECT_NAME_PLURAL}...`}
+      value={searchValue}
+      onChange={(e) => {
+        if (searchTimeout.current != null) {
+          window.clearTimeout(searchTimeout.current)
+        }
+        setSearchValue(e.target.value)
+        searchTimeout.current = window.setTimeout(() => {
+          searchTimeout.current = null
+          onChange(e.target.value)
+        }, 100)
+      }}
+    />
+  )
+}
+
 const Splash = (props: SplashProps): ReactElement => {
   const fairIsOpen = useSetting('FAIR_OPEN')
   const preFair = useSetting('PRE_FAIR')
@@ -286,7 +317,11 @@ const Splash = (props: SplashProps): ReactElement => {
       <Metadata />
       <div style={{ backgroundColor: SNOW }}>
         <SearchBar updateSearch={setSearchInput} searchInput={searchInput}>
-          <SearchBarTextItem param="search" />
+          {SHOW_SEARCHBAR_TOP || (
+            <div className="mt-2">
+              <SearchBarTextItem param="search" />
+            </div>
+          )}
           <SearchBarTagItem
             param="tags__in"
             label="Tags"
@@ -376,7 +411,7 @@ const Splash = (props: SplashProps): ReactElement => {
             <div style={{ padding: '30px 0' }}>
               <DisplayButtons switchDisplay={setDisplay} />
 
-              <Title className="title" style={{ color: H1_TEXT }}>
+              <Title style={{ color: H1_TEXT }}>
                 Browse {OBJECT_NAME_TITLE}
               </Title>
               <p
@@ -386,6 +421,13 @@ const Splash = (props: SplashProps): ReactElement => {
                 {SITE_TAGLINE}
               </p>
             </div>
+            {SHOW_SEARCHBAR_TOP && (
+              <TopSearchBar
+                onChange={(value) =>
+                  setSearchInput((inpt) => ({ ...inpt, search: value }))
+                }
+              />
+            )}
             <ResultsText>
               {' '}
               {clubs.count} result{clubs.count === 1 ? '' : 's'}
