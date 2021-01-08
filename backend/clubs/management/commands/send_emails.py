@@ -27,13 +27,13 @@ def send_fair_email(club, email, template="fair"):
     send_mail_helper(template, "Making the SAC Fair Easier for You", [email], context)
 
 
-def send_hap_intro_email(email, resources, address_string, template="intro"):
+def send_hap_intro_email(email, resources, recipient_string, template="intro"):
     """
     Send the Hub@Penn introduction email given the email and the list of resources.
     """
 
     send_mail_helper(
-        template, None, [email], {"resources": resources, "address_string": address_string}
+        template, None, [email], {"resources": resources, "recipient_string": recipient_string}
     )
 
 
@@ -163,17 +163,17 @@ class Command(BaseCommand):
                     contacts.append("Staff member")
 
                 # Format names in comma separated form
-                address_string = ""
+                recipient_string = ""
                 for contact in contacts:
-                    address_string += contact + ", "
-                address_string = address_string[:-2]
+                    recipient_string += contact + ", "
+                recipient_string = recipient_string[:-2]
 
                 resources = context["resources"]
                 if not dry_run:
                     send_hap_intro_email(
                         email,
                         resources,
-                        address_string,
+                        recipient_string,
                         template={
                             "hap_intro": "intro",
                             "hap_intro_remind": "intro_remind",
@@ -181,13 +181,13 @@ class Command(BaseCommand):
                         }[action],
                     )
                     self.stdout.write(
-                        f"Sent {action} email to {email} (addressed: "
-                        + f"{address_string}) for groups: {resources}"
+                        f"Sent {action} email to {email} (recipients: "
+                        + f"{recipient_string}) for groups: {resources}"
                     )
                 else:
                     self.stdout.write(
-                        f"Would have sent {action} email to {email} (addressed: "
-                        + f"{address_string}) for groups: {resources}"
+                        f"Would have sent {action} email to {email} (recipients: "
+                        + f"{recipient_string}) for groups: {resources}"
                     )
             return
 
