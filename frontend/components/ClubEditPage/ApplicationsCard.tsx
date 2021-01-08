@@ -2,6 +2,7 @@ import { Field } from 'formik'
 import { ReactElement } from 'react'
 
 import { Club, ClubApplicationRequired } from '../../types'
+import { getSemesterFromDate } from '../../utils'
 import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -90,7 +91,14 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
             />
           </>
         }
-        tableFields={[{ name: 'name', label: 'Name' }]}
+        tableFields={[
+          { name: 'name', label: 'Name' },
+          {
+            name: 'application_end_time',
+            label: 'Semester',
+            converter: (date: string): string => getSemesterFromDate(date),
+          },
+        ]}
         noun="Application"
       />
     </BaseCard>

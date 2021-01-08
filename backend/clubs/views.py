@@ -3004,7 +3004,11 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         return ClubApplicationSerializer
 
     def get_queryset(self):
-        return ClubApplication.objects.filter(club__code=self.kwargs["club_code"])
+        now = timezone.now()
+
+        return ClubApplication.objects.filter(
+            club__code=self.kwargs["club_code"], result_release_time__gte=now
+        ).order_by("application_end_time")
 
 
 class MassInviteAPIView(APIView):

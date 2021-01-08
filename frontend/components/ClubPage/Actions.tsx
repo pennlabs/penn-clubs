@@ -21,7 +21,14 @@ import {
   SITE_NAME,
 } from '../../utils/branding'
 import { logException, logMessage } from '../../utils/sentry'
-import { BookmarkIcon, Contact, Icon, Modal, SubscribeIcon } from '../common'
+import {
+  BookmarkIcon,
+  Contact,
+  Icon,
+  Modal,
+  SubscribeIcon,
+  Title,
+} from '../common'
 import { AuthCheckContext } from '../contexts'
 
 const Wrapper = styled.span`
@@ -102,36 +109,21 @@ const Quote = styled.p`
   color: #888;
 `
 
-const Actions = ({
+/**
+ * A button that can be used to request membership to the club.
+ * Assumes that the user is already in the club and is adding themselves on Penn Clubs.
+ */
+export const RequestMembershipButton = ({
   club,
-  style,
   updateRequests,
-  className,
-}: ActionsProps): ReactElement => {
+}: {
+  club: Club
+  updateRequests: (code: string) => Promise<void>
+}): ReactElement => {
   const authCheck = useContext(AuthCheckContext)
-  const { code, favorite_count: favoriteCount } = club
-  const isRequested = club.is_request
-
-  // inClub is set to true if the user is in the club, otherwise false
-  const inClub = club.is_member !== false
-
-  // a user can edit a club if they are either a superuser or in the club and
-  // at least an officer
-  const canEdit = apiCheckPermission(`clubs.manage_club:${code}`)
-
-  const [favCount, setFavCount] = useState<number>(favoriteCount ?? 0)
   const [showModal, setShowModal] = useState<boolean>(false)
   const [isSubmitDisabled, setSubmitDisabled] = useState<boolean>(false)
   const [isSubmitted, setSubmitted] = useState<boolean | null>(null)
-  const requestMembership = () => {
-    if (!isRequested) {
-      authCheck(() => {
-        setShowModal(true)
-      })
-    } else {
-      updateRequests(code)
-    }
-  }
 
   useEffect(() => {
     if (showModal) {
@@ -140,69 +132,36 @@ const Actions = ({
     }
   }, [showModal])
 
+  const isRequested = club.is_request
   const isMembershipOpen =
     club.application_required === ClubApplicationRequired.Open
 
+  const requestMembership = () => {
+    if (!isRequested) {
+      authCheck(() => {
+        setShowModal(true)
+      })
+    } else {
+      updateRequests(club.code)
+    }
+  }
+
   return (
     <>
-      <div className={className} style={style}>
-        <Wrapper>
-          {SHOW_MEMBERSHIP_REQUEST &&
-            !inClub &&
-            club.members.length > 0 &&
-            (isMembershipOpen ? (
-              club.accepting_members && (
-                <ActionButton
-                  className="button is-success"
-                  onClick={requestMembership}
-                >
-                  {isRequested ? 'Withdraw Request' : 'Request Membership'}
-                </ActionButton>
-              )
-            ) : (
-              <Link
-                href={CLUB_APPLY_ROUTE()}
-                as={CLUB_APPLY_ROUTE(code)}
-                passHref
-              >
-                <ActionButton className="button is-success">
-                  <Icon name="edit" /> Apply
-                </ActionButton>
-              </Link>
-            ))}
-          {canEdit && (
-            <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)} passHref>
-              <ActionButton className="button is-success">
-                Manage {OBJECT_NAME_TITLE_SINGULAR}
-              </ActionButton>
-            </Link>
-          )}
-
-          <ActionWrapper>
-            <BookmarkIcon
-              club={club}
-              onFavorite={(status) => {
-                setFavCount(favCount + (status ? 1 : -1))
-              }}
-              padding="0"
-            />
-            <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
-            {club.enables_subscription && (
-              <>
-                <ActionDiv>|</ActionDiv>
-                <SubscribeIcon padding="0" club={club} />
-              </>
-            )}
-          </ActionWrapper>
-        </Wrapper>
-      </div>
+      <ActionButton className="button is-success" onClick={requestMembership}>
+        {isRequested
+          ? 'Withdraw Request'
+          : isMembershipOpen
+          ? 'Request Membership'
+          : "I'm a Member"}
+      </ActionButton>
       <Modal
         marginBottom={false}
         show={showModal}
         closeModal={() => setShowModal(false)}
       >
         <ModalContent>
-          <h1>Confirm Membership Request</h1>
+          <Title>Confirm Membership Request</Title>
           {isMembershipOpen ? (
             <p>
               You can use this feature to request to be added on {SITE_NAME} for
@@ -257,11 +216,11 @@ const Actions = ({
                 setSubmitDisabled(true)
                 e.preventDefault()
                 try {
-                  await updateRequests(code)
+                  await updateRequests(club.code)
 
                   // sanity check
                   const resp = await doApiRequest(
-                    `/requests/${code}/?format=json`,
+                    `/requests/${club.code}/?format=json`,
                   )
 
                   if (resp.ok) {
@@ -284,6 +243,81 @@ const Actions = ({
           )}
         </ModalContent>
       </Modal>
+    </>
+  )
+}
+
+const Actions = ({
+  club,
+  style,
+  updateRequests,
+  className,
+}: ActionsProps): ReactElement => {
+  const { code, favorite_count: favoriteCount } = club
+
+  // inClub is set to true if the user is in the club, otherwise false
+  const inClub = club.is_member !== false
+
+  // a user can edit a club if they are either a superuser or in the club and
+  // at least an officer
+  const canEdit = apiCheckPermission(`clubs.manage_club:${code}`)
+
+  const [favCount, setFavCount] = useState<number>(favoriteCount ?? 0)
+
+  const isMembershipOpen =
+    club.application_required === ClubApplicationRequired.Open
+
+  return (
+    <>
+      <div className={className} style={style}>
+        <Wrapper>
+          {SHOW_MEMBERSHIP_REQUEST &&
+            !inClub &&
+            club.members.length > 0 &&
+            (isMembershipOpen ? (
+              club.accepting_members && (
+                <RequestMembershipButton
+                  club={club}
+                  updateRequests={updateRequests}
+                />
+              )
+            ) : (
+              <Link
+                href={CLUB_APPLY_ROUTE()}
+                as={CLUB_APPLY_ROUTE(code)}
+                passHref
+              >
+                <ActionButton className="button is-success">
+                  <Icon name="edit" /> Apply
+                </ActionButton>
+              </Link>
+            ))}
+          {canEdit && (
+            <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)} passHref>
+              <ActionButton className="button is-success">
+                Manage {OBJECT_NAME_TITLE_SINGULAR}
+              </ActionButton>
+            </Link>
+          )}
+
+          <ActionWrapper>
+            <BookmarkIcon
+              club={club}
+              onFavorite={(status) => {
+                setFavCount(favCount + (status ? 1 : -1))
+              }}
+              padding="0"
+            />
+            <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
+            {club.enables_subscription && (
+              <>
+                <ActionDiv>|</ActionDiv>
+                <SubscribeIcon padding="0" club={club} />
+              </>
+            )}
+          </ActionWrapper>
+        </Wrapper>
+      </div>
     </>
   )
 }
