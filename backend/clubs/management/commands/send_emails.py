@@ -32,8 +32,9 @@ def send_hap_intro_email(email, resources, address_string, template="intro"):
     Send the Hub@Penn introduction email given the email and the list of resources.
     """
 
-    send_mail_helper(template, None, [email], {"resources": resources,
-                     "address_string": address_string})
+    send_mail_helper(
+        template, None, [email], {"resources": resources, "address_string": address_string}
+    )
 
 
 class Command(BaseCommand):
@@ -157,7 +158,7 @@ class Command(BaseCommand):
             # send emails grouped by recipients
             for email, context in people.items():
                 contacts = list(set(context["contacts"]))  # No duplicate names
-                contacts = list(filter(lambda x: x != "", contacts))   # No empty string names
+                contacts = list(filter(lambda x: x != "", contacts))  # No empty string names
                 if len(contacts) == 0:
                     contacts.append("Staff member")
 
@@ -179,8 +180,10 @@ class Command(BaseCommand):
                             "hap_second_round": "second_round",
                         }[action],
                     )
-                    self.stdout.write(f"Sent {action} email to {email} (addressed: "
-                                      + f"{address_string}) for groups: {resources}")
+                    self.stdout.write(
+                        f"Sent {action} email to {email} (addressed: "
+                        + f"{address_string}) for groups: {resources}"
+                    )
                 else:
                     self.stdout.write(
                         f"Would have sent {action} email to {email} (addressed: "
