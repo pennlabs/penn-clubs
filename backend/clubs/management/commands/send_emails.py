@@ -137,7 +137,7 @@ class Command(BaseCommand):
                     for line in reader:
                         name = line["name"].strip()
                         email = line["email"].strip()
-                        if "contact" in line.keys():
+                        if "contact" in line:
                             contact = line["contact"].strip()
                         else:
                             contact = ""
@@ -180,10 +180,12 @@ class Command(BaseCommand):
                             "hap_second_round": "second_round",
                         }[action],
                     )
-                    self.stdout.write(f"Sent {action} email to {email} (addressed: {address_string}) for groups: {resources}")
+                    self.stdout.write(f"Sent {action} email to {email} (addressed: "
+                                      + "{address_string}) for groups: {resources}")
                 else:
                     self.stdout.write(
-                        f"Would have sent {action} email to {email} (addressed: {address_string}) for groups: {resources}"
+                        f"Would have sent {action} email to {email} (addressed: "
+                        + "{address_string}) for groups: {resources}"
                     )
             return
 
