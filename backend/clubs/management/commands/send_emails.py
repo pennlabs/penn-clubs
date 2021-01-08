@@ -180,8 +180,10 @@ class Command(BaseCommand):
                             "hap_second_round": "second_round",
                         }[action],
                     )
-                    self.stdout.write(f"Sent {action} email to {email} (addressed: "
-                                      + f"{address_string}) for groups: {resources}")
+                    self.stdout.write(
+                        f"Sent {action} email to {email} (addressed: "
+                        + f"{address_string}) for groups: {resources}"
+                    )
                 else:
                     self.stdout.write(
                         f"Would have sent {action} email to {email} (addressed: "
