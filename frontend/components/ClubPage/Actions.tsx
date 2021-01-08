@@ -10,7 +10,7 @@ import Linkify from 'react-linkify'
 import styled from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
-import { CLUB_EDIT_ROUTE } from '../../constants/routes'
+import { CLUB_APPLY_ROUTE, CLUB_EDIT_ROUTE } from '../../constants/routes'
 import { Club, ClubApplicationRequired, UserInfo } from '../../types'
 import { apiCheckPermission, doApiRequest } from '../../utils'
 import {
@@ -21,7 +21,7 @@ import {
   SITE_NAME,
 } from '../../utils/branding'
 import { logException, logMessage } from '../../utils/sentry'
-import { BookmarkIcon, Contact, Modal, SubscribeIcon } from '../common'
+import { BookmarkIcon, Contact, Icon, Modal, SubscribeIcon } from '../common'
 import { AuthCheckContext } from '../contexts'
 
 const Wrapper = styled.span`
@@ -150,18 +150,26 @@ const Actions = ({
           {SHOW_MEMBERSHIP_REQUEST &&
             !inClub &&
             club.members.length > 0 &&
-            (!isMembershipOpen || club.accepting_members) && (
-              <ActionButton
-                className="button is-success"
-                onClick={requestMembership}
+            (isMembershipOpen ? (
+              club.accepting_members && (
+                <ActionButton
+                  className="button is-success"
+                  onClick={requestMembership}
+                >
+                  {isRequested ? 'Withdraw Request' : 'Request Membership'}
+                </ActionButton>
+              )
+            ) : (
+              <Link
+                href={CLUB_APPLY_ROUTE()}
+                as={CLUB_APPLY_ROUTE(code)}
+                passHref
               >
-                {isRequested
-                  ? 'Withdraw Request'
-                  : isMembershipOpen
-                  ? 'Request Membership'
-                  : "I'm a Member"}
-              </ActionButton>
-            )}
+                <ActionButton className="button is-success">
+                  <Icon name="edit" /> Apply
+                </ActionButton>
+              </Link>
+            ))}
           {canEdit && (
             <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)} passHref>
               <ActionButton className="button is-success">
