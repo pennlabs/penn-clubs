@@ -180,11 +180,11 @@ class Command(BaseCommand):
                         }[action],
                     )
                     self.stdout.write(f"Sent {action} email to {email} (addressed: "
-                                      + "{address_string}) for groups: {resources}")
+                                      + f"{address_string}) for groups: {resources}")
                 else:
                     self.stdout.write(
                         f"Would have sent {action} email to {email} (addressed: "
-                        + "{address_string}) for groups: {resources}"
+                        + f"{address_string}) for groups: {resources}"
                     )
             return
 
