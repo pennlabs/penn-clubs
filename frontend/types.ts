@@ -64,6 +64,14 @@ export interface ClubEvent {
   url: string | null
 }
 
+export interface ClubApplication {
+  name: string
+  application_start_time: string
+  application_end_time: string
+  result_release_time: string
+  external_url: string
+}
+
 export enum ClubSize {
   Small = 1,
   Medium = 2,

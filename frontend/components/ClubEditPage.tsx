@@ -34,11 +34,13 @@ import {
   OBJECT_NAME_TITLE_SINGULAR,
   OBJECT_TAB_MEMBERSHIP_LABEL,
   OBJECT_TAB_RECRUITMENT_LABEL,
+  SHOW_APPLICATIONS,
   SHOW_MEMBERSHIP_REQUEST,
   SITE_NAME,
 } from '../utils/branding'
 import AdvisorCard from './ClubEditPage/AdvisorCard'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
+import ApplicationsCard from './ClubEditPage/ApplicationsCard'
 import ClubFairCard from './ClubEditPage/ClubFairCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
 import EnableSubscriptionCard from './ClubEditPage/EnableSubscriptionCard'
@@ -285,6 +287,7 @@ const ClubForm = ({
         label: OBJECT_TAB_RECRUITMENT_LABEL,
         content: (
           <>
+            {SHOW_APPLICATIONS && <ApplicationsCard club={club} />}
             <QRCodeCard club={club} />
             <EnableSubscriptionCard
               notify={notify}

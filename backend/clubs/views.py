@@ -2987,7 +2987,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class ClubApplicationViewSet(viewsets.ModelViewSet):
     """
-    create: Creat an application of the club.
+    create: Create an application for the club.
 
     list: Retrieve a list of applications of the club.
 
