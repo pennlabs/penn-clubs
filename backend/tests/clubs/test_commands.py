@@ -5,6 +5,7 @@ These management commands can be executed with "./manage.py <command>".
 
 import csv
 import datetime
+import io
 import os
 import tempfile
 import uuid
@@ -323,14 +324,18 @@ class SendInvitesTestCase(TestCase):
         self.assertTrue(Club.objects.filter(approved__isnull=True, active=True).exists())
 
         # ensure test runs on a weekday
+        errors = io.StringIO()
         with mock.patch(
             "django.utils.timezone.now",
             return_value=datetime.datetime(2021, 1, 5, tzinfo=timezone.utc),
         ):
-            call_command("daily_notifications")
+            call_command("daily_notifications", stderr=errors)
 
         # ensure approval email was sent out
         self.assertTrue(any(m.to == [self.user1.email] for m in mail.outbox))
+
+        # ensure no error messages are printed
+        self.assertFalse(errors.getvalue())
 
     def test_fuzzy_lookup(self):
         # test failed matches

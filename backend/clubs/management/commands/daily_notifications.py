@@ -1,5 +1,6 @@
 import collections
 import datetime
+import traceback
 
 from django.conf import settings
 from django.contrib.auth.models import Group
@@ -17,8 +18,15 @@ class Command(BaseCommand):
     web_execute = True
 
     def handle(self, *args, **kwargs):
-        self.send_approval_queue_reminder()
-        self.send_application_notifications()
+        try:
+            self.send_approval_queue_reminder()
+        except Exception:
+            self.stderr.write(traceback.format_exc())
+
+        try:
+            self.send_application_notifications()
+        except Exception:
+            self.stderr.write(traceback.format_exc())
 
     def send_application_notifications(self):
         """
@@ -31,7 +39,9 @@ class Command(BaseCommand):
         )
         emails = collections.defaultdict(list)
         for code, name, email in apps:
-            emails[email].append((code, name))
+            emails[email].append(
+                (name, settings.APPLY_URL.format(domain=settings.DOMAIN, club=code))
+            )
 
         for email, data in emails.values():
             context = {"clubs": data}

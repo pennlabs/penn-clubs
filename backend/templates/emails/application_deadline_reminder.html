@@ -4,9 +4,9 @@ clubs:
     items:
         type: tuple
         properties:
-            code:
-                type: string
             name:
+                type: string
+            url:
                 type: string
 -->
 {% extends 'emails/base.html' %}
@@ -16,8 +16,8 @@ clubs:
     <p style="font-size: 1.2em">There are <b>{{ clubs|length }} clubs</b> that you have subscribed to with an application deadline
         in <b>3 days</b>.</p>
     <ul style="font-size: 1.2em">
-        {% for code, name in clubs %}
-        <li><a href="https://pennclubs.com/club/{code}/apply">{name}</a></li>
+        {% for name, url in clubs %}
+        <li><a href="{{ url }}">{{ name }}</a></li>
         {% endfor %}
     </ul>
     <p style="font-size: 1.2em">This is an automated message. If you would not like to receive these notifications,
