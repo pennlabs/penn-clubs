@@ -1,0 +1,24 @@
+<!-- TYPES:
+clubs:
+    type: array
+    items:
+        type: tuple
+        properties:
+            code:
+                type: string
+            name:
+                type: string
+-->
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <p style="font-size: 1.2em">There are {{ clubs|length }} clubs that you have subscribed to with an application deadline
+        in 3 days.</p>
+    <ul style="font-size: 1.2em">
+        {% for code, name in clubs %}
+        <li><a href="https://pennclubs.com/club/{code}/apply">{name}</a></li>
+        {% endfor %}
+    </ul>
+    <p style="font-size: 1.2em">This is an automated message. If you would not like to receive these notifications,
+        unsubscribe from the clubs that you no longer wish to hear updates from.</p>
+{% endblock %}

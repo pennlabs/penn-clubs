@@ -10,6 +10,7 @@ import tempfile
 import uuid
 from unittest import mock
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core import mail
@@ -20,7 +21,16 @@ from django.utils import timezone
 from ics import Calendar
 from ics import Event as ICSEvent
 
-from clubs.models import Club, ClubFair, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import (
+    Club,
+    ClubFair,
+    Event,
+    Favorite,
+    Membership,
+    MembershipInvite,
+    Tag,
+    get_mail_type_annotation,
+)
 from clubs.utils import fuzzy_lookup_club
 
 
@@ -275,6 +285,31 @@ class SendInvitesTestCase(TestCase):
 
         # test post fair email
         call_command("send_emails", "post_virtual_fair")
+
+    def test_proper_annotations(self):
+        """
+        Ensure that all email templates have type annotation metadata.
+        """
+        bad_templates = []
+        for site in ["clubs", "fyh"]:
+            with self.settings(BRANDING=site):
+                prefix = {"fyh": "fyh_emails"}.get(settings.BRANDING, "emails")
+                path = os.path.join(settings.BASE_DIR, "templates", prefix)
+                for file in os.listdir(path):
+                    if file.endswith(".html"):
+                        template_name = file.rsplit(".", 1)[0]
+                        if get_mail_type_annotation(template_name) is None:
+                            if template_name not in {"base"}:
+                                bad_templates.append(f"{prefix}/{template_name}")
+
+        if bad_templates:
+            bad_templates = "\n".join(f" - {temp}" for temp in bad_templates)
+            self.fail(
+                "There are templates that do not have type annotations. \n"
+                "Leaving out type annotations will cause issues with email previews. \n"
+                "Please ensure that all templates listed below have proper type annotations: \n\n"
+                f"{bad_templates}"
+            )
 
     def test_daily_notifications(self):
         # add group and user for approval queue

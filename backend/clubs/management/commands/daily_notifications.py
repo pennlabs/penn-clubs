@@ -1,17 +1,46 @@
+import collections
+import datetime
+
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from clubs.models import Club, send_mail_helper
+from clubs.models import Club, ClubApplication, send_mail_helper
 
 
 class Command(BaseCommand):
-    help = "This script runs each morning to send out relevant notification emails."
+    help = (
+        "This script runs each morning to send out relevant notification emails."
+        "To avoid duplicate emails, this script should be executed at most once per day."
+    )
     web_execute = True
 
     def handle(self, *args, **kwargs):
         self.send_approval_queue_reminder()
+        self.send_application_notifications()
+
+    def send_application_notifications(self):
+        """
+        Send notifications about application deadlines three days before the deadline, for students
+        that have subscribed to those organizations.
+        """
+        now = timezone.now() + datetime.timedelta(days=3)
+        apps = ClubApplication.objects.filter(application_end_time__date=now.date()).values_list(
+            "club__code", "club__name", "club__favorite__person__email"
+        )
+        emails = collections.defaultdict(list)
+        for code, name, email in apps:
+            emails[email].append((code, name))
+
+        for email, data in emails.values():
+            context = {"clubs": data}
+            send_mail_helper(
+                "application_deadline_reminder",
+                f"{len(data)} club(s) have application deadlines approaching",
+                [email],
+                context,
+            )
 
     def send_approval_queue_reminder(self):
         """

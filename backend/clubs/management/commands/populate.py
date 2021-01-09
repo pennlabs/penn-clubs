@@ -11,6 +11,7 @@ from clubs.models import (
     Advisor,
     Badge,
     Club,
+    ClubApplication,
     ClubFair,
     Event,
     Major,
@@ -494,6 +495,19 @@ class Command(BaseCommand):
         if created:
             contents = get_image(event_image_url)
             event.image.save("image.png", ContentFile(contents))
+
+        # create a club application
+        club = Club.objects.get(code="pppjo")
+        ClubApplication.objects.get_or_create(
+            name="Test Application",
+            club=club,
+            defaults={
+                "application_start_time": now + datetime.timedelta(days=1),
+                "application_end_time": now + datetime.timedelta(days=3),
+                "result_release_time": now + datetime.timedelta(weeks=1),
+                "external_url": "https://pennlabs.org/apply/",
+            },
+        )
 
         # 10am today
         even_base = now.replace(hour=14, minute=0, second=0, microsecond=0)

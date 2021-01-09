@@ -17,6 +17,7 @@ import {
   FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
+  SHOW_APPLICATIONS,
   SHOW_MEMBERSHIP_REQUEST,
   SITE_NAME,
 } from '../../utils/branding'
@@ -274,24 +275,24 @@ const Actions = ({
           {SHOW_MEMBERSHIP_REQUEST &&
             !inClub &&
             club.members.length > 0 &&
-            (isMembershipOpen ? (
-              club.accepting_members && (
-                <RequestMembershipButton
-                  club={club}
-                  updateRequests={updateRequests}
-                />
-              )
-            ) : (
-              <Link
-                href={CLUB_APPLY_ROUTE()}
-                as={CLUB_APPLY_ROUTE(code)}
-                passHref
-              >
-                <ActionButton className="button is-success">
-                  <Icon name="edit" /> Apply
-                </ActionButton>
-              </Link>
-            ))}
+            (isMembershipOpen
+              ? club.accepting_members && (
+                  <RequestMembershipButton
+                    club={club}
+                    updateRequests={updateRequests}
+                  />
+                )
+              : SHOW_APPLICATIONS && (
+                  <Link
+                    href={CLUB_APPLY_ROUTE()}
+                    as={CLUB_APPLY_ROUTE(code)}
+                    passHref
+                  >
+                    <ActionButton className="button is-success">
+                      <Icon name="edit" /> Apply
+                    </ActionButton>
+                  </Link>
+                ))}
           {canEdit && (
             <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)} passHref>
               <ActionButton className="button is-success">
