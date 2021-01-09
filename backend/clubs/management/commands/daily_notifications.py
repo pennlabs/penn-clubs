@@ -90,7 +90,8 @@ class Command(BaseCommand):
         if queued_clubs.exists():
             context = {
                 "num_clubs": queued_clubs.count(),
-                "url": f"https://{settings.DOMAIN}/renew#Queue",
+                "url": f"https://{settings.DOMAIN}/admin#queue",
+                "clubs": list(queued_clubs.order_by("name").values_list("name", flat=True)),
             }
             count = queued_clubs.count()
             send_mail_helper(
