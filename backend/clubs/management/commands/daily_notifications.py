@@ -74,12 +74,13 @@ class Command(BaseCommand):
             )
             return False
 
-        emails = list(group.user_set.all().values_list("email", flat=True))
+        emails = [e for e in group.user_set.all().values_list("email", flat=True) if e]
 
         if not emails:
             self.stdout.write(
                 self.style.WARNING(
-                    f"There are no users in the '{group_name}' group. No emails will be sent out."
+                    f"There are no users or no associated emails in the '{group_name}' group. "
+                    "No emails will be sent out."
                 )
             )
             return False
