@@ -3350,13 +3350,15 @@ def email_preview(request):
 
     email = None
     text_email = None
+    initial_context = {}
 
     if "email" in request.GET:
         email_path = os.path.basename(request.GET.get("email"))
 
         # initial values
         types = get_mail_type_annotation(email_path)
-        initial_context = get_initial_context_from_types(types) if types is not None else {}
+        if types is not None:
+            initial_context = get_initial_context_from_types(types)
 
         # set specified values
         for param, value in request.GET.items():

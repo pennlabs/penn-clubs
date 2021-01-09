@@ -12,8 +12,9 @@ clubs:
 {% extends 'emails/base.html' %}
 
 {% block content %}
-    <p style="font-size: 1.2em">There are {{ clubs|length }} clubs that you have subscribed to with an application deadline
-        in 3 days.</p>
+    <h2>Upcoming Application Deadlines</h2>
+    <p style="font-size: 1.2em">There are <b>{{ clubs|length }} clubs</b> that you have subscribed to with an application deadline
+        in <b>3 days</b>.</p>
     <ul style="font-size: 1.2em">
         {% for code, name in clubs %}
         <li><a href="https://pennclubs.com/club/{code}/apply">{name}</a></li>
