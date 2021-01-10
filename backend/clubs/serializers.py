@@ -1158,9 +1158,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Override save in order to replace code with slugified name if not specified.
         """
+        # remove any spaces from the name
         if "name" in self.validated_data:
             self.validated_data["name"] = self.validated_data["name"].strip()
 
+        # set the code to the name
         if not self.instance:
             if not self.validated_data.get("code") and self.validated_data.get("name"):
                 self.validated_data["code"] = slugify(self.validated_data["name"])

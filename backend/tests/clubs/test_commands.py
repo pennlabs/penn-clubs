@@ -24,11 +24,13 @@ from ics import Event as ICSEvent
 
 from clubs.models import (
     Club,
+    ClubApplication,
     ClubFair,
     Event,
     Favorite,
     Membership,
     MembershipInvite,
+    Subscribe,
     Tag,
     get_mail_type_annotation,
 )
@@ -320,19 +322,54 @@ class SendInvitesTestCase(TestCase):
         user.save()
         group.user_set.add(user)
 
+        # create some users for application notification
+        user2 = get_user_model().objects.create_user(
+            "tjefferson", "test-application-notif@example.com", "test"
+        )
+
+        user3 = get_user_model().objects.create_user(
+            "jmadsion", "test-no-notif@example.com", "test"
+        )
+        user3.profile.graduation_year = 1999
+        user3.profile.save()
+
+        user4 = get_user_model().objects.create_user(
+            "gwashington", "test-no-notif@example.com", "test"
+        )
+        Membership.objects.create(club=self.club1, person=user4)
+
+        for usr in [user2, user3, user4]:
+            Subscribe.objects.create(club=self.club1, person=usr)
+
+        now = datetime.datetime(2021, 1, 5, 12, tzinfo=timezone.utc)
+
+        ClubApplication.objects.create(
+            name="Test Application",
+            club=self.club1,
+            application_start_time=now - datetime.timedelta(days=1),
+            application_end_time=now + datetime.timedelta(days=3),
+            result_release_time=now + datetime.timedelta(weeks=1),
+            external_url="https://pennlabs.org/",
+        )
+
         # ensure that there are some groups pending approval
         self.assertTrue(Club.objects.filter(approved__isnull=True, active=True).exists())
 
         # ensure test runs on a weekday
         errors = io.StringIO()
         with mock.patch(
-            "django.utils.timezone.now",
-            return_value=datetime.datetime(2021, 1, 5, tzinfo=timezone.utc),
+            "django.utils.timezone.now", return_value=now,
         ):
             call_command("daily_notifications", stderr=errors)
 
         # ensure approval email was sent out
         self.assertTrue(any(m.to == [self.user1.email] for m in mail.outbox))
+
+        # ensure application email was sent out
+        self.assertTrue(any(m.to == [user2.email] for m in mail.outbox))
+
+        # ensure no unnecessary app emails were sent out
+        self.assertFalse(any(m.to == [user3.email] for m in mail.outbox))
 
         # ensure no error messages are printed
         self.assertFalse(errors.getvalue())

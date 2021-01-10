@@ -5,9 +5,10 @@ import traceback
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from django.utils import timezone
 
-from clubs.models import Club, ClubApplication, send_mail_helper
+from clubs.models import Club, ClubApplication, Membership, send_mail_helper
 
 
 class Command(BaseCommand):
@@ -32,18 +33,38 @@ class Command(BaseCommand):
         """
         Send notifications about application deadlines three days before the deadline, for students
         that have subscribed to those organizations.
+
+        Ignore students that have already graduated and students that are already in the club.
         """
         now = timezone.now() + datetime.timedelta(days=3)
-        apps = ClubApplication.objects.filter(application_end_time__date=now.date()).values_list(
-            "club__code", "club__name", "club__favorite__person__email"
+        apps = ClubApplication.objects.filter(
+            Q(club__subscribe__person__profile__graduation_year__gte=now.year + (now.month >= 6))
+            | Q(club__subscribe__person__profile__graduation_year__isnull=True),
+            application_end_time__date=now.date(),
+        ).values_list(
+            "club__code",
+            "club__name",
+            "club__subscribe__person__email",
+            "club__subscribe__person__pk",
         )
-        emails = collections.defaultdict(list)
-        for code, name, email in apps:
-            emails[email].append(
-                (name, settings.APPLY_URL.format(domain=settings.DOMAIN, club=code))
-            )
 
-        for email, data in emails.values():
+        # compute users already in clubs
+        already_in_club = set(
+            Membership.objects.filter(
+                club__code__in=[x[0] for x in apps], person__pk__in=[x[3] for x in apps]
+            ).values_list("club__code", "person__pk")
+        )
+
+        # group clubs by user
+        emails = collections.defaultdict(list)
+        for code, name, email, user_pk in apps:
+            if (code, user_pk) not in already_in_club:
+                emails[email].append(
+                    (name, settings.APPLY_URL.format(domain=settings.DOMAIN, club=code))
+                )
+
+        # send out one email per user
+        for email, data in emails.items():
             context = {"clubs": data}
             send_mail_helper(
                 "application_deadline_reminder",
@@ -51,6 +72,10 @@ class Command(BaseCommand):
                 [email],
                 context,
             )
+
+        self.stdout.write(
+            self.style.SUCCESS(f"Sent application deadline reminder to {len(emails)} user(s)")
+        )
 
     def send_approval_queue_reminder(self):
         """
