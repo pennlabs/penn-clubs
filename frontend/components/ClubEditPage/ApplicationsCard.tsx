@@ -35,15 +35,20 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
         {[
           <>
             Display your application links in a centralized repository of{' '}
-            {OBJECT_NAME_SINGULAR} applications.
+            {OBJECT_NAME_SINGULAR} applications. While your{' '}
+            {OBJECT_NAME_SINGULAR} has an open application, it will be
+            prioritized in {OBJECT_NAME_SINGULAR} listings.
           </>,
           <>
             Subscribed students will automatically receive email reminders about
-            application deadlines.
+            application deadlines three days before the application is due.
           </>,
           <>
             Automatically update membership and recruiting statuses based on
-            when your applications open and close.
+            when your applications open and close. When your application opens,
+            we will mark your {OBJECT_NAME_SINGULAR} as accepting members. When
+            it closes, we will mark your {OBJECT_NAME_SINGULAR} as not accepting
+            members.
           </>,
         ].map((text, i) => (
           <li key={i}>

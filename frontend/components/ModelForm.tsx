@@ -67,6 +67,7 @@ type ModelFormProps = {
   allowEditing?: boolean
   allowDeletion?: boolean
   confirmDeletion?: boolean
+  actions?: (object: ModelObject) => ReactElement
 }
 
 /**
@@ -102,6 +103,7 @@ type ModelTableProps = {
   deleteVerb?: string
   onEdit?: (object: ModelObject) => void
   onDelete?: (object: ModelObject) => void
+  actions?: (object: ModelObject) => ReactElement
 }
 
 /**
@@ -117,6 +119,7 @@ export const ModelTable = ({
   deleteVerb = 'Delete',
   onEdit = () => undefined,
   onDelete = () => undefined,
+  actions,
 }: ModelTableProps): ReactElement => {
   const columns = useMemo(
     () =>
@@ -201,6 +204,7 @@ export const ModelTable = ({
                         <Icon name="trash" alt="delete" /> {deleteVerb}
                       </button>
                     )}
+                    {actions && actions(object)}
                   </div>
                 </td>
               </tr>
@@ -257,6 +261,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     allowEditing = true,
     allowDeletion = true,
     confirmDeletion = false,
+    actions,
     keyField = 'id',
     onChange: parentComponentChange,
   } = props
@@ -462,6 +467,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           allowDeletion={allowDeletion}
           confirmDeletion={confirmDeletion}
           allowEditing={allowEditing}
+          actions={actions}
         />
         {(allowCreation || currentlyEditing !== null) && (
           <>

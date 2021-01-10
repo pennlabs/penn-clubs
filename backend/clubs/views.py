@@ -497,6 +497,53 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             return WritableClubFairSerializer
         return ClubFairSerializer
 
+    @action(detail=True, methods=["get"])
+    def events(self, request, *args, **kwargs):
+        """
+        Return all of the events related to this club fair and whether they are properly configured.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    code:
+                                        type: string
+                                        description: >
+                                            The club code for the club.
+                                    name:
+                                        type: string
+                                        description: >
+                                            The name of the club.
+                                    meetings:
+                                        type: array
+                                        description: >
+                                            The meeting links for the fair events.
+                                        items:
+                                            type: string
+        ---
+        """
+        fair = self.get_object()
+        clubs = fair.participating_clubs.all()
+        events = collections.defaultdict(list)
+        for k, v in Event.objects.filter(
+            club__in=clubs,
+            type=Event.FAIR,
+            start_time__gte=fair.start_time,
+            end_time__lte=fair.end_time,
+        ).values_list("club__code", "url"):
+            events[k].append(v)
+        return Response(
+            [
+                {"code": code, "name": name, "meetings": events.get(code, [])}
+                for code, name in clubs.order_by("name").values_list("code", "name")
+            ]
+        )
+
     @action(detail=True, methods=["post"])
     def register(self, request, *args, **kwargs):
         """
@@ -508,6 +555,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             content:
                 application/json:
                     schema:
+                        type: object
                         properties:
                             status:
                                 type: boolean
@@ -530,6 +578,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
+                            type: object
                             properties:
                                 success:
                                     type: boolean
@@ -1834,37 +1883,50 @@ class EventViewSet(ClubEventViewSet):
                 A date in YYYY-MM-DD format.
                 If specified, will preview how this endpoint looked on the specified date.
               type: string
+            - name: fair
+              in: query
+              required: false
+              description: >
+                A fair id. If specified, will preview how this endpoint will look for that fair.
+                Overrides the date field if both are specified.
+              type: number
         responses:
             "200":
                 content:
                     application/json:
                         schema:
-                            type: array
+                            type: object
                             items:
-                                type: object
-                                properties:
-                                    start_time:
-                                        type: string
-                                        format: date-time
-                                    end_time:
-                                        type: string
-                                        format: date-time
-                                    events:
-                                        type: array
-                                        items:
-                                            type: object
-                                            properties:
-                                                category:
-                                                    type: string
-                                                events:
-                                                    type: array
-                                                    items:
-                                                        type: object
-                                                        properties:
-                                                            name:
-                                                                type: string
-                                                            code:
-                                                                type: string
+                                fair:
+                                    type: object
+                                    $ref: "#/components/schemas/ClubFair"
+                                events:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            start_time:
+                                                type: string
+                                                format: date-time
+                                            end_time:
+                                                type: string
+                                                format: date-time
+                                            events:
+                                                type: array
+                                                items:
+                                                    type: object
+                                                    properties:
+                                                        category:
+                                                            type: string
+                                                        events:
+                                                            type: array
+                                                            items:
+                                                                type: object
+                                                                properties:
+                                                                    name:
+                                                                        type: string
+                                                                    code:
+                                                                        type: string
         ---
         """
         # accept custom date for preview rendering
@@ -1874,20 +1936,51 @@ class EventViewSet(ClubEventViewSet):
         if date:
             date = parse(date)
 
+        # accept custom fair for preview rendering
+        fair = request.query_params.get("fair")
+        if fair in {"null", "undefined"}:
+            fair = None
+        if fair:
+            fair = int(fair)
+
         # cache the response for this endpoint with short timeout
-        if not date:
-            key = f"events:fair:directory:{request.user.is_authenticated}"
+        if date is None:
+            key = f"events:fair:directory:{request.user.is_authenticated}:{fair}"
             cached = cache.get(key)
             if cached:
                 return Response(cached)
+        else:
+            key = None
+
+        # lookup fair from id
+        if fair:
+            fair = ClubFair.objects.get(id=fair)
+        else:
+            fair = (
+                ClubFair.objects.filter(
+                    end_time__gte=timezone.now() - datetime.timedelta(minutes=30)
+                )
+                .order_by("start_time")
+                .first()
+            )
+        if not date:
+            date = fair.start_time.date()
 
         now = date or timezone.now()
-        events = Event.objects.filter(
-            type=Event.FAIR,
-            club__badges__purpose="fair",
-            start_time__lte=now + datetime.timedelta(days=7),
-            end_time__gte=now - datetime.timedelta(days=1),
-        ).values_list("start_time", "end_time", "club__name", "club__code", "club__badges__label")
+        events = Event.objects.filter(type=Event.FAIR, club__badges__purpose="fair",)
+
+        # filter event range based on the fair times or provide a reasonable fallback
+        if fair is None:
+            events = events.filter(
+                start_time__lte=now + datetime.timedelta(days=7),
+                end_time__gte=now - datetime.timedelta(days=1),
+            )
+        else:
+            events = events.filter(start_time__lte=fair.end_time, end_time__gte=fair.start_time)
+
+        events = events.values_list(
+            "start_time", "end_time", "club__name", "club__code", "club__badges__label"
+        )
         output = {}
         for event in events:
             # group by start date
@@ -1916,10 +2009,11 @@ class EventViewSet(ClubEventViewSet):
                 )
 
         output = list(sorted(output.values(), key=lambda cat: cat["start_time"]))
-        if not date:
-            cache.set(key, output, 60 * 5)
+        final_output = {"events": output, "fair": ClubFairSerializer(instance=fair).data}
+        if key:
+            cache.set(key, final_output, 60 * 5)
 
-        return Response(output)
+        return Response(final_output)
 
     @action(detail=False, methods=["get"])
     def owned(self, request, *args, **kwargs):

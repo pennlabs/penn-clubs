@@ -12,6 +12,7 @@ import {
 } from '../components/common'
 import { CLUB_ROUTE, LIVE_EVENTS, SNOW } from '../constants'
 import renderPage from '../renderPage'
+import { ClubFair } from '../types'
 import { doApiRequest, useSetting } from '../utils'
 import {
   OBJECT_NAME_LONG_PLURAL,
@@ -22,6 +23,8 @@ import {
 } from '../utils/branding'
 
 type FairPageProps = {
+  isOverride: boolean
+  fair: ClubFair | null
   events: {
     start_time: string
     end_time: string
@@ -32,21 +35,27 @@ type FairPageProps = {
   }[]
 }
 
-const FairPage = ({ events }: FairPageProps): ReactElement => {
+const FairPage = ({
+  events,
+  isOverride,
+  fair,
+}: FairPageProps): ReactElement => {
   const isFairOpen = useSetting('FAIR_OPEN')
   const isPreFair = useSetting('PRE_FAIR')
-  const fairName = useSetting('FAIR_NAME') ?? 'Upcoming Fair'
-  const fairOrgName = useSetting('FAIR_ORG_NAME') ?? 'partner organization'
-  const fairContact = useSetting('FAIR_CONTACT') ?? 'the partner organization'
-  const fairTime = useSetting('FAIR_TIME') ?? 'TBD'
-  const fairAdditionalInfo = useSetting('FAIR_INFO') ?? ''
+  const fairName = fair?.name ?? useSetting('FAIR_NAME') ?? 'Upcoming Fair'
+  const fairOrgName =
+    fair?.organization ?? useSetting('FAIR_ORG_NAME') ?? 'partner organization'
+  const fairContact =
+    fair?.contact ?? useSetting('FAIR_CONTACT') ?? 'the partner organization'
+  const fairTime = fair?.time ?? useSetting('FAIR_TIME') ?? 'TBD'
+  const fairAdditionalInfo = fair?.information ?? useSetting('FAIR_INFO') ?? ''
 
   return (
     <Container background={SNOW}>
       <Metadata title={fairName as string} />
       <InfoPageTitle>{fairName} – Student Guide</InfoPageTitle>
       <div className="content">
-        {!isPreFair && !isFairOpen && (
+        {!isPreFair && !isFairOpen && !isOverride && (
           <div className="notification is-warning">
             <Icon name="alert-triangle" /> There is currently no activities fair
             that is currently occuring or upcoming. If you believe this is an
@@ -216,19 +225,24 @@ const FairPage = ({ events }: FairPageProps): ReactElement => {
   )
 }
 
-FairPage.getInitialProps = async (ctx: NextPageContext) => {
-  const { req } = ctx
+FairPage.getInitialProps = async ({ req, query }: NextPageContext) => {
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
 
   const resp = await doApiRequest(
-    `/events/fair/?date=${ctx.query.date as string}&format=json`,
+    `/events/fair/?date=${query.date as string}&fair=${
+      query.fair as string
+    }&format=json`,
     data,
   )
   const json = await resp.json()
 
-  return { events: json }
+  return {
+    events: json.events,
+    isOverride: !!(query.date || query.fair),
+    fair: json.fair,
+  }
 }
 
 export default renderPage(FairPage)
