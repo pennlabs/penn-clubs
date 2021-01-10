@@ -1413,6 +1413,18 @@ class UserClubVisitSerializer(serializers.ModelSerializer):
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = ClubListSerializer(read_only=True)
 
+    def save(self):
+        self.validated_data["ip"] = self.get_ip()
+        return super().save()
+
+    def get_ip(self):
+        x_forwarded_for = self.context["request"].META.get("HTTP_X_FORWARDED_FOR", None)
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(",")[0]
+        else:
+            ip = self.context["request"].META.get("REMOTE_ADDR", None)
+        return ip
+
     class Meta:
         model = ClubVisit
         fields = ("club", "visit_type", "person")

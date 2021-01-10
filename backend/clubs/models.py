@@ -798,6 +798,7 @@ class ClubVisit(models.Model):
 
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    ip = models.GenericIPAddressField(protocol="both", unpack_ipv4=False, blank=True, null=True)
 
     CLUB_PAGE = 1
     EVENT_MODAL = 2
