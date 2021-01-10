@@ -1,12 +1,14 @@
 import { Field } from 'formik'
+import Link from 'next/link'
 import React, { ReactElement } from 'react'
 
+import { FAIR_INFO_ROUTE } from '../../constants'
 import { ClubFair, MembershipRank } from '../../types'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
 } from '../../utils/branding'
-import { Text } from '../common'
+import { Icon, Text } from '../common'
 import {
   DateTimeField,
   DynamicQuestionField,
@@ -93,6 +95,16 @@ const FairsTab = ({ fairs }: FairsTabProps): ReactElement => {
           { name: 'organization', label: 'Organization' },
         ]}
         noun="Fair"
+        actions={(object) => (
+          <Link
+            href={{ pathname: FAIR_INFO_ROUTE, query: { fair: object.id } }}
+          >
+            <button className="button is-info is-small">
+              <Icon name="eye" /> Preview
+            </button>
+          </Link>
+        )}
+        confirmDeletion={true}
       />
     </>
   )

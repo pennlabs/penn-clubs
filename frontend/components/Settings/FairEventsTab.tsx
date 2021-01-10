@@ -17,8 +17,15 @@ type Props = {
 type FairEvent = {
   code: string
   name: string
-  has_event: boolean
-  meeting: string | null
+  meetings: string[]
+}
+
+const BoolIndicator = ({ value }: { value: boolean }): ReactElement => {
+  return (
+    <span className={value ? 'has-text-success' : 'has-text-danger'}>
+      <Icon name={value ? 'check' : 'x'} />
+    </span>
+  )
 }
 
 const FairEventsTab = ({ fairs }: Props): ReactElement => {
@@ -71,24 +78,15 @@ const FairEventsTab = ({ fairs }: Props): ReactElement => {
                     </Link>
                   </td>
                   <td>
-                    <span
-                      className={
-                        event.has_event ? 'has-text-success' : 'has-text-danger'
-                      }
-                    >
-                      <Icon name={event.has_event ? 'check' : 'x'} />
-                    </span>
+                    <BoolIndicator value={event.meetings.length > 0} />
                   </td>
                   <td>
-                    <span
-                      className={
-                        event.has_meeting
-                          ? 'has-text-success'
-                          : 'has-text-danger'
+                    <BoolIndicator
+                      value={
+                        event.meetings.length > 0 &&
+                        event.meetings.every((meet) => meet && meet.length > 0)
                       }
-                    >
-                      <Icon name={event.has_meeting ? 'check' : 'x'} />
-                    </span>
+                    />
                   </td>
                 </tr>
               ))}
