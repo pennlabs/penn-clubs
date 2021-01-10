@@ -85,7 +85,9 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
             name: 'email',
           },
         ]}
-        currentTitle={(obj) => `${obj.name} (${obj.email})`}
+        currentTitle={(obj) =>
+          obj != null ? `${obj.name} (${obj.email})` : 'Kicked Member'
+        }
       />
       <div style={{ marginTop: '1em' }}>
         <a

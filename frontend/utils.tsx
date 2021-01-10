@@ -373,3 +373,18 @@ export function getCurrentSchoolYear(): number {
   }
   return year
 }
+
+/**
+ * Given a date, return a semester string corresponding to that date.
+ * For example, if 1/8/2021 was passed in, the return result should be "Spring 2021".
+ * Does not support the summer semester.
+ */
+export function getSemesterFromDate(date: Date | string): string {
+  if (typeof date === 'string') {
+    date = new Date(date)
+  }
+
+  const year = date.getFullYear()
+  const sem = date.getMonth() >= 6 ? 'Fall' : 'Spring'
+  return `${sem} ${year}`
+}

@@ -1822,8 +1822,7 @@ class NoteTagSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
-class ClubApplicationSerializer(serializers.ModelSerializer):
-    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     name = serializers.SerializerMethodField("get_name")
 
     def get_name(self, obj):
@@ -1851,7 +1850,7 @@ class ClubApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubApplication
         fields = (
-            "club",
+            "id",
             "name",
             "application_start_time",
             "application_end_time",

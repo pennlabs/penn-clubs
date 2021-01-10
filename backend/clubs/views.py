@@ -71,6 +71,7 @@ from clubs.models import (
     Tag,
     Testimonial,
     Year,
+    get_mail_type_annotation,
 )
 from clubs.permissions import (
     AssetPermission,
@@ -2987,7 +2988,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class ClubApplicationViewSet(viewsets.ModelViewSet):
     """
-    create: Creat an application of the club.
+    create: Create an application for the club.
 
     list: Retrieve a list of applications of the club.
 
@@ -3004,7 +3005,11 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         return ClubApplicationSerializer
 
     def get_queryset(self):
-        return ClubApplication.objects.filter(club__code=self.kwargs["club_code"])
+        now = timezone.now()
+
+        return ClubApplication.objects.filter(
+            club__code=self.kwargs["club_code"], result_release_time__gte=now
+        ).order_by("application_end_time")
 
 
 class MassInviteAPIView(APIView):
@@ -3118,34 +3123,6 @@ class EmailInvitesAPIView(generics.ListAPIView):
         return MembershipInvite.objects.filter(email=self.request.user.email, active=True).order_by(
             "-created_at"
         )
-
-
-class EmailPreviewContext(dict):
-    """
-    A dict class to keep track of which variables were actually used by the template.
-    """
-
-    def __init__(self, *args, **kwargs):
-        self._called = set()
-        super().__init__(*args, **kwargs)
-
-    def __getitem__(self, k):
-        try:
-            preview = super().__getitem__(k)
-        except KeyError:
-            preview = None
-
-        if preview is None:
-            preview = "[{}]".format(k.replace("_", " ").title())
-
-        self._called.add((k, preview))
-        return preview
-
-    def __contains__(self, k):
-        return True
-
-    def get_used_variables(self):
-        return sorted(self._called)
 
 
 class OptionListView(APIView):
@@ -3331,6 +3308,38 @@ class ScriptExecutionView(APIView):
             return Response({"output": output.getvalue()})
 
 
+def get_initial_context_from_types(types):
+    """
+    Generate a sample context given the specified types.
+    """
+    # this allows for tuples to work properly
+    context = collections.OrderedDict()
+
+    for name, value in types.items():
+        is_array = value["type"] == "array"
+        if is_array:
+            value = value["items"]
+
+        if value["type"] == "string":
+            context[name] = value.get("default", f"[{name}]")
+        elif value["type"] == "number":
+            context[name] = int(value.get("default", 0))
+        elif value["type"] == "boolean":
+            context[name] = bool(value.get("default", False))
+        elif value["type"] == "object":
+            context[name] = get_initial_context_from_types(value["properties"])
+        elif value["type"] == "tuple":
+            context[name] = tuple(get_initial_context_from_types(value["properties"]).values())
+        else:
+            raise ValueError(f"Unknown email variable type '{value['type']}'!")
+
+        # if is array, duplicate value three times as a sample
+        if is_array:
+            context[name] = [context[name]] * 3
+
+    return context
+
+
 def email_preview(request):
     """
     Debug endpoint used for previewing how email templates will look.
@@ -3341,35 +3350,32 @@ def email_preview(request):
 
     email = None
     text_email = None
-    context = None
+    initial_context = {}
 
     if "email" in request.GET:
         email_path = os.path.basename(request.GET.get("email"))
 
         # initial values
-        initial_context = {
-            "name": "[Club Name]",
-            "sender": {"username": "[Sender Username]", "email": "[Sender Email]"},
-            "role": 0,
-        }
+        types = get_mail_type_annotation(email_path)
+        if types is not None:
+            initial_context = get_initial_context_from_types(types)
 
         # set specified values
         for param, value in request.GET.items():
             if param not in {"email"}:
                 # parse non-string representations
-                if value.strip().lower() == "true":
+                if value.strip().lower() in {"true", "yes"}:
                     value = True
-                elif value.strip().lower() == "false":
+                elif value.strip().lower() in {"false", "no"}:
                     value = False
                 elif value.isdigit():
                     value = int(value)
-                elif value.startswith("{"):
+                elif value.startswith(("{", "[")):
                     value = json.loads(value)
 
                 initial_context[param] = value
 
-        context = EmailPreviewContext(initial_context)
-        email = render_to_string(f"{prefix}/{email_path}.html", context)
+        email = render_to_string(f"{prefix}/{email_path}.html", initial_context)
         text_email = html_to_text(email)
 
     return render(
@@ -3379,6 +3385,6 @@ def email_preview(request):
             "templates": email_templates,
             "email": email,
             "text_email": text_email,
-            "variables": context.get_used_variables() if context is not None else [],
+            "variables": list(sorted(initial_context.items())),
         },
     )

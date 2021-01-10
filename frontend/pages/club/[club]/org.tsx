@@ -1,6 +1,6 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import ClubMetadata from '../../../components/ClubMetadata'
@@ -11,8 +11,9 @@ import {
   Text,
   Title,
 } from '../../../components/common'
-import { CLUB_ORG_ROUTE, CLUB_ROUTE } from '../../../constants'
+import { CLUB_ORG_ROUTE, CLUB_ROUTE, CLUBS_RED } from '../../../constants'
 import renderPage from '../../../renderPage'
+import { Club } from '../../../types'
 import { doApiRequest } from '../../../utils'
 import { OBJECT_NAME_PLURAL } from '../../../utils/branding'
 
@@ -44,13 +45,24 @@ const OrgChildWrapper = styled.div`
 `
 
 const ErrorText = styled.p`
-  color: red;
+  color: ${CLUBS_RED};
 `
 
-const OrgChild = ({ name, code, children, isParent, detail }) => {
-  if (detail) {
-    return <ErrorText>{detail}</ErrorText>
+type OrgTree =
+  | {
+      name: string
+      code: string
+      children: OrgTree[]
+      isParent: boolean
+    }
+  | { detail: string }
+
+const OrgChild = (tree: OrgTree): ReactElement => {
+  if ('detail' in tree) {
+    return <ErrorText>{tree.detail}</ErrorText>
   }
+
+  const { name, code, children, isParent } = tree
 
   return (
     <OrgChildWrapper>
@@ -73,28 +85,32 @@ const OrgChild = ({ name, code, children, isParent, detail }) => {
           </a>
         </Link>
       </div>
-      {children && children.map((a, i) => <OrgChild key={i} {...a} />)}
+      {children && children.map((a, i: number) => <OrgChild key={i} {...a} />)}
     </OrgChildWrapper>
   )
 }
 
-const Organization = ({ query, club }) => {
-  const [children, setChildren] = useState(null)
-  const [parents, setParents] = useState(null)
+type Props = {
+  club: Club
+}
+
+const OrganizationPage = ({ club }: Props): ReactElement => {
+  const [children, setChildren] = useState<OrgTree | null>(null)
+  const [parents, setParents] = useState<OrgTree | null>(null)
 
   useEffect(() => {
-    doApiRequest(`/clubs/${query.club}/children/?format=json`)
+    doApiRequest(`/clubs/${club.code}/children/?format=json`)
       .then((res) => res.json())
       .then((res) => {
         setChildren(res)
       })
 
-    doApiRequest(`/clubs/${query.club}/parents/?format=json`)
+    doApiRequest(`/clubs/${club.code}/parents/?format=json`)
       .then((res) => res.json())
       .then((res) => {
         setParents(res)
       })
-  }, [query])
+  }, [club])
 
   return (
     <>
@@ -122,14 +138,14 @@ const Organization = ({ query, club }) => {
   )
 }
 
-Organization.getInitialProps = async ({ query, req }: NextPageContext) => {
+OrganizationPage.getInitialProps = async ({ query, req }: NextPageContext) => {
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
   const clubReq = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const clubRes = await clubReq.json()
 
-  return { query, club: clubRes }
+  return { club: clubRes }
 }
 
-export default renderPage(Organization)
+export default renderPage(OrganizationPage)

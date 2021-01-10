@@ -180,6 +180,7 @@ EDIT_URL = "https://{domain}/club/{club}/edit"
 FLYER_URL = "https://{domain}/club/{club}/flyer"
 QUESTION_URL = "https://{domain}/club/{club}/edit#questions"
 RENEWAL_URL = "https://{domain}/club/{club}/renew"
+APPLY_URL = "https://{domain}/club/{club}/apply"
 
 
 # File upload settings

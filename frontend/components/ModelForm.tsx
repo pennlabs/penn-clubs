@@ -77,6 +77,9 @@ type ModelFormProps = {
 export const doFormikInitialValueFixes = (currentObject: {
   [key: string]: any
 }): { [key: string]: any } => {
+  if (currentObject == null) {
+    return {}
+  }
   return Object.entries(currentObject).reduce((prev, [key, val]) => {
     if (key.endsWith('_url')) {
       const otherKey = key.substr(0, key.length - 4)
@@ -349,6 +352,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
             .then((resp) => {
               if (resp.ok) {
                 object._status = true
+                // eslint-disable-next-line camelcase
                 object._error_message = null
                 return resp.json().then((resp) => {
                   Object.keys(resp).forEach((key) => {
@@ -382,6 +386,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                 Object.keys(resp).forEach((key) => {
                   object[key] = resp[key]
                 })
+                // eslint-disable-next-line camelcase
                 object._error_message = null
               } else {
                 // eslint-disable-next-line camelcase

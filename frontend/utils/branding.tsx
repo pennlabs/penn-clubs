@@ -68,6 +68,8 @@ const sites = {
     SHOW_LEAVE_CONFIRMATION: true,
     // show the searchbar at the top of the page instead of the sidebar
     SHOW_SEARCHBAR_TOP: false,
+    // show applications
+    SHOW_APPLICATIONS: true,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
     OBJECT_MEMBERSHIP_LABEL: 'Members',
@@ -179,6 +181,8 @@ const sites = {
     SHOW_ADDITIONAL_LINKS: false,
     SHOW_LEAVE_CONFIRMATION: false,
     SHOW_SEARCHBAR_TOP: true,
+    SHOW_APPLICATIONS: false,
+
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
     OBJECT_MEMBERSHIP_LABEL_LOWERCASE: 'staff',
@@ -262,6 +266,7 @@ export const SHOW_ACCESSIBILITY = sites[site].SHOW_ACCESSIBILITY
 export const SHOW_ADDITIONAL_LINKS = sites[site].SHOW_ADDITIONAL_LINKS
 export const SHOW_LEAVE_CONFIRMATION = sites[site].SHOW_LEAVE_CONFIRMATION
 export const SHOW_SEARCHBAR_TOP = sites[site].SHOW_SEARCHBAR_TOP
+export const SHOW_APPLICATIONS = sites[site].SHOW_APPLICATIONS
 
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
 export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
