@@ -1412,7 +1412,6 @@ class UserClubVisitSerializer(serializers.ModelSerializer):
 
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = ClubListSerializer(read_only=True)
-    ip = serializers.HiddenField(default=None)
 
     def save(self):
         self.validated_data["ip"] = self.get_ip()
@@ -1428,7 +1427,7 @@ class UserClubVisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ClubVisit
-        fields = ("club", "visit_type", "person", "ip")
+        fields = ("club", "visit_type", "person")
 
 
 class UserClubVisitWriteSerializer(UserClubVisitSerializer):
