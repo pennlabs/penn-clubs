@@ -9,6 +9,7 @@ class Command(BaseCommand):
         "Executes various operations to ensure that the database is in a consistent state. "
         "Synchronizes badges based on parent and child org relationships. "
         "Removes duplicate club fair registration entries, keeping the latest. "
+        "There should be no issues with repeatedly running this script. "
     )
     web_execute = True
 
@@ -27,12 +28,15 @@ class Command(BaseCommand):
         self._visited.add(club.code)
         count = 0
         if not club.badges.filter(pk=badge.pk).exists():
-            self.stdout.write(f"Adding {badge.label} to {club.name}")
             if not self.dry_run:
+                self.stdout.write(f"Adding badge {badge.label} to club {club.name}.")
                 club.badges.add(badge)
+            else:
+                self.stdout.write(f"Would have added badge {badge.label} to club {club.name}.")
             count += 1
         for child in club.children_orgs.all():
             return self.recursively_add_badge(club, badge) + count
+        return count
 
     def get_parent_club_codes(self, club):
         queue = [club.code]
@@ -109,8 +113,12 @@ class Command(BaseCommand):
 
                     parent_club_codes = self.get_parent_club_codes(club)
                     if badge.org.code not in parent_club_codes:
-                        self.stdout.write(f"Adding {badge.org.name} as parent for {club.name}")
                         if not self.dry_run:
+                            self.stdout.write(f"Adding {badge.org.name} as parent for {club.name}.")
                             club.parent_orgs.add(badge.org)
+                        else:
+                            self.stdout.write(
+                                f"Would have added {badge.org.name} as a parent for {club.name}."
+                            )
                         count += 1
         self.stdout.write(self.style.SUCCESS(f"Modified {count} parent child relationships."))
