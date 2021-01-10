@@ -1,8 +1,6 @@
 import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
-import styled from 'styled-components'
 
-import { MEDIUM_GRAY } from '../../constants'
 import { Club, ClubFair, MembershipRank, UserInfo } from '../../types'
 import {
   apiCheckPermission,
@@ -16,25 +14,8 @@ import {
   OBJECT_NAME_TITLE_SINGULAR,
   SITE_NAME,
 } from '../../utils/branding'
-import { Contact, Icon, Modal, Text } from '../common'
+import { Contact, Icon, Modal, Text, TextQuote } from '../common'
 import { ModalContent } from './Actions'
-
-const ReviewQuote = styled.span`
-  white-space: pre-wrap;
-  display: block;
-  margin-top: 12px;
-  margin-bottom: 5px;
-  padding: 5px;
-  padding-left: 12px;
-  border-left: 3px solid ${MEDIUM_GRAY};
-  color: ${MEDIUM_GRAY};
-  font-size: 1.2em;
-
-  .notification.is-info & {
-    color: white;
-    border-left-color: white;
-  }
-`
 
 type Props = {
   club: Club
@@ -104,7 +85,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
           </div>
           {club.approved_comment && (
             <div className="mb-5">
-              <ReviewQuote>{club.approved_comment}</ReviewQuote>
+              <TextQuote>{club.approved_comment}</TextQuote>
             </div>
           )}
           <button
@@ -150,7 +131,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
                   listed below. If you believe that this is a mistake, contact{' '}
                   <Contact point="osa" />.
                 </p>
-                <ReviewQuote>
+                <TextQuote>
                   {club.approved_comment || (
                     <>
                       No reason has been given for why your{' '}
@@ -158,7 +139,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
                       <Contact point="osa" /> for more details.
                     </>
                   )}
-                </ReviewQuote>
+                </TextQuote>
               </>
             ) : (
               <>

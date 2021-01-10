@@ -15,6 +15,23 @@ export const Text = styled.p<{ isGray?: boolean; color?: string }>`
   ${({ color }) => (color ? `color: ${color};` : '')}
 `
 
+export const TextQuote = styled.span`
+  white-space: pre-wrap;
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 5px;
+  padding: 5px;
+  padding-left: 12px;
+  border-left: 3px solid ${MEDIUM_GRAY};
+  color: ${MEDIUM_GRAY};
+  font-size: 1.2em;
+
+  .notification.is-info & {
+    color: white;
+    border-left-color: white;
+  }
+`
+
 export const SmallText = styled(Text)`
   font-size: 80%;
 `

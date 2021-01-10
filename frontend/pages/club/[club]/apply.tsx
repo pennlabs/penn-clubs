@@ -3,7 +3,10 @@ import Link from 'next/link'
 import { ReactElement, useState } from 'react'
 import TimeAgo from 'react-timeago'
 
-import { CLUB_APPLICATIONS } from '../../../components/ClubEditPage/ClubEditCard'
+import {
+  CLUB_APPLICATIONS,
+  CLUB_RECRUITMENT_CYCLES,
+} from '../../../components/ClubEditPage/ClubEditCard'
 import ClubMetadata from '../../../components/ClubMetadata'
 import { RequestMembershipButton } from '../../../components/ClubPage/Actions'
 import {
@@ -11,18 +14,20 @@ import {
   Icon,
   Subtitle,
   Text,
+  TextQuote,
   Title,
 } from '../../../components/common'
 import { CLUB_ROUTE } from '../../../constants'
 import renderPage from '../../../renderPage'
-import { Club, ClubApplication, ClubApplicationRequired } from '../../../types'
+import {
+  Club,
+  ClubApplication,
+  ClubApplicationRequired,
+  ClubRecruitingCycle,
+} from '../../../types'
 import { doApiRequest, getSemesterFromDate } from '../../../utils'
 import { logEvent } from '../../../utils/analytics'
-import {
-  OBJECT_NAME_SINGULAR,
-  SITE_ID,
-  SITE_NAME,
-} from '../../../utils/branding'
+import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../../utils/branding'
 
 type Props = {
   club: Club
@@ -56,6 +61,10 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
       }}
     />
   )
+
+  const recruitmentCycleLabel = CLUB_RECRUITMENT_CYCLES.find(
+    ({ value }) => value === club.recruiting_cycle,
+  )?.label
 
   return (
     <>
@@ -95,15 +104,28 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
               {club.name} requires an application process to join the{' '}
               {OBJECT_NAME_SINGULAR}. You can subscribe to this{' '}
               {OBJECT_NAME_SINGULAR} to get notified when applications open and
-              close.
+              close.{' '}
+              {club.recruiting_cycle !== ClubRecruitingCycle.Unknown &&
+                club.recruiting_cycle !== ClubRecruitingCycle.Open && (
+                  <>
+                    This {OBJECT_NAME_SINGULAR} typically recruits its members
+                    during {recruitmentCycleLabel?.toLowerCase()}.
+                  </>
+                )}
             </Text>
           </>
         )}
-        <Text>
-          {club.how_to_get_involved.length > 0
-            ? club.how_to_get_involved
-            : `This ${OBJECT_NAME_SINGULAR} has no additional details on how to get involved.`}
-        </Text>
+        {club.how_to_get_involved.length > 0 && (
+          <>
+            <Text>
+              <b>{club.name}</b> provides the following information on how to
+              get involved with the {OBJECT_NAME_SINGULAR}:
+            </Text>
+            <Text>
+              <TextQuote>{club.how_to_get_involved}</TextQuote>
+            </Text>
+          </>
+        )}
         {isOpenMembership ? (
           btn
         ) : (
@@ -150,9 +172,9 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
             ))}
             <Subtitle>Already a member?</Subtitle>
             <Text>
-              Are you an existing member of {club.name}, but not on {SITE_ID}{' '}
-              yet? Use the button below to request to be added to this{' '}
-              {OBJECT_NAME_SINGULAR} on {SITE_NAME}.
+              Are you an existing member of {club.name}, but not listed on{' '}
+              {SITE_NAME} yet? Use the button below to request to be added to
+              this {OBJECT_NAME_SINGULAR} on {SITE_NAME}.
             </Text>
             {btn}
           </>
