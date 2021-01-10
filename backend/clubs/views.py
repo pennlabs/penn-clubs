@@ -3422,7 +3422,7 @@ class ScriptExecutionView(APIView):
         kwargs = {}
         for arg, details in script["arguments"].items():
             if arg in parameters:
-                kwargs[arg] = {"str": str, "bool": bool, "int": int}.get(details.type, str)(
+                kwargs[arg] = {"str": str, "bool": bool, "int": int}.get(details["type"], str)(
                     parameters[arg]
                 )
 
