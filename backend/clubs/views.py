@@ -539,7 +539,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             events[k].append(v)
         return Response(
             [
-                {"code": code, "name": name, "meetings": events.get(code, []),}
+                {"code": code, "name": name, "meetings": events.get(code, [])}
                 for code, name in clubs.order_by("name").values_list("code", "name")
             ]
         )
