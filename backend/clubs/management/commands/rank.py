@@ -117,6 +117,12 @@ class Command(BaseCommand):
             if ClubFair.objects.filter(end_time__gte=now, participating_clubs=club).exists():
                 ranking += 10
 
+            # points for club applications
+            if club.clubapplication_set.filter(
+                application_start_time__lte=now, application_end_time__gte=now
+            ).exists():
+                ranking += 25
+
             # points for events
             today_events = club.events.filter(
                 end_time__gte=now, start_time__lte=now + datetime.timedelta(days=1)

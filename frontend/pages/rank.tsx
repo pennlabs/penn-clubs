@@ -150,6 +150,13 @@ const Rank = (): ReactElement => (
           ],
         },
         {
+          name: 'Upcoming Applications',
+          description: `If a ${OBJECT_NAME_SINGULAR} application is currently open for your ${OBJECT_NAME_SINGULAR}, it will be prioritized while that application is still open.`,
+          points: [
+            [25, `Has at least one open ${OBJECT_NAME_SINGULAR} application`],
+          ],
+        },
+        {
           name: 'Membership',
           description: `Having your ${OBJECT_NAME_SINGULAR} members displayed on ${SITE_NAME} provides more points of contact for questions about your ${OBJECT_NAME_SINGULAR}.`,
           points: [
