@@ -2488,11 +2488,34 @@ class BadgeViewSet(viewsets.ModelViewSet):
         return Badge.objects.filter(visible=True)
 
 
+def parse_boolean(inpt):
+    if not isinstance(inpt, str):
+        return inpt
+    inpt = inpt.strip().lower()
+    if inpt in {"true", "yes", "y"}:
+        return True
+    elif inpt in {"false", "no", "n"}:
+        return False
+    return None
+
+
 class FavoriteCalendarAPIView(APIView):
     def get(self, request, *args, **kwargs):
         """
         Return a .ics file of the user's favorite club events.
         ---
+        parameters:
+            - name: global
+              in: query
+              required: false
+              description: >
+                If specified, either only show global events
+                if true or exclude global events if false.
+            - name: all
+              in: query
+              required: false
+              description: >
+                If set to true, show all events instead of only subscribed events.
         responses:
             "200":
                 description: Return a calendar file in ICS format.
@@ -2502,6 +2525,9 @@ class FavoriteCalendarAPIView(APIView):
                             type: string
         ---
         """
+        is_global = parse_boolean(request.query_params.get("global"))
+        is_all = parse_boolean(request.query_params.get("all"))
+
         calendar = ICSCal(creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAIN})")
         calendar.extra.append(
             ICSParse.ContentLine(name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events")
@@ -2509,15 +2535,19 @@ class FavoriteCalendarAPIView(APIView):
 
         # only fetch events newer than the past month
         one_month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
-        all_events = (
-            Event.objects.filter(
-                Q(club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"])
-                | Q(club__isnull=True),
-                start_time__gte=one_month_ago,
-            )
-            .distinct()
-            .select_related("club")
-        )
+        all_events = Event.objects.filter(start_time__gte=one_month_ago)
+
+        # filter based on user supplied flags
+        q = Q(club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"])
+        if is_global is None:
+            q |= Q(club__isnull=True)
+
+        if is_global:
+            all_events = all_events.filter(club__isnull=True)
+        elif not is_all:
+            all_events = all_events.filter(q)
+
+        all_events = all_events.distinct().select_related("club")
 
         for event in all_events:
             e = ICSEvent()
