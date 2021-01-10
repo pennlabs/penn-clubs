@@ -281,18 +281,18 @@ const eventTableFields = [
   {
     name: 'start_time',
     label: 'Start Time',
-    converter: (a) => <TimeAgo date={a} />,
+    converter: (a: string): ReactElement => <TimeAgo date={a} />,
   },
   {
     name: 'type',
     label: 'Type',
-    converter: (a) =>
+    converter: (a: ClubEventType): string =>
       (EVENT_TYPES.find((v) => v.value === a) || { label: 'Unknown' }).label,
   },
   {
     name: 'is_ics_event',
     label: 'ICS',
-    converter: (a) => <Icon name={a ? 'check' : 'x'} />,
+    converter: (a: boolean): ReactElement => <Icon name={a ? 'check' : 'x'} />,
   },
 ]
 

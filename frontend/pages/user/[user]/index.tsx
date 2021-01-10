@@ -25,7 +25,7 @@ import {
 } from '../../../constants'
 import renderPage from '../../../renderPage'
 import { MembershipRank, UserInfo, UserProfile } from '../../../types'
-import { doApiRequest } from '../../../utils'
+import { doApiRequest, getCurrentSchoolYear } from '../../../utils'
 import { OBJECT_NAME_PLURAL, OBJECT_NAME_TITLE } from '../../../utils/branding'
 
 type UserProfilePageProps = {
@@ -35,10 +35,7 @@ type UserProfilePageProps = {
 }
 
 const GraduationYearTag = ({ year }: { year: number | null }): ReactElement => {
-  let now = new Date().getFullYear()
-  if (new Date().getMonth() > 7) {
-    now += 1
-  }
+  const now = getCurrentSchoolYear() + 1
   if (year == null || typeof year !== 'number') {
     return <span className="tag is-light ml-1">Unknown</span>
   }

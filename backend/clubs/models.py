@@ -2,9 +2,11 @@ import datetime
 import os
 import re
 import uuid
+import warnings
 from urllib.parse import urlparse
 
 import requests
+import yaml
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -23,6 +25,24 @@ from urlextract import URLExtract
 from clubs.utils import clean, get_django_minified_image, get_domain, html_to_text
 
 
+subject_regex = re.compile(r"\s*<!--\s*SUBJECT:\s*(.*?)\s*-->", re.I)
+types_regex = re.compile(r"\s*<!--\s*TYPES:\s*(.*?)\s*-->", re.DOTALL)
+
+
+def get_mail_type_annotation(name):
+    """
+    Given a template name, return the type annotation metadata.
+    """
+    prefix = {"fyh": "fyh_emails"}.get(settings.BRANDING, "emails")
+    path = os.path.join(settings.BASE_DIR, "templates", prefix, f"{name}.html")
+    with open(path, "r") as f:
+        contents = f.read()
+    match = types_regex.search(contents)
+    if match is not None:
+        return yaml.safe_load(match.group(1).strip())
+    return None
+
+
 def send_mail_helper(name, subject, emails, context):
     """
     A helper to send out an email given the template name, subject, to emails, and context.
@@ -32,20 +52,35 @@ def send_mail_helper(name, subject, emails, context):
     if not all(isinstance(email, str) for email in emails):
         raise ValueError("The to email argument must be a list of strings!")
 
+    # emulate django behavior of silently returning without recipients
+    emails = [email for email in emails if email]
+    if not emails:
+        return
+
     # load email template
     prefix = {"fyh": "fyh_emails"}.get(settings.BRANDING, "emails")
     html_content = render_to_string(f"{prefix}/{name}.html", context)
 
     # use subject from template if it exists
     # subject should match: <!-- SUBJECT: (subject) --> and be the first line
-    subject_regex = re.compile(r"\s*<!--\s*SUBJECT:\s*(.*?)\s*-->", re.I)
     match = subject_regex.match(html_content)
     if match is not None:
         subject = match.group(1)
         html_content = subject_regex.sub("", html_content, count=1)
 
+    # remove type annotation comment
+    match = types_regex.match(html_content)
+    if match is not None:
+        html_content = types_regex.sub("", html_content, count=1)
+    else:
+        warnings.warn(
+            f"There is no type annotation information for the template '{name}'! "
+            "Email previews may work incorrectly without type information.",
+            SyntaxWarning,
+        )
+
     if subject is None:
-        raise ValueError("You must specify a subject as an argument or in the template!")
+        raise ValueError("You must specify a email subject as an argument or in the template!")
 
     # generate text alternative
     text_content = html_to_text(html_content)
@@ -669,12 +704,13 @@ class RecurringEvent(models.Model):
 class Event(models.Model):
     """
     Represents an event hosted by a club.
+    If the club is null, this is a global event.
     """
 
     code = models.SlugField(max_length=255, db_index=True)
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=255)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="events")
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="events", null=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     location = models.CharField(max_length=255, null=True, blank=True)
@@ -1193,6 +1229,27 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+class ClubApplication(models.Model):
+    """
+    Represents an application to a club.
+    """
+
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    application_start_time = models.DateTimeField()
+    application_end_time = models.DateTimeField()
+    name = models.TextField(blank=True)
+    result_release_time = models.DateTimeField()
+    external_url = models.URLField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "{} created {}: start {}, end {}".format(
+            self.club.name, self.name, self.application_start_time, self.application_end_time
+        )
 
 
 @receiver(models.signals.pre_delete, sender=Asset)

@@ -5,6 +5,7 @@ from clubs.views import (
     AdvisorViewSet,
     AssetViewSet,
     BadgeViewSet,
+    ClubApplicationViewSet,
     ClubEventViewSet,
     ClubFairViewSet,
     ClubViewSet,
@@ -64,6 +65,7 @@ router.register(r"users", UserViewSet, basename="users")
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")
 clubs_router.register(r"events", ClubEventViewSet, basename="club-events")
+clubs_router.register(r"applications", ClubApplicationViewSet, basename="club-applications")
 clubs_router.register(r"invites", MemberInviteViewSet, basename="club-invites")
 clubs_router.register(r"assets", AssetViewSet, basename="club-assets")
 clubs_router.register(r"notes", NoteViewSet, basename="club-notes")

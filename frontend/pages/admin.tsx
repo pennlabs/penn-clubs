@@ -11,6 +11,8 @@ import {
   TextField,
 } from '../components/FormComponents'
 import { fixDeserialize } from '../components/reports/ReportForm'
+import FairsTab from '../components/Settings/FairsTab'
+import QueueTab from '../components/Settings/QueueTab'
 import TabView from '../components/TabView'
 import { BG_GRADIENT, WHITE } from '../constants'
 import renderPage from '../renderPage'
@@ -258,6 +260,16 @@ function AdminPage({
         </div>
       ),
     },
+    {
+      name: 'queue',
+      label: 'Approval Queue',
+      content: () => <QueueTab />,
+    },
+    {
+      name: 'fair',
+      label: 'Fair Management',
+      content: () => <FairsTab fairs={[]} />,
+    },
   ]
 
   return (
@@ -277,6 +289,6 @@ AdminPage.getInitialProps = async (ctx: NextPageContext) => {
   return doBulkLookup(['tags', 'badges', 'clubfairs', 'scripts'], ctx)
 }
 
-AdminPage.permissions = []
+AdminPage.permissions = ['clubs.approve_club']
 
 export default renderPage(AdminPage)

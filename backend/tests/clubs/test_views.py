@@ -445,13 +445,23 @@ class ClubTestCase(TestCase):
         self.event1.type = Event.FAIR
         self.event1.save()
 
+        # test global event
+        Event.objects.create(
+            code="test-event-4",
+            club=None,
+            name="Test Global Event",
+            start_time=timezone.now() + timezone.timedelta(days=2),
+            end_time=timezone.now() + timezone.timedelta(days=3),
+            type=Event.OTHER,
+        )
+
         # list events without a club to namespace.
         now = timezone.now()
         resp = self.client.get(
             reverse("events-list"), {"end_time__gte": now}, content_type="application/json"
         )
         self.assertIn(resp.status_code, [200], resp.content)
-        self.assertEquals(2, len(resp.data), resp.data)
+        self.assertEquals(len(resp.data), 3, resp.content)
 
         # list events with a filter
         resp = self.client.get(
@@ -1221,7 +1231,7 @@ class ClubTestCase(TestCase):
             },
             {"query": "founded__lt=2000", "results": ["pppjo"]},
             {"query": "tags=Professional&founded__lt=2000", "results": ["pppjo"]},
-            {"query": "accepting_members=true", "results": ["pppjo"]},
+            {"query": "accepting_members=true", "results": ["pppjo", "empty-club"]},
             {
                 "query": f"size__or={Club.SIZE_MEDIUM},{Club.SIZE_LARGE}",
                 "results": ["pppjo", "lorem-ipsum"],

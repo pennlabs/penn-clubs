@@ -3,6 +3,7 @@ import { ReactElement } from 'react'
 
 import { CLUB_RENEW_ROUTE } from '../../constants'
 import { Club } from '../../types'
+import { getCurrentSchoolYear } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   OBJECT_NAME_SINGULAR,
@@ -15,7 +16,7 @@ type RenewCardProps = {
 }
 
 export default function RenewCard({ club }: RenewCardProps): ReactElement {
-  const year = new Date().getFullYear()
+  const year = getCurrentSchoolYear()
 
   return (
     <BaseCard title={`Renew ${OBJECT_NAME_TITLE_SINGULAR} Approval`}>

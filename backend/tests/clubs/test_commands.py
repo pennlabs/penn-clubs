@@ -5,12 +5,15 @@ These management commands can be executed with "./manage.py <command>".
 
 import csv
 import datetime
+import io
 import os
 import tempfile
 import uuid
 from unittest import mock
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core import mail
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -19,7 +22,16 @@ from django.utils import timezone
 from ics import Calendar
 from ics import Event as ICSEvent
 
-from clubs.models import Club, ClubFair, Event, Favorite, Membership, MembershipInvite, Tag
+from clubs.models import (
+    Club,
+    ClubFair,
+    Event,
+    Favorite,
+    Membership,
+    MembershipInvite,
+    Tag,
+    get_mail_type_annotation,
+)
 from clubs.utils import fuzzy_lookup_club
 
 
@@ -275,8 +287,55 @@ class SendInvitesTestCase(TestCase):
         # test post fair email
         call_command("send_emails", "post_virtual_fair")
 
+    def test_proper_annotations(self):
+        """
+        Ensure that all email templates have type annotation metadata.
+        """
+        bad_templates = []
+        for site in ["clubs", "fyh"]:
+            with self.settings(BRANDING=site):
+                prefix = {"fyh": "fyh_emails"}.get(settings.BRANDING, "emails")
+                path = os.path.join(settings.BASE_DIR, "templates", prefix)
+                for file in os.listdir(path):
+                    if file.endswith(".html"):
+                        template_name = file.rsplit(".", 1)[0]
+                        if get_mail_type_annotation(template_name) is None:
+                            if template_name not in {"base"}:
+                                bad_templates.append(f"{prefix}/{template_name}")
+
+        if bad_templates:
+            bad_templates = "\n".join(f" - {temp}" for temp in bad_templates)
+            self.fail(
+                "There are templates that do not have type annotations. \n"
+                "Leaving out type annotations will cause issues with email previews. \n"
+                "Please ensure that all templates listed below have proper type annotations: \n\n"
+                f"{bad_templates}"
+            )
+
     def test_daily_notifications(self):
-        call_command("daily_notifications")
+        # add group and user for approval queue
+        group, _ = Group.objects.get_or_create(name="Approvers")
+        user = self.user1
+        user.email = "test-approve-notif@example.com"
+        user.save()
+        group.user_set.add(user)
+
+        # ensure that there are some groups pending approval
+        self.assertTrue(Club.objects.filter(approved__isnull=True, active=True).exists())
+
+        # ensure test runs on a weekday
+        errors = io.StringIO()
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime.datetime(2021, 1, 5, tzinfo=timezone.utc),
+        ):
+            call_command("daily_notifications", stderr=errors)
+
+        # ensure approval email was sent out
+        self.assertTrue(any(m.to == [self.user1.email] for m in mail.outbox))
+
+        # ensure no error messages are printed
+        self.assertFalse(errors.getvalue())
 
     def test_fuzzy_lookup(self):
         # test failed matches

@@ -91,7 +91,9 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
               image={imageUrl}
               fallback={
                 <p>
-                  <b>{clubName.toLocaleUpperCase()}</b>
+                  <b>
+                    {clubName != null ? clubName.toLocaleUpperCase() : 'Event'}
+                  </b>
                 </p>
               }
             />
