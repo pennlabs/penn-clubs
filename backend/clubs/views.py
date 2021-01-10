@@ -653,7 +653,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "success": False,
-                    "message": "The deadline has passed for this activities fair. "
+                    "message": "The deadline has passed to register for this activities fair. "
                     f"Please email {fair.contact} for assistance.",
                 }
             )
@@ -663,8 +663,8 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         if mship is not None and mship.role <= Membership.ROLE_OFFICER or request.user.is_superuser:
             # register or unregister club
             if status:
-                ClubFairRegistration.objects.create(
-                    club=club, fair=fair, answers=answers, registrant=request.user
+                ClubFairRegistration.objects.update_or_create(
+                    club=club, fair=fair, defaults={"answers": answers, "registrant": request.user}
                 )
             else:
                 fair.participating_clubs.remove(club)
