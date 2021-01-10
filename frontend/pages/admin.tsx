@@ -25,12 +25,12 @@ import {
   SITE_NAME,
 } from '../utils/branding'
 
-const ScriptBox = ({ script }): ReactElement => {
+const ScriptBox = ({ script, useWs }): ReactElement => {
   const ws = useRef<WebSocket | null>(null)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [output, setOutput] = useState<string | null>(null)
 
-  async function executeScriptHttp(data) {
+  async function executeScriptHttp(data): Promise<void> {
     await doApiRequest('/scripts/?format=json', {
       method: 'POST',
       body: { action: script.name, parameters: data },
@@ -41,7 +41,7 @@ const ScriptBox = ({ script }): ReactElement => {
       })
   }
 
-  async function executeScriptWs(data) {
+  async function executeScriptWs(data): Promise<void> {
     setLoading(true)
     setOutput('')
     const wsUrl = `${location.protocol === 'http:' ? 'ws' : 'wss'}://${
@@ -70,7 +70,7 @@ const ScriptBox = ({ script }): ReactElement => {
 
   function execute(data): void {
     setLoading(true)
-    if ('WebSocket' in window) {
+    if ('WebSocket' in window && useWs) {
       executeScriptWs(data).then(() => setLoading(false))
     } else {
       executeScriptHttp(data).then(() => setLoading(false))
@@ -137,6 +137,8 @@ function AdminPage({
   if (!userInfo) {
     return <AuthPrompt />
   }
+
+  const [useWs, setUseWs] = useState<boolean>(true)
 
   const bulkSubmit = async (data, { setSubmitting }) => {
     try {
@@ -243,15 +245,37 @@ function AdminPage({
         <div>
           <Text>
             As an administrator, you can execute management scripts that affect
-            all of {SITE_NAME}.
+            all of {SITE_NAME}. You can specify the execution method below. The
+            preferred method is Web Sockets, as this will allow you to see
+            real-time updates and work for long running scripts.
           </Text>
+          <div className="field has-addons mb-5">
+            <div className="control">
+              <button
+                className={`button ${useWs ? 'is-primary' : 'is-secondary'}`}
+                onClick={() => setUseWs(true)}
+              >
+                Web Sockets
+              </button>
+            </div>
+            <div className="control">
+              <button
+                className={`button ${!useWs ? 'is-primary' : 'is-secondary'}`}
+                onClick={() => setUseWs(false)}
+              >
+                HTTP
+              </button>
+            </div>
+          </div>
           {Array.isArray(scripts) ? (
             scripts
               .filter((s) => s.execute)
               .sort((a, b) =>
                 a.execute ? -1 : b.execute ? 1 : a.name.localeCompare(b.name),
               )
-              .map((script) => <ScriptBox key={script.name} script={script} />)
+              .map((script) => (
+                <ScriptBox key={script.name} script={script} useWs={useWs} />
+              ))
           ) : (
             <Text>
               You do not have permissions to view the list of available scripts.

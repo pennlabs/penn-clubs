@@ -4,6 +4,7 @@ import React, { ReactElement } from 'react'
 import ClubFairCard from '../components/ClubEditPage/ClubFairCard'
 import { Contact, Container, Metadata, Text, Title } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
+import FairEventsTab from '../components/Settings/FairEventsTab'
 import FairsTab from '../components/Settings/FairsTab'
 import TabView from '../components/TabView'
 import { BG_GRADIENT, WHITE } from '../constants'
@@ -26,7 +27,8 @@ function FairsPage({ userInfo, fairs, memberships }): ReactElement {
 
   const tabs = [
     {
-      name: 'Register',
+      name: 'registration',
+      label: 'Register',
       content: () => (
         <>
           <Text>
@@ -46,8 +48,15 @@ function FairsPage({ userInfo, fairs, memberships }): ReactElement {
       ),
     },
     {
-      name: 'Management',
+      name: 'management',
+      label: 'Management',
       content: () => <FairsTab fairs={fairs} />,
+      disabled: !canSeeFairStatus,
+    },
+    {
+      name: 'events',
+      label: 'Fair Events',
+      content: () => <FairEventsTab fairs={fairs} />,
       disabled: !canSeeFairStatus,
     },
   ]

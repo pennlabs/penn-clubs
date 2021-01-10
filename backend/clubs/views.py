@@ -497,6 +497,62 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             return WritableClubFairSerializer
         return ClubFairSerializer
 
+    @action(detail=True, methods=["get"])
+    def events(self, request, *args, **kwargs):
+        """
+        Return all of the events related to this club fair and whether they are properly configured.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    code:
+                                        type: string
+                                        description: >
+                                            The club code for the club.
+                                    name:
+                                        type: string
+                                        description: >
+                                            The name of the club.
+                                    has_event:
+                                        type: boolean
+                                        description: >
+                                            Whether or not a fair event exists for this club.
+                                    meeting:
+                                        type: string
+                                        nullable: true
+                                        description: >
+                                            The meeting link for the event, if it exists.
+        ---
+        """
+        fair = self.get_object()
+        clubs = fair.participating_clubs.all()
+        events = {
+            k: v
+            for k, v in Event.objects.filter(
+                club__in=clubs,
+                type=Event.FAIR,
+                start_time__gte=fair.start_time,
+                end_time__lte=fair.end_time,
+            ).values_list("club__code", "url")
+        }
+        return Response(
+            [
+                {
+                    "code": code,
+                    "name": name,
+                    "has_event": code in events,
+                    "meeting": events.get(code),
+                }
+                for code, name in clubs.values_list("code", "name")
+            ]
+        )
+
     @action(detail=True, methods=["post"])
     def register(self, request, *args, **kwargs):
         """
@@ -508,6 +564,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             content:
                 application/json:
                     schema:
+                        type: object
                         properties:
                             status:
                                 type: boolean
@@ -530,6 +587,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
+                            type: object
                             properties:
                                 success:
                                     type: boolean
