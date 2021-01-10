@@ -18,7 +18,36 @@ class Command(BaseCommand):
     web_execute = True
 
     def handle(self, *args, **kwargs):
+        self.set_recruiting_statuses()
         self.rank()
+
+    def set_recruiting_statuses(self):
+        """
+        Modify the recruiting statuses for clubs based on whether or not they have club applications
+        open.
+        """
+        now = timezone.now()
+        # get all clubs with current applications
+        current_apps = Club.objects.exclude(application_required=Club.OPEN_MEMBERSHIP).filter(
+            clubapplication__application_start_time__lte=now,
+            clubapplication__application_end_time__gte=now,
+        )
+
+        # mark all clubs with past applications but no current applications as not accepting members
+        unupd = (
+            Club.objects.exclude(application_required=Club.OPEN_MEMBERSHIP)
+            .filter(clubapplication__application_end_time__lt=now, accepting_members=True)
+            .exclude(pk__in=current_apps.values_list("pk", flat=True))
+            .update(accepting_members=False)
+        )
+
+        # mark all clubs with current applications as accepting members
+        upd = current_apps.filter(accepting_members=False).update(accepting_members=True)
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Set accepting members to true for {upd} club(s) and to false for {unupd} club(s)!"
+            )
+        )
 
     def rank(self):
         count = 0

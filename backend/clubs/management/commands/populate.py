@@ -159,6 +159,7 @@ you can procrastinate on the application and ultimately miss the deadline!""",
  See www.google.com for more details. Alternatively, contact example@example.com.""",
         "active": True,
         "approved": True,
+        "accepting_members": True,
         "tags": [{"name": "Professional"}, {"name": "Undergraduate"}],
     },
     {
@@ -497,12 +498,23 @@ class Command(BaseCommand):
             event.image.save("image.png", ContentFile(contents))
 
         # create a club application
+        club = Club.objects.get(code="empty-club")
+        ClubApplication.objects.get_or_create(
+            name="Test Application",
+            club=club,
+            defaults={
+                "application_start_time": now - datetime.timedelta(weeks=10),
+                "application_end_time": now - datetime.timedelta(weeks=9),
+                "result_release_time": now - datetime.timedelta(weeks=8),
+                "external_url": "https://pennclubs.com/",
+            },
+        )
         club = Club.objects.get(code="pppjo")
         ClubApplication.objects.get_or_create(
             name="Test Application",
             club=club,
             defaults={
-                "application_start_time": now + datetime.timedelta(days=1),
+                "application_start_time": now - datetime.timedelta(days=1),
                 "application_end_time": now + datetime.timedelta(days=3),
                 "result_release_time": now + datetime.timedelta(weeks=1),
                 "external_url": "https://pennlabs.org/apply/",
