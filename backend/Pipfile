@@ -16,7 +16,6 @@ django-extensions = "*"
 [packages]
 dj-database-url = "*"
 djangorestframework = "*"
-mysqlclient = "*"
 sentry-sdk = "*"
 django = "*"
 django-labs-accounts = "*"
@@ -43,7 +42,7 @@ django-redis = "*"
 channels-redis = "*"
 uwsgi = {version = "*", sys_platform = "== 'linux'"}
 uvloop = {version = "*", sys_platform = "== 'linux'"}
-uvicorn = "*"
+uvicorn = {extras = ["standard"], version = "*"}
 gunicorn = "*"
 httptools = "*"
 ics = "*"
