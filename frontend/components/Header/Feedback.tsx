@@ -1,3 +1,4 @@
+import Color from 'color'
 import { ReactElement } from 'react'
 import styled from 'styled-components'
 
@@ -11,7 +12,7 @@ const DIAMETER = '3rem'
 const ICON_SIZE = '1.5rem'
 const OFFSET = '18px'
 
-const FeedbackLink = styled.a`
+export const ActionLink = styled.a`
   display: inline-block;
   width: ${DIAMETER};
   height: ${DIAMETER};
@@ -24,28 +25,28 @@ const FeedbackLink = styled.a`
   box-shadow: 0 2px 8px rgba(25, 89, 130, 0.4);
   cursor: pointer;
   z-index: 10;
-  transition: background-color ${ANIMATION_DURATION}ms ease;
+  transition: background-color ${ANIMATION_DURATION} ease;
 
   &:hover {
-    background-color: ${FEEDBACK_BG};
+    background-color: ${Color(FEEDBACK_BG).lighten(0.1).string()};
+  }
+
+  & svg {
+    margin-top: 0.75rem;
+    color: white;
   }
 `
 
 const Feedback = (): ReactElement => (
-  <FeedbackLink
+  <ActionLink
     rel="noopener noreferrer"
     href={FEEDBACK_URL}
     title="Feedback"
     target="_blank"
     onClick={() => logEvent('feedback', 'clicked')}
   >
-    <Icon
-      name="message-circle"
-      alt="Feedback"
-      size={ICON_SIZE}
-      style={{ marginTop: '0.75rem', color: 'white' }}
-    />
-  </FeedbackLink>
+    <Icon name="message-circle" alt="Feedback" size={ICON_SIZE} />
+  </ActionLink>
 )
 
 export default Feedback

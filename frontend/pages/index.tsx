@@ -8,6 +8,7 @@ import LiveEventsDialog from '../components/ClubPage/LiveEventsDialog'
 import { Icon, Metadata, Title, WideContainer } from '../components/common'
 import DisplayButtons from '../components/DisplayButtons'
 import { FuseTag } from '../components/FilterSearch'
+import { ActionLink } from '../components/Header/Feedback'
 import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
 import SearchBar, {
   SearchBarCheckboxItem,
@@ -19,7 +20,6 @@ import SearchBar, {
 } from '../components/SearchBar'
 import { mediaMaxWidth, PHONE } from '../constants'
 import {
-  BULMA_GREY,
   CLUBS_BLUE,
   CLUBS_GREY_LIGHT,
   CLUBS_PURPLE,
@@ -198,18 +198,6 @@ const TopSearchBar = ({ onChange }): ReactElement => {
   )
 }
 
-const ScrollTopButtonContainer = styled.div`
-  position: fixed;
-  bottom: calc(36px + 3rem);
-  right: 18px;
-  cursor: pointer;
-  z-index: 999;
-
-  &:hover {
-    color: ${BULMA_GREY};
-  }
-`
-
 /**
  * A scroll to top button at the bottom right corner of the page.
  */
@@ -231,9 +219,15 @@ const ScrollTopButton = (): ReactElement | null => {
   }
 
   return (
-    <ScrollTopButtonContainer onClick={() => window.scrollTo(0, 0)}>
-      <Icon name="chevron-up" /> Scroll to Top
-    </ScrollTopButtonContainer>
+    <ActionLink
+      onClick={(e) => {
+        e.preventDefault()
+        window.scrollTo(0, 0)
+      }}
+      title="Scroll to Top"
+    >
+      <Icon name="chevron-up" size="1.5rem" />
+    </ActionLink>
   )
 }
 
