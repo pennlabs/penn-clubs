@@ -403,10 +403,10 @@ function EventPage({
 
     setLoading(true)
 
-    // fetch appropriate range for calendar, or one month starting from now for list
+    // fetch appropriate range for calendar, or three months starting from now for list
     const now = new Date()
     let endDate = new Date()
-    endDate = new Date(endDate.setMonth(endDate.getMonth() + 1))
+    endDate = new Date(endDate.setMonth(endDate.getMonth() + 3))
     const { start, end } =
       viewOption === EventsViewOption.CALENDAR
         ? parseDateRange(dateRange)
