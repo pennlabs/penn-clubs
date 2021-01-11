@@ -55,6 +55,7 @@ class Command(BaseCommand):
                 "hap_intro",
                 "hap_intro_remind",
                 "hap_second_round",
+                "hap_partner_communication",
             ),
         )
         parser.add_argument(
@@ -121,10 +122,33 @@ class Command(BaseCommand):
         role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
 
         # handle custom Hub@Penn intro email
-        if action in {"hap_intro", "hap_intro_remind", "hap_second_round"}:
+        if action in {
+            "hap_intro",
+            "hap_intro_remind",
+            "hap_second_round",
+            "hap_partner_communication",
+        }:
             test_email = kwargs.get("test", None)
             email_file = kwargs["emails"]
             people = collections.defaultdict(dict)
+
+            if action == "hap_partner_communication":
+                emails = Club.objects.all().values_list("email", flat=True)
+                if test_email is not None:
+                    emails = [test_email]
+                for email in emails:
+                    if not dry_run:
+                        send_mail_helper(
+                            "communication_to_partners", None, [email], {}
+                        )
+                        self.stdout.write(
+                            f"Sent {action} email to {email}"
+                        )
+                    else:
+                        self.stdout.write(
+                            f"Would have sent {action} email to {email}"
+                        )
+                return
 
             # read recipients from csv file
             with open(email_file, "r") as f:
