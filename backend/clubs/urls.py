@@ -33,6 +33,7 @@ from clubs.views import (
     SubscribeViewSet,
     TagViewSet,
     TestimonialViewSet,
+    UserGroupAPIView,
     UserPermissionAPIView,
     UserUpdateAPIView,
     UserUUIDAPIView,
@@ -82,6 +83,7 @@ urlpatterns = [
     path(r"settings/zoom/", UserZoomAPIView.as_view(), name="users-zoom"),
     path(r"settings/zoom/meetings/", MeetingZoomAPIView.as_view(), name="users-zoom-meeting"),
     path(r"settings/permissions/", UserPermissionAPIView.as_view(), name="users-permission"),
+    path(r"settings/groups/", UserGroupAPIView.as_view(), name="users-group"),
     path(r"clubs/<slug:club_code>/invite/", MassInviteAPIView.as_view(), name="club-invite"),
     path(r"settings/calendar_url/", UserUUIDAPIView.as_view(), name="user-uuid"),
     path(

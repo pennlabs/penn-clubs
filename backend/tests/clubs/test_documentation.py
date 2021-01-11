@@ -104,6 +104,36 @@ class DocumentationTestCase(TestCase):
                 f"{missing_str}"
             )
 
+    def verify_schema(self, types):
+        """
+        Parse the OpenAPI type schema reference to ensure that is is up to spec.
+        Does not handle the complete specification, only the cases that we use.
+        """
+        self.assertIsInstance(types, dict)
+        if "$ref" in types:
+            return
+        if "allOf" in types:
+            self.assertIsInstance(types["allOf"], list)
+            for item in types["allOf"]:
+                self.verify_schema(item)
+            return
+        self.assertIn("type", types)
+        if types["type"] == "object":
+            if "$ref" in types:
+                pass
+            elif "additionalProperties" in types:
+                self.verify_schema(types["additionalProperties"])
+            else:
+                self.assertIn("properties", types)
+                for v in types["properties"].values():
+                    self.verify_schema(v)
+        elif types["type"] == "array":
+            # ideally we should make sure all arrays are well typed, be lenient for now
+            if "items" in types:
+                self.verify_schema(types["items"])
+        elif types["type"] not in {"string", "number", "integer", "boolean"}:
+            self.fail(f"Unknown data type '{types['type']}' in schema!")
+
     def test_openapi_docs(self):
         """
         Ensure that openapi schema can be generated correctly.
@@ -147,9 +177,34 @@ class DocumentationTestCase(TestCase):
         for path in docs["paths"]:
             for method in docs["paths"][path]:
                 total_routes += 1
-                description = docs["paths"][path][method]["description"]
+                endpoint = docs["paths"][path][method]
+                description = endpoint["description"]
                 if not description:
                     missing_descriptions.append((path, method))
+
+                self.assertIn("responses", endpoint)
+                self.assertIn("parameters", endpoint)
+
+                for status_code, content in endpoint["responses"].items():
+                    status_int = int(status_code)
+                    self.assertTrue(100 <= status_int <= 600)
+                    if status_int not in {201, 204}:
+                        self.assertIn(
+                            "content",
+                            content,
+                            f"Endpoint '{method} {path}' missing content "
+                            f"for {status_code} response.",
+                        )
+                        if "application/json" in content["content"]:
+                            json_content = content["content"]["application/json"]
+                            self.assertTrue("schema" in json_content)
+                            try:
+                                self.verify_schema(json_content["schema"])
+                            except AssertionError as e:
+                                raise AssertionError(
+                                    f"Endpoint '{method} {path}' has invalid schema "
+                                    f"for {status_code} response: {json_content}"
+                                ) from e
 
         # ensure that a certain percentage of the api is documented
         percent_missing = len(missing_descriptions) / total_routes

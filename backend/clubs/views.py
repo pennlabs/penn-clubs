@@ -16,6 +16,7 @@ import requests
 from dateutil.parser import parse
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
@@ -801,6 +802,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 content: &upload_resp
                     application/json:
                         schema:
+                            type: object
                             properties:
                                 detail:
                                     type: string
@@ -855,6 +857,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 content: &upload_resp
                     application/json:
                         schema:
+                            type: object
                             properties:
                                 detail:
                                     type: string
@@ -1041,6 +1044,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
+                            type: object
                             properties:
                                 content:
                                     type: array
@@ -1083,6 +1087,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
+                            type: object
                             properties:
                                 max:
                                     type: integer
@@ -1170,6 +1175,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
+                            type: object
                             properties:
                                 success:
                                     type: boolean
@@ -1290,6 +1296,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
+                            type: object
                             properties:
                                 success:
                                     type: boolean
@@ -1721,6 +1728,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 content: &upload_resp
                     application/json:
                         schema:
+                            type: object
                             properties:
                                 detail:
                                     type: string
@@ -1896,7 +1904,7 @@ class EventViewSet(ClubEventViewSet):
                     application/json:
                         schema:
                             type: object
-                            items:
+                            properties:
                                 fair:
                                     type: object
                                     $ref: "#/components/schemas/ClubFair"
@@ -2334,6 +2342,7 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
+                            type: object
                             properties:
                                 success:
                                     type: boolean
@@ -2591,6 +2600,67 @@ class FakeView(object):
         self.action = action
 
 
+class UserGroupAPIView(APIView):
+    """
+    get: Return the major permission groups and their members on the site.
+    """
+
+    permission_classes = [DjangoPermission("clubs.manage_club")]
+
+    def get(self, request):
+        """
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    code:
+                                        type: string
+                                    members:
+                                        type: object
+                                        properties:
+                                            username:
+                                                type: string
+                                            name:
+                                                type: string
+        ---
+        """
+        perms = [
+            "approve_club",
+            "generate_reports",
+            "manage_club",
+            "see_fair_status",
+            "see_pending_clubs",
+        ]
+        output = {}
+        for name in perms:
+            perm = Permission.objects.get(codename=name)
+            output[name] = (
+                get_user_model()
+                .objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm))
+                .distinct()
+                .values_list("username", "first_name", "last_name")
+            )
+        output["superuser"] = (
+            get_user_model()
+            .objects.filter(is_superuser=True)
+            .values_list("username", "first_name", "last_name")
+        )
+        output = [
+            {
+                "code": k,
+                "members": [{"username": x[0], "name": f"{x[1]} {x[2]}".strip()} for x in v],
+            }
+            for k, v in output.items()
+        ]
+        return Response(output)
+
+
 class UserPermissionAPIView(APIView):
     """
     get: Check if a user has a specific permission or list of permissions separated by commas,
@@ -2604,6 +2674,21 @@ class UserPermissionAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+        """
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                permissions:
+                                    type: object
+                                    additionalProperties:
+                                        type: boolean
+        ---
+        """
         raw_perms = [
             perm.strip() for perm in request.GET.get("perm", "").strip().split(",") if perm
         ]
@@ -2713,6 +2798,19 @@ class MeetingZoomWebhookAPIView(APIView):
     """
 
     def get(self, request):
+        """
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                count:
+                                    type: integer
+        ---
+        """
         id = request.query_params.get("event")
         if not id:
             return Response({"count": 0})
@@ -2749,6 +2847,27 @@ class MeetingZoomAPIView(APIView):
     """
 
     def get(self, request):
+        """
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                meetings:
+                                    type: object
+                                    additionalProperties:
+                                        type: string
+                                extra_details:
+                                    type: object
+                                    additionalProperties:
+                                        type: string
+        ---
+        """
         refresh = request.query_params.get("refresh", "false").lower() == "true"
 
         if request.user.is_authenticated:
@@ -2805,6 +2924,19 @@ class MeetingZoomAPIView(APIView):
     def post(self, request):
         """
         Create a new Zoom meeting for this event or try to fix the existing zoom meeting.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+        ---
         """
         try:
             event = Event.objects.get(id=request.query_params.get("event"))
@@ -2938,6 +3070,25 @@ class UserZoomAPIView(APIView):
     """
 
     def get(self, request):
+        """
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                settings:
+                                    type: object
+                                    additionalProperties:
+                                        type: string
+                                email:
+                                    type: string
+        ---
+        """
         refresh = request.query_params.get("refresh", "false").lower() == "true"
         no_cache = request.query_params.get("noCache", "false").lower() == "true"
 
@@ -2981,6 +3132,21 @@ class UserZoomAPIView(APIView):
         return Response(res)
 
     def post(self, request):
+        """
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+        ---
+        """
         if request.user.is_authenticated:
             key = f"zoom:user:{request.user.username}"
             cache.delete(key)
@@ -3069,9 +3235,11 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
-                            detail:
-                                type: string
-                                description: A success or error message.
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: A success or error message.
         ---
         """
         invite = self.get_object()
@@ -3380,13 +3548,16 @@ class ScriptExecutionView(APIView):
                 content:
                     application/json:
                         schema:
-                            type: list
+                            type: array
                             items:
                                 type: object
                                 properties:
-                                    name: string
-                                    description: string
-                                    execute: boolean
+                                    name:
+                                        type: string
+                                    description:
+                                        type: string
+                                    execute:
+                                        type: boolean
         ---
         """
         scripts = get_scripts()
@@ -3403,7 +3574,8 @@ class ScriptExecutionView(APIView):
                         schema:
                             type: object
                             properties:
-                                output: string
+                                output:
+                                    type: string
         ---
         """
         action = request.data.get("action")
