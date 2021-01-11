@@ -487,7 +487,9 @@ const SearchBar = ({
   searchInput,
   children,
 }: SearchBarProps): ReactElement => {
-  const [scrollAmount, setScrollAmount] = useState<number>(0)
+  const [scrollAmount, setScrollAmount] = useState<number>(
+    parseFloat(FULL_NAV_HEIGHT),
+  )
   const [mobileShow, setMobileShow] = useState<boolean>(false)
 
   useEffect(() => {
