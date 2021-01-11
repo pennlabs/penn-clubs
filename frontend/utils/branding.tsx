@@ -26,6 +26,8 @@ const sites = {
     HEADER_OVERLAY: null,
     SITE_FAVICON: '/static/favicon.ico',
     SITE_TAGLINE: 'Find your people!',
+    OG_IMAGE:
+      'https://pennlabs-assets.s3.amazonaws.com/metadata-images/penn-clubs.png',
 
     APPROVAL_AUTHORITY: 'Office of Student Affairs',
     APPROVAL_AUTHORITY_URL: 'https://osa.vpul.upenn.edu/',
@@ -148,6 +150,8 @@ const sites = {
     SITE_FAVICON: '/static/penn_favicon.ico',
     SITE_TAGLINE:
       "Find the support resources you need on and around Penn's campus!",
+    OG_IMAGE:
+      'https://pennlabs-assets.s3.amazonaws.com/metadata-images/hub-at-penn.png',
 
     APPROVAL_AUTHORITY: 'Hub@Penn administrators',
     APPROVAL_AUTHORITY_URL: '/faq',
@@ -229,6 +233,7 @@ export const SITE_ID = site
 export const SITE_NAME = sites[site].SITE_NAME
 export const SITE_SUBTITLE = sites[site].SITE_SUBTITLE
 export const SITE_TAGLINE = sites[site].SITE_TAGLINE
+export const OG_IMAGE = sites[site].OG_IMAGE
 export const SCHOOL_NAME = sites[site].SCHOOL_NAME
 export const DOMAIN = sites[site].DOMAIN
 export const CONTACT_EMAIL = sites[site].CONTACT_EMAIL
