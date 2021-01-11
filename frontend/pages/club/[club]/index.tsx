@@ -251,7 +251,6 @@ const ClubPage = ({
               : `Be the first to ask a question about this ${OBJECT_NAME_SINGULAR}!`}
           </QAButton>
           <StyledCard bordered>
-            <StrongText>Basic Info</StrongText>
             <InfoBox club={club} />
             <br />
             <StrongText>Contact</StrongText>

@@ -12,7 +12,6 @@ import {
   Loading,
   PhoneContainer,
   SmallText,
-  StrongText,
   TagGroup,
   Text,
   Title,
@@ -154,7 +153,6 @@ const Fair = ({ authenticated, club }: FairProps): ReactElement | null => {
         </SmallText>
         <hr />
       </Center>
-      <StrongText>Basic Info</StrongText>
       <InfoBox club={club} />
       <Center>
         <Margin>

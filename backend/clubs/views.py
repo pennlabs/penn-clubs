@@ -3616,6 +3616,10 @@ def get_initial_context_from_types(types):
     """
     Generate a sample context given the specified types.
     """
+    # handle edge case where user explicitly says there are no types
+    if isinstance(types, str) and types == "None":
+        return {}
+
     # this allows for tuples to work properly
     context = collections.OrderedDict()
 
