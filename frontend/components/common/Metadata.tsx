@@ -2,6 +2,7 @@ import Head from 'next/head'
 import { ReactElement } from 'react'
 
 import {
+  CONTACT_EMAIL,
   DOMAIN,
   OBJECT_NAME_LONG_PLURAL,
   OBJECT_NAME_PLURAL,
@@ -31,7 +32,7 @@ const keywords = [
   'seas',
   'school',
 ].join(', ')
-const author = 'Penn Labs <contact@pennlabs.org>'
+const author = `Penn Labs <${CONTACT_EMAIL}>`
 const description = `${SITE_NAME} is your central source of information about ${OBJECT_NAME_LONG_PLURAL} at the ${SCHOOL_NAME}. Keep discovering new ${OBJECT_NAME_PLURAL} throughout the year.`
 const url = `https://${DOMAIN}`
 const image = OG_IMAGE
