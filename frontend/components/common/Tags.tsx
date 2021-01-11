@@ -29,6 +29,14 @@ export const Tag = styled.span<{ color?: string; foregroundColor?: string }>`
     } !important;
     color: ${foregroundColor ?? calculateForegroundColor(color)} !important;
   `}
+
+  &.tag {
+    white-space: normal;
+    display: inline-block;
+    height: auto;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+  }
 `
 
 export const BlueTag = styled(Tag)`

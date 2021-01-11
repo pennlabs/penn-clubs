@@ -346,6 +346,13 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
 
             return {f"{field}": boolval}
 
+        def parse_string(field, value, operation, queryset):
+            if operation == "in":
+                values = [x.strip() for x in value.split(",")]
+                values = [x for x in values if x]
+                return {f"{field}__in": values}
+            return {f"{field}": value}
+
         def parse_datetime(field, value, operation, queryset):
             try:
                 value = parse(value.strip())
@@ -364,6 +371,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             "approved": parse_boolean,
             "available_virtually": parse_boolean,
             "badges": parse_badges,
+            "code": parse_string,
             "enables_subscription": parse_boolean,
             "favorite_count": parse_int,
             "founded": parse_year,

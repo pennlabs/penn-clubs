@@ -93,7 +93,7 @@ const Search = ({
   clearTags,
 }: SearchProps): ReactElement => {
   // Custom styles for the react-select
-  const styles: Styles = {
+  const styles: Styles<FuseTag, true> = {
     control: ({ background, ...base }, { isFocused }) => {
       const isEmphasized = isFocused
       return {

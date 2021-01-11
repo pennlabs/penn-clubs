@@ -9,7 +9,6 @@ import {
   Line,
   Metadata,
   StrongText,
-  Text,
 } from '../components/common'
 import { CREATE_ROUTE } from '../constants'
 import { SNOW } from '../constants/colors'
@@ -34,14 +33,16 @@ type QuestionProps = React.PropsWithChildren<{
   title: string
 }>
 
+const QuestionText = styled.div`
+  font-size: 1rem;
+  margin-bottom: 2.5rem;
+  line-height: 1.5;
+`
+
 const Question = ({ title, children }: QuestionProps): ReactElement => (
   <>
     <StrongText style={{ marginBottom: '0.5rem' }}>{title}</StrongText>
-    <Text>
-      {children}
-      <br />
-      <br />
-    </Text>
+    <QuestionText>{children}</QuestionText>
   </>
 )
 
@@ -92,7 +93,7 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
         </>
       ) : (
         <>
-          {SITE_NAME} is meant to be your central source of information about
+          {SITE_NAME} is meant to be your central source of information about{' '}
           {OBJECT_NAME_LONG_PLURAL} at the {SCHOOL_NAME}. Keep discovering new{' '}
           {OBJECT_NAME_PLURAL} throughout the year, not just at{' '}
           {data.primaryMeeting}.
@@ -110,12 +111,31 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
     <Line />
     <Question title="Why do I have to log in?">
       Logging in allows us to create an account for you on {SITE_NAME}. This
-      gives you access to many useful and upcoming features! When you bookmark a{' '}
-      {OBJECT_NAME_SINGULAR}, it will be saved to your bookmarked list. You can
-      use this to keep track of {OBJECT_NAME_PLURAL} you’re interested in, or a
-      part of. You can also be invited to join {OBJECT_NAME_SINGULAR} member
-      lists. Finally, you'll need to log in if you want to use your
-      administrator permissions to edit a {OBJECT_NAME_SINGULAR} page.
+      gives you access to many useful features!
+      <UnorderedList>
+        <li>
+          When you bookmark a {OBJECT_NAME_SINGULAR}, it will be saved to your
+          bookmarked list. You can use this to keep track of{' '}
+          {OBJECT_NAME_PLURAL} you're interested in, or a part of.
+        </li>
+        <li>
+          When you subscribe to a {OBJECT_NAME_SINGULAR}, you'll receive
+          notifications about that {OBJECT_NAME_SINGULAR}. The{' '}
+          {OBJECT_NAME_SINGULAR} will also be able to add you to their mailing
+          lists.
+        </li>
+        <li>
+          You'll be able to see events that {OBJECT_NAME_PLURAL} post to{' '}
+          {SITE_NAME}.
+        </li>
+        <li>
+          You can also be invited to join {OBJECT_NAME_SINGULAR} member lists.
+        </li>
+        <li>
+          Finally, you'll need to log in if you want to use your administrator
+          permissions to edit a {OBJECT_NAME_SINGULAR} page.
+        </li>
+      </UnorderedList>
     </Question>
     <Question title="How do I use this site?">
       The #1 way to use this site is to browse {OBJECT_NAME_PLURAL} at the{' '}

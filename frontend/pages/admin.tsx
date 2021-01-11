@@ -11,6 +11,7 @@ import {
   TextField,
 } from '../components/FormComponents'
 import { fixDeserialize } from '../components/reports/ReportForm'
+import FairEventsTab from '../components/Settings/FairEventsTab'
 import FairsTab from '../components/Settings/FairsTab'
 import QueueTab from '../components/Settings/QueueTab'
 import TabView from '../components/TabView'
@@ -293,6 +294,11 @@ function AdminPage({
       name: 'fair',
       label: 'Fair Management',
       content: () => <FairsTab fairs={[]} />,
+    },
+    {
+      name: 'fairevents',
+      label: 'Fair Events',
+      content: () => <FairEventsTab />,
     },
   ]
 

@@ -125,7 +125,9 @@ const QueueTab = (): ReactElement => {
   }, [])
 
   if (!canApprove) {
-    return <div>Nothing to see here!</div>
+    return (
+      <div>You do not have permissions to approve {OBJECT_NAME_PLURAL}.</div>
+    )
   }
 
   const inactiveClubsCount = inactiveClubs?.length ?? 0
