@@ -133,21 +133,19 @@ class Command(BaseCommand):
             people = collections.defaultdict(dict)
 
             if action == "hap_partner_communication":
-                emails = Club.objects.all().values_list("email", flat=True)
+                emails = (
+                    Membership.objects.filter(role__lte=Membership.ROLE_OFFICER)
+                    .values_list("person__email", flat=True)
+                    .distinct()
+                )
                 if test_email is not None:
                     emails = [test_email]
                 for email in emails:
                     if not dry_run:
-                        send_mail_helper(
-                            "communication_to_partners", None, [email], {}
-                        )
-                        self.stdout.write(
-                            f"Sent {action} email to {email}"
-                        )
+                        send_mail_helper("communication_to_partners", None, [email], {})
+                        self.stdout.write(f"Sent {action} email to {email}")
                     else:
-                        self.stdout.write(
-                            f"Would have sent {action} email to {email}"
-                        )
+                        self.stdout.write(f"Would have sent {action} email to {email}")
                 return
 
             # read recipients from csv file
