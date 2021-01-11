@@ -70,6 +70,8 @@ const sites = {
     SHOW_SEARCHBAR_TOP: false,
     // show applications
     SHOW_APPLICATIONS: true,
+    // show badges
+    SHOW_BADGES: true,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
     OBJECT_MEMBERSHIP_LABEL: 'Members',
@@ -182,6 +184,7 @@ const sites = {
     SHOW_LEAVE_CONFIRMATION: false,
     SHOW_SEARCHBAR_TOP: true,
     SHOW_APPLICATIONS: false,
+    SHOW_BADGES: false,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
@@ -267,6 +270,7 @@ export const SHOW_ADDITIONAL_LINKS = sites[site].SHOW_ADDITIONAL_LINKS
 export const SHOW_LEAVE_CONFIRMATION = sites[site].SHOW_LEAVE_CONFIRMATION
 export const SHOW_SEARCHBAR_TOP = sites[site].SHOW_SEARCHBAR_TOP
 export const SHOW_APPLICATIONS = sites[site].SHOW_APPLICATIONS
+export const SHOW_BADGES = sites[site].SHOW_BADGES
 
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
 export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =

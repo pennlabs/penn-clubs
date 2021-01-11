@@ -35,6 +35,7 @@ import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import {
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_TITLE,
+  SHOW_BADGES,
   SHOW_SEARCHBAR_TOP,
   SITE_ID,
   SITE_TAGLINE,
@@ -367,11 +368,13 @@ const Splash = (props: SplashProps): ReactElement => {
             label="Tags"
             options={tagOptions}
           />
-          <SearchBarTagItem
-            param="badges__in"
-            label="Badges"
-            options={badgeOptions}
-          />
+          {SHOW_BADGES && (
+            <SearchBarTagItem
+              param="badges__in"
+              label="Badges"
+              options={badgeOptions}
+            />
+          )}
           <SearchBarOptionItem param="ordering" label="Ordering" />
           {isClubFieldShown('application_required') && (
             <SearchBarCheckboxItem

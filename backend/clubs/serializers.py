@@ -1088,6 +1088,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                 "The URL you entered does not appear to be valid. "
                 "Please check your URL and try again."
             )
+        return value
 
     def validate_facebook(self, value):
         """

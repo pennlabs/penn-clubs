@@ -48,7 +48,11 @@ import {
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, ClubEventType, Tag } from '../types'
 import { cache, doApiRequest, isClubFieldShown, useSetting } from '../utils'
-import { OBJECT_NAME_SINGULAR, OBJECT_NAME_TITLE } from '../utils/branding'
+import {
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE,
+  SHOW_BADGES,
+} from '../utils/branding'
 
 type CalendarDateRange = Date[] | { start: Date; end: Date }
 
@@ -533,11 +537,13 @@ function EventPage({
             label="Tags"
             options={tagOptions}
           />
-          <SearchBarTagItem
-            param="club__badges__in"
-            label="Badges"
-            options={badgeOptions}
-          />
+          {SHOW_BADGES && (
+            <SearchBarTagItem
+              param="club__badges__in"
+              label="Badges"
+              options={badgeOptions}
+            />
+          )}
           <SearchBarCheckboxItem
             param="type__in"
             label="Event Type"
