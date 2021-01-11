@@ -47,8 +47,8 @@ import {
 } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubEvent, ClubEventType, Tag } from '../types'
-import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
-import { OBJECT_NAME_SINGULAR } from '../utils/branding'
+import { cache, doApiRequest, isClubFieldShown, useSetting } from '../utils'
+import { OBJECT_NAME_SINGULAR, OBJECT_NAME_TITLE } from '../utils/branding'
 
 type CalendarDateRange = Date[] | { start: Date; end: Date }
 
@@ -58,6 +58,7 @@ interface EventPageProps {
   dateRange: CalendarDateRange
   tags: Tag[]
   badges: Badge[]
+  clubs: { name: string; code: string }[]
 }
 
 const CardList = styled.div`
@@ -350,6 +351,7 @@ function EventPage({
   dateRange: initialDateRange,
   tags,
   badges,
+  clubs,
 }: EventPageProps): ReactElement {
   const [calendarEvents, setCalendarEvents] = useState<ClubEvent[]>(
     initialEvents,
@@ -361,7 +363,6 @@ function EventPage({
   const [searchInput, setSearchInput] = useState<SearchInput>(
     isFair ? { type__in: ClubEventType.FAIR.toString() } : {},
   )
-  const [isLoading, setLoading] = useState<boolean>(false)
   const [syncModalVisible, setSyncModalVisible] = useState<boolean>(false)
 
   const showSyncModal = () => setSyncModalVisible(true)
@@ -401,8 +402,6 @@ function EventPage({
       params.set(key, value),
     )
 
-    setLoading(true)
-
     // fetch appropriate range for calendar, or three months starting from now for list
     const now = new Date()
     let endDate = new Date()
@@ -415,7 +414,7 @@ function EventPage({
     params.set('start_time__lte', end)
     doApiRequest(`/events/?${params.toString()}`)
       .then((resp) => resp.json())
-      .then((data) => isCurrent && setCalendarEvents(data) && setLoading(false))
+      .then((data) => isCurrent && setCalendarEvents(data))
 
     return () => {
       isCurrent = false
@@ -425,6 +424,10 @@ function EventPage({
   if (!authenticated) {
     return <AuthPrompt />
   }
+
+  const clubOptions = useMemo<FuseTag[]>(() => {
+    return clubs.map(({ name, code }) => ({ value: code, label: name }))
+  }, [clubs])
 
   const tagOptions = useMemo<FuseTag[]>(
     () =>
@@ -517,7 +520,14 @@ function EventPage({
       </style>
       <div style={{ backgroundColor: SNOW }}>
         <SearchBar updateSearch={setSearchInput} searchInput={searchInput}>
-          <SearchBarTextItem param="search" />
+          <div className="mt-2">
+            <SearchBarTextItem param="search" />
+          </div>
+          <SearchBarTagItem
+            param="club__code__in"
+            label={OBJECT_NAME_TITLE}
+            options={clubOptions}
+          />
           <SearchBarTagItem
             param="club__tags__in"
             label="Tags"
@@ -725,20 +735,33 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
     end: new Date(now.getFullYear(), now.getMonth() + 1, 6),
   }
 
-  const [events, tags, badges] = await Promise.all([
+  const cachedInfoReq = cache(
+    'pages:events',
+    async () => {
+      const [tags, badges, clubs] = await Promise.all([
+        doApiRequest('/tags/?format=json', data).then((resp) => resp.json()),
+        doApiRequest('/badges/?format=json', data).then((resp) => resp.json()),
+        doApiRequest('/clubs/directory/?format=json', data)
+          .then((resp) => resp.json())
+          .then((resp) => resp.filter(({ approved }) => approved)),
+      ])
+      return { tags, badges, clubs }
+    },
+    60 * 1000,
+  )
+
+  const [events, cachedInfo] = await Promise.all([
     doApiRequest(
       `/events/?format=json&start_time__gte=${dateRange.start.toISOString()}&end_time__lte=${dateRange.end.toISOString()}`,
       data,
     ).then((resp) => resp.json()),
-    doApiRequest('/tags/?format=json', data).then((resp) => resp.json()),
-    doApiRequest('/badges/?format=json', data).then((resp) => resp.json()),
+    cachedInfoReq,
   ])
 
   return {
     events,
-    tags,
-    badges,
     dateRange,
+    ...cachedInfo,
   }
 }
 

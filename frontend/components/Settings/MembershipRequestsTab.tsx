@@ -66,6 +66,14 @@ const MembershipRequestsTab = (): ReactElement => {
               </td>
             </tr>
           ))}
+          {requests.length === 0 && (
+            <tr>
+              <td colSpan={2}>
+                You have not submitted membership requests for any{' '}
+                {OBJECT_NAME_PLURAL}.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

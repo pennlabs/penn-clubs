@@ -25,6 +25,7 @@ const internalCache = new LRU()
 /**
  * Cache the return value of a function.
  * This should only be used with publically available information.
+ * The time should be specified in milliseconds.
  */
 export async function cache<T>(
   key: string,

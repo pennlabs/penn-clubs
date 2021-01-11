@@ -7,9 +7,12 @@ import RenewTab from '../components/Settings/RenewTab'
 import TabView from '../components/TabView'
 import { BG_GRADIENT, WHITE } from '../constants/colors'
 import renderPage from '../renderPage'
+import { apiCheckPermission } from '../utils'
 import { OBJECT_NAME_TITLE } from '../utils/branding'
 
 function UserRenewal({ userInfo, authenticated }): ReactElement {
+  const canApprove = apiCheckPermission('clubs.approve_club')
+
   if (authenticated === null) {
     return <div />
   }
@@ -23,7 +26,7 @@ function UserRenewal({ userInfo, authenticated }): ReactElement {
       name: 'Clubs',
       content: <RenewTab userInfo={userInfo} />,
     },
-    { name: 'Queue', content: <QueueTab /> },
+    { name: 'Queue', content: <QueueTab />, disabled: !canApprove },
   ]
 
   return (
