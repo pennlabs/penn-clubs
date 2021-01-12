@@ -618,7 +618,9 @@ type SelectFieldProps<T> = {
   deserialize?: (inpt: T) => { value: string; label: string }
   valueDeserialize?: (
     inpt: string | T | T[],
-  ) => typeof inpt extends Array<T> ? T[] : T
+  ) => typeof inpt extends Array<T>
+    ? { value: string; label: string }[]
+    : { value: string; label: string }
   isMulti?: boolean
 }
 

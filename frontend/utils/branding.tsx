@@ -240,7 +240,7 @@ const sites = {
       },
     ],
 
-    GA_TRACKING_CODE: 'G-08JKZXMTZ4',
+    GA_TRACKING_CODE: 'UA-21029575-19',
   },
 }
 
