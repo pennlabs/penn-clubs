@@ -127,7 +127,7 @@ class Command(BaseCommand):
         email_file = kwargs["emails"]
 
         # download file if url
-        if re.match("^https?://", email_file, re.I):
+        if email_file is not None and re.match("^https?://", email_file, re.I):
             tf = tempfile.NamedTemporaryFile(delete=False)
             resp = requests.get(email_file)
             tf.write(resp.content)
