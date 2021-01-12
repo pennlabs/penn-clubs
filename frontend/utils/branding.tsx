@@ -103,6 +103,12 @@ const sites = {
       </>
     ),
     OBJECT_MEMBERSHIP_DEFAULT_TITLE: 'Member',
+    CLUB_EMPTY_STATE: (
+      <>
+        Looking for university resources? Check out{' '}
+        <a href="https://hub.provost.upenn.edu/">Hub@Penn</a>!
+      </>
+    ),
 
     PARTNER_LOGOS: [
       {
@@ -212,6 +218,12 @@ const sites = {
       </>
     ),
     OBJECT_MEMBERSHIP_DEFAULT_TITLE: '',
+    CLUB_EMPTY_STATE: (
+      <>
+        Looking for student organizations? Check out{' '}
+        <a href="https://pennclubs.com/">Penn Clubs</a>!
+      </>
+    ),
 
     PARTNER_LOGOS: [
       {
@@ -287,6 +299,7 @@ export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
 export const OBJECT_MEMBERSHIP_DEFAULT_TITLE =
   sites[site].OBJECT_MEMBERSHIP_DEFAULT_TITLE
 export const OBJECT_EVENT_TYPES = new Set(sites[site].OBJECT_EVENT_TYPES)
+export const CLUB_EMPTY_STATE = sites[site].CLUB_EMPTY_STATE
 
 export const PARTNER_LOGOS = sites[site].PARTNER_LOGOS
 
