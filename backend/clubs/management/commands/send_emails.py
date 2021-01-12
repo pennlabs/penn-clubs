@@ -3,9 +3,9 @@ import csv
 import datetime
 import os
 import re
-import requests
 import tempfile
 
+import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Count, Q
