@@ -1,0 +1,26 @@
+<!-- SUBJECT: Add Your Club to Penn Clubs for the January Clubbing Fair -->
+<!-- TYPES:
+email:
+    type: string
+name:
+    type: string
+clubs:
+    type: array
+    items:
+        type: string
+-->
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>Add Your Club to Penn Clubs for the January Clubbing Fair</h2>
+    <p style="font-size: 1.2em">Hi {{ name }},</p>
+    <p style="font-size: 1.2em">To start off the semester, Wharton Council and Penn Clubs are 
+        partnering to host the January clubbing night for all Wharton clubs.</p>
+    <p style="font-size: 1.2em">To get ready for the Wharton Clubbing Fair, we're requiring all participants to register their 
+        clubs on the Penn Clubs platform. If you haven't already joined the platform, you can sign 
+        your club up here:</p>
+    <p style="font-size: 1.2em"><a style="text-decoration:none;padding:5px 10px;font-size:1.3em;margin-top:10px;color:white;background-color:blue;border-radius:3px;font-weight:bold" href="https://pennclubs.com/create" target="_blank" >Join Penn Clubs</a></p>
+    <p style="font-size: 1.2em">We have you as a point of contact for the following clubs:</p>
+    <ul>{% for club in clubs %}<li><b>{{ club }}</b></li>{% endfor %}</ul>
+    <p style="font-size: 1.2em">If you run into any difficulties registering, please respond to this email.</p>
+{% endblock %}
