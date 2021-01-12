@@ -212,6 +212,7 @@ class Command(BaseCommand):
                             "hap_intro": "intro",
                             "hap_intro_remind": "intro_remind",
                             "hap_second_round": "second_round",
+                            "wc_intro": "wc_intro",
                         }[action],
                     )
                     self.stdout.write(
