@@ -39,6 +39,14 @@ def send_hap_intro_email(email, resources, recipient_string, template="intro"):
     )
 
 
+def send_wc_intro_email(emails, clubs, recipient_string, template="wc_intro"):
+    """
+    Send the Hub@Penn introduction email given the email and the list of resources.
+    """
+
+    send_mail_helper(template, None, emails, {"clubs": clubs, "recipient_string": recipient_string})
+
+
 class Command(BaseCommand):
     help = "Send out mass email communications for various purposes."
     web_execute = True
@@ -142,7 +150,6 @@ class Command(BaseCommand):
             "hap_intro_remind",
             "hap_second_round",
             "hap_partner_communication",
-            "wc_intro",
         }:
             test_email = kwargs.get("test", None)
             people = collections.defaultdict(dict)
@@ -225,6 +232,62 @@ class Command(BaseCommand):
                         + f"{recipient_string}) for groups: {resources}"
                     )
             self.stdout.write(f"Sent out {len(people)} emails!")
+            return
+
+        if action in {"wc_intro"}:
+            test_email = kwargs.get("test", None)
+            people = collections.defaultdict(dict)
+
+            # read recipients from csv file
+            with open(email_file, "r") as f:
+                header = [
+                    re.sub(r"\W+", "", h.lower().strip().replace(" ", "_"))
+                    for h in f.readline().split(",")
+                ]
+                reader = csv.DictReader(f, fieldnames=header)
+                try:
+                    for line in reader:
+                        name = line["name"].strip()
+                        email = line["email"].strip()
+                        contact = line["contact"].strip()
+                        if test_email is not None:
+                            email = test_email
+                        if name in people.keys():
+                            people[name]["emails"].append(email)
+                            people[name]["contacts"].append(contact)
+                        else:
+                            people[name]["emails"] = [email]
+                            people[name]["contacts"] = [contact]
+                except KeyError as e:
+                    raise ValueError(
+                        "Ensure the spreadsheet has a header with the 'name' and 'email' columns."
+                    ) from e
+
+            # send emails grouped by recipients
+            for name, context in people.items():
+                emails = list(set(context["emails"]))  # No duplicate names
+                contacts = list(set(context["contacts"]))  # No duplicate names
+                contacts = list(filter(lambda x: x != "", contacts))  # No empty string names
+                if len(contacts) == 0:
+                    contacts.append("Staff member")
+
+                # Format names in comma separated form
+                recipient_string = ", ".join(contacts)
+
+                clubs = [name]
+                if not dry_run:
+                    send_wc_intro_email(
+                        emails, clubs, recipient_string, template={"wc_intro": "wc_intro"}[action],
+                    )
+                    self.stdout.write(
+                        f"Sent {action} email to {email} (recipients: "
+                        + f"{recipient_string}) for groups: {clubs}"
+                    )
+                else:
+                    self.stdout.write(
+                        f"Would have sent {action} email to {email} (recipients: "
+                        + f"{recipient_string}) for groups: {clubs}"
+                    )
             return
 
         # get club whitelist
