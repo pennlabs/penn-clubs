@@ -3482,6 +3482,7 @@ class LoggingArgumentParser(argparse.ArgumentParser):
 
     def __init__(self, *args, **kwargs):
         self._arguments = {}
+        self._pos_count = 0
         super().__init__(*args, **kwargs)
 
     def add_argument(self, *args, **kwargs):
@@ -3500,10 +3501,16 @@ class LoggingArgumentParser(argparse.ArgumentParser):
             if default is not None
             else str,
         )
+        pos = -1
+        if not args[0].startswith("-"):
+            pos = self._pos_count
+            self._pos_count += 1
         self._arguments[name] = {
+            "position": pos,
             "type": typ.__name__ if typ is not None else typ,
             "help": re.sub(r"\s+", " ", kwargs.get("help", "")) or None,
             "default": default,
+            "choices": kwargs.get("choices"),
         }
 
     def set_defaults(self, *args, **kwargs):
@@ -3540,6 +3547,28 @@ def get_scripts():
     return scripts
 
 
+def parse_script_parameters(script, parameters):
+    """
+    Turn a list of user specified parameters into a set of args and kwargs that can
+    be passed to call_command(), given the corresponding script.
+
+    Use the script that is returned from get_scripts().
+    """
+    args = []
+    kwargs = {}
+    for arg, details in script["arguments"].items():
+        if parameters.get(arg) is not None:
+            value = {"str": str, "bool": bool, "int": int}.get(details["type"], str)(
+                parameters[arg]
+            )
+            if details["position"] == -1:
+                kwargs[arg] = value
+            else:
+                args.append((details["position"], value))
+    args = [arg[1] for arg in sorted(args)]
+    return args, kwargs
+
+
 class ScriptExecutionView(APIView):
     """
     View and execute Django management scripts using these endpoints.
@@ -3562,10 +3591,30 @@ class ScriptExecutionView(APIView):
                                 properties:
                                     name:
                                         type: string
+                                    path:
+                                        type: string
                                     description:
                                         type: string
                                     execute:
                                         type: boolean
+                                    arguments:
+                                        type: object
+                                        additionalProperties:
+                                            type: object
+                                            properties:
+                                                type:
+                                                    type: string
+                                                help:
+                                                    type: string
+                                                position:
+                                                    type: integer
+                                                default:
+                                                    type: string
+                                                choices:
+                                                    type: array
+                                                    items:
+                                                        type: string
+                                                    nullable: true
         ---
         """
         scripts = get_scripts()
@@ -3599,16 +3648,11 @@ class ScriptExecutionView(APIView):
                 {"output": f"You are not allowed to execute '{action}' from the web interface."}
             )
 
-        kwargs = {}
-        for arg, details in script["arguments"].items():
-            if arg in parameters:
-                kwargs[arg] = {"str": str, "bool": bool, "int": int}.get(details["type"], str)(
-                    parameters[arg]
-                )
+        args, kwargs = parse_script_parameters(script, parameters)
 
         # execute command and return output
         with io.StringIO() as output:
-            call_command(action, **kwargs, stdout=output)
+            call_command(action, *args, **kwargs, stdout=output, stderr=output)
             return Response({"output": output.getvalue()})
 
 

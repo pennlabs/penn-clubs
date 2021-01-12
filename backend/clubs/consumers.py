@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.management import call_command
 
 from clubs.models import Club
-from clubs.views import get_scripts
+from clubs.views import get_scripts, parse_script_parameters
 
 
 def log_errors(func):
@@ -75,22 +75,19 @@ class ExecuteScriptConsumer(AsyncWebsocketConsumer):
             return
 
         # parse arguments
-        kwargs = {}
-        for arg, details in script["arguments"].items():
-            if arg in parameters:
-                kwargs[arg] = {"str": str, "bool": bool, "int": int}.get(details["type"], str)(
-                    parameters[arg]
-                )
+        args, kwargs = parse_script_parameters(script, parameters)
 
         # execute the script on a separate thread
         await self.send(
-            json.dumps({"output": f"Executing script '{action}' with parameters: {parameters}\n"})
+            json.dumps(
+                {"output": f"Executing script '{action}' with parameters: {args} {kwargs}\n"}
+            )
         )
-        await sync_to_async(self.execute_script, thread_sensitive=False)(action, kwargs)
+        await sync_to_async(self.execute_script, thread_sensitive=False)(action, args, kwargs)
         await self.send(json.dumps({"output": "Script execution finished!"}))
         await self.close()
 
-    def execute_script(self, action, parameters):
+    def execute_script(self, action, args, kwargs):
         class LiveIO(io.StringIO):
             def write(s, data):
                 try:
@@ -102,7 +99,7 @@ class ExecuteScriptConsumer(AsyncWebsocketConsumer):
 
         with LiveIO() as out:
             try:
-                call_command(action, **parameters, stdout=out)
+                call_command(action, *args, **kwargs, stdout=out, stderr=out)
             except Exception:
                 async_to_sync(self.send)(json.dumps({"output": traceback.format_exc()}))
 

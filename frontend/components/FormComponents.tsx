@@ -640,31 +640,49 @@ export const SelectField = useFieldWrapper(
     valueDeserialize,
     isMulti,
   }: BasicFormField &
-    SelectFieldProps<{ [key: string]: string | number }>): ReactElement => {
+    SelectFieldProps<
+      { [key: string]: string | number } | string
+    >): ReactElement => {
     const { setFieldValue } = useFormikContext()
 
+    /**
+     * Convert from react-select format to the final value that is being set.
+     */
     const actualSerialize = (opt) => {
       if (opt == null) {
         return isMulti ? [] : null
       }
       if (serialize == null) {
-        serialize = ({ value, label }) => ({
-          id: value,
-          name: label,
-        })
+        if (choices.length > 0 && typeof choices[0] !== 'object') {
+          serialize = ({ value }) => value
+        } else {
+          serialize = ({ value, label }) => ({
+            id: value,
+            name: label,
+          })
+        }
       }
       return Array.isArray(opt) ? opt.map(serialize) : serialize(opt)
     }
 
+    /**
+     * Convert from the props that were passed in to the format that react-select is expecting.
+     */
     const actualDeserialize = (opt) => {
       if (opt == null) {
         return isMulti ? [] : null
       }
       if (deserialize == null) {
         deserialize = (item) => {
+          if (typeof item === 'object') {
+            return {
+              value: (item.id ?? item.value) as string,
+              label: (item.name ?? item.label) as string,
+            }
+          }
           return {
-            value: (item.id ?? item.value) as string,
-            label: (item.name ?? item.label) as string,
+            value: item,
+            label: item,
           }
         }
       }

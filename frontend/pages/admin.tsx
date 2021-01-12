@@ -17,7 +17,7 @@ import QueueTab from '../components/Settings/QueueTab'
 import TabView from '../components/TabView'
 import { BG_GRADIENT, WHITE } from '../constants'
 import renderPage from '../renderPage'
-import { doApiRequest, doBulkLookup } from '../utils'
+import { doApiRequest, doBulkLookup, titleize } from '../utils'
 import {
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
@@ -97,13 +97,16 @@ const ScriptBox = ({ script, useWs }): ReactElement => {
               <Field
                 key={arg}
                 as={
-                  script.arguments[arg].type === 'bool'
+                  script.arguments[arg].choices != null
+                    ? SelectField
+                    : script.arguments[arg].type === 'bool'
                     ? CheckboxField
                     : TextField
                 }
                 name={arg}
-                label={arg}
+                label={titleize(arg)}
                 helpText={script.arguments[arg].help}
+                choices={script.arguments[arg].choices}
               />
             ))}
           <button
