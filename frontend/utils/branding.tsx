@@ -26,6 +26,8 @@ const sites = {
     HEADER_OVERLAY: null,
     SITE_FAVICON: '/static/favicon.ico',
     SITE_TAGLINE: 'Find your people!',
+    OG_IMAGE:
+      'https://pennlabs-assets.s3.amazonaws.com/metadata-images/penn-clubs.png',
 
     APPROVAL_AUTHORITY: 'Office of Student Affairs',
     APPROVAL_AUTHORITY_URL: 'https://osa.vpul.upenn.edu/',
@@ -72,6 +74,8 @@ const sites = {
     SHOW_APPLICATIONS: true,
     // show badges
     SHOW_BADGES: true,
+    // show feedback icon on bottom right
+    SHOW_FEEDBACK: true,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
     OBJECT_MEMBERSHIP_LABEL: 'Members',
@@ -99,6 +103,12 @@ const sites = {
       </>
     ),
     OBJECT_MEMBERSHIP_DEFAULT_TITLE: 'Member',
+    CLUB_EMPTY_STATE: (
+      <>
+        Looking for university resources? Check out{' '}
+        <a href="https://hub.provost.upenn.edu/">Hub@Penn</a>!
+      </>
+    ),
 
     PARTNER_LOGOS: [
       {
@@ -148,6 +158,8 @@ const sites = {
     SITE_FAVICON: '/static/penn_favicon.ico',
     SITE_TAGLINE:
       "Find the support resources you need on and around Penn's campus!",
+    OG_IMAGE:
+      'https://pennlabs-assets.s3.amazonaws.com/metadata-images/hub-at-penn.png',
 
     APPROVAL_AUTHORITY: 'Hub@Penn administrators',
     APPROVAL_AUTHORITY_URL: '/faq',
@@ -185,6 +197,7 @@ const sites = {
     SHOW_SEARCHBAR_TOP: true,
     SHOW_APPLICATIONS: false,
     SHOW_BADGES: false,
+    SHOW_FEEDBACK: false,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
@@ -205,6 +218,12 @@ const sites = {
       </>
     ),
     OBJECT_MEMBERSHIP_DEFAULT_TITLE: '',
+    CLUB_EMPTY_STATE: (
+      <>
+        Looking for student organizations? Check out{' '}
+        <a href="https://pennclubs.com/">Penn Clubs</a>!
+      </>
+    ),
 
     PARTNER_LOGOS: [
       {
@@ -221,7 +240,7 @@ const sites = {
       },
     ],
 
-    GA_TRACKING_CODE: 'G-08JKZXMTZ4',
+    GA_TRACKING_CODE: 'UA-21029575-19',
   },
 }
 
@@ -229,6 +248,7 @@ export const SITE_ID = site
 export const SITE_NAME = sites[site].SITE_NAME
 export const SITE_SUBTITLE = sites[site].SITE_SUBTITLE
 export const SITE_TAGLINE = sites[site].SITE_TAGLINE
+export const OG_IMAGE = sites[site].OG_IMAGE
 export const SCHOOL_NAME = sites[site].SCHOOL_NAME
 export const DOMAIN = sites[site].DOMAIN
 export const CONTACT_EMAIL = sites[site].CONTACT_EMAIL
@@ -271,6 +291,7 @@ export const SHOW_LEAVE_CONFIRMATION = sites[site].SHOW_LEAVE_CONFIRMATION
 export const SHOW_SEARCHBAR_TOP = sites[site].SHOW_SEARCHBAR_TOP
 export const SHOW_APPLICATIONS = sites[site].SHOW_APPLICATIONS
 export const SHOW_BADGES = sites[site].SHOW_BADGES
+export const SHOW_FEEDBACK = sites[site].SHOW_FEEDBACK
 
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
 export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
@@ -278,6 +299,7 @@ export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
 export const OBJECT_MEMBERSHIP_DEFAULT_TITLE =
   sites[site].OBJECT_MEMBERSHIP_DEFAULT_TITLE
 export const OBJECT_EVENT_TYPES = new Set(sites[site].OBJECT_EVENT_TYPES)
+export const CLUB_EMPTY_STATE = sites[site].CLUB_EMPTY_STATE
 
 export const PARTNER_LOGOS = sites[site].PARTNER_LOGOS
 

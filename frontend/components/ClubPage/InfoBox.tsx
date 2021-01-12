@@ -2,7 +2,7 @@ import { ReactElement } from 'react'
 
 import { Club, ClubRecruitingCycle } from '../../types'
 import { getSizeDisplay, isClubFieldShown } from '../../utils'
-import { Icon, Text } from '../common'
+import { Icon, StrongText, Text } from '../common'
 
 const iconStyles = {
   opacity: 0.5,
@@ -34,7 +34,7 @@ type InfoBoxProps = {
   club: Club
 }
 
-const InfoBox = (props: InfoBoxProps): ReactElement => {
+const InfoBox = (props: InfoBoxProps): ReactElement | null => {
   const data = [
     {
       field: 'size',
@@ -75,10 +75,16 @@ const InfoBox = (props: InfoBoxProps): ReactElement => {
     ))
 
   if (infoFields.length <= 0) {
-    return <Text style={infoStyles}>No Information</Text>
+    return null
   }
 
-  return <>{infoFields}</>
+  return (
+    <>
+      {' '}
+      <StrongText>Basic Info</StrongText>
+      {infoFields}
+    </>
+  )
 }
 
 export default InfoBox

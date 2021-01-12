@@ -23,6 +23,7 @@ import { UserInfo } from '../../types'
 import {
   HEADER_BACKGROUND_IMAGE,
   LOGO_BACKGROUND_IMAGE,
+  SHOW_FEEDBACK,
   SITE_ID,
   SITE_LOGO,
   SITE_NAME,
@@ -193,7 +194,7 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
       </Nav>
       {isHub && <ImageHead />}
 
-      <Feedback />
+      {SHOW_FEEDBACK && <Feedback />}
     </>
   )
 }

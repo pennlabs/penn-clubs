@@ -1,8 +1,10 @@
 import { ReactElement, useEffect, useRef, useState } from 'react'
+import styled from 'styled-components'
 
 import { PaginatedClubPage } from '../renderPage'
 import { Club, Tag } from '../types'
 import { doApiRequest } from '../utils'
+import { CLUB_EMPTY_STATE, OBJECT_NAME_PLURAL } from '../utils/branding'
 import ClubDisplay from './ClubDisplay'
 import { Loading } from './common'
 
@@ -11,6 +13,16 @@ type ClubDisplayProps = {
   tags: Tag[]
   display: 'list' | 'cards'
 }
+
+const EmptyState = styled.div`
+  text-align: center;
+  margin-top: 5rem;
+
+  & img {
+    max-width: 300px;
+    margin-bottom: 1rem;
+  }
+`
 
 const PaginatedClubDisplay = ({
   displayClubs,
@@ -89,6 +101,18 @@ const PaginatedClubDisplay = ({
         />
       )}
       {isLoading && <Loading delay={0} />}
+      {clubs.length <= 0 && (
+        <EmptyState>
+          <img
+            src="/static/img/button.svg"
+            alt={`no ${OBJECT_NAME_PLURAL} found`}
+          />
+          <div>
+            There are no {OBJECT_NAME_PLURAL} matching your search query.
+          </div>
+          <div>{CLUB_EMPTY_STATE}</div>
+        </EmptyState>
+      )}
     </>
   )
 }

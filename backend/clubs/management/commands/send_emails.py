@@ -3,7 +3,9 @@ import csv
 import datetime
 import os
 import re
+import tempfile
 
+import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Count, Q
@@ -38,7 +40,8 @@ def send_hap_intro_email(email, resources, recipient_string, template="intro"):
 
 
 class Command(BaseCommand):
-    help = "Send out invites to clubs without owners."
+    help = "Send out mass email communications for various purposes."
+    web_execute = True
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -63,7 +66,7 @@ class Command(BaseCommand):
             nargs="?",
             type=str,
             help="The CSV file with club name to email mapping. First column is club name"
-            + "and second column is emails.",
+            + "and second column is emails. You can also input a URL to a CSV file.",
             default=None,
         )
         parser.add_argument(
@@ -107,7 +110,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--test",
             type=str,
-            help="Send all emails to test email instead of for real. "
+            help="Send all emails to the specified test email instead of to the actual recipient. "
             "Does not work with all email types.",
         )
         parser.set_defaults(include_staff=False, dry_run=False, only_sheet=False, only_active=True)
@@ -121,6 +124,17 @@ class Command(BaseCommand):
         role = kwargs["role"]
         role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
 
+        email_file = kwargs["emails"]
+
+        # download file if url
+        if email_file is not None and re.match("^https?://", email_file, re.I):
+            tf = tempfile.NamedTemporaryFile(delete=False)
+            resp = requests.get(email_file)
+            tf.write(resp.content)
+            self.stdout.write(f"Downloaded '{email_file}' to '{tf.name}'.")
+            email_file = tf.name
+            tf.close()
+
         # handle custom Hub@Penn intro email
         if action in {
             "hap_intro",
@@ -129,7 +143,6 @@ class Command(BaseCommand):
             "hap_partner_communication",
         }:
             test_email = kwargs.get("test", None)
-            email_file = kwargs["emails"]
             people = collections.defaultdict(dict)
 
             if action == "hap_partner_communication":
@@ -185,10 +198,7 @@ class Command(BaseCommand):
                     contacts.append("Staff member")
 
                 # Format names in comma separated form
-                recipient_string = ""
-                for contact in contacts:
-                    recipient_string += contact + ", "
-                recipient_string = recipient_string[:-2]
+                recipient_string = ", ".join(contacts)
 
                 resources = context["resources"]
                 if not dry_run:
@@ -211,6 +221,7 @@ class Command(BaseCommand):
                         f"Would have sent {action} email to {email} (recipients: "
                         + f"{recipient_string}) for groups: {resources}"
                     )
+            self.stdout.write(f"Sent out {len(people)} emails!")
             return
 
         # get club whitelist
@@ -307,8 +318,6 @@ class Command(BaseCommand):
 
         # parse CSV file
         emails = {}
-
-        email_file = kwargs["emails"]
 
         # verify email file
         if email_file is not None:
