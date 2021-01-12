@@ -56,6 +56,7 @@ class Command(BaseCommand):
                 "hap_intro_remind",
                 "hap_second_round",
                 "hap_partner_communication",
+                "wc_intro",
             ),
         )
         parser.add_argument(
@@ -127,6 +128,7 @@ class Command(BaseCommand):
             "hap_intro_remind",
             "hap_second_round",
             "hap_partner_communication",
+            "wc_intro",
         }:
             test_email = kwargs.get("test", None)
             email_file = kwargs["emails"]
