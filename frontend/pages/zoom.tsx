@@ -2,6 +2,7 @@ import moment from 'moment'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import {
@@ -22,8 +23,8 @@ import {
   ZOOM_BLUE,
 } from '../constants'
 import renderPage from '../renderPage'
-import { ClubEvent, ClubEventType } from '../types'
-import { doApiRequest, useSetting } from '../utils'
+import { ClubEvent, ClubEventType, ClubFair } from '../types'
+import { doApiRequest } from '../utils'
 import {
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
@@ -34,6 +35,7 @@ import {
 type ZoomPageProps = {
   authenticated: boolean | null
   events: ClubEvent[]
+  fairs: ClubFair[]
   userMeetings: ZoomMeeting[]
   zoomSettings: ZoomSettings
 }
@@ -172,22 +174,17 @@ const ZoomPage = ({
   events: initialEvents,
   zoomSettings: initialZoomSettings,
   userMeetings: initialUserMeetings,
+  fairs,
 }: ZoomPageProps): ReactElement => {
   const [nextUrl, setNextUrl] = useState<string>('/')
   const [zoomSettings, setZoomSettings] = useState<ZoomSettings>(
     initialZoomSettings,
   )
   const [events, setEvents] = useState<ClubEvent[]>(initialEvents)
-  const [settingsNotif, setSettingsNotif] = useState<{
-    success: boolean
-    detail: string
-  } | null>(null)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [userMeetings, setUserMeetings] = useState<ZoomMeeting[]>(
     initialUserMeetings,
   )
-  const [createResp, setCreateResp] = useState<any>(null)
-  const fairName = useSetting('FAIR_NAME') ?? 'Upcoming Fair'
 
   useEffect(() => {
     setNextUrl(window.location.pathname)
@@ -205,13 +202,13 @@ const ZoomPage = ({
         className="subtitle is-size-5 mb-3"
         style={{ color: CLUBS_GREY_LIGHT }}
       >
-        {fairName}
+        {fairs.map((fair) => fair.name).join(', ')}
       </p>
       <div className="content">
         <p>
           You can use the 4-step process below to automatically configure Zoom
-          for you and get you set up for the {fairName}. If you run into any
-          issues while using the tool, please contact <Contact />.
+          for you and get you set up for the upcoming activities fair. If you
+          run into any issues while using the tool, please contact <Contact />.
         </p>
         <h3>1. Login to your Zoom Account</h3>
         <p>
@@ -243,7 +240,7 @@ const ZoomPage = ({
           <>
             <p className="has-text-info">
               <b>Success!</b> You are logged into Zoom and your account is
-              connected to {SITE_NAME}. Your Zoom email is{' '}
+              connected to {SITE_NAME}. Your Zoom account email is{' '}
               <b>{zoomSettings.email}</b>.
             </p>
             {zoomSettings.email &&
@@ -290,13 +287,13 @@ const ZoomPage = ({
                 value: zoomSettings.settings.feature.meeting_capacity >= 300,
                 label: 'Zoom meeting room capacity at least 300 people',
                 details:
-                  'We cannot adjust this setting for you. If your account does not support 300 people, you are most likely not logged into your Penn account. If this happens to you, disconnect your account and login to your Penn account.',
+                  'We cannot adjust this setting for you. If your account does not support at least 300 people, you are most likely not logged into your Penn account. If this happens to you, disconnect your account and login to your Penn account.',
               },
               {
                 value: zoomSettings.settings.in_meeting.breakout_room,
                 label: 'Breakout rooms enabled',
                 details:
-                  'Breakout rooms will allow you to setup one on one interactions with prospective members. This setting should be enabled.',
+                  'Enabling breakout rooms will allow you to setup one on one interactions with prospective members if you desire this functionality. This setting cannot be changed in the middle of a meeting. This setting should be enabled.',
               },
               {
                 value: !zoomSettings.settings.in_meeting.waiting_room,
@@ -308,7 +305,7 @@ const ZoomPage = ({
                 value: zoomSettings.settings.in_meeting.co_host,
                 label: 'Co-hosting enabled',
                 details:
-                  'We recommend that you enable co-hosting on your account to allow other officers to assist you with managing Zoom and taking over if you get disconnected.',
+                  'We recommend that you enable co-hosting on your account to allow other officers to assist you with managing Zoom and take over if you get disconnected.',
               },
               {
                 value: zoomSettings.settings.in_meeting.screen_sharing,
@@ -325,15 +322,6 @@ const ZoomPage = ({
             </div>
           )
         )}
-        {settingsNotif != null && (
-          <div
-            className={`notification ${
-              settingsNotif.success ? 'is-success' : 'is-danger'
-            }`}
-          >
-            {settingsNotif.detail}
-          </div>
-        )}
         <p>
           Pressing the button below will automatically configure your Zoom
           account with the recommended settings.
@@ -348,9 +336,11 @@ const ZoomPage = ({
                 .then((resp) => resp.json())
                 .then((data) => {
                   if (Array.isArray(data)) {
-                    setSettingsNotif({ success: false, detail: data.join(' ') })
+                    toast.error(data.join(' '), { hideProgressBar: true })
                   } else {
-                    setSettingsNotif(data)
+                    toast[data.success ? 'success' : 'error'](data.detail, {
+                      hideProgressBar: true,
+                    })
                   }
                   loadSettings(false)
                     .then(setZoomSettings)
@@ -370,6 +360,10 @@ const ZoomPage = ({
               const settings = await loadSettings(true)
               setZoomSettings(settings)
               setLoading(false)
+              toast.info(
+                'Your user account settings have been reloaded from Zoom.',
+                { hideProgressBar: true },
+              )
             }}
           >
             <Icon name="refresh" /> Refresh
@@ -380,7 +374,7 @@ const ZoomPage = ({
           Here is a list of all of the virtual fair events that you have access
           to edit. Make sure that you have a{' '}
           <b>valid Zoom link, description, and photo</b> for all events! Events
-          without any of these three attributes will be sent to the bottom of
+          without all three of these attributes will be shown at the bottom of
           the list.
         </p>
         <p>
@@ -396,6 +390,10 @@ const ZoomPage = ({
           className="button is-small"
           onClick={() => {
             loadMeetings(undefined, true).then(setUserMeetings)
+            toast.info(
+              `Your activities fair events on ${SITE_NAME} have been reloaded.`,
+              { hideProgressBar: true },
+            )
           }}
         >
           <Icon name="refresh" /> Refresh
@@ -461,12 +459,15 @@ const ZoomPage = ({
                         details: (
                           <>
                             Zoom is a proven and trusted platform for
-                            videoconferencing and has a contract with the
+                            videoconferencing and has a contract with the{' '}
                             {SCHOOL_NAME} to provide premium accounts.{' '}
                             <b>
                               We strongly recommend that you use this service
                               for your virtual fair booth.
-                            </b>
+                            </b>{' '}
+                            By using a Penn Zoom link, we will also be able to
+                            provide students with additional information, such
+                            as how many people are currently in the meeting.
                           </>
                         ),
                       },
@@ -564,27 +565,20 @@ const ZoomPage = ({
                   />
                 </div>
                 <p className="mt-3">
-                  Click on create/fix meeting for us to create your zoom meeting
-                  for you or attempt to fix issues with your meeting. Click on
-                  edit event if you want to edit the cover photo and description
-                  for your virtual activities fair booth.
+                  Click on{' '}
+                  <b>{zoomId != null ? 'Fix Meeting' : 'Add Meeting'}</b> for us
+                  to{' '}
+                  {zoomId == null
+                    ? 'create your Zoom meeting link for you'
+                    : 'attempt to fix issues with your meeting'}
+                  . Click on <b>Edit Event</b> if you want to edit the cover
+                  photo and description for your virtual activities fair booth.
                 </p>
                 <p className="mt-3">
                   Clicking the button below will also attempt to add all
-                  officers who have linked their Zoom accounts to {SITE_NAME} as
-                  co-hosts of the meeting.
+                  {OBJECT_NAME_SINGULAR} officers who have linked their Zoom
+                  accounts to {SITE_NAME} as co-hosts of the meeting.
                 </p>
-                {createResp && createResp.event === event.id && (
-                  <p
-                    className={
-                      createResp.success
-                        ? 'has-text-success'
-                        : 'has-text-danger'
-                    }
-                  >
-                    {createResp.detail}
-                  </p>
-                )}
                 <div className="mt-3 buttons">
                   <button
                     className="button is-small is-success"
@@ -597,7 +591,10 @@ const ZoomPage = ({
                       )
                         .then((resp) => resp.json())
                         .then((resp) => {
-                          setCreateResp({ ...resp, event: event.id })
+                          toast[resp.success ? 'success' : 'error'](
+                            resp.detail,
+                            { hideProgressBar: true },
+                          )
                           loadEvents().then(setEvents)
                           loadMeetings(undefined, true)
                             .then(setUserMeetings)
@@ -695,13 +692,14 @@ ZoomPage.getInitialProps = async (ctx: NextPageContext) => {
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
-  const [events, zoomSettings, userMeetings] = await Promise.all([
+  const [events, zoomSettings, userMeetings, fairs] = await Promise.all([
     loadEvents(data),
     loadSettings(false, false, data),
     loadMeetings(data),
+    doApiRequest('/clubfairs/?format=json', data).then((resp) => resp.json()),
   ])
 
-  return { events, zoomSettings, userMeetings }
+  return { events, zoomSettings, userMeetings, fairs }
 }
 
 export default renderPage(ZoomPage)

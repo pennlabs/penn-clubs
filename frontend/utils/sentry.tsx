@@ -32,8 +32,10 @@ export function logMessage(msg: string): void {
   Sentry.captureMessage(msg)
 }
 
-export default function withSentry(WrappedComponent) {
-  return class SentryComponent extends React.Component {
+export default function withSentry<T>(
+  WrappedComponent: React.ComponentType<T>,
+): React.ComponentType<T> {
+  return class SentryComponent extends React.Component<T> {
     render() {
       try {
         return <WrappedComponent {...this.props} />
