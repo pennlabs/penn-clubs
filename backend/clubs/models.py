@@ -328,6 +328,8 @@ class Club(models.Model):
                         if ev.pk is None:
                             ev.type = Event.OTHER
                             for val, lbl in Event.TYPES:
+                                if val in {Event.FAIR}:
+                                    continue
                                 if (
                                     lbl.lower() in ev.name.lower()
                                     or lbl.lower() in ev.description.lower()

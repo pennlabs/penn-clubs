@@ -2996,8 +2996,8 @@ class MeetingZoomAPIView(APIView):
             return Response(
                 {
                     "success": True,
-                    "detail": "Your Zoom meeting has been created!"
-                    f"The following accounts have been made hosts: {', '.join(alt_hosts)}",
+                    "detail": "Your Zoom meeting has been created! "
+                    f"The following Zoom accounts have been made hosts: {', '.join(alt_hosts)}",
                 }
             )
         else:
