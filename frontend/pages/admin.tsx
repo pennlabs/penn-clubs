@@ -17,6 +17,7 @@ import QueueTab from '../components/Settings/QueueTab'
 import TabView from '../components/TabView'
 import { BG_GRADIENT, WHITE } from '../constants'
 import renderPage from '../renderPage'
+import { Badge, ClubFair, Tag } from '../types'
 import { doApiRequest, doBulkLookup, titleize } from '../utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -297,12 +298,12 @@ function AdminPage({
     {
       name: 'fair',
       label: 'Fair Management',
-      content: () => <FairsTab fairs={[]} />,
+      content: () => <FairsTab fairs={clubfairs} />,
     },
     {
       name: 'fairevents',
       label: 'Fair Events',
-      content: () => <FairEventsTab fair={fair} />,
+      content: () => <FairEventsTab fairs={clubfairs} fair={fair} />,
     },
   ]
 
@@ -319,9 +320,20 @@ function AdminPage({
   )
 }
 
+type BulkResp = {
+  tags: Tag[]
+  badges: Badge[]
+  clubfairs: ClubFair[]
+  scripts: any[]
+}
+
 AdminPage.getInitialProps = async (ctx: NextPageContext) => {
+  const data: BulkResp = (await doBulkLookup(
+    ['tags', 'badges', 'clubfairs', 'scripts'],
+    ctx,
+  )) as BulkResp
   return {
-    ...doBulkLookup(['tags', 'badges', 'clubfairs', 'scripts'], ctx),
+    ...data,
     fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
   }
 }
