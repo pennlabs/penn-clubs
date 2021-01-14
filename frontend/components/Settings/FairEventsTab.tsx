@@ -83,7 +83,10 @@ const FairEventsTab = ({
         the required permissions can view this page.
       </Text>
       <div className="select is-fullwidth mb-5">
-        <select onChange={(e) => setSelectedFair(parseInt(e.target.value))}>
+        <select
+          value={selectedFair ?? undefined}
+          onChange={(e) => setSelectedFair(parseInt(e.target.value))}
+        >
           {fairs.map((fair) => (
             <option key={fair.id} value={fair.id}>
               {fair.name}
