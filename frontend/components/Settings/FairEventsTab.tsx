@@ -12,6 +12,7 @@ import { Icon, Loading, Text } from '../common'
 
 type Props = {
   fairs?: ClubFair[]
+  fair?: number
 }
 
 type FairEvent = {
@@ -28,13 +29,16 @@ const BoolIndicator = ({ value }: { value: boolean }): ReactElement => {
   )
 }
 
-const FairEventsTab = ({ fairs: initialFairs }: Props): ReactElement => {
+const FairEventsTab = ({
+  fairs: initialFairs,
+  fair: initialSelection,
+}: Props): ReactElement => {
   const [fairs, setFairs] = useState<ClubFair[] | { detail: string } | null>(
     initialFairs ?? null,
   )
   const [selectedFair, setSelectedFair] = useState<number | null>(
     fairs != null && !('detail' in fairs) && fairs.length > 0
-      ? fairs[0].id
+      ? initialSelection ?? fairs[0].id
       : null,
   )
   const [fairEvents, setFairEvents] = useState<
@@ -48,7 +52,7 @@ const FairEventsTab = ({ fairs: initialFairs }: Props): ReactElement => {
         .then((data) => {
           setFairs(data)
           if (selectedFair == null && data.length > 0) {
-            setSelectedFair(data[0].id)
+            setSelectedFair(initialSelection ?? data[0].id)
           }
         })
     }

@@ -137,6 +137,7 @@ function AdminPage({
   badges,
   clubfairs,
   scripts,
+  fair,
 }): ReactElement {
   if (!userInfo) {
     return <AuthPrompt />
@@ -301,7 +302,7 @@ function AdminPage({
     {
       name: 'fairevents',
       label: 'Fair Events',
-      content: () => <FairEventsTab />,
+      content: () => <FairEventsTab fair={fair} />,
     },
   ]
 
@@ -319,7 +320,10 @@ function AdminPage({
 }
 
 AdminPage.getInitialProps = async (ctx: NextPageContext) => {
-  return doBulkLookup(['tags', 'badges', 'clubfairs', 'scripts'], ctx)
+  return {
+    ...doBulkLookup(['tags', 'badges', 'clubfairs', 'scripts'], ctx),
+    fair: ctx.query.fair != null ? parseInt(ctx.query.fair) : null,
+  }
 }
 
 AdminPage.permissions = ['clubs.approve_club']
