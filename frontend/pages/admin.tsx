@@ -322,7 +322,7 @@ function AdminPage({
 AdminPage.getInitialProps = async (ctx: NextPageContext) => {
   return {
     ...doBulkLookup(['tags', 'badges', 'clubfairs', 'scripts'], ctx),
-    fair: ctx.query.fair != null ? parseInt(ctx.query.fair) : null,
+    fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
   }
 }
 
