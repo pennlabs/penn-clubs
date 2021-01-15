@@ -338,8 +338,8 @@ class BadgeAdmin(admin.ModelAdmin):
         )
 
     search_fields = ("label",)
-    list_display = ("label", "org", "club_count", "badge_color", "visible")
-    list_filter = ("visible",)
+    list_display = ("label", "purpose", "org", "club_count", "badge_color", "visible")
+    list_filter = ("visible", "purpose")
     actions = [do_merge_tags]
 
 

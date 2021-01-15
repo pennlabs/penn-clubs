@@ -663,6 +663,29 @@ class ClubFair(models.Model):
     questions = models.TextField(default="[]")
     participating_clubs = models.ManyToManyField(Club, through="ClubFairRegistration", blank=True)
 
+    def create_events(self, start_time=None, end_time=None, filter=None):
+        """
+        Create activities fair events for all registered clubs.
+        Does not create event if it already exists.
+        Returns a list of activities fair events.
+        """
+        start_time = start_time or self.start_time
+        end_time = end_time or self.end_time
+
+        club_query = self.participating_clubs.all()
+        if filter is not None:
+            club_query = club_query.filter(filter)
+        events = []
+        for club in club_query:
+            obj, _ = Event.objects.get_or_create(
+                code=f"fair-{club.code}-{self.id}",
+                club=club,
+                type=Event.FAIR,
+                defaults={"name": self.name, "start_time": start_time, "end_time": end_time},
+            )
+            events.append(obj)
+        return events
+
     def __str__(self):
         fmt = "%b %d, %Y"
         return f"{self.name} ({self.start_time.strftime(fmt)} - {self.end_time.strftime(fmt)})"
@@ -1113,10 +1136,16 @@ class Badge(models.Model):
     """
     Represents a category that a club could fall under.
     Clubs do not select badges, these are designated by an external authority.
+
+    The label and description are shown to the public.
+
+    The purpose field is used for tagging badges with special purposes (ex: "fair").
     """
 
+    PURPOSE_CHOICES = [("fair", "Fair"), ("org", "Organization")]
+
     label = models.CharField(max_length=255)
-    purpose = models.CharField(max_length=255)
+    purpose = models.CharField(max_length=255, choices=PURPOSE_CHOICES)
     description = models.TextField(blank=True)
 
     # The color of the badge to be displayed on the frontend.
@@ -1125,6 +1154,9 @@ class Badge(models.Model):
     # The organization that this badge represents (If this is the "SAC Funded" badge,
     # then this would link to SAC)
     org = models.ForeignKey(Club, on_delete=models.CASCADE, blank=True, null=True)
+
+    # The fair that this badge is related to
+    fair = models.ForeignKey(ClubFair, on_delete=models.CASCADE, blank=True, null=True)
 
     # whether or not users can view and filter by this badge
     visible = models.BooleanField(default=False)

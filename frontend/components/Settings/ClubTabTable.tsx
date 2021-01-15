@@ -32,6 +32,20 @@ type ClubTabTableProps = {
   leaveClub: (club: Club) => void
 }
 
+export const ColumnTooltip = ({ tip }: { tip: string }): ReactElement => (
+  <>
+    <Icon
+      data-tip={tip}
+      data-effect="solid"
+      data-multiline={true}
+      name="info"
+      alt="?"
+      style={{ paddingLeft: 4 }}
+    />
+    <ReactTooltip />
+  </>
+)
+
 const ClubTabTable = ({
   className,
   memberships,
@@ -46,43 +60,26 @@ const ClubTabTable = ({
         <th>Position</th>
         <th>
           Permissions
-          <Icon
-            data-tip={`Shows your level of access to club management tools. Can be one of the following: ${Object.entries(
+          <ColumnTooltip
+            tip={`Shows your level of access to club management tools. Can be one of the following: ${Object.entries(
               MEMBERSHIP_ROLE_NAMES,
             )
               .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
               .map((role) => role[1])
               .join(', ')}.`}
-            data-effect="solid"
-            data-multiline="true"
-            name="info"
-            alt="?"
-            style={{ paddingLeft: 4 }}
           />
-          <ReactTooltip />
         </th>
         <th>
           Active
-          <Icon
-            data-tip={`Toggle whether you’re currently an active member of this ${OBJECT_NAME_SINGULAR}.`}
-            data-effect="solid"
-            data-multiline="true"
-            name="info"
-            alt="?"
-            style={{ paddingLeft: 4 }}
+          <ColumnTooltip
+            tip={`Toggle whether you’re currently an active member of this ${OBJECT_NAME_SINGULAR}.`}
           />
-          <ReactTooltip />
         </th>
         <th>
           Public
-          <Icon
-            data-tip={`Toggle whether you want to be listed on the ${OBJECT_NAME_SINGULAR} page.`}
-            data-effect="solid"
-            name="info"
-            alt="?"
-            style={{ paddingLeft: 4 }}
+          <ColumnTooltip
+            tip={`Toggle whether you want to be listed on the ${OBJECT_NAME_SINGULAR} page.`}
           />
-          <ReactTooltip />
         </th>
         <th>Actions</th>
       </tr>

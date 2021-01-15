@@ -506,6 +506,28 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             return WritableClubFairSerializer
         return ClubFairSerializer
 
+    @action(detail=True, methods=["post"])
+    def create_events(self, request, *args, **kwargs):
+        """
+        Create events for each club registered for this activities fair.
+        This endpoint will create one event per club spanning the entire listed duration.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                events:
+                                    type: number
+        ---
+        """
+        fair = self.get_object()
+        events = fair.create_events()
+        return Response({"events": len(events)})
+
     @action(detail=True, methods=["get"])
     def events(self, request, *args, **kwargs):
         """
@@ -528,6 +550,17 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                                         type: string
                                         description: >
                                             The name of the club.
+                                    approved:
+                                        type: boolean
+                                        description: >
+                                            Whether this club has been approved by the approval
+                                            authority or not.
+                                    badges:
+                                        type: array
+                                        description: >
+                                            A list of badges associated with this club and fair.
+                                        items:
+                                            type: string
                                     meetings:
                                         type: array
                                         description: >
@@ -538,6 +571,8 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         """
         fair = self.get_object()
         clubs = fair.participating_clubs.all()
+
+        # collect events
         events = collections.defaultdict(list)
         for k, v in Event.objects.filter(
             club__in=clubs,
@@ -546,10 +581,26 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             end_time__lte=fair.end_time,
         ).values_list("club__code", "url"):
             events[k].append(v)
+
+        # collect badges
+        badges = collections.defaultdict(list)
+        for code, lbl in Badge.objects.filter(purpose="fair", fair=fair).values_list(
+            "club__code", "label"
+        ):
+            badges[code].append(lbl)
+
         return Response(
             [
-                {"code": code, "name": name, "meetings": events.get(code, [])}
-                for code, name in clubs.order_by("name").values_list("code", "name")
+                {
+                    "code": code,
+                    "name": name,
+                    "approved": approved or ghost,
+                    "meetings": events.get(code, []),
+                    "badges": badges.get(code, []),
+                }
+                for code, name, approved, ghost in clubs.order_by("name").values_list(
+                    "code", "name", "approved", "ghost"
+                )
             ]
         )
 
@@ -639,13 +690,14 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                 asset.name.lower().endswith((".pdf", ".doc", ".docx"))
                 for asset in club.asset_set.all()
             ):
-                return Response(
-                    {
-                        "success": False,
-                        "message": "As a SAC affiliated club, "
-                        "you must upload a club constitution before registering for this fair.",
-                    }
-                )
+                if not request.user.is_superuser:
+                    return Response(
+                        {
+                            "success": False,
+                            "message": "As a SAC affiliated club, "
+                            "you must upload a club constitution before registering for this fair.",
+                        }
+                    )
 
         # check if registration has started
         now = timezone.now()
@@ -1970,7 +2022,7 @@ class EventViewSet(ClubEventViewSet):
 
         # lookup fair from id
         if fair:
-            fair = ClubFair.objects.get(id=fair)
+            fair = get_object_or_404(ClubFair, id=fair)
         else:
             fair = (
                 ClubFair.objects.filter(
@@ -1983,7 +2035,9 @@ class EventViewSet(ClubEventViewSet):
             date = fair.start_time.date()
 
         now = date or timezone.now()
-        events = Event.objects.filter(type=Event.FAIR, club__badges__purpose="fair",)
+        events = Event.objects.filter(
+            type=Event.FAIR, club__badges__purpose="fair", club__badges__fair=fair
+        )
 
         # filter event range based on the fair times or provide a reasonable fallback
         if fair is None:

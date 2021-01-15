@@ -186,6 +186,9 @@ export interface ClubFair {
   registration_start_time: string | null
   registration_end_time: string
 
+  start_time: string
+  end_time: string
+
   questions: string
 }
 

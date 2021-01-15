@@ -5,10 +5,14 @@ import { CLUB_ROUTE } from '../../constants'
 import { ClubFair } from '../../types'
 import { doApiRequest } from '../../utils'
 import {
+  APPROVAL_AUTHORITY,
   OBJECT_NAME_PLURAL,
+  OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
+  SITE_NAME,
 } from '../../utils/branding'
 import { Icon, Loading, Text } from '../common'
+import { ColumnTooltip } from './ClubTabTable'
 
 type Props = {
   fairs?: ClubFair[]
@@ -18,7 +22,9 @@ type Props = {
 type FairEvent = {
   code: string
   name: string
+  approved: boolean
   meetings: string[]
+  badges: string[]
 }
 
 const BoolIndicator = ({ value }: { value: boolean }): ReactElement => {
@@ -99,12 +105,29 @@ const FairEventsTab = ({
           <Text>{fairEvents.detail}</Text>
         ) : (
           <div className="content">
-            <table>
+            <table className="table is-hoverable">
               <thead>
                 <tr>
                   <th>{OBJECT_NAME_TITLE_SINGULAR}</th>
-                  <th>Has Event</th>
-                  <th>Has Meeting Link</th>
+                  <th>Categories</th>
+                  <th>
+                    Approved{' '}
+                    <ColumnTooltip
+                      tip={`Shows whether or not this ${OBJECT_NAME_SINGULAR} has been approved by the ${APPROVAL_AUTHORITY}. Only the ${APPROVAL_AUTHORITY} can change this.`}
+                    />
+                  </th>
+                  <th>
+                    Has Event{' '}
+                    <ColumnTooltip
+                      tip={`Shows whether or not an event has been created for this ${OBJECT_NAME_SINGULAR}. Only ${SITE_NAME} administrators can do this.`}
+                    />
+                  </th>
+                  <th>
+                    Has Meeting Link{' '}
+                    <ColumnTooltip
+                      tip={`Shows whether or not the meeting link has been properly configured. Only ${OBJECT_NAME_SINGULAR} officers can do this.`}
+                    />
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -114,6 +137,10 @@ const FairEventsTab = ({
                       <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.code)}>
                         {event.name}
                       </Link>
+                    </td>
+                    <td>{event.badges.join(', ') || 'None'}</td>
+                    <td>
+                      <BoolIndicator value={event.approved} />
                     </td>
                     <td>
                       <BoolIndicator value={event.meetings.length > 0} />
@@ -132,7 +159,7 @@ const FairEventsTab = ({
                 ))}
                 {fairEvents.length === 0 && (
                   <tr>
-                    <td colSpan={3}>
+                    <td colSpan={5}>
                       There are no {OBJECT_NAME_PLURAL} registered for this
                       activities fair.
                     </td>
