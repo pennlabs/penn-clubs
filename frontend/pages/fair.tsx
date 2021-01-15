@@ -1,7 +1,8 @@
 import moment from 'moment-timezone'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
-import { ReactElement } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
+import TimeAgo from 'react-timeago'
 
 import {
   Contact,
@@ -40,7 +41,9 @@ const FairPage = ({
   isOverride,
   fair,
 }: FairPageProps): ReactElement => {
-  const isFairOpen = useSetting('FAIR_OPEN')
+  const [isFairOpen, setFairOpen] = useState<boolean>(
+    useSetting('FAIR_OPEN') as boolean,
+  )
   const isPreFair = useSetting('PRE_FAIR')
   const fairName = fair?.name ?? useSetting('FAIR_NAME') ?? 'Upcoming Fair'
   const fairOrgName =
@@ -49,6 +52,23 @@ const FairPage = ({
     fair?.contact ?? useSetting('FAIR_CONTACT') ?? 'the partner organization'
   const fairTime = fair?.time ?? useSetting('FAIR_TIME') ?? 'TBD'
   const fairAdditionalInfo = fair?.information ?? useSetting('FAIR_INFO') ?? ''
+
+  /**
+   * Open up the fair on the designated time client side if we're close.
+   * This is in order to reduce the number of frantic refreshes to enter the fair.
+   */
+  useEffect(() => {
+    const remainingTime =
+      fair != null
+        ? new Date(fair?.start_time).getTime() - new Date().getTime()
+        : -1
+    if (remainingTime > 0 && remainingTime <= 5 * 60 * 1000) {
+      const id = setTimeout(() => {
+        setFairOpen(true)
+      }, remainingTime)
+      return () => clearTimeout(id)
+    }
+  }, [])
 
   return (
     <Container background={SNOW}>
@@ -179,12 +199,16 @@ const FairPage = ({
         <p>
           You can find the schedule for the activities fair in the table below.
         </p>
-        {isFairOpen && (
+        {isFairOpen ? (
           <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
             <a className="button is-primary">
               <Icon name="chevrons-right" /> Go to events
             </a>
           </Link>
+        ) : (
+          <p>
+            The <b>{fairName}</b> opens <TimeAgo date={fair?.start_time} />.
+          </p>
         )}
         <div className="columns mt-3">
           {events.map(

@@ -13,6 +13,7 @@ from clubs.models import (
     Club,
     ClubApplication,
     ClubFair,
+    ClubFairRegistration,
     Event,
     Major,
     Membership,
@@ -45,9 +46,9 @@ hone your skills in time for recruiting season!""",
         "enables_subscription": True,
         "tags": [{"name": "Professional"}, {"name": "Athletics"}, {"name": "Undergraduate"}],
         "badges": [
-            {"label": "Red Badge", "color": "ff0000", "visible": True},
-            {"label": "Green Badge", "color": "00ff00", "visible": True},
-            {"label": "Blue Badge", "color": "0000ff", "visible": True},
+            {"label": "Red Badge", "color": "ff0000", "visible": True, "purpose": "org"},
+            {"label": "Green Badge", "color": "00ff00", "visible": True, "purpose": "org"},
+            {"label": "Blue Badge", "color": "0000ff", "visible": True, "purpose": "org"},
         ],
         "testimonials": [
             {"text": "Great club!"},
@@ -338,12 +339,13 @@ class Command(BaseCommand):
         badge, _ = Badge.objects.get_or_create(
             label="TAC",
             description="Testing Activities Council",
+            purpose="org",
             org=Club.objects.get(code="tac"),
             visible=True,
         )
 
         badge2, _ = Badge.objects.get_or_create(
-            label="SAC", description="Student Activities Council", visible=True
+            label="SAC", description="Student Activities Council", purpose="org", visible=True
         )
 
         # create additional clubs
@@ -477,7 +479,7 @@ class Command(BaseCommand):
         )
 
         # create a club fair one month from now
-        ClubFair.objects.update_or_create(
+        fair, _ = ClubFair.objects.update_or_create(
             name="Sample Fair",
             defaults={
                 "organization": "Student Activities Council",
@@ -492,6 +494,18 @@ class Command(BaseCommand):
                 " <b>Formatting is supported here!</b></p>" + fair_registration_text,
             },
         )
+
+        fair_cat_badge, _ = Badge.objects.get_or_create(
+            label="General Category",
+            purpose="fair",
+            defaults={"description": "Grouping for Sample Fair"},
+        )
+
+        for club in Club.objects.filter(code__startswith="z-club-"):
+            ClubFairRegistration.objects.get_or_create(fair=fair, registrant=ben, club=club)
+            club.badges.add(fair_cat_badge)
+
+        fair.create_events()
 
         if created:
             contents = get_image(event_image_url)

@@ -506,6 +506,27 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             return WritableClubFairSerializer
         return ClubFairSerializer
 
+    @action(detail=True, methods=["post"])
+    def create_events(self, request, *args, **kwargs):
+        """
+        Create events for each club registered for this activities fair.
+        This endpoint will create one event per club spanning the entire listed duration.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                events:
+                                    type: number
+        ---
+        """
+        fair = self.get_object()
+        events = fair.create_events()
+        return Response({"events": len(events)})
+
     @action(detail=True, methods=["get"])
     def events(self, request, *args, **kwargs):
         """
@@ -1970,7 +1991,7 @@ class EventViewSet(ClubEventViewSet):
 
         # lookup fair from id
         if fair:
-            fair = ClubFair.objects.get(id=fair)
+            fair = get_object_or_404(ClubFair, id=fair)
         else:
             fair = (
                 ClubFair.objects.filter(
@@ -1983,7 +2004,7 @@ class EventViewSet(ClubEventViewSet):
             date = fair.start_time.date()
 
         now = date or timezone.now()
-        events = Event.objects.filter(type=Event.FAIR, club__badges__purpose="fair",)
+        events = Event.objects.filter(type=Event.FAIR, club__badges__purpose="fair")
 
         # filter event range based on the fair times or provide a reasonable fallback
         if fair is None:

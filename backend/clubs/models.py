@@ -663,6 +663,26 @@ class ClubFair(models.Model):
     questions = models.TextField(default="[]")
     participating_clubs = models.ManyToManyField(Club, through="ClubFairRegistration", blank=True)
 
+    def create_events(self, start_time=None, end_time=None):
+        """
+        Create activities fair events for all registered clubs.
+        Does not create event if it already exists.
+        Returns a list of activities fair events.
+        """
+        start_time = start_time or self.start_time
+        end_time = end_time or self.end_time
+
+        events = []
+        for club in self.participating_clubs.all():
+            obj, _ = Event.objects.get_or_create(
+                code=f"fair-{club.code}-{self.id}",
+                club=club,
+                type=Event.FAIR,
+                defaults={"name": self.name, "start_time": start_time, "end_time": end_time,},
+            )
+            events.append(obj)
+        return events
+
     def __str__(self):
         fmt = "%b %d, %Y"
         return f"{self.name} ({self.start_time.strftime(fmt)} - {self.end_time.strftime(fmt)})"
@@ -1113,10 +1133,16 @@ class Badge(models.Model):
     """
     Represents a category that a club could fall under.
     Clubs do not select badges, these are designated by an external authority.
+
+    The label and description are shown to the public.
+
+    The purpose field is used for tagging badges with special purposes (ex: "fair").
     """
 
+    PURPOSE_CHOICES = [("fair", "Fair"), ("org", "Organization")]
+
     label = models.CharField(max_length=255)
-    purpose = models.CharField(max_length=255)
+    purpose = models.CharField(max_length=255, choices=PURPOSE_CHOICES)
     description = models.TextField(blank=True)
 
     # The color of the badge to be displayed on the frontend.
