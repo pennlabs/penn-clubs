@@ -498,7 +498,7 @@ class Command(BaseCommand):
         fair_cat_badge, _ = Badge.objects.get_or_create(
             label="General Category",
             purpose="fair",
-            defaults={"description": "Grouping for Sample Fair"},
+            defaults={"description": "Grouping for Sample Fair", "fair": fair},
         )
 
         for club in Club.objects.filter(code__startswith="z-club-"):

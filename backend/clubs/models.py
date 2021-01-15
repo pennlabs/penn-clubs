@@ -663,7 +663,7 @@ class ClubFair(models.Model):
     questions = models.TextField(default="[]")
     participating_clubs = models.ManyToManyField(Club, through="ClubFairRegistration", blank=True)
 
-    def create_events(self, start_time=None, end_time=None):
+    def create_events(self, start_time=None, end_time=None, filter=None):
         """
         Create activities fair events for all registered clubs.
         Does not create event if it already exists.
@@ -672,13 +672,16 @@ class ClubFair(models.Model):
         start_time = start_time or self.start_time
         end_time = end_time or self.end_time
 
+        club_query = self.participating_clubs.all()
+        if filter is not None:
+            club_query = club_query.filter(filter)
         events = []
-        for club in self.participating_clubs.all():
+        for club in club_query:
             obj, _ = Event.objects.get_or_create(
                 code=f"fair-{club.code}-{self.id}",
                 club=club,
                 type=Event.FAIR,
-                defaults={"name": self.name, "start_time": start_time, "end_time": end_time,},
+                defaults={"name": self.name, "start_time": start_time, "end_time": end_time},
             )
             events.append(obj)
         return events
@@ -1151,6 +1154,9 @@ class Badge(models.Model):
     # The organization that this badge represents (If this is the "SAC Funded" badge,
     # then this would link to SAC)
     org = models.ForeignKey(Club, on_delete=models.CASCADE, blank=True, null=True)
+
+    # The fair that this badge is related to
+    fair = models.ForeignKey(ClubFair, on_delete=models.CASCADE, blank=True, null=True)
 
     # whether or not users can view and filter by this badge
     visible = models.BooleanField(default=False)

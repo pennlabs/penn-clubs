@@ -549,6 +549,17 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                                         type: string
                                         description: >
                                             The name of the club.
+                                    approved:
+                                        type: boolean
+                                        description: >
+                                            Whether this club has been approved by the approval
+                                            authority or not.
+                                    badges:
+                                        type: array
+                                        description: >
+                                            A list of badges associated with this club and fair.
+                                        items:
+                                            type: string
                                     meetings:
                                         type: array
                                         description: >
@@ -559,6 +570,8 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         """
         fair = self.get_object()
         clubs = fair.participating_clubs.all()
+
+        # collect events
         events = collections.defaultdict(list)
         for k, v in Event.objects.filter(
             club__in=clubs,
@@ -567,10 +580,26 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             end_time__lte=fair.end_time,
         ).values_list("club__code", "url"):
             events[k].append(v)
+
+        # collect badges
+        badges = collections.defaultdict(list)
+        for code, lbl in Badge.objects.filter(purpose="fair", fair=fair).values_list(
+            "club__code", "label"
+        ):
+            badges[code].append(lbl)
+
         return Response(
             [
-                {"code": code, "name": name, "meetings": events.get(code, [])}
-                for code, name in clubs.order_by("name").values_list("code", "name")
+                {
+                    "code": code,
+                    "name": name,
+                    "approved": approved or ghost,
+                    "meetings": events.get(code, []),
+                    "badges": badges.get(code, []),
+                }
+                for code, name, approved, ghost in clubs.order_by("name").values_list(
+                    "code", "name", "approved", "ghost"
+                )
             ]
         )
 
@@ -2004,7 +2033,9 @@ class EventViewSet(ClubEventViewSet):
             date = fair.start_time.date()
 
         now = date or timezone.now()
-        events = Event.objects.filter(type=Event.FAIR, club__badges__purpose="fair")
+        events = Event.objects.filter(
+            type=Event.FAIR, club__badges__purpose="fair", club__badges__fair=fair
+        )
 
         # filter event range based on the fair times or provide a reasonable fallback
         if fair is None:
