@@ -512,6 +512,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         Create events for each club registered for this activities fair.
         This endpoint will create one event per club spanning the entire listed duration.
         ---
+        requestBody: {}
         responses:
             "200":
                 content:
@@ -689,13 +690,14 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                 asset.name.lower().endswith((".pdf", ".doc", ".docx"))
                 for asset in club.asset_set.all()
             ):
-                return Response(
-                    {
-                        "success": False,
-                        "message": "As a SAC affiliated club, "
-                        "you must upload a club constitution before registering for this fair.",
-                    }
-                )
+                if not request.user.is_superuser:
+                    return Response(
+                        {
+                            "success": False,
+                            "message": "As a SAC affiliated club, "
+                            "you must upload a club constitution before registering for this fair.",
+                        }
+                    )
 
         # check if registration has started
         now = timezone.now()
