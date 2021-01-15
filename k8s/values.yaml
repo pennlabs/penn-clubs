@@ -119,6 +119,13 @@ cronjobs:
     image: pennlabs/penn-clubs-backend
     secret: first-year-hub
     cmd: ["python", "manage.py", "daily_notifications"]
+    extraEnv:
+      - name: DOMAIN
+        value: pennclubs.com
+      - name: DJANGO_SETTINGS_MODULE
+        value: pennclubs.settings.production
+      - name: REDIS_HOST
+        value: penn-clubs-redis
   - name: calendar-import
     schedule: "0 12 * * *"
     image: pennlabs/penn-clubs-backend
@@ -129,3 +136,10 @@ cronjobs:
     image: pennlabs/penn-clubs-backend
     secret: first-year-hub
     cmd: ["python", "manage.py", "import_calendar_events"]
+    extraEnv:
+      - name: DOMAIN
+        value: pennclubs.com
+      - name: DJANGO_SETTINGS_MODULE
+        value: pennclubs.settings.production
+      - name: REDIS_HOST
+        value: penn-clubs-redis
