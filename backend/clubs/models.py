@@ -846,6 +846,25 @@ class ClubVisit(models.Model):
         return "<Visit: {} visited {}>".format(self.person.username, self.club.code)
 
 
+class ZoomMeetingVisit(models.Model):
+    """
+    Stores information on a user's attendance to a Zoom meeting
+    """
+
+    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    event = models.ManyToManyField("Event", null=True)
+
+    meeting_id = models.CharField(max_length=255)
+    participant_id = models.CharField(max_length=255)
+
+    join_time = models.DateTimeField(auto_now_add=True)
+    leave_time = models.DateTimeField(null=True)
+
+    def __str__(self):
+        return "<ZoomMeeting: {} in Zoom meeting {}>".format(self.person.username, self.meeting_id)
+
+
 class MembershipRequest(models.Model):
     """
     Used when users are not in the club but request membership from the owner
