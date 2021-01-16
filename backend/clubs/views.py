@@ -2899,7 +2899,7 @@ class MeetingZoomWebhookAPIView(APIView):
             authorization = request.META["HTTP_AUTHORIZATION"]
             if authorization != settings.ZOOM_VERIFICATION_TOKEN:
                 return Response(
-                    {"detail": "Your authorization token is  invalid!", "success": False},
+                    {"detail": "Your authorization token is invalid!", "success": False},
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
