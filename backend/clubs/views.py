@@ -138,8 +138,6 @@ from clubs.serializers import (
 )
 from clubs.utils import html_to_text
 
-# from pennclubs.settings import base
-
 
 def file_upload_endpoint_helper(request, code):
     obj = get_object_or_404(Club, code=code)
