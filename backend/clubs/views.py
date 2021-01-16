@@ -2556,6 +2556,11 @@ class BadgeViewSet(viewsets.ModelViewSet):
     lookup_field = "name"
 
     def get_queryset(self):
+        show_all = self.request.query_params.get("all", "false") == "true"
+
+        if show_all:
+            return Badge.objects.all()
+
         return Badge.objects.filter(visible=True)
 
 

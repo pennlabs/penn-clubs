@@ -312,18 +312,15 @@ const parseDateRange = (
  */
 const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
   const withRankings = events.map((event) => {
-    let rank = Math.random()
+    let rank = 0
     if (event.image_url) {
       rank += 2
     }
     if (event.description && event.description.length > 3) {
       rank += 2
     }
-    if (event.url) {
+    if (event.url && MEETING_REGEX.test(event.url)) {
       rank += 3
-      if (MEETING_REGEX.test(event.url)) {
-        rank += 0.5
-      }
     }
     return {
       event,
@@ -340,7 +337,13 @@ const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
       if (b.startDate < a.startDate) {
         return 1
       }
-      return b.rank - a.rank
+      if (a.rank !== b.rank) {
+        return a.rank - b.rank
+      }
+      return (
+        a.event.club_name?.localeCompare(b.event.club_name as string) ??
+        a.event.name.localeCompare(b.event.name)
+      )
     })
     .map((a) => a.event)
 }

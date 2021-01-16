@@ -329,7 +329,12 @@ type BulkResp = {
 
 AdminPage.getInitialProps = async (ctx: NextPageContext) => {
   const data: BulkResp = (await doBulkLookup(
-    ['tags', 'badges', 'clubfairs', 'scripts'],
+    [
+      'tags',
+      ['badges', '/badges/?all=true&format=json'],
+      'clubfairs',
+      'scripts',
+    ],
     ctx,
   )) as BulkResp
   return {
