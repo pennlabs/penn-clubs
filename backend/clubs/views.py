@@ -2968,6 +2968,8 @@ class MeetingZoomAPIView(APIView):
     get: Return a list of upcoming Zoom meetings for a user.
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         """
         ---
@@ -3043,6 +3045,42 @@ class MeetingZoomAPIView(APIView):
             cache.set(key, response, 120)
         return Response(response)
 
+    def delete(self, request):
+        """
+        Delete the Zoom meeting for this event.
+        """
+        event = get_object_or_404(Event, id=request.query_params.get("event"))
+
+        if (
+            not request.user.has_perm("clubs.manage_club")
+            and not event.club.membership_set.filter(
+                person=request.user, role__lte=Membership.ROLE_OFFICER
+            ).exists()
+        ):
+            return Response(
+                {"success": False, "detail": "You do not have permission to perform this action."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if event.url:
+            match = re.search(r"(\d+)", urlparse(event.url).path)
+            if "zoom.us" in event.url and match is not None:
+                zoom_id = int(match[1])
+                zoom_api_call(request.user, "DELETE", f"https://api.zoom.us/v2/meetings/{zoom_id}")
+
+            event.url = None
+            event.save()
+            return Response(
+                {
+                    "success": True,
+                    "detail": "The associated Zoom meeting has been unlinked and deleted.",
+                }
+            )
+        else:
+            return Response(
+                {"success": True, "detail": "There is no Zoom meeting configured for this event."}
+            )
+
     def post(self, request):
         """
         Create a new Zoom meeting for this event or try to fix the existing zoom meeting.
@@ -3066,6 +3104,15 @@ class MeetingZoomAPIView(APIView):
             raise DRFValidationError("The event you are trying to modify does not exist.") from e
 
         eastern = pytz.timezone("America/New_York")
+
+        # ensure user can do this
+        if not request.user.has_perm("clubs.manage_club") and not event.club.memberhip_set.filter(
+            role__lte=Membership.ROLE_OFFICER, person=request.user
+        ):
+            return Response(
+                {"success": False, "detail": "You are not allowed to perform this action!"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         # add all other officers as alternative hosts
         alt_hosts = []
