@@ -2895,8 +2895,8 @@ class MeetingZoomWebhookAPIView(APIView):
         return Response({"count": ans})
 
     def post(self, request):
-        if settings.ZOOM_VERIFICATION_TOKEN is not None:
-            authorization = request.META["HTTP_AUTHORIZATION"]
+        if settings.ZOOM_VERIFICATION_TOKEN:
+            authorization = request.META.get("HTTP_AUTHORIZATION")
             if authorization != settings.ZOOM_VERIFICATION_TOKEN:
                 return Response(
                     {"detail": "Your authorization token is invalid!", "success": False},
