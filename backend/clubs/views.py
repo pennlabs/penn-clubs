@@ -30,7 +30,6 @@ from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.text import slugify
-from django_redis import get_redis_connection
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics import parse as ICSParse
@@ -72,6 +71,7 @@ from clubs.models import (
     Tag,
     Testimonial,
     Year,
+    ZoomMeetingVisit,
     get_mail_type_annotation,
 )
 from clubs.permissions import (
@@ -2867,6 +2867,10 @@ class MeetingZoomWebhookAPIView(APIView):
     def get(self, request):
         """
         ---
+        parameters:
+            - name: event
+              in: query
+              type: integer
         responses:
             "200":
                 content:
@@ -2878,21 +2882,8 @@ class MeetingZoomWebhookAPIView(APIView):
                                     type: integer
         ---
         """
-        id = request.query_params.get("event")
-        if not id:
-            return Response({"count": 0})
-
-        try:
-            conn = get_redis_connection()
-        except NotImplementedError:
-            return Response({"count": 0})
-        key = f"zoom:meeting:live:{id}"
-        ans = conn.get(key)
-        if ans is None:
-            ans = 0
-        else:
-            ans = int(ans)
-        return Response({"count": ans})
+        meeting_id = request.query_params.get("event")
+        return Response({"count": ZoomMeetingVisit.objects.filter(meeting_id=meeting_id).count()})
 
     def post(self, request):
         if settings.ZOOM_VERIFICATION_TOKEN:
@@ -2904,15 +2895,71 @@ class MeetingZoomWebhookAPIView(APIView):
                 )
 
         action = request.data.get("event")
-        meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
-        if meeting_id is not None:
-            conn = get_redis_connection()
-            key = f"zoom:meeting:live:{meeting_id}"
-            if action == "meeting.participant_joined":
-                conn.incr(key)
-            elif action == "meeting.participant_left":
-                conn.decr(key)
-            conn.expire(key, datetime.timedelta(hours=8))
+        if action == "meeting.participant_joined":
+            email = (
+                request.data.get("payload", {})
+                .get("object", {})
+                .get("participant", {})
+                .get("email", None)
+            )
+
+            if email:
+                username = email.split("@")[0]
+                person = get_user_model().objects.filter(username=username).first()
+            else:
+                person = None
+
+            meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
+            regex = rf"https?:\/\/([A-z]*.)?zoom.us/[^\/]*\/{meeting_id}(\?pwd=[A-z,0-9]*)?"
+            event = Event.objects.filter(url__regex=regex).first()
+
+            participant_id = (
+                request.data.get("payload", {})
+                .get("object", {})
+                .get("participant", {})
+                .get("user_id", None)
+            )
+            join_time = (
+                request.data.get("payload", {})
+                .get("object", {})
+                .get("participant", {})
+                .get("join_time", None)
+            )
+
+            if event:
+                ZoomMeetingVisit.objects.create(
+                    person=person,
+                    event=event,
+                    meeting_id=meeting_id,
+                    participant_id=participant_id,
+                    join_time=join_time,
+                )
+        elif action == "meeting.participant_left":
+            meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
+            participant_id = (
+                request.data.get("payload", {})
+                .get("object", {})
+                .get("participant", {})
+                .get("user_id", None)
+            )
+            leave_time = (
+                request.data.get("payload", {})
+                .get("object", {})
+                .get("participant", {})
+                .get("leave_time", None)
+            )
+
+            meeting = (
+                ZoomMeetingVisit.objects.filter(
+                    meeting_id=meeting_id, participant_id=participant_id, leave_time__isnull=True
+                )
+                .order_by("-created_at")
+                .first()
+            )
+            if meeting is not None:
+                meeting.leave_time = leave_time
+                meeting.save()
+
         return Response({"success": True})
 
 

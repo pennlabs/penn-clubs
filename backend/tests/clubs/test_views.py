@@ -29,6 +29,7 @@ from clubs.models import (
     School,
     Tag,
     Testimonial,
+    ZoomMeetingVisit,
 )
 
 
@@ -172,6 +173,7 @@ class ClubTestCase(TestCase):
             name="Test Event",
             start_time=timezone.now() + timezone.timedelta(days=2),
             end_time=timezone.now() + timezone.timedelta(days=3),
+            url="https://zoom.us/j/4880003126",
         )
 
         self.question1 = QuestionAnswer.objects.create(
@@ -2215,3 +2217,64 @@ class ClubTestCase(TestCase):
         # ensure superuser has access to everything
         for perm in permissions:
             self.assertTrue(data[perm], perm)
+
+    def test_zoom_webhook(self):
+        person = self.user1
+        event = self.event1
+        meeting_id = "4880003126"
+        participant_id = "jswPTE5-StSc-kbAX6n2Rw"
+        join_time = "2021-01-10T20:38:49Z"
+        leave_time = "2021-01-10T20:42:23Z"
+
+        req = {
+            "event": "meeting.participant_joined",
+            "payload": {
+                "object": {
+                    "participant": {
+                        "user_id": participant_id,
+                        "join_time": join_time,
+                        "email": person.email,
+                    },
+                    "id": meeting_id,
+                }
+            },
+        }
+
+        resp = self.client.post(reverse("webhooks-meeting"), req, content_type="application/json")
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertTrue(
+            ZoomMeetingVisit.objects.filter(
+                person=person,
+                event=event,
+                meeting_id=meeting_id,
+                participant_id=participant_id,
+                join_time=join_time,
+            )
+        )
+
+        req = {
+            "event": "meeting.participant_left",
+            "payload": {
+                "object": {
+                    "participant": {
+                        "user_id": participant_id,
+                        "leave_time": leave_time,
+                        "email": person.email,
+                    },
+                    "id": meeting_id,
+                }
+            },
+        }
+
+        resp = self.client.post(reverse("webhooks-meeting"), req, content_type="application/json")
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertTrue(
+            ZoomMeetingVisit.objects.filter(
+                person=person,
+                event=event,
+                meeting_id=meeting_id,
+                participant_id=participant_id,
+                join_time=join_time,
+                leave_time=leave_time,
+            )
+        )
