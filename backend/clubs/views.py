@@ -2867,6 +2867,10 @@ class MeetingZoomWebhookAPIView(APIView):
     def get(self, request):
         """
         ---
+        parameters:
+            - name: event
+              in: query
+              type: integer
         responses:
             "200":
                 content:
@@ -2906,7 +2910,7 @@ class MeetingZoomWebhookAPIView(APIView):
                 person = None
 
             meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
-            regex = rf"https:\/\/([A-z]*.)?zoom.us/[^\/]*\/{meeting_id}(\?pwd=[A-z,0-9]*)?"
+            regex = rf"https?:\/\/([A-z]*.)?zoom.us/[^\/]*\/{meeting_id}(\?pwd=[A-z,0-9]*)?"
             event = Event.objects.filter(url__regex=regex).first()
 
             participant_id = (
@@ -2947,12 +2951,14 @@ class MeetingZoomWebhookAPIView(APIView):
 
             meeting = (
                 ZoomMeetingVisit.objects.filter(
-                    meeting_id=meeting_id, participant_id=participant_id
+                    meeting_id=meeting_id, participant_id=participant_id, leave_time__isnull=True
                 )
                 .order_by("-created_at")
                 .first()
             )
-            ZoomMeetingVisit.objects.filter(pk=meeting.pk).update(leave_time=leave_time)
+            if meeting is not None:
+                meeting.leave_time = leave_time
+                meeting.save()
 
         return Response({"success": True})
 
