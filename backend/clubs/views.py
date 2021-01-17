@@ -2899,15 +2899,15 @@ class MeetingZoomWebhookAPIView(APIView):
                 .get("email", None)
             )
 
-            person = None
             if email:
                 username = email.split("@")[0]
-                res = get_user_model().objects.filter(username=username)
-                if res:
-                    person = res.first()
+                person = get_user_model().objects.filter(username=username).first()
+            else:
+                person = None
 
             meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
-            event = Event.objects.filter(url__contains=meeting_id).first()
+            regex = rf"https:\/\/([A-z]*.)?zoom.us/[^\/]*\/{meeting_id}(\?pwd=[A-z,0-9]*)?"
+            event = Event.objects.filter(url__regex=regex).first()
 
             participant_id = (
                 request.data.get("payload", {})
