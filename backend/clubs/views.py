@@ -2898,12 +2898,17 @@ class MeetingZoomWebhookAPIView(APIView):
                 .get("participant", {})
                 .get("email", None)
             )
-            person = get_user_model().objects.filter(email=email)
 
-            event_name = request.data.get("payload", {}).get("object", {}).get("topic", None)
-            event = Event.objects.filter(name=event_name).order_by("-start_time")[0]
+            person = None
+            if email:
+                username = email.split("@")[0]
+                res = get_user_model().objects.filter(username=username)
+                if res:
+                    person = res.first()
 
             meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
+            event = Event.objects.filter(url__contains=meeting_id).first()
+
             participant_id = (
                 request.data.get("payload", {})
                 .get("object", {})
@@ -2918,10 +2923,8 @@ class MeetingZoomWebhookAPIView(APIView):
             )
 
             if event:
-                club = event.club
                 ZoomMeetingVisit.objects.create(
                     person=person,
-                    club=club,
                     event=event,
                     meeting_id=meeting_id,
                     participant_id=participant_id,
@@ -2941,9 +2944,16 @@ class MeetingZoomWebhookAPIView(APIView):
                 .get("participant", {})
                 .get("leave_time", None)
             )
-            ZoomMeetingVisit.objects.filter(meeting_id=meeting_id).filter(
-                participant_id=participant_id
-            ).update(leave_time=leave_time)
+
+            meeting = (
+                ZoomMeetingVisit.objects.filter(
+                    meeting_id=meeting_id, participant_id=participant_id
+                )
+                .order_by("-created_at")
+                .first()
+            )
+            ZoomMeetingVisit.objects.filter(pk=meeting.pk).update(leave_time=leave_time)
+
         return Response({"success": True})
 
 

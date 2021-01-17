@@ -851,15 +851,15 @@ class ZoomMeetingVisit(models.Model):
     Stores information on a user's attendance to a Zoom meeting
     """
 
-    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE)
-    event = models.ManyToManyField("Event", null=True)
-
+    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     meeting_id = models.CharField(max_length=255)
     participant_id = models.CharField(max_length=255)
 
-    join_time = models.DateTimeField(auto_now_add=True)
+    join_time = models.DateTimeField()
     leave_time = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return "<ZoomMeeting: {} in Zoom meeting {}>".format(self.person.username, self.meeting_id)
