@@ -46,12 +46,10 @@ const FairPage = ({
   )
   const isPreFair = useSetting('PRE_FAIR')
   const fairName = fair?.name ?? useSetting('FAIR_NAME') ?? 'Upcoming Fair'
-  const fairOrgName =
-    fair?.organization ?? useSetting('FAIR_ORG_NAME') ?? 'partner organization'
-  const fairContact =
-    fair?.contact ?? useSetting('FAIR_CONTACT') ?? 'the partner organization'
-  const fairTime = fair?.time ?? useSetting('FAIR_TIME') ?? 'TBD'
-  const fairAdditionalInfo = fair?.information ?? useSetting('FAIR_INFO') ?? ''
+  const fairOrgName = fair?.organization ?? 'partner organization'
+  const fairContact = fair?.contact ?? 'the partner organization'
+  const fairTime = fair?.time ?? 'TBD'
+  const fairAdditionalInfo = fair?.information ?? ''
 
   /**
    * Open up the fair on the designated time client side if we're close.

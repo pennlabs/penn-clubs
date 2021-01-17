@@ -384,12 +384,27 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             "target_students": parse_tags,
         }
 
+        def parse_fair(field, value, operation, queryset):
+            try:
+                value = int(value.strip())
+            except ValueError:
+                return
+
+            fair = ClubFair.objects.filter(id=value).first()
+            if fair:
+                return {"start_time__gte": fair.start_time, "end_time__lte": fair.end_time}
+
         if not queryset.model == Club:
             fields = {f"club__{k}": v for k, v in fields.items()}
 
         if queryset.model == Event:
             fields.update(
-                {"type": parse_int, "start_time": parse_datetime, "end_time": parse_datetime}
+                {
+                    "type": parse_int,
+                    "start_time": parse_datetime,
+                    "end_time": parse_datetime,
+                    "fair": parse_fair,
+                }
             )
 
         query = {}
@@ -505,6 +520,22 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         if self.action in {"create", "update", "partial_update"}:
             return WritableClubFairSerializer
         return ClubFairSerializer
+
+    @action(detail=False, methods=["get"])
+    def current(self, request, *args, **kwargs):
+        """
+        Return only the current club fair instance in a list or an empty list
+        if there is no fair going on.
+        """
+        now = timezone.now()
+        fair = ClubFair.objects.filter(
+            start_time__lte=now + datetime.timedelta(minutes=2),
+            end_time__gte=now - datetime.timedelta(minutes=2),
+        ).first()
+        if fair is None:
+            return Response([])
+        else:
+            return Response([ClubFairSerializer(instance=fair).data])
 
     @action(detail=True, methods=["post"])
     def create_events(self, request, *args, **kwargs):
@@ -3625,14 +3656,7 @@ class OptionListView(APIView):
             happening = fair.start_time <= now - datetime.timedelta(minutes=3)
             close = fair.start_time <= now - datetime.timedelta(weeks=1)
             options["FAIR_NAME"] = fair.name
-            options["FAIR_ORG_NAME"] = fair.organization
-            options["FAIR_CONTACT"] = fair.contact or settings.FROM_EMAIL
-            options["FAIR_TIME"] = fair.time or (
-                "{} - {}".format(
-                    fair.start_time.strftime("%b %d, %Y"), fair.end_time.strftime("%b %d, %Y")
-                )
-            )
-            options["FAIR_INFO"] = fair.information
+            options["FAIR_ID"] = fair.id
             options["FAIR_OPEN"] = happening
             options["PRE_FAIR"] = not happening and close
         else:
