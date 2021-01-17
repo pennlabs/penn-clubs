@@ -2895,6 +2895,14 @@ class MeetingZoomWebhookAPIView(APIView):
         return Response({"count": ans})
 
     def post(self, request):
+        if settings.ZOOM_VERIFICATION_TOKEN:
+            authorization = request.META.get("HTTP_AUTHORIZATION")
+            if authorization != settings.ZOOM_VERIFICATION_TOKEN:
+                return Response(
+                    {"detail": "Your authorization token is invalid!", "success": False},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
         action = request.data.get("event")
         meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
         if meeting_id is not None:
