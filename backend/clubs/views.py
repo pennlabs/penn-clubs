@@ -2858,7 +2858,7 @@ def generate_zoom_password():
 
 class MeetingZoomWebhookAPIView(APIView):
     """
-    get: Given a Zoom meeting ID, return the number of people on the call.
+    get: Given an event id, return the number of people on the Zoom call.
 
     post: Trigger this webhook. Should be triggered when a Zoom event occurs.
     Not available to the public, requires Zoom verification token.
@@ -2882,8 +2882,14 @@ class MeetingZoomWebhookAPIView(APIView):
                                     type: integer
         ---
         """
-        meeting_id = request.query_params.get("event")
-        return Response({"count": ZoomMeetingVisit.objects.filter(meeting_id=meeting_id).count()})
+        event_id = request.query_params.get("event")
+        return Response(
+            {
+                "count": ZoomMeetingVisit.objects.filter(
+                    event__id=event_id, leave_time__isnull=True
+                ).count()
+            }
+        )
 
     def post(self, request):
         if settings.ZOOM_VERIFICATION_TOKEN:

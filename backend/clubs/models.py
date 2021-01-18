@@ -862,7 +862,10 @@ class ZoomMeetingVisit(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return "<ZoomMeeting: {} in Zoom meeting {}>".format(self.person.username, self.meeting_id)
+        return "<ZoomMeetingVisit: {} in Zoom meeting {}>".format(
+            self.person.username if self.person is not None else self.participant_id,
+            self.meeting_id,
+        )
 
 
 class MembershipRequest(models.Model):
