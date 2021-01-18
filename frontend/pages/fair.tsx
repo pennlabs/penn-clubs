@@ -101,7 +101,9 @@ const FairPage = ({
             The main fair functionality is each {OBJECT_NAME_SINGULAR}'s
             informational Zoom meeting, which will all be visible on our{' '}
             {isFairOpen ? (
-              <a href="https://pennclubs.com/events">Live Events Page</a>
+              <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
+                <a>Live Events Page</a>
+              </Link>
             ) : (
               'Live Events Page'
             )}

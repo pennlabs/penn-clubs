@@ -1,7 +1,13 @@
 import Link from 'next/link'
 import React, { ReactElement, useState } from 'react'
 
-import { CLUB_ROUTE, DIRECTORY_ROUTE, RED, SNOW } from '../constants'
+import {
+  CLUB_ROUTE,
+  CLUBS_HOME,
+  DIRECTORY_ROUTE,
+  RED,
+  SNOW,
+} from '../constants'
 import { Club, Major, School, StudentType, Tag, Year } from '../types'
 import { doApiRequest } from '../utils'
 import {
@@ -151,11 +157,7 @@ const ResourceCreationPage = ({
           </Text>
           <div className="notification is-info mb-4">
             Student groups who would like to be listed are directed to{' '}
-            <a
-              rel="noopener noreferrer"
-              target="_blank"
-              href="https://pennclubs.com/"
-            >
+            <a rel="noopener noreferrer" target="_blank" href={CLUBS_HOME}>
               Penn Clubs
             </a>
             , a resource page specifically tailored for student organizations.

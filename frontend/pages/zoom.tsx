@@ -614,6 +614,31 @@ const ZoomPage = ({
                       </>
                     )}
                   </button>
+                  {zoomId && (
+                    <button
+                      className="button is-small is-danger"
+                      disabled={isLoading || !zoomSettings.success}
+                      onClick={() => {
+                        setLoading(true)
+                        doApiRequest(
+                          `/settings/zoom/meetings/?format=json&event=${event.id}`,
+                          { method: 'DELETE' },
+                        )
+                          .then((resp) => resp.json())
+                          .then((resp) => {
+                            toast[
+                              resp.success ? 'success' : 'error'
+                            ](resp.detail, { hideProgressBar: true })
+                            loadEvents().then(setEvents)
+                            loadMeetings(undefined, true)
+                              .then(setUserMeetings)
+                              .then(() => setLoading(false))
+                          })
+                      }}
+                    >
+                      <Icon name="trash" /> Remove Meeting
+                    </button>
+                  )}
                   <Link
                     href={CLUB_EDIT_ROUTE() + '#events'}
                     as={CLUB_EDIT_ROUTE(event.club as string) + '#events'}

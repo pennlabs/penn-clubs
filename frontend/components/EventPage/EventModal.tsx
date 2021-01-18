@@ -91,15 +91,11 @@ const EventModal = (props: {
 
   useEffect(() => {
     if (url && MEETING_REGEX.test(url)) {
-      const match = url.match(/\/(\d+)/)
-      if (match) {
-        const id = match[1]
-        doApiRequest(`/webhook/meeting/?format=json&event=${id}`)
-          .then((resp) => resp.json())
-          .then((resp) => {
-            setUserCount(resp.count)
-          })
-      }
+      doApiRequest(`/webhook/meeting/?format=json&event=${event.id}`)
+        .then((resp) => resp.json())
+        .then((resp) => {
+          setUserCount(resp.count)
+        })
     }
   }, [])
 
