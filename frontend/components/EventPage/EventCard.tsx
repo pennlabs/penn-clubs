@@ -1,22 +1,21 @@
-import { ReactElement, useState } from 'react'
+import { ReactElement } from 'react'
 import LazyLoad from 'react-lazy-load'
 import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
-import { Icon, Modal } from '../../components/common'
+import { Icon } from '../../components/common'
 import { MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import {
   mediaMaxWidth,
   mediaMinWidth,
   PHONE,
 } from '../../constants/measurements'
-import { ClubEvent, VisitType } from '../../types'
-import { doApiRequest } from '../../utils'
+import { ClubEvent } from '../../types'
 import { Card } from '../common/Card'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
-import EventModal, { MEETING_REGEX } from './EventModal'
+import { MEETING_REGEX } from './EventModal'
 import HappeningNow from './HappeningNow'
 
 const EventCardContainer = styled.div`
@@ -36,7 +35,11 @@ const TimeLeft = styled(TimeAgo)<{ date: Date }>`
 `
 const clipLink = (s: string) => (s.length > 32 ? `${s.slice(0, 35)}...` : s)
 
-const EventCard = (props: { event: ClubEvent }): ReactElement => {
+const EventCard = (props: {
+  event: ClubEvent
+  onClick: () => void
+  onLinkClicked: () => void
+}): ReactElement => {
   const {
     image_url: imageUrl,
     club_name: clubName,
@@ -48,13 +51,6 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
     pinned,
     badges,
   } = props.event
-  const [modalVisible, setModalVisible] = useState(false)
-
-  const showModal = () => {
-    eventModelClicked()
-    setModalVisible(true)
-  }
-  const hideModal = () => setModalVisible(false)
 
   const now = new Date()
   const startDate = new Date(start_time)
@@ -64,79 +60,54 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
   const hoursBetween =
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60)
 
-  const eventClicked = () => {
-    doApiRequest('/clubvisits/?format=json', {
-      method: 'POST',
-      body: {
-        club: club,
-        visit_type: VisitType.EventLink,
-      },
-    })
-  }
-
-  const eventModelClicked = () => {
-    doApiRequest('/clubvisits/?format=json', {
-      method: 'POST',
-      body: {
-        club: club,
-        visit_type: VisitType.EventModal,
-      },
-    })
-  }
-
   return (
-    <>
-      <EventCardContainer className="event">
-        <Card bordered hoverable background={WHITE} onClick={showModal}>
-          <LazyLoad offset={800}>
-            <CoverPhoto
-              image={imageUrl}
-              fallback={
-                <p>
-                  <b>
-                    {clubName != null ? clubName.toLocaleUpperCase() : 'Event'}
-                  </b>
-                </p>
-              }
-            />
-          </LazyLoad>
-          <DateInterval start={startDate} end={endDate} />
-          {isHappening ? (
-            <HappeningNow urgent={hoursBetween <= 8} />
+    <EventCardContainer className="event">
+      <Card bordered hoverable background={WHITE} onClick={props.onClick}>
+        <LazyLoad offset={800}>
+          <CoverPhoto
+            image={imageUrl}
+            fallback={
+              <p>
+                <b>
+                  {clubName != null ? clubName.toLocaleUpperCase() : 'Event'}
+                </b>
+              </p>
+            }
+          />
+        </LazyLoad>
+        <DateInterval start={startDate} end={endDate} />
+        {isHappening ? (
+          <HappeningNow urgent={hoursBetween <= 8} />
+        ) : (
+          <TimeLeft date={new Date(startDate)} />
+        )}
+        <ClubName>{clubName}</ClubName>
+        <EventName>{name}</EventName>
+        {url && MEETING_REGEX.test(url) && <Icon name="video" />}{' '}
+        {url &&
+          (/^\(.*\)$/.test(url) ? (
+            url
           ) : (
-            <TimeLeft date={new Date(startDate)} />
-          )}
-          <ClubName>{clubName}</ClubName>
-          <EventName>{name}</EventName>
-          {url && MEETING_REGEX.test(url) && <Icon name="video" />}{' '}
-          {url &&
-            (/^\(.*\)$/.test(url) ? (
-              url
-            ) : (
-              <EventLink onClick={eventClicked} href={url}>
-                {clipLink(url)}
-              </EventLink>
+            <EventLink onClick={props.onLinkClicked} href={url}>
+              {clipLink(url)}
+            </EventLink>
+          ))}
+        {(badges.length > 0 || pinned) && (
+          <div className="tags mt-2">
+            {pinned && (
+              <span className="tag is-primary">
+                <Icon name="map-pin" className="mr-1" /> Pinned
+              </span>
+            )}
+            {badges.map(({ id, label }) => (
+              <span key={id} className="tag is-info">
+                {label}
+              </span>
             ))}
-          {(badges.length > 0 || pinned) && (
-            <div className="tags mt-2">
-              {pinned && (
-                <span className="tag is-primary">
-                  <Icon name="map-pin" className="mr-1" /> Pinned
-                </span>
-              )}
-              {badges.map(({ label }) => (
-                <span className="tag is-info">{label}</span>
-              ))}
-            </div>
-          )}
-        </Card>
-      </EventCardContainer>
-      {modalVisible && (
-        <Modal show={modalVisible} closeModal={hideModal} width="45%">
-          <EventModal {...props} eventClicked={eventClicked} />
-        </Modal>
-      )}
-    </>
+          </div>
+        )}
+      </Card>
+    </EventCardContainer>
   )
 }
 

@@ -47,7 +47,14 @@ import {
   SNOW,
 } from '../constants'
 import renderPage from '../renderPage'
-import { Badge, ClubEvent, ClubEventType, ClubFair, Tag } from '../types'
+import {
+  Badge,
+  ClubEvent,
+  ClubEventType,
+  ClubFair,
+  Tag,
+  VisitType,
+} from '../types'
 import { cache, doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_SINGULAR, OBJECT_NAME_TITLE } from '../utils/branding'
 
@@ -64,6 +71,9 @@ interface EventPageProps {
 }
 
 const CardList = styled.div`
+  margin-left: -1rem;
+  margin-right: -1rem;
+
   & .event {
     display: inline-block;
     vertical-align: top;
@@ -94,6 +104,22 @@ const CalendarEvent = ({
       {resource.club_name != null && <> - {resource.club_name}</>}
     </>
   )
+}
+
+/**
+ * Log the event when a user clicks on an event and opens up the modal.
+ */
+const logEvent = (visit: VisitType, club: string | null): void => {
+  if (club == null) {
+    return
+  }
+  doApiRequest('/clubvisits/?format=json', {
+    method: 'POST',
+    body: {
+      club,
+      visit_type: visit,
+    },
+  })
 }
 
 enum EventsViewOption {
@@ -355,7 +381,7 @@ const sortEvents = (events: ClubEvent[]): ClubEvent[] => {
         return 1
       }
       if (a.rank !== b.rank) {
-        return a.rank - b.rank
+        return b.rank - a.rank
       }
       return (
         a.event.club_name?.localeCompare(b.event.club_name as string) ??
@@ -409,6 +435,12 @@ function EventPage({
 
   const [previewEvent, setPreviewEvent] = useState<ClubEvent | null>(null)
   const hideModal = () => setPreviewEvent(null)
+
+  useEffect(() => {
+    if (previewEvent != null) {
+      logEvent(VisitType.EventModal, previewEvent.club)
+    }
+  }, [previewEvent])
 
   /**
    * When the search parameters or the view is changed, refetch the events from the server.
@@ -652,7 +684,14 @@ function EventPage({
                       </StyledHeader>
                       <CardList>
                         {liveEvents.map((e) => (
-                          <EventCard key={e.id} event={e} />
+                          <EventCard
+                            key={e.id}
+                            event={e}
+                            onClick={() => setPreviewEvent(e)}
+                            onLinkClicked={() =>
+                              logEvent(VisitType.EventLink, e.club)
+                            }
+                          />
                         ))}
                       </CardList>
                       <br />
@@ -675,7 +714,14 @@ function EventPage({
                   </StyledHeader>
                   <CardList>
                     {upcomingEvents.map((e) => (
-                      <EventCard key={e.id} event={e} />
+                      <EventCard
+                        key={e.id}
+                        event={e}
+                        onClick={() => setPreviewEvent(e)}
+                        onLinkClicked={() =>
+                          logEvent(VisitType.EventLink, e.club)
+                        }
+                      />
                     ))}
                   </CardList>
                   {!upcomingEvents.length && (
@@ -751,8 +797,19 @@ function EventPage({
         </Modal>
       )}
       {previewEvent && (
-        <Modal show={true} closeModal={hideModal} width="45%">
-          <EventModal event={previewEvent} showDetailsButton={true} />
+        <Modal
+          show={true}
+          closeModal={hideModal}
+          width="45%"
+          marginBottom={false}
+        >
+          <EventModal
+            event={previewEvent}
+            showDetailsButton={true}
+            onLinkClicked={() =>
+              logEvent(VisitType.EventLink, previewEvent.club)
+            }
+          />
         </Modal>
       )}
     </>

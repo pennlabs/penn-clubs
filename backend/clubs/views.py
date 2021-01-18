@@ -526,6 +526,16 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         """
         Return only the current club fair instance in a list or an empty list
         if there is no fair going on.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                $ref: "#/components/schemas/ClubFair"
+        ---
         """
         now = timezone.now()
         fair = ClubFair.objects.filter(
