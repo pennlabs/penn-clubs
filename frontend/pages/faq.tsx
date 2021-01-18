@@ -10,7 +10,7 @@ import {
   Metadata,
   StrongText,
 } from '../components/common'
-import { CREATE_ROUTE } from '../constants'
+import { CLUBS_HOME, CREATE_ROUTE, HUB_HOME } from '../constants'
 import { SNOW } from '../constants/colors'
 import renderPage from '../renderPage'
 import { MembershipRank } from '../types'
@@ -89,14 +89,17 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
       {SITE_ID === 'fyh' ? (
         <>
           {SITE_NAME} is a place for the Penn community to find and connect with
-          support resources.
+          support resources. If you are looking for student clubs, check out{' '}
+          <a href={CLUBS_HOME}>Penn Clubs</a>, the official registry for student
+          organizations on campus.
         </>
       ) : (
         <>
           {SITE_NAME} is meant to be your central source of information about{' '}
           {OBJECT_NAME_LONG_PLURAL} at the {SCHOOL_NAME}. Keep discovering new{' '}
           {OBJECT_NAME_PLURAL} throughout the year, not just at{' '}
-          {data.primaryMeeting}.
+          {data.primaryMeeting}. If you are looking for official university
+          support resources, check out <a href={HUB_HOME}>Hub@Penn</a>.
         </>
       )}
     </Question>
@@ -253,7 +256,9 @@ const FAQS = {
     <div>
       <Question title="What is Hub@Penn?">
         Hub@Penn is a place for the Penn community to find and connect with
-        support resources.
+        support resources. If you are looking for student clubs, check out{' '}
+        <a href={CLUBS_HOME}>Penn Clubs</a>, the official registry for student
+        organizations on campus.
       </Question>
       <Question title="How can I provide feedback?">
         We're so excited to let everyone at Penn contribute to the development

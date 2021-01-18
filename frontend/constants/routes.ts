@@ -41,3 +41,6 @@ export const REPORT_EDIT_ROUTE = (slug?: number): string =>
 
 export const PROFILE_ROUTE = (slug?: string): string =>
   slug ? `/user/${slug}` : '/user/[user]'
+
+export const CLUBS_HOME = 'http://pennclubs.com/'
+export const HUB_HOME = 'http://hub.provost.upenn.edu/'

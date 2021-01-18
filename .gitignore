@@ -52,3 +52,4 @@ frontend/coverage
 
 # Logs
 yarn-error.log
+frontend/yarn.lock
