@@ -497,12 +497,14 @@ class ClubsOrderingFilter(RandomOrderingFilter):
 
         return new_queryset
 
+
 def get_officers(event):
     officers = []
     for visit in ZoomMeetingVisit.objects.filter(event=event, leave_time=None):
         m = Membership.objects.get(club=event.club, person=visit.person)
         if m and m.role <= Membership.ROLE_OFFICER:
             officers.append(visit.person.username)
+
 
 class ClubFairViewSet(viewsets.ModelViewSet):
     """
@@ -563,7 +565,8 @@ class ClubFairViewSet(viewsets.ModelViewSet):
     def get_events_user_info(self):
         """
         Returns all events, grouped by id, with the number of participants currently in the meeting,
-        the officers or owners in the meeting, and the number of participants who have already attended the meeting
+        the officers or owners in the meeting, and the number of participants
+        who have already attended the meeting
         """
         fair = self.get_object()
         clubs = fair.participating_clubs.all()
@@ -576,13 +579,13 @@ class ClubFairViewSet(viewsets.ModelViewSet):
 
         response = [
             {
-               event.id: {
-                        "num_participants": len(
-                            ZoomMeetingVisit.objects.filter(event=event, leave_time=None)
-                        ),
-                        "officers": get_officers(event),
-                        "already_attended": len(ZoomMeetingVisit.objects.filter(event=event)),
-                    }
+                event.id: {
+                    "num_participants": len(
+                        ZoomMeetingVisit.objects.filter(event=event, leave_time=None)
+                    ),
+                    "officers": get_officers(event),
+                    "already_attended": len(ZoomMeetingVisit.objects.filter(event=event)),
+                }
             }
             for event in events
         ]

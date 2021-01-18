@@ -92,7 +92,6 @@ urlpatterns = [
         FavoriteCalendarAPIView.as_view(),
         name="favorites-calendar",
     ),
-    path(r"fairinfo/", FairInfoAPIView.as_view(), name="fair-info"),
     path(r"emailpreview/", email_preview, name="email-preview"),
     path(r"scripts/", ScriptExecutionView.as_view(), name="scripts"),
     path(r"options/", OptionListView.as_view(), name="options"),

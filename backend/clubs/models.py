@@ -25,6 +25,7 @@ from urlextract import URLExtract
 
 from clubs.utils import clean, get_django_minified_image, get_domain, html_to_text
 
+
 subject_regex = re.compile(r"\s*<!--\s*SUBJECT:\s*(.*?)\s*-->", re.I)
 types_regex = re.compile(r"\s*<!--\s*TYPES:\s*(.*?)\s*-->", re.DOTALL)
 
