@@ -25,7 +25,6 @@ from urlextract import URLExtract
 
 from clubs.utils import clean, get_django_minified_image, get_domain, html_to_text
 
-
 subject_regex = re.compile(r"\s*<!--\s*SUBJECT:\s*(.*?)\s*-->", re.I)
 types_regex = re.compile(r"\s*<!--\s*TYPES:\s*(.*?)\s*-->", re.DOTALL)
 
@@ -695,6 +694,8 @@ class ClubFair(models.Model):
         Create activities fair events for all registered clubs.
         Does not create event if it already exists.
         Returns a list of activities fair events.
+
+        This method should only be used for testing purposes in development.
         """
         start_time = start_time or self.start_time
         end_time = end_time or self.end_time

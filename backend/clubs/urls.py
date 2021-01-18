@@ -77,6 +77,7 @@ clubs_router.register(
 )
 clubs_router.register(r"advisors", AdvisorViewSet, basename="club-advisors")
 
+
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),
     path(r"settings/invites/", EmailInvitesAPIView.as_view(), name="email-invites"),
@@ -91,6 +92,7 @@ urlpatterns = [
         FavoriteCalendarAPIView.as_view(),
         name="favorites-calendar",
     ),
+    path(r"fairinfo/", FairInfoAPIView.as_view(), name="fair-info"),
     path(r"emailpreview/", email_preview, name="email-preview"),
     path(r"scripts/", ScriptExecutionView.as_view(), name="scripts"),
     path(r"options/", OptionListView.as_view(), name="options"),
