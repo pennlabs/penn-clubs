@@ -45,6 +45,8 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
     name,
     url,
     club,
+    pinned,
+    badges,
   } = props.event
   const [modalVisible, setModalVisible] = useState(false)
 
@@ -115,6 +117,18 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
                 {clipLink(url)}
               </EventLink>
             ))}
+          {(badges.length > 0 || pinned) && (
+            <div className="tags mt-2">
+              {pinned && (
+                <span className="tag is-primary">
+                  <Icon name="map-pin" className="mr-1" /> Pinned
+                </span>
+              )}
+              {badges.map(({ label }) => (
+                <span className="tag is-info">{label}</span>
+              ))}
+            </div>
+          )}
         </Card>
       </EventCardContainer>
       {modalVisible && (

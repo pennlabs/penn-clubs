@@ -1947,7 +1947,14 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return (
             qs.select_related("club", "creator",)
-            .prefetch_related("club__badges")
+            .prefetch_related(
+                Prefetch(
+                    "club__badges",
+                    queryset=Badge.objects.filter(
+                        fair__id=self.request.query_params.get("fair", None)
+                    ),
+                )
+            )
             .order_by("start_time")
         )
 
@@ -2588,9 +2595,12 @@ class BadgeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         show_all = self.request.query_params.get("all", "false") == "true"
+        fair = self.request.query_params.get("fair", None)
 
         if show_all:
             return Badge.objects.all()
+        elif fair and fair not in {"null", "undefined"}:
+            return Badge.objects.filter(fair__id=fair)
 
         return Badge.objects.filter(visible=True)
 

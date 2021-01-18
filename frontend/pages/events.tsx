@@ -320,13 +320,16 @@ const getDefaultDateRange = (): { start: Date; end: Date } => {
 }
 
 /**
- * Randomize the order the events are shown in.
+ * Sort the order the events are shown in.
  * First prioritize the events with an earlier start date.
  * If these are equal, slightly prioritize events with more filled out info.
  */
-const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
+const sortEvents = (events: ClubEvent[]): ClubEvent[] => {
   const withRankings = events.map((event) => {
     let rank = 0
+    if (event.pinned) {
+      rank += 10
+    }
     if (event.image_url) {
       rank += 2
     }
@@ -513,8 +516,8 @@ function EventPage({
       }
     })
 
-  liveEvents = randomizeEvents(liveEvents)
-  upcomingEvents = randomizeEvents(upcomingEvents)
+  liveEvents = sortEvents(liveEvents)
+  upcomingEvents = sortEvents(upcomingEvents)
 
   return (
     <>
@@ -764,24 +767,36 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
 
   const dateRange = getDefaultDateRange()
 
-  const cachedFairList: ClubFair[] = await cache(
-    'pages:events:fair',
-    async () => {
-      return doApiRequest('/clubfairs/current/?format=json').then((resp) =>
-        resp.json(),
-      )
-    },
-    60 * 1000,
-  )
+  const cachedFairList: ClubFair[] =
+    ctx.query.fair != null
+      ? [
+          await doApiRequest(
+            `/clubfairs/${encodeURIComponent(
+              ctx.query.fair as string,
+            )}/?format=json`,
+          ).then((resp) => resp.json()),
+        ]
+      : await cache(
+          'pages:events:fair',
+          async () => {
+            return doApiRequest(
+              '/clubfairs/current/?format=json',
+            ).then((resp) => resp.json())
+          },
+          60 * 1000,
+        )
 
   const cachedFair = cachedFairList.length > 0 ? cachedFairList[0] : null
 
   const cachedInfoReq = cache(
-    'pages:events',
+    `pages:events:${cachedFair?.id}`,
     async () => {
       const [tags, badges, clubs] = await Promise.all([
         doApiRequest('/tags/?format=json', data).then((resp) => resp.json()),
-        doApiRequest('/badges/?format=json', data).then((resp) => resp.json()),
+        doApiRequest(
+          `/badges/?fair=${cachedFair?.id}&format=json`,
+          data,
+        ).then((resp) => resp.json()),
         doApiRequest('/clubs/directory/?format=json', data)
           .then((resp) => resp.json())
           .then((resp) => resp.filter(({ approved }) => approved)),
