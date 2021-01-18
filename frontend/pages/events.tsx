@@ -21,6 +21,7 @@ import {
   Icon,
   Metadata,
   Modal,
+  Subtitle,
   Title,
   WideContainer,
 } from '../components/common'
@@ -46,7 +47,14 @@ import {
   SNOW,
 } from '../constants'
 import renderPage from '../renderPage'
-import { Badge, ClubEvent, ClubEventType, Tag } from '../types'
+import {
+  Badge,
+  ClubEvent,
+  ClubEventType,
+  ClubFair,
+  Tag,
+  VisitType,
+} from '../types'
 import { cache, doApiRequest, isClubFieldShown, useSetting } from '../utils'
 import { OBJECT_NAME_SINGULAR, OBJECT_NAME_TITLE } from '../utils/branding'
 
@@ -59,9 +67,13 @@ interface EventPageProps {
   tags: Tag[]
   badges: Badge[]
   clubs: { name: string; code: string }[]
+  fair: ClubFair | null
 }
 
 const CardList = styled.div`
+  margin-left: -1rem;
+  margin-right: -1rem;
+
   & .event {
     display: inline-block;
     vertical-align: top;
@@ -92,6 +104,22 @@ const CalendarEvent = ({
       {resource.club_name != null && <> - {resource.club_name}</>}
     </>
   )
+}
+
+/**
+ * Log the event when a user clicks on an event and opens up the modal.
+ */
+const logEvent = (visit: VisitType, club: string | null): void => {
+  if (club == null) {
+    return
+  }
+  doApiRequest('/clubvisits/?format=json', {
+    method: 'POST',
+    body: {
+      club,
+      visit_type: visit,
+    },
+  })
 }
 
 enum EventsViewOption {
@@ -306,13 +334,28 @@ const parseDateRange = (
 }
 
 /**
- * Randomize the order the events are shown in.
+ * Return the default date range for events in the calendar view.
+ * Returns the events for a month with a little bit of padding on both edges.
+ */
+const getDefaultDateRange = (): { start: Date; end: Date } => {
+  const now = new Date()
+  return {
+    start: new Date(now.getFullYear(), now.getMonth(), -6),
+    end: new Date(now.getFullYear(), now.getMonth() + 1, 6),
+  }
+}
+
+/**
+ * Sort the order the events are shown in.
  * First prioritize the events with an earlier start date.
  * If these are equal, slightly prioritize events with more filled out info.
  */
-const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
+const sortEvents = (events: ClubEvent[]): ClubEvent[] => {
   const withRankings = events.map((event) => {
     let rank = 0
+    if (event.pinned) {
+      rank += 10
+    }
     if (event.image_url) {
       rank += 2
     }
@@ -338,7 +381,7 @@ const randomizeEvents = (events: ClubEvent[]): ClubEvent[] => {
         return 1
       }
       if (a.rank !== b.rank) {
-        return a.rank - b.rank
+        return b.rank - a.rank
       }
       return (
         a.event.club_name?.localeCompare(b.event.club_name as string) ??
@@ -355,16 +398,23 @@ function EventPage({
   tags,
   badges,
   clubs,
+  fair,
 }: EventPageProps): ReactElement {
   const [calendarEvents, setCalendarEvents] = useState<ClubEvent[]>(
     initialEvents,
   )
 
   const isFair = useSetting('FAIR_OPEN')
+  const fairId = useSetting('FAIR_ID')
 
   // during an activities fair, use list view and filter fair events by default
   const [searchInput, setSearchInput] = useState<SearchInput>(
-    isFair ? { type__in: ClubEventType.FAIR.toString() } : {},
+    isFair
+      ? {
+          type__in: ClubEventType.FAIR.toString(),
+          fair: fairId?.toString() as string,
+        }
+      : {},
   )
   const [syncModalVisible, setSyncModalVisible] = useState<boolean>(false)
 
@@ -386,6 +436,12 @@ function EventPage({
   const [previewEvent, setPreviewEvent] = useState<ClubEvent | null>(null)
   const hideModal = () => setPreviewEvent(null)
 
+  useEffect(() => {
+    if (previewEvent != null) {
+      logEvent(VisitType.EventModal, previewEvent.club)
+    }
+  }, [previewEvent])
+
   /**
    * When the search parameters or the view is changed, refetch the events from the server.
    */
@@ -405,14 +461,15 @@ function EventPage({
       params.set(key, value),
     )
 
-    // fetch appropriate range for calendar, or three months starting from now for list
+    // fetch appropriate range for calendar, or now to three months from now for list
     const now = new Date()
-    let endDate = new Date()
-    endDate = new Date(endDate.setMonth(endDate.getMonth() + 3))
     const { start, end } =
       viewOption === EventsViewOption.CALENDAR
         ? parseDateRange(dateRange)
-        : { start: now.toISOString(), end: endDate.toISOString() }
+        : {
+            start: now.toISOString(),
+            end: new Date(now.getFullYear(), now.getMonth() + 3).toISOString(),
+          }
     params.set('end_time__gte', start)
     params.set('start_time__lte', end)
     doApiRequest(`/events/?${params.toString()}`)
@@ -491,8 +548,8 @@ function EventPage({
       }
     })
 
-  liveEvents = randomizeEvents(liveEvents)
-  upcomingEvents = randomizeEvents(upcomingEvents)
+  liveEvents = sortEvents(liveEvents)
+  upcomingEvents = sortEvents(upcomingEvents)
 
   return (
     <>
@@ -613,7 +670,10 @@ function EventPage({
                   {!!liveEvents.length && (
                     <>
                       <StyledHeader>
-                        <Title className="title info">Live Events</Title>
+                        <div className="info">
+                          <Title>Live Events</Title>
+                          {fair != null && <Subtitle>{fair?.name}</Subtitle>}
+                        </div>
                         <div className="tools">
                           <EventsViewToolbar
                             viewOption={viewOption}
@@ -624,14 +684,24 @@ function EventPage({
                       </StyledHeader>
                       <CardList>
                         {liveEvents.map((e) => (
-                          <EventCard key={e.id} event={e} />
+                          <EventCard
+                            key={e.id}
+                            event={e}
+                            onClick={() => setPreviewEvent(e)}
+                            onLinkClicked={() =>
+                              logEvent(VisitType.EventLink, e.club)
+                            }
+                          />
                         ))}
                       </CardList>
                       <br />
                     </>
                   )}
                   <StyledHeader>
-                    <Title className="title info">Upcoming Events</Title>
+                    <div className="info">
+                      <Title>Upcoming Events</Title>
+                      {fair != null && <Subtitle>{fair?.name}</Subtitle>}
+                    </div>
                     {!liveEvents.length && (
                       <div className="tools">
                         <EventsViewToolbar
@@ -644,7 +714,14 @@ function EventPage({
                   </StyledHeader>
                   <CardList>
                     {upcomingEvents.map((e) => (
-                      <EventCard key={e.id} event={e} />
+                      <EventCard
+                        key={e.id}
+                        event={e}
+                        onClick={() => setPreviewEvent(e)}
+                        onLinkClicked={() =>
+                          logEvent(VisitType.EventLink, e.club)
+                        }
+                      />
                     ))}
                   </CardList>
                   {!upcomingEvents.length && (
@@ -720,8 +797,19 @@ function EventPage({
         </Modal>
       )}
       {previewEvent && (
-        <Modal show={true} closeModal={hideModal} width="45%">
-          <EventModal event={previewEvent} showDetailsButton={true} />
+        <Modal
+          show={true}
+          closeModal={hideModal}
+          width="45%"
+          marginBottom={false}
+        >
+          <EventModal
+            event={previewEvent}
+            showDetailsButton={true}
+            onLinkClicked={() =>
+              logEvent(VisitType.EventLink, previewEvent.club)
+            }
+          />
         </Modal>
       )}
     </>
@@ -734,18 +822,38 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
 
-  const now = new Date()
-  const dateRange = {
-    start: new Date(now.getFullYear(), now.getMonth(), -6),
-    end: new Date(now.getFullYear(), now.getMonth() + 1, 6),
-  }
+  const dateRange = getDefaultDateRange()
+
+  const cachedFairList: ClubFair[] =
+    ctx.query.fair != null
+      ? [
+          await doApiRequest(
+            `/clubfairs/${encodeURIComponent(
+              ctx.query.fair as string,
+            )}/?format=json`,
+          ).then((resp) => resp.json()),
+        ]
+      : await cache(
+          'pages:events:fair',
+          async () => {
+            return doApiRequest(
+              '/clubfairs/current/?format=json',
+            ).then((resp) => resp.json())
+          },
+          60 * 1000,
+        )
+
+  const cachedFair = cachedFairList.length > 0 ? cachedFairList[0] : null
 
   const cachedInfoReq = cache(
-    'pages:events',
+    `pages:events:${cachedFair?.id}`,
     async () => {
       const [tags, badges, clubs] = await Promise.all([
         doApiRequest('/tags/?format=json', data).then((resp) => resp.json()),
-        doApiRequest('/badges/?format=json', data).then((resp) => resp.json()),
+        doApiRequest(
+          `/badges/?fair=${cachedFair?.id}&format=json`,
+          data,
+        ).then((resp) => resp.json()),
         doApiRequest('/clubs/directory/?format=json', data)
           .then((resp) => resp.json())
           .then((resp) => resp.filter(({ approved }) => approved)),
@@ -755,15 +863,25 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
     60 * 1000,
   )
 
+  const params = new URLSearchParams()
+  params.set('format', 'json')
+  params.set('start_time__gte', dateRange.start.toISOString())
+  params.set('end_time__lte', dateRange.end.toISOString())
+
+  if (cachedFair != null) {
+    params.set('type__in', ClubEventType.FAIR.toString())
+    params.set('fair', cachedFair.id.toString())
+  }
+
   const [events, cachedInfo] = await Promise.all([
-    doApiRequest(
-      `/events/?format=json&start_time__gte=${dateRange.start.toISOString()}&end_time__lte=${dateRange.end.toISOString()}`,
-      data,
-    ).then((resp) => resp.json()),
+    doApiRequest(`/events/?${params.toString()}`, data).then((resp) =>
+      resp.json(),
+    ),
     cachedInfoReq,
   ])
 
   return {
+    fair: cachedFair,
     events,
     dateRange,
     ...cachedInfo,

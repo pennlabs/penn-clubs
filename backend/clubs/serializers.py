@@ -424,6 +424,7 @@ class EventSerializer(ClubEventSerializer):
     )
     club_name = serializers.SerializerMethodField()
     badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
+    pinned = serializers.BooleanField(read_only=True)
 
     def get_club_name(self, obj):
         if obj.club is None:
@@ -436,6 +437,7 @@ class EventSerializer(ClubEventSerializer):
             "club",
             "club_name",
             "badges",
+            "pinned",
         ]
 
 

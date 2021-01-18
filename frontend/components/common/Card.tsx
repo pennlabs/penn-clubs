@@ -6,6 +6,7 @@ type CardProps = {
   bordered?: boolean
   hoverable?: boolean
   background?: string
+  pinned?: boolean
 }
 
 export const CARD_BORDER_RADIUS = '4px'

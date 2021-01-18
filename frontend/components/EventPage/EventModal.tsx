@@ -1,11 +1,12 @@
+import Color from 'color'
 import Link from 'next/link'
 import React, { ReactElement, useEffect, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
-import { Icon, TransparentButtonLink } from '../../components/common'
+import { Icon } from '../../components/common'
 import { CLUB_ROUTE, M2, ZOOM_BLUE } from '../../constants'
-import { ADD_BUTTON, MEDIUM_GRAY } from '../../constants/colors'
+import { MEDIUM_GRAY } from '../../constants/colors'
 import { ClubEvent } from '../../types'
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_TITLE_SINGULAR } from '../../utils/branding'
@@ -64,14 +65,26 @@ const TimeLeft = styled(TimeAgo)<{ date: Date }>`
   font-size: 12px;
 `
 
+const ZoomButton = styled.a`
+  background-color: ${ZOOM_BLUE};
+  border-color: transparent;
+  color: #fff;
+
+  &:hover {
+    background-color: ${Color(ZOOM_BLUE).darken(0.1).toString()};
+    border-color: transparent;
+    color: #fff;
+  }
+`
+
 export const MEETING_REGEX = /^https?:\/\/(?:[\w-]+\.)?zoom\.us\//i
 
 const EventModal = (props: {
   event: ClubEvent
   showDetailsButton?: boolean
-  eventClicked?: () => void
+  onLinkClicked?: () => void
 }): ReactElement => {
-  const { event, showDetailsButton, eventClicked } = props
+  const { event, showDetailsButton, onLinkClicked } = props
   const {
     large_image_url,
     image_url,
@@ -122,19 +135,18 @@ const EventModal = (props: {
         <EventName>{name}</EventName>
         {url &&
           (MEETING_REGEX.test(url) ? (
-            <a
-              className="button is-info is-small mt-3 mb-2"
-              style={{ backgroundColor: ZOOM_BLUE }}
+            <ZoomButton
+              className="button is-small mt-3 mb-2"
               href={url}
               target="_blank"
-              onClick={eventClicked}
+              onClick={onLinkClicked}
             >
               <Icon name="video" /> Join Meeting
-            </a>
+            </ZoomButton>
           ) : /^\(.*\)$/.test(url) ? (
             url
           ) : (
-            <EventLink onClick={eventClicked} href={url}>
+            <EventLink onClick={onLinkClicked} href={url}>
               {url}
             </EventLink>
           ))}{' '}
@@ -145,10 +157,10 @@ const EventModal = (props: {
         )}
         <StyledDescription contents={description} />
         {showDetailsButton !== false && event.club != null && (
-          <RightAlign>
-            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)} passHref>
-              <TransparentButtonLink
-                backgroundColor={ADD_BUTTON}
+          <div className="is-clearfix">
+            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
+              <a
+                className="button is-link is-pulled-right"
                 onClick={(e) => {
                   if (!event.club) {
                     e.preventDefault()
@@ -156,10 +168,10 @@ const EventModal = (props: {
                 }}
               >
                 See {OBJECT_NAME_TITLE_SINGULAR} Details{' '}
-                <Icon name="chevrons-right" alt="chevrons-right" />
-              </TransparentButtonLink>
+                <Icon name="chevrons-right" className="ml-2" />
+              </a>
             </Link>
-          </RightAlign>
+          </div>
         )}
       </EventDetails>
     </ModalContainer>
