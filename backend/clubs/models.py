@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
-from django.db import models
+from django.db import models, transaction
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -663,7 +663,7 @@ class ClubFair(models.Model):
     questions = models.TextField(default="[]")
     participating_clubs = models.ManyToManyField(Club, through="ClubFairRegistration", blank=True)
 
-    def create_events(self, start_time=None, end_time=None, filter=None):
+    def create_events(self, start_time=None, end_time=None, filter=None, suffix="default"):
         """
         Create activities fair events for all registered clubs.
         Does not create event if it already exists.
@@ -676,14 +676,15 @@ class ClubFair(models.Model):
         if filter is not None:
             club_query = club_query.filter(filter)
         events = []
-        for club in club_query:
-            obj, _ = Event.objects.get_or_create(
-                code=f"fair-{club.code}-{self.id}",
-                club=club,
-                type=Event.FAIR,
-                defaults={"name": self.name, "start_time": start_time, "end_time": end_time},
-            )
-            events.append(obj)
+        with transaction.atomic():
+            for club in club_query:
+                obj, _ = Event.objects.get_or_create(
+                    code=f"fair-{club.code}-{self.id}-{suffix}",
+                    club=club,
+                    type=Event.FAIR,
+                    defaults={"name": self.name, "start_time": start_time, "end_time": end_time},
+                )
+                events.append(obj)
         return events
 
     def __str__(self):

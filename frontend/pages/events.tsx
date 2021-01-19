@@ -55,7 +55,7 @@ import {
   Tag,
   VisitType,
 } from '../types'
-import { cache, doApiRequest, isClubFieldShown, useSetting } from '../utils'
+import { cache, doApiRequest, isClubFieldShown } from '../utils'
 import { OBJECT_NAME_SINGULAR, OBJECT_NAME_TITLE } from '../utils/branding'
 
 type CalendarDateRange = Date[] | { start: Date; end: Date }
@@ -404,15 +404,14 @@ function EventPage({
     initialEvents,
   )
 
-  const isFair = useSetting('FAIR_OPEN')
-  const fairId = useSetting('FAIR_ID')
+  const isFair = fair != null
 
   // during an activities fair, use list view and filter fair events by default
   const [searchInput, setSearchInput] = useState<SearchInput>(
     isFair
       ? {
           type__in: ClubEventType.FAIR.toString(),
-          fair: fairId?.toString() as string,
+          fair: fair?.id.toString() as string,
         }
       : {},
   )

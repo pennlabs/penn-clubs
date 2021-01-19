@@ -287,6 +287,7 @@ function AdminPage({
                 <Form>
                   <Field name="start_time" as={DateTimeField} />
                   <Field name="end_time" as={DateTimeField} />
+                  <Field name="suffix" as={TextField} />
                   <Field
                     name="fair"
                     label={`${OBJECT_NAME_TITLE_SINGULAR} Fair`}

@@ -576,13 +576,14 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         """
         start_time = None
         end_time = None
+        suffix = request.data.get("suffix") or "default"
         if "start_time" in request.data:
             start_time = parse(request.data["start_time"])
         if "end_time" in request.data:
             end_time = parse(request.data["end_time"])
 
         fair = self.get_object()
-        events = fair.create_events(start_time=start_time, end_time=end_time)
+        events = fair.create_events(start_time=start_time, end_time=end_time, suffix=suffix)
         return Response({"events": len(events)})
 
     @action(detail=True, methods=["get"])
@@ -1972,13 +1973,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             qs = qs.filter(Q(club__approved=True) | Q(club__ghost=True) | Q(club__isnull=True))
 
         return (
-            qs.select_related("club", "creator",)
+            qs.select_related("club", "creator")
             .prefetch_related(
                 Prefetch(
                     "club__badges",
-                    queryset=Badge.objects.filter(
-                        fair__id=self.request.query_params.get("fair", None)
-                    ),
+                    queryset=Badge.objects.filter(fair__id=self.request.query_params.get("fair"))
+                    if "fair" in self.request.query_params
+                    else Badge.objects.filter(visible=True),
                 )
             )
             .order_by("start_time")
