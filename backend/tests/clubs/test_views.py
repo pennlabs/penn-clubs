@@ -512,6 +512,10 @@ class ClubTestCase(TestCase):
         )
         self.assertTrue(200 <= resp.status_code < 300, resp.data)
 
+        # can only change link for non activities fair
+        e2.type = Event.OTHER
+        e2.save()
+
         # test google zoom link parsing
         resp = self.client.patch(
             reverse("club-events-detail", args=(self.club1.code, e2.pk)),
