@@ -212,6 +212,13 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.load_extra_data",
 )
 
+SOCIAL_AUTH_DISCONNECT_PIPELINE = (
+    "social_core.pipeline.disconnect.allowed_to_disconnect",
+    "social_core.pipeline.disconnect.get_entries",
+    "social_core.pipeline.disconnect.revoke_tokens",
+    "social_core.pipeline.disconnect.disconnect",
+)
+
 SOCIAL_AUTH_ZOOM_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_ZOOM_OAUTH2_KEY")
 SOCIAL_AUTH_ZOOM_OAUTH2_SECRET = os.environ.get("SOCIAL_AUTH_ZOOM_OAUTH2_SECRET")
 SOCIAL_AUTH_ZOOM_OAUTH2_SCOPE = ["user:read", "user:write", "meeting:read", "meeting:write"]

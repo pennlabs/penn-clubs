@@ -237,6 +237,10 @@ const DatePickerWrapper = styled.span`
   & .react-datepicker-wrapper {
     width: 100%;
   }
+
+  & .react-datepicker-popper {
+    z-index: 3;
+  }
 `
 
 /**

@@ -2117,7 +2117,7 @@ class EventViewSet(ClubEventViewSet):
 
         events = events.values_list(
             "start_time", "end_time", "club__name", "club__code", "club__badges__label"
-        )
+        ).distinct()
         output = {}
         for event in events:
             # group by start date
