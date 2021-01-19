@@ -3083,7 +3083,9 @@ class MeetingZoomWebhookAPIView(APIView):
         if event_id is not None:
             channel_layer = get_channel_layer()
             if channel_layer is not None:
-                async_to_sync(channel_layer.group_send)(f"events-live-{event_id}", {"type": action})
+                async_to_sync(channel_layer.group_send)(
+                    f"events-live-{event_id}", {"type": "join_leave", "event": action}
+                )
 
         return Response({"success": True})
 
@@ -3405,6 +3407,7 @@ class UserZoomAPIView(APIView):
         except requests.exceptions.HTTPError as e:
             raise DRFValidationError(
                 "An error occured while fetching user information. "
+                "Your authentication with the Zoom API might have expired. "
                 "Try reconnecting your account."
             ) from e
 

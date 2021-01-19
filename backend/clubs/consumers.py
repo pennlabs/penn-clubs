@@ -118,7 +118,7 @@ class LiveEventConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     @log_errors
-    async def receive(self, text_data):
+    async def join_leave(self, event):
         await self.send(text_data=json.dumps({"update": True}))
 
 

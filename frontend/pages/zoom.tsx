@@ -1,4 +1,4 @@
-import moment from 'moment'
+import moment from 'moment-timezone'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
@@ -67,6 +67,10 @@ const SmallEvent = styled.div`
 
   & .has-text-warning {
     color: #ffa500 !important;
+  }
+
+  & .has-text-grey {
+    color: #595959 !important;
   }
 `
 
@@ -427,8 +431,8 @@ const ZoomPage = ({
             }
 
             const matchingMeeting = userMeetings.find(({ id }) => id === zoomId)
-            const startTime = moment(event.start_time)
-            const endTime = moment(event.end_time)
+            const startTime = moment(event.start_time).tz('America/New_York')
+            const endTime = moment(event.end_time).tz('America/New_York')
             const eventDuration = moment
               .duration(endTime.diff(startTime))
               .asMinutes()
@@ -449,7 +453,7 @@ const ZoomPage = ({
                     <a>{event.club_name}</a>
                   </Link>
                   <div>
-                    {startTime.format('LLL')} - {endTime.format('LT')}
+                    {startTime.format('LLL')} - {endTime.format('LT z')}
                   </div>
                   <div className="has-text-grey">
                     {moment.duration(endTime.diff(startTime)).asHours()} Hour
