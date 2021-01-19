@@ -81,6 +81,22 @@ const ZoomButton = styled.a`
 
 export const MEETING_REGEX = /^https?:\/\/(?:[\w-]+\.)?zoom\.us\//i
 
+/**
+ * Convert seconds into an approximate human friendly format.
+ */
+const formatDuration = (time: number): string => {
+  if (time >= 3600) {
+    const hours = Math.round(time / 3600)
+    return `${hours} hour${hours === 1 ? '' : 's'}`
+  }
+  if (time >= 60) {
+    const minutes = Math.round(time / 60)
+    return `${minutes} minute${minutes === 1 ? '' : 's'}`
+  }
+  const secs = Math.round(time)
+  return `${secs} second${secs === 1 ? '' : 's'}`
+}
+
 const EventModal = (props: {
   event: ClubEvent
   showDetailsButton?: boolean
@@ -101,6 +117,7 @@ const EventModal = (props: {
     attending: number
     attended: number
     officers: number
+    time: number
   } | null>(null)
 
   const now = new Date()
@@ -157,18 +174,23 @@ const EventModal = (props: {
             </EventLink>
           ))}{' '}
         {userCount != null && (
-          <>
-            <span className="mt-3 ml-2 is-inline-block has-text-info">
+          <div className="mb-3">
+            <span className="has-text-info mr-2">
               <Icon name="user" /> {userCount.attending} attendees
             </span>
-            <span className="mt-3 ml-2 is-inline-block has-text-link">
+            <span className="has-text-link mr-2">
               <Icon name="user" /> {userCount.officers} {OBJECT_NAME_SINGULAR}{' '}
               members
             </span>
-            <span className="mt-3 ml-2 is-inline-block has-text-grey">
+            <span className="has-text-grey mr-2">
               <Icon name="user" /> {userCount.attended} attended
             </span>
-          </>
+            {userCount.time > 0 && (
+              <span className="has-text-primary mr-2">
+                <Icon name="clock" /> {formatDuration(userCount.time)}
+              </span>
+            )}
+          </div>
         )}
         <StyledDescription contents={description} />
         {showDetailsButton !== false && event.club != null && (

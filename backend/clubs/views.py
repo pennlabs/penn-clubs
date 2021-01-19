@@ -22,7 +22,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.validators import validate_email
-from django.db.models import Count, F, Prefetch, Q
+from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
@@ -2957,9 +2957,26 @@ class MeetingZoomWebhookAPIView(APIView):
                                     description: >
                                         Number of users that attended the meeting before.
                                         Does not include currently attending users.
+                                time:
+                                    type: number
+                                    description:
+                                        Number of seconds that the median user attends the meeting.
         ---
         """
         event_id = request.query_params.get("event")
+
+        time_query = (
+            ZoomMeetingVisit.objects.filter(event__id=event_id, leave_time__isnull=False)
+            .annotate(time=ExpressionWrapper(F("leave_time") - F("join_time"), DurationField()))
+            .order_by("time")
+        )
+        time_index = time_query.count()
+        if time_index > 0:
+            time_index //= 2
+            median_time = time_query[time_index].time
+        else:
+            median_time = 0
+
         return Response(
             {
                 "attending": ZoomMeetingVisit.objects.filter(
@@ -2979,6 +2996,7 @@ class MeetingZoomWebhookAPIView(APIView):
                 .values("person")
                 .distinct()
                 .count(),
+                "time": median_time,
             }
         )
 
