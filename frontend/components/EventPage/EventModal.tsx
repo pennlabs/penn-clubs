@@ -97,6 +97,30 @@ const formatDuration = (time: number): string => {
   return `${secs} second${secs === 1 ? '' : 's'}`
 }
 
+/**
+ * Given an event ID, listen using a websocket connection for updates to this event.
+ */
+const LiveEventUpdater = ({
+  id,
+  onUpdate,
+}: {
+  id: number
+  onUpdate: () => void
+}): null => {
+  useEffect(() => {
+    const wsUrl = `${location.protocol === 'http:' ? 'ws' : 'wss'}://${
+      location.host
+    }/api/ws/event/${id}/`
+    const ws = new WebSocket(wsUrl)
+    ws.onmessage = () => {
+      onUpdate()
+    }
+    return () => ws.close()
+  }, [id])
+
+  return null
+}
+
 const EventModal = (props: {
   event: ClubEvent
   showDetailsButton?: boolean
@@ -124,16 +148,19 @@ const EventModal = (props: {
   const startDate = new Date(start_time)
   const endDate = new Date(end_time)
   const isHappening = now >= startDate && now <= endDate
+  const isZoomMeeting = url && MEETING_REGEX.test(url)
 
-  useEffect(() => {
-    if (url && MEETING_REGEX.test(url)) {
+  const refreshLiveData = () => {
+    if (isZoomMeeting) {
       doApiRequest(`/webhook/meeting/?format=json&event=${event.id}`)
         .then((resp) => resp.json())
         .then((resp) => {
           setUserCount(resp)
         })
     }
-  }, [])
+  }
+
+  useEffect(refreshLiveData, [])
 
   return (
     <ModalContainer>
@@ -144,6 +171,9 @@ const EventModal = (props: {
         }
       />
       <EventDetails>
+        {isZoomMeeting && (
+          <LiveEventUpdater id={event.id} onUpdate={refreshLiveData} />
+        )}
         <MetaDataGrid>
           <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
           <RightAlign>

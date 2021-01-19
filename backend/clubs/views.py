@@ -13,6 +13,8 @@ from urllib.parse import urlparse
 import pytz
 import qrcode
 import requests
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from dateutil.parser import parse
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -3010,6 +3012,7 @@ class MeetingZoomWebhookAPIView(APIView):
                 )
 
         action = request.data.get("event")
+        event_id = None
         if action == "meeting.participant_joined":
             email = (
                 request.data.get("payload", {})
@@ -3049,6 +3052,7 @@ class MeetingZoomWebhookAPIView(APIView):
                     participant_id=participant_id,
                     join_time=join_time,
                 )
+                event_id = event.id
         elif action == "meeting.participant_left":
             meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
             participant_id = (
@@ -3074,6 +3078,11 @@ class MeetingZoomWebhookAPIView(APIView):
             if meeting is not None:
                 meeting.leave_time = leave_time
                 meeting.save()
+                event_id = meeting.event.id
+
+        if event_id is not None:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(f"events-live-{event_id}")
 
         return Response({"success": True})
 
