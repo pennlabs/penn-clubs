@@ -526,6 +526,10 @@ class ClubTestCase(TestCase):
         e2.refresh_from_db()
         self.assertEqual(e2.url, "https://upenn.zoom.us/j/123456789")
 
+        # revert that
+        e2.type = Event.FAIR
+        e2.save()
+
         # ensure we can't delete the event as a normal user
         resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, e2.pk)))
         self.assertIn(resp.status_code, [400, 401, 403], resp.data)
