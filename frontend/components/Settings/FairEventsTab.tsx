@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
 
-import { CLUB_ROUTE } from '../../constants'
+import { CLUB_ROUTE, FAIR_INFO_ROUTE, LIVE_EVENTS } from '../../constants'
 import { ClubFair } from '../../types'
 import { doApiRequest } from '../../utils'
 import {
@@ -100,6 +100,28 @@ const FairEventsTab = ({
           ))}
         </select>
       </div>
+      {fairEvents != null && !('detail' in fairEvents) && (
+        <>
+          <div className="buttons mb-2">
+            <Link href={`${FAIR_INFO_ROUTE}?fair=${selectedFair}`}>
+              <a className="button is-link is-small">
+                <Icon name="eye" />
+                Preview Info Page
+              </a>
+            </Link>
+            <Link href={`${LIVE_EVENTS}?fair=${selectedFair}`}>
+              <a className="button is-link is-small">
+                <Icon name="eye" />
+                Preview Events Page
+              </a>
+            </Link>
+          </div>
+          <Text>
+            There are {fairEvents.length} {OBJECT_NAME_PLURAL} in this
+            activities fair.
+          </Text>
+        </>
+      )}
       {fairEvents != null ? (
         'detail' in fairEvents ? (
           <Text>{fairEvents.detail}</Text>
@@ -143,7 +165,13 @@ const FairEventsTab = ({
                       <BoolIndicator value={event.approved} />
                     </td>
                     <td>
-                      <BoolIndicator value={event.meetings.length > 0} />
+                      <BoolIndicator value={event.meetings.length > 0} />{' '}
+                      {event.meetings.length > 1 && (
+                        <span className="has-text-link">
+                          {' '}
+                          ({event.meetings.length})
+                        </span>
+                      )}
                     </td>
                     <td>
                       <BoolIndicator

@@ -553,7 +553,16 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         Create events for each club registered for this activities fair.
         This endpoint will create one event per club spanning the entire listed duration.
         ---
-        requestBody: {}
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            start_time:
+                                type: string
+                            end_time:
+                                type: string
         responses:
             "200":
                 content:
@@ -565,8 +574,15 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                                     type: number
         ---
         """
+        start_time = None
+        end_time = None
+        if "start_time" in request.data:
+            start_time = parse(request.data["start_time"])
+        if "end_time" in request.data:
+            end_time = parse(request.data["end_time"])
+
         fair = self.get_object()
-        events = fair.create_events()
+        events = fair.create_events(start_time=start_time, end_time=end_time)
         return Response({"events": len(events)})
 
     @action(detail=True, methods=["get"])

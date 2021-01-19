@@ -7,6 +7,7 @@ import { Container, Icon, Metadata, Text, Title } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import {
   CheckboxField,
+  DateTimeField,
   SelectField,
   TextField,
 } from '../components/FormComponents'
@@ -169,78 +170,140 @@ function AdminPage({
       label: 'Bulk Editing',
       content: () => (
         <>
-          <Text>
-            You can use the form below to perform bulk editing on{' '}
-            {OBJECT_NAME_PLURAL}. Specify the list of {OBJECT_NAME_SINGULAR}{' '}
-            codes below, which tags or badges you want to add or remove, and
-            then press the action that you desire.
-          </Text>
-          <Formik initialValues={{ action: 'add' }} onSubmit={bulkSubmit}>
-            {({ setFieldValue, handleSubmit, isSubmitting }) => (
-              <Form>
-                <Field
-                  as={TextField}
-                  type="textarea"
-                  name="clubs"
-                  label={`List of ${OBJECT_NAME_TITLE}`}
-                  helpText={`A list of ${OBJECT_NAME_SINGULAR} codes separated by commas, tabs, or new lines. Pasting in an Excel column will usually work perfectly fine.`}
-                />
-                <Field
-                  name="tags"
-                  label="Tags"
-                  as={SelectField}
-                  choices={tags}
-                  valueDeserialize={fixDeserialize(tags)}
-                  isMulti
-                  helpText={`Add or remove all of the specified tags.`}
-                />
-                <Field
-                  name="badges"
-                  label="Badges"
-                  as={SelectField}
-                  choices={badges}
-                  valueDeserialize={fixDeserialize(badges)}
-                  isMulti
-                  helpText={`Add or remove all of the specified badges.`}
-                />
-                <Field
-                  name="fairs"
-                  label={`${OBJECT_NAME_TITLE_SINGULAR} Fairs`}
-                  as={SelectField}
-                  choices={clubfairs}
-                  valueDeserialize={fixDeserialize(clubfairs)}
-                  isMulti
-                  helpText={`Register or deregister the ${OBJECT_NAME_SINGULAR} for the selected fairs. Does not take into account any fair questions.`}
-                />
-                <div className="buttons">
+          <div className="box">
+            <div className="is-size-4">
+              {OBJECT_NAME_TITLE_SINGULAR} Editing
+            </div>
+            <Text>
+              You can use the form below to perform bulk editing on{' '}
+              {OBJECT_NAME_PLURAL}. Specify the list of {OBJECT_NAME_SINGULAR}{' '}
+              codes below, which tags or badges you want to add or remove, and
+              then press the action that you desire.
+            </Text>
+            <Formik initialValues={{ action: 'add' }} onSubmit={bulkSubmit}>
+              {({ setFieldValue, handleSubmit, isSubmitting }) => (
+                <Form>
+                  <Field
+                    as={TextField}
+                    type="textarea"
+                    name="clubs"
+                    label={`List of ${OBJECT_NAME_TITLE}`}
+                    helpText={`A list of ${OBJECT_NAME_SINGULAR} codes separated by commas, tabs, or new lines. Pasting in an Excel column will usually work perfectly fine.`}
+                  />
+                  <Field
+                    name="tags"
+                    label="Tags"
+                    as={SelectField}
+                    choices={tags}
+                    valueDeserialize={fixDeserialize(tags)}
+                    isMulti
+                    helpText={`Add or remove all of the specified tags.`}
+                  />
+                  <Field
+                    name="badges"
+                    label="Badges"
+                    as={SelectField}
+                    choices={badges}
+                    valueDeserialize={fixDeserialize(badges)}
+                    isMulti
+                    helpText={`Add or remove all of the specified badges.`}
+                  />
+                  <Field
+                    name="fairs"
+                    label={`${OBJECT_NAME_TITLE_SINGULAR} Fairs`}
+                    as={SelectField}
+                    choices={clubfairs}
+                    valueDeserialize={fixDeserialize(clubfairs)}
+                    isMulti
+                    helpText={`Register or deregister the ${OBJECT_NAME_SINGULAR} for the selected fairs. Does not take into account any fair questions.`}
+                  />
+                  <div className="buttons">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="button is-success"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setFieldValue('action', 'add')
+                        handleSubmit()
+                      }}
+                    >
+                      <Icon name="plus" /> Bulk Add
+                    </button>
+                    <button
+                      type="submit"
+                      className="button is-danger"
+                      disabled={isSubmitting}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setFieldValue('action', 'remove')
+                        handleSubmit()
+                      }}
+                    >
+                      <Icon name="x" /> Bulk Remove
+                    </button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
+          </div>
+          <div className="box">
+            <div className="is-size-4">Bulk Fair Event Insert</div>
+            <Text>
+              You can use the form below to perform a bulk insertion of events
+              for a particular fair. This will create one event for each{' '}
+              {OBJECT_NAME_SINGULAR} registered for the fair between the given
+              times. For more fine grained control, you will need to manually
+              create the appropriate events.
+            </Text>
+            <Text>
+              This function has a few caveats. It will not create more than one
+              event per club. It will not overwrite any existing entries.
+            </Text>
+            <Formik
+              initialValues={{ fair: null }}
+              onSubmit={(
+                data: { fair: { id: number } | null },
+                { setSubmitting },
+              ) => {
+                if (data.fair != null) {
+                  doApiRequest(
+                    `/clubfairs/${data.fair.id}/create_events/?format=json`,
+                    { method: 'POST', body: data },
+                  )
+                    .then((resp) => resp.json())
+                    .then(({ events }) => {
+                      toast.success(`Created or updated ${events} event(s)!`, {
+                        hideProgressBar: true,
+                      })
+                      setSubmitting(false)
+                    })
+                } else {
+                  setSubmitting(false)
+                }
+              }}
+            >
+              {({ isSubmitting }) => (
+                <Form>
+                  <Field name="start_time" as={DateTimeField} />
+                  <Field name="end_time" as={DateTimeField} />
+                  <Field
+                    name="fair"
+                    label={`${OBJECT_NAME_TITLE_SINGULAR} Fair`}
+                    as={SelectField}
+                    choices={clubfairs}
+                  />
                   <button
                     type="submit"
+                    className="button is-primary"
                     disabled={isSubmitting}
-                    className="button is-success"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      setFieldValue('action', 'add')
-                      handleSubmit()
-                    }}
                   >
-                    <Icon name="plus" /> Bulk Add
+                    <Icon name="plus" /> Insert
                   </button>
-                  <button
-                    type="submit"
-                    className="button is-danger"
-                    disabled={isSubmitting}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      setFieldValue('action', 'remove')
-                      handleSubmit()
-                    }}
-                  >
-                    <Icon name="x" /> Bulk Remove
-                  </button>
-                </div>
-              </Form>
-            )}
-          </Formik>
+                </Form>
+              )}
+            </Formik>
+          </div>
         </>
       ),
     },
