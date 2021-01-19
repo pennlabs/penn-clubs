@@ -577,10 +577,10 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                 start_time_gte=fair.start_time,
                 end_time_lte=fair.end_time,
             )
-            .annotate(participant_count=Count("visits__person"))
+            .annotate(participant_count=Count("visits__person", distinct=True))
             .annotate(
                 already_attended=Count(
-                    "visits__person",
+                    "visits__person", distinct=True,
                     filter=Q(visits__leave_time__lt=datetime.datetime.now())
                     | Q(visits__leave_time__lt=None),
                 )
@@ -588,9 +588,11 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         )
 
         l = events.values_list("id", "participant_count", "already_attended")
-        d = dict(events.filter(
-            club__in=clubs, club__membership_set__role__lte=10, visits__leave_time__lt=None
-        ).values_list("id", "membership_set_person__name"))
+        d = dict(
+            events.filter(
+                club__in=clubs, club__membership_set__role__lte=10, visits__leave_time__lt=None
+            ).values_list("id", "membership_set_person__name")
+        )
 
 <<<<<<< HEAD
         return Response(response)
@@ -604,8 +606,12 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             else:
                 l2.append((i[0], i[1], i[2], []))
 
+<<<<<<< HEAD
         return Response(events)
 >>>>>>> efficiency changes
+=======
+        return Response(l2)
+>>>>>>> tweaks
 
     @action(detail=True, methods=["post"])
     def create_events(self, request, *args, **kwargs):
