@@ -448,7 +448,7 @@ class EventWriteSerializer(EventSerializer):
     Enables URL checking for the url field.
     """
 
-    url = serializers.CharField(max_length=2048, required=False, allow_blank=True)
+    url = serializers.CharField(max_length=2048, required=False, allow_blank=True, allow_null=True)
 
     def update(self, instance, validated_data):
         """
