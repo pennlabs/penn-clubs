@@ -327,6 +327,10 @@ class ClubEventSerializer(serializers.ModelSerializer):
         """
         Ensure that the URL is valid.
         """
+        # convert none to blank
+        if value is None:
+            value = ""
+
         # remove surrounding whitespace
         value = value.strip()
 
@@ -342,9 +346,10 @@ class ClubEventSerializer(serializers.ModelSerializer):
                 )
 
         # expand links copied from google calendar
-        parsed = urlparse(value)
-        if parsed.netloc.endswith(".google.com") and parsed.path == "/url":
-            return parse_qs(parsed.query)["q"][0]
+        if value:
+            parsed = urlparse(value)
+            if parsed.netloc.endswith(".google.com") and parsed.path == "/url":
+                return parse_qs(parsed.query)["q"][0]
 
         return value
 
