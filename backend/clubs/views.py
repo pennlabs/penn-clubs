@@ -3082,7 +3082,8 @@ class MeetingZoomWebhookAPIView(APIView):
 
         if event_id is not None:
             channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(f"events-live-{event_id}")
+            if channel_layer is not None:
+                async_to_sync(channel_layer.group_send)(f"events-live-{event_id}")
 
         return Response({"success": True})
 
