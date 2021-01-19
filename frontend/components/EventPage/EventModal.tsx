@@ -5,11 +5,14 @@ import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
 import { Icon } from '../../components/common'
-import { CLUB_ROUTE, M2, ZOOM_BLUE } from '../../constants'
+import { CLUB_ROUTE, ZOOM_BLUE } from '../../constants'
 import { MEDIUM_GRAY } from '../../constants/colors'
 import { ClubEvent } from '../../types'
 import { doApiRequest } from '../../utils'
-import { OBJECT_NAME_TITLE_SINGULAR } from '../../utils/branding'
+import {
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
+} from '../../utils/branding'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
@@ -39,7 +42,6 @@ const Description = ({
 )
 
 const StyledDescription = styled(Description)`
-  font-size: ${M2};
   margin-top: 5px;
   margin-bottom: 15px;
   max-height: 150px;
@@ -95,7 +97,11 @@ const EventModal = (props: {
     url,
     description,
   } = event
-  const [userCount, setUserCount] = useState<number>(0)
+  const [userCount, setUserCount] = useState<{
+    attending: number
+    attended: number
+    officers: number
+  } | null>(null)
 
   const now = new Date()
   const startDate = new Date(start_time)
@@ -107,7 +113,7 @@ const EventModal = (props: {
       doApiRequest(`/webhook/meeting/?format=json&event=${event.id}`)
         .then((resp) => resp.json())
         .then((resp) => {
-          setUserCount(resp.count)
+          setUserCount(resp)
         })
     }
   }, [])
@@ -150,10 +156,19 @@ const EventModal = (props: {
               {url}
             </EventLink>
           ))}{' '}
-        {userCount > 0 && (
-          <span className="mt-3 ml-2 is-inline-block has-text-info">
-            <Icon name="user" /> {userCount} attendees
-          </span>
+        {userCount != null && (
+          <>
+            <span className="mt-3 ml-2 is-inline-block has-text-info">
+              <Icon name="user" /> {userCount.attending} attendees
+            </span>
+            <span className="mt-3 ml-2 is-inline-block has-text-link">
+              <Icon name="user" /> {userCount.officers} {OBJECT_NAME_SINGULAR}{' '}
+              members
+            </span>
+            <span className="mt-3 ml-2 is-inline-block has-text-grey">
+              <Icon name="user" /> {userCount.attended} attended
+            </span>
+          </>
         )}
         <StyledDescription contents={description} />
         {showDetailsButton !== false && event.club != null && (

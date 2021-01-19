@@ -78,9 +78,27 @@ type CheckListProps = {
   }[]
 }
 
+/**
+ * A unordered list, except Bulma text color constants have been
+ * overwritten to provide better contrast in accordance with AAA guidelines.
+ */
+const AccessibleColorList = styled.ul`
+  & .has-text-success {
+    color: #1d5d36 !important;
+  }
+
+  & .has-text-danger {
+    color: #a60c2b !important;
+  }
+
+  & .has-text-warning {
+    color: #7a5000 !important;
+  }
+`
+
 const CheckList = ({ items }: CheckListProps): ReactElement => {
   return (
-    <ul>
+    <AccessibleColorList>
       {items.map(({ value, label, details }, i) => (
         <li
           key={i}
@@ -101,7 +119,7 @@ const CheckList = ({ items }: CheckListProps): ReactElement => {
           )}
         </li>
       ))}
-    </ul>
+    </AccessibleColorList>
   )
 }
 
@@ -556,10 +574,13 @@ const ZoomPage = ({
                           event.description.length > 3 &&
                           event.description !== 'Replace this description!',
                         label: 'Has meaningful description',
+                        details: `Add some details about your ${OBJECT_NAME_SINGULAR} and information session to the event description. Booths with descriptions will appear above booths without descriptions.`,
                       },
                       {
                         value: !!event.image_url,
                         label: 'Has cover photo',
+                        details:
+                          'Add an eye-catching cover photo to encourage students to visit your booth! Booths with cover photos will appear above booths without cover photos.',
                       },
                     ]}
                   />

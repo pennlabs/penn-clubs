@@ -22,7 +22,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.validators import validate_email
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, F, Prefetch, Q
 from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
@@ -2929,16 +2929,39 @@ class MeetingZoomWebhookAPIView(APIView):
                         schema:
                             type: object
                             properties:
-                                count:
+                                attending:
                                     type: integer
+                                    description: Number of users currently attending the meeting.
+                                officers:
+                                    type: integer
+                                    description: Number of officers attending the meeting.
+                                attended:
+                                    type: integer
+                                    description: >
+                                        Number of users that attended the meeting before.
+                                        Does not include currently attending users.
         ---
         """
         event_id = request.query_params.get("event")
         return Response(
             {
-                "count": ZoomMeetingVisit.objects.filter(
+                "attending": ZoomMeetingVisit.objects.filter(
                     event__id=event_id, leave_time__isnull=True
-                ).count()
+                ).count(),
+                "attended": ZoomMeetingVisit.objects.filter(
+                    event__id=event_id, leave_time__isnull=False
+                )
+                .values("person")
+                .distinct()
+                .count(),
+                "officers": ZoomMeetingVisit.objects.filter(
+                    event__id=event_id,
+                    leave_time__isnull=True,
+                    person=F("event__club__membership__person"),
+                )
+                .values("person")
+                .distinct()
+                .count(),
             }
         )
 

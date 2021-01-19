@@ -450,6 +450,21 @@ class EventWriteSerializer(EventSerializer):
 
     url = serializers.CharField(max_length=2048, required=False, allow_blank=True)
 
+    def update(self, instance, validated_data):
+        """
+        Enforce only changing the meeting link using the Zoom setup page for activities fair events.
+        """
+        if instance.type == Event.FAIR and "url" in validated_data:
+            old_url = instance.url or ""
+            new_url = validated_data.get("url", "")
+            if old_url != new_url:
+                raise serializers.ValidationError(
+                    "You should not change the meeting link manually for fair events! "
+                    "Use the Zoom setup page instead."
+                )
+
+        return super().update(instance, validated_data)
+
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
     id = serializers.CharField(max_length=8, read_only=True)
