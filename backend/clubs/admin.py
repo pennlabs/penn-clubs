@@ -365,6 +365,12 @@ class QuestionAnswerAdmin(admin.ModelAdmin):
     list_filter = ("approved", "updated_at")
 
 
+class ZoomMeetingVisitAdmin(admin.ModelAdmin):
+    search_fields = ("person__username", "event__club__code")
+    list_display = ("person", "event", "join_time")
+    list_filter = (("leave_time", admin.EmptyFieldListFilter),)
+
+
 admin.site.register(Asset)
 admin.site.register(Advisor, AdvisorAdmin)
 admin.site.register(Club, ClubAdmin)
@@ -391,4 +397,4 @@ admin.site.register(StudentType)
 admin.site.register(Note)
 admin.site.register(NoteTag)
 admin.site.register(Year, YearAdmin)
-admin.site.register(ZoomMeetingVisit)
+admin.site.register(ZoomMeetingVisit, ZoomMeetingVisitAdmin)
