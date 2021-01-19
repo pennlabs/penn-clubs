@@ -882,8 +882,10 @@ class ZoomMeetingVisit(models.Model):
     Stores information on a user's attendance to a Zoom meeting
     """
 
-    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True)
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    person = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, null=True, related_name="visits"
+    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="visits")
     meeting_id = models.CharField(max_length=255)
     participant_id = models.CharField(max_length=255)
 

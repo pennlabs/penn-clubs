@@ -500,7 +500,7 @@ class ClubsOrderingFilter(RandomOrderingFilter):
 
 def get_officers(event):
     officers = []
-    for visit in ZoomMeetingVisit.objects.filter(event=event, leave_time=None):
+    for visit in ZoomMeetingVisit.objects.filter(event_in=event, leave_time=None):
         m = Membership.objects.get(club=event.club, person=visit.person)
         if m and m.role <= Membership.ROLE_OFFICER:
             officers.append(visit.person.username)
@@ -562,7 +562,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             return Response([ClubFairSerializer(instance=fair).data])
 =======
     @action(detail=True, methods=["get"])
-    def get_events_user_info(self):
+    def live(self):
         """
         Returns all events, grouped by id, with the number of participants currently in the meeting,
         the officers or owners in the meeting, and the number of participants
@@ -570,28 +570,42 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         """
         fair = self.get_object()
         clubs = fair.participating_clubs.all()
-        events = Event.objects.filter(
-            club__in=clubs,
-            type=Event.FAIR,
-            start_time_gte=fair.start_time,
-            end_time_lte=fair.end_time,
+        events = (
+            Event.objects.filter(
+                club__in=clubs,
+                type=Event.FAIR,
+                start_time_gte=fair.start_time,
+                end_time_lte=fair.end_time,
+            )
+            .annotate(participant_count=Count("visits__person"))
+            .annotate(
+                already_attended=Count(
+                    "visits__person",
+                    filter=Q(visits__leave_time__lt=datetime.datetime.now())
+                    | Q(visits__leave_time__lt=None),
+                )
+            )
         )
 
-        response = [
-            {
-                event.id: {
-                    "num_participants": len(
-                        ZoomMeetingVisit.objects.filter(event=event, leave_time=None)
-                    ),
-                    "officers": get_officers(event),
-                    "already_attended": len(ZoomMeetingVisit.objects.filter(event=event)),
-                }
-            }
-            for event in events
-        ]
+        l = events.values_list("id", "participant_count", "already_attended")
+        d = dict(events.filter(
+            club__in=clubs, club__membership_set__role__lte=10, visits__leave_time__lt=None
+        ).values_list("id", "membership_set_person__name"))
 
+<<<<<<< HEAD
         return Response(response)
 >>>>>>> user info for fairs
+=======
+        l2 = []
+
+        for i in l:
+            if d[i[0]]:
+                l2.append((i[0], i[1], i[2], d[i[0]]))
+            else:
+                l2.append((i[0], i[1], i[2], []))
+
+        return Response(events)
+>>>>>>> efficiency changes
 
     @action(detail=True, methods=["post"])
     def create_events(self, request, *args, **kwargs):
