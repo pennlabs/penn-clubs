@@ -24,7 +24,11 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.validators import validate_email
+<<<<<<< HEAD
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
+=======
+from django.db.models import Count, DateTimeField, ExpressionWrapper, F, Prefetch, Q, Avg, DurationField
+>>>>>>> median and mean
 from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
@@ -580,20 +584,38 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             .annotate(participant_count=Count("visits__person", distinct=True))
             .annotate(
                 already_attended=Count(
-                    "visits__person", distinct=True,
+                    "visits__person",
+                    distinct=True,
                     filter=Q(visits__leave_time__lt=datetime.datetime.now())
                     | Q(visits__leave_time__lt=None),
                 )
             )
+<<<<<<< HEAD
         )
 
         l = events.values_list("id", "participant_count", "already_attended")
         d = dict(
+=======
+            .filter(visits__leave_time__isnull=False)
+            .annotate(
+                durations=ExpressionWrapper(
+                    F("visits__leave_time") - F("visits__join_time"), output_field=DurationField()
+                )
+            )
+            .annotate(durations_mean=Avg("durations")) # mean in case median does not work out
+        )
+
+        median = events.values_list("durations", flat=True).order_by("durations")[int(round(events.count()/2))]
+        # this is a global median, not specific to any event
+        values_list1 = events.values_list("id", "participant_count", "already_attended")
+        values_list2 = dict(
+>>>>>>> median and mean
             events.filter(
                 club__in=clubs, club__membership_set__role__lte=10, visits__leave_time__lt=None
             ).values_list("id", "membership_set_person__name")
         )
 
+<<<<<<< HEAD
 <<<<<<< HEAD
         return Response(response)
 >>>>>>> user info for fairs
@@ -605,6 +627,16 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                 l2.append((i[0], i[1], i[2], d[i[0]]))
             else:
                 l2.append((i[0], i[1], i[2], []))
+=======
+        formatted = {}
+        for i in values_list1:
+            formatted[i[0]] = {
+                "participant_count": i[1],
+                "already_attended": i[2],
+                "officers": values_list2[i[0]] or [],
+                "global_median" : median
+            }
+>>>>>>> median and mean
 
 <<<<<<< HEAD
         return Response(events)
