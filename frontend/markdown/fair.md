@@ -8,7 +8,7 @@ Welcome to **Penn Clubs**, the University of Pennsylvania's official registry fo
 
 <div class="has-text-danger">Club officers will <b>not</b> be able to access the list of students that have bookmarked their club. Bookmarks are intended for personal use only. If you would like a student to send you their contact information, ensure that they <b>subscribe</b> to your club instead of bookmarking it.</div>
 
-## 📅 REQUIRED: Editing Your Activites Fair Fair "Booth"
+## 📅 REQUIRED: Editing Your Activites Fair Booth
 
 To help you get set up, use our automated system by clicking the button below. This is a quick, three-step process that will make sure your meetings are configured correctly for the upcoming fair.
 
