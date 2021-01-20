@@ -1972,7 +1972,7 @@ class ClubTestCase(TestCase):
 
         # test with club fair
         now = timezone.now()
-        ClubFair.objects.create(
+        fair = ClubFair.objects.create(
             name="SAC Fair",
             start_time=now - datetime.timedelta(days=1),
             end_time=now + datetime.timedelta(days=1),
@@ -1982,6 +1982,17 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("options"))
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertTrue(resp.data["FAIR_OPEN"])
+        self.assertFalse(resp.data["PRE_FAIR"])
+
+        # test pre fair status
+        fair.start_time = now + datetime.timedelta(days=2)
+        fair.end_time = now + datetime.timedelta(days=3)
+        fair.save()
+
+        resp = self.client.get(reverse("options"))
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertTrue(resp.data["PRE_FAIR"])
+        self.assertFalse(resp.data["FAIR_OPEN"])
 
     def test_club_fair_registration(self):
         # create a fair
