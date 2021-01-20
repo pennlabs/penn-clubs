@@ -703,7 +703,10 @@ export const SelectField = useFieldWrapper(
         isMulti={isMulti}
         value={(valueDeserialize ?? actualDeserialize)(value)}
         options={
-          actualDeserialize(choices) as { label: string; value: string }[]
+          actualDeserialize(choices) as {
+            label: string | ReactElement
+            value: string
+          }[]
         }
         onChange={(opt): void => setFieldValue(name, actualSerialize(opt))}
         onBlur={onBlur}

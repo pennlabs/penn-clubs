@@ -244,6 +244,14 @@ function AdminPage({
                     label="Badges"
                     as={SelectField}
                     choices={badges}
+                    deserialize={({ id, label, description }) => ({
+                      value: id,
+                      label: (
+                        <>
+                          <b>{label}</b> {description}
+                        </>
+                      ),
+                    })}
                     valueDeserialize={fixDeserialize(badges)}
                     isMulti
                     helpText={`Add or remove all of the specified badges.`}
