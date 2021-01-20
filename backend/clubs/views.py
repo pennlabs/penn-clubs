@@ -25,10 +25,14 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.validators import validate_email
 <<<<<<< HEAD
+<<<<<<< HEAD
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 =======
 from django.db.models import Count, DateTimeField, ExpressionWrapper, F, Prefetch, Q, Avg, DurationField
 >>>>>>> median and mean
+=======
+from django.db.models import Count, ExpressionWrapper, F, Prefetch, Q, Avg, DurationField
+>>>>>>> resolving conflicts
 from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
@@ -644,6 +648,32 @@ class ClubFairViewSet(viewsets.ModelViewSet):
 =======
         return Response(l2)
 >>>>>>> tweaks
+
+    @action(detail=False, methods=["get"])
+    def current(self, request, *args, **kwargs):
+        """
+        Return only the current club fair instance in a list or an empty list
+        if there is no fair going on.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                $ref: "#/components/schemas/ClubFair"
+        ---
+        """
+        now = timezone.now()
+        fair = ClubFair.objects.filter(
+            start_time__lte=now + datetime.timedelta(minutes=2),
+            end_time__gte=now - datetime.timedelta(minutes=2),
+        ).first()
+        if fair is None:
+            return Response([])
+        else:
+            return Response([ClubFairSerializer(instance=fair).data])
 
     @action(detail=True, methods=["post"])
     def create_events(self, request, *args, **kwargs):
