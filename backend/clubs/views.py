@@ -1405,7 +1405,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                     type: string
         ---
         """
-        clubs = [c.strip() for c in re.split(r"[,\t\n]", request.data.get("clubs", ""))]
+        clubs = [c.strip() for c in re.split(r"[\t\n]", request.data.get("clubs", ""))]
         clubs = [c for c in clubs if c]
         simple = {
             name: code
@@ -1415,14 +1415,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         for name in clubs:
             if name in simple:
                 output.append(simple[name])
-            else:
+            elif name:
                 fuzzy = fuzzy_lookup_club(name)
                 if fuzzy is None:
                     fuzzy = "None"
                 else:
                     fuzzy = fuzzy.code
                 output.append(fuzzy)
-        return Response({"output": "\n".join(output)})
+            else:
+                output.append(name)
+        return Response({"output": "\n".join(output).strip()})
 
     @action(detail=False, methods=["post"])
     def bulk(self, request, *args, **kwargs):
@@ -1552,7 +1554,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     )
                     count += len(unregistered_clubs)
                 elif action == "remove":
-                    count += ClubFairRegistration.objects.filter(club__in=club_objs).delete()[0]
+                    count += ClubFairRegistration.objects.filter(
+                        club__in=club_objs, fair=fair
+                    ).delete()[0]
 
         msg = f"{count} object(s) have been updated!"
         if missing_clubs:

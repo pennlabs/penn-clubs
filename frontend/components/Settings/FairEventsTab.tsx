@@ -160,7 +160,11 @@ const FairEventsTab = ({
                         {event.name}
                       </Link>
                     </td>
-                    <td>{event.badges.join(', ') || 'None'}</td>
+                    <td>
+                      {event.badges.join(', ') || (
+                        <span className="has-text-danger">None</span>
+                      )}
+                    </td>
                     <td>
                       <BoolIndicator value={event.approved} />
                     </td>
@@ -187,7 +191,7 @@ const FairEventsTab = ({
                           {' '}
                           (
                           {
-                            event.meetings.map((mt) => mt && mt.length > 0)
+                            event.meetings.filter((mt) => mt && mt.length > 0)
                               .length
                           }
                           /{event.meetings.length})
