@@ -232,6 +232,12 @@ const ZoomPage = ({
           for you and get you set up for the upcoming activities fair. If you
           run into any issues while using the tool, please contact <Contact />.
         </p>
+        <p>
+          Using this process will also allow us to display additional statistics
+          about your Zoom meeting during the fair, including how many people are
+          inside the meeting, how many people have already attended the meeting,
+          and the median meeting participation time.
+        </p>
         <h3>1. Login to your Zoom Account</h3>
         <p>
           Use the button below to login to Zoom and link your Zoom account to{' '}

@@ -32,6 +32,7 @@ import {
  * A component where the user can enter a list of club names and get a list of club codes in response.
  */
 const ClubNameLookup = (): ReactElement => {
+  const [input, setInput] = useState<string>('')
   const [output, setOutput] = useState<string>('')
   const [isLoading, setLoading] = useState<boolean>(false)
 
@@ -41,6 +42,7 @@ const ClubNameLookup = (): ReactElement => {
         initialValues={{}}
         onSubmit={(data) => {
           setLoading(true)
+          setInput(data.clubs)
           doApiRequest(`/clubs/lookup/?format=json`, {
             method: 'POST',
             body: data,
@@ -63,7 +65,12 @@ const ClubNameLookup = (): ReactElement => {
           </button>
         </Form>
       </Formik>
-      {output.length > 0 && <pre className="mt-2">{output}</pre>}
+      {output.length > 0 && (
+        <div className="columns mt-2">
+          <pre className="column">{input}</pre>
+          <pre className="column">{output}</pre>
+        </div>
+      )}
     </>
   )
 }
@@ -244,14 +251,23 @@ function AdminPage({
                     label="Badges"
                     as={SelectField}
                     choices={badges}
-                    deserialize={({ id, label, description }) => ({
+                    deserialize={({ id, label, description, purpose }) => ({
                       value: id,
-                      label: (
-                        <>
-                          <b>{label}</b> {description}
-                        </>
-                      ),
+                      label: label,
+                      description: description,
+                      purpose: purpose,
                     })}
+                    formatOptionLabel={({ label, description, purpose }) => (
+                      <>
+                        {purpose === 'fair' && (
+                          <>
+                            <Icon name="tent" />{' '}
+                          </>
+                        )}
+                        <b>{label}</b>{' '}
+                        <span className="has-text-grey">{description}</span>
+                      </>
+                    )}
                     valueDeserialize={fixDeserialize(badges)}
                     isMulti
                     helpText={`Add or remove all of the specified badges.`}

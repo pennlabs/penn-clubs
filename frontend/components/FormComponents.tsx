@@ -645,6 +645,7 @@ export const SelectField = useFieldWrapper(
     deserialize,
     valueDeserialize,
     isMulti,
+    formatOptionLabel,
   }: BasicFormField &
     SelectFieldProps<
       { [key: string]: string | number } | string
@@ -708,6 +709,7 @@ export const SelectField = useFieldWrapper(
             value: string
           }[]
         }
+        formatOptionLabel={formatOptionLabel}
         onChange={(opt): void => setFieldValue(name, actualSerialize(opt))}
         onBlur={onBlur}
         styles={{ container: (style) => ({ ...style, width: '100%' }) }}
