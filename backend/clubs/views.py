@@ -138,7 +138,7 @@ from clubs.serializers import (
     WritableClubFairSerializer,
     YearSerializer,
 )
-from clubs.utils import html_to_text
+from clubs.utils import fuzzy_lookup_club, html_to_text
 
 
 def file_upload_endpoint_helper(request, code):
@@ -565,6 +565,10 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                                 type: string
                             end_time:
                                 type: string
+                            suffix:
+                                type: string
+                            clubs:
+                                type: string
         responses:
             "200":
                 content:
@@ -578,14 +582,23 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         """
         start_time = None
         end_time = None
+        query = None
         suffix = request.data.get("suffix") or "default"
+        clubs = [c.strip() for c in re.split(r"[,\t\n]", request.data.get("clubs", ""))]
+        clubs = [c for c in clubs]
+
+        if clubs:
+            query = Q(code__in=clubs)
+
         if "start_time" in request.data:
             start_time = parse(request.data["start_time"])
         if "end_time" in request.data:
             end_time = parse(request.data["end_time"])
 
         fair = self.get_object()
-        events = fair.create_events(start_time=start_time, end_time=end_time, suffix=suffix)
+        events = fair.create_events(
+            start_time=start_time, end_time=end_time, suffix=suffix, filter=query
+        )
         return Response({"events": len(events)})
 
     @action(detail=True, methods=["get"])
@@ -870,7 +883,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             if self.action in {"retrieve"}:
                 queryset = queryset.prefetch_related(
                     "asset_set",
-                    "badges",
+                    Prefetch("badges", queryset=Badge.objects.filter(visible=True)),
                     "student_types",
                     "target_majors",
                     "target_schools",
@@ -1368,6 +1381,48 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return Response(serializer.data)
         else:
             return Response({"error": "The SAC badge does not exist in the database."})
+
+    @action(detail=False, methods=["post"])
+    def lookup(self, request, *args, **kwargs):
+        """
+        An endpoint to look up club codes from club names.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        properties:
+                            clubs:
+                                type: string
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                output:
+                                    type: string
+        ---
+        """
+        clubs = [c.strip() for c in re.split(r"[,\t\n]", request.data.get("clubs", ""))]
+        clubs = [c for c in clubs if c]
+        simple = {
+            name: code
+            for name, code in Club.objects.filter(name__in=clubs).values_list("name", "code")
+        }
+        output = []
+        for name in clubs:
+            if name in simple:
+                output.append(simple[name])
+            else:
+                fuzzy = fuzzy_lookup_club(name)
+                if fuzzy is None:
+                    fuzzy = "None"
+                else:
+                    fuzzy = fuzzy.name
+                output.append(fuzzy)
+        return Response({"output": "\n".join(output)})
 
     @action(detail=False, methods=["post"])
     def bulk(self, request, *args, **kwargs):

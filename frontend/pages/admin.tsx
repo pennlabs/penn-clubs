@@ -28,6 +28,46 @@ import {
   SITE_NAME,
 } from '../utils/branding'
 
+/**
+ * A component where the user can enter a list of club names and get a list of club codes in response.
+ */
+const ClubNameLookup = (): ReactElement => {
+  const [output, setOutput] = useState<string>('')
+  const [isLoading, setLoading] = useState<boolean>(false)
+
+  return (
+    <>
+      <Formik
+        initialValues={{}}
+        onSubmit={(data) => {
+          setLoading(true)
+          doApiRequest(`/clubs/lookup/?format=json`, {
+            method: 'POST',
+            body: data,
+          })
+            .then((resp) => resp.json())
+            .then((data) => {
+              setOutput(data.output)
+              setLoading(false)
+            })
+        }}
+      >
+        <Form>
+          <Field name="clubs" as={TextField} type="textarea" />
+          <button
+            type="submit"
+            className="button is-primary"
+            disabled={isLoading}
+          >
+            <Icon name="search" /> Lookup
+          </button>
+        </Form>
+      </Formik>
+      {output.length > 0 && <pre className="mt-2">{output}</pre>}
+    </>
+  )
+}
+
 const ScriptBox = ({ script, useWs }): ReactElement => {
   const ws = useRef<WebSocket | null>(null)
   const [isLoading, setLoading] = useState<boolean>(false)
@@ -287,12 +327,23 @@ function AdminPage({
                 <Form>
                   <Field name="start_time" as={DateTimeField} />
                   <Field name="end_time" as={DateTimeField} />
-                  <Field name="suffix" as={TextField} />
+                  <Field
+                    name="suffix"
+                    as={TextField}
+                    helpText={`Prevents the creation of duplicate events. Already created events with the same ${OBJECT_NAME_SINGULAR}, fair, and suffix will not be duplicated.`}
+                  />
+                  <Field
+                    name="clubs"
+                    as={TextField}
+                    type="textarea"
+                    helpText={`A list of ${OBJECT_NAME_SINGULAR} codes, separated by commas, tabs, or newlines. If specified, events will only be created for the ${OBJECT_NAME_PLURAL} in the list.`}
+                  />
                   <Field
                     name="fair"
                     label={`${OBJECT_NAME_TITLE_SINGULAR} Fair`}
                     as={SelectField}
                     choices={clubfairs}
+                    helpText={`The ${OBJECT_NAME_SINGULAR} fair to create the events for.`}
                   />
                   <button
                     type="submit"
@@ -304,6 +355,14 @@ function AdminPage({
                 </Form>
               )}
             </Formik>
+          </div>
+          <div className="box">
+            <div className="is-size-4">Club Name Lookup</div>
+            <Text>
+              Convert a list of club names into a list of club codes, which can
+              be used with the other functions.
+            </Text>
+            <ClubNameLookup />
           </div>
         </>
       ),
