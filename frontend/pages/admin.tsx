@@ -39,7 +39,7 @@ const ClubNameLookup = (): ReactElement => {
   return (
     <>
       <Formik
-        initialValues={{}}
+        initialValues={{ clubs: '' }}
         onSubmit={(data) => {
           setLoading(true)
           setInput(data.clubs)

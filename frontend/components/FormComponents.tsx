@@ -625,6 +625,7 @@ type SelectFieldProps<T> = {
   ) => typeof inpt extends Array<T>
     ? { value: string; label: string }[]
     : { value: string; label: string }
+  formatOptionLabel: (inpt: any) => string | ReactElement
   isMulti?: boolean
 }
 
