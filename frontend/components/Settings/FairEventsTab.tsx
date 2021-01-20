@@ -181,7 +181,18 @@ const FairEventsTab = ({
                             (meet) => meet && meet.length > 0,
                           )
                         }
-                      />
+                      />{' '}
+                      {event.meetings.length > 1 && (
+                        <span className="has-text-link">
+                          {' '}
+                          (
+                          {
+                            event.meetings.map((mt) => mt && mt.length > 0)
+                              .length
+                          }
+                          /{event.meetings.length})
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}

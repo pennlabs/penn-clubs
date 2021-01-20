@@ -63,13 +63,13 @@ def send_mail_helper(name, subject, emails, context):
 
     # use subject from template if it exists
     # subject should match: <!-- SUBJECT: (subject) --> and be the first line
-    match = subject_regex.match(html_content)
+    match = subject_regex.search(html_content)
     if match is not None:
         subject = match.group(1)
         html_content = subject_regex.sub("", html_content, count=1)
 
     # remove type annotation comment
-    match = types_regex.match(html_content)
+    match = types_regex.search(html_content)
     if match is not None:
         html_content = types_regex.sub("", html_content, count=1)
     else:
@@ -80,7 +80,10 @@ def send_mail_helper(name, subject, emails, context):
         )
 
     if subject is None:
-        raise ValueError("You must specify a email subject as an argument or in the template!")
+        raise ValueError(
+            "You must specify a email subject as an argument or in the template! \n"
+            f"The following output was generated from the template:\n\n{html_content}"
+        )
 
     # generate text alternative
     text_content = html_to_text(html_content)
@@ -393,10 +396,12 @@ class Club(models.Model):
             return len(modified_events)
         return 0
 
-    def send_virtual_fair_email(self, request=None, email="setup"):
+    def send_virtual_fair_email(self, request=None, email="setup", fair=None, emails=None):
         """
-        Send the virtual fair email to all club officers
-        about setting up their club for the virtual fair.
+        Send an email to all club officers about setting up their club for the virtual fair.
+
+        If no list of emails is specified, the officer emails for this club will be used.
+        If no fair is specified, the closest upcoming fair will be used.
         """
         domain = get_domain(request)
 
@@ -404,6 +409,9 @@ class Club(models.Model):
         event = (
             self.events.filter(start_time__gte=now, type=Event.FAIR).order_by("start_time").first()
         )
+
+        if fair is None:
+            fair = ClubFair.objects.filter(start_time__gte=now).order_by("start_time").first()
 
         prefix = (
             "ACTION REQUIRED"
@@ -413,22 +421,18 @@ class Club(models.Model):
         if email in {"urgent", "zoom"}:
             prefix = "URGENT"
 
-        emails = self.get_officer_emails()
-        subj = "SAC Fair Setup and Information"
-        if email in {"urgent", "zoom"}:
-            subj = "SAC Fair Setup"
-        elif email in {"post"}:
-            subj = "Post SAC Fair Information"
-            prefix = "REMINDER"
+        if emails is None:
+            emails = self.get_officer_emails()
 
         context = {
             "name": self.name,
             "prefix": prefix,
-            "guide_url": f"https://{domain}/sacfairguide",
+            "guide_url": f"https://{domain}/guides/fair",
             "zoom_url": f"https://{domain}/zoom",
-            "fair_url": f"https://{domain}/fair",
+            "fair_url": f"https://{domain}/fair?fair={fair.id if fair is not None else ''}",
             "subscriptions_url": f"https://{domain}/club/{self.code}/edit#recruitment",
             "num_subscriptions": self.subscribe_set.count(),
+            "fair": fair,
         }
 
         if emails:
@@ -439,7 +443,7 @@ class Club(models.Model):
                     "zoom": "zoom_reminder",
                     "post": "fair_feedback_officers",
                 }[email],
-                subject=f"[{prefix}] {subj}",
+                subject=None,
                 emails=emails,
                 context=context,
             )

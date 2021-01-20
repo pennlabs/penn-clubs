@@ -3995,19 +3995,9 @@ def email_preview(request):
             initial_context = get_initial_context_from_types(types)
 
         # set specified values
-        for param, value in request.GET.items():
-            if param not in {"email"}:
-                # parse non-string representations
-                if value.strip().lower() in {"true", "yes"}:
-                    value = True
-                elif value.strip().lower() in {"false", "no"}:
-                    value = False
-                elif value.isdigit():
-                    value = int(value)
-                elif value.startswith(("{", "[")):
-                    value = json.loads(value)
-
-                initial_context[param] = value
+        variables = request.GET.get("variables")
+        if variables is not None:
+            initial_context.update(json.loads(variables))
 
         email = render_to_string(f"{prefix}/{email_path}.html", initial_context)
         text_email = html_to_text(email)
@@ -4019,6 +4009,6 @@ def email_preview(request):
             "templates": email_templates,
             "email": email,
             "text_email": text_email,
-            "variables": list(sorted(initial_context.items())),
+            "variables": json.dumps(initial_context, indent=4),
         },
     )

@@ -7,8 +7,12 @@ import styled from 'styled-components'
 import { Icon } from '../../components/common'
 import { CLUB_ROUTE, ZOOM_BLUE } from '../../constants'
 import { MEDIUM_GRAY } from '../../constants/colors'
-import { ClubEvent } from '../../types'
-import { doApiRequest } from '../../utils'
+import { Club, ClubEvent } from '../../types'
+import {
+  apiSetFavoriteStatus,
+  apiSetSubscribeStatus,
+  doApiRequest,
+} from '../../utils'
 import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -121,6 +125,50 @@ const LiveEventUpdater = ({
   return null
 }
 
+/**
+ * Buttons that allow you to bookmark and subscribe to a club.
+ */
+const ActionButtons = ({ club: code }): ReactElement | null => {
+  const [isBookmarked, setBookmarked] = useState<boolean | null>(null)
+  const [isSubscribed, setSubscribed] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    doApiRequest(`/clubs/${code}/?format=json`)
+      .then((resp) => resp.json())
+      .then((data: Club) => {
+        setSubscribed(data.is_subscribe)
+        setBookmarked(data.is_favorite)
+      })
+  }, [code])
+
+  if (isSubscribed == null || isBookmarked == null) {
+    return null
+  }
+
+  return (
+    <>
+      <button
+        className="button is-success is-small"
+        disabled={isBookmarked}
+        onClick={() =>
+          apiSetFavoriteStatus(code, true).then(() => setBookmarked(true))
+        }
+      >
+        <Icon name="bookmark" /> {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+      </button>
+      <button
+        className="button is-success is-small"
+        disabled={isSubscribed}
+        onClick={() =>
+          apiSetSubscribeStatus(code, true).then(() => setSubscribed(true))
+        }
+      >
+        <Icon name="bell" /> {isSubscribed ? 'Subscribed' : 'Subscribe'}
+      </button>
+    </>
+  )
+}
+
 const EventModal = (props: {
   event: ClubEvent
   showDetailsButton?: boolean
@@ -130,6 +178,7 @@ const EventModal = (props: {
   const {
     large_image_url,
     image_url,
+    club,
     club_name,
     start_time,
     end_time,
@@ -225,19 +274,22 @@ const EventModal = (props: {
         <StyledDescription contents={description} />
         {showDetailsButton !== false && event.club != null && (
           <div className="is-clearfix">
-            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
-              <a
-                className="button is-link is-pulled-right"
-                onClick={(e) => {
-                  if (!event.club) {
-                    e.preventDefault()
-                  }
-                }}
-              >
-                See {OBJECT_NAME_TITLE_SINGULAR} Details{' '}
-                <Icon name="chevrons-right" className="ml-2" />
-              </a>
-            </Link>
+            <div className="buttons is-pulled-right">
+              {club != null && <ActionButtons club={club} />}
+              <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
+                <a
+                  className="button is-link is-small"
+                  onClick={(e) => {
+                    if (!event.club) {
+                      e.preventDefault()
+                    }
+                  }}
+                >
+                  See {OBJECT_NAME_TITLE_SINGULAR} Details{' '}
+                  <Icon name="chevrons-right" className="ml-2" />
+                </a>
+              </Link>
+            </div>
           </div>
         )}
       </EventDetails>
