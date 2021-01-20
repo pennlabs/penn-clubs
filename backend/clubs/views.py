@@ -507,19 +507,8 @@ class ClubsOrderingFilter(RandomOrderingFilter):
         return new_queryset
 
 
-def get_officers(event):
-    officers = []
-    for visit in ZoomMeetingVisit.objects.filter(event_in=event, leave_time=None):
-        m = Membership.objects.get(club=event.club, person=visit.person)
-        if m and m.role <= Membership.ROLE_OFFICER:
-            officers.append(visit.person.username)
-
-
 class ClubFairViewSet(viewsets.ModelViewSet):
     """
-    get:
-    Return an individual fair's details
-
     list:
     Return a list of ongoing and upcoming club fairs.
 
