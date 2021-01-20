@@ -1551,7 +1551,7 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_has_badges(self):
-        badge = Badge(label="SAC Funded", description="")
+        badge = Badge(label="SAC Funded", description="", visible=True)
         badge.save()
         self.club1.badges.add(badge)
         resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
