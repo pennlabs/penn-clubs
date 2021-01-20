@@ -27,7 +27,6 @@ from django.core.validators import validate_email
 from django.db.models import (
     Avg,
     Count,
-    DateTimeField,
     DurationField,
     ExpressionWrapper,
     F,
@@ -612,32 +611,6 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                 "global_median": median,
             }
         return Response(events)
-
-    @action(detail=False, methods=["get"])
-    def current(self, request, *args, **kwargs):
-        """
-        Return only the current club fair instance in a list or an empty list
-        if there is no fair going on.
-        ---
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                            type: array
-                            items:
-                                $ref: "#/components/schemas/ClubFair"
-        ---
-        """
-        now = timezone.now()
-        fair = ClubFair.objects.filter(
-            start_time__lte=now + datetime.timedelta(minutes=2),
-            end_time__gte=now - datetime.timedelta(minutes=2),
-        ).first()
-        if fair is None:
-            return Response([])
-        else:
-            return Response([ClubFairSerializer(instance=fair).data])
 
     @action(detail=True, methods=["post"])
     def create_events(self, request, *args, **kwargs):
