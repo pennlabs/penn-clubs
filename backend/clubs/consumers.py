@@ -118,8 +118,12 @@ class LiveEventConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     @log_errors
-    async def join_leave(self, event):
-        await self.send(text_data=json.dumps({"update": True}))
+    async def join_leave(self, event, is_current_user):
+        await self.send(text_data=json.dumps({
+            "update": True,
+            "event": event,
+            "is_current_user": is_current_user
+        }))
 
 
 class ChatConsumer(AsyncWebsocketConsumer):

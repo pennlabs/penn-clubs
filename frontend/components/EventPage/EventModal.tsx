@@ -102,22 +102,86 @@ const formatDuration = (time: number): string => {
 }
 
 /**
+ * Modal that allows you to bookmark or subscribe to a club after leaving their
+ * meeting
+ */
+const ActionModal = ({
+  display,
+  code,
+  closeActionModal,
+}: {
+  display: boolean
+  code: string | null
+  closeActionModal: () => void
+}): ReactElement | null => {
+  const [isBookmarked, setBookmarked] = useState<boolean | null>(null)
+  const [isSubscribed, setSubscribed] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    doApiRequest(`/clubs/${code}/?format=json`)
+      .then((resp) => resp.json())
+      .then((data: Club) => {
+        setSubscribed(data.is_subscribe)
+        setBookmarked(data.is_favorite)
+      })
+  }, [code])
+
+  if (display || code == null || isSubscribed == null || isBookmarked == null) {
+    return null
+  }
+
+  return (
+    <>
+      <button
+        className="button is-success is-small"
+        disabled={isBookmarked}
+        onClick={() =>
+          apiSetFavoriteStatus(code, true).then(() => setBookmarked(true))
+        }
+      >
+        <Icon name="bookmark" /> {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+      </button>
+      <button
+        className="button is-success is-small"
+        disabled={isSubscribed}
+        onClick={() =>
+          apiSetSubscribeStatus(code, true).then(() => setSubscribed(true))
+        }
+      >
+        <Icon name="bell" /> {isSubscribed ? 'Subscribed' : 'Subscribe'}
+      </button>
+      <button className="button is-success is-small" onClick={closeActionModal}>
+        Close
+      </button>
+    </>
+  )
+}
+
+/**
  * Given an event ID, listen using a websocket connection for updates to this event.
  */
 const LiveEventUpdater = ({
   id,
   onUpdate,
+  openActionModal,
 }: {
   id: number
   onUpdate: () => void
+  openActionModal: () => void
 }): null => {
   useEffect(() => {
     const wsUrl = `${location.protocol === 'http:' ? 'ws' : 'wss'}://${
       location.host
     }/api/ws/event/${id}/`
     const ws = new WebSocket(wsUrl)
-    ws.onmessage = () => {
+    ws.onmessage = (event) => {
       onUpdate()
+
+      // Handle bookmark / subscription modal
+      const msg = event.data
+      if (msg.event === 'meeting.participant_left' && msg.is_current_user) {
+        openActionModal()
+      }
     }
     return () => ws.close()
   }, [id])
@@ -192,6 +256,7 @@ const EventModal = (props: {
     officers: number
     time: number
   } | null>(null)
+  const [actionModal, setActionModal] = useState<boolean>(false)
 
   const now = new Date()
   const startDate = new Date(start_time)
@@ -221,7 +286,11 @@ const EventModal = (props: {
       />
       <EventDetails>
         {isZoomMeeting && (
-          <LiveEventUpdater id={event.id} onUpdate={refreshLiveData} />
+          <LiveEventUpdater
+            id={event.id}
+            onUpdate={refreshLiveData}
+            openActionModal={() => setActionModal(true)}
+          />
         )}
         <MetaDataGrid>
           <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
@@ -293,6 +362,11 @@ const EventModal = (props: {
           </div>
         )}
       </EventDetails>
+      <ActionModal
+        display={actionModal}
+        code={club}
+        closeActionModal={() => setActionModal(false)}
+      ></ActionModal>
     </ModalContainer>
   )
 }

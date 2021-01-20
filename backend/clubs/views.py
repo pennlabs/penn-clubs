@@ -3139,7 +3139,11 @@ class MeetingZoomWebhookAPIView(APIView):
             channel_layer = get_channel_layer()
             if channel_layer is not None:
                 async_to_sync(channel_layer.group_send)(
-                    f"events-live-{event_id}", {"type": "join_leave", "event": action}
+                    f"events-live-{event_id}", {
+                        "type": "join_leave",
+                        "event": action,
+                        "is_current_user": person == request.user
+                    }
                 )
 
         return Response({"success": True})
