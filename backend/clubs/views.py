@@ -24,15 +24,16 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.validators import validate_email
-<<<<<<< HEAD
-<<<<<<< HEAD
-from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
-=======
-from django.db.models import Count, DateTimeField, ExpressionWrapper, F, Prefetch, Q, Avg, DurationField
->>>>>>> median and mean
-=======
-from django.db.models import Count, ExpressionWrapper, F, Prefetch, Q, Avg, DurationField
->>>>>>> resolving conflicts
+from django.db.models import (
+    Avg,
+    Count,
+    DateTimeField,
+    DurationField,
+    ExpressionWrapper,
+    F,
+    Prefetch,
+    Q,
+)
 from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
@@ -542,7 +543,6 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             return WritableClubFairSerializer
         return ClubFairSerializer
 
-<<<<<<< HEAD
     @action(detail=False, methods=["get"])
     def current(self, request, *args, **kwargs):
         """
@@ -568,7 +568,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             return Response([])
         else:
             return Response([ClubFairSerializer(instance=fair).data])
-=======
+
     @action(detail=True, methods=["get"])
     def live(self):
         """
@@ -594,60 +594,35 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                     | Q(visits__leave_time__lt=None),
                 )
             )
-<<<<<<< HEAD
-        )
-
-        l = events.values_list("id", "participant_count", "already_attended")
-        d = dict(
-=======
             .filter(visits__leave_time__isnull=False)
             .annotate(
                 durations=ExpressionWrapper(
                     F("visits__leave_time") - F("visits__join_time"), output_field=DurationField()
                 )
             )
-            .annotate(durations_mean=Avg("durations")) # mean in case median does not work out
+            .annotate(durations_mean=Avg("durations"))  # mean in case median does not work out
         )
 
-        median = events.values_list("durations", flat=True).order_by("durations")[int(round(events.count()/2))]
+        median = events.values_list("durations", flat=True).order_by("durations")[
+            int(round(events.count() / 2))
+        ]
         # this is a global median, not specific to any event
         values_list1 = events.values_list("id", "participant_count", "already_attended")
         values_list2 = dict(
->>>>>>> median and mean
             events.filter(
                 club__in=clubs, club__membership_set__role__lte=10, visits__leave_time__lt=None
             ).values_list("id", "membership_set_person__name")
         )
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-        return Response(response)
->>>>>>> user info for fairs
-=======
-        l2 = []
-
-        for i in l:
-            if d[i[0]]:
-                l2.append((i[0], i[1], i[2], d[i[0]]))
-            else:
-                l2.append((i[0], i[1], i[2], []))
-=======
         formatted = {}
         for i in values_list1:
             formatted[i[0]] = {
                 "participant_count": i[1],
                 "already_attended": i[2],
                 "officers": values_list2[i[0]] or [],
-                "global_median" : median
+                "global_median": median,
             }
->>>>>>> median and mean
-
-<<<<<<< HEAD
         return Response(events)
->>>>>>> efficiency changes
-=======
-        return Response(l2)
->>>>>>> tweaks
 
     @action(detail=False, methods=["get"])
     def current(self, request, *args, **kwargs):
