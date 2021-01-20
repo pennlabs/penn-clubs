@@ -104,6 +104,12 @@ class Command(BaseCommand):
             help="The permission level to grant for new invitations.",
         )
         parser.add_argument(
+            "--fair",
+            type=int,
+            help="The id of the club fair to use for fair related emails. "
+            "If not specified, uses the closest upcoming activities fair.",
+        )
+        parser.add_argument(
             "--include-staff",
             dest="include_staff",
             action="store_true",
@@ -134,6 +140,7 @@ class Command(BaseCommand):
         role_mapping = {k: v for k, v in Membership.ROLE_CHOICES}
 
         email_file = kwargs["emails"]
+        test_email = kwargs.get("test", None)
 
         # download file if url
         if email_file is not None and re.match("^https?://", email_file, re.I):
@@ -151,7 +158,6 @@ class Command(BaseCommand):
             "hap_second_round",
             "hap_partner_communication",
         }:
-            test_email = kwargs.get("test", None)
             people = collections.defaultdict(dict)
 
             if action == "hap_partner_communication":
@@ -235,7 +241,6 @@ class Command(BaseCommand):
             return
 
         if action in {"wc_intro"}:
-            test_email = kwargs.get("test", None)
             people = collections.defaultdict(dict)
 
             # read recipients from csv file
@@ -304,7 +309,11 @@ class Command(BaseCommand):
         # handle sending out virtual fair emails
         if action == "virtual_fair":
             now = timezone.now()
-            fair = ClubFair.objects.filter(end_time__gte=now).order_by("start_time").first()
+            fair_id = kwargs.get("fair")
+            if fair_id is not None:
+                fair = ClubFair.objects.get(id=fair_id)
+            else:
+                fair = ClubFair.objects.filter(end_time__gte=now).order_by("start_time").first()
             if fair is None:
                 raise CommandError("Could not find an upcoming activities fair!")
             clubs = fair.participating_clubs.all()
@@ -312,9 +321,13 @@ class Command(BaseCommand):
                 clubs = clubs.filter(code__in=clubs_whitelist)
             self.stdout.write(f"Found {clubs.count()} clubs participating in the {fair.name} fair.")
             for club in clubs:
-                self.stdout.write(f"Sending virtual fair setup email to {club.name}...")
                 if not dry_run:
-                    club.send_virtual_fair_email()
+                    self.stdout.write(f"Sending virtual fair setup email to {club.name}...")
+                    club.send_virtual_fair_email(
+                        fair=fair, emails=[test_email] if test_email is not None else None
+                    )
+                else:
+                    self.stdout.write(f"Would have sent virtual fair setup email to {club.name}...")
             return
         elif action == "urgent_virtual_fair":
             now = timezone.now()

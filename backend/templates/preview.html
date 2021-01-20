@@ -40,6 +40,9 @@
             margin: 5px;
             background-color: #eee;
         }
+        #variables textarea {
+            width: 100%;
+        }
         </style>
         <script>
             window.addEventListener('load', e => {
@@ -52,12 +55,13 @@
 
                 document.getElementById("update").addEventListener("click", () => {
                     const params = new URLSearchParams(window.location.search);
-                    document.querySelectorAll("#variables ul li input").forEach(ele => {
-                        params.set(ele.getAttribute("name"), ele.value);
-                    });
+                    const vars = document.querySelector("#variables textarea").value;
+                    params.set("variables", JSON.stringify(JSON.parse(vars)));
                     window.location.href = window.location.pathname + "?" + params.toString();
-                    console.log(values);
                 });
+
+                const textarea = document.querySelector("#variables textarea");
+                textarea.setAttribute("rows", textarea.value.split("\n").length)
             })
 
         </script>
@@ -74,11 +78,7 @@
         <div id="text-email">{{text_email}}</div>
         <div id="variables">
             <b>Used Variables</b>
-            <ul>
-                {% for var in variables %}
-                    <li><kbd>{{var.0}}</kbd> - <input type="text" name="{{ var.0 }}" value="{{var.1}}" /></li>
-                {% endfor %}
-            </ul>
+            <div><textarea>{{variables}}</textarea></div>
             <button id="update">Update Values</button>
         </div>
     </body>
