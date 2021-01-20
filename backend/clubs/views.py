@@ -1420,7 +1420,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 if fuzzy is None:
                     fuzzy = "None"
                 else:
-                    fuzzy = fuzzy.name
+                    fuzzy = fuzzy.code
                 output.append(fuzzy)
         return Response({"output": "\n".join(output)})
 
