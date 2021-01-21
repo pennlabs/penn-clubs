@@ -413,6 +413,15 @@ class Club(models.Model):
         if fair is None:
             fair = ClubFair.objects.filter(start_time__gte=now).order_by("start_time").first()
 
+        events = [
+            f"{start.strftime('%B %d, %Y %I:%M %p')} - {end.strftime('%B %d, %Y %I:%M %p')}"
+            for start, end in self.events.filter(
+                start_time__gte=fair.start_time, end_time__lte=fair.end_time, type=Event.FAIR
+            )
+            .order_by("start_time")
+            .values_list("start_time", "end_time")
+        ]
+
         prefix = (
             "ACTION REQUIRED"
             if event is None or not event.url or "zoom.us" not in event.url
@@ -434,6 +443,7 @@ class Club(models.Model):
             "subscriptions_url": f"https://{domain}/club/{self.code}/edit#recruitment",
             "num_subscriptions": self.subscribe_set.count(),
             "fair": fair,
+            "events": events,
         }
 
         if emails:

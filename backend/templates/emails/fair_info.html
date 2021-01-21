@@ -23,6 +23,13 @@ fair:
             type: string
         contact:
             type: string
+events:
+    type: array
+    items:
+        type: object
+        properties:
+            time:
+                type: string
 -->
     <h2>[{{ prefix }}] {{ fair.name }} Setup and Information</h2>
     <p style="font-size: 1.2em">
@@ -33,6 +40,12 @@ fair:
         few <b>action items you must complete</b>,
         such as adding club officers and setting up your Zoom meeting, prior to the start of the {{ fair.name }}.
     </p>
+    <p style="font-size: 1.2em">{{ name }} is scheduled to present on the following time slots:</p>
+    <ul style="font-size: 1.2em">
+        {% for event in events %}
+        <li>{{ event.time }}</li>
+        {% endfor %}
+    </ul>
     <p style="font-size: 1.2em">To find which day a specific club is presenting on, you can check <a href="{{ fair_url }}">this list</a>.</p>
     <p style="font-size: 1.2em">
         Please follow the link below to setup your virtual fair booth for the {{ fair.name }}. Only one club officer needs to complete the setup process.
@@ -41,7 +54,7 @@ fair:
     <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ zoom_url }}">Setup Your Booth</a>
     
     <p style="font-size: 1.2em">
-        If you are not presenting during the morning session, please upload a multimedia presentation to your club description.
+        Reminder that if your club is not going to participate in the Jan 27 morning session, you MUST upload a multimedia alternative to your club page by noon on the day you're scheduled for.
         To learn how to do this, you can follow <a href="{{ media_guide_url }}">this guide</a>.
     </p>
 
