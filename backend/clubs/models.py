@@ -47,6 +47,7 @@ def get_mail_type_annotation(name):
 def send_mail_helper(name, subject, emails, context):
     """
     A helper to send out an email given the template name, subject, to emails, and context.
+    Returns true if an email was sent out, or false if no emails were sent out.
 
     All emails should go through this function.
     """
@@ -56,7 +57,7 @@ def send_mail_helper(name, subject, emails, context):
     # emulate django behavior of silently returning without recipients
     emails = [email for email in emails if email]
     if not emails:
-        return
+        return False
 
     # load email template
     prefix = {"fyh": "fyh_emails"}.get(settings.BRANDING, "emails")
@@ -93,6 +94,7 @@ def send_mail_helper(name, subject, emails, context):
 
     msg.attach_alternative(html_content, "text/html")
     msg.send(fail_silently=False)
+    return True
 
 
 def get_asset_file_name(instance, fname):
@@ -453,7 +455,7 @@ class Club(models.Model):
         }
 
         if emails:
-            send_mail_helper(
+            return send_mail_helper(
                 name={
                     "setup": "fair_info",
                     "urgent": "fair_reminder",
@@ -464,6 +466,7 @@ class Club(models.Model):
                 emails=emails,
                 context=context,
             )
+        return False
 
     def send_renewal_email(self, request=None):
         """

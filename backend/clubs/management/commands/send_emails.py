@@ -318,16 +318,21 @@ class Command(BaseCommand):
                 raise CommandError("Could not find an upcoming activities fair!")
             clubs = fair.participating_clubs.all()
             if clubs_whitelist:
+                self.stdout.write(f"Using clubs whitelist: {clubs_whitelist}")
                 clubs = clubs.filter(code__in=clubs_whitelist)
             self.stdout.write(f"Found {clubs.count()} clubs participating in the {fair.name} fair.")
             for club in clubs:
+                emails = [test_email] if test_email else None
+                emails_disp = emails or "officers"
                 if not dry_run:
-                    self.stdout.write(f"Sending virtual fair setup email to {club.name}...")
-                    club.send_virtual_fair_email(
-                        fair=fair, emails=[test_email] if test_email is not None else None
+                    status = club.send_virtual_fair_email(fair=fair, emails=emails)
+                    self.stdout.write(
+                        f"Sent virtual fair email to {club.name} ({emails_disp})... -> {status}"
                     )
                 else:
-                    self.stdout.write(f"Would have sent virtual fair setup email to {club.name}...")
+                    self.stdout.write(
+                        f"Would have sent virtual fair email to {club.name} ({emails_disp})..."
+                    )
             return
         elif action == "urgent_virtual_fair":
             now = timezone.now()
