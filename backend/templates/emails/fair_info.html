@@ -28,8 +28,7 @@ fair:
     </p>
     <p style="font-size: 1.2em">
         We are looking forward to seeing you at the {{ fair.name }}! The fair will be on <b>{{ fair.time }}</b>. There are a
-        few
-        <b>action items you must complete</b>,
+        few <b>action items you must complete</b>,
         such as adding club officers and setting up your Zoom meeting, prior to the start of the {{ fair.name }}.
     </p>
     <p style="font-size: 1.2em">To find which day a specific club is presenting on, you can check <a href="{{ fair_url }}">this list</a>.</p>
@@ -42,7 +41,7 @@ fair:
     <p style="font-size: 1.2em">
         For more information about the fair, check out the <a href="{{ guide_url }}">officer guide</a>.
         The guide contains information on how to use our three-step process to ensure your Zoom meetings
-        are best set up for the SAC Fair, how to best take advantage of the tools Penn Clubs has to 
+        are best set up for the {{ fair.name }}, how to best take advantage of the tools Penn Clubs has to 
         offer, and tips on how to boost your club to the top of our homepage!
     </p>
     
@@ -51,6 +50,6 @@ fair:
     </p>
 
     <p style="font-size: 1.2em">
-        If you have any questions about the SAC Fair in general, please contact <a href="{{ fair.contact }}">{{ fair.contact }}</a>.
+        If you have any questions about the {{ fair.name }} in general, please contact <a href="{{ fair.contact }}">{{ fair.contact }}</a>.
     </p>
 {% endblock %}

@@ -9,7 +9,7 @@ import {
   M2,
   M4,
 } from '../../constants'
-import { MembershipRank } from '../../types'
+import { ClubEventType, MembershipRank } from '../../types'
 import { doApiRequest, useSetting } from '../../utils'
 import { MEMBERSHIP_ROLE_NAMES } from '../../utils/branding'
 
@@ -86,7 +86,7 @@ const LiveEventsDialog = ({
     if (fairName != null) {
       const now = new Date().toISOString()
       doApiRequest(
-        `/events/?format=json&start_time__lte=${now}&end_time__gte=${now}`,
+        `/events/?format=json&type=${ClubEventType.FAIR}&start_time__lte=${now}&end_time__gte=${now}`,
       )
         .then((resp) => resp.json())
         .then((data) => setLiveEventCount(data.length))

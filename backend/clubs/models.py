@@ -428,6 +428,7 @@ class Club(models.Model):
             "name": self.name,
             "prefix": prefix,
             "guide_url": f"https://{domain}/guides/fair",
+            "media_guide_url": f"https://{domain}/guides/media",
             "zoom_url": f"https://{domain}/zoom",
             "fair_url": f"https://{domain}/fair?fair={fair.id if fair is not None else ''}",
             "subscriptions_url": f"https://{domain}/club/{self.code}/edit#recruitment",
