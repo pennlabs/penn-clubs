@@ -5,6 +5,7 @@ import uuid
 import warnings
 from urllib.parse import urlparse
 
+import pytz
 import requests
 import yaml
 from django.conf import settings
@@ -413,10 +414,12 @@ class Club(models.Model):
         if fair is None:
             fair = ClubFair.objects.filter(start_time__gte=now).order_by("start_time").first()
 
+        eastern = pytz.timezone("America/New_York")
+
         events = [
             {
-                "time": f"{start.strftime('%B %d, %Y %I:%M %p')} - "
-                f"{end.strftime('%B %d, %Y %I:%M %p')}"
+                "time": f"{timezone.localtime(start, eastern).strftime('%B %d, %Y %I:%M %p')} - "
+                f"{timezone.localtime(end, eastern).strftime('%B %d, %Y %I:%M %p')} ET"
             }
             for start, end in self.events.filter(
                 start_time__gte=fair.start_time, end_time__lte=fair.end_time, type=Event.FAIR
