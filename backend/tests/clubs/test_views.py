@@ -3,7 +3,7 @@ import io
 import json
 import os
 from collections import Counter
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -2247,6 +2247,7 @@ class ClubTestCase(TestCase):
         # try creating meeting as officer of club
         Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
         self.client.login(username=self.user4.username, password="test")
+        self.assertFalse(self.user4.is_superuser)
 
         output_url = "https://www.example.com/"
         ret = MagicMock()
