@@ -527,7 +527,7 @@ class Club(models.Model):
             pass
 
         # add email for all officers and above
-        for user in self.membership_set.filter(role__lte=Membership.ROLE_OFFICER):
+        for user in self.membership_set.filter(role__lte=Membership.ROLE_OFFICER, active=True):
             emails.append(user.person.email)
 
         # remove empty emails

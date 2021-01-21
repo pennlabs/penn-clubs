@@ -3292,7 +3292,7 @@ class MeetingZoomAPIView(APIView):
         eastern = pytz.timezone("America/New_York")
 
         # ensure user can do this
-        if not request.user.has_perm("clubs.manage_club") and not event.club.memberhip_set.filter(
+        if not request.user.has_perm("clubs.manage_club") and not event.club.membership_set.filter(
             role__lte=Membership.ROLE_OFFICER, person=request.user
         ):
             return Response(
