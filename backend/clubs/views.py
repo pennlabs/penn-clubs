@@ -1338,6 +1338,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     "are you sure your URL is correct?",
                 }
             )
+
         return Response({"success": True, "message": f"Fetched {num_events} events!"})
 
     @action(detail=False, methods=["get"])
