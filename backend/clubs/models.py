@@ -414,7 +414,9 @@ class Club(models.Model):
             fair = ClubFair.objects.filter(start_time__gte=now).order_by("start_time").first()
 
         events = [
-            f"{start.strftime('%B %d, %Y %I:%M %p')} - {end.strftime('%B %d, %Y %I:%M %p')}"
+            {
+                "time": f"{start.strftime('%B %d, %Y %I:%M %p')} - {end.strftime('%B %d, %Y %I:%M %p')}"
+            }
             for start, end in self.events.filter(
                 start_time__gte=fair.start_time, end_time__lte=fair.end_time, type=Event.FAIR
             )
