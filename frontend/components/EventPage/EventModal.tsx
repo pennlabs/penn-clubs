@@ -169,6 +169,41 @@ const ActionButtons = ({ club: code }): ReactElement | null => {
   )
 }
 
+type LiveStatsData = {
+  attending: number
+  attended: number
+  officers: number
+  time: number
+}
+
+/**
+ * A small widget that shows the live statistics for the current event.
+ */
+export const LiveStats = ({
+  stats,
+}: {
+  stats: LiveStatsData
+}): ReactElement => {
+  return (
+    <div className="mb-3">
+      <span className="has-text-info mr-2">
+        <Icon name="user" /> {stats.attending} attendees
+      </span>
+      <span className="has-text-link mr-2">
+        <Icon name="user" /> {stats.officers} {OBJECT_NAME_SINGULAR} members
+      </span>
+      <span className="has-text-grey mr-2">
+        <Icon name="user" /> {stats.attended} attended
+      </span>
+      {stats.time > 0 && (
+        <span className="has-text-primary mr-2">
+          <Icon name="clock" /> {formatDuration(stats.time)}
+        </span>
+      )}
+    </div>
+  )
+}
+
 const EventModal = (props: {
   event: ClubEvent
   showDetailsButton?: boolean
@@ -186,12 +221,7 @@ const EventModal = (props: {
     url,
     description,
   } = event
-  const [userCount, setUserCount] = useState<{
-    attending: number
-    attended: number
-    officers: number
-    time: number
-  } | null>(null)
+  const [userCount, setUserCount] = useState<LiveStatsData | null>(null)
 
   const now = new Date()
   const startDate = new Date(start_time)
@@ -252,25 +282,7 @@ const EventModal = (props: {
               {url}
             </EventLink>
           ))}{' '}
-        {userCount != null && (
-          <div className="mb-3">
-            <span className="has-text-info mr-2">
-              <Icon name="user" /> {userCount.attending} attendees
-            </span>
-            <span className="has-text-link mr-2">
-              <Icon name="user" /> {userCount.officers} {OBJECT_NAME_SINGULAR}{' '}
-              members
-            </span>
-            <span className="has-text-grey mr-2">
-              <Icon name="user" /> {userCount.attended} attended
-            </span>
-            {userCount.time > 0 && (
-              <span className="has-text-primary mr-2">
-                <Icon name="clock" /> {formatDuration(userCount.time)}
-              </span>
-            )}
-          </div>
-        )}
+        {userCount != null && <LiveStats stats={userCount} />}
         <StyledDescription contents={description} />
         {showDetailsButton !== false && event.club != null && (
           <div className="is-clearfix">

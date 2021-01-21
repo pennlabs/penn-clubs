@@ -1,7 +1,7 @@
 import moment from 'moment-timezone'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
@@ -13,6 +13,7 @@ import {
   Metadata,
 } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
+import { LiveStats } from '../components/EventPage/EventModal'
 import {
   CLUB_EDIT_ROUTE,
   CLUB_ROUTE,
@@ -191,6 +192,31 @@ const loadEvents = (data?: any): Promise<ClubEvent[]> => {
   ).then((resp) => resp.json())
 }
 
+/**
+ * A fake live statistics widget with some fake numbers.
+ */
+const LiveStatsDemo = (): ReactElement => {
+  const [attending, setAttending] = useState<number>(15)
+  const [attended, setAttended] = useState<number>(43)
+  const times = useRef<number>(0)
+
+  useEffect(() => {
+    const upd = setInterval(() => {
+      if (Math.random() > 0.7 || times.current <= 3) {
+        const incr = Math.random() > 0.5 ? 1 : -1
+        setAttending((attending) => Math.max(attending + incr, 0))
+        if (incr < 0) {
+          setAttended((attended) => attended + 1)
+        }
+      }
+      times.current += 1
+    }, 2000)
+    return () => clearInterval(upd)
+  }, [])
+
+  return <LiveStats stats={{ attending, attended, officers: 3, time: 600 }} />
+}
+
 const ZoomPage = ({
   authenticated,
   events: initialEvents,
@@ -216,6 +242,16 @@ const ZoomPage = ({
     return <AuthPrompt />
   }
 
+  const wrongEmail =
+    zoomSettings.email && !zoomSettings.email.endsWith('@upenn.edu')
+
+  const forceDisconnect = () =>
+    doApiRequest(`/social/disconnect/zoom-oauth2/?next=${nextUrl}`, {
+      method: 'POST',
+    }).finally(() => {
+      loadSettings(true, true).then(setZoomSettings)
+    })
+
   return (
     <Container background={SNOW}>
       <Metadata title="Zoom Configuration" />
@@ -233,11 +269,14 @@ const ZoomPage = ({
           run into any issues while using the tool, please contact <Contact />.
         </p>
         <p>
-          Using this process will also allow us to display additional statistics
+          Using this process will allow {SITE_NAME} to display live statistics
           about your Zoom meeting during the fair, including how many people are
-          inside the meeting, how many people have already attended the meeting,
-          and the median meeting participation time.
+          inside the meeting, the number of {OBJECT_NAME_SINGULAR} members in
+          the meeting, how many people have already attended the meeting, and
+          the median meeting participation time. On the day of the fair, the
+          following information will appear when a student clicks your event:
         </p>
+        <LiveStatsDemo />
         <h3>1. Login to your Zoom Account</h3>
         <p>
           Use the button below to login to Zoom and link your Zoom account to{' '}
@@ -271,13 +310,12 @@ const ZoomPage = ({
               connected to {SITE_NAME}. Your Zoom account email is{' '}
               <b>{zoomSettings.email}</b>.
             </p>
-            {zoomSettings.email &&
-              !zoomSettings.email.endsWith('@upenn.edu') && (
-                <p className="has-text-danger">
-                  This does not appear to be a {SCHOOL_NAME} Zoom account. Are
-                  you sure you logged into the right email?
-                </p>
-              )}
+            {wrongEmail && (
+              <p className="has-text-danger">
+                This does not appear to be a {SCHOOL_NAME} Zoom account. Are you
+                sure you logged into the right email?
+              </p>
+            )}
             <div className="buttons">
               <a
                 className="button is-info is-small"
@@ -289,12 +327,26 @@ const ZoomPage = ({
               <button
                 className="button is-small"
                 onClick={() => {
-                  doApiRequest(
-                    `/social/disconnect/zoom-oauth2/?next=${nextUrl}`,
-                    { method: 'POST' },
-                  ).finally(() => {
-                    loadSettings(true, true).then(setZoomSettings)
-                  })
+                  if (wrongEmail) {
+                    forceDisconnect()
+                  } else {
+                    toast.info(
+                      <>
+                        <div>
+                          Are you sure you want to disconnect your Zoom account?
+                          We will not be able to provide live statistics for
+                          your meeting if you do.
+                        </div>
+                        <button
+                          className="button is-danger is-small mt-2"
+                          onClick={forceDisconnect}
+                        >
+                          <Icon name="trash" /> Disconnect
+                        </button>
+                      </>,
+                      { hideProgressBar: true },
+                    )
+                  }
                 }}
               >
                 <Icon name="x" /> Disconnect
