@@ -3,6 +3,7 @@ import io
 import json
 import os
 from collections import Counter
+from unittest.mock import patch, MagicMock
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -2237,7 +2238,35 @@ class ClubTestCase(TestCase):
         for perm in permissions:
             self.assertTrue(data[perm], perm)
 
+    def test_zoom_add_meeting(self):
+        # setup fair event
+        self.event1.type = Event.FAIR
+        self.event1.url = None
+        self.event1.save()
+
+        # try creating meeting as officer of club
+        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+        self.client.login(username=self.user4.username, password="test")
+
+        output_url = "https://www.example.com/"
+        ret = MagicMock()
+        ret.status_code = 200
+        ret.json.return_value = {"join_url": output_url}
+
+        with patch("clubs.views.zoom_api_call", return_value=ret):
+            resp = self.client.post(
+                "{}?format=json&event={}".format(reverse("users-zoom-meeting"), self.event1.id),
+                content_type="application/json",
+            )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertTrue(resp.data["success"], resp.content)
+        self.event1.refresh_from_db()
+        self.assertEqual(self.event1.url, output_url)
+
     def test_zoom_webhook(self):
+        """
+        Test that the Zoom webhook can properly parse a request sent by the Zoom API.
+        """
         person = self.user1
         event = self.event1
         meeting_id = "4880003126"

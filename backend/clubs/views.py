@@ -2135,7 +2135,7 @@ class EventViewSet(ClubEventViewSet):
         if fair in {"null", "undefined"}:
             fair = None
         if fair:
-            fair = int(fair)
+            fair = int(re.sub(r"\D", "", fair))
 
         # cache the response for this endpoint with short timeout
         if date is None:
