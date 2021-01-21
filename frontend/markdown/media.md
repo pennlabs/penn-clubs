@@ -32,4 +32,56 @@ Finally, **make sure to scroll down to the bottom of your page and click Submit*
 
 ![Submit Changes](SubmitChanges.png)
 
+## 🔗 Embedding Links (for Zoom Recordings)
 
+If you would like to embed a link in your description, such as a Zoom recording, it is incredibly easy to do so. Select the text you would like to hyperlink, and click the "chainlink" button, as shown below. Paste your Zoom recording in the "Link Target" section, and then click "Add".
+
+![Hyperlink instructions](Link1.png)
+
+If applicable, include the Zoom password in your description, too:
+
+![Include Zoom Link Password](Link2.png)
+
+## 🎥 Embedding YouTube Videos
+
+If you would like to embed a Youtube video into your description, you will need to find the embed link. Navigate to the Youtube link and click the "Share" button:
+
+![Share link of Youtube video](Youtube1.png)
+
+Then copy **only the link** of the embed text, as shown here:
+
+![Taking embed link from Youtube video](Youtube2.png)
+
+Then paste this link in the "embed" popup of your description as shown previously:
+
+![Pasting embed link from Youtube video into Clubs](Youtube3.png)
+
+The embedded video, with the specified dimensions, will now be embedded into your club's description:
+
+![Embedded Youtube video](Youtube4.png)
+
+## 📄 Embedding PDF Documents
+
+In order to embed a PDF document, you will need to upload your PDF to Google Drive and change the permissions to the document as "Anyone on the internet with this link can view":
+
+![Sharing permissions for PDF on Google Drive](PDF1.png)
+
+Then, click onto the document to view it, then click the three dots menu, and click "Open in new window":
+
+![Open PDF in new window](PDF2.png)
+
+In the new menu, click the three dots menu again, and click "Embed item":
+
+![Embed item](PDF3.png)
+
+Copy **only the link** in the text box from the popup:
+
+![Copying the text link](PDF4.png)
+
+Paste the link in the "embed" popup of your description as shown previously, and click "Embed":
+
+![Embedding PDF into Penn Clubs](PDF6.png)
+
+The embedded PDF, with the specified dimensions, will now be embedded into your club's description:
+
+![Embedded PDF](PDF5.png)
