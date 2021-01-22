@@ -1,3 +1,4 @@
+import { Field, Form, Formik } from 'formik'
 import moment from 'moment-timezone'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
@@ -14,6 +15,7 @@ import {
 } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import { LiveStats } from '../components/EventPage/EventModal'
+import { FileField, RichTextField } from '../components/FormComponents'
 import {
   CLUB_EDIT_ROUTE,
   CLUB_ROUTE,
@@ -284,25 +286,49 @@ const ZoomPage = ({
           help you configure your meeting. Ensure that you login to your{' '}
           <b>Penn provided</b> Zoom account.
         </p>
-        <p>
-          To do this, use the <b>Sign in with SSO</b> button on the Zoom login
-          page that appears when you click the login button below and enter{' '}
-          <b>upenn</b> as the domain name.
-        </p>
-        <p>
-          If you see a <b>You cannot authorize the app</b> message when clicking
-          the button below, you are not logged into a Penn Zoom account. Log out
-          of your current Zoom account and login to your Penn Zoom account to
-          continue the process.
-        </p>
         {!zoomSettings.success ? (
-          <a
-            className="button is-info"
-            style={{ backgroundColor: ZOOM_BLUE }}
-            href={`/api/social/login/zoom-oauth2/?next=${nextUrl}`}
-          >
-            <Icon name="video" /> Login to Zoom
-          </a>
+          <>
+            <p>
+              To do this, use the <b>Sign in with SSO</b> button on the Zoom
+              login page that appears when you click the login button below and
+              enter <b>upenn</b> as the domain name.
+            </p>
+            <div className="columns">
+              <div className="column has-text-centered">
+                <img
+                  src="/static/img/screenshots/zoom_web_login_1.png"
+                  height={300}
+                />
+                <div className="has-text-grey">
+                  Instead of entering a username or password, press the "Sign in
+                  with SSO" button on the right column.
+                </div>
+              </div>
+              <div className="column has-text-centered">
+                <img
+                  src="/static/img/screenshots/zoom_web_login_2.png"
+                  height={300}
+                />
+                <div className="has-text-grey">
+                  On the next screen that appears, enter "upenn" for the domain
+                  name. You will then be redirected to a PennKey login.
+                </div>
+              </div>
+            </div>
+            <p>
+              If you see a <b>You cannot authorize the app</b> message when
+              clicking the button below, you are not logged into a Penn Zoom
+              account. Log out of your current Zoom account and login to your
+              Penn Zoom account to continue the process.
+            </p>
+            <a
+              className="button is-info"
+              style={{ backgroundColor: ZOOM_BLUE }}
+              href={`/api/social/login/zoom-oauth2/?next=${nextUrl}`}
+            >
+              <Icon name="video" /> Login to Zoom
+            </a>
+          </>
         ) : (
           <>
             <p className="has-text-info">
@@ -453,14 +479,13 @@ const ZoomPage = ({
         <p>
           Here is a list of all of the virtual fair events that you have access
           to edit. Make sure that you have a{' '}
-          <b>valid Zoom link, description, and photo</b> for all events! Events
-          without all three of these attributes will be shown at the bottom of
-          the list.
+          <b>valid meeting link, description, and cover photo</b> for all
+          events!
         </p>
         <p>
           <b>
-            If you have multiple {OBJECT_NAME_PLURAL} participating in the Zoom
-            fair,
+            If you have multiple {OBJECT_NAME_PLURAL} participating in the
+            activities fair,
           </b>{' '}
           have a different officer create a Zoom meeting for each{' '}
           {OBJECT_NAME_SINGULAR}. Zoom does not allow you to have or join
@@ -654,8 +679,8 @@ const ZoomPage = ({
                   {zoomId == null
                     ? 'create your Zoom meeting link for you'
                     : 'attempt to fix issues with your meeting'}
-                  . Click on <b>Edit Event</b> if you want to edit the cover
-                  photo and description for your virtual activities fair booth.
+                  . Use the form below if you want to edit the cover photo and
+                  description for your virtual activities fair booth.
                 </p>
                 <p className="mt-3">
                   Clicking the button below will also attempt to add all
@@ -747,11 +772,76 @@ const ZoomPage = ({
                     href={CLUB_EDIT_ROUTE() + '#events'}
                     as={CLUB_EDIT_ROUTE(event.club as string) + '#events'}
                   >
-                    <a className="button is-small is-info" target="_blank">
+                    <a className="button is-small is-secondary" target="_blank">
                       <Icon name="edit" /> Edit Event
                     </a>
                   </Link>
                 </div>
+                <hr />
+                <p className="mt-3">
+                  You can use the form below to quickly edit the description and
+                  cover photo fields for your event.
+                </p>
+                <Formik
+                  initialValues={{
+                    description: event.description,
+                    image: event.image_url,
+                  }}
+                  onSubmit={async (data) => {
+                    setLoading(true)
+                    const body: { description: string; image?: null } = {
+                      description: data.description,
+                    }
+                    if (typeof data.image !== 'string') {
+                      if (data.image != null) {
+                        const formData = new FormData()
+                        formData.append('file', data.image)
+                        await doApiRequest(
+                          `/clubs/${event.club}/events/${event.id}/upload/?format=json`,
+                          { method: 'POST', body: formData },
+                        )
+                      } else {
+                        body.image = null
+                      }
+                    }
+                    await doApiRequest(
+                      `/clubs/${event.club}/events/${event.id}/?format=json`,
+                      {
+                        method: 'PATCH',
+                        body,
+                      },
+                    )
+                    loadEvents().then(setEvents)
+                    setLoading(false)
+                    toast.success(
+                      'The description and cover photo for this event has been saved!',
+                      { hideProgressBar: true },
+                    )
+                  }}
+                  enableReinitialize
+                >
+                  <Form>
+                    <Field
+                      as={FileField}
+                      name="image"
+                      label="Cover Photo"
+                      helpText="The cover photo for your fair event. We recommend a 16:9 image, preferrably 1920 x 1080."
+                      isImage
+                    />
+                    <Field
+                      as={RichTextField}
+                      name="description"
+                      helpText="A meaningful description about the information session. Can include next steps and application links."
+                    />
+                    <button
+                      type="submit"
+                      className="button is-success"
+                      disabled={isLoading}
+                    >
+                      <Icon name="edit" /> Save Details
+                    </button>
+                  </Form>
+                </Formik>
               </SmallEvent>
             )
           })}
