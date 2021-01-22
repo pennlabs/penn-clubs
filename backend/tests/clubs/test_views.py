@@ -2264,6 +2264,27 @@ class ClubTestCase(TestCase):
         self.event1.refresh_from_db()
         self.assertEqual(self.event1.url, output_url)
 
+    def test_event_add_meeting(self):
+        """
+        Test manually adding a meeting link without the Zoom page, but having their account linked.
+        """
+        self.event1.type = Event.FAIR
+        self.event1.url = None
+        self.event1.save()
+
+        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+        self.client.login(username=self.user4.username, password="test")
+        self.assertFalse(self.user4.is_superuser)
+
+        resp = self.client.patch(
+            reverse("club-events-detail", args=(self.club1.code, self.event1.pk)),
+            {"url": "https://upenn.zoom.us/j/123456789"},
+            content_type="application/json",
+        )
+        self.event1.refresh_from_db()
+        self.assertIn("url", resp.data, resp.content)
+        self.assertFalse(self.event1.url, resp.content)
+
     def test_zoom_webhook(self):
         """
         Test that the Zoom webhook can properly parse a request sent by the Zoom API.

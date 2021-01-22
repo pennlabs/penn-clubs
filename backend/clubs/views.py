@@ -1338,6 +1338,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     "are you sure your URL is correct?",
                 }
             )
+
         return Response({"success": True, "message": f"Fetched {num_events} events!"})
 
     @action(detail=False, methods=["get"])
@@ -2941,6 +2942,8 @@ class UserPermissionAPIView(APIView):
 def zoom_api_call(user, verb, url, *args, **kwargs):
     """
     Perform an API call to Zoom with various checks.
+
+    If the call returns a token expired event, refresh the token and try the call one more time.
     """
     if not settings.SOCIAL_AUTH_ZOOM_OAUTH2_KEY:
         raise DRFValidationError("Server is not configured with Zoom OAuth2 credentials.")
@@ -3062,6 +3065,7 @@ class MeetingZoomWebhookAPIView(APIView):
         )
 
     def post(self, request):
+        # security check to make sure request contains zoom provided token
         if settings.ZOOM_VERIFICATION_TOKEN:
             authorization = request.META.get("HTTP_AUTHORIZATION")
             if authorization != settings.ZOOM_VERIFICATION_TOKEN:

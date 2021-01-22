@@ -685,6 +685,16 @@ const ZoomPage = ({
                               setLoading(false)
                             })
                         })
+                        .catch(() => {
+                          toast.error(
+                            <>
+                              An error occured while trying to add your meeting.
+                              Please contact <Contact /> for assistance.
+                            </>,
+                            { hideProgressBar: true },
+                          )
+                          setLoading(false)
+                        })
                     }}
                   >
                     {zoomId ? (
@@ -716,6 +726,17 @@ const ZoomPage = ({
                             loadMeetings(undefined, true)
                               .then(setUserMeetings)
                               .then(() => setLoading(false))
+                          })
+                          .catch(() => {
+                            toast.error(
+                              <>
+                                An error occured while trying to delete your
+                                meeting. Please contact <Contact /> for
+                                assistance.
+                              </>,
+                              { hideProgressBar: true },
+                            )
+                            setLoading(false)
                           })
                       }}
                     >
