@@ -17,6 +17,7 @@ import AuthPrompt from '../components/common/AuthPrompt'
 import { LiveStats } from '../components/EventPage/EventModal'
 import { FileField, RichTextField } from '../components/FormComponents'
 import {
+  CLUB_EDIT_ROUTE,
   CLUB_ROUTE,
   CLUBS_GREY_LIGHT,
   LIGHT_GRAY,
@@ -285,25 +286,49 @@ const ZoomPage = ({
           help you configure your meeting. Ensure that you login to your{' '}
           <b>Penn provided</b> Zoom account.
         </p>
-        <p>
-          To do this, use the <b>Sign in with SSO</b> button on the Zoom login
-          page that appears when you click the login button below and enter{' '}
-          <b>upenn</b> as the domain name.
-        </p>
-        <p>
-          If you see a <b>You cannot authorize the app</b> message when clicking
-          the button below, you are not logged into a Penn Zoom account. Log out
-          of your current Zoom account and login to your Penn Zoom account to
-          continue the process.
-        </p>
         {!zoomSettings.success ? (
-          <a
-            className="button is-info"
-            style={{ backgroundColor: ZOOM_BLUE }}
-            href={`/api/social/login/zoom-oauth2/?next=${nextUrl}`}
-          >
-            <Icon name="video" /> Login to Zoom
-          </a>
+          <>
+            <p>
+              To do this, use the <b>Sign in with SSO</b> button on the Zoom
+              login page that appears when you click the login button below and
+              enter <b>upenn</b> as the domain name.
+            </p>
+            <div className="columns">
+              <div className="column has-text-centered">
+                <img
+                  src="/static/img/screenshots/zoom_web_login_1.png"
+                  height={300}
+                />
+                <div className="has-text-grey">
+                  Instead of entering a username or password, press the "Sign in
+                  with SSO" button on the right column.
+                </div>
+              </div>
+              <div className="column has-text-centered">
+                <img
+                  src="/static/img/screenshots/zoom_web_login_2.png"
+                  height={300}
+                />
+                <div className="has-text-grey">
+                  On the next screen that appears, enter "upenn" for the domain
+                  name. You will then be redirected to a PennKey login.
+                </div>
+              </div>
+            </div>
+            <p>
+              If you see a <b>You cannot authorize the app</b> message when
+              clicking the button below, you are not logged into a Penn Zoom
+              account. Log out of your current Zoom account and login to your
+              Penn Zoom account to continue the process.
+            </p>
+            <a
+              className="button is-info"
+              style={{ backgroundColor: ZOOM_BLUE }}
+              href={`/api/social/login/zoom-oauth2/?next=${nextUrl}`}
+            >
+              <Icon name="video" /> Login to Zoom
+            </a>
+          </>
         ) : (
           <>
             <p className="has-text-info">
@@ -743,6 +768,14 @@ const ZoomPage = ({
                       <Icon name="trash" /> Remove Meeting
                     </button>
                   )}
+                  <Link
+                    href={CLUB_EDIT_ROUTE() + '#events'}
+                    as={CLUB_EDIT_ROUTE(event.club as string) + '#events'}
+                  >
+                    <a className="button is-small is-secondary" target="_blank">
+                      <Icon name="edit" /> Edit Event
+                    </a>
+                  </Link>
                 </div>
                 <hr />
                 <p className="mt-3">

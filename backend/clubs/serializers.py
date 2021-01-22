@@ -473,22 +473,24 @@ class EventWriteSerializer(EventSerializer):
                     if request.user.social_auth.filter(provider="zoom-oauth2").first() is not None:
                         has_linked_account = True
 
-                # if we've linked a zoom account and entering a zoom link, we're fine
-                if not has_linked_account and new_url:
-                    raise serializers.ValidationError(
-                        {
-                            "url": "You should link your Zoom account on the "
-                            "Zoom setup page before changing this field."
-                        }
-                    )
+                # edge case to allow vpul links
+                if "vpul-upenn.zoom.us" not in parsed_url.netloc:
+                    # if we've linked a zoom account and entering a zoom link, we're fine
+                    if not has_linked_account and new_url:
+                        raise serializers.ValidationError(
+                            {
+                                "url": "You should link your Zoom account on the "
+                                "Zoom setup page before changing this field."
+                            }
+                        )
 
-                if "upenn.zoom.us" not in parsed_url.netloc and new_url:
-                    raise serializers.ValidationError(
-                        {
-                            "url": "You should use a Penn Zoom account for the meeting link! "
-                            "Use the Zoom setup page to do this for you."
-                        }
-                    )
+                    if "upenn.zoom.us" not in parsed_url.netloc and new_url:
+                        raise serializers.ValidationError(
+                            {
+                                "url": "You should use a Penn Zoom account for the meeting link! "
+                                "Use the Zoom setup page to do this for you."
+                            }
+                        )
 
         return super().update(instance, validated_data)
 
