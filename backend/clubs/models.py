@@ -399,7 +399,9 @@ class Club(models.Model):
             return len(modified_events)
         return 0
 
-    def send_virtual_fair_email(self, request=None, email="setup", fair=None, emails=None):
+    def send_virtual_fair_email(
+        self, request=None, email="setup", fair=None, emails=None, extra=False
+    ):
         """
         Send an email to all club officers about setting up their club for the virtual fair.
 
@@ -452,6 +454,7 @@ class Club(models.Model):
             "num_subscriptions": self.subscribe_set.count(),
             "fair": fair,
             "events": events,
+            "extra": extra,
         }
 
         if emails:

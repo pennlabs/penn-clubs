@@ -474,10 +474,20 @@ class EventWriteSerializer(EventSerializer):
                         has_linked_account = True
 
                 # if we've linked a zoom account and entering a zoom link, we're fine
-                if ("upenn.zoom.us" not in parsed_url.netloc or not has_linked_account) and new_url:
+                if not has_linked_account and new_url:
                     raise serializers.ValidationError(
-                        "You should not change the meeting link manually for fair events! "
-                        "Use the Zoom setup page instead."
+                        {
+                            "url": "You should link your Zoom account on the "
+                            "Zoom setup page before changing this field."
+                        }
+                    )
+
+                if "upenn.zoom.us" not in parsed_url.netloc and new_url:
+                    raise serializers.ValidationError(
+                        {
+                            "url": "You should use a Penn Zoom account for the meeting link! "
+                            "Use the Zoom setup page to do this for you."
+                        }
                     )
 
         return super().update(instance, validated_data)

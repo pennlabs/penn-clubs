@@ -113,7 +113,21 @@ class Command(BaseCommand):
             "--include-staff",
             dest="include_staff",
             action="store_true",
-            help="Include staff members of a club in the email being sent out.",
+            help="Include staff members of a club in the email being sent out. "
+            "Only applies to certain email types.",
+        )
+        parser.add_argument(
+            "--extra",
+            dest="extra",
+            action="store_true",
+            help="Include extra information in the email template. "
+            "Only applies to certain templates.",
+        )
+        parser.add_argument(
+            "--limit",
+            dest="limit",
+            action="store_true",
+            help="Limit the number of emails being sent. Only applies to certain templates.",
         )
         parser.add_argument(
             "--clubs",
@@ -128,7 +142,14 @@ class Command(BaseCommand):
             help="Send all emails to the specified test email instead of to the actual recipient. "
             "Does not work with all email types.",
         )
-        parser.set_defaults(include_staff=False, dry_run=False, only_sheet=False, only_active=True)
+        parser.set_defaults(
+            extra=False,
+            include_staff=False,
+            dry_run=False,
+            only_sheet=False,
+            only_active=True,
+            limit=False,
+        )
 
     def handle(self, *args, **kwargs):
         dry_run = kwargs["dry_run"]
@@ -321,11 +342,20 @@ class Command(BaseCommand):
                 self.stdout.write(f"Using clubs whitelist: {clubs_whitelist}")
                 clubs = clubs.filter(code__in=clubs_whitelist)
             self.stdout.write(f"Found {clubs.count()} clubs participating in the {fair.name} fair.")
+            extra = kwargs.get("extra", False)
+            limit = kwargs.get("limit", False)
+            self.stdout.write(f"Extra flag status: {extra}")
             for club in clubs:
                 emails = [test_email] if test_email else None
                 emails_disp = emails or "officers"
+                if limit:
+                    if club.events.filter(
+                        ~Q(url="") & ~Q(url__isnull=True), start_time__gte=now, type=Event.FAIR
+                    ).exists():
+                        self.stdout.write(f"Skipping {club.name}, fair event already set up.")
+                        continue
                 if not dry_run:
-                    status = club.send_virtual_fair_email(fair=fair, emails=emails)
+                    status = club.send_virtual_fair_email(fair=fair, emails=emails, extra=extra)
                     self.stdout.write(
                         f"Sent virtual fair email to {club.name} ({emails_disp})... -> {status}"
                     )
