@@ -558,7 +558,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             return Response([ClubFairSerializer(instance=fair).data])
 
     @action(detail=True, methods=["get"])
-    def live(self):
+    def live(self, *args, **kwargs):
         """
         Returns all events, grouped by id, with the number of participants currently in the meeting,
         the officers or owners in the meeting, and the number of participants
@@ -570,16 +570,13 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             Event.objects.filter(
                 club__in=clubs,
                 type=Event.FAIR,
-                start_time_gte=fair.start_time,
-                end_time_lte=fair.end_time,
+                start_time__gte=fair.start_time,
+                end_time__lte=fair.end_time,
             )
             .annotate(participant_count=Count("visits__person", distinct=True))
             .annotate(
                 already_attended=Count(
-                    "visits__person",
-                    distinct=True,
-                    filter=Q(visits__leave_time__lt=datetime.datetime.now())
-                    | Q(visits__leave_time__lt=None),
+                    "visits__person", distinct=True, filter=Q(visits__leave_time__isnull=False),
                 )
             )
             .filter(visits__leave_time__isnull=False)
@@ -588,29 +585,29 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                     F("visits__leave_time") - F("visits__join_time"), output_field=DurationField()
                 )
             )
-            .annotate(durations_mean=Avg("durations"))  # mean in case median does not work out
         )
 
-        median = events.values_list("durations", flat=True).order_by("durations")[
-            int(round(events.count() / 2))
-        ]
-        # this is a global median, not specific to any event
-        values_list1 = events.values_list("id", "participant_count", "already_attended")
-        values_list2 = dict(
-            events.filter(
-                club__in=clubs, club__membership_set__role__lte=10, visits__leave_time__lt=None
-            ).values_list("id", "membership_set_person__name")
-        )
+        median_list = collections.defaultdict(list)
+        for event_id, duration in events.values_list("id", "durations").order_by("durations"):
+            median_list[event_id].append(duration.total_seconds())
+        median_list = {k: v[len(v) // 2] if v else 0 for k, v in median_list.items()}
+
+        event_list = events.values_list("id", "participant_count", "already_attended")
+        officer_mapping = collections.defaultdict(list)
+        for k, v in events.filter(
+            club__in=clubs, club__membership__role__lte=10, visits__leave_time__isnull=True
+        ).values_list("id", "club__membership__person__username"):
+            officer_mapping[k].append(v)
 
         formatted = {}
-        for i in values_list1:
-            formatted[i[0]] = {
-                "participant_count": i[1],
-                "already_attended": i[2],
-                "officers": values_list2[i[0]] or [],
-                "global_median": median,
+        for event_id, particpant_count, already_attended in event_list:
+            formatted[event_id] = {
+                "participant_count": particpant_count,
+                "already_attended": already_attended,
+                "officers": officer_mapping.get(event_id, []),
+                "median": median_list.get(event_id, 0),
             }
-        return Response(events)
+        return Response(formatted)
 
     @action(detail=True, methods=["post"])
     def create_events(self, request, *args, **kwargs):
@@ -3151,7 +3148,7 @@ class MeetingZoomWebhookAPIView(APIView):
                 username = email.split("@")[0]
                 person = get_user_model().objects.filter(username=username).first()
             else:
-                person = None
+                person = Nonvee
 
             meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
             regex = rf"https?:\/\/([A-z]*.)?zoom.us/[^\/]*\/{meeting_id}(\?pwd=[A-z,0-9]*)?"

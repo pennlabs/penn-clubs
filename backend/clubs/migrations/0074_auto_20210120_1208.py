@@ -9,18 +9,25 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('clubs', '0073_event_pinned'),
+        ("clubs", "0073_event_pinned"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='zoommeetingvisit',
-            name='event',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='visits', to='clubs.event'),
+            model_name="zoommeetingvisit",
+            name="event",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, related_name="visits", to="clubs.event"
+            ),
         ),
         migrations.AlterField(
-            model_name='zoommeetingvisit',
-            name='person',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='visits', to=settings.AUTH_USER_MODEL),
+            model_name="zoommeetingvisit",
+            name="person",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="visits",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]
