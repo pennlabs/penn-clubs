@@ -2942,6 +2942,8 @@ class UserPermissionAPIView(APIView):
 def zoom_api_call(user, verb, url, *args, **kwargs):
     """
     Perform an API call to Zoom with various checks.
+
+    If the call returns a token expired event, refresh the token and try the call one more time.
     """
     if not settings.SOCIAL_AUTH_ZOOM_OAUTH2_KEY:
         raise DRFValidationError("Server is not configured with Zoom OAuth2 credentials.")
@@ -3063,6 +3065,7 @@ class MeetingZoomWebhookAPIView(APIView):
         )
 
     def post(self, request):
+        # security check to make sure request contains zoom provided token
         if settings.ZOOM_VERIFICATION_TOKEN:
             authorization = request.META.get("HTTP_AUTHORIZATION")
             if authorization != settings.ZOOM_VERIFICATION_TOKEN:

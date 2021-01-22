@@ -727,6 +727,17 @@ const ZoomPage = ({
                               .then(setUserMeetings)
                               .then(() => setLoading(false))
                           })
+                          .catch(() => {
+                            toast.error(
+                              <>
+                                An error occured while trying to delete your
+                                meeting. Please contact <Contact /> for
+                                assistance.
+                              </>,
+                              { hideProgressBar: true },
+                            )
+                            setLoading(false)
+                          })
                       }}
                     >
                       <Icon name="trash" /> Remove Meeting
