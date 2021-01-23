@@ -13,7 +13,6 @@ import {
   XYPlot,
   YAxis,
 } from 'react-vis'
-import { start } from 'repl'
 
 import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
