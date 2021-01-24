@@ -104,20 +104,29 @@ const GROUPS = [
 function parse(obj, startRange: Date, endRange: Date, group: Group): LineData {
   const exists = {}
   obj.forEach((item) => {
-    exists[new Date(item.group).getTime()] = item.count
+    const adjustedDate = new Date(item.group).toLocaleDateString('en-US', {
+      timeZone: 'America/New_York',
+    })
+    exists[new Date(adjustedDate).getTime()] = item.count
   })
   const output: LineData = []
   let current = startRange
   // If we are grouping by week or month, we need to make sure our start
   // day is the same as the start day on the backend, so we do this
   // logic to ensure they line up
-  if (group === Group.Week) {
-    current = new Date(current.getDate() - current.getDay() + 1)
+  if (group === Group.Day) {
+    const currentAdjusted = current.toLocaleDateString('en-US', {
+      timeZone: 'America/New_York',
+    })
+    current = new Date(new Date(currentAdjusted).toDateString())
+  } else if (group === Group.Week) {
+    current = new Date(
+      current.setDate(current.getDate() - current.getDay() + 1),
+    )
   } else if (group === Group.Month) {
     current = new Date(current.getFullYear(), current.getMonth(), 1)
   }
-
-  for (let i = startRange.getTime(); i <= endRange.getTime(); ) {
+  for (let i = current.getTime(); i <= endRange.getTime(); ) {
     current = new Date(i)
     output.push({ x: current, y: exists[i] ?? 0 })
 
