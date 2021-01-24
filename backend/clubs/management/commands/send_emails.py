@@ -380,9 +380,19 @@ class Command(BaseCommand):
             self.stdout.write(f"{clubs.count()} clubs have not registered for the {fair.name}.")
             extra = kwargs.get("extra", False)
             for club in clubs.distinct():
-                self.stdout.write(f"Sending virtual fair urgent reminder to {club.name}...")
+                emails = [test_email] if test_email else None
+                emails_disp = emails or "officers"
                 if not dry_run:
-                    club.send_virtual_fair_email(email="urgent", fair=fair, extra=extra)
+                    self.stdout.write(
+                        f"Sending fair urgent reminder for {club.name} to {emails_disp}..."
+                    )
+                    club.send_virtual_fair_email(
+                        email="urgent", fair=fair, extra=extra, emails=emails
+                    )
+                else:
+                    self.stdout.write(
+                        f"Would have sent fair urgent reminder for {club.name} to {emails_disp}..."
+                    )
 
             # don't continue
             return
