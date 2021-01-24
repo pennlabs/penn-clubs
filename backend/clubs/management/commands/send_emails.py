@@ -368,7 +368,7 @@ class Command(BaseCommand):
             return
         elif action == "urgent_virtual_fair":
             clubs = fair.participating_clubs.filter(
-                Q(url="") | Q(url__isnull=True),
+                Q(events__url="") | Q(events__url__isnull=True),
                 events__type=Event.FAIR,
                 events__start_time__gte=fair.start_time,
                 events__end_time__lte=fair.end_time,
