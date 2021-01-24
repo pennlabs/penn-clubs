@@ -53,6 +53,7 @@ from rest_framework.response import Response
 from rest_framework.utils.serializer_helpers import ReturnList
 from rest_framework.views import APIView
 from social_django.utils import load_strategy
+from tatsu.exceptions import FailedParse
 
 from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
 from clubs.mixins import XLSXFormatterMixin
@@ -1396,6 +1397,13 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     "success": False,
                     "message": "Failed to fetch events from server, "
                     "are you sure your URL is correct?",
+                }
+            )
+        except FailedParse:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Failed to parse ICS events, are you sure this is an ICS file?",
                 }
             )
 
