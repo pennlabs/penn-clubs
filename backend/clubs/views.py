@@ -555,7 +555,28 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         """
         Returns all events, grouped by id, with the number of participants currently in the meeting,
         the officers or owners in the meeting, and the number of participants
-        who have already attended the meeting
+        who have already attended the meeting.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            additionalProperties:
+                                type: object
+                                properties:
+                                    participant_count:
+                                        type: integer
+                                    already_attended:
+                                        type: integer
+                                    officers:
+                                        type: array
+                                        items:
+                                            type: string
+                                    median:
+                                        type: number
+        ---
         """
         fair = self.get_object()
         clubs = fair.participating_clubs.all()
@@ -2800,7 +2821,7 @@ class FavoriteCalendarAPIView(APIView):
         )
 
         # only fetch events newer than the past month
-        one_month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
+        one_month_ago = timezone.now() - datetime.timedelta(days=30)
         all_events = Event.objects.filter(start_time__gte=one_month_ago)
 
         # filter based on user supplied flags

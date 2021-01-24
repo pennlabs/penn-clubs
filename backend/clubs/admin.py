@@ -1,4 +1,3 @@
-import datetime
 import re
 
 import simple_history
@@ -6,6 +5,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import TabularInline
 from django.db.models import Count, Exists, OuterRef
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
@@ -124,7 +124,7 @@ def mark_approved(modeladmin, request, queryset):
         return
 
     num_updated = queryset.filter(approved=False).update(
-        approved=True, approved_by=request.user, approved_on=datetime.datetime.now()
+        approved=True, approved_by=request.user, approved_on=timezone.now()
     )
     modeladmin.message_user(
         request, "Marked {} club(s) as approved!".format(num_updated), level=messages.SUCCESS

@@ -1,6 +1,5 @@
 import collections
 import csv
-import datetime
 import os
 import re
 import tempfile
@@ -327,9 +326,9 @@ class Command(BaseCommand):
         if missing:
             raise CommandError(f"Invalid club codes in clubs parameter: {missing}")
 
-        # handle sending out virtual fair emails
-        if action == "virtual_fair":
-            now = timezone.now()
+        # load fair
+        now = timezone.now()
+        if action in {"virtual_fair", "urgent_virtual_fair", "post_virtual_fair"}:
             fair_id = kwargs.get("fair")
             if fair_id is not None:
                 fair = ClubFair.objects.get(id=fair_id)
@@ -337,6 +336,9 @@ class Command(BaseCommand):
                 fair = ClubFair.objects.filter(end_time__gte=now).order_by("start_time").first()
             if fair is None:
                 raise CommandError("Could not find an upcoming activities fair!")
+
+        # handle sending out virtual fair emails
+        if action == "virtual_fair":
             clubs = fair.participating_clubs.all()
             if clubs_whitelist:
                 self.stdout.write(f"Using clubs whitelist: {clubs_whitelist}")
@@ -365,43 +367,39 @@ class Command(BaseCommand):
                     )
             return
         elif action == "urgent_virtual_fair":
-            now = timezone.now()
-            events = Event.objects.filter(
-                type=Event.FAIR, end_time__gte=now, start_time__lte=now + datetime.timedelta(days=1)
+            clubs = fair.participating_clubs.filter(
+                Q(url="") | Q(url__isnull=True),
+                events__type=Event.FAIR,
+                events__start_time__gte=fair.start_time,
+                events__end_time__lte=fair.end_time,
             )
             if clubs_whitelist:
-                events = events.filter(club__code__in=clubs_whitelist)
+                self.stdout.write(f"Using clubs whitelist: {clubs_whitelist}")
+                clubs = clubs.filter(code__in=clubs_whitelist)
 
-            self.stdout.write(f"{events.count()} clubs have not registered for the virtual fair.")
-            for event in events:
-                if event.url is None or not event.url:
-                    self.stdout.write(
-                        f"Sending virtual fair urgent reminder to {event.club.name}..."
-                    )
-                    if not dry_run:
-                        event.club.send_virtual_fair_email(email="urgent")
-                elif "zoom.us" not in event.url:
-                    self.stdout.write(f"Sending Zoom reminder to {event.club.name}...")
-                    if not dry_run:
-                        event.club.send_virtual_fair_email(email="zoom")
+            self.stdout.write(f"{clubs.count()} clubs have not registered for the {fair.name}.")
+            extra = kwargs.get("extra", False)
+            for club in clubs.distinct():
+                self.stdout.write(f"Sending virtual fair urgent reminder to {club.name}...")
+                if not dry_run:
+                    club.send_virtual_fair_email(email="urgent", fair=fair, extra=extra)
 
             # don't continue
             return
         elif action == "post_virtual_fair":
-            now = timezone.now()
-            events = Event.objects.filter(
-                type=Event.FAIR,
-                end_time__lte=now,
-                start_time__gte=now - datetime.timedelta(weeks=2),
+            clubs = fair.participating_clubs.filter(
+                events__type=Event.FAIR,
+                events__start_time__gte=fair.start_time,
+                events__end_time__lte=fair.end_time,
             )
             if clubs_whitelist:
-                events = events.filter(club__code__in=clubs_whitelist)
+                clubs = clubs.filter(code__in=clubs_whitelist)
 
-            self.stdout.write(f"{events.count()} post fair emails to send to participants.")
-            for event in events:
-                self.stdout.write(f"Sending post fair reminder to {event.club.name}...")
+            self.stdout.write(f"{clubs.count()} post fair emails to send to participants.")
+            for club in clubs.distinct():
+                self.stdout.write(f"Sending post fair reminder to {club.name}...")
                 if not dry_run:
-                    event.club.send_virtual_fair_email(email="post")
+                    club.send_virtual_fair_email(email="post")
 
             return
 

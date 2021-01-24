@@ -1,10 +1,10 @@
-import datetime
 from collections import OrderedDict
 
 import dateutil.parser
 from django.core.exceptions import FieldDoesNotExist, MultipleObjectsReturned, ObjectDoesNotExist
 from django.db.models import BooleanField, DateTimeField, ManyToManyField
 from django.db.models.fields.reverse_related import ManyToOneRel
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -254,7 +254,7 @@ class XLSXFormatterMixin(object):
         """
         Returns a custom filename for the spreadsheet.
         """
-        return "report-{}.xlsx".format(datetime.datetime.now().strftime("%Y%m%d-%H%M"))
+        return "report-{}.xlsx".format(timezone.now().strftime("%Y%m%d-%H%M"))
 
     def get_column_header(self):
         """
