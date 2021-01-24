@@ -178,12 +178,17 @@ type LiveStatsData = {
 
 /**
  * A small widget that shows the live statistics for the current event.
+ * Hides the statistics if no one is attending or attended the meeting.
  */
 export const LiveStats = ({
   stats,
 }: {
   stats: LiveStatsData
-}): ReactElement => {
+}): ReactElement | null => {
+  if (stats.attending <= 0 && stats.attended <= 0) {
+    return null
+  }
+
   return (
     <div className="mb-3">
       <span className="has-text-info mr-2">

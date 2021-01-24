@@ -45,6 +45,7 @@ from rest_framework.response import Response
 from rest_framework.utils.serializer_helpers import ReturnList
 from rest_framework.views import APIView
 from social_django.utils import load_strategy
+from tatsu.exceptions import FailedParse
 
 from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
 from clubs.mixins import XLSXFormatterMixin
@@ -548,6 +549,83 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             return Response([])
         else:
             return Response([ClubFairSerializer(instance=fair).data])
+
+    @action(detail=True, methods=["get"])
+    def live(self, *args, **kwargs):
+        """
+        Returns all events, grouped by id, with the number of participants currently in the meeting,
+        the officers or owners in the meeting, and the number of participants
+        who have already attended the meeting.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            additionalProperties:
+                                type: object
+                                properties:
+                                    participant_count:
+                                        type: integer
+                                    already_attended:
+                                        type: integer
+                                    officers:
+                                        type: array
+                                        items:
+                                            type: string
+                                    median:
+                                        type: number
+        ---
+        """
+        fair = self.get_object()
+        clubs = fair.participating_clubs.all()
+        events = (
+            Event.objects.filter(
+                club__in=clubs,
+                type=Event.FAIR,
+                start_time__gte=fair.start_time,
+                end_time__lte=fair.end_time,
+            )
+            .annotate(
+                participant_count=Count(
+                    "visits__person", distinct=True, filter=Q(visits__leave_time__isnull=True)
+                )
+            )
+            .annotate(
+                already_attended=Count(
+                    "visits__person", distinct=True, filter=Q(visits__leave_time__isnull=False),
+                )
+            )
+            .filter(visits__leave_time__isnull=False)
+            .annotate(
+                durations=ExpressionWrapper(
+                    F("visits__leave_time") - F("visits__join_time"), output_field=DurationField()
+                )
+            )
+        )
+
+        median_list = collections.defaultdict(list)
+        for event_id, duration in events.values_list("id", "durations").order_by("durations"):
+            median_list[event_id].append(duration.total_seconds())
+        median_list = {k: v[len(v) // 2] if v else 0 for k, v in median_list.items()}
+
+        event_list = events.values_list("id", "participant_count", "already_attended")
+        officer_mapping = collections.defaultdict(list)
+        for k, v in events.filter(
+            club__in=clubs, club__membership__role__lte=10, visits__leave_time__isnull=True
+        ).values_list("id", "club__membership__person__username"):
+            officer_mapping[k].append(v)
+
+        formatted = {}
+        for event_id, particpant_count, already_attended in event_list:
+            formatted[event_id] = {
+                "participant_count": particpant_count,
+                "already_attended": already_attended,
+                "officers": officer_mapping.get(event_id, []),
+                "median": median_list.get(event_id, 0),
+            }
+        return Response(formatted)
 
     @action(detail=True, methods=["post"])
     def create_events(self, request, *args, **kwargs):
@@ -1336,6 +1414,13 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     "success": False,
                     "message": "Failed to fetch events from server, "
                     "are you sure your URL is correct?",
+                }
+            )
+        except FailedParse:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Failed to parse ICS events, are you sure this is an ICS file?",
                 }
             )
 
@@ -2740,7 +2825,7 @@ class FavoriteCalendarAPIView(APIView):
         )
 
         # only fetch events newer than the past month
-        one_month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
+        one_month_ago = timezone.now() - datetime.timedelta(days=30)
         all_events = Event.objects.filter(start_time__gte=one_month_ago)
 
         # filter based on user supplied flags
@@ -3868,7 +3953,7 @@ class LoggingArgumentParser(argparse.ArgumentParser):
         return self._arguments
 
 
-@functools.lru_cache
+@functools.lru_cache()
 def get_scripts():
     """
     Return a list of Django management commands and some associated metadata.

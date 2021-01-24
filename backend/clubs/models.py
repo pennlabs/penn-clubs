@@ -411,25 +411,22 @@ class Club(models.Model):
         domain = get_domain(request)
 
         now = timezone.now()
-        event = (
-            self.events.filter(start_time__gte=now, type=Event.FAIR).order_by("start_time").first()
-        )
 
         if fair is None:
             fair = ClubFair.objects.filter(start_time__gte=now).order_by("start_time").first()
 
         eastern = pytz.timezone("America/New_York")
 
+        events = self.events.filter(
+            start_time__gte=fair.start_time, end_time__lte=fair.end_time, type=Event.FAIR
+        ).order_by("start_time")
+        event = events.first()
         events = [
             {
                 "time": f"{timezone.localtime(start, eastern).strftime('%B %d, %Y %I:%M %p')} - "
                 f"{timezone.localtime(end, eastern).strftime('%B %d, %Y %I:%M %p')} ET"
             }
-            for start, end in self.events.filter(
-                start_time__gte=fair.start_time, end_time__lte=fair.end_time, type=Event.FAIR
-            )
-            .order_by("start_time")
-            .values_list("start_time", "end_time")
+            for start, end in events.values_list("start_time", "end_time")
         ]
 
         prefix = (
@@ -437,8 +434,6 @@ class Club(models.Model):
             if event is None or not event.url or "zoom.us" not in event.url
             else "REMINDER"
         )
-        if email in {"urgent", "zoom"}:
-            prefix = "URGENT"
 
         if emails is None:
             emails = self.get_officer_emails()
@@ -462,7 +457,6 @@ class Club(models.Model):
                 name={
                     "setup": "fair_info",
                     "urgent": "fair_reminder",
-                    "zoom": "zoom_reminder",
                     "post": "fair_feedback_officers",
                 }[email],
                 subject=None,
@@ -572,7 +566,7 @@ class Club(models.Model):
 
         context = {
             "name": self.name,
-            "year": datetime.datetime.now().year,
+            "year": timezone.now().year,
             "approved": self.approved,
             "approved_comment": self.approved_comment,
             "view_url": settings.VIEW_URL.format(domain=domain, club=self.code),
@@ -695,6 +689,8 @@ class ClubFair(models.Model):
         Create activities fair events for all registered clubs.
         Does not create event if it already exists.
         Returns a list of activities fair events.
+
+        This method should only be used for testing purposes in development.
         """
         start_time = start_time or self.start_time
         end_time = end_time or self.end_time
@@ -880,8 +876,10 @@ class ZoomMeetingVisit(models.Model):
     Stores information on a user's attendance to a Zoom meeting
     """
 
-    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True)
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    person = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, null=True, related_name="visits"
+    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="visits")
     meeting_id = models.CharField(max_length=255)
     participant_id = models.CharField(max_length=255)
 

@@ -2264,6 +2264,51 @@ class ClubTestCase(TestCase):
         self.event1.refresh_from_db()
         self.assertEqual(self.event1.url, output_url)
 
+    def test_zoom_general_meeting_info(self):
+        """
+        Test the endpoint to retrieve all live information for a fair.
+        """
+        now = timezone.now()
+        start_time = now - datetime.timedelta(days=1)
+        end_time = now + datetime.timedelta(days=1)
+        fair = ClubFair.objects.create(
+            name="Example Fair",
+            start_time=start_time,
+            end_time=end_time,
+            registration_end_time=now - datetime.timedelta(weeks=1),
+        )
+        ClubFairRegistration.objects.create(registrant=self.user1, club=self.event1.club, fair=fair)
+
+        self.event1.type = Event.FAIR
+        self.event1.start_time = start_time
+        self.event1.end_time = end_time
+        self.event1.save()
+
+        ZoomMeetingVisit.objects.bulk_create(
+            ZoomMeetingVisit(
+                event=self.event1,
+                person=[self.user1, self.user2, self.user3, self.user4, self.user5][i],
+                join_time=start_time + datetime.timedelta(hours=1),
+                leave_time=start_time + datetime.timedelta(hours=1) + datetime.timedelta(minutes=i),
+                meeting_id="",
+                participant_id="",
+            )
+            for i in range(5)
+        )
+
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.get(reverse("clubfairs-live", args=(fair.id,)))
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertIn(self.event1.id, resp.data, resp.content)
+        self.assertEqual(resp.data[self.event1.id]["participant_count"], 0, resp.content)
+        self.assertEqual(resp.data[self.event1.id]["already_attended"], 5, resp.content)
+        self.assertEqual(
+            resp.data[self.event1.id]["median"],
+            datetime.timedelta(minutes=2).total_seconds(),
+            resp.content,
+        )
+
     def test_event_add_meeting(self):
         """
         Test manually adding a meeting link without the Zoom page, but having their account linked.
