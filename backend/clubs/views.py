@@ -587,7 +587,11 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                 start_time__gte=fair.start_time,
                 end_time__lte=fair.end_time,
             )
-            .annotate(participant_count=Count("visits__person", distinct=True))
+            .annotate(
+                participant_count=Count(
+                    "visits__person", distinct=True, filter=Q(visits__leave_time__isnull=True)
+                )
+            )
             .annotate(
                 already_attended=Count(
                     "visits__person", distinct=True, filter=Q(visits__leave_time__isnull=False),
