@@ -20,7 +20,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("code", models.SlugField(max_length=255, unique=True)),
@@ -33,7 +36,8 @@ class Migration(migrations.Migration):
                 (
                     "size",
                     models.IntegerField(
-                        choices=[(1, "1-20"), (2, "21-50"), (3, "51-100"), (4, "101+")], default=1
+                        choices=[(1, "1-20"), (2, "21-50"), (3, "51-100"), (4, "101+")],
+                        default=1,
                     ),
                 ),
                 ("email", models.EmailField(blank=True, max_length=254, null=True)),
@@ -74,7 +78,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("name", models.CharField(max_length=255)),
@@ -95,14 +102,19 @@ class Migration(migrations.Migration):
                 ("active", models.BooleanField(default=True)),
                 ("auto", models.BooleanField(default=False)),
                 ("email", models.EmailField(max_length=254)),
-                ("token", models.CharField(default=clubs.models.get_token, max_length=128)),
+                (
+                    "token",
+                    models.CharField(default=clubs.models.get_token, max_length=128),
+                ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("title", models.CharField(default="Member", max_length=255)),
                 ("role", models.IntegerField(default=20)),
                 (
                     "club",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="clubs.Club"),
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="clubs.Club"
+                    ),
                 ),
                 (
                     "creator",
@@ -120,7 +132,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("active", models.BooleanField(default=True)),
@@ -129,19 +144,23 @@ class Migration(migrations.Migration):
                 (
                     "role",
                     models.IntegerField(
-                        choices=[(0, "Owner"), (10, "Officer"), (20, "Member")], default=20
+                        choices=[(0, "Owner"), (10, "Officer"), (20, "Member")],
+                        default=20,
                     ),
                 ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 (
                     "club",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="clubs.Club"),
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="clubs.Club"
+                    ),
                 ),
                 (
                     "person",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
@@ -153,7 +172,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("code", models.SlugField(max_length=255, unique=True)),
@@ -165,7 +187,9 @@ class Migration(migrations.Migration):
                 (
                     "image",
                     models.ImageField(
-                        blank=True, null=True, upload_to=clubs.models.get_event_file_name
+                        blank=True,
+                        null=True,
+                        upload_to=clubs.models.get_event_file_name,
                     ),
                 ),
                 ("description", models.TextField()),
@@ -173,7 +197,9 @@ class Migration(migrations.Migration):
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 (
                     "club",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="clubs.Club"),
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="clubs.Club"
+                    ),
                 ),
                 (
                     "creator",
@@ -188,7 +214,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="club",
             name="members",
-            field=models.ManyToManyField(through="clubs.Membership", to=settings.AUTH_USER_MODEL),
+            field=models.ManyToManyField(
+                through="clubs.Membership", to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AddField(
             model_name="club", name="tags", field=models.ManyToManyField(to="clubs.Tag")
@@ -199,7 +227,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("file", models.FileField(upload_to=clubs.models.get_asset_file_name)),
@@ -221,19 +252,25 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 (
                     "club",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="clubs.Club"),
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="clubs.Club"
+                    ),
                 ),
                 (
                     "person",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],

@@ -153,7 +153,8 @@ def file_upload_endpoint_helper(request, code):
         )
     else:
         return Response(
-            {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST,
+            {"detail": "No image file was uploaded!"},
+            status=status.HTTP_400_BAD_REQUEST,
         )
     return Response({"detail": "Club file uploaded!", "id": asset.id})
 
@@ -163,8 +164,8 @@ def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
     Given a Model class with lookup arguments or a Model object, save the uploaded image
     to the image field specified in the argument.
 
-    The save parameter can be used to control whether the Model is actually saved to the database.
-    This parameter only applies if you pass in a Model object.
+    The save parameter can be used to control whether the Model is actually saved to
+    the database. This parameter only applies if you pass in a Model object.
 
     Returns a response that can be given to the end user.
     """
@@ -180,10 +181,14 @@ def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
             obj.save()
     else:
         return Response(
-            {"detail": "No image file was uploaded!"}, status=status.HTTP_400_BAD_REQUEST,
+            {"detail": "No image file was uploaded!"},
+            status=status.HTTP_400_BAD_REQUEST,
         )
     return Response(
-        {"detail": f"{obj.__class__.__name__} image uploaded!", "url": getattr(obj, field).url}
+        {
+            "detail": f"{obj.__class__.__name__} image uploaded!",
+            "url": getattr(obj, field).url,
+        }
     )
 
 
@@ -196,7 +201,9 @@ def find_relationship_helper(relationship, club_object, found):
     for child in children:
         if child.code not in found:
             found.add(child.code)
-            children_recurse.append(find_relationship_helper(relationship, child, found))
+            children_recurse.append(
+                find_relationship_helper(relationship, child, found)
+            )
             found.remove(child.code)
         else:
             children_recurse.append({"name": child.name, "code": child.code})
@@ -395,7 +402,10 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
 
             fair = ClubFair.objects.filter(id=value).first()
             if fair:
-                return {"start_time__gte": fair.start_time, "end_time__lte": fair.end_time}
+                return {
+                    "start_time__gte": fair.start_time,
+                    "end_time__lte": fair.end_time,
+                }
 
         if not queryset.model == Club:
             fields = {f"club__{k}": v for k, v in fields.items()}
@@ -454,9 +464,12 @@ class ClubsOrderingFilter(RandomOrderingFilter):
             and request.user.has_perm("clubs.generate_reports")
         ):
             valid_fields = [
-                (field.name, field.verbose_name) for field in queryset.model._meta.fields
+                (field.name, field.verbose_name)
+                for field in queryset.model._meta.fields
             ]
-            valid_fields += [(key, key.title().split("__")) for key in queryset.query.annotations]
+            valid_fields += [
+                (key, key.title().split("__")) for key in queryset.query.annotations
+            ]
             valid_fields += [
                 (f"club__{field.name}", f"Club - {field.verbose_name}")
                 for field in Club._meta.fields
@@ -467,14 +480,18 @@ class ClubsOrderingFilter(RandomOrderingFilter):
         return super().get_valid_fields(queryset, view, context)
 
     def filter_queryset(self, request, queryset, view):
-        ordering = [arg for arg in request.GET.get("ordering", "").strip().split(",") if arg]
+        ordering = [
+            arg for arg in request.GET.get("ordering", "").strip().split(",") if arg
+        ]
         if not ordering and hasattr(view, "ordering"):
             ordering = [view.ordering]
 
         if "featured" in ordering:
             if queryset.model == Club:
                 return queryset.order_by("-rank", "-favorite_count", "-id")
-            return queryset.order_by("-club__rank", "-club__favorite_count", "-club__id")
+            return queryset.order_by(
+                "-club__rank", "-club__favorite_count", "-club__id"
+            )
         else:
             # prevent invalid SQL lookups from custom ordering properties
             if hasattr(view, "ordering") and view.ordering in {
@@ -508,10 +525,12 @@ class ClubFairViewSet(viewsets.ModelViewSet):
     Schedule a new club fair.
 
     update:
-    Update some attributes related to an existing club fair. All fields must be specified.
+    Update some attributes related to an existing club fair.
+    All fields must be specified.
 
     partial_update:
-    Update some attributes related to an existing club fair. Only specified fields are updated.
+    Update some attributes related to an existing club fair.
+    Only specified fields are updated.
 
     destroy:
     Delete a club fair.
@@ -553,9 +572,9 @@ class ClubFairViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def live(self, *args, **kwargs):
         """
-        Returns all events, grouped by id, with the number of participants currently in the meeting,
-        the officers or owners in the meeting, and the number of participants
-        who have already attended the meeting.
+        Returns all events, grouped by id, with the number of participants currently
+        in the meeting, the officers or owners in the meeting, and the number of
+        participants who have already attended the meeting.
         ---
         responses:
             "200":
@@ -589,31 +608,40 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             )
             .annotate(
                 participant_count=Count(
-                    "visits__person", distinct=True, filter=Q(visits__leave_time__isnull=True)
+                    "visits__person",
+                    distinct=True,
+                    filter=Q(visits__leave_time__isnull=True),
                 )
             )
             .annotate(
                 already_attended=Count(
-                    "visits__person", distinct=True, filter=Q(visits__leave_time__isnull=False),
+                    "visits__person",
+                    distinct=True,
+                    filter=Q(visits__leave_time__isnull=False),
                 )
             )
             .filter(visits__leave_time__isnull=False)
             .annotate(
                 durations=ExpressionWrapper(
-                    F("visits__leave_time") - F("visits__join_time"), output_field=DurationField()
+                    F("visits__leave_time") - F("visits__join_time"),
+                    output_field=DurationField(),
                 )
             )
         )
 
         median_list = collections.defaultdict(list)
-        for event_id, duration in events.values_list("id", "durations").order_by("durations"):
+        for event_id, duration in events.values_list("id", "durations").order_by(
+            "durations"
+        ):
             median_list[event_id].append(duration.total_seconds())
         median_list = {k: v[len(v) // 2] if v else 0 for k, v in median_list.items()}
 
         event_list = events.values_list("id", "participant_count", "already_attended")
         officer_mapping = collections.defaultdict(list)
         for k, v in events.filter(
-            club__in=clubs, club__membership__role__lte=10, visits__leave_time__isnull=True
+            club__in=clubs,
+            club__membership__role__lte=10,
+            visits__leave_time__isnull=True,
         ).values_list("id", "club__membership__person__username"):
             officer_mapping[k].append(v)
 
@@ -631,7 +659,8 @@ class ClubFairViewSet(viewsets.ModelViewSet):
     def create_events(self, request, *args, **kwargs):
         """
         Create events for each club registered for this activities fair.
-        This endpoint will create one event per club spanning the entire listed duration.
+        This endpoint will create one event per club spanning the
+        entire listed duration.
         ---
         requestBody:
             content:
@@ -682,7 +711,8 @@ class ClubFairViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def events(self, request, *args, **kwargs):
         """
-        Return all of the events related to this club fair and whether they are properly configured.
+        Return all of the events related to this club fair
+        and whether they are properly configured.
         ---
         responses:
             "200":
@@ -704,12 +734,13 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                                     approved:
                                         type: boolean
                                         description: >
-                                            Whether this club has been approved by the approval
-                                            authority or not.
+                                            Whether this club has been approved by the
+                                            approval authority or not.
                                     badges:
                                         type: array
                                         description: >
-                                            A list of badges associated with this club and fair.
+                                            A list of badges associated with this
+                                            club and fair.
                                         items:
                                             type: string
                                     meetings:
@@ -760,7 +791,8 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         """
         Register a club for this club fair.
         Pass in a "club" string parameter with the club code
-        and a "status" parameter that is true to register the club, or false to unregister.
+        and a "status" parameter that is true to register the club,
+        or false to unregister.
         ---
         requestBody:
             content:
@@ -771,17 +803,20 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                             status:
                                 type: boolean
                                 description: >
-                                    Whether to register or unregister this club for the fair.
-                                    By default, the endpoint will attempt to register the club.
+                                    Whether to register or unregister this club for
+                                    the fair. By default, the endpoint will attempt
+                                    to register the club.
                             club:
                                 type: string
-                                description: The code of the club that you are trying to register.
+                                description: The code of the club that you are trying
+                                to register.
                             answers:
                                 type: array
                                 description: >
                                     The answers to the required fair questions.
-                                    Each element in the array is an answer to a fair question,
-                                    in the same order of the related fair questions.
+                                    Each element in the array is an answer to a fair
+                                    question, in the same order of the related
+                                    fair questions.
                         required:
                             - club
         responses:
@@ -793,7 +828,8 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                             properties:
                                 success:
                                     type: boolean
-                                    description: Whether or not this club has been registered.
+                                    description: >
+                                        Whether or not this club has been registered.
                                 message:
                                     type: string
                                     description: A success or error message.
@@ -828,7 +864,10 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             )
         ):
             return Response(
-                {"success": False, "message": "Please fill out all of the questions in the form."}
+                {
+                    "success": False,
+                    "message": "Please fill out all of the questions in the form.",
+                }
             )
 
         # make sure club constitution is uploaded for SAC clubs
@@ -846,17 +885,22 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                         {
                             "success": False,
                             "message": "As a SAC affiliated club, "
-                            "you must upload a club constitution before registering for this fair.",
+                            "you must upload a club constitution "
+                            "before registering for this fair.",
                         }
                     )
 
         # check if registration has started
         now = timezone.now()
-        if fair.registration_start_time is not None and fair.registration_start_time > now:
+        if (
+            fair.registration_start_time is not None
+            and fair.registration_start_time > now
+        ):
             return Response(
                 {
                     "success": False,
-                    "message": "Registration for this activities fair has not opened yet.",
+                    "message": "Registration for this activities fair "
+                    "has not opened yet.",
                 }
             )
 
@@ -865,18 +909,25 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "success": False,
-                    "message": "The deadline has passed to register for this activities fair. "
+                    "message": "The deadline has passed to register "
+                    "for this activities fair. "
                     f"Please email {fair.contact} for assistance.",
                 }
             )
 
         # check if user can actually register club
         mship = find_membership_helper(request.user, club)
-        if mship is not None and mship.role <= Membership.ROLE_OFFICER or request.user.is_superuser:
+        if (
+            mship is not None
+            and mship.role <= Membership.ROLE_OFFICER
+            or request.user.is_superuser
+        ):
             # register or unregister club
             if status:
                 ClubFairRegistration.objects.update_or_create(
-                    club=club, fair=fair, defaults={"answers": answers, "registrant": request.user}
+                    club=club,
+                    fair=fair,
+                    defaults={"answers": answers, "registrant": request.user},
                 )
             else:
                 fair.participating_clubs.remove(club)
@@ -898,7 +949,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     Return a list of clubs with partial information for each club.
 
     create:
-    Add a new club record. After creation, the club will need to go through the approval process.
+    Add a new club record.
+    After creation, the club will need to go through the approval process.
 
     update:
     Update all fields in the club.
@@ -1020,9 +1072,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                     description: The status of the file upload.
                                 url:
                                     type: string
+                                    nullable: true
                                     description: >
                                         The URL of the newly uploaded file.
-                                        Only exists if the file was successfully uploaded.
+                                        Only exists if the file was
+                                        successfully uploaded.
             "400":
                 description: Returned if there was an error while uploading the file.
                 content: *upload_resp
@@ -1041,7 +1095,15 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 club.ghost = True
 
             club._change_reason = "Mark pending approval due to image change"
-            club.save(update_fields=["image", "approved", "approved_by", "approved_on", "ghost"])
+            club.save(
+                update_fields=[
+                    "image",
+                    "approved",
+                    "approved_by",
+                    "approved_on",
+                    "ghost",
+                ]
+            )
 
             # create thumbnail
             club.create_thumbnail(request)
@@ -1075,9 +1137,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                     description: The status of the file upload.
                                 url:
                                     type: string
+                                    nullable: true
                                     description: >
                                         The URL of the newly uploaded file.
-                                        Only exists if the file was successfully uploaded.
+                                        Only exists if the file was successfully
+                                        uploaded.
             "400":
                 description: Returned if there was an error while uploading the file.
                 content: *upload_resp
@@ -1107,7 +1171,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                 children:
                                     type: array
                                     description: >
-                                        An array of clubs containing the fields in this object.
+                                        An array of clubs containing
+                                        the fields in this object.
         ---
         """
         club = self.get_object()
@@ -1133,7 +1198,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                 children:
                                     type: array
                                     description: >
-                                        An array of clubs containing the fields in this object.
+                                        An array of clubs containing
+                                        the fields in this object.
         ---
         """
         club = self.get_object()
@@ -1174,7 +1240,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             "person__username",
         ):
             results[year].append(
-                {"name": f"{first} {last}".strip(), "username": username if show else None}
+                {
+                    "name": f"{first} {last}".strip(),
+                    "username": username if show else None,
+                }
             )
         return Response(results)
 
@@ -1228,7 +1297,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             .prefetch_related("person__profile__school", "person__profile__major")
         )
         shared_bookmarks = (
-            Favorite.objects.exclude(person__pk__in=subscribes.values_list("person__pk", flat=True))
+            Favorite.objects.exclude(
+                person__pk__in=subscribes.values_list("person__pk", flat=True)
+            )
             .filter(club=club, person__profile__share_bookmarks=True)
             .select_related("person", "person__profile", "club")
             .prefetch_related("person__profile__school", "person__profile__major")
@@ -1241,7 +1312,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def analytics_pie_charts(self, request, *args, **kwargs):
         """
-        Returns demographic information about bookmarks and subscriptions in pie chart format.
+        Returns demographic information about bookmarks
+        and subscriptions in pie chart format.
         ---
         parameters:
             - name: category
@@ -1273,16 +1345,22 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 category_join = "person__profile__school__name"
 
             if metric == "favorite":
-                queryset = Favorite.objects.filter(club=club, created_at__gte=lower_bound)
+                queryset = Favorite.objects.filter(
+                    club=club, created_at__gte=lower_bound
+                )
             elif metric == "subscribe":
-                queryset = Subscribe.objects.filter(club=club, created_at__gte=lower_bound)
+                queryset = Subscribe.objects.filter(
+                    club=club, created_at__gte=lower_bound
+                )
             else:
                 queryset = ClubVisit.objects.filter(
                     club=club, created_at__gte=lower_bound, visit_type=1
                 )
 
             return {
-                "content": list(queryset.values(category_join).annotate(count=Count("id"))),
+                "content": list(
+                    queryset.values(category_join).annotate(count=Count("id"))
+                ),
             }
 
         return Response(get_breakdown(category, metric))
@@ -1304,7 +1382,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                     type: integer
                                     description: >
                                         The maximum value among all categories.
-                                        Useful when deciding how tall a line chart should be.
+                                        Useful when deciding how tall a
+                                        line chart should be.
                                 visits:
                                     type: array
                                 favorites:
@@ -1318,7 +1397,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if "date" in request.query_params:
             date = datetime.datetime.strptime(request.query_params["date"], "%Y-%m-%d")
         else:
-            date = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
+            date = datetime.datetime.combine(
+                datetime.date.today(), datetime.datetime.min.time()
+            )
 
         # parse date range
         if "start" in request.query_params:
@@ -1334,7 +1415,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # retrieve data
         def get_count(queryset):
             """
-            Return a json serializable aggregation of analytics data for a specific model.
+            Return a json serializable aggregation of
+            analytics data for a specific model.
             """
             objs = (
                 queryset.annotate(group=Trunc("created_at", group))
@@ -1354,10 +1436,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             )
         )
         favorites_data = get_count(
-            Favorite.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
+            Favorite.objects.filter(
+                club=club, created_at__gte=start, created_at__lte=end
+            )
         )
         subscriptions_data = get_count(
-            Subscribe.objects.filter(club=club, created_at__gte=start, created_at__lte=end)
+            Subscribe.objects.filter(
+                club=club, created_at__gte=start, created_at__lte=end
+            )
         )
 
         max_value = max(
@@ -1390,7 +1476,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                             properties:
                                 success:
                                     type: boolean
-                                    description: Whether or not events were successfully fetched.
+                                    description: Whether or not events were fetched.
                                 message:
                                     type: string
                                     description: A success or error message.
@@ -1420,7 +1506,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return Response(
                 {
                     "success": False,
-                    "message": "Failed to parse ICS events, are you sure this is an ICS file?",
+                    "message": "Failed to parse ICS events, "
+                    "are you sure this is an ICS file?",
                 }
             )
 
@@ -1435,7 +1522,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         ---
         """
         serializer = ClubMinimalSerializer(
-            Club.objects.all().exclude(approved=False).order_by(Lower("name")), many=True
+            Club.objects.all().exclude(approved=False).order_by(Lower("name")),
+            many=True,
         )
         return Response(serializer.data)
 
@@ -1463,7 +1551,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                         to_attr="user_membership_set",
                     )
                 )
-            serializer = ClubConstitutionSerializer(query, many=True, context={"request": request})
+            serializer = ClubConstitutionSerializer(
+                query, many=True, context={"request": request}
+            )
             return Response(serializer.data)
         else:
             return Response({"error": "The SAC badge does not exist in the database."})
@@ -1495,7 +1585,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         clubs = [c for c in clubs if c]
         simple = {
             name: code
-            for name, code in Club.objects.filter(name__in=clubs).values_list("name", "code")
+            for name, code in Club.objects.filter(name__in=clubs).values_list(
+                "name", "code"
+            )
         }
         output = []
         for name in clubs:
@@ -1563,17 +1655,24 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                             properties:
                                 success:
                                     type: boolean
-                                    description: Whether or not this club has been registered.
+                                    description: >
+                                        Whether or not this club has been registered.
                                 message:
                                     type: string
-                                    description: A success message. Only set if operation passes.
+                                    description: >
+                                        A success message. Only set if operation passes.
                                 error:
                                     type: string
-                                    description: An error message. Only set if an error occurs.
+                                    description: >
+                                        An error message. Only set if an error occurs.
         ---
         """
-        if not request.user.is_authenticated or not request.user.has_perm("clubs.manage_club"):
-            return Response({"error": "You do not have permission to perform this action."})
+        if not request.user.is_authenticated or not request.user.has_perm(
+            "clubs.manage_club"
+        ):
+            return Response(
+                {"error": "You do not have permission to perform this action."}
+            )
 
         action = request.data.get("action")
         if action is None:
@@ -1581,12 +1680,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         # lookup clubs by code
         clubs = [
-            code.strip() for code in re.split(r"[,\t\n]", request.data.get("clubs", "").strip())
+            code.strip()
+            for code in re.split(r"[,\t\n]", request.data.get("clubs", "").strip())
         ]
         clubs = [code for code in clubs if code]
         if not clubs:
             return Response(
-                {"error": "You must specify the list of codes you want to apply this action to."}
+                {
+                    "error": "You must specify the list of codes "
+                    "you want to apply this action to."
+                }
             )
         club_objs = Club.objects.filter(code__in=clubs)
         missing_clubs = set(clubs) - set(club_objs.values_list("code", flat=True))
@@ -1595,7 +1698,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if not club_objs.exists():
             clubs_str = ", ".join(clubs)
             return Response(
-                {"error": f"No objects were found matching those codes. Codes tried: {clubs_str}"}
+                {
+                    "error": "No objects were found matching those codes. "
+                    f"Codes tried: {clubs_str}"
+                }
             )
 
         tags = request.data.get("tags", [])
@@ -1603,7 +1709,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         fairs = request.data.get("fairs", [])
 
         if not tags and not badges and not fairs:
-            return Response({"error": "You must specify some related objects to manipulate!"})
+            return Response(
+                {"error": "You must specify some related objects to manipulate!"}
+            )
 
         tags = Tag.objects.filter(id__in=[tag["id"] for tag in tags])
         badges = Badge.objects.filter(id__in=[badge["id"] for badge in badges])
@@ -1634,7 +1742,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     ]
                     ClubFairRegistration.objects.bulk_create(
                         [
-                            ClubFairRegistration(club=club, fair=fair, registrant=request.user)
+                            ClubFairRegistration(
+                                club=club, fair=fair, registrant=request.user
+                            )
                             for club in unregistered_clubs
                         ]
                     )
@@ -1647,7 +1757,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         msg = f"{count} object(s) have been updated!"
         if missing_clubs:
             msg += (
-                f" Could not find {len(missing_clubs)} club(s) by code: {', '.join(missing_clubs)}"
+                f" Could not find {len(missing_clubs)} club(s) by code: "
+                f"{', '.join(missing_clubs)}"
             )
 
         return Response({"success": True, "message": msg})
@@ -1715,9 +1826,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def fields(self, request, *args, **kwargs):
         """
         Return the list of fields that can be exported in the Excel file.
-        The list of fields is taken from the associated serializer, with model names overriding
-        the serializer names if they exist. Custom fields are also available with certain permission
-        levels.
+        The list of fields is taken from the associated serializer, with model names
+        overriding the serializer names if they exist. Custom fields are also available
+        with certain permission levels.
         ---
         responses:
             "200":
@@ -1731,7 +1842,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                     type: string
         ---
         """
-        # use the title given in the models.py if it exists, fallback to the field name otherwise
+        # use the title given in the models.py if it exists,
+        # fallback to the field name otherwise
         name_to_title = {}
         name_to_relation = {}
         for f in Club._meta._get_fields(reverse=False):
@@ -1748,7 +1860,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # compute list of fields on Club
         club_fields = serializer_class().get_fields()
         for field, obj in club_fields.items():
-            if isinstance(obj, (serializers.ModelSerializer, serializers.ListSerializer)):
+            if isinstance(
+                obj, (serializers.ModelSerializer, serializers.ListSerializer)
+            ):
                 name_to_relation[field] = True
 
         fields.update(
@@ -1771,8 +1885,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def get_serializer_class(self):
         """
         Return a serializer class that is appropriate for the action being performed.
-        Some serializer classes return less information, either for permission reasons or
-        to improve performance.
+        Some serializer classes return less information, either for permission reasons
+        or to improve performance.
         """
         if self.action == "upload":
             return AssetSerializer
@@ -1786,7 +1900,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return NoteSerializer
         if self.action in {"list", "fields"}:
             if self.request is not None and (
-                self.request.accepted_renderer.format == "xlsx" or self.action == "fields"
+                self.request.accepted_renderer.format == "xlsx"
+                or self.action == "fields"
             ):
                 if self.request.user.has_perm("clubs.generate_reports"):
                     return ReportClubSerializer
@@ -1850,7 +1965,8 @@ class MajorViewSet(viewsets.ModelViewSet):
 class StudentTypeViewSet(viewsets.ModelViewSet):
     """
     list:
-    Retrieve a list of all the student types (ex: Online Student, Transfer Student, etc).
+    Retrieve a list of all the student types
+    (ex: Online Student, Transfer Student, etc).
 
     retrieve:
     Retrieve a single student type by ID.
@@ -1870,7 +1986,8 @@ class StudentTypeViewSet(viewsets.ModelViewSet):
 class YearViewSet(viewsets.ModelViewSet):
     """
     list:
-    Retrieve a list of all of the graduation years (ex: Freshman, Sophomore, Junior, Senior).
+    Retrieve a list of all of the graduation years
+    (ex: Freshman, Sophomore, Junior, Senior).
 
     retrieve:
     Retrieve a single graduation year by ID.
@@ -1888,8 +2005,8 @@ class YearViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-        Sort items by reverse year. Since this calculation is done in Python, we need to apply
-        it after the SQL query has been processed.
+        Sort items by reverse year. Since this calculation is done in Python, we need
+        to apply it after the SQL query has been processed.
         """
         queryset = self.get_queryset()
         serializer = self.get_serializer_class()(queryset, many=True)
@@ -1940,7 +2057,9 @@ class AdvisorViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
     def get_queryset(self):
-        return Advisor.objects.filter(club__code=self.kwargs.get("club_code")).order_by("name")
+        return Advisor.objects.filter(club__code=self.kwargs.get("club_code")).order_by(
+            "name"
+        )
 
 
 class ClubEventViewSet(viewsets.ModelViewSet):
@@ -2002,7 +2121,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     type: string
                                     description: >
                                         The URL of the newly uploaded file.
-                                        Only exists if the file was successfully uploaded.
+                                        Only exists if the file was successfully
+                                        uploaded.
             "400":
                 description: Returned if there was an error while uploading the file.
                 content: *upload_resp
@@ -2021,8 +2141,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        Has the option to create a recurring event by specifying an offset and an end date.
-        Additionaly, do not let non-superusers create events with the `FAIR` type through the API.
+        Has the option to create a recurring event by specifying an offset and an
+        end date. Additionaly, do not let non-superusers create events with the
+        `FAIR` type through the API.
         ---
         requestBody:
             content:
@@ -2047,8 +2168,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     format: date-time
                                     description: >
                                         The date when all items in the recurring event
-                                        series should end. Only specify this if the event
-                                        is recurring.
+                                        series should end. Only specify this if the
+                                        event is recurring.
 
         ---
         """
@@ -2083,7 +2204,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     ev.parent_recurring_event = parent_recurring_event
                     result_data.append(ev)
                 else:
-                    return Response(event_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        event_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                    )
 
                 start_time = start_time + datetime.timedelta(days=offset)
                 end_time = end_time + datetime.timedelta(days=offset)
@@ -2115,7 +2238,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         is_club_specific = self.kwargs.get("club_code") is not None
         if is_club_specific:
             qs = qs.filter(club__code=self.kwargs["club_code"])
-            qs = qs.filter(Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True))
+            qs = qs.filter(
+                Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True)
+            )
         else:
             qs = qs.filter(
                 Q(club__approved=True)
@@ -2129,7 +2254,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             .prefetch_related(
                 Prefetch(
                     "club__badges",
-                    queryset=Badge.objects.filter(fair__id=self.request.query_params.get("fair"))
+                    queryset=Badge.objects.filter(
+                        fair__id=self.request.query_params.get("fair")
+                    )
                     if "fair" in self.request.query_params
                     else Badge.objects.filter(visible=True),
                 )
@@ -2166,14 +2293,15 @@ class EventViewSet(ClubEventViewSet):
               required: false
               description: >
                 A date in YYYY-MM-DD format.
-                If specified, will preview how this endpoint looked on the specified date.
+                If specified, will preview how this endpoint looked on the specified
+                date.
               type: string
             - name: fair
               in: query
               required: false
               description: >
-                A fair id. If specified, will preview how this endpoint will look for that fair.
-                Overrides the date field if both are specified.
+                A fair id. If specified, will preview how this endpoint will look for
+                that fair. Overrides the date field if both are specified.
               type: number
         responses:
             "200":
@@ -2263,7 +2391,9 @@ class EventViewSet(ClubEventViewSet):
                 end_time__gte=now - datetime.timedelta(days=1),
             )
         else:
-            events = events.filter(start_time__lte=fair.end_time, end_time__gte=fair.start_time)
+            events = events.filter(
+                start_time__lte=fair.end_time, end_time__gte=fair.start_time
+            )
 
         events = events.values_list(
             "start_time", "end_time", "club__name", "club__code", "club__badges__label"
@@ -2287,16 +2417,23 @@ class EventViewSet(ClubEventViewSet):
                     "events": [],
                 }
 
-            output[ts]["events"][category]["events"].append({"name": event[2], "code": event[3]})
+            output[ts]["events"][category]["events"].append(
+                {"name": event[2], "code": event[3]}
+            )
         for item in output.values():
-            item["events"] = list(sorted(item["events"].values(), key=lambda cat: cat["category"]))
+            item["events"] = list(
+                sorted(item["events"].values(), key=lambda cat: cat["category"])
+            )
             for category in item["events"]:
                 category["events"] = list(
                     sorted(category["events"], key=lambda e: e["name"].casefold())
                 )
 
         output = list(sorted(output.values(), key=lambda cat: cat["start_time"]))
-        final_output = {"events": output, "fair": ClubFairSerializer(instance=fair).data}
+        final_output = {
+            "events": output,
+            "fair": ClubFairSerializer(instance=fair).data,
+        }
         if key:
             cache.set(key, final_output, 60 * 5)
 
@@ -2439,7 +2576,9 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        queryset = Favorite.objects.filter(person=self.request.user).prefetch_related("club__tags")
+        queryset = Favorite.objects.filter(person=self.request.user).prefetch_related(
+            "club__tags"
+        )
 
         person = self.request.user
         queryset = queryset.prefetch_related(
@@ -2500,7 +2639,9 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        queryset = Subscribe.objects.filter(person=self.request.user).prefetch_related("club__tags")
+        queryset = Subscribe.objects.filter(person=self.request.user).prefetch_related(
+            "club__tags"
+        )
 
         person = self.request.user
         queryset = queryset.prefetch_related(
@@ -2568,7 +2709,9 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         If a membership request object already exists, reuse it.
         """
         club = request.data.get("club", None)
-        obj = MembershipRequest.objects.filter(club__code=club, person=request.user).first()
+        obj = MembershipRequest.objects.filter(
+            club__code=club, person=request.user
+        ).first()
         if obj is not None:
             obj.withdrew = False
             obj.save(update_fields=["withdrew"])
@@ -2580,8 +2723,8 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         """
         Don't actually delete the membership request when it is withdrawn.
 
-        This is to keep track of repeat membership requests and avoid spamming the club owners
-        with requests.
+        This is to keep track of repeat membership requests and avoid spamming the club
+        owners with requests.
         """
         obj = self.get_object()
         obj.withdrew = True
@@ -2590,7 +2733,9 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         return Response({"success": True})
 
     def get_queryset(self):
-        return MembershipRequest.objects.filter(person=self.request.user, withdrew=False)
+        return MembershipRequest.objects.filter(
+            person=self.request.user, withdrew=False
+        )
 
 
 class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
@@ -2608,7 +2753,9 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     lookup_field = "person__username"
 
     def get_queryset(self):
-        return MembershipRequest.objects.filter(club__code=self.kwargs["club_code"], withdrew=False)
+        return MembershipRequest.objects.filter(
+            club__code=self.kwargs["club_code"], withdrew=False
+        )
 
     @action(detail=True, methods=["post"])
     def accept(self, request, *ages, **kwargs):
@@ -2626,11 +2773,13 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                 success:
                                     type: boolean
                                     description: >
-                                        Whether or not this request was successfully accepted.
+                                        True if this request was properly processed.
         ---
         """
         request_object = self.get_object()
-        Membership.objects.get_or_create(person=request_object.person, club=request_object.club)
+        Membership.objects.get_or_create(
+            person=request_object.person, club=request_object.club
+        )
         request_object.delete()
         return Response({"success": True})
 
@@ -2751,7 +2900,9 @@ class TagViewSet(viewsets.ModelViewSet):
     Return details for a specific tag by name.
     """
 
-    queryset = Tag.objects.all().annotate(clubs=Count("club", distinct=True)).order_by("name")
+    queryset = (
+        Tag.objects.all().annotate(clubs=Count("club", distinct=True)).order_by("name")
+    )
     serializer_class = TagSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
@@ -2826,7 +2977,9 @@ class FavoriteCalendarAPIView(APIView):
 
         calendar = ICSCal(creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAIN})")
         calendar.extra.append(
-            ICSParse.ContentLine(name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events")
+            ICSParse.ContentLine(
+                name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events"
+            )
         )
 
         # only fetch events newer than the past month
@@ -2864,7 +3017,8 @@ class FavoriteCalendarAPIView(APIView):
                 e.location = event.url
             e.url = event.url
             e.description = "{}\n\n{}".format(
-                event.url or "" if not event.location else "", html_to_text(event.description)
+                event.url or "" if not event.location else "",
+                html_to_text(event.description),
             ).strip()
             e.uid = f"{event.ics_uuid}@{settings.DOMAIN}"
             e.created = event.created_at
@@ -2941,7 +3095,9 @@ class UserGroupAPIView(APIView):
         output = [
             {
                 "code": k,
-                "members": [{"username": x[0], "name": f"{x[1]} {x[2]}".strip()} for x in v],
+                "members": [
+                    {"username": x[0], "name": f"{x[1]} {x[2]}".strip()} for x in v
+                ],
             }
             for k, v in output.items()
         ]
@@ -2950,12 +3106,13 @@ class UserGroupAPIView(APIView):
 
 class UserPermissionAPIView(APIView):
     """
-    get: Check if a user has a specific permission or list of permissions separated by commas,
-    or return a list of all user permissions.
+    get: Check if a user has a specific permission or list of permissions separated by
+    commas, or return a list of all user permissions.
 
-    This endpoint can accept general Django permissions or per object Django permissions, with the
-    permission name and lookup key for the object separated by a colon. A general Django permission
-    will grant access to the per object version if the user has the general permission.
+    This endpoint can accept general Django permissions or per object Django
+    permissions, with the permission name and lookup key for the object separated by a
+    colon. A general Django permission will grant access to the per object version
+    if the user has the general permission.
     """
 
     permission_classes = [AllowAny]
@@ -2977,7 +3134,9 @@ class UserPermissionAPIView(APIView):
         ---
         """
         raw_perms = [
-            perm.strip() for perm in request.GET.get("perm", "").strip().split(",") if perm
+            perm.strip()
+            for perm in request.GET.get("perm", "").strip().split(",")
+            if perm
         ]
 
         if not request.user.is_authenticated:
@@ -3033,10 +3192,13 @@ def zoom_api_call(user, verb, url, *args, **kwargs):
     """
     Perform an API call to Zoom with various checks.
 
-    If the call returns a token expired event, refresh the token and try the call one more time.
+    If the call returns a token expired event,
+    refresh the token and try the call one more time.
     """
     if not settings.SOCIAL_AUTH_ZOOM_OAUTH2_KEY:
-        raise DRFValidationError("Server is not configured with Zoom OAuth2 credentials.")
+        raise DRFValidationError(
+            "Server is not configured with Zoom OAuth2 credentials."
+        )
 
     if not user.is_authenticated:
         raise DRFValidationError("You are not authenticated.")
@@ -3102,26 +3264,37 @@ class MeetingZoomWebhookAPIView(APIView):
                             properties:
                                 attending:
                                     type: integer
-                                    description: Number of users currently attending the meeting.
+                                    description: >
+                                        Number of users currently attending the meeting.
+                                        Includes the club officers.
                                 officers:
                                     type: integer
-                                    description: Number of officers attending the meeting.
+                                    description: >
+                                        Number of officers attending the meeting.
                                 attended:
                                     type: integer
                                     description: >
-                                        Number of users that attended the meeting before.
-                                        Does not include currently attending users.
+                                        Number of users that attended the meeting
+                                        before. Does not include currently attending
+                                        users.
                                 time:
                                     type: number
-                                    description:
-                                        Number of seconds that the median user attends the meeting.
+                                    description: >
+                                        Number of seconds that the median user attended
+                                        the meeting.
         ---
         """
         event_id = request.query_params.get("event")
 
         time_query = (
-            ZoomMeetingVisit.objects.filter(event__id=event_id, leave_time__isnull=False)
-            .annotate(time=ExpressionWrapper(F("leave_time") - F("join_time"), DurationField()))
+            ZoomMeetingVisit.objects.filter(
+                event__id=event_id, leave_time__isnull=False
+            )
+            .annotate(
+                time=ExpressionWrapper(
+                    F("leave_time") - F("join_time"), DurationField()
+                )
+            )
             .order_by("time")
         )
         time_index = time_query.count()
@@ -3160,7 +3333,10 @@ class MeetingZoomWebhookAPIView(APIView):
             authorization = request.META.get("HTTP_AUTHORIZATION")
             if authorization != settings.ZOOM_VERIFICATION_TOKEN:
                 return Response(
-                    {"detail": "Your authorization token is invalid!", "success": False},
+                    {
+                        "detail": "Your authorization token is invalid!",
+                        "success": False,
+                    },
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
@@ -3180,8 +3356,12 @@ class MeetingZoomWebhookAPIView(APIView):
             else:
                 person = None
 
-            meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
-            regex = rf"https?:\/\/([A-z]*.)?zoom.us/[^\/]*\/{meeting_id}(\?pwd=[A-z,0-9]*)?"
+            meeting_id = (
+                request.data.get("payload", {}).get("object", {}).get("id", None)
+            )
+            regex = (
+                rf"https?:\/\/([A-z]*.)?zoom.us/[^\/]*\/{meeting_id}(\?pwd=[A-z,0-9]*)?"
+            )
             event = Event.objects.filter(url__regex=regex).first()
 
             participant_id = (
@@ -3207,7 +3387,9 @@ class MeetingZoomWebhookAPIView(APIView):
                 )
                 event_id = event.id
         elif action == "meeting.participant_left":
-            meeting_id = request.data.get("payload", {}).get("object", {}).get("id", None)
+            meeting_id = (
+                request.data.get("payload", {}).get("object", {}).get("id", None)
+            )
             participant_id = (
                 request.data.get("payload", {})
                 .get("object", {})
@@ -3223,7 +3405,9 @@ class MeetingZoomWebhookAPIView(APIView):
 
             meeting = (
                 ZoomMeetingVisit.objects.filter(
-                    meeting_id=meeting_id, participant_id=participant_id, leave_time__isnull=True
+                    meeting_id=meeting_id,
+                    participant_id=participant_id,
+                    leave_time__isnull=True,
                 )
                 .order_by("-created_at")
                 .first()
@@ -3282,7 +3466,9 @@ class MeetingZoomAPIView(APIView):
                     return Response(res)
 
         try:
-            data = zoom_api_call(request.user, "GET", "https://api.zoom.us/v2/users/{uid}/meetings")
+            data = zoom_api_call(
+                request.user, "GET", "https://api.zoom.us/v2/users/{uid}/meetings"
+            )
         except requests.exceptions.HTTPError as e:
             raise DRFValidationError(
                 "An error occured while fetching meetings for current user."
@@ -3310,7 +3496,9 @@ class MeetingZoomAPIView(APIView):
                     if zoom_id in meetings:
                         try:
                             individual_data = zoom_api_call(
-                                request.user, "GET", f"https://api.zoom.us/v2/meetings/{zoom_id}",
+                                request.user,
+                                "GET",
+                                f"https://api.zoom.us/v2/meetings/{zoom_id}",
                             ).json()
                             extra_details[individual_data["id"]] = individual_data
                         except requests.exceptions.HTTPError:
@@ -3338,7 +3526,10 @@ class MeetingZoomAPIView(APIView):
             ).exists()
         ):
             return Response(
-                {"success": False, "detail": "You do not have permission to perform this action."},
+                {
+                    "success": False,
+                    "detail": "You do not have permission to perform this action.",
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -3346,24 +3537,30 @@ class MeetingZoomAPIView(APIView):
             match = re.search(r"(\d+)", urlparse(event.url).path)
             if "zoom.us" in event.url and match is not None:
                 zoom_id = int(match[1])
-                zoom_api_call(request.user, "DELETE", f"https://api.zoom.us/v2/meetings/{zoom_id}")
+                zoom_api_call(
+                    request.user, "DELETE", f"https://api.zoom.us/v2/meetings/{zoom_id}"
+                )
 
             event.url = None
             event.save()
             return Response(
                 {
                     "success": True,
-                    "detail": "The associated Zoom meeting has been unlinked and deleted.",
+                    "detail": "The Zoom meeting has been unlinked and deleted.",
                 }
             )
         else:
             return Response(
-                {"success": True, "detail": "There is no Zoom meeting configured for this event."}
+                {
+                    "success": True,
+                    "detail": "There is no Zoom meeting configured for this event.",
+                }
             )
 
     def post(self, request):
         """
-        Create a new Zoom meeting for this event or try to fix the existing zoom meeting.
+        Create a new Zoom meeting for this event
+        or try to fix the existing zoom meeting.
         ---
         responses:
             "200":
@@ -3381,22 +3578,31 @@ class MeetingZoomAPIView(APIView):
         try:
             event = Event.objects.get(id=request.query_params.get("event"))
         except Event.DoesNotExist as e:
-            raise DRFValidationError("The event you are trying to modify does not exist.") from e
+            raise DRFValidationError(
+                "The event you are trying to modify does not exist."
+            ) from e
 
         eastern = pytz.timezone("America/New_York")
 
         # ensure user can do this
-        if not request.user.has_perm("clubs.manage_club") and not event.club.membership_set.filter(
+        if not request.user.has_perm(
+            "clubs.manage_club"
+        ) and not event.club.membership_set.filter(
             role__lte=Membership.ROLE_OFFICER, person=request.user
         ):
             return Response(
-                {"success": False, "detail": "You are not allowed to perform this action!"},
+                {
+                    "success": False,
+                    "detail": "You are not allowed to perform this action!",
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         # add all other officers as alternative hosts
         alt_hosts = []
-        for mship in event.club.membership_set.filter(role__lte=Membership.ROLE_OFFICER):
+        for mship in event.club.membership_set.filter(
+            role__lte=Membership.ROLE_OFFICER
+        ):
             social = mship.person.social_auth.filter(provider="zoom-oauth2").first()
             if social is not None:
                 alt_hosts.append(social.extra_data["email"])
@@ -3422,14 +3628,18 @@ class MeetingZoomAPIView(APIView):
                 "start_time": event.start_time.astimezone(eastern)
                 .replace(tzinfo=None, microsecond=0, second=0)
                 .isoformat(),
-                "duration": (event.end_time - event.start_time) / datetime.timedelta(minutes=1),
+                "duration": (event.end_time - event.start_time)
+                / datetime.timedelta(minutes=1),
                 "timezone": "America/New_York",
                 "agenda": f"Virtual Activities Fair Booth for {event.club.name}",
                 "password": password,
                 "settings": recommended_settings,
             }
             data = zoom_api_call(
-                request.user, "POST", "https://api.zoom.us/v2/users/{uid}/meetings", json=body,
+                request.user,
+                "POST",
+                "https://api.zoom.us/v2/users/{uid}/meetings",
+                json=body,
             )
             out = data.json()
             event.url = out.get("join_url", "")
@@ -3438,7 +3648,8 @@ class MeetingZoomAPIView(APIView):
                 {
                     "success": True,
                     "detail": "Your Zoom meeting has been created! "
-                    f"The following Zoom accounts have been made hosts: {', '.join(alt_hosts)}",
+                    "The following Zoom accounts have been made hosts:"
+                    f" {', '.join(alt_hosts)}",
                 }
             )
         else:
@@ -3449,8 +3660,8 @@ class MeetingZoomAPIView(APIView):
                     {
                         "success": False,
                         "detail": "The current meeting link is not a Zoom link. "
-                        "If you would like to have your Zoom link automatically generated, "
-                        "please clear the URL field and try again.",
+                        "If you would like to have your Zoom link automatically "
+                        "generated, please clear the URL field and try again.",
                     }
                 )
 
@@ -3459,9 +3670,9 @@ class MeetingZoomAPIView(APIView):
                     {
                         "success": False,
                         "detail": "The current meeting link is not a Penn Zoom link. "
-                        "If you would like to have your Penn Zoom link automatically generated, "
-                        "login with your Penn Zoom account, clear the URL from your event, "
-                        "and try this process again.",
+                        "If you would like to have your Penn Zoom link automatically "
+                        "generated, login with your Penn Zoom account, clear the URL "
+                        "from your event, and try this process again.",
                     }
                 )
 
@@ -3477,7 +3688,9 @@ class MeetingZoomAPIView(APIView):
 
             zoom_id = int(match[1])
 
-            data = zoom_api_call(request.user, "GET", f"https://api.zoom.us/v2/meetings/{zoom_id}")
+            data = zoom_api_call(
+                request.user, "GET", f"https://api.zoom.us/v2/meetings/{zoom_id}"
+            )
             out = data.json()
             event.url = out.get("join_url", event.url)
             event.save(update_fields=["url"])
@@ -3490,20 +3703,25 @@ class MeetingZoomAPIView(APIView):
 
             body = {
                 "start_time": start_time,
-                "duration": (event.end_time - event.start_time) / datetime.timedelta(minutes=1),
+                "duration": (event.end_time - event.start_time)
+                / datetime.timedelta(minutes=1),
                 "timezone": "America/New_York",
                 "settings": recommended_settings,
             }
 
             out = zoom_api_call(
-                request.user, "PATCH", f"https://api.zoom.us/v2/meetings/{zoom_id}", json=body,
+                request.user,
+                "PATCH",
+                f"https://api.zoom.us/v2/meetings/{zoom_id}",
+                json=body,
             )
 
             return Response(
                 {
                     "success": out.ok,
                     "detail": "Your Zoom meeting has been updated. "
-                    f"The following accounts have been made hosts: {', '.join(alt_hosts)}"
+                    "The following accounts have been made hosts:"
+                    f" {', '.join(alt_hosts)}"
                     if out.ok
                     else "Your Zoom meeting has not been updated. "
                     "Are you the owner of the meeting?",
@@ -3725,10 +3943,14 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
         invite.updated_at = timezone.now()
         invite.save(update_fields=["updated_at"])
 
-        return Response({"detail": "Resent email invitation to {}!".format(invite.email)})
+        return Response(
+            {"detail": "Resent email invitation to {}!".format(invite.email)}
+        )
 
     def get_queryset(self):
-        return MembershipInvite.objects.filter(club__code=self.kwargs["club_code"], active=True)
+        return MembershipInvite.objects.filter(
+            club__code=self.kwargs["club_code"], active=True
+        )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -3784,7 +4006,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
 class MassInviteAPIView(APIView):
     """
-    Send out invites and add invite objects given a list of comma or newline separated emails.
+    Send out invites and add invite objects
+    given a list of comma or newline separated emails.
     """
 
     permission_classes = [IsAuthenticated]
@@ -3798,7 +4021,10 @@ class MassInviteAPIView(APIView):
             not mem or not mem.role <= Membership.ROLE_OFFICER
         ):
             return Response(
-                {"detail": "You do not have permission to invite new members!", "success": False},
+                {
+                    "detail": "You do not have permission to invite new members!",
+                    "success": False,
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -3808,7 +4034,8 @@ class MassInviteAPIView(APIView):
         if not title:
             return Response(
                 {
-                    "detail": "You must enter a title for the members that you are inviting.",
+                    "detail": "You must enter a title for the members "
+                    "that you are inviting.",
                     "success": False,
                 },
                 status=status.HTTP_400_BAD_REQUEST,
@@ -3817,7 +4044,8 @@ class MassInviteAPIView(APIView):
         if mem and mem.role > role and not request.user.is_superuser:
             return Response(
                 {
-                    "detail": "You cannot send invites for a role higher than your own!",
+                    "detail": "You cannot send invites "
+                    "for a role higher than your own!",
                     "success": False,
                 },
                 status=status.HTTP_403_FORBIDDEN,
@@ -3829,9 +4057,9 @@ class MassInviteAPIView(APIView):
         original_count = len(emails)
 
         # remove users that are already in the club
-        exist = Membership.objects.filter(club=club, person__email__in=emails).values_list(
-            "person__email", flat=True
-        )
+        exist = Membership.objects.filter(
+            club=club, person__email__in=emails
+        ).values_list("person__email", flat=True)
         emails = list(set(emails) - set(exist))
 
         # remove users that have already been invited
@@ -3846,7 +4074,10 @@ class MassInviteAPIView(APIView):
                 validate_email(email)
         except ValidationError:
             return Response(
-                {"detail": "The email address '{}' is not valid!".format(email), "success": False}
+                {
+                    "detail": "The email address '{}' is not valid!".format(email),
+                    "success": False,
+                }
             )
 
         # send invites to all emails
@@ -3864,7 +4095,7 @@ class MassInviteAPIView(APIView):
 
         return Response(
             {
-                "detail": "Sent invite{} to {} email{}! {} email{} were skipped.".format(
+                "detail": "Sent invite{} to {} email{}! {} email{} skipped.".format(
                     "" if sent_emails == 1 else "s",
                     sent_emails,
                     "" if sent_emails == 1 else "s",
@@ -3880,7 +4111,8 @@ class MassInviteAPIView(APIView):
 
 class EmailInvitesAPIView(generics.ListAPIView):
     """
-    get: Return the club code, invite id and token of the email invitations for the current user.
+    get: Return the club code, invite id and token of
+    the email invitations for the current user.
     """
 
     permission_classes = [IsAuthenticated]
@@ -3890,9 +4122,9 @@ class EmailInvitesAPIView(generics.ListAPIView):
         return "List Email Invitations for Self"
 
     def get_queryset(self):
-        return MembershipInvite.objects.filter(email=self.request.user.email, active=True).order_by(
-            "-created_at"
-        )
+        return MembershipInvite.objects.filter(
+            email=self.request.user.email, active=True
+        ).order_by("-created_at")
 
 
 class OptionListView(APIView):
@@ -3912,7 +4144,10 @@ class OptionListView(APIView):
         ---
         """
         # compute base django options
-        options = {k: v for k, v in Option.objects.filter(public=True).values_list("key", "value")}
+        options = {
+            k: v
+            for k, v in Option.objects.filter(public=True).values_list("key", "value")
+        }
 
         # add in activities fair information
         now = timezone.now()
@@ -4108,7 +4343,10 @@ class ScriptExecutionView(APIView):
             return Response({"output": f"'{action}' is not a valid script to execute."})
         if not script["execute"]:
             return Response(
-                {"output": f"You are not allowed to execute '{action}' from the web interface."}
+                {
+                    "output": "You are not allowed to "
+                    f"execute '{action}' from the web interface."
+                }
             )
 
         args, kwargs = parse_script_parameters(script, parameters)
@@ -4144,7 +4382,9 @@ def get_initial_context_from_types(types):
         elif value["type"] == "object":
             context[name] = get_initial_context_from_types(value["properties"])
         elif value["type"] == "tuple":
-            context[name] = tuple(get_initial_context_from_types(value["properties"]).values())
+            context[name] = tuple(
+                get_initial_context_from_types(value["properties"]).values()
+            )
         else:
             raise ValueError(f"Unknown email variable type '{value['type']}'!")
 
@@ -4161,7 +4401,9 @@ def email_preview(request):
     """
     prefix = "fyh_emails" if settings.BRANDING == "fyh" else "emails"
     email_templates = os.listdir(os.path.join(settings.BASE_DIR, "templates", prefix))
-    email_templates = [e.rsplit(".", 1)[0] for e in email_templates if e.endswith(".html")]
+    email_templates = [
+        e.rsplit(".", 1)[0] for e in email_templates if e.endswith(".html")
+    ]
 
     email = None
     text_email = None

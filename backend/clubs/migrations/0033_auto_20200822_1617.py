@@ -14,7 +14,8 @@ class Migration(migrations.Migration):
             model_name="event",
             name="type",
             field=models.IntegerField(
-                choices=[(1, "Recruitment"), (2, "GBM"), (3, "Speaker"), (0, "Other")], default=1
+                choices=[(1, "Recruitment"), (2, "GBM"), (3, "Speaker"), (0, "Other")],
+                default=1,
             ),
         ),
     ]

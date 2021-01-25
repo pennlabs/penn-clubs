@@ -14,7 +14,7 @@ from clubs.models import Club, ClubApplication, Membership, send_mail_helper
 class Command(BaseCommand):
     help = (
         "This script runs each morning to send out relevant notification emails."
-        "To avoid duplicate emails, this script should be executed at most once per day."
+        "To avoid duplicate emails, this script should be executed at most once a day."
     )
     web_execute = True
 
@@ -31,14 +31,18 @@ class Command(BaseCommand):
 
     def send_application_notifications(self):
         """
-        Send notifications about application deadlines three days before the deadline, for students
-        that have subscribed to those organizations.
+        Send notifications about application deadlines three days before the deadline,
+        for students that have subscribed to those organizations.
 
-        Ignore students that have already graduated and students that are already in the club.
+        Ignore students that have already graduated and students that are already in
+        the club.
         """
         now = timezone.now() + datetime.timedelta(days=3)
         apps = ClubApplication.objects.filter(
-            Q(club__subscribe__person__profile__graduation_year__gte=now.year + (now.month >= 6))
+            Q(
+                club__subscribe__person__profile__graduation_year__gte=now.year
+                + (now.month >= 6)
+            )
             | Q(club__subscribe__person__profile__graduation_year__isnull=True),
             application_end_time__date=now.date(),
         ).values_list(
@@ -74,7 +78,9 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(
-            self.style.SUCCESS(f"Sent application deadline reminder to {len(emails)} user(s)")
+            self.style.SUCCESS(
+                f"Sent application deadline reminder to {len(emails)} user(s)"
+            )
         )
 
     def send_approval_queue_reminder(self):
@@ -93,8 +99,8 @@ class Command(BaseCommand):
         if group is None:
             self.stdout.write(
                 self.style.WARNING(
-                    f"There is no Django admin group named '{group_name}' in the database. "
-                    "Cannot send out approval queue notification emails!"
+                    f"There is no Django admin group named '{group_name}' in the "
+                    "database. Cannot send out approval queue notification emails!"
                 )
             )
             return False
@@ -104,8 +110,8 @@ class Command(BaseCommand):
         if not emails:
             self.stdout.write(
                 self.style.WARNING(
-                    f"There are no users or no associated emails in the '{group_name}' group. "
-                    "No emails will be sent out."
+                    f"There are no users or no associated emails in the '{group_name}' "
+                    "group. No emails will be sent out."
                 )
             )
             return False
@@ -116,18 +122,23 @@ class Command(BaseCommand):
             context = {
                 "num_clubs": queued_clubs.count(),
                 "url": f"https://{settings.DOMAIN}/admin#queue",
-                "clubs": list(queued_clubs.order_by("name").values_list("name", flat=True)),
+                "clubs": list(
+                    queued_clubs.order_by("name").values_list("name", flat=True)
+                ),
             }
             count = queued_clubs.count()
             send_mail_helper(
                 "approval_queue_reminder",
-                "{} clubs awaiting review on {}".format(count, settings.BRANDING_SITE_NAME),
+                "{} clubs awaiting review on {}".format(
+                    count, settings.BRANDING_SITE_NAME
+                ),
                 emails,
                 context,
             )
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Sent approval queue reminder for {count} clubs to {', '.join(emails)}"
+                    "Sent approval queue reminder for "
+                    f"{count} clubs to {', '.join(emails)}"
                 )
             )
 

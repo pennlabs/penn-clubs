@@ -9,7 +9,10 @@ import clubs.models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("auth", "0011_update_proxy_permissions"), ("clubs", "0005_auto_20191025_2218")]
+    dependencies = [
+        ("auth", "0011_update_proxy_permissions"),
+        ("clubs", "0005_auto_20191025_2218"),
+    ]
 
     operations = [
         migrations.CreateModel(

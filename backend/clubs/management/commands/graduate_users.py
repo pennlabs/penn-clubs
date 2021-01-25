@@ -19,6 +19,7 @@ class Command(BaseCommand):
         ).update(active=False)
         self.stdout.write(
             self.style.SUCCESS(
-                f"Updated the membership status of {num_rows} student club relationships!"
+                "Updated the membership status of "
+                f"{num_rows} student club relationships!"
             )
         )

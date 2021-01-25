@@ -13,10 +13,13 @@ def send_reminder_to_club(club):
 
     # calculate email recipients
     if staff.exists():
-        # if there are staff members that can edit the page, send the update email to them
+        # if there are staff members that can edit the page,
+        # send the update email to them
         receivers = list(staff.values_list("email", flat=True))
     elif club.email:
-        invites = club.membershipinvite_set.filter(active=True, role__lte=Membership.ROLE_OFFICER)
+        invites = club.membershipinvite_set.filter(
+            active=True, role__lte=Membership.ROLE_OFFICER
+        )
         if invites.exists():
             # if there are existing invites, resend the invite emails
             for invite in invites:
@@ -26,7 +29,8 @@ def send_reminder_to_club(club):
                     invite.send_mail()
             return True
         else:
-            # if there are no owner-level invites or members, create and send an owner invite
+            # if there are no owner-level invites or members,
+            # create and send an owner invite
             if club.email:
                 invite = MembershipInvite.objects.create(
                     club=club,
@@ -50,7 +54,9 @@ def send_reminder_to_club(club):
             "view_url": settings.VIEW_URL.format(domain=domain, club=club.code),
         }
 
-        send_mail_helper("remind", "Reminder to Update Your Club's Page", receivers, context)
+        send_mail_helper(
+            "remind", "Reminder to Update Your Club's Page", receivers, context
+        )
         return True
     return False
 
@@ -59,7 +65,11 @@ class Command(BaseCommand):
     help = "Remind clubs to update their information on Penn Clubs."
 
     def handle(self, *args, **kwargs):
-        clubs = Club.objects.exclude(email__isnull=True).filter(active=True).order_by("code")
+        clubs = (
+            Club.objects.exclude(email__isnull=True)
+            .filter(active=True)
+            .order_by("code")
+        )
         self.stdout.write(
             "Found {} active club(s) to send out email invites.".format(clubs.count())
         )
@@ -67,7 +77,11 @@ class Command(BaseCommand):
         for club in clubs:
             if send_reminder_to_club(club):
                 self.stdout.write(
-                    self.style.SUCCESS("Sent {} reminder to {}".format(club.name, club.email))
+                    self.style.SUCCESS(
+                        "Sent {} reminder to {}".format(club.name, club.email)
+                    )
                 )
             else:
-                self.stdout.write("Skipping {} reminder, no contact email set".format(club.name))
+                self.stdout.write(
+                    "Skipping {} reminder, no contact email set".format(club.name)
+                )

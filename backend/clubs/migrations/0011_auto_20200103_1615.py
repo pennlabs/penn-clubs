@@ -14,7 +14,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("name", models.TextField()),
@@ -26,7 +29,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("name", models.TextField()),
@@ -38,7 +44,9 @@ class Migration(migrations.Migration):
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name="profile", name="has_been_prompted", field=models.BooleanField(default=False)
+            model_name="profile",
+            name="has_been_prompted",
+            field=models.BooleanField(default=False),
         ),
         migrations.AddField(
             model_name="club",

@@ -13,7 +13,8 @@ DEFAULT_SEED = 1234
 
 class OptionalPageNumberPagination(PageNumberPagination):
     """
-    Optional pagination that does not paginate the response if the user does not specify it.
+    Optional pagination that does not paginate the response
+    if the user does not specify it.
     """
 
     page_size = DEFAULT_PAGE_SIZE
@@ -54,7 +55,9 @@ class RandomPageNumberPagination(OptionalPageNumberPagination):
                 new_params["page"] = str(page + 1)
                 self._random_next_page = "{}?{}".format(
                     request.build_absolute_uri(request.path),
-                    "&".join(["{}={}".format(k, quote(v)) for k, v in new_params.items()]),
+                    "&".join(
+                        ["{}={}".format(k, quote(v)) for k, v in new_params.items()]
+                    ),
                 )
             return results
 

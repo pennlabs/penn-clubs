@@ -39,7 +39,8 @@ from clubs.utils import fuzzy_lookup_club
 
 def mocked_requests_get(time):
     """
-    Mock an ICS calendar http request with a single event, starting at the specified start time.
+    Mock an ICS calendar http request with a single event,
+    starting at the specified start time.
     """
 
     def fake_request(url, *args):
@@ -126,9 +127,12 @@ class ImportCalendarTestCase(TestCase):
 
     def test_import_nonstandard_ics(self):
         """
-        Test importing a random nonstandard ICS file from a file downloaded from the internet.
+        Test importing a random nonstandard ICS file from
+        a arbitrary file downloaded from the internet.
         """
-        with mock.patch("requests.get", return_value=mock.Mock(text=SAMPLE_ICS, status_code=200)):
+        with mock.patch(
+            "requests.get", return_value=mock.Mock(text=SAMPLE_ICS, status_code=200)
+        ):
             call_command("import_calendar_events")
 
         ev = self.club1.events.first()
@@ -154,10 +158,14 @@ class ImportCalendarTestCase(TestCase):
         self.assertEqual(desired.name, "A test event")
         self.assertEqual(desired.description, "A test description")
 
-        # ensure difference between calendar date and imported date is less than one second
-        self.assertLessEqual(abs(desired.start_time - now), datetime.timedelta(seconds=1))
+        # ensure difference between calendar date and imported date is
+        # less than one second
         self.assertLessEqual(
-            desired.end_time - (now + datetime.timedelta(minutes=60)), datetime.timedelta(seconds=1)
+            abs(desired.start_time - now), datetime.timedelta(seconds=1)
+        )
+        self.assertLessEqual(
+            desired.end_time - (now + datetime.timedelta(minutes=60)),
+            datetime.timedelta(seconds=1),
         )
 
         # run the script again, make sure still only one event
@@ -204,7 +212,9 @@ class SendInvitesTestCase(TestCase):
             "bfranklin", "bfranklin@seas.upenn.edu", "test"
         )
 
-        Membership.objects.create(club=self.club3, person=self.user1, role=Membership.ROLE_OWNER)
+        Membership.objects.create(
+            club=self.club3, person=self.user1, role=Membership.ROLE_OWNER
+        )
 
     def test_send_invites(self):
         with tempfile.TemporaryDirectory() as d:
@@ -310,7 +320,7 @@ class SendInvitesTestCase(TestCase):
             self.fail(
                 "There are templates that do not have type annotations. \n"
                 "Leaving out type annotations will cause issues with email previews. \n"
-                "Please ensure that all templates listed below have proper type annotations: \n\n"
+                "Please ensure that all templates below have type annotations: \n\n"
                 f"{bad_templates}"
             )
 
@@ -353,7 +363,9 @@ class SendInvitesTestCase(TestCase):
         )
 
         # ensure that there are some groups pending approval
-        self.assertTrue(Club.objects.filter(approved__isnull=True, active=True).exists())
+        self.assertTrue(
+            Club.objects.filter(approved__isnull=True, active=True).exists()
+        )
 
         # ensure test runs on a weekday
         errors = io.StringIO()
@@ -388,10 +400,14 @@ class SendInvitesTestCase(TestCase):
             self.assertEqual(fuzzy_lookup_club(name).code, code)
 
         # closest match should be one of three
-        self.assertIn(fuzzy_lookup_club("italian").code, ["italian-1", "italian-2", "italian-3"])
+        self.assertIn(
+            fuzzy_lookup_club("italian").code, ["italian-1", "italian-2", "italian-3"]
+        )
 
         # test partial club name
-        Club.objects.create(code="league", name="University of Pennsylvania League of Legends Club")
+        Club.objects.create(
+            code="league", name="University of Pennsylvania League of Legends Club"
+        )
         self.assertEqual(fuzzy_lookup_club("league of legends").code, "league")
 
         # test partial match both strings
@@ -400,7 +416,9 @@ class SendInvitesTestCase(TestCase):
 
         # test remove prefix
         Club.objects.create(code="pasa", name="Penn African Student Association")
-        self.assertEqual(fuzzy_lookup_club("PASA - Penn African Students Association").code, "pasa")
+        self.assertEqual(
+            fuzzy_lookup_club("PASA - Penn African Students Association").code, "pasa"
+        )
 
         # don't overmatch on suffix
         Club.objects.create(code="dental-1", name="Indian Students Dental Association")
@@ -441,7 +459,9 @@ class SendReminderTestCase(TestCase):
             "bfranklin", "bfranklin@seas.upenn.edu", "test"
         )
 
-        Membership.objects.create(club=self.club1, person=self.user1, role=Membership.ROLE_OWNER)
+        Membership.objects.create(
+            club=self.club1, person=self.user1, role=Membership.ROLE_OWNER
+        )
 
     def test_send_reminders(self):
         call_command("remind")
@@ -558,7 +578,8 @@ class RenewalTestCase(TestCase):
                 break
         else:
             self.fail(
-                "Expected there to be an email with more than one recipient, but did not exist!"
+                "Expected there to be an email with more than one recipient, "
+                "but did not exist!"
             )
 
         # send out reminder emails

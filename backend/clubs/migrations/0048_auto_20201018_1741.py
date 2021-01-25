@@ -11,13 +11,19 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="club", name="appointment_needed", field=models.BooleanField(default=False),
+            model_name="club",
+            name="appointment_needed",
+            field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name="club", name="available_virtually", field=models.BooleanField(default=False),
+            model_name="club",
+            name="available_virtually",
+            field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name="club", name="signature_events", field=models.TextField(blank=True),
+            model_name="club",
+            name="signature_events",
+            field=models.TextField(blank=True),
         ),
         migrations.AddField(
             model_name="historicalclub",

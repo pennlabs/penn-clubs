@@ -11,7 +11,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="club", name="terms", field=models.CharField(blank=True, max_length=1024),
+            model_name="club",
+            name="terms",
+            field=models.CharField(blank=True, max_length=1024),
         ),
         migrations.AddField(
             model_name="historicalclub",

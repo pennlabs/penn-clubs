@@ -11,7 +11,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="questionanswer", name="approved", field=models.BooleanField(default=False),
+            model_name="questionanswer",
+            name="approved",
+            field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
             model_name="questionanswer",

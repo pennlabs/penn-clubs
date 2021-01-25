@@ -39,7 +39,8 @@ class Migration(migrations.Migration):
                 (
                     "size",
                     models.IntegerField(
-                        choices=[(1, "1-20"), (2, "21-50"), (3, "51-100"), (4, "101+")], default=1
+                        choices=[(1, "1-20"), (2, "21-50"), (3, "51-100"), (4, "101+")],
+                        default=1,
                     ),
                 ),
                 ("email", models.EmailField(blank=True, max_length=254, null=True)),
@@ -74,7 +75,8 @@ class Migration(migrations.Migration):
                 (
                     "history_type",
                     models.CharField(
-                        choices=[("+", "Created"), ("~", "Changed"), ("-", "Deleted")], max_length=1
+                        choices=[("+", "Created"), ("~", "Changed"), ("-", "Deleted")],
+                        max_length=1,
                     ),
                 ),
                 (

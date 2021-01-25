@@ -44,11 +44,30 @@ hone your skills in time for recruiting season!""",
         "founded": "1984-01-01",
         "accepting_members": True,
         "enables_subscription": True,
-        "tags": [{"name": "Professional"}, {"name": "Athletics"}, {"name": "Undergraduate"}],
+        "tags": [
+            {"name": "Professional"},
+            {"name": "Athletics"},
+            {"name": "Undergraduate"},
+        ],
         "badges": [
-            {"label": "Red Badge", "color": "ff0000", "visible": True, "purpose": "org"},
-            {"label": "Green Badge", "color": "00ff00", "visible": True, "purpose": "org"},
-            {"label": "Blue Badge", "color": "0000ff", "visible": True, "purpose": "org"},
+            {
+                "label": "Red Badge",
+                "color": "ff0000",
+                "visible": True,
+                "purpose": "org",
+            },
+            {
+                "label": "Green Badge",
+                "color": "00ff00",
+                "visible": True,
+                "purpose": "org",
+            },
+            {
+                "label": "Blue Badge",
+                "color": "0000ff",
+                "visible": True,
+                "purpose": "org",
+            },
         ],
         "testimonials": [
             {"text": "Great club!"},
@@ -59,12 +78,14 @@ hone your skills in time for recruiting season!""",
         "questions": [
             {
                 "question": "What kind of objects do you juggle?",
-                "answer": "Anything ranging from bowling pins to Husqvarna 455 Rancher chain saws!",
+                "answer": "Anything ranging from bowling pins to "
+                "Husqvarna 455 Rancher chain saws!",
                 "is_anonymous": True,
                 "approved": True,
             },
             {
-                "question": "What kind of legal liability does your club have for injuries?",
+                "question": "What kind of legal liability does "
+                "your club have for injuries?",
                 "answer": None,
                 "is_anonymous": False,
                 "approved": False,
@@ -146,7 +167,10 @@ you can procrastinate on the application and ultimately miss the deadline!""",
     {
         "code": "long-club-with-a-very-long-club-name-that-goes-on-and-on-and-on",
         "name": "Club with a {}long club name".format("very " * 15),
-        "description": "<p>{}</p><p> </p>".format("This is a very long description! " * 25) * 4,
+        "description": "<p>{}</p><p> </p>".format(
+            "This is a very long description! " * 25
+        )
+        * 4,
         "active": True,
         "approved": True,
         "tags": [{"name": ("long " * 15) + "tag"}, {"name": "Undergraduate"}],
@@ -166,7 +190,8 @@ you can procrastinate on the application and ultimately miss the deadline!""",
     {
         "code": "tac",
         "name": "Testing Activities Council",
-        "description": "We are an umbrella organization for many of the clubs on campus.",
+        "description": "We are an umbrella organization "
+        "for many of the clubs on campus.",
         "email": "tac@example.com",
         "active": True,
         "approved": True,
@@ -211,14 +236,20 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         if Club.objects.filter(name="Penn Labs").exists():
-            raise CommandError("You probably do not want to run this script in production!")
+            raise CommandError(
+                "You probably do not want to run this script in production!"
+            )
 
         # create options
         bool_options = ["CLUB_REGISTRATION"]
         for option in bool_options:
             Option.objects.get_or_create(
                 key=option,
-                defaults={"value": "false", "value_type": Option.TYPE_BOOL, "public": True},
+                defaults={
+                    "value": "false",
+                    "value_type": Option.TYPE_BOOL,
+                    "public": True,
+                },
             )
 
         # create years
@@ -270,7 +301,9 @@ class Command(BaseCommand):
                 "Underwater",
             ]
         ]
-        existing = set(Major.objects.filter(name__in=major_names).values_list("name", flat=True))
+        existing = set(
+            Major.objects.filter(name__in=major_names).values_list("name", flat=True)
+        )
         Major.objects.bulk_create(
             [Major(name=name) for name in major_names if name not in existing]
         )
@@ -345,7 +378,10 @@ class Command(BaseCommand):
         )
 
         badge2, _ = Badge.objects.get_or_create(
-            label="SAC", description="Student Activities Council", purpose="org", visible=True
+            label="SAC",
+            description="Student Activities Council",
+            purpose="org",
+            visible=True,
         )
 
         # create additional clubs
@@ -385,8 +421,13 @@ class Command(BaseCommand):
                 )
 
             if i < 5:
-                [club.student_types.add(type) for type in StudentType.objects.filter(id__lte=i)]
-            club.recruiting_cycle = Club.RECRUITING_CYCLES[(i - 1) % len(Club.RECRUITING_CYCLES)][0]
+                [
+                    club.student_types.add(type)
+                    for type in StudentType.objects.filter(id__lte=i)
+                ]
+            club.recruiting_cycle = Club.RECRUITING_CYCLES[
+                (i - 1) % len(Club.RECRUITING_CYCLES)
+            ][0]
             club.save()
 
             Advisor.objects.get_or_create(
@@ -472,9 +513,12 @@ class Command(BaseCommand):
             defaults={
                 "creator": ben,
                 "name": "Test Global Event",
-                "description": "This is a global event that does not belong to any club.",
+                "description": "This is a global event that "
+                "does not belong to any club.",
                 "start_time": now + datetime.timedelta(days=1),
-                "end_time": now + datetime.timedelta(days=1) + datetime.timedelta(hours=1),
+                "end_time": now
+                + datetime.timedelta(days=1)
+                + datetime.timedelta(hours=1),
             },
         )
 
@@ -487,11 +531,27 @@ class Command(BaseCommand):
                 "start_time": now + datetime.timedelta(days=30),
                 "end_time": now + datetime.timedelta(days=33),
                 "registration_end_time": now + datetime.timedelta(days=15),
-                "information": "<p>This information is shown to students participating in the fair!"
-                " <b>Formatting is supported here!</b></p>",
-                "registration_information": "<p>This information is shown when registering!"
-                " Display registration information here."
-                " <b>Formatting is supported here!</b></p>" + fair_registration_text,
+                "information": """
+<p>
+    This information is shown to students participating in the fair!
+    <b>Formatting is supported here!</b>
+</p>
+<p>
+    This information is shown on the main fair page
+    to students participating in the fair.
+</p>""",
+                "registration_information": """
+<p>
+    This information is shown when registering!
+    Display registration information here.
+    <b>Formatting is supported here!</b>
+</p>
+<p>
+    Place additional registration instructions in this section.
+    This section will only be visible to club officers registering for the fair.
+</p>
+"""
+                + fair_registration_text,
             },
         )
 
@@ -502,7 +562,9 @@ class Command(BaseCommand):
         )
 
         for club in Club.objects.filter(code__startswith="z-club-"):
-            ClubFairRegistration.objects.get_or_create(fair=fair, registrant=ben, club=club)
+            ClubFairRegistration.objects.get_or_create(
+                fair=fair, registrant=ben, club=club
+            )
             club.badges.add(fair_cat_badge)
 
         fair.create_events()
@@ -543,10 +605,13 @@ class Command(BaseCommand):
 
         for j in range(-14, 15):
             for i, club in enumerate(Club.objects.all()[:10]):
-                # When even we start at 10am and overlap, when odd we start at 3pm and no overlap
+                # When even we start at 10am and overlap,
+                # when odd we start at 3pm and no overlap
                 if j % 2 == 0:
                     start_time = (
-                        even_base + datetime.timedelta(days=j) + datetime.timedelta(minutes=30 * i)
+                        even_base
+                        + datetime.timedelta(days=j)
+                        + datetime.timedelta(minutes=30 * i)
                     )
                     end_time = (
                         even_base
@@ -554,9 +619,15 @@ class Command(BaseCommand):
                         + datetime.timedelta(hours=1, minutes=30 * i)
                     )
                 else:
-                    start_time = odd_base + datetime.timedelta(days=j) + datetime.timedelta(hours=i)
+                    start_time = (
+                        odd_base
+                        + datetime.timedelta(days=j)
+                        + datetime.timedelta(hours=i)
+                    )
                     end_time = (
-                        odd_base + datetime.timedelta(days=j) + datetime.timedelta(hours=i + 1)
+                        odd_base
+                        + datetime.timedelta(days=j)
+                        + datetime.timedelta(hours=i + 1)
                     )
 
                 event, created = Event.objects.get_or_create(
@@ -589,7 +660,9 @@ class Command(BaseCommand):
         for club in Club.objects.exclude(code="empty-club")[:50]:
             for obj in user_objs[:count]:
                 Membership.objects.get_or_create(
-                    club=club, person=obj, defaults={"active": True, "public": count % 2 == 0}
+                    club=club,
+                    person=obj,
+                    defaults={"active": True, "public": count % 2 == 0},
                 )
             first_mship = club.membership_set.first()
             if first_mship is not None:

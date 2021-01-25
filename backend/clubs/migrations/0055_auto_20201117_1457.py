@@ -14,7 +14,13 @@ class Migration(migrations.Migration):
             model_name="club",
             name="recruiting_cycle",
             field=models.IntegerField(
-                choices=[(1, "Unknown"), (2, "Fall"), (3, "Spring"), (4, "Both"), (5, "Open")],
+                choices=[
+                    (1, "Unknown"),
+                    (2, "Fall"),
+                    (3, "Spring"),
+                    (4, "Both"),
+                    (5, "Open"),
+                ],
                 default=1,
             ),
         ),
@@ -38,7 +44,13 @@ class Migration(migrations.Migration):
             model_name="historicalclub",
             name="recruiting_cycle",
             field=models.IntegerField(
-                choices=[(1, "Unknown"), (2, "Fall"), (3, "Spring"), (4, "Both"), (5, "Open")],
+                choices=[
+                    (1, "Unknown"),
+                    (2, "Fall"),
+                    (3, "Spring"),
+                    (4, "Both"),
+                    (5, "Open"),
+                ],
                 default=1,
             ),
         ),

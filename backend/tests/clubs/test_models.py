@@ -8,12 +8,29 @@ import pytz
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from clubs.models import Advisor, Badge, Club, Event, Favorite, Membership, Note, Tag, Year
+from clubs.models import (
+    Advisor,
+    Badge,
+    Club,
+    Event,
+    Favorite,
+    Membership,
+    Note,
+    Tag,
+    Year,
+)
 
 
 class YearTestCase(TestCase):
     def test_offset_conversion(self):
-        titles = ["Freshman", "Sophomore", "Junior", "Senior", "First-year", "Second-year"]
+        titles = [
+            "Freshman",
+            "Sophomore",
+            "Junior",
+            "Senior",
+            "First-year",
+            "Second-year",
+        ]
         for title in titles:
             Year.objects.create(name=title)
 
@@ -49,7 +66,9 @@ class ProfileTestCase(TestCase):
         """
         Ensure that a Profile object is created when the user is created.
         """
-        self.person = get_user_model().objects.create_user("test", "test@example.com", "test")
+        self.person = get_user_model().objects.create_user(
+            "test", "test@example.com", "test"
+        )
         self.assertTrue(self.person.profile)
 
 
@@ -70,7 +89,9 @@ class EventTestCase(TestCase):
 class FavoriteTestCase(TestCase):
     def setUp(self):
         date = pytz.timezone("America/New_York").localize(datetime.datetime(2019, 1, 1))
-        self.person = get_user_model().objects.create_user("test", "test@example.com", "test")
+        self.person = get_user_model().objects.create_user(
+            "test", "test@example.com", "test"
+        )
         self.club = Club.objects.create(
             code="a", name="a", subtitle="a", founded=date, description="a", size=1
         )
@@ -83,7 +104,9 @@ class FavoriteTestCase(TestCase):
 class MembershipTestCase(TestCase):
     def setUp(self):
         date = pytz.timezone("America/New_York").localize(datetime.datetime(2019, 1, 1))
-        self.person = get_user_model().objects.create_user("test", "test@example.com", "test")
+        self.person = get_user_model().objects.create_user(
+            "test", "test@example.com", "test"
+        )
         self.club = Club.objects.create(
             code="a", name="a", subtitle="a", founded=date, description="a", size=1
         )
@@ -103,7 +126,9 @@ class TagTestCase(TestCase):
 
 class BadgeTestCase(TestCase):
     def setUp(self):
-        self.badge = Badge.objects.create(label="SAC Funded", description="SAC Funded Club")
+        self.badge = Badge.objects.create(
+            label="SAC Funded", description="SAC Funded Club"
+        )
 
     def test_str(self):
         self.assertTrue(str(self.badge), self.badge.label)
@@ -126,7 +151,9 @@ class AdvisorTestCase(TestCase):
 class NoteTestCase(TestCase):
     def setUp(self):
         date = pytz.timezone("America/New_York").localize(datetime.datetime(2019, 1, 1))
-        self.person = get_user_model().objects.create_user("test", "test@example.com", "test")
+        self.person = get_user_model().objects.create_user(
+            "test", "test@example.com", "test"
+        )
         self.club1 = Club.objects.create(
             code="a", name="a", subtitle="a", founded=date, description="a", size=1
         )

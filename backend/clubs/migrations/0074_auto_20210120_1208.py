@@ -17,7 +17,9 @@ class Migration(migrations.Migration):
             model_name="zoommeetingvisit",
             name="event",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, related_name="visits", to="clubs.event"
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="visits",
+                to="clubs.event",
             ),
         ),
         migrations.AlterField(

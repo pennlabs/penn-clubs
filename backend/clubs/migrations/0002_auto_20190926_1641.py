@@ -10,7 +10,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="club", name="parent_orgs", field=models.ManyToManyField(to="clubs.Club")
+            model_name="club",
+            name="parent_orgs",
+            field=models.ManyToManyField(to="clubs.Club"),
         ),
         migrations.CreateModel(
             name="Badge",
@@ -18,7 +20,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("label", models.CharField(max_length=255)),
@@ -36,6 +41,8 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.AddField(
-            model_name="club", name="badges", field=models.ManyToManyField(to="clubs.Badge")
+            model_name="club",
+            name="badges",
+            field=models.ManyToManyField(to="clubs.Badge"),
         ),
     ]

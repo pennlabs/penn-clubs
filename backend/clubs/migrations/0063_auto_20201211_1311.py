@@ -11,7 +11,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name="clubfair", name="information", field=models.TextField(blank=True),
+            model_name="clubfair",
+            name="information",
+            field=models.TextField(blank=True),
         ),
         migrations.AlterField(
             model_name="clubfair",

@@ -12,7 +12,8 @@ from clubs.models import Club, ClubFair, Membership
 class Command(BaseCommand):
     help = (
         "Precomputes ranking information for all clubs on Penn Clubs. "
-        "This script should be run periodically approximately once per day to keep rankings fresh. "
+        "This script should be run periodically approximately once per day "
+        "to keep rankings fresh. "
         "Also updates club attributes that vary depending on different events."
     )
     web_execute = True
@@ -23,29 +24,37 @@ class Command(BaseCommand):
 
     def set_recruiting_statuses(self):
         """
-        Modify the recruiting statuses for clubs based on whether or not they have club applications
-        open.
+        Modify the recruiting statuses for clubs based on whether or not they have
+        club applications open.
         """
         now = timezone.now()
         # get all clubs with current applications
-        current_apps = Club.objects.exclude(application_required=Club.OPEN_MEMBERSHIP).filter(
+        current_apps = Club.objects.exclude(
+            application_required=Club.OPEN_MEMBERSHIP
+        ).filter(
             clubapplication__application_start_time__lte=now,
             clubapplication__application_end_time__gte=now,
         )
 
-        # mark all clubs with past applications but no current applications as not accepting members
+        # mark all clubs with past applications but no current applications as not
+        # accepting members
         unupd = (
             Club.objects.exclude(application_required=Club.OPEN_MEMBERSHIP)
-            .filter(clubapplication__application_end_time__lt=now, accepting_members=True)
+            .filter(
+                clubapplication__application_end_time__lt=now, accepting_members=True
+            )
             .exclude(pk__in=current_apps.values_list("pk", flat=True))
             .update(accepting_members=False)
         )
 
         # mark all clubs with current applications as accepting members
-        upd = current_apps.filter(accepting_members=False).update(accepting_members=True)
+        upd = current_apps.filter(accepting_members=False).update(
+            accepting_members=True
+        )
         self.stdout.write(
             self.style.SUCCESS(
-                f"Set accepting members to true for {upd} club(s) and to false for {unupd} club(s)!"
+                f"Set accepting members to true for {upd} club(s) "
+                f"and to false for {unupd} club(s)!"
             )
         )
 
@@ -114,7 +123,9 @@ class Command(BaseCommand):
 
             # points for fair
             now = timezone.now()
-            if ClubFair.objects.filter(end_time__gte=now, participating_clubs=club).exists():
+            if ClubFair.objects.filter(
+                end_time__gte=now, participating_clubs=club
+            ).exists():
                 ranking += 10
 
             # points for club applications
@@ -130,7 +141,8 @@ class Command(BaseCommand):
 
             if today_events.exists():
                 short_events = [
-                    (e.end_time - e.start_time).seconds / 3600 < 16 for e in today_events
+                    (e.end_time - e.start_time).seconds / 3600 < 16
+                    for e in today_events
                 ]
                 if any(short_events):
                     ranking += 10
@@ -148,7 +160,8 @@ class Command(BaseCommand):
 
             if close_events.exists():
                 short_events = [
-                    (e.end_time - e.start_time).seconds / 3600 < 16 for e in close_events
+                    (e.end_time - e.start_time).seconds / 3600 < 16
+                    for e in close_events
                 ]
                 if any(short_events):
                     ranking += 5
@@ -175,7 +188,9 @@ class Command(BaseCommand):
                 "youtube",
             ]
             social_fields = [getattr(club, field) for field in social_fields]
-            has_fields = [field is not None and len(field) >= 3 for field in social_fields]
+            has_fields = [
+                field is not None and len(field) >= 3 for field in social_fields
+            ]
             has_fields = [field for field in social_fields if field]
             if len(has_fields) >= 2:
                 ranking += 10

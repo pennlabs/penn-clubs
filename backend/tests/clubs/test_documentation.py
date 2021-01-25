@@ -13,13 +13,16 @@ from .test_security import all_viewset_actions
 
 class DocumentationTestCase(TestCase):
     """
-    Test cases related to ensuring that we have an appropriate amount of backend documentation.
+    Test cases related to ensuring that we have an appropriate amount
+    of backend documentation.
     """
 
     def setUp(self):
         self.client = Client()
 
-        self.user1 = get_user_model().objects.create_user("jadams", "jadams@sas.upenn.edu", "test")
+        self.user1 = get_user_model().objects.create_user(
+            "jadams", "jadams@sas.upenn.edu", "test"
+        )
         self.user1.first_name = "John"
         self.user1.last_name = "Adams"
         self.user1.is_staff = True
@@ -37,8 +40,8 @@ class DocumentationTestCase(TestCase):
         """
         Ensure that all actions on viewsets have proper parameters and responses.
         """
-        # don't add your action to the whitelist unless it returns what the base ModelViewSet
-        # returns and does not accept any additional parameters
+        # don't add your action to the whitelist unless it returns what the base
+        # ModelViewSet returns and does not accept any additional parameters
         whitelist = set(
             [
                 ("ClubViewSet", "constitutions"),
@@ -75,20 +78,21 @@ class DocumentationTestCase(TestCase):
 
         if failed_cases:
             failed_cases_str = "\n".join(
-                f"\t- {cls_name} -> {name} ({status})" for cls_name, name, status in failed_cases
+                f"\t- {cls_name} -> {name} ({status})"
+                for cls_name, name, status in failed_cases
             )
             self.fail(
                 "Found one or more action methods on viewsets that do not have YAML "
                 "documentation specified in the docstring. \n"
-                "It is very rare that the action will have the exact same parameters and "
-                "return format as the base ModelViewSet. \n"
-                "DRF cannot detect the parameters and response format for you in these cases, "
-                "you must manually specify them."
+                "It is very rare that the action will have the exact same parameters "
+                "and return format as the base ModelViewSet. \n"
+                "DRF cannot detect the parameters and response format for you in these "
+                "cases, you must manually specify them."
                 "\n\n"
                 f"{failed_cases_str}"
                 "\n\n"
-                "To do this, add a YAML OpenAPI string to your docstring surrounded by two "
-                "lines with '---' as their only contents. \n"
+                "To do this, add a YAML OpenAPI string to your docstring surrounded by "
+                "two lines with '---' as their only contents. \n"
                 "You can check out existing examples throughout the codebase "
                 "or in the /api/openapi endpoint."
             )
@@ -98,8 +102,8 @@ class DocumentationTestCase(TestCase):
                 f"\t- {cls_name} -> {name}" for cls_name, name in whitelist - all_cases
             )
             self.fail(
-                "Found one or more whitelist entries that do not exist in the views anymore. "
-                "Remove these entries in order to keep the codebase clean."
+                "Found one or more whitelist entries that do not exist in the views "
+                "anymore. Remove these entries in order to keep the codebase clean."
                 "\n\n"
                 f"{missing_str}"
             )
@@ -210,13 +214,16 @@ class DocumentationTestCase(TestCase):
         percent_missing = len(missing_descriptions) / total_routes
         required_percent = 0.75
         if (1 - percent_missing) < required_percent:
-            formatted_missing = "\n".join("\t{1} {0}".format(*x) for x in missing_descriptions)
+            formatted_missing = "\n".join(
+                "\t{1} {0}".format(*x) for x in missing_descriptions
+            )
             self.fail(
                 "Too many endpoints are missing API descriptions "
                 f"({(1 - percent_missing):.2%} < minimum {required_percent:.2%}):\n\n"
                 f"{formatted_missing}"
-                f"\n\nThis is an automated test to ensure that at least {required_percent:.2%} of "
-                "the Penn Clubs API is properly documented. \n"
-                "If you are below this threshold, please add some descriptions to the new routes "
-                "that you have added. \nYou can do this by adding a docstring to your ViewSet.",
+                "\n\nThis is an automated test to ensure that at least "
+                f"{required_percent:.2%} of the Penn Clubs API is documented. \n"
+                "If you are below this threshold, please add some descriptions to the "
+                "new routes that you have added. \nYou can do this by adding a "
+                "docstring to your ViewSet.",
             )

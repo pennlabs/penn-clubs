@@ -17,7 +17,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="club", name="fair_on", field=models.DateTimeField(blank=True, null=True),
+            model_name="club",
+            name="fair_on",
+            field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.RunPython(set_sac_defaults, lambda apps, schema_editor: None),
         migrations.AddField(

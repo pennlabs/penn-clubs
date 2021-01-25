@@ -1,7 +1,11 @@
 from collections import OrderedDict
 
 import dateutil.parser
-from django.core.exceptions import FieldDoesNotExist, MultipleObjectsReturned, ObjectDoesNotExist
+from django.core.exceptions import (
+    FieldDoesNotExist,
+    MultipleObjectsReturned,
+    ObjectDoesNotExist,
+)
 from django.db.models import BooleanField, DateTimeField, ManyToManyField
 from django.db.models.fields.reverse_related import ManyToOneRel
 from django.utils import timezone
@@ -34,12 +38,22 @@ class ManyToManySaveMixin(object):
                 return model.objects.get(**item)
             except ObjectDoesNotExist:
                 raise serializers.ValidationError(
-                    {field_name: ["The object with these values does not exist: {}".format(item)]},
+                    {
+                        field_name: [
+                            "The object with these values does not exist: {}".format(
+                                item
+                            )
+                        ]
+                    },
                     code="invalid",
                 )
             except MultipleObjectsReturned:
                 raise serializers.ValidationError(
-                    {field_name: ["Multiple objects exist with these values: {}".format(item)]}
+                    {
+                        field_name: [
+                            "Multiple objects exist with these values: {}".format(item)
+                        ]
+                    }
                 )
 
     def save(self):
@@ -69,13 +83,17 @@ class ManyToManySaveMixin(object):
                     ignore_fields.add(field_name)
                     continue
                 for item in items:
-                    m2m_lists[field_name].append(self._lookup_item(model, field_name, item, mode))
+                    m2m_lists[field_name].append(
+                        self._lookup_item(model, field_name, item, mode)
+                    )
             else:
                 m2m["many"] = False
                 if hasattr(field, "Meta"):
                     model = field.Meta.model
                     item = self.validated_data.pop(field_name, None)
-                    m2m_lists[field_name] = self._lookup_item(model, field_name, item, mode)
+                    m2m_lists[field_name] = self._lookup_item(
+                        model, field_name, item, mode
+                    )
                 else:
                     ignore_fields.add(field_name)
 
@@ -120,8 +138,8 @@ class XLSXFormatterMixin(object):
     def get_xlsx_column_name(self, key):
         """
         Format the text displayed in the column header.
-        Cache the column name if obtained from the serializer, as this method is called once for
-        every cell.
+        Cache the column name if obtained from the serializer,
+        as this method is called once for every cell.
         """
         if key in self._column_cache:
             return self._column_cache[key]
@@ -273,19 +291,29 @@ class XLSXFormatterMixin(object):
         )
 
         # If this is a spreadsheet response, intercept and format.
-        if isinstance(response, Response) and response.accepted_renderer.format == "xlsx":
+        if (
+            isinstance(response, Response)
+            and response.accepted_renderer.format == "xlsx"
+        ):
             self._field_dict = {}
             if isinstance(response.data, ReturnList):
                 new_data = [
                     OrderedDict([self._format_cell(k, v) for k, v in row.items()])
                     for row in response.data
                 ]
-                response.data = ReturnList(new_data, serializer=response.data.serializer)
+                response.data = ReturnList(
+                    new_data, serializer=response.data.serializer
+                )
             elif isinstance(response.data, ReturnDict):
-                new_data = OrderedDict([self._format_cell(k, v) for k, v in response.data.items()])
-                response.data = ReturnDict(new_data, serializer=response.data.serializer)
+                new_data = OrderedDict(
+                    [self._format_cell(k, v) for k, v in response.data.items()]
+                )
+                response.data = ReturnDict(
+                    new_data, serializer=response.data.serializer
+                )
             elif isinstance(response.data, dict):
-                # If this is not a proper spreadsheet response (ex: object does not exist),
+                # If this is not a proper spreadsheet response
+                # (ex: object does not exist),
                 # then return the response in JSON format.
                 response = Response(response.data)
                 response.accepted_renderer = JSONRenderer()
@@ -293,6 +321,8 @@ class XLSXFormatterMixin(object):
                 response.renderer_context = {}
                 return response
 
-            response["Content-Disposition"] = "attachment; filename={}".format(self.get_filename())
+            response["Content-Disposition"] = "attachment; filename={}".format(
+                self.get_filename()
+            )
 
         return response

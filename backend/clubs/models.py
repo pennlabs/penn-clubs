@@ -46,8 +46,9 @@ def get_mail_type_annotation(name):
 
 def send_mail_helper(name, subject, emails, context):
     """
-    A helper to send out an email given the template name, subject, to emails, and context.
-    Returns true if an email was sent out, or false if no emails were sent out.
+    A helper to send out an email given the template name, subject, to emails,
+    and context. Returns true if an email was sent out, or false if no emails
+    were sent out.
 
     All emails should go through this function.
     """
@@ -90,7 +91,9 @@ def send_mail_helper(name, subject, emails, context):
     # generate text alternative
     text_content = html_to_text(html_content)
 
-    msg = EmailMultiAlternatives(subject, text_content, settings.FROM_EMAIL, list(set(emails)))
+    msg = EmailMultiAlternatives(
+        subject, text_content, settings.FROM_EMAIL, list(set(emails))
+    )
 
     msg.attach_alternative(html_content, "text/html")
     msg.send(fail_silently=False)
@@ -102,11 +105,15 @@ def get_asset_file_name(instance, fname):
 
 
 def get_club_file_name(instance, fname):
-    return os.path.join("clubs", "{}.{}".format(instance.code, fname.rsplit(".", 1)[-1]))
+    return os.path.join(
+        "clubs", "{}.{}".format(instance.code, fname.rsplit(".", 1)[-1])
+    )
 
 
 def get_club_small_file_name(instance, fname):
-    return os.path.join("clubs_small", "{}.{}".format(instance.code, fname.rsplit(".", 1)[-1]))
+    return os.path.join(
+        "clubs_small", "{}.{}".format(instance.code, fname.rsplit(".", 1)[-1])
+    )
 
 
 def get_event_file_name(instance, fname):
@@ -114,11 +121,15 @@ def get_event_file_name(instance, fname):
 
 
 def get_event_small_file_name(instance, fname):
-    return os.path.join("events_small", "{}.{}".format(instance.id, fname.rsplit(".", 1)[-1]))
+    return os.path.join(
+        "events_small", "{}.{}".format(instance.id, fname.rsplit(".", 1)[-1])
+    )
 
 
 def get_user_file_name(instance, fname):
-    return os.path.join("users", "{}.{}".format(instance.user.username, fname.rsplit(".", 1)[-1]))
+    return os.path.join(
+        "users", "{}.{}".format(instance.user.username, fname.rsplit(".", 1)[-1])
+    )
 
 
 class Report(models.Model):
@@ -245,21 +256,29 @@ class Club(models.Model):
     github = models.URLField(blank=True, null=True)
     youtube = models.URLField(blank=True, null=True)
     how_to_get_involved = models.TextField(blank=True)
-    application_required = models.IntegerField(choices=APPLICATION_CHOICES, default=APPLICATION)
+    application_required = models.IntegerField(
+        choices=APPLICATION_CHOICES, default=APPLICATION
+    )
     accepting_members = models.BooleanField(default=False)
     student_types = models.ManyToManyField("StudentType", blank=True)
-    recruiting_cycle = models.IntegerField(choices=RECRUITING_CYCLES, default=RECRUITING_UNKNOWN)
+    recruiting_cycle = models.IntegerField(
+        choices=RECRUITING_CYCLES, default=RECRUITING_UNKNOWN
+    )
     enables_subscription = models.BooleanField(default=True)
     listserv = models.CharField(blank=True, max_length=255)
     ics_import_url = models.URLField(max_length=200, blank=True, null=True)
     image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
-    image_small = models.ImageField(upload_to=get_club_small_file_name, null=True, blank=True)
+    image_small = models.ImageField(
+        upload_to=get_club_small_file_name, null=True, blank=True
+    )
     tags = models.ManyToManyField("Tag")
     members = models.ManyToManyField(get_user_model(), through="Membership")
-    # Represents which organizations this club is directly under in the organizational structure.
-    # For example, SAC is a parent of PAC, which is a parent of TAC-E which is a parent of
-    # Penn Players.
-    parent_orgs = models.ManyToManyField("Club", related_name="children_orgs", blank=True)
+    # Represents which organizations this club is directly under in the org structure.
+    # For example, SAC is a parent of PAC, which is a parent of TAC-E which is a parent
+    # of Penn Players.
+    parent_orgs = models.ManyToManyField(
+        "Club", related_name="children_orgs", blank=True
+    )
     badges = models.ManyToManyField("Badge", blank=True)
 
     target_years = models.ManyToManyField("Year", blank=True)
@@ -288,7 +307,8 @@ class Club(models.Model):
 
     def add_ics_events(self):
         """
-        Fetch the ICS events from the club's calendar URL and return the number of modified events.
+        Fetch the ICS events from the club's calendar URL
+        and return the number of modified events.
         """
         # random but consistent uuid used to generate uuid5s from invalid uuids
         ics_import_uuid_namespace = uuid.UUID("8f37c140-3775-42e8-91d4-fda7a2e44152")
@@ -303,7 +323,9 @@ class Club(models.Model):
             for event in calendar.events:
                 tries = [
                     Event.objects.filter(
-                        club=self, start_time=event.begin.datetime, end_time=event.end.datetime
+                        club=self,
+                        start_time=event.begin.datetime,
+                        end_time=event.end.datetime,
                     ).first(),
                     Event(),
                 ]
@@ -403,9 +425,10 @@ class Club(models.Model):
         self, request=None, email="setup", fair=None, emails=None, extra=False
     ):
         """
-        Send an email to all club officers about setting up their club for the virtual fair.
+        Send an email to all club officers about setting
+        up their club for the virtual fair.
 
-        If no list of emails is specified, the officer emails for this club will be used.
+        If no list of emails is specified, the officer emails for the club will be used.
         If no fair is specified, the closest upcoming fair will be used.
         """
         domain = get_domain(request)
@@ -413,18 +436,25 @@ class Club(models.Model):
         now = timezone.now()
 
         if fair is None:
-            fair = ClubFair.objects.filter(start_time__gte=now).order_by("start_time").first()
+            fair = (
+                ClubFair.objects.filter(start_time__gte=now)
+                .order_by("start_time")
+                .first()
+            )
 
         eastern = pytz.timezone("America/New_York")
 
         events = self.events.filter(
-            start_time__gte=fair.start_time, end_time__lte=fair.end_time, type=Event.FAIR
+            start_time__gte=fair.start_time,
+            end_time__lte=fair.end_time,
+            type=Event.FAIR,
         ).order_by("start_time")
         event = events.first()
+        fstr = "%B %d, %Y %I:%M %p"
         events = [
             {
-                "time": f"{timezone.localtime(start, eastern).strftime('%B %d, %Y %I:%M %p')} - "
-                f"{timezone.localtime(end, eastern).strftime('%B %d, %Y %I:%M %p')} ET"
+                "time": f"{timezone.localtime(start, eastern).strftime(fstr)} - "
+                f"{timezone.localtime(end, eastern).strftime(fstr)} ET"
             }
             for start, end in events.values_list("start_time", "end_time")
         ]
@@ -443,13 +473,14 @@ class Club(models.Model):
         if emails is None:
             emails = self.get_officer_emails()
 
+        fair_str = fair.id if fair is not None else ""
         context = {
             "name": self.name,
             "prefix": prefix,
             "guide_url": f"https://{domain}/guides/fair",
             "media_guide_url": f"https://{domain}/guides/media",
             "zoom_url": f"https://{domain}/zoom",
-            "fair_url": f"https://{domain}/fair?fair={fair.id if fair is not None else ''}",
+            "fair_url": f"https://{domain}/fair?fair={fair_str}",
             "subscriptions_url": f"https://{domain}/club/{self.code}/edit#recruitment",
             "num_subscriptions": self.subscribe_set.count(),
             "fair": fair,
@@ -487,15 +518,17 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="renew",
-                subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(self.name),
+                subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(
+                    self.name
+                ),
                 emails=emails,
                 context=context,
             )
 
     def send_renewal_reminder_email(self, request=None):
         """
-        Send a reminder email to clubs about renewing their approval with the Office of Student
-        Affairs and registering for the SAC fair.
+        Send a reminder email to clubs about renewing their approval
+        with the approval authority and registering for activities fairs.
         """
         domain = get_domain(request)
 
@@ -510,7 +543,9 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="renewal_reminder",
-                subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(self.name),
+                subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(
+                    self.name
+                ),
                 emails=emails,
                 context=context,
             )
@@ -529,7 +564,9 @@ class Club(models.Model):
             pass
 
         # add email for all officers and above
-        for user in self.membership_set.filter(role__lte=Membership.ROLE_OFFICER, active=True):
+        for user in self.membership_set.filter(
+            role__lte=Membership.ROLE_OFFICER, active=True
+        ):
             emails.append(user.person.email)
 
         # remove empty emails
@@ -543,7 +580,8 @@ class Club(models.Model):
 
     def send_confirmation_email(self, request=None):
         """
-        Send an email to the club officers confirming that their club has been queued for approval.
+        Send an email to the club officers confirming that
+        their club has been queued for approval.
         """
         domain = get_domain(request)
 
@@ -599,7 +637,10 @@ class Club(models.Model):
         permissions = [
             ("approve_club", "Can approve pending clubs"),
             ("see_pending_clubs", "View pending clubs that are not one's own"),
-            ("see_fair_status", "See whether or not a club has registered for the SAC fair"),
+            (
+                "see_fair_status",
+                "See whether or not a club has registered for the SAC fair",
+            ),
             ("manage_club", "Manipulate club object and related objects"),
         ]
 
@@ -634,9 +675,9 @@ class QuestionAnswer(models.Model):
         domain = get_domain(request)
 
         owner_emails = list(
-            self.club.membership_set.filter(role__lte=Membership.ROLE_OFFICER).values_list(
-                "person__email", flat=True
-            )
+            self.club.membership_set.filter(
+                role__lte=Membership.ROLE_OFFICER
+            ).values_list("person__email", flat=True)
         )
 
         context = {
@@ -659,7 +700,9 @@ class Testimonial(models.Model):
     Represents a testimonial for a club.
     """
 
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="testimonials")
+    club = models.ForeignKey(
+        Club, on_delete=models.CASCADE, related_name="testimonials"
+    )
     text = models.TextField()
 
     def __str__(self):
@@ -687,9 +730,13 @@ class ClubFair(models.Model):
     registration_end_time = models.DateTimeField()
 
     questions = models.TextField(default="[]")
-    participating_clubs = models.ManyToManyField(Club, through="ClubFairRegistration", blank=True)
+    participating_clubs = models.ManyToManyField(
+        Club, through="ClubFairRegistration", blank=True
+    )
 
-    def create_events(self, start_time=None, end_time=None, filter=None, suffix="default"):
+    def create_events(
+        self, start_time=None, end_time=None, filter=None, suffix="default"
+    ):
         """
         Create activities fair events for all registered clubs.
         Does not create event if it already exists.
@@ -710,14 +757,21 @@ class ClubFair(models.Model):
                     code=f"fair-{club.code}-{self.id}-{suffix}",
                     club=club,
                     type=Event.FAIR,
-                    defaults={"name": self.name, "start_time": start_time, "end_time": end_time},
+                    defaults={
+                        "name": self.name,
+                        "start_time": start_time,
+                        "end_time": end_time,
+                    },
                 )
                 events.append(obj)
         return events
 
     def __str__(self):
         fmt = "%b %d, %Y"
-        return f"{self.name} ({self.start_time.strftime(fmt)} - {self.end_time.strftime(fmt)})"
+        return (
+            f"{self.name} "
+            f"({self.start_time.strftime(fmt)} - {self.end_time.strftime(fmt)})"
+        )
 
 
 class ClubFairRegistration(models.Model):
@@ -727,7 +781,9 @@ class ClubFairRegistration(models.Model):
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     fair = models.ForeignKey(ClubFair, on_delete=models.CASCADE)
-    registrant = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
+    registrant = models.ForeignKey(
+        get_user_model(), on_delete=models.SET_NULL, null=True
+    )
 
     answers = models.TextField(blank=True)
 
@@ -750,7 +806,9 @@ class RecurringEvent(models.Model):
             last_event = events.last()
             name = first_event.name
             return (
-                f"{name}: {first_event.start_time} - {last_event.end_time} ({events.count()} times)"
+                f"{name}: "
+                f"{first_event.start_time} - {last_event.end_time} "
+                f"({events.count()} times)"
             )
         return "empty recurring event object"
 
@@ -764,13 +822,17 @@ class Event(models.Model):
     code = models.SlugField(max_length=255, db_index=True)
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=255)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="events", null=True)
+    club = models.ForeignKey(
+        Club, on_delete=models.CASCADE, related_name="events", null=True
+    )
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     location = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(max_length=2048, null=True, blank=True)
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
-    image_small = models.ImageField(upload_to=get_event_small_file_name, null=True, blank=True)
+    image_small = models.ImageField(
+        upload_to=get_event_small_file_name, null=True, blank=True
+    )
     description = models.TextField(blank=True)  # rich html
     ics_uuid = models.UUIDField(default=uuid.uuid4)
     is_ics_event = models.BooleanField(default=False, blank=True)
@@ -828,7 +890,8 @@ class Favorite(models.Model):
 
 class Subscribe(models.Model):
     """
-    Used when people subscribe to a club and clubs will be able to see the users' email addresses
+    Used when people subscribe to a club and clubs
+    will be able to see the users' email addresses.
     """
 
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -853,7 +916,9 @@ class ClubVisit(models.Model):
 
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
-    ip = models.GenericIPAddressField(protocol="both", unpack_ipv4=False, blank=True, null=True)
+    ip = models.GenericIPAddressField(
+        protocol="both", unpack_ipv4=False, blank=True, null=True
+    )
 
     CLUB_PAGE = 1
     EVENT_MODAL = 2
@@ -930,9 +995,9 @@ class MembershipRequest(models.Model):
         }
 
         owner_emails = list(
-            self.club.membership_set.filter(role__lte=Membership.ROLE_OFFICER).values_list(
-                "person__email", flat=True
-            )
+            self.club.membership_set.filter(
+                role__lte=Membership.ROLE_OFFICER
+            ).values_list("person__email", flat=True)
         )
 
         send_mail_helper(
@@ -956,7 +1021,9 @@ class Advisor(models.Model):
     name = models.CharField(max_length=255)
     title = models.CharField(max_length=255, blank=True, null=True)
     department = models.CharField(max_length=255, blank=True, null=True)
-    email = models.CharField(max_length=320, blank=True, null=True, validators=[validate_email])
+    email = models.CharField(
+        max_length=320, blank=True, null=True, validators=[validate_email]
+    )
     phone = PhoneNumberField(null=False, blank=True)
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
@@ -973,8 +1040,12 @@ class Note(models.Model):
     """
 
     creator = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    creating_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="note_by_club")
-    subject_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="note_of_club")
+    creating_club = models.ForeignKey(
+        Club, on_delete=models.CASCADE, related_name="note_by_club"
+    )
+    subject_club = models.ForeignKey(
+        Club, on_delete=models.CASCADE, related_name="note_of_club"
+    )
     note_tags = models.ManyToManyField("NoteTag")
     title = models.CharField(max_length=255, default="Note")
     content = models.TextField(blank=True)
@@ -1004,7 +1075,8 @@ class Note(models.Model):
     )
 
     creating_club_permission = models.IntegerField(
-        choices=CREATING_CLUB_PERMISSION_CHOICES, default=PERMISSION_CREATING_CLUB_MEMBER,
+        choices=CREATING_CLUB_PERMISSION_CHOICES,
+        default=PERMISSION_CREATING_CLUB_MEMBER,
     )
     outside_club_permission = models.IntegerField(
         choices=OUTSIDE_CLUB_PERMISSION_CHOICES, default=PERMISSION_SUBJECT_CLUB_MEMBER
@@ -1115,7 +1187,9 @@ class MembershipInvite(models.Model):
         self.save()
 
         obj, _ = Membership.objects.get_or_create(
-            person=user, club=self.club, defaults={"role": self.role, "title": self.title},
+            person=user,
+            club=self.club,
+            defaults={"role": self.role, "title": self.title},
         )
 
         return obj
@@ -1133,7 +1207,10 @@ class MembershipInvite(models.Model):
             "club_id": self.club.code,
             "sender": request.user
             if request is not None
-            else {"username": settings.BRANDING_SITE_NAME, "email": settings.BRANDING_SITE_EMAIL},
+            else {
+                "username": settings.BRANDING_SITE_NAME,
+                "email": settings.BRANDING_SITE_EMAIL,
+            },
             "role": self.role,
             "title": self.title,
             "url": settings.INVITE_URL.format(
@@ -1154,7 +1231,8 @@ class MembershipInvite(models.Model):
         """
         if self.role > Membership.ROLE_OWNER:
             raise ValueError(
-                "This invite should grant owner permissions if sending out the owner email!"
+                "This invite should grant owner permissions "
+                "if sending out the owner email!"
             )
 
         domain = get_domain(request)
@@ -1238,7 +1316,8 @@ class Asset(models.Model):
 
 class Year(models.Model):
     """
-    Represents a graduation class (ex: Freshman, Sophomore, Junior, Senior, Graduate Student).
+    Represents a graduation class
+    (ex: Freshman, Sophomore, Junior, Senior, Graduate Student).
     """
 
     name = models.TextField()
@@ -1304,7 +1383,9 @@ class Profile(models.Model):
     Additional information attached to a user account.
     """
 
-    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, primary_key=True)
+    user = models.OneToOneField(
+        get_user_model(), on_delete=models.CASCADE, primary_key=True
+    )
     image = models.ImageField(upload_to=get_user_file_name, null=True, blank=True)
     uuid_secret = models.UUIDField(default=uuid.uuid4)
 
@@ -1336,7 +1417,10 @@ class ClubApplication(models.Model):
 
     def __str__(self):
         return "{} created {}: start {}, end {}".format(
-            self.club.name, self.name, self.application_start_time, self.application_end_time
+            self.club.name,
+            self.name,
+            self.application_start_time,
+            self.application_end_time,
         )
 
 

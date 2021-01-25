@@ -18,8 +18,8 @@ class Command(BaseCommand):
             "--clubs",
             dest="club",
             type=str,
-            help="If this parameter is specified, then only trigger renewal for the comma \
-                  separated list of club codes specified by this argument.",
+            help="If this parameter is specified, then only trigger renewal for the "
+            "comma separated list of club codes specified by this argument.",
         )
 
         parser.add_argument(
@@ -27,8 +27,8 @@ class Command(BaseCommand):
             default="all",
             choices=["deactivate", "emails", "all", "remind"],
             type=str,
-            help="Specify the actions that you want to take, \
-                  either only deactivating the clubs, only sending the emails, or both.",
+            help="Specify the actions that you want to take, "
+            "either only deactivating the clubs, only sending the emails, or both.",
         )
 
     def handle(self, *args, **kwargs):
@@ -43,9 +43,10 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING(
                     "You are about to set all club status to inactive and will have "
-                    + "to begin the renewal process. This should only happen at the beginning "
-                    + "of the school year. Are you postive this is what you want "
-                    + "to do? Type 'deactivate all clubs' to continue or press Ctrl-C to abort."
+                    "to begin the renewal process. This should only happen at the "
+                    "beginning of the school year. Are you sure this is what you want "
+                    "to do? Type 'deactivate all clubs' to continue or press Ctrl-C "
+                    "to abort."
                 )
             )
 
@@ -69,11 +70,15 @@ class Command(BaseCommand):
             for club in clubs:
                 if club.history.filter(approved=True).exists():
                     club.ghost = True
-                    club._change_reason = "Mark pending approval (yearly renewal process)"
+                    club._change_reason = (
+                        "Mark pending approval (yearly renewal process)"
+                    )
                     club.save(update_fields=["ghost"])
                     ghosted += 1
 
-            self.stdout.write(f"{clubs.count()} clubs deactivated! {ghosted} clubs ghosted!")
+            self.stdout.write(
+                f"{clubs.count()} clubs deactivated! {ghosted} clubs ghosted!"
+            )
 
         # send out renewal emails to all clubs
         if send_emails:
@@ -94,4 +99,6 @@ class Command(BaseCommand):
             for club in rejected_clubs:
                 club.send_approval_email()
 
-            self.stdout.write(f"All {rejected_clubs.count()} rejection emails sent out!")
+            self.stdout.write(
+                f"All {rejected_clubs.count()} rejection emails sent out!"
+            )

@@ -21,11 +21,15 @@ SECRET_KEY = os.environ.get("SECRET_KEY", None)
 # Sentry settings
 SENTRY_URL = os.environ.get("SENTRY_URL")
 if SENTRY_URL:
-    sentry_sdk.init(dsn=SENTRY_URL, integrations=[DjangoIntegration()], send_default_pii=True)
+    sentry_sdk.init(
+        dsn=SENTRY_URL, integrations=[DjangoIntegration()], send_default_pii=True
+    )
 
 # DLA settings
 PLATFORM_ACCOUNTS = {
-    "ADMIN_PERMISSION": "hub_admin" if BRANDING == "fyh" else "clubs_admin"  # noqa: F405
+    "ADMIN_PERMISSION": "hub_admin"
+    if BRANDING == "fyh"  # noqa: F405
+    else "clubs_admin"
 }
 
 # Email client information

@@ -17,7 +17,9 @@ class Migration(migrations.Migration):
             model_name="clubfairregistration",
             name="registrant",
             field=models.ForeignKey(
-                null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
             ),
         ),
     ]

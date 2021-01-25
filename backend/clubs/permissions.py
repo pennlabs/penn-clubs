@@ -69,7 +69,9 @@ class ClubFairPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if view.action in {"list", "retrieve", "register", "current", "live"}:
             return True
-        return request.user.is_authenticated and request.user.has_perm("clubs.see_fair_status")
+        return request.user.is_authenticated and request.user.has_perm(
+            "clubs.see_fair_status"
+        )
 
 
 class ProfilePermission(permissions.BasePermission):
@@ -99,7 +101,9 @@ class ProfilePermission(permissions.BasePermission):
 
         # only admins can enumerate users
         if view.action in {"list"}:
-            return request.user.is_authenticated and request.user.has_perm("clubs.manage_club")
+            return request.user.is_authenticated and request.user.has_perm(
+                "clubs.manage_club"
+            )
 
         return request.user.is_authenticated
 
@@ -121,10 +125,14 @@ class ClubPermission(permissions.BasePermission):
             if obj.approved or obj.ghost:
                 return True
 
-            # with special bypass flag, anyone can view information for just the clubs endpoint
+            # with special bypass flag, anyone can view information
+            # for just the clubs endpoint
             # this is used for the email invitations page
             if view.action in {"retrieve"}:
-                if request.query_params.get("bypass", "false").lower().strip() == "true":
+                if (
+                    request.query_params.get("bypass", "false").lower().strip()
+                    == "true"
+                ):
                     return True
 
             # otherwise, can view if you have special permissions or is member
@@ -254,7 +262,8 @@ class IsSuperuser(permissions.BasePermission):
 
 def DjangoPermission(perm):
     """
-    Returns a permission class that grants full access to the users with the specified permission.
+    Returns a permission class that grants full access
+    to the users with the specified permission.
     """
 
     class DjangoPermissionInstance(permissions.BasePermission):
@@ -266,8 +275,8 @@ def DjangoPermission(perm):
 
 class MemberPermission(permissions.BasePermission):
     """
-    Members of a higher role can update/delete members of equal or lower roles, except ordinary
-    members.
+    Members of a higher role can update/delete members of equal or lower roles,
+    except ordinary members.
     Members can edit themselves, with additional restrictions on the serializer level.
     Officers and above can add new members.
     Anyone can view membership.
@@ -389,7 +398,8 @@ class QuestionAnswerPermission(permissions.BasePermission):
             if not request.user.is_authenticated:
                 return False
 
-            # only allow original user to edit and delete if the question has not been answered
+            # only allow original user to edit and delete
+            # if the question has not been answered
             if obj.author == request.user and obj.answer is None:
                 return True
 

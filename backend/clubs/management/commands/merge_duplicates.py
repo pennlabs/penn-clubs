@@ -19,10 +19,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "items", nargs="*", type=str, help="The ID or name of the clubs/tags to merge."
+            "items",
+            nargs="*",
+            type=str,
+            help="The ID or name of the clubs/tags to merge.",
         )
         parser.add_argument(
-            "--tag", dest="tag", action="store_true", help="Merge tags instead of clubs."
+            "--tag",
+            dest="tag",
+            action="store_true",
+            help="Merge tags instead of clubs.",
         )
         parser.add_argument(
             "--auto",
@@ -48,7 +54,9 @@ class Command(BaseCommand):
                 final, rest = clubs[0], clubs[1:]
                 for item in rest:
                     final = merge_clubs(final, item)
-                self.stdout.write(self.style.SUCCESS("Merged {} ({})".format(duplicate, num_clubs)))
+                self.stdout.write(
+                    self.style.SUCCESS("Merged {} ({})".format(duplicate, num_clubs))
+                )
         else:
             items = kwargs["items"]
             if kwargs["tag"]:
@@ -152,10 +160,14 @@ def merge_clubs(one, two):
     primary.accepting_members = primary.accepting_members or secondary.accepting_members
 
     # If either one enables subscription, the final one does as well
-    primary.enables_subscription = primary.enables_subscription or secondary.enables_subscription
+    primary.enables_subscription = (
+        primary.enables_subscription or secondary.enables_subscription
+    )
 
     # Choose most restrictive application_required
-    primary.application_required = max(primary.application_required, secondary.application_required)
+    primary.application_required = max(
+        primary.application_required, secondary.application_required
+    )
 
     # Use the larger club size
     primary.size = max(primary.size, secondary.size)
@@ -167,7 +179,9 @@ def merge_clubs(one, two):
     duplicate_memberships = list(
         Membership.objects.filter(club=primary).values_list("person__id", flat=True)
     )
-    Membership.objects.filter(club=secondary, person__in=duplicate_memberships,).delete()
+    Membership.objects.filter(
+        club=secondary, person__in=duplicate_memberships,
+    ).delete()
     Membership.objects.filter(club=secondary).update(club=primary)
 
     # Take all membership invites

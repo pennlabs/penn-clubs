@@ -13,10 +13,14 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="club", name="ics_import_url", field=models.URLField(blank=True, null=True),
+            model_name="club",
+            name="ics_import_url",
+            field=models.URLField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name="event", name="ics_uuid", field=models.UUIDField(default=uuid.uuid4),
+            model_name="event",
+            name="ics_uuid",
+            field=models.UUIDField(default=uuid.uuid4),
         ),
         migrations.AddField(
             model_name="event",
