@@ -25,7 +25,7 @@ jobs:
       - name: Lint (black)
         run: |-
           cd backend
-          pipenv run black --check .
+          pipenv run black -l100 --check .
       - name: Test
         run: |-
           cd backend
