@@ -457,7 +457,7 @@ class EventWriteSerializer(EventSerializer):
 
     def update(self, instance, validated_data):
         """
-        Enforce only changing the meeting link using the Zoom setup page for activities fair events.
+        Enforce only changing the meeting link to Zoom links for activities fair events.
         """
         if instance.type == Event.FAIR and "url" in validated_data:
             old_url = instance.url or ""
@@ -466,31 +466,13 @@ class EventWriteSerializer(EventSerializer):
             if old_url != new_url:
                 parsed_url = urlparse(new_url)
 
-                # check if we have linked a zoom account
-                has_linked_account = False
-                request = self.context.get("request")
-                if request and hasattr(request, "user"):
-                    if request.user.social_auth.filter(provider="zoom-oauth2").first() is not None:
-                        has_linked_account = True
-
-                # edge case to allow vpul links
-                if "vpul-upenn.zoom.us" not in parsed_url.netloc:
-                    # if we've linked a zoom account and entering a zoom link, we're fine
-                    if not has_linked_account and new_url:
-                        raise serializers.ValidationError(
-                            {
-                                "url": "You should link your Zoom account on the "
-                                "Zoom setup page before changing this field."
-                            }
-                        )
-
-                    if "upenn.zoom.us" not in parsed_url.netloc and new_url:
-                        raise serializers.ValidationError(
-                            {
-                                "url": "You should use a Penn Zoom account for the meeting link! "
-                                "Use the Zoom setup page to do this for you."
-                            }
-                        )
+                if "upenn.zoom.us" not in parsed_url.netloc and new_url:
+                    raise serializers.ValidationError(
+                        {
+                            "url": "You should use a Zoom link for the fair meeting link! "
+                            "You can use the Zoom setup page to do this for you."
+                        }
+                    )
 
         return super().update(instance, validated_data)
 
