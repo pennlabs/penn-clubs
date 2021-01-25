@@ -1,3 +1,7 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+<!-- SUBJECT: [{{ prefix }}] {{ fair.name }} Setup -->
 <!-- TYPES:
 guide_url:
     type: string
@@ -17,9 +21,6 @@ fair:
         contact:
             type: string
 -->
-{% extends 'emails/base.html' %}
-
-{% block content %}
     <h2>[{{ prefix }}] {{ fair.name }} Setup</h2>
     <p style="font-size: 1.2em">
     	Dear <b>{{ name }}</b> officers,
@@ -30,12 +31,12 @@ fair:
         booth prior to the start of the fair at <b>{{ fair.time }}</b>.
     </p>
     <p style="font-size: 1.2em">
-        Please click the button below to add a meeting link to your booth for the {{ fair.name }}.
+        Please click the button below to add a meeting link to your booth for the {{ fair.name }}. This process should take less than five minutes.
     </p>
     
     <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ zoom_url }}">Setup Meeting Link</a>
     <p style="font-size: 1.2em">
-        If you have any questions about the Penn Clubs platform, please respond to this email.
+        If you run into any issues or have any questions about the Penn Clubs platform, please respond to this email.
     </p>
 
     <p style="font-size: 1.2em">

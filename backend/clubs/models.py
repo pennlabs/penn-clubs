@@ -435,6 +435,11 @@ class Club(models.Model):
             else "REMINDER"
         )
 
+        # if one day before fair, change prefix to urgent
+        if fair.start_time - datetime.timedelta(days=1) < now:
+            prefix = "URGENT"
+
+        # if no emails specified, send to officers
         if emails is None:
             emails = self.get_officer_emails()
 
