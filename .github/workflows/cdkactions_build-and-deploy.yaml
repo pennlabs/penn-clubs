@@ -123,8 +123,8 @@ jobs:
         run: docker-compose -f docker-compose.test.yaml up -d
       - name: Run integration tests
         run: |-
-          docker-compose -f docker-compose.test.yaml exec backend python manage.py populate
-          docker-compose -f docker-compose.test.yaml exec frontend yarn integration
+          docker-compose -f docker-compose.test.yaml exec -T backend python manage.py populate
+          docker-compose -f docker-compose.test.yaml exec -T frontend yarn integration
     env:
       GIT_SHA: ${{ github.sha }}
     needs:
