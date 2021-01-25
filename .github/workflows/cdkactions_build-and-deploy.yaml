@@ -114,7 +114,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run docker compose
-        run: docker-compose up -d -f docker-compose.test.yaml
+        run: docker-compose -f docker-compose.test.yaml up -d
       - name: Run integration tests
         run: |-
           docker-compose -f docker-compose.test.yaml exec backend python manage.py populate
