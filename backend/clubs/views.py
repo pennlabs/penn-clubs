@@ -808,8 +808,9 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                                     to register the club.
                             club:
                                 type: string
-                                description: The code of the club that you are trying
-                                to register.
+                                description: >
+                                    The code of the club that you are trying
+                                    to register.
                             answers:
                                 type: array
                                 description: >

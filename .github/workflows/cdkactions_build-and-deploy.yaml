@@ -31,7 +31,7 @@ jobs:
       - name: Test
         run: |-
           cd backend
-          pipenv run coverage run manage.py test --settings=pennclubs.settings.ci
+          pipenv run coverage run manage.py test --settings=pennclubs.settings.ci --parallel
       - name: Upload Code Coverage
         run: |-
           ROOT=$(pwd)
