@@ -2312,6 +2312,7 @@ class ClubTestCase(TestCase):
     def test_event_add_meeting(self):
         """
         Test manually adding a meeting link without the Zoom page, but having their account linked.
+        This should go through.
         """
         self.event1.type = Event.FAIR
         self.event1.url = None
@@ -2328,7 +2329,7 @@ class ClubTestCase(TestCase):
         )
         self.event1.refresh_from_db()
         self.assertIn("url", resp.data, resp.content)
-        self.assertFalse(self.event1.url, resp.content)
+        self.assertTrue(self.event1.url, resp.content)
 
     def test_zoom_webhook(self):
         """
