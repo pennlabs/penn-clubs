@@ -63,12 +63,11 @@ jobs:
       - name: Publish
         uses: docker/build-push-action@v2
         with:
-          repository: pennlabs/penn-clubs-backend
-          path: backend
-          dockerfile: backend/Dockerfile
+          context: backend
+          file: backend/Dockerfile
           push: ${{ github.ref == 'refs/heads/master' }}
-          tags: 'latest,${{ github.sha }}'
-          cache_froms: 'pennlabs/penn-clubs-backend:latest'
+          tags: 'pennlabs/penn-clubs-backend:latest,pennlabs/penn-clubs-backend:${{ github.sha }}'
+          cache-from: 'type=registry,ref=pennlabs/penn-clubs-backend:latest'
     needs: django-check
   react-check:
     name: React Check
@@ -109,12 +108,11 @@ jobs:
       - name: Publish
         uses: docker/build-push-action@v2
         with:
-          repository: pennlabs/penn-clubs-frontend
-          path: frontend
-          dockerfile: frontend/Dockerfile
+          context: frontend
+          file: frontend/Dockerfile
           push: ${{ github.ref == 'refs/heads/master' }}
-          tags: 'latest,${{ github.sha }}'
-          cache_froms: 'pennlabs/penn-clubs-frontend:latest'
+          tags: 'pennlabs/penn-clubs-frontend:latest,pennlabs/penn-clubs-frontend:${{ github.sha }}'
+          cache-from: 'type=registry,ref=pennlabs/penn-clubs-frontend:latest'
     needs: react-check
   integration-tests:
     name: Integration Tests
