@@ -152,6 +152,10 @@ jobs:
           done
           docker-compose -f docker-compose.test.yaml exec -T backend python manage.py populate
           docker-compose -f docker-compose.test.yaml exec -T frontend yarn integration
+      - name: Print server logs
+        if: failure()
+        run: |-
+          docker-compose -f docker-compose.test.yaml logs
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         if: failure()
