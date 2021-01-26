@@ -136,8 +136,10 @@ jobs:
             frontend-container
       - name: Load docker images
         run: |-
-          docker load --input backend-container/image.tar
-          docker load --input frontend-container/image.tar
+          ID=$(docker load --input backend-container/image.tar)
+          docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-backend:latest
+          ID=$(docker load --input frontend-container/image.tar)
+          docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-frontend:latest
           docker images
       - name: Run docker compose
         run: docker-compose -f docker-compose.test.yaml up -d
