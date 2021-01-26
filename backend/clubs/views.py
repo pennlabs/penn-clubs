@@ -4222,7 +4222,7 @@ class LoggingArgumentParser(argparse.ArgumentParser):
         return self._arguments
 
 
-@functools.lru_cache()
+@functools.lru_cache(maxsize=None)
 def get_scripts():
     """
     Return a list of Django management commands and some associated metadata.
