@@ -3640,6 +3640,34 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
 
+    def get(self, request, *args, **kwargs):
+        """
+        Cache the settings endpoint for 5 minutes or until user data is updated.
+        """
+        key = f"user:settings:{request.user.username}"
+        val = cache.get(key)
+        if val:
+            return Response(val)
+        resp = super().get(request, *args, **kwargs)
+        cache.set(key, resp.data, 5 * 60)
+        return resp
+
+    def put(self, request, *args, **kwargs):
+        """
+        Clear the cache when putting user settings.
+        """
+        key = f"user:settings:{request.user.username}"
+        cache.delete(key)
+        return super().put(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        """
+        Clear the cache when patching user settings.
+        """
+        key = f"user:settings:{request.user.username}"
+        cache.delete(key)
+        return super().patch(request, *args, **kwargs)
+
     def get_operation_id(self, **kwargs):
         if kwargs["action"] == "get":
             return "Retrieve Self User"

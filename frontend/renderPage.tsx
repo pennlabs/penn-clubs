@@ -315,7 +315,7 @@ function renderPage<T>(
           const resp = await doApiRequest('/options/?format=json')
           return await resp.json()
         },
-        1000 * 60,
+        1000 * 60 * 5,
       )
     }
 
@@ -434,7 +434,7 @@ const getPublicCachedContent = async () => {
         years: yearResponse as Year[],
       }
     },
-    1000 * 60,
+    1000 * 60 * 5,
   )
 }
 

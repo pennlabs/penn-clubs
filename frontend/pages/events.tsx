@@ -859,13 +859,15 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
       ])
       return { tags, badges, clubs }
     },
-    60 * 1000,
+    5 * 60 * 1000,
   )
 
   const params = new URLSearchParams()
+  const startStr = dateRange.start.toISOString()
+  const endStr = dateRange.end.toISOString()
   params.set('format', 'json')
-  params.set('start_time__gte', dateRange.start.toISOString())
-  params.set('end_time__lte', dateRange.end.toISOString())
+  params.set('start_time__gte', startStr)
+  params.set('end_time__lte', endStr)
 
   if (cachedFair != null) {
     params.set('type__in', ClubEventType.FAIR.toString())
@@ -873,8 +875,13 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
   }
 
   const [events, cachedInfo] = await Promise.all([
-    doApiRequest(`/events/?${params.toString()}`, data).then((resp) =>
-      resp.json(),
+    cache(
+      `events:list:range:${cachedFair?.id}:${startStr}:${endStr}`,
+      async () => {
+        const resp = await doApiRequest(`/events/?${params.toString()}`, data)
+        return await resp.json()
+      },
+      5 * 60 * 1000,
     ),
     cachedInfoReq,
   ])

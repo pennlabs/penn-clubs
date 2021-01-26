@@ -14,7 +14,7 @@ import {
 import { CLUB_ROUTE, LIVE_EVENTS, SNOW } from '../constants'
 import renderPage from '../renderPage'
 import { ClubFair } from '../types'
-import { doApiRequest, useSetting } from '../utils'
+import { cache, doApiRequest, useSetting } from '../utils'
 import {
   OBJECT_NAME_LONG_PLURAL,
   OBJECT_NAME_SINGULAR,
@@ -254,13 +254,19 @@ FairPage.getInitialProps = async ({ req, query }: NextPageContext) => {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
 
-  const resp = await doApiRequest(
-    `/events/fair/?date=${query.date as string}&fair=${
-      query.fair as string
-    }&format=json`,
-    data,
+  const json = await cache(
+    `events:fair:${query.fair as string}:${query.date as string}`,
+    async () => {
+      const resp = await doApiRequest(
+        `/events/fair/?date=${query.date as string}&fair=${
+          query.fair as string
+        }&format=json`,
+        data,
+      )
+      return await resp.json()
+    },
+    5 * 60 * 1000,
   )
-  const json = await resp.json()
 
   return {
     events: json.events,
