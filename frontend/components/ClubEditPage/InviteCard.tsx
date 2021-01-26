@@ -92,8 +92,15 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
       },
     })
 
-    const json = (await resp).json()
-    return json
+    try {
+      const json = (await resp).json()
+      return json
+    } catch (e) {
+      return {
+        success: false,
+        detail: 'An unknown error occured while sending an invitation batch.',
+      }
+    }
   }
 
   const sendInvites = async () => {
