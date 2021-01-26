@@ -46,7 +46,7 @@ describe('Invitation tests', () => {
 
   it('Accepts invitation using incorrect login credentials', () => {
     cy.contains('Accept Invitation').click()
-    cy.contains('This invitation was meant for "jmadison", but you are logged in as "bfranklin"!')
+    cy.contains('This invitation was meant for jmadison, but you are logged in as bfranklin!')
     cy.logout()
   })
 
