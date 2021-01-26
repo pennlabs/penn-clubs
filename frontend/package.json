@@ -59,7 +59,7 @@
     "test": "tsc --noemit",
     "integration": "./test.sh",
     "dev": "node server.js",
-    "build": "build-storybook -o public/storybook && env NODE_ENV=production next build",
+    "build": "build-storybook -o public/storybook &; env NODE_ENV=production next build &; wait",
     "start": "env NODE_ENV=production node server.js",
     "storybook": "start-storybook -s ./public -p 6006"
   },

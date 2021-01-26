@@ -141,6 +141,7 @@ jobs:
           ID=$(docker load --input frontend-container/image.tar)
           docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-frontend:latest
           docker images
+          mkdir -p /tmp/test-results
       - name: Run docker compose
         run: docker-compose -f docker-compose.test.yaml up -d
       - name: Run integration tests
