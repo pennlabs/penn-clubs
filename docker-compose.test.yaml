@@ -15,8 +15,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
   backend:
-    # this is bad, as it doesn't actually test branches, but the workaround (publish on branch push) isn't great
-    image: "pennlabs/penn-clubs-backend:latest"
+    image: "penn-clubs-backend:latest"
     environment:
       DJANGO_SETTINGS_MODULE: pennclubs.settings.ci
     labels:
@@ -25,7 +24,7 @@ services:
       - "traefik.http.routers.backend.entrypoints=web"
       - "traefik.http.services.backend.loadbalancer.server.port=80"
   frontend:
-    image: "pennlabs/penn-clubs-frontend:latest"
+    image: "penn-clubs-frontend:latest"
     command: ["yarn", "start"]
     environment:
       DOMAIN: traefik
