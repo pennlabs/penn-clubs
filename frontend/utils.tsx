@@ -197,10 +197,10 @@ export async function doBulkLookup(
         typeof item === 'string' ? `/${item}/?format=json` : item[1],
         data,
       ).then(async (resp) => {
+        const contents = await resp.text()
         try {
-          return await resp.json()
+          return JSON.parse(contents)
         } catch (e) {
-          const contents = await resp.text()
           // eslint-disable-next-line no-console
           console.error(`Body contents of failed JSON parsing: ${contents}`)
           throw e
