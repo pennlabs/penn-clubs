@@ -15,5 +15,8 @@ CACHES = {"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
 
 del PLATFORM_ACCOUNTS["REDIRECT_URI"]
 
+# Use a dummy backend for sending emails
+EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
+
 # Allow http callback for DLA
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
