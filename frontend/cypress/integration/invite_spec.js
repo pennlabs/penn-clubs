@@ -19,11 +19,11 @@ describe('Invitation tests', () => {
   it('Invites User', () => {
     cy.visit('/club/pppjo/edit#member')
     cy.contains('Invite Members').scrollIntoView()
-    cy.get('[data-testid="invite-emails-input"]').type(
+    cy.get('textarea[placeholder="Enter email addresses here!"]').type(
         'jmadison@seas.upenn.edu'
     )
 
-    cy.get('[data-testid="invite-emails-submit"]').click()
+    cy.contains('.button', 'Send Invite').click()
 
     cy.contains(/Sent invites? to 1 emails?/).should('be.visible')
   })
