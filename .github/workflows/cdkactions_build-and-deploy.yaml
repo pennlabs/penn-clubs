@@ -138,6 +138,7 @@ jobs:
         run: |-
           docker load --input backend-container/image.tar
           docker load --input frontend-container/image.tar
+          docker images
       - name: Run docker compose
         run: docker-compose -f docker-compose.test.yaml up -d
       - name: Run integration tests
