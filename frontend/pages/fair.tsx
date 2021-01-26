@@ -66,6 +66,9 @@ const FairPage = ({
       }, remainingTime)
       return () => clearTimeout(id)
     }
+    if (remainingTime < 0 && fair != null && !isFairOpen) {
+      setFairOpen(true)
+    }
   }, [])
 
   return (
