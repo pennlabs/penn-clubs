@@ -88,7 +88,7 @@ WSGI_APPLICATION = "pennclubs.wsgi.application"
 
 DATABASES = {
     "default": dj_database_url.config(
-        default="sqlite:///" + os.path.join(BASE_DIR, "db.sqlite3", conn_max_age=20)
+        default="sqlite:///" + os.path.join(BASE_DIR, "db.sqlite3"), conn_max_age=20
     )
 }
 
