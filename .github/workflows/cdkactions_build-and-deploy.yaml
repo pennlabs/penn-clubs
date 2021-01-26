@@ -50,7 +50,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
         options: '--health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5'
   publish-backend:
-    name: Publish backend
+    name: Build backend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -100,7 +100,7 @@ jobs:
     container:
       image: 'node:14'
   publish-frontend:
-    name: Publish frontend
+    name: Build frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -154,6 +154,7 @@ jobs:
           docker-compose -f docker-compose.test.yaml exec -T frontend yarn integration
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
+        if: failure()
         with:
           name: cypress-output
           path: /tmp/test-results
