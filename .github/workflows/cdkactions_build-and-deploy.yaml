@@ -138,8 +138,10 @@ jobs:
         run: |-
           ID=$(docker load --input backend-container/image.tar)
           docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-backend:latest
+          docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-backend:${{ github.sha }}
           ID=$(docker load --input frontend-container/image.tar)
           docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-frontend:latest
+          docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-frontend:${{ github.sha }}
           docker images
           mkdir -p /tmp/test-results
       - name: Run docker compose
@@ -162,6 +164,14 @@ jobs:
         with:
           name: cypress-output
           path: /tmp/test-results
+      - uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Publish images
+        run: |-
+          docker push pennlabs/penn-clubs-backend --all-tags
+          docker push pennlabs/penn-clubs-frontend --all-tags
     env:
       GIT_SHA: ${{ github.sha }}
     needs:
