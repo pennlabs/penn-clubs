@@ -1,8 +1,8 @@
 import json
 import re
-import bleach
 from urllib.parse import parse_qs, urlparse
 
+import bleach
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
