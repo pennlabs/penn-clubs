@@ -16,7 +16,6 @@ export const Text = styled.p<{ isGray?: boolean; color?: string }>`
 `
 
 export const TextQuote = styled.span`
-  white-space: pre-wrap;
   display: block;
   margin-top: 12px;
   margin-bottom: 5px;

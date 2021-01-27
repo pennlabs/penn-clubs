@@ -121,9 +121,13 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
               <b>{club.name}</b> provides the following information on how to
               get involved with the {OBJECT_NAME_SINGULAR}:
             </Text>
-            <Text>
-              <TextQuote>{club.how_to_get_involved}</TextQuote>
-            </Text>
+            <div className="mb-4">
+              <TextQuote>
+                <div
+                  dangerouslySetInnerHTML={{ __html: club.how_to_get_involved }}
+                />
+              </TextQuote>
+            </div>
           </>
         )}
         {isOpenMembership ? (

@@ -255,7 +255,7 @@ class Club(models.Model):
     linkedin = models.URLField(blank=True, null=True)
     github = models.URLField(blank=True, null=True)
     youtube = models.URLField(blank=True, null=True)
-    how_to_get_involved = models.TextField(blank=True)
+    how_to_get_involved = models.TextField(blank=True)  # html
     application_required = models.IntegerField(
         choices=APPLICATION_CHOICES, default=APPLICATION
     )
@@ -288,7 +288,7 @@ class Club(models.Model):
     # Hub@Penn fields
     available_virtually = models.BooleanField(default=False)
     appointment_needed = models.BooleanField(default=False)
-    signature_events = models.TextField(blank=True)
+    signature_events = models.TextField(blank=True)  # html
 
     # cache club rankings
     rank = models.IntegerField(default=0)

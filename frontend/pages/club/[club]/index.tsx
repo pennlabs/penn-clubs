@@ -259,9 +259,7 @@ const ClubPage = ({
           {involvement && !!involvement.length && (
             <StyledCard bordered>
               <StrongText>{FIELD_PARTICIPATION_LABEL}</StrongText>
-              <Text style={{ marginBottom: M0, wordBreak: 'break-word' }}>
-                <Linkify>{involvement}</Linkify>
-              </Text>
+              <div dangerouslySetInnerHTML={{ __html: involvement }} />
             </StyledCard>
           )}
           <Events data={events} />

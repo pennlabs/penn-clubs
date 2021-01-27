@@ -1,5 +1,6 @@
 import json
 import re
+import bleach
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
@@ -369,7 +370,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
         """
         Allow the description to have HTML tags that come from a whitelist.
         """
-        return clean(value)
+        return clean(bleach.linkify(value))
 
     def validate(self, data):
         start_time = data.get(
@@ -1121,9 +1122,21 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         out = clean(value).strip()
         if len(out) <= 10:
             raise serializers.ValidationError(
-                "You must enter a valid description for your club."
+                "You must enter a valid description for your organization."
             )
         return out
+
+    def validate_how_to_get_involved(self, value):
+        """
+        Allow the how to get involved field to have whitelisted HTML tags.
+        """
+        return clean(bleach.linkify(value))
+
+    def validate_signature_events(self, value):
+        """
+        Allow the signature events field to have whitelisted HTML tags.
+        """
+        return clean(bleach.linkify(value))
 
     def validate_email(self, value):
         """

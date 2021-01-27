@@ -6,7 +6,6 @@ import {
   useEffect,
   useState,
 } from 'react'
-import Linkify from 'react-linkify'
 import styled from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
@@ -103,11 +102,15 @@ export const ModalContent = styled.div`
   }
 `
 
-const Quote = styled.p`
+const Quote = styled.div`
+  & p {
+    margin-bottom: 0;
+  }
+
   border-left: 3px solid #ccc;
   padding: 3px 12px;
-  font-style: italic;
   color: #888;
+  margin-bottom: 1em;
 `
 
 /**
@@ -179,10 +182,13 @@ export const RequestMembershipButton = ({
             the "{FIELD_PARTICIPATION_LABEL}" section for more details!
           </p>
           <Quote>
-            <Linkify>
-              {club.how_to_get_involved ||
-                `There is currently no information about how to participate in this ${OBJECT_NAME_SINGULAR}.`}
-            </Linkify>
+            {club.how_to_get_involved && club.how_to_get_involved.length > 0 ? (
+              <div
+                dangerouslySetInnerHTML={{ __html: club.how_to_get_involved }}
+              />
+            ) : (
+              `There is currently no information about how to participate in this ${OBJECT_NAME_SINGULAR}.`
+            )}
           </Quote>
           <p>
             If you{' '}
