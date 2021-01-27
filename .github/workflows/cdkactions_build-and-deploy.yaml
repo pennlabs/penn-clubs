@@ -170,8 +170,10 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Publish images
         run: |-
-          docker push --all-tags pennlabs/penn-clubs-backend
-          docker push --all-tags pennlabs/penn-clubs-frontend
+          docker push pennlabs/penn-clubs-backend:latest
+          docker push pennlabs/penn-clubs-frontend:latest
+          docker push pennlabs/penn-clubs-backend:${{ github.sha }}
+          docker push pennlabs/penn-clubs-frontend:${{ github.sha }}
     env:
       GIT_SHA: ${{ github.sha }}
     needs:
