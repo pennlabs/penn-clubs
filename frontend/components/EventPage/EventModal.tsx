@@ -185,7 +185,7 @@ export const LiveStats = ({
 }: {
   stats: LiveStatsData
 }): ReactElement | null => {
-  if (stats.attending <= 0 && stats.attended <= 0) {
+  if (stats.attending - stats.officers + stats.attended <= 8) {
     return null
   }
 
@@ -200,7 +200,7 @@ export const LiveStats = ({
       <span className="has-text-grey mr-2">
         <Icon name="user" /> {stats.attended} attended
       </span>
-      {stats.time > 0 && (
+      {stats.time >= 60 && (
         <span className="has-text-primary mr-2">
           <Icon name="clock" /> {formatDuration(stats.time)}
         </span>
