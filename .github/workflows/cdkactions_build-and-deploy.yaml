@@ -169,6 +169,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Publish images
+        if: github.ref == 'refs/heads/master'
         run: |-
           docker push pennlabs/penn-clubs-backend:latest
           docker push pennlabs/penn-clubs-frontend:latest
