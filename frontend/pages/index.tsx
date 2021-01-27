@@ -178,22 +178,39 @@ const SearchTags = ({
 const TopSearchBar = ({ onChange }): ReactElement => {
   const searchTimeout = useRef<number | null>(null)
   const [searchValue, setSearchValue] = useState<string>('')
+
+  const updateSearchValue = (value: string): void => {
+    if (searchTimeout.current != null) {
+      window.clearTimeout(searchTimeout.current)
+    }
+    setSearchValue(value)
+    searchTimeout.current = window.setTimeout(() => {
+      searchTimeout.current = null
+      onChange(value)
+    }, 100)
+  }
+
   return (
-    <input
-      className="input mb-5"
-      placeholder={`Search for ${OBJECT_NAME_PLURAL}...`}
-      value={searchValue}
-      onChange={(e) => {
-        if (searchTimeout.current != null) {
-          window.clearTimeout(searchTimeout.current)
-        }
-        setSearchValue(e.target.value)
-        searchTimeout.current = window.setTimeout(() => {
-          searchTimeout.current = null
-          onChange(e.target.value)
-        }, 100)
-      }}
-    />
+    <div className="control has-icons-right">
+      <input
+        className="input mb-5"
+        placeholder={`Search for ${OBJECT_NAME_PLURAL}...`}
+        value={searchValue}
+        onChange={(e) => updateSearchValue(e.target.value)}
+      />
+      {searchValue.length > 0 && (
+        <span
+          className="icon is-small is-right"
+          onClick={() => {
+            setSearchValue('')
+            onChange('')
+          }}
+          style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+        >
+          <Icon name="x" />
+        </span>
+      )}
+    </div>
   )
 }
 
