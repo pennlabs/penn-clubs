@@ -38,17 +38,17 @@ jobs:
           cd backend
           pipenv run codecov --root ROOT --flags backend
     container:
-      image: 'python:3.8'
+      image: "python:3.8"
     env:
-      DATABASE_URL: 'postgres://postgres:postgres@postgres:5432/postgres'
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/postgres"
     services:
       postgres:
-        image: 'postgres:12'
+        image: "postgres:12"
         env:
           POSTGRES_USER: postgres
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: postgres
-        options: '--health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5'
+        options: "--health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5"
   publish-backend:
     name: Build backend
     runs-on: ubuntu-latest
@@ -66,8 +66,8 @@ jobs:
           context: backend
           file: backend/Dockerfile
           push: false
-          tags: 'pennlabs/penn-clubs-backend:latest,pennlabs/penn-clubs-backend:${{ github.sha }}'
-          cache-from: 'type=registry,ref=pennlabs/penn-clubs-backend:latest'
+          tags: "pennlabs/penn-clubs-backend:latest,pennlabs/penn-clubs-backend:${{ github.sha }}"
+          cache-from: "type=registry,ref=pennlabs/penn-clubs-backend:latest"
           outputs: type=oci,dest=/tmp/image.tar
       - uses: actions/upload-artifact@v2
         with:
@@ -82,7 +82,7 @@ jobs:
       - name: Cache
         uses: actions/cache@v2
         with:
-          path: '**/node_modules'
+          path: "**/node_modules"
           key: v0-${{ hashFiles('frontend/yarn.lock') }}
       - name: Install Dependencies
         run: |-
@@ -98,7 +98,7 @@ jobs:
           cd frontend
           yarn run codecov -p $ROOT -F frontend
     container:
-      image: 'node:14'
+      image: "node:14"
   publish-frontend:
     name: Build frontend
     runs-on: ubuntu-latest
@@ -115,8 +115,8 @@ jobs:
         with:
           context: frontend
           file: frontend/Dockerfile
-          tags: 'pennlabs/penn-clubs-frontend:latest,pennlabs/penn-clubs-frontend:${{ github.sha }}'
-          cache-from: 'type=registry,ref=pennlabs/penn-clubs-frontend:latest'
+          tags: "pennlabs/penn-clubs-frontend:latest,pennlabs/penn-clubs-frontend:${{ github.sha }}"
+          cache-from: "type=registry,ref=pennlabs/penn-clubs-frontend:latest"
           outputs: type=oci,dest=/tmp/image.tar
       - uses: actions/upload-artifact@v2
         with:
@@ -137,8 +137,13 @@ jobs:
       - name: Load docker images
         run: |-
           ID=$(docker load --input backend-container/image.tar)
+          echo "Pre-retag"
+          docker images
           docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-backend:latest
           docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-backend:${{ github.sha }}
+          echo "post-retag"
+          docker images
+          echo "done"
           ID=$(docker load --input frontend-container/image.tar)
           docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-frontend:latest
           docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-frontend:${{ github.sha }}
@@ -180,10 +185,46 @@ jobs:
     needs:
       - publish-backend
       - publish-frontend
+  publish-images:
+    name: Publish Images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: |
+            backend-container
+            frontend-container
+      - name: Load docker images
+        run: |-
+          ID=$(docker load --input backend-container/image.tar)
+          docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-backend:latest
+          docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-backend:${{ github.sha }}
+          ID=$(docker load --input frontend-container/image.tar)
+          docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-frontend:latest
+          docker tag ${ID##Loaded image ID: } pennlabs/penn-clubs-frontend:${{ github.sha }}
+          docker images
+          mkdir -p /tmp/test-results
+      - uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Publish images
+        if: github.ref == 'refs/heads/master'
+        run: |-
+          docker push pennlabs/penn-clubs-backend:latest
+          docker push pennlabs/penn-clubs-frontend:latest
+          docker push pennlabs/penn-clubs-backend:${{ github.sha }}
+          docker push pennlabs/penn-clubs-frontend:${{ github.sha }}
+    env:
+      GIT_SHA: ${{ github.sha }}
+    needs:
+      - integration-tests
   deploy:
     runs-on: ubuntu-latest
     container:
-      image: 'pennlabs/helm-tools:c964e53d3e3e88d36677e84f5437da40a289c7a4'
+      image: "pennlabs/helm-tools:c964e53d3e3e88d36677e84f5437da40a289c7a4"
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
@@ -212,4 +253,4 @@ jobs:
           DO_AUTH_TOKEN: ${{ secrets.DO_AUTH_TOKEN }}
           K8S_CLUSTER_ID: ${{ secrets.K8S_CLUSTER_ID }}
     needs:
-      - integration-tests
+      - publish-images
