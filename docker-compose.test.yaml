@@ -18,6 +18,8 @@ services:
     image: "pennlabs/penn-clubs-backend:latest"
     environment:
       DJANGO_SETTINGS_MODULE: pennclubs.settings.ci
+    healthcheck:
+      test: python manage.py migrate --check
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`traefik`) && PathPrefix(`/api`)"
