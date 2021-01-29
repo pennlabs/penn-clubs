@@ -40,13 +40,32 @@ const styles = {
    }
  },
 }
+
+type filterOption = {
+  options : string[],
+  label: string,
+}
+
+type Row= { [key: string]: any }
+
+type Action = {
+  name: string,
+  classes: string,
+  Icon : string,
+  clickFunction : (any) => any
+}
+
+type selectFilter = {
+  value: string,
+  label: string
+}
  
 type tableProps = {
- columns: any
- data: any
- searchableColumns: any
- filterOptions: any
- actions?: any
+ columns: Row[],
+ data: Row[],
+ searchableColumns: string[]
+ filterOptions: filterOption [],
+ actions?: Action[]
 }
  
 const Styles = styled.div`
@@ -129,12 +148,9 @@ const Table = ({
  filterOptions,
  actions,
 }: tableProps): ReactElement => {
- const [searchQuery, setSearchQuery] = useState<any>('')
- const [tableData, setTableData] = useState<any>([])
- const [selectedFilter, setSelectedFilter] = useState<any>({
-   value: '',
-   label: '',
- })
+ const [searchQuery, setSearchQuery] = useState<string>('')
+ const [tableData, setTableData] = useState<Row[]>([])
+ const [selectedFilter, setSelectedFilter] = useState<selectFilter[]>([])
  useEffect(() => {
    const searchedData = data.filter((item) => {
      if (!searchQuery || searchQuery.length < 0) return true
@@ -160,8 +176,12 @@ const Table = ({
      return valid
    })
    const filteredData = searchedData.filter((item) => {
-     if (selectedFilter.value.length > 0 && selectedFilter.label.length > 0) {
-       return item[selectedFilter.value] === selectedFilter.label
+     if (selectedFilter && selectedFilter.length > 0) {
+       let valid = true;
+       selectedFilter.forEach(filter => {
+        if (item[filter.value] !== filter.label) valid = false
+       })
+       return valid;
      } else return true
    })
  
@@ -230,8 +250,10 @@ const Table = ({
  }
  
  const handleFilterChange = (value) => {
-   setSelectedFilter(value)
-  
+   if (value){
+   const newFilters = [...selectedFilter, value]
+   setSelectedFilter(newFilters) 
+   }
  }
  
  return (
@@ -261,7 +283,7 @@ const Table = ({
            {filterOptions.map((filterOption) => (
                <div style={{marginRight:"10px"}}>
                <Select
-                 value={selectedFilter ? selectedFilter.label : ''}
+                 value={selectedFilter[filterOption.label]}
                  styles={styles}
                  components={components}
                  onChange={handleFilterChange}
@@ -309,7 +331,7 @@ const Table = ({
                  return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
                })}
                <td>
-                 <div className="buttons">
+                {actions && <div className="buttons">
                    {actions.map((action) => {
                      return (
                        <button
@@ -322,7 +344,7 @@ const Table = ({
                        </button>
                      )
                    })}
-                 </div>
+                 </div> }
                </td>
              </tr>
            )

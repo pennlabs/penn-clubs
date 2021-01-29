@@ -150,7 +150,14 @@ export const ModelTable = ({
     {
       label: 'email',
       options: ['bfranklin@seas.upenn.edu', "ajackson@sas.upenn.edu"],
+      
     },
+    {
+      label: 'name',
+      options: ['Thomas Jefferson', "James Madison"],
+      
+    },
+
     
   ]
   return (
