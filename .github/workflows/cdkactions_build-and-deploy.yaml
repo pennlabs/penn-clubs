@@ -140,11 +140,11 @@ jobs:
         run: docker-compose -f docker-compose.test.yaml up -d
       - name: Run integration tests
         run: |-
-          for try in {1..10}; do
-            docker-compose -f docker-compose.test.yaml exec -T backend python manage.py migrate --check && break
-            echo $try
-            sleep 5
-          done
+          # for try in {1..10}; do
+          #   docker-compose -f docker-compose.test.yaml exec -T backend python manage.py migrate --check && break
+          #   echo $try
+          #   sleep 5
+          # done
           docker-compose -f docker-compose.test.yaml exec -T backend python manage.py populate
           docker-compose -f docker-compose.test.yaml exec -T frontend yarn integration
       - name: Print server logs
