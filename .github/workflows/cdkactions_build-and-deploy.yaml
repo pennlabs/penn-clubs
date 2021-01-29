@@ -142,6 +142,7 @@ jobs:
         run: |-
           for try in {1..10}; do
             docker-compose -f docker-compose.test.yaml exec -T backend python manage.py migrate --check && break
+            echo $try
             sleep 5
           done
           docker-compose -f docker-compose.test.yaml exec -T backend python manage.py populate
