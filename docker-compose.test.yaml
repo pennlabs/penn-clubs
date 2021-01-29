@@ -27,6 +27,9 @@ services:
       DATABASE_URL: "postgres://postgres:postgres@postgres:5432/postgres"
     healthcheck:
       test: python manage.py migrate --check
+      interval: 10s
+      timeout: 5s
+      retries: 5
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`traefik`) && PathPrefix(`/api`)"
