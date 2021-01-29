@@ -128,7 +128,6 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -167,6 +166,7 @@ jobs:
   publish-images:
     name: Publish Images
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -184,7 +184,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Publish images
-        if: github.ref == 'refs/heads/master'
         run: |-
           docker push pennlabs/penn-clubs-backend:latest
           docker push pennlabs/penn-clubs-frontend:latest
