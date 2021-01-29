@@ -15,6 +15,7 @@ import {
  HOVER_GRAY,
  ALLBIRDS_GRAY,
  CLUBS_GREY,
+ BLUE,
  FOCUS_GRAY,
 } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
@@ -61,7 +62,7 @@ const Styles = styled.div`
    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
  
    thead tr {
-     background-color: ${GREEN};
+     background-color: ${BLUE};
      color: ${WHITE};
      text-align: left;
    }
@@ -84,7 +85,7 @@ const Styles = styled.div`
    }
  
    tbody tr:last-of-type {
-     border-bottom: 2px solid ${GREEN};
+     border-bottom: 2px solid ${BLUE};
    }
 
  }
@@ -239,7 +240,7 @@ const Table = ({
        <div className="is-pulled-right">
          <SearchWrapper>
            <Input
-             className="input is-primary"
+             className="input"
              value={searchQuery}
              placeholder={`search ${
                tableData.length < 1 ? data.length : tableData.length

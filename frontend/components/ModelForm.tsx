@@ -149,11 +149,7 @@ export const ModelTable = ({
   const filterOptions = [
     {
       label: 'email',
-      options: ['bfranklin@seas.upenn.edu', 'Eric', 'Campell'],
-    },
-    {
-      label: 'name',
-      options: ['bfranklin@seas.upenn.edu', 'John Adams', 'Campell'],
+      options: ['bfranklin@seas.upenn.edu', "ajackson@sas.upenn.edu"],
     },
     
   ]
