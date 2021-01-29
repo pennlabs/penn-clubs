@@ -1,6 +1,12 @@
 version: "3"
 
 services:
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
   traefik:
     image: "traefik:v2.3"
     container_name: "traefik"
@@ -18,6 +24,7 @@ services:
     image: "pennlabs/penn-clubs-backend:latest"
     environment:
       DJANGO_SETTINGS_MODULE: pennclubs.settings.ci
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/postgres"
     healthcheck:
       test: python manage.py migrate --check
     labels:
