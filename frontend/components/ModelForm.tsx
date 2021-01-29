@@ -5,6 +5,7 @@ import styled from 'styled-components'
 
 import { doApiRequest, formatResponse, titleize } from '../utils'
 import { Icon, Loading } from './common'
+import Table from './common/Table'
 import { FormStyle } from './FormComponents'
 
 const ModelItem = styled.div`
@@ -145,92 +146,27 @@ export const ModelTable = ({
     usePagination,
   )
 
+  const filterOptions = [
+    {
+      label: 'email',
+      options: ['bfranklin@seas.upenn.edu', 'Eric', 'Campell'],
+    },
+    {
+      label: 'name',
+      options: ['bfranklin@seas.upenn.edu', 'John Adams', 'Campell'],
+    },
+    
+  ]
   return (
     <>
-      <table className="table is-fullwidth" {...getTableProps()}>
-        <thead>
-          <tr>
-            {tableFields.map((a, i) => (
-              <th key={i}>{a.label || titleize(a.name)}</th>
-            ))}
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody {...getTableBodyProps()}>
-          {objects.length === 0 && (
-            <tr>
-              <td colSpan={tableFields.length + 1}>
-                There are no {noun.toLowerCase()}s to display.
-              </td>
-            </tr>
-          )}
-          {page.map(
-            ({ original: object }, i: number): ReactElement => (
-              <tr key={i}>
-                {tableFields.map((a, i) => (
-                  <td key={i}>
-                    {a.converter
-                      ? a.converter(object[a.name], object)
-                      : object[a.name]}
-                  </td>
-                ))}
-                <td>
-                  <div className="buttons">
-                    {allowEditing && (
-                      <button
-                        onClick={() => onEdit(object)}
-                        className="button is-primary is-small"
-                      >
-                        <Icon name="edit" alt="edit" /> Edit
-                      </button>
-                    )}
-                    {allowDeletion && (
-                      <button
-                        onClick={() => {
-                          if (confirmDeletion) {
-                            if (
-                              confirm(
-                                `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
-                              )
-                            ) {
-                              onDelete(object)
-                            }
-                          } else {
-                            onDelete(object)
-                          }
-                        }}
-                        className="button is-danger is-small"
-                      >
-                        <Icon name="trash" alt="delete" /> {deleteVerb}
-                      </button>
-                    )}
-                    {actions && actions(object)}
-                  </div>
-                </td>
-              </tr>
-            ),
-          )}
-        </tbody>
-      </table>
-      {pageOptions.length > 1 && (
-        <div className="is-clearfix">
-          <select
-            value={pageIndex}
-            onChange={(e) => gotoPage(Number(e.target.value))}
-            className="input is-small"
-            style={{ maxWidth: 150 }}
-          >
-            {pageOptions.map(
-              (idx: number): ReactElement => (
-                <option value={idx}>Page {idx + 1}</option>
-              ),
-            )}
-          </select>
-          <span className="is-pulled-right">
-            {objects.length} total entries, {pageSize} entries per page
-          </span>
-        </div>
-      )}
+      <Table
+        data={objects}
+        columns={tableFields}
+        searchableColumns={['name']}
+        filterOptions = {filterOptions}
+        actions = {[{name: "edit", classes:"button is-primary is-small", Icon:"edit", clickFunction:(target) => onEdit(target) } ,
+         {name:"delete", classes:"button is-danger is-small", Icon:"trash", clickFunction:(target) => onEdit(target) }]}
+      />
     </>
   )
 }
