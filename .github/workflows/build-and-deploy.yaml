@@ -140,7 +140,9 @@ jobs:
         run: docker-compose -f docker-compose.test.yaml up -d
       - name: Run integration tests
         run: |-
+          set -x
           for try in {1..10}; do
+            echo $try
             docker-compose -f docker-compose.test.yaml exec -T backend python manage.py migrate --check && break
             sleep 5
           done
