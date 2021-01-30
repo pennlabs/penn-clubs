@@ -152,10 +152,18 @@ jobs:
       - name: Populate backend
         run: docker-compose -f docker-compose.test.yaml exec -T backend python manage.py populate
       - name: Run integration tests
-        run: docker-compose -f docker-compose.test.yaml exec -T frontend yarn integration
+        run: |-
+          mkdir -p /tmp/test-results
+          docker-compose -f docker-compose.test.yaml exec -T frontend yarn integration
       - name: Print logs on failure
         if: failure()
         run: docker-compose -f docker-compose.test.yaml logs
+      - name: Upload artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: cypress-output
+          path: /tmp/test-results
     env:
       GIT_SHA: ${{ github.sha }}
     needs:
