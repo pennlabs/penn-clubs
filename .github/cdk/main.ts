@@ -1,4 +1,3 @@
-import * as dedent from 'dedent-js';
 import { App } from "cdkactions";
 import { LabsApplicationStack } from '@pennlabs/kraken';
 
@@ -9,8 +8,7 @@ new LabsApplicationStack(app, {
   dockerImageBaseName: 'penn-clubs',
   integrationTests: true,
   integrationProps: {
-    testCommand: dedent`docker-compose -f docker-compose.test.yaml exec backend python manage.py populate
-    docker-compose -f docker-compose.test.yaml exec frontend yarn integration`,
+    testCommand: 'docker-compose -f docker-compose.test.yaml exec -T frontend yarn integration',
   },
 });
 app.synth();

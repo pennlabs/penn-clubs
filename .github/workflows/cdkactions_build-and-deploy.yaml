@@ -143,12 +143,16 @@ jobs:
           docker load --input build-frontend/image.tar
       - name: Run docker compose
         run: docker-compose up -d -f docker-compose.test.yaml
-      - name: Populate backend
-        run: docker run backend python manage.py populate
-      - name: Run integration tests
+      - name: Wait for backend
         run: |-
-          docker-compose -f docker-compose.test.yaml exec backend python manage.py populate
-          docker-compose -f docker-compose.test.yaml exec frontend yarn integration
+          for try in {1..10}; do
+            docker-compose -f docker-compose.test.yaml exec -T backend python manage.py migrate --check && break
+            sleep 5
+          done
+      - name: Populate backend
+        run: docker-compose -f docker-compose.test.yaml exec -T backend python manage.py populate
+      - name: Run integration tests
+        run: docker-compose -f docker-compose.test.yaml exec -T frontend yarn integration
       - name: Print logs on failure
         if: failure()
         run: docker-compose -f docker-compose.test.yaml logs
