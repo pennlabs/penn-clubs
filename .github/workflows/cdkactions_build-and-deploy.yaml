@@ -155,6 +155,13 @@ jobs:
         run: docker-compose -f docker-compose.test.yaml exec -T backend python manage.py populate
       - name: Run integration tests
         run: docker-compose -f docker-compose.test.yaml exec -T frontend yarn integration
+      - name: Delete artifacts when no longer needed
+        if: failure() || github.ref != 'refs/heads/master'
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: |-
+            build-backend
+            build-frontend
       - name: Print logs on failure
         if: failure()
         run: docker-compose -f docker-compose.test.yaml logs
