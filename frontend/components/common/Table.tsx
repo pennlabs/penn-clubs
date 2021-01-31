@@ -51,7 +51,7 @@ type Row= { [key: string]: any }
 type Action = {
   name: string,
   classes: string,
-  Icon : string,
+  icon : string,
   clickFunction : (any) => any
 }
 
@@ -71,43 +71,6 @@ type tableProps = {
 const Styles = styled.div`
  padding: 1rem;
  width: 100%;
- 
- table {
-   border-collapse: collapse;
-   margin: 25px 0;
-   font-size: 0.95em;
-   font-family: sans-serif;
-   min-width: 400px;
-   box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
- 
-   thead tr {
-     background-color: ${BLUE};
-     color: ${WHITE};
-     text-align: left;
-   }
-   thead th {
-    color: ${WHITE};
-    text-transform : capitalize
-  }
- 
-   th,
-   td {
-     padding: 8px 15px;
-   }
- 
-   tbody tr {
-     border-bottom: 1px solid #dddddd;
-   }
- 
-   tbody tr:nth-of-type(even) {
-     background-color: ${HOVER_GRAY};
-   }
- 
-   tbody tr:last-of-type {
-     border-bottom: 2px solid ${BLUE};
-   }
-
- }
 `
  
 const SearchWrapper = styled.div`
@@ -153,9 +116,8 @@ const Table = ({
  const [selectedFilter, setSelectedFilter] = useState<selectFilter[]>([])
  useEffect(() => {
    const searchedData = data.filter((item) => {
-     if (!searchQuery || searchQuery.length < 0) return true
-     const searschString = searchQuery
-     if (!searschString || searschString.length < 3) {
+     if (!searchQuery) return true
+     if (!searchQuery || searchQuery.length < 3) {
        return true
      }
      let valid = false
@@ -163,13 +125,13 @@ const Table = ({
        const strings = item[searchableColumns[searchId]].split(' ')
        valid = strings.reduce(
          (acc, item) =>
-           acc || item.toLowerCase().startsWith(searschString.toLowerCase()),
+           acc || item.toLowerCase().startsWith(searchQuery.toLowerCase()),
          false,
        )
        if (
          item[searchableColumns[searchId]]
            .toLowerCase()
-           .startsWith(searschString.toLowerCase())
+           .startsWith(searchQuery.toLowerCase())
        )
          valid = true
      }
@@ -178,7 +140,7 @@ const Table = ({
    const filteredData = searchedData.filter((item) => {
      if (selectedFilter && selectedFilter.length > 0) {
        let valid = true;
-       selectedFilter.forEach(filter => {
+       selectedFilter.every(filter => {
         if (item[filter.value] !== filter.label) valid = false
        })
        return valid;
@@ -240,9 +202,7 @@ const Table = ({
  )
  
  const handleSearchChange = (e) => {
-   if (e.target.value.length >= 0) {
      setSearchQuery(e.target.value)
-   }
  }
  
  const components = {
@@ -340,7 +300,7 @@ const Table = ({
                            action.clickFunction(row.original)
                          }}
                        >
-                         <Icon name={action.Icon} alt="edit" /> 
+                         <Icon name={action.icon} alt="edit" /> {action.name}
                        </button>
                      )
                    })}

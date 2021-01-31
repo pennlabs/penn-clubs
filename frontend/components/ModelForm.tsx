@@ -163,12 +163,24 @@ export const ModelTable = ({
   return (
     <>
       <Table
-        data={objects}
+        data={objects}  
         columns={tableFields}
         searchableColumns={['name']}
         filterOptions = {filterOptions}
-        actions = {[{name: "edit", classes:"button is-primary is-small", Icon:"edit", clickFunction:(target) => onEdit(target) } ,
-         {name:"delete", classes:"button is-danger is-small", Icon:"trash", clickFunction:(target) => onEdit(target) }]}
+        actions = {[{name: "edit", classes:"button is-primary is-small", icon:"edit", clickFunction:(target) => onEdit(target) } ,
+         {name:"delete", classes:"button is-danger is-small", icon:"trash", clickFunction: (target) => {
+          if (confirmDeletion) {
+            if (
+              confirm(
+                `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
+              )
+            ) {
+              onDelete(target)
+            }
+          } else {
+            onDelete(target)
+          }
+        } }]}
       />
     </>
   )
