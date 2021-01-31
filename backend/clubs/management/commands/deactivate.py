@@ -1,4 +1,6 @@
-from django.core.management.base import BaseCommand
+import sys
+
+from django.core.management.base import BaseCommand, CommandError
 
 from clubs.models import Club
 
@@ -6,6 +8,7 @@ from clubs.models import Club
 class Command(BaseCommand):
     help = "Deactivates all clubs in the database. This should be used at \
             the beginning of the school year when clubs must be renewed."
+    web_execute = True
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -28,7 +31,8 @@ class Command(BaseCommand):
             choices=["deactivate", "emails", "all", "remind"],
             type=str,
             help="Specify the actions that you want to take, "
-            "either only deactivating the clubs, only sending the emails, or both.",
+            "either only deactivating the clubs, only sending the reminder emails, "
+            "or performing both actions.",
         )
 
     def handle(self, *args, **kwargs):
@@ -49,6 +53,13 @@ class Command(BaseCommand):
                     "to abort."
                 )
             )
+
+            if not sys.stdin.isatty():
+                raise CommandError(
+                    "This is not an interactive terminal, "
+                    "cannot prompt for confirmation. "
+                    "Use the --force flag instead."
+                )
 
             correct = "deactivate all clubs"
             self.stdout.write("Input:", ending=" ")
