@@ -287,9 +287,11 @@ const Table = ({
            prepareRow(row)
            return (
              <tr {...row.getRowProps()}>
-               {row.cells.map((cell) => {
-                 return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
-               })}
+               {columns.map(column => {
+                 return <td>
+                 {column.render? column.render(row.id): row.original[column.name]}
+               </td>})}
+ 
                <td>
                 {actions && <div className="buttons">
                    {actions.map((action) => {

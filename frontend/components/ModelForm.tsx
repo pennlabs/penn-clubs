@@ -146,6 +146,8 @@ export const ModelTable = ({
     usePagination,
   )
 
+  
+
   const filterOptions = [
     {
       label: 'email',
@@ -157,9 +159,15 @@ export const ModelTable = ({
       options: ['Thomas Jefferson', "James Madison"],
       
     },
-
-    
   ]
+
+  tableFields = tableFields.map(column => {
+    console.log(column)
+    return {... column,
+      render: column.converter? (id) => column.converter(objects[id][column.name],objects[id]) : (id) => <span>{objects[id][column.name]}</span>
+    }
+  })
+
   return (
     <>
       <Table
