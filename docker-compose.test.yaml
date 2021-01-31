@@ -39,7 +39,7 @@ services:
     image: "pennlabs/penn-clubs-frontend:latest"
     command: ["yarn", "start"]
     environment:
-      DOMAIN: traefik
+      DOMAIN: http://traefik
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`traefik`)"
