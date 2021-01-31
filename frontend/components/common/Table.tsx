@@ -11,8 +11,6 @@ import { Icon } from '.'
 import {
  BORDER,
  WHITE,
- GREEN,
- HOVER_GRAY,
  ALLBIRDS_GRAY,
  CLUBS_GREY,
  BLUE,
@@ -109,7 +107,6 @@ const Table = ({
  data,
  searchableColumns,
  filterOptions,
- actions,
 }: tableProps): ReactElement => {
  const [searchQuery, setSearchQuery] = useState<string>('')
  const [tableData, setTableData] = useState<Row[]>([])
@@ -278,7 +275,6 @@ const Table = ({
                  </span>
                </th>
              ))}
-             {actions && <th>Actions</th>}
            </tr>
          ))}
        </thead>
@@ -286,28 +282,11 @@ const Table = ({
          {page.map((row, i) => {
            prepareRow(row)
            return (
-             <tr {...row.getRowProps()}>
+             <tr key={row.id} {...row.getRowProps()}>
                {columns.map(column => {
                  return <td>
                  {column.render? column.render(row.id): row.original[column.name]}
                </td>})}
- 
-               <td>
-                {actions && <div className="buttons">
-                   {actions.map((action) => {
-                     return (
-                       <button
-                         className={action.classes}
-                         onClick={() => {
-                           action.clickFunction(row.original)
-                         }}
-                       >
-                         <Icon name={action.icon} alt="edit" /> {action.name}
-                       </button>
-                     )
-                   })}
-                 </div> }
-               </td>
              </tr>
            )
          })}

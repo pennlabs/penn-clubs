@@ -164,8 +164,44 @@ export const ModelTable = ({
   tableFields = tableFields.map(column => {
     console.log(column)
     return {... column,
-      render: column.converter? (id) => column.converter(objects[id][column.name],objects[id]) : (id) => <span>{objects[id][column.name]}</span>
+      render: column.converter? (id) => column.converter(objects[id][column.name],objects[id]) : null
     }
+  })
+  tableFields.push({
+    name:"Actions",
+    render: (id) => 
+    <div className="buttons">
+    {allowEditing && (
+      <button
+        onClick={() => onEdit(objects[id])}
+        className="button is-primary is-small"
+      >
+        <Icon name="edit" alt="edit" /> Edit
+      </button>
+    )}
+    {allowDeletion && (
+      <button
+        onClick={() => {
+          if (confirmDeletion) {
+            if (
+              confirm(
+                `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
+              )
+            ) {
+              onDelete(objects[id])
+            }
+          } else {
+            onDelete(objects[id])
+          }
+        }}
+        className="button is-danger is-small"
+      >
+        <Icon name="trash" alt="delete" /> {deleteVerb}
+      </button>
+    )}
+    {actions && actions(object)}
+  </div>
+    
   })
 
   return (
@@ -175,20 +211,6 @@ export const ModelTable = ({
         columns={tableFields}
         searchableColumns={['name']}
         filterOptions = {filterOptions}
-        actions = {[{name: "edit", classes:"button is-primary is-small", icon:"edit", clickFunction:(target) => onEdit(target) } ,
-         {name:"delete", classes:"button is-danger is-small", icon:"trash", clickFunction: (target) => {
-          if (confirmDeletion) {
-            if (
-              confirm(
-                `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
-              )
-            ) {
-              onDelete(target)
-            }
-          } else {
-            onDelete(target)
-          }
-        } }]}
       />
     </>
   )
