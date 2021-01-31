@@ -28,6 +28,7 @@ from clubs.views import (
     QuestionAnswerViewSet,
     ReportViewSet,
     SchoolViewSet,
+    SearchViewSet,
     ScriptExecutionView,
     StudentTypeViewSet,
     SubscribeViewSet,
@@ -53,6 +54,7 @@ router.register(r"badges", BadgeViewSet, basename="badges")
 router.register(r"favorites", FavoriteViewSet, basename="favorites")
 router.register(r"subscriptions", SubscribeViewSet, basename="subscribes")
 router.register(r"clubvisits", ClubVisitViewSet, basename="clubvisits")
+router.register(r"searches", SearchViewSet, basename="searches")
 router.register(r"memberships", MembershipViewSet, basename="members")
 router.register(r"requests", MembershipRequestViewSet, basename="requests")
 

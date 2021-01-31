@@ -35,6 +35,7 @@ from clubs.models import (
     QuestionAnswer,
     Report,
     School,
+    Search,
     StudentType,
     Subscribe,
     Tag,
@@ -1529,6 +1530,19 @@ class UserClubVisitWriteSerializer(UserClubVisitSerializer):
 
     class Meta(UserClubVisitSerializer.Meta):
         pass
+
+
+class SearchSerializer(serializers.ModelSerializer):
+    """
+    Used by users to enter search result into backend.
+    """
+
+    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    query = serializers.CharField(allow_null=True)
+
+    class Meta:
+        model = Search
+        fields = ("person", "query")
 
 
 class MembershipRequestSerializer(serializers.ModelSerializer):
