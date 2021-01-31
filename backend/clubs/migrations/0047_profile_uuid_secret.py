@@ -13,6 +13,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="profile", name="uuid_secret", field=models.UUIDField(default=uuid.uuid4),
+            model_name="profile",
+            name="uuid_secret",
+            field=models.UUIDField(default=uuid.uuid4),
         ),
     ]

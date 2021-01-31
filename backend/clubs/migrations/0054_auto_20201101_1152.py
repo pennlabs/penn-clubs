@@ -14,14 +14,16 @@ class Migration(migrations.Migration):
             model_name="club",
             name="recruiting_cycle",
             field=models.IntegerField(
-                choices=[(1, "Unknown"), (2, "Fall"), (3, "Spring"), (4, "Both")], default=1
+                choices=[(1, "Unknown"), (2, "Fall"), (3, "Spring"), (4, "Both")],
+                default=1,
             ),
         ),
         migrations.AddField(
             model_name="historicalclub",
             name="recruiting_cycle",
             field=models.IntegerField(
-                choices=[(1, "Unknown"), (2, "Fall"), (3, "Spring"), (4, "Both")], default=1
+                choices=[(1, "Unknown"), (2, "Fall"), (3, "Spring"), (4, "Both")],
+                default=1,
             ),
         ),
         migrations.AlterField(

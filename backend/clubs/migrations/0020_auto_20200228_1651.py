@@ -34,7 +34,9 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddField(
-            model_name="club", name="approved_on", field=models.DateTimeField(null=True),
+            model_name="club",
+            name="approved_on",
+            field=models.DateTimeField(null=True),
         ),
         migrations.AddField(
             model_name="membershiprequest",
@@ -42,6 +44,8 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AlterField(
-            model_name="club", name="approved", field=models.BooleanField(default=None, null=True),
+            model_name="club",
+            name="approved",
+            field=models.BooleanField(default=None, null=True),
         ),
     ]

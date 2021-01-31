@@ -48,6 +48,7 @@ httptools = "*"
 ics = "*"
 urlextract = "*"
 jsonref = "*"
+unittest-xml-reporting = "*"
 
 [requires]
 python_version = "3"

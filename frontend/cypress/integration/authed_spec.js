@@ -135,8 +135,8 @@ describe('Authenticated user tests', () => {
 
     cy.visit('/club/test-new-club/edit#member')
     cy.contains('Invite Members').scrollIntoView()
-    cy.get('[data-testid="invite-emails-input"]').type(fakeEmails.join(','))
-    cy.get('[data-testid="invite-emails-submit"]').click()
+    cy.get('textarea[placeholder="Enter email addresses here!"]').type(fakeEmails.join(','), {delay: 1})
+    cy.contains('.button', 'Send Invite').click()
     cy.contains(/Sent invites? to 50 emails?/).should('be.visible')
 
     // delete created club

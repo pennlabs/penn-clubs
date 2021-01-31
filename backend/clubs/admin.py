@@ -74,13 +74,16 @@ class HasInviteListFilter(admin.SimpleListFilter):
 def do_merge_clubs(modeladmin, request, queryset):
     if queryset.count() < 2:
         modeladmin.message_user(
-            request, "You must select at least two clubs to merge!", level=messages.ERROR
+            request,
+            "You must select at least two clubs to merge!",
+            level=messages.ERROR,
         )
         return
-    if queryset.count() > 10:
+    if queryset.count() > 5:
         modeladmin.message_user(
             request,
-            "You have selected more than 10 clubs, you probably do not want to do this.",
+            "You have selected more than 5 clubs, "
+            "you probably do not want to do this.",
             level=messages.ERROR,
         )
         return
@@ -91,7 +94,9 @@ def do_merge_clubs(modeladmin, request, queryset):
         merge_clubs(first, club)
     modeladmin.message_user(
         request,
-        "Merged the following clubs: {} into {}".format(", ".join(club_names), first.name),
+        "Merged the following clubs: {} into {}".format(
+            ", ".join(club_names), first.name
+        ),
         level=messages.SUCCESS,
     )
 
@@ -108,7 +113,9 @@ def send_edit_reminder(modeladmin, request, queryset):
         total_count += 1
     modeladmin.message_user(
         request,
-        "Sent edit page reminder emails to {}/{} club(s).".format(success_count, total_count),
+        "Sent edit page reminder emails to {}/{} club(s).".format(
+            success_count, total_count
+        ),
         level=messages.SUCCESS,
     )
 
@@ -119,7 +126,9 @@ send_edit_reminder.short_description = "Send edit page reminder"
 def mark_approved(modeladmin, request, queryset):
     if not request.user.has_perm("clubs.approve_club"):
         modeladmin.message_user(
-            request, "You do not have permission to approve clubs!", level=messages.ERROR
+            request,
+            "You do not have permission to approve clubs!",
+            level=messages.ERROR,
         )
         return
 
@@ -127,7 +136,9 @@ def mark_approved(modeladmin, request, queryset):
         approved=True, approved_by=request.user, approved_on=timezone.now()
     )
     modeladmin.message_user(
-        request, "Marked {} club(s) as approved!".format(num_updated), level=messages.SUCCESS
+        request,
+        "Marked {} club(s) as approved!".format(num_updated),
+        level=messages.SUCCESS,
     )
 
 
@@ -174,7 +185,9 @@ class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
             super()
             .get_queryset(request)
             .annotate(
-                has_owner=Exists(Membership.objects.filter(club=OuterRef("pk"), role__lte=0)),
+                has_owner=Exists(
+                    Membership.objects.filter(club=OuterRef("pk"), role__lte=0)
+                ),
                 has_invite=Exists(MembershipInvite.objects.filter(club=OuterRef("pk"))),
             )
         )
@@ -251,7 +264,13 @@ class MembershipRequestAdmin(admin.ModelAdmin):
 
 
 class MembershipAdmin(admin.ModelAdmin):
-    search_fields = ("person__username", "person__email", "club__name", "club__pk", "title")
+    search_fields = (
+        "person__username",
+        "person__email",
+        "club__name",
+        "club__pk",
+        "title",
+    )
     list_display = ("person", "club", "role", "title")
     list_filter = ("role", "active", "public")
 
@@ -306,7 +325,9 @@ def do_merge_tags(modeladmin, request, queryset):
         merge_tags(first, tag)
     modeladmin.message_user(
         request,
-        "Merged the following tags: {} into {}".format(", ".join(tag_names), first.name),
+        "Merged the following tags: {} into {}".format(
+            ", ".join(tag_names), first.name
+        ),
         level=messages.SUCCESS,
     )
 

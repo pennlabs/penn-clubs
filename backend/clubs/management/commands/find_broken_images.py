@@ -32,21 +32,29 @@ class Command(BaseCommand):
                     resp = requests.head(club.image.url)
                     image_ok = resp.ok
                 else:
-                    image_ok = os.path.isfile(os.path.join(settings.MEDIA_ROOT, club.image.url))
+                    image_ok = os.path.isfile(
+                        os.path.join(settings.MEDIA_ROOT, club.image.url)
+                    )
                 if not image_ok:
                     self.stdout.write(
-                        self.style.ERROR("{} has broken image {}".format(club.code, club.image.url))
+                        self.style.ERROR(
+                            "{} has broken image {}".format(club.code, club.image.url)
+                        )
                     )
                     if not self.dry_run:
                         club.image.delete(save=True)
-                    broken_list.append({"id": club.id, "name": club.name, "url": club.image.url})
+                    broken_list.append(
+                        {"id": club.id, "name": club.name, "url": club.image.url}
+                    )
                 else:
                     self.stdout.write(
                         self.style.SUCCESS(
                             "{} has working image {}".format(club.code, club.image.url)
                         )
                     )
-                    working_list.append({"id": club.id, "name": club.name, "url": club.image.url})
+                    working_list.append(
+                        {"id": club.id, "name": club.name, "url": club.image.url}
+                    )
         self.stdout.write(
             "{} total, {} broken images".format(
                 len(working_list) + len(broken_list), len(broken_list)

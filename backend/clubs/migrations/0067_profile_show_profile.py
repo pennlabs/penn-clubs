@@ -11,6 +11,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="profile", name="show_profile", field=models.BooleanField(default=True),
+            model_name="profile",
+            name="show_profile",
+            field=models.BooleanField(default=True),
         ),
     ]

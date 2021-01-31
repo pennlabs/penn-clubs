@@ -5,6 +5,9 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("clubs", "0003_auto_20191025_2102"), ("clubs", "0003_auto_20191025_2120")]
+    dependencies = [
+        ("clubs", "0003_auto_20191025_2102"),
+        ("clubs", "0003_auto_20191025_2120"),
+    ]
 
     operations = []

@@ -135,7 +135,8 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
             if self.instance.answer:
                 raise serializers.ValidationError(
-                    "You are not allowed to edit the question after an answer has been given!"
+                    "You are not allowed to edit the question "
+                    "after an answer has been given!"
                 )
 
         return value
@@ -179,7 +180,9 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
         if membership is not None and membership.role <= Membership.ROLE_OFFICER:
             return value
 
-        raise serializers.ValidationError("You are not allowed to answer this question!")
+        raise serializers.ValidationError(
+            "You are not allowed to answer this question!"
+        )
 
     def update(self, instance, validated_data):
         """
@@ -187,10 +190,16 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
         """
         user = self.context["request"].user
 
-        if "question" in validated_data and not validated_data["question"] == instance.question:
+        if (
+            "question" in validated_data
+            and not validated_data["question"] == instance.question
+        ):
             validated_data["author"] = user
 
-        if "answer" in validated_data and not validated_data["answer"] == instance.answer:
+        if (
+            "answer" in validated_data
+            and not validated_data["answer"] == instance.answer
+        ):
             validated_data["responder"] = user
             if "approved" not in validated_data:
                 validated_data["approved"] = True
@@ -232,7 +241,8 @@ class ReportSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         Set the creator of the report to the current user.
-        If a report with the same name and creator exists, overwrite that report instead.
+        If a report with the same name and creator exists,
+        overwrite that report instead.
         """
         return Report.objects.update_or_create(
             name=validated_data.pop("name"),
@@ -263,7 +273,9 @@ class YearSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "year")
 
 
-class AdvisorSerializer(ClubRouteMixin, ManyToManySaveMixin, serializers.ModelSerializer):
+class AdvisorSerializer(
+    ClubRouteMixin, ManyToManySaveMixin, serializers.ModelSerializer
+):
     class Meta:
         model = Advisor
         fields = ("id", "name", "title", "department", "email", "phone", "public")
@@ -361,7 +373,8 @@ class ClubEventSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         start_time = data.get(
-            "start_time", self.instance.start_time if self.instance is not None else None
+            "start_time",
+            self.instance.start_time if self.instance is not None else None,
         )
         end_time = data.get(
             "end_time", self.instance.end_time if self.instance is not None else None
@@ -381,10 +394,12 @@ class ClubEventSerializer(serializers.ModelSerializer):
                 for field in unchanged_fields:
                     if (
                         field in validated_data
-                        and not getattr(self.instance, field, None) == validated_data[field]
+                        and not getattr(self.instance, field, None)
+                        == validated_data[field]
                     ):
                         raise serializers.ValidationError(
-                            "You may not change the start and end times for a fair event!"
+                            "You cannot change the meeting time for a fair event! "
+                            "If you would like to, please contact the fair organizers."
                         )
 
         return super().update(instance, validated_data)
@@ -453,7 +468,9 @@ class EventWriteSerializer(EventSerializer):
     Enables URL checking for the url field.
     """
 
-    url = serializers.CharField(max_length=2048, required=False, allow_blank=True, allow_null=True)
+    url = serializers.CharField(
+        max_length=2048, required=False, allow_blank=True, allow_null=True
+    )
 
     def update(self, instance, validated_data):
         """
@@ -466,10 +483,10 @@ class EventWriteSerializer(EventSerializer):
             if old_url != new_url:
                 parsed_url = urlparse(new_url)
 
-                if "upenn.zoom.us" not in parsed_url.netloc and new_url:
+                if ".zoom.us" not in parsed_url.netloc and new_url:
                     raise serializers.ValidationError(
                         {
-                            "url": "You should use a Zoom link for the fair meeting link! "
+                            "url": "You should use a Zoom link for the meeting url! "
                             "You can use the Zoom setup page to do this for you."
                         }
                     )
@@ -495,7 +512,8 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         if not self.validated_data.get("token") == self.instance.token:
             raise serializers.ValidationError("Missing or invalid token in request!")
 
-        # if there is an owner and the invite is for a upenn email, do strict username checking
+        # if there is an owner and the invite is for a upenn email,
+        # do strict username checking
         if (
             self.instance.email.endswith((".upenn.edu", "@upenn.edu"))
             and self.instance.club.membership_set.count() > 0
@@ -508,9 +526,8 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
                     or self.instance.email == user.email
                 ):
                     raise serializers.ValidationError(
-                        'This invitation was meant for "{}", but you are logged in as "{}"!'.format(
-                            invite_username, user.username
-                        )
+                        f"This invitation was meant for {invite_username}, "
+                        f"but you are logged in as {user.username}!"
                     )
 
         # claim the invite and set the membership public status
@@ -539,7 +556,8 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
 
 class UserMembershipInviteSerializer(MembershipInviteSerializer):
     """
-    This serializer is used for listing the email invitations that the current user was sent.
+    This serializer is used for listing the email invitations
+    that the current user was sent.
     """
 
     token = serializers.CharField(max_length=128)
@@ -597,17 +615,25 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
         Also ensure that owners can't demote themselves without leaving another owner.
         """
         user = self.context["request"].user
-        mem_user_id = self.instance.person.id if self.instance else self.initial_data["person"]
+        mem_user_id = (
+            self.instance.person.id if self.instance else self.initial_data["person"]
+        )
         club_code = self.context["view"].kwargs.get(
             "club_code", self.context["view"].kwargs.get("code")
         )
-        membership = Membership.objects.filter(person=user, club__code=club_code).first()
+        membership = Membership.objects.filter(
+            person=user, club__code=club_code
+        ).first()
         if user.has_perm("clubs.manage_club"):
             return value
         if membership is None:
-            raise serializers.ValidationError("You must be a member of this club to modify roles!")
+            raise serializers.ValidationError(
+                "You must be a member of this club to modify roles!"
+            )
         if membership.role > value:
-            raise serializers.ValidationError("You cannot promote someone above your own level.")
+            raise serializers.ValidationError(
+                "You cannot promote someone above your own level."
+            )
         if value > Membership.ROLE_OWNER and user.id == mem_user_id:
             if membership.role <= Membership.ROLE_OWNER:
                 if (
@@ -630,7 +656,9 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "club_code", self.context["view"].kwargs.get("code")
         )
 
-        membership = Membership.objects.filter(person=user, club__code=club_code).first()
+        membership = Membership.objects.filter(
+            person=user, club__code=club_code
+        ).first()
 
         if not user.is_superuser and (
             membership is None or membership.role > Membership.ROLE_OFFICER
@@ -716,7 +744,8 @@ class ClubConstitutionSerializer(ClubMinimalSerializer):
 
 class ClubListSerializer(serializers.ModelSerializer):
     """
-    The club list serializer returns a subset of the information that the full serializer returns.
+    The club list serializer returns a subset of the information that the full
+    serializer returns.
     Optimized for the home page, some fields may be missing if not necessary.
     For example, if the subtitle is set, the description is returned as null.
     This is done for a quicker response.
@@ -802,8 +831,8 @@ class ClubListSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         """
-        Override the fields that are returned if the "fields" GET parameter is specified.
-        Acts as a filter on the returned fields.
+        Override the fields that are returned if the "fields" GET parameter
+        is specified. Acts as a filter on the returned fields.
         """
         all_fields = super().get_fields()
 
@@ -813,7 +842,9 @@ class ClubListSerializer(serializers.ModelSerializer):
                 for field in fields.values():
                     all_fields[field] = ReportClubField(field, read_only=True)
 
-        fields_param = getattr(self.context.get("request", dict()), "GET", {}).get("fields", "")
+        fields_param = getattr(self.context.get("request", dict()), "GET", {}).get(
+            "fields", ""
+        )
         if fields_param:
             fields_param = fields_param.split(",")
         else:
@@ -838,11 +869,14 @@ class ClubListSerializer(serializers.ModelSerializer):
                 "clubs.manage_club"
             )
             is_member = (
-                user.is_authenticated and instance.membership_set.filter(person=user).exists()
+                user.is_authenticated
+                and instance.membership_set.filter(person=user).exists()
             )
             if not can_see_pending and not is_member:
                 historical_club = (
-                    instance.history.filter(approved=True).order_by("-approved_on").first()
+                    instance.history.filter(approved=True)
+                    .order_by("-approved_on")
+                    .first()
                 )
                 if historical_club is not None:
                     approved_instance = historical_club.instance
@@ -888,7 +922,8 @@ class ClubListSerializer(serializers.ModelSerializer):
                 "and used to identify this club.",
             },
             "description": {
-                "help_text": "A long description for the club. Certain HTML tags are allowed."
+                "help_text": "A long description for the club. "
+                "Certain HTML tags are allowed."
             },
             "email": {"help_text": "The primary contact email for the club."},
             "subtitle": {
@@ -901,8 +936,8 @@ class ClubListSerializer(serializers.ModelSerializer):
 
 class MembershipClubListSerializer(ClubListSerializer):
     """
-    The club list serializer, except return more detailed information about the relationship of
-    the club with the authenticated user.
+    The club list serializer, except return more detailed information about the
+    relationship of the club with the authenticated user.
 
     Used on the user profile page to show additional information.
     """
@@ -946,7 +981,9 @@ def social_validation_helper(value, domain, prefix="", at_prefix=None):
     parsed = urlparse(value)
     path = parsed.path
     if parsed.path.startswith("@"):
-        path = "{}/{}/".format(at_prefix if at_prefix is not None else prefix, parsed.path[1:])
+        path = "{}/{}/".format(
+            at_prefix if at_prefix is not None else prefix, parsed.path[1:]
+        )
     elif not parsed.path.startswith("/"):
         path = "{}/{}/".format(prefix, parsed.path)
     if parsed.query:
@@ -1044,7 +1081,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         )
 
         if not settings.BRANDING == "fyh":
-            # send a renewal email prompting the user to apply for approval for their club
+            # send a renewal email prompting the user
+            # to apply for approval for their club
             obj.send_renewal_email()
 
         return obj
@@ -1058,12 +1096,16 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         if settings.BRANDING == "fyh":
             if len(value) < 1:
-                raise serializers.ValidationError("You must specify at least one tag in this list.")
+                raise serializers.ValidationError(
+                    "You must specify at least one tag in this list."
+                )
         else:
             tag_names = [tag.get("name") for tag in value]
             necessary_tags = {"Undergraduate", "Graduate"}
             if not any(tag in necessary_tags for tag in tag_names):
-                if Tag.objects.filter(name__in=list(necessary_tags)).count() >= len(necessary_tags):
+                if Tag.objects.filter(name__in=list(necessary_tags)).count() >= len(
+                    necessary_tags
+                ):
                     raise serializers.ValidationError(
                         "You must specify either the {} tag in this list.".format(
                             " or ".join(f"'{tag}'" for tag in necessary_tags)
@@ -1078,7 +1120,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         out = clean(value).strip()
         if len(out) <= 10:
-            raise serializers.ValidationError("You must enter a valid description for your club.")
+            raise serializers.ValidationError(
+                "You must enter a valid description for your club."
+            )
         return out
 
     def validate_email(self, value):
@@ -1122,7 +1166,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Ensure that URL is actually a Facebook link.
         """
-        return social_validation_helper(value, "facebook.com", prefix="/groups", at_prefix="")
+        return social_validation_helper(
+            value, "facebook.com", prefix="/groups", at_prefix=""
+        )
 
     def validate_twitter(self, value):
         """
@@ -1138,8 +1184,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def validate_linkedin(self, value):
         """
-        Ensure that URL is actually a LinkedIn URL. Attempt to convert into correct format with
-        limited information.
+        Ensure that URL is actually a LinkedIn URL.
+        Attempt to convert into correct format with limited information.
         """
         return social_validation_helper(value, "linkedin.com", prefix="/company")
 
@@ -1204,9 +1250,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         needs_reapproval = False
         if self.instance:
             for field in {"name", "image", "description"}:
-                if field in self.validated_data and not self.validated_data[field] == getattr(
-                    self.instance, field, None
-                ):
+                if field in self.validated_data and not self.validated_data[
+                    field
+                ] == getattr(self.instance, field, None):
                     needs_reapproval = True
                     break
 
@@ -1226,7 +1272,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             self.validated_data["ghost"] = has_approved_version
 
         # if approval was revoked, also reset the other fields
-        if "approved" in self.validated_data and self.validated_data["approved"] is None:
+        if (
+            "approved" in self.validated_data
+            and self.validated_data["approved"] is None
+        ):
             self.validated_data["approved"] = None
             self.validated_data["approved_by"] = None
             self.validated_data["approved_on"] = None
@@ -1237,7 +1286,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # check if was active before
         was_active = self.instance and self.instance.active
 
-        if self.instance and self.instance.approved is None and new_approval_status is not None:
+        if (
+            self.instance
+            and self.instance.approved is None
+            and new_approval_status is not None
+        ):
             self.validated_data["approved_by"] = self.context["request"].user
             self.validated_data["approved_on"] = timezone.now()
 
@@ -1259,7 +1312,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # if accepted or rejected, send email with reason
         if approval_email_required:
             obj.send_approval_email(change=has_approved_version)
-            update_change_reason(obj, "{} club".format("Approve" if obj.approved else "Reject"))
+            update_change_reason(
+                obj, "{} club".format("Approve" if obj.approved else "Reject")
+            )
         elif needs_reapproval:
             update_change_reason(obj, "Edit club through UI (reapproval required)")
         else:
@@ -1619,12 +1674,16 @@ class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(read_only=True)
     name = serializers.SerializerMethodField("get_full_name")
     is_superuser = serializers.BooleanField(read_only=True)
-    image = serializers.ImageField(source="profile.image", write_only=True, allow_null=True)
+    image = serializers.ImageField(
+        source="profile.image", write_only=True, allow_null=True
+    )
     image_url = serializers.SerializerMethodField("get_image_url")
     has_been_prompted = serializers.BooleanField(source="profile.has_been_prompted")
     share_bookmarks = serializers.BooleanField(source="profile.share_bookmarks")
     show_profile = serializers.BooleanField(source="profile.show_profile")
-    graduation_year = serializers.IntegerField(source="profile.graduation_year", allow_null=True)
+    graduation_year = serializers.IntegerField(
+        source="profile.graduation_year", allow_null=True
+    )
     school = SchoolSerializer(many=True, source="profile.school")
     major = MajorSerializer(many=True, source="profile.major")
 
@@ -1636,11 +1695,15 @@ class UserSerializer(serializers.ModelSerializer):
         max_year = current_year + 10
         if value < min_year:
             raise serializers.ValidationError(
-                "Invalid graduation year, must be greater than or equal to {}.".format(min_year)
+                "Invalid graduation year, must be greater than or equal to {}.".format(
+                    min_year
+                )
             )
         elif value > max_year:
             raise serializers.ValidationError(
-                "Invalid graduation year, must be less than or equal to {}.".format(max_year)
+                "Invalid graduation year, must be less than or equal to {}.".format(
+                    max_year
+                )
             )
         return value
 
@@ -1716,7 +1779,9 @@ class AssetSerializer(serializers.ModelSerializer):
         if data.size <= settings.MAX_FILE_SIZE:
             return data
         else:
-            max_file_size_in_gb = round((settings.MAX_FILE_SIZE / settings.FILE_SIZE_ONE_GB), 3)
+            max_file_size_in_gb = round(
+                (settings.MAX_FILE_SIZE / settings.FILE_SIZE_ONE_GB), 3
+            )
             raise serializers.ValidationError(
                 "You cannot upload a file that is more than {} GB of space!".format(
                     max_file_size_in_gb
@@ -1733,7 +1798,9 @@ class AuthenticatedClubSerializer(ClubSerializer):
     Provides additional information about the club to members in the club.
     """
 
-    members = AuthenticatedMembershipSerializer(many=True, source="membership_set", read_only=True)
+    members = AuthenticatedMembershipSerializer(
+        many=True, source="membership_set", read_only=True
+    )
     files = AssetSerializer(many=True, source="asset_set", read_only=True)
     fairs = serializers.SerializerMethodField("get_fairs")
     email = serializers.EmailField()
@@ -1778,7 +1845,9 @@ class ReportClubField(serializers.Field):
                 suffix = fair_match.group(2)
                 if suffix == "reg_time":
                     self._default_value = None
-                    reg = fair.clubfairregistration_set.values_list("club__code", "created_at")
+                    reg = fair.clubfairregistration_set.values_list(
+                        "club__code", "created_at"
+                    )
                     for code, time in reg:
                         self._cached_values[code] = time.astimezone(
                             timezone.get_current_timezone()
@@ -1791,7 +1860,9 @@ class ReportClubField(serializers.Field):
                     self._cached_values = dict(reg)
                 elif suffix.startswith("q_"):
                     index = int(suffix.rsplit("_")[-1])
-                    reg = fair.clubfairregistration_set.values_list("club__code", "answers")
+                    reg = fair.clubfairregistration_set.values_list(
+                        "club__code", "answers"
+                    )
                     self._default_value = None
                     for code, ans in reg:
                         if ans:
@@ -1802,7 +1873,8 @@ class ReportClubField(serializers.Field):
                 else:
                     self._default_value = False
                     self._cached_values = {
-                        k: True for k in fair.participating_clubs.values_list("code", flat=True)
+                        k: True
+                        for k in fair.participating_clubs.values_list("code", flat=True)
                     }
 
         super().__init__(*args, **kwargs)
@@ -1832,10 +1904,14 @@ class ReportClubSerializer(AuthenticatedClubSerializer):
         now = timezone.now()
         for fair in ClubFair.objects.filter(end_time__gte=now):
             fields[f"Is participating in {fair.name}"] = f"custom_fair_{fair.id}_reg"
-            fields[f"Registration time for {fair.name}"] = f"custom_fair_{fair.id}_reg_time"
+            fields[
+                f"Registration time for {fair.name}"
+            ] = f"custom_fair_{fair.id}_reg_time"
             fields[f"Contact email for {fair.name}"] = f"custom_fair_{fair.id}_email"
             for i, question in enumerate(json.loads(fair.questions)):
-                fields[f"[{fair.name}] {question['label']}"] = f"custom_fair_{fair.id}_q_{i}"
+                fields[
+                    f"[{fair.name}] {question['label']}"
+                ] = f"custom_fair_{fair.id}_q_{i}"
         return {"virtual_fair": fields}
 
     @staticmethod
@@ -1911,8 +1987,12 @@ class WritableClubApplicationSerializer(ClubApplicationSerializer):
 
 class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    creating_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
-    subject_club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    creating_club = serializers.SlugRelatedField(
+        queryset=Club.objects.all(), slug_field="code"
+    )
+    subject_club = serializers.SlugRelatedField(
+        queryset=Club.objects.all(), slug_field="code"
+    )
     title = serializers.CharField(max_length=255, default="Note")
     content = serializers.CharField(required=False)
     note_tags = NoteTagSerializer(many=True, required=False)

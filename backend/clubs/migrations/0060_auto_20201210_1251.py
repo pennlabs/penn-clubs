@@ -11,7 +11,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="clubfair", name="questions", field=models.TextField(default="[]"),
+            model_name="clubfair",
+            name="questions",
+            field=models.TextField(default="[]"),
         ),
         migrations.AddField(
             model_name="clubfair",
@@ -19,6 +21,8 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name="clubfairregistration", name="answers", field=models.TextField(blank=True),
+            model_name="clubfairregistration",
+            name="answers",
+            field=models.TextField(blank=True),
         ),
     ]

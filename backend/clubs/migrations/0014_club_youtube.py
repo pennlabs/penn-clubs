@@ -11,6 +11,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="club", name="youtube", field=models.URLField(blank=True, null=True),
+            model_name="club",
+            name="youtube",
+            field=models.URLField(blank=True, null=True),
         ),
     ]

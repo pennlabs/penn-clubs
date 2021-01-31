@@ -151,7 +151,9 @@ class ClubTestCase(TestCase):
         cls.user4.last_name = "Arnold"
         cls.user4.save()
 
-        cls.user5 = get_user_model().objects.create_user("jadams", "jadams@sas.upenn.edu", "test")
+        cls.user5 = get_user_model().objects.create_user(
+            "jadams", "jadams@sas.upenn.edu", "test"
+        )
         cls.user5.first_name = "John"
         cls.user5.last_name = "Adams"
         cls.user5.is_staff = True
@@ -165,7 +167,10 @@ class ClubTestCase(TestCase):
         self.client = Client()
 
         self.club1 = Club.objects.create(
-            code="test-club", name="Test Club", approved=True, email="example@example.com"
+            code="test-club",
+            name="Test Club",
+            approved=True,
+            email="example@example.com",
         )
 
         self.event1 = Event.objects.create(
@@ -227,7 +232,8 @@ class ClubTestCase(TestCase):
 
         # successful file upload
         resp = self.client.post(
-            reverse("clubs-upload-file", args=(self.club1.code,)), {"file": io.BytesIO(b"")}
+            reverse("clubs-upload-file", args=(self.club1.code,)),
+            {"file": io.BytesIO(b"")},
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -324,7 +330,9 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = json.loads(resp.content.decode("utf-8"))
         self.assertEqual(data["graduation_year"], given_year)
-        self.assertEqual(set([s["name"] for s in data["school"]]), {"Wharton", "Engineering"})
+        self.assertEqual(
+            set([s["name"] for s in data["school"]]), {"Wharton", "Engineering"}
+        )
 
     def test_superuser_views(self):
         """
@@ -461,7 +469,9 @@ class ClubTestCase(TestCase):
         # list events without a club to namespace.
         now = timezone.now()
         resp = self.client.get(
-            reverse("events-list"), {"end_time__gte": now}, content_type="application/json"
+            reverse("events-list"),
+            {"end_time__gte": now},
+            content_type="application/json",
         )
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertEquals(len(resp.data), 3, resp.content)
@@ -469,14 +479,19 @@ class ClubTestCase(TestCase):
         # list events with a filter
         resp = self.client.get(
             reverse("events-list"),
-            {"start_time__gte": e2_start.isoformat(), "end_time__lte": e2_end.isoformat()},
+            {
+                "start_time__gte": e2_start.isoformat(),
+                "end_time__lte": e2_end.isoformat(),
+            },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertEquals(1, len(resp.data), resp.data)
 
     def test_event_update_fair(self):
-        Membership.objects.create(person=self.user1, club=self.club1, role=Membership.ROLE_OWNER)
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
+        )
 
         self.client.login(username=self.user1.username, password="test")
 
@@ -532,7 +547,9 @@ class ClubTestCase(TestCase):
         e2.save()
 
         # ensure we can't delete the event as a normal user
-        resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, e2.pk)))
+        resp = self.client.delete(
+            reverse("club-events-detail", args=(self.club1.code, e2.pk))
+        )
         self.assertIn(resp.status_code, [400, 401, 403], resp.data)
         self.assertTrue(Event.objects.filter(pk=e2.pk).exists())
 
@@ -620,7 +637,9 @@ class ClubTestCase(TestCase):
         self.assertFalse(self.user4.is_superuser)
 
         # add user as officer
-        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER
+        )
 
         # set event start and end dates
         start_date = datetime.datetime.now() - datetime.timedelta(days=3)
@@ -664,7 +683,9 @@ class ClubTestCase(TestCase):
         self.assertEqual(Event.objects.get(id=id).name, "Awesome Interest Meeting")
 
         # delete event
-        resp = self.client.delete(reverse("club-events-detail", args=(self.club1.code, id)))
+        resp = self.client.delete(
+            reverse("club-events-detail", args=(self.club1.code, id))
+        )
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
     def test_recurring_event_create(self):
@@ -672,7 +693,9 @@ class ClubTestCase(TestCase):
         self.assertFalse(self.user4.is_superuser)
 
         # add user as officer
-        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER
+        )
 
         # set event start and end dates
         start_time = datetime.datetime.now() - datetime.timedelta(days=3)
@@ -727,13 +750,17 @@ class ClubTestCase(TestCase):
         self.assertEqual(testimonials.count(), 3)
 
         # list testimonials
-        resp = self.client.get(reverse("club-testimonials-list", args=(self.club1.code,)))
+        resp = self.client.get(
+            reverse("club-testimonials-list", args=(self.club1.code,))
+        )
         self.assertEqual(resp.status_code, 200, resp.content)
 
         # delete testimonials
         for testimonial in testimonials:
             resp = self.client.delete(
-                reverse("club-testimonials-detail", args=(self.club1.code, testimonial.id))
+                reverse(
+                    "club-testimonials-detail", args=(self.club1.code, testimonial.id)
+                )
             )
             self.assertIn(resp.status_code, [200, 204], resp.content)
 
@@ -860,7 +887,8 @@ class ClubTestCase(TestCase):
         )
 
         self.assertEqual(
-            Membership.objects.get(person=self.user3, club__code="penn-labs").title, "Treasurer",
+            Membership.objects.get(person=self.user3, club__code="penn-labs").title,
+            "Treasurer",
         )
 
         # delete member
@@ -896,7 +924,9 @@ class ClubTestCase(TestCase):
         bad_tries = [{"title": "Supreme Leader"}, {"role": Membership.ROLE_OFFICER}]
         for bad in bad_tries:
             resp = self.client.patch(
-                reverse("club-members-detail", args=(self.club1.code, self.user1.username)),
+                reverse(
+                    "club-members-detail", args=(self.club1.code, self.user1.username)
+                ),
                 bad,
                 content_type="application/json",
             )
@@ -908,7 +938,9 @@ class ClubTestCase(TestCase):
         ]
         for good in good_tries:
             resp = self.client.patch(
-                reverse("club-members-detail", args=(self.club1.code, self.user1.username)),
+                reverse(
+                    "club-members-detail", args=(self.club1.code, self.user1.username)
+                ),
                 good,
                 content_type="application/json",
             )
@@ -1094,7 +1126,9 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
-        resp = self.client.post(reverse("clubs-list"), {}, content_type="application/json")
+        resp = self.client.post(
+            reverse("clubs-list"), {}, content_type="application/json"
+        )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_create_nonexistent_tag(self):
@@ -1152,7 +1186,11 @@ class ClubTestCase(TestCase):
                 "name": "Penn Labs",
                 "description": "We code stuff.",
                 "badges": [{"label": "SAC Funded"}],
-                "tags": [{"name": tag1.name}, {"name": tag2.name}, {"name": "Graduate"}],
+                "tags": [
+                    {"name": tag1.name},
+                    {"name": tag2.name},
+                    {"name": "Graduate"},
+                ],
                 "target_schools": [{"name": school1.name}],
                 "email": "example@example.com",
                 "facebook": "https://www.facebook.com/groups/966590693376781/"
@@ -1160,7 +1198,8 @@ class ClubTestCase(TestCase):
                 "twitter": "https://twitter.com/Penn",
                 "instagram": "https://www.instagram.com/uofpenn/?hl=en",
                 "website": "https://pennlabs.org",
-                "linkedin": "https://www.linkedin.com/school/university-of-pennsylvania/",
+                "linkedin": "https://www.linkedin.com"
+                "/school/university-of-pennsylvania/",
                 "youtube": "https://youtu.be/dQw4w9WgXcQ",
                 "github": "https://github.com/pennlabs",
             },
@@ -1247,11 +1286,16 @@ class ClubTestCase(TestCase):
                 "query": f"size__or={Club.SIZE_MEDIUM},{Club.SIZE_LARGE}",
                 "results": ["pppjo", "lorem-ipsum"],
             },
-            {"query": f"application_required={Club.OPEN_MEMBERSHIP}", "results": ["pppjo"]},
+            {
+                "query": f"application_required={Club.OPEN_MEMBERSHIP}",
+                "results": ["pppjo"],
+            },
         ]
 
         for query in queries:
-            resp = self.client.get(f"{reverse('clubs-list')}?format=json&{query['query']}")
+            resp = self.client.get(
+                f"{reverse('clubs-list')}?format=json&{query['query']}"
+            )
             self.assertIn(resp.status_code, [200], resp.content)
             data = json.loads(resp.content.decode("utf-8"))
             codes = [club["code"] for club in data]
@@ -1273,7 +1317,9 @@ class ClubTestCase(TestCase):
         """
         Ordinary members should not be able to modify the club.
         """
-        Membership.objects.create(club=Club.objects.get(code=self.club1.code), person=self.user2)
+        Membership.objects.create(
+            club=Club.objects.get(code=self.club1.code), person=self.user2
+        )
         self.client.login(username=self.user2.username, password="test")
         resp = self.client.patch(
             reverse("clubs-detail", args=(self.club1.code,)),
@@ -1286,7 +1332,9 @@ class ClubTestCase(TestCase):
         """
         Ordinary members should be able to retrieve the club.
         """
-        Membership.objects.create(club=Club.objects.get(code=self.club1.code), person=self.user2)
+        Membership.objects.create(
+            club=Club.objects.get(code=self.club1.code), person=self.user2
+        )
         self.client.login(username=self.user2.username, password="test")
         resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
         self.assertIn(resp.status_code, [200], resp.content)
@@ -1308,7 +1356,10 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password="test")
         resp = self.client.patch(
             reverse("clubs-detail", args=(self.club1.code,)),
-            {"description": "We do stuff.", "tags": [{"name": tag3.name}, {"name": "Graduate"}]},
+            {
+                "description": "We do stuff.",
+                "tags": [{"name": tag3.name}, {"name": "Graduate"}],
+            },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -1360,7 +1411,9 @@ class ClubTestCase(TestCase):
         """
         Officers should not be able to deactivate the club.
         """
-        Membership.objects.create(club=self.club1, person=self.user2, role=Membership.ROLE_MEMBER)
+        Membership.objects.create(
+            club=self.club1, person=self.user2, role=Membership.ROLE_MEMBER
+        )
         self.client.login(username=self.user2.username, password="test")
         resp = self.client.patch(
             reverse("clubs-detail", args=(self.club1.code,)),
@@ -1383,7 +1436,9 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user4.username, password="test")
         self.assertFalse(self.user4.is_superuser)
 
-        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)) + "?bypass=true")
+        resp = self.client.get(
+            reverse("clubs-detail", args=(self.club1.code,)) + "?bypass=true"
+        )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         self.assertIn("code", resp.data)
 
@@ -1415,23 +1470,29 @@ class ClubTestCase(TestCase):
         invites = MembershipInvite.objects.filter(club__code=self.club1.code)
         self.assertEqual(invites.count(), 3, data)
         self.assertEqual(
-            list(invites.values_list("role", flat=True)), [Membership.ROLE_OFFICER] * 3, data,
+            list(invites.values_list("role", flat=True)),
+            [Membership.ROLE_OFFICER] * 3,
+            data,
         )
         self.assertEqual(len(mail.outbox), 3, mail.outbox)
 
         # ensure we can get all memberships
-        ids_and_tokens = MembershipInvite.objects.filter(club__code=self.club1.code).values_list(
-            "id", "token"
-        )
+        ids_and_tokens = MembershipInvite.objects.filter(
+            club__code=self.club1.code
+        ).values_list("id", "token")
         for id, token in ids_and_tokens:
-            resp = self.client.get(reverse("club-invites-detail", args=(self.club1.code, id)))
+            resp = self.client.get(
+                reverse("club-invites-detail", args=(self.club1.code, id))
+            )
             self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure invite can be redeemed
         self.client.login(username=self.user5.username, password="test")
 
         resp = self.client.patch(
-            reverse("club-invites-detail", args=(self.club1.code, ids_and_tokens[0][0])),
+            reverse(
+                "club-invites-detail", args=(self.club1.code, ids_and_tokens[0][0])
+            ),
             {"token": ids_and_tokens[0][1], "public": True},
             content_type="application/json",
         )
@@ -1443,7 +1504,9 @@ class ClubTestCase(TestCase):
 
         # ensure invite cannot be reclaimed
         resp = self.client.patch(
-            reverse("club-invites-detail", args=(self.club1.code, ids_and_tokens[0][0])),
+            reverse(
+                "club-invites-detail", args=(self.club1.code, ids_and_tokens[0][0])
+            ),
             {"token": ids_and_tokens[0][1]},
             content_type="application/json",
         )
@@ -1470,7 +1533,9 @@ class ClubTestCase(TestCase):
 
         # ensure redeeming invite works
         resp = self.client.patch(
-            reverse("club-invites-detail", args=(self.club1.code, ids_and_tokens[2][0])),
+            reverse(
+                "club-invites-detail", args=(self.club1.code, ids_and_tokens[2][0])
+            ),
             {"token": ids_and_tokens[2][1], "public": False},
             content_type="application/json",
         )
@@ -1512,7 +1577,11 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("club-invite", args=(self.club1.code,)),
-            {"emails": "test@example.upenn.edu", "role": Membership.ROLE_MEMBER, "title": "Member"},
+            {
+                "emails": "test@example.upenn.edu",
+                "role": Membership.ROLE_MEMBER,
+                "title": "Member",
+            },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -1538,7 +1607,9 @@ class ClubTestCase(TestCase):
 
     def test_club_invite_insufficient_permissions(self):
         self.client.login(username=self.user2.username, password="test")
-        Membership.objects.create(person=self.user2, club=self.club1, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user2, club=self.club1, role=Membership.ROLE_OFFICER
+        )
 
         resp = self.client.post(
             reverse("club-invite", args=(self.club1.code,)),
@@ -1580,7 +1651,9 @@ class ClubTestCase(TestCase):
 
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
-        Membership.objects.create(person=self.user2, club=self.club1, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user2, club=self.club1, role=Membership.ROLE_OFFICER
+        )
 
         # Creating note after given permissions
         resp = self.client.post(
@@ -1617,14 +1690,18 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_report_selects_one_field(self):
-        res = self.client.get(reverse("clubs-list"), {"format": "xlsx", "fields": "name"})
+        res = self.client.get(
+            reverse("clubs-list"), {"format": "xlsx", "fields": "name"}
+        )
         self.assertEqual(200, res.status_code)
         self.assertEqual(1, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
         self.assertEqual(1, len(res.data[0]))
 
     def test_club_report_selects_few_fields(self):
-        res = self.client.get(reverse("clubs-list"), {"format": "xlsx", "fields": "name,code"})
+        res = self.client.get(
+            reverse("clubs-list"), {"format": "xlsx", "fields": "name,code"}
+        )
         self.assertEqual(200, res.status_code)
         self.assertEqual(1, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
@@ -1666,7 +1743,9 @@ class ClubTestCase(TestCase):
 
     def test_club_question_answer(self):
         # add officer to club
-        Membership.objects.create(person=self.user5, club=self.club1, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user5, club=self.club1, role=Membership.ROLE_OFFICER
+        )
 
         # login to an account
         self.client.login(username=self.user4.username, password="test")
@@ -1695,8 +1774,8 @@ class ClubTestCase(TestCase):
 
     def test_club_sensitive_field_renew(self):
         """
-        When editing sensitive fields like the name, description, and club image, require
-        the club to be reapproved.
+        When editing sensitive fields like the name, description, and club image,
+        require the club to be reapproved.
         """
         club = self.club1
 
@@ -1704,7 +1783,9 @@ class ClubTestCase(TestCase):
         self.assertTrue(club.approved)
 
         # add officer to club
-        Membership.objects.create(person=self.user4, club=club, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user4, club=club, role=Membership.ROLE_OFFICER
+        )
 
         # login to officer user
         self.client.login(username=self.user4.username, password="test")
@@ -1749,7 +1830,8 @@ class ClubTestCase(TestCase):
 
         # subscription endpoint should fail
         resp = self.client.get(
-            reverse("clubs-subscription", args=(club.code,)), content_type="application/json"
+            reverse("clubs-subscription", args=(club.code,)),
+            content_type="application/json",
         )
         self.assertIn(resp.status_code, [401, 403], resp.content)
 
@@ -1768,13 +1850,15 @@ class ClubTestCase(TestCase):
 
         # uploading file should fail
         resp = self.client.post(
-            reverse("clubs-upload-file", args=(club.code,)), content_type="application/json"
+            reverse("clubs-upload-file", args=(club.code,)),
+            content_type="application/json",
         )
         self.assertIn(resp.status_code, [401, 403], resp.content)
 
     def test_club_detail_endpoints_insufficient_auth(self):
         """
-        Ensure that the club based endpoints are not usable by users with insufficient auth.
+        Ensure that the club based endpoints are not usable by users with
+        insufficient auth.
         """
         # login to account
         self.client.login(username=self.user4.username, password="test")
@@ -1786,7 +1870,8 @@ class ClubTestCase(TestCase):
 
         # subscription endpoint should fail
         resp = self.client.get(
-            reverse("clubs-subscription", args=(club.code,)), content_type="application/json"
+            reverse("clubs-subscription", args=(club.code,)),
+            content_type="application/json",
         )
         self.assertIn(resp.status_code, [401, 403], resp.content)
 
@@ -1805,7 +1890,8 @@ class ClubTestCase(TestCase):
 
         # uploading file should fail
         resp = self.client.post(
-            reverse("clubs-upload-file", args=(club.code,)), content_type="application/json"
+            reverse("clubs-upload-file", args=(club.code,)),
+            content_type="application/json",
         )
         self.assertIn(resp.status_code, [401, 403], resp.content)
 
@@ -1821,11 +1907,15 @@ class ClubTestCase(TestCase):
         club = self.club1
 
         # add a badge to the club
-        badge = Badge.objects.create(label="Test Badge", description="This is a test badge!")
+        badge = Badge.objects.create(
+            label="Test Badge", description="This is a test badge!"
+        )
         club.badges.add(badge)
 
         # add officer to club
-        Membership.objects.create(person=self.user4, club=club, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user4, club=club, role=Membership.ROLE_OFFICER
+        )
 
         # login to officer account
         self.client.login(username=self.user4.username, password="test")
@@ -1850,7 +1940,9 @@ class ClubTestCase(TestCase):
             Permission.objects.get(codename="approve_club", content_type=content_type)
         )
         self.user3.user_permissions.add(
-            Permission.objects.get(codename="see_pending_clubs", content_type=content_type)
+            Permission.objects.get(
+                codename="see_pending_clubs", content_type=content_type
+            )
         )
 
         # ensure user is not superuser
@@ -1908,7 +2000,9 @@ class ClubTestCase(TestCase):
 
         # login as user without approve permissions
         self.assertFalse(self.user2.has_perm("clubs.approve_club"))
-        Membership.objects.create(person=self.user2, club=club, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user2, club=club, role=Membership.ROLE_OFFICER
+        )
 
         self.client.login(username=self.user2.username, password="test")
 
@@ -1925,7 +2019,9 @@ class ClubTestCase(TestCase):
         club = self.club1
 
         # add officer to club
-        Membership.objects.create(person=self.user4, club=club, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user4, club=club, role=Membership.ROLE_OFFICER
+        )
 
         # login to officer account
         self.client.login(username=self.user4.username, password="test")
@@ -2011,7 +2107,10 @@ class ClubTestCase(TestCase):
                         "name": "fav_color",
                         "label": "What is your favorite color?",
                         "type": "radio",
-                        "choices": [{"id": "red", "label": "Red"}, {"id": "blue", "label": "Blue"}],
+                        "choices": [
+                            {"id": "red", "label": "Red"},
+                            {"id": "blue", "label": "Blue"},
+                        ],
                     }
                 ]
             ),
@@ -2025,7 +2124,9 @@ class ClubTestCase(TestCase):
         Asset.objects.create(name="constitution.pdf", club=self.club1)
 
         # add officer to club
-        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER
+        )
 
         # login to officer account
         self.client.login(username=self.user4.username, password="test")
@@ -2039,7 +2140,9 @@ class ClubTestCase(TestCase):
         self.assertTrue(resp.data["success"], resp.content)
 
         # ensure registration was processed
-        self.assertTrue(ClubFairRegistration.objects.filter(club=self.club1, fair=fair).exists())
+        self.assertTrue(
+            ClubFairRegistration.objects.filter(club=self.club1, fair=fair).exists()
+        )
 
     def test_bulk_edit(self):
         """
@@ -2126,7 +2229,9 @@ class ClubTestCase(TestCase):
                 public=i < 5 or i == 10,
             )
 
-        resp = self.client.get(reverse("users-detail", kwargs={"username": self.user4.username}))
+        resp = self.client.get(
+            reverse("users-detail", kwargs={"username": self.user4.username})
+        )
         self.assertEqual(resp.status_code, 200, resp.content)
 
         # ensure fields exist
@@ -2139,7 +2244,9 @@ class ClubTestCase(TestCase):
         self.assertEqual(actual_club_codes, expected_club_codes)
 
         # make sure there are no duplicate clubs
-        self.assertEqual(len(actual_club_codes), len(resp.data["clubs"]), resp.data["clubs"])
+        self.assertEqual(
+            len(actual_club_codes), len(resp.data["clubs"]), resp.data["clubs"]
+        )
 
     def test_alumni_page(self):
         """
@@ -2150,7 +2257,9 @@ class ClubTestCase(TestCase):
             profile = user.profile
             profile.graduation_year = now.year - 3
             profile.save()
-            Membership.objects.create(person=user, club=self.club1, public=i <= 1, active=False)
+            Membership.objects.create(
+                person=user, club=self.club1, public=i <= 1, active=False
+            )
 
         # fetch alumni page
         resp = self.client.get(reverse("clubs-alumni", args=(self.club1.code,)))
@@ -2185,7 +2294,9 @@ class ClubTestCase(TestCase):
 
         # check permissions checker endpoint
         def check():
-            resp = self.client.get(reverse("users-permission"), {"perm": ",".join(permissions)})
+            resp = self.client.get(
+                reverse("users-permission"), {"perm": ",".join(permissions)}
+            )
             self.assertIn(resp.status_code, [200], resp.content)
 
             data = resp.json()
@@ -2204,16 +2315,22 @@ class ClubTestCase(TestCase):
             self.assertFalse(data[perm], perm)
 
         # add officer to club
-        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER
+        )
 
         # add special permission to user
         content_type = ContentType.objects.get_for_model(Club)
-        perm = Permission.objects.get(codename="approve_club", content_type=content_type)
+        perm = Permission.objects.get(
+            codename="approve_club", content_type=content_type
+        )
         self.user4.user_permissions.add(perm)
 
         # login to officer account
         self.client.login(username=self.user4.username, password="test")
-        self.assertTrue(Membership.objects.filter(club=self.club1, person=self.user4).exists())
+        self.assertTrue(
+            Membership.objects.filter(club=self.club1, person=self.user4).exists()
+        )
 
         # check as authenticated user
         data = check()
@@ -2245,7 +2362,9 @@ class ClubTestCase(TestCase):
         self.event1.save()
 
         # try creating meeting as officer of club
-        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER
+        )
         self.client.login(username=self.user4.username, password="test")
         self.assertFalse(self.user4.is_superuser)
 
@@ -2256,7 +2375,9 @@ class ClubTestCase(TestCase):
 
         with patch("clubs.views.zoom_api_call", return_value=ret):
             resp = self.client.post(
-                "{}?format=json&event={}".format(reverse("users-zoom-meeting"), self.event1.id),
+                "{}?format=json&event={}".format(
+                    reverse("users-zoom-meeting"), self.event1.id
+                ),
                 content_type="application/json",
             )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -2277,7 +2398,9 @@ class ClubTestCase(TestCase):
             end_time=end_time,
             registration_end_time=now - datetime.timedelta(weeks=1),
         )
-        ClubFairRegistration.objects.create(registrant=self.user1, club=self.event1.club, fair=fair)
+        ClubFairRegistration.objects.create(
+            registrant=self.user1, club=self.event1.club, fair=fair
+        )
 
         self.event1.type = Event.FAIR
         self.event1.start_time = start_time
@@ -2289,7 +2412,9 @@ class ClubTestCase(TestCase):
                 event=self.event1,
                 person=[self.user1, self.user2, self.user3, self.user4, self.user5][i],
                 join_time=start_time + datetime.timedelta(hours=1),
-                leave_time=start_time + datetime.timedelta(hours=1) + datetime.timedelta(minutes=i),
+                leave_time=start_time
+                + datetime.timedelta(hours=1)
+                + datetime.timedelta(minutes=i),
                 meeting_id="",
                 participant_id="",
             )
@@ -2301,7 +2426,9 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("clubfairs-live", args=(fair.id,)))
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertIn(self.event1.id, resp.data, resp.content)
-        self.assertEqual(resp.data[self.event1.id]["participant_count"], 0, resp.content)
+        self.assertEqual(
+            resp.data[self.event1.id]["participant_count"], 0, resp.content
+        )
         self.assertEqual(resp.data[self.event1.id]["already_attended"], 5, resp.content)
         self.assertEqual(
             resp.data[self.event1.id]["median"],
@@ -2311,14 +2438,16 @@ class ClubTestCase(TestCase):
 
     def test_event_add_meeting(self):
         """
-        Test manually adding a meeting link without the Zoom page, but having their account linked.
-        This should go through.
+        Test manually adding a meeting link without the Zoom page, but having their
+        account linked. This should go through.
         """
         self.event1.type = Event.FAIR
         self.event1.url = None
         self.event1.save()
 
-        Membership.objects.create(person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER)
+        Membership.objects.create(
+            person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER
+        )
         self.client.login(username=self.user4.username, password="test")
         self.assertFalse(self.user4.is_superuser)
 
@@ -2356,7 +2485,9 @@ class ClubTestCase(TestCase):
             },
         }
 
-        resp = self.client.post(reverse("webhooks-meeting"), req, content_type="application/json")
+        resp = self.client.post(
+            reverse("webhooks-meeting"), req, content_type="application/json"
+        )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         self.assertTrue(
             ZoomMeetingVisit.objects.filter(
@@ -2382,7 +2513,9 @@ class ClubTestCase(TestCase):
             },
         }
 
-        resp = self.client.post(reverse("webhooks-meeting"), req, content_type="application/json")
+        resp = self.client.post(
+            reverse("webhooks-meeting"), req, content_type="application/json"
+        )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         self.assertTrue(
             ZoomMeetingVisit.objects.filter(

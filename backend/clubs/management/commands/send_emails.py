@@ -10,7 +10,14 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Count, Q
 from django.utils import timezone
 
-from clubs.models import Club, ClubFair, Event, Membership, MembershipInvite, send_mail_helper
+from clubs.models import (
+    Club,
+    ClubFair,
+    Event,
+    Membership,
+    MembershipInvite,
+    send_mail_helper,
+)
 from clubs.utils import fuzzy_lookup_club
 
 
@@ -34,7 +41,10 @@ def send_hap_intro_email(email, resources, recipient_string, template="intro"):
     """
 
     send_mail_helper(
-        template, None, [email], {"resources": resources, "recipient_string": recipient_string}
+        template,
+        None,
+        [email],
+        {"resources": resources, "recipient_string": recipient_string},
     )
 
 
@@ -43,7 +53,9 @@ def send_wc_intro_email(emails, clubs, recipient_string, template="wc_intro"):
     Send the Hub@Penn introduction email given the email and the list of resources.
     """
 
-    send_mail_helper(template, None, emails, {"clubs": clubs, "recipient_string": recipient_string})
+    send_mail_helper(
+        template, None, emails, {"clubs": clubs, "recipient_string": recipient_string}
+    )
 
 
 class Command(BaseCommand):
@@ -73,8 +85,8 @@ class Command(BaseCommand):
             "emails",
             nargs="?",
             type=str,
-            help="The CSV file with club name to email mapping. First column is club name"
-            + "and second column is emails. You can also input a URL to a CSV file.",
+            help="The CSV file with club name to email mapping. First column is club "
+            "name and second column is emails. You can also input a URL to a CSV file.",
             default=None,
         )
         parser.add_argument(
@@ -87,7 +99,8 @@ class Command(BaseCommand):
             "--only-sheet",
             dest="only_sheet",
             action="store_true",
-            help="Only send out emails to the clubs and emails that are listed in the CSV file.",
+            help="Only send out emails to the clubs and emails "
+            "that are listed in the CSV file.",
         )
         parser.add_argument(
             "--only-active",
@@ -126,7 +139,8 @@ class Command(BaseCommand):
             "--limit",
             dest="limit",
             action="store_true",
-            help="Limit the number of emails being sent. Only applies to certain templates.",
+            help="Limit the number of emails being sent. "
+            "Only applies to certain templates.",
         )
         parser.add_argument(
             "--clubs",
@@ -138,7 +152,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "--test",
             type=str,
-            help="Send all emails to the specified test email instead of to the actual recipient. "
+            help="Send all emails to the specified test email "
+            "instead of to the actual recipient. "
             "Does not work with all email types.",
         )
         parser.set_defaults(
@@ -222,13 +237,16 @@ class Command(BaseCommand):
                                 people[email]["contacts"] = [contact]
                 except KeyError as e:
                     raise ValueError(
-                        "Ensure the spreadsheet has a header with the 'name' and 'email' columns."
+                        "Ensure the spreadsheet has a header with "
+                        "the 'name' and 'email' columns."
                     ) from e
 
             # send emails grouped by recipients
             for email, context in people.items():
                 contacts = list(set(context["contacts"]))  # No duplicate names
-                contacts = list(filter(lambda x: x != "", contacts))  # No empty string names
+                contacts = list(
+                    filter(lambda x: x != "", contacts)
+                )  # No empty string names
                 if len(contacts) == 0:
                     contacts.append("Staff member")
 
@@ -285,14 +303,17 @@ class Command(BaseCommand):
                             people[name]["contacts"] = [contact]
                 except KeyError as e:
                     raise ValueError(
-                        "Ensure the spreadsheet has a header with the 'name' and 'email' columns."
+                        "Ensure the spreadsheet has a header with "
+                        "the 'name' and 'email' columns."
                     ) from e
 
             # send emails grouped by recipients
             for name, context in people.items():
                 emails = list(set(context["emails"]))  # No duplicate names
                 contacts = list(set(context["contacts"]))  # No duplicate names
-                contacts = list(filter(lambda x: x != "", contacts))  # No empty string names
+                contacts = list(
+                    filter(lambda x: x != "", contacts)
+                )  # No empty string names
                 if len(contacts) == 0:
                     contacts.append("Staff member")
 
@@ -302,7 +323,10 @@ class Command(BaseCommand):
                 clubs = [name]
                 if not dry_run:
                     send_wc_intro_email(
-                        emails, clubs, recipient_string, template={"wc_intro": "wc_intro"}[action],
+                        emails,
+                        clubs,
+                        recipient_string,
+                        template={"wc_intro": "wc_intro"}[action],
                     )
                     self.stdout.write(
                         f"Sent {action} email to {email} (recipients: "
@@ -316,7 +340,9 @@ class Command(BaseCommand):
             return
 
         # get club whitelist
-        clubs_whitelist = [club.strip() for club in (kwargs.get("clubs") or "").split(",")]
+        clubs_whitelist = [
+            club.strip() for club in (kwargs.get("clubs") or "").split(",")
+        ]
         clubs_whitelist = [club for club in clubs_whitelist if club]
 
         found_whitelist = set(
@@ -333,7 +359,11 @@ class Command(BaseCommand):
             if fair_id is not None:
                 fair = ClubFair.objects.get(id=fair_id)
             else:
-                fair = ClubFair.objects.filter(end_time__gte=now).order_by("start_time").first()
+                fair = (
+                    ClubFair.objects.filter(end_time__gte=now)
+                    .order_by("start_time")
+                    .first()
+                )
             if fair is None:
                 raise CommandError("Could not find an upcoming activities fair!")
 
@@ -343,7 +373,9 @@ class Command(BaseCommand):
             if clubs_whitelist:
                 self.stdout.write(f"Using clubs whitelist: {clubs_whitelist}")
                 clubs = clubs.filter(code__in=clubs_whitelist)
-            self.stdout.write(f"Found {clubs.count()} clubs participating in the {fair.name} fair.")
+            self.stdout.write(
+                f"Found {clubs.count()} clubs participating in the {fair.name} fair."
+            )
             extra = kwargs.get("extra", False)
             limit = kwargs.get("limit", False)
             self.stdout.write(f"Extra flag status: {extra}")
@@ -352,18 +384,26 @@ class Command(BaseCommand):
                 emails_disp = emails or "officers"
                 if limit:
                     if club.events.filter(
-                        ~Q(url="") & ~Q(url__isnull=True), start_time__gte=now, type=Event.FAIR
+                        ~Q(url="") & ~Q(url__isnull=True),
+                        start_time__gte=now,
+                        type=Event.FAIR,
                     ).exists():
-                        self.stdout.write(f"Skipping {club.name}, fair event already set up.")
+                        self.stdout.write(
+                            f"Skipping {club.name}, fair event already set up."
+                        )
                         continue
                 if not dry_run:
-                    status = club.send_virtual_fair_email(fair=fair, emails=emails, extra=extra)
+                    status = club.send_virtual_fair_email(
+                        fair=fair, emails=emails, extra=extra
+                    )
                     self.stdout.write(
-                        f"Sent virtual fair email to {club.name} ({emails_disp})... -> {status}"
+                        "Sent virtual fair email to "
+                        f"{club.name} ({emails_disp})... -> {status}"
                     )
                 else:
                     self.stdout.write(
-                        f"Would have sent virtual fair email to {club.name} ({emails_disp})..."
+                        "Would have sent virtual fair email to "
+                        f"{club.name} ({emails_disp})..."
                     )
             return
         elif action == "urgent_virtual_fair":
@@ -377,21 +417,25 @@ class Command(BaseCommand):
                 self.stdout.write(f"Using clubs whitelist: {clubs_whitelist}")
                 clubs = clubs.filter(code__in=clubs_whitelist)
 
-            self.stdout.write(f"{clubs.count()} clubs have not registered for the {fair.name}.")
+            self.stdout.write(
+                f"{clubs.count()} clubs have not registered for the {fair.name}."
+            )
             extra = kwargs.get("extra", False)
             for club in clubs.distinct():
                 emails = [test_email] if test_email else None
                 emails_disp = emails or "officers"
                 if not dry_run:
                     self.stdout.write(
-                        f"Sending fair urgent reminder for {club.name} to {emails_disp}..."
+                        "Sending fair urgent reminder for "
+                        f"{club.name} to {emails_disp}..."
                     )
                     club.send_virtual_fair_email(
                         email="urgent", fair=fair, extra=extra, emails=emails
                     )
                 else:
                     self.stdout.write(
-                        f"Would have sent fair urgent reminder for {club.name} to {emails_disp}..."
+                        "Would have sent fair urgent reminder for "
+                        f"{club.name} to {emails_disp}..."
                     )
 
             # don't continue
@@ -405,7 +449,9 @@ class Command(BaseCommand):
             if clubs_whitelist:
                 clubs = clubs.filter(code__in=clubs_whitelist)
 
-            self.stdout.write(f"{clubs.count()} post fair emails to send to participants.")
+            self.stdout.write(
+                f"{clubs.count()} post fair emails to send to participants."
+            )
             for club in clubs.distinct():
                 self.stdout.write(f"Sending post fair reminder to {club.name}...")
                 if not dry_run:
@@ -424,7 +470,9 @@ class Command(BaseCommand):
                 ),
                 invite_count=Count(
                     "membershipinvite",
-                    filter=Q(membershipinvite__role__lte=Membership.ROLE_OWNER, active=True),
+                    filter=Q(
+                        membershipinvite__role__lte=Membership.ROLE_OWNER, active=True
+                    ),
                 ),
             ).filter(owner_count=0, invite_count=0)
             self.stdout.write(f"Found {clubs.count()} active club(s) without owners.")
@@ -446,9 +494,13 @@ class Command(BaseCommand):
             if not os.path.isfile(email_file):
                 raise CommandError(f'Email file "{email_file}" does not exist!')
         elif only_sheet:
-            raise CommandError("Cannot specify only sheet option without an email file!")
+            raise CommandError(
+                "Cannot specify only sheet option without an email file!"
+            )
         else:
-            self.stdout.write(self.style.WARNING("No email spreadsheet file specified!"))
+            self.stdout.write(
+                self.style.WARNING("No email spreadsheet file specified!")
+            )
 
         # load email file
         if email_file is not None:
@@ -456,20 +508,26 @@ class Command(BaseCommand):
                 reader = csv.reader(f)
                 for line in reader:
                     if not line:
-                        self.stdout.write(self.style.WARNING("Skipping empty line in CSV file..."))
+                        self.stdout.write(
+                            self.style.WARNING("Skipping empty line in CSV file...")
+                        )
                         continue
                     raw_name = line[0].strip()
                     club = fuzzy_lookup_club(raw_name)
 
                     if club is not None:
                         if verbosity >= 2:
-                            self.stdout.write(f"Mapped {raw_name} -> {club.name} ({club.code})")
+                            self.stdout.write(
+                                f"Mapped {raw_name} -> {club.name} ({club.code})"
+                            )
                         clubs_sent += 1
                         emails[club.id] = [x.strip() for x in line[1].split(",")]
                     else:
                         clubs_missing += 1
                         self.stdout.write(
-                            self.style.WARNING(f"Could not find club matching {raw_name}!")
+                            self.style.WARNING(
+                                f"Could not find club matching {raw_name}!"
+                            )
                         )
 
         # send out emails
@@ -486,7 +544,8 @@ class Command(BaseCommand):
                 if include_staff:
                     receivers += list(
                         club.membership_set.filter(
-                            role__lte=Membership.ROLE_OFFICER, person__email__isnull=False
+                            role__lte=Membership.ROLE_OFFICER,
+                            person__email__isnull=False,
                         )
                         .exclude(person__email="")
                         .values_list("person__email", flat=True)
@@ -494,7 +553,9 @@ class Command(BaseCommand):
                 receivers = list(set(receivers))
                 receivers_str = ", ".join(receivers)
                 self.stdout.write(
-                    self.style.SUCCESS(f"Sending {action} email for {club.name} to {receivers_str}")
+                    self.style.SUCCESS(
+                        f"Sending {action} email for {club.name} to {receivers_str}"
+                    )
                 )
                 for receiver in receivers:
                     if not dry_run:
@@ -526,4 +587,6 @@ class Command(BaseCommand):
                         elif action == "physical_postfair":
                             send_fair_email(club, receiver, template="postfair")
 
-        self.stdout.write(f"Sent {clubs_sent} email(s), {clubs_missing} missing club(s)")
+        self.stdout.write(
+            f"Sent {clubs_sent} email(s), {clubs_missing} missing club(s)"
+        )

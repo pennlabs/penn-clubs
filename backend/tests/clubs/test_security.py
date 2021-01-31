@@ -37,8 +37,8 @@ def is_action_detail_decorator(node, is_detail):
 
 def all_viewset_actions(is_detail=None):
     """
-    Return a tuple of (viewset name, viewset object, function ast) for each action function
-    for each ModelViewSet defined in the views.py file.
+    Return a tuple of (viewset name, viewset object, function ast) for each action
+    function for each ModelViewSet defined in the views.py file.
     """
     for name, obj in inspect.getmembers(views, inspect.isclass):
         # loop through all model view set classes
@@ -69,8 +69,9 @@ class SecurityTestCase(TestCase):
 
     def test_check_permissions_update(self):
         """
-        A check to ensure that update and delete operations for every permission should always
-        require a logged in user. This check should almost never be bypassed or whitelisted.
+        A check to ensure that update and delete operations for every permission should
+        always require a logged in user. This check should almost never be bypassed or
+        whitelisted.
         """
         factory = RequestFactory()
         request = factory.post("/test")
@@ -88,45 +89,50 @@ class SecurityTestCase(TestCase):
                 view.kwargs = {}
                 self.assertFalse(
                     perm.has_permission(request, view),
-                    f"The permission {name} ({obj}) allows edit and delete access for anonymous "
-                    f"users, but it *really* should never allow this to happen. "
+                    f"The permission {name} ({obj}) allows edit and delete access for "
+                    f"anonymous users, but it *really* should never let this happen. "
                     f"In particular, {action} is allowed. "
-                    f"To fix this, ensure that all permission classes deny {action} access for "
-                    "anonymous (not logged in) users.",
+                    f"To fix this, ensure that all permission classes deny {action} "
+                    "access for anonymous (not logged in) users.",
                 )
 
     def test_check_permissions_set(self):
         """
-        A check to ensure that permission_classes is set to something reasonable for each
-        ModelViewSet in the views file.
+        A check to ensure that permission_classes is set to something reasonable for
+        each ModelViewSet in the views file.
 
-        If the permission_classes field is not set, you must explicitly acknowledge what you're
-        doing in the whitelist below.
+        If the permission_classes field is not set, you must explicitly acknowledge
+        what you're doing in the whitelist below.
 
-        Does your object contain any kind of user information? If so, you shouldn't be putting it
-        in the whitelist below.
+        Does your object contain any kind of user information? If so, you shouldn't be
+        putting it in the whitelist below.
         """
         whitelist = set()
 
         for name, obj in inspect.getmembers(views, inspect.isclass):
             if issubclass(obj, viewsets.ModelViewSet):
-                if permissions.AllowAny in obj.permission_classes or not obj.permission_classes:
+                if (
+                    permissions.AllowAny in obj.permission_classes
+                    or not obj.permission_classes
+                ):
                     if name in whitelist:
                         continue
 
                     self.fail(
-                        f"Class {name} has the permission classes to allow anyone to access this "
-                        "model view set. Are you sure you want to do this? If you are sure about "
-                        f"this change, add {name} to the whitelist in this test case."
+                        f"Class {name} has the permission classes to allow anyone to "
+                        "access this model view set. Are you sure you want to do this? "
+                        f"If you are sure about this change, add {name} to the "
+                        "whitelist in this test case."
                     )
 
     def test_check_detail_level_permissions(self):
         """
-        A check to ensure that all @action(detail=True) methods call self.check_object_permissions
-        somewhere in the method body.
+        A check to ensure that all @action(detail=True) methods call
+        self.check_object_permissions somewhere in the method body.
 
-        Django Rest Framework does NOT run the object level permissions checking for detail views.
-        You must manually run them yourself with "self.check_object_permissions(request, object)".
+        Django Rest Framework does NOT run the object level permissions checking for
+        detail views. You must manually run them yourself with
+        "self.check_object_permissions(request, object)".
 
         Not doing this will most likely result in a security issue.
         """
@@ -140,7 +146,9 @@ class SecurityTestCase(TestCase):
             get_object = False
 
             for child in ast.walk(node):
-                if isinstance(child, ast.Call) and isinstance(child.func, ast.Attribute):
+                if isinstance(child, ast.Call) and isinstance(
+                    child.func, ast.Attribute
+                ):
                     if not hasattr(child.func.value, "id"):
                         continue
                     if not child.func.value.id == "self":

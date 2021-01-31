@@ -6,8 +6,8 @@ from clubs.models import Badge, Club, ClubFairRegistration
 
 class Command(BaseCommand):
     help = (
-        "Executes various operations to ensure that the database is in a consistent state. "
-        "Synchronizes badges based on parent and child org relationships. "
+        "Executes various operations to ensure that the database is in a consistent "
+        "state. Synchronizes badges based on parent and child org relationships. "
         "Removes duplicate club fair registration entries, keeping the latest. "
         "There should be no issues with repeatedly running this script. "
     )
@@ -32,7 +32,9 @@ class Command(BaseCommand):
                 self.stdout.write(f"Adding badge {badge.label} to club {club.name}.")
                 club.badges.add(badge)
             else:
-                self.stdout.write(f"Would have added badge {badge.label} to club {club.name}.")
+                self.stdout.write(
+                    f"Would have added badge {badge.label} to club {club.name}."
+                )
             count += 1
         for child in club.children_orgs.all():
             return self.recursively_add_badge(club, badge) + count
@@ -57,7 +59,9 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.dry_run = kwargs["dry_run"]
         if self.dry_run:
-            self.stdout.write("Running in dry run mode, no changes will actually be made.")
+            self.stdout.write(
+                "Running in dry run mode, no changes will actually be made."
+            )
 
         self.sync_badges()
         self.sync_club_fairs()
@@ -79,7 +83,9 @@ class Command(BaseCommand):
                 f"club code '{club_code}' and fair id '{fair_id}'."
             )
             dups = (
-                ClubFairRegistration.objects.filter(fair__id=fair_id, club__code=club_code)
+                ClubFairRegistration.objects.filter(
+                    fair__id=fair_id, club__code=club_code
+                )
                 .order_by("-created_at")
                 .values_list("id", flat=True)[1:]
             )
@@ -100,7 +106,9 @@ class Command(BaseCommand):
             if badge.org is not None:
                 self._visited = set()
                 count += self.recursively_add_badge(badge.org, badge)
-        self.stdout.write(self.style.SUCCESS(f"Modified {count} club badge relationships."))
+        self.stdout.write(
+            self.style.SUCCESS(f"Modified {count} club badge relationships.")
+        )
 
         # if badge exist on child, link it to the parent directly
         # unless it is already indirectly linked
@@ -114,11 +122,16 @@ class Command(BaseCommand):
                     parent_club_codes = self.get_parent_club_codes(club)
                     if badge.org.code not in parent_club_codes:
                         if not self.dry_run:
-                            self.stdout.write(f"Adding {badge.org.name} as parent for {club.name}.")
+                            self.stdout.write(
+                                f"Adding {badge.org.name} as parent for {club.name}."
+                            )
                             club.parent_orgs.add(badge.org)
                         else:
                             self.stdout.write(
-                                f"Would have added {badge.org.name} as a parent for {club.name}."
+                                f"Would have added {badge.org.name} "
+                                f"as a parent for {club.name}."
                             )
                         count += 1
-        self.stdout.write(self.style.SUCCESS(f"Modified {count} parent child relationships."))
+        self.stdout.write(
+            self.style.SUCCESS(f"Modified {count} parent child relationships.")
+        )

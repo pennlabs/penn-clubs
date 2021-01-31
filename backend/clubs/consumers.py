@@ -15,7 +15,8 @@ from clubs.views import get_scripts, parse_script_parameters
 
 def log_errors(func):
     """
-    Helper to print errors to stderr, since an issue with Django Debug Toolbar prevents exceptions
+    Helper to print errors to stderr, since an issue with
+    Django Debug Toolbar prevents exceptions
     from threads from being logged to the console.
     """
 
@@ -60,7 +61,10 @@ class ExecuteScriptConsumer(AsyncWebsocketConsumer):
         if not script["execute"]:
             await self.send(
                 json.dumps(
-                    {"output": f"The script {action} cannot be executed from the web interface."}
+                    {
+                        "output": f"The script {action} cannot "
+                        "be executed from the web interface."
+                    }
                 )
             )
             await self.close()
@@ -69,7 +73,9 @@ class ExecuteScriptConsumer(AsyncWebsocketConsumer):
         # check user permissions
         if not user.has_perm("clubs.manage_club"):
             await self.send(
-                json.dumps({"output": "You do not have permission to execute this script."})
+                json.dumps(
+                    {"output": "You do not have permission to execute this script."}
+                )
             )
             await self.close()
             return
@@ -80,10 +86,15 @@ class ExecuteScriptConsumer(AsyncWebsocketConsumer):
         # execute the script on a separate thread
         await self.send(
             json.dumps(
-                {"output": f"Executing script '{action}' with parameters: {args} {kwargs}\n"}
+                {
+                    "output": f"Executing script '{action}' "
+                    f"with parameters: {args} {kwargs}\n"
+                }
             )
         )
-        await sync_to_async(self.execute_script, thread_sensitive=False)(action, args, kwargs)
+        await sync_to_async(self.execute_script, thread_sensitive=False)(
+            action, args, kwargs
+        )
         await self.send(json.dumps({"output": "Script execution finished!"}))
         await self.close()
 
@@ -145,7 +156,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_send(
             self.group_room_name,
-            {"type": "chat_message", "message": f"{self.full_name} has joined the room"},
+            {
+                "type": "chat_message",
+                "message": f"{self.full_name} has joined the room",
+            },
         )
 
     @log_errors

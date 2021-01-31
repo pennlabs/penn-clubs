@@ -9,8 +9,8 @@ from rest_framework.utils.formatting import dedent
 
 
 API_DESCRIPTION = """
-This is the documentation for the backend that powers the Penn Clubs and Hub@Penn websites.
-The backend is written with [Django](https://www.djangoproject.com/) and the
+This is the documentation for the backend that powers the Penn Clubs and Hub@Penn
+websites. The backend is written with [Django](https://www.djangoproject.com/) and the
 [Django Rest Framework](https://www.django-rest-framework.org/).
 
 This documentation is intended to help frontend developers and external
@@ -25,8 +25,8 @@ def merge_metadata(original, changes):
     Merge together two metadata dictionaries. By default, overwrite any existing values.
     If the object is a list, concatenate the original and new list instead.
     If the object is a dict with the $extend property set to true, merge the two
-    dictionaries instead of overwriting. This only works if both parent paths exist up to
-    that point.
+    dictionaries instead of overwriting. This only works if both parent paths exist up
+    to that point.
     """
     if isinstance(changes, dict):
         if isinstance(original, dict):
@@ -48,7 +48,8 @@ def merge_metadata(original, changes):
 
 class CustomAutoSchema(AutoSchema):
     """
-    A custom schema to parse documentation from the docstrings of the view, if applicable.
+    A custom schema to parse documentation from the docstrings of the view,
+    if applicable.
     """
 
     META_REGEX = re.compile(r"^\s*---\s*$(.*?)^\s*---", re.MULTILINE | re.DOTALL)
@@ -136,6 +137,8 @@ class CustomJSONOpenAPIRenderer(JSONOpenAPIRenderer):
         # order tag groups
         categories = list(sorted(categories))
         data["tags"] = [{"name": cat, "description": ""} for cat in categories]
-        data["x-tagGroups"] = [{"name": settings.BRANDING_SITE_NAME, "tags": categories}]
+        data["x-tagGroups"] = [
+            {"name": settings.BRANDING_SITE_NAME, "tags": categories}
+        ]
 
         return jsonref.dumps(data, indent=4 if settings.DEBUG else None).encode("utf-8")

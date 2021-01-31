@@ -46,7 +46,11 @@ urlpatterns = [
 urlpatterns = [path("api/", include(urlpatterns))]
 
 if settings.DEBUG:
-    import debug_toolbar
+    try:
+        import debug_toolbar
+    except ImportError:
+        debug_toolbar = None
 
-    urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    if debug_toolbar is not None:
+        urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
+        urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

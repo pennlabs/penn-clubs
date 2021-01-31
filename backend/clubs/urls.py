@@ -66,14 +66,18 @@ router.register(r"users", UserViewSet, basename="users")
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")
 clubs_router.register(r"events", ClubEventViewSet, basename="club-events")
-clubs_router.register(r"applications", ClubApplicationViewSet, basename="club-applications")
+clubs_router.register(
+    r"applications", ClubApplicationViewSet, basename="club-applications"
+)
 clubs_router.register(r"invites", MemberInviteViewSet, basename="club-invites")
 clubs_router.register(r"assets", AssetViewSet, basename="club-assets")
 clubs_router.register(r"notes", NoteViewSet, basename="club-notes")
 clubs_router.register(r"testimonials", TestimonialViewSet, basename="club-testimonials")
 clubs_router.register(r"questions", QuestionAnswerViewSet, basename="club-questions")
 clubs_router.register(
-    r"membershiprequests", MembershipRequestOwnerViewSet, basename="club-membership-requests"
+    r"membershiprequests",
+    MembershipRequestOwnerViewSet,
+    basename="club-membership-requests",
 )
 clubs_router.register(r"advisors", AdvisorViewSet, basename="club-advisors")
 
@@ -82,10 +86,22 @@ urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),
     path(r"settings/invites/", EmailInvitesAPIView.as_view(), name="email-invites"),
     path(r"settings/zoom/", UserZoomAPIView.as_view(), name="users-zoom"),
-    path(r"settings/zoom/meetings/", MeetingZoomAPIView.as_view(), name="users-zoom-meeting"),
-    path(r"settings/permissions/", UserPermissionAPIView.as_view(), name="users-permission"),
+    path(
+        r"settings/zoom/meetings/",
+        MeetingZoomAPIView.as_view(),
+        name="users-zoom-meeting",
+    ),
+    path(
+        r"settings/permissions/",
+        UserPermissionAPIView.as_view(),
+        name="users-permission",
+    ),
     path(r"settings/groups/", UserGroupAPIView.as_view(), name="users-group"),
-    path(r"clubs/<slug:club_code>/invite/", MassInviteAPIView.as_view(), name="club-invite"),
+    path(
+        r"clubs/<slug:club_code>/invite/",
+        MassInviteAPIView.as_view(),
+        name="club-invite",
+    ),
     path(r"settings/calendar_url/", UserUUIDAPIView.as_view(), name="user-uuid"),
     path(
         r"calendar/<slug:user_secretuuid>/",
@@ -96,7 +112,11 @@ urlpatterns = [
     path(r"scripts/", ScriptExecutionView.as_view(), name="scripts"),
     path(r"options/", OptionListView.as_view(), name="options"),
     path(r"social/", include("social_django.urls", namespace="social")),
-    path(r"webhook/meeting/", MeetingZoomWebhookAPIView.as_view(), name="webhooks-meeting"),
+    path(
+        r"webhook/meeting/",
+        MeetingZoomWebhookAPIView.as_view(),
+        name="webhooks-meeting",
+    ),
 ]
 
 urlpatterns += router.urls

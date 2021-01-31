@@ -18,6 +18,8 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AddField(
-            model_name="report", name="public", field=models.BooleanField(default=False),
+            model_name="report",
+            name="public",
+            field=models.BooleanField(default=False),
         ),
     ]

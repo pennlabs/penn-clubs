@@ -17,7 +17,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("application_start_time", models.DateTimeField()),
@@ -29,7 +32,9 @@ class Migration(migrations.Migration):
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 (
                     "club",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="clubs.club"),
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="clubs.club"
+                    ),
                 ),
             ],
         ),

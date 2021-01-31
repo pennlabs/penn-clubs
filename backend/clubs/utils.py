@@ -177,7 +177,8 @@ def min_edit(s1, s2):
                 newDistances.append(distances[index1])
             else:
                 newDistances.append(
-                    1 + min((distances[index1], distances[index1 + 1], newDistances[-1]))
+                    1
+                    + min((distances[index1], distances[index1 + 1], newDistances[-1]))
                 )
         distances = newDistances
     return distances[-1]
@@ -255,7 +256,9 @@ def fuzzy_lookup_club(name):
         return club.first()
 
     # lookup club without dashes
-    regex = "^{}$".format(re.escape(name.replace("-", " ").strip()).replace("\\ ", r"[\s-]"))
+    regex = "^{}$".format(
+        re.escape(name.replace("-", " ").strip()).replace("\\ ", r"[\s-]")
+    )
     club = Club.objects.filter(name__iregex=regex)
     if club.exists():
         return min(club, key=lambda c: min_edit(c.name.lower(), name.lower()))
@@ -282,7 +285,9 @@ def fuzzy_lookup_club(name):
 
     # strip out common words to see if we can get match
     modified_name = re.sub(r"university of pennsylvania", "", name, flags=re.I).strip()
-    modified_name = re.sub(r"upenn|the|club|penn", "", modified_name, flags=re.I).strip()
+    modified_name = re.sub(
+        r"upenn|the|club|penn", "", modified_name, flags=re.I
+    ).strip()
     club = Club.objects.filter(name__icontains=modified_name)
 
     if club.exists():
@@ -323,7 +328,9 @@ def resize_image(content, width=None, height=None):
 
     # ensure parameter is specified
     if height is None and width is None:
-        raise ValueError("You must specify either the maximum width or the maximum height!")
+        raise ValueError(
+            "You must specify either the maximum width or the maximum height!"
+        )
 
     # preserve aspect ratio
     if height is not None:

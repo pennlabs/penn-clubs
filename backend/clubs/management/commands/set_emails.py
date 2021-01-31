@@ -12,7 +12,9 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **kwargs):
-        for club in Club.objects.filter(Q(active=True) & (Q(email="") | Q(email__isnull=True))):
+        for club in Club.objects.filter(
+            Q(active=True) & (Q(email="") | Q(email__isnull=True))
+        ):
             mship = (
                 club.membership_set.filter(~Q(person__email=""))
                 .order_by("role", "created_at")

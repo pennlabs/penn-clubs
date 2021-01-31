@@ -196,7 +196,16 @@ export async function doBulkLookup(
       doApiRequest(
         typeof item === 'string' ? `/${item}/?format=json` : item[1],
         data,
-      ).then((resp) => resp.json()),
+      ).then(async (resp) => {
+        const contents = await resp.text()
+        try {
+          return JSON.parse(contents)
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error(`Body contents of failed JSON parsing: ${contents}`)
+          throw e
+        }
+      }),
     ),
   )
 

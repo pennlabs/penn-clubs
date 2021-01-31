@@ -3,7 +3,6 @@
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "python.formatting.provider": "black",
-    "python.formatting.blackArgs": ["--line-length", "100"],
     "python.sortImports.args": ["-rc"],
     "[python]": {
         "editor.formatOnPaste": false,
@@ -19,5 +18,5 @@
         "**/.DS_Store": true,
         "**/.venv": true
     },
-    "editor.rulers": [100]
+    "editor.rulers": [88]
 }

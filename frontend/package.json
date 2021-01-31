@@ -56,12 +56,13 @@
   "scripts": {
     "lint": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\"",
     "clean": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\" --fix",
-    "checkts": "tsc --noemit",
-    "test": "./test.sh",
+    "test": "tsc --noemit",
+    "integration": "./test.sh",
     "dev": "node server.js",
-    "build": "build-storybook -o public/storybook && env NODE_ENV=production next build",
+    "build": "env NODE_ENV=production next build",
     "start": "env NODE_ENV=production node server.js",
-    "storybook": "start-storybook -s ./public -p 6006"
+    "storybook": "start-storybook -s ./public -p 6006",
+    "build-storybook": "build-storybook -o public/storybook"
   },
   "license": "MIT",
   "devDependencies": {

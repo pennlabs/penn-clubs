@@ -22,7 +22,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", "884_o+gq8u$6!n$rqa76&tasf%#_mc7is2-!+(dxf^!8*ssh&4")
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", "884_o+gq8u$6!n$rqa76&tasf%#_mc7is2-!+(dxf^!8*ssh&4"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -97,7 +99,10 @@ DATABASES = {
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation."
+        "UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -162,7 +167,9 @@ REST_FRAMEWORK = {
 
 BRANDING = os.environ.get("NEXT_PUBLIC_SITE_NAME", "clubs")
 BRANDING_SITE_NAME = "Hub@Penn" if BRANDING == "fyh" else "Penn Clubs"
-BRANDING_SITE_EMAIL = "hub.provost@upenn.edu" if BRANDING == "fyh" else "info@pennclubs.com"
+BRANDING_SITE_EMAIL = (
+    "hub.provost@upenn.edu" if BRANDING == "fyh" else "info@pennclubs.com"
+)
 
 
 # Email Settings
@@ -223,7 +230,12 @@ SOCIAL_AUTH_DISCONNECT_PIPELINE = (
 
 SOCIAL_AUTH_ZOOM_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_ZOOM_OAUTH2_KEY")
 SOCIAL_AUTH_ZOOM_OAUTH2_SECRET = os.environ.get("SOCIAL_AUTH_ZOOM_OAUTH2_SECRET")
-SOCIAL_AUTH_ZOOM_OAUTH2_SCOPE = ["user:read", "user:write", "meeting:read", "meeting:write"]
+SOCIAL_AUTH_ZOOM_OAUTH2_SCOPE = [
+    "user:read",
+    "user:write",
+    "meeting:read",
+    "meeting:write",
+]
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/"
 ZOOM_VERIFICATION_TOKEN = os.environ.get("ZOOM_VERIFICATION_TOKEN")
 

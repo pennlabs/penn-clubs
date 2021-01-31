@@ -20,7 +20,9 @@ class Migration(migrations.Migration):
             model_name="event",
             name="club",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, related_name="events", to="clubs.Club"
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="events",
+                to="clubs.Club",
             ),
         ),
     ]
