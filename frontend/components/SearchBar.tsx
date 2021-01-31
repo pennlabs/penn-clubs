@@ -25,6 +25,7 @@ import {
   NAV_HEIGHT,
 } from '../constants/measurements'
 import { BODY_FONT } from '../constants/styles'
+import { doApiRequest } from '../utils'
 import { Icon } from './common'
 import DropdownFilter, { FilterHeader, SelectableTag } from './DropdownFilter'
 import FilterSearch, { FuseTag } from './FilterSearch'
@@ -340,6 +341,10 @@ export const SearchBarTextItem = ({
   const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
 
   useEffect(() => {
+    doApiRequest('/searches/', {
+      method: 'POST',
+      body: { query: nameInput },
+    })
     timeout !== null && clearTimeout(timeout)
     const timeoutId: number = window.setTimeout(
       () =>
