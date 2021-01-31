@@ -439,12 +439,12 @@ export default function ClubEditCard({
         {
           name: 'how_to_get_involved',
           label: FIELD_PARTICIPATION_LABEL,
-          type: 'textarea',
+          type: 'html',
         },
         {
           name: 'signature_events',
           label: 'Signature Events',
-          type: 'textarea',
+          type: 'html',
         },
         {
           type: 'content',

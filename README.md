@@ -1,6 +1,6 @@
 # Penn Clubs
 
-[![CircleCI](https://circleci.com/gh/pennlabs/penn-clubs.svg?style=shield)](https://circleci.com/gh/pennlabs/penn-clubs)
+![Build and Deploy](https://github.com/pennlabs/penn-clubs/workflows/Build%20and%20Deploy/badge.svg)
 [![Coverage Status](https://codecov.io/gh/pennlabs/penn-clubs/branch/master/graph/badge.svg)](https://codecov.io/gh/pennlabs/penn-clubs)
 
 Official React-based website for Penn Labs' club directory and events listings.
