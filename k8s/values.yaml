@@ -10,7 +10,7 @@ applications:
     image: pennlabs/penn-clubs-backend
     secret: penn-clubs
     cmd: ["/usr/local/bin/asgi-run"]
-    replicas: 5
+    replicas: 2
     ingress:
       hosts:
         - host: pennclubs.com
@@ -25,7 +25,7 @@ applications:
   - name: django-wgsi
     image: pennlabs/penn-clubs-backend
     secret: penn-clubs
-    replicas: 15
+    replicas: 5
     ingress:
       hosts:
         - host: pennclubs.com
@@ -39,7 +39,7 @@ applications:
         value: penn-clubs-redis
   - name: react
     image: pennlabs/penn-clubs-frontend
-    replicas: 5
+    replicas: 2
     ingress:
       hosts:
         - host: pennclubs.com
