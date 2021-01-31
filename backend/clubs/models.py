@@ -965,6 +965,15 @@ class ZoomMeetingVisit(models.Model):
         )
 
 
+class Search(models.Model):
+    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    query = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "<Search: {} at {}>".format(self.query, self.created_at)
+
+
 class MembershipRequest(models.Model):
     """
     Used when users are not in the club but request membership from the owner
