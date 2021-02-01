@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js'
 import { ReactElement, useEffect, useState } from 'react'
-import { Styles } from 'react-select'
+import { OptionsType, Styles } from 'react-select'
 import Select from 'react-select/async'
 import styled from 'styled-components'
 
@@ -185,13 +185,17 @@ const Search = ({
         defaultOptions={recommendedTags}
         value={selected}
         backspaceRemovesValue
-        onChange={(_, selectEvent): void => {
-          const { action, option, removedValue } = selectEvent
-          if (action === 'select-option') {
-            updateTag(option as FuseTag, name)
-          } else if (action === 'pop-value') {
-            // pop-value events contain removedValue = undefined if no tags are selected
-            removedValue && updateTag(removedValue, name)
+        onChange={(value: OptionsType<FuseTag>, selectEvent): void => {
+          const { action } = selectEvent
+          if (action === 'select-option' || action === 'pop-value') {
+            const currentSet = new Set(selected.map(({ value }) => value))
+            const newSet = new Set(value.map(({ value }) => value))
+            selected
+              .filter(({ value }) => !newSet.has(value))
+              .forEach((val) => updateTag(val, name))
+            value
+              .filter(({ value }) => !currentSet.has(value))
+              .forEach((val) => updateTag(val, name))
           } else if (action === 'clear') {
             clearTags()
           }
