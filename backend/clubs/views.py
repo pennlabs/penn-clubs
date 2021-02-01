@@ -2713,6 +2713,7 @@ class SearchViewSet(viewsets.ModelViewSet):
     create: Add a new search query
     """
 
+    permission_classes = [IsAuthenticated]
     http_method_names = ["post"]
 
     def get_serializer_class(self):
