@@ -69,7 +69,6 @@ from clubs.models import (
     RecurringEvent,
     Report,
     School,
-    Search,
     StudentType,
     Subscribe,
     Tag,
