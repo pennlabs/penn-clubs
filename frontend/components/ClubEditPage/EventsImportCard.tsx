@@ -99,6 +99,7 @@ export default function EventsImportCard({
               as={TextField}
               type="url"
               label="ICS Calendar URL"
+              autocomplete="off"
             />
             <div className="buttons">
               <button
