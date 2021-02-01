@@ -7,7 +7,7 @@
     ],
     "env": {
         "production": {
-            "plugins": []
+            "plugins": [["styled-components", { "ssr": true }]]
         },
         "development": {
             "plugins": [
