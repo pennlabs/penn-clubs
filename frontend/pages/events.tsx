@@ -1,3 +1,4 @@
+import Color from 'color'
 import equal from 'deep-equal'
 import moment from 'moment'
 import { NextPageContext } from 'next'
@@ -45,6 +46,7 @@ import {
   MD,
   mediaMaxWidth,
   SNOW,
+  WHITE,
 } from '../constants'
 import renderPage from '../renderPage'
 import {
@@ -772,7 +774,9 @@ function EventPage({
                       return {
                         style: {
                           backgroundColor: color,
-                          color: CLUBS_GREY_LIGHT,
+                          color: Color(color).isLight()
+                            ? CLUBS_GREY_LIGHT
+                            : WHITE,
                           border: 'none',
                         },
                       }
