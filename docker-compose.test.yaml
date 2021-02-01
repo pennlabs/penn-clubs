@@ -30,6 +30,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    depends_on:
+      - postgres
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`traefik`) && PathPrefix(`/api`)"
