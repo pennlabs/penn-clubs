@@ -40,7 +40,7 @@ const Settings = ({ userInfo, authenticated }: SettingsProps) => {
    * @param The message to show to the user.
    */
   const notify = (msg: ReactNode, type: TypeOptions = 'info'): void => {
-    toast[type](msg, { hideProgressBar: true })
+    toast[type](msg)
   }
 
   if (authenticated === null) {

@@ -76,15 +76,11 @@ const SyncModal = (): ReactElement | null => {
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(url)
-                  toast('Copied to clipboard!', {
-                    hideProgressBar: true,
-                    type: 'info',
-                  })
+                  toast.info('Copied to clipboard!')
                 } catch (error) {
-                  toast('Failed to copy! You need to manually copy the URL.', {
-                    hideProgressBar: true,
-                    type: 'error',
-                  })
+                  toast.error(
+                    'Failed to copy! You need to manually copy the URL.',
+                  )
                 }
               }}
             >

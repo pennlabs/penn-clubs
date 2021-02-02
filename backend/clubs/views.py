@@ -1462,7 +1462,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         return Response(analytics_dict)
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post", "delete"])
     def fetch(self, request, *args, **kwargs):
         """
         Fetch the ICS calendar events from the club's ICS calendar URL.
@@ -1484,6 +1484,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         ---
         """
         club = self.get_object()
+
+        if request.method == "DELETE":
+            now = timezone.now()
+            num = club.events.filter(is_ics_event=True, start_time__gte=now).delete()[0]
+            return Response(
+                {
+                    "success": True,
+                    "message": f"Deleted all {num} imported ICS calendar events!",
+                }
+            )
 
         if not club.ics_import_url:
             return Response(

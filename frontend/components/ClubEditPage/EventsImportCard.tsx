@@ -18,23 +18,30 @@ export default function EventsImportCard({
   onFetchEvents,
 }: EventsImportCardProps): ReactElement {
   const [isFetching, setFetching] = useState<boolean>(false)
+  const [isDeleting, setDeleting] = useState<boolean>(false)
 
   const fetchEvents = (): void => {
     setFetching(true)
     doApiRequest(`/clubs/${club.code}/fetch/?format=json`, { method: 'POST' })
       .then((resp) => resp.json())
       .then((data) => {
-        toast[data.success ? 'success' : 'error'](data.message, {
-          hideProgressBar: true,
-        })
+        toast[data.success ? 'success' : 'error'](data.message)
         onFetchEvents && onFetchEvents()
       })
       .catch(() => {
-        toast.error('Failed to fetch events, an unknown error occured.', {
-          hideProgressBar: true,
-        })
+        toast.error('Failed to fetch events, an unknown error occured.')
       })
       .finally(() => setFetching(false))
+  }
+
+  const deleteEvents = async (): Promise<void> => {
+    setDeleting(true)
+    const resp = await doApiRequest(`/clubs/${club.code}/fetch/?format=json`, {
+      method: 'DELETE',
+    })
+    const json = await resp.json()
+    toast[json.success ? 'success' : 'error'](json.message)
+    setDeleting(false)
   }
 
   const submit = (data: { url: string }, { setSubmitting }): void => {
@@ -43,9 +50,7 @@ export default function EventsImportCard({
       body: { ics_import_url: data.url },
     })
       .then(() => {
-        toast.success('Calendar ICS URL has been saved!', {
-          hideProgressBar: true,
-        })
+        toast.success('Calendar ICS URL has been saved!')
         if (!isFetching) {
           fetchEvents()
         }
@@ -63,7 +68,7 @@ export default function EventsImportCard({
         events will be automatically imported once a day. You can also fetch the
         events manually using the button below.
       </Text>
-      <div className="content mb-3">
+      <div className="content mb-4">
         <ul>
           <li>
             If you use Google Calendar, see{' '}
@@ -111,12 +116,20 @@ export default function EventsImportCard({
               </button>
               <button
                 type="button"
-                disabled={isSubmitting || isFetching}
+                disabled={isSubmitting || isFetching || isDeleting}
                 className="button is-info"
                 onClick={fetchEvents}
               >
                 <Icon name="download" />{' '}
                 {isFetching ? 'Fetching Events...' : 'Fetch Events'}
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting || isFetching || isDeleting}
+                className="button is-danger"
+                onClick={deleteEvents}
+              >
+                <Icon name="trash" /> Delete Events
               </button>
             </div>
           </Form>

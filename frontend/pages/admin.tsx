@@ -202,9 +202,9 @@ function AdminPage({
       })
       const contents = await resp.json()
       if (contents.message) {
-        toast.info(contents.message, { hideProgressBar: true })
+        toast.info(contents.message)
       } else if (contents.error) {
-        toast.error(contents.error, { hideProgressBar: true })
+        toast.error(contents.error)
       }
     } finally {
       setSubmitting(false)
@@ -337,9 +337,7 @@ function AdminPage({
                   )
                     .then((resp) => resp.json())
                     .then(({ events }) => {
-                      toast.success(`Created or updated ${events} event(s)!`, {
-                        hideProgressBar: true,
-                      })
+                      toast.success(`Created or updated ${events} event(s)!`)
                       setSubmitting(false)
                     })
                 } else {

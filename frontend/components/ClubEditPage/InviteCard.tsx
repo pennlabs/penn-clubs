@@ -48,7 +48,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
     msg: ReactElement | string,
     type: TypeOptions = 'info',
   ): void => {
-    toast[type](msg, { hideProgressBar: true })
+    toast[type](msg)
   }
 
   const reloadInvites = (): void => {

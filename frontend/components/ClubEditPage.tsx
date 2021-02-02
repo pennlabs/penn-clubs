@@ -91,7 +91,7 @@ const ClubForm = ({
     msg: string | ReactElement,
     type: TypeOptions = 'info',
   ): void => {
-    toast[type](msg, { hideProgressBar: true })
+    toast[type](msg)
   }
 
   const submit = async ({

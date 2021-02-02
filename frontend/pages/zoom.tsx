@@ -370,7 +370,6 @@ const ZoomPage = ({
                           <Icon name="trash" /> Disconnect
                         </button>
                       </>,
-                      { hideProgressBar: true },
                     )
                   }
                 }}
@@ -442,11 +441,9 @@ const ZoomPage = ({
                 .then((resp) => resp.json())
                 .then((data) => {
                   if (Array.isArray(data)) {
-                    toast.error(data.join(' '), { hideProgressBar: true })
+                    toast.error(data.join(' '))
                   } else {
-                    toast[data.success ? 'success' : 'error'](data.detail, {
-                      hideProgressBar: true,
-                    })
+                    toast[data.success ? 'success' : 'error'](data.detail)
                   }
                   loadSettings(false)
                     .then(setZoomSettings)
@@ -468,7 +465,6 @@ const ZoomPage = ({
               setLoading(false)
               toast.info(
                 'Your user account settings have been reloaded from Zoom.',
-                { hideProgressBar: true },
               )
             }}
           >
@@ -497,7 +493,6 @@ const ZoomPage = ({
             loadMeetings(undefined, true).then(setUserMeetings)
             toast.info(
               `Your activities fair events on ${SITE_NAME} have been reloaded.`,
-              { hideProgressBar: true },
             )
           }}
         >
@@ -699,10 +694,7 @@ const ZoomPage = ({
                       )
                         .then((resp) => resp.json())
                         .then((resp) => {
-                          toast[resp.success ? 'success' : 'error'](
-                            resp.detail,
-                            { hideProgressBar: true },
-                          )
+                          toast[resp.success ? 'success' : 'error'](resp.detail)
                           loadEvents().then(setEvents)
                           loadMeetings(undefined, true)
                             .then(setUserMeetings)
@@ -716,7 +708,6 @@ const ZoomPage = ({
                               An error occured while trying to add your meeting.
                               Please contact <Contact /> for assistance.
                             </>,
-                            { hideProgressBar: true },
                           )
                           setLoading(false)
                         })
@@ -744,9 +735,9 @@ const ZoomPage = ({
                         )
                           .then((resp) => resp.json())
                           .then((resp) => {
-                            toast[
-                              resp.success ? 'success' : 'error'
-                            ](resp.detail, { hideProgressBar: true })
+                            toast[resp.success ? 'success' : 'error'](
+                              resp.detail,
+                            )
                             loadEvents().then(setEvents)
                             loadMeetings(undefined, true)
                               .then(setUserMeetings)
@@ -759,7 +750,6 @@ const ZoomPage = ({
                                 meeting. Please contact <Contact /> for
                                 assistance.
                               </>,
-                              { hideProgressBar: true },
                             )
                             setLoading(false)
                           })
@@ -815,7 +805,6 @@ const ZoomPage = ({
                     setLoading(false)
                     toast.success(
                       'The description and cover photo for this event has been saved!',
-                      { hideProgressBar: true },
                     )
                   }}
                   enableReinitialize
