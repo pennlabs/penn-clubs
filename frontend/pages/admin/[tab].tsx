@@ -25,11 +25,11 @@ function AdminPage({
   fair,
   reports,
 }): ReactElement {
+  const router = useRouter()
+
   if (!userInfo) {
     return <AuthPrompt />
   }
-
-  const router = useRouter()
 
   const tabs = [
     {
@@ -62,7 +62,7 @@ function AdminPage({
     {
       name: 'reports',
       label: 'Reports',
-      content: () => <ReportsTab reports={reports} />,
+      content: () => <ReportsTab reports={reports} authenticated={true} />,
     },
   ]
 
