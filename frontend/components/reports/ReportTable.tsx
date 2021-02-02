@@ -49,55 +49,56 @@ const ReportTable = ({
           </tr>
         </TableHeadDivider>
         <tbody>
-          {reports.map((report, i) => (
-            <tr key={i}>
-              <TableData>
-                <Icon
-                  name={report.public ? 'globe' : 'user'}
-                  alt={report.public ? 'public' : 'private'}
-                />{' '}
-                {report.name || <span>None</span>}
-              </TableData>
-              <TableData>{report.creator || <span>None</span>}</TableData>
-              <TableData>
-                {report.created_at ? (
-                  <TimeAgo date={report.created_at} />
-                ) : (
-                  <span>None</span>
-                )}
-              </TableData>
-              <TableData>
-                {report.updated_at ? (
-                  <TimeAgo date={report.updated_at} />
-                ) : (
-                  <span>None</span>
-                )}
-              </TableData>
-              <TableData>
-                <div className="buttons">
-                  <button
-                    onClick={() => onRun(report)}
-                    className="button is-small is-success"
-                  >
-                    <Icon name="play" /> Run
-                  </button>
-                  <button
-                    onClick={() => onEdit(report)}
-                    className="button is-small is-info"
-                  >
-                    <Icon name="edit" /> Edit
-                  </button>
-                  <button
-                    className="button is-small is-danger"
-                    onClick={() => onDelete(report)}
-                  >
-                    <Icon name="trash" /> Delete
-                  </button>
-                </div>
-              </TableData>
-            </tr>
-          ))}
-          {!reports.length && (
+          {reports &&
+            reports.map((report, i) => (
+              <tr key={i}>
+                <TableData>
+                  <Icon
+                    name={report.public ? 'globe' : 'user'}
+                    alt={report.public ? 'public' : 'private'}
+                  />{' '}
+                  {report.name || <span>None</span>}
+                </TableData>
+                <TableData>{report.creator || <span>None</span>}</TableData>
+                <TableData>
+                  {report.created_at ? (
+                    <TimeAgo date={report.created_at} />
+                  ) : (
+                    <span>None</span>
+                  )}
+                </TableData>
+                <TableData>
+                  {report.updated_at ? (
+                    <TimeAgo date={report.updated_at} />
+                  ) : (
+                    <span>None</span>
+                  )}
+                </TableData>
+                <TableData>
+                  <div className="buttons">
+                    <button
+                      onClick={() => onRun(report)}
+                      className="button is-small is-success"
+                    >
+                      <Icon name="play" /> Run
+                    </button>
+                    <button
+                      onClick={() => onEdit(report)}
+                      className="button is-small is-info"
+                    >
+                      <Icon name="edit" /> Edit
+                    </button>
+                    <button
+                      className="button is-small is-danger"
+                      onClick={() => onDelete(report)}
+                    >
+                      <Icon name="trash" /> Delete
+                    </button>
+                  </div>
+                </TableData>
+              </tr>
+            ))}
+          {(!reports || !reports.length) && (
             <tr>
               <TableData colSpan={3}>
                 <Empty>There are no existing reports.</Empty>
