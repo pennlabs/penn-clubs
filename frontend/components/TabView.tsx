@@ -42,27 +42,41 @@ const Div = styled.div`
 `
 const Tabs = styled.div``
 
+type Tab = {
+  name: string
+  content: ReactNode | (() => ReactNode)
+  disabled?: boolean
+  label?: string
+}
+
 type Props = {
   background?: string
   tabClassName?: string
-  tabs: {
-    name: string
-    content: ReactNode | (() => ReactNode)
-    disabled?: boolean
-    label?: string
-  }[]
+  tabs: Tab[]
+  useHashRouting?: boolean
+  currentTabName?: string
+  onTabChange?: (tab: Tab) => void
 }
 
 const TabView = ({
   tabs,
   tabClassName = '',
   background,
+  useHashRouting = true,
+  currentTabName,
+  onTabChange,
 }: Props): ReactElement => {
   // the server side rendering does not have a window object
-  const [currentTab, setCurrentTab] = useState<string>(tabs[0].name)
+  const [currentTab, setCurrentTab] = useState<string>(
+    currentTabName ?? tabs[0].name,
+  )
 
   useEffect(() => {
-    setCurrentTab(window.location.hash.substring(1) || currentTab)
+    if (useHashRouting) {
+      setCurrentTab(window.location.hash.substring(1) || currentTab)
+    } else {
+      setCurrentTab(currentTab)
+    }
   }, [])
 
   const getTabContent = (): ReactElement => {
@@ -98,7 +112,10 @@ const TabView = ({
                   style={{ borderBottomWidth: '2px', marginBottom: '-2px' }}
                   onClick={() => {
                     setCurrentTab(name)
-                    window.history.replaceState(undefined, '', `#${name}`)
+                    if (useHashRouting)
+                      window.history.replaceState(undefined, '', `#${name}`)
+                    const t = tabs.find((t) => t.name === name)
+                    if (t && onTabChange) onTabChange(t)
                   }}
                 >
                   {label || titleize(name)}
