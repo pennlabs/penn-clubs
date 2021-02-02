@@ -33,13 +33,13 @@ export default function AdvisorCard({
     club.advisor_set.length || 0,
   )
   const updateAdvisors = (
-    newAdvisors: (Advisor & { _status?: boolean; _error_message?: string })[],
+    newAdvisors: (Advisor & { _status?: boolean; _errorMessage?: string })[],
   ): void => {
     let validCount = 0
     if (newAdvisors.length) {
       validCount = newAdvisors.filter(
         (advisor) =>
-          (advisor._status || !advisor._error_message) && advisor.public,
+          (advisor._status || !advisor._errorMessage) && advisor.public,
       ).length
     }
     if (validateAdvisors) {

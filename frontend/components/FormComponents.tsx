@@ -156,7 +156,7 @@ export const RichTextField = useFieldWrapper(
     const { setFieldValue } = useFormikContext()
     const textValue = useRef<string | null>(null)
 
-    const [editorState, setEditorState] = useState(() =>
+    const [editorState, setEditorState] = useState<EditorState>(() =>
       EditorState.createEmpty(),
     )
 
