@@ -10,8 +10,8 @@ import FairsTab from '../../components/Settings/FairsTab'
 import QueueTab from '../../components/Settings/QueueTab'
 import ReportsTab from '../../components/Settings/ReportsTab'
 import ScriptsTab from '../../components/Settings/ScriptsTab'
-import TabView from '../../components/TabView'
-import { BG_GRADIENT, WHITE } from '../../constants'
+import { BrowserTabView } from '../../components/TabView'
+import { ADMIN_ROUTE, BG_GRADIENT, WHITE } from '../../constants'
 import renderPage from '../../renderPage'
 import { Badge, ClubFair, Report, Tag } from '../../types'
 import { doBulkLookup } from '../../utils'
@@ -66,7 +66,7 @@ function AdminPage({
     },
   ]
 
-  const { tab = tabs[0].name } = router.query
+  const tab = router.query.slug?.[0]
 
   return (
     <>
@@ -76,19 +76,12 @@ function AdminPage({
           Admin Dashboard
         </Title>
       </Container>
-      <TabView
+      <BrowserTabView
         background={BG_GRADIENT}
         tabs={tabs}
+        tab={tab}
         tabClassName="is-boxed"
-        useHashRouting={false}
-        currentTabName={tab as string}
-        onTabChange={(tab) => {
-          window.history.replaceState(
-            undefined,
-            '',
-            router.pathname.replace('[tab]', tab.name),
-          )
-        }}
+        route={ADMIN_ROUTE}
       />
     </>
   )

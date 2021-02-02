@@ -5,6 +5,7 @@ import { ReactElement, useState } from 'react'
 import { REPORT_CREATE_ROUTE, REPORT_EDIT_ROUTE } from '../../constants'
 import { Report } from '../../types'
 import { apiCheckPermission, doApiRequest } from '../../utils'
+import { SITE_NAME } from '../../utils/branding'
 import { Icon, Text } from '../common'
 import { downloadReport } from '../reports/ReportPage'
 import ReportTable from '../reports/ReportTable'
@@ -33,11 +34,17 @@ const ReportsTab = ({
 
   return (
     <>
-      <Link href={REPORT_CREATE_ROUTE}>
-        <a className="button is-link">
-          <Icon name="plus" alt="plus" /> Create New Report
-        </a>
-      </Link>
+      <Text>
+        You can use this page to generate Excel spreadsheet exports from the{' '}
+        {SITE_NAME} database.
+      </Text>
+      <div className="buttons">
+        <Link href={REPORT_CREATE_ROUTE}>
+          <a className="button is-link is-small">
+            <Icon name="plus" alt="plus" /> Create New Report
+          </a>
+        </Link>
+      </div>
       <ReportTable
         onRun={downloadReport}
         onEdit={(report: Report) =>
