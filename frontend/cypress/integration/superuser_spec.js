@@ -77,7 +77,7 @@ describe('Permissioned (superuser) user tests', { retries: { runMode: 2, openMod
   })
 
   it('Visits the reports page', () => {
-    cy.visit('/reports')
+    cy.visit('/admin/reports')
     cy.contains('Reports')
     cy.contains('.button', 'Create New Report').click()
   })
