@@ -25,11 +25,11 @@ function AdminPage({
   fair,
   reports,
 }): ReactElement {
-  const router = useRouter()
-
   if (!userInfo) {
     return <AuthPrompt />
   }
+
+  const router = useRouter()
 
   const tabs = [
     {
@@ -62,7 +62,7 @@ function AdminPage({
     {
       name: 'reports',
       label: 'Reports',
-      content: () => <ReportsTab reports={reports} authenticated={true} />,
+      content: () => <ReportsTab reports={reports} />,
     },
   ]
 
@@ -119,8 +119,6 @@ AdminPage.getInitialProps = async (ctx: NextPageContext) => {
   }
 }
 
-AdminPage.permissions = ['clubs.approve_club']
-
-AdminPage.getAdditionalPermissions = () => ['clubs.generate_reports']
+AdminPage.permissions = ['clubs.approve_club', 'clubs.generate_reports']
 
 export default renderPage(AdminPage)

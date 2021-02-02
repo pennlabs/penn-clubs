@@ -4,20 +4,22 @@ import { ReactElement, useState } from 'react'
 
 import { REPORT_CREATE_ROUTE, REPORT_EDIT_ROUTE } from '../../constants'
 import { Report } from '../../types'
-import { doApiRequest } from '../../utils'
-import { Icon } from '../common'
+import { apiCheckPermission, doApiRequest } from '../../utils'
+import { OBJECT_NAME_TITLE_SINGULAR, SITE_NAME } from '../../utils/branding'
+import { Contact, Icon, Metadata, Text } from '../common'
+import AuthPrompt from '../common/AuthPrompt'
 import { downloadReport } from '../reports/ReportPage'
 import ReportTable from '../reports/ReportTable'
 
 type ReportsProps = {
-  authenticated: boolean | null
   reports: Report[]
 }
 
 const ReportsTab = ({
   reports: initialReports,
 }: ReportsProps): ReactElement => {
-  const [reports, setReports] = useState<Report[]>(initialReports)
+  const [reports, setReports] = useState<Report[]>(initialReports ?? [])
+  const permission = apiCheckPermission('clubs.generate_reports')
 
   const router = useRouter()
 
@@ -25,6 +27,10 @@ const ReportsTab = ({
     doApiRequest('/reports/?format=json')
       .then((resp) => (resp.ok ? resp.json() : []))
       .then((data) => setReports(data))
+  }
+
+  if (!permission) {
+    return <Text>You do not have permission to view this page.</Text>
   }
 
   return (
