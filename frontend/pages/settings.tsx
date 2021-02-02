@@ -8,7 +8,7 @@ import ClubTab from '../components/Settings/ClubTab'
 import FavoritesTab from '../components/Settings/FavoritesTab'
 import MembershipRequestsTab from '../components/Settings/MembershipRequestsTab'
 import ProfileTab from '../components/Settings/ProfileTab'
-import TabView from '../components/TabView'
+import HashTabView from '../components/TabView'
 import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '../constants/colors'
 import { BORDER_RADIUS } from '../constants/measurements'
 import renderPage from '../renderPage'
@@ -40,7 +40,7 @@ const Settings = ({ userInfo, authenticated }: SettingsProps) => {
    * @param The message to show to the user.
    */
   const notify = (msg: ReactNode, type: TypeOptions = 'info'): void => {
-    toast[type](msg, { hideProgressBar: true })
+    toast[type](msg)
   }
 
   if (authenticated === null) {
@@ -88,7 +88,11 @@ const Settings = ({ userInfo, authenticated }: SettingsProps) => {
           Welcome, {userInfo.name}
         </Title>
       </Container>
-      <TabView background={BG_GRADIENT} tabs={tabs} tabClassName="is-boxed" />
+      <HashTabView
+        background={BG_GRADIENT}
+        tabs={tabs}
+        tabClassName="is-boxed"
+      />
     </>
   )
 }

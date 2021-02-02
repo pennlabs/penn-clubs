@@ -52,7 +52,7 @@ type InitialRenewPageProps = {
   majors: Major[]
   years: Year[]
   tags: Tag[]
-  student_types: StudentType[]
+  studentTypes: StudentType[]
 }
 
 type RenewPageProps = InitialRenewPageProps & {
@@ -179,7 +179,7 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
     majors,
     years,
     tags,
-    student_types: studentTypes,
+    studentTypes,
   } = props
 
   const [club, setClub] = useState<Club>(initialClub)
@@ -309,7 +309,7 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
             majors={majors}
             years={years}
             tags={tags}
-            student_types={studentTypes}
+            studentTypes={studentTypes}
             club={club}
             isEdit={true}
             onSubmit={({ club, message }): Promise<void> => {

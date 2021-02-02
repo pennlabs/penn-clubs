@@ -4,7 +4,7 @@ import { ReactElement } from 'react'
 import { Club } from '../../types'
 import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Empty } from '../common'
-import { CheckboxField, TextField } from '../FormComponents'
+import { CheckboxField, RichTextField, TextField } from '../FormComponents'
 import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
@@ -34,12 +34,11 @@ export default function QuestionsCard({
         fields={
           <>
             <Field name="question" as={TextField} type="textarea" disabled />
-            <Field name="answer" as={TextField} type="textarea" />
+            <Field name="answer" as={RichTextField} />
             <Field
               name="approved"
-              label="Is this question and response shown to the public?"
+              label="Is this question and response visible to the public?"
               as={CheckboxField}
-              disabled
             />
           </>
         }

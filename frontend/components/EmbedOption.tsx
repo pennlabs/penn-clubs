@@ -6,7 +6,7 @@ import { Contact, Icon, Modal } from './common'
 
 type Props = {
   editorState?: EditorState
-  onChange?: (state: any) => void
+  onChange?: (state: EditorState) => void
 }
 
 type Entity = {
@@ -89,7 +89,7 @@ const EmbedOption = (props: Props): ReactElement => {
     ReactElement | string | null
   >(null)
 
-  const embedContent = () => {
+  const embedContent = (embedUrl: string) => {
     if (!embedUrl.length) {
       setErrorMessage('You must specify a valid URL.')
       return false
@@ -106,10 +106,15 @@ const EmbedOption = (props: Props): ReactElement => {
     }
 
     if (/^\s*<iframe/.test(embedUrl)) {
-      setErrorMessage(
-        'Please only specify the URL in the input, not the entire embedding code.',
-      )
-      return false
+      const matches = embedUrl.match(/src=['"](.*?)['"]/)
+      if (matches == null) {
+        setErrorMessage(
+          'Please only specify the URL in the input, not the entire embedding code.',
+        )
+        return false
+      }
+      embedUrl = matches[1]
+      setEmbedUrl(embedUrl)
     }
 
     if (!/^https?:\/\//.test(embedUrl)) {
@@ -130,6 +135,14 @@ const EmbedOption = (props: Props): ReactElement => {
     }
 
     const { editorState, onChange } = props
+
+    if (editorState == null) {
+      setErrorMessage(
+        'There is no editor state available, this should not happen!',
+      )
+      return false
+    }
+
     const contentState = editorState.getCurrentContent()
     const contentStateWithEntity = contentState.createEntity(
       'EMBED',
@@ -294,7 +307,7 @@ const EmbedOption = (props: Props): ReactElement => {
               className="button is-success"
               style={{ height: 24 }}
               onClick={() => {
-                if (embedContent()) {
+                if (embedContent(embedUrl)) {
                   setShowModal(false)
                 }
               }}

@@ -46,7 +46,7 @@ type ResourceCreationPageProps = {
   years: Year[]
   majors: Major[]
   tags: Tag[]
-  student_types: StudentType[]
+  studentTypes: StudentType[]
 }
 
 type TabItem = {
@@ -63,7 +63,7 @@ const ResourceCreationPage = ({
   years,
   majors,
   tags,
-  student_types: studentTypes,
+  studentTypes,
 }: ResourceCreationPageProps): ReactElement => {
   const isResuming = initialClub != null
   const metadata = (
@@ -181,7 +181,7 @@ const ResourceCreationPage = ({
             majors={majors}
             tags={tags}
             club={club === null ? {} : club}
-            student_types={studentTypes}
+            studentTypes={studentTypes}
             onSubmit={({ message, club }): Promise<void> => {
               setClub(club ?? null)
               if (club) {

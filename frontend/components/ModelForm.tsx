@@ -319,7 +319,10 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
    * Called when the form is submitted to save an individual object.
    * @returns a promise with the first argument as the new object values.
    */
-  const onSubmit = (object, data): Promise<any> => {
+  const onSubmit = async (
+    object: ModelObject | null,
+    data,
+  ): Promise<ModelObject> => {
     const { baseUrl, keyField = 'id' } = props
 
     // if object was deleted, return
@@ -327,7 +330,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
       return new Promise((resolve) => {
         resolve({
           _status: false,
-          _error_message:
+          _errorMessage:
             'This object has already been deleted and cannot be saved.',
         })
       })
@@ -354,78 +357,51 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
             method: 'POST',
             body: formData,
           })
-            .then((resp) => {
-              if (resp.ok) {
-                object._status = true
-                // eslint-disable-next-line camelcase
-                object._error_message = null
-                return resp.json().then((resp) => {
-                  Object.keys(resp).forEach((key) => {
-                    object[key] = resp[key]
-                  })
-                })
-              } else {
-                object._status = false
-                return resp.json().then((resp) => {
-                  // eslint-disable-next-line camelcase
-                  object._error_message = resp
-                })
-              }
-            })
-            .then(() => {
-              changeObjects([...objects])
-              if (onUpdate) {
-                onUpdate(objects)
-              }
-            })
         : doApiRequest(`${baseUrl}${object[keyField]}/?format=json`, {
             method: 'PATCH',
             body: formData,
           })
-            .then((resp) => {
-              object._status = resp.ok
-              return resp.json()
-            })
-            .then((resp) => {
-              if (object._status) {
-                Object.keys(resp).forEach((key) => {
-                  object[key] = resp[key]
-                })
-                // eslint-disable-next-line camelcase
-                object._error_message = null
-              } else {
-                // eslint-disable-next-line camelcase
-                object._error_message = resp
-              }
-              changeObjects([...objects])
-              if (onUpdate) onUpdate(objects)
-            })
+
+    // parse response
+    const resp = await savePromise
+    const json = await resp.json()
+    object._status = resp.ok
+    if (object._status) {
+      Object.keys(json).forEach((key) => {
+        object[key] = json[key]
+      })
+      object._errorMessage = null
+    } else {
+      object._errorMessage = json
+    }
+    const newObject = { ...object }
+
+    // update object state
+    changeObjects((objects) => {
+      const objIndex = objects.indexOf(newObject)
+      if (objIndex !== -1) {
+        objects[objIndex] = newObject
+      }
+      return [...objects]
+    })
 
     // upload all files in the form
-    return savePromise
-      .then(() => {
-        return Promise.all(
-          Object.entries(data)
-            .map(([key, value]) => {
-              if (!(value instanceof File)) {
-                return null
-              }
-              const fieldData = new FormData()
-              fieldData.append(key, value)
-              return doApiRequest(
-                `${baseUrl}${object[keyField]}/?format=json`,
-                {
-                  method: 'PATCH',
-                  body: fieldData,
-                },
-              )
-            })
-            .filter((a) => a !== null),
-        )
-      })
-      .then(() => {
-        return object
-      })
+    await Promise.all(
+      Object.entries(data)
+        .map(([key, value]) => {
+          if (!(value instanceof File)) {
+            return null
+          }
+          const fieldData = new FormData()
+          fieldData.append(key, value)
+          return doApiRequest(`${baseUrl}${object[keyField]}/?format=json`, {
+            method: 'PATCH',
+            body: fieldData,
+          })
+        })
+        .filter((a) => a !== null),
+    )
+    return newObject
   }
 
   /**
@@ -485,13 +461,13 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
               initialStatus={
                 currentObject &&
                 currentObject._status === false &&
-                currentObject._error_message
+                currentObject._errorMessage
               }
               onSubmit={(data) => {
                 if (currentObjectIndex !== -1) {
                   objects[currentObjectIndex] = currentObject
                 }
-                onSubmit(currentObject, data).then((obj: any) => {
+                onSubmit(currentObject, data).then((obj: ModelObject) => {
                   if (obj._status) {
                     if (currentlyEditing === null) {
                       objects.push(obj)
@@ -563,31 +539,33 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           </>
         )}
 
-        {currentObject?._error_message && (
+        {currentObject?._errorMessage && (
           <div style={{ color: 'red', marginTop: '1rem' }}>
             <Icon name="alert-circle" />{' '}
-            {typeof currentObject._error_message === 'object' &&
+            {typeof currentObject._errorMessage === 'object' &&
               'Errors occured while processing your request:'}
-            {formatResponse(currentObject._error_message)}
+            {formatResponse(currentObject._errorMessage)}
           </div>
         )}
       </>
     )
   }
+
+  // card view
   return (
     <>
       {objects.map((object) => (
         <ModelItem
           key={
-            typeof object.id === 'undefined'
+            typeof object[keyField] === 'undefined'
               ? `new-${object.tempId}`
-              : object.id
+              : object[keyField]
           }
         >
           <Formik
-            initialValues={object}
+            initialValues={doFormikInitialValueFixes(object)}
             initialStatus={
-              object && object._status === false && object._error_message
+              object && object._status === false && object._errorMessage
             }
             onSubmit={(data) => onSubmit(object, data)}
             enableReinitialize

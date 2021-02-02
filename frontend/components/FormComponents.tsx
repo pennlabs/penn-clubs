@@ -156,23 +156,23 @@ export const RichTextField = useFieldWrapper(
     const { setFieldValue } = useFormikContext()
     const textValue = useRef<string | null>(null)
 
-    const [editorState, setEditorState] = useState(() =>
+    const [editorState, setEditorState] = useState<EditorState>(() =>
       EditorState.createEmpty(),
     )
 
     useEffect(() => {
-      if (
-        props.value &&
-        props.value.length &&
-        props.value !== textValue.current
-      ) {
-        setEditorState(
-          EditorState.createWithContent(
-            ContentState.createFromBlockArray(
-              htmlToDraft(props.value, htmlToEntity).contentBlocks,
+      if (props.value !== textValue.current) {
+        if (props.value && props.value.length) {
+          setEditorState(
+            EditorState.createWithContent(
+              ContentState.createFromBlockArray(
+                htmlToDraft(props.value, htmlToEntity).contentBlocks,
+              ),
             ),
-          ),
-        )
+          )
+        } else {
+          setEditorState(EditorState.createEmpty())
+        }
         textValue.current = props.value
       }
     }, [props.value])
@@ -195,7 +195,7 @@ export const RichTextField = useFieldWrapper(
           <Editor
             editorState={editorState}
             placeholder={props.placeholder}
-            onEditorStateChange={(state) => {
+            onEditorStateChange={(state): void => {
               setEditorState(state)
               const newValue = draftToHtml(
                 convertToRaw(state.getCurrentContent()),

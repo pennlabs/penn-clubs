@@ -103,7 +103,6 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
     author = serializers.SerializerMethodField("get_author_name")
     responder = serializers.SerializerMethodField("get_responder_name")
     is_anonymous = serializers.BooleanField(write_only=True)
-    approved = serializers.BooleanField(read_only=True)
 
     def get_author_name(self, obj):
         user = self.context["request"].user
@@ -171,6 +170,8 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
                 )
             return value
 
+        value = clean(bleach.linkify(value))
+
         club = Club.objects.get(code=self.context["view"].kwargs.get("club_code"))
         user = self.context["request"].user
 
@@ -202,8 +203,7 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
             and not validated_data["answer"] == instance.answer
         ):
             validated_data["responder"] = user
-            if "approved" not in validated_data:
-                validated_data["approved"] = True
+            validated_data["approved"] = True
 
         return super().update(instance, validated_data)
 

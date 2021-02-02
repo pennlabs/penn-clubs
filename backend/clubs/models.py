@@ -663,7 +663,7 @@ class QuestionAnswer(models.Model):
     is_anonymous = models.BooleanField(default=False)
 
     question = models.TextField()
-    answer = models.TextField(null=True)
+    answer = models.TextField(null=True)  # html
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
