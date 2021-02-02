@@ -17,7 +17,7 @@ describe('Invitation tests', () => {
   })
 
   it('Invites User', () => {
-    cy.visit('/club/pppjo/edit#member')
+    cy.visit('/club/pppjo/edit/member')
     cy.contains('Invite Members').scrollIntoView()
     cy.get('textarea[placeholder="Enter email addresses here!"]').type(
         'jmadison@seas.upenn.edu'

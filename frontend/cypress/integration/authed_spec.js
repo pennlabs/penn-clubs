@@ -37,7 +37,7 @@ describe('Authenticated user tests', () => {
     // click on each tab
     tabs.forEach((tab) => {
       cy.get('.tabs').contains(tab).should('be.visible').click()
-      cy.url().should('contain', `#${tab}`)
+      cy.url().should('contain', `${tab}`)
     })
   })
 
@@ -133,7 +133,7 @@ describe('Authenticated user tests', () => {
       fakeEmails.push(`test${i}@example.com`)
     }
 
-    cy.visit('/club/test-new-club/edit#member')
+    cy.visit('/club/test-new-club/edit/member')
     cy.contains('Invite Members').scrollIntoView()
     cy.get('textarea[placeholder="Enter email addresses here!"]').type(fakeEmails.join(','), {delay: 1})
     cy.contains('.button', 'Send Invite').click()
