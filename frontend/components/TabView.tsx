@@ -43,15 +43,20 @@ const Div = styled.div`
 `
 const Tabs = styled.div``
 
+type Tab = {
+  name: string
+  content: ReactNode | (() => ReactNode)
+  disabled?: boolean
+  label?: string
+}
+
 type Props = {
   background?: string
   tabClassName?: string
-  tabs: {
-    name: string
-    content: ReactNode | (() => ReactNode)
-    disabled?: boolean
-    label?: string
-  }[]
+  tabs: Tab[]
+  useHashRouting?: boolean
+  currentTabName?: string
+  onTabChange?: (tab: Tab) => void
 }
 
 type BaseProps = {
