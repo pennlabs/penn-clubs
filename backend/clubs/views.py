@@ -1462,6 +1462,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         return Response(analytics_dict)
 
+    def get_operation_id(self, **kwargs):
+        if kwargs["action"] == "fetch" and kwargs["method"] == "DELETE":
+            return "deleteIcsEvents"
+
     @action(detail=True, methods=["post", "delete"])
     def fetch(self, request, *args, **kwargs):
         """
