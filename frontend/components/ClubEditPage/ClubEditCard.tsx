@@ -110,7 +110,7 @@ const CLUB_SIZES = [
 type ClubEditCardProps = {
   schools: Readonly<School[]>
   majors: Readonly<Major[]>
-  student_types: Readonly<StudentType[]>
+  studentTypes: Readonly<StudentType[]>
   years: Readonly<Year[]>
   tags: Readonly<Tag[]>
   club: Partial<Club>
@@ -166,7 +166,7 @@ const removeNonFieldAttributes = (
 export default function ClubEditCard({
   schools,
   majors,
-  student_types,
+  studentTypes,
   years,
   tags,
   club,
@@ -472,7 +472,7 @@ export default function ClubEditCard({
           name: 'student_types',
           type: 'multiselect',
           placeholder: `Select student types relevant to your ${OBJECT_NAME_SINGULAR}!`,
-          choices: student_types,
+          choices: studentTypes,
         },
       ].filter(({ name }) => name == null || isClubFieldShown(name)),
     },

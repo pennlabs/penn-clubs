@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router'
 import { ReactElement, ReactNode, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
@@ -53,25 +54,34 @@ type Props = {
   }[]
 }
 
-const TabView = ({
+type BaseProps = {
+  tab?: string | null
+  setTab: (tab: string) => void
+} & Props
+
+/**
+ * A tab view that does not handle the state of the current tab.
+ * Uses the first tab as default if tab is null or undefined.
+ */
+export const BaseTabView = ({
+  tab,
+  setTab,
   tabs,
   tabClassName = '',
   background,
-}: Props): ReactElement => {
-  // the server side rendering does not have a window object
-  const [currentTab, setCurrentTab] = useState<string>(tabs[0].name)
-
-  useEffect(() => {
-    setCurrentTab(window.location.hash.substring(1) || currentTab)
-  }, [])
+}: BaseProps): ReactElement => {
+  if (tab == null || tab.length <= 0) {
+    tab = tabs[0].name
+  }
 
   const getTabContent = (): ReactElement => {
-    const tab = tabs.find((a) => a.name === currentTab) ?? {
-      content: <>Invalid tab selected.</>,
-    }
+    const tabContent = tabs.find((a) => a.name === tab)?.content ?? (
+      <>Invalid tab selected.</>
+    )
+
     return (
-      <div key={currentTab}>
-        {typeof tab.content === 'function' ? tab.content() : tab.content}
+      <div key={tab}>
+        {typeof tabContent === 'function' ? tabContent() : tabContent}
       </div>
     )
   }
@@ -91,14 +101,13 @@ const TabView = ({
           <ul>
             {enabledTabs.map(({ name, label }) => (
               <li
-                className={name === currentTab ? 'is-active' : ''}
+                className={name === tab ? 'is-active' : ''}
                 key={`tab-${name}`}
               >
                 <a
                   style={{ borderBottomWidth: '2px', marginBottom: '-2px' }}
                   onClick={() => {
-                    setCurrentTab(name)
-                    window.history.replaceState(undefined, '', `#${name}`)
+                    setTab(name)
                   }}
                 >
                   {label || titleize(name)}
@@ -114,4 +123,57 @@ const TabView = ({
   )
 }
 
-export default TabView
+/**
+ * A tab view that uses Next.js routing to transition between tab states.
+ */
+export const BrowserTabView = (
+  props: Props & { tab?: string | null; route: string },
+): ReactElement => {
+  const router = useRouter()
+  const [currentTab, setCurrentTab] = useState<string | null>(props.tab ?? null)
+
+  useEffect(() => {
+    const handleChange = (url: string) => {
+      if (url.startsWith(props.route)) {
+        const newTab = url.substring(props.route.length).replace(/^\//, '')
+        setCurrentTab(newTab)
+      }
+    }
+
+    router.events.on('routeChangeStart', handleChange)
+
+    return () => router.events.off('routeChangeStart', handleChange)
+  }, [])
+
+  const setTab = (newTab: string) => {
+    setCurrentTab(newTab)
+    router.push(`${props.route}/${newTab}`, undefined, { shallow: true })
+  }
+
+  return <BaseTabView {...props} tab={currentTab} setTab={setTab} />
+}
+
+/**
+ * A tab view that uses browser hashes and navigation to set the state of the current tab.
+ */
+const HashTabView = (props: Props): ReactElement => {
+  const [currentTab, setCurrentTab] = useState<string>(props.tabs[0].name)
+
+  // the server side rendering does not have a window object
+  useEffect(() => {
+    setCurrentTab(window.location.hash.substring(1) || currentTab)
+  }, [])
+
+  return (
+    <BaseTabView
+      {...props}
+      tab={currentTab}
+      setTab={(tab) => {
+        setCurrentTab(tab)
+        window.history.replaceState(undefined, '', `#${tab}`)
+      }}
+    />
+  )
+}
+
+export default HashTabView

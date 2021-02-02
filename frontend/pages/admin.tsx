@@ -15,7 +15,7 @@ import { fixDeserialize } from '../components/reports/ReportForm'
 import FairEventsTab from '../components/Settings/FairEventsTab'
 import FairsTab from '../components/Settings/FairsTab'
 import QueueTab from '../components/Settings/QueueTab'
-import TabView from '../components/TabView'
+import HashTabView from '../components/TabView'
 import { BG_GRADIENT, WHITE } from '../constants'
 import renderPage from '../renderPage'
 import { Badge, ClubFair, Tag } from '../types'
@@ -462,7 +462,11 @@ function AdminPage({
           Admin Dashboard
         </Title>
       </Container>
-      <TabView background={BG_GRADIENT} tabs={tabs} tabClassName="is-boxed" />
+      <HashTabView
+        background={BG_GRADIENT}
+        tabs={tabs}
+        tabClassName="is-boxed"
+      />
     </>
   )
 }

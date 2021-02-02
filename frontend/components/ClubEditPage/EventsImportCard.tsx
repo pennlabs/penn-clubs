@@ -62,35 +62,35 @@ export default function EventsImportCard({
         existing calendar. The calendar URL should be a live feed of events. The
         events will be automatically imported once a day. You can also fetch the
         events manually using the button below.
-        <span className="content">
-          <ul>
-            <li>
-              If you use Google Calendar, see{' '}
-              <a
-                rel="noopener noreferrer"
-                href="https://support.google.com/calendar/answer/37648?hl=en&ref_topic=3417927"
-              >
-                this link
-              </a>{' '}
-              for instructions on how to import your calendar.
-            </li>
-            <li>
-              If you use iCalendar, see{' '}
-              <a
-                rel="noopener noreferrer"
-                href="https://www.techrepublic.com/article/how-to-find-your-icloud-calendar-url/"
-              >
-                this link
-              </a>{' '}
-              for instructions on how to import your calendar.
-            </li>
-            <li>
-              If you use an alternative calendar service and cannot find your
-              URL, please email <Contact />.
-            </li>
-          </ul>
-        </span>
       </Text>
+      <div className="content mb-3">
+        <ul>
+          <li>
+            If you use Google Calendar, see{' '}
+            <a
+              rel="noopener noreferrer"
+              href="https://support.google.com/calendar/answer/37648?hl=en&ref_topic=3417927"
+            >
+              this link
+            </a>{' '}
+            for instructions on how to import your calendar.
+          </li>
+          <li>
+            If you use iCalendar, see{' '}
+            <a
+              rel="noopener noreferrer"
+              href="https://www.techrepublic.com/article/how-to-find-your-icloud-calendar-url/"
+            >
+              this link
+            </a>{' '}
+            for instructions on how to import your calendar.
+          </li>
+          <li>
+            If you use an alternative calendar service and cannot find your URL,
+            please email <Contact />.
+          </li>
+        </ul>
+      </div>
       <Formik initialValues={{ url: club.ics_import_url }} onSubmit={submit}>
         {({ isSubmitting }) => (
           <Form>
@@ -99,7 +99,7 @@ export default function EventsImportCard({
               as={TextField}
               type="url"
               label="ICS Calendar URL"
-              autocomplete="off"
+              autoComplete="off"
             />
             <div className="buttons">
               <button

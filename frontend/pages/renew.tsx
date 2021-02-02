@@ -4,7 +4,7 @@ import { Container, Metadata, Title } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import QueueTab from '../components/Settings/QueueTab'
 import RenewTab from '../components/Settings/RenewTab'
-import TabView from '../components/TabView'
+import HashTabView from '../components/TabView'
 import { BG_GRADIENT, WHITE } from '../constants/colors'
 import renderPage from '../renderPage'
 import { apiCheckPermission } from '../utils'
@@ -37,7 +37,11 @@ function UserRenewal({ userInfo, authenticated }): ReactElement {
           Renew {OBJECT_NAME_TITLE}
         </Title>
       </Container>
-      <TabView background={BG_GRADIENT} tabs={tabs} tabClassName="is-boxed" />
+      <HashTabView
+        background={BG_GRADIENT}
+        tabs={tabs}
+        tabClassName="is-boxed"
+      />
     </>
   )
 }

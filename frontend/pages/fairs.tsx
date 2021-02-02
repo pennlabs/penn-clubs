@@ -6,7 +6,7 @@ import { Contact, Container, Metadata, Text, Title } from '../components/common'
 import AuthPrompt from '../components/common/AuthPrompt'
 import FairEventsTab from '../components/Settings/FairEventsTab'
 import FairsTab from '../components/Settings/FairsTab'
-import TabView from '../components/TabView'
+import HashTabView from '../components/TabView'
 import { BG_GRADIENT, WHITE } from '../constants'
 import renderPage from '../renderPage'
 import { MembershipRank } from '../types'
@@ -69,7 +69,11 @@ function FairsPage({ userInfo, fairs, memberships }): ReactElement {
           Register for {OBJECT_NAME_TITLE_SINGULAR} Fairs
         </Title>
       </Container>
-      <TabView background={BG_GRADIENT} tabs={tabs} tabClassName="is-boxed" />
+      <HashTabView
+        background={BG_GRADIENT}
+        tabs={tabs}
+        tabClassName="is-boxed"
+      />
     </>
   )
 }

@@ -1,23 +1,13 @@
 import { NextPageContext } from 'next'
 import { ReactElement } from 'react'
 
-import ClubEditPage from '../../../components/ClubEditPage'
-import renderPage from '../../../renderPage'
-import { Major, School, StudentType, Tag, Year } from '../../../types'
-import { doApiRequest, isClubFieldShown } from '../../../utils'
+import ClubEditPage from '../../../../components/ClubEditPage'
+import renderPage from '../../../../renderPage'
+import { doApiRequest, isClubFieldShown } from '../../../../utils'
 
-type EditPageProps = {
-  clubId: string
-  tags: Tag[]
-  schools: School[]
-  majors: Major[]
-  years: Year[]
-  student_types: StudentType[]
-}
+type EditPageProps = React.ComponentProps<typeof ClubEditPage>
 
-const Edit = (
-  props: React.ComponentProps<typeof ClubEditPage>,
-): ReactElement => {
+const Edit = (props: EditPageProps): ReactElement => {
   return <ClubEditPage {...props} />
 }
 
@@ -33,7 +23,7 @@ Edit.getInitialProps = async ({ query }): Promise<EditPageProps> => {
       return [item, response]
     }),
   ).then((values) => {
-    const output = { clubId: query.club }
+    const output = { clubId: query.club, tab: query.slug?.[0] }
     values.forEach((item) => {
       output[item[0]] = item[1]
     })

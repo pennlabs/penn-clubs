@@ -59,7 +59,7 @@ import {
   Metadata,
 } from './common'
 import AuthPrompt from './common/AuthPrompt'
-import TabView from './TabView'
+import { BrowserTabView } from './TabView'
 
 type ClubFormProps = {
   clubId: string | undefined
@@ -69,6 +69,7 @@ type ClubFormProps = {
   years: Year[]
   tags: Tag[]
   student_types: StudentType[]
+  tab?: string | null
 }
 
 const ClubForm = ({
@@ -77,8 +78,9 @@ const ClubForm = ({
   years,
   majors,
   tags,
-  student_types,
+  student_types: studentTypes,
   clubId,
+  tab,
 }: ClubFormProps): ReactElement => {
   const [club, setClub] = useState<Club | null>(null)
   const [isEdit, setIsEdit] = useState<boolean>(typeof clubId !== 'undefined')
@@ -225,7 +227,7 @@ const ClubForm = ({
             years={years}
             majors={majors}
             tags={tags}
-            student_types={student_types}
+            studentTypes={studentTypes}
             club={club}
             onSubmit={submit}
           />
@@ -397,7 +399,7 @@ const ClubForm = ({
         </>
       )}
       {isEdit ? (
-        <TabView tabs={tabs} />
+        <BrowserTabView tabs={tabs} tab={tab} route={CLUB_EDIT_ROUTE(clubId)} />
       ) : (
         <div style={{ marginTop: '1em' }}>
           <ClubEditCard
@@ -407,7 +409,7 @@ const ClubForm = ({
             majors={majors}
             tags={tags}
             club={club === null ? {} : club}
-            student_types={student_types}
+            studentTypes={studentTypes}
             onSubmit={submit}
           />
         </div>
