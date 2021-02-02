@@ -25,7 +25,7 @@ describe('Page load tests', () => {
   })
 
   it('Visits the reports page', () => {
-    cy.visit('/reports')
+    cy.visit('/admin/reports')
     cy.contains('Penn Clubs')
   })
 
