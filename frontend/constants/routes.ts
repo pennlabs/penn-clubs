@@ -30,14 +30,15 @@ export const CREATE_ROUTE = '/create'
 export const DIRECTORY_ROUTE = '/directory'
 export const LIVE_EVENTS = '/events'
 export const FAIR_INFO_ROUTE = '/fair'
+export const ADMIN_ROUTE = '/admin'
 export const FAIR_OFFICER_GUIDE_ROUTE = '/sacfairguide'
 export const GUIDE_ROUTE = (slug?: string): string =>
   slug ? `/guides/${slug}` : '/guides/[page]'
 
-export const REPORT_LIST_ROUTE = '/reports'
-export const REPORT_CREATE_ROUTE = '/reports/create'
+export const REPORT_LIST_ROUTE = '/admin/reports'
+export const REPORT_CREATE_ROUTE = '/admin/reports/create'
 export const REPORT_EDIT_ROUTE = (slug?: number): string =>
-  slug ? `/reports/${slug}` : '/reports/[report]'
+  slug ? `/admin/reports/${slug}` : '/admin/reports/[report]'
 
 export const PROFILE_ROUTE = (slug?: string): string =>
   slug ? `/user/${slug}` : '/user/[user]'

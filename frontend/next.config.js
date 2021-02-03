@@ -18,6 +18,11 @@ module.exports = {
       },
     ]
   },
+  async redirects() {
+    return [
+      { source: '/reports', destination: '/admin/reports', permanent: true },
+    ]
+  },
   publicRuntimeConfig: {
     // If DOMAIN starts with http, use it directly, otherwise add https
     SITE_ORIGIN: process.env.DOMAIN

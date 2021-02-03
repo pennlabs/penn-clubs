@@ -1,20 +1,21 @@
 import { NextPageContext } from 'next'
 import { ReactElement } from 'react'
 
-import { EditReportPage } from '../../components/reports/ReportPage'
-import renderPage from '../../renderPage'
-import { Badge, Tag } from '../../types'
-import { doBulkLookup } from '../../utils'
+import { EditReportPage } from '../../../../components/reports/ReportPage'
+import renderPage from '../../../../renderPage'
+import { Badge, Report, Tag } from '../../../../types'
+import { doBulkLookup } from '../../../../utils'
 
 type CreateReportPageProps = {
   nameToCode: { [cat: string]: { [key: string]: string } }
   authenticated: boolean | null
   badges: Badge[]
   tags: Tag[]
+  report: Report
 }
 
 const CreateReportPage = (props: CreateReportPageProps): ReactElement => {
-  return <EditReportPage {...props} report={null} />
+  return <EditReportPage {...props} />
 }
 
 CreateReportPage.getInitialProps = async (ctx: NextPageContext) => {
@@ -23,6 +24,7 @@ CreateReportPage.getInitialProps = async (ctx: NextPageContext) => {
       ['nameToCode', '/clubs/fields/?format=json'],
       ['badges', '/badges/?format=json'],
       ['tags', '/tags/?format=json'],
+      ['report', `/reports/${ctx.query.report}/?format=json`],
     ],
     ctx,
   )

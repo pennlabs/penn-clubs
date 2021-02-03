@@ -1,29 +1,24 @@
-import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ReactElement, useState } from 'react'
 
-import { Icon } from '../../components/common'
-import {
-  downloadReport,
-  ReportsPageContainer,
-} from '../../components/reports/ReportPage'
-import ReportTable from '../../components/reports/ReportTable'
 import { REPORT_CREATE_ROUTE, REPORT_EDIT_ROUTE } from '../../constants'
-import renderPage from '../../renderPage'
 import { Report } from '../../types'
-import { doApiRequest, doBulkLookup } from '../../utils'
+import { apiCheckPermission, doApiRequest } from '../../utils'
+import { SITE_NAME } from '../../utils/branding'
+import { Icon, Text } from '../common'
+import { downloadReport } from '../reports/ReportPage'
+import ReportTable from '../reports/ReportTable'
 
 type ReportsProps = {
-  authenticated: boolean | null
   reports: Report[]
 }
 
-const Reports = ({
-  authenticated,
+const ReportsTab = ({
   reports: initialReports,
 }: ReportsProps): ReactElement => {
-  const [reports, setReports] = useState<Report[]>(initialReports)
+  const [reports, setReports] = useState<Report[]>(initialReports ?? [])
+  const permission = apiCheckPermission('clubs.generate_reports')
 
   const router = useRouter()
 
@@ -33,18 +28,23 @@ const Reports = ({
       .then((data) => setReports(data))
   }
 
+  if (!permission) {
+    return <Text>You do not have permission to view this page.</Text>
+  }
+
   return (
-    <ReportsPageContainer
-      authenticated={authenticated}
-      title="Reports"
-      buttons={
+    <>
+      <Text>
+        You can use this page to generate Excel spreadsheet exports from the{' '}
+        {SITE_NAME} database.
+      </Text>
+      <div className="buttons">
         <Link href={REPORT_CREATE_ROUTE}>
-          <a className="button is-link is-pulled-right">
+          <a className="button is-link is-small">
             <Icon name="plus" alt="plus" /> Create New Report
           </a>
         </Link>
-      }
-    >
+      </div>
       <ReportTable
         onRun={downloadReport}
         onEdit={(report: Report) =>
@@ -57,14 +57,8 @@ const Reports = ({
         }}
         reports={reports}
       />
-    </ReportsPageContainer>
+    </>
   )
 }
 
-Reports.getInitialProps = async (ctx: NextPageContext) => {
-  return await doBulkLookup([['reports', '/reports/?format=json']], ctx)
-}
-
-Reports.permissions = ['clubs.generate_reports']
-
-export default renderPage(Reports)
+export default ReportsTab
