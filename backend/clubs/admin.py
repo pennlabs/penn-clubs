@@ -32,7 +32,7 @@ from clubs.models import (
     RecurringEvent,
     Report,
     School,
-    Search,
+    SearchQuery,
     StudentType,
     Subscribe,
     Tag,
@@ -404,7 +404,7 @@ admin.site.register(Badge, BadgeAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(School)
-admin.site.register(Search)
+admin.site.register(SearchQuery)
 admin.site.register(Subscribe, SubscribeAdmin)
 admin.site.register(MembershipRequest, MembershipRequestAdmin)
 admin.site.register(Major, MajorAdmin)
