@@ -341,14 +341,15 @@ export const SearchBarTextItem = ({
   const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
 
   useEffect(() => {
-    doApiRequest('/searches/', {
-      method: 'POST',
-      body: { query: nameInput },
-    })
     timeout !== null && clearTimeout(timeout)
     const timeoutId: number = window.setTimeout(
       () =>
         searchCallback((inpt) => {
+          doApiRequest('/searches/', {
+            method: 'POST',
+            body: { query: nameInput },
+          })
+
           if (nameInput.length <= 0) {
             const newInpt = { ...inpt }
             if (param in newInpt) {

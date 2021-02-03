@@ -965,13 +965,13 @@ class ZoomMeetingVisit(models.Model):
         )
 
 
-class Search(models.Model):
-    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    query = models.CharField(max_length=255)
+class SearchQuery(models.Model):
+    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True)
+    query = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "<Search: {} at {}>".format(self.query, self.created_at)
+        return "<SearchQuery: {} at {}>".format(self.query, self.created_at)
 
 
 class MembershipRequest(models.Model):

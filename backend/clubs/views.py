@@ -69,6 +69,7 @@ from clubs.models import (
     RecurringEvent,
     Report,
     School,
+    SearchQuery,
     StudentType,
     Subscribe,
     Tag,
@@ -120,7 +121,7 @@ from clubs.serializers import (
     ReportClubSerializer,
     ReportSerializer,
     SchoolSerializer,
-    SearchSerializer,
+    SearchQuerySerializer,
     StudentTypeSerializer,
     SubscribeBookmarkSerializer,
     SubscribeSerializer,
@@ -2706,18 +2707,22 @@ class ClubVisitViewSet(viewsets.ModelViewSet):
         return UserClubVisitSerializer
 
 
-class SearchViewSet(viewsets.ModelViewSet):
+class SearchQueryViewSet(viewsets.ModelViewSet):
     """
-    list: Return a list of search queries
-
     create: Add a new search query
     """
 
     permission_classes = [IsAuthenticated]
-    http_method_names = ["post"]
+    http_method_names = ["get", "post"]
+
+    def get_queryset(self):
+        if IsSuperuser:
+            return SearchQuery.objects.all()
+        else:
+            return SearchQuery.objects.filter(person=self.request.user)
 
     def get_serializer_class(self):
-        return SearchSerializer
+        return SearchQuerySerializer
 
 
 class MembershipRequestViewSet(viewsets.ModelViewSet):
