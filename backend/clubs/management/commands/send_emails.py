@@ -79,6 +79,7 @@ class Command(BaseCommand):
                 "hap_second_round",
                 "hap_partner_communication",
                 "wc_intro",
+                "osa_communication_email",
             ),
         )
         parser.add_argument(
