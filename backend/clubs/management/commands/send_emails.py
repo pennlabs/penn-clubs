@@ -350,9 +350,7 @@ class Command(BaseCommand):
 
                 Membership.objects.filter(club=club)
                 if not dry_run:
-                    send_mail_helper(
-                        "osa_email_communication", None, emails, None
-                    )
+                    send_mail_helper("osa_email_communication", None, emails, None)
                     self.stdout.write(
                         f"Sent {action} email to {emails} for club {club}"
                     )
