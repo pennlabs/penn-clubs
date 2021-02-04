@@ -348,7 +348,6 @@ class Command(BaseCommand):
                 if test_email is not None:
                     emails = [test_email]
 
-                Membership.objects.filter(club=club)
                 if not dry_run:
                     send_mail_helper("osa_email_communication", None, emails, None)
                     self.stdout.write(
