@@ -79,7 +79,7 @@ class Command(BaseCommand):
                 "hap_second_round",
                 "hap_partner_communication",
                 "wc_intro",
-                "osa_communication_email",
+                "osa_email_communication",
             ),
         )
         parser.add_argument(
@@ -337,6 +337,28 @@ class Command(BaseCommand):
                     self.stdout.write(
                         f"Would have sent {action} email to {email} (recipients: "
                         + f"{recipient_string}) for groups: {clubs}"
+                    )
+            return
+
+        if action in {"osa_email_communication"}:
+            clubs = Club.objects.all()
+
+            for club in clubs:
+                emails = club.get_officer_emails()
+                if test_email is not None:
+                    emails = [test_email]
+
+                Membership.objects.filter(club=club)
+                if not dry_run:
+                    send_mail_helper(
+                        "osa_email_communication", None, emails, None
+                    )
+                    self.stdout.write(
+                        f"Sent {action} email to {emails} for club {club}"
+                    )
+                else:
+                    self.stdout.write(
+                        f"Would have sent {action} email to {emails} for club {club}"
                     )
             return
 
