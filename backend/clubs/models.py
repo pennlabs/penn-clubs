@@ -1137,6 +1137,9 @@ class Membership(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default="Member")
     role = models.IntegerField(choices=ROLE_CHOICES, default=ROLE_MEMBER)
+    description = models.TextField(max_length=1000, blank=True)
+    image = models.ImageField(null=True, blank=True)
+
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
