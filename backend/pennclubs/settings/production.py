@@ -28,8 +28,8 @@ if SENTRY_URL:
 # DLA settings
 PLATFORM_ACCOUNTS = {
     "ADMIN_PERMISSION": "hub_admin"
-    if BRANDING == "fyh"  # noqa: F405
-    else "clubs_admin"
+    if BRANDING == "fyh"
+    else "clubs_admin"  # noqa: F405
 }
 
 # Email client information
