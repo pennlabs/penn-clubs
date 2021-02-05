@@ -99,6 +99,7 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
                   if (object.role > 0) return true
                   else return false
                   break
+                default: return false
               }
             },
           },

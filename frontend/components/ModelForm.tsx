@@ -52,7 +52,7 @@ type TableField = {
 type filterOption = {
   options: string[]
   label: string
-  func?: (a, b) => boolean
+  func: (a, b) => boolean
 }
 
 type ModelFormProps = {
@@ -141,13 +141,19 @@ export const ModelTable = ({
   )
 
   tableFields = tableFields.map((column) => {
-    return {
-      ...column,
-      render: column.converter
-        ? (id) => column.converter(objects[id][column.name], objects[id])
-        : undefined,
+    if (column.converter){
+      return {
+        ...column,
+        render: (id) => { if (column.converter) {
+          column.converter(objects[id][column.name], objects[id])
+        }
+        }     
+      }
     }
-  })
+      else return column
+    } 
+  )
+
   tableFields.push({
     name: 'Actions',
     render: (id) => (
@@ -180,19 +186,22 @@ export const ModelTable = ({
             <Icon name="trash" alt="delete" /> {deleteVerb}
           </button>
         )}
-        {actions && actions(object)}
+        {actions && actions(objects[id])}
       </div>
     ),
   })
 
+
   return (
     <>
+
       <Table
         data={objects}
         columns={tableFields}
         searchableColumns={['name']}
-        filterOptions={filterOptions}
+        filterOptions = {filterOptions? filterOptions : []}
       />
+       
     </>
   )
 }

@@ -56,7 +56,7 @@ type tableProps = {
   columns: Row[]
   data: Row[]
   searchableColumns: string[]
-  filterOptions: filterOption[]
+  filterOptions?: filterOption[]
 }
 
 const Styles = styled.div`
@@ -103,7 +103,7 @@ const Table = ({
 }: tableProps): ReactElement => {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [tableData, setTableData] = useState<Row[]>([])
-  const [selectedFilter, setSelectedFilter] = useState<selectFilter[]>({})
+  const [selectedFilter, setSelectedFilter] = useState<Object>({})
   useEffect(() => {
     const searchedData = data.filter((item) => {
       if (!searchQuery) return true
@@ -129,6 +129,7 @@ const Table = ({
     })
     const filteredData = searchedData.filter((item) => {
       let valid = true
+      if (filterOptions){
       for (const filter in selectedFilter) {
         const original = filterOptions.filter((i) => i.label === filter)[0]
         if (
@@ -136,6 +137,7 @@ const Table = ({
           !original.func(selectedFilter[filter], item)
         )
           valid = false
+        }
       }
       return valid
     })
@@ -233,7 +235,7 @@ const Table = ({
               gridTemplateColumns: '1fr 1fr 1fr',
             }}
           >
-            {filterOptions.map((filterOption) => (
+            {filterOptions && filterOptions.map((filterOption) => (
               <div style={{ marginRight: '10px' }}>
                 <Select
                   value={
