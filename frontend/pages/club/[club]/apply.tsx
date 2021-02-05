@@ -1,14 +1,9 @@
-import { NextPageContext } from 'next'
-import Link from 'next/link'
-import { ReactElement, useState } from 'react'
-import TimeAgo from 'react-timeago'
-
 import {
   CLUB_APPLICATIONS,
   CLUB_RECRUITMENT_CYCLES,
-} from '../../../components/ClubEditPage/ClubEditCard'
-import ClubMetadata from '../../../components/ClubMetadata'
-import { RequestMembershipButton } from '../../../components/ClubPage/Actions'
+} from 'components/ClubEditPage/ClubEditCard'
+import ClubMetadata from 'components/ClubMetadata'
+import { RequestMembershipButton } from 'components/ClubPage/Actions'
 import {
   Container,
   Icon,
@@ -16,18 +11,23 @@ import {
   Text,
   TextQuote,
   Title,
-} from '../../../components/common'
-import { CLUB_ROUTE } from '../../../constants'
-import renderPage from '../../../renderPage'
+} from 'components/common'
+import { NextPageContext } from 'next'
+import Link from 'next/link'
+import { ReactElement, useState } from 'react'
+import TimeAgo from 'react-timeago'
+import renderPage from 'renderPage'
 import {
   Club,
   ClubApplication,
   ClubApplicationRequired,
   ClubRecruitingCycle,
-} from '../../../types'
-import { doApiRequest, getSemesterFromDate } from '../../../utils'
-import { logEvent } from '../../../utils/analytics'
-import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../../utils/branding'
+} from 'types'
+import { doApiRequest, getSemesterFromDate } from 'utils'
+import { logEvent } from 'utils/analytics'
+import { OBJECT_NAME_SINGULAR, SITE_NAME } from 'utils/branding'
+
+import { CLUB_ROUTE } from '~/constants'
 
 type Props = {
   club: Club

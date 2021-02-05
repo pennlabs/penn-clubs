@@ -1,20 +1,20 @@
+import ClubMetadata from 'components/ClubMetadata'
+import { Contact, Metadata } from 'components/common'
+import AuthPrompt from 'components/common/AuthPrompt'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ReactElement, useState } from 'react'
-
-import ClubMetadata from '../../../../../components/ClubMetadata'
-import { Contact, Metadata } from '../../../../../components/common'
-import AuthPrompt from '../../../../../components/common/AuthPrompt'
-import { CLUB_ROUTE } from '../../../../../constants/routes'
-import renderPage from '../../../../../renderPage'
-import { Club } from '../../../../../types'
-import { doApiRequest, formatResponse } from '../../../../../utils'
+import renderPage from 'renderPage'
+import { Club } from 'types'
+import { doApiRequest, formatResponse } from 'utils'
 import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   SHOW_MEMBERS,
-} from '../../../../../utils/branding'
+} from 'utils/branding'
+
+import { CLUB_ROUTE } from '~/constants/routes'
 
 type Query = {
   club: string

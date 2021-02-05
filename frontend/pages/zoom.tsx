@@ -1,21 +1,30 @@
-import { Field, Form, Formik } from 'formik'
-import moment from 'moment-timezone'
-import { NextPageContext } from 'next'
-import Link from 'next/link'
-import { ReactElement, useEffect, useRef, useState } from 'react'
-import { toast } from 'react-toastify'
-import styled from 'styled-components'
-
 import {
   Contact,
   Container,
   Icon,
   InfoPageTitle,
   Metadata,
-} from '../components/common'
-import AuthPrompt from '../components/common/AuthPrompt'
-import { LiveStats } from '../components/EventPage/EventModal'
-import { FileField, RichTextField } from '../components/FormComponents'
+} from 'components/common'
+import AuthPrompt from 'components/common/AuthPrompt'
+import { LiveStats } from 'components/EventPage/EventModal'
+import { FileField, RichTextField } from 'components/FormComponents'
+import { Field, Form, Formik } from 'formik'
+import moment from 'moment-timezone'
+import { NextPageContext } from 'next'
+import Link from 'next/link'
+import { ReactElement, useEffect, useRef, useState } from 'react'
+import { toast } from 'react-toastify'
+import renderPage from 'renderPage'
+import styled from 'styled-components'
+import { ClubEvent, ClubEventType, ClubFair } from 'types'
+import { doApiRequest } from 'utils'
+import {
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_SINGULAR,
+  SCHOOL_NAME,
+  SITE_NAME,
+} from 'utils/branding'
+
 import {
   CLUB_EDIT_ROUTE,
   CLUB_ROUTE,
@@ -24,16 +33,7 @@ import {
   SNOW,
   WHITE,
   ZOOM_BLUE,
-} from '../constants'
-import renderPage from '../renderPage'
-import { ClubEvent, ClubEventType, ClubFair } from '../types'
-import { doApiRequest } from '../utils'
-import {
-  OBJECT_NAME_PLURAL,
-  OBJECT_NAME_SINGULAR,
-  SCHOOL_NAME,
-  SITE_NAME,
-} from '../utils/branding'
+} from '~/constants'
 
 type ZoomPageProps = {
   authenticated: boolean | null

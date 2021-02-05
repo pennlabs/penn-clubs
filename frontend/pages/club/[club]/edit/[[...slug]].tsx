@@ -1,9 +1,8 @@
+import ClubEditPage from 'components/ClubEditPage'
 import { NextPageContext } from 'next'
 import { ReactElement } from 'react'
-
-import ClubEditPage from '../../../../components/ClubEditPage'
-import renderPage from '../../../../renderPage'
-import { doApiRequest, isClubFieldShown } from '../../../../utils'
+import renderPage from 'renderPage'
+import { doApiRequest, isClubFieldShown } from 'utils'
 
 type EditPageProps = React.ComponentProps<typeof ClubEditPage>
 

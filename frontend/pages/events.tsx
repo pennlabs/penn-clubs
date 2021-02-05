@@ -1,4 +1,25 @@
 import Color from 'color'
+import { EVENT_TYPES } from 'components/ClubEditPage/EventsCard'
+import {
+  Icon,
+  Metadata,
+  Modal,
+  Subtitle,
+  Title,
+  WideContainer,
+} from 'components/common'
+import AuthPrompt from 'components/common/AuthPrompt'
+import EventCard from 'components/EventPage/EventCard'
+import EventModal, { MEETING_REGEX } from 'components/EventPage/EventModal'
+import SyncModal from 'components/EventPage/SyncModal'
+import { FuseTag } from 'components/FilterSearch'
+import SearchBar, {
+  SearchBarCheckboxItem,
+  SearchbarRightContainer,
+  SearchBarTagItem,
+  SearchBarTextItem,
+  SearchInput,
+} from 'components/SearchBar'
 import equal from 'deep-equal'
 import moment from 'moment'
 import { NextPageContext } from 'next'
@@ -15,29 +36,19 @@ import {
   useState,
 } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
+import renderPage from 'renderPage'
 import styled from 'styled-components'
-
-import { EVENT_TYPES } from '../components/ClubEditPage/EventsCard'
 import {
-  Icon,
-  Metadata,
-  Modal,
-  Subtitle,
-  Title,
-  WideContainer,
-} from '../components/common'
-import AuthPrompt from '../components/common/AuthPrompt'
-import EventCard from '../components/EventPage/EventCard'
-import EventModal, { MEETING_REGEX } from '../components/EventPage/EventModal'
-import SyncModal from '../components/EventPage/SyncModal'
-import { FuseTag } from '../components/FilterSearch'
-import SearchBar, {
-  SearchBarCheckboxItem,
-  SearchbarRightContainer,
-  SearchBarTagItem,
-  SearchBarTextItem,
-  SearchInput,
-} from '../components/SearchBar'
+  Badge,
+  ClubEvent,
+  ClubEventType,
+  ClubFair,
+  Tag,
+  VisitType,
+} from 'types'
+import { cache, doApiRequest, isClubFieldShown } from 'utils'
+import { OBJECT_NAME_SINGULAR, OBJECT_NAME_TITLE } from 'utils/branding'
+
 import {
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
@@ -47,18 +58,7 @@ import {
   mediaMaxWidth,
   SNOW,
   WHITE,
-} from '../constants'
-import renderPage from '../renderPage'
-import {
-  Badge,
-  ClubEvent,
-  ClubEventType,
-  ClubFair,
-  Tag,
-  VisitType,
-} from '../types'
-import { cache, doApiRequest, isClubFieldShown } from '../utils'
-import { OBJECT_NAME_SINGULAR, OBJECT_NAME_TITLE } from '../utils/branding'
+} from '~/constants'
 
 type CalendarDateRange = Date[] | { start: Date; end: Date }
 

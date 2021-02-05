@@ -1,6 +1,3 @@
-import { ReactElement } from 'react'
-import styled from 'styled-components'
-
 import {
   Contact,
   Container,
@@ -9,9 +6,10 @@ import {
   Metadata,
   StrongText,
   Text,
-} from '../components/common'
-import { GREEN, SNOW } from '../constants/colors'
-import renderPage from '../renderPage'
+} from 'components/common'
+import { ReactElement } from 'react'
+import renderPage from 'renderPage'
+import styled from 'styled-components'
 import {
   FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_PLURAL,
@@ -20,7 +18,9 @@ import {
   OBJECT_NAME_TITLE_SINGULAR,
   SHOW_RANK_ALGORITHM,
   SITE_NAME,
-} from '../utils/branding'
+} from 'utils/branding'
+
+import { GREEN, SNOW } from '~/constants/colors'
 
 const RankItem = styled.div`
   padding: 0.75em;

@@ -1,24 +1,17 @@
+import ClubEditCard from 'components/ClubEditPage/ClubEditCard'
+import ClubFairCard from 'components/ClubEditPage/ClubFairCard'
+import FilesCard from 'components/ClubEditPage/FilesCard'
+import FormProgressIndicator from 'components/ClubEditPage/FormProgressIndicator'
+import ClubMetadata from 'components/ClubMetadata'
+import { Contact, Container, Icon, InfoPageTitle } from 'components/common'
+import AuthPrompt from 'components/common/AuthPrompt'
+import ResourceCreationPage from 'components/ResourceCreationPage'
+import { DARK_GRAY, GREEN, MEDIUM_GRAY } from 'constants/colors'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
+import renderPage from 'renderPage'
 import styled from 'styled-components'
-
-import ClubEditCard from '../../../components/ClubEditPage/ClubEditCard'
-import ClubFairCard from '../../../components/ClubEditPage/ClubFairCard'
-import FilesCard from '../../../components/ClubEditPage/FilesCard'
-import FormProgressIndicator from '../../../components/ClubEditPage/FormProgressIndicator'
-import ClubMetadata from '../../../components/ClubMetadata'
-import {
-  Contact,
-  Container,
-  Icon,
-  InfoPageTitle,
-} from '../../../components/common'
-import AuthPrompt from '../../../components/common/AuthPrompt'
-import ResourceCreationPage from '../../../components/ResourceCreationPage'
-import { DARK_GRAY, GREEN, MEDIUM_GRAY } from '../../../constants/colors'
-import { CLUB_ROUTE } from '../../../constants/routes'
-import renderPage from '../../../renderPage'
 import {
   Club,
   Major,
@@ -27,13 +20,13 @@ import {
   StudentType,
   Tag,
   Year,
-} from '../../../types'
+} from 'types'
 import {
   apiCheckPermission,
   doApiRequest,
   getCurrentSchoolYear,
   isClubFieldShown,
-} from '../../../utils'
+} from 'utils'
 import {
   APPROVAL_AUTHORITY,
   APPROVAL_AUTHORITY_URL,
@@ -44,7 +37,9 @@ import {
   SCHOOL_NAME,
   SITE_ID,
   SITE_NAME,
-} from '../../../utils/branding'
+} from 'utils/branding'
+
+import { CLUB_ROUTE } from '~/constants/routes'
 
 type InitialRenewPageProps = {
   club: Club

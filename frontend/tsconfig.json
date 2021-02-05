@@ -20,6 +20,10 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "strictBindCallApply": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./*"]
+    }
   },
   "exclude": [
     "node_modules"

@@ -1,18 +1,18 @@
 import cheerio from 'cheerio'
+import { Contact, Container, Metadata } from 'components/common'
 import { NextPageContext } from 'next'
 import { ReactElement } from 'react'
+import renderPage from 'renderPage'
 import styled from 'styled-components'
+import { SITE_NAME } from 'utils/branding'
+import { fetchMarkdown } from 'utils/server'
 
-import { Contact, Container, Metadata } from '../../../components/common'
 import {
   BACKGROUND_GRAY,
   LIGHT_GRAY,
   MEDIUM_GRAY,
   SNOW,
-} from '../../../constants/colors'
-import renderPage from '../../../renderPage'
-import { SITE_NAME } from '../../../utils/branding'
-import { fetchMarkdown } from '../../../utils/server'
+} from '~/constants/colors'
 
 const MarkdownContent = styled.div.attrs({ className: 'content' })`
   & h1 {

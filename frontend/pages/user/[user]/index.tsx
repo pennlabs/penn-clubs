@@ -1,9 +1,4 @@
-import { NextPageContext } from 'next'
-import Link from 'next/link'
-import React, { ReactElement } from 'react'
-import styled from 'styled-components'
-
-import ClubCard from '../../../components/ClubCard'
+import ClubCard from 'components/ClubCard'
 import {
   Contact,
   Container,
@@ -13,8 +8,17 @@ import {
   Subtitle,
   Text,
   Title,
-} from '../../../components/common'
-import AuthPrompt from '../../../components/common/AuthPrompt'
+} from 'components/common'
+import AuthPrompt from 'components/common/AuthPrompt'
+import { NextPageContext } from 'next'
+import Link from 'next/link'
+import React, { ReactElement } from 'react'
+import renderPage from 'renderPage'
+import styled from 'styled-components'
+import { MembershipRank, UserInfo, UserProfile } from 'types'
+import { doApiRequest, getCurrentSchoolYear } from 'utils'
+import { OBJECT_NAME_PLURAL, OBJECT_NAME_TITLE } from 'utils/branding'
+
 import {
   BULMA_INFO,
   CLUBS_BLUE,
@@ -22,11 +26,7 @@ import {
   CLUBS_PURPLE,
   SETTINGS_ROUTE,
   WHITE,
-} from '../../../constants'
-import renderPage from '../../../renderPage'
-import { MembershipRank, UserInfo, UserProfile } from '../../../types'
-import { doApiRequest, getCurrentSchoolYear } from '../../../utils'
-import { OBJECT_NAME_PLURAL, OBJECT_NAME_TITLE } from '../../../utils/branding'
+} from '~/constants'
 
 type UserProfilePageProps = {
   profile: UserProfile | { detail: string }

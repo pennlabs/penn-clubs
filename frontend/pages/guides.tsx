@@ -1,14 +1,14 @@
+import { Container, InfoPageTitle, Metadata, Text } from 'components/common'
 import fs from 'fs'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import path from 'path'
 import { ReactElement } from 'react'
+import renderPage from 'renderPage'
 import util from 'util'
+import { SITE_NAME } from 'utils/branding'
 
-import { Container, InfoPageTitle, Metadata, Text } from '../components/common'
-import { GUIDE_ROUTE, SNOW } from '../constants'
-import renderPage from '../renderPage'
-import { SITE_NAME } from '../utils/branding'
+import { GUIDE_ROUTE, SNOW } from '~/constants'
 
 const readDirPromise = util.promisify(fs.readdir)
 
