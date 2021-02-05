@@ -39,7 +39,7 @@ const styles = {
   },
 }
 
-type filterOption = {
+type FilterOption = {
   options: string[]
   label: string
   func: (a, b) => boolean
@@ -56,7 +56,7 @@ type tableProps = {
   columns: Row[]
   data: Row[]
   searchableColumns: string[]
-  filterOptions?: filterOption[]
+  filterOptions?: FilterOption[]
 }
 
 const Styles = styled.div`

@@ -88,15 +88,19 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
         filterOptions={[
           {
             label: 'role',
-            options: ['Owner', 'Member'],
+            options: ['Owner', 'Member', 'Officer'],
             func: (selection, object) => {
               switch (selection) {
                 case 'Owner':
                   if (object.role === 0) return true
                   else return false
                   break
+                case 'Officer':
+                  if (object.role === 10) return true
+                  else return false
+                  break
                 case 'Member':
-                  if (object.role > 0) return true
+                  if (object.role > 10) return true
                   else return false
                   break
                 default:

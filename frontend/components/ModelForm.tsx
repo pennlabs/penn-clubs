@@ -49,7 +49,7 @@ type TableField = {
   render?: (field: any, object: ModelObject) => any
 }
 
-type filterOption = {
+type FilterOption = {
   options: string[]
   label: string
   func: (a, b) => boolean
@@ -67,7 +67,7 @@ type ModelFormProps = {
   empty?: ReactElement | string
   fields: any
   tableFields?: TableField[]
-  filterOptions?: filterOption[]
+  filterOptions?: FilterOption[]
   currentTitle?: (object: ModelObject) => ReactElement | string
   noun?: string
   deleteVerb?: string
@@ -103,7 +103,7 @@ export const doFormikInitialValueFixes = (currentObject: {
 
 type ModelTableProps = {
   tableFields: TableField[]
-  filterOptions?: filterOption[]
+  filterOptions?: FilterOption[]
   objects: ModelObject[]
   allowEditing?: boolean
   allowDeletion?: boolean
@@ -142,13 +142,10 @@ export const ModelTable = ({
 
   tableFields = tableFields.map((column) => {
     if (column.converter) {
+      const renderFunction = column.converter
       return {
         ...column,
-        render: (id) => {
-          if (column.converter) {
-            column.converter(objects[id][column.name], objects[id])
-          }
-        },
+        render: (id) => renderFunction(objects[id][column.name], objects[id]),
       }
     } else return column
   })
