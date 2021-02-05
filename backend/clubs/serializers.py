@@ -601,7 +601,7 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
     def get_image(self, obj):
         if not obj.public:
             return None
-        if not obj.image.url:
+        if not obj.image:
             if not obj.person.profile.image:
                 return None
         image_url = obj.image.url or obj.person.profile.image.url
