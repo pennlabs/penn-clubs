@@ -103,7 +103,7 @@ const Table = ({
 }: tableProps): ReactElement => {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [tableData, setTableData] = useState<Row[]>([])
-  const [selectedFilter, setSelectedFilter] = useState<Object>({})
+  const [selectedFilter, setSelectedFilter] = useState<any>({})
   useEffect(() => {
     const searchedData = data.filter((item) => {
       if (!searchQuery) return true
@@ -129,14 +129,14 @@ const Table = ({
     })
     const filteredData = searchedData.filter((item) => {
       let valid = true
-      if (filterOptions){
-      for (const filter in selectedFilter) {
-        const original = filterOptions.filter((i) => i.label === filter)[0]
-        if (
-          selectedFilter[filter] != null &&
-          !original.func(selectedFilter[filter], item)
-        )
-          valid = false
+      if (filterOptions) {
+        for (const filter in selectedFilter) {
+          const original = filterOptions.filter((i) => i.label === filter)[0]
+          if (
+            selectedFilter[filter] != null &&
+            !original.func(selectedFilter[filter], item)
+          )
+            valid = false
         }
       }
       return valid
@@ -235,33 +235,34 @@ const Table = ({
               gridTemplateColumns: '1fr 1fr 1fr',
             }}
           >
-            {filterOptions && filterOptions.map((filterOption) => (
-              <div style={{ marginRight: '10px' }}>
-                <Select
-                  value={
-                    selectedFilter[filterOption.label]
-                      ? {
-                          label: selectedFilter[filterOption.label],
-                          value: selectedFilter[filterOption.label],
-                        }
-                      : null
-                  }
-                  styles={styles}
-                  components={components}
-                  onChange={(value) =>
-                    handleFilterChange({
-                      value: value ? value.label : null,
-                      label: filterOption.label,
-                    })
-                  }
-                  isClearable={true}
-                  placeholder={`Filter By ${filterOption.label}`}
-                  options={filterOption.options.map((option) => {
-                    return { value: filterOption.label, label: option }
-                  })}
-                />
-              </div>
-            ))}
+            {filterOptions &&
+              filterOptions.map((filterOption) => (
+                <div style={{ marginRight: '10px' }}>
+                  <Select
+                    value={
+                      selectedFilter[filterOption.label]
+                        ? {
+                            label: selectedFilter[filterOption.label],
+                            value: selectedFilter[filterOption.label],
+                          }
+                        : null
+                    }
+                    styles={styles}
+                    components={components}
+                    onChange={(value) =>
+                      handleFilterChange({
+                        value: value ? value.label : null,
+                        label: filterOption.label,
+                      })
+                    }
+                    isClearable={true}
+                    placeholder={`Filter By ${filterOption.label}`}
+                    options={filterOption.options.map((option) => {
+                      return { value: filterOption.label, label: option }
+                    })}
+                  />
+                </div>
+              ))}
           </div>
         </div>
       </Toolbar>

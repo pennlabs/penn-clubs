@@ -141,18 +141,17 @@ export const ModelTable = ({
   )
 
   tableFields = tableFields.map((column) => {
-    if (column.converter){
+    if (column.converter) {
       return {
         ...column,
-        render: (id) => { if (column.converter) {
-          column.converter(objects[id][column.name], objects[id])
-        }
-        }     
+        render: (id) => {
+          if (column.converter) {
+            column.converter(objects[id][column.name], objects[id])
+          }
+        },
       }
-    }
-      else return column
-    } 
-  )
+    } else return column
+  })
 
   tableFields.push({
     name: 'Actions',
@@ -191,17 +190,14 @@ export const ModelTable = ({
     ),
   })
 
-
   return (
     <>
-
       <Table
         data={objects}
         columns={tableFields}
         searchableColumns={['name']}
-        filterOptions = {filterOptions? filterOptions : []}
+        filterOptions={filterOptions || []}
       />
-       
     </>
   )
 }
