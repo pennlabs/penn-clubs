@@ -2710,6 +2710,8 @@ class ClubVisitViewSet(viewsets.ModelViewSet):
 class SearchQueryViewSet(viewsets.ModelViewSet):
     """
     create: Add a new search query
+
+    list: Superuser sees all queries, any other user sees only their own
     """
 
     permission_classes = [IsAuthenticated]
