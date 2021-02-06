@@ -1095,12 +1095,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Check for required tags before saving the club.
         """
-        if settings.BRANDING == "fyh":
-            if len(value) < 1:
-                raise serializers.ValidationError(
-                    "You must specify at least one tag in this list."
-                )
-        else:
+        if settings.BRANDING == "clubs":
             tag_names = [tag.get("name") for tag in value]
             necessary_tags = {"Undergraduate", "Graduate"}
             if not any(tag in necessary_tags for tag in tag_names):
