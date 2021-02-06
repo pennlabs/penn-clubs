@@ -99,6 +99,24 @@ const Invite = ({
     })
   }
 
+  const decline = () => {
+    if (query.invite === 'example') {
+      router.push(CLUB_ROUTE(), CLUB_ROUTE(query.club))
+    }
+    doApiRequest(`/clubs/${query.club}/invites/${query.invite}/?format=json`, {
+      method: 'DELETE',
+    }).then((resp) => {
+      if (resp.ok) {
+        router.push(CLUB_ROUTE(), CLUB_ROUTE(query.club))
+      } else {
+        resp.json().then((data) => {
+          setInviter(null)
+          setError(data)
+        })
+      }
+    })
+  }
+
   if (!authenticated) {
     return (
       <>
@@ -182,7 +200,7 @@ const Invite = ({
             </button>
             <button
               className="button is-medium is-light"
-              // TODO: implement decline behavior
+              onClick={() => decline()}
             >
               Decline Invitation
             </button>
