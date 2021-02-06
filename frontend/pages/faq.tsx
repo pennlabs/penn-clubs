@@ -1,7 +1,3 @@
-import Link from 'next/link'
-import { ReactElement } from 'react'
-import styled from 'styled-components'
-
 import {
   Contact,
   Container,
@@ -9,11 +5,12 @@ import {
   Line,
   Metadata,
   StrongText,
-} from '../components/common'
-import { CLUBS_HOME, CREATE_ROUTE, HUB_HOME } from '../constants'
-import { SNOW } from '../constants/colors'
-import renderPage from '../renderPage'
-import { MembershipRank } from '../types'
+} from 'components/common'
+import Link from 'next/link'
+import { ReactElement } from 'react'
+import renderPage from 'renderPage'
+import styled from 'styled-components'
+import { MembershipRank } from 'types'
 import {
   APPROVAL_AUTHORITY,
   APPROVAL_AUTHORITY_URL,
@@ -27,7 +24,9 @@ import {
   SHOW_RANK_ALGORITHM,
   SITE_ID,
   SITE_NAME,
-} from '../utils/branding'
+} from 'utils/branding'
+
+import { CLUBS_HOME, CREATE_ROUTE, HUB_HOME, SNOW } from '~/constants'
 
 type QuestionProps = React.PropsWithChildren<{
   title: string

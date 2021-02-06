@@ -1,26 +1,17 @@
-import { NextPageContext } from 'next'
-import Link from 'next/link'
-import { ReactElement, useEffect, useRef, useState } from 'react'
-import Linkify from 'react-linkify'
-import styled from 'styled-components'
-
-import ClubMetadata from '../../../components/ClubMetadata'
-import {
-  DesktopActions,
-  MobileActions,
-} from '../../../components/ClubPage/Actions'
-import AdvisorList from '../../../components/ClubPage/AdvisorList'
-import ClubApprovalDialog from '../../../components/ClubPage/ClubApprovalDialog'
-import Description from '../../../components/ClubPage/Description'
-import Events from '../../../components/ClubPage/Events'
-import FilesList from '../../../components/ClubPage/FilesList'
-import Header from '../../../components/ClubPage/Header'
-import InfoBox from '../../../components/ClubPage/InfoBox'
-import MemberList from '../../../components/ClubPage/MemberList'
-import QuestionList from '../../../components/ClubPage/QuestionList'
-import RenewalRequest from '../../../components/ClubPage/RenewalRequestDialog'
-import SocialIcons from '../../../components/ClubPage/SocialIcons'
-import Testimonials from '../../../components/ClubPage/Testimonials'
+import ClubMetadata from 'components/ClubMetadata'
+import { DesktopActions, MobileActions } from 'components/ClubPage/Actions'
+import AdvisorList from 'components/ClubPage/AdvisorList'
+import ClubApprovalDialog from 'components/ClubPage/ClubApprovalDialog'
+import Description from 'components/ClubPage/Description'
+import Events from 'components/ClubPage/Events'
+import FilesList from 'components/ClubPage/FilesList'
+import Header from 'components/ClubPage/Header'
+import InfoBox from 'components/ClubPage/InfoBox'
+import MemberList from 'components/ClubPage/MemberList'
+import QuestionList from 'components/ClubPage/QuestionList'
+import RenewalRequest from 'components/ClubPage/RenewalRequestDialog'
+import SocialIcons from 'components/ClubPage/SocialIcons'
+import Testimonials from 'components/ClubPage/Testimonials'
 import {
   Card,
   Contact,
@@ -32,14 +23,16 @@ import {
   StrongText,
   Text,
   WideContainer,
-} from '../../../components/common'
-import { CLUB_ALUMNI_ROUTE, CLUB_ORG_ROUTE } from '../../../constants'
-import { CLUBS_RED, SNOW, WHITE } from '../../../constants/colors'
-import { M0, M2, M3 } from '../../../constants/measurements'
-import renderPage from '../../../renderPage'
-import { Club, QuestionAnswer, UserInfo, VisitType } from '../../../types'
-import { doApiRequest, isClubFieldShown } from '../../../utils'
-import { logEvent } from '../../../utils/analytics'
+} from 'components/common'
+import { NextPageContext } from 'next'
+import Link from 'next/link'
+import { ReactElement, useEffect, useRef, useState } from 'react'
+import Linkify from 'react-linkify'
+import renderPage from 'renderPage'
+import styled from 'styled-components'
+import { Club, QuestionAnswer, UserInfo, VisitType } from 'types'
+import { doApiRequest, isClubFieldShown } from 'utils'
+import { logEvent } from 'utils/analytics'
 import {
   APPROVAL_AUTHORITY,
   FIELD_PARTICIPATION_LABEL,
@@ -47,7 +40,11 @@ import {
   SHOW_ADDITIONAL_LINKS,
   SHOW_MEMBERS,
   SITE_NAME,
-} from '../../../utils/branding'
+} from 'utils/branding'
+
+import { CLUB_ALUMNI_ROUTE, CLUB_ORG_ROUTE } from '~/constants'
+import { CLUBS_RED, SNOW, WHITE } from '~/constants/colors'
+import { M0, M2, M3 } from '~/constants/measurements'
 
 const Image = styled.img`
   height: 86px;

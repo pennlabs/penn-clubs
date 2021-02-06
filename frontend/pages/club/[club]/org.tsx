@@ -1,21 +1,15 @@
+import ClubMetadata from 'components/ClubMetadata'
+import { Container, Icon, Loading, Text, Title } from 'components/common'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
+import renderPage from 'renderPage'
 import styled from 'styled-components'
+import { Club } from 'types'
+import { doApiRequest } from 'utils'
+import { OBJECT_NAME_PLURAL } from 'utils/branding'
 
-import ClubMetadata from '../../../components/ClubMetadata'
-import {
-  Container,
-  Icon,
-  Loading,
-  Text,
-  Title,
-} from '../../../components/common'
-import { CLUB_ORG_ROUTE, CLUB_ROUTE, CLUBS_RED } from '../../../constants'
-import renderPage from '../../../renderPage'
-import { Club } from '../../../types'
-import { doApiRequest } from '../../../utils'
-import { OBJECT_NAME_PLURAL } from '../../../utils/branding'
+import { CLUB_ORG_ROUTE, CLUB_ROUTE, CLUBS_RED } from '~/constants'
 
 const Subtitle = styled(Title)`
   font-size: 1.5em;

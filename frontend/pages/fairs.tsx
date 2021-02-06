@@ -1,22 +1,22 @@
+import ClubFairCard from 'components/ClubEditPage/ClubFairCard'
+import { Contact, Container, Metadata, Text, Title } from 'components/common'
+import AuthPrompt from 'components/common/AuthPrompt'
+import FairEventsTab from 'components/Settings/FairEventsTab'
+import FairsTab from 'components/Settings/FairsTab'
+import HashTabView from 'components/TabView'
 import { NextPageContext } from 'next'
 import React, { ReactElement } from 'react'
-
-import ClubFairCard from '../components/ClubEditPage/ClubFairCard'
-import { Contact, Container, Metadata, Text, Title } from '../components/common'
-import AuthPrompt from '../components/common/AuthPrompt'
-import FairEventsTab from '../components/Settings/FairEventsTab'
-import FairsTab from '../components/Settings/FairsTab'
-import HashTabView from '../components/TabView'
-import { BG_GRADIENT, WHITE } from '../constants'
-import renderPage from '../renderPage'
-import { MembershipRank } from '../types'
-import { apiCheckPermission, doBulkLookup } from '../utils'
+import renderPage from 'renderPage'
+import { MembershipRank } from 'types'
+import { apiCheckPermission, doBulkLookup } from 'utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
-} from '../utils/branding'
+} from 'utils/branding'
+
+import { BG_GRADIENT, WHITE } from '~/constants'
 
 function FairsPage({ userInfo, fairs, memberships }): ReactElement {
   if (!userInfo) {

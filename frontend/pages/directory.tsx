@@ -1,17 +1,17 @@
+import { Container, InfoPageTitle, Metadata } from 'components/common'
 import { NextPageContext } from 'next'
 import { ReactElement } from 'react'
+import renderPage from 'renderPage'
 import styled from 'styled-components'
-
-import { Container, InfoPageTitle, Metadata } from '../components/common'
-import { SNOW } from '../constants'
-import renderPage from '../renderPage'
-import { Club } from '../types'
-import { doApiRequest } from '../utils'
+import { Club } from 'types'
+import { doApiRequest } from 'utils'
 import {
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_TITLE,
   SITE_NAME,
-} from '../utils/branding'
+} from 'utils/branding'
+
+import { SNOW } from '~/constants'
 
 type Props = {
   clubs: Club[]

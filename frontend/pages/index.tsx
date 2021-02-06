@@ -1,15 +1,11 @@
-import equal from 'deep-equal'
-import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
-import styled from 'styled-components'
-
-import { CLUB_RECRUITMENT_CYCLES } from '../components/ClubEditPage/ClubEditCard'
-import ListRenewalDialog from '../components/ClubPage/ListRenewalDialog'
-import LiveEventsDialog from '../components/ClubPage/LiveEventsDialog'
-import { Icon, Metadata, Title, WideContainer } from '../components/common'
-import DisplayButtons from '../components/DisplayButtons'
-import { FuseTag } from '../components/FilterSearch'
-import { ActionLink } from '../components/Header/Feedback'
-import PaginatedClubDisplay from '../components/PaginatedClubDisplay'
+import { CLUB_RECRUITMENT_CYCLES } from 'components/ClubEditPage/ClubEditCard'
+import ListRenewalDialog from 'components/ClubPage/ListRenewalDialog'
+import LiveEventsDialog from 'components/ClubPage/LiveEventsDialog'
+import { Icon, Metadata, Title, WideContainer } from 'components/common'
+import DisplayButtons from 'components/DisplayButtons'
+import { FuseTag } from 'components/FilterSearch'
+import { ActionLink } from 'components/Header/Feedback'
+import PaginatedClubDisplay from 'components/PaginatedClubDisplay'
 import SearchBar, {
   SearchBarCheckboxItem,
   SearchBarOptionItem,
@@ -17,8 +13,22 @@ import SearchBar, {
   SearchBarTagItem,
   SearchBarTextItem,
   SearchInput,
-} from '../components/SearchBar'
-import { mediaMaxWidth, PHONE } from '../constants'
+} from 'components/SearchBar'
+import equal from 'deep-equal'
+import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
+import { PaginatedClubPage, renderListPage } from 'renderPage'
+import styled from 'styled-components'
+import { Badge, School, StudentType, Tag, UserInfo, Year } from 'types'
+import { doApiRequest, isClubFieldShown, useSetting } from 'utils'
+import {
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_TITLE,
+  SHOW_SEARCHBAR_TOP,
+  SITE_ID,
+  SITE_TAGLINE,
+} from 'utils/branding'
+
+import { mediaMaxWidth, PHONE } from '~/constants'
 import {
   CLUBS_BLUE,
   CLUBS_GREY_LIGHT,
@@ -28,17 +38,7 @@ import {
   SNOW,
   TAG_BACKGROUND_COLOR_MAP,
   TAG_TEXT_COLOR_MAP,
-} from '../constants/colors'
-import { PaginatedClubPage, renderListPage } from '../renderPage'
-import { Badge, School, StudentType, Tag, UserInfo, Year } from '../types'
-import { doApiRequest, isClubFieldShown, useSetting } from '../utils'
-import {
-  OBJECT_NAME_PLURAL,
-  OBJECT_NAME_TITLE,
-  SHOW_SEARCHBAR_TOP,
-  SITE_ID,
-  SITE_TAGLINE,
-} from '../utils/branding'
+} from '~/constants/colors'
 
 const ClearAllLink = styled.span`
   cursor: pointer;

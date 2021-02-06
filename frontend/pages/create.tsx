@@ -1,10 +1,9 @@
+import ClubEditPage from 'components/ClubEditPage'
+import ResourceCreationPage from 'components/ResourceCreationPage'
 import { NextPageContext } from 'next'
-
-import ClubEditPage from '../components/ClubEditPage'
-import ResourceCreationPage from '../components/ResourceCreationPage'
-import renderPage from '../renderPage'
-import { doBulkLookup } from '../utils'
-import { SITE_ID } from '../utils/branding'
+import renderPage from 'renderPage'
+import { doBulkLookup } from 'utils'
+import { SITE_ID } from 'utils/branding'
 
 const Create = (props) =>
   SITE_ID === 'fyh' ? (

@@ -1,13 +1,12 @@
+import { Center, Container, Metadata } from 'components/common'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement } from 'react'
+import renderPage from 'renderPage'
 import styled from 'styled-components'
+import { logException, logMessage } from 'utils/sentry'
 
-import { Center, Container, Metadata } from '../components/common'
-import { SNOW } from '../constants/colors'
-import { HOME_ROUTE } from '../constants/routes'
-import renderPage from '../renderPage'
-import { logException, logMessage } from '../utils/sentry'
+import { HOME_ROUTE, SNOW } from '~/constants'
 const Image = styled.img`
   margin-top: calc(1rem + 5vh);
   width: 100%;

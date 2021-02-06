@@ -1,27 +1,27 @@
-import moment from 'moment-timezone'
-import { NextPageContext } from 'next'
-import Link from 'next/link'
-import { ReactElement, useEffect, useState } from 'react'
-import TimeAgo from 'react-timeago'
-
 import {
   Contact,
   Container,
   Icon,
   InfoPageTitle,
   Metadata,
-} from '../components/common'
-import { CLUB_ROUTE, LIVE_EVENTS, SNOW } from '../constants'
-import renderPage from '../renderPage'
-import { ClubFair } from '../types'
-import { cache, doApiRequest, useSetting } from '../utils'
+} from 'components/common'
+import moment from 'moment-timezone'
+import { NextPageContext } from 'next'
+import Link from 'next/link'
+import { ReactElement, useEffect, useState } from 'react'
+import TimeAgo from 'react-timeago'
+import renderPage from 'renderPage'
+import { ClubFair } from 'types'
+import { cache, doApiRequest, useSetting } from 'utils'
 import {
   OBJECT_NAME_LONG_PLURAL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
   OBJECT_NAME_TITLE_SINGULAR,
   SITE_NAME,
-} from '../utils/branding'
+} from 'utils/branding'
+
+import { CLUB_ROUTE, LIVE_EVENTS, SNOW } from '~/constants'
 
 type FairPageProps = {
   isOverride: boolean

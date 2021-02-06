@@ -1,8 +1,3 @@
-import { NextPageContext } from 'next'
-import Link from 'next/link'
-import { ReactElement, useEffect, useState } from 'react'
-import styled from 'styled-components'
-
 import {
   Center,
   Container,
@@ -11,14 +6,17 @@ import {
   PhoneContainer,
   Text,
   Title,
-} from '../components/common'
-import AuthPrompt from '../components/common/AuthPrompt'
-import LogoWithText from '../components/LogoWithText'
-import ProfileForm from '../components/Settings/ProfileForm'
-import { HOME_ROUTE } from '../constants/routes'
-import renderPage from '../renderPage'
-import { UserInfo } from '../types'
-import { doApiRequest } from '../utils'
+} from 'components/common'
+import AuthPrompt from 'components/common/AuthPrompt'
+import LogoWithText from 'components/LogoWithText'
+import ProfileForm from 'components/Settings/ProfileForm'
+import { NextPageContext } from 'next'
+import Link from 'next/link'
+import { ReactElement, useEffect, useState } from 'react'
+import renderPage from 'renderPage'
+import styled from 'styled-components'
+import { UserInfo } from 'types'
+import { doApiRequest } from 'utils'
 import {
   OBJECT_NAME_LONG_PLURAL,
   OBJECT_NAME_PLURAL,
@@ -26,7 +24,9 @@ import {
   SCHOOL_NAME,
   SITE_ID,
   SITE_NAME,
-} from '../utils/branding'
+} from 'utils/branding'
+
+import { HOME_ROUTE } from '~/constants/routes'
 
 const Subtitle = styled(Title)`
   font-size: 1.3rem;

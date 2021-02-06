@@ -1,14 +1,14 @@
+import { Container, Metadata, Title } from 'components/common'
+import AuthPrompt from 'components/common/AuthPrompt'
+import QueueTab from 'components/Settings/QueueTab'
+import RenewTab from 'components/Settings/RenewTab'
+import HashTabView from 'components/TabView'
 import { ReactElement } from 'react'
+import renderPage from 'renderPage'
+import { apiCheckPermission } from 'utils'
+import { OBJECT_NAME_TITLE } from 'utils/branding'
 
-import { Container, Metadata, Title } from '../components/common'
-import AuthPrompt from '../components/common/AuthPrompt'
-import QueueTab from '../components/Settings/QueueTab'
-import RenewTab from '../components/Settings/RenewTab'
-import HashTabView from '../components/TabView'
-import { BG_GRADIENT, WHITE } from '../constants/colors'
-import renderPage from '../renderPage'
-import { apiCheckPermission } from '../utils'
-import { OBJECT_NAME_TITLE } from '../utils/branding'
+import { BG_GRADIENT, WHITE } from '~/constants/colors'
 
 function UserRenewal({ userInfo, authenticated }): ReactElement {
   const canApprove = apiCheckPermission('clubs.approve_club')

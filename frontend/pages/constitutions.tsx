@@ -1,18 +1,16 @@
-import { NextPageContext } from 'next'
-import Link from 'next/link'
-import React, { ReactElement } from 'react'
-
 import {
   Container,
   Icon,
   InfoPageTitle,
   Metadata,
   Text,
-} from '../components/common'
-import { CLUB_ROUTE, SNOW } from '../constants'
-import renderPage from '../renderPage'
-import { MembershipRank } from '../types'
-import { doApiRequest, intersperse } from '../utils'
+} from 'components/common'
+import { NextPageContext } from 'next'
+import Link from 'next/link'
+import React, { ReactElement } from 'react'
+import renderPage from 'renderPage'
+import { MembershipRank } from 'types'
+import { doApiRequest, intersperse } from 'utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_PLURAL,
@@ -20,7 +18,9 @@ import {
   OBJECT_NAME_TITLE,
   OBJECT_NAME_TITLE_SINGULAR,
   SITE_NAME,
-} from '../utils/branding'
+} from 'utils/branding'
+
+import { CLUB_ROUTE, SNOW } from '~/constants'
 
 type Props = {
   clubs: {

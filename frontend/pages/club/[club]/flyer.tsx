@@ -1,18 +1,12 @@
+import { Center, Container, Metadata, Text, Title } from 'components/common'
 import { NextPageContext } from 'next'
 import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
+import { Club } from 'types'
+import { doApiRequest, getApiUrl } from 'utils'
+import { DOMAIN, OBJECT_URL_SLUG } from 'utils/branding'
 
-import {
-  Center,
-  Container,
-  Metadata,
-  Text,
-  Title,
-} from '../../../components/common'
-import { CLUBS_NAVY } from '../../../constants/colors'
-import { Club } from '../../../types'
-import { doApiRequest, getApiUrl } from '../../../utils'
-import { DOMAIN, OBJECT_URL_SLUG } from '../../../utils/branding'
+import { CLUBS_NAVY } from '~/constants/colors'
 
 const Image = styled.img`
   padding: 0;

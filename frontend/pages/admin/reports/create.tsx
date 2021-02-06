@@ -1,10 +1,9 @@
+import { EditReportPage } from 'components/reports/ReportPage'
 import { NextPageContext } from 'next'
 import { ReactElement } from 'react'
-
-import { EditReportPage } from '../../../components/reports/ReportPage'
-import renderPage from '../../../renderPage'
-import { Badge, Tag } from '../../../types'
-import { doBulkLookup } from '../../../utils'
+import renderPage from 'renderPage'
+import { Badge, Tag } from 'types'
+import { doBulkLookup } from 'utils'
 
 type CreateReportPageProps = {
   nameToCode: { [cat: string]: { [key: string]: string } }

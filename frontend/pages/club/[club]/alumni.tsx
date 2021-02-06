@@ -1,13 +1,13 @@
+import ClubMetadata from 'components/ClubMetadata'
+import { Container, StrongText, Text, Title } from 'components/common'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement } from 'react'
+import renderPage from 'renderPage'
+import { Club } from 'types'
+import { doApiRequest } from 'utils'
 
-import ClubMetadata from '../../../components/ClubMetadata'
-import { Container, StrongText, Text, Title } from '../../../components/common'
-import { CLUB_ROUTE, PROFILE_ROUTE } from '../../../constants'
-import renderPage from '../../../renderPage'
-import { Club } from '../../../types'
-import { doApiRequest } from '../../../utils'
+import { CLUB_ROUTE, PROFILE_ROUTE } from '~/constants'
 
 type AlumniPageProps = {
   club: Club

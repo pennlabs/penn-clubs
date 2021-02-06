@@ -1,10 +1,5 @@
-import { NextPageContext } from 'next'
-import Link from 'next/link'
-import { ReactElement, useContext, useEffect, useState } from 'react'
-import styled from 'styled-components'
-
-import ClubMetadata from '../../../components/ClubMetadata'
-import InfoBox from '../../../components/ClubPage/InfoBox'
+import ClubMetadata from 'components/ClubMetadata'
+import InfoBox from 'components/ClubPage/InfoBox'
 import {
   Center,
   Container,
@@ -15,18 +10,23 @@ import {
   TagGroup,
   Text,
   Title,
-} from '../../../components/common'
-import AuthPrompt from '../../../components/common/AuthPrompt'
-import { AuthCheckContext } from '../../../components/contexts'
-import { CLUB_ROUTE } from '../../../constants/routes'
-import renderPage from '../../../renderPage'
-import { Club, VisitType } from '../../../types'
+} from 'components/common'
+import AuthPrompt from 'components/common/AuthPrompt'
+import { AuthCheckContext } from 'components/contexts'
+import { NextPageContext } from 'next'
+import Link from 'next/link'
+import { ReactElement, useContext, useEffect, useState } from 'react'
+import renderPage from 'renderPage'
+import styled from 'styled-components'
+import { Club, VisitType } from 'types'
 import {
   apiSetFavoriteStatus,
   apiSetSubscribeStatus,
   doApiRequest,
-} from '../../../utils'
-import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../../utils/branding'
+} from 'utils'
+import { OBJECT_NAME_SINGULAR, SITE_NAME } from 'utils/branding'
+
+import { CLUB_ROUTE } from '~/constants/routes'
 
 const Image = styled.img`
   height: 86px;
