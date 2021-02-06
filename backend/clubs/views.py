@@ -3962,6 +3962,31 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
             {"detail": "Resent email invitation to {}!".format(invite.email)}
         )
 
+    def destroy(self, request, *args, **kwargs):
+        invite = self.get_object()
+
+        if request.user.is_authenticated:
+            membership = find_membership_helper(request.user, invite.club)
+            is_officer = (
+                membership is not None and membership.role <= Membership.ROLE_OFFICER
+            )
+        else:
+            is_officer = False
+
+        # if we're not an officer and haven't specified the token
+        # don't let us delete this invite
+        if (
+            not request.data.get("token") == invite.token
+            and not is_officer
+            and not request.user.has_perm("clubs.manage_club")
+        ):
+            return Response(
+                {"detail": "Invalid or missing token in request."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        return super().destroy(request, *args, **kwargs)
+
     def get_queryset(self):
         return MembershipInvite.objects.filter(
             club__code=self.kwargs["club_code"], active=True
