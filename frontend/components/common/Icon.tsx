@@ -32,6 +32,7 @@ type IconProps = {
   show?: boolean
   onClick?: () => void
   noMargin?: boolean
+  noAlign?: boolean
 }
 
 export const Icon = ({
@@ -39,6 +40,7 @@ export const Icon = ({
   show = true,
   size = '1rem',
   noMargin,
+  noAlign,
   ...props
 }: IconProps): ReactElement | null => {
   const svg = reqSvgs(`./${name}.svg`)
@@ -47,7 +49,7 @@ export const Icon = ({
   }
   const iconInfo = svg.default().props
   return (
-    <IconWrapper noMargin={noMargin}>
+    <IconWrapper noAlign={noAlign} noMargin={noMargin}>
       {svg.default({
         preserveAspectRatio: 'xMidYMid meet',
         width: size,
