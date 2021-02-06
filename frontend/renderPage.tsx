@@ -18,6 +18,7 @@ import {
   BULMA_PRIMARY,
   BULMA_SUCCESS,
   BULMA_WARNING,
+  SNOW,
   WHITE,
 } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
@@ -68,6 +69,7 @@ const ToastStyle = styled.div`
 
 const Wrapper = styled.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
+  background: ${SNOW};
 `
 
 const GlobalStyle = createGlobalStyle`
