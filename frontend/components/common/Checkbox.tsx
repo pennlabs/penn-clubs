@@ -19,7 +19,7 @@ const HiddenCheckbox = styled.input.attrs({ type: 'checkbox' })`
   width: 1px;
 `
 
-const StyledCheckbox = styled.div`
+const StyledCheckbox = styled.div<{ color?: string }>`
   display: inline-block;
   width: 16px;
   height: 16px;
@@ -39,11 +39,12 @@ export const CheckboxLabel = styled.label`
 
 type CheckboxProps = {
   id?: string
+  color?: string
   name?: string
   className?: string
   checked: boolean
   value?: string
-  onBlur: () => void
+  onBlur?: () => void
   onChange: (e: ChangeEvent<HTMLInputElement>) => void
 }
 
@@ -55,6 +56,7 @@ export const Checkbox = ({
   value,
   id,
   name,
+  color,
 }: CheckboxProps): ReactElement => {
   const checkboxRef = createRef<HTMLInputElement>()
 
@@ -70,8 +72,12 @@ export const Checkbox = ({
         name={name}
         type="checkbox"
       />
-      <StyledCheckbox onClick={() => checkboxRef.current?.click()}>
+      <StyledCheckbox
+        color={color}
+        onClick={() => checkboxRef.current?.click()}
+      >
         <Icon
+          noAlign
           alt={checked ? 'checked' : 'unchecked'}
           name={checked ? 'check-box' : 'box'}
         />

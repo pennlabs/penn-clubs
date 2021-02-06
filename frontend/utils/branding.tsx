@@ -205,7 +205,7 @@ const sites = {
     FORM_DESCRIPTION_EXAMPLES:
       'Office of New Student Orientation & Academic Initiative - NSOAI',
     FORM_TAG_DESCRIPTION:
-      'Tags will allow students to find your resource while filtering Hub@Penn. Select as many as apply. You will need to at least specify one tag.',
+      'Tags will allow students to find your resource while filtering Hub@Penn. Select as many as apply.',
     FORM_LOGO_DESCRIPTION: 'Upload your approved Penn logo.',
     FORM_TARGET_DESCRIPTION: (
       <>

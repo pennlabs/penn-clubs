@@ -1,7 +1,8 @@
 import { Field, Form, Formik } from 'formik'
 import Link from 'next/link'
-import { ReactElement } from 'react'
+import { ReactElement, useState } from 'react'
 
+import { BLACK } from '../../constants'
 import {
   Club,
   ClubApplicationRequired,
@@ -30,7 +31,7 @@ import {
   SITE_ID,
   SITE_NAME,
 } from '../../utils/branding'
-import { Contact, Text } from '../common'
+import { Checkbox, CheckboxLabel, Contact, Text } from '../common'
 import {
   CheckboxField,
   FileField,
@@ -173,6 +174,15 @@ export default function ClubEditCard({
   isEdit,
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement {
+  const [showTargetFields, setShowTargetFields] = useState<boolean>(
+    !!(
+      club.target_majors?.length ||
+      club.target_schools?.length ||
+      club.target_years?.length ||
+      club.student_types?.length
+    ),
+  )
+
   const submit = (data, { setSubmitting, setStatus }): Promise<void> => {
     const photo = data.image
     if (photo !== null) {
@@ -448,31 +458,52 @@ export default function ClubEditCard({
         },
         {
           type: 'content',
-          content: <Text>{FORM_TARGET_DESCRIPTION}</Text>,
+          content: (
+            <>
+              <Text>{FORM_TARGET_DESCRIPTION}</Text>
+              <div className="ml-2 mb-4">
+                <CheckboxLabel>
+                  <Checkbox
+                    checked={showTargetFields}
+                    onChange={(e) => setShowTargetFields(e.target.checked)}
+                    color={BLACK}
+                  />{' '}
+                  <span className="ml-1">
+                    Yes, my {OBJECT_NAME_SINGULAR} is restricted to certain
+                    student groups.
+                  </span>
+                </CheckboxLabel>
+              </div>
+            </>
+          ),
         },
         {
           name: 'target_years',
           type: 'multiselect',
           placeholder: `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: years,
+          hidden: !showTargetFields,
         },
         {
           name: 'target_schools',
           type: 'multiselect',
           placeholder: `Select schools relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: schools,
+          hidden: !showTargetFields,
         },
         {
           name: 'target_majors',
           type: 'multiselect',
           placeholder: `Select majors relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: majors,
+          hidden: !showTargetFields,
         },
         {
           name: 'student_types',
           type: 'multiselect',
           placeholder: `Select student types relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: studentTypes,
+          hidden: !showTargetFields,
         },
       ].filter(({ name }) => name == null || isClubFieldShown(name)),
     },
@@ -510,8 +541,11 @@ export default function ClubEditCard({
                 <Card title={name} key={i}>
                   {description}
                   {(fields as any[]).map(
-                    (props: any, i): ReactElement => {
-                      const { ...other } = props
+                    (props: any, i): ReactElement | null => {
+                      const { hidden, ...other } = props
+                      if (hidden) {
+                        return null
+                      }
                       if (props.type === 'content') {
                         return <div key={i}>{props.content}</div>
                       }

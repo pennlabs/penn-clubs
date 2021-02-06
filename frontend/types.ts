@@ -168,8 +168,12 @@ export interface Club {
   recruiting_cycle: ClubRecruitingCycle
   signature_events: string
   size: ClubSize
+  student_types: StudentType[]
   subtitle: string
   tags: Tag[]
+  target_majors: Major[]
+  target_schools: School[]
+  target_years: Year[]
   testimonials: Testimonial[]
   twitter: string
   website: string
