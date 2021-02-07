@@ -47,11 +47,6 @@ type FilterOption = {
 
 type Row = { [key: string]: any }
 
-type selectFilter = {
-  value: string
-  label: string
-}
-
 type tableProps = {
   columns: Row[]
   data: Row[]
@@ -221,7 +216,7 @@ const Table = ({
             <Input
               className="input"
               value={searchQuery}
-              placeholder={`search ${
+              placeholder={`Search ${
                 tableData.length < 1 ? data.length : tableData.length
               } entries`}
               onChange={handleSearchChange}
