@@ -121,7 +121,7 @@ class Command(BaseCommand):
         if queued_clubs.exists():
             context = {
                 "num_clubs": queued_clubs.count(),
-                "url": f"https://{settings.DOMAIN}/admin#queue",
+                "url": f"https://{settings.DOMAIN}/admin/queue",
                 "clubs": list(
                     queued_clubs.order_by("name").values_list("name", flat=True)
                 ),

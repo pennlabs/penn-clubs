@@ -481,7 +481,7 @@ class Club(models.Model):
             "media_guide_url": f"https://{domain}/guides/media",
             "zoom_url": f"https://{domain}/zoom",
             "fair_url": f"https://{domain}/fair?fair={fair_str}",
-            "subscriptions_url": f"https://{domain}/club/{self.code}/edit#recruitment",
+            "subscriptions_url": f"https://{domain}/club/{self.code}/edit/recruitment",
             "num_subscriptions": self.subscribe_set.count(),
             "fair": fair,
             "events": events,
@@ -988,7 +988,7 @@ class MembershipRequest(models.Model):
 
         context = {
             "club_name": self.club.name,
-            "edit_url": "{}#member".format(
+            "edit_url": "{}/member".format(
                 settings.EDIT_URL.format(domain=domain, club=self.club.code)
             ),
             "full_name": self.person.get_full_name(),
