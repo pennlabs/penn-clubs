@@ -40,7 +40,7 @@ describe('Invitation tests', () => {
       cy.login('bfranklin', 'test')
 
       cy.visit(`/invite/${invite['code']}/${invite['id']}/${invite['token']}`)
-      cy.contains('Invitation for Penn Pre-Professional Juggling Organization')
+      cy.contains('Penn Pre-Professional Juggling Organization has invited you')
     })
   })
 
