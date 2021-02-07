@@ -352,7 +352,7 @@ class InvitePermission(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        if view.action in ["retrieve", "update", "partial_update"]:
+        if view.action in {"retrieve", "update", "partial_update", "destroy"}:
             return request.user.is_authenticated
         else:
             if not request.user.is_authenticated:
