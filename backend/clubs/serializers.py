@@ -604,7 +604,8 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
         if not obj.image:
             if not obj.person.profile.image:
                 return None
-        image_url = obj.image.url or obj.person.profile.image.url
+        image_url = obj.image.url if obj.image else obj.person.profile.image.url
+
         if image_url.startswith("http"):
             return image_url
         elif "request" in self.context:
