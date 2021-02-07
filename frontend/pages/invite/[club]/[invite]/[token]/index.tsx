@@ -105,6 +105,9 @@ const Invite = ({
     }
     doApiRequest(`/clubs/${query.club}/invites/${query.invite}/?format=json`, {
       method: 'DELETE',
+      body: {
+        token: query.token,
+      },
     }).then((resp) => {
       if (resp.ok) {
         router.push(CLUB_ROUTE(), CLUB_ROUTE(query.club))
