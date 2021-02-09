@@ -1109,6 +1109,50 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                     )
         return value
 
+    def validate_target_years(self, value):
+        """
+        Ensure that the user does not select all of the target years.
+        """
+        if len(value) >= Year.objects.count():
+            raise serializers.ValidationError(
+                "You should not select all of the items in this list. "
+                "If all of these items apply, select none of them instead."
+            )
+        return value
+
+    def validate_target_schools(self, value):
+        """
+        Ensure that the user does not select all of the target schools.
+        """
+        if len(value) >= School.objects.count():
+            raise serializers.ValidationError(
+                "You should not select all of the items in this list. "
+                "If all of these items apply, select none of them instead."
+            )
+        return value
+
+    def validate_target_majors(self, value):
+        """
+        Ensure that the user does not select all of the target majors.
+        """
+        if len(value) >= Major.objects.count():
+            raise serializers.ValidationError(
+                "You should not select all of the items in this list. "
+                "If all of these items apply, select none of them instead."
+            )
+        return value
+
+    def validate_student_types(self, value):
+        """
+        Ensure that the user does not select all of the student types.
+        """
+        if len(value) >= StudentType.objects.count():
+            raise serializers.ValidationError(
+                "You should not select all of the items in this list. "
+                "If all of these items apply, select none of them instead."
+            )
+        return value
+
     def validate_description(self, value):
         """
         Allow the description to have HTML tags that come from a whitelist.
