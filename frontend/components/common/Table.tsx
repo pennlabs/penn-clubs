@@ -260,7 +260,7 @@ const Table = ({
               <tr {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map((column) => (
                   <th {...column.getHeaderProps(column.getSortByToggleProps())}>
-                    {column.render('Header')}
+                    {titleize(column.render('Header'))}
                     <span style={{ marginLeft: '1rem' }}>
                       {column.isSorted ? (
                         column.isSortedDesc ? (
