@@ -212,8 +212,10 @@ const FairEventsTab = ({
             </table>
           </div>
         )
-      ) : (
+      ) : fairs.length > 0 ? (
         <Loading />
+      ) : (
+        <Text>There are no activities fairs to display.</Text>
       )}
     </>
   )
