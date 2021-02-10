@@ -49,6 +49,7 @@ ics = "*"
 urlextract = "*"
 jsonref = "*"
 unittest-xml-reporting = "*"
+tblib = "*"
 
 [requires]
 python_version = "3"
