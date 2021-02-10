@@ -2391,7 +2391,7 @@ class EventViewSet(ClubEventViewSet):
                 .order_by("start_time")
                 .first()
             )
-        if not date:
+        if not date and fair is not None:
             date = fair.start_time.date()
 
         now = date or timezone.now()

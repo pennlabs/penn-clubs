@@ -480,10 +480,9 @@ export function renderListPage<T>(
     const initialProps = await fetchOriginalProps()
 
     const [clubsResponse, cached] = await Promise.all([
-      doApiRequest(
-        '/clubs/?page=1&ordering=featured&format=json',
-        data,
-      ).then((resp) => resp.json()),
+      doApiRequest('/clubs/?page=1&ordering=featured&format=json', data)
+        .then((resp) => resp.json())
+        .catch(() => []),
       getPublicCachedContent(),
     ])
 

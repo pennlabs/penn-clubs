@@ -1177,6 +1177,7 @@ class ClubTestCase(TestCase):
 
         badge1 = Badge.objects.create(label="SAC Funded", purpose="org")
         school1 = School.objects.create(name="Engineering", is_graduate=False)
+        School.objects.create(name="Wharton", is_graduate=False)
 
         self.client.login(username=self.user5.username, password="test")
 
