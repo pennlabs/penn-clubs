@@ -47,13 +47,19 @@ type TableField = {
   name: string
   converter?: (field: any, object: ModelObject) => any
   render?: (field: any, object: ModelObject) => any
+  id?: string
 }
 
-type FilterOption = {
-  options: string[]
-  label: string
-  func: (a, b) => boolean
-}
+type Option = {
+  label:string,
+  key : any
+ }
+ 
+ type FilterOption = {
+   options: Option[]
+   label: string
+   func: (a, b) => boolean
+ }
 
 type ModelFormProps = {
   listParams?: string
@@ -140,7 +146,7 @@ export const ModelTable = ({
     [tableFields],
   )
 
-  tableFields = tableFields.map((column) => {
+  tableFields = tableFields.map((column, index) => {
     if (column.converter) {
       const renderFunction = column.converter
       return {
@@ -190,7 +196,7 @@ export const ModelTable = ({
   return (
     <>
       <Table
-        data={objects}
+        data={ objects.map((item, index) => item.id? item: {...item, id:index}) }
         columns={tableFields}
         searchableColumns={['name']}
         filterOptions={filterOptions || []}

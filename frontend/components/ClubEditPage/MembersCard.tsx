@@ -88,25 +88,8 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
         filterOptions={[
           {
             label: 'role',
-            options: ['Owner', 'Member', 'Officer'],
-            func: (selection, object) => {
-              switch (selection) {
-                case 'Owner':
-                  if (object.role === 0) return true
-                  else return false
-                  break
-                case 'Officer':
-                  if (object.role === 10) return true
-                  else return false
-                  break
-                case 'Member':
-                  if (object.role > 10) return true
-                  else return false
-                  break
-                default:
-                  return false
-              }
-            },
+            options: [{key: 0, label:"Owner"}, {key:20, label:'Member'}, {key:10, label :'Officer'}],
+            func: (selection, object) => object.role === selection,
           },
         ]}
         currentTitle={(obj) =>

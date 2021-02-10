@@ -8,7 +8,7 @@ import {
   useTable,
 } from 'react-table'
 import styled from 'styled-components'
-
+import { titleize } from '../../utils'
 import {
   ALLBIRDS_GRAY,
   BORDER,
@@ -39,8 +39,13 @@ const styles = {
   },
 }
 
+type Option = {
+ label:string,
+ key : any
+}
+
 type FilterOption = {
-  options: string[]
+  options: Option[]
   label: string
   func: (a, b) => boolean
 }
@@ -101,26 +106,13 @@ const Table = ({
   const [selectedFilter, setSelectedFilter] = useState<any>({})
   useEffect(() => {
     const searchedData = data.filter((item) => {
-      if (!searchQuery) return true
       if (!searchQuery || searchQuery.length < 3) {
         return true
       }
-      let valid = false
-      for (const searchId in searchableColumns) {
-        const strings = item[searchableColumns[searchId]].split(' ')
-        valid = strings.reduce(
-          (acc, item) =>
-            acc || item.toLowerCase().startsWith(searchQuery.toLowerCase()),
-          false,
-        )
-        if (
-          item[searchableColumns[searchId]]
-            .toLowerCase()
-            .startsWith(searchQuery.toLowerCase())
-        )
-          valid = true
-      }
-      return valid
+      return searchableColumns.some(searchId => {
+        const strings = item[searchId].split(' ')
+        return strings.some(string => string.toLowerCase().startsWith(searchQuery.toLowerCase()))
+      })
     })
     const filteredData = searchedData.filter((item) => {
       let valid = true
@@ -129,14 +121,13 @@ const Table = ({
           const original = filterOptions.filter((i) => i.label === filter)[0]
           if (
             selectedFilter[filter] != null &&
-            !original.func(selectedFilter[filter], item)
+            !original.func(selectedFilter[filter].value, item)
           )
             valid = false
         }
       }
       return valid
     })
-
     setTableData(filteredData)
   }, [searchQuery, selectedFilter, data])
 
@@ -201,7 +192,7 @@ const Table = ({
 
   const handleFilterChange = (newFilter) => {
     const newFilters = { ...selectedFilter }
-    newFilters[newFilter.label] = newFilter.value
+    newFilters[newFilter.label] = newFilter.value;
     setSelectedFilter(newFilters)
   }
 
@@ -237,8 +228,8 @@ const Table = ({
                     value={
                       selectedFilter[filterOption.label]
                         ? {
-                            label: selectedFilter[filterOption.label],
-                            value: selectedFilter[filterOption.label],
+                            label: selectedFilter[filterOption.label].label,
+                            value: selectedFilter[filterOption.label].key,
                           }
                         : null
                     }
@@ -246,14 +237,14 @@ const Table = ({
                     components={components}
                     onChange={(value) =>
                       handleFilterChange({
-                        value: value ? value.label : null,
-                        label: filterOption.label,
+                        value: value ? value : null, 
+                        label: filterOption.label? filterOption.label: null,
                       })
                     }
                     isClearable={true}
-                    placeholder={`Filter By ${filterOption.label}`}
+                    placeholder={`Filter by ${titleize(filterOption.label)}`}
                     options={filterOption.options.map((option) => {
-                      return { value: filterOption.label, label: option }
+                      return { value: option.key, label: option.label }
                     })}
                   />
                 </div>
@@ -292,10 +283,11 @@ const Table = ({
               return (
                 <tr key={row.id} {...row.getRowProps()}>
                   {columns.map((column) => {
+                    console.log(row.original)
                     return (
                       <td>
                         {column.render
-                          ? column.render(row.id)
+                          ? column.render(row.original.id)
                           : row.original[column.name]}
                       </td>
                     )
@@ -306,7 +298,7 @@ const Table = ({
           </tbody>
         </table>
       ) : (
-        <h1>No matches where found. Please change your filters.</h1>
+        <h1>No matches were found. Please change your filters.</h1>
       )}
       {pageOptions.length > 1 && (
         <div className="is-clearfix" style={{ display: 'flex' }}>
