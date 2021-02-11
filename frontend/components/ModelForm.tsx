@@ -56,10 +56,10 @@ type Option = {
  }
  
  type FilterOption = {
-   options: Option[]
-   label: string
-   filtetrFunction: (a, b) => boolean
- }
+  options: Option[]
+  label: string
+  filterFunction: (a, b) => boolean
+}
 
 type ModelFormProps = {
   listParams?: string
