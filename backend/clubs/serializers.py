@@ -1538,11 +1538,10 @@ class SearchQuerySerializer(serializers.ModelSerializer):
     """
 
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    query = serializers.CharField()
 
     class Meta:
         model = SearchQuery
-        fields = ("person", "query")
+        fields = ("person", "query", "created_at")
 
 
 class MembershipRequestSerializer(serializers.ModelSerializer):

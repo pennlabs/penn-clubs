@@ -2714,6 +2714,7 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
     list: Superuser sees all queries, any other user sees only their own
     """
 
+    serializer_class = SearchQuerySerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ["get", "post"]
 
@@ -2722,9 +2723,6 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
             return SearchQuery.objects.all()
         else:
             return SearchQuery.objects.filter(person=self.request.user)
-
-    def get_serializer_class(self):
-        return SearchQuerySerializer
 
 
 class MembershipRequestViewSet(viewsets.ModelViewSet):
