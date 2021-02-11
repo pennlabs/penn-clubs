@@ -2718,7 +2718,7 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post"]
 
     def get_queryset(self):
-        if IsSuperuser:
+        if self.request.user.is_superuser:
             return SearchQuery.objects.all()
         else:
             return SearchQuery.objects.filter(person=self.request.user)

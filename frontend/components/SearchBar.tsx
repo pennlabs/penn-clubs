@@ -345,10 +345,12 @@ export const SearchBarTextItem = ({
     const timeoutId: number = window.setTimeout(
       () =>
         searchCallback((inpt) => {
-          doApiRequest('/searches/', {
-            method: 'POST',
-            body: { query: nameInput },
-          })
+          if (nameInput.trim().length > 0) {
+            doApiRequest('/searches/', {
+              method: 'POST',
+              body: { query: nameInput },
+            })
+          }
 
           if (nameInput.length <= 0) {
             const newInpt = { ...inpt }
