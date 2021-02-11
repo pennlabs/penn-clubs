@@ -47,7 +47,7 @@ type Option = {
 type FilterOption = {
   options: Option[]
   label: string
-  func: (a, b) => boolean
+  filterFunction: (a, b) => boolean
 }
 
 type Row = { [key: string]: any }
@@ -121,7 +121,7 @@ const Table = ({
           const original = filterOptions.filter((i) => i.label === filter)[0]
           if (
             selectedFilter[filter] != null &&
-            !original.func(selectedFilter[filter].value, item)
+            !original.filterFunction(selectedFilter[filter].value, item)
           )
             valid = false
         }

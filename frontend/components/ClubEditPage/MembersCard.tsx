@@ -89,7 +89,7 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
           {
             label: 'role',
             options: [{key: 0, label:"Owner"}, {key:20, label:'Member'}, {key:10, label :'Officer'}],
-            func: (selection, object) => object.role === selection,
+            filterFunction: (selection, object) => object.role === selection,
           },
         ]}
         currentTitle={(obj) =>

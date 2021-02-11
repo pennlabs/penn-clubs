@@ -58,7 +58,7 @@ type Option = {
  type FilterOption = {
    options: Option[]
    label: string
-   func: (a, b) => boolean
+   filtetrFunction: (a, b) => boolean
  }
 
 type ModelFormProps = {
