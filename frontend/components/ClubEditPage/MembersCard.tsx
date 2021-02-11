@@ -88,7 +88,11 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
         filterOptions={[
           {
             label: 'role',
-            options: [{key: 0, label:"Owner"}, {key:20, label:'Member'}, {key:10, label :'Officer'}],
+            options: [
+              { key: 0, label: 'Owner' },
+              { key: 20, label: 'Member' },
+              { key: 10, label: 'Officer' },
+            ],
             filterFunction: (selection, object) => object.role === selection,
           },
         ]}

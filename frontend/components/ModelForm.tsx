@@ -51,11 +51,11 @@ type TableField = {
 }
 
 type Option = {
-  label:string,
-  key : any
- }
- 
- type FilterOption = {
+  label: string
+  key: any
+}
+
+type FilterOption = {
   options: Option[]
   label: string
   filterFunction: (a, b) => boolean
@@ -196,7 +196,9 @@ export const ModelTable = ({
   return (
     <>
       <Table
-        data={ objects.map((item, index) => item.id? item: {...item, id:index}) }
+        data={objects.map((item, index) =>
+          item.id ? item : { ...item, id: index },
+        )}
         columns={tableFields}
         searchableColumns={['name']}
         filterOptions={filterOptions || []}

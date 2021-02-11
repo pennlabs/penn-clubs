@@ -8,7 +8,7 @@ import {
   useTable,
 } from 'react-table'
 import styled from 'styled-components'
-import { titleize } from '../../utils'
+
 import {
   ALLBIRDS_GRAY,
   BORDER,
@@ -18,6 +18,7 @@ import {
 } from '../../constants/colors'
 import { BORDER_RADIUS, MD, mediaMaxWidth } from '../../constants/measurements'
 import { BODY_FONT } from '../../constants/styles'
+import { titleize } from '../../utils'
 import { Icon } from '.'
 
 const styles = {
@@ -40,8 +41,8 @@ const styles = {
 }
 
 type Option = {
- label:string,
- key : any
+  label: string
+  key: any
 }
 
 type FilterOption = {
@@ -109,9 +110,11 @@ const Table = ({
       if (!searchQuery || searchQuery.length < 3) {
         return true
       }
-      return searchableColumns.some(searchId => {
+      return searchableColumns.some((searchId) => {
         const strings = item[searchId].split(' ')
-        return strings.some(string => string.toLowerCase().startsWith(searchQuery.toLowerCase()))
+        return strings.some((string) =>
+          string.toLowerCase().startsWith(searchQuery.toLowerCase()),
+        )
       })
     })
     const filteredData = searchedData.filter((item) => {
@@ -192,7 +195,7 @@ const Table = ({
 
   const handleFilterChange = (newFilter) => {
     const newFilters = { ...selectedFilter }
-    newFilters[newFilter.label] = newFilter.value;
+    newFilters[newFilter.label] = newFilter.value
     setSelectedFilter(newFilters)
   }
 
@@ -237,8 +240,8 @@ const Table = ({
                     components={components}
                     onChange={(value) =>
                       handleFilterChange({
-                        value: value ? value : null, 
-                        label: filterOption.label? filterOption.label: null,
+                        value: value || null,
+                        label: filterOption.label ? filterOption.label : null,
                       })
                     }
                     isClearable={true}
