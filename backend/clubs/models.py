@@ -967,7 +967,7 @@ class ZoomMeetingVisit(models.Model):
 
 class SearchQuery(models.Model):
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True)
-    query = models.TextField(blank=True)
+    query = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

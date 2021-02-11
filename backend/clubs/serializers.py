@@ -1582,7 +1582,7 @@ class SearchQuerySerializer(serializers.ModelSerializer):
     """
 
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    query = serializers.CharField(allow_blank=True)
+    query = serializers.CharField()
 
     class Meta:
         model = SearchQuery
