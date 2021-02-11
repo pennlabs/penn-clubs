@@ -283,7 +283,6 @@ const Table = ({
               return (
                 <tr key={row.id} {...row.getRowProps()}>
                   {columns.map((column) => {
-                    console.log(row.original)
                     return (
                       <td>
                         {column.render
