@@ -85,6 +85,17 @@ export default function MembersCard({ club }: MembersCardProps): ReactElement {
             name: 'email',
           },
         ]}
+        filterOptions={[
+          {
+            label: 'role',
+            options: [
+              { key: 0, label: 'Owner' },
+              { key: 20, label: 'Member' },
+              { key: 10, label: 'Officer' },
+            ],
+            filterFunction: (selection, object) => object.role === selection,
+          },
+        ]}
         currentTitle={(obj) =>
           obj != null ? `${obj.name} (${obj.email})` : 'Kicked Member'
         }

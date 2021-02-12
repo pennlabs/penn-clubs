@@ -1,10 +1,10 @@
 import { Form, Formik } from 'formik'
 import { ReactElement, useEffect, useMemo, useState } from 'react'
-import { usePagination, useTable } from 'react-table'
 import styled from 'styled-components'
 
-import { doApiRequest, formatResponse, titleize } from '../utils'
+import { doApiRequest, formatResponse } from '../utils'
 import { Icon, Loading } from './common'
+import Table from './common/Table'
 import { FormStyle } from './FormComponents'
 
 const ModelItem = styled.div`
@@ -46,6 +46,19 @@ type TableField = {
   label?: string
   name: string
   converter?: (field: any, object: ModelObject) => any
+  render?: (field: any, object: ModelObject) => any
+  id?: string
+}
+
+type Option = {
+  label: string
+  key: any
+}
+
+type FilterOption = {
+  options: Option[]
+  label: string
+  filterFunction: (a, b) => boolean
 }
 
 type ModelFormProps = {
@@ -60,6 +73,7 @@ type ModelFormProps = {
   empty?: ReactElement | string
   fields: any
   tableFields?: TableField[]
+  filterOptions?: FilterOption[]
   currentTitle?: (object: ModelObject) => ReactElement | string
   noun?: string
   deleteVerb?: string
@@ -95,6 +109,7 @@ export const doFormikInitialValueFixes = (currentObject: {
 
 type ModelTableProps = {
   tableFields: TableField[]
+  filterOptions?: FilterOption[]
   objects: ModelObject[]
   allowEditing?: boolean
   allowDeletion?: boolean
@@ -111,6 +126,7 @@ type ModelTableProps = {
  */
 export const ModelTable = ({
   tableFields,
+  filterOptions,
   objects,
   allowEditing = false,
   allowDeletion = false,
@@ -130,107 +146,67 @@ export const ModelTable = ({
     [tableFields],
   )
 
-  const {
-    getTableProps,
-    page,
-    getTableBodyProps,
-    gotoPage,
-    pageOptions,
-    state: { pageIndex, pageSize },
-  } = useTable(
-    {
-      columns: columns,
-      data: objects,
-    },
-    usePagination,
-  )
+  tableFields = tableFields.map((column, index) => {
+    if (column.converter) {
+      const renderFunction = column.converter
+      return {
+        ...column,
+        render: (id) => {
+          const obj = objects?.[id]
+          const value = obj?.[column.name]
+          return obj && value ? renderFunction(value, obj) : 'N/A'
+        },
+      }
+    } else return column
+  })
+
+  tableFields.push({
+    name: 'Actions',
+    render: (id) => (
+      <div className="buttons">
+        {allowEditing && (
+          <button
+            onClick={() => onEdit(objects[id])}
+            className="button is-primary is-small"
+          >
+            <Icon name="edit" alt="edit" /> Edit
+          </button>
+        )}
+        {allowDeletion && (
+          <button
+            onClick={() => {
+              if (confirmDeletion) {
+                if (
+                  confirm(
+                    `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
+                  )
+                ) {
+                  onDelete(objects[id])
+                }
+              } else {
+                onDelete(objects[id])
+              }
+            }}
+            className="button is-danger is-small"
+          >
+            <Icon name="trash" alt="delete" /> {deleteVerb}
+          </button>
+        )}
+        {actions && actions(objects[id])}
+      </div>
+    ),
+  })
 
   return (
     <>
-      <table className="table is-fullwidth" {...getTableProps()}>
-        <thead>
-          <tr>
-            {tableFields.map((a, i) => (
-              <th key={i}>{a.label || titleize(a.name)}</th>
-            ))}
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody {...getTableBodyProps()}>
-          {objects.length === 0 && (
-            <tr>
-              <td colSpan={tableFields.length + 1}>
-                There are no {noun.toLowerCase()}s to display.
-              </td>
-            </tr>
-          )}
-          {page.map(
-            ({ original: object }, i: number): ReactElement => (
-              <tr key={i}>
-                {tableFields.map((a, i) => (
-                  <td key={i}>
-                    {a.converter
-                      ? a.converter(object[a.name], object)
-                      : object[a.name]}
-                  </td>
-                ))}
-                <td>
-                  <div className="buttons">
-                    {allowEditing && (
-                      <button
-                        onClick={() => onEdit(object)}
-                        className="button is-primary is-small"
-                      >
-                        <Icon name="edit" alt="edit" /> Edit
-                      </button>
-                    )}
-                    {allowDeletion && (
-                      <button
-                        onClick={() => {
-                          if (confirmDeletion) {
-                            if (
-                              confirm(
-                                `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
-                              )
-                            ) {
-                              onDelete(object)
-                            }
-                          } else {
-                            onDelete(object)
-                          }
-                        }}
-                        className="button is-danger is-small"
-                      >
-                        <Icon name="trash" alt="delete" /> {deleteVerb}
-                      </button>
-                    )}
-                    {actions && actions(object)}
-                  </div>
-                </td>
-              </tr>
-            ),
-          )}
-        </tbody>
-      </table>
-      {pageOptions.length > 1 && (
-        <div className="is-clearfix">
-          <select
-            value={pageIndex}
-            onChange={(e) => gotoPage(Number(e.target.value))}
-            className="input is-small"
-            style={{ maxWidth: 150 }}
-          >
-            {pageOptions.map(
-              (idx: number): ReactElement => (
-                <option value={idx}>Page {idx + 1}</option>
-              ),
-            )}
-          </select>
-          <span className="is-pulled-right">
-            {objects.length} total entries, {pageSize} entries per page
-          </span>
-        </div>
-      )}
+      <Table
+        data={objects.map((item, index) =>
+          item.id ? item : { ...item, id: index },
+        )}
+        columns={tableFields}
+        searchableColumns={['name']}
+        filterOptions={filterOptions || []}
+      />
     </>
   )
 }
@@ -253,6 +229,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
   const {
     fields,
     tableFields,
+    filterOptions,
     onUpdate,
     currentTitle,
     noun = 'Object',
@@ -439,6 +416,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           deleteVerb={deleteVerb}
           noun={noun}
           tableFields={tableFields}
+          filterOptions={filterOptions}
           objects={objects}
           allowDeletion={allowDeletion}
           confirmDeletion={confirmDeletion}
