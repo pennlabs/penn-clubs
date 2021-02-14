@@ -109,6 +109,7 @@ from clubs.serializers import (
     ClubSerializer,
     EventSerializer,
     EventWriteSerializer,
+    ExternalSerializer,
     FavoriteSerializer,
     FavoriteWriteSerializer,
     MajorSerializer,
@@ -4013,6 +4014,24 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
         )
 
 
+class ExternalViewSet(viewsets.ModelViewSet):
+    """
+    list: Retrieve non-sensitive information available to CORS for all clubs
+
+    get: Retrieve members per club
+    """
+
+    http_method_names = ["get"]
+    serializer_class = ExternalSerializer
+
+    def get_queryset(self):
+        return (
+            Membership.objects.all()
+            .select_related("person")
+            .filter(club__code=self.kwargs["code"])
+        )
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """
     list: Retrieve a list of users.
@@ -4023,13 +4042,14 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = get_user_model().objects.all().select_related("profile")
     permission_classes = [ProfilePermission | IsSuperuser]
     filter_backends = [filters.SearchFilter]
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+
     search_fields = [
         "email",
         "first_name",
         "last_name",
         "username",
     ]
-    http_method_names = ["get"]
     lookup_field = "username"
 
     def get_serializer_class(self):

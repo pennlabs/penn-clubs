@@ -128,7 +128,10 @@ def get_event_small_file_name(instance, fname):
 
 def get_membership_image_file_name(instance, fname):
     return os.path.join(
-        "membership", "{}.{}".format(instance.code, fname.rsplit(".", 1)[-1])
+        "membership",
+        "{}.{}.{}".format(
+            instance.club.code, instance.person.username, fname.rsplit(".", 1)[-1]
+        ),
     )
 
 
