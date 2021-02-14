@@ -4025,7 +4025,7 @@ class ExternalViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return (
             Membership.objects.all()
-            .select_related("person")
+            .select_related("person", "club")
             .filter(club__code=self.kwargs["code"])
         )
 
