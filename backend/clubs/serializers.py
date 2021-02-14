@@ -568,7 +568,7 @@ class ExternalSerializer(serializers.ModelSerializer):
     def get_image(self, obj):
         if not obj.image and not obj.person.profile.image:
             return None
-        image_url = obj.image.url if obj.image else obj.person.profile.image.url
+        return obj.image.url if obj.image else obj.person.profile.image.url
 
     class Meta:
         model = Membership
