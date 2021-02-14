@@ -4016,9 +4016,7 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
 
 class ExternalViewSet(viewsets.ModelViewSet):
     """
-    list: Retrieve non-sensitive information available to CORS for all clubs
-
-    get: Retrieve members per club
+    get: Retrieve members' nonsensitive information per club
     """
 
     http_method_names = ["get"]
@@ -4042,7 +4040,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = get_user_model().objects.all().select_related("profile")
     permission_classes = [ProfilePermission | IsSuperuser]
     filter_backends = [filters.SearchFilter]
-    http_method_names = ["get", "post", "put", "patch", "delete"]
+    http_method_names = ["get"]
 
     search_fields = [
         "email",
