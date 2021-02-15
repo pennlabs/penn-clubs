@@ -222,7 +222,11 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
   }
 
   if (SITE_ID === 'fyh') {
-    return <ResourceCreationPage {...props} />
+    return (
+      <ResourceCreationPage
+        {...{ ...props, student_types: props.studentTypes }}
+      />
+    )
   }
 
   const year = getCurrentSchoolYear()
