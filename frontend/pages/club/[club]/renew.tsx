@@ -223,7 +223,13 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
 
   if (SITE_ID === 'fyh') {
     return (
+<<<<<<< HEAD
       <ResourceCreationPage {...props} student_types={props.studentTypes} />
+=======
+      <ResourceCreationPage
+        {...{ ...props, student_types: props.studentTypes }}
+      />
+>>>>>>> missed one typescript change
     )
   }
 
