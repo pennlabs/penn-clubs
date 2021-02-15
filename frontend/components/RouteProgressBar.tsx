@@ -78,7 +78,7 @@ const ProgressBarContainer = styled.div`
 `
 
 type RouteProgressBarProps = {
-  fireThreshold: number
+  fireThreshold?: number
 }
 
 const RouteProgressBar = ({
