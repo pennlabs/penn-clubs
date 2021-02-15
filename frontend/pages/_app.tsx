@@ -6,8 +6,15 @@ import 'react-toastify/dist/ReactToastify.min.css'
 import { AppProps } from 'next/app'
 import { ReactElement } from 'react'
 
+import RouteProgressBar from '~/components/RouteProgressBar'
+
 const App = ({ Component, pageProps }: AppProps): ReactElement => {
-  return <Component {...pageProps} />
+  return (
+    <>
+      <Component {...pageProps} />
+      <RouteProgressBar />
+    </>
+  )
 }
 
 export default App
