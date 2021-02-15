@@ -556,7 +556,7 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         ]
 
 
-class ExternalSerializer(serializers.ModelSerializer):
+class ExternalMemberListSerializer(serializers.ModelSerializer):
     """
     This serializer is used for listing non-sensitive data
     accessible to the public via CORS

@@ -4014,7 +4014,7 @@ class MemberInviteViewSet(viewsets.ModelViewSet):
         )
 
 
-class ExternalViewSet(viewsets.ModelViewSet):
+class ExternalMemberListViewSet(viewsets.ModelViewSet):
     """
     get: Retrieve members' nonsensitive information per club
     """
