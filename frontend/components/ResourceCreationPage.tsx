@@ -46,7 +46,7 @@ type ResourceCreationPageProps = {
   years: Year[]
   majors: Major[]
   tags: Tag[]
-  studentTypes: StudentType[]
+  student_types: StudentType[]
 }
 
 type TabItem = {
@@ -63,7 +63,7 @@ const ResourceCreationPage = ({
   years,
   majors,
   tags,
-  studentTypes,
+  student_types: studentTypes,
 }: ResourceCreationPageProps): ReactElement => {
   const isResuming = initialClub != null
   const metadata = (
