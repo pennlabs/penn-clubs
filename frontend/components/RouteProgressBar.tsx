@@ -77,7 +77,13 @@ const ProgressBarContainer = styled.div`
   z-index: 1002;
 `
 
-const RouteProgressBar = (): ReactPortal | ReactElement => {
+type RouteProgressBarProps = {
+  fireThreshold: number
+}
+
+const RouteProgressBar = ({
+  fireThreshold = 250,
+}: RouteProgressBarProps): ReactPortal | ReactElement => {
   const container =
     typeof window !== 'undefined'
       ? document.querySelector("nav[aria-label='main navigation']")
@@ -87,9 +93,18 @@ const RouteProgressBar = (): ReactPortal | ReactElement => {
 
   useEffect(() => {
     const genHandler = (state: RouteProgressState) => () => setState(state)
+    let timeout: number | null = null
     const handlers = {
-      routeChangeStart: genHandler(RouteProgressState.ROUTE_CHANGE_START),
-      routeChangeComplete: genHandler(RouteProgressState.ROUTE_CHANGE_COMPLETE),
+      routeChangeStart: () => {
+        timeout = window.setTimeout(
+          genHandler(RouteProgressState.ROUTE_CHANGE_START),
+          fireThreshold,
+        )
+      },
+      routeChangeComplete: () => {
+        if (timeout != null) clearTimeout(timeout)
+        setState(RouteProgressState.ROUTE_CHANGE_COMPLETE)
+      },
       routeChangeError: genHandler(RouteProgressState.ROUTE_CHANGE_ERROR),
     }
     for (const key in handlers) {
