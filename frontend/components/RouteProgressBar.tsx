@@ -56,10 +56,14 @@ const keyframeForState = (state: RouteProgressState): Keyframes | null => {
   }
 }
 
-const ProgressBar = styled.div<{ state: RouteProgressState }>`
+type ProgressBarProps = {
+  state: RouteProgressState | null
+}
+
+const ProgressBar = styled.div<ProgressBarProps>`
   position: absolute;
   height: 100%;
-  animation-name: ${({ state }) => keyframeForState(state)};
+  animation-name: ${({ state }) => (state ? keyframeForState(state) : 'none')};
   animation-duration: ${LONG_ANIMATION_DURATION};
   animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
