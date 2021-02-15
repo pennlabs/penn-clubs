@@ -11,7 +11,7 @@ enum RouteProgressState {
   ROUTE_CHANGE_ERROR = 'ERROR',
 }
 
-const keyframeForState = (state: RouteProgressState): Keyframes | null => {
+const keyframeForState = (state: RouteProgressState): Keyframes => {
   switch (state) {
     case RouteProgressState.ROUTE_CHANGE_START:
       return keyframes`
