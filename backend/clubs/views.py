@@ -109,7 +109,7 @@ from clubs.serializers import (
     ClubSerializer,
     EventSerializer,
     EventWriteSerializer,
-    ExternalSerializer,
+    ExternalMemberListSerializer,
     FavoriteSerializer,
     FavoriteWriteSerializer,
     MajorSerializer,
@@ -4020,7 +4020,7 @@ class ExternalMemberListViewSet(viewsets.ModelViewSet):
     """
 
     http_method_names = ["get"]
-    serializer_class = ExternalSerializer
+    serializer_class = ExternalMemberListSerializer
 
     def get_queryset(self):
         return (
