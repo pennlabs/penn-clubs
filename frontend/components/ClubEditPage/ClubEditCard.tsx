@@ -479,9 +479,12 @@ export default function ClubEditCard({
         },
         {
           name: 'target_years',
-          label: 'Degree Type',
+          label: SITE_ID === 'fyh' ? 'Degree Type' : 'Target Years',
           type: 'multiselect',
-          placeholder: `Select degree type relevant to your ${OBJECT_NAME_SINGULAR}!`,
+          placeholder:
+            SITE_ID === 'fyh'
+              ? `Select degree type relevant to your ${OBJECT_NAME_SINGULAR}!`
+              : `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: years,
           hidden: !showTargetFields,
         },
