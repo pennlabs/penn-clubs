@@ -458,7 +458,7 @@ const Splash = (props: SplashProps): ReactElement => {
             param="target_years__in"
             label="School Year"
             options={yearOptions}
-          />}
+          />
           {isClubFieldShown('student_types') && (
             <SearchBarCheckboxItem
               param="student_types__in"
