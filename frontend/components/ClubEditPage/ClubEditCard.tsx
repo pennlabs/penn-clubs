@@ -493,7 +493,7 @@ export default function ClubEditCard({
           type: 'multiselect',
           placeholder: `Select schools relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: schools,
-          hidden: !showTargetFields,
+          hidden: schools.length === 0 || !showTargetFields,
         },
         {
           name: 'target_majors',
