@@ -65,7 +65,9 @@ router.register(r"student_types", StudentTypeViewSet, basename="student_types"),
 router.register(r"reports", ReportViewSet, basename="reports")
 router.register(r"years", YearViewSet, basename="years")
 router.register(r"users", UserViewSet, basename="users")
-router.register(r"external/members/(?P<code>.+)", ExternalMemberListViewSet, basename="external")
+router.register(
+    r"external/members/(?P<code>.+)", ExternalMemberListViewSet, basename="external"
+)
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")
