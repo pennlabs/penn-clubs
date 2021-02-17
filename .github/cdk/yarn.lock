@@ -3,18 +3,18 @@
 
 
 "@pennlabs/kraken@^0.4.7":
-  version "0.4.7"
-  resolved "https://registry.yarnpkg.com/@pennlabs/kraken/-/kraken-0.4.7.tgz#403a5b5025ee2012ddd7ca59e9c41882ce482b08"
-  integrity sha512-AAjfcpdHAXK3SvD8nTqUmLP7S7c9v0DOZHtDX56c6pQ2SevZws6iTVqrfsNYlK8y+kImCa5R8xPdG4yMlcFH+w==
+  version "0.4.10"
+  resolved "https://registry.yarnpkg.com/@pennlabs/kraken/-/kraken-0.4.10.tgz#feca9668cecedfc8bf9c831ec4a74d9947ad89d1"
+  integrity sha512-jyUkIdv6XMEbWHSI2jmedwls7PEdTIZn8hVHaeu98fdukx4P2FoqsX1Cq3n2tBwkRfQfFNrURJGAfXNGkbwSrg==
   dependencies:
     cdkactions "^0.2.0"
     constructs "^3.2.80"
     dedent-js "^1.0.1"
 
 "@types/node@^14.14.17":
-  version "14.14.17"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.17.tgz#29fab92f3986c0e379968ad3c2043683d8020dbb"
-  integrity sha512-G0lD1/7qD60TJ/mZmhog76k7NcpLWkPVGgzkRy3CTlnFu4LUQh5v2Wa661z6vnXmD8EQrnALUyf0VRtrACYztw==
+  version "14.14.28"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.28.tgz#cade4b64f8438f588951a6b35843ce536853f25b"
+  integrity sha512-lg55ArB+ZiHHbBBttLpzD07akz0QPrZgUODNakeC09i62dnrywr9mFErHuaPlB6I7z+sEbK+IYmplahvplCj2g==
 
 ansi-regex@^5.0.0:
   version "5.0.0"
@@ -61,9 +61,9 @@ cdkactions@^0.1.4:
     js-yaml "^3.14.1"
 
 cdkactions@^0.2.0, cdkactions@^0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/cdkactions/-/cdkactions-0.2.1.tgz#696574e55cc78cd4ac1525d635651f0477de50f3"
-  integrity sha512-XlzaMhK7NoqPHl8zLcbr9OOMSO1mWu/ZVX2jeXcTOC7ZimkqfMIcSEAMxKQRpquld6XvHScs6N22UbEffUXdNQ==
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/cdkactions/-/cdkactions-0.2.3.tgz#aa27bf720962376d54f8ef95cdfb0ab46458b966"
+  integrity sha512-/DYQ2qsT6fzgZB+cmQjtPqR4aAWCqAytWbFpJK+iJLQ4jQrl6l4uMf01TLiWY3mAILS0YGlwPcoBbGvq9Jnz5g==
   dependencies:
     js-yaml "^4.0.0"
     ts-dedent "^2.0.0"
@@ -90,9 +90,9 @@ color-name@~1.1.4:
   integrity sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==
 
 constructs@^3.2.80:
-  version "3.2.88"
-  resolved "https://registry.yarnpkg.com/constructs/-/constructs-3.2.88.tgz#4591f70642d173b28a1b0ce4ad15b98c2fbb8bda"
-  integrity sha512-yCfr1CHTlm94+TTIlTly+KG4u7fmeuFhMvNUhFQcX53f0wtr+8DRrSdjSNx4zjd0+1hlweerKWHEwKMkTJrVdQ==
+  version "3.3.25"
+  resolved "https://registry.yarnpkg.com/constructs/-/constructs-3.3.25.tgz#6a9bb2309ed953ddf9e402bee45069d0c01f4ae5"
+  integrity sha512-9rbQIPdE+LSRs3AHr8OTJNMhgrmtvOh2qQRtTdvG3flmadMx68Oy0Bm8bY7Y1AGHbJtg4iUQimSOMXP7c//vWQ==
 
 dedent-js@^1.0.1:
   version "1.0.1"
@@ -129,9 +129,9 @@ get-caller-file@^2.0.5:
   integrity sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==
 
 graceful-fs@^4.1.6, graceful-fs@^4.2.0:
-  version "4.2.4"
-  resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.4.tgz#2256bde14d3632958c465ebc96dc467ca07a29fb"
-  integrity sha512-WjKPNJF79dtJAVniUlGGWHYGz2jWxT6VhN/4m1NdkbZ2nOsEF+cI1Edgql5zCRhs/VsQYRvrXctxktVXZUkixw==
+  version "4.2.6"
+  resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.6.tgz#ff040b2b0853b23c3d31027523706f1885d76bee"
+  integrity sha512-nTnJ528pbqxYanhpDYsi4Rd8MAeaBA67+RZ10CM1m3bTAVFEDcd5AuA4a6W5YkGZ1iNXHzZz8T6TBKLeBuNriQ==
 
 is-fullwidth-code-point@^3.0.0:
   version "3.0.0"
@@ -197,9 +197,9 @@ ts-dedent@^2.0.0:
   integrity sha512-DfxKjSFQfw9+uf7N9Cy8Ebx9fv5fquK4hZ6SD3Rzr+1jKP6AVA6H8+B5457ZpUs0JKsGpGqIevbpZ9DMQJDp1A==
 
 typescript@^4.1.3:
-  version "4.1.3"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.1.3.tgz#519d582bd94cba0cf8934c7d8e8467e473f53bb7"
-  integrity sha512-B3ZIOf1IKeH2ixgHhj6la6xdwR9QrLC5d1VKeCSY4tvkqhF2eqd9O7txNlS0PO3GrBAFIdr3L1ndNwteUbZLYg==
+  version "4.1.5"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.1.5.tgz#123a3b214aaff3be32926f0d8f1f6e704eb89a72"
+  integrity sha512-6OSu9PTIzmn9TCDiovULTnET6BgXtDYL4Gg4szY+cGsc3JP1dQL8qvE8kShTRx1NIw4Q9IBHlwODjkjWEtMUyA==
 
 universalify@^0.1.0:
   version "0.1.2"
@@ -226,9 +226,9 @@ yaml@^1.10.0:
   integrity sha512-yr2icI4glYaNG+KWONODapy2/jDdMSDnrONSjblABjD9B4Z5LgiircSt8m8sRZFNi08kG9Sm0uSHtEmP3zaEGg==
 
 yargs-parser@^20.2.2:
-  version "20.2.4"
-  resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-20.2.4.tgz#b42890f14566796f85ae8e3a25290d205f154a54"
-  integrity sha512-WOkpgNhPTlE73h4VFAFsOnomJVaovO8VqLDzy5saChRBFQFBoMYirowyW+Q9HB4HFF4Z7VZTiG3iSzJJA29yRA==
+  version "20.2.5"
+  resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-20.2.5.tgz#5d37729146d3f894f39fc94b6796f5b239513186"
+  integrity sha512-jYRGS3zWy20NtDtK2kBgo/TlAoy5YUuhD9/LZ7z7W4j1Fdw2cqD0xEEclf8fxc8xjD6X5Qr+qQQwCEsP8iRiYg==
 
 yargs@^16.2.0:
   version "16.2.0"
