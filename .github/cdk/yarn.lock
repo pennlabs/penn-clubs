@@ -3,9 +3,9 @@
 
 
 "@pennlabs/kraken@^0.4.7":
-  version "0.4.10"
-  resolved "https://registry.yarnpkg.com/@pennlabs/kraken/-/kraken-0.4.10.tgz#feca9668cecedfc8bf9c831ec4a74d9947ad89d1"
-  integrity sha512-jyUkIdv6XMEbWHSI2jmedwls7PEdTIZn8hVHaeu98fdukx4P2FoqsX1Cq3n2tBwkRfQfFNrURJGAfXNGkbwSrg==
+  version "0.4.11"
+  resolved "https://registry.yarnpkg.com/@pennlabs/kraken/-/kraken-0.4.11.tgz#3c8d7c474c133d1b596e04bfeaf1a00e27afe67a"
+  integrity sha512-sbIohKxZEQ/+KiR+xhyh38mUpw7VvXfPUr2ZAHsPaOZhvPpX8ZH42JVEMS8cbMwtLTLK9DaeVLSYLTUYDirqiQ==
   dependencies:
     cdkactions "^0.2.0"
     constructs "^3.2.80"
