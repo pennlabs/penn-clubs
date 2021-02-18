@@ -198,8 +198,8 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Load docker images
         run: |-
-          docker push pennlabs/penn-clubs-backend
-          docker push pennlabs/penn-clubs-frontend
+          docker push -a pennlabs/penn-clubs-backend
+          docker push -a pennlabs/penn-clubs-frontend
     needs: integration-tests
   deploy:
     runs-on: ubuntu-latest
