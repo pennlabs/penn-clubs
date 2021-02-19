@@ -285,11 +285,11 @@ const Table = ({
               prepareRow(row)
               return (
                 <tr key={row.id} {...row.getRowProps()}>
-                  {columns.map((column) => {
+                  {columns.map((column, i) => {
                     return (
-                      <td>
+                      <td key={i}>
                         {column.render
-                          ? column.render(row.original.id)
+                          ? column.render(row.original.id, row.id)
                           : row.original[column.name]}
                       </td>
                     )
