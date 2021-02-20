@@ -1393,7 +1393,7 @@ class ClubTestCase(TestCase):
         # ensure archived was correctly recorded
         # self.assertEqual(self.club1.archived_by, self.user5)
         club = Club.objects.filter(archived=True).first()
-        self.assertTrue(club != None)
+        self.assertTrue(club is not None)
         self.assertEquals(club.code, self.club1.code)
         self.assertTrue(club.archived)
         self.assertEquals(club.archived_by, self.user5)
