@@ -1038,7 +1038,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             queryset = queryset.filter(code__in=subset)
 
         # filter out archived clubs
-        queryset = queryset.filter(Q(archived=False))
+        queryset = queryset.filter(archived=False)
 
         # filter by approved clubs
         if (
@@ -2263,14 +2263,16 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         if is_club_specific:
             qs = qs.filter(club__code=self.kwargs["club_code"])
             qs = qs.filter(
-                Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True)
+                Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True),
+                club__archived=False,
             )
         else:
             qs = qs.filter(
                 Q(club__approved=True)
                 | Q(type=Event.FAIR)
                 | Q(club__ghost=True)
-                | Q(club__isnull=True)
+                | Q(club__isnull=True),
+                club__archived=False,
             )
 
         return (
