@@ -1834,11 +1834,14 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         """
-        Manually delete uploaded asset instances because of PostgreSQL integrity rules.
+        Set archived boolean to be True so that the club appears to have been deleted
         """
-        for asset in instance.asset_set.all():
-            asset.delete()
-        instance.delete()
+
+        club = self.get_object()
+        club.archived = True
+        club.archived_by = self.request.user
+        club.archived_on = timezone.now()
+        club.save()
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
