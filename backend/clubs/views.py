@@ -2272,7 +2272,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 | Q(type=Event.FAIR)
                 | Q(club__ghost=True)
                 | Q(club__isnull=True),
-                club__archived=False,
+                Q(club__isnull=True) | Q(club__archived=False),
             )
 
         return (
