@@ -1037,6 +1037,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             subset = [x.strip() for x in subset.strip().split(",")]
             queryset = queryset.filter(code__in=subset)
 
+        # filter out archived clubs
+        queryset = queryset.filter(Q(archived=False))
+
         # filter by approved clubs
         if (
             self.request.user.has_perm("clubs.see_pending_clubs")
