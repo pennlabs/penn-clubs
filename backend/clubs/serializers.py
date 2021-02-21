@@ -556,6 +556,25 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         ]
 
 
+class ExternalMemberListSerializer(serializers.ModelSerializer):
+    """
+    This serializer is used for listing non-sensitive data
+    accessible to the public via CORS
+    """
+
+    name = serializers.CharField(source="person.username")
+    image = serializers.SerializerMethodField("get_image")
+
+    def get_image(self, obj):
+        if not obj.image and not obj.person.profile.image:
+            return None
+        return obj.image.url if obj.image else obj.person.profile.image.url
+
+    class Meta:
+        model = Membership
+        fields = ["name", "role", "description", "image"]
+
+
 class UserMembershipInviteSerializer(MembershipInviteSerializer):
     """
     This serializer is used for listing the email invitations
@@ -601,9 +620,10 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
     def get_image(self, obj):
         if not obj.public:
             return None
-        if not obj.person.profile.image:
+        if not obj.image and not obj.person.profile.image:
             return None
-        image_url = obj.person.profile.image.url
+        image_url = obj.image.url if obj.image else obj.person.profile.image.url
+
         if image_url.startswith("http"):
             return image_url
         elif "request" in self.context:
@@ -684,6 +704,7 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "role",
             "title",
             "username",
+            "description",
         ]
 
 

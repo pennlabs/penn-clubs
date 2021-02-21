@@ -126,6 +126,15 @@ def get_event_small_file_name(instance, fname):
     )
 
 
+def get_membership_image_file_name(instance, fname):
+    return os.path.join(
+        "membership",
+        "{}.{}.{}".format(
+            instance.club.code, instance.person.username, fname.rsplit(".", 1)[-1]
+        ),
+    )
+
+
 def get_user_file_name(instance, fname):
     return os.path.join(
         "users", "{}.{}".format(instance.user.username, fname.rsplit(".", 1)[-1])
@@ -1137,6 +1146,10 @@ class Membership(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default="Member")
     role = models.IntegerField(choices=ROLE_CHOICES, default=ROLE_MEMBER)
+    description = models.TextField(max_length=1000, blank=True)
+    image = models.ImageField(
+        upload_to=get_membership_image_file_name, null=True, blank=True
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

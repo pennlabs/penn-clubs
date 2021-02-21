@@ -107,7 +107,7 @@ class SecurityTestCase(TestCase):
         Does your object contain any kind of user information? If so, you shouldn't be
         putting it in the whitelist below.
         """
-        whitelist = set()
+        whitelist = {"ExternalMemberListViewSet"}
 
         for name, obj in inspect.getmembers(views, inspect.isclass):
             if issubclass(obj, viewsets.ModelViewSet):
