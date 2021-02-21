@@ -1733,13 +1733,13 @@ class UserProfileSerializer(MinimalUserProfileSerializer):
             ),
         )
 
+        # filter out archived clubs (user and superuser)
+        queryset = queryset.filter(archived=False)
+
         # hide non public memberships if not superuser
         if user is None or not user.has_perm("clubs.manage_club"):
             queryset = queryset.filter(
-                membership__person=obj,
-                membership__public=True,
-                approved=True,
-                archived=False,
+                membership__person=obj, membership__public=True, approved=True,
             )
 
         serializer = MembershipClubListSerializer(

@@ -1543,7 +1543,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         ---
         """
         serializer = ClubMinimalSerializer(
-            Club.objects.all().exclude(approved=False).order_by(Lower("name")),
+            Club.objects.all()
+            .exclude(Q(approved=False) | Q(archived=True))
+            .order_by(Lower("name")),
             many=True,
         )
         return Response(serializer.data)
@@ -1560,7 +1562,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         badge = Badge.objects.filter(label="SAC").first()
         if badge:
             query = (
-                Club.objects.filter(badges=badge)
+                Club.objects.filter(badges=badge, archived=False)
                 .order_by(Lower("name"))
                 .prefetch_related(Prefetch("asset_set", to_attr="prefetch_asset_set"),)
             )
