@@ -46,7 +46,7 @@ type TableField = {
   label?: string
   name: string
   converter?: (field: any, object: ModelObject) => any
-  render?: (field: any, object: ModelObject) => any
+  render?: (field: any, object: number) => any
   id?: string
 }
 
@@ -151,7 +151,7 @@ export const ModelTable = ({
       const renderFunction = column.converter
       return {
         ...column,
-        render: (id) => {
+        render: (id, _) => {
           const obj = objects?.[id]
           const value = obj?.[column.name]
           return obj && value ? renderFunction(value, obj) : 'N/A'
@@ -162,11 +162,13 @@ export const ModelTable = ({
 
   tableFields.push({
     name: 'Actions',
-    render: (id) => (
+    render: (_, index) => (
       <div className="buttons">
         {allowEditing && (
           <button
-            onClick={() => onEdit(objects[id])}
+            onClick={() => {
+              return onEdit(objects[index])
+            }}
             className="button is-primary is-small"
           >
             <Icon name="edit" alt="edit" /> Edit
@@ -181,10 +183,10 @@ export const ModelTable = ({
                     `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
                   )
                 ) {
-                  onDelete(objects[id])
+                  onDelete(objects[index])
                 }
               } else {
-                onDelete(objects[id])
+                onDelete(objects[index])
               }
             }}
             className="button is-danger is-small"
@@ -192,7 +194,7 @@ export const ModelTable = ({
             <Icon name="trash" alt="delete" /> {deleteVerb}
           </button>
         )}
-        {actions && actions(objects[id])}
+        {actions && actions(objects[index])}
       </div>
     ),
   })

@@ -196,10 +196,10 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Load docker images
+      - name: Push docker images
         run: |-
-          docker push pennlabs/penn-clubs-backend
-          docker push pennlabs/penn-clubs-frontend
+          docker push -a pennlabs/penn-clubs-backend
+          docker push -a pennlabs/penn-clubs-frontend
     needs: integration-tests
   deploy:
     runs-on: ubuntu-latest
@@ -225,12 +225,19 @@ jobs:
           fi
 
           helm repo add pennlabs https://helm.pennlabs.org/
-
           for i in {1..10}; do
-            helm upgrade --install --atomic --set=image_tag=$IMAGE_TAG -f k8s/values.yaml --version "${DEPLOY_TAG}" $RELEASE_NAME pennlabs/icarus && exit 0
+            # This is bash soup, but it'll do.
+            # 1. Attempt to install with helm
+            # 2. If this succeeds, exit with a success status code
+            # 3. If it fails, mark the command as succeeded so that '-e' doesn't kick us out
+            # 4. Wait 10s and try again
+            helm upgrade --install --atomic --set=image_tag=$IMAGE_TAG -f k8s/values.yaml --version "${DEPLOY_TAG}" $RELEASE_NAME pennlabs/icarus && exit 0 || true
             sleep 10s
             echo "Retrying deploy for $i times"
           done
+
+          # If we get here, all helm installs failed so our command should fail
+          exit 1
         env:
           IMAGE_TAG: ${{ github.sha }}
           DO_AUTH_TOKEN: ${{ secrets.DO_AUTH_TOKEN }}
