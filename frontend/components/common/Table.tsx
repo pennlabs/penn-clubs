@@ -439,14 +439,14 @@ const Table = ({
         <div className="is-clearfix">
           <button
             style={{ marginRight: '0.5rem' }}
-            onClick={() => previousPage()}
+            onClick={() => gotoPage(0)}
             disabled={!canPreviousPage}
           >
             <Icon name="chevrons-left" />
           </button>
           <button
             style={{ marginRight: '0.5rem' }}
-            onClick={() => gotoPage(0)}
+            onClick={() => previousPage()}            
             disabled={!canPreviousPage}
           >
             <Icon name="chevron-left" />
