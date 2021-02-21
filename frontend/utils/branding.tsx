@@ -56,6 +56,7 @@ const sites = {
       'recruiting_cycle',
       'size',
       'target_majors',
+      'target_schools',
     ],
     // enable showing members for each club
     SHOW_MEMBERS: true,
