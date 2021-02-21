@@ -301,6 +301,16 @@ const eventTableFields = [
   },
 ]
 
+const eventTableFilter = [
+  {
+    label: 'Types',
+    options: EVENT_TYPES.map((obj) => {
+      return { key: obj.value, label: obj.label }
+    }),
+    filterFunction: (selection, object) => object.type === selection,
+  },
+]
+
 const eventFields = (
   <>
     <Field
@@ -415,6 +425,7 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
         fields={eventFields}
         fileFields={['image']}
         tableFields={eventTableFields}
+        filterOptions={eventTableFilter}
         noun="Event"
         currentTitle={(obj) => (obj != null ? obj.name : 'Deleted Event')}
         onChange={(obj) => {
