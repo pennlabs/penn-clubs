@@ -74,6 +74,7 @@ type ModelFormProps = {
   fields: any
   tableFields?: TableField[]
   filterOptions?: FilterOption[]
+  searchableColumns?: string[]
   currentTitle?: (object: ModelObject) => ReactElement | string
   noun?: string
   deleteVerb?: string
@@ -111,6 +112,7 @@ export const doFormikInitialValueFixes = (currentObject: {
 type ModelTableProps = {
   tableFields: TableField[]
   filterOptions?: FilterOption[]
+  searchableColumns?: string[]
   objects: ModelObject[]
   allowEditing?: boolean
   allowDeletion?: boolean
@@ -130,6 +132,7 @@ type ModelTableProps = {
 export const ModelTable = ({
   tableFields,
   filterOptions,
+  searchableColumns,
   objects,
   allowEditing = false,
   allowDeletion = false,
@@ -219,7 +222,7 @@ export const ModelTable = ({
       <Table
         data={objects}
         columns={tableFields}
-        searchableColumns={['name']}
+        searchableColumns={searchableColumns || []}
         filterOptions={filterOptions || []}
         draggable={draggable}
         onDragEnd={onDragEnd}
@@ -259,6 +262,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     fields,
     tableFields,
     filterOptions,
+    searchableColumns,
     onUpdate,
     currentTitle,
     noun = 'Object',
@@ -468,6 +472,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           noun={noun}
           tableFields={tableFields}
           filterOptions={filterOptions}
+          searchableColumns={searchableColumns}
           objects={objects}
           allowDeletion={allowDeletion}
           confirmDeletion={confirmDeletion}
