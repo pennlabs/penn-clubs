@@ -19,6 +19,7 @@ from clubs.models import (
     ClubFair,
     ClubFairRegistration,
     ClubVisit,
+    EmailTemplate,
     Event,
     Favorite,
     Major,
@@ -401,6 +402,7 @@ admin.site.register(ClubApplication)
 admin.site.register(ClubFairRegistration)
 admin.site.register(ClubVisit)
 admin.site.register(Badge, BadgeAdmin)
+admin.site.register(EmailTemplate)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(School)

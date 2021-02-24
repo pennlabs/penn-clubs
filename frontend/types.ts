@@ -285,3 +285,8 @@ export type DynamicQuestion = {
   type: string
   choices?: { id: string; label: string }[]
 }
+
+export type EmailTemplate = {
+  name: string
+  template: string
+}

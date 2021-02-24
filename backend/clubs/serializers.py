@@ -23,6 +23,7 @@ from clubs.models import (
     ClubApplication,
     ClubFair,
     ClubVisit,
+    EmailTemplate,
     Event,
     Favorite,
     Major,
@@ -1877,6 +1878,15 @@ class AssetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = ("id", "file_url", "file", "creator", "club", "name", "created_at")
+
+class EmailTemplateSerializer(serializers.ModelSerializer):
+    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    name = serializers.CharField(max_length=255, required=True)
+    template = serializers.CharField(required=True)
+
+    class Meta:
+        model = EmailTemplate
+        fields = ("name", "creator", "name", "template", "created_at", "updated_at")
 
 
 class AuthenticatedClubSerializer(ClubSerializer):

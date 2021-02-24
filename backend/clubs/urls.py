@@ -11,6 +11,7 @@ from clubs.views import (
     ClubViewSet,
     ClubVisitViewSet,
     EmailInvitesAPIView,
+    EmailTemplateViewSet,
     EventViewSet,
     ExternalMemberListViewSet,
     FavoriteCalendarAPIView,
@@ -49,6 +50,7 @@ from clubs.views import (
 router = routers.SimpleRouter()
 router.register(r"clubs", ClubViewSet, basename="clubs")
 router.register(r"clubfairs", ClubFairViewSet, basename="clubfairs")
+router.register(r"emailtemplates", EmailTemplateViewSet, basename="emailtemplates")
 router.register(r"events", EventViewSet, basename="events")
 router.register(r"tags", TagViewSet, basename="tags")
 router.register(r"badges", BadgeViewSet, basename="badges")

@@ -58,6 +58,7 @@ from clubs.models import (
     ClubFair,
     ClubFairRegistration,
     ClubVisit,
+    EmailTemplate,
     Event,
     Favorite,
     Major,
@@ -107,6 +108,7 @@ from clubs.serializers import (
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
+    EmailTemplateSerializer,
     EventSerializer,
     EventWriteSerializer,
     ExternalMemberListSerializer,
@@ -4513,3 +4515,28 @@ def email_preview(request):
             "variables": json.dumps(initial_context, indent=4),
         },
     )
+
+class EmailTemplateViewSet(viewsets.ModelViewSet):
+    """
+    retrieve:
+    Return a single email template.
+
+    list:
+    Return a list of email templates.
+
+    create:
+    Add a new email template
+
+    update:
+    Update an email template
+    """
+
+    queryset = EmailTemplate.objects.all()
+    serializer_class = EmailTemplateSerializer
+    permission_classes = [IsSuperuser]
+    filter_backends = [filters.SearchFilter]
+    http_method_names = ["get"]
+
+    search_fields = [
+        "name",
+    ]

@@ -1335,6 +1335,18 @@ class Asset(models.Model):
     def __str__(self):
         return self.name
 
+class EmailTemplate(models.Model):
+    """
+    Represents a admin email template
+    """
+
+    creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
+    name = models.CharField(max_length=255)
+    template = models.TextField()
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
 
 class Year(models.Model):
     """

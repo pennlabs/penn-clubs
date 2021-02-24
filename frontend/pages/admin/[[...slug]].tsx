@@ -14,6 +14,7 @@ import renderPage from 'renderPage'
 import { Badge, ClubFair, Report, Tag } from 'types'
 import { doBulkLookup } from 'utils'
 
+import EmailTemplatesTab from '~/components/Settings/EmailTemplatesTab'
 import { ADMIN_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
 
 function AdminPage({
@@ -24,6 +25,7 @@ function AdminPage({
   scripts,
   fair,
   reports,
+  emailTemplates,
 }): ReactElement {
   if (!userInfo) {
     return <AuthPrompt />
@@ -64,6 +66,11 @@ function AdminPage({
       label: 'Reports',
       content: () => <ReportsTab reports={reports} />,
     },
+    {
+      name: 'emailtemplates',
+      label: 'Email Templates',
+      content: () => <EmailTemplatesTab emailTemplates={emailTemplates} />,
+    },
   ]
 
   const tab = router.query.slug?.[0]
@@ -103,6 +110,7 @@ AdminPage.getInitialProps = async (ctx: NextPageContext) => {
       'clubfairs',
       'scripts',
       ['reports', '/reports/?format=json'],
+      ['emailTemplates', '/emailtemplates/?format=json'],
     ],
     ctx,
   )) as BulkResp
