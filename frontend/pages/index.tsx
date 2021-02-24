@@ -275,7 +275,7 @@ const Splash = (props: SplashProps): ReactElement => {
       params.set(key, value)
     })
 
-    if (searchInput.search.trim().length > 0) {
+    if (searchInput.search && searchInput.search.trim().length > 0) {
       doApiRequest('/searches/', {
         method: 'POST',
         body: { query: searchInput.search },
