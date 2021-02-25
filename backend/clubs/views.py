@@ -1842,11 +1842,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Set archived boolean to be True so that the club appears to have been deleted
         """
 
-        club = self.get_object()
-        club.archived = True
-        club.archived_by = self.request.user
-        club.archived_on = timezone.now()
-        club.save()
+        instance.archived = True
+        instance.archived_by = self.request.user
+        instance.archived_on = timezone.now()
+        instance.save()
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
@@ -2539,7 +2538,9 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         club_code = self.kwargs["club_code"]
-        questions = QuestionAnswer.objects.filter(club__code=club_code)
+        questions = QuestionAnswer.objects.filter(
+            club__code=club_code, club__archived=False
+        )
 
         if not self.request.user.is_authenticated:
             return questions.filter(approved=True)
@@ -2566,9 +2567,9 @@ class MembershipViewSet(viewsets.ModelViewSet):
     http_method_names = ["get"]
 
     def get_queryset(self):
-        queryset = Membership.objects.filter(person=self.request.user).prefetch_related(
-            "club__tags"
-        )
+        queryset = Membership.objects.filter(
+            person=self.request.user, club__archived=False
+        ).prefetch_related("club__tags")
         person = self.request.user
         queryset = queryset.prefetch_related(
             Prefetch(
@@ -2604,9 +2605,9 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        queryset = Favorite.objects.filter(person=self.request.user).prefetch_related(
-            "club__tags"
-        )
+        queryset = Favorite.objects.filter(
+            person=self.request.user, club__archived=False
+        ).prefetch_related("club__tags")
 
         person = self.request.user
         queryset = queryset.prefetch_related(
@@ -2667,9 +2668,9 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        queryset = Subscribe.objects.filter(person=self.request.user).prefetch_related(
-            "club__tags"
-        )
+        queryset = Subscribe.objects.filter(
+            person=self.request.user, club__archived=False
+        ).prefetch_related("club__tags")
 
         person = self.request.user
         queryset = queryset.prefetch_related(
@@ -2710,7 +2711,7 @@ class ClubVisitViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post"]
 
     def get_queryset(self):
-        return ClubVisit.objects.filter(person=self.request.user)
+        return ClubVisit.objects.filter(person=self.request.user, club__archived=False)
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -2780,7 +2781,7 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            person=self.request.user, withdrew=False
+            person=self.request.user, withdrew=False, club__archived=False,
         )
 
 
@@ -4211,7 +4212,7 @@ class EmailInvitesAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return MembershipInvite.objects.filter(
-            email=self.request.user.email, active=True
+            email=self.request.user.email, active=True, club__archived=False
         ).order_by("-created_at")
 
 
