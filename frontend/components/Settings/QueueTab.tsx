@@ -1,4 +1,6 @@
+/* eslint no-console: 0 */
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
@@ -12,13 +14,52 @@ import {
   OBJECT_NAME_TITLE_SINGULAR,
   SITE_NAME,
 } from '../../utils/branding'
-import { Icon } from '../common'
+import { Checkbox, Icon } from '../common'
 
 type QueueTableProps = {
   clubs: Club[] | null
+  selectableClubs?: boolean
+  canApprove?: boolean
 }
 
-const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
+const QueueTable = ({
+  clubs,
+  selectableClubs = false,
+  canApprove = false,
+}: QueueTableProps): ReactElement => {
+  const router = useRouter()
+  const [selectedCodes, setSelectedCodes] = useState<string[]>([])
+  const noClubsSelected = selectedCodes.length === 0
+
+  const toggleCode = (code: string) => {
+    if (selectedCodes.includes(code))
+      selectedCodes.splice(selectedCodes.indexOf(code), 1)
+    else selectedCodes.push(code)
+
+    setSelectedCodes([...selectedCodes])
+  }
+
+  const bulkApprove = (approve: boolean) => {
+    const bulkApiRequests = (clubs || [])
+      .filter((club: Club) => club.active && selectedCodes.includes(club.code))
+      .map((club: Club) => {
+        return new Promise((resolve) => {
+          doApiRequest(`/clubs/${club.code}/?format=json`, {
+            method: 'PATCH',
+            body: {
+              approved: approve,
+              approved_comment: `Your club has ${
+                approve ? '' : 'not'
+              } been approved in a bulk selection.`,
+            },
+          }).then(resolve)
+        })
+      })
+    Promise.all(bulkApiRequests).then(() => {
+      router.reload()
+    })
+  }
+
   if (clubs === null) {
     return <div className="has-text-info">Loading table...</div>
   }
@@ -35,6 +76,38 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
     <table className="table is-fullwidth">
       <thead>
         <tr>
+          {selectableClubs && (
+            <th>
+              <div className="buttons">
+                {canApprove && (
+                  <>
+                    <button
+                      className="button is-primary"
+                      onClick={() => {
+                        setSelectedCodes(clubs.map((club) => club.code))
+                      }}
+                    >
+                      Select All
+                    </button>
+                    <button
+                      className="button is-success"
+                      disabled={noClubsSelected}
+                      onClick={() => bulkApprove(true)}
+                    >
+                      <Icon name="check" /> Approve
+                    </button>
+                    <button
+                      className="button is-danger"
+                      disabled={noClubsSelected}
+                      onClick={() => bulkApprove(false)}
+                    >
+                      <Icon name="x" /> Reject
+                    </button>
+                  </>
+                )}
+              </div>
+            </th>
+          )}
           <th>{OBJECT_NAME_TITLE_SINGULAR}</th>
           <th>Status</th>
         </tr>
@@ -42,6 +115,14 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
       <tbody>
         {clubs.map((club) => (
           <tr key={club.code}>
+            {selectableClubs && (
+              <td>
+                <Checkbox
+                  checked={selectedCodes.includes(club.code)}
+                  onChange={() => toggleCode(club.code)}
+                />
+              </td>
+            )}
             <td>
               <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
                 <a target="_blank">{club.name}</a>
@@ -192,7 +273,11 @@ const QueueTab = (): ReactElement => {
         Click on the {OBJECT_NAME_SINGULAR} name to view the{' '}
         {OBJECT_NAME_SINGULAR}.
       </div>
-      <QueueTable clubs={pendingClubs} />
+      <QueueTable
+        clubs={pendingClubs}
+        selectableClubs={true}
+        canApprove={canApprove}
+      />
       <SmallTitle>Rejected Clubs</SmallTitle>
       <div className="mt-3 mb-3">
         The table below shows a list of {rejectedClubsCount}{' '}
