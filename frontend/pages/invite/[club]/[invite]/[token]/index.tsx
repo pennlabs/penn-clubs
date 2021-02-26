@@ -150,7 +150,7 @@ const Invite = ({
     )
   }
 
-  const { name, code, image_url: image } = club
+  const { name, code, imageUrl: image } = club
 
   return (
     <>

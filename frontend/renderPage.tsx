@@ -257,7 +257,7 @@ function renderPage<T>(
         if (
           typeof window !== 'undefined' &&
           userInfo &&
-          userInfo.has_been_prompted === false &&
+          userInfo.hasBeenPrompted === false &&
           window.location.pathname !== '/welcome'
         ) {
           window.location.href =

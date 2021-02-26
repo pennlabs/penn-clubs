@@ -18,18 +18,18 @@ export default function EnableSubscriptionCard({
   notify = () => undefined,
   onUpdate = () => undefined,
 }: Props): ReactElement {
-  const [active, enable] = useState(club.enables_subscription)
+  const [active, enable] = useState(club.enablesSubscription)
   const changeEnableSubscription = () => {
     doApiRequest(`/clubs/${club.code}/?format=json`, {
       method: 'PATCH',
       body: {
-        enables_subscription: !club.enables_subscription,
+        enablesSubscription: !club.enablesSubscription,
       },
     }).then((resp) => {
       if (resp.ok) {
         notify(
           `Successfully ${
-            !club.enables_subscription ? 'enabled' : 'disabled'
+            !club.enablesSubscription ? 'enabled' : 'disabled'
           } subscriptions feature for ${club.name}.`,
           'success',
         )

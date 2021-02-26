@@ -98,7 +98,7 @@ const UserProfilePage = ({
         <div className="notification is-info is-light">
           <Icon name="alert-circle" /> This is your profile page. You will
           always be able to see all of the information shown here. Currently,
-          other people <b>{userInfo?.show_profile ? 'can' : 'cannot'}</b> see
+          other people <b>{userInfo?.showProfile ? 'can' : 'cannot'}</b> see
           this page. To change this, go to the{' '}
           <Link href={SETTINGS_ROUTE + '#Profile'}>
             <a>settings page</a>
@@ -117,7 +117,7 @@ const UserProfilePage = ({
         <div className="is-pulled-left mr-3">
           <ProfilePic
             size="is-128x128"
-            user={{ name: profile.name, image: profile.image_url }}
+            user={{ name: profile.name, image: profile.imageUrl }}
             isCentered={false}
             fontSize="2.5em"
           />
@@ -147,8 +147,8 @@ const UserProfilePage = ({
             <span className="is-family-monospace">{profile.username}</span>
           </div>
           <div>
-            <b>Graduation Year:</b> {profile.graduation_year ?? 'Unknown'}{' '}
-            <GraduationYearTag year={profile.graduation_year} />
+            <b>Graduation Year:</b> {profile.graduationYear ?? 'Unknown'}{' '}
+            <GraduationYearTag year={profile.graduationYear} />
           </div>
           <div>
             <b>Email:</b>{' '}

@@ -62,7 +62,7 @@ const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
               day: '2-digit',
               hour: 'numeric',
               minute: 'numeric',
-            }).format(new Date(entry.start_time))}
+            }).format(new Date(entry.startTime))}
             {entry.location && ` | ${entry.location}`}
           </BigParagraph>
           <SmallParagraph>

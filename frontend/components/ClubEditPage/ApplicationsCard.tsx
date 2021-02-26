@@ -19,7 +19,7 @@ type Props = {
 export default function ApplicationsCard({ club }: Props): ReactElement {
   return (
     <BaseCard title={`${OBJECT_NAME_TITLE_SINGULAR} Applications`}>
-      {club.application_required === ClubApplicationRequired.Open && (
+      {club.applicationRequired === ClubApplicationRequired.Open && (
         <div className="notification is-warning">
           <Icon name="alert-triangle" /> Your {OBJECT_NAME_SINGULAR} currently
           has it application status set to open membership. Adding{' '}

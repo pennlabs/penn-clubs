@@ -27,8 +27,8 @@ type FairPageProps = {
   isOverride: boolean
   fair: ClubFair | null
   events: {
-    start_time: string
-    end_time: string
+    startTime: string
+    endTime: string
     events: {
       category: string | null
       events: { name: string; code: string }[]
@@ -58,7 +58,7 @@ const FairPage = ({
   useEffect(() => {
     const remainingTime =
       fair != null
-        ? new Date(fair?.start_time).getTime() - new Date().getTime()
+        ? new Date(fair?.startTime).getTime() - new Date().getTime()
         : -1
     if (remainingTime > 0 && remainingTime <= 5 * 60 * 1000) {
       const id = setTimeout(() => {
@@ -210,14 +210,14 @@ const FairPage = ({
           </Link>
         ) : (
           <p>
-            The <b>{fairName}</b> opens <TimeAgo date={fair?.start_time} />.
+            The <b>{fairName}</b> opens <TimeAgo date={fair?.startTime} />.
           </p>
         )}
         <div className="columns mt-3">
           {events.map(
-            ({ start_time, end_time, events }, i): ReactElement => {
-              const parsedDate = moment(start_time).tz('America/New_York')
-              const endDate = moment(end_time).tz('America/New_York')
+            ({ startTime, endTime, events }, i): ReactElement => {
+              const parsedDate = moment(startTime).tz('America/New_York')
+              const endDate = moment(endTime).tz('America/New_York')
               return (
                 <div key={i} className="column">
                   <div className="mb-3">

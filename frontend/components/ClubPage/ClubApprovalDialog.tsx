@@ -30,7 +30,7 @@ type ConfirmParams = {
 const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
   const router = useRouter()
   const year = getCurrentSchoolYear()
-  const [comment, setComment] = useState<string>(club.approved_comment || '')
+  const [comment, setComment] = useState<string>(club.approvedComment || '')
   const [loading, setLoading] = useState<boolean>(false)
   const [confirmModal, setConfirmModal] = useState<ConfirmParams | null>(null)
   const [fairs, setFairs] = useState<ClubFair[]>([])
@@ -40,7 +40,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
   const canDeleteClub = apiCheckPermission('clubs.delete_club')
 
   const isOfficer =
-    club.is_member !== false && club.is_member <= MembershipRank.Officer
+    club.isMember !== false && club.isMember <= MembershipRank.Officer
 
   const doConfirm = (params: ConfirmParams): void => {
     setConfirmModal(params)
@@ -79,13 +79,13 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
       {club.approved && canApprove && (
         <div className="notification is-info">
           <div className="mb-3">
-            <b>{club.name}</b> has been approved by <b>{club.approved_by}</b>{' '}
-            for the school year. If you want to revoke approval for this{' '}
+            <b>{club.name}</b> has been approved by <b>{club.approvedBy}</b> for
+            the school year. If you want to revoke approval for this{' '}
             {OBJECT_NAME_SINGULAR}, use the button below.
           </div>
-          {club.approved_comment && (
+          {club.approvedComment && (
             <div className="mb-5">
-              <TextQuote>{club.approved_comment}</TextQuote>
+              <TextQuote>{club.approvedComment}</TextQuote>
             </div>
           )}
           <button
@@ -132,7 +132,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
                   <Contact point="osa" />.
                 </p>
                 <TextQuote>
-                  {club.approved_comment || (
+                  {club.approvedComment || (
                     <>
                       No reason has been given for why your{' '}
                       {OBJECT_NAME_SINGULAR} was not approved. Contact{' '}
@@ -143,13 +143,13 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
               </>
             ) : (
               <>
-                {club.is_ghost
+                {club.isGhost
                   ? `Changes to this ${OBJECT_NAME_SINGULAR} have`
                   : `This ${OBJECT_NAME_SINGULAR} has`}{' '}
                 <b>not been approved yet</b> for the {year}-{year + 1} school
                 year and is only visible to {OBJECT_NAME_SINGULAR} members and
                 administrators of {SITE_NAME}.
-                {club.is_ghost && (
+                {club.isGhost && (
                   <span className="mt-3 is-block">
                     The latest approved version of this {OBJECT_NAME_SINGULAR}{' '}
                     will be shown in the meantime. When your changes have been
@@ -178,9 +178,9 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
                     <div className="mb-3">
                       <b>Club Files:</b>
                       <ul>
-                        {club.files.map(({ name, file_url }, i) => (
+                        {club.files.map(({ name, fileUrl }, i) => (
                           <li key={i}>
-                            <a target="_blank" href={file_url}>
+                            <a target="_blank" href={fileUrl}>
                               {name}
                             </a>
                           </li>
@@ -212,7 +212,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
                           method: 'PATCH',
                           body: {
                             approved: true,
-                            approved_comment: comment,
+                            approvedComment: comment,
                           },
                         })
                           .then(() => router.reload())
@@ -230,7 +230,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
                           method: 'PATCH',
                           body: {
                             approved: false,
-                            approved_comment: comment,
+                            approvedComment: comment,
                           },
                         })
                           .then(() => router.reload())

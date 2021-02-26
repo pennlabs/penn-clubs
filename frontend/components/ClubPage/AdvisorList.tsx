@@ -54,7 +54,7 @@ const AdvisorCard = ({ info }: AdvisorCardProps): ReactElement => {
 const AdvisorList = ({ club }: Props): ReactElement => {
   return (
     <>
-      {club.advisor_set.map((advisor, i) => (
+      {club.advisorSet.map((advisor, i) => (
         <AdvisorCard key={i} info={advisor} />
       ))}
     </>

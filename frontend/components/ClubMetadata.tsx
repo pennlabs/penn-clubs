@@ -20,13 +20,7 @@ const ClubMetadata = ({ club }: Props): ReactElement | null => {
   if (!club) {
     return null
   }
-  const {
-    name,
-    code,
-    description,
-    image_url: image,
-    twitter: twitterUrl,
-  } = club
+  const { name, code, description, imageUrl: image, twitter: twitterUrl } = club
   const twitter = getTwitterUsername(twitterUrl)
   const [baseUrl, setBaseUrl] = useState<string>('')
   useEffect(() => {

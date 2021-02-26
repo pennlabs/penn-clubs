@@ -70,7 +70,7 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement {
               <tr key={`${a.id}-${a.name}`}>
                 <td>{a.name}</td>
                 <td>
-                  <TimeAgo date={a.created_at} />
+                  <TimeAgo date={a.createdAt} />
                 </td>
                 <td>
                   <div className="buttons">

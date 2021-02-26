@@ -26,7 +26,7 @@ const FilesList = ({ club }: Props): ReactElement => {
             <tr key={`${file.id}`}>
               <td>{file.name}</td>
               <td>
-                <TimeAgo date={file.created_at} />
+                <TimeAgo date={file.createdAt} />
               </td>
               <td>
                 <a

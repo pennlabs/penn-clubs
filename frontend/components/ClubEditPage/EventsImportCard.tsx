@@ -47,7 +47,7 @@ export default function EventsImportCard({
   const submit = (data: { url: string }, { setSubmitting }): void => {
     doApiRequest(`/clubs/${club.code}/?format=json`, {
       method: 'PATCH',
-      body: { ics_import_url: data.url },
+      body: { icsImportUrl: data.url },
     })
       .then(() => {
         toast.success('Calendar ICS URL has been saved!')
@@ -96,7 +96,7 @@ export default function EventsImportCard({
           </li>
         </ul>
       </div>
-      <Formik initialValues={{ url: club.ics_import_url }} onSubmit={submit}>
+      <Formik initialValues={{ url: club.icsImportUrl }} onSubmit={submit}>
         {({ isSubmitting }) => (
           <Form>
             <Field

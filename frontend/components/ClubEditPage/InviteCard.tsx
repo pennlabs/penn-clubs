@@ -27,7 +27,7 @@ type Invite = {
   email: string
   title: string
   role: number
-  updated_at: string
+  updatedAt: string
 }
 
 export default function InviteCard({ club }: InviteCardProps): ReactElement {
@@ -194,7 +194,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
                     {item.title} ({getRoleDisplay(item.role)})
                   </td>
                   <td>
-                    <TimeAgo date={item.updated_at} />
+                    <TimeAgo date={item.updatedAt} />
                   </td>
                   <td>
                     <button

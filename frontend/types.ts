@@ -16,8 +16,8 @@ export interface Report {
   creator: string
   description: string
   public: boolean
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
   parameters: string
 }
 
@@ -50,17 +50,17 @@ export enum ClubEventType {
 export interface ClubEvent {
   badges: Badge[]
   club: string | null
-  club_name: string | null
+  clubName: string | null
   description: string
-  end_time: string
+  endTime: string
   id: number
-  image_url: string | null
-  is_ics_event: boolean
-  large_image_url: string | null
+  imageUrl: string | null
+  isIcsEvent: boolean
+  largeImageUrl: string | null
   location: string | null
   name: string
   pinned: boolean
-  start_time: string
+  startTime: string
   type: ClubEventType
   url: string | null
 }
@@ -68,10 +68,10 @@ export interface ClubEvent {
 export interface ClubApplication {
   id: number
   name: string
-  application_start_time: string
-  application_end_time: string
-  result_release_time: string
-  external_url: string
+  applicationStartTime: string
+  applicationEndTime: string
+  resultReleaseTime: string
+  externalUrl: string
 }
 
 export enum ClubSize {
@@ -131,49 +131,49 @@ export interface Advisor {
 }
 
 export interface Club {
-  accepting_members: boolean
+  acceptingMembers: boolean
   active: boolean
-  advisor_set: Advisor[]
-  application_required: ClubApplicationRequired
-  appointment_needed: boolean
+  advisorSet: Advisor[]
+  applicationRequired: ClubApplicationRequired
+  appointmentNeeded: boolean
   approved: boolean | null
-  approved_by: string | null
-  approved_comment: string | null
-  available_virtually: boolean
+  approvedBy: string | null
+  approvedComment: string | null
+  availableVirtually: boolean
   badges: Badge[]
   code: string
   description: string
   email: string
-  enables_subscription: boolean
+  enablesSubscription: boolean
   events: ClubEvent[]
   facebook: string
   fairs: number[]
-  favorite_count: number
+  favoriteCount: number
   files: File[]
   github: string
-  how_to_get_involved: string
-  ics_import_url: string
-  image_url: string
+  howToGetInvolved: string
+  icsImportUrl: string
+  imageUrl: string
   instagram: string
-  is_favorite: boolean
-  is_ghost: boolean
-  is_member: MembershipRank | false
-  is_request: boolean
-  is_subscribe: boolean
+  isFavorite: boolean
+  isGhost: boolean
+  isMember: MembershipRank | false
+  isRequest: boolean
+  isSubscribe: boolean
   linkedin: string
   listserv: string
   members: Membership[]
-  membership_count: number
+  membershipCount: number
   name: string
-  recruiting_cycle: ClubRecruitingCycle
-  signature_events: string
+  recruitingCycle: ClubRecruitingCycle
+  signatureEvents: string
   size: ClubSize
-  student_types: StudentType[]
+  studentTypes: StudentType[]
   subtitle: string
   tags: Tag[]
-  target_majors: Major[]
-  target_schools: School[]
-  target_years: Year[]
+  targetMajors: Major[]
+  targetSchools: School[]
+  targetYears: Year[]
   testimonials: Testimonial[]
   twitter: string
   website: string
@@ -187,12 +187,12 @@ export interface ClubFair {
   time: string
 
   information: string
-  registration_information: string
-  registration_start_time: string | null
-  registration_end_time: string
+  registrationInformation: string
+  registrationStartTime: string | null
+  registrationEndTime: string
 
-  start_time: string
-  end_time: string
+  startTime: string
+  endTime: string
 
   questions: string
 }
@@ -200,21 +200,21 @@ export interface ClubFair {
 export interface File {
   id: number
   name: string
-  created_at: string
-  file_url: string
+  createdAt: string
+  fileUrl: string
 }
 
 export interface UserInfo {
   email: string
-  graduation_year: number
-  has_been_prompted: boolean
-  image_url: string
-  is_superuser: boolean
+  graduationYear: number
+  hasBeenPrompted: boolean
+  imageUrl: string
+  isSuperuser: boolean
   major: Major[]
   name: string
   school: School[]
-  share_bookmarks: boolean
-  show_profile: boolean
+  shareBookmarks: boolean
+  showProfile: boolean
   username: string
 }
 
@@ -223,8 +223,8 @@ export interface UserProfile {
     membership: { active: boolean; title: string; role: number }
   })[]
   email: string
-  graduation_year: number | null
-  image_url: string | null
+  graduationYear: number | null
+  imageUrl: string | null
   major: Major[]
   name: string
   public: boolean
@@ -241,18 +241,18 @@ export type UserMembership = {
 }
 
 export interface ExtendedUserInfo extends UserInfo {
-  membership_set: {
+  membershipSet: {
     code: string
     role: MembershipRank
   }[]
-  subscribe_set: { club: string }[]
-  favorite_set: { club: string }[]
+  subscribeSet: { club: string }[]
+  favoriteSet: { club: string }[]
 }
 
 export interface School {
   id: number
   name: string
-  is_graduate: boolean
+  isGraduate: boolean
 }
 
 export interface Major {

@@ -68,10 +68,10 @@ const Fair = ({ authenticated, club }: FairProps): ReactElement | null => {
     )
   }
 
-  const { image_url: image } = club
+  const { imageUrl: image } = club
 
-  const [isFavorite, setFavorite] = useState<boolean>(club.is_favorite)
-  const [isSubscribe, setSubscribe] = useState<boolean>(club.is_subscribe)
+  const [isFavorite, setFavorite] = useState<boolean>(club.isFavorite)
+  const [isSubscribe, setSubscribe] = useState<boolean>(club.isSubscribe)
   const authCheck = useContext(AuthCheckContext)
 
   const updateFavorite = () => {
@@ -92,7 +92,7 @@ const Fair = ({ authenticated, club }: FairProps): ReactElement | null => {
         method: 'POST',
         body: {
           club: club.code,
-          visit_type: VisitType.FairPage,
+          visitType: VisitType.FairPage,
         },
       })
     }

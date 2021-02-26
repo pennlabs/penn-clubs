@@ -28,7 +28,7 @@ type ClubListProps = {
 
 const ClubList = ({ club }: ClubListProps): ReactElement => {
   const { name, subtitle, tags, code } = club
-  const img = club.image_url || getDefaultClubImageURL()
+  const img = club.imageUrl || getDefaultClubImageURL()
 
   return (
     <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>

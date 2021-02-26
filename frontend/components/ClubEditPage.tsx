@@ -68,7 +68,7 @@ type ClubFormProps = {
   majors: Major[]
   years: Year[]
   tags: Tag[]
-  student_types: StudentType[]
+  studentTypes: StudentType[]
   tab?: string | null
 }
 
@@ -78,7 +78,7 @@ const ClubForm = ({
   years,
   majors,
   tags,
-  student_types: studentTypes,
+  studentTypes,
   clubId,
   tab,
 }: ClubFormProps): ReactElement => {
@@ -156,7 +156,7 @@ const ClubForm = ({
         method: 'POST',
         body: {
           club: club.code,
-          visit_type: VisitType.ManagePage,
+          visitType: VisitType.ManagePage,
         },
       })
     }
@@ -296,7 +296,7 @@ const ClubForm = ({
               club={club}
               onUpdate={reloadClub}
             />
-            {club.enables_subscription && (
+            {club.enablesSubscription && (
               <PotentialMemberCard
                 header={
                   <p className="mb-5">

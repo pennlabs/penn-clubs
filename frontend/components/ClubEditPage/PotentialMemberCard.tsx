@@ -23,14 +23,14 @@ type Student = {
   username: string
   name: string
   email: string
-  graduation_year: number
+  graduationYear: number
   school: {
     name: string
   }[]
   major: {
     name: string
   }[]
-  created_at: string
+  createdAt: string
 }
 
 /**
@@ -83,7 +83,7 @@ export default function PotentialMemberCard({
             <tr key={i}>
               <td>{item.name || item.username || <Empty>None</Empty>}</td>
               <td>{item.email || <Empty>None</Empty>}</td>
-              <td>{item.graduation_year || <Empty>None</Empty>}</td>
+              <td>{item.graduationYear || <Empty>None</Empty>}</td>
               <td>
                 {item.school && item.school.length ? (
                   item.school.map((a) => a.name).join(', ')
@@ -99,7 +99,7 @@ export default function PotentialMemberCard({
                 )}
               </td>
               <td>
-                <TimeAgo date={item.created_at} />
+                <TimeAgo date={item.createdAt} />
               </td>
               {actions && (
                 <td>

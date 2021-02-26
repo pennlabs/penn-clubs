@@ -176,6 +176,17 @@ export function apiCheckPermission(
   return false
 }
 
+// from [PascalCase, snake_case] to camelCase
+const toCamelCase = (otherCase: string) =>
+  otherCase
+    .split(/[-_ ]/g)
+    .map((str, idx) =>
+      idx > 0
+        ? str.substr(0, 1).toUpperCase() + str.substr(1)
+        : str.substr(0, 1).toLowerCase() + str.substr(1),
+    )
+    .join('')
+
 /**
  * Lookup a lot of endpoints asynchronously.
  * Should be used primarily by getInitialProps methods.
@@ -211,8 +222,9 @@ export async function doBulkLookup(
 
   const output = {}
   for (let i = 0; i < paths.length; i++) {
-    output[typeof paths[i] === 'string' ? (paths[i] as string) : paths[i][0]] =
-      resps[i]
+    const key =
+      typeof paths[i] === 'string' ? (paths[i] as string) : paths[i][0]
+    output[toCamelCase(key)] = resps[i]
   }
 
   return output

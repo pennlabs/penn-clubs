@@ -136,8 +136,8 @@ const ActionButtons = ({ club: code }): ReactElement | null => {
     doApiRequest(`/clubs/${code}/?format=json`)
       .then((resp) => resp.json())
       .then((data: Club) => {
-        setSubscribed(data.is_subscribe)
-        setBookmarked(data.is_favorite)
+        setSubscribed(data.isSubscribe)
+        setBookmarked(data.isFavorite)
       })
   }, [code])
 
@@ -216,12 +216,12 @@ const EventModal = (props: {
 }): ReactElement => {
   const { event, showDetailsButton, onLinkClicked } = props
   const {
-    large_image_url,
-    image_url,
+    largeImageUrl,
+    imageUrl,
     club,
-    club_name,
-    start_time,
-    end_time,
+    clubName,
+    startTime,
+    endTime,
     name,
     url,
     description,
@@ -229,8 +229,8 @@ const EventModal = (props: {
   const [userCount, setUserCount] = useState<LiveStatsData | null>(null)
 
   const now = new Date()
-  const startDate = new Date(start_time)
-  const endDate = new Date(end_time)
+  const startDate = new Date(startTime)
+  const endDate = new Date(endTime)
   const isHappening = now >= startDate && now <= endDate
   const isZoomMeeting = url && MEETING_REGEX.test(url)
 
@@ -249,9 +249,9 @@ const EventModal = (props: {
   return (
     <ModalContainer>
       <CoverPhoto
-        image={large_image_url ?? image_url}
+        image={largeImageUrl ?? imageUrl}
         fallback={
-          <p>{club_name != null ? club_name.toLocaleUpperCase() : 'Event'}</p>
+          <p>{clubName != null ? clubName.toLocaleUpperCase() : 'Event'}</p>
         }
       />
       <EventDetails>
@@ -259,16 +259,16 @@ const EventModal = (props: {
           <LiveEventUpdater id={event.id} onUpdate={refreshLiveData} />
         )}
         <MetaDataGrid>
-          <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
+          <DateInterval start={new Date(startTime)} end={new Date(endTime)} />
           <RightAlign>
             {isHappening ? (
               <HappeningNow urgent={true} />
             ) : (
-              <TimeLeft date={new Date(start_time)} />
+              <TimeLeft date={new Date(startTime)} />
             )}
           </RightAlign>
         </MetaDataGrid>
-        {club_name != null && <ClubName>{club_name}</ClubName>}
+        {clubName != null && <ClubName>{clubName}</ClubName>}
         <EventName>{name}</EventName>
         {url &&
           (MEETING_REGEX.test(url) ? (

@@ -41,10 +41,10 @@ const EventCard = (props: {
   onLinkClicked: () => void
 }): ReactElement => {
   const {
-    image_url: imageUrl,
-    club_name: clubName,
-    start_time,
-    end_time,
+    imageUrl,
+    clubName,
+    startTime,
+    endTime,
     name,
     url,
     club,
@@ -53,8 +53,8 @@ const EventCard = (props: {
   } = props.event
 
   const now = new Date()
-  const startDate = new Date(start_time)
-  const endDate = new Date(end_time)
+  const startDate = new Date(startTime)
+  const endDate = new Date(endTime)
   const isHappening = now >= startDate && now <= endDate
 
   const hoursBetween =

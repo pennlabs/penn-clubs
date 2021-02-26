@@ -49,7 +49,7 @@ export const SubscribeIcon = ({
   absolute = false,
   padding,
 }: SubscribeIconProps): ReactElement => {
-  const [subscribe, setSubscribe] = useState<boolean>(club.is_subscribe)
+  const [subscribe, setSubscribe] = useState<boolean>(club.isSubscribe)
   const authCheck = useContext(AuthCheckContext)
 
   const updateSubscribe = () => {

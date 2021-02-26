@@ -176,10 +176,10 @@ export default function ClubEditCard({
 }: ClubEditCardProps): ReactElement {
   const [showTargetFields, setShowTargetFields] = useState<boolean>(
     !!(
-      club.target_majors?.length ||
-      club.target_schools?.length ||
-      club.target_years?.length ||
-      club.student_types?.length
+      club.targetMajors?.length ||
+      club.targetSchools?.length ||
+      club.targetYears?.length ||
+      club.studentTypes?.length
     ),
   )
 
@@ -228,7 +228,7 @@ export default function ClubEditCard({
               if (resp.ok) {
                 msg += ` ${OBJECT_NAME_TITLE_SINGULAR} image also saved.`
                 const { url } = await resp.json()
-                info.image_url = url
+                info.imageUrl = url
               } else {
                 msg += ` However, failed to upload ${OBJECT_NAME_SINGULAR} image file!`
               }
@@ -515,11 +515,11 @@ export default function ClubEditCard({
 
   const creationDefaults = {
     subtitle: '',
-    email_public: true,
-    accepting_members: false,
+    emailPublic: true,
+    acceptingMembers: false,
     size: CLUB_SIZES[0].value,
-    application_required: CLUB_APPLICATIONS[0].value,
-    recruiting_cycle: CLUB_RECRUITMENT_CYCLES[0].value,
+    applicationRequired: CLUB_APPLICATIONS[0].value,
+    recruitingCycle: CLUB_RECRUITMENT_CYCLES[0].value,
   }
 
   const editingFields = new Set<string>()

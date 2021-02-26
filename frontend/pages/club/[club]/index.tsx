@@ -92,8 +92,8 @@ const ClubPage = ({
 
   const updateRequests = async (code: string): Promise<void> => {
     const newClub = { ...club }
-    logEvent(!newClub.is_request ? 'request' : 'unrequest', code)
-    const req = !newClub.is_request
+    logEvent(!newClub.isRequest ? 'request' : 'unrequest', code)
+    const req = !newClub.isRequest
       ? doApiRequest('/requests/?format=json', {
           method: 'POST',
           body: {
@@ -106,7 +106,7 @@ const ClubPage = ({
 
     await req
 
-    newClub.is_request = !newClub.is_request
+    newClub.isRequest = !newClub.isRequest
     setClub(newClub)
   }
 
@@ -115,7 +115,7 @@ const ClubPage = ({
       method: 'POST',
       body: {
         club: code,
-        visit_type: VisitType.ClubPage,
+        visitType: VisitType.ClubPage,
       },
     })
   }, [])
@@ -151,11 +151,11 @@ const ClubPage = ({
 
   const {
     active: isActive,
-    image_url: image,
-    how_to_get_involved: involvement,
+    imageUrl: image,
+    howToGetInvolved: involvement,
     events,
     testimonials,
-    signature_events: signatureEvents,
+    signatureEvents,
   } = club
 
   return (
@@ -189,7 +189,7 @@ const ClubPage = ({
             </Flex>
           </StyledCard>
 
-          {club.is_ghost && (
+          {club.isGhost && (
             <div className="notification is-info is-light">
               <Icon name="alert-circle" style={{ marginTop: '-3px' }} /> There
               are changes to this {OBJECT_NAME_SINGULAR} page that are still
@@ -207,7 +207,7 @@ const ClubPage = ({
           <StyledCard bordered>
             <Description club={club} />
           </StyledCard>
-          {club.advisor_set.length > 0 && (
+          {club.advisorSet.length > 0 && (
             <>
               <StrongText>Points of Contact</StrongText>
               <AdvisorList club={club} />
@@ -217,7 +217,7 @@ const ClubPage = ({
             <StrongText ref={questionsScrollRef}>FAQ</StrongText>
             <QuestionList club={club} questions={questions} />
           </div>
-          {club.is_member !== false && club.files && !!club.files.length && (
+          {club.isMember !== false && club.files && !!club.files.length && (
             <div className="mt-4">
               <StrongText> Uploaded Files </StrongText>
               <StyledCard bordered>

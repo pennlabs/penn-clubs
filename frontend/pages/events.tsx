@@ -101,9 +101,9 @@ const CalendarEvent = ({
 }) => {
   return (
     <>
-      {resource.club_name == null && <Icon name="globe" className="mr-1" />}
+      {resource.clubName == null && <Icon name="globe" className="mr-1" />}
       {resource.name}
-      {resource.club_name != null && <> - {resource.club_name}</>}
+      {resource.clubName != null && <> - {resource.clubName}</>}
     </>
   )
 }
@@ -119,7 +119,7 @@ const logEvent = (visit: VisitType, club: string | null): void => {
     method: 'POST',
     body: {
       club,
-      visit_type: visit,
+      visitType: visit,
     },
   })
 }
@@ -358,7 +358,7 @@ const sortEvents = (events: ClubEvent[]): ClubEvent[] => {
     if (event.pinned) {
       rank += 10
     }
-    if (event.image_url) {
+    if (event.imageUrl) {
       rank += 2
     }
     if (event.description && event.description.length > 3) {
@@ -370,8 +370,8 @@ const sortEvents = (events: ClubEvent[]): ClubEvent[] => {
     return {
       event,
       rank,
-      startDate: new Date(event.start_time),
-      endDate: new Date(event.end_time),
+      startDate: new Date(event.startTime),
+      endDate: new Date(event.endTime),
     }
   })
   return withRankings
@@ -386,7 +386,7 @@ const sortEvents = (events: ClubEvent[]): ClubEvent[] => {
         return b.rank - a.rank
       }
       return (
-        a.event.club_name?.localeCompare(b.event.club_name as string) ??
+        a.event.clubName?.localeCompare(b.event.clubName as string) ??
         a.event.name.localeCompare(b.event.name)
       )
     })
@@ -532,8 +532,8 @@ function EventPage({
       return event.club != null
     })
     .forEach((event) => {
-      const endTime = new Date(event.end_time)
-      const startTime = new Date(event.start_time)
+      const endTime = new Date(event.endTime)
+      const startTime = new Date(event.startTime)
       if (endTime >= now) {
         if (startTime <= now) {
           liveEvents.push(event)
@@ -759,8 +759,8 @@ function EventPage({
                     onRangeChange={fetchForDateRange}
                     events={calendarEvents.map((e) => ({
                       title: e.name,
-                      start: new Date(e.start_time),
-                      end: new Date(e.end_time),
+                      start: new Date(e.startTime),
+                      end: new Date(e.endTime),
                       allDay: false,
                       resource: e,
                     }))}

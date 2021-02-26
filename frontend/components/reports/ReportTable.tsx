@@ -61,15 +61,15 @@ const ReportTable = ({
                 </TableData>
                 <TableData>{report.creator || <span>None</span>}</TableData>
                 <TableData>
-                  {report.created_at ? (
-                    <TimeAgo date={report.created_at} />
+                  {report.createdAt ? (
+                    <TimeAgo date={report.createdAt} />
                   ) : (
                     <span>None</span>
                   )}
                 </TableData>
                 <TableData>
-                  {report.updated_at ? (
-                    <TimeAgo date={report.updated_at} />
+                  {report.updatedAt ? (
+                    <TimeAgo date={report.updatedAt} />
                   ) : (
                     <span>None</span>
                   )}

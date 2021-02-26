@@ -232,7 +232,7 @@ const Flyer = ({ club }: { club: string }): ReactElement => {
         if (club === null) {
           return null
         }
-        const { image_url: image } = club
+        const { imageUrl: image } = club
         return (
           <PrintPage key={club.code}>
             <div className="columns is-mobile is-marginless">

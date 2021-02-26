@@ -48,15 +48,15 @@ type ZoomSettings = any
 type ZoomMeeting = {
   uuid: string
   id: number
-  host_id: string
+  hostId: string
   topic: string
   type: number
-  start_time: string
+  startTime: string
   duration: number
   timezone: string
-  created_at: string
-  join_url: string
-  extra_details: any
+  createdAt: string
+  joinUrl: string
+  extraDetails: any
 }
 
 const SmallEvent = styled.div`
@@ -172,10 +172,10 @@ const loadMeetings = async (
     .then((resp) => resp.json())
     .then((data) => {
       const meetings = (data.meetings ?? { meetings: [] }).meetings ?? []
-      if (data.extra_details) {
+      if (data.extraDetails) {
         meetings.forEach((meeting) => {
-          if (meeting.id in data.extra_details) {
-            meeting.extra_details = data.extra_details[meeting.id]
+          if (meeting.id in data.extraDetails) {
+            meeting.extraDetails = data.extraDetails[meeting.id]
           }
         })
       }
@@ -509,16 +509,14 @@ const ZoomPage = ({
             }
 
             const matchingMeeting = userMeetings.find(({ id }) => id === zoomId)
-            const startTime = moment(event.start_time).tz('America/New_York')
-            const endTime = moment(event.end_time).tz('America/New_York')
+            const startTime = moment(event.startTime).tz('America/New_York')
+            const endTime = moment(event.endTime).tz('America/New_York')
             const eventDuration = moment
               .duration(endTime.diff(startTime))
               .asMinutes()
 
             const matchingTime =
-              matchingMeeting != null
-                ? moment(matchingMeeting.start_time)
-                : null
+              matchingMeeting != null ? moment(matchingMeeting.startTime) : null
 
             return (
               <SmallEvent key={event.id}>
@@ -528,7 +526,7 @@ const ZoomPage = ({
                     href={CLUB_ROUTE()}
                     as={CLUB_ROUTE(event.club as string)}
                   >
-                    <a>{event.club_name}</a>
+                    <a>{event.clubName}</a>
                   </Link>
                   <div>
                     {startTime.format('LLL')} - {endTime.format('LT z')}
@@ -628,7 +626,7 @@ const ZoomPage = ({
                       {
                         value:
                           matchingMeeting != null
-                            ? !matchingMeeting.extra_details?.settings
+                            ? !matchingMeeting.extraDetails?.settings
                                 ?.waiting_room
                             : null,
                         label: 'Meeting room disabled',
@@ -637,7 +635,7 @@ const ZoomPage = ({
                       },
                       {
                         value:
-                          matchingMeeting?.extra_details?.settings
+                          matchingMeeting?.extraDetails?.settings
                             ?.mute_upon_entry,
                         label: 'Mute upon entry enabled',
                         details:
@@ -645,7 +643,7 @@ const ZoomPage = ({
                       },
                       {
                         value:
-                          matchingMeeting?.extra_details?.settings
+                          matchingMeeting?.extraDetails?.settings
                             ?.meeting_authentication,
                         label: 'Meeting authentication enabled',
                         details:
@@ -659,7 +657,7 @@ const ZoomPage = ({
                         details: `Add some details about your ${OBJECT_NAME_SINGULAR} and information session to the event description. Booths with descriptions will appear above booths without descriptions.`,
                       },
                       {
-                        value: !!event.image_url,
+                        value: !!event.imageUrl,
                         label: 'Has cover photo',
                         details:
                           'Add an eye-catching cover photo to encourage students to visit your booth! Booths with cover photos will appear above booths without cover photos.',
@@ -775,7 +773,7 @@ const ZoomPage = ({
                 <Formik
                   initialValues={{
                     description: event.description,
-                    image: event.image_url,
+                    image: event.imageUrl,
                   }}
                   onSubmit={async (data) => {
                     setLoading(true)

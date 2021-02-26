@@ -58,9 +58,9 @@ const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement => {
       <AlertDesc>
         {canRenew ? (
           <>
-            {club.is_member !== false ? (
+            {club.isMember !== false ? (
               <p className="mb-2">
-                You are an {MEMBERSHIP_ROLE_NAMES[club.is_member].toLowerCase()}{' '}
+                You are an {MEMBERSHIP_ROLE_NAMES[club.isMember].toLowerCase()}{' '}
                 of this {OBJECT_NAME_SINGULAR}, so you can {text.PROCESS_ACTION}{' '}
                 by clicking the button below. Your {OBJECT_NAME_SINGULAR} will
                 not be queued for approval until this process is complete.

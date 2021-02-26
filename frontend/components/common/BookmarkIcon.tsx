@@ -46,7 +46,7 @@ export const BookmarkIcon = ({
   padding,
   onFavorite = () => null,
 }: Props): ReactElement => {
-  const [favorite, setFavorite] = useState<boolean>(club.is_favorite)
+  const [favorite, setFavorite] = useState<boolean>(club.isFavorite)
   const authCheck = useContext(AuthCheckContext)
 
   const updateFavorite = () => {

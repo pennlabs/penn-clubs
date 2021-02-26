@@ -136,9 +136,9 @@ export const RequestMembershipButton = ({
     }
   }, [showModal])
 
-  const isRequested = club.is_request
+  const isRequested = club.isRequest
   const isMembershipOpen =
-    club.application_required === ClubApplicationRequired.Open
+    club.applicationRequired === ClubApplicationRequired.Open
 
   const requestMembership = () => {
     if (!isRequested) {
@@ -182,9 +182,9 @@ export const RequestMembershipButton = ({
             the "{FIELD_PARTICIPATION_LABEL}" section for more details!
           </p>
           <Quote>
-            {club.how_to_get_involved && club.how_to_get_involved.length > 0 ? (
+            {club.howToGetInvolved && club.howToGetInvolved.length > 0 ? (
               <div
-                dangerouslySetInnerHTML={{ __html: club.how_to_get_involved }}
+                dangerouslySetInnerHTML={{ __html: club.howToGetInvolved }}
               />
             ) : (
               `There is currently no information about how to participate in this ${OBJECT_NAME_SINGULAR}.`
@@ -260,10 +260,10 @@ const Actions = ({
   updateRequests,
   className,
 }: ActionsProps): ReactElement => {
-  const { code, favorite_count: favoriteCount } = club
+  const { code, favoriteCount } = club
 
   // inClub is set to true if the user is in the club, otherwise false
-  const inClub = club.is_member !== false
+  const inClub = club.isMember !== false
 
   // a user can edit a club if they are either a superuser or in the club and
   // at least an officer
@@ -272,7 +272,7 @@ const Actions = ({
   const [favCount, setFavCount] = useState<number>(favoriteCount ?? 0)
 
   const isMembershipOpen =
-    club.application_required === ClubApplicationRequired.Open
+    club.applicationRequired === ClubApplicationRequired.Open
 
   return (
     <>
@@ -282,7 +282,7 @@ const Actions = ({
             !inClub &&
             club.members.length > 0 &&
             (isMembershipOpen
-              ? club.accepting_members && (
+              ? club.acceptingMembers && (
                   <RequestMembershipButton
                     club={club}
                     updateRequests={updateRequests}
@@ -316,7 +316,7 @@ const Actions = ({
               padding="0"
             />
             <BookmarkCountWrapper>{favCount}</BookmarkCountWrapper>
-            {club.enables_subscription && (
+            {club.enablesSubscription && (
               <>
                 <ActionDiv>|</ActionDiv>
                 <SubscribeIcon padding="0" club={club} />

@@ -45,10 +45,10 @@ const DetailBoolIcon = ({ value, alt }): ReactElement => {
 const Details = ({ club }: DetailsProps): ReactElement => {
   const {
     size,
-    application_required: applicationRequired,
-    accepting_members: acceptingMembers,
-    available_virtually: availableVirtually,
-    appointment_needed: appointmentNeeded,
+    applicationRequired,
+    acceptingMembers,
+    availableVirtually,
+    appointmentNeeded,
   } = club
 
   return (
@@ -115,7 +115,7 @@ const Details = ({ club }: DetailsProps): ReactElement => {
         )}
       </div>
       <BookmarkIcon club={club} padding="0" />
-      {club.enables_subscription && <SubscribeIcon club={club} padding="0" />}
+      {club.enablesSubscription && <SubscribeIcon club={club} padding="0" />}
     </Wrapper>
   )
 }

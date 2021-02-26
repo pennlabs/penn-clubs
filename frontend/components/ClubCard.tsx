@@ -97,16 +97,8 @@ type ClubCardProps = {
 }
 
 const ClubCard = ({ club, fullWidth }: ClubCardProps): ReactElement => {
-  const {
-    name,
-    active,
-    approved,
-    subtitle,
-    tags,
-    enables_subscription,
-    code,
-  } = club
-  const img = club.image_url
+  const { name, active, approved, subtitle, tags, code } = club
+  const img = club.imageUrl
   const textDescription = shorten(subtitle || 'This club has no description.')
 
   return (

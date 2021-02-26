@@ -36,15 +36,15 @@ type Props = {
 
 const ApplyPage = ({ club, applications }: Props): ReactElement => {
   const [updatedIsRequest, setUpdatedIsRequest] = useState<boolean>(
-    club.is_request,
+    club.isRequest,
   )
 
   const isOpenMembership =
-    club.application_required === ClubApplicationRequired.Open
+    club.applicationRequired === ClubApplicationRequired.Open
 
   const btn = (
     <RequestMembershipButton
-      club={{ ...club, is_request: updatedIsRequest }}
+      club={{ ...club, isRequest: updatedIsRequest }}
       updateRequests={async (code: string) => {
         logEvent('request', code)
         if (updatedIsRequest) {
@@ -63,7 +63,7 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
   )
 
   const recruitmentCycleLabel = CLUB_RECRUITMENT_CYCLES.find(
-    ({ value }) => value === club.recruiting_cycle,
+    ({ value }) => value === club.recruitingCycle,
   )?.label
 
   return (
@@ -87,7 +87,7 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
               is required to join the {OBJECT_NAME_SINGULAR}. You can request to
               be added as a member to this {OBJECT_NAME_SINGULAR} on {SITE_NAME}
               . The {OBJECT_NAME_SINGULAR} is currently{' '}
-              {club.accepting_members ? 'accepting' : 'not accepting'} new
+              {club.acceptingMembers ? 'accepting' : 'not accepting'} new
               members.
             </Text>
           </>
@@ -96,7 +96,7 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
             <Subtitle>
               {
                 CLUB_APPLICATIONS.find(
-                  (app) => app.value === club.application_required,
+                  (app) => app.value === club.applicationRequired,
                 )?.label
               }
             </Subtitle>
@@ -105,8 +105,8 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
               {OBJECT_NAME_SINGULAR}. You can subscribe to this{' '}
               {OBJECT_NAME_SINGULAR} to get notified when applications open and
               close.{' '}
-              {club.recruiting_cycle !== ClubRecruitingCycle.Unknown &&
-                club.recruiting_cycle !== ClubRecruitingCycle.Open && (
+              {club.recruitingCycle !== ClubRecruitingCycle.Unknown &&
+                club.recruitingCycle !== ClubRecruitingCycle.Open && (
                   <>
                     This {OBJECT_NAME_SINGULAR} typically recruits its members
                     during {recruitmentCycleLabel?.toLowerCase()}.
@@ -115,7 +115,7 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
             </Text>
           </>
         )}
-        {club.how_to_get_involved.length > 0 && (
+        {club.howToGetInvolved.length > 0 && (
           <>
             <Text>
               <b>{club.name}</b> provides the following information on how to
@@ -124,7 +124,7 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
             <div className="mb-4">
               <TextQuote>
                 <div
-                  dangerouslySetInnerHTML={{ __html: club.how_to_get_involved }}
+                  dangerouslySetInnerHTML={{ __html: club.howToGetInvolved }}
                 />
               </TextQuote>
             </div>
@@ -147,26 +147,26 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
                 <Subtitle>
                   {app.name}{' '}
                   <span className="has-text-grey">
-                    for {getSemesterFromDate(app.application_end_time)}
+                    for {getSemesterFromDate(app.applicationEndTime)}
                   </span>
                 </Subtitle>
                 <div>
                   <b>Open Time:</b>{' '}
-                  {new Date(app.application_start_time).toLocaleString()} (
-                  <TimeAgo date={app.application_start_time} />)
+                  {new Date(app.applicationStartTime).toLocaleString()} (
+                  <TimeAgo date={app.applicationStartTime} />)
                 </div>
                 <div>
                   <b>Close Time:</b>{' '}
-                  {new Date(app.application_end_time).toLocaleString()} (
-                  <TimeAgo date={app.application_end_time} />)
+                  {new Date(app.applicationEndTime).toLocaleString()} (
+                  <TimeAgo date={app.applicationEndTime} />)
                 </div>
                 <div>
                   <b>Results Released By:</b>{' '}
-                  {new Date(app.result_release_time).toLocaleString()} (
-                  <TimeAgo date={app.result_release_time} />)
+                  {new Date(app.resultReleaseTime).toLocaleString()} (
+                  <TimeAgo date={app.resultReleaseTime} />)
                 </div>
                 <a
-                  href={app.external_url}
+                  href={app.externalUrl}
                   rel="noopener noreferrer"
                   className="button is-success mt-3"
                 >

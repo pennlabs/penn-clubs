@@ -100,7 +100,7 @@ const QuestionList = ({
           </button>
         </div>
       ) : (
-        <Formik initialValues={{ is_anonymous: false }} onSubmit={handleSubmit}>
+        <Formik initialValues={{ isAnonymous: false }} onSubmit={handleSubmit}>
           <Form>
             <Field
               name="question"

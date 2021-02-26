@@ -125,10 +125,10 @@ const ClubFairCard = ({
       </Text>
       {fairs.map((fair) => {
         const isRegistered = fairStatuses.indexOf(fair.id) !== -1
-        const registrationEnd = new Date(fair.registration_end_time)
+        const registrationEnd = new Date(fair.registrationEndTime)
         const registrationStart =
-          fair.registration_start_time != null
-            ? new Date(fair.registration_start_time)
+          fair.registrationStartTime != null
+            ? new Date(fair.registrationStartTime)
             : null
         const now = new Date().getTime()
         const isEnded = now > registrationEnd.getTime()
@@ -145,7 +145,7 @@ const ClubFairCard = ({
             <div className="content">
               <div
                 dangerouslySetInnerHTML={{
-                  __html: fair.registration_information,
+                  __html: fair.registrationInformation,
                 }}
               />
             </div>

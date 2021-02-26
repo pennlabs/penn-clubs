@@ -40,14 +40,14 @@ const InfoBox = (props: InfoBoxProps): ReactElement | null => {
       field: 'size',
       icon: 'user',
       alt: 'members',
-      text: `${props.club.membership_count} Registered (${getSizeDisplay(
+      text: `${props.club.membershipCount} Registered (${getSizeDisplay(
         props.club.size,
       )})`,
     },
     {
       field: 'accepting_members',
-      icon: props.club.accepting_members ? 'check-circle' : 'x-circle',
-      text: props.club.accepting_members
+      icon: props.club.acceptingMembers ? 'check-circle' : 'x-circle',
+      text: props.club.acceptingMembers
         ? 'Currently Accepting Members'
         : 'Not Currently Accepting Members',
     },
@@ -55,13 +55,13 @@ const InfoBox = (props: InfoBoxProps): ReactElement | null => {
       field: 'application_required',
       icon: 'edit',
       text:
-        applicationTextMap[props.club.application_required] ||
+        applicationTextMap[props.club.applicationRequired] ||
         defaultApplicationText,
     },
     {
       field: 'recruiting_cycle',
       icon: 'clock',
-      text: recruitingTextMap[props.club.recruiting_cycle],
+      text: recruitingTextMap[props.club.recruitingCycle],
     },
   ]
 

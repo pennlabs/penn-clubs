@@ -211,7 +211,7 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
           {(club && club.name) || `this ${OBJECT_NAME_SINGULAR}`}. To get
           access, contact <Contact />.
         </p>
-        {club.is_member !== false && (
+        {club.isMember !== false && (
           <p>
             You are a member of this {OBJECT_NAME_SINGULAR}, but only officers
             and above can perform this action.

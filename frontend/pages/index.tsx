@@ -340,11 +340,11 @@ const Splash = (props: SplashProps): ReactElement => {
     { value: 4, label: 'more than 100', name: 'size' },
   ]
 
-  const schoolOptions = props.schools.map(({ id, name, is_graduate }) => ({
+  const schoolOptions = props.schools.map(({ id, name, isGraduate }) => ({
     value: id,
     label: name,
     name: 'school',
-    color: is_graduate && SITE_ID === 'clubs' ? CLUBS_BLUE : undefined,
+    color: isGraduate && SITE_ID === 'clubs' ? CLUBS_BLUE : undefined,
   }))
 
   const yearOptions = props.years.map(({ id, name }) => ({

@@ -83,7 +83,7 @@ const ProfileForm = ({
   return (
     <>
       <Formik
-        initialValues={{ ...settings, image: settings.image_url }}
+        initialValues={{ ...settings, image: settings.imageUrl }}
         onSubmit={submit}
         enableReinitialize
       >

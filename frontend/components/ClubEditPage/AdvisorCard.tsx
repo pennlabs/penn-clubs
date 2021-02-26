@@ -30,7 +30,7 @@ export default function AdvisorCard({
   validateAdvisors,
 }: Props): ReactElement {
   const [advisorsCount, setAdvisorsCount] = useState<number>(
-    club.advisor_set.length || 0,
+    club.advisorSet.length || 0,
   )
   const updateAdvisors = (
     newAdvisors: (Advisor & { _status?: boolean; _errorMessage?: string })[],
@@ -84,7 +84,7 @@ export default function AdvisorCard({
           baseUrl={`/clubs/${club.code}/advisors/`}
           listParams="&public=true"
           defaultObject={{ public: true }}
-          initialData={club.advisor_set.filter(
+          initialData={club.advisorSet.filter(
             ({ public: isPublic }) => isPublic,
           )}
           fields={fields}
@@ -105,7 +105,7 @@ export default function AdvisorCard({
           baseUrl={`/clubs/${club.code}/advisors/`}
           listParams="&public=false"
           defaultObject={{ public: false }}
-          initialData={club.advisor_set.filter(
+          initialData={club.advisorSet.filter(
             ({ public: isPublic }) => !isPublic,
           )}
           fields={fields}

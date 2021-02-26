@@ -364,7 +364,7 @@ const EventPreview = ({ event }: { event: ClubEvent }) => (
     <EventPreviewDescriptionContainer>
       <h3 className="subtitle">Event Preview</h3>
       <p>This is how your event will appear to students on the event page.</p>
-      {event.is_ics_event && (
+      {event.isIcsEvent && (
         <p className="mt-3">
           This event was automatically imported from your ICS calendar. Any
           changes you make to this event may be overwritten if you update your
@@ -385,11 +385,11 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
 
   const event = {
     ...deviceContents,
-    club_name: club.name,
-    image_url:
+    clubName: club.name,
+    imageUrl:
       (deviceContents.image && deviceContents.image instanceof File
         ? URL.createObjectURL(deviceContents.image)
-        : false) || deviceContents.image_url,
+        : false) || deviceContents.imageUrl,
   } as ClubEvent
 
   return (
