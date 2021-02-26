@@ -158,9 +158,14 @@ PLATFORM_ACCOUNTS = {
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": (
-        "rest_framework.renderers.JSONRenderer",
-        "rest_framework.renderers.BrowsableAPIRenderer",
+        'djangorestframework_camel_case.render.CamelCaseJSONRenderer',
+        'djangorestframework_camel_case.render.CamelCaseBrowsableAPIRenderer',
         "drf_renderer_xlsx.renderers.XLSXRenderer",
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'djangorestframework_camel_case.parser.CamelCaseFormParser',
+        'djangorestframework_camel_case.parser.CamelCaseMultiPartParser',
+        'djangorestframework_camel_case.parser.CamelCaseJSONParser',
     ),
     "DEFAULT_SCHEMA_CLASS": "pennclubs.doc_settings.CustomAutoSchema",
 }

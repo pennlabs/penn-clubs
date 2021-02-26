@@ -16,6 +16,7 @@ django-extensions = "*"
 [packages]
 dj-database-url = "*"
 djangorestframework = "*"
+djangorestframework-camel-case = "*"
 sentry-sdk = "*"
 django = "*"
 django-labs-accounts = "*"
