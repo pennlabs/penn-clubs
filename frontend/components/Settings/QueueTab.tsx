@@ -40,22 +40,23 @@ const QueueTable = ({
   }
 
   const bulkApprove = (approve: boolean) => {
-    const bulkApiRequests = (clubs || [])
-      .filter((club: Club) => club.active && selectedCodes.includes(club.code))
-      .map((club: Club) => {
-        return new Promise((resolve) => {
+    Promise.all(
+      (clubs || [])
+        .filter(
+          (club: Club) => club.active && selectedCodes.includes(club.code),
+        )
+        .map((club: Club) =>
           doApiRequest(`/clubs/${club.code}/?format=json`, {
             method: 'PATCH',
             body: {
               approved: approve,
-              approved_comment: `Your club has ${
+              approved_comment: `Club has ${
                 approve ? '' : 'not'
               } been approved in a bulk selection.`,
             },
-          }).then(resolve)
-        })
-      })
-    Promise.all(bulkApiRequests).then(() => {
+          }),
+        ),
+    ).then(() => {
       router.reload()
     })
   }
@@ -201,7 +202,7 @@ const QueueTab = (): ReactElement => {
 
       doApiRequest('/clubs/directory/?format=json')
         .then((resp) => resp.json())
-        .then((data) => setAllClubs(data.map((club) => club.approved)))
+        .then((data) => setAllClubs(data.map((club: Club) => club.approved)))
     }
   }, [])
 
