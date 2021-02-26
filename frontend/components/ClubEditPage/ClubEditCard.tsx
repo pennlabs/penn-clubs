@@ -440,6 +440,13 @@ export default function ClubEditCard({
           type: 'html',
         },
         {
+          name: 'mission',
+          required: true,
+          help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
+          placeholder: `Enter your ${OBJECT_NAME_SINGULAR} Mission here!`,
+          type: 'html',
+        },
+        {
           name: 'tags',
           type: 'multiselect',
           required: true,
