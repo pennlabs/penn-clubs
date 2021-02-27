@@ -153,7 +153,6 @@ export const ModelTable = ({
       })),
     [tableFields],
   )
-
   tableFields = tableFields.map((column, index) => {
     if (column.converter) {
       const renderFunction = column.converter
@@ -220,7 +219,9 @@ export const ModelTable = ({
       <Table
         data={objects}
         columns={tableFields}
-        searchableColumns={searchableColumns || []}
+        searchableColumns={
+          searchableColumns || tableFields.map((field) => field.name)
+        }
         filterOptions={filterOptions || []}
         draggable={draggable}
         onDragEnd={onDragEnd}
