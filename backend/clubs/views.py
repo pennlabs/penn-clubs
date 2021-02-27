@@ -1038,7 +1038,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             SearchQuery(
                 person=self.request.user,
                 query=self.request.query_params.get("search"),
-                created_at=datetime.datetime.now(),
             ).save()
 
         # select subset of clubs if requested
