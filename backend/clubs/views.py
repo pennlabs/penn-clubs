@@ -1031,8 +1031,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     ),
                 )
 
+        # if there is a search query made by a signed-in user, save it to the database
+        if self.request.query_params.get("search") and isinstance(
+            self.request.user, get_user_model()
+        ):
+            SearchQuery(
+                person=self.request.user, query=self.request.query_params.get("search"),
+            ).save()
+
         # select subset of clubs if requested
         subset = self.request.query_params.get("in", None)
+
         if subset:
             subset = [x.strip() for x in subset.strip().split(",")]
             queryset = queryset.filter(code__in=subset)
@@ -2728,7 +2737,7 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
 
     serializer_class = SearchQuerySerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = ["get", "post"]
+    http_method_names = ["get"]
 
     def get_queryset(self):
         if self.request.user.is_superuser:
