@@ -429,7 +429,7 @@ const Table = ({
           )}
         </table>
       ) : (
-        <h1>Nothing to Show</h1>
+        <h1>Nothing to Show.</h1>
       )}
       {pageOptions.length > 1 && (
         <div className="is-clearfix">
