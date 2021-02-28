@@ -176,8 +176,7 @@ const ResourceCreationPage = ({
           </Text>
           <ClubEditCard
             isEdit={club !== null}
-            // setting schools to a 0-length array will hide the field
-            schools={[]}
+            schools={schools}
             years={years}
             majors={majors}
             tags={tags}
