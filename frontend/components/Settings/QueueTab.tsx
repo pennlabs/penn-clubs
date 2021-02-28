@@ -13,7 +13,47 @@ import {
   OBJECT_NAME_TITLE_SINGULAR,
   SITE_NAME,
 } from '../../utils/branding'
-import { Checkbox, Icon } from '../common'
+import { ModalContent } from '../ClubPage/Actions'
+import { Checkbox, Icon, Modal } from '../common'
+
+type QueueTableModalProps = {
+  show: boolean
+  closeModal: () => void
+  bulkAction: (comment: string) => void
+  approve: boolean
+}
+
+const QueueTableModal = ({
+  show,
+  closeModal,
+  bulkAction,
+  approve,
+}: QueueTableModalProps): ReactElement => {
+  const [comment, setComment] = useState<string>('')
+  return (
+    <Modal show={show} closeModal={closeModal} marginBottom={false}>
+      <ModalContent>
+        <div className="mb-3">You may include a comment with this action.</div>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="textarea my-2"
+          placeholder="Enter bulk approval or rejection notes here! Your notes will be emailed to the requester when you approve or reject this request."
+        ></textarea>
+        <button
+          className={`mb-2 button ${approve ? 'is-success' : 'is-danger'}`}
+          onClick={() => {
+            closeModal()
+            bulkAction(comment)
+          }}
+        >
+          <Icon name={approve ? 'check' : 'x'} />
+          {` ${approve ? 'Approve' : 'Reject'} and Send Message`}
+        </button>
+      </ModalContent>
+    </Modal>
+  )
+}
 
 type QueueTableProps = {
   clubs: Club[] | null
@@ -23,6 +63,8 @@ type QueueTableProps = {
   description: string
 }
 
+// TODO: implement mohamed's table component for "Other Clubs" and leave approval
+// queue functionality strictly to the "Pending Clubs" table.
 const QueueTable = ({
   clubs,
   title,
@@ -32,19 +74,23 @@ const QueueTable = ({
 }: QueueTableProps): ReactElement => {
   const router = useRouter()
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
-  const noClubsSelected = selectedCodes.length === 0
+  const [showModal, setShowModal] = useState<boolean>(false)
+  const [approve, setApprove] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(false)
   const allClubsSelected = selectedCodes.length === (clubs || []).length
 
   const toggleCode = (code: string) => {
-    if (selectedCodes.includes(code))
+    if (selectedCodes.includes(code)) {
       selectedCodes.splice(selectedCodes.indexOf(code), 1)
-    else selectedCodes.push(code)
-
+    } else {
+      selectedCodes.push(code)
+    }
     setSelectedCodes([...selectedCodes])
   }
 
-  const bulkApprove = (approved: boolean) => {
+  const bulkAction = (comment: string) => {
     const codeSet = new Set(selectedCodes) // O(1) lookup for our filter
+    setLoading(true)
     Promise.all(
       (clubs || [])
         .filter((club: Club) => club.active && codeSet.has(club.code))
@@ -52,116 +98,132 @@ const QueueTable = ({
           doApiRequest(`/clubs/${club.code}/?format=json`, {
             method: 'PATCH',
             body: {
-              approved: approved,
-              approved_comment: `Club has ${
-                approved ? '' : 'not'
-              } been approved in a bulk selection.`,
+              approved: approve,
+              approved_comment:
+                comment || '(Administrator did not include a comment.)',
             },
           }),
         ),
-    ).then(router.reload)
-  }
-  let tableContent: ReactElement
-  if (clubs === null) {
-    tableContent = <div className="has-text-info">Loading table...</div>
-  } else if (!clubs.length) {
-    tableContent = (
-      <div className="has-text-info">
-        There are no {OBJECT_NAME_PLURAL} in this table.
-      </div>
-    )
-  } else {
-    tableContent = (
-      <table className="table is-fullwidth">
-        <thead>
-          <tr>
-            {selectableClubs && (
-              <th>
-                <Checkbox
-                  checked={allClubsSelected}
-                  onChange={() => {
-                    setSelectedCodes(
-                      allClubsSelected ? [] : clubs.map((club) => club.code),
-                    )
-                  }}
-                />
-              </th>
-            )}
-            <th>{OBJECT_NAME_TITLE_SINGULAR}</th>
-            {showStatus && <th>Status</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {clubs.map((club) => (
-            <tr key={club.code}>
-              {selectableClubs && (
-                <td>
-                  <Checkbox
-                    checked={selectedCodes.includes(club.code)}
-                    onChange={() => toggleCode(club.code)}
-                  />
-                </td>
-              )}
-              <td>
-                <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-                  <a target="_blank">{club.name}</a>
-                </Link>
-              </td>
-              {showStatus && (
-                <td>
-                  <>
-                    {club.active === false && (
-                      <span className="has-text-primary">
-                        <Icon name="clock" /> Inactive
-                      </span>
-                    )}
-                    {club.active === true && club.approved === true && (
-                      <span className="has-text-success">
-                        <Icon name="check" /> Approved
-                      </span>
-                    )}
-                    {club.active === true && club.approved === false && (
-                      <span className="has-text-danger">
-                        <Icon name="x" /> Rejected
-                      </span>
-                    )}
-                  </>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    )
+    ).then(() => {
+      setLoading(false)
+      router.reload()
+    })
   }
 
   return (
     <>
+      <QueueTableModal
+        show={showModal}
+        closeModal={() => setShowModal(false)}
+        bulkAction={bulkAction}
+        approve={approve}
+      />
       <QueueTableHeader>
-        <div>
+        <QueueTableHeaderText>
           <SmallTitle>{title}</SmallTitle>
           <div className="mt-3 mb-3">{description}</div>
-        </div>
+        </QueueTableHeaderText>
         {selectableClubs && (
-          <>
+          <div className="buttons">
             <button
               className="button is-success"
-              disabled={noClubsSelected}
-              onClick={() => bulkApprove(true)}
+              disabled={!(clubs || []).length || loading}
+              onClick={() => {
+                setApprove(true)
+                setShowModal(true)
+              }}
             >
               <Icon name="check" /> Approve
             </button>
             <button
               className="button is-danger"
-              disabled={noClubsSelected}
-              onClick={() => bulkApprove(false)}
+              disabled={!(clubs || []).length || loading}
+              onClick={() => {
+                setApprove(false)
+                setShowModal(true)
+              }}
             >
               <Icon name="x" /> Reject
             </button>
-          </>
+          </div>
         )}
       </QueueTableHeader>
-      {tableContent}
+      {(() => {
+        if (clubs === null)
+          return <div className="has-text-info">Loading table...</div>
+        if (!clubs.length)
+          return (
+            <div className="has-text-info">
+              There are no {OBJECT_NAME_PLURAL} in this table.
+            </div>
+          )
+        return (
+          <table className="table is-fullwidth is-striped">
+            <thead>
+              <tr>
+                {selectableClubs && (
+                  <th>
+                    <Checkbox
+                      checked={allClubsSelected}
+                      onChange={() =>
+                        setSelectedCodes(
+                          allClubsSelected
+                            ? []
+                            : clubs.map((club) => club.code),
+                        )
+                      }
+                    />
+                  </th>
+                )}
+                <th>{OBJECT_NAME_TITLE_SINGULAR}</th>
+                {showStatus && <th>Status</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {clubs.map((club) => (
+                <tr key={club.code}>
+                  {selectableClubs && (
+                    <td>
+                      <Checkbox
+                        checked={selectedCodes.includes(club.code)}
+                        onChange={() => toggleCode(club.code)}
+                      />
+                    </td>
+                  )}
+                  <td>
+                    <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+                      <a target="_blank">{club.name}</a>
+                    </Link>
+                  </td>
+                  {showStatus && (
+                    <td>
+                      {(() => {
+                        if (!club.active)
+                          return (
+                            <span className="has-text-primary">
+                              <Icon name="clock" /> Inactive
+                            </span>
+                          )
+                        if (club.approved)
+                          return (
+                            <span className="has-text-success">
+                              <Icon name="check" /> Approved
+                            </span>
+                          )
+                        return (
+                          <span className="has-text-danger">
+                            <Icon name="x" /> Rejected
+                          </span>
+                        )
+                      })()}
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      })()}
     </>
   )
 }
@@ -170,6 +232,9 @@ const QueueTableHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+`
+const QueueTableHeaderText = styled.div`
+  flex-basis: 75%;
 `
 
 const MultiProgressBar = styled.div`
@@ -244,23 +309,6 @@ const QueueTab = (): ReactElement => {
     inactiveClubsCount +
     pendingClubsCount
 
-  const tableText = {
-    pending: {
-      title: 'Pending Clubs',
-      description: `
-      As an administrator of ${SITE_NAME}, you can approve and reject
-      ${OBJECT_NAME_SINGULAR} approval requests. The table below contains a
-      list of ${pendingClubsCount} ${OBJECT_NAME_PLURAL} pending your approval.
-      Click on the ${OBJECT_NAME_SINGULAR} name to view the ${OBJECT_NAME_SINGULAR}.
-    `,
-    },
-    other: {
-      title: 'Other Clubs',
-      description: `
-      The table below shows a list of ${OBJECT_NAME_PLURAL} that have been marked
-      as approved, rejected or that are inactive.`,
-    },
-  }
   return (
     <>
       <SmallTitle>Overview</SmallTitle>
@@ -305,21 +353,24 @@ const QueueTab = (): ReactElement => {
         </li>
       </ul>
       <QueueTable
-        title={tableText.pending.title}
-        description={tableText.pending.description}
+        title={'Pending Clubs'}
+        description={`As an administrator of ${SITE_NAME}, you can approve and reject
+        ${OBJECT_NAME_SINGULAR} approval requests. The table below contains a
+        list of ${pendingClubsCount} ${OBJECT_NAME_PLURAL} pending your approval.
+        Click on the ${OBJECT_NAME_SINGULAR} name to view the ${OBJECT_NAME_SINGULAR}.`}
         clubs={pendingClubs}
         selectableClubs={true}
         showStatus={false}
       />
       <QueueTable
-        title={tableText.other.title}
-        description={tableText.other.description}
+        title={'Other Clubs'}
+        description={`The table below shows a list of ${OBJECT_NAME_PLURAL} that have been marked
+        as approved, rejected or that are inactive.`}
         clubs={
-          approvedClubs !== null &&
-          rejectedClubs !== null &&
-          inactiveClubs !== null
-            ? approvedClubs.concat(rejectedClubs, inactiveClubs)
-            : null
+          approvedClubs &&
+          rejectedClubs &&
+          inactiveClubs &&
+          approvedClubs.concat(rejectedClubs, inactiveClubs)
         }
         selectableClubs={false}
         showStatus={true}
