@@ -210,10 +210,7 @@ const sites = {
     FORM_LOGO_DESCRIPTION: 'Upload your approved Penn logo.',
     FORM_TARGET_DESCRIPTION: (
       <>
-        <b>Do you offer specialized services for particular student groups?</b>{' '}
-        It is assumed that all resources at Penn are available to all Penn
-        students. However, if you offer specialized resources, please designate
-        the groups that receive those resources here.
+        <b>Does your resource apply to all undergraduate, graduate, and professional Penn students?</b>{' '}
       </>
     ),
     OBJECT_MEMBERSHIP_DEFAULT_TITLE: '',
