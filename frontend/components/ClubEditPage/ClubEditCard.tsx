@@ -458,37 +458,62 @@ export default function ClubEditCard({
         },
         {
           type: 'content',
-          content: SITE_ID === 'fyh' ? (
+          content:
+            SITE_ID === 'fyh' ? (
               <>
                 <Text>{FORM_TARGET_DESCRIPTION}</Text>
-              <div className="ml-2 mb-4">
-                <input type="radio" id="yes" name="resource" value="yes"/>
-                <label htmlFor="yes">Yes</label> {' '}
-                <input type="radio" id="no" name="resource" value="no" checked={showTargetFields} onChange={(e) => setShowTargetFields(e.target.checked)} color={BLACK}/>
-                <label htmlFor="no">No</label>
-              </div>
-                <Text>If no, Hub@Penn has provided a way for certain student populations to filter resources with support services designed specifically with them in mind. In order for this filter to work adequately for your resource, you must choose from following list of tags.  </Text>
-                <Text>Please note: It is assumed that all Penn resources are available to all Penn students. Please be selective in your choice of tags.</Text>
-            </>
-              ) :
-              (
-            <>
-              <Text>{FORM_TARGET_DESCRIPTION}</Text>
-              <div className="ml-2 mb-4">
-                <CheckboxLabel>
-                  <Checkbox
-                    checked={showTargetFields}
-                    onChange={(e) => setShowTargetFields(e.target.checked)}
-                    color={BLACK}
-                  />{' '}
-                  <span className="ml-1">
-                    Yes, my {OBJECT_NAME_SINGULAR} is restricted to certain
-                    student groups.
-                  </span>
-                </CheckboxLabel>
-              </div>
-            </>
-          ),
+                <div className="ml-2 mb-4">
+                  <CheckboxLabel>
+                    <Checkbox
+                      checked={false}
+                      onChange={(e) => setShowTargetFields(false)}
+                      color={BLACK}
+                    />{' '}
+                    <span className="ml-1">Yes.</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <Checkbox
+                      checked={showTargetFields}
+                      onChange={(e) => setShowTargetFields(true)}
+                      color={BLACK}
+                    />{' '}
+                    <span className="ml-1">
+                      No, my {OBJECT_NAME_SINGULAR} is restricted to certain
+                      student groups.
+                    </span>
+                  </CheckboxLabel>
+                </div>
+                <Text>
+                  If no, Hub@Penn has provided a way for certain student
+                  populations to filter resources with support services designed
+                  specifically with them in mind. In order for this filter to
+                  work adequately for your resource, you must choose from
+                  following list of tags.  
+                </Text>
+                <Text>
+                  Please note: It is assumed that all Penn resources are
+                  available to all Penn students. Please be selective in your
+                  choice of tags.
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text>{FORM_TARGET_DESCRIPTION}</Text>
+                <div className="ml-2 mb-4">
+                  <CheckboxLabel>
+                    <Checkbox
+                      checked={showTargetFields}
+                      onChange={(e) => setShowTargetFields(e.target.checked)}
+                      color={BLACK}
+                    />{' '}
+                    <span className="ml-1">
+                      Yes, my {OBJECT_NAME_SINGULAR} is restricted to certain
+                      student groups.
+                    </span>
+                  </CheckboxLabel>
+                </div>
+              </>
+            ),
         },
         {
           name: 'target_years',

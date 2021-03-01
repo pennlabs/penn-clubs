@@ -1139,8 +1139,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             if settings.BRANDING == "fyh":
                 raise serializers.ValidationError(
                     """
-                   We noticed you selected all of the options for one or more of the previous tags. In order to best optimize our sorting algorithm, you need to select only the few tags that apply to your resource.
-                   If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the question asking if your resource applies to all undergraduate, graduate, and professional Penn students.
+                   We noticed you selected all of the options for one or more of the previous tags. In order to best optimize our sorting algorithm, you need to select only the few tags that apply to your resource.<br/> 
+                   If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the question asking if your resource applies to all undergraduate, graduate, and professional Penn students.<br/> 
 
                    Thanks for doing your part to ensure that Hub@Penn quickly and efficiently gets resources to our Penn community. 
                    """
@@ -1159,8 +1159,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             if settings.BRANDING == "fyh":
                 raise serializers.ValidationError(
                     """
-                   We noticed you selected all of the options for one or more of the previous tags. In order to best optimize our sorting algorithm, you need to select only the few tags that apply to your resource.
-                   If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the question asking if your resource applies to all undergraduate, graduate, and professional Penn students.
+                   We noticed you selected all of the options for one or more of the previous tags. In order to best optimize our sorting algorithm, you need to select only the few tags that apply to your resource. 
+                   If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the question asking if your resource applies to all undergraduate, graduate, and professional Penn students. 
 
                    Thanks for doing your part to ensure that Hub@Penn quickly and efficiently gets resources to our Penn community. 
                    """
@@ -1179,8 +1179,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             if settings.BRANDING == "fyh":
                 raise serializers.ValidationError(
                     """
-                   We noticed you selected all of the options for one or more of the previous tags. In order to best optimize our sorting algorithm, you need to select only the few tags that apply to your resource. \n
-                   If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the question asking if your resource applies to all undergraduate, graduate, and professional Penn students.\n 
+                   We noticed you selected all of the options for one or more of the previous tags. In order to best optimize our sorting algorithm, you need to select only the few tags that apply to your resource. 
+                   If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the question asking if your resource applies to all undergraduate, graduate, and professional Penn students. 
 
                    Thanks for doing your part to ensure that Hub@Penn quickly and efficiently gets resources to our Penn community. 
                    """
@@ -1199,8 +1199,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             if settings.BRANDING == "fyh":
                 raise serializers.ValidationError(
                     """
-                   We noticed you selected all of the options for one or more of the previous tags. In order to best optimize our sorting algorithm, you need to select only the few tags that apply to your resource. \n
-                   If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the question asking if your resource applies to all undergraduate, graduate, and professional Penn students. \n
+                   We noticed you selected all of the options for one or more of the previous tags. In order to best optimize our sorting algorithm, you need to select only the few tags that apply to your resource.
+                   If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the question asking if your resource applies to all undergraduate, graduate, and professional Penn students.
 
                    Thanks for doing your part to ensure that Hub@Penn quickly and efficiently gets resources to our Penn community. 
                    """
