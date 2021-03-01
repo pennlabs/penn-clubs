@@ -1138,14 +1138,17 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if len(value) >= Year.objects.count():
             if settings.BRANDING == "fyh":
                 raise serializers.ValidationError(
-                    "We noticed you selected all of the options for one or more of the previous tags."
-                    "In order to best optimize our sorting algorithm, you need to select only the few \
+                    "We noticed you selected all of the options\
+                     for one or more of the previous tags."
+                    "In order to best optimize our sorting algorithm,\
+                     you need to select only the few \
                     tags that apply to your resource."
-                    "If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the \
-                    question asking if your resource applies to all undergraduate, graduate, and professional\
-                     Penn students."
-                    "Thanks for doing your part to ensure that Hub@Penn quickly and efficiently gets resources \
-                    to our Penn community. "
+                    "If you feel that all the tags apply, that's great!\
+                     In that case you would select 'Yes' to the \
+                    question asking if your resource applies to\
+                     all undergraduate, graduate, and professional Penn students."
+                    "Thanks for doing your part to ensure that Hub@Penn\
+                     quickly and efficiently gets resources to our Penn community. "
                 )
             raise serializers.ValidationError(
                 "You should not select all of the items in this list. "
@@ -1160,14 +1163,17 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if len(value) >= School.objects.count():
             if settings.BRANDING == "fyh":
                 raise serializers.ValidationError(
-                    "We noticed you selected all of the options for one or more of the previous tags."
-                    "In order to best optimize our sorting algorithm, you need to select only the few \
+                    "We noticed you selected all of the options\
+                     for one or more of the previous tags."
+                    "In order to best optimize our sorting algorithm,\
+                     you need to select only the few \
                     tags that apply to your resource."
-                    "If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the \
-                    question asking if your resource applies to all undergraduate, graduate, and professional\
-                     Penn students."
-                    "Thanks for doing your part to ensure that Hub@Penn quickly and efficiently gets resources \
-                    to our Penn community. "
+                    "If you feel that all the tags apply, that's great!\
+                     In that case you would select 'Yes' to the \
+                    question asking if your resource applies to\
+                     all undergraduate, graduate, and professional Penn students."
+                    "Thanks for doing your part to ensure that Hub@Penn\
+                     quickly and efficiently gets resources to our Penn community. "
                 )
             raise serializers.ValidationError(
                 "You should not select all of the items in this list. "
@@ -1182,14 +1188,17 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if len(value) >= Major.objects.count():
             if settings.BRANDING == "fyh":
                 raise serializers.ValidationError(
-                    "We noticed you selected all of the options for one or more of the previous tags."
-                    "In order to best optimize our sorting algorithm, you need to select only the few \
+                    "We noticed you selected all of the options\
+                     for one or more of the previous tags."
+                    "In order to best optimize our sorting algorithm,\
+                     you need to select only the few \
                     tags that apply to your resource."
-                    "If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the \
-                    question asking if your resource applies to all undergraduate, graduate, and professional\
-                     Penn students."
-                    "Thanks for doing your part to ensure that Hub@Penn quickly and efficiently gets resources \
-                    to our Penn community. "
+                    "If you feel that all the tags apply, that's great!\
+                     In that case you would select 'Yes' to the \
+                    question asking if your resource applies to\
+                     all undergraduate, graduate, and professional Penn students."
+                    "Thanks for doing your part to ensure that Hub@Penn\
+                     quickly and efficiently gets resources to our Penn community. "
                 )
             raise serializers.ValidationError(
                 "You should not select all of the items in this list. "
@@ -1204,14 +1213,17 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if len(value) >= StudentType.objects.count():
             if settings.BRANDING == "fyh":
                 raise serializers.ValidationError(
-                    "We noticed you selected all of the options for one or more of the previous tags."
-                    "In order to best optimize our sorting algorithm, you need to select only the few \
+                    "We noticed you selected all of the options\
+                     for one or more of the previous tags."
+                    "In order to best optimize our sorting algorithm,\
+                     you need to select only the few \
                     tags that apply to your resource."
-                    "If you feel that all the tags apply, that's great! In that case you would select 'Yes' to the \
-                    question asking if your resource applies to all undergraduate, graduate, and professional\
-                     Penn students."
-                    "Thanks for doing your part to ensure that Hub@Penn quickly and efficiently gets resources \
-                    to our Penn community. "
+                    "If you feel that all the tags apply, that's great!\
+                     In that case you would select 'Yes' to the \
+                    question asking if your resource applies to\
+                     all undergraduate, graduate, and professional Penn students."
+                    "Thanks for doing your part to ensure that Hub@Penn\
+                     quickly and efficiently gets resources to our Penn community. "
                 )
             raise serializers.ValidationError(
                 "You should not select all of the items in this list. "
