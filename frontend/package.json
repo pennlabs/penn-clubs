@@ -51,7 +51,8 @@
     "react-vis": "^1.11.7",
     "showdown": "^1.9.1",
     "styled-components": "^5.2.1",
-    "use-places-autocomplete": "^1.8.1"
+    "use-places-autocomplete": "^1.8.1",
+    "yarn": "^1.22.10"
   },
   "scripts": {
     "lint": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\"",

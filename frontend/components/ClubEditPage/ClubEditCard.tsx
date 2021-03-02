@@ -488,7 +488,7 @@ export default function ClubEditCard({
                   populations to filter resources with support services designed
                   specifically with them in mind. In order for this filter to
                   work adequately for your resource, you must choose from
-                  following list of tags.  
+                  following list of tags.
                 </Text>
                 <Text>
                   Please note: It is assumed that all Penn resources are
