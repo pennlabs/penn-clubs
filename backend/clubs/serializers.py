@@ -44,6 +44,27 @@ from clubs.models import (
 )
 from clubs.utils import clean
 
+ALL_TAGS_SELECTED_ERROR_MESSAGE = (
+    (
+        "We noticed you selected all of the options"
+        "for one or more of the previous tags."
+        "In order to best optimize our sorting algorithm,"
+        "you need to select only the few "
+        "tags that apply to your resource."
+        "If you feel that all the tags apply, that's great!"
+        "In that case you would select 'Yes' to the "
+        "question asking if your resource applies to"
+        "all undergraduate, graduate, and professional Penn students."
+        "Thanks for doing your part to ensure that Hub@Penn"
+        "quickly and efficiently gets resources to our Penn community. "
+    )
+    if settings.BRANDING == "fyh"
+    else (
+        "You should not select all of the items in this list. "
+        "If all of these items apply, select none of them instead."
+    )
+)
+
 
 class ClubRouteMixin(object):
     """
@@ -1136,24 +1157,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         Ensure that the user does not select all of the target years.
         """
         if len(value) >= Year.objects.count():
-            if settings.BRANDING == "fyh":
-                raise serializers.ValidationError(
-                    "We noticed you selected all of the options\
-                     for one or more of the previous tags."
-                    "In order to best optimize our sorting algorithm,\
-                     you need to select only the few \
-                    tags that apply to your resource."
-                    "If you feel that all the tags apply, that's great!\
-                     In that case you would select 'Yes' to the \
-                    question asking if your resource applies to\
-                     all undergraduate, graduate, and professional Penn students."
-                    "Thanks for doing your part to ensure that Hub@Penn\
-                     quickly and efficiently gets resources to our Penn community. "
-                )
-            raise serializers.ValidationError(
-                "You should not select all of the items in this list. "
-                "If all of these items apply, select none of them instead."
-            )
+            raise serializers.ValidationError(ALL_TAGS_SELECTED_ERROR_MESSAGE)
         return value
 
     def validate_target_schools(self, value):
@@ -1161,24 +1165,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         Ensure that the user does not select all of the target schools.
         """
         if len(value) >= School.objects.count():
-            if settings.BRANDING == "fyh":
-                raise serializers.ValidationError(
-                    "We noticed you selected all of the options\
-                     for one or more of the previous tags."
-                    "In order to best optimize our sorting algorithm,\
-                     you need to select only the few \
-                    tags that apply to your resource."
-                    "If you feel that all the tags apply, that's great!\
-                     In that case you would select 'Yes' to the \
-                    question asking if your resource applies to\
-                     all undergraduate, graduate, and professional Penn students."
-                    "Thanks for doing your part to ensure that Hub@Penn\
-                     quickly and efficiently gets resources to our Penn community. "
-                )
-            raise serializers.ValidationError(
-                "You should not select all of the items in this list. "
-                "If all of these items apply, select none of them instead."
-            )
+            raise serializers.ValidationError(ALL_TAGS_SELECTED_ERROR_MESSAGE)
         return value
 
     def validate_target_majors(self, value):
@@ -1186,24 +1173,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         Ensure that the user does not select all of the target majors.
         """
         if len(value) >= Major.objects.count():
-            if settings.BRANDING == "fyh":
-                raise serializers.ValidationError(
-                    "We noticed you selected all of the options\
-                     for one or more of the previous tags."
-                    "In order to best optimize our sorting algorithm,\
-                     you need to select only the few \
-                    tags that apply to your resource."
-                    "If you feel that all the tags apply, that's great!\
-                     In that case you would select 'Yes' to the \
-                    question asking if your resource applies to\
-                     all undergraduate, graduate, and professional Penn students."
-                    "Thanks for doing your part to ensure that Hub@Penn\
-                     quickly and efficiently gets resources to our Penn community. "
-                )
-            raise serializers.ValidationError(
-                "You should not select all of the items in this list. "
-                "If all of these items apply, select none of them instead."
-            )
+            raise serializers.ValidationError(ALL_TAGS_SELECTED_ERROR_MESSAGE)
         return value
 
     def validate_student_types(self, value):
@@ -1211,24 +1181,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         Ensure that the user does not select all of the student types.
         """
         if len(value) >= StudentType.objects.count():
-            if settings.BRANDING == "fyh":
-                raise serializers.ValidationError(
-                    "We noticed you selected all of the options\
-                     for one or more of the previous tags."
-                    "In order to best optimize our sorting algorithm,\
-                     you need to select only the few \
-                    tags that apply to your resource."
-                    "If you feel that all the tags apply, that's great!\
-                     In that case you would select 'Yes' to the \
-                    question asking if your resource applies to\
-                     all undergraduate, graduate, and professional Penn students."
-                    "Thanks for doing your part to ensure that Hub@Penn\
-                     quickly and efficiently gets resources to our Penn community. "
-                )
-            raise serializers.ValidationError(
-                "You should not select all of the items in this list. "
-                "If all of these items apply, select none of them instead."
-            )
+            raise serializers.ValidationError(ALL_TAGS_SELECTED_ERROR_MESSAGE)
         return value
 
     def validate_description(self, value):

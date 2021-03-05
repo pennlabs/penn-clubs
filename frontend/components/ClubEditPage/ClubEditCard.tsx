@@ -465,7 +465,7 @@ export default function ClubEditCard({
                 <div className="ml-2 mb-4">
                   <CheckboxLabel>
                     <Checkbox
-                      checked={false}
+                      checked={!showTargetFields}
                       onChange={(e) => setShowTargetFields(false)}
                       color={BLACK}
                     />{' '}
