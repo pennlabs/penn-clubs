@@ -44,6 +44,7 @@ from clubs.models import (
 )
 from clubs.utils import clean
 
+
 ALL_TAGS_SELECTED_ERROR_MESSAGE = (
     (
         "We noticed you selected all of the options"
