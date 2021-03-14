@@ -14,7 +14,7 @@ const Create = (props) =>
 
 Create.getInitialProps = async (ctx: NextPageContext) => {
   return doBulkLookup(
-    ['tags', 'schools', 'majors', 'years', 'student_types'],
+    ['tags', 'schools', 'majors', 'years', ['studentTypes', 'student_types']],
     ctx,
   )
 }
