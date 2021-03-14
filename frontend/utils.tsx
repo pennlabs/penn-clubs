@@ -286,7 +286,7 @@ export function apiSetSubscribeStatus(
     return doApiRequest('/subscriptions/?format=json', {
       method: 'POST',
       body: {
-        club: club,
+        club,
       },
     }).then(() => undefined)
   } else {

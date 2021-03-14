@@ -156,7 +156,7 @@ const ClubForm = ({
         method: 'POST',
         body: {
           club: club.code,
-          visitType: VisitType.ManagePage,
+          visit_type: VisitType.ManagePage,
         },
       })
     }
