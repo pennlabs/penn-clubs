@@ -194,7 +194,7 @@ export async function doBulkLookup(
   const resps = await Promise.all(
     paths.map((item) =>
       doApiRequest(
-        typeof item === 'string' ? `/${item}/?format=json` : item[1],
+        `/${typeof item === 'string' ? item : item[1]}/?format=json`,
         data,
       ).then(async (resp) => {
         const contents = await resp.text()
