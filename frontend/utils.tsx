@@ -202,10 +202,7 @@ export async function doBulkLookup(
 
   const resps = await Promise.all(
     paths.map((item) =>
-      doApiRequest(
-        chooseEndpoint(item)
-        data,
-      ).then(async (resp) => {
+      doApiRequest(chooseEndpoint(item), data).then(async (resp) => {
         const contents = await resp.text()
         try {
           return JSON.parse(contents)
