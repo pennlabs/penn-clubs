@@ -196,7 +196,7 @@ const sites = {
     SHOW_LEAVE_CONFIRMATION: false,
     SHOW_SEARCHBAR_TOP: true,
     SHOW_APPLICATIONS: false,
-    SHOW_FEEDBACK: false,
+    SHOW_FEEDBACK: true,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
