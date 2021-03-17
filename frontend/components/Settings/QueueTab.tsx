@@ -15,6 +15,7 @@ import {
 } from '../../utils/branding'
 import { ModalContent } from '../ClubPage/Actions'
 import { Checkbox, Icon, Modal } from '../common'
+import Table from '../common/Table'
 
 type QueueTableModalProps = {
   show: boolean
@@ -33,12 +34,16 @@ const QueueTableModal = ({
   return (
     <Modal show={show} closeModal={closeModal} marginBottom={false}>
       <ModalContent>
-        <div className="mb-3">You may include a comment with this action.</div>
+        <div className="mb-3">
+          Enter bulk {approve ? 'approval' : 'rejection'} notes here! Your notes
+          will be emailed to the requesters when you{' '}
+          {approve ? 'approve' : 'reject'} these requests.
+        </div>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           className="textarea my-2"
-          placeholder="Enter bulk approval or rejection notes here! Your notes will be emailed to the requester when you approve or reject this request."
+          placeholder={`${approve ? 'approval' : 'rejection'} notes`}
         ></textarea>
         <button
           className={`mb-2 button ${approve ? 'is-success' : 'is-danger'}`}
@@ -57,21 +62,11 @@ const QueueTableModal = ({
 
 type QueueTableProps = {
   clubs: Club[] | null
-  selectableClubs: boolean // selectectable clubs -> can approve
-  showStatus: boolean
-  title: string
-  description: string
 }
 
 // TODO: implement mohamed's table component for "Other Clubs" and leave approval
 // queue functionality strictly to the "Pending Clubs" table.
-const QueueTable = ({
-  clubs,
-  title,
-  description,
-  selectableClubs,
-  showStatus,
-}: QueueTableProps): ReactElement => {
+const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
   const router = useRouter()
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
   const [showModal, setShowModal] = useState<boolean>(false)
@@ -89,11 +84,12 @@ const QueueTable = ({
   }
 
   const bulkAction = (comment: string) => {
-    const codeSet = new Set(selectedCodes) // O(1) lookup for our filter
     setLoading(true)
     Promise.all(
       (clubs || [])
-        .filter((club: Club) => club.active && codeSet.has(club.code))
+        .filter(
+          (club: Club) => club.active && selectedCodes.includes(club.code),
+        )
         .map((club: Club) =>
           doApiRequest(`/clubs/${club.code}/?format=json`, {
             method: 'PATCH',
@@ -120,33 +116,37 @@ const QueueTable = ({
       />
       <QueueTableHeader>
         <QueueTableHeaderText>
-          <SmallTitle>{title}</SmallTitle>
-          <div className="mt-3 mb-3">{description}</div>
-        </QueueTableHeaderText>
-        {selectableClubs && (
-          <div className="buttons">
-            <button
-              className="button is-success"
-              disabled={!(clubs || []).length || loading}
-              onClick={() => {
-                setApprove(true)
-                setShowModal(true)
-              }}
-            >
-              <Icon name="check" /> Approve
-            </button>
-            <button
-              className="button is-danger"
-              disabled={!(clubs || []).length || loading}
-              onClick={() => {
-                setApprove(false)
-                setShowModal(true)
-              }}
-            >
-              <Icon name="x" /> Reject
-            </button>
+          <SmallTitle>Pending Clubs</SmallTitle>
+          <div className="mt-3 mb-3">
+            As an administrator of {SITE_NAME}, you can approve and reject
+            {OBJECT_NAME_SINGULAR} approval requests. The table below contains a
+            list of {(clubs || []).length} {OBJECT_NAME_PLURAL} pending your
+            approval. Click on the {OBJECT_NAME_SINGULAR} name to view the
+            {OBJECT_NAME_SINGULAR}.
           </div>
-        )}
+        </QueueTableHeaderText>
+        <div className="buttons">
+          <button
+            className="button is-success"
+            disabled={!selectedCodes.length || loading}
+            onClick={() => {
+              setApprove(true)
+              setShowModal(true)
+            }}
+          >
+            <Icon name="check" /> Approve
+          </button>
+          <button
+            className="button is-danger"
+            disabled={!selectedCodes.length || loading}
+            onClick={() => {
+              setApprove(false)
+              setShowModal(true)
+            }}
+          >
+            <Icon name="x" /> Reject
+          </button>
+        </div>
       </QueueTableHeader>
       {(() => {
         if (clubs === null)
@@ -161,63 +161,31 @@ const QueueTable = ({
           <table className="table is-fullwidth is-striped">
             <thead>
               <tr>
-                {selectableClubs && (
-                  <th>
-                    <Checkbox
-                      checked={allClubsSelected}
-                      onChange={() =>
-                        setSelectedCodes(
-                          allClubsSelected
-                            ? []
-                            : clubs.map((club) => club.code),
-                        )
-                      }
-                    />
-                  </th>
-                )}
-                <th>{OBJECT_NAME_TITLE_SINGULAR}</th>
-                {showStatus && <th>Status</th>}
+                <th>
+                  <Checkbox
+                    className="mr-3"
+                    checked={allClubsSelected}
+                    onChange={() =>
+                      setSelectedCodes(
+                        allClubsSelected ? [] : clubs.map((club) => club.code),
+                      )
+                    }
+                  />
+                  {OBJECT_NAME_TITLE_SINGULAR}
+                </th>
               </tr>
             </thead>
             <tbody>
               {clubs.map((club) => (
                 <tr key={club.code}>
-                  {selectableClubs && (
-                    <td>
-                      <Checkbox
-                        checked={selectedCodes.includes(club.code)}
-                        onChange={() => toggleCode(club.code)}
-                      />
-                    </td>
-                  )}
                   <td>
-                    <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-                      <a target="_blank">{club.name}</a>
-                    </Link>
+                    <Checkbox
+                      className="mr-3"
+                      checked={selectedCodes.includes(club.code)}
+                      onChange={() => toggleCode(club.code)}
+                    />
+                    <ClubLink {...club} />
                   </td>
-                  {showStatus && (
-                    <td>
-                      {(() => {
-                        if (!club.active)
-                          return (
-                            <span className="has-text-primary">
-                              <Icon name="clock" /> Inactive
-                            </span>
-                          )
-                        if (club.approved)
-                          return (
-                            <span className="has-text-success">
-                              <Icon name="check" /> Approved
-                            </span>
-                          )
-                        return (
-                          <span className="has-text-danger">
-                            <Icon name="x" /> Rejected
-                          </span>
-                        )
-                      })()}
-                    </td>
-                  )}
                 </tr>
               ))}
             </tbody>
@@ -228,7 +196,13 @@ const QueueTable = ({
   )
 }
 
+const ClubLink = ({ code, name }: Club) => (
+  <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
+    <a target="_blank">{name}</a>
+  </Link>
+)
 const QueueTableHeader = styled.div`
+  margin-top: 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -352,28 +326,48 @@ const QueueTab = (): ReactElement => {
           {approvedClubsCount} Approved {OBJECT_NAME_TITLE}
         </li>
       </ul>
-      <QueueTable
-        title={'Pending Clubs'}
-        description={`As an administrator of ${SITE_NAME}, you can approve and reject
-        ${OBJECT_NAME_SINGULAR} approval requests. The table below contains a
-        list of ${pendingClubsCount} ${OBJECT_NAME_PLURAL} pending your approval.
-        Click on the ${OBJECT_NAME_SINGULAR} name to view the ${OBJECT_NAME_SINGULAR}.`}
-        clubs={pendingClubs}
-        selectableClubs={true}
-        showStatus={false}
-      />
-      <QueueTable
-        title={'Other Clubs'}
-        description={`The table below shows a list of ${OBJECT_NAME_PLURAL} that have been marked
-        as approved, rejected or that are inactive.`}
-        clubs={
-          approvedClubs &&
-          rejectedClubs &&
-          inactiveClubs &&
-          approvedClubs.concat(rejectedClubs, inactiveClubs)
+      <QueueTable clubs={pendingClubs} />
+      <SmallTitle>Other Clubs</SmallTitle>
+      <div className="mt-3 mb-3">
+        The table below shows a list of {OBJECT_NAME_PLURAL} that have been
+        marked as approved, rejected or that are inactive.
+      </div>
+      <Table
+        data={
+          approvedClubs && rejectedClubs && inactiveClubs
+            ? approvedClubs.concat(rejectedClubs, inactiveClubs).map((club) => {
+                return {
+                  id: club.code,
+                  Club: <ClubLink {...club} />,
+                  Status: (() => {
+                    if (!club.active)
+                      return (
+                        <span className="has-text-primary">
+                          <Icon name="clock" /> Inactive
+                        </span>
+                      )
+                    if (club.approved)
+                      return (
+                        <span className="has-text-success">
+                          <Icon name="check" /> Approved
+                        </span>
+                      )
+                    return (
+                      <span className="has-text-danger">
+                        <Icon name="x" /> Rejected
+                      </span>
+                    )
+                  })(),
+                }
+              })
+            : []
         }
-        selectableClubs={false}
-        showStatus={true}
+        columns={[
+          { name: 'Club', id: 'club' },
+          { name: 'Status', id: 'status' },
+        ]}
+        searchableColumns={[]} // column name
+        filterOptions={[]}
       />
     </>
   )
