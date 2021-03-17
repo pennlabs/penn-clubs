@@ -64,8 +64,6 @@ type QueueTableProps = {
   clubs: Club[] | null
 }
 
-// TODO: implement mohamed's table component for "Other Clubs" and leave approval
-// queue functionality strictly to the "Pending Clubs" table.
 const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
   const router = useRouter()
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
@@ -118,10 +116,10 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
         <QueueTableHeaderText>
           <SmallTitle>Pending Clubs</SmallTitle>
           <div className="mt-3 mb-3">
-            As an administrator of {SITE_NAME}, you can approve and reject
+            As an administrator of {SITE_NAME}, you can approve and reject{' '}
             {OBJECT_NAME_SINGULAR} approval requests. The table below contains a
             list of {(clubs || []).length} {OBJECT_NAME_PLURAL} pending your
-            approval. Click on the {OBJECT_NAME_SINGULAR} name to view the
+            approval. Click on the {OBJECT_NAME_SINGULAR} name to view the{' '}
             {OBJECT_NAME_SINGULAR}.
           </div>
         </QueueTableHeaderText>
@@ -337,7 +335,6 @@ const QueueTab = (): ReactElement => {
           approvedClubs && rejectedClubs && inactiveClubs
             ? approvedClubs.concat(rejectedClubs, inactiveClubs).map((club) => {
                 return {
-                  id: club.code,
                   Club: <ClubLink {...club} />,
                   Status: (() => {
                     if (!club.active)
@@ -366,8 +363,7 @@ const QueueTab = (): ReactElement => {
           { name: 'Club', id: 'club' },
           { name: 'Status', id: 'status' },
         ]}
-        searchableColumns={[]} // column name
-        filterOptions={[]}
+        searchableColumns={[]}
       />
     </>
   )
