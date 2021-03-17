@@ -484,7 +484,7 @@ export default function ClubEditCard({
                   </CheckboxLabel>
                 </div>
                 <Text>
-                  If no, Hub@Penn has provided a way for certain student
+                  If not, Hub@Penn has provided a way for certain student
                   populations to filter resources with support services designed
                   specifically with them in mind. In order for this filter to
                   work adequately for your resource, you must choose from

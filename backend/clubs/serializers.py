@@ -47,16 +47,16 @@ from clubs.utils import clean
 
 ALL_TAGS_SELECTED_ERROR_MESSAGE = (
     (
-        "We noticed you selected all of the options"
-        "for one or more of the previous tags."
-        "In order to best optimize our sorting algorithm,"
+        "We noticed you selected all of the options "
+        "for one or more of the previous tags. "
+        "In order to best optimize our sorting algorithm, "
         "you need to select only the few "
-        "tags that apply to your resource."
-        "If you feel that all the tags apply, that's great!"
+        "tags that apply to your resource. "
+        "If you feel that all the tags apply, that's great! "
         "In that case you would select 'Yes' to the "
-        "question asking if your resource applies to"
-        "all undergraduate, graduate, and professional Penn students."
-        "Thanks for doing your part to ensure that Hub@Penn"
+        "question asking if your resource applies to "
+        "all undergraduate, graduate, and professional Penn students. "
+        "Thanks for doing your part to ensure that Hub@Penn "
         "quickly and efficiently gets resources to our Penn community. "
     )
     if settings.BRANDING == "fyh"
