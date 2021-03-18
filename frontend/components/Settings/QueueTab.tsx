@@ -15,45 +15,51 @@ import {
 } from '../../utils/branding'
 import { ModalContent } from '../ClubPage/Actions'
 import { Checkbox, Icon, Modal } from '../common'
-import Table from '../common/Table'
 
 type QueueTableModalProps = {
   show: boolean
   closeModal: () => void
   bulkAction: (comment: string) => void
-  approve: boolean
+  isApproving: boolean
 }
 
 const QueueTableModal = ({
   show,
   closeModal,
   bulkAction,
-  approve,
+  isApproving,
 }: QueueTableModalProps): ReactElement => {
   const [comment, setComment] = useState<string>('')
   return (
-    <Modal show={show} closeModal={closeModal} marginBottom={false}>
+    <Modal
+      show={show}
+      closeModal={() => {
+        setComment('')
+        closeModal()
+      }}
+      marginBottom={false}
+    >
       <ModalContent>
         <div className="mb-3">
-          Enter bulk {approve ? 'approval' : 'rejection'} notes here! Your notes
-          will be emailed to the requesters when you{' '}
-          {approve ? 'approve' : 'reject'} these requests.
+          Enter bulk {isApproving ? 'approval' : 'rejection'} notes here! Your
+          notes will be emailed to the requesters when you{' '}
+          {isApproving ? 'approve' : 'reject'} these requests.
         </div>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           className="textarea my-2"
-          placeholder={`${approve ? 'approval' : 'rejection'} notes`}
+          placeholder={`${isApproving ? 'approval' : 'rejection'} notes`}
         ></textarea>
         <button
-          className={`mb-2 button ${approve ? 'is-success' : 'is-danger'}`}
+          className={`mb-2 button ${isApproving ? 'is-success' : 'is-danger'}`}
           onClick={() => {
             closeModal()
             bulkAction(comment)
           }}
         >
-          <Icon name={approve ? 'check' : 'x'} />
-          {` ${approve ? 'Approve' : 'Reject'} and Send Message`}
+          <Icon name={isApproving ? 'check' : 'x'} />
+          {` ${isApproving ? 'Approve' : 'Reject'} and Send Message`}
         </button>
       </ModalContent>
     </Modal>
@@ -63,7 +69,8 @@ const QueueTableModal = ({
 type QueueTableProps = {
   clubs: Club[] | null
 }
-
+/* TODO: refactor with Table component when render and search
+functionality are disconnected */
 const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
   const router = useRouter()
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
@@ -98,10 +105,7 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
             },
           }),
         ),
-    ).then(() => {
-      setLoading(false)
-      router.reload()
-    })
+    ).then(router.reload)
   }
 
   return (
@@ -110,7 +114,7 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
         show={showModal}
         closeModal={() => setShowModal(false)}
         bulkAction={bulkAction}
-        approve={approve}
+        isApproving={approve}
       />
       <QueueTableHeader>
         <QueueTableHeaderText>
@@ -118,9 +122,8 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
           <div className="mt-3 mb-3">
             As an administrator of {SITE_NAME}, you can approve and reject{' '}
             {OBJECT_NAME_SINGULAR} approval requests. The table below contains a
-            list of {(clubs || []).length} {OBJECT_NAME_PLURAL} pending your
-            approval. Click on the {OBJECT_NAME_SINGULAR} name to view the{' '}
-            {OBJECT_NAME_SINGULAR}.
+            list of {OBJECT_NAME_PLURAL} pending your approval. Click on the{' '}
+            {OBJECT_NAME_SINGULAR} name to view the {OBJECT_NAME_SINGULAR}.
           </div>
         </QueueTableHeaderText>
         <div className="buttons">
@@ -165,7 +168,7 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
                     checked={allClubsSelected}
                     onChange={() =>
                       setSelectedCodes(
-                        allClubsSelected ? [] : clubs.map((club) => club.code),
+                        allClubsSelected ? [] : clubs.map(({ code }) => code),
                       )
                     }
                   />
@@ -264,11 +267,10 @@ const QueueTab = (): ReactElement => {
     }
   }, [])
 
-  if (!canApprove) {
+  if (!canApprove)
     return (
       <div>You do not have permissions to approve {OBJECT_NAME_PLURAL}.</div>
     )
-  }
 
   const inactiveClubsCount = inactiveClubs?.length ?? 0
   const pendingClubsCount = pendingClubs?.length ?? 0
@@ -280,7 +282,11 @@ const QueueTab = (): ReactElement => {
     rejectedClubsCount +
     inactiveClubsCount +
     pendingClubsCount
-
+  const otherClubs =
+    approvedClubs &&
+    rejectedClubs &&
+    inactiveClubs &&
+    approvedClubs.concat(rejectedClubs, inactiveClubs)
   return (
     <>
       <SmallTitle>Overview</SmallTitle>
@@ -330,41 +336,58 @@ const QueueTab = (): ReactElement => {
         The table below shows a list of {OBJECT_NAME_PLURAL} that have been
         marked as approved, rejected or that are inactive.
       </div>
-      <Table
-        data={
-          approvedClubs && rejectedClubs && inactiveClubs
-            ? approvedClubs.concat(rejectedClubs, inactiveClubs).map((club) => {
-                return {
-                  Club: <ClubLink {...club} />,
-                  Status: (() => {
-                    if (!club.active)
+      {/* TODO: refactor with Table component when render and search
+      functionality are disconnected */}
+      {(() => {
+        if (otherClubs === null)
+          return <div className="has-text-info">Loading table...</div>
+        if (!otherClubs.length)
+          return (
+            <div className="has-text-info">
+              There are no {OBJECT_NAME_PLURAL} in this table.
+            </div>
+          )
+        return (
+          <table className="table is-fullwidth is-striped">
+            <thead>
+              <tr>
+                <th>{OBJECT_NAME_TITLE_SINGULAR}</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {otherClubs.map((club) => (
+                <tr key={club.code}>
+                  <td>
+                    <ClubLink {...club} />
+                  </td>
+                  <td>
+                    {(() => {
+                      if (!club.active)
+                        return (
+                          <span className="has-text-primary">
+                            <Icon name="clock" /> Inactive
+                          </span>
+                        )
+                      if (club.approved)
+                        return (
+                          <span className="has-text-success">
+                            <Icon name="check" /> Approved
+                          </span>
+                        )
                       return (
-                        <span className="has-text-primary">
-                          <Icon name="clock" /> Inactive
+                        <span className="has-text-danger">
+                          <Icon name="x" /> Rejected
                         </span>
                       )
-                    if (club.approved)
-                      return (
-                        <span className="has-text-success">
-                          <Icon name="check" /> Approved
-                        </span>
-                      )
-                    return (
-                      <span className="has-text-danger">
-                        <Icon name="x" /> Rejected
-                      </span>
-                    )
-                  })(),
-                }
-              })
-            : []
-        }
-        columns={[
-          { name: 'Club', id: 'club' },
-          { name: 'Status', id: 'status' },
-        ]}
-        searchableColumns={[]}
-      />
+                    })()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      })()}
     </>
   )
 }
