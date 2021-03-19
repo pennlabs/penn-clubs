@@ -179,10 +179,10 @@ export function apiCheckPermission(
 const chooseEndpoint = (input: [string, string] | string) => {
   if (typeof input === 'string') {
     return `/${input}/?format=json`
-  } else {
-    if (input[1].startsWith('/')) return input[1]
-    return chooseEndpoint(input[1])
+  } else if (input[1].startsWith('/')) {
+    return input[1]
   }
+  return chooseEndpoint(input[1])
 }
 
 /**
