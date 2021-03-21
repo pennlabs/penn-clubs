@@ -59,7 +59,7 @@ const QueueTableModal = ({
           }}
         >
           <Icon name={isApproving ? 'check' : 'x'} />
-          {` ${isApproving ? 'Approve' : 'Reject'} and Send Message`}
+          {isApproving ? 'Approve' : 'Reject'} and Send Message
         </button>
       </ModalContent>
     </Modal>
@@ -79,14 +79,12 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
   const allClubsSelected = selectedCodes.length === (clubs || []).length
 
-  const toggleCode = (code: string) => {
-    if (selectedCodes.includes(code)) {
-      selectedCodes.splice(selectedCodes.indexOf(code), 1)
-    } else {
-      selectedCodes.push(code)
-    }
-    setSelectedCodes([...selectedCodes])
-  }
+  const toggleCode = (code: string) =>
+    setSelectedCodes(
+      selectedCodes.includes(code)
+        ? selectedCodes.filter((c) => c !== code)
+        : [...selectedCodes, code],
+    )
 
   const bulkAction = (comment: string) => {
     setLoading(true)
