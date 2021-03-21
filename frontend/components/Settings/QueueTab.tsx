@@ -79,13 +79,6 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
   const allClubsSelected = selectedCodes.length === (clubs || []).length
 
-  const toggleCode = (code: string) =>
-    setSelectedCodes(
-      selectedCodes.includes(code)
-        ? selectedCodes.filter((c) => c !== code)
-        : [...selectedCodes, code],
-    )
-
   const bulkAction = (comment: string) => {
     setLoading(true)
     Promise.all(
@@ -181,7 +174,13 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
                     <Checkbox
                       className="mr-3"
                       checked={selectedCodes.includes(club.code)}
-                      onChange={() => toggleCode(club.code)}
+                      onChange={() =>
+                        setSelectedCodes(
+                          selectedCodes.includes(club.code)
+                            ? selectedCodes.filter((c) => c !== club.code)
+                            : [...selectedCodes, club.code],
+                        )
+                      }
                     />
                     <ClubLink {...club} />
                   </td>
