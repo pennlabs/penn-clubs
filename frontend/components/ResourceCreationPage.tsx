@@ -63,7 +63,7 @@ const ResourceCreationPage = ({
   years,
   majors,
   tags,
-  student_types: studentTypes,
+  studentTypes,
 }: ResourceCreationPageProps): ReactElement => {
   const isResuming = initialClub != null
   const metadata = (
