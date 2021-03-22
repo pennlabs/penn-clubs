@@ -187,6 +187,7 @@ const sites = {
       'available_virtually',
       'signature_events',
       'student_types',
+      'target_schools',
     ],
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,
@@ -210,7 +211,10 @@ const sites = {
     FORM_LOGO_DESCRIPTION: 'Upload your approved Penn logo.',
     FORM_TARGET_DESCRIPTION: (
       <>
-        <b>Does your resource apply to all undergraduate, graduate, and professional Penn students?</b>{' '}
+        <b>
+          Does your resource apply to all undergraduate, graduate, and
+          professional Penn students?
+        </b>{' '}
       </>
     ),
     OBJECT_MEMBERSHIP_DEFAULT_TITLE: '',
