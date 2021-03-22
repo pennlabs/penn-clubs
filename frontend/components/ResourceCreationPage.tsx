@@ -46,7 +46,7 @@ type ResourceCreationPageProps = {
   years: Year[]
   majors: Major[]
   tags: Tag[]
-  student_types: StudentType[]
+  studentTypes: StudentType[]
 }
 
 type TabItem = {
