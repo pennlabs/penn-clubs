@@ -441,43 +441,47 @@ const Splash = (props: SplashProps): ReactElement => {
               ]}
             />
           )}
-          {isClubFieldShown('target_schools') && (
-              SITE_ID === 'fyh' ? (
+          {isClubFieldShown('target_schools') &&
+            (SITE_ID === 'fyh' ? (
+              <SearchBarCheckboxItem
+                param="target_schools__in"
+                label="School Specific"
+                options={schoolOptions}
+              />
+            ) : (
+              <SearchBarCheckboxItem
+                param="target_schools__in"
+                label="School"
+                options={schoolOptions}
+              />
+            ))}
+          {SITE_ID === 'fyh' ? (
             <SearchBarCheckboxItem
-              param="target_schools__in"
-              label="School Specific"
-              options={schoolOptions}
+              param="target_years__in"
+              label="School Year Specific"
+              options={yearOptions}
             />
-          ) : ( <SearchBarCheckboxItem
-              param="target_schools__in"
-              label="School"
-              options={schoolOptions}
-            />))}
-          { SITE_ID === 'fyh' ? (<SearchBarCheckboxItem
-            param="target_years__in"
-            label= "School Year Specific"
-            options={yearOptions}
-          />) :
-              (<SearchBarCheckboxItem
-            param="target_years__in"
-            label= "School Year"
-            options={yearOptions}
-          />)}
-          {isClubFieldShown('student_types') && (
-              SITE_ID === 'fyh' ?
-                  (<SearchBarCheckboxItem
-              param="student_types__in"
-              label="Student Type Specific"
-              options={studentTypeOptions}
-            />) :
-                  (
-                    <SearchBarCheckboxItem
-              param="student_types__in"
-              label="Student Type"
-              options={studentTypeOptions}
+          ) : (
+            <SearchBarCheckboxItem
+              param="target_years__in"
+              label="School Year"
+              options={yearOptions}
             />
-                  )
           )}
+          {isClubFieldShown('student_types') &&
+            (SITE_ID === 'fyh' ? (
+              <SearchBarCheckboxItem
+                param="student_types__in"
+                label="Student Type Specific"
+                options={studentTypeOptions}
+              />
+            ) : (
+              <SearchBarCheckboxItem
+                param="student_types__in"
+                label="Student Type"
+                options={studentTypeOptions}
+              />
+            ))}
         </SearchBar>
 
         <SearchbarRightContainer>
