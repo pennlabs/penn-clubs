@@ -1,0 +1,45 @@
+<!-- SUBJECT: Grad Resources, We Need Your Help! -->
+<!-- TYPES:
+resources:
+    type: array
+    items:
+        type: string
+-->
+{% extends 'fyh_emails/base.html' %} {% block content %}
+<h2>Grad Resources, We Need Your Help!</h2>
+<p style="font-size: 1.2em">Hello!</p>
+<p style="font-size: 1.2em">
+  Penn’s newest online spot for resources launched earlier this semester.
+  Hub@Penn is a one-stop shop for all resources within the Penn community.
+  Originally born out of a vision of easing access to Penn resources for
+  incoming first-year students, Hub@Penn is expanding to be inclusive of the
+  needs of all Penn students. As such, <b>we need your help!</b> We are reaching
+  out to Penn resources specifically tailored to meet the needs of Graduate and
+  Professional Penn students. That includes you!
+</p>
+<p style="font-size: 1.2em">
+  <b
+    >Please fill out
+    <a href="https://hub.provost.upenn.edu/create">Hub@Penn Submission Form</a>
+    form which gathers key information about your resource. You have been
+    designated to populate information for the following resource(s):</b
+  >
+</p>
+<ul>
+  {% for resource in resources %}
+  <li><b>{{ resource }}</b></li>
+  {% endfor %}
+</ul>
+<p style="font-size: 1.2em">
+  If there is another, more appropriate contact to serve as the liaison between
+  your resource and the Hub@Penn administrators, please feel free to forward
+  this message and/or let us know who we should contact for future
+  communications.
+</p>
+<p style="font-size: 1.2em">
+  Thank you in advance for taking the time to ensure easy access to your
+  resource through Hub@Penn and as always for the resources your office offers
+  our Penn community.
+</p>
+<p style="font-size: 1.2em">Hub@Penn Admin</p>
+{% endblock %}

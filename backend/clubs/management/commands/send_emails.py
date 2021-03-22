@@ -81,6 +81,7 @@ class Command(BaseCommand):
                 "wc_intro",
                 "osa_email_communication",
                 "ics_calendar_ingestation",
+                "grad_resource_contact",
             ),
         )
         parser.add_argument(
@@ -194,6 +195,7 @@ class Command(BaseCommand):
             "hap_intro_remind",
             "hap_second_round",
             "hap_partner_communication",
+            "grad_resource_contact",
         }:
             people = collections.defaultdict(dict)
 
@@ -266,6 +268,7 @@ class Command(BaseCommand):
                             "hap_intro_remind": "intro_remind",
                             "hap_second_round": "second_round",
                             "wc_intro": "wc_intro",
+                            "grad_resource_contact": "grad_resource_contact",
                         }[action],
                     )
                     self.stdout.write(
