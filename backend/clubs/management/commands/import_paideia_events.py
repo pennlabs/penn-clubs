@@ -23,8 +23,12 @@ class Command(BaseCommand):
         with (urllib.request.urlopen(url)) as data:
             parsed_json = json.loads(data.read().decode())
             for event in parsed_json:
-                if Event.objects.filter(code=event["slug"]).first():
-                    Event.objects.filter(code=event["slug"]).first().delete()
+
+                # prevent duplicates
+                existing = Event.objects.filter(code=event["slug"]).first()
+                if existing:
+                    existing.delete()
+
                 ev = Event()
                 # ev.club = Is there a club for this? What even is SNF Paideia?
                 ev.code = event["slug"]
