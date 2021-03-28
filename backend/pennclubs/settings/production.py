@@ -4,7 +4,7 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from pennclubs.settings.base import *  # noqa: F401, F403
-from pennclubs.settings.base import DOMAIN
+from pennclubs.settings.base import BRANDING, DOMAIN
 
 
 DEBUG = False
@@ -27,9 +27,7 @@ if SENTRY_URL:
 
 # DLA settings
 PLATFORM_ACCOUNTS = {
-    "ADMIN_PERMISSION": "hub_admin"
-    if BRANDING == "fyh"
-    else "penn_clubs_admin"  # noqa: F405
+    "ADMIN_PERMISSION": "hub_admin" if BRANDING == "fyh" else "penn_clubs_admin"
 }
 
 # Email client information
