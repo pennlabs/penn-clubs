@@ -68,7 +68,7 @@ type ClubFormProps = {
   majors: Major[]
   years: Year[]
   tags: Tag[]
-  student_types: StudentType[]
+  studentTypes: StudentType[]
   tab?: string | null
 }
 
@@ -78,7 +78,7 @@ const ClubForm = ({
   years,
   majors,
   tags,
-  student_types: studentTypes,
+  studentTypes,
   clubId,
   tab,
 }: ClubFormProps): ReactElement => {
