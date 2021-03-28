@@ -52,7 +52,7 @@ const Feedback = (): ReactElement => (
     target="_blank"
     onClick={() => logEvent('feedback', 'clicked')}
   >
-    <Icon name="message-circle" alt="Feedback" size={ICON_SIZE} />
+    <Icon name="feedback" alt="Feedback" size={ICON_SIZE} />
   </ActionLink>
 )
 
