@@ -119,7 +119,6 @@ const GreyText = styled.span`
   color: ${LIGHT_GRAY};
 `
 
-
 const Table = ({
   columns,
   data,
@@ -148,7 +147,7 @@ const Table = ({
           return strings.some((string) =>
             string.toLowerCase().startsWith(searchQuery.toLowerCase()),
           )
-        } 
+        }
         return false
       })
     })
