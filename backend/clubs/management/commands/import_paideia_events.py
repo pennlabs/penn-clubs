@@ -4,6 +4,8 @@ import urllib.request
 from datetime import datetime
 from html import unescape
 
+import requests
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -41,13 +43,6 @@ class Command(BaseCommand):
                 ev.description = event["excerpt"]
                 ev.url = event["link"]
 
-                # parse image url from provided image tag
-                img_tag = event["featured_image"]
-                matcher = re.search(r"src=\"([^\"]*)\"", img_tag)
-                if matcher is not None:
-                    img_url = "https://snfpaideia.upenn.edu{}".format(matcher.group(1))
-                    # Eric's advice probably needed for how to actual save this image
-
                 # parse their datetime format
                 string_date = event["acf"]["event_date"]["start_date"]
                 yyyy, dd, mm = (
@@ -74,3 +69,18 @@ class Command(BaseCommand):
                 )
 
                 ev.save()
+
+                # parse image needs to happen after save so instance.id is not None
+                img_tag = event["featured_image"]
+                matcher = re.search(r"src=\"([^\"]*)\"", img_tag)
+                if matcher is not None:
+                    img_url = "https://snfpaideia.upenn.edu{}".format(matcher.group(1))
+                    # Remove resizing
+                    extension = img_url.split(".")[-1]
+                    img_url = "{}.{}".format(
+                        img_url[: -(9 + len(extension))], extension
+                    )
+                    contents = requests.get(img_url).content
+                    ev.image.save(
+                        "snfpaideia-event.jpg", ContentFile(contents), save=True
+                    )
