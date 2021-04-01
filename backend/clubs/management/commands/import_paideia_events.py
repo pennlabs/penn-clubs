@@ -6,9 +6,8 @@ from html import unescape
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from django.utils.html import strip_tags
 
-from clubs.models import Event
+from clubs.models import Club, Event
 
 
 class Command(BaseCommand):
@@ -30,16 +29,24 @@ class Command(BaseCommand):
                     existing.delete()
 
                 ev = Event()
-                # ev.club = Is there a club for this? What even is SNF Paideia?
+                ev.club = Club.objects.filter(code="snf-paideia-program").first()
+
+                # if SNF Paideia has been deleted, this script should do nothing
+                if ev.club is None:
+                    return
+
+                ev.type = Event.OTHER
                 ev.code = event["slug"]
                 ev.name = unescape(event["title"]["rendered"])
-                ev.description = (
-                    "Register Here: "
-                    + event["acf"]["registration_url"]
-                    + "\n\n"
-                    + unescape(strip_tags(event["content"]["rendered"]))
-                )
+                ev.description = event["excerpt"]
                 ev.url = event["link"]
+
+                # parse image url from provided image tag
+                img_tag = event["featured_image"]
+                matcher = re.search(r"src=\"([^\"]*)\"", img_tag)
+                if matcher is not None:
+                    img_url = "https://snfpaideia.upenn.edu{}".format(matcher.group(1))
+                    # Eric's advice probably needed for how to actual save this image
 
                 # parse their datetime format
                 string_date = event["acf"]["event_date"]["start_date"]
