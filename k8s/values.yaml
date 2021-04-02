@@ -143,7 +143,7 @@ cronjobs:
         value: pennclubs.settings.production
       - name: REDIS_HOST
         value: penn-clubs-redis
-- name: hub-paideia-calendar-import
+  - name: hub-paideia-calendar-import
     schedule: "0 12 * * *"
     image: pennlabs/penn-clubs-backend
     secret: first-year-hub
