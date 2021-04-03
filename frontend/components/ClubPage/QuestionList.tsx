@@ -1,6 +1,5 @@
 import { Field, Form, Formik } from 'formik'
 import { ReactElement, useState } from 'react'
-import Linkify from 'react-linkify'
 import styled from 'styled-components'
 
 import { Club, QuestionAnswer } from '../../types'
@@ -68,7 +67,12 @@ const QuestionList = ({
           <AnswerText>
             {question.answer ? (
               <>
-                <Linkify>{question.answer}</Linkify>
+                <span
+                  className="content"
+                  dangerouslySetInnerHTML={{
+                    __html: question.answer,
+                  }}
+                />
                 <div>
                   <QuoteAuthor>- {question.responder}</QuoteAuthor>
                 </div>
