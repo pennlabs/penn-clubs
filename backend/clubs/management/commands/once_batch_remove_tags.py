@@ -15,9 +15,9 @@ class Command(BaseCommand):
     web_execute = True
 
     def handle(self, *args, **kwargs):
-        target_years_count = Year.objects.distinct().count()
-        target_schools_count = School.objects.distinct().count()
-        student_types_count = StudentType.objects.distinct().count()
+        target_years_count = Year.objects.count()
+        target_schools_count = School.objects.count()
+        student_types_count = StudentType.objects.count()
 
         # clear the many-to-many field if it is connected to all associated objects
 
