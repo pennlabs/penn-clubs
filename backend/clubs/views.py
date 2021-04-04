@@ -325,7 +325,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
 
             if tags[0].isdigit() or operation == "id":
                 tags = [int(tag) for tag in tags if tag]
-                if settings.BRANDING == "fyh" and (
+                if settings.BRANDING == "fyh" and request.GET.get("viewType", "") == "exclusive" and (
                     field == "target_years"
                     or field == "student_types"
                     or field == "target_schools"
