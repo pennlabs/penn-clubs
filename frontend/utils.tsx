@@ -176,6 +176,15 @@ export function apiCheckPermission(
   return false
 }
 
+const chooseEndpoint = (input: [string, string] | string) => {
+  if (typeof input === 'string') {
+    return `/${input}/?format=json`
+  } else if (input[1].startsWith('/')) {
+    return input[1]
+  }
+  return chooseEndpoint(input[1])
+}
+
 /**
  * Lookup a lot of endpoints asynchronously.
  * Should be used primarily by getInitialProps methods.
@@ -193,10 +202,7 @@ export async function doBulkLookup(
 
   const resps = await Promise.all(
     paths.map((item) =>
-      doApiRequest(
-        typeof item === 'string' ? `/${item}/?format=json` : item[1],
-        data,
-      ).then(async (resp) => {
+      doApiRequest(chooseEndpoint(item), data).then(async (resp) => {
         const contents = await resp.text()
         try {
           return JSON.parse(contents)

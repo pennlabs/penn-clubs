@@ -325,6 +325,14 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
 
             if tags[0].isdigit() or operation == "id":
                 tags = [int(tag) for tag in tags if tag]
+                if settings.BRANDING == "fyh" and (
+                    field == "target_years"
+                    or field == "student_types"
+                    or field == "target_schools"
+                ):
+                    queryset = queryset.annotate(
+                        num_tags=Count(f"{field}", distinct=True)
+                    ).filter(num_tags__lte=len(tags))
                 for tag in tags:
                     queryset = queryset.filter(**{f"{field}__id": tag})
             else:
@@ -395,6 +403,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             "target_schools": parse_tags,
             "target_years": parse_tags,
             "target_students": parse_tags,
+            "student_types": parse_tags,
         }
 
         def parse_fair(field, value, operation, queryset):
@@ -1031,11 +1040,23 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     ),
                 )
 
+        # if there is a search query made by a signed-in user, save it to the database
+        if self.request.query_params.get("search") and isinstance(
+            self.request.user, get_user_model()
+        ):
+            SearchQuery(
+                person=self.request.user, query=self.request.query_params.get("search"),
+            ).save()
+
         # select subset of clubs if requested
         subset = self.request.query_params.get("in", None)
+
         if subset:
             subset = [x.strip() for x in subset.strip().split(",")]
             queryset = queryset.filter(code__in=subset)
+
+        # filter out archived clubs
+        queryset = queryset.filter(archived=False)
 
         # filter by approved clubs
         if (
@@ -1540,7 +1561,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         ---
         """
         serializer = ClubMinimalSerializer(
-            Club.objects.all().exclude(approved=False).order_by(Lower("name")),
+            Club.objects.all()
+            .exclude(Q(approved=False) | Q(archived=True))
+            .order_by(Lower("name")),
             many=True,
         )
         return Response(serializer.data)
@@ -1557,7 +1580,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         badge = Badge.objects.filter(label="SAC").first()
         if badge:
             query = (
-                Club.objects.filter(badges=badge)
+                Club.objects.filter(badges=badge, archived=False)
                 .order_by(Lower("name"))
                 .prefetch_related(Prefetch("asset_set", to_attr="prefetch_asset_set"),)
             )
@@ -1834,11 +1857,13 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         """
-        Manually delete uploaded asset instances because of PostgreSQL integrity rules.
+        Set archived boolean to be True so that the club appears to have been deleted
         """
-        for asset in instance.asset_set.all():
-            asset.delete()
-        instance.delete()
+
+        instance.archived = True
+        instance.archived_by = self.request.user
+        instance.archived_on = timezone.now()
+        instance.save()
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
@@ -2257,14 +2282,16 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         if is_club_specific:
             qs = qs.filter(club__code=self.kwargs["club_code"])
             qs = qs.filter(
-                Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True)
+                Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True),
+                club__archived=False,
             )
         else:
             qs = qs.filter(
                 Q(club__approved=True)
                 | Q(type=Event.FAIR)
                 | Q(club__ghost=True)
-                | Q(club__isnull=True)
+                | Q(club__isnull=True),
+                Q(club__isnull=True) | Q(club__archived=False),
             )
 
         return (
@@ -2529,7 +2556,9 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         club_code = self.kwargs["club_code"]
-        questions = QuestionAnswer.objects.filter(club__code=club_code)
+        questions = QuestionAnswer.objects.filter(
+            club__code=club_code, club__archived=False
+        )
 
         if not self.request.user.is_authenticated:
             return questions.filter(approved=True)
@@ -2556,9 +2585,9 @@ class MembershipViewSet(viewsets.ModelViewSet):
     http_method_names = ["get"]
 
     def get_queryset(self):
-        queryset = Membership.objects.filter(person=self.request.user).prefetch_related(
-            "club__tags"
-        )
+        queryset = Membership.objects.filter(
+            person=self.request.user, club__archived=False
+        ).prefetch_related("club__tags")
         person = self.request.user
         queryset = queryset.prefetch_related(
             Prefetch(
@@ -2594,9 +2623,9 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        queryset = Favorite.objects.filter(person=self.request.user).prefetch_related(
-            "club__tags"
-        )
+        queryset = Favorite.objects.filter(
+            person=self.request.user, club__archived=False
+        ).prefetch_related("club__tags")
 
         person = self.request.user
         queryset = queryset.prefetch_related(
@@ -2657,9 +2686,9 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        queryset = Subscribe.objects.filter(person=self.request.user).prefetch_related(
-            "club__tags"
-        )
+        queryset = Subscribe.objects.filter(
+            person=self.request.user, club__archived=False
+        ).prefetch_related("club__tags")
 
         person = self.request.user
         queryset = queryset.prefetch_related(
@@ -2700,7 +2729,7 @@ class ClubVisitViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post"]
 
     def get_queryset(self):
-        return ClubVisit.objects.filter(person=self.request.user)
+        return ClubVisit.objects.filter(person=self.request.user, club__archived=False)
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -2717,7 +2746,7 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
 
     serializer_class = SearchQuerySerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = ["get", "post"]
+    http_method_names = ["get"]
 
     def get_queryset(self):
         if self.request.user.is_superuser:
@@ -2770,7 +2799,7 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            person=self.request.user, withdrew=False
+            person=self.request.user, withdrew=False, club__archived=False,
         )
 
 
@@ -4201,7 +4230,7 @@ class EmailInvitesAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return MembershipInvite.objects.filter(
-            email=self.request.user.email, active=True
+            email=self.request.user.email, active=True, club__archived=False
         ).order_by("-created_at")
 
 

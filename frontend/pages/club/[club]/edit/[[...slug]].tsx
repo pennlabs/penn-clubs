@@ -11,15 +11,23 @@ const Edit = (props: EditPageProps): ReactElement => {
 }
 
 Edit.getInitialProps = async ({ query }): Promise<EditPageProps> => {
-  const endpoints = ['tags', 'schools', 'majors', 'years', 'student_types']
+  const endpoints = [
+    'tags',
+    'schools',
+    'majors',
+    'years',
+    ['student_types', 'studentTypes'],
+  ]
   return Promise.all(
     endpoints.map(async (item) => {
-      if (!isClubFieldShown(item)) {
-        return [item, []]
+      const endpoint = typeof item === 'string' ? item : item[0]
+      const name = typeof item === 'string' ? item : item[1]
+      if (!isClubFieldShown(endpoint)) {
+        return [endpoint, []]
       }
-      const request = await doApiRequest(`/${item}/?format=json`)
+      const request = await doApiRequest(`/${endpoint}/?format=json`)
       const response = await request.json()
-      return [item, response]
+      return [name, response]
     }),
   ).then((values) => {
     const output = { clubId: query.club, tab: query.slug?.[0] }

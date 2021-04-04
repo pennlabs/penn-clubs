@@ -56,6 +56,7 @@ const sites = {
       'recruiting_cycle',
       'size',
       'target_majors',
+      'target_schools',
     ],
     // enable showing members for each club
     SHOW_MEMBERS: true,
@@ -186,6 +187,7 @@ const sites = {
       'available_virtually',
       'signature_events',
       'student_types',
+      'target_schools',
     ],
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,
@@ -195,7 +197,7 @@ const sites = {
     SHOW_LEAVE_CONFIRMATION: false,
     SHOW_SEARCHBAR_TOP: true,
     SHOW_APPLICATIONS: false,
-    SHOW_FEEDBACK: false,
+    SHOW_FEEDBACK: true,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
@@ -209,10 +211,10 @@ const sites = {
     FORM_LOGO_DESCRIPTION: 'Upload your approved Penn logo.',
     FORM_TARGET_DESCRIPTION: (
       <>
-        <b>Do you offer specialized services for particular student groups?</b>{' '}
-        It is assumed that all resources at Penn are available to all Penn
-        students. However, if you offer specialized resources, please designate
-        the groups that receive those resources here.
+        <b>
+          Does your resource apply to all undergraduate, graduate, and
+          professional Penn students?
+        </b>{' '}
       </>
     ),
     OBJECT_MEMBERSHIP_DEFAULT_TITLE: '',

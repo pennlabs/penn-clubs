@@ -10,17 +10,23 @@ import { Icon } from '../common'
 
 const DIAMETER = '3rem'
 const ICON_SIZE = '1.5rem'
-const OFFSET = '18px'
+const OFFSET = 18
 
-export const ActionLink = styled.a`
+interface LinkProps {
+  offsetAddition: number
+}
+
+export const ActionLink = styled.a.attrs((props: LinkProps) => ({
+  offsetAddition: props.offsetAddition,
+}))<LinkProps>`
   display: inline-block;
   width: ${DIAMETER};
   height: ${DIAMETER};
   border-radius: 3rem;
   background-color: ${FEEDBACK_BG};
   position: fixed;
-  bottom: ${OFFSET};
-  right: ${OFFSET};
+  bottom: ${(props) => props.offsetAddition + OFFSET}px;
+  right: ${OFFSET}px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(25, 89, 130, 0.4);
   cursor: pointer;
@@ -39,13 +45,14 @@ export const ActionLink = styled.a`
 
 const Feedback = (): ReactElement => (
   <ActionLink
+    offsetAddition={0}
     rel="noopener noreferrer"
     href={FEEDBACK_URL}
     title="Feedback"
     target="_blank"
     onClick={() => logEvent('feedback', 'clicked')}
   >
-    <Icon name="message-circle" alt="Feedback" size={ICON_SIZE} />
+    <Icon name="feedback" alt="Feedback" size={ICON_SIZE} />
   </ActionLink>
 )
 

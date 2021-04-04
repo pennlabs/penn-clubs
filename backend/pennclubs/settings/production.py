@@ -4,7 +4,7 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from pennclubs.settings.base import *  # noqa: F401, F403
-from pennclubs.settings.base import DOMAIN
+from pennclubs.settings.base import BRANDING, DOMAIN
 
 
 DEBUG = False

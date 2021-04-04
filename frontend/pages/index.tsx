@@ -236,6 +236,7 @@ const ScrollTopButton = (): ReactElement | null => {
 
   return (
     <ActionLink
+      offsetAddition={55}
       onClick={(e) => {
         e.preventDefault()
         window.scrollTo(0, 0)
@@ -440,23 +441,47 @@ const Splash = (props: SplashProps): ReactElement => {
               ]}
             />
           )}
-          <SearchBarCheckboxItem
-            param="target_schools__in"
-            label="School"
-            options={schoolOptions}
-          />
-          <SearchBarCheckboxItem
-            param="target_years__in"
-            label="School Year"
-            options={yearOptions}
-          />
-          {isClubFieldShown('student_types') && (
+          {isClubFieldShown('target_schools') &&
+            (SITE_ID === 'fyh' ? (
+              <SearchBarCheckboxItem
+                param="target_schools__in"
+                label="School Specific"
+                options={schoolOptions}
+              />
+            ) : (
+              <SearchBarCheckboxItem
+                param="target_schools__in"
+                label="School"
+                options={schoolOptions}
+              />
+            ))}
+          {SITE_ID === 'fyh' ? (
             <SearchBarCheckboxItem
-              param="student_types__in"
-              label="Student Type"
-              options={studentTypeOptions}
+              param="target_years__in"
+              label="School Year Specific"
+              options={yearOptions}
+            />
+          ) : (
+            <SearchBarCheckboxItem
+              param="target_years__in"
+              label="School Year"
+              options={yearOptions}
             />
           )}
+          {isClubFieldShown('student_types') &&
+            (SITE_ID === 'fyh' ? (
+              <SearchBarCheckboxItem
+                param="student_types__in"
+                label="Student Type Specific"
+                options={studentTypeOptions}
+              />
+            ) : (
+              <SearchBarCheckboxItem
+                param="student_types__in"
+                label="Student Type"
+                options={studentTypeOptions}
+              />
+            ))}
         </SearchBar>
 
         <SearchbarRightContainer>
