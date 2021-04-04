@@ -1,7 +1,13 @@
 import { CLUB_RECRUITMENT_CYCLES } from 'components/ClubEditPage/ClubEditCard'
 import ListRenewalDialog from 'components/ClubPage/ListRenewalDialog'
 import LiveEventsDialog from 'components/ClubPage/LiveEventsDialog'
-import { Icon, Metadata, Title, WideContainer } from 'components/common'
+import {
+  Checkbox,
+  Icon,
+  Metadata,
+  Title,
+  WideContainer,
+} from 'components/common'
 import DisplayButtons from 'components/DisplayButtons'
 import { FuseTag } from 'components/FilterSearch'
 import { ActionLink } from 'components/Header/Feedback'
@@ -35,7 +41,6 @@ import {
   CLUBS_PURPLE,
   FOCUS_GRAY,
   H1_TEXT,
-  HUB_WHITE,
   SNOW,
   TAG_BACKGROUND_COLOR_MAP,
   TAG_TEXT_COLOR_MAP,
@@ -259,10 +264,14 @@ const Splash = (props: SplashProps): ReactElement => {
   const [isLoading, setLoading] = useState<boolean>(false)
   const [searchInput, setSearchInput] = useState<SearchInput>({})
   const [viewType, setViewType] = useState<string>('general')
+  const [currentViewType, setCurrentViewType] = useState<string>('general')
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {
-    if (equal(searchInput, currentSearch.current)) {
+    if (
+      equal(searchInput, currentSearch.current) &&
+      currentViewType === viewType
+    ) {
       return
     }
     currentSearch.current = { ...searchInput }
@@ -274,6 +283,7 @@ const Splash = (props: SplashProps): ReactElement => {
 
     if (SITE_ID === 'fyh') {
       params.set('viewType', viewType)
+      setCurrentViewType(viewType)
     }
 
     Object.entries(searchInput).forEach(([key, value]) => {
@@ -290,7 +300,11 @@ const Splash = (props: SplashProps): ReactElement => {
           setLoading(false)
         }
       })
-  }, [searchInput])
+  }, [searchInput, viewType])
+
+  const handleViewTypeChange = () => {
+    setViewType(viewType === 'general' ? 'exclusive' : 'general')
+  }
 
   const tagOptions = useMemo<FuseTag[]>(
     () =>
@@ -519,30 +533,31 @@ const Splash = (props: SplashProps): ReactElement => {
             </ResultsText>
             {SITE_ID === 'fyh' && (
               <div style={{ marginBottom: '5px' }}>
-                <button
-                  className="button"
+                <span
                   style={{
-                    marginRight: '8px',
-                    backgroundColor:
-                      viewType === 'exclusive' ? HUB_WHITE : SNOW,
-                  }}
-                  onClick={() => {
-                    setViewType('exclusive')
+                    marginRight: '10px',
                   }}
                 >
                   Exclusive View
-                </button>
-                <button
-                  className="button"
+                </span>
+                <Checkbox
+                  color={'black'}
+                  checked={viewType === 'exclusive'}
+                  onChange={handleViewTypeChange}
+                />
+                <span
                   style={{
-                    backgroundColor: viewType === 'general' ? HUB_WHITE : SNOW,
-                  }}
-                  onClick={() => {
-                    setViewType('general')
+                    marginRight: '10px',
+                    marginLeft: '20px',
                   }}
                 >
-                  General view
-                </button>
+                  General View
+                </span>
+                <Checkbox
+                  color={'black'}
+                  checked={viewType === 'general'}
+                  onChange={handleViewTypeChange}
+                />
               </div>
             )}
 
