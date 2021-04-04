@@ -35,6 +35,7 @@ import {
   CLUBS_PURPLE,
   FOCUS_GRAY,
   H1_TEXT,
+  HUB_WHITE,
   SNOW,
   TAG_BACKGROUND_COLOR_MAP,
   TAG_TEXT_COLOR_MAP,
@@ -257,7 +258,7 @@ const Splash = (props: SplashProps): ReactElement => {
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [searchInput, setSearchInput] = useState<SearchInput>({})
-  const [viewType, setViewType] = useState<string>("general")
+  const [viewType, setViewType] = useState<string>('general')
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {
@@ -271,10 +272,9 @@ const Splash = (props: SplashProps): ReactElement => {
     params.set('format', 'json')
     params.set('page', '1')
 
-    if (SITE_ID === "fyh" ) {
-      //params.set('viewType', viewType)
+    if (SITE_ID === 'fyh') {
+      params.set('viewType', viewType)
     }
-
 
     Object.entries(searchInput).forEach(([key, value]) => {
       params.set(key, value)
@@ -517,16 +517,34 @@ const Splash = (props: SplashProps): ReactElement => {
               {' '}
               {clubs.count} result{clubs.count === 1 ? '' : 's'}
             </ResultsText>
-            {SITE_ID === "fyh" &&
-            <div style = {{marginBottom:"5px"}}>
-              <button className="button" style={{marginRight:"8px"}} onClick = {()=>{setViewType("exclusive")}} >
-                Exclusive View
-              </button>
-              <button className="button" onClick = {()=>{setViewType("general")}}>
-                General view
-              </button>
-            </div>
-            }
+            {SITE_ID === 'fyh' && (
+              <div style={{ marginBottom: '5px' }}>
+                <button
+                  className="button"
+                  style={{
+                    marginRight: '8px',
+                    backgroundColor:
+                      viewType === 'exclusive' ? HUB_WHITE : SNOW,
+                  }}
+                  onClick={() => {
+                    setViewType('exclusive')
+                  }}
+                >
+                  Exclusive View
+                </button>
+                <button
+                  className="button"
+                  style={{
+                    backgroundColor: viewType === 'general' ? HUB_WHITE : SNOW,
+                  }}
+                  onClick={() => {
+                    setViewType('general')
+                  }}
+                >
+                  General view
+                </button>
+              </div>
+            )}
 
             <SearchTags
               searchInput={searchInput}
