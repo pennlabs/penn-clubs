@@ -1,7 +1,13 @@
 import { CLUB_RECRUITMENT_CYCLES } from 'components/ClubEditPage/ClubEditCard'
 import ListRenewalDialog from 'components/ClubPage/ListRenewalDialog'
 import LiveEventsDialog from 'components/ClubPage/LiveEventsDialog'
-import { Icon, Metadata, Title, WideContainer } from 'components/common'
+import {
+  Checkbox,
+  Icon,
+  Metadata,
+  Title,
+  WideContainer,
+} from 'components/common'
 import DisplayButtons from 'components/DisplayButtons'
 import { FuseTag } from 'components/FilterSearch'
 import { ActionLink } from 'components/Header/Feedback'
@@ -257,20 +263,28 @@ const Splash = (props: SplashProps): ReactElement => {
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [searchInput, setSearchInput] = useState<SearchInput>({})
+  const [viewType, setViewType] = useState<string>('general')
+  const [currentViewType, setCurrentViewType] = useState<string>('general')
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {
-    if (equal(searchInput, currentSearch.current)) {
+    if (
+      equal(searchInput, currentSearch.current) &&
+      currentViewType === viewType
+    ) {
       return
     }
-
     currentSearch.current = { ...searchInput }
-
     setLoading(true)
 
     const params = new URLSearchParams()
     params.set('format', 'json')
     params.set('page', '1')
+
+    if (SITE_ID === 'fyh') {
+      params.set('viewType', viewType)
+      setCurrentViewType(viewType)
+    }
 
     Object.entries(searchInput).forEach(([key, value]) => {
       params.set(key, value)
@@ -286,7 +300,11 @@ const Splash = (props: SplashProps): ReactElement => {
           setLoading(false)
         }
       })
-  }, [searchInput])
+  }, [searchInput, viewType])
+
+  const handleViewTypeChange = () => {
+    setViewType(viewType === 'general' ? 'exclusive' : 'general')
+  }
 
   const tagOptions = useMemo<FuseTag[]>(
     () =>
@@ -513,6 +531,35 @@ const Splash = (props: SplashProps): ReactElement => {
               {' '}
               {clubs.count} result{clubs.count === 1 ? '' : 's'}
             </ResultsText>
+            {SITE_ID === 'fyh' && (
+              <div style={{ marginBottom: '5px' }}>
+                <span
+                  style={{
+                    marginRight: '10px',
+                  }}
+                >
+                  Exclusive View
+                </span>
+                <Checkbox
+                  color={'black'}
+                  checked={viewType === 'exclusive'}
+                  onChange={handleViewTypeChange}
+                />
+                <span
+                  style={{
+                    marginRight: '10px',
+                    marginLeft: '20px',
+                  }}
+                >
+                  General View
+                </span>
+                <Checkbox
+                  color={'black'}
+                  checked={viewType === 'general'}
+                  onChange={handleViewTypeChange}
+                />
+              </div>
+            )}
 
             <SearchTags
               searchInput={searchInput}
