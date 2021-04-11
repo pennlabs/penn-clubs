@@ -4,6 +4,7 @@ import React, { ReactElement, useEffect, useState } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
+import ClubManagementCard from '../components/ClubEditPage/ClubManagementCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
 import InviteCard from '../components/ClubEditPage/InviteCard'
@@ -347,6 +348,15 @@ const ClubForm = ({
         content: (
           <>
             <AnalyticsCard club={club} />
+          </>
+        ),
+      },
+      {
+        name: 'organization',
+        label: 'Club Management',
+        content: (
+          <>
+            <ClubManagementCard club={club} />
           </>
         ),
       },
