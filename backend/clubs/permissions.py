@@ -227,6 +227,36 @@ class EventPermission(permissions.BasePermission):
         return True
 
 
+class ClubBadgePermission(permissions.BasePermission):
+    """
+    Officers and above can edit the badges that the club has control over.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        if view.action in ["list", "retrieve"]:
+            return True
+
+        if not request.user.is_authenticated:
+            return False
+
+        if request.user.has_perm("clubs.manage_club"):
+            return True
+
+        # only effective superusers can modify badges without clubs
+        if obj.org is None:
+            return False
+
+        # club officers and above can modify badges they own
+        membership = find_membership_helper(request.user, obj.org)
+
+        return membership is not None and membership.role <= Membership.ROLE_OFFICER
+
+    def has_permission(self, request, view):
+        if view.action in ["create", "list", "retrieve", "destroy"]:
+            return True
+        return False
+
+
 class ClubItemPermission(permissions.BasePermission):
     """
     Officers and above can create/update/delete events or testimonials.
