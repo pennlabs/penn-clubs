@@ -1416,12 +1416,16 @@ class Profile(models.Model):
     """
 
     UNDERGRADUATE = 0
-    GRADUATE = 1
-    STAFF = 2
+    MASTERS = 1
+    PROFESSIONAL = 2
+    PHD = 3
+    STAFF = 4
 
     AFFILIATION_CHOICES = (
         (UNDERGRADUATE, "Undergraduate"),
-        (GRADUATE, "Graduate"),
+        (MASTERS, "Masters"),
+        (PROFESSIONAL, "Professional"),
+        (PHD, "Doctoral"),
         (STAFF, "Staff"),
     )
 
@@ -1452,7 +1456,7 @@ class Profile(models.Model):
         """
 
         # detect the affilation
-        if self.user.groups.filter(name="platform_student"):
+        if self.user.groups.filter(name="platform_student").exists():
             # if the user has the student group from platform, they're probably student
             domain = self.user.email.split("@", 1)[-1].lower()
             if domain in {
@@ -1465,7 +1469,7 @@ class Profile(models.Model):
                 # domains commonly associated with undergrad schools marked as undergrad
                 self.affiliation = Profile.UNDERGRADUATE
             else:
-                self.affiliation = Profile.GRADUATE
+                self.affiliation = Profile.MASTERS
         else:
             self.affiliation = Profile.STAFF
 

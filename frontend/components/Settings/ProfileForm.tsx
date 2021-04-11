@@ -82,8 +82,10 @@ const ProfileForm = ({
 
   const affiliations = [
     { value: 0, label: 'Undergraduate Student' },
-    { value: 1, label: 'Graduate/Professional Student' },
-    { value: 2, label: 'Faculty or Staff Member' },
+    { value: 1, label: 'Masters Student' },
+    { value: 2, label: 'Professional Student' },
+    { value: 3, label: 'Doctoral Student' },
+    { value: 4, label: 'Faculty or Staff Member' },
   ]
 
   return (
