@@ -4,8 +4,8 @@ from rest_framework_nested import routers
 from clubs.views import (
     AdvisorViewSet,
     AssetViewSet,
-    BadgeViewSet,
     BadgeClubViewSet,
+    BadgeViewSet,
     ClubApplicationViewSet,
     ClubEventViewSet,
     ClubFairViewSet,

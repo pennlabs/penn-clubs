@@ -80,6 +80,7 @@ from clubs.models import (
 )
 from clubs.permissions import (
     AssetPermission,
+    ClubBadgePermission,
     ClubFairPermission,
     ClubItemPermission,
     ClubPermission,
@@ -4146,7 +4147,7 @@ class BadgeClubViewSet(viewsets.ModelViewSet):
     destroy: Remove this badge from a club.
     """
 
-    permission_classes = [IsSuperuser]
+    permission_classes = [ClubBadgePermission | IsSuperuser]
     serializer_class = ClubMinimalSerializer
     http_method_names = ["get", "post", "delete"]
     lookup_field = "code"
