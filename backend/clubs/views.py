@@ -342,7 +342,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
                     queryset = queryset.filter(**{f"{field}__id__in": tags})
                 else:
                     for tag in tags:
-                        queryset = queryset.filter(**{f"{field}__id": tag}) 
+                        queryset = queryset.filter(**{f"{field}__id": tag})
             else:
                 for tag in tags:
                     queryset = queryset.filter(**{f"{field}__{label}": tag})
