@@ -337,8 +337,12 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
                     queryset = queryset.annotate(
                         num_tags=Count(f"{field}", distinct=True)
                     ).filter(num_tags__lte=len(tags))
-                for tag in tags:
-                    queryset = queryset.filter(**{f"{field}__id": tag})
+
+                if settings.BRANDING == "fyh":
+                    queryset = queryset.filter(**{f"{field}__id__in": tags})
+                else:
+                    for tag in tags:
+                        queryset = queryset.filter(**{f"{field}__id": tag}) 
             else:
                 for tag in tags:
                     queryset = queryset.filter(**{f"{field}__{label}": tag})
