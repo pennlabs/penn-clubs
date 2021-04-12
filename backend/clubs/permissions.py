@@ -233,7 +233,7 @@ class ClubBadgePermission(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        if view.action in ["list", "retrieve"]:
+        if view.action in {"list", "retrieve"}:
             return True
 
         if not request.user.is_authenticated:
@@ -252,8 +252,14 @@ class ClubBadgePermission(permissions.BasePermission):
         return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
     def has_permission(self, request, view):
-        if view.action in ["create", "list", "retrieve", "destroy"]:
+        # must be at least logged in to modify badge relationships
+        if view.action in {"create", "destroy"}:
+            return request.user.is_authenticated
+
+        # anyone can view badge relationships
+        if view.action in {"list", "retrieve"}:
             return True
+
         return False
 
 
