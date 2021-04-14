@@ -82,6 +82,7 @@ class Command(BaseCommand):
                 "osa_email_communication",
                 "ics_calendar_ingestation",
                 "grad_resource_contact",
+                "faq_demo",
             ),
         )
         parser.add_argument(
@@ -345,7 +346,11 @@ class Command(BaseCommand):
             return
 
         # Sends email to all club officers
-        if action in {"osa_email_communication", "ics_calendar_ingestation"}:
+        if action in {
+            "osa_email_communication",
+            "ics_calendar_ingestation",
+            "faq_demo",
+        }:
             clubs = Club.objects.all()
 
             # Only send one email if it is a test email
