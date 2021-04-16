@@ -338,7 +338,8 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
                         num_tags=Count(f"{field}", distinct=True)
                     ).filter(num_tags__lte=len(tags))
                 for tag in tags:
-                    queryset = queryset.filter(**{f"{field}__id": tag})
+                    tag_specific_queryset = queryset.filter(**{f"{field}__id": tag})
+                    queryset = queryset.union(tag_specific_queryset)
             else:
                 for tag in tags:
                     queryset = queryset.filter(**{f"{field}__{label}": tag})
