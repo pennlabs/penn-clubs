@@ -74,6 +74,8 @@ const sites = {
     SHOW_SEARCHBAR_TOP: false,
     // show applications
     SHOW_APPLICATIONS: true,
+    // show organization and badge management
+    SHOW_ORG_MANAGEMENT: true,
     // show feedback icon on bottom right
     SHOW_FEEDBACK: true,
 
@@ -197,6 +199,7 @@ const sites = {
     SHOW_LEAVE_CONFIRMATION: false,
     SHOW_SEARCHBAR_TOP: true,
     SHOW_APPLICATIONS: false,
+    SHOW_ORG_MANAGEMENT: false,
     SHOW_FEEDBACK: true,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
@@ -290,6 +293,7 @@ export const SHOW_ADDITIONAL_LINKS = sites[site].SHOW_ADDITIONAL_LINKS
 export const SHOW_LEAVE_CONFIRMATION = sites[site].SHOW_LEAVE_CONFIRMATION
 export const SHOW_SEARCHBAR_TOP = sites[site].SHOW_SEARCHBAR_TOP
 export const SHOW_APPLICATIONS = sites[site].SHOW_APPLICATIONS
+export const SHOW_ORG_MANAGEMENT = sites[site].SHOW_ORG_MANAGEMENT
 export const SHOW_FEEDBACK = sites[site].SHOW_FEEDBACK
 
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL

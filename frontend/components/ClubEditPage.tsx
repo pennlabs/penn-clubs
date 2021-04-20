@@ -37,6 +37,7 @@ import {
   OBJECT_TAB_RECRUITMENT_LABEL,
   SHOW_APPLICATIONS,
   SHOW_MEMBERSHIP_REQUEST,
+  SHOW_ORG_MANAGEMENT,
   SITE_NAME,
 } from '../utils/branding'
 import AdvisorCard from './ClubEditPage/AdvisorCard'
@@ -353,12 +354,13 @@ const ClubForm = ({
       },
       {
         name: 'organization',
-        label: 'Club Management',
+        label: `${OBJECT_NAME_TITLE_SINGULAR} Management`,
         content: (
           <>
             <ClubManagementCard club={club} />
           </>
         ),
+        disabled: !SHOW_ORG_MANAGEMENT,
       },
     ]
   }
