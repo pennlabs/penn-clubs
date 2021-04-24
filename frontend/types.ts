@@ -1,4 +1,6 @@
 /* eslint-disable camelcase */
+export type Maybe<T> = T | undefined
+
 export enum MembershipRank {
   Owner = 0,
   Officer = 10,
