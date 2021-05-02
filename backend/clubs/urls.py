@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 from clubs.views import (
     AdvisorViewSet,
     AssetViewSet,
+    BadgeClubViewSet,
     BadgeViewSet,
     ClubApplicationViewSet,
     ClubEventViewSet,
@@ -87,6 +88,9 @@ clubs_router.register(
 )
 clubs_router.register(r"advisors", AdvisorViewSet, basename="club-advisors")
 
+badges_router = routers.NestedSimpleRouter(router, r"badges", lookup="badge")
+badges_router.register(r"clubs", BadgeClubViewSet, basename="badge-clubs")
+
 
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),
@@ -127,3 +131,4 @@ urlpatterns = [
 
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls
+urlpatterns += badges_router.urls

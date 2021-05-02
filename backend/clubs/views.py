@@ -80,6 +80,7 @@ from clubs.models import (
 )
 from clubs.permissions import (
     AssetPermission,
+    ClubBadgePermission,
     ClubFairPermission,
     ClubItemPermission,
     ClubPermission,
@@ -1173,6 +1174,25 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
 
         return file_upload_endpoint_helper(request, code=club.code)
+
+    @action(detail=True, methods=["get"])
+    def owned_badges(self, request, *args, **kwargs):
+        """
+        Return a list of badges that this club is an owner of.
+        The club will be able to assign these badges to other clubs.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            allOf:
+                                - $ref: "#/components/schemas/Badge"
+        ---
+        """
+        club = self.get_object()
+        badges = Badge.objects.filter(org=club)
+        return Response(BadgeSerializer(badges, many=True).data)
 
     @action(detail=True, methods=["get"])
     def children(self, request, *args, **kwargs):
@@ -2983,7 +3003,6 @@ class BadgeViewSet(viewsets.ModelViewSet):
     serializer_class = BadgeSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
-    lookup_field = "name"
 
     def get_queryset(self):
         show_all = self.request.query_params.get("all", "false") == "true"
@@ -4106,6 +4125,36 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         return ClubApplication.objects.filter(
             club__code=self.kwargs["club_code"], result_release_time__gte=now
         ).order_by("application_end_time")
+
+
+class BadgeClubViewSet(viewsets.ModelViewSet):
+    """
+    create: Add this badge to a club.
+
+    list: List the clubs with this badge.
+
+    destroy: Remove this badge from a club.
+    """
+
+    permission_classes = [ClubBadgePermission | IsSuperuser]
+    serializer_class = ClubMinimalSerializer
+    http_method_names = ["get", "post", "delete"]
+    lookup_field = "code"
+
+    def create(self, request, *args, **kwargs):
+        badge = get_object_or_404(Badge, pk=self.kwargs["badge_pk"])
+        club = get_object_or_404(Club, code=request.data["club"])
+        club.badges.add(badge)
+        return Response({"success": True})
+
+    def destroy(self, request, *args, **kwargs):
+        club = self.get_object()
+        badge = get_object_or_404(Badge, pk=self.kwargs["badge_pk"])
+        club.badges.remove(badge)
+        return Response({"success": True})
+
+    def get_queryset(self):
+        return Club.objects.filter(badges__id=self.kwargs["badge_pk"]).order_by("name")
 
 
 class MassInviteAPIView(APIView):

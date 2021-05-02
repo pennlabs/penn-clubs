@@ -4,6 +4,7 @@ import React, { ReactElement, useEffect, useState } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
+import ClubManagementCard from '../components/ClubEditPage/ClubManagementCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
 import InviteCard from '../components/ClubEditPage/InviteCard'
@@ -36,6 +37,7 @@ import {
   OBJECT_TAB_RECRUITMENT_LABEL,
   SHOW_APPLICATIONS,
   SHOW_MEMBERSHIP_REQUEST,
+  SHOW_ORG_MANAGEMENT,
   SITE_NAME,
 } from '../utils/branding'
 import AdvisorCard from './ClubEditPage/AdvisorCard'
@@ -349,6 +351,16 @@ const ClubForm = ({
             <AnalyticsCard club={club} />
           </>
         ),
+      },
+      {
+        name: 'organization',
+        label: `${OBJECT_NAME_TITLE_SINGULAR} Management`,
+        content: (
+          <>
+            <ClubManagementCard club={club} />
+          </>
+        ),
+        disabled: !SHOW_ORG_MANAGEMENT,
       },
     ]
   }
