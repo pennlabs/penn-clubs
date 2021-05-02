@@ -300,9 +300,9 @@ class Club(models.Model):
     )
     badges = models.ManyToManyField("Badge", blank=True)
 
-    target_years = models.ManyToManyField("Year", through = "TargetYear")
-    target_schools = models.ManyToManyField("School", through ="TargetSchool")
-    target_majors = models.ManyToManyField("Major", through ="TargetMajor")
+    target_years = models.ManyToManyField("Year", through="TargetYear")
+    target_schools = models.ManyToManyField("School", through="TargetSchool")
+    target_majors = models.ManyToManyField("Major", through="TargetMajor")
 
     # Hub@Penn fields
     available_virtually = models.BooleanField(default=False)
@@ -663,6 +663,7 @@ class Club(models.Model):
             ("manage_club", "Manipulate club object and related objects"),
         ]
 
+
 class TargetYear(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     target_years = models.ForeignKey("Year", blank=True, on_delete=models.CASCADE)
@@ -670,6 +671,7 @@ class TargetYear(models.Model):
 
     def __str__(self):
         return "{}: {}({})".format(self.club.name, self.target_years, self.program)
+
 
 class TargetSchool(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
@@ -679,6 +681,7 @@ class TargetSchool(models.Model):
     def __str__(self):
         return "{}: {}({})".format(self.club.name, self.target_schools, self.program)
 
+
 class TargetMajor(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     target_majors = models.ForeignKey("Major", blank=True, on_delete=models.CASCADE)
@@ -686,6 +689,7 @@ class TargetMajor(models.Model):
 
     def __str__(self):
         return "{}: {}({})".format(self.club.name, self.target_majors, self.program)
+
 
 class QuestionAnswer(models.Model):
     """
