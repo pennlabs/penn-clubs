@@ -325,20 +325,10 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
 
             if tags[0].isdigit() or operation == "id":
                 tags = [int(tag) for tag in tags if tag]
-                if (
-                    settings.BRANDING == "fyh"
-                    and request.GET.get("viewType", "") == "exclusive"
-                    and (
-                        field == "target_years"
-                        or field == "student_types"
-                        or field == "target_schools"
-                    )
-                ):
-                    queryset = queryset.annotate(
-                        num_tags=Count(f"{field}", distinct=True)
-                    ).filter(num_tags__lte=len(tags))
                 if settings.BRANDING == "fyh":
+                    print(queryset)
                     queryset = queryset.filter(**{f"{field}__id__in": tags})
+                    print(queryset)
                 else:
                     for tag in tags:
                         queryset = queryset.filter(**{f"{field}__id": tag})
