@@ -39,6 +39,9 @@ from clubs.models import (
     StudentType,
     Subscribe,
     Tag,
+TargetMajor,
+TargetSchool,
+    TargetYear,
     Testimonial,
     Year,
 )
@@ -1040,6 +1043,29 @@ def social_validation_helper(value, domain, prefix="", at_prefix=None):
             domain = domain[0]
     return "https://{}{}".format(domain, path)
 
+class TargetYearSerializer(serializers.ModelSerializer):
+    """
+    Used as a nested serializer by ClubSerializer
+    """
+    class Meta:
+        model = TargetYear
+        fields = ('target_years','program')
+
+class TargetSchoolSerializer(serializers.ModelSerializer):
+    """
+    Used as a nested serializer by ClubSerializer
+    """
+    class Meta:
+        model = TargetSchool
+        fields = ('target_schools','program')
+
+class TargetMajorSerializer(serializers.ModelSerializer):
+    """
+    Used as a nested serializer by ClubSerializer
+    """
+    class Meta:
+        model = TargetMajor
+        fields = ('target_majors','program')
 
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
@@ -1053,9 +1079,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     approved_by = serializers.SerializerMethodField("get_approved_by")
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
 
-    target_schools = SchoolSerializer(many=True, required=False)
-    target_majors = MajorSerializer(many=True, required=False)
-    target_years = YearSerializer(many=True, required=False)
+    target_schools = serializers.SerializerMethodField("get_target_schools")
+    target_majors = serializers.SerializerMethodField("get_target_majors")
+    target_years = serializers.SerializerMethodField("get_target_years")
 
     subtitle = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
@@ -1111,6 +1137,18 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             return False
         return obj.membershiprequest_set.filter(person=user, withdrew=False).exists()
 
+    def get_target_years(self,obj):
+        qset = TargetYear.objects.filter(club=obj)
+        return [TargetYearSerializer(m).data for m in qset]
+
+    def get_target_majors(self,obj):
+        qset = TargetMajor.objects.filter(club=obj)
+        return [TargetMajorSerializer(m).data for m in qset]
+
+    def get_target_schools(self,obj):
+        qset = TargetSchool.objects.filter(club=obj)
+        return [TargetSchoolSerializer(m).data for m in qset]
+
     def create(self, validated_data):
         """
         Ensure new clubs follow certain invariants.
@@ -1124,6 +1162,25 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         Membership.objects.create(
             person=self.context["request"].user, club=obj, role=Membership.ROLE_OWNER
         )
+
+        # Create target year, target school, and target major with specific program names
+        if self.context["request"].data.get('target_years', None) is not None:
+            target_years = self.context["request"].data['target_years']
+            for target in target_years:
+                year = Year.objects.get(name=target["name"])
+                TargetYear.objects.create(club=obj, target_years=year, program=target.get("program", ""))
+
+        if self.context["request"].data.get('target_schools', None) is not None:
+            target_schools = self.context["request"].data['target_schools']
+            for target in target_schools:
+                school = School.objects.get(name=target["name"])
+                TargetSchool.objects.create(club=obj, target_schools=school, program=target.get("program", ""))
+
+        if self.context["request"].data.get('target_majors', None) is not None:
+            target_majors = self.context["request"].data['target_majors']
+            for target in target_majors:
+                major = Major.objects.get(name=target["name"])
+                TargetMajor.objects.create(club=obj, target_majors=major, program=target.get("program", ""))
 
         if not settings.BRANDING == "fyh":
             # send a renewal email prompting the user
@@ -1445,7 +1502,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "advisor_set",
         ]
 
-
 class FavoriteSerializer(serializers.ModelSerializer):
     """
     Used by users to get a list of clubs that they have favorited.
@@ -1555,7 +1611,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
             "name",
             "person",
             "school",
-            "username",
+            "username"
         )
         validators = [
             validators.UniqueTogetherValidator(
