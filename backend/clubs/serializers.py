@@ -1049,9 +1049,14 @@ class TargetYearSerializer(serializers.ModelSerializer):
     Used as a nested serializer by ClubSerializer
     """
 
+    id = serializers.SerializerMethodField("get_id")
+
     class Meta:
         model = TargetYear
-        fields = ("target_years", "program")
+        fields = ("id", "program")
+
+    def get_id(self, obj):
+        return obj.target_years.id
 
 
 class TargetSchoolSerializer(serializers.ModelSerializer):
@@ -1059,9 +1064,14 @@ class TargetSchoolSerializer(serializers.ModelSerializer):
     Used as a nested serializer by ClubSerializer
     """
 
+    id = serializers.SerializerMethodField("get_id")
+
     class Meta:
         model = TargetSchool
-        fields = ("target_schools", "program")
+        fields =  ("id", "program")
+
+    def get_id(self, obj):
+        return obj.target_schools.id
 
 
 class TargetMajorSerializer(serializers.ModelSerializer):
@@ -1069,9 +1079,14 @@ class TargetMajorSerializer(serializers.ModelSerializer):
     Used as a nested serializer by ClubSerializer
     """
 
+    id = serializers.SerializerMethodField("get_id")
+
     class Meta:
         model = TargetMajor
-        fields = ("target_majors", "program")
+        fields = ("id", "program")
+
+    def get_id(self, obj):
+        return obj.target_majors.id
 
 
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
@@ -1174,7 +1189,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if self.context["request"].data.get("target_years", None) is not None:
             target_years = self.context["request"].data["target_years"]
             for target in target_years:
-                year = Year.objects.get(name=target["name"])
+                year = Year.objects.get(id=target["id"])
                 TargetYear.objects.create(
                     club=obj, target_years=year, program=target.get("program", "")
                 )
@@ -1182,7 +1197,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if self.context["request"].data.get("target_schools", None) is not None:
             target_schools = self.context["request"].data["target_schools"]
             for target in target_schools:
-                school = School.objects.get(name=target["name"])
+                school = School.objects.get(id=target["id"])
                 TargetSchool.objects.create(
                     club=obj, target_schools=school, program=target.get("program", "")
                 )
@@ -1190,7 +1205,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if self.context["request"].data.get("target_majors", None) is not None:
             target_majors = self.context["request"].data["target_majors"]
             for target in target_majors:
-                major = Major.objects.get(name=target["name"])
+                major = Major.objects.get(id=target["id"])
                 TargetMajor.objects.create(
                     club=obj, target_majors=major, program=target.get("program", "")
                 )

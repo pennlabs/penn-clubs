@@ -15,7 +15,13 @@ import {
   Tag,
   Year,
 } from '../../types'
-import { doApiRequest, formatResponse, isClubFieldShown } from '../../utils'
+import {
+  bifurcateFilter,
+  categorizeFilter,
+  doApiRequest,
+  formatResponse,
+  isClubFieldShown,
+} from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   FIELD_PARTICIPATION_LABEL,
@@ -34,6 +40,7 @@ import {
 import { Checkbox, CheckboxLabel, Contact, Text } from '../common'
 import {
   CheckboxField,
+  CheckboxTextField,
   FileField,
   FormikAddressField,
   FormStyle,
@@ -159,6 +166,9 @@ const removeNonFieldAttributes = (
   }, {})
 }
 
+const EXCLUSIVE_CHECKBOX_TEXT_REQUIRED_ERROR =
+  'We cannot accept a checkmark only. Please return to the list and provide the name of the specific programming for the student populations that have been selected.'
+
 /**
  * A card that can show and edit the basic properties of a Club object.
  *
@@ -189,15 +199,76 @@ export default function ClubEditCard({
       delete data.image
     }
 
+    const entries = Object.entries(data)
+
+    const [exclusiveEntries, withoutExclusiveEntries] = bifurcateFilter(
+      entries,
+      ([key]) => !!key.match(/^exclusive:(.+?):(.+?)$/g),
+    )
+
+    const exclusives = categorizeFilter(
+      exclusiveEntries,
+      ([key]) => key.match(/^exclusive:(.+?):(.+?)$/)?.[1] ?? 'unknown',
+    ) as {
+      year: Array<[string, { checked?: boolean; detail?: string }]>
+      major: Array<[string, { checked?: boolean; detail?: string }]>
+      school: Array<[string, { checked?: boolean; detail?: string }]>
+    }
+
+    const target_years =
+      exclusives.year
+        ?.filter(([_, value]) => value?.checked)
+        .map(([key, value]) => {
+          const id = Number(key.match(/^exclusive:(.+?):(.+?)$/)?.[2] ?? -1)
+          const name = years.find((o) => o.id === id)?.name
+          return {
+            id,
+            // name,
+            program: value.detail,
+          }
+        }) ?? []
+
+    const target_majors =
+      exclusives.major
+        ?.filter(([_, value]) => value?.checked)
+        .map(([key, value]) => {
+          const id = Number(key.match(/^exclusive:(.+?):(.+?)$/)?.[2] ?? -1)
+          const name = majors.find((o) => o.id === id)?.name
+          return {
+            id,
+            // name,
+            program: value.detail,
+          }
+        }) ?? []
+
+    const target_schools =
+      exclusives.school
+        ?.filter(([_, value]) => value?.checked)
+        .map(([key, value]) => {
+          const id = Number(key.match(/^exclusive:(.+?):(.+?)$/)?.[2] ?? -1)
+          const name = schools.find((o) => o.id === id)?.name
+          return {
+            id,
+            // name,
+            program: value.detail,
+          }
+        }) ?? []
+
+    const body = {
+      ...Object.fromEntries(withoutExclusiveEntries),
+      target_years,
+      target_majors,
+      target_schools,
+    }
     const req =
       isEdit && club !== null
         ? doApiRequest(`/clubs/${club.code}/?format=json`, {
             method: 'PATCH',
-            body: data,
+            body,
           })
         : doApiRequest('/clubs/?format=json', {
             method: 'POST',
-            body: data,
+            body,
           })
 
     return req.then((resp) => {
@@ -458,62 +529,25 @@ export default function ClubEditCard({
         },
         {
           type: 'content',
-          content:
-            SITE_ID === 'fyh' ? (
-              <>
-                <Text>{FORM_TARGET_DESCRIPTION}</Text>
-                <div className="ml-2 mb-4">
-                  <CheckboxLabel>
-                    <Checkbox
-                      checked={!showTargetFields}
-                      onChange={(e) => setShowTargetFields(false)}
-                      color={BLACK}
-                    />{' '}
-                    <span className="ml-1">Yes.</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <Checkbox
-                      checked={showTargetFields}
-                      onChange={(e) => setShowTargetFields(true)}
-                      color={BLACK}
-                    />{' '}
-                    <span className="ml-1">
-                      No, my {OBJECT_NAME_SINGULAR} is restricted to certain
-                      student groups.
-                    </span>
-                  </CheckboxLabel>
-                </div>
-                <Text>
-                  If not, Hub@Penn has provided a way for certain student
-                  populations to filter resources with support services designed
-                  specifically with them in mind. In order for this filter to
-                  work adequately for your resource, you must choose from
-                  following list of tags.
-                </Text>
-                <Text>
-                  Please note: It is assumed that all Penn resources are
-                  available to all Penn students. Please be selective in your
-                  choice of tags.
-                </Text>
-              </>
-            ) : (
-              <>
-                <Text>{FORM_TARGET_DESCRIPTION}</Text>
-                <div className="ml-2 mb-4">
-                  <CheckboxLabel>
-                    <Checkbox
-                      checked={showTargetFields}
-                      onChange={(e) => setShowTargetFields(e.target.checked)}
-                      color={BLACK}
-                    />{' '}
-                    <span className="ml-1">
-                      Yes, my {OBJECT_NAME_SINGULAR} is restricted to certain
-                      student groups.
-                    </span>
-                  </CheckboxLabel>
-                </div>
-              </>
-            ),
+          content: (
+            <>
+              <Text>{FORM_TARGET_DESCRIPTION}</Text>
+              <div className="ml-2 mb-4">
+                <CheckboxLabel>
+                  <Checkbox
+                    checked={showTargetFields}
+                    onChange={(e) => setShowTargetFields(e.target.checked)}
+                    color={BLACK}
+                  />{' '}
+                  <span className="ml-1">
+                    Yes, my {OBJECT_NAME_SINGULAR} is restricted to certain
+                    student groups.
+                  </span>
+                </CheckboxLabel>
+              </div>
+            </>
+          ),
+          hidden: SITE_ID === 'fyh',
         },
         {
           name: 'target_years',
@@ -524,30 +558,116 @@ export default function ClubEditCard({
               ? `Select degree type relevant to your ${OBJECT_NAME_SINGULAR}!`
               : `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: years,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
         },
         {
           name: 'target_schools',
           type: 'multiselect',
           placeholder: `Select schools relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: schools,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
         },
         {
           name: 'target_majors',
           type: 'multiselect',
           placeholder: `Select majors relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: majors,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
         },
         {
           name: 'student_types',
           type: 'multiselect',
           placeholder: `Select student types relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: studentTypes,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
         },
       ].filter(({ name }) => name == null || isClubFieldShown(name)),
+    },
+    {
+      name: 'Exclusive Programming',
+      type: 'group',
+      hidden: SITE_ID !== 'fyh',
+      description: (
+        <>
+          <Text>
+            We assume that many Penn resources are available to all Penn
+            students. Among all the services/programs that your resource
+            provides,{' '}
+            <b>
+              does your resource provide programs targeted to a specific
+              category of students
+            </b>{' '}
+            (graduate, exchange, etc.) ? If yes, please select and provide the
+            name of the specific programming for the student populations that
+            have been selected. If no, please skip this question.
+          </Text>
+        </>
+      ),
+      fields: [
+        {
+          type: 'content',
+          content: (
+            <div style={{ marginBottom: '8px' }}>
+              <b>School Year Specific</b>
+            </div>
+          ),
+        },
+        ...years.map(({ name, id }) => {
+          const inTarget = club.target_years?.find((o) => o.id === id)
+          return {
+            name: `exclusive:year:${id}`,
+            label: name,
+            type: 'checkboxText',
+            textRequired: EXCLUSIVE_CHECKBOX_TEXT_REQUIRED_ERROR,
+            value: {
+              checked: !!inTarget,
+              detail: (inTarget ?? ({} as any)).program ?? '',
+            },
+          }
+        }),
+        {
+          type: 'content',
+          content: (
+            <div style={{ marginBottom: '8px' }}>
+              <b>Major Specific</b>
+            </div>
+          ),
+        },
+        ...majors.map(({ name, id }) => {
+          const inTarget = club.target_majors?.find((o) => o.id === id)
+          return {
+            name: `exclusive:major:${id}`,
+            label: name,
+            type: 'checkboxText',
+            textRequired: EXCLUSIVE_CHECKBOX_TEXT_REQUIRED_ERROR,
+            value: {
+              checked: !!inTarget,
+              detail: (inTarget ?? ({} as any)).program ?? '',
+            },
+          }
+        }),
+        {
+          type: 'content',
+          content: (
+            <div style={{ marginBottom: '8px' }}>
+              <b>School Specific</b>
+            </div>
+          ),
+        },
+        ...schools.map(({ name, id }) => {
+          const inTarget = club.target_schools?.find((o) => o.id === id)
+          return {
+            name: `exclusive:school:${id}`,
+            label: name,
+            type: 'checkboxText',
+            textRequired: EXCLUSIVE_CHECKBOX_TEXT_REQUIRED_ERROR,
+            value: {
+              checked: !!inTarget,
+              detail: (inTarget ?? ({} as any)).program ?? '',
+            },
+          }
+        }),
+      ],
     },
   ]
 
@@ -616,6 +736,7 @@ export default function ClubEditCard({
                               select: SelectField,
                               image: FileField,
                               address: FormikAddressField,
+                              checkboxText: CheckboxTextField,
                             }[props.type] ?? TextField
                           }
                           {...other}
