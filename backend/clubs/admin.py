@@ -38,6 +38,7 @@ from clubs.models import (
     Tag,
     TargetMajor,
     TargetSchool,
+    TargetStudentType,
     TargetYear,
     Testimonial,
     Year,
@@ -421,6 +422,7 @@ admin.site.register(Tag, TagAdmin)
 admin.site.register(TargetMajor)
 admin.site.register(TargetSchool)
 admin.site.register(TargetYear)
+admin.site.register(TargetStudentType)
 admin.site.register(Testimonial)
 admin.site.register(StudentType)
 admin.site.register(Note)

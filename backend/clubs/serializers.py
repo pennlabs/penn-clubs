@@ -41,6 +41,7 @@ from clubs.models import (
     Tag,
     TargetMajor,
     TargetSchool,
+    TargetStudentType,
     TargetYear,
     Testimonial,
     Year,
@@ -1088,6 +1089,20 @@ class TargetMajorSerializer(serializers.ModelSerializer):
     def get_id(self, obj):
         return obj.target_majors.id
 
+class TargetStudentTypeSerializer(serializers.ModelSerializer):
+    """
+    Used as a nested serializer by ClubSerializer
+    """
+
+    id = serializers.SerializerMethodField("get_id")
+
+    class Meta:
+        model = TargetMajor
+        fields = ("id", "program")
+
+    def get_id(self, obj):
+        return obj.target_student_types.id
+
 
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
@@ -1096,7 +1111,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     testimonials = TestimonialSerializer(many=True, read_only=True)
     events = serializers.SerializerMethodField("get_events")
     is_request = serializers.SerializerMethodField("get_is_request")
-    student_types = StudentTypeSerializer(many=True, required=False)
+    student_types = serializers.SerializerMethodField("get_target_student_types")
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
@@ -1171,6 +1186,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         qset = TargetSchool.objects.filter(club=obj)
         return [TargetSchoolSerializer(m).data for m in qset]
 
+    def get_target_student_types(self, obj):
+        qset = TargetStudentType.objects.filter(club=obj)
+        return [TargetStudentTypeSerializer(m).data for m in qset]
+
     def create(self, validated_data):
         """
         Ensure new clubs follow certain invariants.
@@ -1208,6 +1227,14 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                 major = Major.objects.get(id=target["id"])
                 TargetMajor.objects.create(
                     club=obj, target_majors=major, program=target.get("program", "")
+                )
+
+        if self.context["request"].data.get("student_types", None) is not None:
+            target_student_types = self.context["request"].data["student_types"]
+            for target in target_student_types:
+                student_type = StudentType.objects.get(id=target["id"])
+                TargetStudentType.objects.create(
+                    club=obj, target_student_types=student_type, program=target.get("program", "")
                 )
 
         if not settings.BRANDING == "fyh":
@@ -1543,6 +1570,23 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                 else:
                     TargetMajor.objects.create(
                         club=obj, target_majors=major, program=target.get("program", "")
+                    )
+
+        if self.context["request"].data.get("student_types", None) is not None:
+            target_student_types = self.context["request"].data["student_types"]
+            for target in target_student_types:
+                student_type = StudentType.objects.get(id=target["id"])
+                if (
+                    TargetStudentType.objects.filter(club=obj)
+                    .filter(target_student_types=student_type)
+                    .exists()
+                ):
+                    TargetStudentType.objects.filter(club=obj).filter(
+                        target_student_types=student_type
+                    ).update(program=target.get("program", ""))
+                else:
+                    TargetStudentType.objects.create(
+                        club=obj, target_student_types=student_type, program=target.get("program", "")
                     )
 
         return obj

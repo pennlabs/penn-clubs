@@ -279,7 +279,7 @@ class Club(models.Model):
         choices=APPLICATION_CHOICES, default=APPLICATION
     )
     accepting_members = models.BooleanField(default=False)
-    student_types = models.ManyToManyField("StudentType", blank=True)
+    student_types = models.ManyToManyField("StudentType", through="TargetStudentType")
     recruiting_cycle = models.IntegerField(
         choices=RECRUITING_CYCLES, default=RECRUITING_UNKNOWN
     )
@@ -662,7 +662,13 @@ class Club(models.Model):
             ),
             ("manage_club", "Manipulate club object and related objects"),
         ]
+class TargetStudentType(models.Model):
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    target_student_types = models.ForeignKey("StudentType", blank=True, on_delete=models.CASCADE)
+    program = models.CharField(max_length=255, null=True, blank=True)
 
+    def __str__(self):
+        return "{}: {}({})".format(self.club.name, self.target_student_types, self.program)
 
 class TargetYear(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
