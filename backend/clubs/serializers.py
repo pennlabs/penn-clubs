@@ -1089,6 +1089,7 @@ class TargetMajorSerializer(serializers.ModelSerializer):
     def get_id(self, obj):
         return obj.target_majors.id
 
+
 class TargetStudentTypeSerializer(serializers.ModelSerializer):
     """
     Used as a nested serializer by ClubSerializer
@@ -1234,7 +1235,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             for target in target_student_types:
                 student_type = StudentType.objects.get(id=target["id"])
                 TargetStudentType.objects.create(
-                    club=obj, target_student_types=student_type, program=target.get("program", "")
+                    club=obj,
+                    target_student_types=student_type,
+                    program=target.get("program", ""),
                 )
 
         if not settings.BRANDING == "fyh":
@@ -1586,7 +1589,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                     ).update(program=target.get("program", ""))
                 else:
                     TargetStudentType.objects.create(
-                        club=obj, target_student_types=student_type, program=target.get("program", "")
+                        club=obj,
+                        target_student_types=student_type,
+                        program=target.get("program", ""),
                     )
 
         return obj
