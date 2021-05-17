@@ -83,7 +83,7 @@ class Command(BaseCommand):
                 "ics_calendar_ingestation",
                 "grad_resource_contact",
                 "faq_demo",
-                "one_pager",
+                "admin_outreach",
             ),
         )
         parser.add_argument(
@@ -351,9 +351,19 @@ class Command(BaseCommand):
             "osa_email_communication",
             "ics_calendar_ingestation",
             "faq_demo",
-            "one_pager",
+            "admin_outreach",
         }:
             clubs = Club.objects.all()
+            attachment = None
+
+            if action == "admin_outreach":
+                path = os.path.join(
+                    settings.BASE_DIR, "templates", "fyh_emails", "one_pager.html"
+                )
+                attachment = {
+                    "filename": "one-pager",
+                    "path": path,
+                }
 
             # Only send one email if it is a test email
             if test_email is not None:
@@ -365,7 +375,7 @@ class Command(BaseCommand):
                     emails = [test_email]
 
                 if not dry_run:
-                    send_mail_helper(action, None, emails, None)
+                    send_mail_helper(action, None, emails, None, attachment=attachment)
                     self.stdout.write(
                         f"Sent {action} email to {emails} for club {club}"
                     )
