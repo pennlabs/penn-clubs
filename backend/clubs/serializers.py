@@ -1068,7 +1068,7 @@ class TargetSchoolSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TargetSchool
-        fields =  ("id", "program")
+        fields = ("id", "program")
 
     def get_id(self, obj):
         return obj.target_schools.id
@@ -1488,6 +1488,62 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             update_change_reason(obj, "Edit club through UI (reapproval required)")
         else:
             update_change_reason(obj, "Edit club through UI")
+
+        print(self.context["request"].data)
+
+        # Update target year, target school, and target major with specific program names
+        if self.context["request"].data.get("target_years", None) is not None:
+            target_years = self.context["request"].data["target_years"]
+            for target in target_years:
+                year = Year.objects.get(id=target["id"])
+                if (
+                    TargetYear.objects.filter(club=obj)
+                    .filter(target_years=year)
+                    .exists()
+                ):
+                    TargetYear.objects.filter(club=obj).filter(
+                        target_years=year
+                    ).update(program=target.get("program", ""))
+                else:
+                    TargetYear.objects.create(
+                        club=obj, target_years=year, program=target.get("program", "")
+                    )
+
+        if self.context["request"].data.get("target_schools", None) is not None:
+            target_schools = self.context["request"].data["target_schools"]
+            for target in target_schools:
+                school = School.objects.get(id=target["id"])
+                if (
+                    TargetSchool.objects.filter(club=obj)
+                    .filter(target_schools=school)
+                    .exists()
+                ):
+                    TargetSchool.objects.filter(club=obj).filter(
+                        target_schools=school
+                    ).update(program=target.get("program", ""))
+                else:
+                    TargetSchool.objects.create(
+                        club=obj,
+                        target_schools=school,
+                        program=target.get("program", ""),
+                    )
+
+        if self.context["request"].data.get("target_majors", None) is not None:
+            target_majors = self.context["request"].data["target_majors"]
+            for target in target_majors:
+                major = Major.objects.get(id=target["id"])
+                if (
+                    TargetMajor.objects.filter(club=obj)
+                    .filter(target_majors=major)
+                    .exists()
+                ):
+                    TargetMajor.objects.filter(club=obj).filter(
+                        target_majors=major
+                    ).update(program=target.get("program", ""))
+                else:
+                    TargetMajor.objects.create(
+                        club=obj, target_majors=major, program=target.get("program", "")
+                    )
 
         return obj
 
