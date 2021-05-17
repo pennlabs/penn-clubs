@@ -100,7 +100,8 @@ def send_mail_helper(name, subject, emails, context, attachment=None):
             msg.attach(
                 attachment["filename"],
                 file.read(),
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.openxmlformats-officedocument."
+                + "wordprocessingml.document",
             )
 
     msg.attach_alternative(html_content, "text/html")
