@@ -233,17 +233,23 @@ export default function ClubEditCard({
       delete data.image
     }
 
-    const entries = Object.entries(data)
+    const entries = Object.entries(data).map(([key, val]) => {
+      if (['target_schools', 'target_majors', 'target_years'].includes(key)) {
+        return [key, (val as any[]).map((v) => v.id)]
+      }
+      return [key, val]
+    }) as [string, string][]
 
     const [exclusiveEntries, withoutExclusiveEntries] = bifurcateFilter(
       entries,
       ([key]) => !!key.match(/^exclusive:(.+?):(.+?)$/g),
     )
 
-    const exclusives = categorizeFilter(
+    // sorry ts
+    const exclusives = (categorizeFilter(
       exclusiveEntries,
       ([key]) => key.match(/^exclusive:(.+?):(.+?)$/)?.[1] ?? 'unknown',
-    ) as {
+    ) as unknown) as {
       year: Array<[string, { checked?: boolean; detail?: string }]>
       // major: Array<[string, { checked?: boolean; detail?: string }]>
       student_type: Array<[string, { checked?: boolean; detail?: string }]>
@@ -290,10 +296,10 @@ export default function ClubEditCard({
         }) ?? []
 
     const body = {
-      ...Object.fromEntries(withoutExclusiveEntries),
       target_years,
       student_types,
       target_schools,
+      ...Object.fromEntries(withoutExclusiveEntries),
     }
     const req =
       isEdit && club !== null
@@ -632,6 +638,8 @@ export default function ClubEditCard({
           placeholder: `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: years,
           hidden: SITE_ID === 'fyh' || !showTargetFields,
+          // valueDeserialize: (o) => o && { value: o.id, label: o.name },
+          deserialize: (o) => ({ value: o.id, label: o.name }),
         },
         {
           name: 'target_schools',
