@@ -211,7 +211,8 @@ export default function ClubEditCard({
       ([key]) => key.match(/^exclusive:(.+?):(.+?)$/)?.[1] ?? 'unknown',
     ) as {
       year: Array<[string, { checked?: boolean; detail?: string }]>
-      major: Array<[string, { checked?: boolean; detail?: string }]>
+      // major: Array<[string, { checked?: boolean; detail?: string }]>
+      student_type: Array<[string, { checked?: boolean; detail?: string }]>
       school: Array<[string, { checked?: boolean; detail?: string }]>
     }
 
@@ -228,12 +229,12 @@ export default function ClubEditCard({
           }
         }) ?? []
 
-    const target_majors =
-      exclusives.major
+    const student_types =
+      exclusives.student_type
         ?.filter(([_, value]) => value?.checked)
         .map(([key, value]) => {
           const id = Number(key.match(/^exclusive:(.+?):(.+?)$/)?.[2] ?? -1)
-          const name = majors.find((o) => o.id === id)?.name
+          const name = studentTypes.find((o) => o.id === id)?.name
           return {
             id,
             // name,
@@ -257,7 +258,7 @@ export default function ClubEditCard({
     const body = {
       ...Object.fromEntries(withoutExclusiveEntries),
       target_years,
-      target_majors,
+      student_types,
       target_schools,
     }
     const req =
@@ -587,6 +588,7 @@ export default function ClubEditCard({
                 </div>
               </>
             ),
+          hidden: SITE_ID === 'fyh',
         },
         {
           name: 'target_years',
@@ -597,28 +599,28 @@ export default function ClubEditCard({
               ? `Select degree type relevant to your ${OBJECT_NAME_SINGULAR}!`
               : `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: years,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
         },
         {
           name: 'target_schools',
           type: 'multiselect',
           placeholder: `Select schools relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: schools,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
         },
         {
           name: 'target_majors',
           type: 'multiselect',
           placeholder: `Select majors relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: majors,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
         },
         {
           name: 'student_types',
           type: 'multiselect',
           placeholder: `Select student types relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: studentTypes,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
         },
       ].filter(({ name }) => name == null || isClubFieldShown(name)),
     },
@@ -668,14 +670,14 @@ export default function ClubEditCard({
           type: 'content',
           content: (
             <div style={{ marginBottom: '8px' }}>
-              <b>Major Specific</b>
+              <b>Student Type Specific</b>
             </div>
           ),
         },
-        ...majors.map(({ name, id }) => {
-          const inTarget = club.target_majors?.find((o) => o.id === id)
+        ...studentTypes.map(({ name, id }) => {
+          const inTarget = club.student_types?.find((o) => o.id === id)
           return {
-            name: `exclusive:major:${id}`,
+            name: `exclusive:student_type:${id}`,
             label: name,
             type: 'checkboxText',
             textRequired: EXCLUSIVE_CHECKBOX_TEXT_REQUIRED_ERROR,
