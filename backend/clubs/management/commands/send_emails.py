@@ -83,6 +83,7 @@ class Command(BaseCommand):
                 "ics_calendar_ingestation",
                 "grad_resource_contact",
                 "faq_demo",
+                "one_pager",
             ),
         )
         parser.add_argument(
@@ -350,6 +351,7 @@ class Command(BaseCommand):
             "osa_email_communication",
             "ics_calendar_ingestation",
             "faq_demo",
+            "one_pager",
         }:
             clubs = Club.objects.all()
 
