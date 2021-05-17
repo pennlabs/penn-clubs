@@ -97,7 +97,11 @@ def send_mail_helper(name, subject, emails, context, attachment=None):
 
     if attachment is not None and "filename" in attachment and "path" in attachment:
         with open(attachment["path"], "rb") as file:
-            msg.attach(attachment["filename"], file.read(), "text/html")
+            msg.attach(
+                attachment["filename"],
+                file.read(),
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
 
     msg.attach_alternative(html_content, "text/html")
     msg.send(fail_silently=False)

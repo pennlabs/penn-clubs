@@ -358,10 +358,10 @@ class Command(BaseCommand):
 
             if action == "admin_outreach":
                 path = os.path.join(
-                    settings.BASE_DIR, "templates", "fyh_emails", "one_pager.html"
+                    settings.BASE_DIR, "templates", "fyh_emails", "one_pager.docx"
                 )
                 attachment = {
-                    "filename": "one-pager",
+                    "filename": "Hub@Penn One-Pager",
                     "path": path,
                 }
 
