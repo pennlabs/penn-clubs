@@ -396,6 +396,7 @@ export default function ClubEditCard({
         {
           name: 'website',
           type: 'url',
+          required: SITE_ID === 'fyh',
         },
         {
           name: 'facebook',
