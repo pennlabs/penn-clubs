@@ -1,8 +1,9 @@
 import { Field, Form, Formik } from 'formik'
 import Link from 'next/link'
-import { ReactElement, useState } from 'react'
+import React, { ReactElement, useState } from 'react'
 
-import { BLACK } from '../../constants'
+import { BLACK } from '~/constants'
+
 import {
   Club,
   ClubApplicationRequired,
@@ -185,6 +186,39 @@ export default function ClubEditCard({
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement {
   const [showTargetFields, setShowTargetFields] = useState<boolean>(
+    !!(
+      club.target_majors?.length ||
+      club.target_schools?.length ||
+      club.target_years?.length ||
+      club.student_types?.length
+    ),
+  )
+
+  const [
+    showSchoolYearProgramming,
+    setSchoolYearProgramming,
+  ] = useState<boolean>(
+    !!(
+      club.target_majors?.length ||
+      club.target_schools?.length ||
+      club.target_years?.length ||
+      club.student_types?.length
+    ),
+  )
+
+  const [
+    showStudentTypeProgramming,
+    setStudentTypeProgramming,
+  ] = useState<boolean>(
+    !!(
+      club.target_majors?.length ||
+      club.target_schools?.length ||
+      club.target_years?.length ||
+      club.student_types?.length
+    ),
+  )
+
+  const [showSchoolProgramming, setSchoolProgramming] = useState<boolean>(
     !!(
       club.target_majors?.length ||
       club.target_schools?.length ||
@@ -433,6 +467,7 @@ export default function ClubEditCard({
         {
           name: 'website',
           type: 'url',
+          required: SITE_ID === 'fyh',
         },
         {
           name: 'facebook',
@@ -590,12 +625,9 @@ export default function ClubEditCard({
         },
         {
           name: 'target_years',
-          label: SITE_ID === 'fyh' ? 'Degree Type' : 'Target Years',
+          label: 'Target Years',
           type: 'multiselect',
-          placeholder:
-            SITE_ID === 'fyh'
-              ? `Select degree type relevant to your ${OBJECT_NAME_SINGULAR}!`
-              : `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
+          placeholder: `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: years,
           hidden: !showTargetFields,
         },
