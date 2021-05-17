@@ -529,25 +529,64 @@ export default function ClubEditCard({
         },
         {
           type: 'content',
-          content: (
-            <>
-              <Text>{FORM_TARGET_DESCRIPTION}</Text>
-              <div className="ml-2 mb-4">
-                <CheckboxLabel>
-                  <Checkbox
-                    checked={showTargetFields}
-                    onChange={(e) => setShowTargetFields(e.target.checked)}
-                    color={BLACK}
-                  />{' '}
-                  <span className="ml-1">
-                    Yes, my {OBJECT_NAME_SINGULAR} is restricted to certain
-                    student groups.
-                  </span>
-                </CheckboxLabel>
-              </div>
-            </>
-          ),
-          hidden: SITE_ID === 'fyh',
+          content:
+            SITE_ID === 'fyh' ? (
+              <>
+                <Text>{FORM_TARGET_DESCRIPTION}</Text>
+                <div className="ml-2 mb-4">
+                  <CheckboxLabel>
+                    <Checkbox
+                      checked={!showTargetFields}
+                      onChange={(e) => setShowTargetFields(false)}
+                      color={BLACK}
+                    />{' '}
+                    <span className="ml-1">Yes.</span>
+                  </CheckboxLabel>
+                  {/* spacer */}
+                  <div style={{ display: 'inline-block', marginLeft: '8px' }} />
+                  <CheckboxLabel>
+                    <Checkbox
+                      checked={showTargetFields}
+                      onChange={(e) => setShowTargetFields(true)}
+                      color={BLACK}
+                    />{' '}
+                    <span className="ml-1">
+                      No, my {OBJECT_NAME_SINGULAR} is restricted to certain
+                      student groups.
+                    </span>
+                  </CheckboxLabel>
+                </div>
+                <Text>
+                  If not, Hub@Penn has provided a way for certain student
+                  populations to filter resources with support services designed
+                  specifically with them in mind. In order for this filter to
+                  work adequately for your resource, you must choose from
+                  following list of tags.
+                </Text>
+                <Text>
+                  Please note: It is assumed that all Penn resources are
+                  available to all Penn students. Please be selective in your
+                  choice of tags.
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text>{FORM_TARGET_DESCRIPTION}</Text>
+                <div className="ml-2 mb-4">
+                  <CheckboxLabel>
+                    <Checkbox
+                      checked={showTargetFields}
+                      onChange={(e) => setShowTargetFields(e.target.checked)}
+                      color={BLACK}
+                    />{' '}
+                    <span className="ml-1">
+                      Yes, my {OBJECT_NAME_SINGULAR} is restricted to certain
+                      student groups.
+                    </span>
+                  </CheckboxLabel>
+                </div>
+              </>
+            ),
         },
         {
           name: 'target_years',
@@ -558,28 +597,28 @@ export default function ClubEditCard({
               ? `Select degree type relevant to your ${OBJECT_NAME_SINGULAR}!`
               : `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: years,
-          hidden: SITE_ID === 'fyh' || !showTargetFields,
+          hidden: !showTargetFields,
         },
         {
           name: 'target_schools',
           type: 'multiselect',
           placeholder: `Select schools relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: schools,
-          hidden: SITE_ID === 'fyh' || !showTargetFields,
+          hidden: !showTargetFields,
         },
         {
           name: 'target_majors',
           type: 'multiselect',
           placeholder: `Select majors relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: majors,
-          hidden: SITE_ID === 'fyh' || !showTargetFields,
+          hidden: !showTargetFields,
         },
         {
           name: 'student_types',
           type: 'multiselect',
           placeholder: `Select student types relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: studentTypes,
-          hidden: SITE_ID === 'fyh' || !showTargetFields,
+          hidden: !showTargetFields,
         },
       ].filter(({ name }) => name == null || isClubFieldShown(name)),
     },
@@ -698,7 +737,10 @@ export default function ClubEditCard({
       {({ dirty, isSubmitting }) => (
         <Form>
           <FormStyle isHorizontal>
-            {fields.map(({ name, description, fields }, i) => {
+            {fields.map(({ name, description, fields, hidden }, i) => {
+              if (hidden) {
+                return null
+              }
               return (
                 <Card title={name} key={i}>
                   {description}
