@@ -1,8 +1,9 @@
 import { Field, Form, Formik } from 'formik'
 import Link from 'next/link'
-import { ReactElement, useState } from 'react'
+import React, { ReactElement, useState } from 'react'
 
-import { BLACK } from '../../constants'
+import { BLACK } from '~/constants'
+
 import {
   Club,
   ClubApplicationRequired,
@@ -175,6 +176,39 @@ export default function ClubEditCard({
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement {
   const [showTargetFields, setShowTargetFields] = useState<boolean>(
+    !!(
+      club.target_majors?.length ||
+      club.target_schools?.length ||
+      club.target_years?.length ||
+      club.student_types?.length
+    ),
+  )
+
+  const [
+    showSchoolYearProgramming,
+    setSchoolYearProgramming,
+  ] = useState<boolean>(
+    !!(
+      club.target_majors?.length ||
+      club.target_schools?.length ||
+      club.target_years?.length ||
+      club.student_types?.length
+    ),
+  )
+
+  const [
+    showStudentTypeProgramming,
+    setStudentTypeProgramming,
+  ] = useState<boolean>(
+    !!(
+      club.target_majors?.length ||
+      club.target_schools?.length ||
+      club.target_years?.length ||
+      club.student_types?.length
+    ),
+  )
+
+  const [showSchoolProgramming, setSchoolProgramming] = useState<boolean>(
     !!(
       club.target_majors?.length ||
       club.target_schools?.length ||
@@ -458,71 +492,31 @@ export default function ClubEditCard({
         },
         {
           type: 'content',
-          content:
-            SITE_ID === 'fyh' ? (
-              <>
-                <Text>{FORM_TARGET_DESCRIPTION}</Text>
-                <div className="ml-2 mb-4">
-                  <CheckboxLabel>
-                    <Checkbox
-                      checked={!showTargetFields}
-                      onChange={(e) => setShowTargetFields(false)}
-                      color={BLACK}
-                    />{' '}
-                    <span className="ml-1">Yes.</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <Checkbox
-                      checked={showTargetFields}
-                      onChange={(e) => setShowTargetFields(true)}
-                      color={BLACK}
-                    />{' '}
-                    <span className="ml-1">
-                      No, my {OBJECT_NAME_SINGULAR} is restricted to certain
-                      student groups.
-                    </span>
-                  </CheckboxLabel>
-                </div>
-                <Text>
-                  If not, Hub@Penn has provided a way for certain student
-                  populations to filter resources with support services designed
-                  specifically with them in mind. In order for this filter to
-                  work adequately for your resource, you must choose from
-                  following list of tags.
-                </Text>
-                <Text>
-                  Please note: It is assumed that all Penn resources are
-                  available to all Penn students. Please be selective in your
-                  choice of tags.
-                </Text>
-              </>
-            ) : (
-              <>
-                <Text>{FORM_TARGET_DESCRIPTION}</Text>
-                <div className="ml-2 mb-4">
-                  <CheckboxLabel>
-                    <Checkbox
-                      checked={showTargetFields}
-                      onChange={(e) => setShowTargetFields(e.target.checked)}
-                      color={BLACK}
-                    />{' '}
-                    <span className="ml-1">
-                      Yes, my {OBJECT_NAME_SINGULAR} is restricted to certain
-                      student groups.
-                    </span>
-                  </CheckboxLabel>
-                </div>
-              </>
-            ),
+          hidden: SITE_ID !== 'clubs',
+          content: (
+            <>
+              <Text>{FORM_TARGET_DESCRIPTION}</Text>
+              <div className="ml-2 mb-4">
+                <CheckboxLabel>
+                  <Checkbox
+                    checked={showTargetFields}
+                    onChange={(e) => setShowTargetFields(e.target.checked)}
+                    color={BLACK}
+                  />{' '}
+                  <span className="ml-1">
+                    Yes, my {OBJECT_NAME_SINGULAR} is restricted to certain
+                    student groups.
+                  </span>
+                </CheckboxLabel>
+              </div>
+            </>
+          ),
         },
         {
           name: 'target_years',
-          label: SITE_ID === 'fyh' ? 'Degree Type' : 'Target Years',
+          label: 'Target Years',
           type: 'multiselect',
-          placeholder:
-            SITE_ID === 'fyh'
-              ? `Select degree type relevant to your ${OBJECT_NAME_SINGULAR}!`
-              : `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
+          placeholder: `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: years,
           hidden: !showTargetFields,
         },
@@ -548,6 +542,242 @@ export default function ClubEditCard({
           hidden: !showTargetFields,
         },
       ].filter(({ name }) => name == null || isClubFieldShown(name)),
+    },
+    {
+      name: 'Targeted Programming',
+      type: 'group',
+      hidden: SITE_ID !== 'fyh',
+      description: (
+        <Text>
+          We assume that many Penn resources are available to all Penn students.
+          students. Among all the services/programs that your resource{' '}
+          <b>
+            does your resource provide programs targeted to a specific category
+            of students
+          </b>{' '}
+          (graduate, exchange, etc.)? If yes, please select and provide the name
+          of the specific programming for the student populations that have been
+          selected. If no, please skip this question.
+        </Text>
+      ),
+      fields: [
+        {
+          type: 'content',
+          content: (
+            <>
+              <div className="ml-2 mb-4">
+                <CheckboxLabel>
+                  <Checkbox
+                    checked={showSchoolYearProgramming}
+                    onChange={(e) => setSchoolYearProgramming(e.target.checked)}
+                    color={BLACK}
+                  />{' '}
+                  <span className="ml-1">
+                    Yes, we offer exclusive programming for{' '}
+                    <b>specific school years</b>.
+                  </span>
+                </CheckboxLabel>
+              </div>
+            </>
+          ),
+        },
+        {
+          name: 'first_year_undergrad_programming',
+          label: `First-Year Undergrad`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolYearProgramming,
+        },
+        {
+          name: 'second_year_undergrad_programming',
+          label: `Second-Year Undergrad`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolYearProgramming,
+        },
+        {
+          name: 'junior_programming',
+          label: `Junior`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolYearProgramming,
+        },
+        {
+          name: 'senior_programming',
+          label: `Senior`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolYearProgramming,
+        },
+        {
+          name: 'graduate_professional_programming',
+          label: `Graduate & Professional`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolYearProgramming,
+        },
+        {
+          type: 'content',
+          content: (
+            <>
+              <div className="ml-2 mb-4">
+                <CheckboxLabel>
+                  <Checkbox
+                    checked={showStudentTypeProgramming}
+                    onChange={(e) =>
+                      setStudentTypeProgramming(e.target.checked)
+                    }
+                    color={BLACK}
+                  />{' '}
+                  <span className="ml-1">
+                    Yes, we offer exclusive programming for{' '}
+                    <b>specific student types</b>.
+                  </span>
+                </CheckboxLabel>
+              </div>
+            </>
+          ),
+        },
+        {
+          name: 'exchange_student_programming',
+          label: `Exchange Students`,
+          required: false,
+          type: 'text',
+          hidden: !showStudentTypeProgramming,
+        },
+        {
+          name: 'first_generator_lower_income_programming',
+          label: `First-Generator & Lower-Income`,
+          required: false,
+          type: 'text',
+          hidden: !showStudentTypeProgramming,
+        },
+        {
+          name: 'international_student_programming',
+          label: `International Students`,
+          required: false,
+          type: 'text',
+          hidden: !showStudentTypeProgramming,
+        },
+        {
+          name: 'online_degree_programming',
+          label: `Online Degree`,
+          required: false,
+          type: 'text',
+          hidden: !showStudentTypeProgramming,
+        },
+        {
+          name: 'transfer_student_programming',
+          label: `Transfer Students`,
+          required: false,
+          type: 'text',
+          hidden: !showStudentTypeProgramming,
+        },
+        {
+          type: 'content',
+          content: (
+            <>
+              <div className="ml-2 mb-4">
+                <CheckboxLabel>
+                  <Checkbox
+                    checked={showSchoolProgramming}
+                    onChange={(e) => setSchoolProgramming(e.target.checked)}
+                    color={BLACK}
+                  />{' '}
+                  <span className="ml-1">
+                    Yes, we offer exclusive programming for{' '}
+                    <b>specific schools</b>.
+                  </span>
+                </CheckboxLabel>
+              </div>
+            </>
+          ),
+        },
+        {
+          name: 'school_of_arts_and_sciences_programming',
+          label: `School of Arts & Sciences`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+        {
+          name: 'school_of_engineering_and_applied_sciences_programming',
+          label: `School of Engineering & Applied Sciences`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+        {
+          name: 'school_of_nursing_programming',
+          label: `School of Nursing`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+        {
+          name: 'wharton_school_programming',
+          label: `The Wharton School`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+        {
+          name: 'annenberg_school_for_communication_programming',
+          label: `Annenberg School for Communication`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+        {
+          name: 'graduate_school_education_programming',
+          label: `Graduate School Education`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+        {
+          name: 'law_school_programming',
+          label: `Law School`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+        {
+          name: 'perelman_school_of_medicine_programming',
+          label: `Perelman School of Medicine`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+        {
+          name: 'school_of_dental_medicine_programming',
+          label: `School of Dental Medicine`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+        {
+          name: 'school_of_social_policy_and_practice_programming',
+          label: `School of Social Policy & Practice`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+        {
+          name: 'school_of_veterinary_medicine_programming',
+          label: `School of Veterinary Medicine`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+        {
+          name: 'stuart_weitzman_school_of_design',
+          label: `Stuart Weitzman School of Design`,
+          required: false,
+          type: 'text',
+          hidden: !showSchoolProgramming,
+        },
+      ],
     },
   ]
 
@@ -578,7 +808,10 @@ export default function ClubEditCard({
       {({ dirty, isSubmitting }) => (
         <Form>
           <FormStyle isHorizontal>
-            {fields.map(({ name, description, fields }, i) => {
+            {fields.map(({ name, description, fields, hidden }, i) => {
+              if (hidden) {
+                return null
+              }
               return (
                 <Card title={name} key={i}>
                   {description}
