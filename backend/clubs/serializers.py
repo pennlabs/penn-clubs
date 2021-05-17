@@ -1205,7 +1205,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             person=self.context["request"].user, club=obj, role=Membership.ROLE_OWNER
         )
 
-        # Create target year, target school, and target major with specific program names
+        # Create target year, target school
+        # and target major with specific program names
         if self.context["request"].data.get("target_years", None) is not None:
             target_years = self.context["request"].data["target_years"]
             for target in target_years:
@@ -1521,7 +1522,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         print(self.context["request"].data)
 
-        # Update target year, target school, and target major with specific program names
+        # Update target year, target school
+        # and target major with specific program names
         if self.context["request"].data.get("target_years", None) is not None:
             target_years = self.context["request"].data["target_years"]
             for target in target_years:
