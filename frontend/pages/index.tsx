@@ -594,7 +594,7 @@ const Splash = (props: SplashProps): ReactElement => {
                   />
                 )}
                 <div style={{ marginBottom: '8px' }}>
-                  Check out these additional resources that may interest you
+                  Check out these additional resources that may interest you.
                 </div>
                 <Divider />
               </>
