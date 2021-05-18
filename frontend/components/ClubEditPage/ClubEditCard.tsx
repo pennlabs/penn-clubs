@@ -714,7 +714,7 @@ export default function ClubEditCard({
             </div>
           ),
         },
-        ...studentTypes.map(({ name, id }) => {
+        ...(studentTypes || []).map(({ name, id }) => {
           const inTarget = club.student_types?.find((o) => o.id === id)
           return {
             name: `exclusive:student_type:${id}`,
