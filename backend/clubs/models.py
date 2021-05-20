@@ -44,7 +44,7 @@ def get_mail_type_annotation(name):
     return None
 
 
-def send_mail_helper(name, subject, emails, context):
+def send_mail_helper(name, subject, emails, context, attachment=None):
     """
     A helper to send out an email given the template name, subject, to emails,
     and context. Returns true if an email was sent out, or false if no emails
@@ -94,6 +94,15 @@ def send_mail_helper(name, subject, emails, context):
     msg = EmailMultiAlternatives(
         subject, text_content, settings.FROM_EMAIL, list(set(emails))
     )
+
+    if attachment is not None and "filename" in attachment and "path" in attachment:
+        with open(attachment["path"], "rb") as file:
+            msg.attach(
+                attachment["filename"],
+                file.read(),
+                "application/vnd.openxmlformats-officedocument."
+                + "wordprocessingml.document",
+            )
 
     msg.attach_alternative(html_content, "text/html")
     msg.send(fail_silently=False)
