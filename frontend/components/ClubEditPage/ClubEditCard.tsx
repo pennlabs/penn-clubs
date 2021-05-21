@@ -233,12 +233,7 @@ export default function ClubEditCard({
       delete data.image
     }
 
-    const entries = Object.entries(data).map(([key, val]) => {
-      if (['target_schools', 'target_majors', 'target_years'].includes(key)) {
-        return [key, (val as any[]).map((v) => v.id)]
-      }
-      return [key, val]
-    }) as [string, string][]
+    const entries = Object.entries(data)
 
     const [exclusiveEntries, withoutExclusiveEntries] = bifurcateFilter(
       entries,
