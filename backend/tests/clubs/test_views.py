@@ -1192,7 +1192,7 @@ class ClubTestCase(TestCase):
                     {"name": tag2.name},
                     {"name": "Graduate"},
                 ],
-                "target_schools": [{"id": school1.id}],
+                "target_schools": [{"name": school1.name}],
                 "email": "example@example.com",
                 "facebook": "https://www.facebook.com/groups/966590693376781/"
                 + "?ref=nf_target&fref=nf",

@@ -326,10 +326,9 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
 
             if tags[0].isdigit() or operation == "id":
                 tags = [int(tag) for tag in tags if tag]
+
                 if settings.BRANDING == "fyh":
-                    print(queryset)
                     queryset = queryset.filter(**{f"{field}__id__in": tags})
-                    print(queryset)
                 else:
                     for tag in tags:
                         queryset = queryset.filter(**{f"{field}__id": tag})

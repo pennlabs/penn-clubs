@@ -39,10 +39,6 @@ from clubs.models import (
     StudentType,
     Subscribe,
     Tag,
-    TargetMajor,
-    TargetSchool,
-    TargetStudentType,
-    TargetYear,
     Testimonial,
     Year,
 )
@@ -1045,66 +1041,6 @@ def social_validation_helper(value, domain, prefix="", at_prefix=None):
     return "https://{}{}".format(domain, path)
 
 
-class TargetYearSerializer(serializers.ModelSerializer):
-    """
-    Used as a nested serializer by ClubSerializer
-    """
-
-    id = serializers.SerializerMethodField("get_id")
-
-    class Meta:
-        model = TargetYear
-        fields = ("id", "program")
-
-    def get_id(self, obj):
-        return obj.target_years.id
-
-
-class TargetSchoolSerializer(serializers.ModelSerializer):
-    """
-    Used as a nested serializer by ClubSerializer
-    """
-
-    id = serializers.SerializerMethodField("get_id")
-
-    class Meta:
-        model = TargetSchool
-        fields = ("id", "program")
-
-    def get_id(self, obj):
-        return obj.target_schools.id
-
-
-class TargetMajorSerializer(serializers.ModelSerializer):
-    """
-    Used as a nested serializer by ClubSerializer
-    """
-
-    id = serializers.SerializerMethodField("get_id")
-
-    class Meta:
-        model = TargetMajor
-        fields = ("id", "program")
-
-    def get_id(self, obj):
-        return obj.target_majors.id
-
-
-class TargetStudentTypeSerializer(serializers.ModelSerializer):
-    """
-    Used as a nested serializer by ClubSerializer
-    """
-
-    id = serializers.SerializerMethodField("get_id")
-
-    class Meta:
-        model = TargetMajor
-        fields = ("id", "program")
-
-    def get_id(self, obj):
-        return obj.target_student_types.id
-
-
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
@@ -1112,14 +1048,14 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     testimonials = TestimonialSerializer(many=True, read_only=True)
     events = serializers.SerializerMethodField("get_events")
     is_request = serializers.SerializerMethodField("get_is_request")
-    student_types = serializers.SerializerMethodField("get_target_student_types")
+    student_types = StudentTypeSerializer(many=True, required=False)
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
 
-    target_schools = serializers.SerializerMethodField("get_target_schools")
-    target_majors = serializers.SerializerMethodField("get_target_majors")
-    target_years = serializers.SerializerMethodField("get_target_years")
+    target_schools = SchoolSerializer(many=True, required=False)
+    target_majors = MajorSerializer(many=True, required=False)
+    target_years = YearSerializer(many=True, required=False)
 
     subtitle = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
@@ -1175,22 +1111,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             return False
         return obj.membershiprequest_set.filter(person=user, withdrew=False).exists()
 
-    def get_target_years(self, obj):
-        qset = TargetYear.objects.filter(club=obj)
-        return [TargetYearSerializer(m).data for m in qset]
-
-    def get_target_majors(self, obj):
-        qset = TargetMajor.objects.filter(club=obj)
-        return [TargetMajorSerializer(m).data for m in qset]
-
-    def get_target_schools(self, obj):
-        qset = TargetSchool.objects.filter(club=obj)
-        return [TargetSchoolSerializer(m).data for m in qset]
-
-    def get_target_student_types(self, obj):
-        qset = TargetStudentType.objects.filter(club=obj)
-        return [TargetStudentTypeSerializer(m).data for m in qset]
-
     def create(self, validated_data):
         """
         Ensure new clubs follow certain invariants.
@@ -1204,42 +1124,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         Membership.objects.create(
             person=self.context["request"].user, club=obj, role=Membership.ROLE_OWNER
         )
-
-        # Create target year, target school
-        # and target major with specific program names
-        if self.context["request"].data.get("target_years", None) is not None:
-            target_years = self.context["request"].data["target_years"]
-            for target in target_years:
-                year = Year.objects.get(id=target["id"])
-                TargetYear.objects.create(
-                    club=obj, target_years=year, program=target.get("program", "")
-                )
-
-        if self.context["request"].data.get("target_schools", None) is not None:
-            target_schools = self.context["request"].data["target_schools"]
-            for target in target_schools:
-                school = School.objects.get(id=target["id"])
-                TargetSchool.objects.create(
-                    club=obj, target_schools=school, program=target.get("program", "")
-                )
-
-        if self.context["request"].data.get("target_majors", None) is not None:
-            target_majors = self.context["request"].data["target_majors"]
-            for target in target_majors:
-                major = Major.objects.get(id=target["id"])
-                TargetMajor.objects.create(
-                    club=obj, target_majors=major, program=target.get("program", "")
-                )
-
-        if self.context["request"].data.get("student_types", None) is not None:
-            target_student_types = self.context["request"].data["student_types"]
-            for target in target_student_types:
-                student_type = StudentType.objects.get(id=target["id"])
-                TargetStudentType.objects.create(
-                    club=obj,
-                    target_student_types=student_type,
-                    program=target.get("program", ""),
-                )
 
         if not settings.BRANDING == "fyh":
             # send a renewal email prompting the user
@@ -1519,82 +1403,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             update_change_reason(obj, "Edit club through UI (reapproval required)")
         else:
             update_change_reason(obj, "Edit club through UI")
-
-        print(self.context["request"].data)
-
-        # Update target year, target school
-        # and target major with specific program names
-        if self.context["request"].data.get("target_years", None) is not None:
-            target_years = self.context["request"].data["target_years"]
-            for target in target_years:
-                year = Year.objects.get(id=target["id"])
-                if (
-                    TargetYear.objects.filter(club=obj)
-                    .filter(target_years=year)
-                    .exists()
-                ):
-                    TargetYear.objects.filter(club=obj).filter(
-                        target_years=year
-                    ).update(program=target.get("program", ""))
-                else:
-                    TargetYear.objects.create(
-                        club=obj, target_years=year, program=target.get("program", "")
-                    )
-
-        if self.context["request"].data.get("target_schools", None) is not None:
-            target_schools = self.context["request"].data["target_schools"]
-            for target in target_schools:
-                school = School.objects.get(id=target["id"])
-                if (
-                    TargetSchool.objects.filter(club=obj)
-                    .filter(target_schools=school)
-                    .exists()
-                ):
-                    TargetSchool.objects.filter(club=obj).filter(
-                        target_schools=school
-                    ).update(program=target.get("program", ""))
-                else:
-                    TargetSchool.objects.create(
-                        club=obj,
-                        target_schools=school,
-                        program=target.get("program", ""),
-                    )
-
-        if self.context["request"].data.get("target_majors", None) is not None:
-            target_majors = self.context["request"].data["target_majors"]
-            for target in target_majors:
-                major = Major.objects.get(id=target["id"])
-                if (
-                    TargetMajor.objects.filter(club=obj)
-                    .filter(target_majors=major)
-                    .exists()
-                ):
-                    TargetMajor.objects.filter(club=obj).filter(
-                        target_majors=major
-                    ).update(program=target.get("program", ""))
-                else:
-                    TargetMajor.objects.create(
-                        club=obj, target_majors=major, program=target.get("program", "")
-                    )
-
-        if self.context["request"].data.get("student_types", None) is not None:
-            target_student_types = self.context["request"].data["student_types"]
-            for target in target_student_types:
-                student_type = StudentType.objects.get(id=target["id"])
-                if (
-                    TargetStudentType.objects.filter(club=obj)
-                    .filter(target_student_types=student_type)
-                    .exists()
-                ):
-                    TargetStudentType.objects.filter(club=obj).filter(
-                        target_student_types=student_type
-                    ).update(program=target.get("program", ""))
-                else:
-                    TargetStudentType.objects.create(
-                        club=obj,
-                        target_student_types=student_type,
-                        program=target.get("program", ""),
-                    )
 
         return obj
 

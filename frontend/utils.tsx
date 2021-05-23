@@ -404,27 +404,3 @@ export function getSemesterFromDate(date: Date | string): string {
   const sem = date.getMonth() >= 6 ? 'Fall' : 'Spring'
   return `${sem} ${year}`
 }
-
-export const bifurcateFilter: <T>(
-  arr: T[],
-  _filter: (obj: T) => boolean,
-) => [T[], T[]] = (arr, filter) =>
-  arr.reduce(
-    ([trueArray, falseArray], cur) =>
-      filter(cur)
-        ? [[...trueArray, cur], falseArray]
-        : [trueArray, [...falseArray, cur]],
-    [[], []],
-  )
-
-export const categorizeFilter: <T>(
-  arr: T[],
-  _filter: (obj: T) => string,
-) => Record<string, T[]> = (arr, filter) =>
-  arr.reduce((acc, cur) => {
-    const key = filter(cur)
-    return {
-      ...acc,
-      [key]: acc[key] ? [...acc[key], cur] : [cur],
-    }
-  }, {})
