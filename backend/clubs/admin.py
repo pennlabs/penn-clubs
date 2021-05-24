@@ -36,6 +36,10 @@ from clubs.models import (
     StudentType,
     Subscribe,
     Tag,
+    TargetMajor,
+    TargetSchool,
+    TargetStudentType,
+    TargetYear,
     Testimonial,
     Year,
     ZoomMeetingVisit,
@@ -415,6 +419,10 @@ admin.site.register(QuestionAnswer, QuestionAnswerAdmin)
 admin.site.register(RecurringEvent)
 admin.site.register(Report, ReportAdmin)
 admin.site.register(Tag, TagAdmin)
+admin.site.register(TargetMajor)
+admin.site.register(TargetSchool)
+admin.site.register(TargetYear)
+admin.site.register(TargetStudentType)
 admin.site.register(Testimonial)
 admin.site.register(StudentType)
 admin.site.register(Note)

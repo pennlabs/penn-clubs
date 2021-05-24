@@ -70,7 +70,7 @@ const Divider = styled.div`
   height: 3px;
   margin-bottom: 1.5rem;
   border-radius: 1.5px;
-  background: ${CLUBS_BLUE};
+  background: #000f3a;
 `
 
 type SplashProps = {
@@ -593,6 +593,9 @@ const Splash = (props: SplashProps): ReactElement => {
                     tags={props.tags}
                   />
                 )}
+                <div style={{ marginBottom: '8px' }}>
+                  Check out these additional resources that may interest you.
+                </div>
                 <Divider />
               </>
             )}
