@@ -1520,8 +1520,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         else:
             update_change_reason(obj, "Edit club through UI")
 
-        print(self.context["request"].data)
-
         # Update target year, target school
         # and target major with specific program names
         if self.context["request"].data.get("target_years", None) is not None:
