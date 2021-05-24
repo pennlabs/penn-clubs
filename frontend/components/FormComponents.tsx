@@ -2,7 +2,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 
 import { ContentState, convertToRaw, EditorState } from 'draft-js'
 import draftToHtml from 'draftjs-to-html'
-import { useFormikContext } from 'formik'
+import { useField, useFormikContext } from 'formik'
 import Head from 'next/head'
 import React, {
   ReactElement,
@@ -764,5 +764,71 @@ export const CheckboxField = (
         innerBody
       )}
     </div>
+  )
+}
+
+export const CheckboxTextField: React.FC<BasicFormField & AnyHack> = (
+  props,
+) => {
+  const { label, onChange, textRequired, ...other } = props
+  const fieldContext = useContext(FormFieldClassContext)
+  const [input, meta, helpers] = useField({
+    name: props.name,
+    validate: (value) => {
+      if (
+        !!textRequired &&
+        value?.checked &&
+        (!value?.detail || value?.detail?.length === 0)
+      ) {
+        return textRequired
+      }
+      return null
+    },
+  })
+
+  const value = meta.value || props.value
+
+  return (
+    <>
+      <div
+        className={`field ${fieldContext}`}
+        style={{ display: 'flex', alignItems: 'center' }}
+      >
+        <div className="control">
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              style={{ transform: 'scale(1.5)' }}
+              checked={value?.checked ?? false}
+              onChange={(e) =>
+                helpers.setValue({
+                  ...value,
+                  checked: e.target.checked,
+                })
+              }
+            />{' '}
+            <span style={{ display: 'inline-block', marginLeft: '8px' }}>
+              {label}
+            </span>
+          </label>
+        </div>
+        <div className="field-text" style={{ marginLeft: '8px', flex: 1 }}>
+          <input
+            type="text"
+            className="input"
+            style={{ width: '100%' }}
+            value={value?.detail ?? ''}
+            onChange={(e) =>
+              helpers.setValue({ ...value, detail: e.target.value })
+            }
+          />
+        </div>
+      </div>
+      {meta.error && (
+        <p className="help is-danger" style={{ marginBottom: '8px' }}>
+          {meta.error}
+        </p>
+      )}
+    </>
   )
 }
