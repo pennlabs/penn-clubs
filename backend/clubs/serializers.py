@@ -1484,6 +1484,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         else:
             update_change_reason(obj, "Edit club through UI")
 
+        print(self.context["request"].data)
+
         # Update target year, target school
         # and target major with specific program names
         if self.context["request"].data.get("target_years", None) is not None:
@@ -1549,12 +1551,12 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                         break
                 if not updated:
                     TargetMajor.objects.filter(club=obj).filter(
-                        target_schools=school
+                        target_majors=school
                     ).delete()
 
         if self.context["request"].data.get("student_types", None) is not None:
             target_student_types = self.context["request"].data["student_types"]
-            # Iterate over all Student Type objects, if a given student type's ID
+            # Iterate over all Student Type objects, if a given student type's ID 
             # does not appear in the request then we need to delete it
             for student_type in StudentType.objects.all():
                 updated = False
