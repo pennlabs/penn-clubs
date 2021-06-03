@@ -256,46 +256,72 @@ export default function ClubEditCard({
         ?.filter(([_, value]) => value?.checked)
         .map(([key, value]) => {
           const id = Number(key.match(/^exclusive:(.+?):(.+?)$/)?.[2] ?? -1)
-          const name = years.find((o) => o.id === id)?.name
           return {
             id,
-            // name,
             program: value.detail,
           }
         }) ?? []
+
+    data.target_years.forEach((target_year) => {
+      if (
+        exclusives.year?.find(
+          (year) => year[0].split(':')[2] === target_year.id.toString(),
+        ) === undefined
+      ) {
+        target_years.push(target_year)
+      }
+    })
 
     const student_types =
       exclusives.student_type
         ?.filter(([_, value]) => value?.checked)
         .map(([key, value]) => {
           const id = Number(key.match(/^exclusive:(.+?):(.+?)$/)?.[2] ?? -1)
-          const name = studentTypes.find((o) => o.id === id)?.name
           return {
             id,
-            // name,
             program: value.detail,
           }
         }) ?? []
+
+    data.student_types.forEach((target_student_type) => {
+      if (
+        exclusives.student_type?.find(
+          (student_type) =>
+            student_type[0].split(':')[2] === target_student_type.id.toString(),
+        ) === undefined
+      ) {
+        student_types.push(target_student_type)
+      }
+    })
 
     const target_schools =
       exclusives.school
         ?.filter(([_, value]) => value?.checked)
         .map(([key, value]) => {
           const id = Number(key.match(/^exclusive:(.+?):(.+?)$/)?.[2] ?? -1)
-          const name = schools.find((o) => o.id === id)?.name
           return {
             id,
-            // name,
             program: value.detail,
           }
         }) ?? []
 
-    const body = {
+    data.target_schools.forEach((target_school) => {
+      if (
+        exclusives.school?.find(
+          (school) => school[0].split(':')[2] === target_school.id.toString(),
+        ) === undefined
+      ) {
+        target_schools.push(target_school)
+      }
+    })
+
+    const body: any = {
+      ...Object.fromEntries(withoutExclusiveEntries),
       target_years,
       student_types,
       target_schools,
-      ...Object.fromEntries(withoutExclusiveEntries),
     }
+
     const req =
       isEdit && club !== null
         ? doApiRequest(`/clubs/${club.code}/?format=json`, {

@@ -1205,42 +1205,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             person=self.context["request"].user, club=obj, role=Membership.ROLE_OWNER
         )
 
-        # Create target year, target school
-        # and target major with specific program names
-        if self.context["request"].data.get("target_years", None) is not None:
-            target_years = self.context["request"].data["target_years"]
-            for target in target_years:
-                year = Year.objects.get(id=target["id"])
-                TargetYear.objects.create(
-                    club=obj, target_years=year, program=target.get("program", "")
-                )
-
-        if self.context["request"].data.get("target_schools", None) is not None:
-            target_schools = self.context["request"].data["target_schools"]
-            for target in target_schools:
-                school = School.objects.get(id=target["id"])
-                TargetSchool.objects.create(
-                    club=obj, target_schools=school, program=target.get("program", "")
-                )
-
-        if self.context["request"].data.get("target_majors", None) is not None:
-            target_majors = self.context["request"].data["target_majors"]
-            for target in target_majors:
-                major = Major.objects.get(id=target["id"])
-                TargetMajor.objects.create(
-                    club=obj, target_majors=major, program=target.get("program", "")
-                )
-
-        if self.context["request"].data.get("student_types", None) is not None:
-            target_student_types = self.context["request"].data["student_types"]
-            for target in target_student_types:
-                student_type = StudentType.objects.get(id=target["id"])
-                TargetStudentType.objects.create(
-                    club=obj,
-                    target_student_types=student_type,
-                    program=target.get("program", ""),
-                )
-
         if not settings.BRANDING == "fyh":
             # send a renewal email prompting the user
             # to apply for approval for their club
@@ -1524,75 +1488,91 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # and target major with specific program names
         if self.context["request"].data.get("target_years", None) is not None:
             target_years = self.context["request"].data["target_years"]
-            for target in target_years:
-                year = Year.objects.get(id=target["id"])
-                if (
-                    TargetYear.objects.filter(club=obj)
-                    .filter(target_years=year)
-                    .exists()
-                ):
+            # Iterate over all Year objects, if a given year's ID does not appear
+            # in the request then we need to delete it
+            for year in Year.objects.all():
+                updated = False
+                for target_year in target_years:
+                    if year.id == target_year["id"]:
+                        TargetYear.objects.filter(club=obj).filter(
+                            target_years=year
+                        ).update_or_create(
+                            club=obj,
+                            target_years=year,
+                            program=target_year.get("program", ""),
+                        )
+                        updated = True
+                        break
+                if not updated:
                     TargetYear.objects.filter(club=obj).filter(
                         target_years=year
-                    ).update(program=target.get("program", ""))
-                else:
-                    TargetYear.objects.create(
-                        club=obj, target_years=year, program=target.get("program", "")
-                    )
+                    ).delete()
 
         if self.context["request"].data.get("target_schools", None) is not None:
             target_schools = self.context["request"].data["target_schools"]
-            for target in target_schools:
-                school = School.objects.get(id=target["id"])
-                if (
-                    TargetSchool.objects.filter(club=obj)
-                    .filter(target_schools=school)
-                    .exists()
-                ):
+            # Iterate over all School objects, if a given schools's ID does not appear
+            # in the request then we need to delete it
+            for school in School.objects.all():
+                updated = False
+                for target_school in target_schools:
+                    if school.id == target_school["id"]:
+                        TargetSchool.objects.filter(club=obj).filter(
+                            target_schools=school
+                        ).update_or_create(
+                            club=obj,
+                            target_schools=school,
+                            program=target_school.get("program", ""),
+                        )
+                        updated = True
+                        break
+                if not updated:
                     TargetSchool.objects.filter(club=obj).filter(
                         target_schools=school
-                    ).update(program=target.get("program", ""))
-                else:
-                    TargetSchool.objects.create(
-                        club=obj,
-                        target_schools=school,
-                        program=target.get("program", ""),
-                    )
+                    ).delete()
 
         if self.context["request"].data.get("target_majors", None) is not None:
             target_majors = self.context["request"].data["target_majors"]
-            for target in target_majors:
-                major = Major.objects.get(id=target["id"])
-                if (
-                    TargetMajor.objects.filter(club=obj)
-                    .filter(target_majors=major)
-                    .exists()
-                ):
+            # Iterate over all Major objects, if a given major's ID does not appear
+            # in the request then we need to delete it
+            for major in Major.objects.all():
+                updated = False
+                for target_major in target_majors:
+                    if major.id == target_major["id"]:
+                        TargetMajor.objects.filter(club=obj).filter(
+                            target_majors=major
+                        ).update_or_create(
+                            club=obj,
+                            target_majors=major,
+                            program=target_major.get("program", ""),
+                        )
+                        updated = True
+                        break
+                if not updated:
                     TargetMajor.objects.filter(club=obj).filter(
-                        target_majors=major
-                    ).update(program=target.get("program", ""))
-                else:
-                    TargetMajor.objects.create(
-                        club=obj, target_majors=major, program=target.get("program", "")
-                    )
+                        target_schools=school
+                    ).delete()
 
         if self.context["request"].data.get("student_types", None) is not None:
             target_student_types = self.context["request"].data["student_types"]
-            for target in target_student_types:
-                student_type = StudentType.objects.get(id=target["id"])
-                if (
-                    TargetStudentType.objects.filter(club=obj)
-                    .filter(target_student_types=student_type)
-                    .exists()
-                ):
+            # Iterate over all Student Type objects, if a given student type's ID
+            # does not appear in the request then we need to delete it
+            for student_type in StudentType.objects.all():
+                updated = False
+                for target_student_type in target_student_types:
+                    if student_type.id == target_student_type["id"]:
+                        TargetStudentType.objects.filter(club=obj).filter(
+                            target_student_types=student_type
+                        ).update_or_create(
+                            club=obj,
+                            target_student_types=student_type,
+                            program=target_student_type.get("program", ""),
+                        )
+                        updated = True
+                        break
+                if not updated:
                     TargetStudentType.objects.filter(club=obj).filter(
                         target_student_types=student_type
-                    ).update(program=target.get("program", ""))
-                else:
-                    TargetStudentType.objects.create(
-                        club=obj,
-                        target_student_types=student_type,
-                        program=target.get("program", ""),
-                    )
+                    ).delete()
 
         return obj
 
