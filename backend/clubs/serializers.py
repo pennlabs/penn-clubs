@@ -1556,7 +1556,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         if self.context["request"].data.get("student_types", None) is not None:
             target_student_types = self.context["request"].data["student_types"]
-            # Iterate over all Student Type objects, if a given student type's ID 
+            # Iterate over all Student Type objects, if a given student type's ID
             # does not appear in the request then we need to delete it
             for student_type in StudentType.objects.all():
                 updated = False
