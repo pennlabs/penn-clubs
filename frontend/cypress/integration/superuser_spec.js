@@ -51,6 +51,7 @@ describe('Permissioned (superuser) user tests', { retries: { runMode: 2, openMod
       .find('input')
       .clear()
       .type('Penn Pre-Professional Juggling Organization')
+      .blur()
     cy.contains('Submit').click()
   })
 

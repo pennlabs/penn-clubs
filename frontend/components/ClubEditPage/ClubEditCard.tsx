@@ -234,6 +234,7 @@ export default function ClubEditCard({
     }
 
     const entries = Object.entries(data)
+    let body = {}
 
     const [exclusiveEntries, withoutExclusiveEntries] = bifurcateFilter(
       entries,
@@ -262,16 +263,6 @@ export default function ClubEditCard({
           }
         }) ?? []
 
-    data.target_years.forEach((target_year) => {
-      if (
-        exclusives.year?.find(
-          (year) => year[0].split(':')[2] === target_year.id.toString(),
-        ) === undefined
-      ) {
-        target_years.push(target_year)
-      }
-    })
-
     const student_types =
       exclusives.student_type
         ?.filter(([_, value]) => value?.checked)
@@ -282,17 +273,6 @@ export default function ClubEditCard({
             program: value.detail,
           }
         }) ?? []
-
-    data.student_types.forEach((target_student_type) => {
-      if (
-        exclusives.student_type?.find(
-          (student_type) =>
-            student_type[0].split(':')[2] === target_student_type.id.toString(),
-        ) === undefined
-      ) {
-        student_types.push(target_student_type)
-      }
-    })
 
     const target_schools =
       exclusives.school
@@ -305,22 +285,56 @@ export default function ClubEditCard({
           }
         }) ?? []
 
-    data.target_schools.forEach((target_school) => {
-      if (
-        exclusives.school?.find(
-          (school) => school[0].split(':')[2] === target_school.id.toString(),
-        ) === undefined
-      ) {
-        target_schools.push(target_school)
-      }
-    })
+    if (SITE_NAME === 'fyh') {
+      data.target_years.forEach((target_year) => {
+        if (
+          exclusives.year?.find(
+            (year) => year[0].split(':')[2] === target_year.id.toString(),
+          ) === undefined
+        ) {
+          target_years.push(target_year)
+        }
+      })
 
-    const body: any = {
-      ...Object.fromEntries(withoutExclusiveEntries),
-      target_years,
-      student_types,
-      target_schools,
+      data.student_types.forEach((target_student_type) => {
+        if (
+          exclusives.student_type?.find(
+            (student_type) =>
+              student_type[0].split(':')[2] ===
+              target_student_type.id.toString(),
+          ) === undefined
+        ) {
+          student_types.push(target_student_type)
+        }
+      })
+
+      data.target_schools.forEach((target_school) => {
+        if (
+          exclusives.school?.find(
+            (school) => school[0].split(':')[2] === target_school.id.toString(),
+          ) === undefined
+        ) {
+          target_schools.push(target_school)
+        }
+      })
+
+      body = {
+        ...Object.fromEntries(withoutExclusiveEntries),
+        target_years,
+        student_types,
+        target_schools,
+      }
+    } else {
+      body = {
+        ...Object.fromEntries(withoutExclusiveEntries),
+        target_years,
+        student_types,
+        target_schools,
+      }
     }
+
+    // eslint-disable-next-line no-console
+    console.log(body)
 
     const req =
       isEdit && club !== null
