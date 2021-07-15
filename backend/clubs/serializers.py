@@ -2235,6 +2235,7 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             "id",
             "question_type",
             "prompt",
+            "word_limit",
         )
 
     def create(self, validated_data):
