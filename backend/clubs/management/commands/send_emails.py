@@ -84,6 +84,7 @@ class Command(BaseCommand):
                 "grad_resource_contact",
                 "faq_demo",
                 "admin_outreach",
+                "semesterly_email",
             ),
         )
         parser.add_argument(
@@ -352,9 +353,11 @@ class Command(BaseCommand):
             "ics_calendar_ingestation",
             "faq_demo",
             "admin_outreach",
+            "semesterly_email",
         }:
             clubs = Club.objects.all()
             attachment = None
+            context = None
 
             if action == "admin_outreach":
                 path = os.path.join(
@@ -370,12 +373,16 @@ class Command(BaseCommand):
                 clubs = clubs[:1]
 
             for club in clubs:
+                if action == "semesterly_email":
+                    context = {"code": club.code}
                 emails = club.get_officer_emails()
                 if test_email is not None:
                     emails = [test_email]
 
                 if not dry_run:
-                    send_mail_helper(action, None, emails, None, attachment=attachment)
+                    send_mail_helper(
+                        action, None, emails, context, attachment=attachment
+                    )
                     self.stdout.write(
                         f"Sent {action} email to {emails} for club {club}"
                     )
