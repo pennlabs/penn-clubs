@@ -1529,6 +1529,17 @@ class ApplicationQuestion(models.Model):
     )
 
 
+class ApplicationMultipleChoice(models.Model):
+    """
+    Represents a multiple choice selection in an application question
+    """
+
+    value = models.TextField(blank=True)
+    question = models.ForeignKey(
+        ApplicationQuestion, related_name="multiple_choice", on_delete=models.CASCADE,
+    )
+
+
 class ApplicationQuestionResponse(models.Model):
     """
     Represents a response to a question in a custom application. The fields here are
@@ -1540,8 +1551,12 @@ class ApplicationQuestionResponse(models.Model):
     question = models.ForeignKey(
         ApplicationQuestion, related_name="responses", on_delete=models.CASCADE
     )
-    user = models.ForeignKey(
-        get_user_model(), on_delete=models.CASCADE, null=False
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)
+    multiple_choice = models.ForeignKey(
+        ApplicationMultipleChoice,
+        related_name="responses",
+        on_delete=models.CASCADE,
+        null=True,
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

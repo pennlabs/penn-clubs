@@ -17,6 +17,7 @@ from simple_history.utils import update_change_reason
 from clubs.mixins import ManyToManySaveMixin
 from clubs.models import (
     Advisor,
+    ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
     Asset,
@@ -2228,7 +2229,17 @@ class NoteTagSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
+class ApplicationMultipleChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationMultipleChoice
+        fields = ("value",)
+
+
 class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer):
+    multiple_choice = ApplicationMultipleChoiceSerializer(
+        many=True, required=False, read_only=True
+    )
+
     class Meta:
         model = ApplicationQuestion
         fields = (
@@ -2236,24 +2247,68 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             "question_type",
             "prompt",
             "word_limit",
+            "multiple_choice",
+            "question_type",
         )
 
     def create(self, validated_data):
+        # remove club from request we do not use it
         validated_data.pop("club")
+
         application_pk = self.context["view"].kwargs.get("application_pk")
         validated_data["application"] = ClubApplication.objects.filter(
             pk=application_pk
         ).first()
-        obj = super().create(validated_data)
-        return obj
+        question_obj = super().create(validated_data)
+
+        # TODO: this code is repeated twice and should probably only be in the save()
+        # method but I'm not sure how to get the object within the save method
+
+        # manually create multiple choice answers as Django does not
+        # support nested serializers out of the box
+        request = self.context["request"].data
+        if "multiple_choice" in request:
+            # TODO: I'm like 90% sure this is horrendous code —- we're not supposed
+            # to tailor the serializer to a specific request from a particular form
+            # but I'm not going to dive into the ModelForm right now
+            multiple_choice = request["multiple_choice"]
+            for choice in multiple_choice:
+                ApplicationMultipleChoice.objects.create(
+                    value=choice["value"], question=question_obj,
+                )
+
+        return question_obj
+
+    def save(self):
+        # manually create multiple choice answers as Django does not
+        # support nested serializers out of the box
+        request = self.context["request"].data
+        if "multiple_choice" in request and "id" in request:
+            # TODO: I'm like 90% sure this is horrendous code —- we're not supposed
+            # to tailor the serializer to a specific request from a particular form
+            # but I'm not going to dive into the ModelForm right now
+            multiple_choice = request["multiple_choice"]
+            question = ApplicationQuestion.objects.filter(pk=request["id"]).first()
+            ApplicationMultipleChoice.objects.filter(question=question).delete()
+            for choice in multiple_choice:
+                ApplicationMultipleChoice.objects.create(
+                    value=choice["value"], question=question,
+                )
+
+        return super().save()
 
 
 class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
+    multiple_choice = ApplicationMultipleChoiceSerializer(
+        required=False, read_only=True
+    )
+    question_type = serializers.CharField(
+        source="question.question_type", read_only=True
+    )
+
     class Meta:
         model = ApplicationQuestionResponse
-        fields = (
-            "text",
-        )
+        fields = ("text", "multiple_choice", "question_type")
 
 
 class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
