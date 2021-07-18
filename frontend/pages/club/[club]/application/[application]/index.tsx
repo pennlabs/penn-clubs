@@ -8,7 +8,7 @@ import styled from 'styled-components'
 import { ApplicationQuestionType, Club } from 'types'
 import { doApiRequest } from 'utils'
 
-import { TextField } from '~/components/FormComponents'
+import { SelectField, TextField } from '~/components/FormComponents'
 
 type Application = {
   name: string
@@ -23,6 +23,11 @@ type ApplicationQuestion = {
   question_type: ApplicationQuestionType
   prompt: string
   word_limit: number
+  multiple_choice: [
+    {
+      value: string
+    },
+  ]
 }
 
 type ApplicationPageProps = {
@@ -47,7 +52,9 @@ const ApplicationPage = ({
   const [errors, setErrors] = useState<string | null>(null)
 
   function computeWordCount(input: string): number {
-    return input.split(' ').filter((word) => word !== '').length
+    return input !== undefined
+      ? input.split(' ').filter((word) => word !== '').length
+      : 0
   }
 
   function formatQuestionType(
@@ -75,7 +82,17 @@ const ApplicationPage = ({
         )
       case ApplicationQuestionType.MultipleChoice:
         return (
-          <Field name={question.id} label={question.prompt} as={TextField} />
+          <Field
+            name={question.id}
+            label={question.prompt}
+            as={SelectField}
+            choices={question.multiple_choice.map((choice) => {
+              return {
+                label: choice.value,
+                value: choice.value,
+              }
+            })}
+          />
         )
       default:
         return (
@@ -94,7 +111,7 @@ const ApplicationPage = ({
         <hr />
         <Formik
           initialValues={initialValues}
-          onSubmit={(values: { [id: number]: string }, actions) => {
+          onSubmit={(values: { [id: number]: any }, actions) => {
             for (const [questionId, text] of Object.entries(values)) {
               const question = questions.find(
                 (question: ApplicationQuestion) =>
@@ -102,21 +119,47 @@ const ApplicationPage = ({
               )
               if (
                 question !== undefined &&
+                question.question_type ===
+                  ApplicationQuestionType.FreeResponse &&
                 computeWordCount(text) > question.word_limit
               ) {
                 setErrors('One of your responses exceeds the word limit!')
               }
             }
 
-            if (errors !== null) {
+            if (errors === null) {
               for (const [questionId, text] of Object.entries(values)) {
-                doApiRequest('/users/questions/?format=json', {
-                  method: 'POST',
-                  body: {
-                    questionId,
-                    text,
-                  },
-                })
+                const question = questions.find(
+                  (question: ApplicationQuestion) =>
+                    question.id === parseInt(questionId),
+                )
+
+                let body: any | null = null
+                switch (question?.question_type) {
+                  case ApplicationQuestionType.FreeResponse:
+                  case ApplicationQuestionType.ShortAnswer:
+                    body = {
+                      questionId,
+                      text,
+                    }
+                    break
+                  case ApplicationQuestionType.MultipleChoice:
+                    body = {
+                      questionId,
+                      multipleChoice: text.name,
+                    }
+                    break
+                  default:
+                    body = null
+                    break
+                }
+
+                if (body !== null) {
+                  doApiRequest('/users/questions/?format=json', {
+                    method: 'POST',
+                    body,
+                  })
+                }
               }
             }
           }}
@@ -167,17 +210,29 @@ ApplicationPage.getInitialProps = async (
     ].map(async (url) => (await doApiRequest(url, data)).json()),
   )
 
-  const initialValues = await questions
+  // TODO: refactor this, functional methods with async-await is horrible
+  const initialValues = await await questions
     .map((question) => {
       return [
         question.id,
         `/users/questions?format=json&prompt=${question.prompt}`,
       ]
     })
-    .reduce(async (acc, params) => {
+    .reduce(async (accPromise, params: [number, string]) => {
       const [id, url] = params
+      const acc = await accPromise
       const payload = await (await doApiRequest(url, data)).json()
-      acc[id] = payload.text
+      switch (parseInt(payload.question_type)) {
+        case ApplicationQuestionType.FreeResponse:
+        case ApplicationQuestionType.ShortAnswer:
+          acc[id] = payload.text
+          break
+        case ApplicationQuestionType.MultipleChoice:
+          acc[id] = payload.multiple_choice.value
+          break
+        default:
+          return acc
+      }
       return acc
     }, {})
 

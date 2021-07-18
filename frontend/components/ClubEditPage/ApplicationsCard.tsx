@@ -12,7 +12,12 @@ import {
   OBJECT_NAME_TITLE_SINGULAR,
 } from '../../utils/branding'
 import { Icon, Modal, Text } from '../common'
-import { DateTimeField, SelectField, TextField } from '../FormComponents'
+import {
+  ApplicationMultipleChoiceField,
+  DateTimeField,
+  SelectField,
+  TextField,
+} from '../FormComponents'
 import ModelForm from '../ModelForm'
 import BaseCard from './BaseCard'
 
@@ -51,6 +56,9 @@ const ApplicationModal = (props: {
     questionType,
     setQuestionType,
   ] = useState<ApplicationQuestionType | null>()
+  const [multipleChoices, setMultipleChoices] = useState<
+    [{ label: string; value: string }]
+  >()
 
   return (
     <ModalContainer>
@@ -61,29 +69,47 @@ const ApplicationModal = (props: {
           <>
             <Field name="prompt" as={TextField} required={true} />
             <Field
-              name="type"
+              name="question_type"
               as={SelectField}
               choices={QUESTION_TYPES}
               required={true}
-              customHandleChange={(selection: {
-                value: ApplicationQuestionType
-                label: string
-              }) => {
-                setQuestionType(selection.value)
-              }}
+              valueDeserialize={(a: ApplicationQuestionType) =>
+                QUESTION_TYPES.find((x) => x.value === a)
+              }
+              serialize={(a: { value: ApplicationQuestionType }) => a.value}
             />
             {questionType !== null &&
               questionType === ApplicationQuestionType.FreeResponse && (
                 <Field name="word_limit" as={TextField} type={'number'} />
               )}
+            {questionType !== null &&
+              questionType === ApplicationQuestionType.MultipleChoice && (
+                <Field
+                  name="multiple_choice"
+                  as={ApplicationMultipleChoiceField}
+                  initialValues={multipleChoices}
+                />
+              )}
           </>
         }
-        tableFields={[
-          { name: 'prompt', label: 'Prompt' },
-          { name: 'type', label: 'Type' },
-          { name: 'word_limit', label: 'Word limit' },
-        ]}
+        tableFields={[{ name: 'prompt', label: 'Prompt' }]}
         noun="Application"
+        onChange={(value) => {
+          setQuestionType(value.question_type)
+          if (
+            value.multiple_choice !== null &&
+            value.multiple_choice !== undefined
+          ) {
+            setMultipleChoices(
+              value.multiple_choice.map((item: { value: string }) => {
+                return {
+                  value: item.value,
+                  label: item.value,
+                }
+              }),
+            )
+          }
+        }}
       />
     </ModalContainer>
   )

@@ -14,6 +14,7 @@ import React, {
 } from 'react'
 import DatePicker from 'react-datepicker'
 import Select from 'react-select'
+import CreatableSelect from 'react-select/creatable'
 import styled from 'styled-components'
 import uuid from 'uuid'
 
@@ -265,6 +266,34 @@ export const DateTimeField = useFieldWrapper(
           }}
         />
       </DatePickerWrapper>
+    )
+  },
+)
+
+/**
+ * A datetime field that allows the user to choose a date and a time.
+ */
+export const ApplicationMultipleChoiceField = useFieldWrapper(
+  (props: BasicFormField & AnyHack): ReactElement => {
+    const { name, value, placeholder, initialValues, ...other } = props
+    const { setFieldValue } = useFormikContext()
+
+    return (
+      <CreatableSelect
+        name={name}
+        as={SelectField}
+        onChange={(
+          val: [{ label: string; value: string; _isNew: boolean }],
+          _action: any,
+        ) => {
+          // TODO: types are good but this is not particularly modular, might
+          // be best to make this more generalizable
+          setFieldValue(name, val)
+        }}
+        isMulti
+        creatable
+        value={initialValues}
+      />
     )
   },
 )
@@ -633,6 +662,7 @@ type SelectFieldProps<T> = {
     : { value: string; label: string }
   formatOptionLabel: (inpt: any) => string | ReactElement
   isMulti?: boolean
+  creatable?: boolean
   customHandleChange?: (updated: any) => void
 }
 
@@ -653,6 +683,7 @@ export const SelectField = useFieldWrapper(
     deserialize,
     valueDeserialize,
     isMulti,
+    creatable,
     formatOptionLabel,
     customHandleChange,
   }: BasicFormField &
@@ -711,6 +742,7 @@ export const SelectField = useFieldWrapper(
         key={name}
         placeholder={placeholder}
         isMulti={isMulti}
+        creatable={creatable}
         value={(valueDeserialize ?? actualDeserialize)(value)}
         options={
           actualDeserialize(choices) as {

@@ -51,6 +51,7 @@ from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     Advisor,
+    ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
     Asset,
@@ -4135,17 +4136,42 @@ class UserViewSet(viewsets.ModelViewSet):
             else:
                 return Response(ApplicationQuestionResponseSerializer(response).data)
         elif self.request.method == "POST":
-            question_pk = self.request.data.get("questionId")
-            text = self.request.data.get("text")
-            if question_pk is None or text is None or text == "":
-                return Response([])
-            else:
-                response = ApplicationQuestionResponse.objects.update_or_create(
-                    text=text,
-                    question=ApplicationQuestion.objects.filter(pk=question_pk).first(),
-                    user=self.request.user
-                )
-                return Response(ApplicationQuestionResponseSerializer(response).data)
+            question_pk = self.request.data.get("questionId", None)
+            response = Response([])
+            if question_pk is not None:
+                question = ApplicationQuestion.objects.filter(pk=question_pk).first()
+                question_type = question.question_type
+
+                if (
+                    question_type == ApplicationQuestion.FREE_RESPONSE
+                    or question_type == ApplicationQuestion.SHORT_ANSWER
+                ):
+                    text = self.request.data.get("text", None)
+                    if text is not None and text != "":
+                        obj = ApplicationQuestionResponse.objects.update_or_create(
+                            text=text, question=question, user=self.request.user,
+                        )
+                        response = Response(
+                            ApplicationQuestionResponseSerializer(obj).data
+                        )
+                elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:
+                    multiple_choice_value = self.request.data.get("multipleChoice")
+                    if (
+                        multiple_choice_value is not None
+                        and multiple_choice_value != ""
+                    ):
+                        multiple_choice_obj = ApplicationMultipleChoice.objects.filter(
+                            question=question, value=multiple_choice_value
+                        ).first()
+                        obj = ApplicationQuestionResponse.objects.update_or_create(
+                            multiple_choice=multiple_choice_obj,
+                            question=question,
+                            user=self.request.user,
+                        )
+                        response = Response(
+                            ApplicationQuestionResponseSerializer(obj).data
+                        )
+            return response
 
     def get_serializer_class(self):
         if self.action in {"list"}:
@@ -4193,8 +4219,9 @@ class ApplicationQuestionViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
     def get_queryset(self):
-        # This is incorrect but for some reason it works
-        return ApplicationQuestion.objects.all()
+        return ApplicationQuestion.objects.filter(
+            application__pk=self.kwargs["application_pk"]
+        )
 
 
 class BadgeClubViewSet(viewsets.ModelViewSet):

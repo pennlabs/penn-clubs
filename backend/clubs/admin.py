@@ -13,6 +13,7 @@ from clubs.management.commands.remind import send_reminder_to_club
 from clubs.models import (
     Advisor,
     ApplicationQuestion,
+    ApplicationMultipleChoice,
     ApplicationQuestionResponse,
     Asset,
     Badge,
@@ -401,6 +402,7 @@ class ZoomMeetingVisitAdmin(admin.ModelAdmin):
 
 admin.site.register(Asset)
 admin.site.register(ApplicationQuestion)
+admin.site.register(ApplicationMultipleChoice)
 admin.site.register(ApplicationQuestionResponse)
 admin.site.register(Advisor, AdvisorAdmin)
 admin.site.register(Club, ClubAdmin)
