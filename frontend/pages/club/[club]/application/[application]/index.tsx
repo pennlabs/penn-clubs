@@ -37,7 +37,7 @@ type ApplicationPageProps = {
   initialValues: any
 }
 
-const ErrorSpan = styled.span`
+const SubmitNotificationSpan = styled.span`
   position: relative;
   top: 0.5em;
   left: 1em;
@@ -50,6 +50,7 @@ const ApplicationPage = ({
   initialValues,
 }: ApplicationPageProps): ReactElement => {
   const [errors, setErrors] = useState<string | null>(null)
+  const [saved, setSaved] = useState<boolean>(false)
 
   function computeWordCount(input: string): number {
     return input !== undefined
@@ -161,11 +162,15 @@ const ApplicationPage = ({
                   })
                 }
               }
+              setSaved(true)
             }
           }}
         >
           {(props) => (
-            <Form onSubmit={props.handleSubmit}>
+            <Form
+              onSubmit={props.handleSubmit}
+              onChange={() => setSaved(false)}
+            >
               {questions.map((question: ApplicationQuestion) => {
                 const input = formatQuestionType(props, question)
                 return (
@@ -179,7 +184,14 @@ const ApplicationPage = ({
                 <Icon name="edit" alt="save" /> Submit
               </button>
               {errors !== null && (
-                <ErrorSpan className="has-text-danger">{errors}</ErrorSpan>
+                <SubmitNotificationSpan className="has-text-danger">
+                  {errors}
+                </SubmitNotificationSpan>
+              )}
+              {saved && (
+                <SubmitNotificationSpan style={{ color: 'green' }}>
+                  <Icon name="check-circle" alt="success" /> Saved!
+                </SubmitNotificationSpan>
               )}
               <br></br>
               <br></br>
