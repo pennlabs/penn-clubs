@@ -1493,6 +1493,7 @@ class ClubApplication(models.Model):
     result_release_time = models.DateTimeField()
     external_url = models.URLField()
     is_active = models.BooleanField(default=False, blank=True)
+    is_wharton_council = models.BooleanField(default=False, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
