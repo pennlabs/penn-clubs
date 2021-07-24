@@ -1507,7 +1507,7 @@ class ClubApplication(models.Model):
 
 class CustomTextEmail(models.Model):
     """
-    Represents a custom-designed, club-specific email used as part of the Centralized Application
+    Represents a custom, club-specific email used as part of the Centralized Application
     """
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
