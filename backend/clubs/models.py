@@ -25,7 +25,6 @@ from urlextract import URLExtract
 
 from clubs.utils import clean, get_django_minified_image, get_domain, html_to_text
 
-
 subject_regex = re.compile(r"\s*<!--\s*SUBJECT:\s*(.*?)\s*-->", re.I)
 types_regex = re.compile(r"\s*<!--\s*TYPES:\s*(.*?)\s*-->", re.DOTALL)
 
@@ -387,8 +386,8 @@ class Club(models.Model):
                                 if val in {Event.FAIR}:
                                     continue
                                 if (
-                                    lbl.lower() in ev.name.lower()
-                                    or lbl.lower() in ev.description.lower()
+                                        lbl.lower() in ev.name.lower()
+                                        or lbl.lower() in ev.description.lower()
                                 ):
                                     ev.type = val
                                     break
@@ -450,7 +449,7 @@ class Club(models.Model):
         return 0
 
     def send_virtual_fair_email(
-        self, request=None, email="setup", fair=None, emails=None, extra=False
+            self, request=None, email="setup", fair=None, emails=None, extra=False
     ):
         """
         Send an email to all club officers about setting
@@ -466,8 +465,8 @@ class Club(models.Model):
         if fair is None:
             fair = (
                 ClubFair.objects.filter(start_time__gte=now)
-                .order_by("start_time")
-                .first()
+                    .order_by("start_time")
+                    .first()
             )
 
         eastern = pytz.timezone("America/New_York")
@@ -482,7 +481,7 @@ class Club(models.Model):
         events = [
             {
                 "time": f"{timezone.localtime(start, eastern).strftime(fstr)} - "
-                f"{timezone.localtime(end, eastern).strftime(fstr)} ET"
+                        f"{timezone.localtime(end, eastern).strftime(fstr)} ET"
             }
             for start, end in events.values_list("start_time", "end_time")
         ]
@@ -593,7 +592,7 @@ class Club(models.Model):
 
         # add email for all officers and above
         for user in self.membership_set.filter(
-            role__lte=Membership.ROLE_OFFICER, active=True
+                role__lte=Membership.ROLE_OFFICER, active=True
         ):
             emails.append(user.person.email)
 
@@ -803,7 +802,7 @@ class ClubFair(models.Model):
     )
 
     def create_events(
-        self, start_time=None, end_time=None, filter=None, suffix="default"
+            self, start_time=None, end_time=None, filter=None, suffix="default"
     ):
         """
         Create activities fair events for all registered clubs.
@@ -1503,6 +1502,31 @@ class ClubApplication(models.Model):
             self.application_start_time,
             self.application_end_time,
         )
+
+
+class CustomTextEmail(models.Model):
+    """
+    Represents a custom-designed, club-specific email used as part of the Centralized Application
+    """
+    # Thinking that we will have a frontend platform to create multiple instances of this class which clubs can
+    # fill in and save (and preview, in one of our to-be-created boilerplate templates). They can then customize
+    # sending options like 'send on submission of app, send to all applicants, etc', which we'll then create an
+    # endpoint to handle on the backend
+
+    # Important question - how many clubs will want to use our service as opposed to just doing their own thing, once
+    # they receive apps and corresponding applicants' emails?
+
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    template_name = models.CharField(max_length=30)  # choices field?
+    subject = models.CharField(max_length=60, blank=True)
+    text = models.TextField(blank=True)
+
+    def send(self, to_emails, context):
+        # context is used here to add additional information to the email
+        send_mail_helper(self.template_name, self.subject, to_emails, {**{"text": self.text}, **context})
+
+    def __str__(self):
+        return f"{self.club.name}: {self.template_name}"
 
 
 @receiver(models.signals.pre_delete, sender=Asset)
