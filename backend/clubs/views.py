@@ -4145,6 +4145,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 if (
                     question_type == ApplicationQuestion.FREE_RESPONSE
                     or question_type == ApplicationQuestion.SHORT_ANSWER
+                    or question_type == ApplicationQuestion.COMMITTEE_QUESTION
                 ):
                     text = self.request.data.get("text", None)
                     if text is not None and text != "":
