@@ -17,6 +17,7 @@ from simple_history.utils import update_change_reason
 from clubs.mixins import ManyToManySaveMixin
 from clubs.models import (
     Advisor,
+    ApplicationCommittee,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -2229,6 +2230,12 @@ class NoteTagSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
+class ApplicationCommitteeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationCommittee
+        fields = ("name",)
+
+
 class ApplicationMultipleChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationMultipleChoice
@@ -2237,6 +2244,9 @@ class ApplicationMultipleChoiceSerializer(serializers.ModelSerializer):
 
 class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer):
     multiple_choice = ApplicationMultipleChoiceSerializer(
+        many=True, required=False, read_only=True
+    )
+    committees = ApplicationCommitteeSerializer(
         many=True, required=False, read_only=True
     )
 
@@ -2248,6 +2258,7 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             "prompt",
             "word_limit",
             "multiple_choice",
+            "committees",
             "question_type",
         )
 
@@ -2259,43 +2270,33 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
         validated_data["application"] = ClubApplication.objects.filter(
             pk=application_pk
         ).first()
-        question_obj = super().create(validated_data)
+        return super().create(validated_data)
 
-        # TODO: this code is repeated twice and should probably only be in the save()
-        # method but I'm not sure how to get the object within the save method
-
+    def save(self):
+        question_obj = super().save()
         # manually create multiple choice answers as Django does not
         # support nested serializers out of the box
         request = self.context["request"].data
         if "multiple_choice" in request:
-            # TODO: I'm like 90% sure this is horrendous code —- we're not supposed
-            # to tailor the serializer to a specific request from a particular form
-            # but I'm not going to dive into the ModelForm right now
             multiple_choice = request["multiple_choice"]
+            ApplicationMultipleChoice.objects.filter(question=question_obj).delete()
             for choice in multiple_choice:
                 ApplicationMultipleChoice.objects.create(
                     value=choice["value"], question=question_obj,
                 )
 
-        return question_obj
-
-    def save(self):
-        # manually create multiple choice answers as Django does not
+        # manually create committee choices as Django does not
         # support nested serializers out of the box
-        request = self.context["request"].data
-        if "multiple_choice" in request and "id" in request:
-            # TODO: I'm like 90% sure this is horrendous code —- we're not supposed
-            # to tailor the serializer to a specific request from a particular form
-            # but I'm not going to dive into the ModelForm right now
-            multiple_choice = request["multiple_choice"]
-            question = ApplicationQuestion.objects.filter(pk=request["id"]).first()
-            ApplicationMultipleChoice.objects.filter(question=question).delete()
-            for choice in multiple_choice:
-                ApplicationMultipleChoice.objects.create(
-                    value=choice["value"], question=question,
-                )
+        if "committees" in request:
+            committees = request["committees"]
+            question_obj.committees.clear()
+            for committee in committees:
+                committee_obj = ApplicationCommittee.objects.filter(
+                    application=question_obj.application, name=committee["name"]
+                ).first()
+                question_obj.committees.add(committee_obj)
 
-        return super().save()
+        return question_obj
 
 
 class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
@@ -2313,6 +2314,9 @@ class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
 
 class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     name = serializers.SerializerMethodField("get_name")
+    committees = ApplicationCommitteeSerializer(
+        many=True, required=False, read_only=True
+    )
 
     def get_name(self, obj):
         if obj.name:
@@ -2336,6 +2340,21 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         return data
 
+    def save(self):
+        application_obj = super().save()
+        # manually create committee objects as Django does
+        # not support nested serializers out of the box
+        request = self.context["request"].data
+        if "committees" in request:
+            committees = request["committees"]
+            ApplicationCommittee.objects.filter(application=application_obj).delete()
+            for committee in committees:
+                ApplicationCommittee.objects.create(
+                    name=committee["value"], application=application_obj,
+                )
+
+        return application_obj
+
     class Meta:
         model = ClubApplication
         fields = (
@@ -2345,6 +2364,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "application_end_time",
             "result_release_time",
             "external_url",
+            "committees",
         )
 
 

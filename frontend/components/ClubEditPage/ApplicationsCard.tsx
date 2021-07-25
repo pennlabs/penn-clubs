@@ -37,6 +37,10 @@ const QUESTION_TYPES = [
     value: ApplicationQuestionType.ShortAnswer,
     label: 'Short Answer',
   },
+  {
+    value: ApplicationQuestionType.CommitteeQuestion,
+    label: 'Committee Question',
+  },
 ]
 
 const ModalContainer = styled.div`
@@ -49,14 +53,24 @@ const ApplicationModal = (props: {
   applicationName: string
   showDetailsButton?: boolean
   onLinkClicked?: () => void
+  committeeChoices: Array<{ label: string; value: string }>
 }): ReactElement => {
-  const { clubCode, applicationName, showDetailsButton, onLinkClicked } = props
+  const {
+    clubCode,
+    applicationName,
+    showDetailsButton,
+    onLinkClicked,
+    committeeChoices,
+  } = props
   // TODO: I'm positive that this is something that Formik should do for me
   const [
     questionType,
     setQuestionType,
   ] = useState<ApplicationQuestionType | null>()
   const [multipleChoices, setMultipleChoices] = useState<
+    [{ label: string; value: string }]
+  >()
+  const [committees, setCommittees] = useState<
     [{ label: string; value: string }]
   >()
 
@@ -90,6 +104,16 @@ const ApplicationModal = (props: {
                   initialValues={multipleChoices}
                 />
               )}
+            {questionType !== null &&
+              questionType === ApplicationQuestionType.CommitteeQuestion && (
+                <Field
+                  name="committees"
+                  as={SelectField}
+                  initialValues={committees}
+                  choices={committeeChoices}
+                  isMulti={true}
+                />
+              )}
           </>
         }
         tableFields={[{ name: 'prompt', label: 'Prompt' }]}
@@ -109,6 +133,18 @@ const ApplicationModal = (props: {
               }),
             )
           }
+
+          if (value.committees !== null && value.committees !== undefined) {
+            setCommittees(
+              value.committees.map((item) => {
+                const value = item.name ?? item.value
+                return {
+                  label: value,
+                  value,
+                }
+              }),
+            )
+          }
         }}
       />
     </ModalContainer>
@@ -120,6 +156,16 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
   const showModal = () => setShow(true)
   const hideModal = () => setShow(false)
   const [applicationName, setApplicationName] = useState('')
+  const [committees, setCommittees] = useState<{
+    label: string
+    value: string
+  } | null>(null)
+  const [committeeChoices, setCommitteeChoices] = useState<{
+    id?: Array<{
+      label: string
+      value: string
+    }>
+  } | null>(null)
 
   return (
     <BaseCard title={`${OBJECT_NAME_TITLE_SINGULAR} Applications`}>
@@ -166,6 +212,32 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
       <ModelForm
         baseUrl={`/clubs/${club.code}/applications/`}
         defaultObject={{ name: `${club.name} Application` }}
+        onChange={(data) => {
+          setCommittees(
+            data?.committees.map((item) => {
+              const value = item.name ?? item.value
+              return { label: value, value }
+            }),
+          )
+        }}
+        onUpdate={(applications) => {
+          const committeeChoicesProps: {
+            id?: Array<{
+              label: string
+              value: string
+            }>
+          } = {}
+          applications.forEach((application) => {
+            const id = application.id
+            committeeChoicesProps[id] =
+              application.committees === null
+                ? null
+                : application.committees.map((committee) => {
+                    return { label: committee.name, value: committee.name }
+                  })
+          })
+          setCommitteeChoices(committeeChoicesProps)
+        }}
         fields={
           <>
             <Field
@@ -195,8 +267,13 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               name="external_url"
               as={TextField}
               type="url"
-              required={true}
               helpText={`The external URL where students can apply for your ${OBJECT_NAME_SINGULAR}.`}
+            />
+            <Field
+              name="committees"
+              as={ApplicationMultipleChoiceField}
+              initialValues={committees}
+              helpText={`If your club has multiple committees to which students can apply, list them here.`}
             />
           </>
         }
@@ -238,6 +315,12 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
             clubCode={club.code}
             applicationName={applicationName}
             showDetailsButton={false}
+            committeeChoices={
+              committeeChoices !== null &&
+              committeeChoices[applicationName] !== null
+                ? committeeChoices[applicationName]
+                : null
+            }
           />
         </Modal>
       )}

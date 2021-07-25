@@ -16,6 +16,7 @@ type Application = {
   application_end_time: string
   result_release_time: string
   external_url: string | null
+  committees: Array<{ name: string }> | null
 }
 
 type ApplicationQuestion = {
@@ -23,6 +24,7 @@ type ApplicationQuestion = {
   question_type: ApplicationQuestionType
   prompt: string
   word_limit: number
+  committees: Array<{ name: string }>
   multiple_choice: [
     {
       value: string
@@ -51,6 +53,39 @@ const ApplicationPage = ({
 }: ApplicationPageProps): ReactElement => {
   const [errors, setErrors] = useState<string | null>(null)
   const [saved, setSaved] = useState<boolean>(false)
+  const [currentCommittee, setCurrentCommittee] = useState<{
+    label: string
+    value: string
+  } | null>(null)
+  const initialWordCounts: { id?: number } = {}
+  questions.forEach((question) => {
+    if (question.question_type === ApplicationQuestionType.FreeResponse) {
+      initialWordCounts[question.id] = computeWordCount(
+        initialValues[question.id],
+      )
+    }
+  })
+  const [wordCounts, setWordCounts] = useState<{ id?: number }>(
+    initialWordCounts,
+  )
+
+  const committees = application?.committees
+  questions = questions.filter((question) => {
+    if (question.question_type !== ApplicationQuestionType.CommitteeQuestion) {
+      // render all non-committee questions
+      return true
+    } else if (currentCommittee === undefined || currentCommittee === null) {
+      // committee not yet picked, don't render any committee questions
+      return false
+    } else {
+      // committee is picked, only render questions which pertain to the selected committee
+      return (
+        question.committees
+          .map((committee) => committee.name)
+          .indexOf(currentCommittee.value) !== -1
+      )
+    }
+  })
 
   function computeWordCount(input: string): number {
     return input !== undefined
@@ -61,10 +96,9 @@ const ApplicationPage = ({
   function formatQuestionType(
     props: any,
     question: ApplicationQuestion,
+    wordCounts: { id?: number },
+    setWordCounts: (val: any) => void,
   ): JSX.Element {
-    const [wordCount, setWordCount] = useState<number>(
-      computeWordCount(initialValues[question.id]),
-    )
     switch (question.question_type) {
       case ApplicationQuestionType.FreeResponse:
         return (
@@ -73,11 +107,15 @@ const ApplicationPage = ({
               name={question.id}
               label={question.prompt}
               onInput={(event) => {
-                setWordCount(computeWordCount(event.target.value))
+                const wordCount = computeWordCount(event.target.value)
+                wordCounts[question.id] = wordCount
+                setWordCounts(wordCounts)
               }}
               as={TextField}
               type={'textarea'}
-              helpText={`Word count: ${wordCount}/${question.word_limit}`}
+              helpText={`Word count: ${wordCounts[question.id]}/${
+                question.word_limit
+              }`}
             />
           </>
         )
@@ -139,6 +177,7 @@ const ApplicationPage = ({
                 switch (question?.question_type) {
                   case ApplicationQuestionType.FreeResponse:
                   case ApplicationQuestionType.ShortAnswer:
+                  case ApplicationQuestionType.CommitteeQuestion:
                     body = {
                       questionId,
                       text,
@@ -171,8 +210,31 @@ const ApplicationPage = ({
               onSubmit={props.handleSubmit}
               onChange={() => setSaved(false)}
             >
+              {committees !== undefined &&
+                committees !== null &&
+                committees.length !== 0 && (
+                  <>
+                    <Field
+                      label={
+                        'This club has multiple committees open for applications. Please select the one that interests you (you can submit again if you intend on applying to multiple).'
+                      }
+                      as={SelectField}
+                      choices={committees.map((value) => {
+                        return { label: value.name, value: value.name }
+                      })}
+                      isMulti={false}
+                      customHandleChange={(value) => setCurrentCommittee(value)}
+                      value={currentCommittee}
+                    />
+                  </>
+                )}
               {questions.map((question: ApplicationQuestion) => {
-                const input = formatQuestionType(props, question)
+                const input = formatQuestionType(
+                  props,
+                  question,
+                  wordCounts,
+                  setWordCounts,
+                )
                 return (
                   <div>
                     {input}
@@ -237,6 +299,7 @@ ApplicationPage.getInitialProps = async (
       switch (parseInt(payload.question_type)) {
         case ApplicationQuestionType.FreeResponse:
         case ApplicationQuestionType.ShortAnswer:
+        case ApplicationQuestionType.CommitteeQuestion:
           acc[id] = payload.text
           break
         case ApplicationQuestionType.MultipleChoice:

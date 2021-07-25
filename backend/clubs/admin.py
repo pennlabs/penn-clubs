@@ -12,6 +12,7 @@ from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
 from clubs.management.commands.remind import send_reminder_to_club
 from clubs.models import (
     Advisor,
+    ApplicationCommittee,
     ApplicationQuestion,
     ApplicationMultipleChoice,
     ApplicationQuestionResponse,
@@ -401,6 +402,7 @@ class ZoomMeetingVisitAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Asset)
+admin.site.register(ApplicationCommittee)
 admin.site.register(ApplicationQuestion)
 admin.site.register(ApplicationMultipleChoice)
 admin.site.register(ApplicationQuestionResponse)

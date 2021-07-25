@@ -292,4 +292,5 @@ export enum ApplicationQuestionType {
   FreeResponse = 1,
   MultipleChoice = 2,
   ShortAnswer = 3,
+  CommitteeQuestion = 4,
 }

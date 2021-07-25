@@ -275,7 +275,7 @@ export const DateTimeField = useFieldWrapper(
  */
 export const ApplicationMultipleChoiceField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
-    const { name, value, placeholder, initialValues, ...other } = props
+    const { name, value, placeholder, initialValues, choices, ...other } = props
     const { setFieldValue } = useFormikContext()
 
     return (
@@ -293,6 +293,7 @@ export const ApplicationMultipleChoiceField = useFieldWrapper(
         isMulti
         creatable
         value={initialValues}
+        options={choices}
       />
     )
   },
