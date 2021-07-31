@@ -15,6 +15,7 @@ import { ClubFair } from 'types'
 import { cache, doApiRequest, useSetting } from 'utils'
 import {
   OBJECT_NAME_LONG_PLURAL,
+  OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -86,10 +87,10 @@ const FairPage = ({
         <p>
           <b>Hi there! Welcome to {SITE_NAME}!</b> We are the official platform
           for {OBJECT_NAME_LONG_PLURAL} on campus, and we are excited to get you
-          connected to clubs on our platform this year. In collaboration with
-          the {fairOrgName}, we will be hosting the virtual fair for this
-          semester. Below is some important information that will set you up for
-          a successful experience.
+          connected to {OBJECT_NAME_PLURAL} on our platform this year. In
+          collaboration with the {fairOrgName}, we will be hosting the virtual
+          fair for this semester. Below is some important information that will
+          set you up for a successful experience.
         </p>
         <p>
           <b>How the {fairName} will be run:</b>
@@ -108,9 +109,9 @@ const FairPage = ({
             ) : (
               'Live Events Page'
             )}
-            . Representatives of each club will be available in these meetings
-            to answer questions, give short presentations, and otherwise
-            interact with students.
+            . Representatives of each {OBJECT_NAME_SINGULAR} will be available
+            in these meetings to answer questions, give short presentations, and
+            otherwise interact with attendees.
           </li>
           <li>
             You can also visit each {OBJECT_NAME_SINGULAR}'s individual page.
@@ -120,27 +121,27 @@ const FairPage = ({
             questions. Questions can be submitted anonymously.
           </li>
           <li>
-            To keep track of clubs you are interested in, we encourage you to
-            use some of the tools on our platform!
+            To keep track of {OBJECT_NAME_PLURAL} you are interested in, we
+            encourage you to use some of the tools on our platform!
             <ul>
               <li>
                 The{' '}
                 <b>
                   <Icon name="bookmark" /> Bookmark
                 </b>{' '}
-                button will allow you to save a club for later for your own
-                personal reference. {OBJECT_NAME_TITLE} will not be able to see
-                your contact information unless you have allowed it.
+                button will allow you to save a {OBJECT_NAME_SINGULAR} for later
+                for your own personal reference. {OBJECT_NAME_TITLE} will not be
+                able to see your contact information unless you have allowed it.
               </li>
               <li>
                 The{' '}
                 <b>
                   <Icon name="bell" /> Subscribe
                 </b>{' '}
-                button will put your name on a club's mailing list.{' '}
-                {OBJECT_NAME_TITLE_SINGULAR}
-                officers can use this list to send you updates on their
-                application process, upcoming meetings, and more.
+                button will put your name on a {OBJECT_NAME_SINGULAR}'s mailing
+                list. {OBJECT_NAME_TITLE_SINGULAR}
+                officers can use this list to send you updates on their upcoming
+                events, newsletters, information, and more.
               </li>
             </ul>
           </li>
@@ -175,8 +176,8 @@ const FairPage = ({
           <li>
             Please use appropriate language in the chat windows on Zoom. There
             will be peer to peer monitoring, ensuring that student participants
-            and club members are not misusing any features during these
-            sessions.
+            and {OBJECT_NAME_SINGULAR} officers are not misusing any features
+            during these sessions.
           </li>
         </ul>
         <p>

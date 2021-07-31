@@ -137,8 +137,9 @@ const sites = {
         height: 80,
       },
     ],
-
     GA_TRACKING_CODE: 'UA-21029575-14',
+    FAIR_NAME: 'activities',
+    FAIR_NAME_CAPITALIZED: 'Activities',
   },
   fyh: {
     SITE_NAME: 'Hub@Penn',
@@ -242,8 +243,9 @@ const sites = {
         className: 'mr-4 mb-4',
       },
     ],
-
     GA_TRACKING_CODE: 'UA-21029575-19',
+    FAIR_NAME: 'resource',
+    FAIR_NAME_CAPITALIZED: 'Resource',
   },
 }
 
@@ -314,6 +316,8 @@ export const ALL_CLUB_FIELDS = new Set(
 )
 
 export const GA_TRACKING_CODE = sites[site].GA_TRACKING_CODE
+export const FAIR_NAME = sites[site].FAIR_NAME
+export const FAIR_NAME_CAPITALIZED = sites[site].FAIR_NAME_CAPITALIZED
 
 export const FORM_DESCRIPTION_EXAMPLES: ReactNode =
   sites[site].FORM_DESCRIPTION_EXAMPLES

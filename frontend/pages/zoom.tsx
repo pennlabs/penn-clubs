@@ -19,8 +19,11 @@ import styled from 'styled-components'
 import { ClubEvent, ClubEventType, ClubFair } from 'types'
 import { doApiRequest } from 'utils'
 import {
+  FAIR_NAME,
+  FAIR_NAME_CAPITALIZED,
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE_SINGULAR,
   SCHOOL_NAME,
   SITE_NAME,
 } from 'utils/branding'
@@ -267,7 +270,7 @@ const ZoomPage = ({
       <div className="content">
         <p>
           You can use the 4-step process below to automatically configure Zoom
-          for you and get you set up for the upcoming activities fair. If you
+          for you and get you set up for the upcoming {FAIR_NAME} fair. If you
           run into any issues while using the tool, please contact <Contact />.
         </p>
         <p>
@@ -471,7 +474,7 @@ const ZoomPage = ({
             <Icon name="refresh" /> Refresh
           </button>
         </div>
-        <h3>3. Setup Your Virtual Activities Fair Zoom Meeting</h3>
+        <h3>3. Setup Your Virtual {FAIR_NAME_CAPITALIZED} Fair Zoom Meeting</h3>
         <p>
           Here is a list of all of the virtual fair events that you have access
           to edit. Make sure that you have a{' '}
@@ -481,7 +484,7 @@ const ZoomPage = ({
         <p>
           <b>
             If you have multiple {OBJECT_NAME_PLURAL} participating in the
-            activities fair,
+            {FAIR_NAME} fair,
           </b>{' '}
           have a different officer create a Zoom meeting for each{' '}
           {OBJECT_NAME_SINGULAR}. Zoom does not allow you to have or join
@@ -492,7 +495,7 @@ const ZoomPage = ({
           onClick={() => {
             loadMeetings(undefined, true).then(setUserMeetings)
             toast.info(
-              `Your activities fair events on ${SITE_NAME} have been reloaded.`,
+              `Your ${FAIR_NAME} fair events on ${SITE_NAME} have been reloaded.`,
             )
           }}
         >
@@ -675,7 +678,7 @@ const ZoomPage = ({
                     ? 'create your Zoom meeting link for you'
                     : 'attempt to fix issues with your meeting'}
                   . Use the form below if you want to edit the cover photo and
-                  description for your virtual activities fair booth.
+                  description for your virtual {FAIR_NAME} fair booth.
                 </p>
                 <p className="mt-3">
                   Clicking the button below will also attempt to add all
@@ -835,7 +838,9 @@ const ZoomPage = ({
             )
           })}
         </div>
-        <h3>4. Accessing your Meeting during the Activities Fair</h3>
+        <h3>
+          4. Accessing your Meeting during the {FAIR_NAME_CAPITALIZED} Fair
+        </h3>
         <p>
           If you do not already have the Zoom meeting software downloaded, you
           should download the Zoom meeting client{' '}
@@ -872,7 +877,8 @@ const ZoomPage = ({
         <p>
           After you have logged in, navigate to the "Meetings" tab. Your meeting
           should appear on the left hand list with a name like "Virtual
-          Activities Fair - Club Name". Click "Start" to start the meeting.
+          {FAIR_NAME_CAPITALIZED} Fair - {OBJECT_NAME_TITLE_SINGULAR} Name".
+          Click "Start" to start the meeting.
         </p>
         <div className="has-text-centered">
           <img
@@ -887,7 +893,7 @@ const ZoomPage = ({
           some time to resolve them.
         </p>
         <p>
-          <b>🎉 That's it!</b> You should be set up for the virtual activities
+          <b>🎉 That's it!</b> You should be set up for the virtual {FAIR_NAME}
           fair. If you have any questions or concerns, please email <Contact />.
         </p>
       </div>
