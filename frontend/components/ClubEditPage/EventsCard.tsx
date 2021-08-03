@@ -7,7 +7,11 @@ import styled from 'styled-components'
 import { LIGHT_GRAY } from '../../constants'
 import { Club, ClubEvent, ClubEventType } from '../../types'
 import { stripTags } from '../../utils'
-import { OBJECT_EVENT_TYPES, OBJECT_NAME_SINGULAR } from '../../utils/branding'
+import {
+  FAIR_NAME,
+  OBJECT_EVENT_TYPES,
+  OBJECT_NAME_SINGULAR,
+} from '../../utils/branding'
 import { Device, Icon, Text } from '../common'
 import EventModal from '../EventPage/EventModal'
 import {
@@ -265,7 +269,7 @@ export const EVENT_TYPES = [
   },
   {
     value: ClubEventType.FAIR,
-    label: 'Activities Fair',
+    label: `${FAIR_NAME} Fair`,
   },
   {
     value: ClubEventType.OTHER,

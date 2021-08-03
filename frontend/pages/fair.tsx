@@ -14,6 +14,7 @@ import renderPage from 'renderPage'
 import { ClubFair } from 'types'
 import { cache, doApiRequest, useSetting } from 'utils'
 import {
+  FAIR_NAME,
   OBJECT_NAME_LONG_PLURAL,
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
@@ -79,18 +80,18 @@ const FairPage = ({
       <div className="content">
         {!isPreFair && !isFairOpen && !isOverride && (
           <div className="notification is-warning">
-            <Icon name="alert-triangle" /> There is currently no activities fair
-            that is currently occuring or upcoming. If you believe this is an
-            error, please contact <Contact />.
+            <Icon name="alert-triangle" /> There is currently no {FAIR_NAME}{' '}
+            fair that is currently occurring or upcoming. If you believe this is
+            an error, please contact <Contact />.
           </div>
         )}
         <p>
           <b>Hi there! Welcome to {SITE_NAME}!</b> We are the official platform
           for {OBJECT_NAME_LONG_PLURAL} on campus, and we are excited to get you
           connected to {OBJECT_NAME_PLURAL} on our platform this year. In
-          collaboration with the {fairOrgName}, we will be hosting the virtual
-          fair for this semester. Below is some important information that will
-          set you up for a successful experience.
+          collaboration with {fairOrgName}, we will be hosting the virtual fair
+          for this semester. Below is some important information that will set
+          you up for a successful experience.
         </p>
         <p>
           <b>How the {fairName} will be run:</b>
@@ -154,7 +155,7 @@ const FairPage = ({
             If you have not already activated your Zoom account, click "Sign in"
             at <a href="https://upenn.zoom.us/">this link</a> and sign in with
             your PennKey. You will not be able to attend any of the live events
-            without signing in to your Zoom account.
+            without signing into your Zoom account.
           </li>
           <li>
             If you have not already downloaded the Zoom desktop client, we
@@ -200,9 +201,6 @@ const FairPage = ({
             />
           </p>
         )}
-        <p>
-          You can find the schedule for the activities fair in the table below.
-        </p>
         {isFairOpen ? (
           <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
             <a className="button is-primary">
