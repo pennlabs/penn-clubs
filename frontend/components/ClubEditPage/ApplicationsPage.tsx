@@ -1,10 +1,9 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 import {
   ALLBIRDS_GRAY,
   ANIMATION_DURATION,
-  BG_GRADIENT,
   BORDER_RADIUS,
   CLUBS_BLUE,
   HOVER_GRAY,
@@ -14,15 +13,13 @@ import {
   SNOW,
   WHITE,
 } from '~/constants'
+import { doApiRequest } from '~/utils'
 
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
 import Toggle from '../Settings/Toggle'
-import HashTabView from '../TabView'
+import moment from 'moment-timezone'
 
-const StyledSetting = styled.div`
-  margin-bottom: 20px;
-`
 const StyledResponses = styled.div`
   margin-bottom: 40px;
 `
@@ -44,22 +41,6 @@ const FormsCard = styled.div<CardProps>`
   }
 `
 
-const SettingsCard = styled.div<CardProps>`
-  padding: 0px;
-  box-shadow: 0 0 0 transparent;
-  transition: all ${ANIMATION_DURATION}ms ease;
-  border-radius: ${BORDER_RADIUS};
-  box-shadow: 0 0 0 ${WHITE};
-  background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
-  border: 1px solid ${ALLBIRDS_GRAY};
-  justify-content: space-between;
-  height: 32vh;
-
-  ${mediaMaxWidth(SM)} {
-    width: calc(100%);
-    padding: 8px;
-  }
-`
 const FormsCardWrapper = styled.div`
   position: relative;
   margin-top: 40px;
@@ -67,22 +48,6 @@ const FormsCardWrapper = styled.div`
     padding-top: 0;
     padding-bottom: 1rem;
   }
-`
-
-const SettingsCardWrapper = styled.div`
-  position: relative;
-  margin-top: 40px;
-  ${mediaMaxWidth(SM)} {
-    padding-top: 0;
-    padding-bottom: 1rem;
-  }
-`
-const ManageFormsContainer = styled.div`
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  cursor: pointer;
 `
 
 const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
@@ -160,11 +125,11 @@ const tabs = [
   { name: 'Advanced', content: <AdvancedSettings /> },
 ]
 
-const Form = (f: any) => {
-  const { form } = f
+const Form = (props: any) => {
+  const { application, setApplication } = props
   return (
-    <FormWrapper>
-      {form.name}
+    <FormWrapper onClick={() => setApplication(application)}>
+      {application.name}
       <span className="is-pulled-right">
         <Icon
           name="user"
@@ -172,70 +137,88 @@ const Form = (f: any) => {
           size="1.2rem"
           style={{ marginRight: '8px' }}
         />
-        <span style={{ marginRight: '20px' }}>{form.applicantsNumber}</span>
+        {/* TODO: implement applicants number <span style={{ marginRight: '20px' }}>{application.applicantsNumber}</span> */}
         <Icon name="chevron-right" />
       </span>
     </FormWrapper>
   )
 }
 
-const forms = [
-  { name: 'form1', applicantsNumber: 7 },
-  { name: 'form2', applicantsNumber: 6 },
-]
+const forms = []
 
-const ApplicaionsPage = () => {
+type Application = {
+  id: number
+  name: string
+}
+
+type Submission = {
+  application: number
+  committee: string | null
+  created_at: string
+}
+
+const ApplicationsPage = ({ club }: { club: Club }) => {
   const responseTableFields = [
-    { label: 'Email', name: 'email' },
-    { label: 'Name', name: 'name' },
-    {
-      label: 'Status',
-      name: 'status',
-      render: (_, index) => (
-        <span
-          className={`tag is-${
-            responses[index].status == 'rejected'
-              ? 'danger'
-              : responses[index].status == 'accepted'
-              ? 'success'
-              : 'info'
-          }  is-light`}
-        >
-          {responses[index].status}
-        </span>
-      ),
-    },
-    { label: 'Submitted', name: 'submitted' },
-    { lable: 'Actions', name: 'actions' },
-    ,
+    { label: 'Committee', name: 'committee' },
+    { label: 'Submitted', name: 'created_at' },
+    // {
+    //   label: 'Status',
+    //   name: 'status',
+    //   render: (_, index) => (
+    //     <span
+    //       className={`tag is-${
+    //         responses[index].status === 'rejected'
+    //           ? 'danger'
+    //           : responses[index].status === 'accepted'
+    //           ? 'success'
+    //           : 'info'
+    //       }  is-light`}
+    //     >
+    //       {responses[index].status}
+    //     </span>
+    //   ),
+    // },
+    // { label: 'Submitted', name: 'submitted' },
+    // { label: 'Actions', name: 'actions' },
   ]
 
-  const responses = [
-    {
-      name: 'Mohamed',
-      email: 'alnasir7@seas.upenn.edu',
-      status: 'pending',
-      submitted: '11 April 2021',
-    },
-    {
-      name: 'Campel',
-      email: 'campel7@seas.upenn.edu',
-      status: 'pending',
-      submitted: '13 April 2021',
-    },
-    {
-      name: 'Lucy',
-      email: 'lucy@seas.upenn.edu',
-      status: 'rejected',
-      submitted: '26 March 2021',
-    },
-    {
-      name: 'Eric',
-      email: 'eric@seas.upenn.edu',
-      status: 'accepted',
-      submitted: '20 March 2021',
-    },
-  ]
+  const [applications, setApplications] = useState<Array<Application>>([])
+  const [
+    currentApplication,
+    setCurrentApplication,
+  ] = useState<Application | null>(null)
+  const [responses, setResponses] = useState<Array<Submission>>([])
+
+  useEffect(async () => {
+    const applications = await doApiRequest(
+      `/clubs/${club.code}/applications/?format=json`,
+      {
+        method: 'GET',
+      },
+    ).then((resp) => resp.json())
+    if (applications.length !== 0) {
+      setApplications(applications)
+      setCurrentApplication(applications[0])
+    }
+  }, [])
+
+  useEffect(async () => {
+    if (currentApplication !== null) {
+      const responses = (await doApiRequest(
+        `/clubs/${club.code}/applications/${currentApplication.id}/submissions/?format=json`,
+        {
+          method: 'GET',
+        },
+      ).then((resp) => resp.json())).map((response) => {
+        return {
+          ...response,
+          committee: response.committee?.name ?? "N/A",
+          created_at: moment(response.created_at).tz('America/New_York').format('LLL')
+        }
+      })
+      setResponses(responses)
+    }
+  }, [currentApplication])
 
   const columns = useMemo(
     () =>
@@ -249,34 +232,19 @@ const ApplicaionsPage = () => {
   return (
     <div className="columns">
       <div className="column is-one-third" style={{ marginRight: '100px' }}>
-        <StyledHeader className="is-pulled-left">Forms</StyledHeader>
-        <span className="is-pulled-right">
-          <span className="tag is-info is-light" style={{ cursor: 'pointer' }}>
-            New Form +
-          </span>
-        </span>
+        <StyledHeader className="is-pulled-left">Applications</StyledHeader>
         <FormsCardWrapper>
           <FormsCard className="card">
-            {forms.map((form) => (
-              <Form form={form} />
+            {applications.map((application) => (
+              <Form
+                application={application}
+                setApplication={setCurrentApplication}
+              />
             ))}
-            <ManageFormsContainer>
-              <span className="tag is-link is-normal">Manage Forms</span>
-            </ManageFormsContainer>
           </FormsCard>
         </FormsCardWrapper>
       </div>
       <div className="column is-two-thirds">
-        <StyledSetting>
-          <StyledHeader>Settings</StyledHeader>
-          <SettingsCard className="card">
-            <HashTabView
-              background={BG_GRADIENT}
-              tabs={tabs}
-              tabClassName="is-boxed"
-            />
-          </SettingsCard>
-        </StyledSetting>
         <StyledResponses>
           <StyledHeader style={{ marginBottom: '2px' }}>Responses</StyledHeader>
           <Table
@@ -293,4 +261,4 @@ const ApplicaionsPage = () => {
   )
 }
 
-export default ApplicaionsPage
+export default ApplicationsPage

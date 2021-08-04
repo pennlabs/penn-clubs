@@ -21,6 +21,7 @@ from clubs.models import (
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
+    ApplicationSubmission,
     Asset,
     Badge,
     Club,
@@ -2310,6 +2311,16 @@ class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationQuestionResponse
         fields = ("text", "multiple_choice", "question_type")
+
+
+class ApplicationSubmissionSerializer(serializers.ModelSerializer):
+    committee = ApplicationCommitteeSerializer(
+        required=False, read_only=True
+    )
+
+    class Meta:
+        model = ApplicationSubmission
+        fields = ("application", "committee", "created_at")
 
 
 class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):

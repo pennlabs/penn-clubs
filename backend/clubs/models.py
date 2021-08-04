@@ -1556,6 +1556,28 @@ class ApplicationMultipleChoice(models.Model):
     )
 
 
+class ApplicationSubmission(models.Model):
+    """
+    Represents a complete submission of a particular club application
+    """
+
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)
+    application = models.ForeignKey(
+        ClubApplication,
+        related_name="submissions",
+        on_delete=models.CASCADE,
+        null=False,
+    )
+    committee = models.ForeignKey(
+        ApplicationCommittee,
+        related_name="submissions",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
 class ApplicationQuestionResponse(models.Model):
     """
     Represents a response to a question in a custom application. The fields here are
@@ -1567,7 +1589,9 @@ class ApplicationQuestionResponse(models.Model):
     question = models.ForeignKey(
         ApplicationQuestion, related_name="responses", on_delete=models.CASCADE
     )
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)
+    submission = models.ForeignKey(
+        ApplicationSubmission, on_delete=models.CASCADE, null=False
+    )
     multiple_choice = models.ForeignKey(
         ApplicationMultipleChoice,
         related_name="responses",
