@@ -213,12 +213,14 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
         baseUrl={`/clubs/${club.code}/applications/`}
         defaultObject={{ name: `${club.name} Application` }}
         onChange={(data) => {
-          setCommittees(
-            data?.committees.map((item) => {
-              const value = item.name ?? item.value
-              return { label: value, value }
-            }),
-          )
+          if (data.committees != null) {
+            setCommittees(
+              data.committees.map((item) => {
+                const value = item.name ?? item.value
+                return { label: value, value }
+              }),
+            )
+          }
         }}
         onUpdate={(applications) => {
           const committeeChoicesProps: {

@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 from clubs.views import (
     AdvisorViewSet,
     ApplicationQuestionViewSet,
+    ApplicationSubmissionViewSet,
     AssetViewSet,
     BadgeClubViewSet,
     BadgeViewSet,
@@ -98,6 +99,11 @@ applications_router = routers.NestedSimpleRouter(
 )
 applications_router.register(
     r"questions", ApplicationQuestionViewSet, basename="club-application-questions"
+)
+applications_router.register(
+    r"submissions",
+    ApplicationSubmissionViewSet,
+    basename="club-application-submissions",
 )
 
 urlpatterns = [

@@ -52,6 +52,7 @@ from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     Advisor,
     ApplicationMultipleChoice,
+    ApplicationSubmission,
     ApplicationQuestion,
     ApplicationQuestionResponse,
     Asset,
@@ -103,6 +104,7 @@ from clubs.serializers import (
     AdvisorSerializer,
     ApplicationQuestionResponseSerializer,
     ApplicationQuestionSerializer,
+    ApplicationSubmissionSerializer,
     AssetSerializer,
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
@@ -4126,7 +4128,9 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.request.method == "GET":
             prompt = self.request.GET.get("prompt")
             response = (
-                ApplicationQuestionResponse.objects.filter(user=self.request.user)
+                ApplicationQuestionResponse.objects.filter(
+                    submission__user=self.request.user
+                )
                 .filter(question__prompt=prompt)
                 .order_by("-updated_at")
                 .first()
@@ -4136,27 +4140,37 @@ class UserViewSet(viewsets.ModelViewSet):
             else:
                 return Response(ApplicationQuestionResponseSerializer(response).data)
         elif self.request.method == "POST":
-            question_pk = self.request.data.get("questionId", None)
+            questions = self.request.data.get("questionIds", [])
+            committee_name = self.request.data.get("committee", None)
             response = Response([])
-            if question_pk is not None:
+            if len(questions) == 0:
+                return response
+            application = (
+                ApplicationQuestion.objects.filter(pk=questions[0]).first().application
+            )
+            committee = application.committees.filter(name=committee_name).first()
+            submission = ApplicationSubmission.objects.create(
+                user=self.request.user, application=application, committee=committee,
+            )
+            for question_pk in questions:
                 question = ApplicationQuestion.objects.filter(pk=question_pk).first()
                 question_type = question.question_type
-
+                question_data = self.request.data.get(question_pk, None)
                 if (
                     question_type == ApplicationQuestion.FREE_RESPONSE
                     or question_type == ApplicationQuestion.SHORT_ANSWER
                     or question_type == ApplicationQuestion.COMMITTEE_QUESTION
                 ):
-                    text = self.request.data.get("text", None)
+                    text = question_data.get("text", None)
                     if text is not None and text != "":
-                        obj = ApplicationQuestionResponse.objects.update_or_create(
-                            text=text, question=question, user=self.request.user,
-                        )
+                        obj = ApplicationQuestionResponse.objects.create(
+                            text=text, question=question, submission=submission,
+                        ).save()
                         response = Response(
                             ApplicationQuestionResponseSerializer(obj).data
                         )
                 elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:
-                    multiple_choice_value = self.request.data.get("multipleChoice")
+                    multiple_choice_value = question_data.get("multipleChoice")
                     if (
                         multiple_choice_value is not None
                         and multiple_choice_value != ""
@@ -4164,14 +4178,15 @@ class UserViewSet(viewsets.ModelViewSet):
                         multiple_choice_obj = ApplicationMultipleChoice.objects.filter(
                             question=question, value=multiple_choice_value
                         ).first()
-                        obj = ApplicationQuestionResponse.objects.update_or_create(
+                        obj = ApplicationQuestionResponse.objects.create(
                             multiple_choice=multiple_choice_obj,
                             question=question,
-                            user=self.request.user,
-                        )
+                            submission=submission,
+                        ).save()
                         response = Response(
                             ApplicationQuestionResponseSerializer(obj).data
                         )
+            submission.save()
             return response
 
     def get_serializer_class(self):
@@ -4206,6 +4221,33 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return ClubApplication.objects.filter(club__code=self.kwargs["club_code"])
+
+
+class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
+    """
+    list: List submissions for a given club application.
+    """
+
+    permission_classes = [ClubItemPermission | IsSuperuser]
+    serializer_class = ApplicationSubmissionSerializer
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        distinct_submissions = {}
+        submissions = ApplicationSubmission.objects.filter(
+            application__pk=self.kwargs["application_pk"]
+        ).all()
+        for submission in submissions:
+            key = (submission.user, submission.committee)
+            if key in distinct_submissions:
+                if distinct_submissions[key].created_at < submission.created_at:
+                    distinct_submissions[key] = submission
+            else:
+                distinct_submissions[key] = submission
+            
+        return ApplicationSubmission.objects.filter(
+            application__pk=self.kwargs["application_pk"]
+        )
 
 
 class ApplicationQuestionViewSet(viewsets.ModelViewSet):

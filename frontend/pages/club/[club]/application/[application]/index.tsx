@@ -167,39 +167,41 @@ const ApplicationPage = ({
             }
 
             if (errors === null) {
-              for (const [questionId, text] of Object.entries(values)) {
+              const body: any = { questionIds: [] }
+              for (const [questionId, text] of Object.entries(values).filter(
+                (value) => value[0] !== 'undefined',
+              )) {
+                body.questionIds.push(questionId)
+                if (currentCommittee != null) {
+                  body.committee = currentCommittee.value
+                }
                 const question = questions.find(
                   (question: ApplicationQuestion) =>
                     question.id === parseInt(questionId),
                 )
 
-                let body: any | null = null
                 switch (question?.question_type) {
                   case ApplicationQuestionType.FreeResponse:
                   case ApplicationQuestionType.ShortAnswer:
                   case ApplicationQuestionType.CommitteeQuestion:
-                    body = {
-                      questionId,
+                    body[questionId] = {
                       text,
                     }
                     break
                   case ApplicationQuestionType.MultipleChoice:
-                    body = {
-                      questionId,
+                    body[questionId] = {
                       multipleChoice: text.name,
                     }
                     break
                   default:
-                    body = null
                     break
                 }
-
-                if (body !== null) {
-                  doApiRequest('/users/questions/?format=json', {
-                    method: 'POST',
-                    body,
-                  })
-                }
+              }
+              if (Object.keys(body).length !== 0) {
+                doApiRequest('/users/questions/?format=json', {
+                  method: 'POST',
+                  body,
+                })
               }
               setSaved(true)
             }
