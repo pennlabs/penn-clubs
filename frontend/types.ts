@@ -294,3 +294,16 @@ export enum ApplicationQuestionType {
   ShortAnswer = 3,
   CommitteeQuestion = 4,
 }
+
+type ApplicationQuestion = {
+  id: number
+  question_type: ApplicationQuestionType
+  prompt: string
+  word_limit: number
+  committees: Array<{ name: string }>
+  multiple_choice: [
+    {
+      value: string
+    },
+  ]
+}

@@ -1518,6 +1518,9 @@ class ApplicationCommittee(models.Model):
         ClubApplication, related_name="committees", on_delete=models.CASCADE,
     )
 
+    def __str__(self):
+        return "<ApplicationCommittee: {} in {}>".format(self.name, self.application.pk)
+
 
 class ApplicationQuestion(models.Model):
     """
@@ -1561,6 +1564,20 @@ class ApplicationSubmission(models.Model):
     Represents a complete submission of a particular club application
     """
 
+    # pending, first round, second round, accepted, rejected
+    PENDING = 1
+    FIRST_ROUND = 2
+    SECOND_ROUND = 3
+    ACCEPTED = 4
+    REJECTED = 5
+    STATUS_TYPES = (
+        (PENDING, "Pending"),
+        (FIRST_ROUND, "First round"),
+        (SECOND_ROUND, "second round"),
+        (ACCEPTED, "Accepted"),
+        (REJECTED, "Rejected"),
+    )
+    status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)
     application = models.ForeignKey(
         ClubApplication,
@@ -1590,7 +1607,10 @@ class ApplicationQuestionResponse(models.Model):
         ApplicationQuestion, related_name="responses", on_delete=models.CASCADE
     )
     submission = models.ForeignKey(
-        ApplicationSubmission, on_delete=models.CASCADE, null=False
+        ApplicationSubmission,
+        related_name="responses",
+        on_delete=models.CASCADE,
+        null=False,
     )
     multiple_choice = models.ForeignKey(
         ApplicationMultipleChoice,
