@@ -14,6 +14,7 @@ import {
   BORDER,
   CLUBS_GREY,
   FOCUS_GRAY,
+  SNOW,
   WHITE,
 } from '../../constants/colors'
 import { BORDER_RADIUS, MD, mediaMaxWidth } from '../../constants/measurements'
@@ -40,6 +41,16 @@ const styles = {
   },
 }
 
+const FocusableTr = styled.tr`
+  cursor: pointer;
+  &:hover,
+  &:active,
+  &:focus {
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+    background-color: ${SNOW};
+  }
+`
+
 type Option = {
   label: string
   key: any
@@ -58,6 +69,8 @@ type tableProps = {
   data: Row[]
   searchableColumns: string[]
   filterOptions?: FilterOption[]
+  focusable?: boolean
+  onClick?: (event: any) => void
 }
 
 const Styles = styled.div`
@@ -101,6 +114,8 @@ const Table = ({
   data,
   searchableColumns,
   filterOptions,
+  focusable,
+  onClick,
 }: tableProps): ReactElement => {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [tableData, setTableData] = useState<Row[]>([])
@@ -283,8 +298,28 @@ const Table = ({
           <tbody {...getTableBodyProps()}>
             {page.map((row, i) => {
               prepareRow(row)
-              return (
-                <tr key={row.id} {...row.getRowProps()}>
+              return focusable != null && focusable ? (
+                <FocusableTr
+                  key={row.id}
+                  {...row.getRowProps()}
+                  onClick={() => {
+                    if (onClick != null) {
+                      onClick(row)
+                    }
+                  }}
+                >
+                  {columns.map((column, i) => {
+                    return (
+                      <td key={i}>
+                        {column.render
+                          ? column.render(row.original.id, row.id)
+                          : row.original[column.name]}
+                      </td>
+                    )
+                  })}
+                </FocusableTr>
+              ) : (
+                <tr key={row.id} {...row.getRowProps()} style={{}}>
                   {columns.map((column, i) => {
                     return (
                       <td key={i}>

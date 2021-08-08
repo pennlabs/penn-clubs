@@ -19,6 +19,13 @@ import { Icon } from '../common/Icon'
 import Table from '../common/Table'
 import Toggle from '../Settings/Toggle'
 import moment from 'moment-timezone'
+import { Modal } from '../common'
+import { ApplicationQuestion, ApplicationQuestionType } from '~/types'
+import {
+  computeWordCount,
+  formatQuestionType,
+} from '~/pages/club/[club]/application/[application]'
+import { Form, Formik } from 'formik'
 
 const StyledResponses = styled.div`
   margin-bottom: 40px;
@@ -125,7 +132,7 @@ const tabs = [
   { name: 'Advanced', content: <AdvancedSettings /> },
 ]
 
-const Form = (props: any) => {
+const SubmissionSelect = (props: any) => {
   const { application, setApplication } = props
   return (
     <FormWrapper onClick={() => setApplication(application)}>
@@ -151,16 +158,120 @@ type Application = {
   name: string
 }
 
+enum ApplicationStatusType {
+  Pending = 1,
+  FirstRound = 2,
+  SecondRound = 3,
+  Accepted = 4,
+  Rejected = 5,
+}
+
+const APPLICATION_STATUS_TYPES = [
+  {
+    value: ApplicationStatusType.Pending,
+    label: 'Pending',
+  },
+  {
+    value: ApplicationStatusType.FirstRound,
+    label: 'First round',
+  },
+  {
+    value: ApplicationStatusType.SecondRound,
+    label: 'Second round',
+  },
+  {
+    value: ApplicationStatusType.Accepted,
+    label: 'Accepted',
+  },
+  {
+    value: ApplicationStatusType.Rejected,
+    label: 'Rejected',
+  },
+]
+
 type Submission = {
   application: number
   committee: string | null
   created_at: string
+  pk: number
+  status: string
+  responses: Array<Response>
+}
+
+type Response = {
+  text: string | null
+  multiple_choice: {
+    value: string
+  }
+  question_type: string
+  question: ApplicationQuestion
+}
+
+const ModalContainer = styled.div`
+  text-align: left;
+  padding: 20px;
+`
+
+const SubmissionModal = (props: {
+  club: string
+  application: Application
+  submission: Submission
+  onLinkClicked?: () => void
+}): ReactElement => {
+  const { submission } = props
+  const initialValues = {}
+  const wordCounts = {}
+  submission.responses.forEach((response) => {
+    switch (parseInt(response.question_type)) {
+      case ApplicationQuestionType.FreeResponse:
+        wordCounts[response.question.id] =
+          response.text != null ? computeWordCount(response.text) : 0
+      case ApplicationQuestionType.ShortAnswer:
+      case ApplicationQuestionType.CommitteeQuestion:
+        initialValues[response.question.id] = response.text
+        break
+      case ApplicationQuestionType.MultipleChoice:
+        initialValues[response.question.id] = response.multiple_choice.value
+        break
+      default:
+        break
+    }
+  })
+  return (
+    <ModalContainer>
+      <Formik initialValues={initialValues}>
+        {(props) => (
+          <Form>
+            {submission.responses !== null
+              ? submission.responses.map((response: Response) => {
+                  const input = formatQuestionType(
+                    null,
+                    response.question,
+                    wordCounts,
+                    () => {},
+                    true,
+                  )
+                  return (
+                    <div>
+                      {input}
+                      <br></br>
+                    </div>
+                  )
+                })
+              : null}
+          </Form>
+        )}
+      </Formik>
+    </ModalContainer>
+  )
 }
 
 const ApplicationsPage = ({ club }: { club: Club }) => {
   const responseTableFields = [
+    { label: 'User Id', name: 'user_hash' },
     { label: 'Committee', name: 'committee' },
     { label: 'Submitted', name: 'created_at' },
+    { label: 'Status', name: 'status' },
     // {
     //   label: 'Status',
     //   name: 'status',
@@ -187,7 +298,11 @@ const ApplicationsPage = ({ club }: { club: Club }) => {
     currentApplication,
     setCurrentApplication,
   ] = useState<Application | null>(null)
-  const [responses, setResponses] = useState<Array<Submission>>([])
+  const [submissions, setSubmissions] = useState<Array<Submission>>([])
+  const [showModal, setShowModal] = useState<boolean>(false)
+  const [currentSubmission, setCurrentSubmission] = useState<Submission | null>(
+    null,
+  )
 
   useEffect(async () => {
     const applications = await doApiRequest(
@@ -204,19 +319,26 @@ const ApplicationsPage = ({ club }: { club: Club }) => {
 
   useEffect(async () => {
     if (currentApplication !== null) {
-      const responses = (await doApiRequest(
-        `/clubs/${club.code}/applications/${currentApplication.id}/submissions/?format=json`,
-        {
-          method: 'GET',
-        },
-      ).then((resp) => resp.json())).map((response) => {
+      const responses = (
+        await doApiRequest(
+          `/clubs/${club.code}/applications/${currentApplication.id}/submissions/?format=json`,
+          {
+            method: 'GET',
+          },
+        ).then((resp) => resp.json())
+      ).map((response) => {
         return {
           ...response,
-          committee: response.committee?.name ?? "N/A",
-          created_at: moment(response.created_at).tz('America/New_York').format('LLL')
+          committee: response.committee?.name ?? 'N/A',
+          status: APPLICATION_STATUS_TYPES.find(
+            (status) => status.value === response.status,
+          )?.label,
+          created_at: moment(response.created_at)
+            .tz('America/New_York')
+            .format('LLL'),
         }
       })
-      setResponses(responses)
+      setSubmissions(responses)
     }
   }, [currentApplication])
 
@@ -236,7 +358,7 @@ const ApplicationsPage = ({ club }: { club: Club }) => {
         <FormsCardWrapper>
           <FormsCard className="card">
             {applications.map((application) => (
-              <Form
+              <SubmissionSelect
                 application={application}
                 setApplication={setCurrentApplication}
               />
@@ -248,15 +370,39 @@ const ApplicationsPage = ({ club }: { club: Club }) => {
         <StyledResponses>
           <StyledHeader style={{ marginBottom: '2px' }}>Responses</StyledHeader>
           <Table
-            data={responses.map((item, index) =>
+            data={submissions.map((item, index) =>
               item.id ? item : { ...item, id: index },
             )}
             columns={responseTableFields}
             searchableColumns={['name']}
             filterOptions={[]}
+            focusable={true}
+            onClick={(row) => {
+              setShowModal(true)
+              const submission =
+                submissions.find(
+                  (submission) => submission.pk === row.original.pk,
+                ) ?? null
+              setCurrentSubmission(submission)
+            }}
           />
         </StyledResponses>
       </div>
+      {showModal && (
+        <Modal
+          show={showModal}
+          closeModal={() => setShowModal(false)}
+          width="80%"
+          marginBottom={false}
+        >
+          <SubmissionModal
+            club={club.code}
+            application={currentApplication}
+            submission={currentSubmission}
+            showDetailsButton={false}
+          />
+        </Modal>
+      )}
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { NextPageContext } from 'next'
 import React, { ReactElement, useState } from 'react'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
-import { ApplicationQuestionType, Club } from 'types'
+import { ApplicationQuestion, ApplicationQuestionType, Club } from 'types'
 import { doApiRequest } from 'utils'
 
 import { SelectField, TextField } from '~/components/FormComponents'
@@ -17,19 +17,6 @@ type Application = {
   result_release_time: string
   external_url: string | null
   committees: Array<{ name: string }> | null
-}
-
-type ApplicationQuestion = {
-  id: number
-  question_type: ApplicationQuestionType
-  prompt: string
-  word_limit: number
-  committees: Array<{ name: string }>
-  multiple_choice: [
-    {
-      value: string
-    },
-  ]
 }
 
 type ApplicationPageProps = {
@@ -44,6 +31,67 @@ const SubmitNotificationSpan = styled.span`
   top: 0.5em;
   left: 1em;
 `
+
+export function computeWordCount(input: string): number {
+  return input !== undefined
+    ? input.split(' ').filter((word) => word !== '').length
+    : 0
+}
+
+export function formatQuestionType(
+  props: any,
+  question: ApplicationQuestion,
+  wordCounts: { id?: number },
+  setWordCounts: (val: any) => void,
+  readOnly: boolean,
+): JSX.Element {
+  switch (question.question_type) {
+    case ApplicationQuestionType.FreeResponse:
+      return (
+        <>
+          <Field
+            name={question.id}
+            label={question.prompt}
+            onInput={(event) => {
+              const wordCount = computeWordCount(event.target.value)
+              wordCounts[question.id] = wordCount
+              setWordCounts(wordCounts)
+            }}
+            as={TextField}
+            type={'textarea'}
+            helpText={`Word count: ${wordCounts[question.id]}/${
+              question.word_limit
+            }`}
+            readOnly={readOnly}
+          />
+        </>
+      )
+    case ApplicationQuestionType.MultipleChoice:
+      return (
+        <Field
+          name={question.id}
+          label={question.prompt}
+          as={SelectField}
+          choices={question.multiple_choice.map((choice) => {
+            return {
+              label: choice.value,
+              value: choice.value,
+            }
+          })}
+          readOnly={readOnly}
+        />
+      )
+    default:
+      return (
+        <Field
+          name={question.id}
+          label={question.prompt}
+          as={TextField}
+          readOnly={readOnly}
+        />
+      )
+  }
+}
 
 const ApplicationPage = ({
   club,
@@ -86,59 +134,6 @@ const ApplicationPage = ({
       )
     }
   })
-
-  function computeWordCount(input: string): number {
-    return input !== undefined
-      ? input.split(' ').filter((word) => word !== '').length
-      : 0
-  }
-
-  function formatQuestionType(
-    props: any,
-    question: ApplicationQuestion,
-    wordCounts: { id?: number },
-    setWordCounts: (val: any) => void,
-  ): JSX.Element {
-    switch (question.question_type) {
-      case ApplicationQuestionType.FreeResponse:
-        return (
-          <>
-            <Field
-              name={question.id}
-              label={question.prompt}
-              onInput={(event) => {
-                const wordCount = computeWordCount(event.target.value)
-                wordCounts[question.id] = wordCount
-                setWordCounts(wordCounts)
-              }}
-              as={TextField}
-              type={'textarea'}
-              helpText={`Word count: ${wordCounts[question.id]}/${
-                question.word_limit
-              }`}
-            />
-          </>
-        )
-      case ApplicationQuestionType.MultipleChoice:
-        return (
-          <Field
-            name={question.id}
-            label={question.prompt}
-            as={SelectField}
-            choices={question.multiple_choice.map((choice) => {
-              return {
-                label: choice.value,
-                value: choice.value,
-              }
-            })}
-          />
-        )
-      default:
-        return (
-          <Field name={question.id} label={question.prompt} as={TextField} />
-        )
-    }
-  }
 
   return (
     <>
@@ -190,7 +185,7 @@ const ApplicationPage = ({
                     break
                   case ApplicationQuestionType.MultipleChoice:
                     body[questionId] = {
-                      multipleChoice: text.name,
+                      multipleChoice: text,
                     }
                     break
                   default:
@@ -198,6 +193,7 @@ const ApplicationPage = ({
                 }
               }
               if (Object.keys(body).length !== 0) {
+                console.log(body)
                 doApiRequest('/users/questions/?format=json', {
                   method: 'POST',
                   body,
@@ -236,6 +232,7 @@ const ApplicationPage = ({
                   question,
                   wordCounts,
                   setWordCounts,
+                  false,
                 )
                 return (
                   <div>

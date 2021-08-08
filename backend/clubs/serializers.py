@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 from urllib.parse import parse_qs, urlparse
@@ -2307,20 +2308,31 @@ class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
     question_type = serializers.CharField(
         source="question.question_type", read_only=True
     )
+    question = ApplicationQuestionSerializer(
+        required=False, read_only=True
+    )
 
     class Meta:
         model = ApplicationQuestionResponse
-        fields = ("text", "multiple_choice", "question_type")
+        fields = ("text", "multiple_choice", "question_type", "question")
 
 
 class ApplicationSubmissionSerializer(serializers.ModelSerializer):
     committee = ApplicationCommitteeSerializer(
         required=False, read_only=True
     )
+    responses = ApplicationQuestionResponseSerializer(
+        many=True, required=False, read_only=True
+    )
+    user_hash = serializers.SerializerMethodField("get_user_hash")
+
+    def get_user_hash(self, obj):
+        username = obj.user.username
+        return int(hashlib.sha1(username.encode("utf-8")).hexdigest(), 16) % (10 ** 8)
 
     class Meta:
         model = ApplicationSubmission
-        fields = ("application", "committee", "created_at")
+        fields = ("user_hash", "application", "committee", "created_at", "pk", "status", "responses")
 
 
 class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):

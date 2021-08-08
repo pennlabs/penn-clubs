@@ -4237,17 +4237,21 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         submissions = ApplicationSubmission.objects.filter(
             application__pk=self.kwargs["application_pk"]
         ).all()
+
+        # only want to return the most recent (user, committee) unique submission pair
         for submission in submissions:
-            key = (submission.user, submission.committee)
+            key = (submission.user.__str__(), submission.committee.__str__())
             if key in distinct_submissions:
                 if distinct_submissions[key].created_at < submission.created_at:
                     distinct_submissions[key] = submission
             else:
                 distinct_submissions[key] = submission
-            
-        return ApplicationSubmission.objects.filter(
-            application__pk=self.kwargs["application_pk"]
-        )
+
+        queryset = ApplicationSubmission.objects.none()
+        for submission in distinct_submissions.values():
+            queryset |= ApplicationSubmission.objects.filter(pk=submission.pk)
+
+        return queryset
 
 
 class ApplicationQuestionViewSet(viewsets.ModelViewSet):
