@@ -372,7 +372,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     const newObject = { ...object }
 
     // update object state
-    changeObjects((objects) => {
+    setObjects((objects) => {
       const objIndex = objects.indexOf(newObject)
       if (objIndex !== -1) {
         objects[objIndex] = newObject
