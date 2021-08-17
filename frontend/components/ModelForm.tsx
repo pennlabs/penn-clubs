@@ -162,49 +162,53 @@ export const ModelTable = ({
 
   tableFields.push({
     name: 'Actions',
-    render: (_, index) => (
-      <div className="buttons">
-        {allowEditing && (
-          <button
-            onClick={() => {
-              return onEdit(objects[index])
-            }}
-            className="button is-primary is-small"
-          >
-            <Icon name="edit" alt="edit" /> Edit
-          </button>
-        )}
-        {allowDeletion && (
-          <button
-            onClick={() => {
-              if (confirmDeletion) {
-                if (
-                  confirm(
-                    `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
-                  )
-                ) {
-                  onDelete(objects[index])
+    render: (id, _) => {
+      const object = objects.find((object) => object.id === id)
+      if (object == null) {
+        return null
+      }
+      return (
+        <div className="buttons">
+          {allowEditing && (
+            <button
+              onClick={() => {
+                return onEdit(object)
+              }}
+              className="button is-primary is-small"
+            >
+              <Icon name="edit" alt="edit" /> Edit
+            </button>
+          )}
+          {allowDeletion && (
+            <button
+              onClick={() => {
+                if (confirmDeletion) {
+                  if (
+                    confirm(
+                      `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
+                    )
+                  ) {
+                    onDelete(object)
+                  }
+                } else {
+                  onDelete(object)
                 }
-              } else {
-                onDelete(objects[index])
-              }
-            }}
-            className="button is-danger is-small"
-          >
-            <Icon name="trash" alt="delete" /> {deleteVerb}
-          </button>
-        )}
-        {actions && actions(objects[index])}
-      </div>
-    ),
+              }}
+              className="button is-danger is-small"
+            >
+              <Icon name="trash" alt="delete" /> {deleteVerb}
+            </button>
+          )}
+          {actions && actions(object)}
+        </div>
+      )
+    },
   })
 
   return (
     <>
       <Table
-        data={objects.map((item, index) =>
-          item.id ? item : { ...item, id: index },
-        )}
+        data={objects}
         columns={tableFields}
         searchableColumns={['name']}
         filterOptions={filterOptions || []}
@@ -218,7 +222,7 @@ export const ModelTable = ({
  * capabilities for a Django model using a provided endpoint.
  */
 export const ModelForm = (props: ModelFormProps): ReactElement => {
-  const [objects, changeObjects] = useState<ModelObject[]>([])
+  const [objects, setObjects] = useState<ModelObject[]>([])
   const [
     currentlyEditing,
     changeCurrentlyEditing,
@@ -227,6 +231,18 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
   const [createObject, changeCreateObject] = useState<ModelObject>(
     props.defaultObject != null ? { ...props.defaultObject } : {},
   )
+
+  function changeObjects(newObjects: ModelObject[]) {
+    if (Array.isArray(newObjects)) {
+      setObjects(
+        newObjects.map((object, index) =>
+          object.id ? object : { ...object, id: index },
+        ),
+      )
+    } else {
+      setObjects(newObjects)
+    }
+  }
 
   const {
     fields,
