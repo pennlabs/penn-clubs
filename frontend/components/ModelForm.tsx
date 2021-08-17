@@ -162,7 +162,7 @@ export const ModelTable = ({
 
   tableFields.push({
     name: 'Actions',
-    render: (_, index) => (
+    render: (index, _) => (
       <div className="buttons">
         {allowEditing && (
           <button
