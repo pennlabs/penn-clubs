@@ -74,7 +74,7 @@ applications:
   - name: hub-django-wgsi
     image: pennlabs/penn-clubs-backend
     secret: first-year-hub
-    replicas: 3
+    replicas: 6
     ingress:
       hosts:
         - host: hub.provost.upenn.edu
