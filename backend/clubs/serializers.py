@@ -2262,7 +2262,7 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             "multiple_choice",
             "committees",
             "question_type",
-            "committee_question"
+            "committee_question",
         )
 
     def create(self, validated_data):
@@ -2309,9 +2309,7 @@ class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
     question_type = serializers.CharField(
         source="question.question_type", read_only=True
     )
-    question = ApplicationQuestionSerializer(
-        required=False, read_only=True
-    )
+    question = ApplicationQuestionSerializer(required=False, read_only=True)
 
     class Meta:
         model = ApplicationQuestionResponse
@@ -2319,9 +2317,7 @@ class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
 
 
 class ApplicationSubmissionSerializer(serializers.ModelSerializer):
-    committee = ApplicationCommitteeSerializer(
-        required=False, read_only=True
-    )
+    committee = ApplicationCommitteeSerializer(required=False, read_only=True)
     responses = ApplicationQuestionResponseSerializer(
         many=True, required=False, read_only=True
     )
@@ -2333,7 +2329,15 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApplicationSubmission
-        fields = ("user_hash", "application", "committee", "created_at", "pk", "status", "responses")
+        fields = (
+            "user_hash",
+            "application",
+            "committee",
+            "created_at",
+            "pk",
+            "status",
+            "responses",
+        )
 
 
 class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):

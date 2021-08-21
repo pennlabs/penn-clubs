@@ -101,14 +101,26 @@ const GeneralSettings = () => {
       <div style={{ display: 'flex', flexDirection: 'row', width: '100' }}>
         <span>Collect Email Addresses</span>
         <div style={{ marginLeft: 'auto' }}>
-          <Toggle club={null} active={true} toggle={() => {}} />
+          <Toggle
+            club={null}
+            active={true}
+            toggle={() => {
+              // pass
+            }}
+          />
         </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'row', width: '100' }}>
         <span>Allow edit after submissions</span>
         <div style={{ marginLeft: 'auto' }}>
-          <Toggle club={null} active={true} toggle={() => {}} />
+          <Toggle
+            club={null}
+            active={true}
+            toggle={() => {
+              // pass
+            }}
+          />
         </div>
       </div>
     </div>
@@ -226,6 +238,8 @@ const SubmissionModal = (props: {
       case ApplicationQuestionType.FreeResponse:
         wordCounts[response.question.id] =
           response.text != null ? computeWordCount(response.text) : 0
+        initialValues[response.question.id] = response.text
+        break
       case ApplicationQuestionType.ShortAnswer:
         initialValues[response.question.id] = response.text
         break
@@ -250,7 +264,9 @@ const SubmissionModal = (props: {
                     null,
                     response.question,
                     wordCounts,
-                    () => {},
+                    () => {
+                      // pass
+                    },
                     true,
                   )
                   return (
