@@ -1,3 +1,5 @@
+import { Form, Formik } from 'formik'
+import moment from 'moment-timezone'
 import React, { useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
@@ -13,19 +15,17 @@ import {
   SNOW,
   WHITE,
 } from '~/constants'
-import { doApiRequest } from '~/utils'
-
-import { Icon } from '../common/Icon'
-import Table from '../common/Table'
-import Toggle from '../Settings/Toggle'
-import moment from 'moment-timezone'
-import { Modal } from '../common'
-import { ApplicationQuestion, ApplicationQuestionType } from '~/types'
 import {
   computeWordCount,
   formatQuestionType,
 } from '~/pages/club/[club]/application/[application]'
-import { Form, Formik } from 'formik'
+import { ApplicationQuestion, ApplicationQuestionType } from '~/types'
+import { doApiRequest } from '~/utils'
+
+import { Modal } from '../common'
+import { Icon } from '../common/Icon'
+import Table from '../common/Table'
+import Toggle from '../Settings/Toggle'
 
 const StyledResponses = styled.div`
   margin-bottom: 40px;
@@ -227,11 +227,13 @@ const SubmissionModal = (props: {
         wordCounts[response.question.id] =
           response.text != null ? computeWordCount(response.text) : 0
       case ApplicationQuestionType.ShortAnswer:
-      case ApplicationQuestionType.CommitteeQuestion:
         initialValues[response.question.id] = response.text
         break
       case ApplicationQuestionType.MultipleChoice:
-        initialValues[response.question.id] = response.multiple_choice.value
+        initialValues[response.question.id] =
+          response.multiple_choice !== null
+            ? response.multiple_choice.value
+            : null
         break
       default:
         break

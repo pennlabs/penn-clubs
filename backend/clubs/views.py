@@ -4156,10 +4156,17 @@ class UserViewSet(viewsets.ModelViewSet):
                 question = ApplicationQuestion.objects.filter(pk=question_pk).first()
                 question_type = question.question_type
                 question_data = self.request.data.get(question_pk, None)
+
+                # skip the questions which do not belong to the current committee
+                if (
+                    question.committee_question
+                    and committee not in question.committees.all()
+                ):
+                    continue
+
                 if (
                     question_type == ApplicationQuestion.FREE_RESPONSE
                     or question_type == ApplicationQuestion.SHORT_ANSWER
-                    or question_type == ApplicationQuestion.COMMITTEE_QUESTION
                 ):
                     text = question_data.get("text", None)
                     if text is not None and text != "":
@@ -4170,7 +4177,7 @@ class UserViewSet(viewsets.ModelViewSet):
                             ApplicationQuestionResponseSerializer(obj).data
                         )
                 elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:
-                    multiple_choice_value = question_data.get("multipleChoice")
+                    multiple_choice_value = question_data.get("multipleChoice", None)
                     if (
                         multiple_choice_value is not None
                         and multiple_choice_value != ""

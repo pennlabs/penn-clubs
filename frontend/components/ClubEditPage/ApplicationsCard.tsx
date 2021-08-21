@@ -14,6 +14,7 @@ import {
 import { Icon, Modal, Text } from '../common'
 import {
   ApplicationMultipleChoiceField,
+  CheckboxField,
   DateTimeField,
   SelectField,
   TextField,
@@ -36,10 +37,6 @@ const QUESTION_TYPES = [
   {
     value: ApplicationQuestionType.ShortAnswer,
     label: 'Short Answer',
-  },
-  {
-    value: ApplicationQuestionType.CommitteeQuestion,
-    label: 'Committee Question',
   },
 ]
 
@@ -73,6 +70,7 @@ const ApplicationModal = (props: {
   const [committees, setCommittees] = useState<
     [{ label: string; value: string }]
   >()
+  const [committeeQuestion, setCommitteeQuestion] = useState<boolean>()
 
   return (
     <ModalContainer>
@@ -81,12 +79,18 @@ const ApplicationModal = (props: {
         defaultObject={{ name: `${applicationName} Question` }}
         fields={
           <>
-            <Field name="prompt" as={TextField} required={true} />
+            <Field
+              name="prompt"
+              as={TextField}
+              required={true}
+              helpText={'Prompt for this question on the application'}
+            />
             <Field
               name="question_type"
               as={SelectField}
               choices={QUESTION_TYPES}
               required={true}
+              helpText={'Type of question'}
               valueDeserialize={(a: ApplicationQuestionType) =>
                 QUESTION_TYPES.find((x) => x.value === a)
               }
@@ -94,7 +98,12 @@ const ApplicationModal = (props: {
             />
             {questionType !== null &&
               questionType === ApplicationQuestionType.FreeResponse && (
-                <Field name="word_limit" as={TextField} type={'number'} />
+                <Field
+                  name="word_limit"
+                  as={TextField}
+                  type={'number'}
+                  helpText={'Word limit for this free response question'}
+                />
               )}
             {questionType !== null &&
               questionType === ApplicationQuestionType.MultipleChoice && (
@@ -102,24 +111,38 @@ const ApplicationModal = (props: {
                   name="multiple_choice"
                   as={ApplicationMultipleChoiceField}
                   initialValues={multipleChoices}
+                  helpText={
+                    'Multiple choice options for this multiple choice question'
+                  }
                 />
               )}
-            {questionType !== null &&
-              questionType === ApplicationQuestionType.CommitteeQuestion && (
-                <Field
-                  name="committees"
-                  as={SelectField}
-                  initialValues={committees}
-                  choices={committeeChoices}
-                  isMulti={true}
-                />
-              )}
+            <Field
+              name="committee_question"
+              as={CheckboxField}
+              initialValues={committeeQuestion}
+              label={
+                'Do you want this question to appear only for certain committees?'
+              }
+            />
+            {questionType !== null && committeeQuestion && (
+              <Field
+                name="committees"
+                as={SelectField}
+                initialValues={committees}
+                choices={committeeChoices}
+                isMulti={true}
+                helpText={
+                  'Select the committees for which this question should appear'
+                }
+              />
+            )}
           </>
         }
         tableFields={[{ name: 'prompt', label: 'Prompt' }]}
         noun="Application"
         onChange={(value) => {
           setQuestionType(value.question_type)
+          setCommitteeQuestion(value.committee_question)
           if (
             value.multiple_choice !== null &&
             value.multiple_choice !== undefined

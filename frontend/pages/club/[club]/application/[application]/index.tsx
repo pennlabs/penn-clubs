@@ -1,6 +1,9 @@
+import 'moment-timezone'
+
 import ClubMetadata from 'components/ClubMetadata'
 import { Container, Icon, Title } from 'components/common'
 import { Field, Form, Formik } from 'formik'
+import moment from 'moment'
 import { NextPageContext } from 'next'
 import React, { ReactElement, useState } from 'react'
 import renderPage from 'renderPage'
@@ -119,7 +122,7 @@ const ApplicationPage = ({
 
   const committees = application?.committees
   questions = questions.filter((question) => {
-    if (question.question_type !== ApplicationQuestionType.CommitteeQuestion) {
+    if (!question.committee_question) {
       // render all non-committee questions
       return true
     } else if (currentCommittee === undefined || currentCommittee === null) {
@@ -146,6 +149,9 @@ const ApplicationPage = ({
         <Formik
           initialValues={initialValues}
           onSubmit={(values: { [id: number]: any }, actions) => {
+            let submitErrors: string | null = null
+
+            // word count error check
             for (const [questionId, text] of Object.entries(values)) {
               const question = questions.find(
                 (question: ApplicationQuestion) =>
@@ -157,11 +163,33 @@ const ApplicationPage = ({
                   ApplicationQuestionType.FreeResponse &&
                 computeWordCount(text) > question.word_limit
               ) {
-                setErrors('One of your responses exceeds the word limit!')
+                submitErrors = 'One of your responses exceeds the word limit!'
               }
             }
 
-            if (errors === null) {
+            // committee error check
+            if (
+              committees !== null &&
+              committees.length > 0 &&
+              currentCommittee === null
+            ) {
+              submitErrors =
+                'Please select a committee before submitting (you can apply to more than one committee)'
+            }
+
+            // submissions open error check (disabled for now to test)
+            const applicationStartTime = moment.tz(
+              application.application_start_time,
+              'America/New_York',
+            )
+            const currentTime = moment.tz('America/New_York')
+            if (currentTime.valueOf() < applicationStartTime.valueOf()) {
+              submitErrors = `This application has not opened for submission yet. You can submit on ${applicationStartTime.format(
+                'MMMM Do YYYY, h:mm:ss a',
+              )} EST.`
+            }
+
+            if (submitErrors === null) {
               const body: any = { questionIds: [] }
               for (const [questionId, text] of Object.entries(values).filter(
                 (value) => value[0] !== 'undefined',
@@ -178,7 +206,6 @@ const ApplicationPage = ({
                 switch (question?.question_type) {
                   case ApplicationQuestionType.FreeResponse:
                   case ApplicationQuestionType.ShortAnswer:
-                  case ApplicationQuestionType.CommitteeQuestion:
                     body[questionId] = {
                       text,
                     }
@@ -193,13 +220,14 @@ const ApplicationPage = ({
                 }
               }
               if (Object.keys(body).length !== 0) {
-                console.log(body)
                 doApiRequest('/users/questions/?format=json', {
                   method: 'POST',
                   body,
                 })
               }
               setSaved(true)
+            } else {
+              setErrors(submitErrors)
             }
           }}
         >
@@ -298,11 +326,13 @@ ApplicationPage.getInitialProps = async (
       switch (parseInt(payload.question_type)) {
         case ApplicationQuestionType.FreeResponse:
         case ApplicationQuestionType.ShortAnswer:
-        case ApplicationQuestionType.CommitteeQuestion:
           acc[id] = payload.text
           break
         case ApplicationQuestionType.MultipleChoice:
-          acc[id] = payload.multiple_choice.value
+          acc[id] =
+            payload.multiple_choice !== null
+              ? payload.multiple_choice.value
+              : null
           break
         default:
           return acc
