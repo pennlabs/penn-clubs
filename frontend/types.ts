@@ -292,10 +292,9 @@ export enum ApplicationQuestionType {
   FreeResponse = 1,
   MultipleChoice = 2,
   ShortAnswer = 3,
-  CommitteeQuestion = 4,
 }
 
-type ApplicationQuestion = {
+export type ApplicationQuestion = {
   id: number
   question_type: ApplicationQuestionType
   prompt: string
@@ -306,4 +305,5 @@ type ApplicationQuestion = {
       value: string
     },
   ]
+  committee_question: boolean
 }

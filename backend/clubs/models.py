@@ -1530,12 +1530,10 @@ class ApplicationQuestion(models.Model):
     FREE_RESPONSE = 1
     MULTIPLE_CHOICE = 2
     SHORT_ANSWER = 3
-    COMMITTEE_QUESTION = 4
     QUESTION_TYPES = (
         (FREE_RESPONSE, "Free Response"),
         (MULTIPLE_CHOICE, "Multiple Choice"),
         (SHORT_ANSWER, "Short Answer"),
-        (COMMITTEE_QUESTION, "Committee Question"),
     )
 
     question_type = models.IntegerField(choices=QUESTION_TYPES, default=FREE_RESPONSE)
@@ -1545,6 +1543,7 @@ class ApplicationQuestion(models.Model):
     application = models.ForeignKey(
         ClubApplication, related_name="questions", on_delete=models.CASCADE
     )
+    committee_question = models.BooleanField(default=False)
     committees = models.ManyToManyField("ApplicationCommittee", blank=True)
 
 

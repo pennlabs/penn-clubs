@@ -2262,6 +2262,7 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             "multiple_choice",
             "committees",
             "question_type",
+            "committee_question"
         )
 
     def create(self, validated_data):
