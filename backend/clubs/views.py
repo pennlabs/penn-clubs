@@ -52,9 +52,9 @@ from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     Advisor,
     ApplicationMultipleChoice,
-    ApplicationSubmission,
     ApplicationQuestion,
     ApplicationQuestionResponse,
+    ApplicationSubmission,
     Asset,
     Badge,
     Club,
