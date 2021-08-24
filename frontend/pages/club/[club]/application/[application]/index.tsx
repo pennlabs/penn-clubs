@@ -220,7 +220,7 @@ const ApplicationPage = ({
                 }
               }
               if (Object.keys(body).length !== 0) {
-                doApiRequest('/users/questions/?format=json', {
+                doApiRequest('/users/question_response/?format=json', {
                   method: 'POST',
                   body,
                 })

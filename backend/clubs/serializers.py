@@ -2263,6 +2263,7 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             "committees",
             "question_type",
             "committee_question",
+            "precedence",
         )
 
     def create(self, validated_data):

@@ -4123,78 +4123,189 @@ class UserViewSet(viewsets.ModelViewSet):
     ]
     lookup_field = "username"
 
-    @action(detail=False, methods=["get", "post"])
-    def questions(self, *args, **kwargs):
-        if self.request.method == "GET":
-            prompt = self.request.GET.get("prompt")
-            response = (
-                ApplicationQuestionResponse.objects.filter(
-                    submission__user=self.request.user
-                )
-                .filter(question__prompt=prompt)
-                .order_by("-updated_at")
-                .first()
-            )
-            if prompt == "" or response is None:
-                return Response([])
-            else:
-                return Response(ApplicationQuestionResponseSerializer(response).data)
-        elif self.request.method == "POST":
-            questions = self.request.data.get("questionIds", [])
-            committee_name = self.request.data.get("committee", None)
-            response = Response([])
-            if len(questions) == 0:
-                return response
-            application = (
-                ApplicationQuestion.objects.filter(pk=questions[0]).first().application
-            )
-            committee = application.committees.filter(name=committee_name).first()
-            submission = ApplicationSubmission.objects.create(
-                user=self.request.user, application=application, committee=committee,
-            )
-            for question_pk in questions:
-                question = ApplicationQuestion.objects.filter(pk=question_pk).first()
-                question_type = question.question_type
-                question_data = self.request.data.get(question_pk, None)
-
-                # skip the questions which do not belong to the current committee
-                if (
-                    question.committee_question
-                    and committee not in question.committees.all()
-                ):
-                    continue
-
-                if (
-                    question_type == ApplicationQuestion.FREE_RESPONSE
-                    or question_type == ApplicationQuestion.SHORT_ANSWER
-                ):
-                    text = question_data.get("text", None)
-                    if text is not None and text != "":
-                        obj = ApplicationQuestionResponse.objects.create(
-                            text=text, question=question, submission=submission,
-                        ).save()
-                        response = Response(
-                            ApplicationQuestionResponseSerializer(obj).data
-                        )
-                elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:
-                    multiple_choice_value = question_data.get("multipleChoice", None)
-                    if (
-                        multiple_choice_value is not None
-                        and multiple_choice_value != ""
-                    ):
-                        multiple_choice_obj = ApplicationMultipleChoice.objects.filter(
-                            question=question, value=multiple_choice_value
-                        ).first()
-                        obj = ApplicationQuestionResponse.objects.create(
-                            multiple_choice=multiple_choice_obj,
-                            question=question,
-                            submission=submission,
-                        ).save()
-                        response = Response(
-                            ApplicationQuestionResponseSerializer(obj).data
-                        )
-            submission.save()
+    @action(detail=False, methods=["post"])
+    def question_response(self, *args, **kwargs):
+        """
+        Accepts a response to a question, this happens when the user submits the
+        application form
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            prompt:
+                                type: string
+                            questionIds:
+                                type: array
+                                items:
+                                    type: integer
+                            committee:
+                                type: string
+                            text:
+                                type: string
+                            multipleChoice:
+                                type: array
+                                items:
+                                    type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    text:
+                                        type: string
+                                    multiple_choice:
+                                        type: string
+                                    question_type:
+                                        type: integer
+                                    question:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: integer
+                                            question_type:
+                                                type: integer
+                                            prompt:
+                                                type: string
+                                            word_limit:
+                                                type: integer
+                                            multiple_choice:
+                                                type: array
+                                                items:
+                                                    type: string
+                                            committees:
+                                                type: array
+                                                items:
+                                                    type: string
+                                            committee_question:
+                                                type: boolean
+                                            precedence:
+                                                type: integer
+        ---
+        """
+        questions = self.request.data.get("questionIds", [])
+        committee_name = self.request.data.get("committee", None)
+        response = Response([])
+        if len(questions) == 0:
             return response
+        application = (
+            ApplicationQuestion.objects.filter(pk=questions[0]).first().application
+        )
+        committee = application.committees.filter(name=committee_name).first()
+        submission = ApplicationSubmission.objects.create(
+            user=self.request.user, application=application, committee=committee,
+        )
+        for question_pk in questions:
+            question = ApplicationQuestion.objects.filter(pk=question_pk).first()
+            question_type = question.question_type
+            question_data = self.request.data.get(question_pk, None)
+
+            # skip the questions which do not belong to the current committee
+            if (
+                question.committee_question
+                and committee not in question.committees.all()
+            ):
+                continue
+
+            if (
+                question_type == ApplicationQuestion.FREE_RESPONSE
+                or question_type == ApplicationQuestion.SHORT_ANSWER
+            ):
+                text = question_data.get("text", None)
+                if text is not None and text != "":
+                    obj = ApplicationQuestionResponse.objects.create(
+                        text=text, question=question, submission=submission,
+                    ).save()
+                    response = Response(ApplicationQuestionResponseSerializer(obj).data)
+            elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:
+                multiple_choice_value = question_data.get("multipleChoice", None)
+                if multiple_choice_value is not None and multiple_choice_value != "":
+                    multiple_choice_obj = ApplicationMultipleChoice.objects.filter(
+                        question=question, value=multiple_choice_value
+                    ).first()
+                    obj = ApplicationQuestionResponse.objects.create(
+                        multiple_choice=multiple_choice_obj,
+                        question=question,
+                        submission=submission,
+                    ).save()
+                    response = Response(ApplicationQuestionResponseSerializer(obj).data)
+        submission.save()
+        return response
+
+    @action(detail=False, methods=["get"])
+    def questions(self, *args, **kwargs):
+        """
+        Given a prompt lists the given users responses to this particular question.
+        This allows us to populate the application form with the users'
+        previous submissions.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            prompt:
+                                type: string
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    text:
+                                        type: string
+                                    multiple_choice:
+                                        type: string
+                                    question_type:
+                                        type: integer
+                                    question:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: integer
+                                            question_type:
+                                                type: integer
+                                            prompt:
+                                                type: string
+                                            word_limit:
+                                                type: integer
+                                            multiple_choice:
+                                                type: array
+                                                items:
+                                                    type: string
+                                            committees:
+                                                type: array
+                                                items:
+                                                    type: string
+                                            committee_question:
+                                                type: boolean
+                                            precedence:
+                                                type: integer
+        ---
+        """
+        prompt = self.request.GET.get("prompt")
+        response = (
+            ApplicationQuestionResponse.objects.filter(
+                submission__user=self.request.user
+            )
+            .filter(question__prompt=prompt)
+            .order_by("-updated_at")
+            .first()
+        )
+        if prompt == "" or response is None:
+            return Response([])
+        else:
+            return Response(ApplicationQuestionResponseSerializer(response).data)
 
     def get_serializer_class(self):
         if self.action in {"list"}:
@@ -4207,19 +4318,21 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
     create: Create an application for the club.
 
     list: Retrieve a list of applications of the club.
+    ---
+    responses:
+        "200":
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        additionalProperties:
+                            type: string
+    ---
     """
 
     permission_classes = [ClubItemPermission | IsSuperuser]
     serializer_class = ClubApplicationSerializer
     http_method_names = ["get", "post", "put", "patch", "delete"]
-
-    @action(detail=False, methods=["get"])
-    def active(self, *args, **kwargs):
-        active_application = self.get_queryset().filter(is_active=True).first()
-        if active_application:
-            return Response([ClubApplicationSerializer(active_application).data])
-        else:
-            return Response([])
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
@@ -4275,7 +4388,34 @@ class ApplicationQuestionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return ApplicationQuestion.objects.filter(
             application__pk=self.kwargs["application_pk"]
-        )
+        ).order_by("precedence")
+
+    @action(detail=False, methods=["post"])
+    def precedence(self, *args, **kwargs):
+        """
+        Updates the precedence of questions so they are ordered the same way as
+        arranged by the officer creating the application after they drag and drop
+        the different questions to re-order them
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: array
+                        items:
+                            type: integer
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        precedence = self.request.data.get("precedence", [])
+        for index, question_pk in enumerate(precedence):
+            question = ApplicationQuestion.objects.filter(pk=question_pk).first()
+            if question is not None:
+                question.precedence = index
+                question.save()
+        return Response([])
 
 
 class BadgeClubViewSet(viewsets.ModelViewSet):

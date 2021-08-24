@@ -1,6 +1,6 @@
 import { Form, Formik } from 'formik'
 import moment from 'moment-timezone'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 import {
@@ -8,7 +8,6 @@ import {
   ANIMATION_DURATION,
   BORDER_RADIUS,
   CLUBS_BLUE,
-  HOVER_GRAY,
   MD,
   mediaMaxWidth,
   SM,
@@ -19,7 +18,7 @@ import {
   computeWordCount,
   formatQuestionType,
 } from '~/pages/club/[club]/application/[application]'
-import { ApplicationQuestion, ApplicationQuestionType } from '~/types'
+import { ApplicationQuestion, ApplicationQuestionType, Club } from '~/types'
 import { doApiRequest } from '~/utils'
 
 import { Modal } from '../common'
@@ -31,13 +30,12 @@ const StyledResponses = styled.div`
   margin-bottom: 40px;
 `
 
-const FormsCard = styled.div<CardProps>`
+const FormsCard = styled.div`
   padding: 0px;
   box-shadow: 0 0 0 transparent;
   transition: all ${ANIMATION_DURATION}ms ease;
   border-radius: ${BORDER_RADIUS};
   box-shadow: 0 0 0 ${WHITE};
-  background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
   border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
   height: 65vh;
@@ -202,10 +200,10 @@ const APPLICATION_STATUS_TYPES = [
 ]
 
 type Submission = {
+  pk: number
   application: number
   committee: string | null
   created_at: string
-  pk: number
   status: string
   responses: Array<Response>
 }
@@ -226,39 +224,47 @@ const ModalContainer = styled.div`
 
 const SubmissionModal = (props: {
   club: string
-  application: Application
-  submission: Submission
+  application: Application | null
+  submission: Submission | null
   onLinkClicked?: () => void
 }): ReactElement => {
   const { submission } = props
   const initialValues = {}
   const wordCounts = {}
-  submission.responses.forEach((response) => {
-    switch (parseInt(response.question_type)) {
-      case ApplicationQuestionType.FreeResponse:
-        wordCounts[response.question.id] =
-          response.text != null ? computeWordCount(response.text) : 0
-        initialValues[response.question.id] = response.text
-        break
-      case ApplicationQuestionType.ShortAnswer:
-        initialValues[response.question.id] = response.text
-        break
-      case ApplicationQuestionType.MultipleChoice:
-        initialValues[response.question.id] =
-          response.multiple_choice !== null
-            ? response.multiple_choice.value
-            : null
-        break
-      default:
-        break
-    }
-  })
+  if (submission !== null) {
+    submission.responses.forEach((response) => {
+      switch (parseInt(response.question_type)) {
+        case ApplicationQuestionType.FreeResponse:
+          wordCounts[response.question.id] =
+            response.text != null ? computeWordCount(response.text) : 0
+          initialValues[response.question.id] = response.text
+          break
+        case ApplicationQuestionType.ShortAnswer:
+          initialValues[response.question.id] = response.text
+          break
+        case ApplicationQuestionType.MultipleChoice:
+          initialValues[response.question.id] =
+            response.multiple_choice !== null
+              ? response.multiple_choice.value
+              : null
+          break
+        default:
+          break
+      }
+    })
+  }
+
   return (
     <ModalContainer>
-      <Formik initialValues={initialValues}>
+      <Formik
+        initialValues={initialValues}
+        onSubmit={() => {
+          // pass
+        }}
+      >
         {(props) => (
           <Form>
-            {submission.responses !== null
+            {submission !== null && submission.responses !== null
               ? submission.responses.map((response: Response) => {
                   const input = formatQuestionType(
                     null,
@@ -284,7 +290,11 @@ const SubmissionModal = (props: {
   )
 }
 
-const ApplicationsPage = ({ club }: { club: Club }) => {
+export default function ApplicationsPage({
+  club,
+}: {
+  club: Club
+}): ReactElement {
   const responseTableFields = [
     { label: 'User Id', name: 'user_hash' },
     { label: 'Committee', name: 'committee' },
@@ -322,41 +332,43 @@ const ApplicationsPage = ({ club }: { club: Club }) => {
     null,
   )
 
-  useEffect(async () => {
-    const applications = await doApiRequest(
-      `/clubs/${club.code}/applications/?format=json`,
-      {
-        method: 'GET',
-      },
-    ).then((resp) => resp.json())
-    if (applications.length !== 0) {
-      setApplications(applications)
-      setCurrentApplication(applications[0])
-    }
-  }, [])
-
-  useEffect(async () => {
-    if (currentApplication !== null) {
-      const responses = (
-        await doApiRequest(
-          `/clubs/${club.code}/applications/${currentApplication.id}/submissions/?format=json`,
-          {
-            method: 'GET',
-          },
-        ).then((resp) => resp.json())
-      ).map((response) => {
-        return {
-          ...response,
-          committee: response.committee?.name ?? 'N/A',
-          status: APPLICATION_STATUS_TYPES.find(
-            (status) => status.value === response.status,
-          )?.label,
-          created_at: moment(response.created_at)
-            .tz('America/New_York')
-            .format('LLL'),
+  useEffect(() => {
+    doApiRequest(`/clubs/${club.code}/applications/?format=json`, {
+      method: 'GET',
+    })
+      .then((resp) => resp.json())
+      .then((applications) => {
+        if (applications.length !== 0) {
+          setApplications(applications)
+          setCurrentApplication(applications[0])
         }
       })
-      setSubmissions(responses)
+  }, [])
+
+  useEffect(() => {
+    if (currentApplication !== null) {
+      doApiRequest(
+        `/clubs/${club.code}/applications/${currentApplication.id}/submissions/?format=json`,
+        {
+          method: 'GET',
+        },
+      )
+        .then((resp) => resp.json())
+        .then((responses) => {
+          return responses.map((response) => {
+            return {
+              ...response,
+              committee: response.committee?.name ?? 'N/A',
+              status: APPLICATION_STATUS_TYPES.find(
+                (status) => status.value === response.status,
+              )?.label,
+              created_at: moment(response.created_at)
+                .tz('America/New_York')
+                .format('LLL'),
+            }
+          })
+        })
+        .then((responses) => setSubmissions(responses))
     }
   }, [currentApplication])
 
@@ -372,7 +384,7 @@ const ApplicationsPage = ({ club }: { club: Club }) => {
   return (
     <div className="columns">
       <div className="column is-one-third" style={{ marginRight: '100px' }}>
-        <StyledHeader className="is-pulled-left">Applications</StyledHeader>
+        <StyledHeader>Applications</StyledHeader>
         <FormsCardWrapper>
           <FormsCard className="card">
             {applications.map((application) => (
@@ -389,7 +401,7 @@ const ApplicationsPage = ({ club }: { club: Club }) => {
           <StyledHeader style={{ marginBottom: '2px' }}>Responses</StyledHeader>
           <Table
             data={submissions.map((item, index) =>
-              item.id ? item : { ...item, id: index },
+              item.pk ? { ...item, id: item.pk } : { ...item, id: index },
             )}
             columns={responseTableFields}
             searchableColumns={['name']}
@@ -417,12 +429,9 @@ const ApplicationsPage = ({ club }: { club: Club }) => {
             club={club.code}
             application={currentApplication}
             submission={currentSubmission}
-            showDetailsButton={false}
           />
         </Modal>
       )}
     </div>
   )
 }
-
-export default ApplicationsPage
