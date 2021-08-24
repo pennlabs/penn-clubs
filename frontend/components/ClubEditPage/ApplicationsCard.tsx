@@ -2,6 +2,8 @@ import { Field } from 'formik'
 import React, { ReactElement, useState } from 'react'
 import styled from 'styled-components'
 
+import { doApiRequest } from '~/utils'
+
 import {
   ApplicationQuestionType,
   Club,
@@ -140,6 +142,16 @@ const ApplicationModal = (props: {
         }
         tableFields={[{ name: 'prompt', label: 'Prompt' }]}
         noun="Application"
+        onUpdate={(questions) => {
+          const body = { precedence: questions.map((question) => question.id) }
+          doApiRequest(
+            `/clubs/${clubCode}/applications/${applicationName}/questions/precedence/?format=json`,
+            {
+              method: 'POST',
+              body,
+            },
+          )
+        }}
         onChange={(value) => {
           setQuestionType(value.question_type)
           setCommitteeQuestion(value.committee_question)

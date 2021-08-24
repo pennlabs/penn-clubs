@@ -320,18 +320,7 @@ const ClubForm = ({
       {
         name: 'applications',
         label: `Applications Page`,
-        content: (
-          <ApplicationsPage
-            isEdit={isEdit}
-            schools={schools}
-            years={years}
-            majors={majors}
-            tags={tags}
-            studentTypes={studentTypes}
-            club={club}
-            onSubmit={submit}
-          />
-        ),
+        content: <ApplicationsPage club={club} />,
       },
       {
         name: 'resources',
