@@ -212,7 +212,7 @@ const ApplicationPage = ({
                     break
                   case ApplicationQuestionType.MultipleChoice:
                     body[questionId] = {
-                      multipleChoice: text,
+                      multipleChoice: text.id ? text.id : text,
                     }
                     break
                   default:
