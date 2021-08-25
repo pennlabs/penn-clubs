@@ -15,6 +15,7 @@ from clubs.views import (
     EventViewSet,
     ExternalMemberListViewSet,
     FavoriteCalendarAPIView,
+    FavoriteEventsAPIView,
     FavoriteViewSet,
     MajorViewSet,
     MassInviteAPIView,
@@ -113,6 +114,7 @@ urlpatterns = [
         name="club-invite",
     ),
     path(r"settings/calendar_url/", UserUUIDAPIView.as_view(), name="user-uuid"),
+    path(r"favouriteevents/", FavoriteEventsAPIView.as_view(), name="event-interest"),
     path(
         r"calendar/<slug:user_secretuuid>/",
         FavoriteCalendarAPIView.as_view(),
