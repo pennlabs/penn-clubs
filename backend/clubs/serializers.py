@@ -521,8 +521,10 @@ class EventWriteSerializer(EventSerializer):
 
         return super().update(instance, validated_data)
 
+
 class FavouriteEventSerializer(EventSerializer):
     pass
+
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
     id = serializers.CharField(max_length=8, read_only=True)
