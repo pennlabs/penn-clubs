@@ -112,6 +112,7 @@ from clubs.serializers import (
     EventWriteSerializer,
     ExternalMemberListSerializer,
     FavoriteSerializer,
+    FavouriteEventSerializer,
     FavoriteWriteSerializer,
     MajorSerializer,
     MembershipInviteSerializer,
@@ -3024,14 +3025,12 @@ def parse_boolean(inpt):
         return False
     return None
 
-
 class FavoriteEventsAPIView(generics.ListAPIView):
     """
     Return a list of events, ordered in increasing order of start time (from time
     of API call) corresponding to clubs that a user has favourited
     """
-
-    serializer_class = EventSerializer
+    serializer_class = FavouriteEventSerializer
     permission_classes = [IsAuthenticated & ReadOnly]
 
     def get_queryset(self):
