@@ -3025,6 +3025,27 @@ def parse_boolean(inpt):
     return None
 
 
+class FavoriteEventsAPIView(generics.ListAPIView):
+    """
+    Return a list of events, ordered in increasing order of start time (from time
+    of API call) corresponding to clubs that a user has favourited
+    """
+
+    serializer_class = EventSerializer
+    permission_classes = [ReadOnly | IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            Event.objects.filter(
+                club__favorite__person=self.request.user.id,
+                start_time__gte=timezone.now(),
+            )
+            .select_related("club")
+            .prefetch_related("club__badges")
+            .order_by("start_time")
+        )
+
+
 class FavoriteCalendarAPIView(APIView):
     def get(self, request, *args, **kwargs):
         """
