@@ -3032,7 +3032,7 @@ class FavoriteEventsAPIView(generics.ListAPIView):
     """
 
     serializer_class = EventSerializer
-    permission_classes = [ReadOnly | IsAuthenticated]
+    permission_classes = [IsAuthenticated & ReadOnly]
 
     def get_queryset(self):
         return (

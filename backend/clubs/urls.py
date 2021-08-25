@@ -97,7 +97,7 @@ urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),
     path(r"settings/invites/", EmailInvitesAPIView.as_view(), name="email-invites"),
     path(r"settings/zoom/", UserZoomAPIView.as_view(), name="users-zoom"),
-    path(r"favoriteevents/", FavoriteEventsAPIView.as_view(), name="event-interest"),
+    path(r"favouriteevents/", FavoriteEventsAPIView.as_view(), name="event-interest"),
     path(
         r"settings/zoom/meetings/",
         MeetingZoomAPIView.as_view(),
