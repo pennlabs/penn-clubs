@@ -3036,10 +3036,11 @@ class FavoriteEventsAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated & ReadOnly]
 
     def get_queryset(self):
+        date = datetime.date.today()
         return (
             Event.objects.filter(
                 club__favorite__person=self.request.user.id,
-                start_time__gte=timezone.now(),
+                start_time__gte=datetime.datetime(date.year, date.month, date.day),
             )
             .select_related("club")
             .prefetch_related("club__badges")
