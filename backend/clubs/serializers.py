@@ -2325,8 +2325,8 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
     user_hash = serializers.SerializerMethodField("get_user_hash")
 
     def get_user_hash(self, obj):
-        username = obj.user.username
-        return int(hashlib.sha1(username.encode("utf-8")).hexdigest(), 16) % (10 ** 8)
+        secret = f"{obj.user.username}-{obj.user.date_joined}"
+        return int(hashlib.sha1(secret.encode("utf-8")).hexdigest(), 16) % (10 ** 8)
 
     class Meta:
         model = ApplicationSubmission
