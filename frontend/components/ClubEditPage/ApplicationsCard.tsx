@@ -38,7 +38,7 @@ const QUESTION_TYPES = [
   },
   {
     value: ApplicationQuestionType.ShortAnswer,
-    label: 'Short Answer',
+    label: 'Short Answer (Non-evaluative)',
   },
 ]
 
