@@ -17,7 +17,9 @@ class Command(BaseCommand):
     web_execute = True
 
     def handle(self, *args, **kwargs):
-        wc_badge = Badge.objects.filter(description="Wharton Council constituent").first()
+        wc_badge = Badge.objects.filter(
+            description="Wharton Council constituent"
+        ).first()
         eastern = pytz.timezone("America/New_York")
         application_start_time = datetime.datetime(2021, 9, 4, 0, 0, tzinfo=eastern)
         application_end_time = datetime.datetime(2021, 9, 20, 2, 0, tzinfo=eastern)
@@ -28,7 +30,9 @@ class Command(BaseCommand):
             if wc_badge in club.badges.all():
                 wc_clubs.append(club)
 
-        prompt_one = "Tell us about a time you took initiative or demonstrated leadership"
+        prompt_one = (
+            "Tell us about a time you took initiative or demonstrated leadership"
+        )
         prompt_two = "Tell us about a time you faced a challenge and how you solved it"
         prompt_three = "Tell us about a time you collaborated well in a team"
         for club in wc_clubs:
@@ -41,12 +45,15 @@ class Command(BaseCommand):
                 result_release_time=result_release_time,
                 is_wharton_council=True,
             )
-            link = f"https://pennclubs.com/club/{club.code}/application/{application.pk}"
+            link = (
+                f"https://pennclubs.com/club/{club.code}/application/{application.pk}"
+            )
             application.external_url = link
+            prompt = "Choose one of the following prompts for your personal statement"
             prompt_question = ApplicationQuestion.objects.create(
                 question_type=ApplicationQuestion.MULTIPLE_CHOICE,
-                prompt="Choose one of the following prompts for your personal statement",
                 application=application,
+                prompt=prompt,
             )
             ApplicationMultipleChoice.objects.create(
                 value=prompt_one, question=prompt_question
