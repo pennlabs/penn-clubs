@@ -82,6 +82,7 @@ type ModelFormProps = {
   allowDeletion?: boolean
   confirmDeletion?: boolean
   actions?: (object: ModelObject) => ReactElement
+  draggable?: boolean
 }
 
 /**
@@ -119,6 +120,8 @@ type ModelTableProps = {
   onEdit?: (object: ModelObject) => void
   onDelete?: (object: ModelObject) => void
   actions?: (object: ModelObject) => ReactElement
+  draggable?: boolean
+  onDragEnd?: (result: any) => void | null | undefined
 }
 
 /**
@@ -136,6 +139,8 @@ export const ModelTable = ({
   onEdit = () => undefined,
   onDelete = () => undefined,
   actions,
+  draggable = false,
+  onDragEnd,
 }: ModelTableProps): ReactElement => {
   const columns = useMemo(
     () =>
@@ -212,6 +217,8 @@ export const ModelTable = ({
         columns={tableFields}
         searchableColumns={['name']}
         filterOptions={filterOptions || []}
+        draggable={draggable}
+        onDragEnd={onDragEnd}
       />
     </>
   )
@@ -259,6 +266,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     actions,
     keyField = 'id',
     onChange: parentComponentChange,
+    draggable = false,
   } = props
 
   /**
@@ -399,6 +407,26 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     return newObject
   }
 
+  const onDragEnd = (result: any): void => {
+    const { source, destination } = result
+    if (!destination) {
+      return
+    }
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return
+    }
+
+    const newObjects = [...objects]
+    const temp = newObjects.splice(source.index, 1)[0]
+    newObjects.splice(destination.index, 0, temp)
+    changeObjects(newObjects) // needs to a new object to initiate re-render
+    if (onUpdate) onUpdate(newObjects)
+  }
+
   /**
    * Download the latest list of objects when the component is mounted.
    */
@@ -440,6 +468,8 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           confirmDeletion={confirmDeletion}
           allowEditing={allowEditing}
           actions={actions}
+          draggable={draggable}
+          onDragEnd={onDragEnd}
         />
         {(allowCreation || currentlyEditing !== null) && (
           <>

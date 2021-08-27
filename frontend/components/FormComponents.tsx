@@ -14,6 +14,7 @@ import React, {
 } from 'react'
 import DatePicker from 'react-datepicker'
 import Select from 'react-select'
+import CreatableSelect from 'react-select/creatable'
 import styled from 'styled-components'
 import uuid from 'uuid'
 
@@ -270,6 +271,35 @@ export const DateTimeField = useFieldWrapper(
 )
 
 /**
+ * A datetime field that allows the user to choose a date and a time.
+ */
+export const ApplicationMultipleChoiceField = useFieldWrapper(
+  (props: BasicFormField & AnyHack): ReactElement => {
+    const { name, value, placeholder, initialValues, choices, ...other } = props
+    const { setFieldValue } = useFormikContext()
+
+    return (
+      <CreatableSelect
+        name={name}
+        as={SelectField}
+        onChange={(
+          val: [{ label: string; value: string; _isNew: boolean }],
+          _action: any,
+        ) => {
+          // TODO: types are good but this is not particularly modular, might
+          // be best to make this more generalizable
+          setFieldValue(name, val)
+        }}
+        isMulti
+        creatable
+        value={initialValues}
+        options={choices}
+      />
+    )
+  },
+)
+
+/**
  * A field that allows the user to enter an arbitrary line of text.
  */
 const TextEditField = ({ field, setField }): ReactElement => {
@@ -446,7 +476,14 @@ export const DynamicQuestionField = useFieldWrapper(
  */
 export const TextField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
-    const { type = 'text', isError, value, ...other } = props
+    const {
+      type = 'text',
+      isError,
+      value,
+      customHandleChange,
+      readOnly,
+      ...other
+    } = props
 
     const { setFieldValue } = useFormikContext()
 
@@ -464,6 +501,7 @@ export const TextField = useFieldWrapper(
           className={`textarea ${isError ? 'is-danger' : ''}`}
           value={value ?? ''}
           {...other}
+          readOnly={readOnly ?? false}
         ></textarea>
       )
     }
@@ -627,6 +665,9 @@ type SelectFieldProps<T> = {
     : { value: string; label: string }
   formatOptionLabel: (inpt: any) => string | ReactElement
   isMulti?: boolean
+  creatable?: boolean
+  customHandleChange?: (updated: any) => void
+  readOnly?: boolean
 }
 
 /**
@@ -646,7 +687,10 @@ export const SelectField = useFieldWrapper(
     deserialize,
     valueDeserialize,
     isMulti,
+    creatable,
     formatOptionLabel,
+    customHandleChange,
+    readOnly,
   }: BasicFormField &
     SelectFieldProps<
       { [key: string]: string | number } | string
@@ -703,6 +747,7 @@ export const SelectField = useFieldWrapper(
         key={name}
         placeholder={placeholder}
         isMulti={isMulti}
+        creatable={creatable}
         value={(valueDeserialize ?? actualDeserialize)(value)}
         options={
           actualDeserialize(choices) as {
@@ -711,9 +756,17 @@ export const SelectField = useFieldWrapper(
           }[]
         }
         formatOptionLabel={formatOptionLabel}
-        onChange={(opt): void => setFieldValue(name, actualSerialize(opt))}
+        onChange={(opt): void => {
+          setFieldValue(name, actualSerialize(opt))
+          if (customHandleChange !== undefined) {
+            customHandleChange(opt)
+          }
+        }}
         onBlur={onBlur}
         styles={{ container: (style) => ({ ...style, width: '100%' }) }}
+        isClearable={!readOnly}
+        isSearchable={!readOnly}
+        openMenuOnClick={!readOnly}
       />
     )
   },

@@ -333,9 +333,6 @@ export default function ClubEditCard({
       }
     }
 
-    // eslint-disable-next-line no-console
-    console.log(body)
-
     const req =
       isEdit && club !== null
         ? doApiRequest(`/clubs/${club.code}/?format=json`, {

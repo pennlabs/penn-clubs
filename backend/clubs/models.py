@@ -1483,7 +1483,7 @@ class Profile(models.Model):
 
 class ClubApplication(models.Model):
     """
-    Represents an application to a club.
+    Represents custom club application.
     """
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
@@ -1492,6 +1492,8 @@ class ClubApplication(models.Model):
     name = models.TextField(blank=True)
     result_release_time = models.DateTimeField()
     external_url = models.URLField()
+    is_active = models.BooleanField(default=False, blank=True)
+    is_wharton_council = models.BooleanField(default=False, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1503,6 +1505,130 @@ class ClubApplication(models.Model):
             self.application_start_time,
             self.application_end_time,
         )
+
+
+class ApplicationCommittee(models.Model):
+    """
+    Represents a committee for a particular club application. Each application
+    may have multiple committees to which students can apply.
+    """
+
+    name = models.TextField(blank=True)
+    application = models.ForeignKey(
+        ClubApplication, related_name="committees", on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return "<ApplicationCommittee: {} in {}>".format(self.name, self.application.pk)
+
+
+class ApplicationQuestion(models.Model):
+    """
+    Represents a question of a custom application
+    """
+
+    FREE_RESPONSE = 1
+    MULTIPLE_CHOICE = 2
+    SHORT_ANSWER = 3
+    QUESTION_TYPES = (
+        (FREE_RESPONSE, "Free Response"),
+        (MULTIPLE_CHOICE, "Multiple Choice"),
+        (SHORT_ANSWER, "Short Answer"),
+    )
+
+    question_type = models.IntegerField(choices=QUESTION_TYPES, default=FREE_RESPONSE)
+    prompt = models.TextField(blank=True)
+    precedence = models.IntegerField(default=0)
+    word_limit = models.IntegerField(default=0)
+    application = models.ForeignKey(
+        ClubApplication, related_name="questions", on_delete=models.CASCADE
+    )
+    committee_question = models.BooleanField(default=False)
+    committees = models.ManyToManyField("ApplicationCommittee", blank=True)
+
+
+class ApplicationMultipleChoice(models.Model):
+    """
+    Represents a multiple choice selection in an application question
+    """
+
+    value = models.TextField(blank=True)
+    question = models.ForeignKey(
+        ApplicationQuestion, related_name="multiple_choice", on_delete=models.CASCADE,
+    )
+
+
+class ApplicationSubmission(models.Model):
+    """
+    Represents a complete submission of a particular club application
+    """
+
+    # pending, first round, second round, accepted, rejected
+    PENDING = 1
+    FIRST_ROUND = 2
+    SECOND_ROUND = 3
+    ACCEPTED = 4
+    REJECTED = 5
+    STATUS_TYPES = (
+        (PENDING, "Pending"),
+        (FIRST_ROUND, "First round"),
+        (SECOND_ROUND, "second round"),
+        (ACCEPTED, "Accepted"),
+        (REJECTED, "Rejected"),
+    )
+    status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)
+    application = models.ForeignKey(
+        ClubApplication,
+        related_name="submissions",
+        on_delete=models.CASCADE,
+        null=False,
+    )
+    committee = models.ForeignKey(
+        ApplicationCommittee,
+        related_name="submissions",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class ApplicationQuestionResponse(models.Model):
+    """
+    Represents a response to a question in a custom application. The fields here are
+    a union of all possible fields from all types of questions (most principally free
+    response, but also multiple choice, essay response, etc.).
+    """
+
+    text = models.TextField(blank=True)
+    question = models.ForeignKey(
+        ApplicationQuestion, related_name="responses", on_delete=models.CASCADE
+    )
+    submission = models.ForeignKey(
+        ApplicationSubmission,
+        related_name="responses",
+        on_delete=models.CASCADE,
+        null=False,
+    )
+    multiple_choice = models.ForeignKey(
+        ApplicationMultipleChoice,
+        related_name="responses",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class QuestionResponse(models.Model):
+    """
+    Represents a response to a question on a custom application
+    """
+
+    question = models.ForeignKey(ApplicationQuestion, on_delete=models.CASCADE)
+    response = models.TextField(blank=True)
 
 
 @receiver(models.signals.pre_delete, sender=Asset)

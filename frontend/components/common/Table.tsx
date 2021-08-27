@@ -1,4 +1,5 @@
 import { ReactElement, useEffect, useMemo, useState } from 'react'
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd'
 import Select from 'react-select'
 import {
   useFilters,
@@ -14,6 +15,7 @@ import {
   BORDER,
   CLUBS_GREY,
   FOCUS_GRAY,
+  SNOW,
   WHITE,
 } from '../../constants/colors'
 import { BORDER_RADIUS, MD, mediaMaxWidth } from '../../constants/measurements'
@@ -40,6 +42,16 @@ const styles = {
   },
 }
 
+const FocusableTr = styled.tr`
+  cursor: pointer;
+  &:hover,
+  &:active,
+  &:focus {
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+    background-color: ${SNOW};
+  }
+`
+
 type Option = {
   label: string
   key: any
@@ -58,6 +70,10 @@ type tableProps = {
   data: Row[]
   searchableColumns: string[]
   filterOptions?: FilterOption[]
+  focusable?: boolean
+  onClick?: (event: any) => void
+  draggable?: boolean
+  onDragEnd?: (result: any) => void | null | undefined
 }
 
 const Styles = styled.div`
@@ -76,7 +92,7 @@ const SearchWrapper = styled.div`
   }
 `
 const Toolbar = styled.div`
-  margin-bottom: 50px;
+  margin-bottom: 40px;
 `
 const Input = styled.input`
   border: 1px solid ${ALLBIRDS_GRAY};
@@ -101,6 +117,10 @@ const Table = ({
   data,
   searchableColumns,
   filterOptions,
+  focusable,
+  onClick,
+  draggable = false,
+  onDragEnd,
 }: tableProps): ReactElement => {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [tableData, setTableData] = useState<Row[]>([])
@@ -172,7 +192,7 @@ const Table = ({
     previousPage,
     gotoPage,
     pageOptions,
-    state: { pageIndex, pageSize },
+    state: { pageIndex, pageSize, list },
   } = useTable(
     {
       columns: memoColumns,
@@ -205,7 +225,7 @@ const Table = ({
   return (
     <Styles>
       <Toolbar>
-        <div className="is-pulled-right">
+        <div className="is-pulled-left">
           <SearchWrapper>
             <Input
               className="input"
@@ -280,24 +300,66 @@ const Table = ({
               </tr>
             ))}
           </thead>
-          <tbody {...getTableBodyProps()}>
-            {page.map((row, i) => {
-              prepareRow(row)
-              return (
-                <tr key={row.id} {...row.getRowProps()}>
-                  {columns.map((column, i) => {
-                    return (
-                      <td key={i}>
-                        {column.render
-                          ? column.render(row.original.id, row.id)
-                          : row.original[column.name]}
-                      </td>
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="droppableTable">
+              {(provided) => (
+                <tbody
+                  {...getTableBodyProps()}
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                >
+                  {page.map((row, index) => {
+                    prepareRow(row)
+                    return focusable != null && focusable ? (
+                      <FocusableTr
+                        key={row.id}
+                        {...row.getRowProps()}
+                        onClick={() => {
+                          if (onClick != null) {
+                            onClick(row)
+                          }
+                        }}
+                      >
+                        {columns.map((column, i) => {
+                          return (
+                            <td key={i}>
+                              {column.render
+                                ? column.render(row.original.id, row.id)
+                                : row.original[column.name]}
+                            </td>
+                          )
+                        })}
+                      </FocusableTr>
+                    ) : (
+                      <Draggable draggableId={row.id} index={index}>
+                        {(provided) => (
+                          <tr
+                            key={row.id}
+                            {...row.getRowProps()}
+                            style={{}}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            ref={provided.innerRef}
+                          >
+                            {columns.map((column, i) => {
+                              return (
+                                <td key={i}>
+                                  {column.render
+                                    ? column.render(row.original.id, row.id)
+                                    : row.original[column.name]}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )}
+                      </Draggable>
                     )
                   })}
-                </tr>
-              )
-            })}
-          </tbody>
+                  {provided.placeholder}
+                </tbody>
+              )}
+            </Droppable>
+          </DragDropContext>
         </table>
       ) : (
         <h1>No matches were found. Please change your filters.</h1>
