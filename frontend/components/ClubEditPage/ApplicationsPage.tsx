@@ -358,7 +358,7 @@ export default function ApplicationsPage({
           return responses.map((response) => {
             return {
               ...response,
-              committee: response.committee?.name ?? 'N/A',
+              committee: response.committee?.name ?? 'General Member',
               status: APPLICATION_STATUS_TYPES.find(
                 (status) => status.value === response.status,
               )?.label,

@@ -310,7 +310,7 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               name="committees"
               as={ApplicationMultipleChoiceField}
               initialValues={committees}
-              helpText={`If your club has multiple committees to which students can apply, list them here.`}
+              helpText={`If your ${OBJECT_NAME_SINGULAR} has multiple committees to which students can apply, list them here. NOTE: you won't be able to edit this field after applications open.`}
             />
           </>
         }

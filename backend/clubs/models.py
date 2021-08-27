@@ -1581,13 +1581,13 @@ class ApplicationSubmission(models.Model):
     application = models.ForeignKey(
         ClubApplication,
         related_name="submissions",
-        on_delete=models.CASCADE,
-        null=False,
+        on_delete=models.SET_NULL,
+        null=True,
     )
     committee = models.ForeignKey(
         ApplicationCommittee,
         related_name="submissions",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
     )
 

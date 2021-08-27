@@ -168,14 +168,14 @@ const ApplicationPage = ({
             }
 
             // committee error check
-            if (
-              committees !== null &&
-              committees.length > 0 &&
-              currentCommittee === null
-            ) {
-              submitErrors =
-                'Please select a committee before submitting (you can apply to more than one committee)'
-            }
+            // if (
+            //   committees !== null &&
+            //   committees.length > 0 &&
+            //   currentCommittee === null
+            // ) {
+            //   submitErrors =
+            //     'Please select a committee before submitting (you can apply to more than one committee)'
+            // }
 
             // submissions open error check (disabled for now to test)
             const applicationStartTime = moment.tz(
@@ -242,7 +242,7 @@ const ApplicationPage = ({
                   <>
                     <Field
                       label={
-                        'This club has multiple committees open for applications. Please select the one that interests you (you can submit again if you intend on applying to multiple).'
+                        'This club has multiple committees open for applications. You can apply to multiple committees by saving one submission and then selecting a different committee in the drop-down menu.'
                       }
                       as={SelectField}
                       choices={committees.map((value) => {

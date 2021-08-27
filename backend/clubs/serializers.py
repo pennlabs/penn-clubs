@@ -1,9 +1,11 @@
+import datetime
 import hashlib
 import json
 import re
 from urllib.parse import parse_qs, urlparse
 
 import bleach
+import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -2374,7 +2376,10 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         # manually create committee objects as Django does
         # not support nested serializers out of the box
         request = self.context["request"].data
-        if "committees" in request:
+
+        # only allow modifications to committees if the application is not yet open
+        now = pytz.UTC.localize(datetime.datetime.now())
+        if "committees" in request and application_obj.application_start_time > now:
             committees = request["committees"]
             ApplicationCommittee.objects.filter(application=application_obj).delete()
             for committee in committees:
