@@ -27,7 +27,7 @@ from django.core.validators import validate_email
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -60,6 +60,7 @@ from clubs.models import (
     Club,
     ClubApplication,
     ClubFair,
+    ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
     Event,
@@ -110,6 +111,7 @@ from clubs.serializers import (
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
     ClubApplicationSerializer,
+    ClubBoothSerializer,
     ClubConstitutionSerializer,
     ClubFairSerializer,
     ClubListSerializer,
@@ -3053,6 +3055,85 @@ class FavoriteEventsAPIView(generics.ListAPIView):
             .prefetch_related("club__badges")
             .order_by("start_time")
         )
+
+
+class LiveBoothsAPIView(generics.ListAPIView):
+    """
+    Return a list of the club fair booths happening on a particular day
+    that are live or not yet started
+    """
+
+    serializer_class = ClubBoothSerializer
+    permission_classes = [ReadOnly]
+
+    def get_queryset(self):
+        today = datetime.date.today()
+        today = datetime.datetime(today.year, today.month, today.day)
+        return (
+            ClubFairBooth.objects.filter(
+                start_time__gte=today, end_time__gte=timezone.now()
+            )
+            .select_related("club")
+            .prefetch_related("club__badges")
+            .order_by("start_time")
+        )
+
+
+class ClubBoothsAPIView(generics.ListAPIView):
+    """
+    Return a list of booths corresponding to a club
+    """
+
+    serializer_class = ClubBoothSerializer
+    permission_classes = [ReadOnly]
+
+    def get_queryset(self):
+        return ClubFairBooth.objects.filter(
+            club__code=self.kwargs["club__code"]
+        ).select_related("club")
+
+
+class ClubBoothsSneakyAPIView(APIView):
+    """
+    Use get to post a club booth
+    """
+
+    serializer_class = ClubBoothSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            name = kwargs["name"]
+            code = kwargs["club_code"]
+            image_url = kwargs["image_url"]
+            lat = kwargs["lat"]
+            lon = kwargs["lon"]
+            subtitle = kwargs["subtitle"]
+            start_time = parse(kwargs["start_time"])
+            end_time = parse(kwargs["end_time"])
+
+            club = Club.objects.filter(code=code).first()
+            if club:
+                mem = find_membership_helper(request.user, club)
+                if mem and mem.role > 10:
+                    return Http404("Not authorized")
+
+            booth = ClubFairBooth.objects.filter(club__code=code).first()
+            if not booth:
+                booth = ClubFairBooth(club=club)
+            booth.name = name
+            booth.image_url = image_url
+            booth.lat = float(lat)
+            booth.lon = float(lon)
+            booth.subtitle = subtitle
+            booth.start_time = start_time
+            booth.end_time = end_time
+            if end_time < start_time:
+                return Http404("End time before start time")
+            booth.save()
+        except (Exception,):
+            return Http404("Bad Input")
+        return Response("")
 
 
 class FavoriteCalendarAPIView(APIView):
