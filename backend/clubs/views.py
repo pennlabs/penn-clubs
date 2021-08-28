@@ -3102,6 +3102,9 @@ class ClubBoothsSneakyAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+        """
+        Do stuff
+        """
         try:
             name = kwargs["name"]
             code = kwargs["club_code"]
