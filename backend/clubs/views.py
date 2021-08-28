@@ -117,12 +117,14 @@ from clubs.serializers import (
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
+    DummyBoothSerializer,
     EventSerializer,
     EventWriteSerializer,
     ExternalMemberListSerializer,
     FavoriteSerializer,
     FavoriteWriteSerializer,
     FavouriteEventSerializer,
+    LiveBoothSerializer,
     MajorSerializer,
     MembershipInviteSerializer,
     MembershipRequestSerializer,
@@ -151,7 +153,7 @@ from clubs.serializers import (
     UserUUIDSerializer,
     WritableClubApplicationSerializer,
     WritableClubFairSerializer,
-    YearSerializer, LiveBoothSerializer, DummyBoothSerializer,
+    YearSerializer,
 )
 from clubs.utils import fuzzy_lookup_club, html_to_text
 
