@@ -117,7 +117,6 @@ from clubs.serializers import (
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
-    DummyBoothSerializer,
     EventSerializer,
     EventWriteSerializer,
     ExternalMemberListSerializer,
@@ -3099,8 +3098,6 @@ class ClubBoothsSneakyAPIView(APIView):
     """
     Use get to post a club booth
     """
-
-    serializer_class = DummyBoothSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
