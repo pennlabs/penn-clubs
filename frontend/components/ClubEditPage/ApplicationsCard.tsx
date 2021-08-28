@@ -79,6 +79,7 @@ const ApplicationModal = (props: {
       <ModelForm
         baseUrl={`/clubs/${clubCode}/applications/${applicationName}/questions/`}
         defaultObject={{ name: `${applicationName} Question` }}
+        draggable={true}
         fields={
           <>
             <Field
@@ -320,12 +321,14 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
             name: 'id',
             label: 'Edit',
             render: (id) => {
-              setApplicationName(id)
               return (
                 <>
                   <button
                     className="button is-primary is-small"
-                    onClick={showModal}
+                    onClick={() => {
+                      setApplicationName(id)
+                      showModal()
+                    }}
                   >
                     Questions
                   </button>
