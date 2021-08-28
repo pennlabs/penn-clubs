@@ -541,6 +541,14 @@ class ClubBoothSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class LiveBoothSerializer(ClubBoothSerializer):
+    pass
+
+
+class DummyBoothSerializer(ClubBoothSerializer):
+    pass
+
+
 class MembershipInviteSerializer(serializers.ModelSerializer):
     id = serializers.CharField(max_length=8, read_only=True)
     email = serializers.EmailField(read_only=True)

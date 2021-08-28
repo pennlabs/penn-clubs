@@ -151,7 +151,7 @@ from clubs.serializers import (
     UserUUIDSerializer,
     WritableClubApplicationSerializer,
     WritableClubFairSerializer,
-    YearSerializer,
+    YearSerializer, LiveBoothSerializer, DummyBoothSerializer,
 )
 from clubs.utils import fuzzy_lookup_club, html_to_text
 
@@ -3063,7 +3063,7 @@ class LiveBoothsAPIView(generics.ListAPIView):
     that are live or not yet started
     """
 
-    serializer_class = ClubBoothSerializer
+    serializer_class = LiveBoothSerializer
     permission_classes = [ReadOnly]
 
     def get_queryset(self):
@@ -3098,7 +3098,7 @@ class ClubBoothsSneakyAPIView(APIView):
     Use get to post a club booth
     """
 
-    serializer_class = ClubBoothSerializer
+    serializer_class = DummyBoothSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
