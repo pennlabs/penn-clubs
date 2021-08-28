@@ -134,7 +134,7 @@ urlpatterns = [
     path(r"booths/live", LiveBoothsAPIView.as_view(), name="live-booths"),
     path(r"booths/<club__code>", ClubBoothsAPIView.as_view(), name="club-booths"),
     path(
-        r"booths/new/<club_code>", ClubBoothsSneakyAPIView.as_view(), name="new-booths"
+        r"booths/new/<slug:club_code>", ClubBoothsSneakyAPIView.as_view(), name="new-booths"
     ),
     path(
         r"calendar/<slug:user_secretuuid>/",
