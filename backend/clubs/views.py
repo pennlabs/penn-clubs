@@ -3098,6 +3098,7 @@ class ClubBoothsSneakyAPIView(APIView):
     """
     Use get to post a club booth
     """
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
