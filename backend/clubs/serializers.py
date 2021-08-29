@@ -30,6 +30,7 @@ from clubs.models import (
     Club,
     ClubApplication,
     ClubFair,
+    ClubFairBooth,
     ClubVisit,
     Event,
     Favorite,
@@ -532,6 +533,24 @@ class EventWriteSerializer(EventSerializer):
 
 class FavouriteEventSerializer(EventSerializer):
     pass
+
+
+class ClubBoothSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClubFairBooth
+        fields = "__all__"
+
+
+class LiveBoothSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClubFairBooth
+        fields = "__all__"
+
+
+class DummyBoothSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClubFairBooth
+        fields = "__all__"
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
