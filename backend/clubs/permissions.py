@@ -26,7 +26,7 @@ def codes_extract_helper(obj, key):
     return values
 
 
-def find_membership_helper(user, obj):
+def find_membership_helper(user, club):
     """
     Finds the membership instance in the family tree of a club
     with the most authority.
@@ -36,7 +36,7 @@ def find_membership_helper(user, obj):
     from clubs.views import find_relationship_helper
 
     related_codes = codes_extract_helper(
-        find_relationship_helper("parent_orgs", obj, {obj.code}), "code"
+        find_relationship_helper("parent_orgs", club, {club.code}), "code"
     )
     membership_instance = (
         Membership.objects.filter(person=user, club__code__in=related_codes)
