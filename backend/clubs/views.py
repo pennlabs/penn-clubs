@@ -117,6 +117,7 @@ from clubs.serializers import (
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
+    DummyBoothSerializer,
     EventSerializer,
     EventWriteSerializer,
     ExternalMemberListSerializer,
