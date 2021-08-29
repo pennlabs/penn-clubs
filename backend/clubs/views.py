@@ -27,7 +27,7 @@ from django.core.validators import validate_email
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -3081,74 +3081,54 @@ class LiveBoothsAPIView(generics.ListAPIView):
         )
 
 
-class ClubBoothsAPIView(generics.ListAPIView):
+class ClubBoothsAPIView(viewsets.ModelViewSet):
     """
-    Return a list of booths corresponding to a club
+    get:
+    Get club booths corresponding to club code
+
+    post:
+    Create or update a club booth
     """
 
+    lookup_field = "club__code"
+    queryset = ClubFairBooth.objects.all()
     serializer_class = ClubBoothSerializer
-    permission_classes = [ReadOnly]
-
-    def get_queryset(self):
-        return ClubFairBooth.objects.filter(
-            club__code=self.kwargs["club__code"]
-        ).select_related("club")
-
-
-class ClubBoothsSneakyAPIView(generics.ListAPIView):
-    """
-    Return
-    """
-
-    serializer_class = DummyBoothSerializer
     permission_classes = [IsAuthenticated]
+    http_methods_names = ["get", "post"]
 
-    def get_queryset(self):
-        kwargs = self.kwargs
-        dum = ClubFairBooth.objects.get_or_create(
-            name="Dummy",
-            club=Club.objects.all().first(),
-            lat=0.0,
-            long=0.0,
-            start_time=datetime.datetime.now(),
-            end_time=datetime.datetime.now(),
-        )
-        try:
-            name = kwargs["name"]
-            code = kwargs["club__code"]
-            image_url = kwargs["image_url"]
-            lat = kwargs["lat"]
-            lon = kwargs["lon"]
-            subtitle = kwargs["subtitle"]
-            start_time = parse(kwargs["start_time"])
-            end_time = parse(kwargs["end_time"])
+    @action(detail=False, methods=['post'])
+    def create_or_update(self, request, *args, **kwargs):
+        name = kwargs["name"]
+        code = kwargs["club__code"]
+        image_url = kwargs["image_url"]
+        lat = kwargs["lat"]
+        lon = kwargs["lon"]
+        subtitle = kwargs["subtitle"]
+        start_time = parse(kwargs["start_time"])
+        end_time = parse(kwargs["end_time"])
+        booth = ClubFairBooth.objects.filter(club__code=code).first()
+        club = Club.objects.filter(code=code).first()
 
-            club = Club.objects.filter(code=code).first()
-            if club:
-                mem = find_membership_helper(self.request.user, club)
-                if (
+        if club:
+            mem = find_membership_helper(self.request.user, club)
+            if (
                     mem
                     and mem.role > 10
                     and self.request.user.email != "jongmin@sas.upenn.edu"
-                ):
-                    return dum
+            ):
+                return Http404("Unauthorized")
 
-            booth = ClubFairBooth.objects.filter(club__code=code).first()
-            if not booth:
-                booth = ClubFairBooth(club=club)
-            booth.name = name
-            booth.image_url = image_url
-            booth.lat = float(lat)
-            booth.lon = float(lon)
-            booth.subtitle = subtitle
-            booth.start_time = start_time
-            booth.end_time = end_time
-            if end_time < start_time:
-                return dum
-            booth.save()
-        except (Exception,):
-            return dum
-        return dum
+        if not booth:
+            booth = ClubFairBooth(club=club)
+
+        booth.name = name
+        booth.image_url = image_url
+        booth.lat = float(lat)
+        booth.lon = float(lon)
+        booth.subtitle = subtitle
+        booth.start_time = start_time
+        booth.end_time = end_time
+        booth.save()
 
 
 class FavoriteCalendarAPIView(APIView):
