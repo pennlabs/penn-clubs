@@ -64,16 +64,13 @@ class DocumentationTestCase(TestCase):
                 failed_cases.append((name, node.name, "missing"))
             elif "requestBody" not in meta:
                 # if not a GET request, the body should be specified
-                try:
-                    if any(
-                        kw.arg == "methods"
-                        and "get" not in [elt.value.lower() for elt in kw.value.elts]
-                        for n in node.decorator_list
-                        for kw in n.keywords
-                    ):
-                        failed_cases.append((name, node.name, "missing requestBody"))
-                except (Exception,):
-                    pass
+                if any(
+                    kw.arg == "methods"
+                    and "get" not in [elt.value.lower() for elt in kw.value.elts]
+                    for n in node.decorator_list
+                    for kw in n.keywords
+                ):
+                    failed_cases.append((name, node.name, "missing requestBody"))
             elif "responses" not in meta:
                 failed_cases.append((name, node.name, "missing responses"))
 
