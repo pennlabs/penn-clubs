@@ -3101,6 +3101,7 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
     post: Create or update a club booth
     """
 
+    lookup_field = "club__code"
     serializer_class = ClubBoothSerializer
     http_methods_names = ["get", "post"]
 
