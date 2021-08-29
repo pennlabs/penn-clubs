@@ -3093,7 +3093,7 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
                                         type: string
                                     club:
                                         type: integer
-                                    image_url: 
+                                    image_url:
                                         type: string
                                     lat:
                                         type: number
