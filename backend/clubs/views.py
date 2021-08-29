@@ -3099,6 +3099,8 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
     def create_or_update(self, request, *args, **kwargs):
         """
         Create or update a booth
+        ---
+        ---
         """
         name = kwargs["name"]
         code = kwargs["club__code"]
