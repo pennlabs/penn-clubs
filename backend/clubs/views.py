@@ -27,7 +27,7 @@ from django.core.validators import validate_email
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse, Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -117,7 +117,6 @@ from clubs.serializers import (
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
-    DummyBoothSerializer,
     EventSerializer,
     EventWriteSerializer,
     ExternalMemberListSerializer,
@@ -3096,7 +3095,7 @@ class ClubBoothsAPIView(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     http_methods_names = ["get", "post"]
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=["post"])
     def create_or_update(self, request, *args, **kwargs):
         name = kwargs["name"]
         code = kwargs["club__code"]
@@ -3112,9 +3111,9 @@ class ClubBoothsAPIView(viewsets.ModelViewSet):
         if club:
             mem = find_membership_helper(self.request.user, club)
             if (
-                    mem
-                    and mem.role > 10
-                    and self.request.user.email != "jongmin@sas.upenn.edu"
+                mem
+                and mem.role > 10
+                and self.request.user.email != "jongmin@sas.upenn.edu"
             ):
                 return Http404("Unauthorized")
 
