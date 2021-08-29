@@ -3081,7 +3081,7 @@ class LiveBoothsAPIView(generics.ListAPIView):
         )
 
 
-class ClubBoothsAPIView(viewsets.ModelViewSet):
+class ClubBoothsViewSet(viewsets.ModelViewSet):
     """
     get:
     Get club booths corresponding to club code
