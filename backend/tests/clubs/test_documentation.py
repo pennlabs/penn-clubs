@@ -215,7 +215,7 @@ class DocumentationTestCase(TestCase):
 
         # ensure that a certain percentage of the api is documented
         percent_missing = len(missing_descriptions) / total_routes
-        required_percent = 0.75
+        required_percent = 0.70
         if (1 - percent_missing) < required_percent:
             formatted_missing = "\n".join(
                 "\t{1} {0}".format(*x) for x in missing_descriptions

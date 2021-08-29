@@ -3059,11 +3059,9 @@ class FavoriteEventsAPIView(generics.ListAPIView):
 
 class ClubBoothsViewSet(viewsets.ModelViewSet):
     """
-    get:
-    Get club booths corresponding to club code
+    get: Get club booths corresponding to club code
 
-    post:
-    Create or update a club booth
+    post: Create or update a club booth
     """
 
     lookup_field = "club__code"
@@ -3077,6 +3075,36 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def live(self, *args, **kwargs):
+        """
+        Show live booths at the club fair
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                    subtitle:
+                                        type: string
+                                    club:
+                                        type: integer
+                                    image_url: 
+                                        type: string
+                                    lat:
+                                        type: number
+                                    long:
+                                        type: number
+                                    start_time:
+                                        type: string
+                                    end_time:
+                                        type: string
+        ---
+        """
         today = datetime.date.today()
         today = datetime.datetime(today.year, today.month, today.day)
 
@@ -4359,16 +4387,6 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
     create: Create an application for the club.
 
     list: Retrieve a list of applications of the club.
-    ---
-    responses:
-        "200":
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        additionalProperties:
-                            type: string
-    ---
     """
 
     permission_classes = [ClubItemPermission | IsSuperuser]
