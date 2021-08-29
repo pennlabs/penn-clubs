@@ -27,7 +27,7 @@ from django.core.validators import validate_email
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -117,6 +117,7 @@ from clubs.serializers import (
     ClubListSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
+    DummyBoothSerializer,
     EventSerializer,
     EventWriteSerializer,
     ExternalMemberListSerializer,
@@ -3094,20 +3095,27 @@ class ClubBoothsAPIView(generics.ListAPIView):
         ).select_related("club")
 
 
-class ClubBoothsSneakyAPIView(APIView):
+class ClubBoothsSneakyAPIView(generics.ListAPIView):
     """
-    Use get to post a club booth
+    Return
     """
 
+    serializer_class = DummyBoothSerializer
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        """
-        Do stuff
-        """
+    def get_queryset(self):
+        kwargs = self.kwargs
+        dum = ClubFairBooth.objects.get_or_create(
+            name="Dummy",
+            club=Club.objects.all().first(),
+            lat=0.0,
+            long=0.0,
+            start_time=datetime.datetime.now(),
+            end_time=datetime.datetime.now(),
+        )
         try:
             name = kwargs["name"]
-            code = kwargs["club_code"]
+            code = kwargs["club__code"]
             image_url = kwargs["image_url"]
             lat = kwargs["lat"]
             lon = kwargs["lon"]
@@ -3117,13 +3125,13 @@ class ClubBoothsSneakyAPIView(APIView):
 
             club = Club.objects.filter(code=code).first()
             if club:
-                mem = find_membership_helper(request.user, club)
+                mem = find_membership_helper(self.request.user, club)
                 if (
                     mem
                     and mem.role > 10
-                    and request.user.email != "jongmin@sas.upenn.edu"
+                    and self.request.user.email != "jongmin@sas.upenn.edu"
                 ):
-                    return Http404("Not authorized")
+                    return dum
 
             booth = ClubFairBooth.objects.filter(club__code=code).first()
             if not booth:
@@ -3136,11 +3144,11 @@ class ClubBoothsSneakyAPIView(APIView):
             booth.start_time = start_time
             booth.end_time = end_time
             if end_time < start_time:
-                return Http404("End time before start time")
+                return dum
             booth.save()
         except (Exception,):
-            return Http404("Bad Input")
-        return Response("")
+            return dum
+        return dum
 
 
 class FavoriteCalendarAPIView(APIView):

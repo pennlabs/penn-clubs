@@ -541,12 +541,16 @@ class ClubBoothSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class LiveBoothSerializer(ClubBoothSerializer):
-    pass
+class LiveBoothSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClubFairBooth
+        fields = "__all__"
 
 
-class DummyBoothSerializer(ClubBoothSerializer):
-    pass
+class DummyBoothSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClubFairBooth
+        fields = "__all__"
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
