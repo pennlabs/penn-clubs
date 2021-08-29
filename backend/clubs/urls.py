@@ -10,7 +10,6 @@ from clubs.views import (
     BadgeViewSet,
     ClubApplicationViewSet,
     ClubBoothsAPIView,
-    ClubBoothsSneakyAPIView,
     ClubEventViewSet,
     ClubFairViewSet,
     ClubViewSet,
@@ -133,11 +132,6 @@ urlpatterns = [
     path(r"favouriteevents/", FavoriteEventsAPIView.as_view(), name="event-interest"),
     path(r"booths/live", LiveBoothsAPIView.as_view(), name="live-booths"),
     path(r"booths/<club__code>", ClubBoothsAPIView.as_view(), name="club-booths"),
-    path(
-        r"booths/new/<club__code>",
-        ClubBoothsSneakyAPIView.as_view(),
-        name="new-booths",
-    ),
     path(
         r"calendar/<slug:user_secretuuid>/",
         FavoriteCalendarAPIView.as_view(),
