@@ -60,7 +60,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "accounts.middleware.OAuth2TokenMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
@@ -163,6 +162,11 @@ REST_FRAMEWORK = {
         "drf_renderer_xlsx.renderers.XLSXRenderer",
     ),
     "DEFAULT_SCHEMA_CLASS": "pennclubs.doc_settings.CustomAutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+        "accounts.authentication.PlatformAuthentication",
+    ],
 }
 
 
