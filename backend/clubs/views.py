@@ -3067,7 +3067,7 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
     lookup_field = "club__code"
     queryset = ClubFairBooth.objects.all()
     serializer_class = ClubBoothSerializer
-    permission_classes = [ClubPermission]
+    permission_classes = [IsAuthenticated]
     http_methods_names = ["get", "post"]
 
     def get_queryset(self):
@@ -3092,7 +3092,7 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
                                     subtitle:
                                         type: string
                                     club:
-                                        type: integer
+                                        type: string
                                     image_url:
                                         type: string
                                     lat:

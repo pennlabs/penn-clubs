@@ -536,6 +536,8 @@ class FavouriteEventSerializer(EventSerializer):
 
 
 class ClubBoothSerializer(serializers.ModelSerializer):
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+
     class Meta:
         model = ClubFairBooth
         fields = (
