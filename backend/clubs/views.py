@@ -1544,11 +1544,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         ---
         """
         club = self.get_object()
-        res = (
-            ClubFairBooth.objects.filter(club=club)
-            .select_related("club")
-            .all()
-        )
+        res = ClubFairBooth.objects.filter(club=club).select_related("club").all()
 
         return Response(ClubBoothSerializer(res, many=True).data)
 
@@ -3106,7 +3102,6 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = ClubBoothSerializer
-    permission_classes = [IsAuthenticated]
     http_methods_names = ["get", "post"]
 
     def get_queryset(self):
