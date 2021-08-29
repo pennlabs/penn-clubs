@@ -1511,6 +1511,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         return Response(analytics_dict)
 
+    @action(detail=True, methods=["get"])
+    def booths(self, request, *args, **kwargs):
+        res = (
+            ClubFairBooth.objects.filter(club__code=self.kwargs["code"])
+            .select_related("club")
+            .all()
+        )
+
+        return Response(ClubBoothSerializer(res, many=True).data)
+
     def get_operation_id(self, **kwargs):
         if kwargs["action"] == "fetch" and kwargs["method"] == "DELETE":
             return "deleteIcsEvents"
@@ -3064,8 +3074,6 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
     post: Create or update a club booth
     """
 
-    lookup_field = "club__code"
-    queryset = ClubFairBooth.objects.all()
     serializer_class = ClubBoothSerializer
     permission_classes = [IsAuthenticated]
     http_methods_names = ["get", "post"]
@@ -3115,13 +3123,10 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
             .select_related("club")
             .prefetch_related("club__badges")
             .order_by("start_time")
+            .all()
         )
 
-        return (
-            Response(ClubBoothSerializer(booths).data)
-            if len(booths) > 0
-            else Response([])
-        )
+        return Response(ClubBoothSerializer(booths, many=True).data)
 
 
 class FavoriteCalendarAPIView(APIView):
