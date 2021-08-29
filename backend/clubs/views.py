@@ -27,7 +27,7 @@ from django.core.validators import validate_email
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -123,7 +123,6 @@ from clubs.serializers import (
     FavoriteSerializer,
     FavoriteWriteSerializer,
     FavouriteEventSerializer,
-    LiveBoothSerializer,
     MajorSerializer,
     MembershipInviteSerializer,
     MembershipRequestSerializer,
@@ -3058,28 +3057,6 @@ class FavoriteEventsAPIView(generics.ListAPIView):
         )
 
 
-class LiveBoothsAPIView(generics.ListAPIView):
-    """
-    Return a list of the club fair booths happening on a particular day
-    that are live or not yet started
-    """
-
-    serializer_class = LiveBoothSerializer
-    permission_classes = [ReadOnly]
-
-    def get_queryset(self):
-        today = datetime.date.today()
-        today = datetime.datetime(today.year, today.month, today.day)
-        return (
-            ClubFairBooth.objects.filter(
-                start_time__gte=today, end_time__gte=timezone.now()
-            )
-            .select_related("club")
-            .prefetch_related("club__badges")
-            .order_by("start_time")
-        )
-
-
 class ClubBoothsViewSet(viewsets.ModelViewSet):
     """
     get:
@@ -3092,42 +3069,31 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
     lookup_field = "club__code"
     queryset = ClubFairBooth.objects.all()
     serializer_class = ClubBoothSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [ClubPermission]
     http_methods_names = ["get", "post"]
 
-    @action(detail=False, methods=["post"])
-    def create_or_update(self, request, *args, **kwargs):
-        name = kwargs["name"]
-        code = kwargs["club__code"]
-        image_url = kwargs["image_url"]
-        lat = kwargs["lat"]
-        lon = kwargs["lon"]
-        subtitle = kwargs["subtitle"]
-        start_time = parse(kwargs["start_time"])
-        end_time = parse(kwargs["end_time"])
-        booth = ClubFairBooth.objects.filter(club__code=code).first()
-        club = Club.objects.filter(code=code).first()
+    def get_queryset(self):
+        return ClubFairBooth.objects.all()
 
-        if club:
-            mem = find_membership_helper(self.request.user, club)
-            if (
-                mem
-                and mem.role > 10
-                and self.request.user.email != "jongmin@sas.upenn.edu"
-            ):
-                return Http404("Unauthorized")
+    @action(detail=False, methods=["get"])
+    def live(self, *args, **kwargs):
+        today = datetime.date.today()
+        today = datetime.datetime(today.year, today.month, today.day)
 
-        if not booth:
-            booth = ClubFairBooth(club=club)
+        booths = (
+            ClubFairBooth.objects.filter(
+                start_time__gte=today, end_time__gte=timezone.now()
+            )
+            .select_related("club")
+            .prefetch_related("club__badges")
+            .order_by("start_time")
+        )
 
-        booth.name = name
-        booth.image_url = image_url
-        booth.lat = float(lat)
-        booth.lon = float(lon)
-        booth.subtitle = subtitle
-        booth.start_time = start_time
-        booth.end_time = end_time
-        booth.save()
+        return (
+            Response(ClubBoothSerializer(booths).data)
+            if len(booths) > 0
+            else Response([])
+        )
 
 
 class FavoriteCalendarAPIView(APIView):

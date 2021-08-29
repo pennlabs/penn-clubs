@@ -20,7 +20,6 @@ from clubs.views import (
     FavoriteCalendarAPIView,
     FavoriteEventsAPIView,
     FavoriteViewSet,
-    LiveBoothsAPIView,
     MajorViewSet,
     MassInviteAPIView,
     MeetingZoomAPIView,
@@ -108,6 +107,8 @@ applications_router.register(
     basename="club-application-submissions",
 )
 
+router.register(r"booths", ClubBoothsViewSet, basename="club-booth")
+
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),
     path(r"settings/invites/", EmailInvitesAPIView.as_view(), name="email-invites"),
@@ -130,8 +131,6 @@ urlpatterns = [
     ),
     path(r"settings/calendar_url/", UserUUIDAPIView.as_view(), name="user-uuid"),
     path(r"favouriteevents/", FavoriteEventsAPIView.as_view(), name="event-interest"),
-    path(r"booths/live", LiveBoothsAPIView.as_view(), name="live-booths"),
-    path(r"booths/<club__code>", ClubBoothsViewSet, name="club-booths"),
     path(
         r"calendar/<slug:user_secretuuid>/",
         FavoriteCalendarAPIView.as_view(),

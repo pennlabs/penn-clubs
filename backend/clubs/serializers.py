@@ -538,19 +538,16 @@ class FavouriteEventSerializer(EventSerializer):
 class ClubBoothSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubFairBooth
-        fields = "__all__"
-
-
-class LiveBoothSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ClubFairBooth
-        fields = "__all__"
-
-
-class DummyBoothSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ClubFairBooth
-        fields = "__all__"
+        fields = (
+            "name",
+            "subtitle",
+            "club",
+            "image_url",
+            "lat",
+            "long",
+            "start_time",
+            "end_time",
+        )
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
