@@ -9,6 +9,7 @@ from clubs.views import (
     BadgeClubViewSet,
     BadgeViewSet,
     ClubApplicationViewSet,
+    ClubBoothsViewSet,
     ClubEventViewSet,
     ClubFairViewSet,
     ClubViewSet,
@@ -105,6 +106,8 @@ applications_router.register(
     ApplicationSubmissionViewSet,
     basename="club-application-submissions",
 )
+
+router.register(r"booths", ClubBoothsViewSet, basename="club-booth")
 
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),

@@ -60,6 +60,7 @@ from clubs.models import (
     Club,
     ClubApplication,
     ClubFair,
+    ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
     Event,
@@ -110,6 +111,7 @@ from clubs.serializers import (
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
     ClubApplicationSerializer,
+    ClubBoothSerializer,
     ClubConstitutionSerializer,
     ClubFairSerializer,
     ClubListSerializer,
@@ -3055,6 +3057,73 @@ class FavoriteEventsAPIView(generics.ListAPIView):
         )
 
 
+class ClubBoothsViewSet(viewsets.ModelViewSet):
+    """
+    get: Get club booths corresponding to club code
+
+    post: Create or update a club booth
+    """
+
+    lookup_field = "club__code"
+    queryset = ClubFairBooth.objects.all()
+    serializer_class = ClubBoothSerializer
+    permission_classes = [ClubPermission]
+    http_methods_names = ["get", "post"]
+
+    def get_queryset(self):
+        return ClubFairBooth.objects.all()
+
+    @action(detail=False, methods=["get"])
+    def live(self, *args, **kwargs):
+        """
+        Show live booths at the club fair
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                    subtitle:
+                                        type: string
+                                    club:
+                                        type: integer
+                                    image_url:
+                                        type: string
+                                    lat:
+                                        type: number
+                                    long:
+                                        type: number
+                                    start_time:
+                                        type: string
+                                    end_time:
+                                        type: string
+        ---
+        """
+        today = datetime.date.today()
+        today = datetime.datetime(today.year, today.month, today.day)
+
+        booths = (
+            ClubFairBooth.objects.filter(
+                start_time__gte=today, end_time__gte=timezone.now()
+            )
+            .select_related("club")
+            .prefetch_related("club__badges")
+            .order_by("start_time")
+        )
+
+        return (
+            Response(ClubBoothSerializer(booths).data)
+            if len(booths) > 0
+            else Response([])
+        )
+
+
 class FavoriteCalendarAPIView(APIView):
     def get(self, request, *args, **kwargs):
         """
@@ -4318,16 +4387,6 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
     create: Create an application for the club.
 
     list: Retrieve a list of applications of the club.
-    ---
-    responses:
-        "200":
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        additionalProperties:
-                            type: string
-    ---
     """
 
     permission_classes = [ClubItemPermission | IsSuperuser]
