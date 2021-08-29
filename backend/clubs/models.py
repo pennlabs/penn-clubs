@@ -1184,24 +1184,6 @@ class NoteTag(models.Model):
         return self.name
 
 
-class ClubFairBooth(models.Model):
-    """
-    Represents a booth hosted at an in-person club fair
-    """
-
-    name = models.CharField(max_length=255)
-    subtitle = models.CharField(max_length=255, blank=True, null=True)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE)
-    image_url = models.URLField(blank=True, null=True)
-    lat = models.FloatField()
-    long = models.FloatField()
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-
-    def __str__(self):
-        return self.name
-
-
 class Membership(models.Model):
     """
     Represents the relationship between a member and a club.

@@ -22,7 +22,6 @@ from clubs.models import (
     Club,
     ClubApplication,
     ClubFair,
-    ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
     Event,
@@ -437,7 +436,6 @@ admin.site.register(TargetStudentType)
 admin.site.register(Testimonial)
 admin.site.register(StudentType)
 admin.site.register(Note)
-admin.site.register(ClubFairBooth)
 admin.site.register(NoteTag)
 admin.site.register(Year, YearAdmin)
 admin.site.register(ZoomMeetingVisit, ZoomMeetingVisitAdmin)
