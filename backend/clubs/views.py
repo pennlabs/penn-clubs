@@ -1513,8 +1513,39 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def booths(self, request, *args, **kwargs):
+        """
+        Getting all booths associated with a club
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                    subtitle:
+                                        type: string
+                                    club:
+                                        type: string
+                                    image_url:
+                                        type: string
+                                    lat:
+                                        type: number
+                                    long:
+                                        type: number
+                                    start_time:
+                                        type: string
+                                    end_time:
+                                        type: string
+        ---
+        """
+        club = self.get_object()
         res = (
-            ClubFairBooth.objects.filter(club__code=self.kwargs["code"])
+            ClubFairBooth.objects.filter(club=club)
             .select_related("club")
             .all()
         )
