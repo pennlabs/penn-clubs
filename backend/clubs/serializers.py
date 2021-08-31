@@ -2366,6 +2366,8 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     committees = ApplicationCommitteeSerializer(
         many=True, required=False, read_only=True
     )
+    questions = ApplicationQuestionSerializer(many=True, required=False, read_only=True)
+    club = serializers.SlugRelatedField(slug_field="code", read_only=True)
 
     def get_name(self, obj):
         if obj.name:
@@ -2417,6 +2419,8 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "result_release_time",
             "external_url",
             "committees",
+            "questions",
+            "club",
         )
 
 

@@ -8,19 +8,15 @@ import { NextPageContext } from 'next'
 import React, { ReactElement, useState } from 'react'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
-import { ApplicationQuestion, ApplicationQuestionType, Club } from 'types'
+import {
+  Application,
+  ApplicationQuestion,
+  ApplicationQuestionType,
+  Club,
+} from 'types'
 import { doApiRequest } from 'utils'
 
 import { SelectField, TextField } from '~/components/FormComponents'
-
-type Application = {
-  name: string
-  application_start_time: string
-  application_end_time: string
-  result_release_time: string
-  external_url: string | null
-  committees: Array<{ name: string }> | null
-}
 
 type ApplicationPageProps = {
   club: Club

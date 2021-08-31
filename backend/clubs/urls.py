@@ -46,6 +46,7 @@ from clubs.views import (
     UserUUIDAPIView,
     UserViewSet,
     UserZoomAPIView,
+    WhartonApplicationAPIView,
     YearViewSet,
     email_preview,
 )
@@ -144,6 +145,11 @@ urlpatterns = [
         r"webhook/meeting/",
         MeetingZoomWebhookAPIView.as_view(),
         name="webhooks-meeting",
+    ),
+    path(
+        r"whartonapplications/",
+        WhartonApplicationAPIView.as_view(),
+        name="wharton-applications",
     ),
 ]
 

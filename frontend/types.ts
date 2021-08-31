@@ -288,6 +288,18 @@ export type DynamicQuestion = {
   choices?: { id: string; label: string }[]
 }
 
+export type Application = {
+  id: number
+  name: string
+  application_start_time: string
+  application_end_time: string
+  result_release_time: string
+  external_url: string | null
+  committees: Array<{ name: string }> | null
+  club: string
+  questions: ApplicationQuestion[]
+}
+
 export enum ApplicationQuestionType {
   FreeResponse = 1,
   MultipleChoice = 2,

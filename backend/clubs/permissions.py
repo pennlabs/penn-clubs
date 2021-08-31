@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from rest_framework import permissions
 
 from clubs.models import Club, Membership
@@ -294,6 +295,32 @@ class IsSuperuser(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_superuser
+
+
+class WhartonApplicationPermission(permissions.BasePermission):
+    """
+    Grants permission is the user is an officer of Wharton Council
+    """
+
+    WHARTON_COUNCIL_CLUB_CODE = "wharton-council"
+
+    def check_wharton_council_officer(self, request):
+        if not request.user.is_authenticated:
+            return False
+        user = get_user_model().objects.filter(username=request.user).first()
+        if user is not None:
+            membership = Membership.objects.filter(
+                club__code=self.WHARTON_COUNCIL_CLUB_CODE, person=user
+            ).first()
+            if membership is not None:
+                return membership.role <= Membership.ROLE_OFFICER
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        return self.check_wharton_council_officer(request)
+
+    def has_permission(self, request, view):
+        return self.check_wharton_council_officer(request)
 
 
 def DjangoPermission(perm):

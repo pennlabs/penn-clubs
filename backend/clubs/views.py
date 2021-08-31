@@ -99,6 +99,7 @@ from clubs.permissions import (
     ProfilePermission,
     QuestionAnswerPermission,
     ReadOnly,
+    WhartonApplicationPermission,
     find_membership_helper,
 )
 from clubs.serializers import (
@@ -4432,6 +4433,25 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return ClubApplication.objects.filter(club__code=self.kwargs["club_code"])
+
+
+class WhartonApplicationAPIView(generics.ListAPIView):
+    """
+    get: Return information about all Wharton Council club applications which are
+    currently on going
+    """
+
+    permission_classes = [WhartonApplicationPermission | IsSuperuser]
+    serializer_class = ClubApplicationSerializer
+
+    def get_operation_id(self, **kwargs):
+        return "List wharton applications and details"
+
+    def get_queryset(self):
+        now = timezone.now()
+        return ClubApplication.objects.filter(
+            is_wharton_council=True, application_end_time__gte=now
+        )
 
 
 class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
