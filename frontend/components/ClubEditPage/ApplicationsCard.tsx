@@ -18,6 +18,7 @@ import {
   ApplicationMultipleChoiceField,
   CheckboxField,
   DateTimeField,
+  RichTextField,
   SelectField,
   TextField,
 } from '../FormComponents'
@@ -39,6 +40,10 @@ const QUESTION_TYPES = [
   {
     value: ApplicationQuestionType.ShortAnswer,
     label: 'Short Answer (Non-evaluative)',
+  },
+  {
+    value: ApplicationQuestionType.InfoText,
+    label: 'Informational Text',
   },
 ]
 
@@ -83,21 +88,21 @@ const ApplicationModal = (props: {
         fields={
           <>
             <Field
-              name="prompt"
-              as={TextField}
-              required={true}
-              helpText={'Prompt for this question on the application'}
-            />
-            <Field
               name="question_type"
               as={SelectField}
               choices={QUESTION_TYPES}
               required={true}
-              helpText={'Type of question'}
+              helpText={'Type of question on the application.'}
               valueDeserialize={(a: ApplicationQuestionType) =>
                 QUESTION_TYPES.find((x) => x.value === a)
               }
               serialize={(a: { value: ApplicationQuestionType }) => a.value}
+            />
+            <Field
+              name="prompt"
+              as={TextField}
+              required={true}
+              helpText={'Prompt for this question on the application'}
             />
             {questionType !== null &&
               questionType === ApplicationQuestionType.FreeResponse && (
@@ -282,6 +287,11 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               name="name"
               as={TextField}
               helpText="A name for this application, used for identifying it if you have multiple applications per semester."
+            />
+            <Field
+              name="description"
+              as={RichTextField}
+              helpText="Information about the application that will be displayed at the top of the application page."
             />
             <Field
               name="application_start_time"

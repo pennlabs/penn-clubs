@@ -291,6 +291,7 @@ export type DynamicQuestion = {
 export type Application = {
   id: number
   name: string
+  description: string
   application_start_time: string
   application_end_time: string
   result_release_time: string
@@ -304,6 +305,7 @@ export enum ApplicationQuestionType {
   FreeResponse = 1,
   MultipleChoice = 2,
   ShortAnswer = 3,
+  InfoText = 4,
 }
 
 export type ApplicationQuestion = {

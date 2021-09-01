@@ -1505,6 +1505,7 @@ class ClubApplication(models.Model):
     """
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    description = models.TextField(blank=True)
     application_start_time = models.DateTimeField()
     application_end_time = models.DateTimeField()
     name = models.TextField(blank=True)
@@ -1548,10 +1549,12 @@ class ApplicationQuestion(models.Model):
     FREE_RESPONSE = 1
     MULTIPLE_CHOICE = 2
     SHORT_ANSWER = 3
+    INFO_TEXT = 4
     QUESTION_TYPES = (
         (FREE_RESPONSE, "Free Response"),
         (MULTIPLE_CHOICE, "Multiple Choice"),
         (SHORT_ANSWER, "Short Answer"),
+        (INFO_TEXT, "Informational Text"),
     )
 
     question_type = models.IntegerField(choices=QUESTION_TYPES, default=FREE_RESPONSE)

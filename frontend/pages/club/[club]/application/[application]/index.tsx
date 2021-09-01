@@ -80,6 +80,13 @@ export function formatQuestionType(
           readOnly={readOnly}
         />
       )
+    case ApplicationQuestionType.InfoText:
+      return (
+        <>
+          <b>{question.prompt}</b>
+          <br></br>
+        </>
+      )
     default:
       return (
         <Field
@@ -141,6 +148,15 @@ const ApplicationPage = ({
         <div className="is-clearfix">
           <Title className="is-pulled-left">{application.name}</Title>
         </div>
+        {application.description != null && application.description !== '' && (
+          <>
+            <div
+              dangerouslySetInnerHTML={{
+                __html: application.description,
+              }}
+            ></div>
+          </>
+        )}
         <hr />
         <Formik
           initialValues={initialValues}
@@ -198,6 +214,12 @@ const ApplicationPage = ({
                   (question: ApplicationQuestion) =>
                     question.id === parseInt(questionId),
                 )
+                if (
+                  question != null &&
+                  question.question_type === ApplicationQuestionType.InfoText
+                ) {
+                  continue
+                }
 
                 switch (question?.question_type) {
                   case ApplicationQuestionType.FreeResponse:

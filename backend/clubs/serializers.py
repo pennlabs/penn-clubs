@@ -2421,6 +2421,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "committees",
             "questions",
             "club",
+            "description",
         )
 
 
