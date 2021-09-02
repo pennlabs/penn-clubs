@@ -2412,8 +2412,12 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             committees = request["committees"]
             ApplicationCommittee.objects.filter(application=application_obj).delete()
             for committee in committees:
+                if "value" in committee.keys():
+                    name = committee["value"]
+                elif "name" in committee.keys():
+                    name = committee["name"]
                 ApplicationCommittee.objects.create(
-                    name=committee["value"], application=application_obj,
+                    name=name, application=application_obj,
                 )
 
         return application_obj
