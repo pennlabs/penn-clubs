@@ -99,7 +99,6 @@ from clubs.permissions import (
     ProfilePermission,
     QuestionAnswerPermission,
     ReadOnly,
-    WhartonApplicationPermission,
     find_membership_helper,
 )
 from clubs.serializers import (
