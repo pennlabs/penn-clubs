@@ -2368,11 +2368,20 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     )
     questions = ApplicationQuestionSerializer(many=True, required=False, read_only=True)
     club = serializers.SlugRelatedField(slug_field="code", read_only=True)
+    updated_at = serializers.SerializerMethodField("get_updated_time", read_only=True)
 
     def get_name(self, obj):
         if obj.name:
             return obj.name
         return f"{obj.club.name} Application"
+
+    def get_updated_time(self, obj):
+        updated_at = obj.updated_at
+        questions = ApplicationQuestion.objects.filter(application=obj)
+        for question in questions:
+            if question.updated_at > updated_at:
+                updated_at = question.updated_at
+        return updated_at
 
     def validate(self, data):
         application_start_time = data["application_start_time"]
@@ -2422,6 +2431,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "questions",
             "club",
             "description",
+            "updated_at",
         )
 
 

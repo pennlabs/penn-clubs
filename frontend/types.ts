@@ -295,6 +295,7 @@ export type Application = {
   application_start_time: string
   application_end_time: string
   result_release_time: string
+  updated_at: string
   external_url: string | null
   committees: Array<{ name: string }> | null
   club: string

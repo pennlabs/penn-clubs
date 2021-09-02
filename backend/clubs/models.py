@@ -1567,6 +1567,9 @@ class ApplicationQuestion(models.Model):
     committee_question = models.BooleanField(default=False)
     committees = models.ManyToManyField("ApplicationCommittee", blank=True)
 
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
 
 class ApplicationMultipleChoice(models.Model):
     """

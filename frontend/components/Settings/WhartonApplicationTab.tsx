@@ -1,15 +1,15 @@
+import moment from 'moment'
 import Link from 'next/link'
 import React, { ReactElement, useEffect, useState } from 'react'
 
 import { doApiRequest } from '~/utils'
 
-import { Application, ApplicationQuestionType } from '../../types'
+import { Application } from '../../types'
 import {
   FAIR_NAME,
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
-  SITE_NAME,
 } from '../../utils/branding'
 import { Icon, Loading, Text } from '../common'
 import { ColumnTooltip } from './ClubTabTable'
@@ -22,9 +22,9 @@ type Row = {
   applicationId: number
   club: string
   clubName: string
-  committee: string
   startTime: string
   endTime: string
+  updatedTime: string
   wordCount: number
 }
 
@@ -56,57 +56,26 @@ const WhartonApplicationTab = ({
     initialApplications != null ? applicationToRow(initialApplications) : null,
   )
 
+  function formatDateTime(date: string): string {
+    return moment(date).format('MM-DD-YYYY HH:mm:ss')
+  }
+
   function applicationToRow(applications: Application[]): Row[] {
-    return applications
-      .flatMap((application) => {
-        if (application.committees == null) {
-          return null
-        } else if (application.committees.length === 0) {
-          // if there are no committees just use 'General Member' as a placeholder
-          application.committees.push({ name: 'General Member' })
-        }
-        return application.committees.map((committee) => {
-          // filter to get only the questions that contribute to this committee
-          // namely: all free response questions that either belong to no
-          // committee or belong to the committee in question
-          const committeeQuestions = application.questions.filter(
-            (question) => {
-              if (
-                question.question_type !== ApplicationQuestionType.FreeResponse
-              ) {
-                return false
-              }
-              if (question.committee_question === false) {
-                return true
-              } else {
-                if (
-                  question.committees.find(
-                    (questionCommittee) =>
-                      questionCommittee.name === committee.name,
-                  )
-                ) {
-                  return true
-                }
-              }
-              return false
-            },
-          )
-          const wordCount = committeeQuestions.reduce(
-            (acc, question) => acc + question.word_limit,
-            0,
-          )
-          return {
-            applicationId: application.id,
-            club: application.club,
-            clubName: application.name,
-            committee: committee.name,
-            startTime: application.application_start_time,
-            endTime: application.application_end_time,
-            wordCount: wordCount,
-          }
-        })
-      })
-      .filter((item) => item != null) as Row[]
+    return applications.map((application) => {
+      const wordCount = application.questions.reduce(
+        (acc, question) => acc + question.word_limit ?? 0,
+        0,
+      )
+      return {
+        applicationId: application.id,
+        club: application.club,
+        clubName: application.name,
+        startTime: formatDateTime(application.application_start_time),
+        endTime: formatDateTime(application.application_end_time),
+        updatedTime: formatDateTime(application.updated_at),
+        wordCount: wordCount,
+      }
+    })
   }
 
   useEffect(() => {
@@ -136,23 +105,29 @@ const WhartonApplicationTab = ({
           <table className="table is-hoverable">
             <thead>
               <tr>
-                <th>{OBJECT_NAME_TITLE_SINGULAR} (committee)</th>
+                <th>{OBJECT_NAME_TITLE_SINGULAR}</th>
                 <th>
                   Start Time{' '}
                   <ColumnTooltip
-                    tip={`Shows whether or not an event has been created for this ${OBJECT_NAME_SINGULAR}. Only ${SITE_NAME} administrators can do this.`}
+                    tip={`Displays the time this ${OBJECT_NAME_SINGULAR} application opens.`}
                   />
                 </th>
                 <th>
                   End Time{' '}
                   <ColumnTooltip
-                    tip={`Shows whether or not an event has been created for this ${OBJECT_NAME_SINGULAR}. Only ${SITE_NAME} administrators can do this.`}
+                    tip={`Displays the time this ${OBJECT_NAME_SINGULAR} application closes.`}
+                  />
+                </th>
+                <th>
+                  Updated Time{' '}
+                  <ColumnTooltip
+                    tip={`Displays the time this ${OBJECT_NAME_SINGULAR} application was most recently updated by club officers.`}
                   />
                 </th>
                 <th>
                   Word Count{' '}
                   <ColumnTooltip
-                    tip={`Shows whether or not the meeting link has been properly configured. Only ${OBJECT_NAME_SINGULAR} officers can do this.`}
+                    tip={`Displays the sum of all questions that are associated with an application (across all committees).`}
                   />
                 </th>
               </tr>
@@ -164,15 +139,16 @@ const WhartonApplicationTab = ({
                     <Link
                       href={`/club/${row.club}/application/${row.applicationId}/`}
                     >
-                      {`${row.clubName} (${row.committee})`}
+                      {row.clubName}
                     </Link>
                   </td>
                   <td>{row.startTime}</td>
                   <td>{row.endTime}</td>
+                  <td>{row.updatedTime}</td>
                   <td>
                     {row.wordCount}{' '}
                     <BoolIndicator
-                      value={row.wordCount < WHARTON_APPLICATION_MAX_WORDS}
+                      value={row.wordCount <= WHARTON_APPLICATION_MAX_WORDS}
                     ></BoolIndicator>
                   </td>
                 </tr>
