@@ -4,7 +4,7 @@ import React, { ReactElement, useEffect, useState } from 'react'
 
 import { doApiRequest } from '~/utils'
 
-import { Application } from '../../types'
+import { Application, ApplicationQuestionType } from '../../types'
 import {
   FAIR_NAME,
   OBJECT_NAME_PLURAL,
@@ -63,7 +63,10 @@ const WhartonApplicationTab = ({
   function applicationToRow(applications: Application[]): Row[] {
     return applications.map((application) => {
       const wordCount = application.questions.reduce(
-        (acc, question) => acc + question.word_limit ?? 0,
+        (acc, question) =>
+          acc + question.question_type === ApplicationQuestionType.FreeResponse
+            ? question.word_limit ?? 0
+            : 0,
         0,
       )
       return {

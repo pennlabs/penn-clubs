@@ -4,11 +4,7 @@ import styled from 'styled-components'
 
 import { doApiRequest } from '~/utils'
 
-import {
-  ApplicationQuestionType,
-  Club,
-  ClubApplicationRequired,
-} from '../../types'
+import { ApplicationQuestionType, Club } from '../../types'
 import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -210,14 +206,6 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
 
   return (
     <BaseCard title={`${OBJECT_NAME_TITLE_SINGULAR} Applications`}>
-      {club.application_required === ClubApplicationRequired.Open && (
-        <div className="notification is-warning">
-          <Icon name="alert-triangle" /> Your {OBJECT_NAME_SINGULAR} currently
-          has it application status set to open membership. Adding{' '}
-          {OBJECT_NAME_SINGULAR} applications here will have no effect on what
-          the student sees.
-        </div>
-      )}
       <Text>
         You can use the interface below to add {OBJECT_NAME_SINGULAR}{' '}
         applications.
