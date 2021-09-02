@@ -4441,7 +4441,7 @@ class WhartonApplicationAPIView(generics.ListAPIView):
     currently on going
     """
 
-    permission_classes = [WhartonApplicationPermission | IsSuperuser]
+    permission_classes = [IsAuthenticated]
     serializer_class = ClubApplicationSerializer
 
     def get_operation_id(self, **kwargs):
