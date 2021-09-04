@@ -323,3 +323,54 @@ export type ApplicationQuestion = {
   ]
   committee_question: boolean
 }
+
+export enum ApplicationStatusType {
+  Pending = 1,
+  FirstRound = 2,
+  SecondRound = 3,
+  Accepted = 4,
+  Rejected = 5,
+}
+
+export const APPLICATION_STATUS_TYPES = [
+  {
+    value: ApplicationStatusType.Pending,
+    label: 'Pending',
+  },
+  {
+    value: ApplicationStatusType.FirstRound,
+    label: 'First round',
+  },
+  {
+    value: ApplicationStatusType.SecondRound,
+    label: 'Second round',
+  },
+  {
+    value: ApplicationStatusType.Accepted,
+    label: 'Accepted',
+  },
+  {
+    value: ApplicationStatusType.Rejected,
+    label: 'Rejected',
+  },
+]
+
+export type ApplicationSubmission = {
+  pk: number
+  application: number
+  committee: string | null
+  created_at: string
+  status: string
+  responses: Array<ApplicationResponse>
+  club: string
+  application_link: string
+}
+
+export type ApplicationResponse = {
+  text: string | null
+  multiple_choice: {
+    value: string
+  }
+  question_type: string
+  question: ApplicationQuestion
+}

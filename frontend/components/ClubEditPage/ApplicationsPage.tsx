@@ -18,13 +18,18 @@ import {
   computeWordCount,
   formatQuestionType,
 } from '~/pages/club/[club]/application/[application]'
-import { ApplicationQuestion, ApplicationQuestionType, Club } from '~/types'
+import {
+  APPLICATION_STATUS_TYPES,
+  ApplicationQuestionType,
+  ApplicationResponse,
+  ApplicationSubmission,
+  Club,
+} from '~/types'
 import { doApiRequest } from '~/utils'
 
 import { Modal } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
-import Toggle from '../Settings/Toggle'
 
 const StyledResponses = styled.div`
   margin-bottom: 40px;
@@ -93,55 +98,6 @@ const FormWrapper = styled.div`
   }
 `
 
-const GeneralSettings = () => {
-  return (
-    <div>
-      <div style={{ display: 'flex', flexDirection: 'row', width: '100' }}>
-        <span>Collect Email Addresses</span>
-        <div style={{ marginLeft: 'auto' }}>
-          <Toggle
-            club={null}
-            active={true}
-            toggle={() => {
-              // pass
-            }}
-          />
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'row', width: '100' }}>
-        <span>Allow edit after submissions</span>
-        <div style={{ marginLeft: 'auto' }}>
-          <Toggle
-            club={null}
-            active={true}
-            toggle={() => {
-              // pass
-            }}
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const SharingSettings = () => {
-  return <div>Sharing</div>
-}
-
-const AdvancedSettings = () => {
-  return <div>Advanced</div>
-}
-
-const tabs = [
-  {
-    name: 'General',
-    content: <GeneralSettings />,
-  },
-  { name: 'Sharing', content: <SharingSettings /> },
-  { name: 'Advanced', content: <AdvancedSettings /> },
-]
-
 const SubmissionSelect = (props: any) => {
   const { application, setApplication } = props
   return (
@@ -161,60 +117,9 @@ const SubmissionSelect = (props: any) => {
   )
 }
 
-const forms = []
-
 type Application = {
   id: number
   name: string
-}
-
-enum ApplicationStatusType {
-  Pending = 1,
-  FirstRound = 2,
-  SecondRound = 3,
-  Accepted = 4,
-  Rejected = 5,
-}
-
-const APPLICATION_STATUS_TYPES = [
-  {
-    value: ApplicationStatusType.Pending,
-    label: 'Pending',
-  },
-  {
-    value: ApplicationStatusType.FirstRound,
-    label: 'First round',
-  },
-  {
-    value: ApplicationStatusType.SecondRound,
-    label: 'Second round',
-  },
-  {
-    value: ApplicationStatusType.Accepted,
-    label: 'Accepted',
-  },
-  {
-    value: ApplicationStatusType.Rejected,
-    label: 'Rejected',
-  },
-]
-
-type Submission = {
-  pk: number
-  application: number
-  committee: string | null
-  created_at: string
-  status: string
-  responses: Array<Response>
-}
-
-type Response = {
-  text: string | null
-  multiple_choice: {
-    value: string
-  }
-  question_type: string
-  question: ApplicationQuestion
 }
 
 const ModalContainer = styled.div`
@@ -225,7 +130,7 @@ const ModalContainer = styled.div`
 const SubmissionModal = (props: {
   club: string
   application: Application | null
-  submission: Submission | null
+  submission: ApplicationSubmission | null
   onLinkClicked?: () => void
 }): ReactElement => {
   const { submission } = props
@@ -265,7 +170,7 @@ const SubmissionModal = (props: {
         {(props) => (
           <Form>
             {submission !== null && submission.responses !== null
-              ? submission.responses.map((response: Response) => {
+              ? submission.responses.map((response: ApplicationResponse) => {
                   const input = formatQuestionType(
                     null,
                     response.question,
@@ -300,25 +205,6 @@ export default function ApplicationsPage({
     { label: 'Committee', name: 'committee' },
     { label: 'Submitted', name: 'created_at' },
     { label: 'Status', name: 'status' },
-    // {
-    //   label: 'Status',
-    //   name: 'status',
-    //   render: (_, index) => (
-    //     <span
-    //       className={`tag is-${
-    //         responses[index].status === 'rejected'
-    //           ? 'danger'
-    //           : responses[index].status === 'accepted'
-    //           ? 'success'
-    //           : 'info'
-    //       }  is-light`}
-    //     >
-    //       {responses[index].status}
-    //     </span>
-    //   ),
-    // },
-    // { label: 'Submitted', name: 'submitted' },
-    // { label: 'Actions', name: 'actions' },
   ]
 
   const [applications, setApplications] = useState<Array<Application>>([])
@@ -326,11 +212,14 @@ export default function ApplicationsPage({
     currentApplication,
     setCurrentApplication,
   ] = useState<Application | null>(null)
-  const [submissions, setSubmissions] = useState<Array<Submission>>([])
-  const [showModal, setShowModal] = useState<boolean>(false)
-  const [currentSubmission, setCurrentSubmission] = useState<Submission | null>(
-    null,
+  const [submissions, setSubmissions] = useState<Array<ApplicationSubmission>>(
+    [],
   )
+  const [showModal, setShowModal] = useState<boolean>(false)
+  const [
+    currentSubmission,
+    setCurrentSubmission,
+  ] = useState<ApplicationSubmission | null>(null)
 
   useEffect(() => {
     doApiRequest(`/clubs/${club.code}/applications/?format=json`, {

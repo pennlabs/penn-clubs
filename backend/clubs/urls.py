@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 from clubs.views import (
     AdvisorViewSet,
     ApplicationQuestionViewSet,
+    ApplicationSubmissionAPIView,
     ApplicationSubmissionViewSet,
     AssetViewSet,
     BadgeClubViewSet,
@@ -151,6 +152,7 @@ urlpatterns = [
         WhartonApplicationAPIView.as_view(),
         name="wharton-applications",
     ),
+    path(r"submissions/", ApplicationSubmissionAPIView.as_view(), name="submissions",),
 ]
 
 urlpatterns += router.urls

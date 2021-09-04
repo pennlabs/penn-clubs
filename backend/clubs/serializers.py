@@ -2343,10 +2343,19 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
         many=True, required=False, read_only=True
     )
     user_hash = serializers.SerializerMethodField("get_user_hash")
+    club = serializers.CharField(source="application.club.name", read_only=True)
+    name = serializers.CharField(source="application.name", read_only=True)
+    application_link = serializers.SerializerMethodField("get_application_link")
 
     def get_user_hash(self, obj):
         secret = f"{obj.user.username}-{obj.user.date_joined}"
         return int(hashlib.sha1(secret.encode("utf-8")).hexdigest(), 16) % (10 ** 8)
+
+    def get_application_link(self, obj):
+        """
+        Return url to the internal application page for associated club application
+        """
+        return f"/club/{obj.application.club.code}/application/{obj.application.pk}/"
 
     class Meta:
         model = ApplicationSubmission
@@ -2358,6 +2367,9 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
             "pk",
             "status",
             "responses",
+            "club",
+            "name",
+            "application_link",
         )
 
 

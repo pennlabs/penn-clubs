@@ -66,7 +66,14 @@ export function formatQuestionType(
         </>
       )
     case ApplicationQuestionType.MultipleChoice:
-      return (
+      return readOnly ? (
+        <Field
+          name={question.id}
+          label={question.prompt}
+          as={TextField}
+          readOnly={readOnly}
+        />
+      ) : (
         <Field
           name={question.id}
           label={question.prompt}
@@ -77,7 +84,6 @@ export function formatQuestionType(
               value: choice.value,
             }
           })}
-          readOnly={readOnly}
         />
       )
     case ApplicationQuestionType.InfoText:
@@ -296,9 +302,12 @@ const ApplicationPage = ({
                 </SubmitNotificationSpan>
               )}
               {saved && (
-                <SubmitNotificationSpan style={{ color: 'green' }}>
-                  <Icon name="check-circle" alt="success" /> Saved!
-                </SubmitNotificationSpan>
+                <>
+                  <SubmitNotificationSpan style={{ color: 'green' }}>
+                    <Icon name="check-circle" alt="success" /> Saved! (Click{' '}
+                    <a href="/submissions">here</a> to see your submissions)
+                  </SubmitNotificationSpan>
+                </>
               )}
               <br></br>
               <br></br>

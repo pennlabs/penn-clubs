@@ -1,6 +1,5 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
 import React, { ReactElement } from 'react'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
@@ -37,8 +36,6 @@ const Image = styled.img`
 `
 
 function ApplyDashboard({ userInfo, whartonapplications }): ReactElement {
-  const router = useRouter()
-
   return (
     <>
       <Container background={BG_GRADIENT} style={{ height: '6rem' }}>

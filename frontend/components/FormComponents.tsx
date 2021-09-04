@@ -535,6 +535,7 @@ export const TextField = useFieldWrapper(
         className={`input ${isError ? 'is-danger' : ''}`}
         type={actualType}
         value={value != null ? value.toString() : ''}
+        readOnly={readOnly ?? false}
         {...other}
       />
     )
@@ -667,7 +668,6 @@ type SelectFieldProps<T> = {
   isMulti?: boolean
   creatable?: boolean
   customHandleChange?: (updated: any) => void
-  readOnly?: boolean
 }
 
 /**
@@ -690,7 +690,6 @@ export const SelectField = useFieldWrapper(
     creatable,
     formatOptionLabel,
     customHandleChange,
-    readOnly,
   }: BasicFormField &
     SelectFieldProps<
       { [key: string]: string | number } | string
@@ -764,9 +763,6 @@ export const SelectField = useFieldWrapper(
         }}
         onBlur={onBlur}
         styles={{ container: (style) => ({ ...style, width: '100%' }) }}
-        isClearable={!readOnly}
-        isSearchable={!readOnly}
-        openMenuOnClick={!readOnly}
       />
     )
   },

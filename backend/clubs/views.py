@@ -4484,6 +4484,37 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+class ApplicationSubmissionAPIView(generics.ListAPIView):
+    """
+    get: Return list of submitted applications
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = ApplicationSubmissionSerializer
+
+    def get_operation_id(self, **kwargs):
+        return "List submitted applications"
+
+    def get_queryset(self):
+        distinct_submissions = {}
+        submissions = ApplicationSubmission.objects.filter(user=self.request.user)
+
+        # only want to return the most recent (user, committee) unique submission pair
+        for submission in submissions:
+            key = (submission.application.__str__(), submission.committee.__str__())
+            if key in distinct_submissions:
+                if distinct_submissions[key].created_at < submission.created_at:
+                    distinct_submissions[key] = submission
+            else:
+                distinct_submissions[key] = submission
+
+        queryset = ApplicationSubmission.objects.none()
+        for submission in distinct_submissions.values():
+            queryset |= ApplicationSubmission.objects.filter(pk=submission.pk)
+
+        return queryset
+
+
 class ApplicationQuestionViewSet(viewsets.ModelViewSet):
     """
     create: Create a questions for a club application.
