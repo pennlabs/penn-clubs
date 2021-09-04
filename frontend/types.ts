@@ -299,6 +299,7 @@ export type Application = {
   external_url: string | null
   committees: Array<{ name: string }> | null
   club: string
+  club_image_url: string
   questions: ApplicationQuestion[]
 }
 

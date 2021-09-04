@@ -18,9 +18,7 @@ import {
   WHITE,
 } from '~/constants'
 
-const EventCardContainer = styled.div`
-  cursor: pointer;
-
+const ApplicationCardContainer = styled.div`
   ${mediaMinWidth(PHONE)} {
     max-width: 18em;
     margin: 1rem;
@@ -28,6 +26,14 @@ const EventCardContainer = styled.div`
   ${mediaMaxWidth(PHONE)} {
     margin: 1rem 0;
   }
+  float: left;
+`
+
+const Image = styled.img`
+  max-height: 100%;
+  max-width: 150px;
+  border-radius: 4px;
+  overflow: hidden;
 `
 
 function ApplyDashboard({ userInfo, whartonapplications }): ReactElement {
@@ -43,22 +49,19 @@ function ApplyDashboard({ userInfo, whartonapplications }): ReactElement {
       <Container>
         {whartonapplications.map((application) => (
           <Link href={application.external_url}>
-            <EventCardContainer className="event">
+            <ApplicationCardContainer>
               <Card bordered hoverable background={WHITE}>
+                {application.club_image_url != null &&
+                  application.club_image_url !== '' && (
+                    <Image src={application.club_image_url} />
+                  )}
                 <DateInterval
                   start={application.application_start_time}
                   end={application.application_end_time}
                 />
                 <ClubName>{application.name}</ClubName>
-                {application.description && (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: application.description,
-                    }}
-                  ></div>
-                )}
               </Card>
-            </EventCardContainer>
+            </ApplicationCardContainer>
           </Link>
         ))}
       </Container>

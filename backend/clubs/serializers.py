@@ -2369,6 +2369,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     questions = ApplicationQuestionSerializer(many=True, required=False, read_only=True)
     club = serializers.SlugRelatedField(slug_field="code", read_only=True)
     updated_at = serializers.SerializerMethodField("get_updated_time", read_only=True)
+    club_image_url = serializers.SerializerMethodField("get_image_url", read_only=True)
 
     def get_name(self, obj):
         if obj.name:
@@ -2382,6 +2383,17 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             if question.updated_at > updated_at:
                 updated_at = question.updated_at
         return updated_at
+
+    def get_image_url(self, obj):
+        image = obj.club.image
+        if not image:
+            return None
+        if image.url.startswith("http"):
+            return image.url
+        elif "request" in self.context:
+            return self.context["request"].build_absolute_uri(image.url)
+        else:
+            return image.url
 
     def validate(self, data):
         application_start_time = data["application_start_time"]
@@ -2436,6 +2448,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "club",
             "description",
             "updated_at",
+            "club_image_url",
         )
 
 
