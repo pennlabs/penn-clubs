@@ -187,9 +187,9 @@ def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
         obj = get_object_or_404(cls, **kwargs)
     else:
         obj = cls
-    if "file" in request.data and isinstance(request.data["file"], UploadedFile):
+    if field in request.data and isinstance(request.data[field], UploadedFile):
         getattr(obj, field).delete(save=False)
-        setattr(obj, field, request.data["file"])
+        setattr(obj, field, request.data[field])
         if save:
             obj._change_reason = f"Update '{field}' image field"
             obj.save()
