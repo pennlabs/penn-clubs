@@ -173,7 +173,7 @@ def file_upload_endpoint_helper(request, code):
     return Response({"detail": "Club file uploaded!", "id": asset.id})
 
 
-def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
+def upload_endpoint_helper(request, cls, keyword, field, save=True, **kwargs):
     """
     Given a Model class with lookup arguments or a Model object, save the uploaded image
     to the image field specified in the argument.
@@ -187,9 +187,9 @@ def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
         obj = get_object_or_404(cls, **kwargs)
     else:
         obj = cls
-    if field in request.data and isinstance(request.data[field], UploadedFile):
+    if keyword in request.data and isinstance(request.data[keyword], UploadedFile):
         getattr(obj, field).delete(save=False)
-        setattr(obj, field, request.data[field])
+        setattr(obj, field, request.data[keyword])
         if save:
             obj._change_reason = f"Update '{field}' image field"
             obj.save()
@@ -1117,7 +1117,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
 
         # reset approval status after upload
-        resp = upload_endpoint_helper(request, club, "image", save=False)
+        resp = upload_endpoint_helper(request, club, "file", "image", save=False)
         if status.is_success(resp.status_code):
             club.approved = None
             club.approved_by = None
@@ -2236,7 +2236,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = Event.objects.get(id=kwargs["id"])
         self.check_object_permissions(request, event)
 
-        resp = upload_endpoint_helper(request, Event, "image", pk=event.pk)
+        resp = upload_endpoint_helper(request, Event, "image", "image", pk=event.pk)
 
         # if image uploaded, create thumbnail
         if status.is_success(resp.status_code):
