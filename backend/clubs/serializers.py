@@ -1,5 +1,4 @@
 import datetime
-import hashlib
 import json
 import re
 from urllib.parse import parse_qs, urlparse
@@ -2342,14 +2341,12 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
     responses = ApplicationQuestionResponseSerializer(
         many=True, required=False, read_only=True
     )
-    user_hash = serializers.SerializerMethodField("get_user_hash")
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
+    email = serializers.CharField(source="user.email", read_only=True)
     club = serializers.CharField(source="application.club.name", read_only=True)
     name = serializers.CharField(source="application.name", read_only=True)
     application_link = serializers.SerializerMethodField("get_application_link")
-
-    def get_user_hash(self, obj):
-        secret = f"{obj.user.username}-{obj.user.date_joined}"
-        return int(hashlib.sha1(secret.encode("utf-8")).hexdigest(), 16) % (10 ** 8)
 
     def get_application_link(self, obj):
         """
@@ -2360,7 +2357,6 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationSubmission
         fields = (
-            "user_hash",
             "application",
             "committee",
             "created_at",
@@ -2370,6 +2366,9 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
             "club",
             "name",
             "application_link",
+            "first_name",
+            "last_name",
+            "email",
         )
 
 

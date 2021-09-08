@@ -86,7 +86,6 @@ const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
 
 const FormWrapper = styled.div`
   border-bottom: 1px solid ${ALLBIRDS_GRAY};
-  height: 50px;
   padding: 12px;
   cursor: pointer;
 
@@ -104,12 +103,7 @@ const SubmissionSelect = (props: any) => {
     <FormWrapper onClick={() => setApplication(application)}>
       {application.name}
       <span className="is-pulled-right">
-        <Icon
-          name="user"
-          alt="members"
-          size="1.2rem"
-          style={{ marginRight: '8px' }}
-        />
+        <Icon name="user" alt="members" style={{ marginRight: '8px' }} />
         {/* TODO: implement applicants number <span style={{ marginRight: '20px' }}>{application.applicantsNumber}</span> */}
         <Icon name="chevron-right" />
       </span>
@@ -201,7 +195,9 @@ export default function ApplicationsPage({
   club: Club
 }): ReactElement {
   const responseTableFields = [
-    { label: 'User Id', name: 'user_hash' },
+    { label: 'First Name', name: 'first_name' },
+    { label: 'Last Name', name: 'last_name' },
+    { label: 'Email', name: 'email' },
     { label: 'Committee', name: 'committee' },
     { label: 'Submitted', name: 'created_at' },
     { label: 'Status', name: 'status' },
