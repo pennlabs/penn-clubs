@@ -1510,7 +1510,7 @@ class ClubApplication(models.Model):
     application_end_time = models.DateTimeField()
     name = models.TextField(blank=True)
     result_release_time = models.DateTimeField()
-    external_url = models.URLField()
+    external_url = models.URLField(blank=True)
     is_active = models.BooleanField(default=False, blank=True)
     is_wharton_council = models.BooleanField(default=False, blank=True)
 
