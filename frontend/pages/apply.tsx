@@ -44,24 +44,25 @@ function ApplyDashboard({ userInfo, whartonapplications }): ReactElement {
         </Title>
       </Container>
       <Container>
-        {whartonapplications != null ??
-          whartonapplications.map((application) => (
-            <Link href={application.external_url}>
-              <ApplicationCardContainer>
-                <Card bordered hoverable background={WHITE}>
-                  {application.club_image_url != null &&
-                    application.club_image_url !== '' && (
-                      <Image src={application.club_image_url} />
-                    )}
-                  <DateInterval
-                    start={application.application_start_time}
-                    end={application.application_end_time}
-                  />
-                  <ClubName>{application.name}</ClubName>
-                </Card>
-              </ApplicationCardContainer>
-            </Link>
-          ))}
+        {whartonapplications != null
+          ? whartonapplications.map((application) => (
+              <Link href={application.external_url}>
+                <ApplicationCardContainer>
+                  <Card bordered hoverable background={WHITE}>
+                    {application.club_image_url != null &&
+                      application.club_image_url !== '' && (
+                        <Image src={application.club_image_url} />
+                      )}
+                    <DateInterval
+                      start={application.application_start_time}
+                      end={application.application_end_time}
+                    />
+                    <ClubName>{application.name}</ClubName>
+                  </Card>
+                </ApplicationCardContainer>
+              </Link>
+            ))
+          : null}
       </Container>
     </>
   )
