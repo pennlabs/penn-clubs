@@ -163,6 +163,15 @@ const ApplicationPage = ({
             ></div>
           </>
         )}
+        {application.application_end_time != null &&
+          moment(application.application_end_time).isValid() && (
+            <small className="is-block mt-2">
+              <b>
+                Due:{' '}
+                {moment(application.application_end_time).format('dddd, MMM D')}
+              </b>
+            </small>
+          )}
         <hr />
         <Formik
           initialValues={initialValues}
