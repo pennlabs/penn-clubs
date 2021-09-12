@@ -50,6 +50,7 @@ from tatsu.exceptions import FailedParse
 from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
+    AdminNote,
     Advisor,
     ApplicationMultipleChoice,
     ApplicationQuestion,
@@ -102,6 +103,7 @@ from clubs.permissions import (
     find_membership_helper,
 )
 from clubs.serializers import (
+    AdminNoteSerializer,
     AdvisorSerializer,
     ApplicationQuestionResponseSerializer,
     ApplicationQuestionSerializer,
@@ -4850,6 +4852,36 @@ def parse_script_parameters(script, parameters):
                 args.append((details["position"], value))
     args = [arg[1] for arg in sorted(args)]
     return args, kwargs
+
+
+class AdminNoteViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of admin notes.
+
+    create:
+    Add an admin note.
+
+    put:
+    Update an admin note. All fields are required.
+
+    patch:
+    Update an admin note. Only specified fields are updated.
+
+    retrieve:
+    Return a single admin note.
+
+    destroy:
+    Delete an admin note.
+    """
+
+    serializer_class = AdminNoteSerializer
+    permission_classes = [IsSuperuser]
+    lookup_field = "club__code"
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    def get_queryset(self):
+        return AdminNote.objects.all()
 
 
 class ScriptExecutionView(APIView):

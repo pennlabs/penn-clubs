@@ -1113,7 +1113,7 @@ class Advisor(models.Model):
 class Note(models.Model):
     """
     Represents a note created by a parent about a
-    constituient club
+    constituent club
     """
 
     creator = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -1159,6 +1159,20 @@ class Note(models.Model):
         choices=OUTSIDE_CLUB_PERMISSION_CHOICES, default=PERMISSION_SUBJECT_CLUB_MEMBER
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+class AdminNote(models.Model):
+    """
+    Represents a note created by school admin about a
+    club
+    """
+    creator = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default="Note")
+    content = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.club.name
 
 
 class StudentType(models.Model):
