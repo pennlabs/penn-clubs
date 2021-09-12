@@ -1587,7 +1587,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                         break
                 if not updated:
                     TargetMajor.objects.filter(club=obj).filter(
-                        target_majors=school
+                        target_majors=major
                     ).delete()
 
         if (
