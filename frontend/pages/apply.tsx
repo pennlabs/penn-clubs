@@ -26,6 +26,7 @@ const ApplicationCardContainer = styled.div`
     margin: 1rem 0;
   }
   float: left;
+  cursor: pointer; !important
 `
 
 const Image = styled.img`
