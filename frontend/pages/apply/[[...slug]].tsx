@@ -9,10 +9,16 @@ import ApplicationsPage from '~/components/Applications'
 import SubmissionsPage from '~/components/Submissions'
 import { BrowserTabView } from '~/components/TabView'
 import { APPLY_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
+import { ApplicationSubmission } from '~/types'
 
-function ApplyDashboard({ whartonapplications }): ReactElement {
+function ApplyDashboard({
+  whartonapplications,
+  submissions,
+}: {
+  whartonapplications: any
+  submissions: Array<ApplicationSubmission>
+}): ReactElement {
   const router = useRouter()
-
   const tabs = [
     {
       name: 'applications',
@@ -24,7 +30,7 @@ function ApplyDashboard({ whartonapplications }): ReactElement {
     {
       name: 'submissions',
       label: 'Submissions',
-      content: () => <SubmissionsPage />,
+      content: () => <SubmissionsPage initialSubmissions={submissions} />,
     },
   ]
 
@@ -51,11 +57,12 @@ function ApplyDashboard({ whartonapplications }): ReactElement {
 
 type BulkResp = {
   whartonapplications: any
+  submissions: Array<ApplicationSubmission>
 }
 
 ApplyDashboard.getInitialProps = async (ctx: NextPageContext) => {
   const data: BulkResp = (await doBulkLookup(
-    ['whartonapplications'],
+    ['whartonapplications', ['submissions', '/submissions/?format=json']],
     ctx,
   )) as BulkResp
   return {

@@ -2345,6 +2345,7 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source="user.last_name", read_only=True)
     email = serializers.CharField(source="user.email", read_only=True)
     club = serializers.CharField(source="application.club.name", read_only=True)
+    code = serializers.CharField(source="application.club.code", read_only=True)
     name = serializers.CharField(source="application.name", read_only=True)
     application_link = serializers.SerializerMethodField("get_application_link")
 
@@ -2369,6 +2370,7 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "email",
+            "code",
         )
 
 
