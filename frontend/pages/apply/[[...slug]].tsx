@@ -6,7 +6,7 @@ import renderPage from 'renderPage'
 import { doBulkLookup } from 'utils'
 
 import ApplicationsPage from '~/components/Applications'
-import SubmissionsPage from '~/components/submissions'
+import SubmissionsPage from '~/components/Submissions'
 import { BrowserTabView } from '~/components/TabView'
 import { APPLY_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
 
