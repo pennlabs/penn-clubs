@@ -4460,12 +4460,12 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
 
     permission_classes = [ClubItemPermission | IsSuperuser]
     serializer_class = ApplicationSubmissionSerializer
-    http_method_names = ["get"]
+    http_method_names = ["get", "delete"]
 
     def get_queryset(self):
         distinct_submissions = {}
         submissions = ApplicationSubmission.objects.filter(
-            application__pk=self.kwargs["application_pk"]
+            application__pk=self.kwargs["application_pk"], archived=False,
         ).all()
 
         # only want to return the most recent (user, committee) unique submission pair
@@ -4483,6 +4483,17 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def perform_destroy(self, instance):
+        """
+        Set archived boolean to be True so that the submissions
+        appears to have been deleted
+        """
+
+        instance.archived = True
+        instance.archived_by = self.request.user
+        instance.archived_on = timezone.now()
+        instance.save()
+
 
 class ApplicationSubmissionAPIView(generics.ListAPIView):
     """
@@ -4497,7 +4508,9 @@ class ApplicationSubmissionAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         distinct_submissions = {}
-        submissions = ApplicationSubmission.objects.filter(user=self.request.user)
+        submissions = ApplicationSubmission.objects.filter(
+            user=self.request.user, archived=False
+        )
 
         # only want to return the most recent (user, committee) unique submission pair
         for submission in submissions:

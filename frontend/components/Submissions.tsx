@@ -90,9 +90,17 @@ const SubmissionModal = (props: {
   )
 }
 
-function SubmissionsPage(): ReactElement {
+function SubmissionsPage({
+  initialSubmissions,
+}: {
+  initialSubmissions: Array<ApplicationSubmission> | { detail: string }
+}): ReactElement {
+  if ('detail' in initialSubmissions) {
+    return <Text>{initialSubmissions.detail}</Text>
+  }
+
   const [submissions, setSubmissions] = useState<Array<ApplicationSubmission>>(
-    [],
+    initialSubmissions,
   )
   const [showModal, setShowModal] = useState<boolean>(false)
   const [
@@ -127,10 +135,39 @@ function SubmissionsPage(): ReactElement {
         ) : null
       },
     },
+    {
+      name: 'delete',
+      label: 'Delete',
+      render: (id) => {
+        const submission = submissions.find(
+          (submission) => submission.pk === id,
+        )
+        return submission != null ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              doApiRequest(
+                `/clubs/${submission.code}/applications/${submission.application}/submissions/${submission.pk}/?format=json`,
+                {
+                  method: 'DELETE',
+                },
+              )
+              setSubmissions(
+                submissions.filter((submission) => submission.pk !== id),
+              )
+            }}
+            className="button is-danger is-small ml-3"
+          >
+            <Icon name="trash" alt="delete" />
+            Delete
+          </button>
+        ) : null
+      },
+    },
   ]
 
   useEffect(() => {
-    if (submissions !== null) {
+    if (submissions !== null && submissions.length === 0) {
       doApiRequest(`/submissions/?format=json`, {
         method: 'GET',
       })

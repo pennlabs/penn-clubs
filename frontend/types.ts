@@ -363,6 +363,7 @@ export type ApplicationSubmission = {
   status: string
   responses: Array<ApplicationResponse>
   club: string
+  code: string
   application_link: string
 }
 
