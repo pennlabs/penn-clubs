@@ -622,7 +622,7 @@ class Command(BaseCommand):
                 is_wharton_council=True,
             )
             link = (
-                f"https://pennclubs.com/club/{club.code}/application/{application.pk}"
+                f"http://localhost:3000/club/{club.code}/application/{application.pk}"
             )
             application.external_url = link
             application.save()

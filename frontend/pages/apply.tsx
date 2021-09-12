@@ -6,7 +6,7 @@ import styled from 'styled-components'
 import { Application } from 'types'
 import { doBulkLookup } from 'utils'
 
-import { Card, Container, Title } from '~/components/common'
+import { Card, Container, Text, Title } from '~/components/common'
 import { ClubName } from '~/components/EventPage/common'
 import DateInterval from '~/components/EventPage/DateInterval'
 import {
@@ -37,6 +37,21 @@ const Image = styled.img`
 `
 
 function ApplyDashboard({ userInfo, whartonapplications }): ReactElement {
+  if ('detail' in whartonapplications) {
+    return (
+      <>
+        <Container background={BG_GRADIENT} style={{ height: '6rem' }}>
+          <Title style={{ marginTop: '1rem', color: WHITE, opacity: 0.95 }}>
+            Wharton Club Applications
+          </Title>
+        </Container>
+        <Container>
+          <Text>{whartonapplications.detail}</Text>
+        </Container>
+      </>
+    )
+  }
+
   return (
     <>
       <Container background={BG_GRADIENT} style={{ height: '6rem' }}>
@@ -45,25 +60,27 @@ function ApplyDashboard({ userInfo, whartonapplications }): ReactElement {
         </Title>
       </Container>
       <Container>
-        {whartonapplications != null
-          ? whartonapplications.map((application) => (
-              <Link href={application.external_url}>
-                <ApplicationCardContainer>
-                  <Card bordered hoverable background={WHITE}>
-                    {application.club_image_url != null &&
-                      application.club_image_url !== '' && (
-                        <Image src={application.club_image_url} />
-                      )}
-                    <DateInterval
-                      start={application.application_start_time}
-                      end={application.application_end_time}
-                    />
-                    <ClubName>{application.name}</ClubName>
-                  </Card>
-                </ApplicationCardContainer>
-              </Link>
-            ))
-          : null}
+        {whartonapplications != null && whartonapplications.length > 0 ? (
+          whartonapplications.map((application) => (
+            <Link href={application.external_url}>
+              <ApplicationCardContainer>
+                <Card bordered hoverable background={WHITE}>
+                  {application.club_image_url != null &&
+                    application.club_image_url !== '' && (
+                      <Image src={application.club_image_url} />
+                    )}
+                  <DateInterval
+                    start={application.application_start_time}
+                    end={application.application_end_time}
+                  />
+                  <ClubName>{application.name}</ClubName>
+                </Card>
+              </ApplicationCardContainer>
+            </Link>
+          ))
+        ) : (
+          <Text>No Wharton Applications are currently available.</Text>
+        )}
       </Container>
     </>
   )
