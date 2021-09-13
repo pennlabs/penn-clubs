@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0085_alter_clubapplication_external_url'),
+        ("clubs", "0085_alter_clubapplication_external_url"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='applicationsubmission',
-            name='archived',
+            model_name="applicationsubmission",
+            name="archived",
             field=models.BooleanField(default=False),
         ),
     ]
