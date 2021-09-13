@@ -25,7 +25,6 @@ from urlextract import URLExtract
 
 from clubs.utils import clean, get_django_minified_image, get_domain, html_to_text
 
-
 subject_regex = re.compile(r"\s*<!--\s*SUBJECT:\s*(.*?)\s*-->", re.I)
 types_regex = re.compile(r"\s*<!--\s*TYPES:\s*(.*?)\s*-->", re.DOTALL)
 
@@ -1569,6 +1568,9 @@ class ApplicationQuestion(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    def __str__(self):
+        return f"Question for {self.application.club}: {self.prompt[:10]}..."
 
 
 class ApplicationMultipleChoice(models.Model):

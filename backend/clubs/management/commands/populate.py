@@ -27,6 +27,8 @@ from clubs.models import (
     Tag,
     Testimonial,
     Year,
+    ApplicationCommittee,
+    ApplicationSubmission, ApplicationQuestionResponse,
 )
 
 
@@ -578,7 +580,7 @@ class Command(BaseCommand):
 
         # create a club application
         club = Club.objects.get(code="empty-club")
-        ClubApplication.objects.get_or_create(
+        app1, _ = ClubApplication.objects.get_or_create(
             name="Test Application",
             club=club,
             defaults={
@@ -588,8 +590,12 @@ class Command(BaseCommand):
                 "external_url": "https://pennclubs.com/",
             },
         )
+
+        committee1, _ = ApplicationCommittee.objects.get_or_create(
+            name="Empty Committee", application=app1
+        )
         club = Club.objects.get(code="pppjo")
-        ClubApplication.objects.get_or_create(
+        app2, _ = ClubApplication.objects.get_or_create(
             name="Test Application",
             club=club,
             defaults={
@@ -599,6 +605,19 @@ class Command(BaseCommand):
                 "external_url": "https://pennlabs.org/apply/",
             },
         )
+        committee2, _ = ApplicationCommittee.objects.get_or_create(
+            name="Ball-sourcing commitee", application=app2
+        )
+
+        apps = [app1, app2]
+        mapping = {app1: committee1, app2: committee2}
+        subs = []
+        for c, app in enumerate(apps):
+            sub, _ =  ApplicationSubmission.objects.get_or_create(
+                status=c, application=app, user=ben, committee=mapping[app]
+            )
+            subs.append(sub)
+
 
         # create club applications that are wharton common app
         eastern = pytz.timezone("America/New_York")
