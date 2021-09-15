@@ -90,6 +90,21 @@ const SubmissionModal = (props: {
   )
 }
 
+function formatSubmissions(responses) {
+  return responses.map((response) => {
+    return {
+      ...response,
+      committee: response.committee?.name ?? 'General Member',
+      status: APPLICATION_STATUS_TYPES.find(
+        (status) => status.value === response.status,
+      )?.label,
+      created_at: moment(response.created_at)
+        .tz('America/New_York')
+        .format('LLL'),
+    }
+  })
+}
+
 function SubmissionsPage({
   initialSubmissions,
 }: {
@@ -100,7 +115,7 @@ function SubmissionsPage({
   }
 
   const [submissions, setSubmissions] = useState<Array<ApplicationSubmission>>(
-    initialSubmissions,
+    formatSubmissions(initialSubmissions),
   )
   const [showModal, setShowModal] = useState<boolean>(false)
   const [
@@ -172,21 +187,7 @@ function SubmissionsPage({
         method: 'GET',
       })
         .then((resp) => resp.json())
-        .then((responses) => {
-          return responses.map((response) => {
-            return {
-              ...response,
-              committee: response.committee?.name ?? 'General Member',
-              status: APPLICATION_STATUS_TYPES.find(
-                (status) => status.value === response.status,
-              )?.label,
-              created_at: moment(response.created_at)
-                .tz('America/New_York')
-                .format('LLL'),
-            }
-          })
-        })
-        .then((responses) => setSubmissions(responses))
+        .then((responses) => setSubmissions(formatSubmissions(responses)))
     }
   }, [])
 
