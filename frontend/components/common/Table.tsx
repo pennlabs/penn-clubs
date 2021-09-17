@@ -435,14 +435,14 @@ const Table = ({
           </select>
           <button
             style={{ marginRight: '0.5rem' }}
-            onClick={() => gotoPage(pageCount - 1)}
+            onClick={() => nextPage()}
             disabled={!canNextPage}
           >
             <Icon name="chevron-right" />
           </button>
           <button
             style={{ marginRight: '0.5rem' }}
-            onClick={() => nextPage()}
+            onClick={() => gotoPage(pageCount - 1)}
             disabled={!canNextPage}
           >
             <Icon name="chevrons-right" />
