@@ -57,6 +57,23 @@ def send_wc_intro_email(emails, clubs, recipient_string, template="wc_intro"):
         template, None, emails, {"clubs": clubs, "recipient_string": recipient_string}
     )
 
+def send_designate_resource_admin_email(emails, clubs, recipient_string, template="designate_resource_admin.html"):
+    """
+    Send email to remind to manage resource.
+    """
+
+    send_mail_helper(
+        template, None, emails, {"clubs": clubs, "recipient_string": recipient_string}
+    )
+
+def send_update_resource_email(emails, clubs, recipient_string, template="update_your_penn_resource.html"):
+    """
+    Send email to remind to update resource.
+    """
+
+    send_mail_helper(
+        template, None, emails, {"clubs": clubs, "recipient_string": recipient_string}
+    )
 
 class Command(BaseCommand):
     help = "Send out mass email communications for various purposes."
