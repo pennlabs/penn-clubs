@@ -107,6 +107,7 @@ from clubs.serializers import (
     ApplicationQuestionSerializer,
     ApplicationSubmissionCSVSerializer,
     ApplicationSubmissionSerializer,
+    ApplicationSubmissionUserSerializer,
     AssetSerializer,
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
@@ -4460,7 +4461,7 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
 
     permission_classes = [ClubItemPermission | IsSuperuser]
-    http_method_names = ["get", "delete"]
+    http_method_names = ["get"]
 
     def get_queryset(self):
         distinct_submissions = {}
@@ -4489,28 +4490,17 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         else:
             return ApplicationSubmissionSerializer
 
-    def perform_destroy(self, instance):
-        """
-        Set archived boolean to be True so that the submissions
-        appears to have been deleted
-        """
 
-        instance.archived = True
-        instance.archived_by = self.request.user
-        instance.archived_on = timezone.now()
-        instance.save()
-
-
-class ApplicationSubmissionAPIView(generics.ListAPIView):
+class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
     """
     get: Return list of submitted applications
+
+    delete: Remove a specific application
     """
 
     permission_classes = [IsAuthenticated]
-    serializer_class = ApplicationSubmissionSerializer
-
-    def get_operation_id(self, **kwargs):
-        return "List submitted applications"
+    serializer_class = ApplicationSubmissionUserSerializer
+    http_method_names = ["get", "delete"]
 
     def get_queryset(self):
         distinct_submissions = {}
@@ -4532,6 +4522,17 @@ class ApplicationSubmissionAPIView(generics.ListAPIView):
             queryset |= ApplicationSubmission.objects.filter(pk=submission.pk)
 
         return queryset
+
+    def perform_destroy(self, instance):
+        """
+        Set archived boolean to be True so that the submissions
+        appears to have been deleted
+        """
+
+        instance.archived = True
+        instance.archived_by = self.request.user
+        instance.archived_on = timezone.now()
+        instance.save()
 
 
 class ApplicationQuestionViewSet(viewsets.ModelViewSet):

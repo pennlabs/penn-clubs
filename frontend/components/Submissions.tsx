@@ -161,12 +161,9 @@ function SubmissionsPage({
           <button
             onClick={(e) => {
               e.stopPropagation()
-              doApiRequest(
-                `/clubs/${submission.code}/applications/${submission.application}/submissions/${submission.pk}/?format=json`,
-                {
-                  method: 'DELETE',
-                },
-              )
+              doApiRequest(`/submissions/${submission.pk}/?format=json`, {
+                method: 'DELETE',
+              })
               setSubmissions(
                 submissions.filter((submission) => submission.pk !== id),
               )
