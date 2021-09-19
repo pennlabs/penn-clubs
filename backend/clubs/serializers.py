@@ -2382,7 +2382,7 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
 class ApplicationSubmissionUserSerializer(ApplicationSubmissionSerializer):
     pass
 
-  
+
 class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField("get_name")
     email = serializers.CharField(source="user.email")
