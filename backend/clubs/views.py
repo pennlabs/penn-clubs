@@ -105,6 +105,7 @@ from clubs.serializers import (
     AdvisorSerializer,
     ApplicationQuestionResponseSerializer,
     ApplicationQuestionSerializer,
+    ApplicationSubmissionCSVSerializer,
     ApplicationSubmissionSerializer,
     AssetSerializer,
     AuthenticatedClubSerializer,
@@ -4453,13 +4454,12 @@ class WhartonApplicationAPIView(generics.ListAPIView):
         )
 
 
-class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
+class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     list: List submissions for a given club application.
     """
 
     permission_classes = [ClubItemPermission | IsSuperuser]
-    serializer_class = ApplicationSubmissionSerializer
     http_method_names = ["get", "delete"]
 
     def get_queryset(self):
@@ -4482,6 +4482,12 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
             queryset |= ApplicationSubmission.objects.filter(pk=submission.pk)
 
         return queryset
+
+    def get_serializer_class(self):
+        if self.request.query_params.get("format") == "xlsx":
+            return ApplicationSubmissionCSVSerializer
+        else:
+            return ApplicationSubmissionSerializer
 
     def perform_destroy(self, instance):
         """

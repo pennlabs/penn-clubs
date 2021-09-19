@@ -5,6 +5,7 @@ from urllib.parse import parse_qs, urlparse
 
 import bleach
 import pytz
+from collections import OrderedDict
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -2344,6 +2345,9 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
     email = serializers.CharField(source="user.email", read_only=True)
+    graduation_year = serializers.CharField(
+        source="user.profile.graduation_year", read_only=True
+    )
     club = serializers.CharField(source="application.club.name", read_only=True)
     code = serializers.CharField(source="application.club.code", read_only=True)
     name = serializers.CharField(source="application.name", read_only=True)
@@ -2371,6 +2375,75 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "code",
+            "graduation_year",
+        )
+
+
+class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField("get_name")
+    email = serializers.CharField(source="user.email")
+    graduation_year = serializers.CharField(source="user.profile.graduation_year")
+    committee = serializers.SerializerMethodField("get_committee")
+
+    def get_name(self, obj):
+        """
+        Return the concatenated first and last name of the applicant
+        """
+        return f"{obj.user.first_name} {obj.user.last_name}"
+
+    def get_committee(self, obj):
+        """
+        Return the committee name for the default name if there is no committee name
+        """
+        return obj.committee if obj.committee else ClubApplication.DEFAULT_COMMITTEE
+
+    def to_representation(self, instance):
+        """
+        Override to also include values for fields we add when we override init. We
+        need to query the responses to find the appropriate response for each question
+        """
+        fields = {
+            "name": self.get_name(instance),
+            "email": instance.user.email,
+            "graduation_year": instance.user.profile.graduation_year,
+            "committee": self.get_committee(instance),
+        }
+        application = instance.application
+        for question in application.questions.all():
+            response = instance.responses.get(question=question)
+            # format the responses depending on the question type
+            if question.question_type == ApplicationQuestion.FREE_RESPONSE:
+                fields[question.prompt] = response.text
+            elif question.question_type == ApplicationQuestion.MULTIPLE_CHOICE:
+                fields[question.prompt] = response.multiple_choice.value
+            elif question.question_type == ApplicationQuestion.SHORT_ANSWER:
+                fields[question.prompt] = response.text
+            elif question.question_type == ApplicationQuestion.INFO_TEXT:
+                pass
+        return OrderedDict(fields)
+
+    def __init__(self, *args, **kwargs):
+        """
+        Override init so we can dynamically add fields. Each question prompt needs
+        its own field so it can correctly be formatted into a CSV with one column
+        per question (the XLSXFormatterMixin just gives each field a column)
+        """
+        super(ApplicationSubmissionCSVSerializer, self).__init__(*args, **kwargs)
+        (queryset,) = args
+        submission = queryset.first()
+        if submission:
+            application = submission.application
+            for question in application.questions.all():
+                if question.question_type != ApplicationQuestion.INFO_TEXT:
+                    self.fields[question.prompt] = serializers.CharField()
+
+    class Meta:
+        model = ApplicationSubmission
+        fields = (
+            "name",
+            "email",
+            "graduation_year",
+            "committee",
         )
 
 
