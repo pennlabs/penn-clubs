@@ -1166,6 +1166,7 @@ class AdminNote(models.Model):
     Represents a note created by school admin about a
     club
     """
+
     creator = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default="Note")

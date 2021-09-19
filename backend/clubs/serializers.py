@@ -2528,9 +2528,7 @@ class ClubFairSerializer(serializers.ModelSerializer):
 
 
 class AdminNoteSerializer(serializers.ModelSerializer):
-    club = serializers.SlugRelatedField(
-        queryset=Club.objects.all(), slug_field="code"
-    )
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
     title = serializers.CharField(max_length=255, default="Note")
     content = serializers.CharField(required=False)

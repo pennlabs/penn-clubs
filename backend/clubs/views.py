@@ -4874,6 +4874,7 @@ class AdminNoteViewSet(viewsets.ModelViewSet):
     destroy:
     Delete an admin note.
     """
+
     serializer_class = AdminNoteSerializer
     permission_classes = [IsSuperuser]
     lookup_field = "id"
