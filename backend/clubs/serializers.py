@@ -2526,10 +2526,12 @@ class ClubFairSerializer(serializers.ModelSerializer):
             "time",
         )
 
+
 class AdminNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdminNote
         fields = ("creator", "club", "title", "content", "created_at")
+
 
 class WritableClubFairSerializer(ClubFairSerializer):
     time = serializers.CharField(required=False, allow_blank=True)
