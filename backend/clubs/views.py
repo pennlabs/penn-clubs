@@ -4874,14 +4874,13 @@ class AdminNoteViewSet(viewsets.ModelViewSet):
     destroy:
     Delete an admin note.
     """
-
     serializer_class = AdminNoteSerializer
     permission_classes = [IsSuperuser]
-    lookup_field = "club__code"
+    lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
     def get_queryset(self):
-        return AdminNote.objects.all()
+        return AdminNote.objects.filter(club__code=self.kwargs.get("club_code"))
 
 
 class ScriptExecutionView(APIView):

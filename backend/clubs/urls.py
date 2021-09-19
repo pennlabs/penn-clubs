@@ -66,7 +66,6 @@ router.register(r"clubvisits", ClubVisitViewSet, basename="clubvisits")
 router.register(r"searches", SearchQueryViewSet, basename="searches")
 router.register(r"memberships", MembershipViewSet, basename="members")
 router.register(r"requests", MembershipRequestViewSet, basename="requests")
-router.register(r"admin_notes", AdminNoteViewSet, basename="admin_notes")
 
 router.register(r"schools", SchoolViewSet, basename="schools")
 router.register(r"majors", MajorViewSet, basename="majors")
@@ -95,6 +94,7 @@ clubs_router.register(r"advisors", AdvisorViewSet, basename="club-advisors")
 clubs_router.register(
     r"applications", ClubApplicationViewSet, basename="club-applications"
 )
+clubs_router.register(r"adminnotes", AdminNoteViewSet, basename="adminnotes")
 
 badges_router = routers.NestedSimpleRouter(router, r"badges", lookup="badge")
 badges_router.register(r"clubs", BadgeClubViewSet, basename="badge-clubs")
