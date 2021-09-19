@@ -4484,7 +4484,7 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        if self.request.query_params.get("format") == "xlsx":
+        if self.request and self.request.query_params.get("format") == "xlsx":
             return ApplicationSubmissionCSVSerializer
         else:
             return ApplicationSubmissionSerializer
