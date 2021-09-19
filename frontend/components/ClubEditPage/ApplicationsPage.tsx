@@ -1,19 +1,10 @@
 import { Form, Formik } from 'formik'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
+import Select from 'react-select'
 import styled from 'styled-components'
 
-import {
-  ALLBIRDS_GRAY,
-  ANIMATION_DURATION,
-  BORDER_RADIUS,
-  CLUBS_BLUE,
-  MD,
-  mediaMaxWidth,
-  SM,
-  SNOW,
-  WHITE,
-} from '~/constants'
+import { ALLBIRDS_GRAY, CLUBS_BLUE, MD, mediaMaxWidth, SNOW } from '~/constants'
 import {
   computeWordCount,
   formatQuestionType,
@@ -25,40 +16,11 @@ import {
   ApplicationSubmission,
   Club,
 } from '~/types'
-import { doApiRequest } from '~/utils'
+import { doApiRequest, getApiUrl } from '~/utils'
 
-import { Modal } from '../common'
+import { Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
-
-const StyledResponses = styled.div`
-  margin-bottom: 40px;
-`
-
-const FormsCard = styled.div`
-  padding: 0px;
-  box-shadow: 0 0 0 transparent;
-  transition: all ${ANIMATION_DURATION}ms ease;
-  border-radius: ${BORDER_RADIUS};
-  box-shadow: 0 0 0 ${WHITE};
-  border: 1px solid ${ALLBIRDS_GRAY};
-  justify-content: space-between;
-  height: 65vh;
-
-  ${mediaMaxWidth(SM)} {
-    width: calc(100%);
-    padding: 8px;
-  }
-`
-
-const FormsCardWrapper = styled.div`
-  position: relative;
-  margin-top: 40px;
-  ${mediaMaxWidth(SM)} {
-    padding-top: 0;
-    padding-bottom: 1rem;
-  }
-`
 
 const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   margin-bottom: 20px;
@@ -198,6 +160,7 @@ export default function ApplicationsPage({
     { label: 'First Name', name: 'first_name' },
     { label: 'Last Name', name: 'last_name' },
     { label: 'Email', name: 'email' },
+    { label: 'Graduation Year', name: 'graduation_year' },
     { label: 'Committee', name: 'committee' },
     { label: 'Submitted', name: 'created_at' },
     { label: 'Status', name: 'status' },
@@ -208,14 +171,15 @@ export default function ApplicationsPage({
     currentApplication,
     setCurrentApplication,
   ] = useState<Application | null>(null)
-  const [submissions, setSubmissions] = useState<Array<ApplicationSubmission>>(
-    [],
-  )
+  const [submissions, setSubmissions] = useState<{
+    [key: number]: Array<ApplicationSubmission>
+  }>([])
   const [showModal, setShowModal] = useState<boolean>(false)
   const [
     currentSubmission,
     setCurrentSubmission,
   ] = useState<ApplicationSubmission | null>(null)
+  const [pageIndex, setPageIndex] = useState<number>(0)
 
   useEffect(() => {
     doApiRequest(`/clubs/${club.code}/applications/?format=json`, {
@@ -231,31 +195,37 @@ export default function ApplicationsPage({
   }, [])
 
   useEffect(() => {
-    if (currentApplication !== null) {
-      doApiRequest(
-        `/clubs/${club.code}/applications/${currentApplication.id}/submissions/?format=json`,
-        {
-          method: 'GET',
-        },
-      )
-        .then((resp) => resp.json())
-        .then((responses) => {
-          return responses.map((response) => {
-            return {
-              ...response,
-              committee: response.committee?.name ?? 'General Member',
-              status: APPLICATION_STATUS_TYPES.find(
-                (status) => status.value === response.status,
-              )?.label,
-              created_at: moment(response.created_at)
-                .tz('America/New_York')
-                .format('LLL'),
-            }
+    if (applications !== null) {
+      applications.forEach((application) => {
+        doApiRequest(
+          `/clubs/${club.code}/applications/${application.id}/submissions/?format=json`,
+          {
+            method: 'GET',
+          },
+        )
+          .then((resp) => resp.json())
+          .then((responses) => {
+            return responses.map((response) => {
+              return {
+                ...response,
+                committee: response.committee?.name ?? 'General Member',
+                status: APPLICATION_STATUS_TYPES.find(
+                  (status) => status.value === response.status,
+                )?.label,
+                created_at: moment(response.created_at)
+                  .tz('America/New_York')
+                  .format('LLL'),
+              }
+            })
           })
-        })
-        .then((responses) => setSubmissions(responses))
+          .then((responses) => {
+            const obj = {}
+            obj[application.id] = responses
+            setSubmissions(obj)
+          })
+      })
     }
-  }, [currentApplication])
+  }, [applications])
 
   const columns = useMemo(
     () =>
@@ -267,42 +237,84 @@ export default function ApplicationsPage({
   )
 
   return (
-    <div className="columns">
-      <div className="column is-one-third" style={{ marginRight: '100px' }}>
-        <StyledHeader>Applications</StyledHeader>
-        <FormsCardWrapper>
-          <FormsCard className="card">
-            {applications.map((application) => (
-              <SubmissionSelect
-                application={application}
-                setApplication={setCurrentApplication}
+    <>
+      <StyledHeader style={{ marginBottom: '2px' }}>Applications</StyledHeader>
+      <Text>
+        Select an application here and responses will populate below! Click on
+        any response to see the entire application. You can also download to
+        CSV.
+      </Text>
+      <Select
+        options={applications.map((application) => {
+          return { value: application.id, label: application.name }
+        })}
+        value={
+          currentApplication != null
+            ? {
+                value: currentApplication.id,
+                label: currentApplication.name,
+              }
+            : null
+        }
+        onChange={(v: { value: number; label: string } | null) =>
+          v != null &&
+          setCurrentApplication({
+            id: v.value,
+            name: v.label,
+          })
+        }
+      />
+      <br></br>
+      <div>
+        {currentApplication != null ? (
+          submissions[currentApplication.id] != null ? (
+            <>
+              <StyledHeader style={{ marginBottom: '2px' }}>
+                Responses
+              </StyledHeader>
+              <Table
+                data={submissions[currentApplication.id].map((item, index) =>
+                  item.pk ? { ...item, id: item.pk } : { ...item, id: index },
+                )}
+                columns={responseTableFields}
+                searchableColumns={['name']}
+                filterOptions={[]}
+                focusable={true}
+                initialPage={pageIndex}
+                setInitialPage={setPageIndex}
+                onClick={(row) => {
+                  setShowModal(true)
+                  const submission =
+                    submissions[currentApplication.id].find(
+                      (submission) => submission.pk === row.original.pk,
+                    ) ?? null
+                  setCurrentSubmission(submission)
+                }}
               />
-            ))}
-          </FormsCard>
-        </FormsCardWrapper>
+            </>
+          ) : (
+            <Loading />
+          )
+        ) : null}
       </div>
-      <div className="column is-two-thirds">
-        <StyledResponses>
-          <StyledHeader style={{ marginBottom: '2px' }}>Responses</StyledHeader>
-          <Table
-            data={submissions.map((item, index) =>
-              item.pk ? { ...item, id: item.pk } : { ...item, id: index },
-            )}
-            columns={responseTableFields}
-            searchableColumns={['name']}
-            filterOptions={[]}
-            focusable={true}
-            onClick={(row) => {
-              setShowModal(true)
-              const submission =
-                submissions.find(
-                  (submission) => submission.pk === row.original.pk,
-                ) ?? null
-              setCurrentSubmission(submission)
-            }}
-          />
-        </StyledResponses>
-      </div>
+      {currentApplication != null &&
+        submissions[currentApplication.id] != null &&
+        submissions[currentApplication.id].length > 0 && (
+          <div style={{ marginTop: '1em' }}>
+            <a
+              href={
+                currentApplication != null
+                  ? getApiUrl(
+                      `/clubs/${club.code}/applications/${currentApplication.id}/submissions/?format=xlsx`,
+                    )
+                  : '#'
+              }
+              className="button is-link is-small"
+            >
+              <Icon alt="download" name="download" /> Download Responses
+            </a>
+          </div>
+        )}
       {showModal && (
         <Modal
           show={showModal}
@@ -317,6 +329,6 @@ export default function ApplicationsPage({
           />
         </Modal>
       )}
-    </div>
+    </>
   )
 }
