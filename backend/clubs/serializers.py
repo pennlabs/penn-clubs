@@ -2379,6 +2379,10 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
         )
 
 
+class ApplicationSubmissionUserSerializer(ApplicationSubmissionSerializer):
+    pass
+
+
 class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField("get_name")
     email = serializers.CharField(source="user.email")
@@ -2395,7 +2399,9 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
         """
         Return the committee name for the default name if there is no committee name
         """
-        return obj.committee if obj.committee else ClubApplication.DEFAULT_COMMITTEE
+        return (
+            obj.committee.name if obj.committee else ClubApplication.DEFAULT_COMMITTEE
+        )
 
     def to_representation(self, instance):
         """
@@ -2410,16 +2416,22 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
         }
         application = instance.application
         for question in application.questions.all():
-            response = instance.responses.get(question=question)
-            # format the responses depending on the question type
-            if question.question_type == ApplicationQuestion.FREE_RESPONSE:
-                fields[question.prompt] = response.text
-            elif question.question_type == ApplicationQuestion.MULTIPLE_CHOICE:
-                fields[question.prompt] = response.multiple_choice.value
-            elif question.question_type == ApplicationQuestion.SHORT_ANSWER:
-                fields[question.prompt] = response.text
-            elif question.question_type == ApplicationQuestion.INFO_TEXT:
-                pass
+            response = instance.responses.filter(question=question).first()
+            if response:
+                # format the responses depending on the question type
+                if question.question_type == ApplicationQuestion.FREE_RESPONSE:
+                    fields[question.prompt] = response.text
+                elif question.question_type == ApplicationQuestion.MULTIPLE_CHOICE:
+                    fields[question.prompt] = response.multiple_choice.value
+                elif question.question_type == ApplicationQuestion.SHORT_ANSWER:
+                    fields[question.prompt] = response.text
+                elif question.question_type == ApplicationQuestion.INFO_TEXT:
+                    pass
+            else:
+                # set empty string as response if question unanswered
+                if question.question_type != ApplicationQuestion.INFO_TEXT:
+                    fields[question.prompt] = ""
+
         return OrderedDict(fields)
 
     def __init__(self, *args, **kwargs):
