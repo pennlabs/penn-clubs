@@ -1504,6 +1504,8 @@ class ClubApplication(models.Model):
     Represents custom club application.
     """
 
+    DEFAULT_COMMITTEE = "General Member"
+
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
     application_start_time = models.DateTimeField()
