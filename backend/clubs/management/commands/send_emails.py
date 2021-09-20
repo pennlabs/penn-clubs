@@ -57,23 +57,6 @@ def send_wc_intro_email(emails, clubs, recipient_string, template="wc_intro"):
         template, None, emails, {"clubs": clubs, "recipient_string": recipient_string}
     )
 
-def send_designate_resource_admin_email(emails, clubs, recipient_string, template="designate_resource_admin.html"):
-    """
-    Send email to remind to manage resource.
-    """
-
-    send_mail_helper(
-        template, None, emails, {"clubs": clubs, "recipient_string": recipient_string}
-    )
-
-def send_update_resource_email(emails, clubs, recipient_string, template="update_your_penn_resource.html"):
-    """
-    Send email to remind to update resource.
-    """
-
-    send_mail_helper(
-        template, None, emails, {"clubs": clubs, "recipient_string": recipient_string}
-    )
 
 class Command(BaseCommand):
     help = "Send out mass email communications for various purposes."
@@ -102,6 +85,8 @@ class Command(BaseCommand):
                 "faq_demo",
                 "admin_outreach",
                 "semesterly_email",
+                "hap_designate_resource",
+                "hap_update_resource",
             ),
         )
         parser.add_argument(
@@ -216,10 +201,16 @@ class Command(BaseCommand):
             "hap_second_round",
             "hap_partner_communication",
             "grad_resource_contact",
+            "hap_designate_resource",
+            "hap_update_resource",
         }:
             people = collections.defaultdict(dict)
 
-            if action == "hap_partner_communication":
+            if action in {
+                "hap_partner_communication",
+                "hap_designate_resource",
+                "hap_update_resource",
+            }:
                 emails = (
                     Membership.objects.filter(role__lte=Membership.ROLE_OFFICER)
                     .values_list("person__email", flat=True)
@@ -229,7 +220,12 @@ class Command(BaseCommand):
                     emails = [test_email]
                 for email in emails:
                     if not dry_run:
-                        send_mail_helper("communication_to_partners", None, [email], {})
+                        template = {
+                            "hap_partner_communication": "communication_to_partners",
+                            "hap_designate_resource": "designate_resource_admin",
+                            "hap_update_resource": "update_your_penn_resource",
+                        }[action]
+                        send_mail_helper(template, None, [email], {})
                         self.stdout.write(f"Sent {action} email to {email}")
                     else:
                         self.stdout.write(f"Would have sent {action} email to {email}")
