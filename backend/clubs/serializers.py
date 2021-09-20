@@ -2424,7 +2424,7 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
                 elif question.question_type == ApplicationQuestion.MULTIPLE_CHOICE:
                     if response.multiple_choice is not None:
                         fields[question.prompt] = response.multiple_choice.value
-                    else:
+                    elif question.prompt not in fields:
                         fields[question.prompt] = ""
                 elif question.question_type == ApplicationQuestion.SHORT_ANSWER:
                     fields[question.prompt] = response.text
@@ -2432,7 +2432,10 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
                     pass
             else:
                 # set empty string as response if question unanswered
-                if question.question_type != ApplicationQuestion.INFO_TEXT:
+                if (
+                    question.question_type != ApplicationQuestion.INFO_TEXT
+                    and question.prompt not in fields
+                ):
                     fields[question.prompt] = ""
 
         return OrderedDict(fields)
