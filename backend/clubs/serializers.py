@@ -2422,7 +2422,10 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
                 if question.question_type == ApplicationQuestion.FREE_RESPONSE:
                     fields[question.prompt] = response.text
                 elif question.question_type == ApplicationQuestion.MULTIPLE_CHOICE:
-                    fields[question.prompt] = response.multiple_choice.value
+                    if response.multiple_choice is not None:
+                        fields[question.prompt] = response.multiple_choice.value
+                    else:
+                        fields[question.prompt] = ""
                 elif question.question_type == ApplicationQuestion.SHORT_ANSWER:
                     fields[question.prompt] = response.text
                 elif question.question_type == ApplicationQuestion.INFO_TEXT:
