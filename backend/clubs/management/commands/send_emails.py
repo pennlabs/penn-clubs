@@ -11,6 +11,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 
 from clubs.models import (
+    ApplicationSubmission,
     Club,
     ClubFair,
     Event,
@@ -87,6 +88,7 @@ class Command(BaseCommand):
                 "semesterly_email",
                 "hap_designate_resource",
                 "hap_update_resource",
+                "wc_feedback",
             ),
         )
         parser.add_argument(
@@ -193,6 +195,26 @@ class Command(BaseCommand):
             self.stdout.write(f"Downloaded '{email_file}' to '{tf.name}'.")
             email_file = tf.name
             tf.close()
+
+        # handle Wharton Council feedback email to all centralized applicants
+        if action == "wc_feedback":
+            emails = (
+                ApplicationSubmission.objects.filter(
+                    application__is_wharton_council=True
+                )
+                .values_list("user__email", flat=True)
+                .distinct()
+            )
+            if test_email is not None:
+                emails = [test_email]
+            for email in emails:
+                if not dry_run:
+                    template = "wharton_council_feedback"
+                    send_mail_helper(template, None, [email], {})
+                    self.stdout.write(f"Sent {action} email to {email}")
+                else:
+                    self.stdout.write(f"Would have sent {action} email to {email}")
+            return
 
         # handle custom Hub@Penn intro email
         if action in {
