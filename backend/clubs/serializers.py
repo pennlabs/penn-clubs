@@ -2359,6 +2359,23 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
         """
         return f"/club/{obj.application.club.code}/application/{obj.application.pk}/"
 
+    def validate(self, data):
+        application_start_time = data["application_start_time"]
+        application_end_time = data["application_end_time"]
+        now = pytz.UTC.localize(datetime.datetime.now())
+
+        if now < application_start_time:
+            raise serializers.ValidationError(
+                "You cannot submit before the application has opened."
+            )
+
+        if now > application_end_time:
+            raise serializers.ValidationError(
+                "You cannot submit after the application deadline."
+            )
+
+        return data
+
     class Meta:
         model = ApplicationSubmission
         fields = (
