@@ -1,10 +1,11 @@
 import { ReactElement } from 'react'
 import styled from 'styled-components'
 
+import { UpdateClubContext } from '~/pages'
+
 import { CLUBS_GREY } from '../constants/colors'
 import { Club, ClubApplicationRequired } from '../types'
 import { getSizeDisplay, isClubFieldShown } from '../utils'
-import { ClubDisplayContext } from './ClubDisplay'
 import { CLUB_APPLICATIONS } from './ClubEditPage/ClubEditCard'
 import { BookmarkIcon, Icon, SubscribeIcon } from './common'
 
@@ -115,8 +116,8 @@ const Details = ({ club }: DetailsProps): ReactElement => {
           </>
         )}
       </div>
-      <ClubDisplayContext.Consumer>
-        {({ updateClub }) => (
+      <UpdateClubContext.Consumer>
+        {(updateClub) => (
           <>
             <BookmarkIcon
               club={club}
@@ -136,7 +137,7 @@ const Details = ({ club }: DetailsProps): ReactElement => {
             )}
           </>
         )}
-      </ClubDisplayContext.Consumer>
+      </UpdateClubContext.Consumer>
     </Wrapper>
   )
 }

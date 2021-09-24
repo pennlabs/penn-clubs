@@ -1,4 +1,4 @@
-import { createContext, ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect } from 'react'
 import styled from 'styled-components'
 
 import ClubCard from '../components/ClubCard'
@@ -22,38 +22,11 @@ type ClubDisplayProps = {
   pageSize?: number
 }
 
-interface ClubDisplayContext {
-  clubs: Club[]
-  updateClub: (
-    code: string,
-    // we likely want to limit what keys can be changed
-    key: 'bookmark' | 'subscribe',
-    value: boolean,
-  ) => void
-}
-
-export const ClubDisplayContext = createContext<Partial<ClubDisplayContext>>({})
-
 const ClubDisplay = ({
   displayClubs,
   display,
   onScroll = () => undefined,
 }: ClubDisplayProps): ReactElement | null => {
-  const [clubs, setClubs] = useState<Club[]>(displayClubs)
-  const updateClub = (code, key, value) => {
-    setClubs(
-      clubs.map((club) => {
-        if (club.code === code) {
-          if (key === 'bookmark') {
-            club.is_favorite = value
-          } else if (key === 'subscribe') {
-            club.is_subscribe = value
-          }
-        }
-        return { ...club }
-      }),
-    )
-  }
   const onWindowScroll = (): void => {
     const { innerHeight = 0, scrollY = 0 } = window
     const {
@@ -77,24 +50,20 @@ const ClubDisplay = ({
 
   if (display === 'cards') {
     return (
-      <ClubDisplayContext.Provider value={{ clubs, updateClub }}>
-        <div className="columns is-multiline is-desktop is-tablet">
-          {clubs.map((club) => (
-            <ClubCard key={club.code} club={club} />
-          ))}
-        </div>
-      </ClubDisplayContext.Provider>
+      <div className="columns is-multiline is-desktop is-tablet">
+        {displayClubs.map((club) => (
+          <ClubCard key={club.code} club={club} />
+        ))}
+      </div>
     )
   }
 
   return (
-    <ClubDisplayContext.Provider value={{ clubs, updateClub }}>
-      <ClubTableRowWrapper>
-        {clubs.map((club) => (
-          <ClubTableRow club={club} key={club.code} />
-        ))}
-      </ClubTableRowWrapper>
-    </ClubDisplayContext.Provider>
+    <ClubTableRowWrapper>
+      {displayClubs.map((club) => (
+        <ClubTableRow club={club} key={club.code} />
+      ))}
+    </ClubTableRowWrapper>
   )
 }
 

@@ -15,7 +15,14 @@ import SearchBar, {
   SearchInput,
 } from 'components/SearchBar'
 import equal from 'deep-equal'
-import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  createContext,
+  ReactElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { PaginatedClubPage, renderListPage } from 'renderPage'
 import styled from 'styled-components'
 import { Badge, Maybe, School, StudentType, Tag, UserInfo, Year } from 'types'
@@ -256,6 +263,14 @@ const ScrollTopButton = (): ReactElement | null => {
   )
 }
 
+type UpdateClubContext = (
+  code: string,
+  key: 'bookmark' | 'subscribe', // POLP inspired. We may want to add keys here
+  value: boolean,
+) => void
+
+export const UpdateClubContext = createContext<UpdateClubContext>(() => null)
+
 const searchIsEmpty = (input: SearchInput): boolean => {
   const { search, ...rest } = input
   return (!search || !search.length) && !Object.entries(rest).length
@@ -268,6 +283,21 @@ const Splash = (props: SplashProps): ReactElement => {
   const currentSearch = useRef<SearchInput>({})
 
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
+  const updateClub = (code, key, value) => {
+    setClubs({
+      ...clubs,
+      results: clubs.results.map((club) => {
+        if (club.code === code) {
+          if (key === 'bookmark') {
+            club.is_favorite = value
+          } else if (key === 'subscribe') {
+            club.is_subscribe = value
+          }
+        }
+        return { ...club }
+      }),
+    })
+  }
   const [exclusiveClubs, setExclusiveClubs] = useState<
     Maybe<PaginatedClubPage>
   >()
@@ -584,27 +614,29 @@ const Splash = (props: SplashProps): ReactElement => {
 
             {isLoading && <ListLoadIndicator />}
 
-            {exclusiveClubs && (
-              <>
-                {!!exclusiveClubs.count && (
-                  <PaginatedClubDisplay
-                    displayClubs={exclusiveClubs}
-                    display={display}
-                    tags={props.tags}
-                  />
-                )}
-                <div style={{ marginBottom: '8px' }}>
-                  Check out these additional resources that may interest you.
-                </div>
-                <Divider />
-              </>
-            )}
+            <UpdateClubContext.Provider value={updateClub}>
+              {exclusiveClubs && (
+                <>
+                  {!!exclusiveClubs.count && (
+                    <PaginatedClubDisplay
+                      displayClubs={exclusiveClubs}
+                      display={display}
+                      tags={props.tags}
+                    />
+                  )}
+                  <div style={{ marginBottom: '8px' }}>
+                    Check out these additional resources that may interest you.
+                  </div>
+                  <Divider />
+                </>
+              )}
 
-            <PaginatedClubDisplay
-              displayClubs={clubs}
-              display={display}
-              tags={props.tags}
-            />
+              <PaginatedClubDisplay
+                displayClubs={clubs}
+                display={display}
+                tags={props.tags}
+              />
+            </UpdateClubContext.Provider>
           </WideContainer>
         </SearchbarRightContainer>
       </div>
