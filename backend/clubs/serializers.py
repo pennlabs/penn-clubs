@@ -2379,6 +2379,7 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationSubmission
         fields = (
+            "pk",
             "application",
             "committee",
             "created_at",

@@ -71,7 +71,7 @@ type tableProps = {
   searchableColumns: string[]
   filterOptions?: FilterOption[]
   focusable?: boolean
-  onClick?: (event: any) => void
+  onClick?: (row: any, event: any) => void
   draggable?: boolean
   onDragEnd?: (result: any) => void | null | undefined
   initialPage?: number
@@ -322,9 +322,9 @@ const Table = ({
                         <FocusableTr
                           key={row.id}
                           {...row.getRowProps()}
-                          onClick={() => {
+                          onClick={(e) => {
                             if (onClick != null) {
-                              onClick(row)
+                              onClick(row, e)
                             }
                           }}
                         >
@@ -376,9 +376,9 @@ const Table = ({
                   <FocusableTr
                     key={row.id}
                     {...row.getRowProps()}
-                    onClick={() => {
+                    onClick={(e) => {
                       if (onClick != null) {
-                        onClick(row)
+                        onClick(row, e)
                       }
                     }}
                   >

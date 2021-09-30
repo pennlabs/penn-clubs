@@ -321,6 +321,7 @@ const ClubForm = ({
         name: 'applications',
         label: `Applications Page`,
         content: <ApplicationsPage club={club} />,
+        disabled: !SHOW_APPLICATIONS,
       },
       {
         name: 'resources',

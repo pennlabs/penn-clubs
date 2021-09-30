@@ -13,12 +13,13 @@ import {
   APPLICATION_STATUS_TYPES,
   ApplicationQuestionType,
   ApplicationResponse,
+  ApplicationStatusType,
   ApplicationSubmission,
   Club,
 } from '~/types'
 import { doApiRequest, getApiUrl } from '~/utils'
 
-import { Loading, Modal, Text } from '../common'
+import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
 
@@ -58,6 +59,29 @@ const FormWrapper = styled.div`
     background-color: ${SNOW};
   }
 `
+
+export const APPLICATION_STATUS: Array<{ value: number; label: string }> = [
+  {
+    value: ApplicationStatusType.Pending,
+    label: 'Pending',
+  },
+  {
+    value: ApplicationStatusType.Accepted,
+    label: 'Accepted',
+  },
+  {
+    value: ApplicationStatusType.FirstRound,
+    label: 'First Round',
+  },
+  {
+    value: ApplicationStatusType.SecondRound,
+    label: 'Second Round',
+  },
+  {
+    value: ApplicationStatusType.Rejected,
+    label: 'Rejected',
+  },
+]
 
 const SubmissionSelect = (props: any) => {
   const { application, setApplication } = props
@@ -156,16 +180,6 @@ export default function ApplicationsPage({
 }: {
   club: Club
 }): ReactElement {
-  const responseTableFields = [
-    { label: 'First Name', name: 'first_name' },
-    { label: 'Last Name', name: 'last_name' },
-    { label: 'Email', name: 'email' },
-    { label: 'Graduation Year', name: 'graduation_year' },
-    { label: 'Committee', name: 'committee' },
-    { label: 'Submitted', name: 'created_at' },
-    { label: 'Status', name: 'status' },
-  ]
-
   const [applications, setApplications] = useState<Array<Application>>([])
   const [
     currentApplication,
@@ -227,6 +241,39 @@ export default function ApplicationsPage({
     }
   }, [applications])
 
+  const [selectedSubmissions, setSelectedSubmissions] = useState<Array<number>>(
+    [],
+  )
+  const [status, setStatus] = useState<ApplicationStatusType>(
+    ApplicationStatusType.Pending,
+  )
+
+  const responseTableFields = [
+    {
+      label: 'Select',
+      render: (id) => (
+        <Checkbox
+          className="mr-3"
+          checked={selectedSubmissions.includes(id)}
+          onChange={(e) => {
+            setSelectedSubmissions(
+              selectedSubmissions.includes(id)
+                ? selectedSubmissions.filter((key) => key !== id)
+                : [...selectedSubmissions, id],
+            )
+          }}
+        />
+      ),
+    },
+    { label: 'First Name', name: 'first_name' },
+    { label: 'Last Name', name: 'last_name' },
+    { label: 'Email', name: 'email' },
+    { label: 'Graduation Year', name: 'graduation_year' },
+    { label: 'Committee', name: 'committee' },
+    { label: 'Submitted', name: 'created_at' },
+    { label: 'Status', name: 'status' },
+  ]
+
   const columns = useMemo(
     () =>
       responseTableFields.map(({ label, name }) => ({
@@ -272,6 +319,59 @@ export default function ApplicationsPage({
               <StyledHeader style={{ marginBottom: '2px' }}>
                 Responses
               </StyledHeader>
+              <div>
+                <div style={{ display: 'flex', flexDirection: 'row' }}>
+                  <div className="mr-3" style={{ width: '70%' }}>
+                    <Select
+                      options={APPLICATION_STATUS}
+                      onChange={(val) => val != null && setStatus(val.value)}
+                    />
+                  </div>
+                  <button
+                    className="button is-success"
+                    onClick={() => {
+                      if (submissions[currentApplication.id] != null) {
+                        const obj = {}
+                        obj[currentApplication.id] =
+                          submissions[currentApplication.id]
+                        obj[currentApplication.id].forEach((submission) => {
+                          if (
+                            selectedSubmissions.indexOf(submission.pk) !== -1
+                          ) {
+                            const newStatus = APPLICATION_STATUS.find(
+                              (x) => x.value === status,
+                            )
+                            if (newStatus) {
+                              submission.status = newStatus.label
+                            }
+                          }
+                        })
+                        setSubmissions(obj)
+                        setSelectedSubmissions([])
+                      }
+                      doApiRequest(
+                        `/clubs/${club.code}/applications/${currentApplication.id}/submissions/status/?format=json`,
+                        {
+                          method: 'POST',
+                          body: {
+                            status: status,
+                            submissions: selectedSubmissions,
+                          },
+                        },
+                      )
+                    }}
+                  >
+                    <Icon name="check" /> Update Status
+                  </button>
+                </div>
+                <small>
+                  Check the checkboxes next to submissions whose status you
+                  would like to update. Once submissions have been checked, you
+                  can pick a status here and click "Update Status" to submit.
+                  This is just for your own book keeping (applicants will not
+                  know that their submission status has changed).{' '}
+                </small>
+              </div>
               <Table
                 data={submissions[currentApplication.id].map((item, index) =>
                   item.pk ? { ...item, id: item.pk } : { ...item, id: index },
@@ -282,7 +382,15 @@ export default function ApplicationsPage({
                 focusable={true}
                 initialPage={pageIndex}
                 setInitialPage={setPageIndex}
-                onClick={(row) => {
+                onClick={(row, event) => {
+                  if (
+                    event.target?.type === 'checkbox' ||
+                    event.target.tagName === 'svg' ||
+                    event.target.tagName === 'path'
+                  ) {
+                    // manually prevent the propagation here
+                    return
+                  }
                   setShowModal(true)
                   const submission =
                     submissions[currentApplication.id].find(

@@ -4461,7 +4461,7 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
 
     permission_classes = [ClubItemPermission | IsSuperuser]
-    http_method_names = ["get"]
+    http_method_names = ["get", "post"]
 
     def get_queryset(self):
         distinct_submissions = {}
@@ -4483,6 +4483,19 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             queryset |= ApplicationSubmission.objects.filter(pk=submission.pk)
 
         return queryset
+
+    @action(detail=False, methods=["post"])
+    def status(self, *args, **kwargs):
+        submission_pks = self.request.data.get("submissions", [])
+        status = self.request.data.get("status", None)
+        if (
+            status in map(lambda x: x[0], ApplicationSubmission.STATUS_TYPES)
+            and len(submission_pks) > 0
+        ):
+            ApplicationSubmission.objects.filter(pk__in=submission_pks).update(
+                status=status
+            )
+        return Response([])
 
     def get_serializer_class(self):
         if self.request and self.request.query_params.get("format") == "xlsx":
