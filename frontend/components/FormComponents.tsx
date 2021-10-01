@@ -273,7 +273,7 @@ export const DateTimeField = useFieldWrapper(
 /**
  * A datetime field that allows the user to choose a date and a time.
  */
-export const ApplicationMultipleChoiceField = useFieldWrapper(
+export const CreatableMultipleSelectField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
     const { name, value, placeholder, initialValues, choices, ...other } = props
     const { setFieldValue } = useFormikContext()
