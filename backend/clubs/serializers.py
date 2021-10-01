@@ -1,6 +1,7 @@
 import datetime
 import json
 import re
+from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 import bleach
@@ -1588,7 +1589,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                         break
                 if not updated:
                     TargetMajor.objects.filter(club=obj).filter(
-                        target_majors=school
+                        target_majors=major
                     ).delete()
 
         if (
@@ -2345,7 +2346,11 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
     email = serializers.CharField(source="user.email", read_only=True)
+    graduation_year = serializers.CharField(
+        source="user.profile.graduation_year", read_only=True
+    )
     club = serializers.CharField(source="application.club.name", read_only=True)
+    code = serializers.CharField(source="application.club.code", read_only=True)
     name = serializers.CharField(source="application.name", read_only=True)
     application_link = serializers.SerializerMethodField("get_application_link")
 
@@ -2355,9 +2360,27 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
         """
         return f"/club/{obj.application.club.code}/application/{obj.application.pk}/"
 
+    def validate(self, data):
+        application_start_time = data["application_start_time"]
+        application_end_time = data["application_end_time"]
+        now = pytz.UTC.localize(datetime.datetime.now())
+
+        if now < application_start_time:
+            raise serializers.ValidationError(
+                "You cannot submit before the application has opened."
+            )
+
+        if now > application_end_time:
+            raise serializers.ValidationError(
+                "You cannot submit after the application deadline."
+            )
+
+        return data
+
     class Meta:
         model = ApplicationSubmission
         fields = (
+            "pk",
             "application",
             "committee",
             "created_at",
@@ -2370,6 +2393,94 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "email",
+            "code",
+            "graduation_year",
+        )
+
+
+class ApplicationSubmissionUserSerializer(ApplicationSubmissionSerializer):
+    pass
+
+
+class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField("get_name")
+    email = serializers.CharField(source="user.email")
+    graduation_year = serializers.CharField(source="user.profile.graduation_year")
+    committee = serializers.SerializerMethodField("get_committee")
+
+    def get_name(self, obj):
+        """
+        Return the concatenated first and last name of the applicant
+        """
+        return f"{obj.user.first_name} {obj.user.last_name}"
+
+    def get_committee(self, obj):
+        """
+        Return the committee name for the default name if there is no committee name
+        """
+        return (
+            obj.committee.name if obj.committee else ClubApplication.DEFAULT_COMMITTEE
+        )
+
+    def to_representation(self, instance):
+        """
+        Override to also include values for fields we add when we override init. We
+        need to query the responses to find the appropriate response for each question
+        """
+        fields = {
+            "name": self.get_name(instance),
+            "email": instance.user.email,
+            "graduation_year": instance.user.profile.graduation_year,
+            "committee": self.get_committee(instance),
+        }
+        application = instance.application
+        for question in application.questions.all():
+            response = instance.responses.filter(question=question).first()
+            if response:
+                # format the responses depending on the question type
+                if question.question_type == ApplicationQuestion.FREE_RESPONSE:
+                    fields[question.prompt] = response.text
+                elif question.question_type == ApplicationQuestion.MULTIPLE_CHOICE:
+                    if response.multiple_choice is not None:
+                        fields[question.prompt] = response.multiple_choice.value
+                    elif question.prompt not in fields:
+                        fields[question.prompt] = ""
+                elif question.question_type == ApplicationQuestion.SHORT_ANSWER:
+                    fields[question.prompt] = response.text
+                elif question.question_type == ApplicationQuestion.INFO_TEXT:
+                    pass
+            else:
+                # set empty string as response if question unanswered
+                if (
+                    question.question_type != ApplicationQuestion.INFO_TEXT
+                    and question.prompt not in fields
+                ):
+                    fields[question.prompt] = ""
+
+        return OrderedDict(fields)
+
+    def __init__(self, *args, **kwargs):
+        """
+        Override init so we can dynamically add fields. Each question prompt needs
+        its own field so it can correctly be formatted into a CSV with one column
+        per question (the XLSXFormatterMixin just gives each field a column)
+        """
+        super(ApplicationSubmissionCSVSerializer, self).__init__(*args, **kwargs)
+        (queryset,) = args
+        submission = queryset.first()
+        if submission:
+            application = submission.application
+            for question in application.questions.all():
+                if question.question_type != ApplicationQuestion.INFO_TEXT:
+                    self.fields[question.prompt] = serializers.CharField()
+
+    class Meta:
+        model = ApplicationSubmission
+        fields = (
+            "name",
+            "email",
+            "graduation_year",
+            "committee",
         )
 
 

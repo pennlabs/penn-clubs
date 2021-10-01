@@ -10,8 +10,10 @@ from options.models import Option
 
 from clubs.models import (
     Advisor,
+    ApplicationCommittee,
     ApplicationMultipleChoice,
     ApplicationQuestion,
+    ApplicationSubmission,
     Badge,
     Club,
     ClubApplication,
@@ -647,6 +649,20 @@ class Command(BaseCommand):
                 word_limit=150,
                 application=application,
             )
+
+        application = ClubApplication.objects.last()
+        ApplicationCommittee.objects.create(name="one", application=application)
+        ApplicationCommittee.objects.create(name="two", application=application)
+        ApplicationCommittee.objects.create(name="three", application=application)
+        ApplicationCommittee.objects.create(name="four", application=application)
+        for user in get_user_model().objects.all():
+            for committee in application.committees.all():
+                ApplicationSubmission.objects.create(
+                    status=ApplicationSubmission.PENDING,
+                    user=user,
+                    application=application,
+                    committee=committee,
+                )
 
         # 10am today
         even_base = now.replace(hour=14, minute=0, second=0, microsecond=0)

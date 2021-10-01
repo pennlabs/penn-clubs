@@ -107,7 +107,9 @@ from clubs.serializers import (
     AdvisorSerializer,
     ApplicationQuestionResponseSerializer,
     ApplicationQuestionSerializer,
+    ApplicationSubmissionCSVSerializer,
     ApplicationSubmissionSerializer,
+    ApplicationSubmissionUserSerializer,
     AssetSerializer,
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
@@ -175,7 +177,7 @@ def file_upload_endpoint_helper(request, code):
     return Response({"detail": "Club file uploaded!", "id": asset.id})
 
 
-def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
+def upload_endpoint_helper(request, cls, keyword, field, save=True, **kwargs):
     """
     Given a Model class with lookup arguments or a Model object, save the uploaded image
     to the image field specified in the argument.
@@ -189,9 +191,9 @@ def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
         obj = get_object_or_404(cls, **kwargs)
     else:
         obj = cls
-    if "file" in request.data and isinstance(request.data["file"], UploadedFile):
+    if keyword in request.data and isinstance(request.data[keyword], UploadedFile):
         getattr(obj, field).delete(save=False)
-        setattr(obj, field, request.data["file"])
+        setattr(obj, field, request.data[keyword])
         if save:
             obj._change_reason = f"Update '{field}' image field"
             obj.save()
@@ -1119,7 +1121,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
 
         # reset approval status after upload
-        resp = upload_endpoint_helper(request, club, "image", save=False)
+        resp = upload_endpoint_helper(request, club, "file", "image", save=False)
         if status.is_success(resp.status_code):
             club.approved = None
             club.approved_by = None
@@ -2238,7 +2240,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = Event.objects.get(id=kwargs["id"])
         self.check_object_permissions(request, event)
 
-        resp = upload_endpoint_helper(request, Event, "image", pk=event.pk)
+        resp = upload_endpoint_helper(request, Event, "image", "image", pk=event.pk)
 
         # if image uploaded, create thumbnail
         if status.is_success(resp.status_code):
@@ -4455,19 +4457,18 @@ class WhartonApplicationAPIView(generics.ListAPIView):
         )
 
 
-class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
+class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     list: List submissions for a given club application.
     """
 
     permission_classes = [ClubItemPermission | IsSuperuser]
-    serializer_class = ApplicationSubmissionSerializer
-    http_method_names = ["get"]
+    http_method_names = ["get", "post"]
 
     def get_queryset(self):
         distinct_submissions = {}
         submissions = ApplicationSubmission.objects.filter(
-            application__pk=self.kwargs["application_pk"]
+            application__pk=self.kwargs["application_pk"], archived=False,
         ).all()
 
         # only want to return the most recent (user, committee) unique submission pair
@@ -4485,21 +4486,42 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @action(detail=False, methods=["post"])
+    def status(self, *args, **kwargs):
+        submission_pks = self.request.data.get("submissions", [])
+        status = self.request.data.get("status", None)
+        if (
+            status in map(lambda x: x[0], ApplicationSubmission.STATUS_TYPES)
+            and len(submission_pks) > 0
+        ):
+            ApplicationSubmission.objects.filter(pk__in=submission_pks).update(
+                status=status
+            )
+        return Response([])
 
-class ApplicationSubmissionAPIView(generics.ListAPIView):
+    def get_serializer_class(self):
+        if self.request and self.request.query_params.get("format") == "xlsx":
+            return ApplicationSubmissionCSVSerializer
+        else:
+            return ApplicationSubmissionSerializer
+
+
+class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
     """
     get: Return list of submitted applications
+
+    delete: Remove a specific application
     """
 
     permission_classes = [IsAuthenticated]
-    serializer_class = ApplicationSubmissionSerializer
-
-    def get_operation_id(self, **kwargs):
-        return "List submitted applications"
+    serializer_class = ApplicationSubmissionUserSerializer
+    http_method_names = ["get", "delete"]
 
     def get_queryset(self):
         distinct_submissions = {}
-        submissions = ApplicationSubmission.objects.filter(user=self.request.user)
+        submissions = ApplicationSubmission.objects.filter(
+            user=self.request.user, archived=False
+        )
 
         # only want to return the most recent (user, committee) unique submission pair
         for submission in submissions:
@@ -4515,6 +4537,17 @@ class ApplicationSubmissionAPIView(generics.ListAPIView):
             queryset |= ApplicationSubmission.objects.filter(pk=submission.pk)
 
         return queryset
+
+    def perform_destroy(self, instance):
+        """
+        Set archived boolean to be True so that the submissions
+        appears to have been deleted
+        """
+
+        instance.archived = True
+        instance.archived_by = self.request.user
+        instance.archived_on = timezone.now()
+        instance.save()
 
 
 class ApplicationQuestionViewSet(viewsets.ModelViewSet):

@@ -1,19 +1,10 @@
 import { Form, Formik } from 'formik'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
+import Select from 'react-select'
 import styled from 'styled-components'
 
-import {
-  ALLBIRDS_GRAY,
-  ANIMATION_DURATION,
-  BORDER_RADIUS,
-  CLUBS_BLUE,
-  MD,
-  mediaMaxWidth,
-  SM,
-  SNOW,
-  WHITE,
-} from '~/constants'
+import { ALLBIRDS_GRAY, CLUBS_BLUE, MD, mediaMaxWidth, SNOW } from '~/constants'
 import {
   computeWordCount,
   formatQuestionType,
@@ -22,43 +13,15 @@ import {
   APPLICATION_STATUS_TYPES,
   ApplicationQuestionType,
   ApplicationResponse,
+  ApplicationStatusType,
   ApplicationSubmission,
   Club,
 } from '~/types'
-import { doApiRequest } from '~/utils'
+import { doApiRequest, getApiUrl } from '~/utils'
 
-import { Modal } from '../common'
+import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
-
-const StyledResponses = styled.div`
-  margin-bottom: 40px;
-`
-
-const FormsCard = styled.div`
-  padding: 0px;
-  box-shadow: 0 0 0 transparent;
-  transition: all ${ANIMATION_DURATION}ms ease;
-  border-radius: ${BORDER_RADIUS};
-  box-shadow: 0 0 0 ${WHITE};
-  border: 1px solid ${ALLBIRDS_GRAY};
-  justify-content: space-between;
-  height: 65vh;
-
-  ${mediaMaxWidth(SM)} {
-    width: calc(100%);
-    padding: 8px;
-  }
-`
-
-const FormsCardWrapper = styled.div`
-  position: relative;
-  margin-top: 40px;
-  ${mediaMaxWidth(SM)} {
-    padding-top: 0;
-    padding-bottom: 1rem;
-  }
-`
 
 const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   margin-bottom: 20px;
@@ -96,6 +59,29 @@ const FormWrapper = styled.div`
     background-color: ${SNOW};
   }
 `
+
+export const APPLICATION_STATUS: Array<{ value: number; label: string }> = [
+  {
+    value: ApplicationStatusType.Pending,
+    label: 'Pending',
+  },
+  {
+    value: ApplicationStatusType.Accepted,
+    label: 'Accepted',
+  },
+  {
+    value: ApplicationStatusType.FirstRound,
+    label: 'First Round',
+  },
+  {
+    value: ApplicationStatusType.SecondRound,
+    label: 'Second Round',
+  },
+  {
+    value: ApplicationStatusType.Rejected,
+    label: 'Rejected',
+  },
+]
 
 const SubmissionSelect = (props: any) => {
   const { application, setApplication } = props
@@ -194,28 +180,20 @@ export default function ApplicationsPage({
 }: {
   club: Club
 }): ReactElement {
-  const responseTableFields = [
-    { label: 'First Name', name: 'first_name' },
-    { label: 'Last Name', name: 'last_name' },
-    { label: 'Email', name: 'email' },
-    { label: 'Committee', name: 'committee' },
-    { label: 'Submitted', name: 'created_at' },
-    { label: 'Status', name: 'status' },
-  ]
-
   const [applications, setApplications] = useState<Array<Application>>([])
   const [
     currentApplication,
     setCurrentApplication,
   ] = useState<Application | null>(null)
-  const [submissions, setSubmissions] = useState<Array<ApplicationSubmission>>(
-    [],
-  )
+  const [submissions, setSubmissions] = useState<{
+    [key: number]: Array<ApplicationSubmission>
+  }>([])
   const [showModal, setShowModal] = useState<boolean>(false)
   const [
     currentSubmission,
     setCurrentSubmission,
   ] = useState<ApplicationSubmission | null>(null)
+  const [pageIndex, setPageIndex] = useState<number>(0)
 
   useEffect(() => {
     doApiRequest(`/clubs/${club.code}/applications/?format=json`, {
@@ -231,31 +209,70 @@ export default function ApplicationsPage({
   }, [])
 
   useEffect(() => {
-    if (currentApplication !== null) {
-      doApiRequest(
-        `/clubs/${club.code}/applications/${currentApplication.id}/submissions/?format=json`,
-        {
-          method: 'GET',
-        },
-      )
-        .then((resp) => resp.json())
-        .then((responses) => {
-          return responses.map((response) => {
-            return {
-              ...response,
-              committee: response.committee?.name ?? 'General Member',
-              status: APPLICATION_STATUS_TYPES.find(
-                (status) => status.value === response.status,
-              )?.label,
-              created_at: moment(response.created_at)
-                .tz('America/New_York')
-                .format('LLL'),
-            }
+    if (applications !== null) {
+      applications.forEach((application) => {
+        doApiRequest(
+          `/clubs/${club.code}/applications/${application.id}/submissions/?format=json`,
+          {
+            method: 'GET',
+          },
+        )
+          .then((resp) => resp.json())
+          .then((responses) => {
+            return responses.map((response) => {
+              return {
+                ...response,
+                committee: response.committee?.name ?? 'General Member',
+                status: APPLICATION_STATUS_TYPES.find(
+                  (status) => status.value === response.status,
+                )?.label,
+                created_at: moment(response.created_at)
+                  .tz('America/New_York')
+                  .format('LLL'),
+              }
+            })
           })
-        })
-        .then((responses) => setSubmissions(responses))
+          .then((responses) => {
+            const obj = {}
+            obj[application.id] = responses
+            setSubmissions(obj)
+          })
+      })
     }
-  }, [currentApplication])
+  }, [applications])
+
+  const [selectedSubmissions, setSelectedSubmissions] = useState<Array<number>>(
+    [],
+  )
+  const [status, setStatus] = useState<ApplicationStatusType>(
+    ApplicationStatusType.Pending,
+  )
+
+  const responseTableFields = [
+    {
+      label: 'Select',
+      render: (id) => (
+        <Checkbox
+          className="mr-3"
+          checked={selectedSubmissions.includes(id)}
+          onChange={(e) => {
+            setSelectedSubmissions(
+              selectedSubmissions.includes(id)
+                ? selectedSubmissions.filter((key) => key !== id)
+                : [...selectedSubmissions, id],
+            )
+          }}
+        />
+      ),
+    },
+    { label: 'First Name', name: 'first_name' },
+    { label: 'Last Name', name: 'last_name' },
+    { label: 'Email', name: 'email' },
+    { label: 'Graduation Year', name: 'graduation_year' },
+    { label: 'Committee', name: 'committee' },
+    { label: 'Submitted', name: 'created_at' },
+    { label: 'Status', name: 'status' },
+  ]
 
   const columns = useMemo(
     () =>
@@ -267,42 +284,145 @@ export default function ApplicationsPage({
   )
 
   return (
-    <div className="columns">
-      <div className="column is-one-third" style={{ marginRight: '100px' }}>
-        <StyledHeader>Applications</StyledHeader>
-        <FormsCardWrapper>
-          <FormsCard className="card">
-            {applications.map((application) => (
-              <SubmissionSelect
-                application={application}
-                setApplication={setCurrentApplication}
+    <>
+      <StyledHeader style={{ marginBottom: '2px' }}>Applications</StyledHeader>
+      <Text>
+        Select an application here and responses will populate below! Click on
+        any response to see the entire application. You can also download to
+        CSV.
+      </Text>
+      <Select
+        options={applications.map((application) => {
+          return { value: application.id, label: application.name }
+        })}
+        value={
+          currentApplication != null
+            ? {
+                value: currentApplication.id,
+                label: currentApplication.name,
+              }
+            : null
+        }
+        onChange={(v: { value: number; label: string } | null) =>
+          v != null &&
+          setCurrentApplication({
+            id: v.value,
+            name: v.label,
+          })
+        }
+      />
+      <br></br>
+      <div>
+        {currentApplication != null ? (
+          submissions[currentApplication.id] != null ? (
+            <>
+              <StyledHeader style={{ marginBottom: '2px' }}>
+                Responses
+              </StyledHeader>
+              <div>
+                <div style={{ display: 'flex', flexDirection: 'row' }}>
+                  <div className="mr-3" style={{ width: '70%' }}>
+                    <Select
+                      options={APPLICATION_STATUS}
+                      onChange={(val) => val != null && setStatus(val.value)}
+                    />
+                  </div>
+                  <button
+                    className="button is-success"
+                    onClick={() => {
+                      if (submissions[currentApplication.id] != null) {
+                        const obj = {}
+                        obj[currentApplication.id] =
+                          submissions[currentApplication.id]
+                        obj[currentApplication.id].forEach((submission) => {
+                          if (
+                            selectedSubmissions.indexOf(submission.pk) !== -1
+                          ) {
+                            const newStatus = APPLICATION_STATUS.find(
+                              (x) => x.value === status,
+                            )
+                            if (newStatus) {
+                              submission.status = newStatus.label
+                            }
+                          }
+                        })
+                        setSubmissions(obj)
+                        setSelectedSubmissions([])
+                      }
+                      doApiRequest(
+                        `/clubs/${club.code}/applications/${currentApplication.id}/submissions/status/?format=json`,
+                        {
+                          method: 'POST',
+                          body: {
+                            status: status,
+                            submissions: selectedSubmissions,
+                          },
+                        },
+                      )
+                    }}
+                  >
+                    <Icon name="check" /> Update Status
+                  </button>
+                </div>
+                <small>
+                  Check the checkboxes next to submissions whose status you
+                  would like to update. Once submissions have been checked, you
+                  can pick a status here and click "Update Status" to submit.
+                  This is just for your own book keeping (applicants will not
+                  know that their submission status has changed).{' '}
+                </small>
+              </div>
+              <Table
+                data={submissions[currentApplication.id].map((item, index) =>
+                  item.pk ? { ...item, id: item.pk } : { ...item, id: index },
+                )}
+                columns={responseTableFields}
+                searchableColumns={['name']}
+                filterOptions={[]}
+                focusable={true}
+                initialPage={pageIndex}
+                setInitialPage={setPageIndex}
+                onClick={(row, event) => {
+                  if (
+                    event.target?.type === 'checkbox' ||
+                    event.target.tagName === 'svg' ||
+                    event.target.tagName === 'path'
+                  ) {
+                    // manually prevent the propagation here
+                    return
+                  }
+                  setShowModal(true)
+                  const submission =
+                    submissions[currentApplication.id].find(
+                      (submission) => submission.pk === row.original.pk,
+                    ) ?? null
+                  setCurrentSubmission(submission)
+                }}
               />
-            ))}
-          </FormsCard>
-        </FormsCardWrapper>
+            </>
+          ) : (
+            <Loading />
+          )
+        ) : null}
       </div>
-      <div className="column is-two-thirds">
-        <StyledResponses>
-          <StyledHeader style={{ marginBottom: '2px' }}>Responses</StyledHeader>
-          <Table
-            data={submissions.map((item, index) =>
-              item.pk ? { ...item, id: item.pk } : { ...item, id: index },
-            )}
-            columns={responseTableFields}
-            searchableColumns={['name']}
-            filterOptions={[]}
-            focusable={true}
-            onClick={(row) => {
-              setShowModal(true)
-              const submission =
-                submissions.find(
-                  (submission) => submission.pk === row.original.pk,
-                ) ?? null
-              setCurrentSubmission(submission)
-            }}
-          />
-        </StyledResponses>
-      </div>
+      {currentApplication != null &&
+        submissions[currentApplication.id] != null &&
+        submissions[currentApplication.id].length > 0 && (
+          <div style={{ marginTop: '1em' }}>
+            <a
+              href={
+                currentApplication != null
+                  ? getApiUrl(
+                      `/clubs/${club.code}/applications/${currentApplication.id}/submissions/?format=xlsx`,
+                    )
+                  : '#'
+              }
+              className="button is-link is-small"
+            >
+              <Icon alt="download" name="download" /> Download Responses
+            </a>
+          </div>
+        )}
       {showModal && (
         <Modal
           show={showModal}
@@ -317,6 +437,6 @@ export default function ApplicationsPage({
           />
         </Modal>
       )}
-    </div>
+    </>
   )
 }

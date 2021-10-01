@@ -276,7 +276,7 @@ class ClubTestCase(TestCase):
         # successful image upload
         resp = self.client.post(
             reverse("club-events-upload", args=(self.club1.code, self.event1.id)),
-            {"file": io.BytesIO(b"")},
+            {"image": io.BytesIO(b"")},
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 

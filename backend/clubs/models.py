@@ -1520,6 +1520,8 @@ class ClubApplication(models.Model):
     Represents custom club application.
     """
 
+    DEFAULT_COMMITTEE = "General Member"
+
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
     application_start_time = models.DateTimeField()
@@ -1630,6 +1632,7 @@ class ApplicationSubmission(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
+    archived = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -5,7 +5,7 @@ from clubs.views import (
     AdminNoteViewSet,
     AdvisorViewSet,
     ApplicationQuestionViewSet,
-    ApplicationSubmissionAPIView,
+    ApplicationSubmissionUserViewSet,
     ApplicationSubmissionViewSet,
     AssetViewSet,
     BadgeClubViewSet,
@@ -76,6 +76,7 @@ router.register(r"users", UserViewSet, basename="users")
 router.register(
     r"external/members/(?P<code>.+)", ExternalMemberListViewSet, basename="external"
 )
+router.register(r"submissions", ApplicationSubmissionUserViewSet, basename="submission")
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")
@@ -154,7 +155,6 @@ urlpatterns = [
         WhartonApplicationAPIView.as_view(),
         name="wharton-applications",
     ),
-    path(r"submissions/", ApplicationSubmissionAPIView.as_view(), name="submissions",),
 ]
 
 urlpatterns += router.urls

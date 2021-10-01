@@ -71,9 +71,11 @@ type tableProps = {
   searchableColumns: string[]
   filterOptions?: FilterOption[]
   focusable?: boolean
-  onClick?: (event: any) => void
+  onClick?: (row: any, event: any) => void
   draggable?: boolean
   onDragEnd?: (result: any) => void | null | undefined
+  initialPage?: number
+  setInitialPage?: (page: number) => void
 }
 
 const Styles = styled.div`
@@ -121,6 +123,8 @@ const Table = ({
   onClick,
   draggable = false,
   onDragEnd,
+  initialPage = 0,
+  setInitialPage,
 }: tableProps): ReactElement => {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [tableData, setTableData] = useState<Row[]>([])
@@ -192,12 +196,13 @@ const Table = ({
     previousPage,
     gotoPage,
     pageOptions,
-    state: { pageIndex, pageSize, list },
+    state: { pageIndex, pageSize },
   } = useTable(
     {
       columns: memoColumns,
       data: tableData,
       filterTypes,
+      initialState: { pageIndex: initialPage },
     },
     useFilters,
     useGlobalFilter,
@@ -221,6 +226,8 @@ const Table = ({
 
   if (data.length <= 0) {
     return <></>
+  } else if (setInitialPage != null) {
+    setInitialPage(pageIndex)
   }
   return (
     <Styles>
@@ -315,9 +322,9 @@ const Table = ({
                         <FocusableTr
                           key={row.id}
                           {...row.getRowProps()}
-                          onClick={() => {
+                          onClick={(e) => {
                             if (onClick != null) {
-                              onClick(row)
+                              onClick(row, e)
                             }
                           }}
                         >
@@ -369,9 +376,9 @@ const Table = ({
                   <FocusableTr
                     key={row.id}
                     {...row.getRowProps()}
-                    onClick={() => {
+                    onClick={(e) => {
                       if (onClick != null) {
-                        onClick(row)
+                        onClick(row, e)
                       }
                     }}
                   >
@@ -435,14 +442,14 @@ const Table = ({
           </select>
           <button
             style={{ marginRight: '0.5rem' }}
-            onClick={() => gotoPage(pageCount - 1)}
+            onClick={() => nextPage()}
             disabled={!canNextPage}
           >
             <Icon name="chevron-right" />
           </button>
           <button
             style={{ marginRight: '0.5rem' }}
-            onClick={() => nextPage()}
+            onClick={() => gotoPage(pageCount - 1)}
             disabled={!canNextPage}
           >
             <Icon name="chevrons-right" />

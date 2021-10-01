@@ -104,7 +104,7 @@ const PolicyBox = ({ onChecked = () => undefined }: Props): ReactElement => {
         <div>
           Membership in registered campus organizations must be open to all
           persons without regard to race, color, sex, sexual or affectional
-          preference, religion, national or ethnic origin, handicap, or
+          orientation, religion, national or ethnic origin, handicap, or
           disability. Under Title IX of the U.S. Education Act Amendment of
           1972, certain exemptions may be granted for intercollegiate and
           intramural athletics, fraternities and sororities, and musical groups
