@@ -1796,6 +1796,15 @@ class ClubTestCase(TestCase):
         # ensure email was sent out notifying officer of question
         self.assertEqual(len(mail.outbox), 1, mail.outbox)
 
+        resp = self.client.post(reverse("club-questions-like"), args=("test-club", "2",))
+        self.assertEqual(200, resp.status_code)
+        
+        resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
+        data = json.loads(resp.content.decode("utf-8"))
+        for club in data:
+            if club["id"] == "2":
+                self.assertEqual(club["likes"], 1)
+
     def test_club_sensitive_field_renew(self):
         """
         When editing sensitive fields like the name, description, and club image,
