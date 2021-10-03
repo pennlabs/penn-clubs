@@ -327,7 +327,6 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     data,
   ): Promise<ModelObject> => {
     const { baseUrl, keyField = 'id' } = props
-    console.log(object)
 
     // if object was deleted, return
     if (object == null) {
