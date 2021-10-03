@@ -266,6 +266,7 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "responder",
             "is_anonymous",
             "approved",
+            "likes"
         )
 
 

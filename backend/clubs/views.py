@@ -2617,6 +2617,7 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
 
     serializer_class = QuestionAnswerSerializer
     permission_classes = [QuestionAnswerPermission | IsSuperuser]
+    lookup_field = "id"
 
     def get_queryset(self):
         club_code = self.kwargs["club_code"]
@@ -2638,6 +2639,94 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
 
         return questions.filter(Q(approved=True) | Q(author=self.request.user))
 
+    @action(detail=True, methods=["put"])
+    def likes(self, request, *args, **kwargs):
+        """
+        Endpoint used to like or dislike a question answer.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        properties:
+                            action:
+                                type: string
+                                description: Either like, unlike, dislike, or undislike.
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                    description: >
+                                        Whether or not the like/dislike or unlike/undislike succeeded.
+                                message:
+                                    type: string
+                                    description: A success or error message.
+        ---
+        """
+
+        question = QuestionAnswer.objects.get(
+            club__code=self.kwargs["club_code"], id=self.kwargs["id"], club__archived=False
+        )
+        if self.request.user.is_authenticated and request.data.get("action") == "like" and self.request.user not in question.users_liked.all():
+            question.users_liked.add(self.request.user)
+            if self.request.user in question.users_disliked.all():
+                question.likes = question.likes + 2
+                question.users_disliked.remove(self.request.user)
+            else:
+                question.likes = question.likes + 1
+            question.save()
+            return Response(
+                {
+                    "success": True,
+                    "message": "Succesfully liked",
+                }
+            )
+        elif self.request.user.is_authenticated and request.data.get("action") == "unlike" and self.request.user in question.users_liked.all() and self.request.user not in question.users_disliked.all():
+            question.users_liked.remove(self.request.user)
+            question.likes = question.likes - 1
+            question.save()
+            return Response(
+                {
+                    "success": True,
+                    "message": "Successfully unliked",
+                }
+            )
+        elif self.request.user.is_authenticated and request.data.get("action") == "dislike" and self.request.user not in question.users_disliked.all():
+            question.users_disliked.add(self.request.user)
+            if self.request.user in question.users_liked.all():
+                question.likes = question.likes - 2
+                question.users_liked.remove(self.request.user)
+            else:
+                question.likes = question.likes - 1
+            question.save()
+            return Response(
+                {
+                    "success": True,
+                    "message": "Succesfully disliked",
+                }
+            )
+        elif self.request.user.is_authenticated and request.data.get("action") == "undislike" and self.request.user in question.users_disliked.all() and self.request.user not in question.users_liked.all():
+            question.users_disliked.remove(self.request.user)
+            question.likes = question.likes + 1
+            question.save()
+            return Response(
+                {
+                    "success": True,
+                    "message": "Successfully undisliked",
+                }
+            )
+        else:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Not a valid request",
+                }
+            )
 
 class MembershipViewSet(viewsets.ModelViewSet):
     """
