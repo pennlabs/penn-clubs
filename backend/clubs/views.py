@@ -4460,6 +4460,8 @@ class WhartonApplicationAPIView(generics.ListAPIView):
 class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     list: List submissions for a given club application.
+
+    status: Changes status of a submission
     """
 
     permission_classes = [ClubItemPermission | IsSuperuser]
@@ -4488,6 +4490,33 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"])
     def status(self, *args, **kwargs):
+        """
+        Given some application submissions, change their status to a new one
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            submissions:
+                                type: array
+                                items:
+                                    type: integer
+                            status:
+                                type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                output:
+                                    type: string
+
+        ---
+        """
         submission_pks = self.request.data.get("submissions", [])
         status = self.request.data.get("status", None)
         if (
