@@ -327,6 +327,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     data,
   ): Promise<ModelObject> => {
     const { baseUrl, keyField = 'id' } = props
+    console.log(object)
 
     // if object was deleted, return
     if (object == null) {
@@ -355,7 +356,8 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
 
     // create or edit the object, uploading all non-file fields
     const savePromise =
-      typeof object[keyField] === 'undefined'
+      typeof object[keyField] === 'undefined' ||
+      object.tempId === object[keyField]
         ? doApiRequest(`${baseUrl}?format=json`, {
             method: 'POST',
             body: formData,
