@@ -498,7 +498,7 @@ class ClubsOrderingFilter(RandomOrderingFilter):
             ]
             return valid_fields
 
-        # other people can order by whitelist
+        # other people can order by allowlist
         return super().get_valid_fields(queryset, view, context)
 
     def filter_queryset(self, request, queryset, view):
