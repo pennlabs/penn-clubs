@@ -5,13 +5,18 @@ import { NextPageContext } from 'next'
 import { useRouter } from 'next/router'
 import React, { ReactElement } from 'react'
 import renderPage from 'renderPage'
-import { Application } from 'types'
+import { Application, ApplicationStatus } from 'types'
 import { doBulkLookup } from 'utils'
 
+import WhartonApplicationStatus from '~/components/Settings/WhartonApplicationStatus'
 import WhartonApplicationTab from '~/components/Settings/WhartonApplicationTab'
-import { ADMIN_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
+import { BG_GRADIENT, WHARTON_ROUTE, WHITE } from '~/constants'
 
-function WhartonDashboard({ userInfo, whartonapplications }): ReactElement {
+function WhartonDashboard({
+  userInfo,
+  whartonapplications,
+  statuses,
+}): ReactElement {
   if (!userInfo) {
     return <AuthPrompt />
   }
@@ -20,11 +25,16 @@ function WhartonDashboard({ userInfo, whartonapplications }): ReactElement {
 
   const tabs = [
     {
-      name: 'whartonapplications',
+      name: 'application',
       label: 'Wharton Applications',
       content: () => (
         <WhartonApplicationTab applications={whartonapplications} />
       ),
+    },
+    {
+      name: 'status',
+      label: 'Status',
+      content: () => <WhartonApplicationStatus statuses={statuses} />,
     },
   ]
 
@@ -43,7 +53,7 @@ function WhartonDashboard({ userInfo, whartonapplications }): ReactElement {
         tabs={tabs}
         tab={tab}
         tabClassName="is-boxed"
-        route={ADMIN_ROUTE}
+        route={WHARTON_ROUTE}
       />
     </>
   )
@@ -51,11 +61,15 @@ function WhartonDashboard({ userInfo, whartonapplications }): ReactElement {
 
 type BulkResp = {
   whartonapplications: Application[]
+  statuses: ApplicationStatus[]
 }
 
 WhartonDashboard.getInitialProps = async (ctx: NextPageContext) => {
   const data: BulkResp = (await doBulkLookup(
-    ['whartonapplications'],
+    [
+      'whartonapplications',
+      ['statuses', '/whartonapplications/status/?format=json'],
+    ],
     ctx,
   )) as BulkResp
   return {
