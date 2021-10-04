@@ -258,7 +258,7 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         obj.send_question_mail(self.context["request"])
 
-        return obj   
+        return obj
 
     class Meta:
         model = QuestionAnswer

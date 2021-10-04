@@ -1796,14 +1796,49 @@ class ClubTestCase(TestCase):
         # ensure email was sent out notifying officer of question
         self.assertEqual(len(mail.outbox), 1, mail.outbox)
 
-        resp = self.client.post(reverse("club-questions-like"), args=("test-club", "2",))
+        # ensure that unliking a question answer that is not yet liked does nothing
+        resp = self.client.post(
+            reverse("club-questions-unlike", args=("test-club", "2",))
+        )
         self.assertEqual(200, resp.status_code)
-        
         resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
         data = json.loads(resp.content.decode("utf-8"))
-        for club in data:
-            if club["id"] == "2":
-                self.assertEqual(club["likes"], 1)
+        for question in data:
+            self.assertEqual(0, question["likes"])
+
+        # test if question answer was liked successfully
+        resp = self.client.post(
+            reverse("club-questions-like", args=("test-club", "2",))
+        )
+        self.assertEqual(200, resp.status_code)
+        resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
+        data = json.loads(resp.content.decode("utf-8"))
+        for question in data:
+            if question["id"] == "2":
+                self.assertEqual(1, question["likes"])
+            elif question["id"] == "3":
+                self.assertEqual(1, question["likes"])
+
+        # ensures liking a question answer twice does not increase the number of likes
+        resp = self.client.post(
+            reverse("club-questions-like", args=("test-club", "2",))
+        )
+        self.assertEqual(200, resp.status_code)
+        resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
+        data = json.loads(resp.content.decode("utf-8"))
+        for question in data:
+            if question["id"] == "2":
+                self.assertEqual(1, question["likes"])
+
+        # check if question answer was unliked successfully
+        resp = self.client.post(
+            reverse("club-questions-unlike", args=("test-club", "2",))
+        )
+        self.assertEqual(200, resp.status_code)
+        resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
+        data = json.loads(resp.content.decode("utf-8"))
+        for question in data:
+            self.assertEqual(0, question["likes"])
 
     def test_club_sensitive_field_renew(self):
         """

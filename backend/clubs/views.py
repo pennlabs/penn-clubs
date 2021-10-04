@@ -2617,7 +2617,6 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
 
     serializer_class = QuestionAnswerSerializer
     permission_classes = [QuestionAnswerPermission | IsSuperuser]
-    lookup_field = "id"
 
     def get_queryset(self):
         club_code = self.kwargs["club_code"]
@@ -2644,28 +2643,42 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
         """
         Endpoint used to like a question answer.
         ---
+        requestBody: {}
+        responses:
+            "200":
+                content: {}
+        ---
         """
 
         question = QuestionAnswer.objects.get(
-            club__code=self.kwargs["club_code"], id=self.kwargs["id"], club__archived=False
+            club__code=self.kwargs["club_code"],
+            id=self.get_object().id,
+            club__archived=False,
         )
         question.users_liked.add(self.request.user)
         question.save()
         return Response({})
-        
 
     @action(detail=True, methods=["post"])
     def unlike(self, request, *args, **kwargs):
         """
         Endpoint used to unlike a question answer.
         ---
+        requestBody: {}
+        responses:
+            "200":
+                content: {}
+        ---
         """
         question = QuestionAnswer.objects.get(
-            club__code=self.kwargs["club_code"], id=self.kwargs["id"], club__archived=False
+            club__code=self.kwargs["club_code"],
+            id=self.get_object().id,
+            club__archived=False,
         )
         question.users_liked.remove(self.request.user)
         question.save()
         return Response({})
+
 
 class MembershipViewSet(viewsets.ModelViewSet):
     """

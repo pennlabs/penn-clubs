@@ -138,7 +138,7 @@ class SecurityTestCase(TestCase):
         """
 
         # Don't put your function here unless it never returns any private information.
-        whitelist = set()
+        whitelist = {("QuestionAnswerViewSet", "like"), ("QuestionAnswerViewSet", "unlike")}
 
         for name, obj, node in all_viewset_actions(is_detail=True):
             # check to ensure check_object_permissions called
