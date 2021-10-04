@@ -303,6 +303,15 @@ export type Application = {
   questions: ApplicationQuestion[]
 }
 
+export type ApplicationStatus = {
+  club: string
+  application: number
+  committee: string
+  name: string
+  status: string
+  count: number
+}
+
 export enum ApplicationQuestionType {
   FreeResponse = 1,
   MultipleChoice = 2,
