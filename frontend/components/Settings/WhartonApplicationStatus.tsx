@@ -116,7 +116,9 @@ function StatusCard({
                 fontSize: '10pt',
               }}
             >
-              <CardTitle className="is-size-5">{committee}</CardTitle>
+              <CardTitle className="is-size-5">
+                {committee ?? 'General Member'}
+              </CardTitle>
               <RadialChart
                 data={pieData[application][committee]}
                 width={200}
