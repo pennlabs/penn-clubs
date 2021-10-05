@@ -76,6 +76,7 @@ type tableProps = {
   onDragEnd?: (result: any) => void | null | undefined
   initialPage?: number
   setInitialPage?: (page: number) => void
+  initialPageSize?: number
 }
 
 const Styles = styled.div`
@@ -125,6 +126,7 @@ const Table = ({
   onDragEnd,
   initialPage = 0,
   setInitialPage,
+  initialPageSize = 10,
 }: tableProps): ReactElement => {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [tableData, setTableData] = useState<Row[]>([])
@@ -202,7 +204,7 @@ const Table = ({
       columns: memoColumns,
       data: tableData,
       filterTypes,
-      initialState: { pageIndex: initialPage },
+      initialState: { pageIndex: initialPage, pageSize: initialPageSize },
     },
     useFilters,
     useGlobalFilter,
