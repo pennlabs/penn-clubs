@@ -106,50 +106,58 @@ function StatusCard({
         <div
           style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}
         >
-          {Object.keys(pieData[application]).map((committee) => (
-            <div
-              style={{
-                display: 'block',
-                width: '200px',
-                textAlign: 'center',
-                position: 'relative',
-                fontSize: '10pt',
-              }}
-            >
-              <CardTitle className="is-size-5">
-                {committee ?? 'General Member'}
-              </CardTitle>
-              <RadialChart
-                data={pieData[application][committee]}
-                width={200}
-                height={200}
-                radius={80}
-                colorType="literal"
-                labelsAboveChildren={true}
-                onValueMouseOver={(v: PieDataPoint) => {
-                  setValue(v)
-                  setCurrentCommittee(committee)
+          {Object.keys(pieData[application])
+            .sort((left, right) =>
+              left === 'Total'
+                ? -10
+                : right === 'Total'
+                ? -10
+                : left.localeCompare(right),
+            )
+            .map((committee) => (
+              <div
+                style={{
+                  display: 'block',
+                  width: '200px',
+                  textAlign: 'center',
+                  position: 'relative',
+                  fontSize: '10pt',
                 }}
               >
-                {value != null && committee === currentCommittee && (
-                  <Hint value={value}>
-                    <div
-                      style={{
-                        backgroundColor: 'black',
-                        color: 'white',
-                        padding: '5px',
-                        borderRadius: '10px',
-                      }}
-                    >
-                      <p>{value.label}</p>
-                      <p>count: {count(committee, value.label)}</p>
-                      <p>percent: {percentage(committee, value.label)}%</p>
-                    </div>
-                  </Hint>
-                )}
-              </RadialChart>
-            </div>
-          ))}
+                <CardTitle className="is-size-5">
+                  {committee === 'null' ? 'General Member' : committee}
+                </CardTitle>
+                <RadialChart
+                  data={pieData[application][committee]}
+                  width={200}
+                  height={200}
+                  radius={80}
+                  colorType="literal"
+                  labelsAboveChildren={true}
+                  onValueMouseOver={(v: PieDataPoint) => {
+                    setValue(v)
+                    setCurrentCommittee(committee)
+                  }}
+                >
+                  {value != null && committee === currentCommittee && (
+                    <Hint value={value}>
+                      <div
+                        style={{
+                          backgroundColor: 'black',
+                          color: 'white',
+                          padding: '5px',
+                          borderRadius: '10px',
+                        }}
+                      >
+                        <p>{value.label}</p>
+                        <p>count: {count(committee, value.label)}</p>
+                        <p>percent: {percentage(committee, value.label)}%</p>
+                      </div>
+                    </Hint>
+                  )}
+                </RadialChart>
+              </div>
+            ))}
         </div>
       </Card>
     </>

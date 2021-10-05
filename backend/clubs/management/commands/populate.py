@@ -657,19 +657,22 @@ class Command(BaseCommand):
         ApplicationCommittee.objects.create(name="four", application=application)
         status_switch = False
         for user in get_user_model().objects.all():
+            status = (
+                ApplicationSubmission.ACCEPTED
+                if status_switch
+                else ApplicationSubmission.REJECTED
+            )
+            status_switch = not status_switch
+            ApplicationSubmission.objects.create(
+                status=status, user=user, application=application, committee=None,
+            )
             for committee in application.committees.all():
-                status = (
-                    ApplicationSubmission.ACCEPTED
-                    if status_switch
-                    else ApplicationSubmission.REJECTED
-                )
                 ApplicationSubmission.objects.create(
                     status=status,
                     user=user,
                     application=application,
                     committee=committee,
                 )
-            status_switch = not status_switch
 
         # 10am today
         even_base = now.replace(hour=14, minute=0, second=0, microsecond=0)
