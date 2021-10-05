@@ -253,6 +253,7 @@ export default function ApplicationsPage({
       label: 'Select',
       render: (id) => (
         <Checkbox
+          size={'1.3rem'}
           className="mr-3"
           checked={selectedSubmissions.includes(id)}
           onChange={(e) => {
@@ -382,6 +383,7 @@ export default function ApplicationsPage({
                 focusable={true}
                 initialPage={pageIndex}
                 setInitialPage={setPageIndex}
+                initialPageSize={40}
                 onClick={(row, event) => {
                   if (
                     event.target?.type === 'checkbox' ||

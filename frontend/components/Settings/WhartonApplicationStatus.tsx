@@ -1,5 +1,5 @@
 import React, { ReactElement, useState } from 'react'
-import { DiscreteColorLegend, RadialChart } from 'react-vis'
+import { DiscreteColorLegend, Hint, RadialChart } from 'react-vis'
 
 import { WHITE } from '~/constants/colors'
 import { ApplicationStatus } from '~/types'
@@ -12,73 +12,143 @@ type Props = {
   statuses: ApplicationStatus[]
 }
 
-type PieData = { angle: number; label: string; color?: string }[]
+type PieDataPoint = { angle: number; label: string; color?: string }
+type PieData = PieDataPoint[]
 type PieChartData = {
-  [key: number]: {
+  [key: string]: {
     [key: string]: PieData
   }
 }
 
 const colors = {
   Pending: '#F4A549',
-  'First Round': '#4954F4',
-  'Second Round': '#9E49F4',
+  'First round': '#4954F4',
+  'Second round': '#9E49F4',
   Accepted: '#A9F449',
   Rejected: '#E24A5E',
 }
 
 function parseStatuses(statuses: ApplicationStatus[]): PieChartData {
+  const applicationsTotal = {}
   const applicationsGrouped: PieChartData = {}
   statuses.forEach((status) => {
-    if (!(status.application in applicationsGrouped)) {
-      const obj = {}
-      obj[status.committee] = []
-      applicationsGrouped[status.application] = obj
-    } else if (!(status.committee in applicationsGrouped[status.application])) {
-      applicationsGrouped[status.application][status.committee] = []
-    }
+    if (!(status.name in applicationsGrouped)) {
+      const total = {}
+      Object.keys(colors).forEach((status) => (total[status] = 0))
+      applicationsTotal[status.name] = total
 
-    applicationsGrouped[status.application][status.committee].push({
+      const grouped = {}
+      grouped[status.committee] = []
+      applicationsGrouped[status.name] = grouped
+    } else if (!(status.committee in applicationsGrouped[status.name])) {
+      applicationsGrouped[status.name][status.committee] = []
+    }
+    applicationsTotal[status.name][status.status] += status.count
+    applicationsGrouped[status.name][status.committee].push({
       angle: status.count,
       label: status.status,
       color: colors[status.status],
     })
   })
+
+  Object.keys(applicationsTotal).forEach((application) => {
+    if (!(application in applicationsGrouped)) {
+      return
+    }
+    applicationsGrouped[application].Total = []
+    Object.keys(applicationsTotal[application]).forEach((status) =>
+      applicationsGrouped[application].Total.push({
+        angle: applicationsTotal[application][status],
+        label: status,
+        color: colors[status],
+      }),
+    )
+  })
+
   return applicationsGrouped
 }
 
 function StatusCard({
-  status,
+  application,
   pieData,
 }: {
-  status: ApplicationStatus
+  application: string
   pieData: PieChartData
 }) {
-  if (!(status.application in pieData)) {
-    return null
+  const [currentCommittee, setCurrentCommittee] = useState<string | null>(null)
+  const [value, setValue] = useState<PieDataPoint | null>(null)
+
+  function count(committee: string, label: string): number {
+    return (
+      pieData[application][committee].find((data) => data.label === label)
+        ?.angle ?? 0
+    )
+  }
+
+  function percentage(committee: string, label: string): number {
+    const total = pieData[application][committee].reduce(
+      (acc, x) => acc + x.angle,
+      0,
+    )
+    const count =
+      pieData[application][committee].find((data) => data.label === label)
+        ?.angle ?? 0
+    return count !== 0 ? Math.round((count / total) * 10000) / 100 : 0
   }
 
   return (
     <>
-      <Card className="mb-4" bordered hoverable background={WHITE}>
+      <Card className="mb-4" bordered background={WHITE}>
         <CardHeader>
-          <CardTitle className="is-size-5">{status.name}</CardTitle>
+          <CardTitle className="is-size-3">{application}</CardTitle>
         </CardHeader>
-        {Object.keys(pieData[status.application]).map((committee) => (
-          <div className="is-clearfix">
-            <div className="columns">
-              <div className="column is-8">
-                <CardTitle className="is-size-5">{status.committee}</CardTitle>
-                <RadialChart
-                  data={pieData[status.application][committee]}
-                  width={400}
-                  height={400}
-                  colorType="literal"
-                />
-              </div>
+        <br></br>
+        <div
+          style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}
+        >
+          {Object.keys(pieData[application]).map((committee) => (
+            <div
+              style={{
+                display: 'block',
+                width: '200px',
+                textAlign: 'center',
+                position: 'relative',
+                fontSize: '10pt',
+              }}
+            >
+              <CardTitle className="is-size-5">{committee}</CardTitle>
+              <RadialChart
+                data={pieData[application][committee]}
+                width={200}
+                height={200}
+                radius={80}
+                colorType="literal"
+                labelsAboveChildren={true}
+                onValueMouseOver={(v: PieDataPoint) => {
+                  setValue(v)
+                  setCurrentCommittee(committee)
+                }}
+              >
+                {value != null && committee === currentCommittee && (
+                  <Hint value={value}>
+                    <div
+                      style={{
+                        backgroundColor: 'black',
+                        color: 'white',
+                        padding: '5px',
+                        borderRadius: '10px',
+                      }}
+                    >
+                      <p>{value.label}</p>
+                      <p>count: {count(committee, value.label)}</p>
+                      <p>percent: {percentage(committee, value.label)}%</p>
+                    </div>
+                  </Hint>
+                )}
+              </RadialChart>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </Card>
     </>
   )
@@ -117,8 +187,12 @@ const WhartonApplicationStatus = ({
           }))}
         />
       </div>
-      {statuses.map((status) => (
-        <StatusCard status={status} pieData={pieChartData}></StatusCard>
+      {Object.keys(pieChartData).map((application, key) => (
+        <StatusCard
+          key={key}
+          application={application}
+          pieData={pieChartData}
+        ></StatusCard>
       ))}
     </>
   )

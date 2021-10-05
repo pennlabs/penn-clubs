@@ -26,7 +26,7 @@ function WhartonDashboard({
   const tabs = [
     {
       name: 'application',
-      label: 'Wharton Applications',
+      label: 'Applications',
       content: () => (
         <WhartonApplicationTab applications={whartonapplications} />
       ),
