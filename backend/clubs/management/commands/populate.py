@@ -605,8 +605,8 @@ class Command(BaseCommand):
         # create club applications that are wharton common app
         eastern = pytz.timezone("America/New_York")
         application_start_time = datetime.datetime(2021, 9, 4, 0, 0, tzinfo=eastern)
-        application_end_time = datetime.datetime(2021, 9, 20, 2, 0, tzinfo=eastern)
-        result_release_time = datetime.datetime(2021, 10, 4, 0, 0, tzinfo=eastern)
+        application_end_time = datetime.datetime(2021, 11, 20, 2, 0, tzinfo=eastern)
+        result_release_time = datetime.datetime(2021, 12, 4, 0, 0, tzinfo=eastern)
         prompt_one = (
             "Tell us about a time you took initiative or demonstrated leadership"
         )
@@ -655,14 +655,21 @@ class Command(BaseCommand):
         ApplicationCommittee.objects.create(name="two", application=application)
         ApplicationCommittee.objects.create(name="three", application=application)
         ApplicationCommittee.objects.create(name="four", application=application)
+        status_switch = False
         for user in get_user_model().objects.all():
             for committee in application.committees.all():
+                status = (
+                    ApplicationSubmission.ACCEPTED
+                    if status_switch
+                    else ApplicationSubmission.REJECTED
+                )
                 ApplicationSubmission.objects.create(
-                    status=ApplicationSubmission.PENDING,
+                    status=status,
                     user=user,
                     application=application,
                     committee=committee,
                 )
+            status_switch = not status_switch
 
         # 10am today
         even_base = now.replace(hour=14, minute=0, second=0, microsecond=0)

@@ -99,6 +99,7 @@ from clubs.permissions import (
     ProfilePermission,
     QuestionAnswerPermission,
     ReadOnly,
+    WhartonApplicationPermission,
     find_membership_helper,
 )
 from clubs.serializers import (
@@ -151,6 +152,7 @@ from clubs.serializers import (
     UserSubscribeSerializer,
     UserSubscribeWriteSerializer,
     UserUUIDSerializer,
+    WhartonApplicationStatusSerializer,
     WritableClubApplicationSerializer,
     WritableClubFairSerializer,
     YearSerializer,
@@ -4446,12 +4448,43 @@ class WhartonApplicationAPIView(generics.ListAPIView):
     serializer_class = ClubApplicationSerializer
 
     def get_operation_id(self, **kwargs):
-        return "List wharton applications and details"
+        return "List Wharton applications and details"
 
     def get_queryset(self):
         now = timezone.now()
         return ClubApplication.objects.filter(
             is_wharton_council=True, application_end_time__gte=now
+        )
+
+
+class WhartonApplicationStatusAPIView(generics.ListAPIView):
+    """
+    get: Return information about all Wharton Council club applications which are
+    currently on going
+    """
+
+    permission_class = [WhartonApplicationPermission | IsSuperuser]
+    serializer_class = WhartonApplicationStatusSerializer
+
+    def get_operation_id(self, **kwargs):
+        return "List statuses for Wharton application submissions"
+
+    def get_queryset(self):
+        return (
+            ApplicationSubmission.objects.filter(application__is_wharton_council=True)
+            .annotate(
+                annotated_name=F("application__name"),
+                annotated_committee=F("committee__name"),
+                annotated_club=F("application__club__name"),
+            )
+            .values(
+                "annotated_name",
+                "application",
+                "annotated_committee",
+                "annotated_club",
+                "status",
+            )
+            .annotate(count=Count("status"))
         )
 
 
