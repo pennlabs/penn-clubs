@@ -4459,8 +4459,7 @@ class WhartonApplicationAPIView(generics.ListAPIView):
 
 class WhartonApplicationStatusAPIView(generics.ListAPIView):
     """
-    get: Return information about all Wharton Council club applications which are
-    currently on going
+    get: Return aggregate status for Wharton application submissions
     """
 
     permission_class = [WhartonApplicationPermission | IsSuperuser]
