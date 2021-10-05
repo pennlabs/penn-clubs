@@ -139,7 +139,7 @@ class SecurityTestCase(TestCase):
 
         # Don't put your function here unless it never returns any private information.
         whitelist = {
-            ("QuestionAnswerViewSet", "like"), 
+            ("QuestionAnswerViewSet", "like"),
             ("QuestionAnswerViewSet", "unlike")
         }
 
