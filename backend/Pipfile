@@ -50,7 +50,6 @@ urlextract = "*"
 jsonref = "*"
 unittest-xml-reporting = "*"
 tblib = "*"
-colorama = "*"
 
 [requires]
 python_version = "3"
