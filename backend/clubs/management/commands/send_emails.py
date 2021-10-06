@@ -427,16 +427,16 @@ class Command(BaseCommand):
                     )
             return
 
-        # get club whitelist
-        clubs_whitelist = [
+        # get club allowlist
+        clubs_allowlist = [
             club.strip() for club in (kwargs.get("clubs") or "").split(",")
         ]
-        clubs_whitelist = [club for club in clubs_whitelist if club]
+        clubs_allowlist = [club for club in clubs_allowlist if club]
 
-        found_whitelist = set(
-            Club.objects.filter(code__in=clubs_whitelist).values_list("code", flat=True)
+        found_allowlist = set(
+            Club.objects.filter(code__in=clubs_allowlist).values_list("code", flat=True)
         )
-        missing = set(clubs_whitelist) - found_whitelist
+        missing = set(clubs_allowlist) - found_allowlist
         if missing:
             raise CommandError(f"Invalid club codes in clubs parameter: {missing}")
 
@@ -458,9 +458,9 @@ class Command(BaseCommand):
         # handle sending out virtual fair emails
         if action == "virtual_fair":
             clubs = fair.participating_clubs.all()
-            if clubs_whitelist:
-                self.stdout.write(f"Using clubs whitelist: {clubs_whitelist}")
-                clubs = clubs.filter(code__in=clubs_whitelist)
+            if clubs_allowlist:
+                self.stdout.write(f"Using clubs allowlist: {clubs_allowlist}")
+                clubs = clubs.filter(code__in=clubs_allowlist)
             self.stdout.write(
                 f"Found {clubs.count()} clubs participating in the {fair.name} fair."
             )
@@ -501,9 +501,9 @@ class Command(BaseCommand):
                 events__start_time__gte=fair.start_time,
                 events__end_time__lte=fair.end_time,
             )
-            if clubs_whitelist:
-                self.stdout.write(f"Using clubs whitelist: {clubs_whitelist}")
-                clubs = clubs.filter(code__in=clubs_whitelist)
+            if clubs_allowlist:
+                self.stdout.write(f"Using clubs allowlist: {clubs_allowlist}")
+                clubs = clubs.filter(code__in=clubs_allowlist)
 
             self.stdout.write(
                 f"{clubs.count()} clubs have not registered for the {fair.name}."
@@ -534,8 +534,8 @@ class Command(BaseCommand):
                 events__start_time__gte=fair.start_time,
                 events__end_time__lte=fair.end_time,
             )
-            if clubs_whitelist:
-                clubs = clubs.filter(code__in=clubs_whitelist)
+            if clubs_allowlist:
+                clubs = clubs.filter(code__in=clubs_allowlist)
 
             self.stdout.write(
                 f"{clubs.count()} post fair emails to send to participants."
@@ -568,8 +568,8 @@ class Command(BaseCommand):
         if kwargs["only_active"]:
             clubs = clubs.filter(active=True)
 
-        if clubs_whitelist:
-            clubs = clubs.filter(code__in=clubs_whitelist)
+        if clubs_allowlist:
+            clubs = clubs.filter(code__in=clubs_allowlist)
 
         clubs_missing = 0
         clubs_sent = 0
