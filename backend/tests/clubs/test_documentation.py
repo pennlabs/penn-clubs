@@ -40,9 +40,9 @@ class DocumentationTestCase(TestCase):
         """
         Ensure that all actions on viewsets have proper parameters and responses.
         """
-        # don't add your action to the whitelist unless it returns what the base
+        # don't add your action to the allowlist unless it returns what the base
         # ModelViewSet returns and does not accept any additional parameters
-        whitelist = set(
+        allowlist = set(
             [
                 ("ClubViewSet", "constitutions"),
                 ("ClubViewSet", "directory"),
@@ -77,7 +77,7 @@ class DocumentationTestCase(TestCase):
             elif "responses" not in meta:
                 failed_cases.append((name, node.name, "missing responses"))
 
-        failed_cases = [c for c in failed_cases if (c[0], c[1]) not in whitelist]
+        failed_cases = [c for c in failed_cases if (c[0], c[1]) not in allowlist]
 
         if failed_cases:
             failed_cases_str = "\n".join(
@@ -100,12 +100,12 @@ class DocumentationTestCase(TestCase):
                 "or in the /api/openapi endpoint."
             )
 
-        if whitelist - all_cases:
+        if allowlist - all_cases:
             missing_str = "\n".join(
-                f"\t- {cls_name} -> {name}" for cls_name, name in whitelist - all_cases
+                f"\t- {cls_name} -> {name}" for cls_name, name in allowlist - all_cases
             )
             self.fail(
-                "Found one or more whitelist entries that do not exist in the views "
+                "Found one or more allowlist entries that do not exist in the views "
                 "anymore. Remove these entries in order to keep the codebase clean."
                 "\n\n"
                 f"{missing_str}"
