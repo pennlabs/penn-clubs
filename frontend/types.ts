@@ -335,10 +335,9 @@ export type ApplicationQuestion = {
 
 export enum ApplicationStatusType {
   Pending = 1,
-  FirstRound = 2,
-  SecondRound = 3,
+  RejectedWritten = 2,
+  RejectedInterview = 3,
   Accepted = 4,
-  Rejected = 5,
 }
 
 export const APPLICATION_STATUS_TYPES = [
@@ -347,20 +346,16 @@ export const APPLICATION_STATUS_TYPES = [
     label: 'Pending',
   },
   {
-    value: ApplicationStatusType.FirstRound,
-    label: 'First round',
+    value: ApplicationStatusType.RejectedWritten,
+    label: 'Rejected after written application',
   },
   {
-    value: ApplicationStatusType.SecondRound,
-    label: 'Second round',
+    value: ApplicationStatusType.RejectedInterview,
+    label: 'Rejected after interview(s)',
   },
   {
     value: ApplicationStatusType.Accepted,
     label: 'Accepted',
-  },
-  {
-    value: ApplicationStatusType.Rejected,
-    label: 'Rejected',
   },
 ]
 

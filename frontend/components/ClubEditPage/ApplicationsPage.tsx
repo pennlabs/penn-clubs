@@ -70,16 +70,12 @@ export const APPLICATION_STATUS: Array<{ value: number; label: string }> = [
     label: 'Accepted',
   },
   {
-    value: ApplicationStatusType.FirstRound,
-    label: 'First Round',
+    value: ApplicationStatusType.RejectedWritten,
+    label: 'Rejected after interview(s)',
   },
   {
-    value: ApplicationStatusType.SecondRound,
-    label: 'Second Round',
-  },
-  {
-    value: ApplicationStatusType.Rejected,
-    label: 'Rejected',
+    value: ApplicationStatusType.RejectedInterview,
+    label: 'Rejected after written application',
   },
 ]
 

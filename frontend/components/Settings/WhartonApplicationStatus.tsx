@@ -22,10 +22,9 @@ type PieChartData = {
 
 const colors = {
   Pending: '#F4A549',
-  'First round': '#4954F4',
-  'Second round': '#9E49F4',
+  'Rejected after interview(s)': '#8C0900',
+  'Rejected after written application': '#FF3224',
   Accepted: '#A9F449',
-  Rejected: '#E24A5E',
 }
 
 function parseStatuses(statuses: ApplicationStatus[]): PieChartData {

@@ -1593,16 +1593,14 @@ class ApplicationSubmission(models.Model):
 
     # pending, first round, second round, accepted, rejected
     PENDING = 1
-    FIRST_ROUND = 2
-    SECOND_ROUND = 3
+    REJECTED_AFTER_WRITTEN = 2
+    REJECTED_AFTER_INTERVIEW = 3
     ACCEPTED = 4
-    REJECTED = 5
     STATUS_TYPES = (
         (PENDING, "Pending"),
-        (FIRST_ROUND, "First round"),
-        (SECOND_ROUND, "second round"),
+        (REJECTED_AFTER_WRITTEN, "Rejected after interview(s)"),
+        (REJECTED_AFTER_INTERVIEW, "Rejected after written application"),
         (ACCEPTED, "Accepted"),
-        (REJECTED, "Rejected"),
     )
     status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)

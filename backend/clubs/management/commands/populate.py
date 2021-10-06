@@ -655,17 +655,15 @@ class Command(BaseCommand):
         ApplicationCommittee.objects.create(name="two", application=application)
         ApplicationCommittee.objects.create(name="three", application=application)
         ApplicationCommittee.objects.create(name="four", application=application)
-        status_switch = False
+        status_counter = 0
         for user in get_user_model().objects.all():
-            status = (
-                ApplicationSubmission.ACCEPTED
-                if status_switch
-                else ApplicationSubmission.REJECTED
-            )
-            status_switch = not status_switch
+            status = ApplicationSubmission.STATUS_TYPES[
+                status_counter % len(ApplicationSubmission.STATUS_TYPES)
+            ][0]
             ApplicationSubmission.objects.create(
                 status=status, user=user, application=application, committee=None,
             )
+            status_counter += 1
             for committee in application.committees.all():
                 ApplicationSubmission.objects.create(
                     status=status,
