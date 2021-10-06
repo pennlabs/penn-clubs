@@ -1598,8 +1598,8 @@ class ApplicationSubmission(models.Model):
     ACCEPTED = 4
     STATUS_TYPES = (
         (PENDING, "Pending"),
-        (REJECTED_AFTER_WRITTEN, "Rejected after interview(s)"),
-        (REJECTED_AFTER_INTERVIEW, "Rejected after written application"),
+        (REJECTED_AFTER_WRITTEN, "Rejected after written application"),
+        (REJECTED_AFTER_INTERVIEW, "Rejected after interview(s)"),
         (ACCEPTED, "Accepted"),
     )
     status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
