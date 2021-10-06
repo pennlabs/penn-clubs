@@ -736,6 +736,8 @@ class QuestionAnswer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    users_liked = models.ManyToManyField(get_user_model(), related_name="likes")
+
     def __str__(self):
         return "{}: {}".format(self.club.name, self.question)
 

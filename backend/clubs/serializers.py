@@ -139,6 +139,10 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
     author = serializers.SerializerMethodField("get_author_name")
     responder = serializers.SerializerMethodField("get_responder_name")
     is_anonymous = serializers.BooleanField(write_only=True)
+    likes = serializers.SerializerMethodField("get_likes")
+
+    def get_likes(self, obj):
+        return obj.users_liked.count()
 
     def get_author_name(self, obj):
         user = self.context["request"].user
@@ -266,6 +270,7 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "responder",
             "is_anonymous",
             "approved",
+            "likes",
         )
 
 

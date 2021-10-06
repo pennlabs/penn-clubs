@@ -2640,6 +2640,47 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
 
         return questions.filter(Q(approved=True) | Q(author=self.request.user))
 
+    @action(detail=True, methods=["post"])
+    def like(self, request, *args, **kwargs):
+        """
+        Endpoint used to like a question answer.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+
+        question = QuestionAnswer.objects.get(
+            club__code=self.kwargs["club_code"],
+            id=self.get_object().id,
+            club__archived=False,
+        )
+        question.users_liked.add(self.request.user)
+        question.save()
+        return Response({})
+
+    @action(detail=True, methods=["post"])
+    def unlike(self, request, *args, **kwargs):
+        """
+        Endpoint used to unlike a question answer.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        question = QuestionAnswer.objects.get(
+            club__code=self.kwargs["club_code"],
+            id=self.get_object().id,
+            club__archived=False,
+        )
+        question.users_liked.remove(self.request.user)
+        question.save()
+        return Response({})
+
 
 class MembershipViewSet(viewsets.ModelViewSet):
     """
