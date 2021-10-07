@@ -147,7 +147,7 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
     def check_liked(self, obj):
         user = self.context["request"].user
-        return user in obj.users_liked.all()
+        return obj.users_liked.filter(username=user.username).exists()
 
     def get_author_name(self, obj):
         user = self.context["request"].user
