@@ -1817,7 +1817,7 @@ class ClubTestCase(TestCase):
         for question in data:
             if question["id"] == question_id:
                 self.assertEqual(1, question["likes"])
-                self.assertTrue(question["userLiked"])
+                self.assertTrue(question["user_liked"])
             else:
                 self.assertEqual(0, question["likes"])
 
