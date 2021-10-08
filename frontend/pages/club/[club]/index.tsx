@@ -41,6 +41,7 @@ import {
   SHOW_MEMBERS,
   SITE_NAME,
 } from 'utils/branding'
+
 import { CLUB_ALUMNI_ROUTE, CLUB_ORG_ROUTE } from '~/constants'
 import { CLUBS_RED, SNOW, WHITE } from '~/constants/colors'
 import { M0, M2, M3 } from '~/constants/measurements'

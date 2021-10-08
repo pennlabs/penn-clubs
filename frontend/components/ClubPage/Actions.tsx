@@ -16,7 +16,7 @@ import {
   QuestionAnswer,
   UserInfo,
 } from '../../types'
-import { apiCheckPermission, doApiRequest, apiSetLikeStatus } from '../../utils'
+import { apiCheckPermission, apiSetLikeStatus, doApiRequest } from '../../utils'
 import {
   FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_SINGULAR,
