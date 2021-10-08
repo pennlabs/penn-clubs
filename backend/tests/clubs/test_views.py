@@ -1815,10 +1815,11 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
         data = json.loads(resp.content.decode("utf-8"))
         for question in data:
-            if question["id"] == "2":
+            if question["id"] == question_id:
                 self.assertEqual(1, question["likes"])
-            elif question["id"] == "3":
-                self.assertEqual(1, question["likes"])
+                self.assertTrue(question["user_liked"])
+            else:
+                self.assertEqual(0, question["likes"])
 
         # ensures liking a question answer twice does not increase the number of likes
         resp = self.client.post(
