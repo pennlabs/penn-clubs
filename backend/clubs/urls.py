@@ -49,6 +49,7 @@ from clubs.views import (
     UserViewSet,
     UserZoomAPIView,
     WhartonApplicationAPIView,
+    WhartonApplicationStatusAPIView,
     YearViewSet,
     email_preview,
 )
@@ -154,6 +155,11 @@ urlpatterns = [
         r"whartonapplications/",
         WhartonApplicationAPIView.as_view(),
         name="wharton-applications",
+    ),
+    path(
+        r"whartonapplications/status/",
+        WhartonApplicationStatusAPIView.as_view(),
+        name="wharton-applications-status",
     ),
 ]
 

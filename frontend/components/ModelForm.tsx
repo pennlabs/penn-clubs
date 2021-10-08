@@ -355,7 +355,8 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
 
     // create or edit the object, uploading all non-file fields
     const savePromise =
-      typeof object[keyField] === 'undefined'
+      typeof object[keyField] === 'undefined' ||
+      object.tempId === object[keyField]
         ? doApiRequest(`${baseUrl}?format=json`, {
             method: 'POST',
             body: formData,

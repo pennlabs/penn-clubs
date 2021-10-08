@@ -5,7 +5,7 @@ Cypress.on('window:before:load', (win) => {
   cy.spy(win.console, 'error')
 })
 
-const CONSOLE_ERROR_WHITELIST = [
+const CONSOLE_ERROR_ALLOWLIST = [
   "Warning: Can't perform a React state update on an unmounted component.",
   "Warning: validateDOMNesting(...):",
   "Warning: Expected server HTML to contain a matching ",
@@ -16,7 +16,7 @@ afterEach(() => {
   cy.window().then((win) => {
     const collection = []
     win.console.error.getCalls().forEach((fn) => {
-      if (!CONSOLE_ERROR_WHITELIST.some(prefix => fn.args[0].startsWith(prefix))) {
+      if (!CONSOLE_ERROR_ALLOWLIST.some(prefix => fn.args[0].startsWith(prefix))) {
         collection.push(`Unexpected console.error call with ${fn}`)
       }
     })

@@ -140,6 +140,15 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
     author = serializers.SerializerMethodField("get_author_name")
     responder = serializers.SerializerMethodField("get_responder_name")
     is_anonymous = serializers.BooleanField(write_only=True)
+    likes = serializers.SerializerMethodField("get_likes")
+    user_liked = serializers.SerializerMethodField("check_liked")
+
+    def get_likes(self, obj):
+        return obj.users_liked.count()
+
+    def check_liked(self, obj):
+        user = self.context["request"].user
+        return obj.users_liked.filter(username=user.username).exists()
 
     def get_author_name(self, obj):
         user = self.context["request"].user
@@ -267,6 +276,8 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "responder",
             "is_anonymous",
             "approved",
+            "likes",
+            "user_liked",
         )
 
 
@@ -405,7 +416,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
 
     def validate_description(self, value):
         """
-        Allow the description to have HTML tags that come from a whitelist.
+        Allow the description to have HTML tags that come from a allowlist.
         """
         return clean(bleach.linkify(value))
 
@@ -1298,7 +1309,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def validate_description(self, value):
         """
-        Allow the description to have HTML tags that come from a whitelist.
+        Allow the description to have HTML tags that come from a allowlist.
         The description must exist and not be extremely short.
         """
         out = clean(value).strip()
@@ -1310,13 +1321,13 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def validate_how_to_get_involved(self, value):
         """
-        Allow the how to get involved field to have whitelisted HTML tags.
+        Allow the how to get involved field to have allowlisted HTML tags.
         """
         return clean(bleach.linkify(value))
 
     def validate_signature_events(self, value):
         """
-        Allow the signature events field to have whitelisted HTML tags.
+        Allow the signature events field to have allowlisted HTML tags.
         """
         return clean(bleach.linkify(value))
 
@@ -2400,6 +2411,29 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
 
 class ApplicationSubmissionUserSerializer(ApplicationSubmissionSerializer):
     pass
+
+
+class WhartonApplicationStatusSerializer(serializers.Serializer):
+    club = serializers.CharField(source="annotated_club")
+    committee = serializers.CharField(source="annotated_committee")
+    application = serializers.IntegerField()
+    name = serializers.CharField(source="annotated_name")
+    count = serializers.IntegerField()
+    status = serializers.SerializerMethodField("get_status")
+
+    def get_status(self, obj):
+        """
+        Return the status string of the status associated with the submission
+        """
+        status_string = ApplicationSubmission.STATUS_TYPES[0][1]
+        for (status, name) in ApplicationSubmission.STATUS_TYPES:
+            if obj["status"] == status:
+                status_string = name
+        return status_string
+
+    class Meta:
+        model = ApplicationSubmission
+        fields = ("club", "application", "committee", "name", "status", "count")
 
 
 class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):

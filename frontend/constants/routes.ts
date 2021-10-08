@@ -32,6 +32,7 @@ export const LIVE_EVENTS = '/events'
 export const FAIR_INFO_ROUTE = '/fair'
 export const ADMIN_ROUTE = '/admin'
 export const APPLY_ROUTE = '/apply'
+export const WHARTON_ROUTE = '/wharton'
 export const FAIR_OFFICER_GUIDE_ROUTE = '/sacfairguide'
 export const GUIDE_ROUTE = (slug?: string): string =>
   slug ? `/guides/${slug}` : '/guides/[page]'

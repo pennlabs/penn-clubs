@@ -736,6 +736,8 @@ class QuestionAnswer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    users_liked = models.ManyToManyField(get_user_model(), related_name="likes")
+
     def __str__(self):
         return "{}: {}".format(self.club.name, self.question)
 
@@ -1607,16 +1609,14 @@ class ApplicationSubmission(models.Model):
 
     # pending, first round, second round, accepted, rejected
     PENDING = 1
-    FIRST_ROUND = 2
-    SECOND_ROUND = 3
+    REJECTED_AFTER_WRITTEN = 2
+    REJECTED_AFTER_INTERVIEW = 3
     ACCEPTED = 4
-    REJECTED = 5
     STATUS_TYPES = (
         (PENDING, "Pending"),
-        (FIRST_ROUND, "First round"),
-        (SECOND_ROUND, "second round"),
+        (REJECTED_AFTER_WRITTEN, "Rejected after written application"),
+        (REJECTED_AFTER_INTERVIEW, "Rejected after interview(s)"),
         (ACCEPTED, "Accepted"),
-        (REJECTED, "Rejected"),
     )
     status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)

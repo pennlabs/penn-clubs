@@ -72,14 +72,14 @@ const Image = styled.img`
   overflow: hidden;
 `
 
-const CardHeader = styled.div`
+export const CardHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin: 0 3px;
 `
 
-const CardTitle = styled.strong`
+export const CardTitle = styled.strong`
   line-height: 1.2;
   color: ${H1_TEXT};
   margin-bottom: 0.5rem;

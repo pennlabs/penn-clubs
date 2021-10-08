@@ -70,16 +70,12 @@ export const APPLICATION_STATUS: Array<{ value: number; label: string }> = [
     label: 'Accepted',
   },
   {
-    value: ApplicationStatusType.FirstRound,
-    label: 'First Round',
+    value: ApplicationStatusType.RejectedWritten,
+    label: 'Rejected after interview(s)',
   },
   {
-    value: ApplicationStatusType.SecondRound,
-    label: 'Second Round',
-  },
-  {
-    value: ApplicationStatusType.Rejected,
-    label: 'Rejected',
+    value: ApplicationStatusType.RejectedInterview,
+    label: 'Rejected after written application',
   },
 ]
 
@@ -253,6 +249,7 @@ export default function ApplicationsPage({
       label: 'Select',
       render: (id) => (
         <Checkbox
+          size={'1.3rem'}
           className="mr-3"
           checked={selectedSubmissions.includes(id)}
           onChange={(e) => {
@@ -382,6 +379,7 @@ export default function ApplicationsPage({
                 focusable={true}
                 initialPage={pageIndex}
                 setInitialPage={setPageIndex}
+                initialPageSize={40}
                 onClick={(row, event) => {
                   if (
                     event.target?.type === 'checkbox' ||

@@ -248,7 +248,7 @@ const EmbedOption = (props: Props): ReactElement => {
                   You can embed any website page using this form. Note that you
                   may need to configure your website to allow it to be embedded
                   in an iframe. If the website is not common, you will need to
-                  contact <Contact /> to get it added to the whitelist. Example
+                  contact <Contact /> to get it added to the allowlist. Example
                   link format: https://xkcd.com/
                 </small>
               </li>
