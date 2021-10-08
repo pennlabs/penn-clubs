@@ -291,6 +291,28 @@ export function apiSetSubscribeStatus(
 }
 
 /**
+ * Function Setting Questions's Like Status
+ * @param code Clubs's Code
+ * @param id Questions'ID
+ * @param liked Action User want to perform
+ */
+export function apiSetLikeStatus(
+  code: string,
+  id: number,
+  liked: boolean,
+): Promise<void> {
+  if (liked) {
+    return doApiRequest(`/clubs/${code}/questions/${id}/like/?format=json`, {
+      method: 'POST',
+    }).then(() => undefined)
+  } else {
+    return doApiRequest(`/clubs/${code}/questions/${id}/unlike/?format=json`, {
+      method: 'POST',
+    }).then(() => undefined)
+  }
+}
+
+/**
  * Convert underscores into spaces and capitalize the first letter of every word.
  */
 export function titleize(str: string): string {

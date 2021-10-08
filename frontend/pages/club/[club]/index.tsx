@@ -41,7 +41,6 @@ import {
   SHOW_MEMBERS,
   SITE_NAME,
 } from 'utils/branding'
-
 import { CLUB_ALUMNI_ROUTE, CLUB_ORG_ROUTE } from '~/constants'
 import { CLUBS_RED, SNOW, WHITE } from '~/constants/colors'
 import { M0, M2, M3 } from '~/constants/measurements'
@@ -80,13 +79,21 @@ const QAButton = styled.button.attrs({ className: 'button is-primary' })`
   white-space: pre-wrap;
 `
 
+const SelectWrapper = styled.p`
+  display: flex;
+  align-items: center;
+  float: right;
+`
+
 const ClubPage = ({
   club: initialClub,
   questions,
   userInfo,
 }: ClubPageProps): ReactElement => {
   const [club, setClub] = useState<Club>(initialClub)
-  const scrollToRef = (ref) => window.scrollTo(0, ref.current.offsetTop - 100)
+  const [questionSortBy, setQuestionSortBy] = useState<string>('id')
+  const scrollToRef = (ref) =>
+    window.scrollTo({ top: ref.current.offsetTop - 100, behavior: 'smooth' })
   const questionsScrollRef = useRef(null)
   const scrollToQuestions = () => scrollToRef(questionsScrollRef)
 
@@ -214,8 +221,24 @@ const ClubPage = ({
             </>
           )}
           <div className="mb-3">
-            <StrongText ref={questionsScrollRef}>FAQ</StrongText>
-            <QuestionList club={club} questions={questions} />
+            <StrongText ref={questionsScrollRef}>
+              FAQ
+              <SelectWrapper>
+                <span className="is-size-7">Sort By:</span>
+                <select
+                  className="select is-small is-round"
+                  onChange={(e) => setQuestionSortBy(e.target.value)}
+                >
+                  <option value="id">Most Recent</option>
+                  <option value="likes">Most Likes</option>
+                </select>
+              </SelectWrapper>
+            </StrongText>
+            <QuestionList
+              club={club}
+              questions={questions}
+              sortBy={questionSortBy}
+            />
           </div>
           {club.is_member !== false && club.files && !!club.files.length && (
             <div className="mt-4">
