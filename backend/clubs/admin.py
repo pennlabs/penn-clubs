@@ -11,6 +11,7 @@ from django.utils.safestring import mark_safe
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
 from clubs.management.commands.remind import send_reminder_to_club
 from clubs.models import (
+    AdminNote,
     Advisor,
     ApplicationCommittee,
     ApplicationMultipleChoice,
@@ -441,3 +442,4 @@ admin.site.register(ClubFairBooth)
 admin.site.register(NoteTag)
 admin.site.register(Year, YearAdmin)
 admin.site.register(ZoomMeetingVisit, ZoomMeetingVisitAdmin)
+admin.site.register(AdminNote)

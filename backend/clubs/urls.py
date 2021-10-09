@@ -2,6 +2,7 @@ from django.urls import include, path
 from rest_framework_nested import routers
 
 from clubs.views import (
+    AdminNoteViewSet,
     AdvisorViewSet,
     ApplicationQuestionViewSet,
     ApplicationSubmissionUserViewSet,
@@ -95,6 +96,7 @@ clubs_router.register(r"advisors", AdvisorViewSet, basename="club-advisors")
 clubs_router.register(
     r"applications", ClubApplicationViewSet, basename="club-applications"
 )
+clubs_router.register(r"adminnotes", AdminNoteViewSet, basename="adminnotes")
 
 badges_router = routers.NestedSimpleRouter(router, r"badges", lookup="badge")
 badges_router.register(r"clubs", BadgeClubViewSet, basename="badge-clubs")

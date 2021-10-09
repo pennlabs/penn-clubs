@@ -19,6 +19,7 @@ from simple_history.utils import update_change_reason
 
 from clubs.mixins import ManyToManySaveMixin
 from clubs.models import (
+    AdminNote,
     Advisor,
     ApplicationCommittee,
     ApplicationMultipleChoice,
@@ -2669,6 +2670,17 @@ class ClubFairSerializer(serializers.ModelSerializer):
             "start_time",
             "time",
         )
+
+
+class AdminNoteSerializer(serializers.ModelSerializer):
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    title = serializers.CharField(max_length=255, default="Note")
+    content = serializers.CharField(required=False)
+
+    class Meta:
+        model = AdminNote
+        fields = ("creator", "club", "title", "content", "created_at")
 
 
 class WritableClubFairSerializer(ClubFairSerializer):
