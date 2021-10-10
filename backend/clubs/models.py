@@ -939,6 +939,265 @@ class Event(models.Model):
     def __str__(self):
         return self.name
 
+class FundedEvent(models.Model):
+    STATUS = (
+        ('S', 'SAVED'),
+        ('B', 'SUBMITTED'),
+        ('F', 'FUNDED'),
+        ('W', 'FOLLOWUP'),
+        ('O', 'OVER')
+    )
+    """An Event object."""
+    event = models.OneToOneField(
+        Event,
+        on_delete=models.CASCADE,
+        primary_key=True
+    )
+    name = models.CharField(max_length=256)
+    date = models.DateField()
+    time = models.TimeField()
+    location = models.CharField(max_length=256)
+    requester = models.ForeignKey(
+        get_user_model(),
+        related_name='event_requester',
+        on_delete=models.SET_NULL,
+        null=True
+    )
+    contact_name = models.CharField(max_length=256, blank=True)
+    contact_email = models.EmailField()
+    contact_phone = models.CharField(max_length=15)
+    anticipated_attendance = models.IntegerField()
+    advisor_email = models.EmailField(blank=True)
+    advisor_phone = models.CharField(max_length=15, blank=True)
+    organizations = models.CharField(max_length=256)
+    applied_funders = models.ManyToManyField(
+        get_user_model(),
+        related_name='event_applied_funders'
+    )
+    funding_already_received = models.DecimalField(
+        max_digits=17,
+        decimal_places=2,
+        default=0
+    )
+    status = models.CharField(max_length=1, choices=STATUS)
+    created_at = models.DateTimeField(default=datetime.datetime.now)
+    updated_at = models.DateTimeField(default=datetime.datetime.now)
+
+    def save(self, *args, **kwargs):
+        self.updated_at = datetime.datetime.now()
+        return super(Event, self).save(*args, **kwargs)
+
+    @property
+    def has_update(self):
+        return abs((self.updated_at - self.created_at).seconds) > 60 * 60
+
+    @property
+    def over(self):
+        return self.status == 'O'
+
+    @property
+    def saved(self):
+        return self.status == 'S'
+
+    @property
+    def followup_needed(self):
+        return self.status == 'W'
+
+    @property
+    def submitted(self):
+        return self.status == 'B'
+
+    @property
+    def locked(self):
+        return self.funded or self.over
+        # return self.submitted or self.funded or self.over
+
+    @property
+    def total_funds_already_received(self):
+        """
+        The total amount of money already received
+        (before grants) for an event.
+        """
+        return self.funding_already_received +\
+            sum(item.funding_already_received for item in self.item_set.all())
+
+    @property
+    def amounts(self):
+        """Get a dictionary containing the amount each funder has granted."""
+        amounts = dict((funder, None) for funder in self.applied_funders.all())
+        for item in self.item_set.all():
+            for grant in item.grant_set.all():
+                if grant.funder not in amounts or amounts[grant.funder] is None:
+                    amounts[grant.funder] = grant.amount
+                else:
+                    amounts[grant.funder] += grant.amount
+        return amounts
+
+    @property
+    def total_funds_granted(self):
+        """The total amount of money received via grants."""
+        sum = 0
+        for val in self.amounts.values():
+            sum = sum + val if val is not None else sum
+        return sum
+
+    @property
+    def funded(self):
+        """Whether or not an event has been funded."""
+        return self.status == 'F'
+
+    @property
+    def total_funds_received(self):
+        """The total amount of money received (grants + pre grant)."""
+        return self.total_funds_already_received + self.total_funds_granted
+
+    @property
+    def total_expense(self):
+        """The total amount of money requested for an event."""
+        return sum(item.total for item in self.item_set.all() if not item.revenue)
+
+    @property
+    def total_additional_funds(self):
+        """The tatal amount of non-CFA funding and admission fees."""
+        return sum(item.total for item in self.item_set.all() if item.revenue)
+
+    @property
+    def total_remaining(self):
+        return (self.total_expense - self.total_funds_received - self.total_additional_funds)
+
+    @property
+    def date_passed(self):
+        return datetime.date.today() > self.date + datetime.timedelta(days=14)
+
+    @property
+    def comments(self):
+        return self.comment_set.order_by('created')
+
+    def notify_funders(self, new=False):
+        """Notify all the funders of an event that they have been applied to"""
+        context = {'requester': self.requester, 'event': self}
+
+        template =\
+            'app/application_email' if new else 'app/application_changed'
+
+        subject =\
+            render_to_string('%s_subject.txt' % template, context=context).strip()
+        message = render_to_string('%s.txt' % template, context=context)
+
+        for funder in self.applied_funders.all():
+            self.notify_funder(subject, message, funder)
+
+    def notify_funder(self, subject, message, funder):
+        """Notify a funder that the requester has applied to them."""
+        assert funder.is_funder
+        email = EmailMessage(subject=subject,
+                             body=message,
+                             from_email=settings.DEFAULT_FROM_EMAIL,
+                             to=[funder.user.email],
+                             cc=funder.cc_emails.values_list('email',
+                                                             flat=True))
+        if can_send_email():
+            email.send()
+
+    def notify_requester_from_funders(self):
+        """Send automated email to requester from all selected funders"""
+        for funder in self.applied_funders.all():
+            if funder.send_email_template:
+                subject = funder.email_subject
+                message = funder.email_template
+                email = EmailMessage(subject=subject, body=message,
+                                     from_email=funder.user.username + "@penncfa.com",
+                                     to=[self.requester.user.email])
+                if can_send_email():
+                    email.send()
+
+    def notify_requester(self, grants):
+        """Notify a requester that an event has been funded."""
+        context = {'event': self, 'grants': grants}
+        subject = render_to_string('app/grant_email_subject.txt',
+                                   context=context).strip()
+        message = render_to_string('app/grant_email.txt', context=context)
+        if can_send_email():
+            self.requester.user.email_user(subject, message)
+
+    def notify_requester_for_followups(self):
+        """
+        Notify a requester that his event is over
+        and he needs to answer followup questions
+        """
+        context = {'event': self, 'SITE_NAME': settings.SITE_NAME}
+        subject = render_to_string('app/over_event_email_subject.txt',
+                                   context=context).strip()
+        html_content = render_to_string('app/over_event_email.txt', context=context)
+        email = EmailMessage(subject=subject,
+                             body=html_content,
+                             from_email=settings.DEFAULT_FROM_EMAIL,
+                             to=[self.requester.user.email],
+                             cc=self.requester.cc_emails
+                                    .values_list('email', flat=True))
+        email.content_subtype = "html"  # main content is not text/html
+        if can_send_email():
+            email.send()
+
+    @property
+    def secret_key(self):
+        """
+        Unique key that can be shared so that anyone can view the event.
+        To use the key append ?key=<key>
+        """
+        id_data = [self.name, str(self.date), str(self.requester.user)]
+        identifier = "".join(id_data).encode("utf-8")
+        return sha1(identifier).hexdigest()
+
+    def get_absolute_url(self):
+        if self.id:
+            return reverse('event-show', args=[str(self.id)])
+
+    def __str__(self):
+        return "%s: %s, %s" % (str(self.requester),
+                               self.name,
+                               self.date.isoformat())
+
+    class Meta:
+        unique_together = ("name", "date", "requester")
+
+class Item(models.Model):
+    """An item for an event."""
+    CATEGORIES = (
+        ('H', 'Honoraria/Services'),
+        ('E', 'Equipment/Supplies'),
+        ('F', 'Food/Drinks'),
+        ('S', 'Facilities/Security'),
+        ('T', 'Travel/Conference'),
+        ('P', 'Photocopies/Printing/Publicity'),
+        ('O', 'Other'),
+    )
+    event = models.ForeignKey(FundedEvent, models.CASCADE)
+    name = models.CharField(max_length=256)
+    # number of items
+    quantity = models.IntegerField()
+    # cost per item
+    price_per_unit = models.DecimalField(max_digits=17, decimal_places=2)
+    # funding already received before applications
+    funding_already_received = models.DecimalField(max_digits=17,
+                                                   decimal_places=2)
+    category = models.CharField(max_length=1, choices=CATEGORIES)
+    revenue = models.BooleanField(default=False)
+
+    @property
+    def total(self):
+        return self.price_per_unit * self.quantity
+
+    @property
+    def total_grants(self):
+        return sum([grant.amount for grant in self.grant_set.all()])
+
+    @property
+    def total_received(self):
+        return self.funding_already_received + self.total_grants
+
+    def __str__(self):
+        return self.name
 
 class Favorite(models.Model):
     """
