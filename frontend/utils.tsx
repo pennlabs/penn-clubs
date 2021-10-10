@@ -300,16 +300,11 @@ export function apiSetLikeStatus(
   code: string,
   id: number,
   liked: boolean,
-): Promise<void> {
-  if (liked) {
-    return doApiRequest(`/clubs/${code}/questions/${id}/like/?format=json`, {
-      method: 'POST',
-    }).then(() => undefined)
-  } else {
-    return doApiRequest(`/clubs/${code}/questions/${id}/unlike/?format=json`, {
-      method: 'POST',
-    }).then(() => undefined)
-  }
+): Promise<Response> {
+  const path = liked ? 'like' : 'unlike'
+  return doApiRequest(`/clubs/${code}/questions/${id}/${path}/?format=json`, {
+    method: 'POST',
+  })
 }
 
 /**

@@ -354,12 +354,12 @@ export const QuestionFollowUpAction = ({
   const authCheck = useContext(AuthCheckContext)
   const updateLike = () => {
     authCheck(() => {
-      apiSetLikeStatus(code, question.id, !liked).then(() => {
-        setLikesCount(likesCount + (!liked ? 1 : -1))
-        setLiked(!liked)
-      })
+      apiSetLikeStatus(code, question.id, !liked)
+      setLikesCount(likesCount + (!liked ? 1 : -1))
+      setLiked(!liked)
     })
   }
+
   return (
     <QuestionFollowUpWrapper>
       <button

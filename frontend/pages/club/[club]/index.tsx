@@ -80,7 +80,7 @@ const QAButton = styled.button.attrs({ className: 'button is-primary' })`
   white-space: pre-wrap;
 `
 
-const SelectWrapper = styled.p`
+const SelectWrapper = styled.span`
   display: flex;
   align-items: center;
   float: right;
