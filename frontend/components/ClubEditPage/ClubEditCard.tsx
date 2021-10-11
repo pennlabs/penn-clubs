@@ -429,9 +429,20 @@ export default function ClubEditCard({
         },
         {
           name: 'terms',
-          type: 'createableMultiSelect',
+          type: 'creatableMultiSelect',
           label: 'Keywords',
           help: `Enter alternative names for your ${OBJECT_NAME_SINGULAR} here. For example, this could be an acronym or abbreviation that your ${OBJECT_NAME_SINGULAR} goes by. Your ${OBJECT_NAME_SINGULAR} will show up when these terms are entered into the search bar.`,
+          deserialize: (terms) =>
+            terms != null
+              ? terms.split(',').map((term: string) => {
+                  return {
+                    label: term,
+                    value: term,
+                  }
+                })
+              : null,
+          serialize: (terms) =>
+            terms != null ? terms.map((term) => term.value).join(',') : null,
         },
         {
           name: 'description',
@@ -854,8 +865,7 @@ export default function ClubEditCard({
                               image: FileField,
                               address: FormikAddressField,
                               checkboxText: CheckboxTextField,
-                              //Here
-                              createableMultiSelect: CreatableMultipleSelectField,
+                              creatableMultiSelect: CreatableMultipleSelectField,
                             }[props.type] ?? TextField
                           }
                           {...other}

@@ -271,11 +271,19 @@ export const DateTimeField = useFieldWrapper(
 )
 
 /**
- * A datetime field that allows the user to choose a date and a time.
+ * Field that allows users to add new multi-select items
  */
 export const CreatableMultipleSelectField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
-    const { name, value, placeholder, initialValues, choices, ...other } = props
+    const {
+      name,
+      value,
+      placeholder,
+      initialValues,
+      choices,
+      serialize,
+      deserialize,
+    } = props
     const { setFieldValue } = useFormikContext()
 
     return (
@@ -288,11 +296,21 @@ export const CreatableMultipleSelectField = useFieldWrapper(
         ) => {
           // TODO: types are good but this is not particularly modular, might
           // be best to make this more generalizable
-          setFieldValue(name, val)
+          serialize != null
+            ? setFieldValue(name, serialize(val))
+            : setFieldValue(name, val)
         }}
         isMulti
         creatable
-        value={initialValues}
+        value={
+          initialValues != null
+            ? deserialize != null
+              ? deserialize(initialValues)
+              : initialValues
+            : deserialize != null
+            ? deserialize(value)
+            : value
+        }
         options={choices}
       />
     )
