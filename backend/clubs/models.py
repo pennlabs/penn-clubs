@@ -116,7 +116,7 @@ def send_mail_helper(
         text_content = html_to_text(html_content)
 
     msg = EmailMultiAlternatives(
-        subject, text_content, from_email, list(set(emails), cc=cc)
+        subject, text_content, from_email, list(set(emails)), cc=cc
     )
 
     if attachment is not None and "filename" in attachment and "path" in attachment:
@@ -978,6 +978,9 @@ class FundedEvent(models.Model):
     date = models.DateField()
     time = models.TimeField()
     location = models.CharField(max_length=256)
+    club = models.ForeignKey(
+        Club, on_delete=models.CASCADE, related_name="events", null=True
+    )
     requester = models.ForeignKey(
         get_user_model(),
         related_name="event_requester",
