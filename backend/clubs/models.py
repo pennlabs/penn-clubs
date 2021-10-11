@@ -979,7 +979,7 @@ class FundedEvent(models.Model):
     time = models.TimeField()
     location = models.CharField(max_length=256)
     club = models.ForeignKey(
-        Club, on_delete=models.CASCADE, related_name="events", null=True
+        Club, on_delete=models.CASCADE, related_name="funded_events", null=True
     )
     requester = models.ForeignKey(
         get_user_model(),
@@ -1113,7 +1113,7 @@ class FundedEvent(models.Model):
         """Notify a funder that the requester has applied to them."""
         assert funder.is_funder
 
-        email = send_mail_helper(
+        send_mail_helper(
             name="notify_funder",
             subject=subject,
             emails=[funder.user.email],
@@ -1121,8 +1121,6 @@ class FundedEvent(models.Model):
             body=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
         )
-        if can_send_email():
-            email.send()
 
     def notify_requester_from_funders(self):
         """Send automated email to requester from all selected funders"""
@@ -1131,15 +1129,13 @@ class FundedEvent(models.Model):
                 subject = funder.email_subject
                 message = funder.email_template
 
-                email = send_mail_helper(
+                send_mail_helper(
                     name="notify_requester_from_funders",
                     subject=subject,
                     emails=[self.requester.user.email],
                     body=message,
                     from_email=funder.user.username + "@penncfa.com",
                 )
-                if can_send_email():
-                    email.send()
 
     def notify_requester(self, grants):
         """Notify a requester that an event has been funded."""
@@ -1162,7 +1158,7 @@ class FundedEvent(models.Model):
         ).strip()
         html_content = render_to_string("app/over_event_email.txt", context=context)
 
-        email = send_mail_helper(
+        send_mail_helper(
             name="notify_requester_for_followups",
             subject=subject,
             emails=[self.requester.user.email],
@@ -1171,9 +1167,6 @@ class FundedEvent(models.Model):
             body=html_content,
             from_email=settings.DEFAULT_FROM_EMAIL,
         )
-        email.content_subtype = "html"  # main content is not text/html
-        if can_send_email():
-            email.send()
 
     @property
     def secret_key(self):
