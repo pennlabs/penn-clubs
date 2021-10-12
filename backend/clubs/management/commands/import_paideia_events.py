@@ -19,7 +19,10 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **kwargs):
-        url = """https://snfpaideia.upenn.edu/wp-json/wp/v2/event?order=asc&per_page=100&page=1&onlyInclude=upcoming_events"""
+        url = (
+            "https://snfpaideia.upenn.edu/wp-json/wp/v2/event?"
+            "order=asc&per_page=100&page=1&onlyInclude=upcoming_events"
+        )
         with (urllib.request.urlopen(url)) as data:
             parsed_json = json.loads(data.read().decode())
             for event in parsed_json:
@@ -39,11 +42,15 @@ class Command(BaseCommand):
                     ev.description = unescape(event["excerpt"])
                     ev.url = event["link"]
 
-                    event_dates = event['acf']['event_dates']
+                    event_dates = event["acf"]["event_dates"]
                     # parse their datetime format
                     start_date = event_dates["start_date"]
 
-                    end_date = event_dates["end_date"] if event_dates["multi_day"] else event_dates["start_date"]
+                    end_date = (
+                        event_dates["end_date"]
+                        if event_dates["multi_day"]
+                        else event_dates["start_date"]
+                    )
 
                     for type, d in [("s", start_date), ("e", end_date)]:
                         yyyy, dd, mm = (
@@ -53,26 +60,34 @@ class Command(BaseCommand):
                         )
 
                         if type == "s":
-                            _24h = 12 if "pm" in event_dates["start_time"].lower() else 0
+                            _24h = (
+                                12 if "pm" in event_dates["start_time"].lower() else 0
+                            )
 
                             hrs, mins = (
-                                event_dates["start_time"]
-                                .split()[0]
-                                .split(":")
-                            ) if not event_dates["all_day"] else (0, 0)
+                                (event_dates["start_time"].split()[0].split(":"))
+                                if not event_dates["all_day"]
+                                else (0, 0)
+                            )
                             ev.start_time = timezone.make_aware(
                                 datetime(yyyy, mm, dd, int(hrs) + _24h, int(mins))
                             )
                         elif type == "e":
                             _24h = 12 if "pm" in event_dates["end_time"].lower() else 0
                             hrs, mins = (
-                                event["acf"]["event_dates"]["end_time"]
-                                .split()[0]
-                                .split(":")
-                            ) if not event_dates["all_day"] else (23, 59)
+                                (
+                                    event["acf"]["event_dates"]["end_time"]
+                                    .split()[0]
+                                    .split(":")
+                                )
+                                if not event_dates["all_day"]
+                                else (23, 59)
+                            )
 
                             ev.end_time = timezone.make_aware(
-                                datetime(yyyy, mm, dd, min(int(hrs) + _24h, 23), int(mins))
+                                datetime(
+                                    yyyy, mm, dd, min(int(hrs) + _24h, 23), int(mins)
+                                )
                             )
                     ev.save()
                     # parse image needs to happen after save so instance.id is not None
