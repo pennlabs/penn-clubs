@@ -19,7 +19,7 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **kwargs):
-        url = "https://snfpaideia.upenn.edu/wp-json/wp/v2/event"
+        url = "https://snfpaideia.upenn.edu/wp-json/wp/v2/event?order=asc&per_page=100&page=1&onlyInclude=upcoming_events"
         with (urllib.request.urlopen(url)) as data:
             parsed_json = json.loads(data.read().decode())
             for event in parsed_json:
@@ -36,31 +36,41 @@ class Command(BaseCommand):
                     ev.type = Event.OTHER
                     ev.code = event["slug"]
                     ev.name = unescape(event["title"]["rendered"])
-                    ev.description = event["excerpt"]
+                    ev.description = unescape(event["excerpt"])
                     ev.url = event["link"]
                     # parse their datetime format
-                    string_date = event["acf"]["event_date"]["start_date"]
-                    yyyy, dd, mm = (
-                        int(string_date[:4]),
-                        int(string_date[-2:]),
-                        int(string_date[4:6]),
-                    )
-                    string_time = event["acf"]["time"]
-                    start_24h = 12 if "PM" in event["acf"]["time"].split("-")[0] else 0
-                    end_24h = 12 if "PM" in event["acf"]["time"].split("-")[1] else 0
-                    start_hrs, start_mins = [
-                        int(x.strip()) for x in string_time[:5].split(":")
-                    ]
-                    end_hrs, end_mins = [
-                        int(re.search(r"\d+", x).group())
-                        for x in string_time[-8:].split(":")
-                    ]
-                    ev.start_time = timezone.make_aware(
-                        datetime(yyyy, mm, dd, start_hrs + start_24h, start_mins)
-                    )
-                    ev.end_time = timezone.make_aware(
-                        datetime(yyyy, mm, dd, end_hrs + end_24h, end_mins)
-                    )
+                    start_date = event["acf"]["event_dates"]["start_date"]
+
+                    # intentional for now: start date = end date
+                    end_date = event["acf"]["event_dates"]["start_date"]
+
+                    for type, d in [("s", start_date), ("e", end_date)]:
+                        yyyy, dd, mm = (
+                            int(d[:4]),
+                            int(d[-2:]),
+                            int(d[4:6]),
+                        )
+
+                        _24h = 12 if "pm" in d.lower() else 0
+
+                        if type == "s":
+                            hrs, mins = (
+                                event["acf"]["event_dates"]["start_time"]
+                                .split()[0]
+                                .split(":")
+                            )
+                            ev.start_time = timezone.make_aware(
+                                datetime(yyyy, mm, dd, int(hrs) + _24h, int(mins))
+                            )
+                        elif type == "e":
+                            hrs, mins = (
+                                event["acf"]["event_dates"]["end_time"]
+                                .split()[0]
+                                .split(":")
+                            )
+                            ev.end_time = timezone.make_aware(
+                                datetime(yyyy, mm, dd, int(hrs) + _24h, int(mins))
+                            )
                     ev.save()
                     # parse image needs to happen after save so instance.id is not None
                     img_tag = event["featured_image"]
