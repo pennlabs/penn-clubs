@@ -19,7 +19,8 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **kwargs):
-        url = "https://snfpaideia.upenn.edu/wp-json/wp/v2/event?order=asc&per_page=100&page=1&onlyInclude=upcoming_events"
+        url = """https://snfpaideia.upenn.edu/wp-json/wp/v2/
+        event?order=asc&per_page=100&page=1&onlyInclude=upcoming_events"""
         with (urllib.request.urlopen(url)) as data:
             parsed_json = json.loads(data.read().decode())
             for event in parsed_json:
