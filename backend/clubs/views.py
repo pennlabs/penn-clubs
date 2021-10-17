@@ -89,6 +89,7 @@ from clubs.permissions import (
     ClubBadgePermission,
     ClubFairPermission,
     ClubItemPermission,
+    ClubSensitiveItemPermission,
     ClubPermission,
     DjangoPermission,
     EventPermission,
@@ -4537,7 +4538,7 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     status: Changes status of a submission
     """
 
-    permission_classes = [ClubItemPermission | IsSuperuser]
+    permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
     http_method_names = ["get", "post"]
 
     def get_queryset(self):
