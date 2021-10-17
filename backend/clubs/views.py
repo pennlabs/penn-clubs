@@ -4543,24 +4543,27 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         # Use a raw SQL query to obtain the most recent (user, committee) pairs
         # of application submissions for a specific application.
-        # Done by partitioning on (user_id, commitee_id) and returning the most
-        # recent instance in each partition
+        # Done by grouping by (user_id, commitee_id) and returning the most
+        # recent instance in each group, then selecting those instances
 
         app_id = self.kwargs["application_pk"]
         query = f"""
-        SELECT *
-        FROM
-          (SELECT *,
-                  count(*) OVER (PARTITION BY user_id,
-                                              committee_id
-                                 ORDER BY created_at DESC) AS INSTANCE
-           FROM
-             (SELECT *
-              FROM clubs_applicationsubmission
-              WHERE application_id = {app_id}
-                AND archived = FALSE) subs) cte
-        WHERE cte.instance = 1
-        """
+                SELECT *
+                FROM clubs_applicationsubmission
+                WHERE application_id = {app_id}
+                AND NOT archived
+                AND created_at in
+                    (SELECT recent_time
+                    FROM
+                    (SELECT user_id,
+                            committee_id,
+                            max(created_at) recent_time
+                        FROM clubs_applicationsubmission
+                        WHERE application_id = {app_id}
+                        AND NOT archived
+                        GROUP BY user_id,
+                                committee_id) recent_subs)
+                """
         return ApplicationSubmission.objects.raw(query)
 
     @action(detail=False, methods=["post"])
