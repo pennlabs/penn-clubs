@@ -90,6 +90,7 @@ from clubs.permissions import (
     ClubFairPermission,
     ClubItemPermission,
     ClubPermission,
+    ClubSensitiveItemPermission,
     DjangoPermission,
     EventPermission,
     InvitePermission,
@@ -4537,29 +4538,34 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     status: Changes status of a submission
     """
 
-    permission_classes = [ClubItemPermission | IsSuperuser]
+    permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
     http_method_names = ["get", "post"]
 
     def get_queryset(self):
-        distinct_submissions = {}
-        submissions = ApplicationSubmission.objects.filter(
-            application__pk=self.kwargs["application_pk"], archived=False,
-        ).all()
+        # Use a raw SQL query to obtain the most recent (user, committee) pairs
+        # of application submissions for a specific application.
+        # Done by grouping by (user_id, commitee_id) and returning the most
+        # recent instance in each group, then selecting those instances
 
-        # only want to return the most recent (user, committee) unique submission pair
-        for submission in submissions:
-            key = (submission.user.__str__(), submission.committee.__str__())
-            if key in distinct_submissions:
-                if distinct_submissions[key].created_at < submission.created_at:
-                    distinct_submissions[key] = submission
-            else:
-                distinct_submissions[key] = submission
-
-        queryset = ApplicationSubmission.objects.none()
-        for submission in distinct_submissions.values():
-            queryset |= ApplicationSubmission.objects.filter(pk=submission.pk)
-
-        return queryset
+        app_id = self.kwargs["application_pk"]
+        query = f"""
+                SELECT *
+                FROM clubs_applicationsubmission
+                WHERE application_id = {app_id}
+                AND NOT archived
+                AND created_at in
+                    (SELECT recent_time
+                    FROM
+                    (SELECT user_id,
+                            committee_id,
+                            max(created_at) recent_time
+                        FROM clubs_applicationsubmission
+                        WHERE application_id = {app_id}
+                        AND NOT archived
+                        GROUP BY user_id,
+                                committee_id) recent_subs)
+                """
+        return ApplicationSubmission.objects.raw(query)
 
     @action(detail=False, methods=["post"])
     def status(self, *args, **kwargs):
