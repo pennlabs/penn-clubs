@@ -216,6 +216,25 @@ class Command(BaseCommand):
                     self.stdout.write(f"Would have sent {action} email to {email}")
             return
 
+        if action == "hap_update_resource":
+            emails = (
+                Membership.objects.filter(
+                    role__lte=Membership.ROLE_OFFICER, club__active=False
+                )
+                .values_list("person__email", flat=True)
+                .distinct()
+            )
+            if test_email is not None:
+                emails = [test_email]
+            for email in emails:
+                if not dry_run:
+                    template = "update_your_penn_resource"
+                    send_mail_helper(template, None, [email], {})
+                    self.stdout.write(f"Sent {action} email to {email}")
+                else:
+                    self.stdout.write(f"Would have sent {action} email to {email}")
+            return
+
         # handle custom Hub@Penn intro email
         if action in {
             "hap_intro",
@@ -224,14 +243,12 @@ class Command(BaseCommand):
             "hap_partner_communication",
             "grad_resource_contact",
             "hap_designate_resource",
-            "hap_update_resource",
         }:
             people = collections.defaultdict(dict)
 
             if action in {
                 "hap_partner_communication",
                 "hap_designate_resource",
-                "hap_update_resource",
             }:
                 emails = (
                     Membership.objects.filter(role__lte=Membership.ROLE_OFFICER)
