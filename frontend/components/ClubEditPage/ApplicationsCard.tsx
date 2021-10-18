@@ -11,8 +11,8 @@ import {
 } from '../../utils/branding'
 import { Icon, Modal, Text } from '../common'
 import {
-  ApplicationMultipleChoiceField,
   CheckboxField,
+  CreatableMultipleSelectField,
   DateTimeField,
   RichTextField,
   SelectField,
@@ -113,7 +113,7 @@ const ApplicationModal = (props: {
               questionType === ApplicationQuestionType.MultipleChoice && (
                 <Field
                   name="multiple_choice"
-                  as={ApplicationMultipleChoiceField}
+                  as={CreatableMultipleSelectField}
                   initialValues={multipleChoices}
                   helpText={
                     'Multiple choice options for this multiple choice question'
@@ -307,7 +307,7 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
             />
             <Field
               name="committees"
-              as={ApplicationMultipleChoiceField}
+              as={CreatableMultipleSelectField}
               initialValues={committees}
               helpText={`If your ${OBJECT_NAME_SINGULAR} has multiple committees to which students can apply, list them here. NOTE: you won't be able to edit this field after applications open.`}
             />
