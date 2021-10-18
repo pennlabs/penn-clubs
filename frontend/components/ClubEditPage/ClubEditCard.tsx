@@ -433,7 +433,7 @@ export default function ClubEditCard({
           label: 'Keywords',
           help: `Enter alternative names for your ${OBJECT_NAME_SINGULAR} here. For example, this could be an acronym or abbreviation that your ${OBJECT_NAME_SINGULAR} goes by. Your ${OBJECT_NAME_SINGULAR} will show up when these terms are entered into the search bar.`,
           deserialize: (terms) =>
-            terms != null
+            terms != null && terms !== ''
               ? terms.split(',').map((term: string) => {
                   return {
                     label: term,
