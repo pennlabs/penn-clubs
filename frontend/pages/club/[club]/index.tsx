@@ -28,6 +28,7 @@ import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement, useEffect, useRef, useState } from 'react'
 import Linkify from 'react-linkify'
+import Select from 'react-select'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
 import { Club, QuestionAnswer, UserInfo, VisitType } from 'types'
@@ -80,11 +81,23 @@ const QAButton = styled.button.attrs({ className: 'button is-primary' })`
   white-space: pre-wrap;
 `
 
-const SelectWrapper = styled.span`
+const FAQSectionHeader = styled.div`
   display: flex;
   align-items: center;
-  float: right;
+  justify-content: space-between;
 `
+
+const selectOptions = [
+  { value: 'id', label: 'Most Recent' },
+  { value: 'likes', label: 'Most Likes' },
+]
+
+const selectStyles = {
+  control: (provided) => ({
+    ...provided,
+    width: 175,
+  }),
+}
 
 const ClubPage = ({
   club: initialClub,
@@ -222,19 +235,18 @@ const ClubPage = ({
             </>
           )}
           <div className="mb-3">
-            <StrongText ref={questionsScrollRef}>
-              FAQ
-              <SelectWrapper>
-                <span className="is-size-7">Sort By:</span>
-                <select
-                  className="select is-small is-round"
-                  onChange={(e) => setQuestionSortBy(e.target.value)}
-                >
-                  <option value="id">Most Recent</option>
-                  <option value="likes">Most Likes</option>
-                </select>
-              </SelectWrapper>
-            </StrongText>
+            <FAQSectionHeader ref={questionsScrollRef}>
+              <StrongText>FAQ</StrongText>
+              <Select
+                instanceId="FAQ-sort"
+                options={selectOptions}
+                styles={selectStyles}
+                onChange={(e: any) => setQuestionSortBy(e.value)}
+                value={selectOptions.filter(
+                  (option) => option.value === questionSortBy,
+                )}
+              />
+            </FAQSectionHeader>
             <QuestionList
               club={club}
               questions={questions}
