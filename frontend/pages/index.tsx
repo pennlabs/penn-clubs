@@ -517,26 +517,14 @@ const Splash = (props: SplashProps): ReactElement => {
                 label="School Specific"
                 options={schoolOptions}
               />
-            ) : (
-              <SearchBarCheckboxItem
-                param="target_schools__in"
-                label="School"
-                options={schoolOptions}
-              />
-            ))}
+            ) : null)}
           {SITE_ID === 'fyh' ? (
             <SearchBarCheckboxItem
               param="target_years__in"
               label="School Year Specific"
               options={yearOptions}
             />
-          ) : (
-            <SearchBarCheckboxItem
-              param="target_years__in"
-              label="School Year"
-              options={yearOptions}
-            />
-          )}
+          ) : null}
           {isClubFieldShown('student_types') &&
             (SITE_ID === 'fyh' ? (
               <SearchBarCheckboxItem
