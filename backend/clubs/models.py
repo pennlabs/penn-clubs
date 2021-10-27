@@ -1517,6 +1517,7 @@ class CustomTextEmail(models.Model):
 
     def send(self, to_emails, context):
         # context is used here to add additional information to the email
+        # we'll need to design some more functionality here
         send_mail_helper(
             self.template_name,
             self.subject,
