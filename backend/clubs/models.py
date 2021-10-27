@@ -1511,7 +1511,7 @@ class CustomTextEmail(models.Model):
     """
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
-    template_name = models.CharField(max_length=30)  # choices field?
+    template_name = models.CharField(max_length=30)  # (maybe make this another model)
     subject = models.CharField(max_length=60, blank=True)
     text = models.TextField(blank=True)
 
