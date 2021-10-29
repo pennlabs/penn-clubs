@@ -55,7 +55,7 @@ applications:
     port: 6379
   - name: hub-django-asgi
     image: pennlabs/penn-clubs-backend
-    secret: first-year-hub
+    secret: hub-at-penn
     cmd: ["/usr/local/bin/asgi-run"]
     replicas: 2
     ingress:
@@ -73,7 +73,7 @@ applications:
         value: penn-clubs-hub-redis
   - name: hub-django-wgsi
     image: pennlabs/penn-clubs-backend
-    secret: first-year-hub
+    secret: hub-at-penn
     replicas: 3
     ingress:
       hosts:
@@ -117,7 +117,7 @@ cronjobs:
   - name: hub-daily-notifications
     schedule: "0 13 * * *"
     image: pennlabs/penn-clubs-backend
-    secret: first-year-hub
+    secret: hub-at-penn
     cmd: ["python", "manage.py", "daily_notifications"]
     extraEnv:
       - name: DOMAIN
@@ -134,7 +134,7 @@ cronjobs:
   - name: hub-calendar-import
     schedule: "0 12 * * *"
     image: pennlabs/penn-clubs-backend
-    secret: first-year-hub
+    secret: hub-at-penn
     cmd: ["python", "manage.py", "import_calendar_events"]
     extraEnv:
       - name: DOMAIN
@@ -146,7 +146,7 @@ cronjobs:
   - name: hub-paideia-calendar-import
     schedule: "0 12 * * *"
     image: pennlabs/penn-clubs-backend
-    secret: first-year-hub
+    secret: hub-at-penn
     cmd: ["python", "manage.py", "import_paideia_events"]
     extraEnv:
       - name: DOMAIN

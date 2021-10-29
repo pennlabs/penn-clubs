@@ -285,6 +285,24 @@ class ClubItemPermission(permissions.BasePermission):
             return True
 
 
+class ClubSensitiveItemPermission(permissions.BasePermission):
+    """
+    Officers and above can view/create/update/delete sensitive club items (application
+    submissions). No one else can interact with sensitive items.
+    """
+
+    def has_permission(self, request, view):
+        if "club_code" not in view.kwargs:
+            return False
+        if not request.user.is_authenticated:
+            return False
+        if request.user.has_perm("clubs.manage_club"):
+            return True
+        obj = Club.objects.get(code=view.kwargs["club_code"])
+        membership = find_membership_helper(request.user, obj)
+        return membership is not None and membership.role <= Membership.ROLE_OFFICER
+
+
 class IsSuperuser(permissions.BasePermission):
     """
     Grants permission if the current user is a superuser.
