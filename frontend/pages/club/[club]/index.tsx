@@ -245,6 +245,7 @@ const ClubPage = ({
                 value={selectOptions.filter(
                   (option) => option.value === questionSortBy,
                 )}
+                isSearchable={false}
               />
             </FAQSectionHeader>
             <QuestionList
