@@ -358,12 +358,6 @@ const eventFields = (
       placeholder="Type your event description here!"
       as={RichTextField}
     />
-    <CreatableSelect
-      name="multiple_choice"
-      as={SelectField}
-      isMulti
-      creatable
-    />
   </>
 )
 
