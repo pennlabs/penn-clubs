@@ -74,6 +74,7 @@ type ModelFormProps = {
   fields: any
   tableFields?: TableField[]
   filterOptions?: FilterOption[]
+  searchableColumns?: string[]
   currentTitle?: (object: ModelObject) => ReactElement | string
   noun?: string
   deleteVerb?: string
@@ -111,6 +112,7 @@ export const doFormikInitialValueFixes = (currentObject: {
 type ModelTableProps = {
   tableFields: TableField[]
   filterOptions?: FilterOption[]
+  searchableColumns?: string[]
   objects: ModelObject[]
   allowEditing?: boolean
   allowDeletion?: boolean
@@ -130,6 +132,7 @@ type ModelTableProps = {
 export const ModelTable = ({
   tableFields,
   filterOptions,
+  searchableColumns,
   objects,
   allowEditing = false,
   allowDeletion = false,
@@ -150,16 +153,16 @@ export const ModelTable = ({
       })),
     [tableFields],
   )
-
   tableFields = tableFields.map((column, index) => {
     if (column.converter) {
       const renderFunction = column.converter
       return {
         ...column,
-        render: (id, _) => {
-          const obj = objects?.[id]
+        render: (id) => {
+          const obj =
+            objects?.filter((item) => item.id === id)[0] || objects?.[id]
           const value = obj?.[column.name]
-          return obj && value ? renderFunction(value, obj) : 'N/A'
+          return obj && value !== null ? renderFunction(value, obj) : 'None'
         },
       }
     } else return column
@@ -215,7 +218,9 @@ export const ModelTable = ({
       <Table
         data={objects}
         columns={tableFields}
-        searchableColumns={['name']}
+        searchableColumns={
+          searchableColumns || tableFields.map((field) => field.name)
+        }
         filterOptions={filterOptions || []}
         draggable={draggable}
         onDragEnd={onDragEnd}
@@ -255,6 +260,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     fields,
     tableFields,
     filterOptions,
+    searchableColumns,
     onUpdate,
     currentTitle,
     noun = 'Object',
@@ -464,6 +470,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           noun={noun}
           tableFields={tableFields}
           filterOptions={filterOptions}
+          searchableColumns={searchableColumns}
           objects={objects}
           allowDeletion={allowDeletion}
           confirmDeletion={confirmDeletion}
