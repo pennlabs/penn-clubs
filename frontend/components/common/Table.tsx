@@ -15,8 +15,8 @@ import {
   BORDER,
   CLUBS_GREY,
   FOCUS_GRAY,
-  SNOW,
   LIGHT_GRAY,
+  SNOW,
   WHITE,
 } from '../../constants/colors'
 import { BORDER_RADIUS, MD, mediaMaxWidth } from '../../constants/measurements'
@@ -351,9 +351,13 @@ const Table = ({
                           {columns.map((column, i) => {
                             return (
                               <td key={i}>
-                                {column.render ?
-    (column.render(row.original.id) || (<GreyText>None</GreyText>))
-    : (row.original[column.name] || (<GreyText>None</GreyText>))}
+                                {column.render
+                                  ? column.render(row.original.id) || (
+                                      <GreyText>None</GreyText>
+                                    )
+                                  : row.original[column.name] || (
+                                      <GreyText>None</GreyText>
+                                    )}
                               </td>
                             )
                           })}
