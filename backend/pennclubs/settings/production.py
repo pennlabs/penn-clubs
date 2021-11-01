@@ -22,7 +22,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", None)
 SENTRY_URL = os.environ.get("SENTRY_URL")
 if SENTRY_URL:
     sentry_sdk.init(
-        dsn=SENTRY_URL, integrations=[DjangoIntegration()], send_default_pii=True
+        dsn=SENTRY_URL, integrations=[DjangoIntegration()], send_default_pii=False
     )
 
 # DLA settings
