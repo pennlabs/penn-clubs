@@ -24,6 +24,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.validators import validate_email
+from django.db.models.expressions import RawSQL
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
@@ -4514,7 +4515,23 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return (
-            ApplicationSubmission.objects.filter(application__is_wharton_council=True)
+            ApplicationSubmission.objects.filter(
+                application__is_wharton_council=True,
+                created_at__in=RawSQL(
+                    f"""SELECT recent_time
+                    FROM
+                    (SELECT user_id,
+                            committee_id,
+                            application_id,
+                            max(created_at) recent_time
+                        FROM clubs_applicationsubmission
+                        WHERE NOT archived
+                        GROUP BY user_id,
+                                committee_id, application_id) recent_subs""",
+                    (),
+                ),
+                archived=False,
+            )
             .annotate(
                 annotated_name=F("application__name"),
                 annotated_committee=F("committee__name"),
