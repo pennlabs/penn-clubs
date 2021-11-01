@@ -431,7 +431,7 @@ export default function ClubEditCard({
           name: 'terms',
           type: 'creatableMultiSelect',
           label: 'Keywords',
-          help: `Enter alternative names for your ${OBJECT_NAME_SINGULAR} here. For example, this could be an acronym or abbreviation that your ${OBJECT_NAME_SINGULAR} goes by. Your ${OBJECT_NAME_SINGULAR} will show up when these terms are entered into the search bar.`,
+          help: `Enter keywords for your ${OBJECT_NAME_SINGULAR} here. This could be a term, acronym, abbreviation, or phrase that relates to your ${OBJECT_NAME_SINGULAR}. Keywords allow users to more effectively identify your ${OBJECT_NAME_SINGULAR} when they are entered in the ${SITE_NAME} search bar.`,
           deserialize: (terms) =>
             terms != null && terms !== ''
               ? terms.split(',').map((term: string) => {
