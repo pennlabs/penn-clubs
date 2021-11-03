@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         wc_badge = Badge.objects.filter(
-            description="Wharton Council constituent"
+            label="Wharton Council", purpose="org",
         ).first()
         eastern = pytz.timezone("America/New_York")
         application_start_time = datetime.datetime(2021, 9, 4, 0, 0, tzinfo=eastern)

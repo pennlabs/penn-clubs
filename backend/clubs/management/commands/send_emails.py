@@ -199,7 +199,9 @@ class Command(BaseCommand):
             tf.close()
 
         if action == "update_status_reminder":
-            wc_badge = Badge.objects.filter(pk=15).first()
+            wc_badge = Badge.objects.filter(
+                label="Wharton Council", purpose="org",
+            ).first()
             clubs = Club.objects.filter(badges__in=[wc_badge])
             payloads = []
             for club in clubs:
