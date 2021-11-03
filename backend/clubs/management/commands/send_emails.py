@@ -217,7 +217,7 @@ class Command(BaseCommand):
                 )
                 payloads.append((applications_url, emails))
             if test_email is not None:
-                payloads = [(clubs[0], [test_email])]
+                payloads = [(payloads[0][0], [test_email])]
             for (applications_url, emails) in payloads:
                 for email in emails:
                     if not dry_run:
