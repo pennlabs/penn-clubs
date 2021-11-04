@@ -226,7 +226,7 @@ class Command(BaseCommand):
                             template,
                             None,
                             [email],
-                            {applications_url: applications_url},
+                            {"applications_url": applications_url},
                         )
                         self.stdout.write(f"Sent {action} email to {email}")
                     else:
