@@ -399,9 +399,9 @@ export default function ApplicationsPage({
                   This is just for your own book keeping (applicants will not
                   know that their submission status has changed). You can use
                   the "Select All Pending" button to batch update pending
-                  applications (for example, you could manually mark as accepted
-                  applications, then select all pending and mark them as
-                  rejected to quickly update statuses).
+                  applications (for example, you could manually mark all
+                  accepted applications, then select all pending and mark them
+                  as rejected to quickly update statuses).
                 </small>
               </div>
               {submissions[currentApplication.id].length > 0 ? (
