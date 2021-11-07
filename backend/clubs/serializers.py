@@ -2675,13 +2675,16 @@ class ClubFairSerializer(serializers.ModelSerializer):
 
 class AdminNoteSerializer(serializers.ModelSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
-    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    creator = serializers.SerializerMethodField("get_creator")
     title = serializers.CharField(max_length=255, default="Note")
     content = serializers.CharField(required=False)
 
+    def get_creator(self, obj):
+        return obj.creator.get_full_name()
+
     class Meta:
         model = AdminNote
-        fields = ("creator", "club", "title", "content", "created_at")
+        fields = ("id", "creator", "club", "title", "content", "created_at")
 
 
 class WritableClubFairSerializer(ClubFairSerializer):
