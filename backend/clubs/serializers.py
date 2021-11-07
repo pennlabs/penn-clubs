@@ -1636,6 +1636,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "approved_by",
             "approved_comment",
             "badges",
+            "created_at",
             "description",
             "events",
             "facebook",

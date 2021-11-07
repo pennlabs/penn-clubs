@@ -115,11 +115,13 @@ export interface Badge {
 
 export interface QuestionAnswer {
   id: number
+  likes: number
   approved: boolean
   question: string
   answer: string
   author: string
   responder: string
+  user_liked: boolean
 }
 
 export interface Advisor {

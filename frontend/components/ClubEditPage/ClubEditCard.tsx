@@ -42,6 +42,7 @@ import { Checkbox, CheckboxLabel, Contact, Text } from '../common'
 import {
   CheckboxField,
   CheckboxTextField,
+  CreatableMultipleSelectField,
   FileField,
   FormikAddressField,
   FormStyle,
@@ -428,9 +429,20 @@ export default function ClubEditCard({
         },
         {
           name: 'terms',
-          type: 'text',
-          label: 'Alt Names',
-          help: `Enter alternative names for your ${OBJECT_NAME_SINGULAR} here, separated by commas. For example, this could be an acronym or abbreviation that your ${OBJECT_NAME_SINGULAR} goes by. Your ${OBJECT_NAME_SINGULAR} will show up when these terms are entered into the search bar.`,
+          type: 'creatableMultiSelect',
+          label: 'Keywords',
+          help: `Enter keywords for your ${OBJECT_NAME_SINGULAR} here. This could be a term, acronym, abbreviation, or phrase that relates to your ${OBJECT_NAME_SINGULAR}. Keywords allow users to more effectively identify your ${OBJECT_NAME_SINGULAR} when they are entered in the ${SITE_NAME} search bar.`,
+          deserialize: (terms) =>
+            terms != null && terms !== ''
+              ? terms.split(',').map((term: string) => {
+                  return {
+                    label: term,
+                    value: term,
+                  }
+                })
+              : null,
+          serialize: (terms) =>
+            terms != null ? terms.map((term) => term.value).join(',') : null,
         },
         {
           name: 'description',
@@ -853,6 +865,7 @@ export default function ClubEditCard({
                               image: FileField,
                               address: FormikAddressField,
                               checkboxText: CheckboxTextField,
+                              creatableMultiSelect: CreatableMultipleSelectField,
                             }[props.type] ?? TextField
                           }
                           {...other}

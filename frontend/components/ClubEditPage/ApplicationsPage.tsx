@@ -206,8 +206,9 @@ export default function ApplicationsPage({
 
   useEffect(() => {
     if (applications !== null) {
-      applications.forEach((application) => {
-        doApiRequest(
+      const newSubmissions = {}
+      const fetches = applications.map((application) => {
+        return doApiRequest(
           `/clubs/${club.code}/applications/${application.id}/submissions/?format=json`,
           {
             method: 'GET',
@@ -229,11 +230,10 @@ export default function ApplicationsPage({
             })
           })
           .then((responses) => {
-            const obj = {}
-            obj[application.id] = responses
-            setSubmissions(obj)
+            newSubmissions[application.id] = responses
           })
       })
+      Promise.all(fetches).then(() => setSubmissions(newSubmissions))
     }
   }, [applications])
 
@@ -369,34 +369,45 @@ export default function ApplicationsPage({
                   know that their submission status has changed).{' '}
                 </small>
               </div>
-              <Table
-                data={submissions[currentApplication.id].map((item, index) =>
-                  item.pk ? { ...item, id: item.pk } : { ...item, id: index },
-                )}
-                columns={responseTableFields}
-                searchableColumns={['name']}
-                filterOptions={[]}
-                focusable={true}
-                initialPage={pageIndex}
-                setInitialPage={setPageIndex}
-                initialPageSize={40}
-                onClick={(row, event) => {
-                  if (
-                    event.target?.type === 'checkbox' ||
-                    event.target.tagName === 'svg' ||
-                    event.target.tagName === 'path'
-                  ) {
-                    // manually prevent the propagation here
-                    return
-                  }
-                  setShowModal(true)
-                  const submission =
-                    submissions[currentApplication.id].find(
-                      (submission) => submission.pk === row.original.pk,
-                    ) ?? null
-                  setCurrentSubmission(submission)
-                }}
-              />
+              {submissions[currentApplication.id].length > 0 ? (
+                <Table
+                  data={submissions[currentApplication.id].map((item, index) =>
+                    item.pk ? { ...item, id: item.pk } : { ...item, id: index },
+                  )}
+                  columns={responseTableFields}
+                  searchableColumns={['name']}
+                  filterOptions={[]}
+                  focusable={true}
+                  initialPage={pageIndex}
+                  setInitialPage={setPageIndex}
+                  initialPageSize={40}
+                  onClick={(row, event) => {
+                    if (
+                      event.target?.type === 'checkbox' ||
+                      event.target.tagName === 'svg' ||
+                      event.target.tagName === 'path'
+                    ) {
+                      // manually prevent the propagation here
+                      return
+                    }
+                    setShowModal(true)
+                    const submission =
+                      submissions[currentApplication.id].find(
+                        (submission) => submission.pk === row.original.pk,
+                      ) ?? null
+                    setCurrentSubmission(submission)
+                  }}
+                />
+              ) : (
+                <>
+                  <br></br>
+                  <Text>
+                    This application doesn't have any responses yet, check back
+                    in later!
+                  </Text>
+                  <br></br>
+                </>
+              )}
             </>
           ) : (
             <Loading />

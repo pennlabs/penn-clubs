@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from clubs.models import (
     ApplicationSubmission,
+    Badge,
     Club,
     ClubFair,
     Event,
@@ -89,6 +90,7 @@ class Command(BaseCommand):
                 "hap_designate_resource",
                 "hap_update_resource",
                 "wc_feedback",
+                "update_status_reminder",
             ),
         )
         parser.add_argument(
@@ -196,6 +198,41 @@ class Command(BaseCommand):
             email_file = tf.name
             tf.close()
 
+        if action == "update_status_reminder":
+            wc_badge = Badge.objects.filter(
+                label="Wharton Council", purpose="org",
+            ).first()
+            clubs = Club.objects.filter(badges__in=[wc_badge])
+            payloads = []
+            for club in clubs:
+                emails = (
+                    Membership.objects.filter(
+                        role__lte=Membership.ROLE_OFFICER, club__active=True, club=club,
+                    )
+                    .values_list("person__email", flat=True)
+                    .distinct()
+                )
+                applications_url = (
+                    f"https://pennclubs.com/club/{club.code}/edit/applications"
+                )
+                payloads.append((applications_url, emails))
+            if test_email is not None:
+                payloads = [(payloads[0][0], [test_email])]
+            for (applications_url, emails) in payloads:
+                for email in emails:
+                    if not dry_run:
+                        template = "update_status_reminder"
+                        send_mail_helper(
+                            template,
+                            None,
+                            [email],
+                            {"applications_url": applications_url},
+                        )
+                        self.stdout.write(f"Sent {action} email to {email}")
+                    else:
+                        self.stdout.write(f"Would have sent {action} email to {email}")
+            return
+
         # handle Wharton Council feedback email to all centralized applicants
         if action == "wc_feedback":
             emails = (
@@ -216,6 +253,25 @@ class Command(BaseCommand):
                     self.stdout.write(f"Would have sent {action} email to {email}")
             return
 
+        if action == "hap_update_resource":
+            emails = (
+                Membership.objects.filter(
+                    role__lte=Membership.ROLE_OFFICER, club__active=False
+                )
+                .values_list("person__email", flat=True)
+                .distinct()
+            )
+            if test_email is not None:
+                emails = [test_email]
+            for email in emails:
+                if not dry_run:
+                    template = "update_your_penn_resource"
+                    send_mail_helper(template, None, [email], {})
+                    self.stdout.write(f"Sent {action} email to {email}")
+                else:
+                    self.stdout.write(f"Would have sent {action} email to {email}")
+            return
+
         # handle custom Hub@Penn intro email
         if action in {
             "hap_intro",
@@ -224,14 +280,12 @@ class Command(BaseCommand):
             "hap_partner_communication",
             "grad_resource_contact",
             "hap_designate_resource",
-            "hap_update_resource",
         }:
             people = collections.defaultdict(dict)
 
             if action in {
                 "hap_partner_communication",
                 "hap_designate_resource",
-                "hap_update_resource",
             }:
                 emails = (
                     Membership.objects.filter(role__lte=Membership.ROLE_OFFICER)
