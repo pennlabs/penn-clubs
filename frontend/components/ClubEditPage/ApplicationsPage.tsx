@@ -325,7 +325,7 @@ export default function ApplicationsPage({
                     />
                   </div>
                   <button
-                    className="button is-success"
+                    className="button is-success mr-3"
                     onClick={() => {
                       if (submissions[currentApplication.id] != null) {
                         const obj = {}
@@ -359,6 +359,27 @@ export default function ApplicationsPage({
                     }}
                   >
                     <Icon name="check" /> Update Status
+                  </button>
+                  <button
+                    className="button is-primary"
+                    onClick={() => {
+                      setSelectedSubmissions(
+                        selectedSubmissions.length ===
+                          submissions[currentApplication.id].length
+                          ? []
+                          : submissions[
+                              currentApplication.id
+                            ].map((item, index) =>
+                              item.pk !== undefined ? item.pk : index,
+                            ),
+                      )
+                    }}
+                  >
+                    {selectedSubmissions.length ===
+                    submissions[currentApplication.id].length
+                      ? 'Des'
+                      : 'S'}
+                    elect All
                   </button>
                 </div>
                 <small>
