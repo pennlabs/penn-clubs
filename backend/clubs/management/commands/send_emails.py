@@ -91,6 +91,7 @@ class Command(BaseCommand):
                 "hap_update_resource",
                 "wc_feedback",
                 "update_status_reminder",
+                "keywords_update",
             ),
         )
         parser.add_argument(
@@ -280,12 +281,14 @@ class Command(BaseCommand):
             "hap_partner_communication",
             "grad_resource_contact",
             "hap_designate_resource",
+            "keywords_update",
         }:
             people = collections.defaultdict(dict)
 
             if action in {
                 "hap_partner_communication",
                 "hap_designate_resource",
+                "keywords_update",
             }:
                 emails = (
                     Membership.objects.filter(role__lte=Membership.ROLE_OFFICER)
@@ -300,6 +303,7 @@ class Command(BaseCommand):
                             "hap_partner_communication": "communication_to_partners",
                             "hap_designate_resource": "designate_resource_admin",
                             "hap_update_resource": "update_your_penn_resource",
+                            "keywords_update": "keywords_email",
                         }[action]
                         send_mail_helper(template, None, [email], {})
                         self.stdout.write(f"Sent {action} email to {email}")
