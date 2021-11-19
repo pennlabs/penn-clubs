@@ -2682,6 +2682,14 @@ class AdminNoteSerializer(serializers.ModelSerializer):
     def get_creator(self, obj):
         return obj.creator.get_full_name()
 
+    def create(self, validated_data):
+        return AdminNote.objects.create(
+            creator=self.context["request"].user,
+            club=validated_data["club"],
+            title=validated_data["title"],
+            content=validated_data["content"],
+        )
+
     class Meta:
         model = AdminNote
         fields = ("id", "creator", "club", "title", "content", "created_at")
