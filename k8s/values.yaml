@@ -22,7 +22,7 @@ applications:
         value: pennclubs.settings.production
       - name: REDIS_HOST
         value: penn-clubs-redis
-  - name: django-wgsi
+  - name: django-wsgi
     image: pennlabs/penn-clubs-backend
     secret: penn-clubs
     replicas: 5
@@ -71,7 +71,7 @@ applications:
         value: pennclubs.settings.production
       - name: REDIS_HOST
         value: penn-clubs-hub-redis
-  - name: hub-django-wgsi
+  - name: hub-django-wsgi
     image: pennlabs/penn-clubs-backend
     secret: hub-at-penn
     replicas: 3

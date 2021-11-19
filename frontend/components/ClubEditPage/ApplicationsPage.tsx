@@ -190,6 +190,7 @@ export default function ApplicationsPage({
     setCurrentSubmission,
   ] = useState<ApplicationSubmission | null>(null)
   const [pageIndex, setPageIndex] = useState<number>(0)
+  const [statusToggle, setStatusToggle] = useState<boolean>(false)
 
   useEffect(() => {
     doApiRequest(`/clubs/${club.code}/applications/?format=json`, {
@@ -325,7 +326,7 @@ export default function ApplicationsPage({
                     />
                   </div>
                   <button
-                    className="button is-success"
+                    className="button is-success mr-3"
                     onClick={() => {
                       if (submissions[currentApplication.id] != null) {
                         const obj = {}
@@ -360,13 +361,47 @@ export default function ApplicationsPage({
                   >
                     <Icon name="check" /> Update Status
                   </button>
+                  <button
+                    className="button is-primary"
+                    onClick={() => {
+                      const newSelectedSubmissions: number[] = []
+                      submissions[currentApplication.id].forEach(
+                        (submission) => {
+                          if (selectedSubmissions.includes(submission.pk)) {
+                            if (
+                              !statusToggle ||
+                              submission.status !== 'Pending'
+                            ) {
+                              // do not add pending values when we are deselecting
+                              newSelectedSubmissions.push(submission.pk)
+                            }
+                          } else if (
+                            !statusToggle &&
+                            submission.status === 'Pending'
+                          ) {
+                            // add pending values when we are selecting
+                            newSelectedSubmissions.push(submission.pk)
+                          }
+                        },
+                      )
+                      setStatusToggle(!statusToggle)
+                      setSelectedSubmissions(newSelectedSubmissions)
+                    }}
+                  >
+                    {statusToggle ? 'Des' : 'S'}
+                    elect All Pending
+                  </button>
                 </div>
                 <small>
                   Check the checkboxes next to submissions whose status you
                   would like to update. Once submissions have been checked, you
                   can pick a status here and click "Update Status" to submit.
                   This is just for your own book keeping (applicants will not
-                  know that their submission status has changed).{' '}
+                  know that their submission status has changed). You can use
+                  the "Select All Pending" button to batch update pending
+                  applications (for example, you could manually mark all
+                  accepted applications, then select all pending and mark them
+                  as rejected to quickly update statuses).
                 </small>
               </div>
               {submissions[currentApplication.id].length > 0 ? (
@@ -380,7 +415,7 @@ export default function ApplicationsPage({
                   focusable={true}
                   initialPage={pageIndex}
                   setInitialPage={setPageIndex}
-                  initialPageSize={40}
+                  initialPageSize={600}
                   onClick={(row, event) => {
                     if (
                       event.target?.type === 'checkbox' ||
