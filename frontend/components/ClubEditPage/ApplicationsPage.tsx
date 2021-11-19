@@ -415,7 +415,7 @@ export default function ApplicationsPage({
                   focusable={true}
                   initialPage={pageIndex}
                   setInitialPage={setPageIndex}
-                  initialPageSize={40}
+                  initialPageSize={600}
                   onClick={(row, event) => {
                     if (
                       event.target?.type === 'checkbox' ||
