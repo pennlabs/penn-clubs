@@ -2683,7 +2683,6 @@ class AdminNoteSerializer(serializers.ModelSerializer):
         return obj.creator.get_full_name()
 
     def create(self, validated_data):
-        print(validated_data)
         return AdminNote.objects.create(
             creator=self.context["request"].user,
             club=validated_data["club"],
