@@ -7,6 +7,7 @@ type CardProps = {
   hoverable?: boolean
   background?: string
   pinned?: boolean
+  disabled?: boolean
 }
 
 export const CARD_BORDER_RADIUS = '4px'
@@ -20,6 +21,9 @@ export const Card = styled.div<CardProps>`
 
   ${({ bordered }) => bordered && `border: 1px solid ${BORDER};`}
 
+  ${({ disabled }) =>
+    disabled &&
+    `background : rgb(245, 245, 245); opacity: 0.5; cursor: not-allowed !important;`}
   ${({ hoverable }) =>
     hoverable &&
     `
