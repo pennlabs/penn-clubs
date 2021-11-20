@@ -1,6 +1,6 @@
+import { Field, Form, Formik } from 'formik'
 import React, { ReactElement } from 'react'
 import styled from 'styled-components'
-import { Field, Form, Formik } from 'formik'
 
 import AdminNotesCard from './AdminNotesCard'
 import BaseCard from './BaseCard'
@@ -260,7 +260,10 @@ export default function AdminNotesPage({
             <AddNotesFAB
               ref={fabRef}
               disabled={isEdit}
-              onClick={() => (setCurrNote(null), setIsEdit(!isEdit))}
+              onClick={() => {
+                setCurrNote(null)
+                setIsEdit(!isEdit)
+              }}
             >
               <Icon noMargin size="24px" name="plus" />
             </AddNotesFAB>
@@ -288,7 +291,9 @@ export default function AdminNotesPage({
             innerRef={formikValueRef}
             initialValues={currNote == null ? {} : currNote}
             enableReinitialize
-            onSubmit={() => {}}
+            onSubmit={() => {
+              // pass
+            }}
           >
             <Form
               style={{

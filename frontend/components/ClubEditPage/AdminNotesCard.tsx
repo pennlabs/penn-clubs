@@ -42,7 +42,13 @@ export default function AdminNotesCard({
   return (
     <NotesCard
       hoverable
-      onClick={disabled ? () => {} : () => viewNote(note)}
+      onClick={
+        disabled
+          ? () => {
+              // pass
+            }
+          : () => viewNote(note)
+      }
       disabled={disabled}
     >
       <CardTitle>{note.title}</CardTitle>
