@@ -2,10 +2,8 @@ import { Field, Form, Formik } from 'formik'
 import React, { ReactElement } from 'react'
 import styled from 'styled-components'
 
-import AdminNotesCard from './AdminNotesCard'
-import BaseCard from './BaseCard'
-import { Icon } from '../common'
-import { FormStyle, RichTextField, TextField } from '../FormComponents'
+import { Club } from '~/types'
+import { doApiRequest } from '~/utils'
 
 import {
   ALLBIRDS_GRAY,
@@ -16,9 +14,10 @@ import {
 } from '../../constants/colors'
 import { BORDER_RADIUS, MD, mediaMaxWidth } from '../../constants/measurements'
 import { BODY_FONT } from '../../constants/styles'
-
-import { Club } from '~/types'
-import { doApiRequest } from '~/utils'
+import { Icon } from '../common'
+import { FormStyle, RichTextField, TextField } from '../FormComponents'
+import AdminNotesCard from './AdminNotesCard'
+import BaseCard from './BaseCard'
 
 const NotesPage = styled.div`
   width: 100%;
