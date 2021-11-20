@@ -17,8 +17,8 @@ import {
 import { BORDER_RADIUS, MD, mediaMaxWidth } from '../../constants/measurements'
 import { BODY_FONT } from '../../constants/styles'
 
-import { doApiRequest } from '~/utils'
 import { Club } from '~/types'
+import { doApiRequest } from '~/utils'
 
 const NotesPage = styled.div`
   width: 100%;
