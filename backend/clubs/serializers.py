@@ -1166,6 +1166,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     subtitle = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
     is_ghost = serializers.SerializerMethodField("get_is_ghost")
+    suspend = serializers.BooleanField(required=False, default = False)
 
     # don't use url fields so we can allow for more lax inputs
     website = serializers.CharField(required=False, allow_null=True, allow_blank=True)
@@ -1645,6 +1646,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "image",
             "instagram",
             "is_ghost",
+            "suspend",
             "is_request",
             "linkedin",
             "listserv",

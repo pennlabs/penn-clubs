@@ -325,6 +325,7 @@ class Club(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     ghost = models.BooleanField(default=False)
+    suspend = models.BooleanField(default=False)
     history = HistoricalRecords(cascade_delete_history=True)
 
     def __str__(self):
