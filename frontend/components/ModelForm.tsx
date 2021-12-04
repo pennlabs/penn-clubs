@@ -156,10 +156,10 @@ export const ModelTable = ({
       const renderFunction = column.converter
       return {
         ...column,
-        render: (id, _) => {
-          const obj = objects?.[id]
+        render: (id, row) => {
+          const obj = objects?.[id] ?? objects?.[row]
           const value = obj?.[column.name]
-          return obj && value ? renderFunction(value, obj) : 'N/A'
+          return obj && value != null ? renderFunction(value, obj) : 'N/A'
         },
       }
     } else return column
@@ -236,7 +236,9 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
   ] = useState<ModelObject | null>(null)
   const [newCount, changeNewCount] = useState<number>(0)
   const [createObject, changeCreateObject] = useState<ModelObject>(
-    props.defaultObject != null ? { ...props.defaultObject } : {},
+    props.defaultObject != null
+      ? { tempId: newCount, ...props.defaultObject }
+      : { tempId: newCount },
   )
 
   function changeObjects(newObjects: ModelObject[]) {
@@ -503,8 +505,8 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                     changeCurrentlyEditing(obj[keyField])
                     changeCreateObject(
                       props.defaultObject != null
-                        ? { ...props.defaultObject }
-                        : {},
+                        ? { tempId: newCount, ...props.defaultObject }
+                        : { tempId: newCount },
                     )
                   } else {
                     changeCreateObject(obj)
@@ -532,14 +534,13 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                         </>
                       )}
                     </button>
-
                     {currentlyEditing !== null && (
                       <span
                         onClick={() => {
                           changeCreateObject(
                             props.defaultObject != null
-                              ? { ...props.defaultObject }
-                              : {},
+                              ? { tempId: newCount, ...props.defaultObject }
+                              : { tempId: newCount },
                           )
                           changeCurrentlyEditing(null)
                           onChange({})

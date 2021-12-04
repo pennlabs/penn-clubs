@@ -1,7 +1,6 @@
 import { Field } from 'formik'
 import moment from 'moment'
 import React, { ReactElement, useState } from 'react'
-import CreatableSelect from 'react-select/creatable'
 import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
@@ -297,7 +296,17 @@ const eventTableFields = [
   {
     name: 'is_ics_event',
     label: 'ICS',
-    converter: (a: boolean): ReactElement => <Icon name={a ? 'check' : 'x'} />,
+    converter: (a: boolean): ReactElement => {
+      return a ? (
+        <span className="has-text-success">
+          <Icon name="check" />
+        </span>
+      ) : (
+        <span className="has-text-danger">
+          <Icon name="x" />
+        </span>
+      )
+    },
   },
 ]
 
@@ -342,12 +351,6 @@ const eventFields = (
       name="description"
       placeholder="Type your event description here!"
       as={RichTextField}
-    />
-    <CreatableSelect
-      name="multiple_choice"
-      as={SelectField}
-      isMulti
-      creatable
     />
   </>
 )
