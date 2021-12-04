@@ -35,6 +35,7 @@ Cypress.Commands.add('login', (username, password) => {
               formattedData[a[0]] = a[1]
             })
             formattedData.allow = 'Authorize'
+            formattedData.userChoice = 1000
             const url = data.redirects[data.redirects.length - 1].substring(5)
             cy.request({
               method: 'POST',
