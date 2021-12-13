@@ -1695,6 +1695,17 @@ class QuestionResponse(models.Model):
     response = models.TextField(blank=True)
 
 
+class Ticket(models.Model):
+    """
+    Represents a single ticket for a particular event
+    """
+
+    event = models.ForeignKey(Event, on_delete=models.DO_NOTHING)
+    buyer = models.ForeignKey(
+        get_user_model(), on_delete=models.SET_NULL, null=True, related_name="tickets"
+    )
+
+
 @receiver(models.signals.pre_delete, sender=Asset)
 def asset_delete_cleanup(sender, instance, **kwargs):
     if instance.file:
