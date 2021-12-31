@@ -2739,10 +2739,10 @@ class MembershipViewSet(viewsets.ModelViewSet):
                                 club_code:
                                     type: string
                                     description: The club code of the membership
-                                username: 
+                                username:
                                     type: string
                                     description: The username of the logged in user
-        --- 
+        ---
         """
         return Response(
             ClubMembershipSerializer(
