@@ -2732,7 +2732,17 @@ class MembershipViewSet(viewsets.ModelViewSet):
                     application/json:
                         schema:
                             type: object
-        ---
+                            properties:
+                                role:
+                                    type: integer
+                                    description: The enum value of the role of the user
+                                club_code:
+                                    type: string
+                                    description: The club code of the membership
+                                username: 
+                                    type: string
+                                    description: The username of the logged in user
+        --- 
         """
         return Response(
             ClubMembershipSerializer(
