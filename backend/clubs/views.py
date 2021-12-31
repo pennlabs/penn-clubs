@@ -122,6 +122,7 @@ from clubs.serializers import (
     ClubConstitutionSerializer,
     ClubFairSerializer,
     ClubListSerializer,
+    ClubMembershipSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
     EventSerializer,
@@ -2718,6 +2719,31 @@ class MembershipViewSet(viewsets.ModelViewSet):
             ),
         )
         return queryset
+
+    @action(detail=False, methods=["get"])
+    def admin(self, request, *args, **kwargs):
+        """
+        Endpoint used to retrieve the clubs that the logged-in user is an admin of
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+        ---
+        """
+        return Response(
+            ClubMembershipSerializer(
+                Membership.objects.filter(
+                    person=self.request.user,
+                    club__archived=False,
+                    role__lte=Membership.ROLE_OFFICER,
+                ),
+                many=True,
+            ).data
+        )
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):

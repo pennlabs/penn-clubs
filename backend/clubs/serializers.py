@@ -793,6 +793,21 @@ class AuthenticatedMembershipSerializer(MembershipSerializer):
         pass
 
 
+class ClubMembershipSerializer(MembershipSerializer):
+    """
+    Provides information about the club that the user is a member of.
+    Used in a reverse lookup to find clubs a user is part of
+    """
+
+    club_code = serializers.CharField(source="club.code")
+    role = serializers.IntegerField(required=False)
+    username = serializers.CharField(source="person.username", read_only=True)
+
+    class Meta:
+        model = Membership
+        fields = ["club_code", "role", "username"]
+
+
 class ClubMinimalSerializer(serializers.ModelSerializer):
     """
     Return only the club name, code, and approval status for a club.
