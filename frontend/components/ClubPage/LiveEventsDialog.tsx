@@ -121,7 +121,7 @@ const LiveEventsDialog = ({
       <LiveTitle>{fairName}</LiveTitle>
       <LiveSub>
         {liveEventCount === 0 ? (
-          `Get ready for the virtual ${FAIR_NAME} fair! If you need help registering email fair@sacfunded.net`
+          `Get ready for the virtual ${FAIR_NAME} fair! If you need help registering email contact@pennclubs.com`
         ) : (
           <>
             {liveEventCount}{' '}
