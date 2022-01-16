@@ -54,6 +54,7 @@ from clubs.models import (
     TargetStudentType,
     TargetYear,
     Testimonial,
+    Ticket,
     Year,
 )
 from clubs.utils import clean
@@ -1719,6 +1720,23 @@ class UserMembershipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Membership
         fields = ("club", "role", "title", "active", "public")
+
+
+class TicketSerializer(serializers.ModelSerializer):
+
+    """
+    Used to return a ticket object
+    """
+
+    owner = serializers.SerializerMethodField("get_owner_name")
+    event = EventSerializer(source="obj.event")
+
+    def get_owner_name(self, obj):
+        return obj.owner.get_full_name()
+
+    class Meta:
+        model = Ticket
+        fields = ("id", "event", "owner")
 
 
 class UserUUIDSerializer(serializers.ModelSerializer):

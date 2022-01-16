@@ -82,6 +82,7 @@ from clubs.models import (
     Subscribe,
     Tag,
     Testimonial,
+    Ticket,
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
@@ -148,6 +149,7 @@ from clubs.serializers import (
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
+    TicketSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
     UserMembershipInviteSerializer,
@@ -4195,6 +4197,96 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
             [user], "profile__school", "profile__major",
         )
         return user
+
+
+class TicketViewSet(viewsets.ModelViewSet):
+    """
+    create:
+    Create tickets for an event
+
+    buy:
+    Buy one ticket
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = TicketSerializer
+    http_method_names = ["get", "post"]
+
+    def create(self, request, *args, **kwargs):
+        """
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            name:
+                                type: string
+                            event:
+                                type: integer
+                            quantities:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        type:
+                                            type: string
+                                        count:
+                                            type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: A success or error message.
+        """
+        name = request.data.get("name")
+        event = request.data.get("event")
+        quantities = request.data.get("quantities")
+
+        for type, count in quantities.items():
+            for _ in range(count):
+                Ticket.objects.create(name=name, event=event, type=type)
+
+    @action(detail=False, methods=["get"])
+    def buy(self, request, *args, **kwargs):
+        """
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            type:
+                                type: string
+                            event:
+                                type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                        allOf:
+                            - $ref: "#/components/schemas/Ticket"
+        ---
+        """
+
+        # Get first unsold ticket of type
+        ticket = Ticket.objects.filter(
+            event=request.data.get("event"),
+            type=request.data.get("type"),
+            user__isnull=True,
+        ).first()
+        ticket.owner = request.user
+        ticket.save()
+        return Response(TicketSerializer(ticket).data)
+
+    def get_queryset(self):
+        return Ticket.objects.filter(user=self.request.user)
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
