@@ -48,6 +48,7 @@ from clubs.models import (
     TargetStudentType,
     TargetYear,
     Testimonial,
+    Ticket,
     Year,
     ZoomMeetingVisit,
 )
@@ -443,3 +444,4 @@ admin.site.register(NoteTag)
 admin.site.register(Year, YearAdmin)
 admin.site.register(ZoomMeetingVisit, ZoomMeetingVisitAdmin)
 admin.site.register(AdminNote)
+admin.site.register(Ticket)
