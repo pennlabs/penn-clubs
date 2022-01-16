@@ -2222,35 +2222,34 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     def tickets(self, request, *args, **kwargs):
         """
         Get information about tickets for particular event
-        ___
+        ---
         requestBody: {}
         responses:
             "200":
                 content:
-                    application/json
+                    application/json:
                         schema:
                             type: object
                             properties:
                                 totals:
                                     type: array
-                                        items:
-                                            type: object
-                                            properties:
-                                                type:
-                                                    type: string
-                                                count:
-                                                    type: integer
+                                    items:
+                                        type: object
+                                        properties:
+                                            type:
+                                                type: string
+                                            count:
+                                                type: integer
                                 available:
                                     type: array
-                                        items:
-                                            type: object
-                                            properties:
-                                                type:
-                                                    type: string
-                                                count:
-                                                    type: integer
+                                    items:
+                                        type: object
+                                        properties:
+                                            type:
+                                                type: string
+                                            count:
+                                                type: integer
         ---
-                
         """
 
         tickets = Ticket.objects.filter(event=kwargs["id"])
@@ -2260,9 +2259,12 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         for type in types:
             totals.append({"type": type, "count": tickets.filter(type=type).count()})
-            available.append({"type": type, "count": (
-                tickets.filter(type=type, owner__isnull=True).count()
-            )})
+            available.append(
+                {
+                    "type": type,
+                    "count": (tickets.filter(type=type, owner__isnull=True).count()),
+                }
+            )
 
         return Response({"totals": totals, "available": available})
 
@@ -4321,6 +4323,8 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"])
     def buy(self, request, *args, **kwargs):
         """
+        Buy a ticket
+        ---
         requestBody:
             content:
                 application/json:
@@ -4336,8 +4340,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
-                        allOf:
-                            - $ref: "#/components/schemas/Ticket"
+                            allOf:
+                                - $ref: "#/components/schemas/Ticket"
         ---
         """
         type = request.data.get("type")
