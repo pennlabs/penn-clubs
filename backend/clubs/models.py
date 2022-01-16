@@ -941,6 +941,10 @@ class Event(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def tickets_count(self):
+        return Ticket.objects.count(event=self)
+
 
 class Favorite(models.Model):
     """
@@ -1697,12 +1701,16 @@ class QuestionResponse(models.Model):
 
 class Ticket(models.Model):
     """
-    Represents a single ticket for a particular event
+    Represents an instance of a ticket for an event
     """
 
-    event = models.ForeignKey(Event, on_delete=models.DO_NOTHING)
-    buyer = models.ForeignKey(
-        get_user_model(), on_delete=models.SET_NULL, null=True, related_name="tickets"
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(
+        Event, related_name="tickets", on_delete=models.DO_NOTHING
+    )
+    type = models.CharField(max_length=100)
+    owner = models.ForeignKey(
+        get_user_model(), related_name="tickets", on_delete=models.SET_NULL, blank=True
     )
 
 
