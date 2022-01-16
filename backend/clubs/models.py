@@ -1710,7 +1710,11 @@ class Ticket(models.Model):
     )
     type = models.CharField(max_length=100)
     owner = models.ForeignKey(
-        get_user_model(), related_name="tickets", on_delete=models.SET_NULL, blank=True
+        get_user_model(),
+        related_name="tickets",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
 
 

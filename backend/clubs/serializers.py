@@ -1729,10 +1729,10 @@ class TicketSerializer(serializers.ModelSerializer):
     """
 
     owner = serializers.SerializerMethodField("get_owner_name")
-    event = EventSerializer(source="obj.event")
+    event = EventSerializer()
 
     def get_owner_name(self, obj):
-        return obj.owner.get_full_name()
+        return obj.owner.get_full_name() if obj.owner else "None"
 
     class Meta:
         model = Ticket
