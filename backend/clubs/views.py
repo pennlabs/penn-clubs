@@ -2209,6 +2209,54 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             return EventWriteSerializer
         return EventSerializer
 
+    @action(detail=True, methods=["get"])
+    def tickets(self, request, *args, **kwargs):
+        """
+        Get information about tickets for particular event
+        ___
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json
+                        schema:
+                            type: object
+                            properties:
+                                totals:
+                                    type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                type:
+                                                    type: string
+                                                count:
+                                                    type: integer
+                                available:
+                                    type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                type:
+                                                    type: string
+                                                count:
+                                                    type: integer
+        ---
+                
+        """
+
+        tickets = Ticket.objects.filter(event=kwargs["id"])
+        types = tickets.values_list("type", flat=True).distinct()
+        totals = []
+        available = []
+
+        for type in types:
+            totals.append({"type": type, "count": tickets.filter(type=type).count()})
+            available.append({"type": type, "count": (
+                tickets.filter(type=type, owner__isnull=True).count()
+            )})
+
+        return Response({"totals": totals, "available": available})
+
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
@@ -4206,6 +4254,9 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     buy:
     Buy one ticket
+
+    list:
+    List all tickets owned by user
     """
 
     permission_classes = [IsAuthenticated]
@@ -4244,15 +4295,21 @@ class TicketViewSet(viewsets.ModelViewSet):
                                     type: string
                                     description: A success or error message.
         """
-        name = request.data.get("name")
-        event = request.data.get("event")
+        event = get_object_or_404(Event, id=request.data.get("event"))
         quantities = request.data.get("quantities")
+        membership = find_membership_helper(request.user, event.club)
 
-        for type, count in quantities.items():
-            for _ in range(count):
-                Ticket.objects.create(name=name, event=event, type=type)
+        if membership.role <= 10:  # Create tickets allowed if officer+
+            for item in quantities:
+                for _ in range(item["count"]):
+                    Ticket.objects.create(event=event, type=item["type"])
+            return Response([])
+        else:
+            return Response(
+                {"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
+            )
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["post"])
     def buy(self, request, *args, **kwargs):
         """
         requestBody:
@@ -4274,19 +4331,33 @@ class TicketViewSet(viewsets.ModelViewSet):
                             - $ref: "#/components/schemas/Ticket"
         ---
         """
+        type = request.data.get("type")
+        event = request.data.get("event")
 
-        # Get first unsold ticket of type
+        # If ticket already owned, do nothing
+        if Ticket.objects.filter(event=event, owner=request.user.id).first():
+            return Response(
+                {"detail": "Ticket to event already owned by user"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Otherwise get first unowned ticket of requested type
         ticket = Ticket.objects.filter(
-            event=request.data.get("event"),
-            type=request.data.get("type"),
-            user__isnull=True,
+            event=request.data.get("event"), type=type, owner__isnull=True,
         ).first()
-        ticket.owner = request.user
-        ticket.save()
-        return Response(TicketSerializer(ticket).data)
+
+        if ticket:
+            ticket.owner = request.user
+            ticket.save()
+            return Response(TicketSerializer(ticket).data)
+        else:
+            return Response(
+                {"detail": f"No tickets of type {type} left!"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
     def get_queryset(self):
-        return Ticket.objects.filter(user=self.request.user)
+        return Ticket.objects.filter(owner=self.request.user.id)
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
