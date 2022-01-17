@@ -4430,10 +4430,6 @@ class TicketViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Ticket.objects.filter(owner=self.request.user.id)
 
-    # def get_object(self, request, pk=None):
-    #     print(pk)
-    #     return Ticket.objects.get(pk=pk)
-
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
     """
