@@ -1792,6 +1792,45 @@ class Ticket(models.Model):
                 context=context,
             )
 
+    def get_qr(self):
+        """
+        Return a QR code image linking to the ticket page
+        """
+        if not self.owner:
+            return None
+
+        url = f"https://{settings.DOMAIN}/api/tickets/{self.id}"
+        qr_image = qrcode.make(url, box_size=20, border=0)
+        return qr_image
+
+    def send_confirmation_email(self):
+        """
+        Send a confirmation email to the ticket owner after purchase
+        """
+        owner = self.owner
+
+        output = BytesIO()
+        qr_image = self.get_qr()
+        qr_image.save(output, format="PNG")
+        decoded_image = base64.b64encode(output.getvalue()).decode("ascii")
+
+        context = {
+            "first_name": self.owner.first_name,
+            "name": self.event.name,
+            "type": self.type,
+            "start_time": self.event.start_time,
+            "end_time": self.event.end_time,
+            "qr": decoded_image,
+        }
+
+        if self.owner.email:
+            send_mail_helper(
+                name="ticket_confirmation",
+                subject=f"Ticket confirmation for {owner.get_full_name()}",
+                emails=[owner.email],
+                context=context,
+            )
+
 
 @receiver(models.signals.pre_delete, sender=Asset)
 def asset_delete_cleanup(sender, instance, **kwargs):
