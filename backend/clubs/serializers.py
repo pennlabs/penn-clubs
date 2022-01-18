@@ -2385,7 +2385,13 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
         """
         Return url to the internal application page for associated club application
         """
-        return f"/club/{obj.application.club.code}/application/{obj.application.pk}/"
+        if obj.application and obj.application.club:
+            return (
+                f"/club/{obj.application.club.code}/application/{obj.application.pk}/"
+            )
+        else:
+            # cannot link to the application if the application has been deleted
+            return "#"
 
     def validate(self, data):
         application_start_time = data["application_start_time"]
