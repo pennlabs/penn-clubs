@@ -94,6 +94,8 @@ function formatSubmissions(responses) {
   return responses.map((response) => {
     return {
       ...response,
+      name: response.name ?? '(removed)',
+      club: response.club ?? '(removed)',
       committee: response.committee?.name ?? 'General Member',
       status: APPLICATION_STATUS_TYPES.find(
         (status) => status.value === response.status,
