@@ -2598,18 +2598,26 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         request = self.context["request"].data
 
         # only allow modifications to committees if the application is not yet open
-        now = pytz.UTC.localize(datetime.datetime.now())
+        now = pytz.timezone("America/New_York").localize(datetime.datetime.now())
         if "committees" in request and application_obj.application_start_time > now:
-            committees = request["committees"]
-            ApplicationCommittee.objects.filter(application=application_obj).delete()
-            for committee in committees:
-                if "value" in committee.keys():
-                    name = committee["value"]
-                elif "name" in committee.keys():
-                    name = committee["name"]
-                ApplicationCommittee.objects.create(
-                    name=name, application=application_obj,
-                )
+            committees = map(
+                lambda x: x["value"] if "value" in x else x["name"],
+                request["committees"],
+            )
+            prev_committees = ApplicationCommittee.objects.filter(
+                application=application_obj
+            )
+            # nasty hack for idempotency
+            for prev_committee in prev_committees:
+                if prev_committee.name not in committees:
+                    prev_committee.delete()
+
+            prev_committee_names = prev_committees.values("name")
+            for name in committees:
+                if name not in prev_committee_names:
+                    ApplicationCommittee.objects.create(
+                        name=name, application=application_obj,
+                    )
 
         return application_obj
 
