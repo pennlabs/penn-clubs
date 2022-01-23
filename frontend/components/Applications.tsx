@@ -1,4 +1,5 @@
 import { NextPageContext } from 'next'
+import Link from 'next/link'
 import React, { ReactElement } from 'react'
 import styled from 'styled-components'
 import { Application } from 'types'
@@ -78,10 +79,28 @@ const AppsContainer = styled.div`
   min-height: 60vh;
 `
 
+function shuffle(array) {
+  let currentIndex = array.length
+  let randomIndex
+
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex)
+    currentIndex--
+    ;[array[currentIndex], array[randomIndex]] = [
+      array[randomIndex],
+      array[currentIndex],
+    ]
+  }
+
+  return array
+}
+
 function ApplicationsPage({ whartonapplications }): ReactElement {
   if ('detail' in whartonapplications) {
     return <Text>{whartonapplications.detail}</Text>
   }
+
+  shuffle(whartonapplications)
 
   return (
     <AppsContainer>
@@ -89,26 +108,31 @@ function ApplicationsPage({ whartonapplications }): ReactElement {
         {whartonapplications != null && whartonapplications.length > 0 ? (
           whartonapplications.map((application) => (
             <CardWrapper className={'column is-half-desktop'}>
-              <Card className="card">
-                <MainInfo>
-                  <div>
-                    <ClubName>{application.name}</ClubName>
-                    <DateInterval
-                      start={application.application_start_time}
-                      end={application.application_end_time}
-                    />
-                  </div>
-                  <div>
-                    {application.club_image_url != null &&
-                      application.club_image_url !== '' && (
-                        <Image src={application.club_image_url} />
+              <Link href={application.external_url}>
+                <a target="_blank">
+                  <Card className="card">
+                    <MainInfo>
+                      <div>
+                        <ClubName>{application.name}</ClubName>
+                        <DateInterval
+                          start={application.application_start_time}
+                          end={application.application_end_time}
+                        />
+                      </div>
+                      <div>
+                        {application.club_image_url != null &&
+                          application.club_image_url !== '' && (
+                            <Image src={application.club_image_url} />
+                          )}
+                      </div>
+                    </MainInfo>
+                    {application.description &&
+                      application.description.length && (
+                        <Description>{application.description}</Description>
                       )}
-                  </div>
-                </MainInfo>
-                {application.description && application.description.length && (
-                  <Description>{application.description}</Description>
-                )}
-              </Card>
+                  </Card>
+                </a>
+              </Link>
             </CardWrapper>
           ))
         ) : (
