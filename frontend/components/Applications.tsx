@@ -126,10 +126,13 @@ function ApplicationsPage({ whartonapplications }): ReactElement {
                           )}
                       </div>
                     </MainInfo>
-                    {application.description &&
-                      application.description.length && (
-                        <Description>{application.description}</Description>
-                      )}
+                    {application.description && application.description.length && (
+                      <Description
+                        dangerouslySetInnerHTML={{
+                          __html: application.description,
+                        }}
+                      ></Description>
+                    )}
                   </Card>
                 </a>
               </Link>
