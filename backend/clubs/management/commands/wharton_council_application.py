@@ -67,7 +67,9 @@ class Command(BaseCommand):
                     clubs.append(club)
         else:
             for code in club_names:
-                clubs.append(Club.objects.filter(code=code).first())
+                target_club = Club.objects.filter(code=code).first()
+                if target_club is not None:
+                    clubs.append(target_club)
 
         application_start_time = datetime.strptime(
             kwargs["application_start_time"], "%Y-%m-%d %H:%M:%S"
@@ -84,6 +86,10 @@ class Command(BaseCommand):
         )
         prompt_two = "Tell us about a time you faced a challenge and how you solved it"
         prompt_three = "Tell us about a time you collaborated well in a team"
+
+        if len(clubs) == 0:
+            self.stdout.write(f"No valid club codes provided, returning...")
+
         for club in clubs:
             name = f"{club.name} Application"
             if dry_run:
@@ -98,11 +104,12 @@ class Command(BaseCommand):
                     result_release_time=result_release_time,
                     is_wharton_council=True,
                 )
-                link = (
+                external_url = (
                     f"https://pennclubs.com/club/{club.code}/"
-                    "application/{application.pk}"
+                    f"application/{application.pk}"
                 )
-                application.external_url = link
+                application.external_url = external_url
+                application.save()
                 prompt = (
                     "Choose one of the following " "prompts for your personal statement"
                 )

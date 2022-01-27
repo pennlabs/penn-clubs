@@ -4479,16 +4479,24 @@ class UserViewSet(viewsets.ModelViewSet):
                                                 type: integer
         ---
         """
-        prompt = self.request.GET.get("prompt")
+        question_id_param = self.request.GET.get("question_id")
+        if question_id_param is None or not question_id_param.isnumeric():
+            return Response([])
+        question_id = int(question_id_param)
+        question = ApplicationQuestion.objects.filter(pk=question_id).first()
+        if question is None:
+            return Response([])
+
         response = (
             ApplicationQuestionResponse.objects.filter(
                 submission__user=self.request.user
             )
-            .filter(question__prompt=prompt)
+            .filter(question__prompt=question.prompt)
             .order_by("-updated_at")
             .first()
         )
-        if prompt == "" or response is None:
+
+        if response is None:
             return Response([])
         else:
             return Response(ApplicationQuestionResponseSerializer(response).data)
