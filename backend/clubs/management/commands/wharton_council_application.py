@@ -88,7 +88,7 @@ class Command(BaseCommand):
         prompt_three = "Tell us about a time you collaborated well in a team"
 
         if len(clubs) == 0:
-            self.stdout.write(f"No valid club codes provided, returning...")
+            self.stdout.write("No valid club codes provided, returning...")
 
         for club in clubs:
             name = f"{club.name} Application"
