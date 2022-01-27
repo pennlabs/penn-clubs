@@ -348,20 +348,12 @@ ApplicationPage.getInitialProps = async (
     ].map(async (url) => (await doApiRequest(url, data)).json()),
   )
 
-  const fixedEncodeURIComponent = (str) => {
-    return encodeURIComponent(str).replace(/[!'()*]/g, (c) => {
-      return '%' + c.charCodeAt(0).toString(16)
-    })
-  }
-
   // TODO: refactor this, functional methods with async-await is horrible
   const initialValues = await await questions
     .map((question) => {
       return [
         question.id,
-        `/users/questions?format=json&prompt=${fixedEncodeURIComponent(
-          question.prompt,
-        )}`,
+        `/users/questions?format=json&question_id=${question.id}`,
       ]
     })
     .reduce(async (accPromise, params: [number, string]) => {
