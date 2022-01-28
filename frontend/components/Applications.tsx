@@ -79,28 +79,10 @@ const AppsContainer = styled.div`
   min-height: 60vh;
 `
 
-function shuffle(array) {
-  let currentIndex = array.length
-  let randomIndex
-
-  while (currentIndex !== 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex)
-    currentIndex--
-    ;[array[currentIndex], array[randomIndex]] = [
-      array[randomIndex],
-      array[currentIndex],
-    ]
-  }
-
-  return array
-}
-
 function ApplicationsPage({ whartonapplications }): ReactElement {
   if ('detail' in whartonapplications) {
     return <Text>{whartonapplications.detail}</Text>
   }
-
-  shuffle(whartonapplications)
 
   return (
     <AppsContainer>
