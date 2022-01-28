@@ -1,6 +1,7 @@
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import React, { ReactElement } from 'react'
+import LazyLoad from 'react-lazy-load'
 import styled from 'styled-components'
 import { Application } from 'types'
 import { doBulkLookup } from 'utils'
@@ -104,7 +105,9 @@ function ApplicationsPage({ whartonapplications }): ReactElement {
                       <div>
                         {application.club_image_url != null &&
                           application.club_image_url !== '' && (
-                            <Image src={application.club_image_url} />
+                            <LazyLoad height={62} offset={800}>
+                              <Image src={application.club_image_url} />
+                            </LazyLoad>
                           )}
                       </div>
                     </MainInfo>
