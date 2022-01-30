@@ -353,9 +353,7 @@ ApplicationPage.getInitialProps = async (
     .map((question) => {
       return [
         question.id,
-        `/users/questions?format=json&prompt=${encodeURIComponent(
-          question.prompt,
-        )}`,
+        `/users/questions?format=json&question_id=${question.id}`,
       ]
     })
     .reduce(async (accPromise, params: [number, string]) => {
