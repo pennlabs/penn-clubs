@@ -26,7 +26,7 @@ from django.core.management import call_command, get_commands, load_command_clas
 from django.core.validators import validate_email
 from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.db.models.expressions import RawSQL
-from django.db.models.functions import Lower, Trunc
+from django.db.models.functions import Lower, Trunc, SHA1, Concat
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -50,6 +50,7 @@ from tatsu.exceptions import FailedParse
 
 from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
 from clubs.mixins import XLSXFormatterMixin
+from django.db.models import Value
 from clubs.models import (
     AdminNote,
     Advisor,
@@ -4541,6 +4542,17 @@ class WhartonApplicationAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         now = timezone.now()
+
+        qs = ClubApplication.objects.filter(
+            is_wharton_council=True, application_end_time__gte=now
+        )
+
+        # randomly order applications, seeded by user ID
+
+        seed = self.request.user.id if self.request.user else 30
+
+        qs = qs.annotate(random=SHA1(Concat("name", Value(seed)),)).order_by("random")
+
         return ClubApplication.objects.filter(
             is_wharton_council=True, application_end_time__gte=now
         )
