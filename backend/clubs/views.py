@@ -24,9 +24,17 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.validators import validate_email
-from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
+from django.db.models import (
+    Count,
+    DurationField,
+    ExpressionWrapper,
+    F,
+    Prefetch,
+    Q,
+    Value,
+)
 from django.db.models.expressions import RawSQL
-from django.db.models.functions import Lower, Trunc, SHA1, Concat
+from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -50,7 +58,6 @@ from tatsu.exceptions import FailedParse
 
 from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
 from clubs.mixins import XLSXFormatterMixin
-from django.db.models import Value
 from clubs.models import (
     AdminNote,
     Advisor,
