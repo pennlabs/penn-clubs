@@ -2523,7 +2523,8 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
         """
         super(ApplicationSubmissionCSVSerializer, self).__init__(*args, **kwargs)
         (queryset,) = args
-        submission = queryset.first()
+
+        submission = queryset[0] if len(queryset) else None
         if submission:
             application = submission.application
             for question in application.questions.all():
