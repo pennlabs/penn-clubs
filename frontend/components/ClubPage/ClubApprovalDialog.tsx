@@ -1,6 +1,8 @@
 import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 
+import { CLUB_SETTINGS_ROUTE } from '~/constants/routes'
+
 import { Club, ClubFair, MembershipRank, UserInfo } from '../../types'
 import {
   apiCheckPermission,
@@ -338,6 +340,13 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
               </li>
             )
           })}
+          <p>
+            You can register {club.name} for activities fairs{' '}
+            <b>
+              <a href={CLUB_SETTINGS_ROUTE(club.code)}>here</a>
+            </b>
+            .
+          </p>
         </div>
       )}
     </>
