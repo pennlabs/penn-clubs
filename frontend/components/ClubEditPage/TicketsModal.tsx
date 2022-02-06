@@ -1,4 +1,5 @@
-import React, { ReactElement, useEffect, useState } from 'react'
+import React, { ReactElement, useState } from 'react'
+import { toast, TypeOptions } from 'react-toastify'
 import styled from 'styled-components'
 
 import { Icon, Line, Text, Title } from '../../components/common'
@@ -10,12 +11,8 @@ import {
 } from '../../constants/colors'
 import { BORDER_RADIUS } from '../../constants/measurements'
 import { BODY_FONT } from '../../constants/styles'
-import { Club, ClubEvent } from '../../types'
-import {
-  apiSetFavoriteStatus,
-  apiSetSubscribeStatus,
-  doApiRequest,
-} from '../../utils'
+import { ClubEvent } from '../../types'
+import { doApiRequest } from '../../utils'
 import CoverPhoto from '../EventPage/CoverPhoto'
 
 const ModalContainer = styled.div`
@@ -23,49 +20,11 @@ const ModalContainer = styled.div`
   position: relative;
 `
 const ModalBody = styled.div`
-  padding: 5%;
+  padding: 2rem;
 `
-
-const ActionButtons = ({ club: code }): ReactElement | null => {
-  const [isBookmarked, setBookmarked] = useState<boolean | null>(null)
-  const [isSubscribed, setSubscribed] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    doApiRequest(`/clubs/${code}/?format=json`)
-      .then((resp) => resp.json())
-      .then((data: Club) => {
-        setSubscribed(data.is_subscribe)
-        setBookmarked(data.is_favorite)
-      })
-  }, [code])
-
-  if (isSubscribed == null || isBookmarked == null) {
-    return null
-  }
-
-  return (
-    <>
-      <button
-        className="button is-success is-small"
-        disabled={isBookmarked}
-        onClick={() =>
-          apiSetFavoriteStatus(code, true).then(() => setBookmarked(true))
-        }
-      >
-        <Icon name="bookmark" /> {isBookmarked ? 'Bookmarked' : 'Bookmark'}
-      </button>
-      <button
-        className="button is-success is-small"
-        disabled={isSubscribed}
-        onClick={() =>
-          apiSetSubscribeStatus(code, true).then(() => setSubscribed(true))
-        }
-      >
-        <Icon name="bell" /> {isSubscribed ? 'Subscribed' : 'Subscribe'}
-      </button>
-    </>
-  )
-}
+const SectionContainer = styled.div`
+  margin-bottom: 1.5rem;
+`
 
 const Input = styled.input`
   border: 1px solid ${ALLBIRDS_GRAY};
@@ -84,6 +43,13 @@ const Input = styled.input`
     background: ${FOCUS_GRAY};
   }
 `
+
+const notify = (
+  msg: ReactElement | string,
+  type: TypeOptions = 'info',
+): void => {
+  toast[type](msg)
+}
 
 const TicketItem = ({
   ticket,
@@ -143,18 +109,7 @@ const TicketItem = ({
 
 const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
   const { event } = props
-  const {
-    large_image_url,
-    image_url,
-    club,
-    club_name,
-    start_time,
-    end_time,
-    name,
-    url,
-    id,
-    description,
-  } = event
+  const { large_image_url, image_url, club_name, name, id } = event
 
   const [tickets, setTickets] = useState([
     { name: 'Regular Ticket', count: null },
@@ -187,17 +142,23 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
   const submit = () => {
     if (typeof name === 'string' && tickets.length > 0) {
       const quantities = tickets.map((ticket) => {
-        return { type: ticket.name, count: ticket.count }
+        return { type: ticket.name, count: parseInt(ticket.count) }
       })
       doApiRequest(`/events/${id}/tickets/?format=json`, {
         method: 'PUT',
         body: {
-          name: name,
           quantities: quantities,
         },
       })
+      notify(<>Tickets Created!</>, 'success')
     }
   }
+
+  const disableSubmit = tickets.some(
+    (ticket) =>
+      typeof ticket.name !== 'string' ||
+      !Number.isInteger(parseInt(ticket.count)),
+  )
 
   return (
     <ModalContainer>
@@ -216,11 +177,13 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
           enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
           ut aliquip ex ea commodo consequat. Duis aute irure dolor in
           reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur
+          pariatur.
         </Text>
         <Line />
-        <h1 style={{ marginBottom: '20px' }}>Tickets</h1>
-        <div style={{ marginBottom: '20px' }}>
+        <SectionContainer>
+          <h1>Tickets</h1>
+        </SectionContainer>
+        <SectionContainer>
           {tickets.map((ticket, index) => (
             <TicketItem
               ticket={ticket}
@@ -231,14 +194,18 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
               deleteTicket={deleteTicket}
             />
           ))}
-        </div>
-        <div style={{ marginBottom: '20px' }}>
-          <button className="button is-primary" onClick={addNewTicket}>
-            Add a new ticket
+        </SectionContainer>
+        <SectionContainer>
+          <button className="button is-info" onClick={addNewTicket}>
+            New Ticket Class
           </button>
-        </div>
+        </SectionContainer>
         <div>
-          <button onClick={submit} className="button is-primary">
+          <button
+            onClick={submit}
+            disabled={disableSubmit}
+            className="button is-primary"
+          >
             Submit
           </button>
         </div>
