@@ -111,6 +111,8 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
   const { event } = props
   const { large_image_url, image_url, club_name, name, id } = event
 
+  const [submitting, setSubmitting] = useState(false)
+
   const [tickets, setTickets] = useState([
     { name: 'Regular Ticket', count: null },
   ])
@@ -151,6 +153,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
         },
       })
       notify(<>Tickets Created!</>, 'success')
+      setSubmitting(false)
     }
   }
 
@@ -201,13 +204,41 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
           </button>
         </SectionContainer>
         <div>
-          <button
-            onClick={submit}
-            disabled={disableSubmit}
-            className="button is-primary"
-          >
-            Submit
-          </button>
+          {submitting ? (
+            <>
+              <p className="help is-danger mb-3">
+                Are you sure you want to create these tickets? Ticket classes
+                and quantities are final and you will not be able to change them
+                moving forward.
+              </p>
+              <button
+                onClick={submit}
+                disabled={disableSubmit}
+                className="button is-primary mr-3"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => {
+                  setSubmitting(false)
+                }}
+                disabled={disableSubmit}
+                className="button is-danger"
+              >
+                No
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => {
+                setSubmitting(true)
+              }}
+              disabled={disableSubmit}
+              className="button is-primary"
+            >
+              Submit
+            </button>
+          )}
         </div>
       </ModalBody>
     </ModalContainer>
