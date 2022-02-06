@@ -418,7 +418,7 @@ const CreateTickets = ({ event }: { event: ClubEvent }) => {
           onClick={() => {
             showModal()
           }}
-          disabled={event == null}
+          disabled={!event.name}
           className="button is-primary"
         >
           Create
