@@ -2145,6 +2145,24 @@ class AuthenticatedClubSerializer(ClubSerializer):
     email = serializers.EmailField()
     email_public = serializers.BooleanField(default=True)
     advisor_set = AdvisorSerializer(many=True, required=False)
+    owners = serializers.SerializerMethodField("get_owners")
+    officers = serializers.SerializerMethodField("get_officers")
+
+    def get_owners(self, obj):
+        return MinimalUserProfileSerializer(
+            obj.members.filter(membership__role=Membership.ROLE_OWNER),
+            many=True,
+            read_only=True,
+            context=self.context,
+        ).data
+
+    def get_officers(self, obj):
+        return MinimalUserProfileSerializer(
+            obj.members.filter(membership__role=Membership.ROLE_OFFICER),
+            many=True,
+            read_only=True,
+            context=self.context,
+        ).data
 
     class Meta(ClubSerializer.Meta):
         fields = ClubSerializer.Meta.fields + [
@@ -2153,6 +2171,8 @@ class AuthenticatedClubSerializer(ClubSerializer):
             "files",
             "ics_import_url",
             "terms",
+            "owners",
+            "officers",
         ]
 
 
