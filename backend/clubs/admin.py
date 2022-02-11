@@ -20,6 +20,7 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    Cart,
     Club,
     ClubApplication,
     ClubFair,
@@ -445,3 +446,4 @@ admin.site.register(Year, YearAdmin)
 admin.site.register(ZoomMeetingVisit, ZoomMeetingVisitAdmin)
 admin.site.register(AdminNote)
 admin.site.register(Ticket)
+admin.site.register(Cart)
