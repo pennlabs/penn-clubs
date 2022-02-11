@@ -48,6 +48,21 @@ const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   }
 `
 
+const TableWrapper = styled.div`
+transform:rotateX(180deg);
+-ms-transform:rotateX(180deg); /* IE 9 */
+-webkit-transform:rotateX(180deg);
+over
+`
+
+const ScrollWrapper = styled.div`
+transform:rotateX(180deg);
+-ms-transform:rotateX(180deg); /* IE 9 */
+-webkit-transform:rotateX(180deg);
+overflow-y: auto;
+margin-top: 1rem;
+`
+
 const FormWrapper = styled.div`
   border-bottom: 1px solid ${ALLBIRDS_GRAY};
   padding: 12px;
@@ -640,6 +655,8 @@ export default function ApplicationsPage({
                 </small>
               </div>
               {submissions[currentApplication.id].length > 0 ? (
+                <ScrollWrapper>
+                <TableWrapper>
                 <Table
                   data={submissions[currentApplication.id].map((item, index) =>
                     item.pk ? { ...item, id: item.pk } : { ...item, id: index },
@@ -710,6 +727,8 @@ export default function ApplicationsPage({
                     setCurrentSubmission(submission)
                   }}
                 />
+                </TableWrapper>
+                </ScrollWrapper>
               ) : (
                 <>
                   <br></br>
