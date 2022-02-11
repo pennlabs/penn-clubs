@@ -1702,6 +1702,16 @@ class QuestionResponse(models.Model):
     response = models.TextField(blank=True)
 
 
+class Cart(models.Model):
+    """
+    Represents an instance of a ticket cart for a user
+    """
+
+    owner = models.ForeignKey(
+        get_user_model(), related_name="cart", on_delete=models.CASCADE
+    )
+
+
 class Ticket(models.Model):
     """
     Represents an instance of a ticket for an event
@@ -1719,6 +1729,9 @@ class Ticket(models.Model):
         blank=True,
         null=True,
     )
+    held = models.BooleanField(default=False)
+    holding_expiration = models.DateTimeField(null=True, blank=True)
+    carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
 
     def get_qr(self):
         """
