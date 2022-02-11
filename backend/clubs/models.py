@@ -1574,7 +1574,9 @@ class ApplicationCommittee(models.Model):
 
     name = models.TextField(blank=True)
     application = models.ForeignKey(
-        ClubApplication, related_name="committees", on_delete=models.CASCADE,
+        ClubApplication,
+        related_name="committees",
+        on_delete=models.CASCADE,
     )
 
     def get_word_limit(self):
@@ -1626,7 +1628,9 @@ class ApplicationMultipleChoice(models.Model):
 
     value = models.TextField(blank=True)
     question = models.ForeignKey(
-        ApplicationQuestion, related_name="multiple_choice", on_delete=models.CASCADE,
+        ApplicationQuestion,
+        related_name="multiple_choice",
+        on_delete=models.CASCADE,
     )
 
 
@@ -1752,45 +1756,6 @@ class Ticket(models.Model):
     holding_expiration = models.DateTimeField(null=True, blank=True)
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
     objects = TicketManager()
-
-    def get_qr(self):
-        """
-        Return a QR code image linking to the ticket page
-        """
-        if not self.owner:
-            return None
-
-        url = f"https://{settings.DOMAIN}/api/tickets/{self.id}"
-        qr_image = qrcode.make(url, box_size=20, border=0)
-        return qr_image
-
-    def send_confirmation_email(self):
-        """
-        Send a confirmation email to the ticket owner after purchase
-        """
-        owner = self.owner
-
-        output = BytesIO()
-        qr_image = self.get_qr()
-        qr_image.save(output, format="PNG")
-        decoded_image = base64.b64encode(output.getvalue()).decode("ascii")
-
-        context = {
-            "first_name": self.owner.first_name,
-            "name": self.event.name,
-            "type": self.type,
-            "start_time": self.event.start_time,
-            "end_time": self.event.end_time,
-            "qr": decoded_image,
-        }
-
-        if self.owner.email:
-            send_mail_helper(
-                name="ticket_confirmation",
-                subject=f"Ticket confirmation for {owner.get_full_name()}",
-                emails=[owner.email],
-                context=context,
-            )
 
     def get_qr(self):
         """
