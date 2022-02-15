@@ -15,7 +15,7 @@ export function Contact({
 
   if (SITE_ID === 'clubs') {
     if (point === 'osa') {
-      finalEmail = 'rodneyr@upenn.edu'
+      finalEmail = 'vpul-pennosa@pobox.upenn.edu'
     } else if (point === 'sac') {
       finalEmail = 'sac@sacfunded.net'
     }
