@@ -231,7 +231,7 @@ const sites = {
 
     PARTNER_LOGOS: [
       {
-        name: 'Vice Provost for University Life',
+        name: 'University Life',
         image: '/static/img/collaborators/vpul.png',
         url: 'https://home.vpul.upenn.edu/',
         className: 'mr-4 mb-4',
