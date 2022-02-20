@@ -179,6 +179,8 @@ const ViewContext = createContext<
     option: EventsViewOption,
     setOption?: Dispatch<SetStateAction<EventsViewOption>>,
     showSyncModal?: () => void,
+    viewsVisible?: boolean | undefined,
+    setViewsVisible?: Dispatch<SetStateAction<boolean | undefined>>,
   ]
 >([EventsViewOption.CALENDAR])
 
@@ -468,7 +470,7 @@ function EventPage({
   const [previewEvent, setPreviewEvent] = useState<ClubEvent | null>(null)
   const hideModal = () => setPreviewEvent(null)
 
-  const [viewsVisible, setViewsVisible] = useState<boolean>(false)
+  const [viewsVisible, setViewsVisible] = useState<boolean | undefined>(false)
 
   useEffect(() => {
     if (previewEvent != null) {
