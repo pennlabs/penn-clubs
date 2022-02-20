@@ -189,33 +189,56 @@ const EventsViewToolbar = ({
   viewOption,
   setViewOption,
   showSyncModal,
+  viewsVisible,
+  setViewsVisible,
 }): ReactElement => (
   <>
-    <div className="buttons has-addons mt-0 mb-0">
-      <button
-        id="event-view-list"
-        className={`button is-medium ${
-          viewOption === EventsViewOption.LIST ? 'is-selected is-info' : ''
-        }`}
-        aria-label="switch to grid view"
-        onClick={() => {
-          setViewOption(EventsViewOption.LIST)
-        }}
-      >
-        <Icon name="grid" alt="grid view" />
-      </button>
-      <button
-        id="event-view-calendar"
-        className={`button is-medium ${
-          viewOption === EventsViewOption.CALENDAR ? 'is-selected is-info' : ''
-        }`}
-        aria-label="switch to calendar view"
-        onClick={() => {
-          setViewOption(EventsViewOption.CALENDAR)
-        }}
-      >
-        <Icon name="calendar" alt="calendar view" />
-      </button>
+    <div
+      className="buttons has-addons mt-0 mb-0"
+      style={{ width: 150 }}
+      onMouseEnter={() => {
+        setViewsVisible(true)
+      }}
+      onMouseLeave={() => {
+        setViewsVisible(false)
+      }}
+    >
+      {viewsVisible ? (
+        <>
+          <button
+            id="event-view-list"
+            className={`button is-medium ${
+              viewOption === EventsViewOption.LIST ? 'is-selected is-info' : ''
+            }`}
+            aria-label="switch to grid view"
+            onClick={() => {
+              setViewOption(EventsViewOption.LIST)
+            }}
+            style={{ width: '50%' }}
+          >
+            <Icon name="grid" alt="grid view" />
+          </button>
+          <button
+            id="event-view-calendar"
+            className={`button is-medium ${
+              viewOption === EventsViewOption.CALENDAR
+                ? 'is-selected is-info'
+                : ''
+            }`}
+            aria-label="switch to calendar view"
+            onClick={() => {
+              setViewOption(EventsViewOption.CALENDAR)
+            }}
+            style={{ width: '50%' }}
+          >
+            <Icon name="calendar" alt="calendar view" />
+          </button>
+        </>
+      ) : (
+        <button className="button is-medium" style={{ width: '100%' }}>
+          Toggle View
+        </button>
+      )}
     </div>
     <div className="buttons has-addons mt-0 mb-0">
       <button
@@ -239,7 +262,13 @@ const CalendarHeader = ({
   onView,
   view,
 }: CalendarHeaderProps) => {
-  const [viewOption, setViewOption, showSyncModal] = useContext(ViewContext)
+  const [
+    viewOption,
+    setViewOption,
+    showSyncModal,
+    viewsVisible,
+    setViewsVisible,
+  ] = useContext(ViewContext)
   const _views: CalendarView[] = [
     CalendarView.DAY,
     CalendarView.WEEK,
@@ -302,6 +331,8 @@ const CalendarHeader = ({
           viewOption={viewOption}
           setViewOption={setViewOption}
           showSyncModal={showSyncModal}
+          viewsVisible={viewsVisible}
+          setViewsVisible={setViewsVisible}
         />
       </div>
     </StyledHeader>
@@ -423,7 +454,7 @@ function EventPage({
   const hideSyncModal = () => setSyncModalVisible(false)
 
   const [viewOption, setViewOption] = useState<EventsViewOption>(
-    isFair ? EventsViewOption.LIST : EventsViewOption.CALENDAR,
+    EventsViewOption.LIST,
   )
 
   const [dateRange, setDateRange] = useState<CalendarDateRange>(
@@ -436,6 +467,8 @@ function EventPage({
 
   const [previewEvent, setPreviewEvent] = useState<ClubEvent | null>(null)
   const hideModal = () => setPreviewEvent(null)
+
+  const [viewsVisible, setViewsVisible] = useState<boolean>(false)
 
   useEffect(() => {
     if (previewEvent != null) {
@@ -664,7 +697,13 @@ function EventPage({
         <SearchbarRightContainer>
           <WideContainer background={SNOW} fullHeight>
             <ViewContext.Provider
-              value={[viewOption, setViewOption, showSyncModal]}
+              value={[
+                viewOption,
+                setViewOption,
+                showSyncModal,
+                viewsVisible,
+                setViewsVisible,
+              ]}
             >
               {viewOption === EventsViewOption.LIST ? (
                 <>
@@ -680,6 +719,8 @@ function EventPage({
                             viewOption={viewOption}
                             setViewOption={setViewOption}
                             showSyncModal={showSyncModal}
+                            viewsVisible={viewsVisible}
+                            setViewsVisible={setViewsVisible}
                           />
                         </div>
                       </StyledHeader>
@@ -709,6 +750,8 @@ function EventPage({
                           viewOption={viewOption}
                           setViewOption={setViewOption}
                           showSyncModal={showSyncModal}
+                          viewsVisible={viewsVisible}
+                          setViewsVisible={setViewsVisible}
                         />
                       </div>
                     )}
