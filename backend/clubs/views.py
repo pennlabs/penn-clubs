@@ -2261,7 +2261,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         tickets = Ticket.objects.filter(
             event=event, type=type, owner__isnull=True, held=False
         ).exclude(carts__owner=self.request.user)
-        print(tickets.count())
         if tickets.count() < count:
             return Response(
                 {"detail": f"Not enough tickets of type {type} left!"},
@@ -2291,8 +2290,16 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                 - $ref: "#/components/schemas/Ticket"
         ---
         """
+        # Update holding expirations for all tickets
+        for ticket in Ticket.objects.all():
+            if ticket.holding_expiration:
+                if ticket.holding_expiration <= timezone.now():
+                    ticket.held = False
+                    ticket.save()
+        
         cart = Cart.objects.filter(owner=self.request.user).first()
 
+        # Checks every ticket in cart, if held or owned, tries to replace with another ticket of the same type
         for ticket in cart.tickets.all():
             if ticket.owner or ticket.held:
                 new_ticket = Ticket.objects.filter(
@@ -2301,6 +2308,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 cart.tickets.remove(ticket)
                 if new_ticket:
                     cart.tickets.add(new_ticket)
+                    cart.save()
         return Response({"detail": "Cart validated"})
 
     @action(detail=True, methods=["post"])
@@ -2312,10 +2320,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             content:
                 application/json:
                     schema:
-                        type: object
-                        properties:
-                            type:
-                                type: string
         responses:
             "200":
                 content:
@@ -2325,18 +2329,20 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                 - $ref: "#/components/schemas/Ticket"
         ---
         """
-        cart = self.request.user.cart
+        cart = Cart.objects.filter(owner=self.request.user).first()
 
-        # Before Stripe call, need to implement 10 minute hold here
-        for ticket in cart.tickets:
+        for ticket in cart.tickets.all():
             ticket.held = True
-
-        # If Stripe call succeeds
-        for ticket in cart.tickets:
-            ticket.owner = request.user
+            ticket.holding_expiration = timezone.now() + datetime.timedelta(minutes = 1)
             ticket.save()
-            ticket.send_confirmation_email()
-            return Response(TicketSerializer(ticket).data)
+
+        # Should only run if Stripe call succeeds
+        for ticket in cart.tickets.all():
+            ticket.owner = request.user
+            ticket.carts.remove(cart)
+            ticket.save()
+            # ticket.send_confirmation_email()
+        return Response({"detail": "Successfully checked out!"})
 
     @action(detail=True, methods=["post"])
     def buy(self, request, *args, **kwargs):
