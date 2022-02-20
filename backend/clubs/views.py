@@ -2217,7 +2217,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             return EventWriteSerializer
         return EventSerializer
 
-    @action(detail=False, methods=["post"])
+    @action(detail=True, methods=["post"])
     def cart(self, request, *args, **kwargs):
         """
         Add a certain number of tickets to cart
@@ -2245,6 +2245,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         count = request.data.get("count")
         event = Event.objects.get(id=self.get_object().id)
         cart = Cart.objects.filter(owner=self.request.user).first()
+        if not cart:
+            new_cart = Cart(owner=self.request.user)
+            new_cart.save()
 
         # Try to get count unowned ticket of requested type
         tickets = Ticket.objects.filter(
