@@ -2228,7 +2228,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             return EventWriteSerializer
         return EventSerializer
 
-    @action(detail=True, methods=["post"])
+    @action(detail=False, methods=["post"])
     def cart(self, request, *args, **kwargs):
         """
         Add a certain number of tickets to cart
@@ -2272,7 +2272,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 ticket.save()
             return Response({"detail": "Successfully added to cart"})
 
-    @action(detail=True, methods=["post"])
+    @action(detail=False, methods=["post"])
     def validate_cart(self, request, *args, **kwargs):
         """
         Validate tickets in a cart
@@ -2296,10 +2296,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 if ticket.holding_expiration <= timezone.now():
                     ticket.held = False
                     ticket.save()
-        
+
         cart = Cart.objects.filter(owner=self.request.user).first()
 
-        # Checks every ticket in cart, if held or owned, tries to replace with another ticket of the same type
         for ticket in cart.tickets.all():
             if ticket.owner or ticket.held:
                 new_ticket = Ticket.objects.filter(
@@ -2311,7 +2310,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     cart.save()
         return Response({"detail": "Cart validated"})
 
-    @action(detail=True, methods=["post"])
+    @action(detail=False, methods=["post"])
     def checkout(self, request, *args, **kwargs):
         """
         Checkout all tickets in cart, assumes all tickets are unowned and unheld
@@ -2333,7 +2332,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         for ticket in cart.tickets.all():
             ticket.held = True
-            ticket.holding_expiration = timezone.now() + datetime.timedelta(minutes = 1)
+            ticket.holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
             ticket.save()
 
         # Should only run if Stripe call succeeds
