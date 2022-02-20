@@ -7,6 +7,7 @@ import ApplicationsPage from '../components/ClubEditPage/ApplicationsPage'
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import ClubManagementCard from '../components/ClubEditPage/ClubManagementCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
+import TicketsViewCard from '../components/ClubEditPage/TicketsViewCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
 import InviteCard from '../components/ClubEditPage/InviteCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
@@ -277,13 +278,22 @@ const ClubForm = ({
         ),
         disabled: !isEdit,
       },
-      {
+      { 
         name: 'events',
         label: 'Events',
         content: (
           <>
             <EventsImportCard club={club} />
             <EventsCard club={club} />
+          </>
+        ),
+      },
+      { 
+        name: 'tickets',
+        label: 'Tickets',
+        content: (
+          <>
+            <TicketsViewCard club={club} />
           </>
         ),
       },
