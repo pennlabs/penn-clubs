@@ -2240,6 +2240,12 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                 - $ref: "#/components/schemas/Ticket"
         ---
         """
+        # Update holding status for all held tickets
+        held_tickets = Ticket.objects.filter(held=True).all()
+        for ticket in held_tickets:
+            if ticket.holding_expiration <= timezone.now():
+                ticket.held = False
+                ticket.save()
         type = request.data.get("type")
         count = request.data.get("count")
         event = Event.objects.get(id=self.get_object().id)
@@ -2281,12 +2287,12 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                 - $ref: "#/components/schemas/Ticket"
         ---
         """
-        # Update holding expirations for all tickets
-        for ticket in Ticket.objects.all():
-            if ticket.holding_expiration:
-                if ticket.holding_expiration <= timezone.now():
-                    ticket.held = False
-                    ticket.save()
+        # Update holding status for all held tickets
+        held_tickets = Ticket.objects.filter(held=True).all()
+        for ticket in held_tickets:
+            if ticket.holding_expiration <= timezone.now():
+                ticket.held = False
+                ticket.save()
 
         cart = Cart.objects.filter(owner=self.request.user).first()
 
