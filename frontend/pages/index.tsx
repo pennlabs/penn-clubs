@@ -25,7 +25,7 @@ import {
 } from 'react'
 import { PaginatedClubPage, renderListPage } from 'renderPage'
 import styled from 'styled-components'
-import { Badge, Maybe, School, StudentType, Tag, UserInfo, Year } from 'types'
+import { Badge, School, StudentType, Tag, UserInfo, Year } from 'types'
 import { doApiRequest, doBulkLookup, isClubFieldShown, useSetting } from 'utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -298,9 +298,6 @@ const Splash = (props: SplashProps): ReactElement => {
       }),
     })
   }
-  const [exclusiveClubs, setExclusiveClubs] = useState<
-    Maybe<PaginatedClubPage>
-  >()
 
   const [isLoading, setLoading] = useState<boolean>(false)
   const [searchInput, setSearchInput] = useState<SearchInput>({})
@@ -336,8 +333,7 @@ const Splash = (props: SplashProps): ReactElement => {
           ['exclusive', `/clubs/?${exclusiveParams.toString()}`],
         ])
         if (equal(currentSearch.current, searchInput)) {
-          setClubs(results.general)
-          setExclusiveClubs(results.exclusive)
+          setClubs(results.exclusive)
           setLoading(false)
         }
       } else {
@@ -350,7 +346,6 @@ const Splash = (props: SplashProps): ReactElement => {
         ).then((res) => res.json())
         if (equal(currentSearch.current, searchInput)) {
           setClubs(displayClubs)
-          setExclusiveClubs(undefined)
           setLoading(false)
         }
       }
@@ -567,17 +562,7 @@ const Splash = (props: SplashProps): ReactElement => {
               </>
             )}
             <ResultsText>
-              {' '}
-              {exclusiveClubs ? (
-                <>
-                  {exclusiveClubs.count} result
-                  {exclusiveClubs.count === 1 ? '' : 's'}
-                </>
-              ) : (
-                <>
-                  {clubs.count} result{clubs.count === 1 ? '' : 's'}
-                </>
-              )}
+              {clubs.count} result{clubs.count === 1 ? '' : 's'}
             </ResultsText>
 
             <SearchTags
@@ -603,22 +588,6 @@ const Splash = (props: SplashProps): ReactElement => {
             {isLoading && <ListLoadIndicator />}
 
             <UpdateClubContext.Provider value={updateClub}>
-              {exclusiveClubs && (
-                <>
-                  {!!exclusiveClubs.count && (
-                    <PaginatedClubDisplay
-                      displayClubs={exclusiveClubs}
-                      display={display}
-                      tags={props.tags}
-                    />
-                  )}
-                  <div style={{ marginBottom: '8px' }}>
-                    Check out these additional resources that may interest you.
-                  </div>
-                  <Divider />
-                </>
-              )}
-
               <PaginatedClubDisplay
                 displayClubs={clubs}
                 display={display}
