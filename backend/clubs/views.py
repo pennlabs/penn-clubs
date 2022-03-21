@@ -4650,6 +4650,33 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def export(self, *args, **kwargs):
+        """
+        Given some application submissions, change their status to a new one
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            submissions:
+                                type: array
+                                items:
+                                    type: integer
+                            status:
+                                type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                output:
+                                    type: string
+
+        ---
+        """
         data = (
             ApplicationSubmission.objects.filter(
                 application__is_wharton_council=True,
