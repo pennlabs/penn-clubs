@@ -33,6 +33,7 @@ from django.db.models import (
     Q,
     Value,
 )
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
@@ -4646,6 +4647,43 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                 committee_id) recent_subs)
                 """
         return ApplicationSubmission.objects.raw(query)
+
+    @action(detail=False, methods=["get"])
+    def export(self, *args, **kwargs):
+        data = (
+            ApplicationSubmission.objects.filter(
+                application__is_wharton_council=True,
+                created_at__in=RawSQL(
+                    """SELECT recent_time
+                        FROM
+                        (SELECT user_id,
+                                committee_id,
+                                application_id,
+                                max(created_at) recent_time
+                            FROM clubs_applicationsubmission
+                            WHERE NOT archived
+                            GROUP BY user_id,
+                                    committee_id, application_id) recent_subs""",
+                    (),
+                ),
+                archived=False,
+            )
+            .annotate(
+                annotated_name=F("application__name"),
+                annotated_committee=F("committee__name"),
+                annotated_club=F("application__club__name"),
+            )
+            .values(
+                "annotated_name",
+                "application",
+                "annotated_committee",
+                "annotated_club",
+                "status",
+                "user",
+            )
+        )
+        serialized_q = json.dumps(list(data.values()), cls=DjangoJSONEncoder)
+        return Response(serialized_q)
 
     @action(detail=False, methods=["post"])
     def status(self, *args, **kwargs):
