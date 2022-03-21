@@ -23,6 +23,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command, get_commands, load_command_class
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
 from django.db.models import (
     Count,
@@ -33,7 +34,6 @@ from django.db.models import (
     Q,
     Value,
 )
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
