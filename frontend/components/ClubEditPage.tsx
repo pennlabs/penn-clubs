@@ -7,12 +7,12 @@ import ApplicationsPage from '../components/ClubEditPage/ApplicationsPage'
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import ClubManagementCard from '../components/ClubEditPage/ClubManagementCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
-import TicketsViewCard from '../components/ClubEditPage/TicketsViewCard'
 import FilesCard from '../components/ClubEditPage/FilesCard'
 import InviteCard from '../components/ClubEditPage/InviteCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
 import MembersCard from '../components/ClubEditPage/MembersCard'
 import QRCodeCard from '../components/ClubEditPage/QRCodeCard'
+import TicketsViewCard from '../components/ClubEditPage/TicketsViewCard'
 import {
   CLUB_EDIT_ROUTE,
   CLUB_RENEW_ROUTE,
@@ -278,7 +278,7 @@ const ClubForm = ({
         ),
         disabled: !isEdit,
       },
-      { 
+      {
         name: 'events',
         label: 'Events',
         content: (
@@ -288,7 +288,7 @@ const ClubForm = ({
           </>
         ),
       },
-      { 
+      {
         name: 'tickets',
         label: 'Tickets',
         content: (
