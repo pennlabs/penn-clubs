@@ -71,6 +71,7 @@ type tableProps = {
   searchableColumns: string[]
   filterOptions?: FilterOption[]
   focusable?: boolean
+  hideSearch?: boolean
   onClick?: (row: any, event: any) => void
   draggable?: boolean
   onDragEnd?: (result: any) => void | null | undefined
@@ -122,6 +123,7 @@ const Table = ({
   filterOptions,
   focusable,
   onClick,
+  hideSearch = false,
   draggable = false,
   onDragEnd,
   initialPage = 0,
@@ -234,18 +236,20 @@ const Table = ({
   return (
     <Styles>
       <Toolbar>
-        <div className="is-pulled-left">
-          <SearchWrapper>
-            <Input
-              className="input"
-              value={searchQuery}
-              placeholder={`Search ${
-                tableData.length < 1 ? data.length : tableData.length
-              } entries`}
-              onChange={handleSearchChange}
-            />
-          </SearchWrapper>
-        </div>
+        {!hideSearch && (
+          <div className="is-pulled-left">
+            <SearchWrapper>
+              <Input
+                className="input"
+                value={searchQuery}
+                placeholder={`Search ${
+                  tableData.length < 1 ? data.length : tableData.length
+                } entries`}
+                onChange={handleSearchChange}
+              />
+            </SearchWrapper>
+          </div>
+        )}
         <div className="is-pulled-left" style={{ width: '70%' }}>
           <div
             style={{
