@@ -3,6 +3,7 @@ import AuthPrompt from 'components/common/AuthPrompt'
 import ClubTab from 'components/Settings/ClubTab'
 import FavoritesTab from 'components/Settings/FavoritesTab'
 import MembershipRequestsTab from 'components/Settings/MembershipRequestsTab'
+import TicketsTab from '~/components/Settings/TicketsTab'
 import ProfileTab from 'components/Settings/ProfileTab'
 import HashTabView from 'components/TabView'
 import React, { ReactNode } from 'react'
@@ -72,6 +73,11 @@ const Settings = ({ userInfo, authenticated }: SettingsProps) => {
       icon: 'user-check',
       content: <MembershipRequestsTab />,
       disabled: !SHOW_MEMBERSHIP_REQUEST,
+    },
+    {
+      name: 'Tickets',
+      icon: 'empty_cart',
+      content: <TicketsTab userInfo={userInfo} />,
     },
     {
       name: 'Profile',
