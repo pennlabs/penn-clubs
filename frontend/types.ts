@@ -67,6 +67,13 @@ export interface ClubEvent {
   url: string | null
 }
 
+export interface EventTicket {
+  id: string
+  event: Event
+  type: ClubEventType
+  owner: string
+}
+
 export interface ClubApplication {
   id: number
   name: string
