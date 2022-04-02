@@ -191,7 +191,7 @@ FROM_EMAIL = (
 EMAIL_SUBJECT_PREFIX = f"[{BRANDING_SITE_NAME}] "
 INVITE_URL = "https://{domain}/invite/{club}/{id}/{token}"
 DEFAULT_DOMAIN = "hub.provost.upenn.edu" if BRANDING == "fyh" else "pennclubs.com"
-DOMAINS = os.environ.get("DOMAINS", [DEFAULT_DOMAIN]).split(",")
+DOMAINS = os.environ.get("DOMAINS", DEFAULT_DOMAIN).split(",")
 
 VIEW_URL = "https://{domain}/club/{club}"
 EDIT_URL = "https://{domain}/club/{club}/edit"
