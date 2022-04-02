@@ -3278,7 +3278,9 @@ class FavoriteCalendarAPIView(APIView):
         is_global = parse_boolean(request.query_params.get("global"))
         is_all = parse_boolean(request.query_params.get("all"))
 
-        calendar = ICSCal(creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAINS[0]})")
+        calendar = ICSCal(
+            creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAINS[0]})"
+        )
         calendar.extra.append(
             ICSParse.ContentLine(
                 name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events"

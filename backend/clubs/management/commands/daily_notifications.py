@@ -64,7 +64,10 @@ class Command(BaseCommand):
         for code, name, email, user_pk in apps:
             if (code, user_pk) not in already_in_club:
                 emails[email].append(
-                    (name, settings.APPLY_URL.format(domain=settings.DOMAINS[0], club=code))
+                    (
+                        name,
+                        settings.APPLY_URL.format(domain=settings.DOMAINS[0], club=code)
+                    )
                 )
 
         # send out one email per user
