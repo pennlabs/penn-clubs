@@ -64,7 +64,7 @@ class Command(BaseCommand):
         for code, name, email, user_pk in apps:
             if (code, user_pk) not in already_in_club:
                 emails[email].append(
-                    (name, settings.APPLY_URL.format(domain=settings.DOMAIN, club=code))
+                    (name, settings.APPLY_URL.format(domain=settings.DOMAINS[0], club=code))
                 )
 
         # send out one email per user
@@ -123,7 +123,7 @@ class Command(BaseCommand):
         if queued_clubs.exists():
             context = {
                 "num_clubs": queued_clubs.count(),
-                "url": f"https://{settings.DOMAIN}/admin/queue",
+                "url": f"https://{settings.DOMAINS[0]}/admin/queue",
                 "clubs": list(
                     queued_clubs.order_by("name").values_list("name", flat=True)
                 ),
