@@ -23,6 +23,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command, get_commands, load_command_class
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
 from django.db.models import (
     Count,
@@ -4648,6 +4649,70 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                 committee_id) recent_subs)
                 """
         return ApplicationSubmission.objects.raw(query)
+
+    @action(detail=False, methods=["get"])
+    def export(self, *args, **kwargs):
+        """
+        Given some application submissions, change their status to a new one
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            submissions:
+                                type: array
+                                items:
+                                    type: integer
+                            status:
+                                type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                output:
+                                    type: string
+
+        ---
+        """
+        data = (
+            ApplicationSubmission.objects.filter(
+                application__is_wharton_council=True,
+                created_at__in=RawSQL(
+                    """SELECT recent_time
+                        FROM
+                        (SELECT user_id,
+                                committee_id,
+                                application_id,
+                                max(created_at) recent_time
+                            FROM clubs_applicationsubmission
+                            WHERE NOT archived
+                            GROUP BY user_id,
+                                    committee_id, application_id) recent_subs""",
+                    (),
+                ),
+                archived=False,
+            )
+            .annotate(
+                annotated_name=F("application__name"),
+                annotated_committee=F("committee__name"),
+                annotated_club=F("application__club__name"),
+            )
+            .values(
+                "annotated_name",
+                "application",
+                "annotated_committee",
+                "annotated_club",
+                "status",
+                "user",
+            )
+        )
+        serialized_q = json.dumps(list(data.values()), cls=DjangoJSONEncoder)
+        return Response(serialized_q)
 
     @action(detail=False, methods=["post"])
     def status(self, *args, **kwargs):
