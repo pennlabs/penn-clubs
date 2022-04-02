@@ -66,7 +66,9 @@ class Command(BaseCommand):
                 emails[email].append(
                     (
                         name,
-                        settings.APPLY_URL.format(domain=settings.DOMAINS[0], club=code)
+                        settings.APPLY_URL.format(
+                            domain=settings.DOMAINS[0], club=code
+                        ),
                     )
                 )
 
