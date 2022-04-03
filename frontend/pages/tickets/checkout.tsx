@@ -1,10 +1,25 @@
 import { NextPageContext } from 'next'
 
+import { Container, Metadata, Title } from '~/components/common'
+import CartTickets from '~/components/TicketsPage/CartTickets'
+import { SNOW } from '~/constants'
 import renderPage from '~/renderPage'
 import { ClubEventType, EventTicket } from '~/types'
 
-function TicketsCheckoutPage({ initialCart }) {
-  return <div>Hello!</div>
+interface Props {
+  initialCart: EventTicket[]
+}
+
+function TicketsCheckoutPage({ initialCart }: Props) {
+  return (
+    <>
+      <Metadata title="Checkout Tickets" />
+      <Container background={SNOW}>
+        <Title>Checkout Tickets</Title>
+        <CartTickets />
+      </Container>
+    </>
+  )
 }
 
 const testCart: EventTicket[] = [
