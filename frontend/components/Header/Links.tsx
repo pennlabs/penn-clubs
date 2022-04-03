@@ -18,7 +18,7 @@ import {
   MD,
   mediaMaxWidth,
 } from '../../constants/measurements'
-import { SETTINGS_ROUTE } from '../../constants/routes'
+import { SETTINGS_ROUTE, CART_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
 import { LOGIN_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'
@@ -116,6 +116,12 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
           <StyledLink href={SETTINGS_ROUTE}>
             <StyledIcon name="user" alt="settings" />
             {userInfo.name || userInfo.username}
+          </StyledLink>
+        )}
+        {authenticated === true && (
+          <StyledLink href={CART_ROUTE}>
+            <StyledIcon name="shopping-cart" alt="settings" />
+            Cart
           </StyledLink>
         )}
       </div>
