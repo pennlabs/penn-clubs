@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { ReactElement } from 'react'
+import { ReactElement, useState } from 'react'
 import styled from 'styled-components'
 
 import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
@@ -10,6 +10,7 @@ import {
   LOGIN_BACKGROUND,
   WHITE,
   WHITE_ALPHA,
+  BORDER
 } from '../../constants/colors'
 import {
   LINK_MARGIN,
@@ -17,6 +18,8 @@ import {
   LOGIN_OPACITY,
   MD,
   mediaMaxWidth,
+  NAV_HEIGHT,
+  HEADER_SHADOW
 } from '../../constants/measurements'
 import { SETTINGS_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
@@ -54,6 +57,23 @@ const LoginButton = styled.a`
   }
 `
 
+const CartButton = styled.a`
+  border: 0;
+  padding: 14px 20px;
+  margin: auto;
+  margin-bottom: ${LOGIN_MARGIN};
+  opacity: ${LOGIN_OPACITY};
+  color: ${BANNER_TEXT} !important;
+  transition: color ${SHORT_ANIMATION_DURATION}ms ease,
+    background ${SHORT_ANIMATION_DURATION}ms ease;
+
+  ${mediaMaxWidth(MD)} {
+    padding: 8px 0;
+    padding-top: 0.4rem;
+    width: 5rem !important;
+  }
+`
+
 const StyledLinkAnchor = styled.a`
   padding: ${LINK_MARGIN} 20px;
   color: ${BANNER_TEXT} !important;
@@ -64,6 +84,43 @@ const StyledLinkAnchor = styled.a`
     padding: 14px 0px;
     padding-right: 20px;
   }
+`
+
+const DropdownMenu = styled.div`
+  position: absolute;
+  background: ${BANNER_BG} !important;
+  top: ${NAV_HEIGHT};
+  border-bottom: 1px solid ${BORDER};
+  box-shadow: 0 1px 4px 0 ${BORDER};
+  right: 0px;
+  width: 150px;
+  z-index: 2;
+  box-shadow: ${HEADER_SHADOW};
+
+  ${mediaMaxWidth(MD)} {
+    box-shadow: none;
+  }
+`
+
+const DropdownContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const DropdownItemContent = styled.div`
+  text-align: left;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  border-color: #000000;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: row;
+  padding: 10px;
+`
+
+const DropdownItemTitle = styled.div`
+
 `
 
 const StyledLink = (props): ReactElement => {
@@ -94,6 +151,8 @@ type Props = {
  */
 const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
   const router = useRouter()
+  const [dropdown, setDropdown] = useState(false)
+
   return (
     <Menu className="navbar-menu" show={show}>
       <div className="navbar-end" style={{ padding: '0 1rem' }}>
@@ -118,6 +177,28 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
             {userInfo.name || userInfo.username}
           </StyledLink>
         )}
+        {authenticated === true && (
+          <CartButton
+            className="button"
+            onClick={() => setDropdown(!dropdown)}
+          >
+            <StyledIcon name="shopping-cart" alt="settings" />
+            Cart
+          </CartButton>
+        )}
+        {dropdown &&
+          <DropdownMenu>
+            <DropdownContent>
+              <DropdownItemContent>
+                <DropdownItemTitle>Item1</DropdownItemTitle>
+              </DropdownItemContent>
+              <DropdownItemContent>
+                <DropdownItemTitle>Item2</DropdownItemTitle>
+              </DropdownItemContent>
+
+            </DropdownContent>
+          </DropdownMenu>
+        }
       </div>
     </Menu>
   )

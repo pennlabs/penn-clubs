@@ -191,6 +191,7 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
         </div>
 
         <Links userInfo={userInfo} authenticated={authenticated} show={show} />
+    
       </Nav>
       {isHub && <ImageHead />}
 
