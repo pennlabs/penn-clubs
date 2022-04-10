@@ -55,7 +55,7 @@ export class MyChart extends PennLabsChart {
     });
     
     /** FYH */
-    const fyhSecret = 'first-year-hub';
+    const fyhSecret = 'hub-at-penn';
     const fyhDomain = 'hub.provost.upenn.edu';
 
     new RedisApplication(this, 'hub-redis', {});
