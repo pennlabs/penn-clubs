@@ -16,7 +16,7 @@
     "upgrade:next": "npm i cdk8s@next cdk8s-cli@next"
   },
   "dependencies": {
-    "@pennlabs/kittyhawk": "^1.1.1",
+    "@pennlabs/kittyhawk": "^1.1.2",
     "cdk8s": "^1.5.59",
     "cdk8s-plus-22": "^1.0.0-beta.153",
     "constructs": "^3.3.256"
