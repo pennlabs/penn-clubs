@@ -4561,9 +4561,7 @@ class WhartonApplicationAPIView(generics.ListAPIView):
 
         qs = qs.annotate(random=SHA1(Concat("name", Value(seed)),)).order_by("random")
 
-        return ClubApplication.objects.filter(
-            is_wharton_council=True, application_end_time__gte=now
-        )
+        return qs
 
 
 class WhartonApplicationStatusAPIView(generics.ListAPIView):
