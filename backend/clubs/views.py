@@ -3279,7 +3279,9 @@ class FavoriteCalendarAPIView(APIView):
         is_global = parse_boolean(request.query_params.get("global"))
         is_all = parse_boolean(request.query_params.get("all"))
 
-        calendar = ICSCal(creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAIN})")
+        calendar = ICSCal(
+            creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAINS[0]})"
+        )
         calendar.extra.append(
             ICSParse.ContentLine(
                 name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events"
@@ -3324,7 +3326,7 @@ class FavoriteCalendarAPIView(APIView):
                 event.url or "" if not event.location else "",
                 html_to_text(event.description),
             ).strip()
-            e.uid = f"{event.ics_uuid}@{settings.DOMAIN}"
+            e.uid = f"{event.ics_uuid}@{settings.DOMAINS[0]}"
             e.created = event.created_at
             e.last_modified = event.updated_at
             e.categories = [event.club.name]
