@@ -16,7 +16,7 @@ function TicketsCheckoutPage({ initialCart }: Props) {
       <Metadata title="Checkout Tickets" />
       <Container background={SNOW}>
         <Title>Checkout Tickets</Title>
-        <CartTickets />
+        <CartTickets tickets={testCart} />
       </Container>
     </>
   )
@@ -24,7 +24,11 @@ function TicketsCheckoutPage({ initialCart }: Props) {
 
 const testCart: EventTicket[] = [
   {
-    event: {},
+    event: {
+      id: 12345,
+      name: 'Awesome Event Name',
+      club_name: 'UPenn Natalist Society',
+    },
     id: '497f6eca-6276-4993-bfeb-53cbbbba6f08',
     type: ClubEventType.OTHER,
     owner: 'James Adams',

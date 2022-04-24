@@ -69,14 +69,9 @@ export interface ClubEvent {
 
 export interface EventTicket {
   id: string
-  event: { hehe: 'haha' }
-  // TODO
+  event: ClubEvent
   type: ClubEventType
   owner: string
-}
-
-export interface CountedEventTicket extends EventTicket {
-  count: number
 }
 
 export interface ClubApplication {
