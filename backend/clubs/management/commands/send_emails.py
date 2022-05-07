@@ -92,6 +92,7 @@ class Command(BaseCommand):
                 "wc_feedback",
                 "update_status_reminder",
                 "keywords_update",
+                "update_officers"
             ),
         )
         parser.add_argument(
@@ -447,6 +448,7 @@ class Command(BaseCommand):
             "faq_demo",
             "admin_outreach",
             "semesterly_email",
+            "update_officers",
         }:
             clubs = Club.objects.all()
             attachment = None
@@ -468,6 +470,11 @@ class Command(BaseCommand):
             for club in clubs:
                 if action == "semesterly_email":
                     context = {"code": club.code}
+                elif action == "update_officers":
+                    context = {
+                        "name": club.name,
+                        "url": f"https://pennclubs.com/club/{club.code}/edit/member"
+                    }
                 emails = club.get_officer_emails()
                 if test_email is not None:
                     emails = [test_email]

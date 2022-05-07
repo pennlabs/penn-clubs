@@ -1,0 +1,29 @@
+<!-- SUBJECT: Reminder to Update Club Officers -->
+<!-- TYPES:
+name:
+    type: string
+url:
+    type: string
+-->
+{% extends 'emails/base.html' %} {% block content %}
+<h2>Reminder to Update Club Officers</h2>
+<p style="font-size: 1.2em">Dear <b>{{ name }}</b> leaders,</p>
+
+<p style="font-size: 1.2em">
+  As we wrap up the 2021-2022 academic year, we would like to remind you all to
+  please update permissions to your club on Penn Clubs for new club leaders. You
+  can navigate to <a href="{{ url }}">{{ url }}</a> to update club permissions.
+</p>
+
+<p style="font-size: 1.2em">
+  <b
+    >If you are graduating, it is important that you pass on permission to the
+    club so that access is not lost.</b
+  >
+</p>
+
+<p style="font-size: 1.2em">
+  If you have any questions or problems updating member permissions, feel free
+  to reply to this email.
+</p>
+{% endblock %}
