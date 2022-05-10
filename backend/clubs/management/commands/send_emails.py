@@ -92,7 +92,7 @@ class Command(BaseCommand):
                 "wc_feedback",
                 "update_status_reminder",
                 "keywords_update",
-                "update_officers",
+                "update_officers"
             ),
         )
         parser.add_argument(
@@ -473,7 +473,7 @@ class Command(BaseCommand):
                 elif action == "update_officers":
                     context = {
                         "name": club.name,
-                        "url": f"https://pennclubs.com/club/{club.code}/edit/member",
+                        "url": f"https://pennclubs.com/club/{club.code}/edit/member"
                     }
                 emails = club.get_officer_emails()
                 if test_email is not None:
