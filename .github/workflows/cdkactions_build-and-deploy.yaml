@@ -223,11 +223,6 @@ jobs:
           GIT_SHA: ${{ github.sha }}
           REPOSITORY: ${{ github.repository }}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      - name: Pin kubectl to version v1.23.6 (https://github.com/aws/aws-cli/issues/6920)
-        run: |
-          curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl
-          chmod +x ./kubectl
-          sudo mv ./kubectl /usr/local/bin/kubectl
       - name: Deploy
         run: |-
           aws eks --region us-east-1 update-kubeconfig --name production --role-arn arn:aws:iam::${AWS_ACCOUNT_ID}:role/kubectl
