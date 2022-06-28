@@ -340,7 +340,11 @@ class ClubEventSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField("get_image_url")
     large_image_url = serializers.SerializerMethodField("get_large_image_url")
     url = serializers.SerializerMethodField("get_event_url")
+    ticketed = serializers.SerializerMethodField("get_ticketed")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    def get_ticketed(self, obj):
+        return Event.tickets.exists()
 
     def get_event_url(self, obj):
         # if no url, return that
@@ -2007,7 +2011,9 @@ class UserProfileSerializer(MinimalUserProfileSerializer):
         # hide non public memberships if not superuser
         if user is None or not user.has_perm("clubs.manage_club"):
             queryset = queryset.filter(
-                membership__person=obj, membership__public=True, approved=True,
+                membership__person=obj,
+                membership__public=True,
+                approved=True,
             )
 
         serializer = MembershipClubListSerializer(
@@ -2352,7 +2358,8 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             ApplicationMultipleChoice.objects.filter(question=question_obj).delete()
             for choice in multiple_choice:
                 ApplicationMultipleChoice.objects.create(
-                    value=choice["value"], question=question_obj,
+                    value=choice["value"],
+                    question=question_obj,
                 )
 
         # manually create committee choices as Django does not
@@ -2634,7 +2641,8 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             for name in committees:
                 if name not in prev_committee_names:
                     ApplicationCommittee.objects.create(
-                        name=name, application=application_obj,
+                        name=name,
+                        application=application_obj,
                     )
 
         return application_obj
