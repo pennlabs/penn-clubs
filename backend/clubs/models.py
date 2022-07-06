@@ -1716,6 +1716,19 @@ class Cart(models.Model):
     )
 
 
+class TicketManager(models.Manager):
+
+    # Update holds for all tickets
+    def update_holds(self):
+        expired_tickets = self.select_for_update().filter(
+            holder__isnull=False, holding_expiration__lte=timezone.now()
+        )
+        with transaction.atomic():
+            for ticket in expired_tickets:
+                ticket.holder = None
+            self.bulk_update(expired_tickets, ["holder"])
+
+
 class Ticket(models.Model):
     """
     Represents an instance of a ticket for an event
@@ -1742,6 +1755,7 @@ class Ticket(models.Model):
     )
     holding_expiration = models.DateTimeField(null=True, blank=True)
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
+    objects = TicketManager()
 
     def get_qr(self):
         """

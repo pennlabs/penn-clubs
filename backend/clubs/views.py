@@ -8,6 +8,7 @@ import os
 import re
 import secrets
 import string
+from functools import wraps
 from urllib.parse import urlparse
 
 import pytz
@@ -169,6 +170,19 @@ from clubs.serializers import (
     YearSerializer,
 )
 from clubs.utils import fuzzy_lookup_club, html_to_text
+
+
+def update_holds(func):
+    """
+    Decorator to update ticket holds
+    """
+
+    @wraps(func)
+    def wrap(self, request, *args, **kwargs):
+        Ticket.objects.update_holds()
+        return func(self, request, *args, **kwargs)
+
+    return wrap
 
 
 def file_upload_endpoint_helper(request, code):
@@ -1561,7 +1575,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         club = self.get_object()
         res = ClubFairBooth.objects.filter(club=club).select_related("club").all()
-
         return Response(ClubBoothSerializer(res, many=True).data)
 
     def get_operation_id(self, **kwargs):
@@ -2221,36 +2234,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             return EventWriteSerializer
         return EventSerializer
 
-    def update_holds(self):
-        """
-        Update ticket holds for *all* tickets
-        """
-        held_tickets = Ticket.objects.filter(holder__isnull=False).all()
-        for ticket in held_tickets:
-            if ticket.holding_expiration <= timezone.now():
-                ticket.holder = None
-                ticket.save()
-
-    @action(detail=False, methods=["get"])
-    def view_cart(self):
-        """
-        View contents of the cart
-        ---
-        requestBody: {}
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                            allOf:
-                                - $ref: "#/components/schemas/Cart"
-
-        """
-        cart = Cart.objects.get_or_create(owner=self.request.user)
-        return None  # Response(CartSerializer(cart.data))
-
     @action(detail=True, methods=["post"])
     @transaction.atomic
+    @update_holds
     def add_to_cart(self, request, *args, **kwargs):
         """
         Add a certain number of tickets to the cart
@@ -2282,13 +2268,12 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     type: string
         ---
         """
-        self.update_holds()
         type = request.data.get("type")
         count = request.data.get("count")
         event = self.get_object()
         cart = Cart.objects.get_or_create(owner=self.request.user)
 
-        # count unowned/unheld tickets of requested type
+        # Count unowned/unheld tickets of requested type
         tickets = (
             Ticket.objects.select_for_update(skip_locked=True)
             .filter(event=event, type=type, owner__isnull=True, holder__isnull=True)
@@ -2307,6 +2292,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
+    @update_holds
     def remove_from_cart(self, request, *args, **kwargs):
         """
         Remove a certain type/number of tickets from the cart
@@ -2332,10 +2318,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         """
 
-        self.update_holds()
         type = request.data.get("type")
         event = self.get_object()
-        cart = get_object_or_404(owner=self.request.user)
+        cart = get_object_or_404(Cart, owner=self.request.user)
         tickets = cart.tickets.filter(type=type, event=event)
 
         # Ensure we don't try to remove more tickets than we can
@@ -2346,155 +2331,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return Response({"detail": "Successfully removed from cart"})
 
-    @action(detail=False, methods=["post"])
-    @transaction.atomic
-    def validate_cart(self, request, *args, **kwargs):
-        """
-        Validate tickets in a cart
-        ---
-        requestBody:
-            content:
-                application/json:
-                    schema:
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                            allOf:
-                                - $ref: "#/components/schemas/Ticket"
-        ---
-        """
-        self.update_holds()
-
-        cart = get_object_or_404(Cart, owner=self.request.user)
-        sold_out_flag = False
-
-        for ticket in cart.tickets.all():
-            # if ticket in cart has been bought, try to replace
-            if ticket.owner or ticket.holder:
-                # lock new ticket until transaction is completed
-                new_ticket = (
-                    Ticket.objects.select_for_update(skip_locked=True)
-                    .filter(
-                        event=ticket.event,
-                        type=ticket.type,
-                        owner__isnull=True,
-                        holder__isnull=True,
-                    )
-                    .first()
-                )
-                cart.tickets.remove(ticket)
-                if new_ticket:
-                    cart.tickets.add(new_ticket)
-                else:
-                    sold_out_flag = True
-        cart.save()
-
-        return Response(
-            {"detail": "Validated" + ("" if not sold_out_flag else " with changes")}
-        )
-
-    @action(detail=False, methods=["post"])
-    @transaction.atomic
-    def checkout(self, request, *args, **kwargs):
-        """
-        Checkout all tickets in cart, to be called after validate_cart
-
-        NOTE: this does NOT buy tickets, it simply initiates a checkout process
-        which includes a 10-minute ticket hold
-        ---
-        requestBody:
-            content:
-                application/json:
-                    schema:
-                        type: object
-
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                           properties:
-                                detail:
-                                    type: string
-        ---
-        """
-        cart = get_object_or_404(Cart, owner=self.request.user)
-
-        # The assumption is that this filter query should return all tickets in the cart (if run after validate_cart);
-        # however we cannot guarantee atomicity between validate_cart and checkout
-        #
-        # customers will be prompted to review the cart before payment
-
-        for ticket in cart.tickets.select_for_update().filter(
-            owner__isnull=True, holder__isnull=True
-        ):
-            ticket.holder = self.request.user
-            ticket.holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
-            ticket.save()
-
-        return Response({"detail": "Successfully initated checkout"})
-
-    @action(detail=False, methods=["post"])
-    @transaction.atomic
-    def checkout_success_callback(self, request, *args, **kwargs):
-        """
-        Callback after third party payment succeeds
-        ---
-        requestBody: {}
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                           properties:
-                                detail:
-                                    type: string
-
-        """
-        cart = get_object_or_404(Cart, owner=self.request.user)
-
-        for ticket in cart.tickets.select_for_update().all():
-            ticket.owner = request.user
-            ticket.carts.remove(cart)
-            # ticket.send_confirmation_email()
-            ticket.save()
-
-        return Response({"detail": "callback successful"})
-
-    @action(detail=True, methods=["post"])
-    @transaction.atomic
-    def buy(self, request, *args, **kwargs):
-        """
-        Buy tickets in a cart
-        ---
-        requestBody:
-            content: {}
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                            allOf:
-                                - $ref: "#/components/schemas/Ticket"
-        ---
-        """
-
-        # Some logic here to serialize all held tickets down to whatever
-        # format third party asks for
-
-        cart = get_object_or_404(Cart, owner=self.request.user)
-
-        for ticket in cart.tickets.filter(holder=self.request.user):
-            pass
-
-        pass
-
     @action(detail=True, methods=["get"])
-    def tickets(self, request, *args, **kwargs):
+    def buyers(self, request, *args, **kwargs):
         """
-        Get information about tickets for particular event
+        Get information about ticket buyers
         ---
         requestBody: {}
         responses:
@@ -2513,8 +2353,35 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: string
                                             id:
                                                 type: string
+                                            owner_id:
+                                                type: int
                                             type:
                                                 type: string
+        ---
+        """
+        tickets = Ticket.objects.filter(event=self.get_object()).annotate(
+            fullname=Concat("owner__first_name", Value(" "), "owner__last_name")
+        )
+
+        buyers = tickets.filter(owner__isnull=False).values(
+            "id", "fullname", "owner_id", "type"
+        )
+
+        return Response({"buyers": buyers})
+
+    @action(detail=True, methods=["get"])
+    def tickets(self, request, *args, **kwargs):
+        """
+        Get information about tickets for particular event
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
                                 totals:
                                     type: array
                                     items:
@@ -2536,10 +2403,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         """
         event = self.get_object()
-        tickets = Ticket.objects.filter(event=event).annotate(
-            fullname=Concat("owner__first_name", Value(" "), "owner__last_name")
-        )
+        tickets = Ticket.objects.filter(event=event)
         types = tickets.values_list("type", flat=True).distinct()
+
         totals = []
         available = []
 
@@ -2552,9 +2418,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 }
             )
 
-        buyers = tickets.filter(owner__isnull=False).values("id", "fullname", "type")
-
-        return Response({"totals": totals, "available": available, "buyers": buyers})
+        return Response({"totals": totals, "available": available})
 
     @tickets.mapping.put
     def create_tickets(self, request, *args, **kwargs):
@@ -2583,24 +2447,19 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             properties:
                                 detail:
                                     type: string
-                                    description: Empty array for success
         """
         event = self.get_object()
         quantities = request.data.get("quantities")
-        membership = find_membership_helper(request.user, event.club)
 
-        if membership.role <= 10:  # Create tickets allowed if officer+
+        print(request.method)
 
-            Ticket.objects.filter(event=event).delete()  # Idempotency
+        Ticket.objects.filter(event=event).delete()  # Idempotency
 
-            for item in quantities:
-                for _ in range(item["count"]):
-                    Ticket.objects.create(event=event, type=item["type"])
-            return Response([])
-        else:
-            return Response(
-                {"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
-            )
+        for item in quantities:
+            for _ in range(item["count"]):
+                Ticket.objects.create(event=event, type=item["type"])
+
+        return Response({"detail": "success"})
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
@@ -4599,11 +4458,17 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
 
 class TicketViewSet(viewsets.ModelViewSet):
     """
-    list:
+    get:
     List all tickets owned by user
 
-    retrieve:
-    Retrieve an individual ticket's data
+    cart:
+    List all unowned/unheld tickets currently in user's cart
+
+    checkout:
+    Initiate a hold on the tickets in a user's cart
+
+    buy:
+    Buy the tickets in a user's cart
 
     qr:
     Get a ticket's QR code
@@ -4614,8 +4479,162 @@ class TicketViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post"]
     lookup_field = "id"
 
-    def retrieve(self, request, *args, **kwargs):
-        return Response(TicketSerializer(Ticket.objects.get(id=kwargs["id"])).data)
+    @transaction.atomic
+    @update_holds
+    @action(detail=False, methods=["get"])
+    def cart(self, request, *args, **kwargs):
+        """
+        Validate tickets in a cart
+        ---
+        requestBody:
+            content: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            allOf:
+                                - $ref: "#/components/schemas/Ticket"
+            "204":
+                content:
+                    application/json:
+                        schema:
+                            allOf:
+                                - $ref: "#/components/schemas/Ticket"
+        ---
+        """
+
+        cart, _ = Cart.objects.get_or_create(owner=self.request.user)
+
+        # this flag is true when a validate operation fails to
+        # replace a ticket. return 200 if true, otherwise 204
+        sold_out_flag = False
+
+        for ticket in cart.tickets.all():
+            # if ticket in cart has been bought, try to replace
+            if ticket.owner or ticket.holder:
+                # lock new ticket until transaction is completed
+                new_ticket = (
+                    Ticket.objects.select_for_update(skip_locked=True)
+                    .filter(
+                        event=ticket.event,
+                        type=ticket.type,
+                        owner__isnull=True,
+                        holder__isnull=True,
+                    )
+                    .first()
+                )
+                cart.tickets.remove(ticket)
+                if new_ticket:
+                    cart.tickets.add(new_ticket)
+                else:
+                    sold_out_flag = True
+        cart.save()
+
+        return Response(
+            TicketSerializer(cart.tickets.all(), many=True).data,
+            status=200 if sold_out_flag else 204,
+        )
+
+    @action(detail=False, methods=["post"])
+    @update_holds
+    @transaction.atomic
+    def checkout(self, request, *args, **kwargs):
+        """
+        Checkout all tickets in cart
+
+        NOTE: this does NOT buy tickets, it simply initiates a checkout process
+        which includes a 10-minute ticket hold
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        cart = get_object_or_404(Cart, owner=self.request.user)
+
+        # The assumption is that this filter query should return all tickets in the cart
+        # however we cannot guarantee atomicity between cart and checkout
+        #
+        # customers will be prompted to review the cart before payment
+
+        tickets = cart.tickets.select_for_update().filter(
+            Q(holder__isnull=True) | Q(holder=self.request.user), owner__isnull=True
+        )
+
+        for ticket in tickets:
+            ticket.holder = self.request.user
+            ticket.holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
+
+        Ticket.objects.bulk_update(tickets, ["holder", "holding_expiration"])
+
+        return Response({"detail": "Successfully initated checkout"})
+
+    @action(detail=False, methods=["post"])
+    @transaction.atomic
+    def checkout_success_callback(self, request, *args, **kwargs):
+        """
+        Callback after third party payment succeeds
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           properties:
+                                detail:
+                                    type: string
+
+        """
+        cart = get_object_or_404(Cart, owner=self.request.user)
+
+        for ticket in cart.tickets.select_for_update().all():
+            ticket.owner = request.user
+            ticket.carts.clear()
+            # ticket.send_confirmation_email()
+            ticket.save()
+
+        return Response({"detail": "callback successful"})
+
+    @action(detail=False, methods=["post"])
+    @transaction.atomic
+    def buy(self, request, *args, **kwargs):
+        """
+        Buy held tickets in a cart
+        ---
+        requestBody:
+            content: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            allOf:
+                                - $ref: "#/components/schemas/Ticket"
+        ---
+        """
+
+        # Some logic here to serialize all held tickets down to whatever
+        # format third party asks for
+
+        cart = get_object_or_404(Cart, owner=self.request.user)
+
+        for ticket in cart.tickets.filter(holder=self.request.user):
+            pass
+
+        return Response({})
 
     @action(detail=True, methods=["get"])
     def qr(self, request, *args, **kwargs):
