@@ -343,7 +343,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
     ticketed = serializers.SerializerMethodField("get_ticketed")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
-    def get_ticketed(self, obj):
+    def get_ticketed(self, obj) -> bool:
         return Event.tickets.exists()
 
     def get_event_url(self, obj):
@@ -483,6 +483,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
             "location",
             "name",
             "start_time",
+            "ticketed",
             "type",
             "url",
         ]
