@@ -407,6 +407,14 @@ export function getCurrentSchoolYear(): number {
   return year
 }
 
+/*
+ * Return True if summer, where Summer is between June and July
+ * For disabling certain services in the Summer
+ * */
+export function isSummer(): boolean {
+  return [5, 6].includes(new Date().getMonth())
+}
+
 /**
  * Given a date, return a semester string corresponding to that date.
  * For example, if 1/8/2021 was passed in, the return result should be "Spring 2021".
