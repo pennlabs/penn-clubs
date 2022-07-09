@@ -12,7 +12,6 @@ isort = "*"
 flake8-quotes = "*"
 django-debug-toolbar = "*"
 django-extensions = "*"
-pre-commit = ">=2.19.0"
 
 [packages]
 dj-database-url = "*"
@@ -51,6 +50,7 @@ urlextract = "*"
 jsonref = "*"
 unittest-xml-reporting = "*"
 tblib = "*"
+pre-commit = "*"
 
 [requires]
 python_version = "3"
