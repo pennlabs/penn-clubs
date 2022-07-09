@@ -11,10 +11,22 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name="club", name="student_types",),
-        migrations.RemoveField(model_name="club", name="target_majors",),
-        migrations.RemoveField(model_name="club", name="target_schools",),
-        migrations.RemoveField(model_name="club", name="target_years",),
+        migrations.RemoveField(
+            model_name="club",
+            name="student_types",
+        ),
+        migrations.RemoveField(
+            model_name="club",
+            name="target_majors",
+        ),
+        migrations.RemoveField(
+            model_name="club",
+            name="target_schools",
+        ),
+        migrations.RemoveField(
+            model_name="club",
+            name="target_years",
+        ),
         migrations.CreateModel(
             name="TargetYear",
             fields=[

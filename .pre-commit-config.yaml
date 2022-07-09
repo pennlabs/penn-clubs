@@ -26,9 +26,8 @@ repos:
         args: [--config, backend/setup.cfg]
       - id: frontend
         name: Yarn Linter
-        entry: yarn
+        entry: yarn --cwd frontend lint
         language: system
         files: ^frontend/
-        args: [lint]
         require_serial: false
         pass_filenames: false

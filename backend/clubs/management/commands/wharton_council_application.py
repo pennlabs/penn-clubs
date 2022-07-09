@@ -60,7 +60,8 @@ class Command(BaseCommand):
 
         if club_names == []:
             wc_badge = Badge.objects.filter(
-                label="Wharton Council", purpose="org",
+                label="Wharton Council",
+                purpose="org",
             ).first()
             for club in Club.objects.all():
                 if wc_badge in club.badges.all():

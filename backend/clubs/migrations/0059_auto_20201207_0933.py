@@ -34,10 +34,22 @@ class Migration(migrations.Migration):
                 ("registration_end_time", models.DateTimeField()),
             ],
         ),
-        migrations.RemoveField(model_name="club", name="fair",),
-        migrations.RemoveField(model_name="club", name="fair_on",),
-        migrations.RemoveField(model_name="historicalclub", name="fair",),
-        migrations.RemoveField(model_name="historicalclub", name="fair_on",),
+        migrations.RemoveField(
+            model_name="club",
+            name="fair",
+        ),
+        migrations.RemoveField(
+            model_name="club",
+            name="fair_on",
+        ),
+        migrations.RemoveField(
+            model_name="historicalclub",
+            name="fair",
+        ),
+        migrations.RemoveField(
+            model_name="historicalclub",
+            name="fair_on",
+        ),
         migrations.AddField(
             model_name="school",
             name="is_graduate",

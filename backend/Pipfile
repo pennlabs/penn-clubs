@@ -4,7 +4,6 @@ verify_ssl = true
 
 [dev-packages]
 codecov = "*"
-black = "==19.10b0"
 unittest-xml-reporting = ">=3.0.2"
 flake8 = "*"
 flake8-isort = "*"
@@ -12,6 +11,7 @@ isort = "*"
 flake8-quotes = "*"
 django-debug-toolbar = "*"
 django-extensions = "*"
+black = ">=22.3.0"
 
 [packages]
 dj-database-url = "*"

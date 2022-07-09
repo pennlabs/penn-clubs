@@ -1799,7 +1799,13 @@ class ClubTestCase(TestCase):
 
         # ensure that unliking a question answer that is not yet liked does nothing
         resp = self.client.post(
-            reverse("club-questions-unlike", args=("test-club", question_id,),)
+            reverse(
+                "club-questions-unlike",
+                args=(
+                    "test-club",
+                    question_id,
+                ),
+            )
         )
         self.assertEqual(200, resp.status_code)
         resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
@@ -1809,7 +1815,13 @@ class ClubTestCase(TestCase):
 
         # test if question answer was liked successfully
         resp = self.client.post(
-            reverse("club-questions-like", args=("test-club", question_id,),)
+            reverse(
+                "club-questions-like",
+                args=(
+                    "test-club",
+                    question_id,
+                ),
+            )
         )
         self.assertEqual(200, resp.status_code)
         resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
@@ -1823,7 +1835,13 @@ class ClubTestCase(TestCase):
 
         # ensures liking a question answer twice does not increase the number of likes
         resp = self.client.post(
-            reverse("club-questions-like", args=("test-club", question_id,),)
+            reverse(
+                "club-questions-like",
+                args=(
+                    "test-club",
+                    question_id,
+                ),
+            )
         )
         self.assertEqual(200, resp.status_code)
         resp = self.client.get(reverse("club-questions-list", args=("test-club",)))
@@ -1834,7 +1852,13 @@ class ClubTestCase(TestCase):
 
         # check if question answer was unliked successfully
         resp = self.client.post(
-            reverse("club-questions-unlike", args=("test-club", question_id,),)
+            reverse(
+                "club-questions-unlike",
+                args=(
+                    "test-club",
+                    question_id,
+                ),
+            )
         )
         self.assertEqual(200, resp.status_code)
         resp = self.client.get(reverse("club-questions-list", args=("test-club",)))

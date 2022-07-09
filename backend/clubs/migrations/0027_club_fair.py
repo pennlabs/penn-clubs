@@ -11,6 +11,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="club", name="fair", field=models.BooleanField(default=False),
+            model_name="club",
+            name="fair",
+            field=models.BooleanField(default=False),
         ),
     ]

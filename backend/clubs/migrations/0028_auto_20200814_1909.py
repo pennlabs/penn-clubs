@@ -11,6 +11,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name="club", name="active", field=models.BooleanField(default=False),
+            model_name="club",
+            name="active",
+            field=models.BooleanField(default=False),
         ),
     ]

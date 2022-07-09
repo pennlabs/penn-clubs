@@ -202,14 +202,17 @@ class Command(BaseCommand):
 
         if action == "update_status_reminder":
             wc_badge = Badge.objects.filter(
-                label="Wharton Council", purpose="org",
+                label="Wharton Council",
+                purpose="org",
             ).first()
             clubs = Club.objects.filter(badges__in=[wc_badge])
             payloads = []
             for club in clubs:
                 emails = (
                     Membership.objects.filter(
-                        role__lte=Membership.ROLE_OFFICER, club__active=True, club=club,
+                        role__lte=Membership.ROLE_OFFICER,
+                        club__active=True,
+                        club=club,
                     )
                     .values_list("person__email", flat=True)
                     .distinct()
