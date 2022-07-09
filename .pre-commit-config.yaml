@@ -24,3 +24,11 @@ repos:
         require_serial: true
         files: ^backend/
         args: [--config, backend/setup.cfg]
+      - id: frontend
+        name: Yarn Linter
+        entry: yarn
+        language: system
+        files: ^frontend/
+        args: [lint]
+        require_serial: false
+        pass_filenames: false
