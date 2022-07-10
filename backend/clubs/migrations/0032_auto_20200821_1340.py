@@ -11,9 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="club",
-            name="rank",
-            field=models.IntegerField(default=0),
+            model_name="club", name="rank", field=models.IntegerField(default=0),
         ),
         migrations.AddField(
             model_name="historicalclub",

@@ -11,8 +11,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name="event",
-            name="description",
-            field=models.TextField(blank=True),
+            model_name="event", name="description", field=models.TextField(blank=True),
         ),
     ]

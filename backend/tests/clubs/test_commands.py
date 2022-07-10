@@ -370,8 +370,7 @@ class SendInvitesTestCase(TestCase):
         # ensure test runs on a weekday
         errors = io.StringIO()
         with mock.patch(
-            "django.utils.timezone.now",
-            return_value=now,
+            "django.utils.timezone.now", return_value=now,
         ):
             call_command("daily_notifications", stderr=errors)
 

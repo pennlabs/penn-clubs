@@ -11,9 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="club",
-            name="address",
-            field=models.TextField(blank=True),
+            model_name="club", name="address", field=models.TextField(blank=True),
         ),
         migrations.AddField(
             model_name="historicalclub",

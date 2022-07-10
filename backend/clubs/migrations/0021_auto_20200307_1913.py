@@ -11,8 +11,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name="event",
-            name="code",
-            field=models.SlugField(max_length=255),
+            model_name="event", name="code", field=models.SlugField(max_length=255),
         ),
     ]

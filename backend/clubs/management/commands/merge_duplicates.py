@@ -180,8 +180,7 @@ def merge_clubs(one, two):
         Membership.objects.filter(club=primary).values_list("person__id", flat=True)
     )
     Membership.objects.filter(
-        club=secondary,
-        person__in=duplicate_memberships,
+        club=secondary, person__in=duplicate_memberships,
     ).delete()
     Membership.objects.filter(club=secondary).update(club=primary)
 

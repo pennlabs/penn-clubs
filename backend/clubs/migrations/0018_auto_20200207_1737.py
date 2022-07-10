@@ -12,8 +12,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameModel(
-            old_name="JoinRequest",
-            new_name="MembershipRequest",
-        ),
+        migrations.RenameModel(old_name="JoinRequest", new_name="MembershipRequest",),
     ]
