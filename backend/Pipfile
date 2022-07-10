@@ -4,7 +4,7 @@ verify_ssl = true
 
 [dev-packages]
 codecov = "*"
-unittest-xml-reporting = ">=3.0.2"
+unittest-xml-reporting = "==3.0.4"
 flake8 = "*"
 flake8-isort = "*"
 isort = "*"
@@ -33,7 +33,7 @@ phonenumbers = "*"
 qrcode = "*"
 drf-renderer-xlsx = "==0.3.9"
 python-dateutil = "*"
-psycopg2 = "*"
+psycopg2 = "==2.9.1"
 django-simple-history = "*"
 channels = "<3"
 django-runtime-options = "*"
@@ -49,7 +49,7 @@ ics = "==0.7"
 urlextract = "*"
 jsonref = "*"
 "backports.zoneinfo"={version = "*", python_version = "< '3.9'"}
-unittest-xml-reporting = "*"
+unittest-xml-reporting = "==3.0.4"
 tblib = "*"
 pre-commit = "*"
 
