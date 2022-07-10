@@ -45,7 +45,7 @@ uvloop = {version = "*", sys_platform = "== 'linux'"}
 uvicorn = {extras = ["standard"], version = "*"}
 gunicorn = "*"
 httptools = "*"
-ics = "*"
+ics = "==0.7"
 urlextract = "*"
 jsonref = "*"
 "backports.zoneinfo"={version = "*", python_version = "< '3.9'"}
