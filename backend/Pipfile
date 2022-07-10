@@ -48,6 +48,7 @@ httptools = "*"
 ics = "*"
 urlextract = "*"
 jsonref = "*"
+"backports.zoneinfo"={version = "*", python_version = "< '3.9'"}
 unittest-xml-reporting = "*"
 tblib = "*"
 pre-commit = "*"
