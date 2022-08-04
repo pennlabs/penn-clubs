@@ -89,9 +89,9 @@ const FairPage = ({
           <b>Hi there! Welcome to {SITE_NAME}!</b> We are the official platform
           for {OBJECT_NAME_LONG_PLURAL} on campus, and we are excited to get you
           connected to {OBJECT_NAME_PLURAL} on our platform this year. In
-          collaboration with {fairOrgName}, we will be hosting the virtual fair
-          for this semester. Below is some important information that will set
-          you up for a successful experience.
+          collaboration with {fairOrgName}, we will be hosting the fair for this
+          semester. Below is some important information that will set you up for
+          a successful experience.
         </p>
         <p>
           <b>How the {fairName} will be run:</b>
@@ -101,22 +101,8 @@ const FairPage = ({
             The {fairName} will be held on <b>{fairTime}</b>.
           </li>
           <li>
-            The main fair functionality is each {OBJECT_NAME_SINGULAR}'s
-            informational Zoom meeting, which will all be visible on our{' '}
-            {isFairOpen ? (
-              <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
-                <a>Live Events Page</a>
-              </Link>
-            ) : (
-              'Live Events Page'
-            )}
-            . Representatives of each {OBJECT_NAME_SINGULAR} will be available
-            in these meetings to answer questions, give short presentations, and
-            otherwise interact with attendees.
-          </li>
-          <li>
-            You can also visit each {OBJECT_NAME_SINGULAR}'s individual page.
-            Each {OBJECT_NAME_SINGULAR}'s page has a description, contact
+            You can visit each {OBJECT_NAME_SINGULAR}'s individual page. Each{' '}
+            {OBJECT_NAME_SINGULAR}'s page has a description, contact
             information, and a FAQ feature that {OBJECT_NAME_SINGULAR} officers
             will be monitoring throughout the fair that you can use to ask
             questions. Questions can be submitted anonymously.
@@ -145,40 +131,6 @@ const FairPage = ({
                 events, newsletters, information, and more.
               </li>
             </ul>
-          </li>
-        </ul>
-        <p>
-          <b>Configuring Zoom:</b>
-        </p>
-        <ul>
-          <li>
-            If you have not already activated your Zoom account, click "Sign in"
-            at <a href="https://upenn.zoom.us/">this link</a> and sign in with
-            your PennKey. You will not be able to attend any of the live events
-            without signing into your Zoom account.
-          </li>
-          <li>
-            If you have not already downloaded the Zoom desktop client, we
-            highly encourage you to do so to take advantage of all Zoom
-            features. Click <a href="https://zoom.us/download">here</a> to
-            download the desktop client.
-          </li>
-        </ul>
-        <p>
-          <b>Code of Conduct:</b>
-        </p>
-        <ul>
-          <li>
-            Please be respectful in attending information sessions. If the
-            session is busy with many attendees, allow each other to take turns
-            asking questions. Where appropriate, use the 'raise hand' feature to
-            reduce interruptions.
-          </li>
-          <li>
-            Please use appropriate language in the chat windows on Zoom. There
-            will be peer to peer monitoring, ensuring that student participants
-            and {OBJECT_NAME_SINGULAR} officers are not misusing any features
-            during these sessions.
           </li>
         </ul>
         <p>
