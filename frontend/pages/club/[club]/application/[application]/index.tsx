@@ -256,9 +256,14 @@ const ApplicationPage = ({
                 doApiRequest('/users/question_response/?format=json', {
                   method: 'POST',
                   body,
+                }).then((resp) => {
+                  if (resp.status === 400) {
+                    setErrors('You have already applied to 2 committees!')
+                  } else {
+                    setSaved(true)
+                  }
                 })
               }
-              setSaved(true)
             } else {
               setErrors(submitErrors)
             }

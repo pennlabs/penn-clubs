@@ -2570,6 +2570,12 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     club = serializers.SlugRelatedField(slug_field="code", read_only=True)
     updated_at = serializers.SerializerMethodField("get_updated_time", read_only=True)
     club_image_url = serializers.SerializerMethodField("get_image_url", read_only=True)
+    season = serializers.CharField(read_only=True)
+    active = serializers.SerializerMethodField("get_active", read_only=True)
+
+    def get_active(self, obj):
+        now = timezone.now()
+        return obj.application_start_time <= now and obj.application_end_time >= now
 
     def get_name(self, obj):
         if obj.name:
@@ -2646,6 +2652,8 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         model = ClubApplication
         fields = (
             "id",
+            "season",
+            "active",
             "name",
             "application_start_time",
             "application_end_time",

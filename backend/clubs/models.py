@@ -19,6 +19,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from ics import Calendar
+from model_clone.models import CloneModel
 from phonenumber_field.modelfields import PhoneNumberField
 from simple_history.models import HistoricalRecords
 from urlextract import URLExtract
@@ -1517,7 +1518,7 @@ class Profile(models.Model):
         return self.user.username
 
 
-class ClubApplication(models.Model):
+class ClubApplication(CloneModel):
     """
     Represents custom club application.
     """
@@ -1537,6 +1538,11 @@ class ClubApplication(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    _clone_m2o_or_o2m_fields = [
+        "committees",
+        "questions",
+    ]
+
     def __str__(self):
         return "{} created {}: start {}, end {}".format(
             self.club.name,
@@ -1544,6 +1550,12 @@ class ClubApplication(models.Model):
             self.application_start_time,
             self.application_end_time,
         )
+
+    @property
+    def season(self):
+        semester = "Fall" if 8 <= self.application_start_time.month <= 11 else "Spring"
+        year = str(self.application_start_time.year)
+        return f"{semester} {year}"
 
 
 class ApplicationCommittee(models.Model):
@@ -1561,7 +1573,7 @@ class ApplicationCommittee(models.Model):
         return "<ApplicationCommittee: {} in {}>".format(self.name, self.application.pk)
 
 
-class ApplicationQuestion(models.Model):
+class ApplicationQuestion(CloneModel):
     """
     Represents a question of a custom application
     """
@@ -1589,6 +1601,8 @@ class ApplicationQuestion(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    _clone_m2o_or_o2m_fields = ["multiple_choice"]
 
 
 class ApplicationMultipleChoice(models.Model):

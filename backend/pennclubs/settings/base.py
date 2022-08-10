@@ -36,6 +36,7 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "channels",
+    "model_clone",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
