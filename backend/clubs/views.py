@@ -4552,6 +4552,15 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def duplicate(self, *args, **kwargs):
+        """
+        Duplicate an application, setting the start and end time arbitrarily.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content: {}
+        ---
+        """
         obj = self.get_object()
 
         clone = obj.make_clone()

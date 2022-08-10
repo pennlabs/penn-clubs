@@ -257,7 +257,7 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
           <li key={i}>
             <span className=" ml-3 has-text-success">
               <Icon name="check" />
-            </span>
+            </span>{' '}
             {text}
           </li>
         ))}
