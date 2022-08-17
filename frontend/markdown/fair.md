@@ -22,7 +22,7 @@ To help you get set up, use our automated system by clicking the button below. T
 
 The final step of the setup process will ask you to add a description and cover photo to your event. You can do this by clicking on the "Edit Event" button.
 
-![Edit Virtual Activites Fair Event](3.png)
+![Edit Activites Fair Event](3.png)
 
 You will need to change the following fields:
 
@@ -35,49 +35,9 @@ Note that this date is **fixed**. Trying to change the date and time will result
 
 **Be sure to hit the green "save" button on the lefthand side when you are done!**
 
-![Save Virtual Activities Fair Changes](4.png)
+![Save Activities Fair Changes](4.png)
 
-**And that's it!** Your club's event will show up in the portal during the live, virtual activites fair on the day you are assigned.
-
-## 🎤 Hosting Your Zoom Event
-
-- If you use a personal account, the maximum number of people that can attend your meeting at once is **100 people**. If you use the school provided account, this limit increases to **300 people**. You can check the meeting limit for you account on the Zoom settings page.
-- Make all present members of the session **co-hosts** to help control the session.
-- Have the chat window **open** to answer any questions. For busier sessions, we recommend designating one member to be monitoring the chat window.
-
-  ![Zoom Breakout Rooms](5.png)
-
-## 🎥 Recording Part of Your Session
-
-If you are planning to use a short pitch or short presentation to share with prospective students, we encourage you to record a small partof your Zoom session so that students, especially those with time zone conflicts, can access the recording again. You will be able to link the video recording on your club page after the fair. If you choose to do this, please keep in mind:
-
-- You should aim to record one presentation/description of your club that is no longer than a few minutes.
-- Before recording, you must announce aloud at the start of the session that the presentation portion will be recorded for content purposes and allow students to decide if they wish to stay off-camera until the recording is complete. Once the record button is selected, all participants will receive a consent pop up message prompting them to stay in or leave the meeting during the recording.
-- No other virtual session portions should be recorded, including chats, Q & A, or other activities (i.e. icebreakers, etc.) that may occur during sessions.
-
-To do this, a host of the session can simply just hit the record button. To easily link the file on your club page later, we recommend you click on the "Record to the Cloud" option.
-
-![Zoom Recording](zoom2.png)
-
-## 👨‍👩‍👧‍👦 Managing Breakout Rooms
-
-For busier sessions where multiple club members are present, we recommend taking advantage of the **breakout room** feature, which can be prompted by hosts. Breakout rooms can be used to facilitate 1 on 1 conversations with club members and fair attendees. We would suggest **manually assigning** people to a breakout room, to ensure a member of the club is in each breakout room to answer questions.
-
-![Assign Breakout Rooms Manually](Breakout1.png)
-
-Once you choose the number of rooms, you can manually assign participants to each room. Just click the "Assign" button and select the active participants you would like to move into each breakout room.
-
-![Assign Breakout Rooms Manually](Breakout4.png)
-
-Hosts and co-hosts can move around to breakout rooms freely, though regular participants must join the room they are assigned. As a host, you must regularly be watching the Breakout Rooms window, as new participants will not be put in a breakout room initially. You will have to assign them manually, by clicking the "Assign to" button next to their name when they join. They will be listed under the "Unassigned" attendees.
-
-![Assign Breakout Rooms to New Participants](Breakout3.png)
-
-You can also broadcast messages to all of the participants in the breakout by using the "Broadcast message to all" button.
-
-![Assign Breakout Rooms to New Participants](Breakout2.png)
-
-For more information, check out the on the Zoom website about breakout rooms [here](https://support.zoom.us/hc/en-us/articles/206476313-Managing-Breakout-Rooms).
+**And that's it!** Your club's event will show up in the portal during the live activites fair on the day you are assigned.
 
 ## 📎 Recruitment Resources
 
