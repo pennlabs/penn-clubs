@@ -1,6 +1,12 @@
-# Penn Clubs: Virtual Activites Fair Officer Guide
+# Penn Clubs: Activites Fair Officer Guide
 
-<div class="notification is-info"><b>Are you a fair participant?</b> This guide is meant for club officers to prepare for the virtual fair. If you are looking for instructions on how to participate in the fair, click <a href="/fair">here</a>.</div>
+<div class="notification is-info"><b>Are you setting up in-person?</b> This guide
+is meant for a virtual activities fair. If you are looking for instructions on
+how to sign up for the in-person component, please go to your club's homepage
+and you should be prompted at the top.</div>
+
+<div class="notification is-info"><b>Are you a fair participant?</b> This guide
+is meant for club officers to prepare for the activities fair. If you are looking for instructions on how to participate in the fair, click <a href="/fair">here</a>.</div>
 
 Hi there! 🎉
 
@@ -19,6 +25,7 @@ The final step of the setup process will ask you to add a description and cover 
 ![Edit Virtual Activites Fair Event](3.png)
 
 You will need to change the following fields:
+
 - Add a description
 - Add a cover photo (16:9 dimensions, preferably 1920 x 1080)
 
@@ -33,15 +40,17 @@ Note that this date is **fixed**. Trying to change the date and time will result
 **And that's it!** Your club's event will show up in the portal during the live, virtual activites fair on the day you are assigned.
 
 ## 🎤 Hosting Your Zoom Event
+
 - If you use a personal account, the maximum number of people that can attend your meeting at once is **100 people**. If you use the school provided account, this limit increases to **300 people**. You can check the meeting limit for you account on the Zoom settings page.
 - Make all present members of the session **co-hosts** to help control the session.
 - Have the chat window **open** to answer any questions. For busier sessions, we recommend designating one member to be monitoring the chat window.
 
-    ![Zoom Breakout Rooms](5.png)
+  ![Zoom Breakout Rooms](5.png)
 
 ## 🎥 Recording Part of Your Session
 
 If you are planning to use a short pitch or short presentation to share with prospective students, we encourage you to record a small partof your Zoom session so that students, especially those with time zone conflicts, can access the recording again. You will be able to link the video recording on your club page after the fair. If you choose to do this, please keep in mind:
+
 - You should aim to record one presentation/description of your club that is no longer than a few minutes.
 - Before recording, you must announce aloud at the start of the session that the presentation portion will be recorded for content purposes and allow students to decide if they wish to stay off-camera until the recording is complete. Once the record button is selected, all participants will receive a consent pop up message prompting them to stay in or leave the meeting during the recording.
 - No other virtual session portions should be recorded, including chats, Q & A, or other activities (i.e. icebreakers, etc.) that may occur during sessions.
@@ -73,6 +82,7 @@ For more information, check out the on the Zoom website about breakout rooms [he
 ## 📎 Recruitment Resources
 
 Tired of creating a Google Form to track all interested members? Now, students can click the "Subscribe" bell button on your club's page to immediately be added to your club's own interest list without spending the time to fill out a form. By hitting the "Subscribe" bell button, interested members will have their name and email added to your interest list. You will receive the following information about each subscriber:
+
 - Name
 - Email
 - Graduation Year
@@ -87,7 +97,7 @@ To access this interest list, simply navigate to "Manage Club" once again, then 
 
 ## ❓Club Q&A
 
-To allow interested students to ask questions about your club at any time, we also have an FAQ section on each club's page. When students post a question, all club officers will receive an email notification that a question has been asked. 
+To allow interested students to ask questions about your club at any time, we also have an FAQ section on each club's page. When students post a question, all club officers will receive an email notification that a question has been asked.
 
 ![Club FAQ](8.png)
 
@@ -97,7 +107,7 @@ To answer the questions, navigate once again to the "Manage Club", and then to t
 
 ## 👩‍👧‍👦 Managing Members
 
-As you can tell, there is a lot of responsibility for club owners already. To help lessen the load, you can invite other officers of your club to join your club's profile. Click the "Manage Club" button once again, and then navigate to the "Membership" tab. By entering email addresses (separated by commas or newlines) you can send invites to all the officers of your club by clicking the "Officer" status under Permissions. You can do the same with non-officer members, but leaving their status as "Member". **Only Officers and Owners of a club have access to the Manage Club button**. 
+As you can tell, there is a lot of responsibility for club owners already. To help lessen the load, you can invite other officers of your club to join your club's profile. Click the "Manage Club" button once again, and then navigate to the "Membership" tab. By entering email addresses (separated by commas or newlines) you can send invites to all the officers of your club by clicking the "Officer" status under Permissions. You can do the same with non-officer members, but leaving their status as "Member". **Only Officers and Owners of a club have access to the Manage Club button**.
 
 ![Managing Club Members](10.png)
 
