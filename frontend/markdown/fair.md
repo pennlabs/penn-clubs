@@ -1,9 +1,7 @@
 # Penn Clubs: Activites Fair Officer Guide
 
-<div class="notification is-info"><b>Are you setting up in-person?</b> This guide
-is meant for a virtual activities fair. If you are looking for instructions on
-how to sign up for the in-person component, please go to your club's homepage
-and you should be prompted at the top.</div>
+<div class="notification is-info"><b>Are you registered for the fair?</b> If you are looking for instructions on
+how to sign up for the activities fair, please go to your club's homepage and you should be prompted at the top.</div>
 
 <div class="notification is-info"><b>Are you a fair participant?</b> This guide
 is meant for club officers to prepare for the activities fair. If you are looking for instructions on how to participate in the fair, click <a href="/fair">here</a>.</div>
@@ -13,31 +11,6 @@ Hi there! 🎉
 Welcome to **Penn Clubs**, the University of Pennsylvania's official registry for student organizations on campus. The purpose of this guide is to walk you through the many different features that Penn Clubs can offer that will make your experience recruiting new members as easy as possible.
 
 <div class="has-text-danger">Club officers will <b>not</b> be able to access the list of students that have bookmarked their club. Bookmarks are intended for personal use only. If you would like a student to send you their contact information, ensure that they <b>subscribe</b> to your club instead of bookmarking it.</div>
-
-## 📅 REQUIRED: Editing Your Activites Fair Booth
-
-To help you get set up, use our automated system by clicking the button below. This is a quick, three-step process that will make sure your meetings are configured correctly for the upcoming fair.
-
-<a href="/zoom" class="button is-success">Start Setup</a>
-
-The final step of the setup process will ask you to add a description and cover photo to your event. You can do this by clicking on the "Edit Event" button.
-
-![Edit Activites Fair Event](3.png)
-
-You will need to change the following fields:
-
-- Add a description
-- Add a cover photo (16:9 dimensions, preferably 1920 x 1080)
-
-We recommend that you fill out as many details as possible. Students will be shown currently occuring events in completely random order, with one exception. Clubs that have fully entered their event information will appear above clubs who have not.
-
-Note that this date is **fixed**. Trying to change the date and time will result in an error, preventing you from saving your details. If you have any questions about the date, please email the event organizers.
-
-**Be sure to hit the green "save" button on the lefthand side when you are done!**
-
-![Save Activities Fair Changes](4.png)
-
-**And that's it!** Your club's event will show up in the portal during the live activites fair on the day you are assigned.
 
 ## 📎 Recruitment Resources
 
