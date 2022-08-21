@@ -14,6 +14,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.db import models, transaction
+from django.db.models import Sum
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -1568,6 +1569,12 @@ class ApplicationCommittee(models.Model):
     application = models.ForeignKey(
         ClubApplication, related_name="committees", on_delete=models.CASCADE,
     )
+
+    def get_word_limit(self):
+        total_limit = self.applicationquestion_set.aggregate(
+            total_limit=Sum("word_limit")
+        )
+        return total_limit["total_limit"] or 0
 
     def __str__(self):
         return "<ApplicationCommittee: {} in {}>".format(self.name, self.application.pk)

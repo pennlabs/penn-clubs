@@ -2334,6 +2334,41 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             "precedence",
         )
 
+    def validate_word_limit(self, value):
+        """
+        For wharton council applications, ensure that the committees have
+        at most 500 words worth of questions
+        """
+
+        data = self.context["request"].data
+
+        if "committees" in data:
+            committees = data["committees"]
+
+            application = ClubApplication.objects.filter(
+                pk=self.context["view"].kwargs.get("application_pk")
+            ).first()
+
+            if not application.is_wharton_council:
+                return value
+
+            for committee in committees:
+                obj = ApplicationCommittee.objects.filter(
+                    application=application, name=committee["name"]
+                ).first()
+
+                current_limit = obj.get_word_limit()
+
+                instance_limit = self.instance.word_limit if self.instance else 0
+
+                if data["word_limit"] + current_limit - instance_limit > 500:
+                    raise serializers.ValidationError(
+                        f"The total word limit of questions in committee \
+                        ''{committee['name']} ' should not exceed 500. \
+                        Current: {current_limit}"
+                    )
+        return value
+
     def create(self, validated_data):
         # remove club from request we do not use it
         validated_data.pop("club")
@@ -2342,6 +2377,7 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
         validated_data["application"] = ClubApplication.objects.filter(
             pk=application_pk
         ).first()
+
         return super().create(validated_data)
 
     def save(self):
@@ -2575,7 +2611,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
     def get_active(self, obj):
         now = timezone.now()
-        return obj.application_start_time <= now and obj.application_end_time >= now
+        return obj.application_end_time >= now
 
     def get_name(self, obj):
         if obj.name:

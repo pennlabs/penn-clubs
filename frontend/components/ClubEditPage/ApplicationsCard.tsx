@@ -111,12 +111,11 @@ const ApplicationModal = (props: {
             {questionType !== null &&
               questionType === ApplicationQuestionType.FreeResponse && (
                 <Field
-                  validate={validateWordCount}
                   name="word_limit"
                   as={TextField}
                   type={'number'}
                   helpText={
-                    'Word limit for this free response question (max 500)'
+                    'Word limit for this free response question (maximum total per committee is 500)'
                   }
                 />
               )}
@@ -264,7 +263,7 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
       </ul>
 
       <Text>
-        <b> PSA</b>: To copy over your application from last semester, please
+        <b>TIP</b>: To copy over your application from last semester, please
         click <b> duplicate </b> on the application from the season that you
         would like to copy over and refresh the page. You can then edit this
         application as you please.

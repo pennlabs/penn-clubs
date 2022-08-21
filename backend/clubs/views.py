@@ -4414,8 +4414,14 @@ class UserViewSet(viewsets.ModelViewSet):
             and committees_applied.count() >= 2
             and committee_name not in committees_applied
         ):
-            return Response([], status=status.HTTP_400_BAD_REQUEST)
-
+            return Response(
+                {
+                    "success": False,
+                    "detail": """You cannot submit to more than two committees for any particular club application.
+                    In case you'd like to change the committees you applied to,
+                    you can delete submissions on the submissions page""",
+                }
+            )
         submission = ApplicationSubmission.objects.create(
             user=self.request.user, application=application, committee=committee,
         )
@@ -4566,7 +4572,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         clone = obj.make_clone()
 
         now = timezone.now()
-        clone.application_start_time = now
+        clone.application_start_time = now + datetime.timedelta(days=1)
         clone.application_end_time = now + datetime.timedelta(days=30)
         clone.save()
         return Response([])
@@ -4661,6 +4667,8 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     list: List submissions for a given club application.
 
     status: Changes status of a submission
+
+    export: export applications
     """
 
     permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
@@ -4695,7 +4703,7 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def export(self, *args, **kwargs):
         """
-        Given some application submissions, change their status to a new one
+        Given some application submissions, export them
         ---
         requestBody:
             content:
