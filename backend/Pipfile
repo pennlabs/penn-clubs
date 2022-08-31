@@ -51,6 +51,7 @@ jsonref = "*"
 unittest-xml-reporting = "*"
 tblib = "*"
 pre-commit = "*"
+django-clone = "*"
 
 [requires]
 python_version = "3"

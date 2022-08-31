@@ -174,36 +174,38 @@ export const ModelTable = ({
       }
       return (
         <div className="buttons">
-          {allowEditing && (
-            <button
-              onClick={() => {
-                return onEdit(object)
-              }}
-              className="button is-primary is-small"
-            >
-              <Icon name="edit" alt="edit" /> Edit
-            </button>
-          )}
-          {allowDeletion && (
-            <button
-              onClick={() => {
-                if (confirmDeletion) {
-                  if (
-                    confirm(
-                      `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
-                    )
-                  ) {
+          {allowEditing &&
+            (object.active === true || object.active === undefined) && (
+              <button
+                onClick={() => {
+                  return onEdit(object)
+                }}
+                className="button is-primary is-small"
+              >
+                <Icon name="edit" alt="edit" /> Edit
+              </button>
+            )}
+          {allowDeletion &&
+            (object.active === true || object.active === undefined) && (
+              <button
+                onClick={() => {
+                  if (confirmDeletion) {
+                    if (
+                      confirm(
+                        `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
+                      )
+                    ) {
+                      onDelete(object)
+                    }
+                  } else {
                     onDelete(object)
                   }
-                } else {
-                  onDelete(object)
-                }
-              }}
-              className="button is-danger is-small"
-            >
-              <Icon name="trash" alt="delete" /> {deleteVerb}
-            </button>
-          )}
+                }}
+                className="button is-danger is-small"
+              >
+                <Icon name="trash" alt="delete" /> {deleteVerb}
+              </button>
+            )}
           {actions && actions(object)}
         </div>
       )

@@ -257,8 +257,16 @@ const ApplicationPage = ({
                   method: 'POST',
                   body,
                 })
+                  .then((resp) => resp.json())
+                  .then((data) => {
+                    if (data.success === false) {
+                      setSaved(false)
+                      setErrors(data.detail)
+                    } else {
+                      setSaved(true)
+                    }
+                  })
               }
-              setSaved(true)
             } else {
               setErrors(submitErrors)
             }

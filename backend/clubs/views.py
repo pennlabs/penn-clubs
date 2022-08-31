@@ -32,6 +32,7 @@ from django.db.models import (
     F,
     Prefetch,
     Q,
+    TextField,
     Value,
 )
 from django.db.models.expressions import RawSQL
@@ -4395,6 +4396,32 @@ class UserViewSet(viewsets.ModelViewSet):
             ApplicationQuestion.objects.filter(pk=questions[0]).first().application
         )
         committee = application.committees.filter(name=committee_name).first()
+
+        committees_applied = (
+            ApplicationSubmission.objects.filter(
+                user=self.request.user,
+                committee__isnull=False,
+                application=application,
+                archived=False,
+            )
+            .values_list("committee__name", flat=True)
+            .distinct()
+        )
+
+        # limit applicants to 2 committees
+        if (
+            committee
+            and committees_applied.count() >= 2
+            and committee_name not in committees_applied
+        ):
+            return Response(
+                {
+                    "success": False,
+                    "detail": """You cannot submit to more than two committees for any particular club application.
+                    In case you'd like to change the committees you applied to,
+                    you can delete submissions on the submissions page""",
+                }
+            )
         submission = ApplicationSubmission.objects.create(
             user=self.request.user, application=application, committee=committee,
         )
@@ -4529,6 +4556,27 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
     serializer_class = ClubApplicationSerializer
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
+    @action(detail=True, methods=["post"])
+    def duplicate(self, *args, **kwargs):
+        """
+        Duplicate an application, setting the start and end time arbitrarily.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        obj = self.get_object()
+
+        clone = obj.make_clone()
+
+        now = timezone.now()
+        clone.application_start_time = now + datetime.timedelta(days=1)
+        clone.application_end_time = now + datetime.timedelta(days=30)
+        clone.save()
+        return Response([])
+
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
             return WritableClubApplicationSerializer
@@ -4559,9 +4607,11 @@ class WhartonApplicationAPIView(generics.ListAPIView):
 
         # randomly order applications, seeded by user ID
 
-        seed = self.request.user.id if self.request.user else 30
+        seed = self.request.user.id
 
-        qs = qs.annotate(random=SHA1(Concat("name", Value(seed)),)).order_by("random")
+        qs = qs.annotate(
+            random=SHA1(Concat("name", Value(seed), output_field=TextField()))
+        ).order_by("random")
 
         return qs
 
@@ -4617,6 +4667,8 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     list: List submissions for a given club application.
 
     status: Changes status of a submission
+
+    export: export applications
     """
 
     permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
@@ -4651,7 +4703,7 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def export(self, *args, **kwargs):
         """
-        Given some application submissions, change their status to a new one
+        Given some application submissions, export them
         ---
         requestBody:
             content:

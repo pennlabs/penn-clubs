@@ -271,7 +271,13 @@ class ClubItemPermission(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        if view.action in ["create", "update", "partial_update", "destroy"]:
+        if view.action in [
+            "duplicate",
+            "create",
+            "update",
+            "partial_update",
+            "destroy",
+        ]:
             if "club_code" not in view.kwargs:
                 return False
             if not request.user.is_authenticated:

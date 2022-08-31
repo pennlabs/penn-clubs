@@ -75,6 +75,14 @@ const ApplicationModal = (props: {
   >()
   const [committeeQuestion, setCommitteeQuestion] = useState<boolean>()
 
+  const validateWordCount = (value) => {
+    let errorMsg
+    if (+value > 500) {
+      errorMsg = 'Please enter a valid word count'
+    }
+    return errorMsg
+  }
+
   return (
     <ModalContainer>
       <ModelForm
@@ -106,7 +114,9 @@ const ApplicationModal = (props: {
                   name="word_limit"
                   as={TextField}
                   type={'number'}
-                  helpText={'Word limit for this free response question'}
+                  helpText={
+                    'Word limit for this free response question (maximum total per committee is 500)'
+                  }
                 />
               )}
             {questionType !== null &&
@@ -204,6 +214,19 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
     }>
   } | null>(null)
 
+  function duplicateApplicationCurrent(id, obj) {
+    if (
+      confirm(
+        `Are you sure you want to duplicate the selected application? Please refresh the page after you select OK`,
+      )
+    ) {
+      doApiRequest(`/clubs/${club.code}/applications/${id}/duplicate/`, {
+        method: 'POST',
+        body: {},
+      })
+    }
+  }
+
   return (
     <BaseCard title={`${OBJECT_NAME_TITLE_SINGULAR} Applications`}>
       <Text>
@@ -238,6 +261,14 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
           </li>
         ))}
       </ul>
+
+      <Text>
+        <b>TIP</b>: To copy over your application from last semester, please
+        click <b> duplicate </b> on the application from the season that you
+        would like to copy over and refresh the page. You can then edit this
+        application as you please.
+      </Text>
+
       <ModelForm
         baseUrl={`/clubs/${club.code}/applications/`}
         defaultObject={{ name: `${club.name} Application` }}
@@ -313,23 +344,36 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
             />
           </>
         }
+        confirmDeletion={true}
         tableFields={[
           { name: 'name', label: 'Name' },
+          { name: 'season', label: 'Season' },
           {
             name: 'id',
             label: 'Edit',
-            render: (id) => {
+            converter: (id, object) => {
               return (
                 <>
-                  <button
-                    className="button is-primary is-small"
-                    onClick={() => {
-                      setApplicationName(id)
-                      showModal()
-                    }}
-                  >
-                    Questions
-                  </button>
+                  {object.active ? (
+                    <button
+                      className="button is-primary is-small"
+                      onClick={() => {
+                        setApplicationName(id)
+                        showModal()
+                      }}
+                    >
+                      Questions
+                    </button>
+                  ) : (
+                    <button
+                      className="button is-primary is-small"
+                      onClick={() => {
+                        duplicateApplicationCurrent(id, 1)
+                      }}
+                    >
+                      Duplicate
+                    </button>
+                  )}
                   <a href={`/club/${club.code}/application/${id}`}>
                     <button className="button is-primary is-small ml-3">
                       Preview
