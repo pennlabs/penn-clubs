@@ -58,7 +58,7 @@ class Command(BaseCommand):
         club_names = list(map(lambda x: x.strip(), kwargs["clubs"].split(",")))
         clubs = []
 
-        if club_names == []:
+        if club_names == [] or all(not name for name in club_names):
             wc_badge = Badge.objects.filter(
                 label="Wharton Council", purpose="org",
             ).first()
