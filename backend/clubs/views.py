@@ -4565,6 +4565,9 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         clone.application_start_time = now + datetime.timedelta(days=1)
         clone.application_end_time = now + datetime.timedelta(days=30)
+        clone.external_url = (
+            f"https://pennclubs.com/club/{clone.club.code}/" f"application/{clone.pk}"
+        )
         clone.save()
         return Response([])
 
