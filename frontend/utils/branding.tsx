@@ -42,6 +42,7 @@ const sites = {
       'You can upload club constitutions here. Please upload your club constitution in pdf or docx format.',
 
     CONTACT_EMAIL: 'contact@pennclubs.com',
+    SUPPORT_EMAIL: 'vpul-orgs@pobox.upenn.edu',
     FEEDBACK_URL: 'https://airtable.com/shrCsYFWxCwfwE7cf',
 
     CLUB_FIELDS: [
@@ -183,6 +184,7 @@ const sites = {
     ],
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
+    SUPPORT_EMAIL: 'vpul-orgs@pobox.upenn.edu',
     FEEDBACK_URL: 'https://airtable.com/shrv4RfYIddU1i9o6',
 
     CLUB_FIELDS: [
@@ -257,6 +259,7 @@ export const OG_IMAGE = sites[site].OG_IMAGE
 export const SCHOOL_NAME = sites[site].SCHOOL_NAME
 export const DOMAIN = sites[site].DOMAIN
 export const CONTACT_EMAIL = sites[site].CONTACT_EMAIL
+export const SUPPORT_EMAIL = sites[site].SUPPORT_EMAIL
 export const FEEDBACK_URL = sites[site].FEEDBACK_URL
 
 export const OBJECT_NAME_PLURAL = sites[site].OBJECT_NAME_PLURAL
