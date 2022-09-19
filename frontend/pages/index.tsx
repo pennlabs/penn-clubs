@@ -1,6 +1,9 @@
 import { CLUB_RECRUITMENT_CYCLES } from 'components/ClubEditPage/ClubEditCard'
 import ListRenewalDialog from 'components/ClubPage/ListRenewalDialog'
-import LiveEventsDialog from 'components/ClubPage/LiveEventsDialog'
+import {
+  LiveCustomDialog,
+  LiveEventsDialog,
+} from 'components/ClubPage/LiveEventsDialog'
 import { Icon, Metadata, Title, WideContainer } from 'components/common'
 import DisplayButtons from 'components/DisplayButtons'
 import { FuseTag } from 'components/FilterSearch'
@@ -598,6 +601,8 @@ const Splash = (props: SplashProps): ReactElement => {
             {(preFair || fairIsOpen) && (
               <LiveEventsDialog isPreFair={!!preFair} isFair={!!fairIsOpen} />
             )}
+
+            <LiveCustomDialog text="We are very sorry about the Penn Clubs outage! Please note that all Wharton Council club applications have their deadline extended to 9/19 at 6pm" />
             {renewalBanner && <ListRenewalDialog />}
 
             {isLoading && <ListLoadIndicator />}

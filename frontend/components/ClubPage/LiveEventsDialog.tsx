@@ -136,4 +136,13 @@ const LiveEventsDialog = ({
   )
 }
 
-export default LiveEventsDialog
+const LiveCustomDialog = ({ text }): ReactElement | null => {
+  return (
+    <LiveBanner>
+      <LiveTitle>Notice</LiveTitle>
+      <LiveSub>{text}</LiveSub>
+    </LiveBanner>
+  )
+}
+
+export { LiveCustomDialog, LiveEventsDialog }
