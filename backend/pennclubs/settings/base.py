@@ -217,6 +217,7 @@ SIMPLE_HISTORY_FILEFIELD_TO_CHARFIELD = True
 
 # Django Channels settings
 
+LANGUAGE_SESSION_KEY = "_language"
 ASGI_APPLICATION = "pennclubs.routing.application"
 
 
