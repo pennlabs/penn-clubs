@@ -55,6 +55,7 @@ pre-commit = "*"
 django-clone = "*"
 click = "==8.0.4"
 tinycss2 = "*"
+"backports.weakref" = "*"
 
 [requires]
 python_version = "3"
