@@ -109,7 +109,7 @@ class Command(BaseCommand):
 
             # points for longer descriptions
             cleaned_description = bleach.clean(
-                club.description, tags=[], attributes={}, styles=[], strip=True
+                club.description, tags=[], attributes={}, strip=True
             ).strip()
 
             if len(cleaned_description) > 25:

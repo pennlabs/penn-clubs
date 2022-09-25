@@ -11,7 +11,7 @@ MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware"] + MIDDLEWARE
 INTERNAL_IPS = ["127.0.0.1"]
 
 # Trust frontend (http://localhost:3000) on development
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+CSRF_TRUSTED_ORIGINS = ["http://**", "http://localhost:3000"]
 
 # Allow http callback for DLA
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"

@@ -1061,8 +1061,8 @@ class ClubTestCase(TestCase):
         """
         Ensure that descriptions are properly sanitized.
         """
-        test_good_string = """<p>Here\'s some <b>bold</b>, <i>italic</i>, <u>underline</u>,
-        and a <a href=\"http://example.com\">link</a>.<br></p>
+        test_good_string = """<p>Here\'s some <b>bold</b>, <i>italic</i>,
+        <u>underline</u>, and a <a href=\"http://example.com\">link</a>.<br></p>
 <ul>
     <li>One</li>
     <li>Two</li>
