@@ -3284,9 +3284,7 @@ class FavoriteCalendarAPIView(APIView):
             creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAINS[0]})"
         )
         calendar.extra.append(
-            ICSParse(
-                name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events"
-            )
+            ICSParse(name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events")
         )
 
         # only fetch events newer than the past month
