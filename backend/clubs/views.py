@@ -36,7 +36,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
-from ics import parse as ICSParse
+from ics.grammar.parse import ContentLine as ICSParse
 from options.models import Option
 from rest_framework import filters, generics, parsers, serializers, status, viewsets
 from rest_framework.decorators import action
@@ -3275,9 +3275,7 @@ class FavoriteCalendarAPIView(APIView):
             creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAINS[0]})"
         )
         calendar.extra.append(
-            ICSParse.ContentLine(
-                name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events"
-            )
+            ICSParse(name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events")
         )
 
         # only fetch events newer than the past month
@@ -4408,9 +4406,10 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "success": False,
-                    "detail": """You cannot submit to more than two committees for any particular club application.
-                    In case you'd like to change the committees you applied to,
-                    you can delete submissions on the submissions page""",
+                    "detail": """You cannot submit to more than two committees for any
+                    particular club application. In case you'd like to change the
+                    committees you applied to, you can delete submissions on the
+                    submissions page""",
                 }
             )
         submission = ApplicationSubmission.objects.create(
@@ -4842,10 +4841,11 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
         appears to have been deleted
         """
 
-        instance.archived = True
-        instance.archived_by = self.request.user
-        instance.archived_on = timezone.now()
-        instance.save()
+        ApplicationSubmission.objects.filter(
+            user=instance.user,
+            application=instance.application,
+            committee=instance.committee,
+        ).update(archived=True)
 
 
 class ApplicationQuestionViewSet(viewsets.ModelViewSet):

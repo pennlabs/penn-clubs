@@ -36,8 +36,8 @@ clubs = [
     {
         "code": "pppjo",
         "name": "Penn Pre-Professional Juggling Organization",
-        "description": """The PPPJO is looking for intense jugglers seeking to juggle their way to the top.
-Come with your juggling equipment (and business formal attire) to
+        "description": """The PPPJO is looking for intense jugglers seeking to juggle
+their way to the top. Come with your juggling equipment (and business formal attire) to
 hone your skills in time for recruiting season!""",
         "image": "https://i.imgur.com/WwUKiHP.png",
         "email": "example@example.com",
@@ -100,8 +100,8 @@ hone your skills in time for recruiting season!""",
     {
         "code": "lorem-ipsum",
         "name": "Penn Lorem Ipsum Club",
-        "description": """<i>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua.</i>""",
+        "description": """<i>Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</i>""",
         "tags": [{"name": "Undergraduate"}],
         "founded": "2003-01-01",
         "size": Club.SIZE_LARGE,
@@ -185,8 +185,9 @@ you can procrastinate on the application and ultimately miss the deadline!""",
         "name": "Empty Club",
         "description": "A club without any members.",
         "email": "example@example.com",
-        "how_to_get_involved": """Anyone can join this club, just send us a membership request!
- See www.google.com for more details. Alternatively, contact example@example.com.""",
+        "how_to_get_involved": """Anyone can join this club, just send us a membership
+request! See www.google.com for more details. Alternatively, contact
+example@example.com.""",
         "active": True,
         "approved": True,
         "accepting_members": True,

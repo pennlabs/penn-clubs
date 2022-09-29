@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import bleach
 import requests
+from bleach.css_sanitizer import CSSSanitizer
 from bs4 import BeautifulSoup, Comment, NavigableString
 from django.conf import settings
 from django.core.files.images import ImageFile
@@ -128,6 +129,15 @@ def clean(text):
     """
     Uses bleach to sanitize HTML input with a larger group of exceptions.
     """
+    css_sanitizer = CSSSanitizer(
+        allowed_css_properties=[
+            "color",
+            "background-color",
+            "text-align",
+            "font-size",
+            "font-family",
+        ]
+    )
     return bleach.clean(
         text,
         tags=bleach.sanitizer.ALLOWED_TAGS
@@ -159,7 +169,7 @@ def clean(text):
             **bleach.sanitizer.ALLOWED_ATTRIBUTES,
             **{"*": ["style"], "img": ["src", "alt"], "iframe": allow_iframe},
         },
-        styles=["color", "background-color", "text-align", "font-size", "font-family"],
+        css_sanitizer=css_sanitizer,
     )
 
 

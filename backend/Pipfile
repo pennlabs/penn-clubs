@@ -1,3 +1,4 @@
+[[source]]
 name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
@@ -35,7 +36,7 @@ drf-renderer-xlsx = "==0.3.9"
 python-dateutil = "*"
 psycopg2 = "*"
 django-simple-history = "*"
-channels = "<3"
+channels = "*"
 django-runtime-options = "*"
 social-auth-app-django = "*"
 django-redis = "*"
@@ -52,6 +53,9 @@ unittest-xml-reporting = "*"
 tblib = "*"
 pre-commit = "*"
 django-clone = "*"
+click = "==8.0.4"
+tinycss2 = "*"
+"backports.zoneinfo" = "*"
 
 [requires]
-python_version = "3"
+python_version = ">=3.0,<=3.9"
