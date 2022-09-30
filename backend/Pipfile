@@ -53,6 +53,7 @@ unittest-xml-reporting = "*"
 tblib = "*"
 pre-commit = "*"
 django-clone = "*"
+click = "==8.0.4"
 
 [requires]
 python_version = "3"
