@@ -4408,9 +4408,10 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "success": False,
-                    "detail": """You cannot submit to more than two committees for any particular club application.
-                    In case you'd like to change the committees you applied to,
-                    you can delete submissions on the submissions page""",
+                    "detail": """You cannot submit to more than two committees for any
+                    particular club application. In case you'd like to change the
+                    committees you applied to, you can delete submissions on the
+                    submissions page""",
                 }
             )
         submission = ApplicationSubmission.objects.create(
