@@ -2258,7 +2258,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                            properties:
                                 detail:
                                     type: string
-           "403":
+            "403":
                 content:
                     application/json:
                         schema:
