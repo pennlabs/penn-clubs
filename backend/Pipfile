@@ -1,3 +1,4 @@
+[[source]]
 name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
@@ -17,7 +18,7 @@ django-extensions = "*"
 dj-database-url = "*"
 djangorestframework = "*"
 sentry-sdk = "*"
-django = "*"
+django = "3"
 django-labs-accounts = "*"
 drf-nested-routers = "*"
 "bs4" = "*"
@@ -45,7 +46,7 @@ uvloop = {version = "*", sys_platform = "== 'linux'"}
 uvicorn = {extras = ["standard"], version = "*"}
 gunicorn = "*"
 httptools = "*"
-ics = "*"
+ics = "==0.7"
 urlextract = "*"
 jsonref = "*"
 unittest-xml-reporting = "*"
