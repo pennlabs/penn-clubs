@@ -1561,7 +1561,9 @@ class ApplicationCommittee(models.Model):
 
     name = models.TextField(blank=True)
     application = models.ForeignKey(
-        ClubApplication, related_name="committees", on_delete=models.CASCADE,
+        ClubApplication,
+        related_name="committees",
+        on_delete=models.CASCADE,
     )
 
     def __str__(self):
@@ -1605,7 +1607,9 @@ class ApplicationMultipleChoice(models.Model):
 
     value = models.TextField(blank=True)
     question = models.ForeignKey(
-        ApplicationQuestion, related_name="multiple_choice", on_delete=models.CASCADE,
+        ApplicationQuestion,
+        related_name="multiple_choice",
+        on_delete=models.CASCADE,
     )
 
 
@@ -1686,9 +1690,22 @@ class Cart(models.Model):
     Represents an instance of a ticket cart for a user
     """
 
-    owner = models.ForeignKey(
+    owner = models.OneToOneField(
         get_user_model(), related_name="cart", on_delete=models.CASCADE
     )
+
+
+class TicketManager(models.Manager):
+
+    # Update holds for all tickets
+    def update_holds(self):
+        expired_tickets = self.select_for_update().filter(
+            holder__isnull=False, holding_expiration__lte=timezone.now()
+        )
+        with transaction.atomic():
+            for ticket in expired_tickets:
+                ticket.holder = None
+            self.bulk_update(expired_tickets, ["holder"])
 
 
 class Ticket(models.Model):
@@ -1703,14 +1720,21 @@ class Ticket(models.Model):
     type = models.CharField(max_length=100)
     owner = models.ForeignKey(
         get_user_model(),
-        related_name="tickets",
+        related_name="owned_tickets",
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
     )
-    held = models.BooleanField(default=False)
+    holder = models.ForeignKey(
+        get_user_model(),
+        related_name="held_tickets",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
     holding_expiration = models.DateTimeField(null=True, blank=True)
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
+    objects = TicketManager()
 
     def get_qr(self):
         """
