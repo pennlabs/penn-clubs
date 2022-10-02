@@ -1528,9 +1528,13 @@ class ApplicationCycle(models.Model):
     start_date = models.DateTimeField(auto_now_add=True, null=True)
     end_date = models.DateTimeField(auto_now=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    created_by = models.ForeignKey(
+        get_user_model(), related_name="creator", on_delete=models.CASCADE
+    )
     updated_at = models.DateTimeField(auto_now=True)
-    updated_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    updated_by = models.ForeignKey(
+        get_user_model(), related_name="updater", on_delete=models.CASCADE
+    )
     _clone_m2o_or_o2m_fields = ["applications"]
 
 
