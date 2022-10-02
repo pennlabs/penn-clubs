@@ -2214,6 +2214,16 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
     buy:
     Buy a ticket for an event
+
+    buyers:
+    Get information about the buyers of an event's ticket
+
+    remove_from_cart:
+    Remove a ticket for this event from cart
+
+    add_to_cart:
+    Add a ticket for this event to cart
+
     """
 
     permission_classes = [EventPermission | IsSuperuser]
@@ -2259,7 +2269,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                            properties:
                                 detail:
                                     type: string
-           "403":
+            "403":
                 content:
                     application/json:
                         schema:
@@ -2421,6 +2431,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         return Response({"totals": totals, "available": available})
 
     @tickets.mapping.put
+    @transaction.atomic
     def create_tickets(self, request, *args, **kwargs):
         """
         requestBody:
@@ -2451,13 +2462,14 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         quantities = request.data.get("quantities")
 
-        print(request.method)
-
         Ticket.objects.filter(event=event).delete()  # Idempotency
+        tickets = [
+            Ticket(event=event, type=item["type"])
+            for item in quantities
+            for _ in range(item["count"])
+        ]
 
-        for item in quantities:
-            for _ in range(item["count"]):
-                Ticket.objects.create(event=event, type=item["type"])
+        Ticket.objects.bulk_create(tickets)
 
         return Response({"detail": "success"})
 
