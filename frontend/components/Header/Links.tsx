@@ -103,6 +103,8 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
         <StyledLink
           href="https://penncfa.com/"
           onClick={() => logEvent('cfa redirect', 'click')}
+          target="_blank"
+          rel="noopener noreferrer"
         >
           Funding
         </StyledLink>
