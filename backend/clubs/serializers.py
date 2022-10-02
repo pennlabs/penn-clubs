@@ -344,7 +344,11 @@ class ClubEventSerializer(serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     def get_ticketed(self, obj) -> bool:
+<<<<<<< HEAD
         return obj.tickets.count() > 0
+=======
+        return Event.tickets.exists()
+>>>>>>> 4abb6bbb (rebase master)
 
     def get_event_url(self, obj):
         # if no url, return that
