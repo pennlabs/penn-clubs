@@ -1519,6 +1519,21 @@ class Profile(models.Model):
         return self.user.username
 
 
+class ApplicationCycle(models.Model):
+    """
+    Represents application cycle attached to club applications
+    """
+
+    name = models.TextField(blank=True)
+    start_date = models.DateTimeField(auto_now_add=True, null=True)
+    end_date = models.DateTimeField(auto_now=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    _clone_m2o_or_o2m_fields = ["applications"]
+
+
 class ClubApplication(CloneModel):
     """
     Represents custom club application.
@@ -1530,6 +1545,7 @@ class ClubApplication(CloneModel):
     description = models.TextField(blank=True)
     application_start_time = models.DateTimeField()
     application_end_time = models.DateTimeField()
+    application_cycle = models.ForeignKey(ApplicationCycle, on_delete=models.CASCADE)
     name = models.TextField(blank=True)
     result_release_time = models.DateTimeField()
     external_url = models.URLField(blank=True)
@@ -1543,6 +1559,10 @@ class ClubApplication(CloneModel):
         "committees",
         "questions",
     ]
+
+    cycle = models.ForeignKey(
+        ApplicationCycle, related_name="applications", on_delete=models.CASCADE,
+    )
 
     def __str__(self):
         return "{} created {}: start {}, end {}".format(
