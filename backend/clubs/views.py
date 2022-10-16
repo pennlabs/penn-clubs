@@ -2416,6 +2416,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         tickets = Ticket.objects.filter(event=event)
         types = tickets.values_list("type", flat=True).distinct()
 
+        # TODO: convert this into SQL
+
         totals = []
         available = []
 
