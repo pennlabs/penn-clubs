@@ -235,59 +235,61 @@ const Table = ({
   }
   return (
     <Styles>
-      <Toolbar>
-        {!hideSearch && (
-          <div className="is-pulled-left">
-            <SearchWrapper>
-              <Input
-                className="input"
-                value={searchQuery}
-                placeholder={`Search ${
-                  tableData.length < 1 ? data.length : tableData.length
-                } entries`}
-                onChange={handleSearchChange}
-              />
-            </SearchWrapper>
+      {(!hideSearch || (filterOptions && filterOptions.length > 0)) && (
+        <Toolbar>
+          {!hideSearch && (
+            <div className="is-pulled-left">
+              <SearchWrapper>
+                <Input
+                  className="input"
+                  value={searchQuery}
+                  placeholder={`Search ${
+                    tableData.length < 1 ? data.length : tableData.length
+                  } entries`}
+                  onChange={handleSearchChange}
+                />
+              </SearchWrapper>
+            </div>
+          )}
+          <div className="is-pulled-left" style={{ width: '70%' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+              }}
+            >
+              {filterOptions &&
+                filterOptions.map((filterOption) => (
+                  <div style={{ marginRight: '10px' }}>
+                    <Select
+                      value={
+                        selectedFilter[filterOption.label]
+                          ? {
+                              label: selectedFilter[filterOption.label].label,
+                              value: selectedFilter[filterOption.label].key,
+                            }
+                          : null
+                      }
+                      styles={styles}
+                      components={components}
+                      onChange={(value) =>
+                        handleFilterChange({
+                          value: value || null,
+                          label: filterOption.label ? filterOption.label : null,
+                        })
+                      }
+                      isClearable={true}
+                      placeholder={`Filter by ${titleize(filterOption.label)}`}
+                      options={filterOption.options.map((option) => {
+                        return { value: option.key, label: option.label }
+                      })}
+                    />
+                  </div>
+                ))}
+            </div>
           </div>
-        )}
-        <div className="is-pulled-left" style={{ width: '70%' }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-            }}
-          >
-            {filterOptions &&
-              filterOptions.map((filterOption) => (
-                <div style={{ marginRight: '10px' }}>
-                  <Select
-                    value={
-                      selectedFilter[filterOption.label]
-                        ? {
-                            label: selectedFilter[filterOption.label].label,
-                            value: selectedFilter[filterOption.label].key,
-                          }
-                        : null
-                    }
-                    styles={styles}
-                    components={components}
-                    onChange={(value) =>
-                      handleFilterChange({
-                        value: value || null,
-                        label: filterOption.label ? filterOption.label : null,
-                      })
-                    }
-                    isClearable={true}
-                    placeholder={`Filter by ${titleize(filterOption.label)}`}
-                    options={filterOption.options.map((option) => {
-                      return { value: option.key, label: option.label }
-                    })}
-                  />
-                </div>
-              ))}
-          </div>
-        </div>
-      </Toolbar>
+        </Toolbar>
+      )}
 
       {tableData.length > 0 ? (
         <table className="table is-fullwidth" {...getTableProps()}>

@@ -42,11 +42,12 @@ export const SearchbarRightContainer = styled.div`
 `
 
 const Wrapper = styled.div`
-
+  height: 100vh;
   width: 20vw;
   overflow-x: hidden;
   overflow-y: auto;
-
+  position: fixed;
+  top: 0;
   padding-top: ${NAV_HEIGHT};
   color: ${H1_TEXT};
 
