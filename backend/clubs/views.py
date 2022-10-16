@@ -2462,6 +2462,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         quantities = request.data.get("quantities")
 
+        # Atomicity ensures idempotency
+
         Ticket.objects.filter(event=event).delete()  # Idempotency
         tickets = [
             Ticket(event=event, type=item["type"])
@@ -2657,6 +2659,12 @@ class EventViewSet(ClubEventViewSet):
 
     destroy:
     Delete an event.
+
+    fair:
+    Get information about a fair listing
+
+    owned:
+    Return all events that the user has officer permissions over.
     """
 
     def get_operation_id(self, **kwargs):
@@ -4479,6 +4487,9 @@ class TicketViewSet(viewsets.ModelViewSet):
     checkout:
     Initiate a hold on the tickets in a user's cart
 
+    checkout_success_callback:
+    Callback after third party payment succeeds
+
     buy:
     Buy the tickets in a user's cart
 
@@ -4578,7 +4589,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         # The assumption is that this filter query should return all tickets in the cart
         # however we cannot guarantee atomicity between cart and checkout
-        #
+
         # customers will be prompted to review the cart before payment
 
         tickets = cart.tickets.select_for_update().filter(
@@ -4637,6 +4648,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                                 - $ref: "#/components/schemas/Ticket"
         ---
         """
+
+        # TODO: Implement
 
         # Some logic here to serialize all held tickets down to whatever
         # format third party asks for
