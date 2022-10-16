@@ -231,7 +231,6 @@ class EventPermission(permissions.BasePermission):
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         elif view.action in ["add_to_cart", "remove_from_cart"]:
             return request.user.is_authenticated
-        print("action", view.action)
         return True
 
 
