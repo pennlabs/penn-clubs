@@ -1,20 +1,14 @@
-import { ReactElement, useState } from 'react'
 import { Container, Icon } from 'components/common'
+import { NextPageContext } from 'next'
+import { ReactElement, useState } from 'react'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
 import { doApiRequest } from 'utils'
-import { NextPageContext } from 'next'
-import {
-  ALLBIRDS_GRAY,
-  CLUBS_GREY_LIGHT,
-  H1_TEXT,
-  HOVER_GRAY,
-  WHITE,
-} from '../../constants/colors'
+
+import { ALLBIRDS_GRAY, HOVER_GRAY, WHITE } from '../../constants/colors'
 import {
   ANIMATION_DURATION,
   BORDER_RADIUS,
-  CARD_HEADING,
   mediaMaxWidth,
   SM,
 } from '../../constants/measurements'
@@ -61,7 +55,7 @@ const Text = styled.h1`
   margin: 0.5rem 0rem;
 `
 
-//const Ticket = ({ totals, available, buyers }): ReactElement => {
+// const Ticket = ({ totals, available, buyers }): ReactElement => {
 const Ticket = ({ event }): ReactElement => {
   const tickets = [
     {

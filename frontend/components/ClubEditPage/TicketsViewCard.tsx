@@ -25,7 +25,7 @@ export default function TicketsViewCard({ club }): ReactElement {
       render: (id) => (
         <button className="button is-primary is-pulled-right">
           <Link href={'/tickets/' + id}>
-            <a style={{ textDecoration: 'none' }} target="blank">
+            <a style={{ color: 'white' }} target="blank">
               View
             </a>
           </Link>
