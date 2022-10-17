@@ -32,7 +32,7 @@
     "isomorphic-unfetch": "^3.0.0",
     "lru-cache": "^6.0.0",
     "moment": "^2.27.0",
-    "moment-timezone": "^0.5.31",
+    "moment-timezone": "^0.5.38",
     "next": "^10.0.6",
     "react": "^17.0.1",
     "react-beautiful-dnd": "^13.1.0",
