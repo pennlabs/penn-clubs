@@ -191,15 +191,7 @@ const NotificationModal = (props: {
             <StyledHeader style={{ marginBottom: '2px' }}>
               Send application update (acceptance, rejection, etc.)
             </StyledHeader>
-            <Text>
-              Sending update to {submissions === null ? 0 : submissions.length}{' '}
-              applicants.
-            </Text>
-            <Field
-              name="description"
-              as={ApplicationUpdateTextField}
-              helpText="Information about the application that will be displayed at the top of the application page."
-            />
+            <Text>Current people selected: {submissions}</Text>
           </Form>
         )}
       </Formik>
