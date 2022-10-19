@@ -170,6 +170,33 @@ const SubmissionModal = (props: {
     </ModalContainer>
   )
 }
+const NotificationModal = (props: {
+  submissions: Array<number> | null
+  club: string
+  application: Application | null
+}): ReactElement => {
+  const { submissions } = props
+  const initialValues = {}
+  return (
+    <ModalContainer>
+      <Formik
+        initialValues={initialValues}
+        onSubmit={() => {
+          // pass
+        }}
+      >
+        {(props) => (
+          <Form>
+            <StyledHeader style={{ marginBottom: '2px' }}>
+              Send application update (acceptance, rejection, etc.)
+            </StyledHeader>
+            <Text>Current people selected: {submissions}</Text>
+          </Form>
+        )}
+      </Formik>
+    </ModalContainer>
+  )
+}
 
 export default function ApplicationsPage({
   club,
@@ -185,6 +212,7 @@ export default function ApplicationsPage({
     [key: number]: Array<ApplicationSubmission>
   }>([])
   const [showModal, setShowModal] = useState<boolean>(false)
+  const [showNotifModal, setShowNotifModal] = useState<boolean>(false)
   const [
     currentSubmission,
     setCurrentSubmission,
@@ -362,6 +390,14 @@ export default function ApplicationsPage({
                     <Icon name="check" /> Update Status
                   </button>
                   <button
+                    className="button is-link mr-3"
+                    onClick={(event) => {
+                      setShowNotifModal(true)
+                    }}
+                  >
+                    Send Updates
+                  </button>
+                  <button
                     className="button is-primary"
                     onClick={() => {
                       const newSelectedSubmissions: number[] = []
@@ -478,6 +514,20 @@ export default function ApplicationsPage({
             club={club.code}
             application={currentApplication}
             submission={currentSubmission}
+          />
+        </Modal>
+      )}
+      {showNotifModal && (
+        <Modal
+          show={showNotifModal}
+          closeModal={() => setShowNotifModal(false)}
+          width="80%"
+          marginBottom={false}
+        >
+          <NotificationModal
+            club={club.code}
+            application={currentApplication}
+            submissions={selectedSubmissions}
           />
         </Modal>
       )}
