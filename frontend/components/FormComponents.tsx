@@ -22,6 +22,7 @@ import { DynamicQuestion } from '../types'
 import { titleize } from '../utils'
 import AddressField from './ClubEditPage/AddressField'
 import { Icon } from './common'
+import CustomOption from './CustomOption'
 import EmbedOption, {
   blockRendererFunction,
   entityToHtml,
@@ -226,6 +227,91 @@ export const RichTextField = useFieldWrapper(
               padding: '0 1em',
             }}
             toolbarCustomButtons={[<EmbedOption />]}
+            customBlockRenderFunc={blockRendererFunction}
+          />
+        )}
+      </div>
+    )
+  },
+)
+
+/**
+ * A rich text editor that accepts and outputs HTML as well as basic templating features.
+ */
+export const ApplicationUpdateTextField = useFieldWrapper(
+  (props: BasicFormField & AnyHack): ReactElement => {
+    const { setFieldValue } = useFormikContext()
+    const textValue = useRef<string | null>(null)
+
+    const [editorState, setEditorState] = useState<EditorState>(() =>
+      EditorState.createEmpty(),
+    )
+
+    useEffect(() => {
+      if (props.value !== textValue.current) {
+        if (props.value && props.value.length) {
+          setEditorState(
+            EditorState.createWithContent(
+              ContentState.createFromBlockArray(
+                htmlToDraft(props.value, htmlToEntity).contentBlocks,
+              ),
+            ),
+          )
+        } else {
+          setEditorState(EditorState.createEmpty())
+        }
+        textValue.current = props.value
+      }
+    }, [props.value])
+
+    return (
+      <div>
+        <Head>
+          <link
+            href="/static/css/react-draft-wysiwyg.css"
+            rel="stylesheet"
+            key="editor-css"
+          />
+          <link
+            href="/static/css/react-datepicker.css"
+            rel="stylesheet"
+            key="datepicker-css"
+          />
+        </Head>
+        {Editor != null && (
+          <Editor
+            editorState={editorState}
+            placeholder={props.placeholder}
+            onEditorStateChange={(state): void => {
+              setEditorState(state)
+              const newValue = draftToHtml(
+                convertToRaw(state.getCurrentContent()),
+                undefined,
+                undefined,
+                entityToHtml,
+              )
+              textValue.current = newValue
+              setFieldValue(props.name, newValue)
+            }}
+            toolbar={{
+              options: [
+                'inline',
+                'fontSize',
+                'fontFamily',
+                'list',
+                'textAlign',
+                'colorPicker',
+                'link',
+                'image',
+                'remove',
+                'history',
+              ],
+            }}
+            editorStyle={{
+              border: '1px solid #dbdbdb',
+              padding: '0 1em',
+            }}
+            toolbarCustomButtons={[<CustomOption />]}
             customBlockRenderFunc={blockRendererFunction}
           />
         )}

@@ -1,4 +1,4 @@
-import { Form, Formik } from 'formik'
+import { Field, Form, Formik } from 'formik'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import Select from 'react-select'
@@ -22,6 +22,7 @@ import { doApiRequest, getApiUrl } from '~/utils'
 import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
+import { ApplicationUpdateTextField } from '../FormComponents'
 
 const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   margin-bottom: 20px;
@@ -190,7 +191,15 @@ const NotificationModal = (props: {
             <StyledHeader style={{ marginBottom: '2px' }}>
               Send application update (acceptance, rejection, etc.)
             </StyledHeader>
-            <Text>Current people selected: {submissions}</Text>
+            <Text>
+              Sending update to {submissions === null ? 0 : submissions.length}{' '}
+              applicants.
+            </Text>
+            <Field
+              name="description"
+              as={ApplicationUpdateTextField}
+              helpText="Information about the application that will be displayed at the top of the application page."
+            />
           </Form>
         )}
       </Formik>
