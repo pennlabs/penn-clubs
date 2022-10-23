@@ -29,9 +29,6 @@ const CustomOption = (props: Props): ReactElement => {
   const [showModal, setShowModal] = useState<boolean>(false)
 
   const [variableSelected, setVariableSelected] = useState<string>('name')
-  const [embedUrl, setEmbedUrl] = useState<string>('')
-  const [embedWidth, setEmbedWidth] = useState<string>('100%')
-  const [embedHeight, setEmbedHeight] = useState<string>('1200px')
   const [errorMessage, setErrorMessage] = useState<
     ReactElement | string | null
   >(null)
@@ -50,6 +47,7 @@ const CustomOption = (props: Props): ReactElement => {
         closeModal={() => setShowModal(false)}
         marginBottom={false}
         width="80%"
+        height="40%"
       >
         <ModalContent>
           <h1>Use a custom variable below:</h1>
