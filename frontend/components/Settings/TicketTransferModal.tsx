@@ -1,10 +1,7 @@
-import React, { ReactElement, useState, useEffect } from 'react'
+import React, { ReactElement, useEffect, useState } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 import styled from 'styled-components'
-import SearchBar, { SearchInput, SearchBarTextItem } from '../SearchBar'
-import CreatableSelect from 'react-select/creatable'
 
-import { Icon, Line, Text, Title } from '../../components/common'
 import {
   ALLBIRDS_GRAY,
   CLUBS_GREY,
@@ -14,8 +11,7 @@ import {
 import { BORDER_RADIUS } from '../../constants/measurements'
 import { BODY_FONT } from '../../constants/styles'
 import { ClubEvent } from '../../types'
-import { doApiRequest } from '../../utils'
-import CoverPhoto from '../EventPage/CoverPhoto'
+import { SearchInput } from '../SearchBar'
 
 const ModalContainer = styled.div`
   text-align: left;
@@ -57,9 +53,11 @@ const TicketTransferModal = (props: { event: ClubEvent }): ReactElement => {
   const [searchInput, setSearchInput] = useState<SearchInput>({})
 
   const search = () => {
+    /*
     return doApiRequest('/users?search=bfranklin')
       .then((resp) => resp.json())
       .then(() => {})
+    */
   }
   useEffect(() => {
     search()

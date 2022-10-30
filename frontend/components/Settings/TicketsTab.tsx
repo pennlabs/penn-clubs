@@ -3,11 +3,19 @@ import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import {
-  mediaMaxWidth,
-  SM,
+  ALLBIRDS_GRAY,
+  CLUBS_GREY_LIGHT,
+  H1_TEXT,
+  HOVER_GRAY,
+  WHITE,
+} from '~/constants'
+
+import {
   ANIMATION_DURATION,
   BORDER_RADIUS,
   CARD_HEADING,
+  mediaMaxWidth,
+  SM,
 } from '../../constants/measurements'
 import { UserInfo } from '../../types'
 import { doApiRequest } from '../../utils'
@@ -16,18 +24,10 @@ import {
   EmptyState,
   Icon,
   Loading,
+  Modal,
   Text,
   Title,
-  Modal,
 } from '../common'
-import {
-  ALLBIRDS_GRAY,
-  CLUBS_GREY_LIGHT,
-  H1_TEXT,
-  HOVER_GRAY,
-  WHITE,
-} from '~/constants'
-
 import TicketTransferModal from './TicketTransferModal'
 
 const CardHeader = styled.div`
@@ -121,8 +121,8 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
       .then(setTickets)
   }
   useEffect(() => {
-    //getTickets()
-    //remove later
+    // getTickets()
+    // remove later
     setTickets(ticks)
   }, [])
 
@@ -180,7 +180,7 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
                     <a>View QR Code</a>
                   </Link>
                 </div>
-                <div style={{ cursor: 'pointer' }} onClick = {showModal}>
+                <div style={{ cursor: 'pointer' }} onClick={showModal}>
                   Transfer Ownership <Icon name="send" />
                 </div>
               </div>

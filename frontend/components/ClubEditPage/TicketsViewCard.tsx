@@ -13,7 +13,7 @@ export default function TicketsViewCard({ club }): ReactElement {
     })
       .then((resp) => resp.json())
       .then((res) => {
-        console.log(res)
+        // console.log(res)
       })
   }
 
