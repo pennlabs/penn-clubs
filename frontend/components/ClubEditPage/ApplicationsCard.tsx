@@ -11,6 +11,7 @@ import {
 } from '../../utils/branding'
 import { Icon, Modal, Text } from '../common'
 import {
+  ApplicationUpdateTextField,
   CheckboxField,
   CreatableMultipleSelectField,
   DateTimeField,
@@ -341,6 +342,22 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               as={CreatableMultipleSelectField}
               initialValues={committees}
               helpText={`If your ${OBJECT_NAME_SINGULAR} has multiple committees to which students can apply, list them here. NOTE: you won't be able to edit this field after applications open.`}
+            />
+            <Field
+              name="acceptance_email"
+              as={ApplicationUpdateTextField}
+              initialValues={
+                "<html> <body> <p> Congratulations {{name}}! You've been accepted because {{reason}}! </p> </body> </html>"
+              }
+              helpText={`Acceptance email for your ${OBJECT_NAME_SINGULAR}.`}
+            />
+            <Field
+              name="rejection_email"
+              as={ApplicationUpdateTextField}
+              initialValues={
+                "<html> <body> <p> Congratulations {{name}}! You've been rejected because {{reason}}! </p> </body> </html>"
+              }
+              helpText={`Rejection email for your ${OBJECT_NAME_SINGULAR}.`}
             />
           </>
         }

@@ -1,6 +1,5 @@
 import { EditorState } from 'draft-js'
 import { ReactElement, useState } from 'react'
-import Select from 'react-select'
 
 import { ModalContent } from './ClubPage/Actions'
 import { Icon, Modal } from './common'
@@ -16,12 +15,6 @@ type Entity = {
   data: any
 }
 
-const options = [
-  { value: 'name', label: 'Name' },
-  { value: 'date', label: 'Date' },
-  { value: 'reason', label: 'Reason' },
-]
-
 /**
  * A toolbar widget for the editor to add custom variables to personalized outcome notifications.
  */
@@ -33,6 +26,16 @@ const CustomOption = (props: Props): ReactElement => {
     ReactElement | string | null
   >(null)
 
+  const helperText = String.raw`
+  Hi {{ name }}, you have been invited to join our club on {{ date }}.
+
+  We were very impressed by your initiative and admitted you into the club because of it. 
+            
+  {{ reason }}
+
+  Congratulations!
+  `
+
   return (
     <>
       <div
@@ -40,7 +43,7 @@ const CustomOption = (props: Props): ReactElement => {
         title="Use Custom Variable"
         onClick={() => setShowModal(true)}
       >
-        <Icon name="award" /> Customize
+        <Icon name="award" /> Sample Email!
       </div>
       <Modal
         show={showModal}
@@ -50,11 +53,11 @@ const CustomOption = (props: Props): ReactElement => {
         height="40%"
       >
         <ModalContent>
-          <h1>Use a custom variable below:</h1>
-          <div className="field mb-">
-            <label className="label">Choose from the following.</label>
-            <Select options={options} />
-          </div>
+          <h1>Sample Email</h1>
+          <pre>{helperText}</pre>
+          <p className="help">
+            (note: don't use any variables other than the ones used here!)
+          </p>
           {errorMessage !== null && (
             <p className="has-text-danger">{errorMessage}</p>
           )}

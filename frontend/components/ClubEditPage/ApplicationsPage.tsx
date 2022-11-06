@@ -1,4 +1,4 @@
-import { Field, Form, Formik } from 'formik'
+import { Form, Formik } from 'formik'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import Select from 'react-select'
@@ -22,7 +22,6 @@ import { doApiRequest, getApiUrl } from '~/utils'
 import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
-import { ApplicationUpdateTextField } from '../FormComponents'
 
 const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   margin-bottom: 20px;
@@ -102,6 +101,7 @@ type Application = {
 const ModalContainer = styled.div`
   text-align: left;
   padding: 20px;
+  height: 100%;
 `
 
 const SubmissionModal = (props: {
@@ -178,6 +178,11 @@ const NotificationModal = (props: {
 }): ReactElement => {
   const { submissions } = props
   const initialValues = {}
+  const options = [
+    { value: 'acceptance', label: 'Acceptance' },
+    { value: 'rejection', label: 'Rejection' },
+  ]
+
   return (
     <ModalContainer>
       <Formik
@@ -195,11 +200,13 @@ const NotificationModal = (props: {
               Sending update to {submissions === null ? 0 : submissions.length}{' '}
               applicants.
             </Text>
-            <Field
-              name="description"
-              as={ApplicationUpdateTextField}
-              helpText="Information about the application that will be displayed at the top of the application page."
-            />
+            <div className="field mb-">
+              <label className="label">
+                Choose from the following templates.
+              </label>
+              <Select options={options} />
+            </div>
+            <button className="button">Submit</button>
           </Form>
         )}
       </Formik>
