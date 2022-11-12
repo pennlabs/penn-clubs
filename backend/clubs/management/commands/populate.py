@@ -15,6 +15,7 @@ from clubs.models import (
     ApplicationQuestion,
     ApplicationSubmission,
     Badge,
+    Cart,
     Club,
     ClubApplication,
     ClubFair,
@@ -28,6 +29,7 @@ from clubs.models import (
     StudentType,
     Tag,
     Testimonial,
+    Ticket,
     Year,
 )
 
@@ -662,7 +664,10 @@ class Command(BaseCommand):
                 status_counter % len(ApplicationSubmission.STATUS_TYPES)
             ][0]
             ApplicationSubmission.objects.create(
-                status=status, user=user, application=application, committee=None,
+                status=status,
+                user=user,
+                application=application,
+                committee=None,
             )
             status_counter += 1
             for committee in application.committees.all():
@@ -745,5 +750,32 @@ class Command(BaseCommand):
                 first_mship.role = Membership.ROLE_OWNER
                 first_mship.save()
             count += 1
+
+        # add tickets
+
+        hr = Club.objects.get(code="harvard-rejects")
+
+        hr_events = Event.objects.filter(club=hr)
+
+        for idx, e in enumerate(hr_events[:3]):
+            # Switch up person every so often
+            person = ben if idx < 2 else user_objs[1]
+
+            # Create some unowned tickets
+            Ticket.objects.bulk_create(
+                [Ticket(event=e, type="Regular") for _ in range(10)]
+            )
+
+            Ticket.objects.bulk_create(
+                [Ticket(event=e, type="Premium") for _ in range(5)]
+            )
+
+            # Create some owned tickets and tickets in cart
+            for i in range((idx + 1) * 10):
+                if i % 5:
+                    Ticket.objects.create(event=e, owner=person, type="Regular")
+                else:
+                    c, _ = Cart.objects.get_or_create(owner=person)
+                    c.tickets.add(Ticket.objects.create(event=e, type="Premium"))
 
         self.stdout.write("Finished populating database!")

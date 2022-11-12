@@ -2436,6 +2436,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def create_tickets(self, request, *args, **kwargs):
         """
+        Create ticket offerings for event
+        ---
         requestBody:
             content:
                 application/json:
@@ -2456,12 +2458,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
-                            type: object
                             properties:
                                 detail:
                                     type: string
+        ---
         """
         event = self.get_object()
+
         quantities = request.data.get("quantities")
 
         # Atomicity ensures idempotency
