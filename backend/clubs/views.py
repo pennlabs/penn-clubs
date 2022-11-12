@@ -69,6 +69,7 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    Cart,
     Club,
     ClubApplication,
     ClubFair,
@@ -2228,6 +2229,116 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         return EventSerializer
 
     @action(detail=True, methods=["post"])
+    def cart(self, request, *args, **kwargs):
+        """
+        Add a certain number of tickets to cart
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            type:
+                                type: string
+                            count:
+                                type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            allOf:
+                                - $ref: "#/components/schemas/Ticket"
+        ---
+        """
+        type = request.data.get("type")
+        count = request.data.get("count")
+        event = Event.objects.get(id=self.get_object().id)
+        cart = Cart.objects.filter(owner=self.request.user).first()
+
+        # Try to get count unowned ticket of requested type
+        tickets = Ticket.objects.filter(
+            event=event, type=type, owner__isnull=True, held=False
+        ).exclude(carts__owner=self.request.user)
+        print(tickets.count())
+        if tickets.count() < count:
+            return Response(
+                {"detail": f"Not enough tickets of type {type} left!"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        else:
+            for ticket in tickets[:count]:
+                ticket.carts.add(cart)
+                ticket.save()
+            return Response({"detail": "Successfully added to cart"})
+
+    @action(detail=True, methods=["post"])
+    def validate_cart(self, request, *args, **kwargs):
+        """
+        Validate tickets in a cart
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            allOf:
+                                - $ref: "#/components/schemas/Ticket"
+        ---
+        """
+        cart = Cart.objects.filter(owner=self.request.user).first()
+
+        for ticket in cart.tickets.all():
+            if ticket.owner or ticket.held:
+                new_ticket = Ticket.objects.filter(
+                    event=ticket.event, type=ticket.type, owner__isnull=True, held=False
+                ).first()
+                cart.tickets.remove(ticket)
+                if new_ticket:
+                    cart.tickets.add(new_ticket)
+        return Response({"detail": "Cart validated"})
+
+    @action(detail=True, methods=["post"])
+    def checkout(self, request, *args, **kwargs):
+        """
+        Checkout all tickets in cart, assumes all tickets are unowned and unheld
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            type:
+                                type: string
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            allOf:
+                                - $ref: "#/components/schemas/Ticket"
+        ---
+        """
+        cart = self.request.user.cart
+
+        # Before Stripe call, need to implement 10 minute hold here
+        for ticket in cart.tickets:
+            ticket.held = True
+
+        # If Stripe call succeeds
+        for ticket in cart.tickets:
+            ticket.owner = request.user
+            ticket.save()
+            ticket.send_confirmation_email()
+            return Response(TicketSerializer(ticket).data)
+
+    @action(detail=True, methods=["post"])
     def buy(self, request, *args, **kwargs):
         """
         Buy a ticket
@@ -2261,12 +2372,14 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         # Otherwise get first unowned ticket of requested type
         ticket = Ticket.objects.filter(
-            event=event,
-            type=type,
-            owner__isnull=True,
+            event=event, type=type, owner__isnull=True, held=False
         ).first()
 
+        # Stripe call here
+
+        # If Stripe call succeeds
         if ticket:
+            ticket.held = True
             ticket.owner = request.user
             ticket.save()
             ticket.send_confirmation_email()
