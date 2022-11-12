@@ -340,7 +340,11 @@ class ClubEventSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField("get_image_url")
     large_image_url = serializers.SerializerMethodField("get_large_image_url")
     url = serializers.SerializerMethodField("get_event_url")
+    ticketed = serializers.SerializerMethodField("get_ticketed")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    def get_ticketed(self, obj):
+        return Event.tickets.exists()
 
     def get_event_url(self, obj):
         # if no url, return that
