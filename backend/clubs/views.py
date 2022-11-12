@@ -1080,8 +1080,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             self.request.user, get_user_model()
         ):
             SearchQuery(
-                person=self.request.user,
-                query=self.request.query_params.get("search"),
+                person=self.request.user, query=self.request.query_params.get("search"),
             ).save()
 
         # select subset of clubs if requested
@@ -1673,9 +1672,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             query = (
                 Club.objects.filter(badges=badge, archived=False)
                 .order_by(Lower("name"))
-                .prefetch_related(
-                    Prefetch("asset_set", to_attr="prefetch_asset_set"),
-                )
+                .prefetch_related(Prefetch("asset_set", to_attr="prefetch_asset_set"),)
             )
             if request.user.is_authenticated:
                 query = query.prefetch_related(
@@ -3225,9 +3222,7 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            person=self.request.user,
-            withdrew=False,
-            club__archived=False,
+            person=self.request.user, withdrew=False, club__archived=False,
         )
 
 
@@ -4351,9 +4346,7 @@ class UserZoomAPIView(APIView):
 
         try:
             response = zoom_api_call(
-                request.user,
-                "GET",
-                "https://api.zoom.us/v2/users/{uid}/settings",
+                request.user, "GET", "https://api.zoom.us/v2/users/{uid}/settings",
             )
         except requests.exceptions.HTTPError as e:
             raise DRFValidationError(
@@ -4474,9 +4467,7 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         user = self.request.user
         prefetch_related_objects(
-            [user],
-            "profile__school",
-            "profile__major",
+            [user], "profile__school", "profile__major",
         )
         return user
 
@@ -4909,9 +4900,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 }
             )
         submission = ApplicationSubmission.objects.create(
-            user=self.request.user,
-            application=application,
-            committee=committee,
+            user=self.request.user, application=application, committee=committee,
         )
         for question_pk in questions:
             question = ApplicationQuestion.objects.filter(pk=question_pk).first()
@@ -4932,9 +4921,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 text = question_data.get("text", None)
                 if text is not None and text != "":
                     obj = ApplicationQuestionResponse.objects.create(
-                        text=text,
-                        question=question,
-                        submission=submission,
+                        text=text, question=question, submission=submission,
                     ).save()
                     response = Response(ApplicationQuestionResponseSerializer(obj).data)
             elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:

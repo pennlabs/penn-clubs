@@ -664,10 +664,7 @@ class Command(BaseCommand):
                 status_counter % len(ApplicationSubmission.STATUS_TYPES)
             ][0]
             ApplicationSubmission.objects.create(
-                status=status,
-                user=user,
-                application=application,
-                committee=None,
+                status=status, user=user, application=application, committee=None,
             )
             status_counter += 1
             for committee in application.committees.all():
@@ -751,7 +748,7 @@ class Command(BaseCommand):
                 first_mship.save()
             count += 1
 
-        # add tickets
+        # Add tickets
 
         hr = Club.objects.get(code="harvard-rejects")
 
