@@ -27,9 +27,17 @@ from django.core.management import call_command, get_commands, load_command_clas
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
 from django.db import transaction
-from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
+from django.db.models import (
+    Count,
+    DurationField,
+    ExpressionWrapper,
+    F,
+    Prefetch,
+    Q,
+    TextField,
+)
 from django.db.models.expressions import RawSQL, Value
-from django.db.models.functions import Lower, Trunc
+from django.db.models.functions import SHA1, Lower, Trunc
 from django.db.models.functions.text import Concat
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
@@ -2266,6 +2274,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
+                           type: object
                            properties:
                                 detail:
                                     type: string
@@ -2273,6 +2282,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
+                           type: object
                            properties:
                                 detail:
                                     type: string
@@ -2322,6 +2332,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
+                           type: object
                            properties:
                                 detail:
                                     type: string
@@ -2364,7 +2375,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             id:
                                                 type: string
                                             owner_id:
-                                                type: int
+                                                type: integer
                                             type:
                                                 type: string
         ---
@@ -2436,6 +2447,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def create_tickets(self, request, *args, **kwargs):
         """
+        Create ticket offerings for event
+        ---
         requestBody:
             content:
                 application/json:
@@ -2460,8 +2473,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             properties:
                                 detail:
                                     type: string
+        ---
         """
         event = self.get_object()
+
         quantities = request.data.get("quantities")
 
         # Atomicity ensures idempotency
@@ -4571,17 +4586,13 @@ class TicketViewSet(viewsets.ModelViewSet):
         NOTE: this does NOT buy tickets, it simply initiates a checkout process
         which includes a 10-minute ticket hold
         ---
-        requestBody:
-            content:
-                application/json:
-                    schema:
-                        type: object
-
+        requestBody: {}
         responses:
             "200":
                 content:
                     application/json:
                         schema:
+                           type: object
                            properties:
                                 detail:
                                     type: string
@@ -4618,10 +4629,11 @@ class TicketViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
+                           type: object
                            properties:
                                 detail:
                                     type: string
-
+        ---
         """
         cart = get_object_or_404(Cart, owner=self.request.user)
 
@@ -5095,12 +5107,19 @@ class WhartonApplicationAPIView(generics.ListAPIView):
             is_wharton_council=True, application_end_time__gte=now
         )
 
-        # randomly order applications, seeded by user ID
+        # randomly order Wharton Council applications by user
 
-        # seed = str(self.request.user.id)
-        # qs = qs.annotate(
-        #     random=SHA1(Concat("name", Value(seed), output_field=TextField()))
-        # ).order_by("random")
+        key = str(self.request.user.id)
+
+        cached_qs = cache.get(key)
+
+        if cached_qs and qs.count() == cached_qs.count():
+            return cached_qs
+
+        qs = qs.annotate(
+            random_id=SHA1(Concat("club", Value(key)), output_field=TextField())
+        ).order_by("random_id")
+        cache.set(key, qs, 60)
 
         return qs
 
