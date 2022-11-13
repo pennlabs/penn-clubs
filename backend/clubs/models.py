@@ -5,6 +5,7 @@ import uuid
 import warnings
 from urllib.parse import urlparse
 
+import jinja2
 import pytz
 import requests
 import yaml
@@ -1525,6 +1526,7 @@ class ClubApplication(CloneModel):
     """
 
     DEFAULT_COMMITTEE = "General Member"
+    VALID_TOKENS = {"name", "reason"}
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
@@ -1535,6 +1537,8 @@ class ClubApplication(CloneModel):
     external_url = models.URLField(blank=True)
     is_active = models.BooleanField(default=False, blank=True)
     is_wharton_council = models.BooleanField(default=False, blank=True)
+    acceptance_email = models.TextField(blank=True)
+    rejection_email = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1558,6 +1562,13 @@ class ClubApplication(CloneModel):
         year = str(self.application_start_time.year)
         return f"{semester} {year}"
 
+    @classmethod
+    def validate_template(cls, template):
+        environment = jinja2.Environment()
+        template = environment.from_string(template)
+        tokens = jinja2.meta.find_undeclared_variables(template)
+        return tokens if all(t in cls.VALID_TOKENS for t in tokens) else []
+
 
 class ApplicationCommittee(models.Model):
     """
@@ -1567,7 +1578,9 @@ class ApplicationCommittee(models.Model):
 
     name = models.TextField(blank=True)
     application = models.ForeignKey(
-        ClubApplication, related_name="committees", on_delete=models.CASCADE,
+        ClubApplication,
+        related_name="committees",
+        on_delete=models.CASCADE,
     )
 
     def get_word_limit(self):
@@ -1619,7 +1632,9 @@ class ApplicationMultipleChoice(models.Model):
 
     value = models.TextField(blank=True)
     question = models.ForeignKey(
-        ApplicationQuestion, related_name="multiple_choice", on_delete=models.CASCADE,
+        ApplicationQuestion,
+        related_name="multiple_choice",
+        on_delete=models.CASCADE,
     )
 
 
@@ -1641,6 +1656,7 @@ class ApplicationSubmission(models.Model):
     )
     status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)
+    reason = models.TextField(blank=True)
     application = models.ForeignKey(
         ClubApplication,
         related_name="submissions",

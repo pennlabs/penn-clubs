@@ -1989,7 +1989,9 @@ class UserProfileSerializer(MinimalUserProfileSerializer):
         # hide non public memberships if not superuser
         if user is None or not user.has_perm("clubs.manage_club"):
             queryset = queryset.filter(
-                membership__person=obj, membership__public=True, approved=True,
+                membership__person=obj,
+                membership__public=True,
+                approved=True,
             )
 
         serializer = MembershipClubListSerializer(
@@ -2390,7 +2392,8 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             ApplicationMultipleChoice.objects.filter(question=question_obj).delete()
             for choice in multiple_choice:
                 ApplicationMultipleChoice.objects.create(
-                    value=choice["value"], question=question_obj,
+                    value=choice["value"],
+                    question=question_obj,
                 )
 
         # manually create committee choices as Django does not
@@ -2641,6 +2644,15 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         application_start_time = data["application_start_time"]
         application_end_time = data["application_end_time"]
         result_release_time = data["result_release_time"]
+        acceptance_template = data["acceptance_email"]
+        rejection_template = data["rejection_email"]
+
+        if not ClubApplication.validate_template(
+            acceptance_template
+        ) or not ClubApplication.validate_template(rejection_template):
+            raise serializers.ValidationError(
+                "Your application email templates contain invalid variables!"
+            )
 
         if application_start_time > application_end_time:
             raise serializers.ValidationError(
@@ -2679,7 +2691,8 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             for name in committees:
                 if name not in prev_committee_names:
                     ApplicationCommittee.objects.create(
-                        name=name, application=application_obj,
+                        name=name,
+                        application=application_obj,
                     )
 
         return application_obj
@@ -2691,6 +2704,8 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "season",
             "active",
             "name",
+            "acceptance_email",
+            "rejection_email",
             "application_start_time",
             "application_end_time",
             "result_release_time",

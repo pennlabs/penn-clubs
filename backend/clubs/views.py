@@ -1070,7 +1070,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             self.request.user, get_user_model()
         ):
             SearchQuery(
-                person=self.request.user, query=self.request.query_params.get("search"),
+                person=self.request.user,
+                query=self.request.query_params.get("search"),
             ).save()
 
         # select subset of clubs if requested
@@ -1663,7 +1664,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             query = (
                 Club.objects.filter(badges=badge, archived=False)
                 .order_by(Lower("name"))
-                .prefetch_related(Prefetch("asset_set", to_attr="prefetch_asset_set"),)
+                .prefetch_related(
+                    Prefetch("asset_set", to_attr="prefetch_asset_set"),
+                )
             )
             if request.user.is_authenticated:
                 query = query.prefetch_related(
@@ -2956,7 +2959,9 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            person=self.request.user, withdrew=False, club__archived=False,
+            person=self.request.user,
+            withdrew=False,
+            club__archived=False,
         )
 
 
@@ -4080,7 +4085,9 @@ class UserZoomAPIView(APIView):
 
         try:
             response = zoom_api_call(
-                request.user, "GET", "https://api.zoom.us/v2/users/{uid}/settings",
+                request.user,
+                "GET",
+                "https://api.zoom.us/v2/users/{uid}/settings",
             )
         except requests.exceptions.HTTPError as e:
             raise DRFValidationError(
@@ -4201,7 +4208,9 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         user = self.request.user
         prefetch_related_objects(
-            [user], "profile__school", "profile__major",
+            [user],
+            "profile__school",
+            "profile__major",
         )
         return user
 
@@ -4424,7 +4433,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 }
             )
         submission = ApplicationSubmission.objects.create(
-            user=self.request.user, application=application, committee=committee,
+            user=self.request.user,
+            application=application,
+            committee=committee,
         )
         for question_pk in questions:
             question = ApplicationQuestion.objects.filter(pk=question_pk).first()
@@ -4445,7 +4456,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 text = question_data.get("text", None)
                 if text is not None and text != "":
                     obj = ApplicationQuestionResponse.objects.create(
-                        text=text, question=question, submission=submission,
+                        text=text,
+                        question=question,
+                        submission=submission,
                     ).save()
                     response = Response(ApplicationQuestionResponseSerializer(obj).data)
             elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:
@@ -4551,11 +4564,67 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
     create: Create an application for the club.
 
     list: Retrieve a list of applications of the club.
+
+    send_emails: Send out acceptance/rejection emails
     """
 
     permission_classes = [ClubItemPermission | IsSuperuser]
     serializer_class = ClubApplicationSerializer
     http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    @action(detail=True, methods=["post"])
+    def send_emails(self, *args, **kwargs):
+        """
+        Send out acceptance/rejection emails for a particular application
+
+        Dry run will validate that all emails have nonempty variables
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            dry_run:
+                                type: boolean
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+
+        ---
+
+        """
+
+        app_id = self.get_object().id
+        query = f"""
+                SELECT *
+                FROM clubs_applicationsubmission
+                WHERE application_id = {app_id}
+                AND NOT archived
+                AND created_at in
+                    (SELECT recent_time
+                    FROM
+                    (SELECT user_id,
+                            committee_id,
+                            max(created_at) recent_time
+                        FROM clubs_applicationsubmission
+                        WHERE application_id = {app_id}
+                        AND NOT archived
+                        GROUP BY user_id,
+                                committee_id) recent_subs)
+                """
+        submissions = ApplicationSubmission.objects.raw(query)
+        if self.request.data.get("dry_run"):
+            # validate that all variables are ok in submissions
+            return submissions
+        else:
+            pass
 
     @action(detail=True, methods=["post"])
     def duplicate(self, *args, **kwargs):
@@ -4808,6 +4877,53 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 status=status
             )
         return Response([])
+
+    @action(detail=False, methods=["post"])
+    def reason(self, *args, **kwargs):
+        """
+        Given some application submissions, update their acceptance/rejection
+        reasons
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            submissions:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        id:
+                                            type: integer
+                                        reason:
+                                            type: string
+
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+
+        ---
+        """
+        submissions = self.request.data.get("submissions", [])
+        pks = list(map(lambda x: x["id"], submissions))
+        reasons = list(map(lambda x: x["reason"], submissions))
+
+        submission_objs = ApplicationSubmission.objects.filter(pk__in=pks)
+
+        for idx, obj in enumerate(submission_objs):
+            obj.reason = reasons[idx]
+
+        ApplicationSubmission.objects.bulk_update(submission_objs, ["reason"])
+
+        return Response({"detail": "Successfully updated submissions' reasons"})
 
     def get_serializer_class(self):
         if self.request and self.request.query_params.get("format") == "xlsx":
