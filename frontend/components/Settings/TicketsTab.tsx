@@ -121,9 +121,9 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
       .then(setTickets)
   }
   useEffect(() => {
-    // getTickets()
+    getTickets()
     // remove later
-    setTickets(ticks)
+    // setTickets(ticks)
   }, [])
 
   if (tickets == null) {
@@ -151,16 +151,18 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
             <div>
               <img
                 style={{ marginRight: '1rem', height: '60px' }}
-                src="/static/img/events_calendar.png"
+                src={ticket.event.image_url}
               />
             </div>
             <div>
               <div>
                 <CardHeader>
-                  <CardTitle className="is-size-5">{ticket.event}</CardTitle>
+                  <CardTitle className="is-size-5">
+                    {ticket.event.name}
+                  </CardTitle>
                 </CardHeader>
               </div>
-              <Description>{ticket.class}</Description>
+              <Description>{ticket.type}</Description>
             </div>
           </div>
           <ActionWrapper>
