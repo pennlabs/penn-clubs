@@ -241,9 +241,11 @@ const EventModal = (props: {
       doApiRequest(`/events/${event.id}/tickets/`)
         .then((resp) => resp.json())
         .then((resp) => {
-          setAvailableTickets(resp.available)
-          for (let i = 0; i < resp.available.length; i++) {
-            setTicketCount(ticketCount + resp.available[i].count)
+          if (resp.avaialble) {
+            setAvailableTickets(resp.available)
+            for (let i = 0; i < resp.available.length; i++) {
+              setTicketCount(ticketCount + resp.available[i].count)
+            }
           }
         })
       setUserHasTickets(false)

@@ -55,8 +55,14 @@ const Text = styled.h1`
   margin: 0.5rem 0rem;
 `
 
-// const Ticket = ({ totals, available, buyers }): ReactElement => {
-const Ticket = ({ event }): ReactElement => {
+const Ticket = ({ tickets, buyers, event }): ReactElement => {
+  // const Ticket = ({ event }): ReactElement => {
+
+  // const ticks = new Map()
+  // for (const tick in tickets) {
+  //   const type = tick.type
+  // }
+  /*
   const tickets = [
     {
       name: 'Premium',
@@ -85,13 +91,15 @@ const Ticket = ({ event }): ReactElement => {
       ],
     },
   ]
+  */
+  console.log(tickets)
   return (
     <>
       <Container>
-        <Title>All Tickets for {event.name}</Title>
-        {tickets.map((ticket, i) => (
+        <Title>All Tickets for {/* event.name */ 'hi'}</Title>
+        {/* {tickets.map((ticket, i) => (
           <TicketCard key={i} ticket={ticket} />
-        ))}
+        ))} */}
       </Container>
     </>
   )
@@ -128,27 +136,35 @@ Ticket.getInitialProps = async ({ query, req }: NextPageContext) => {
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
-  const id = query && query.slug ? query.slug[0] : 0
-  const [ticketsReq, eventReq] = await Promise.all([
-    doApiRequest(`/events/${id}/tickets?format=json`, data),
-    doApiRequest(`/events/${id}/?format=json`, data),
-  ])
+  try {
+    const id = query && query.slug ? query.slug[0] : 0
+    const [ticketsReq, eventReq, buyersReq] = await Promise.all([
+      doApiRequest(`/events/${id}/tickets?format=json`, data),
+      doApiRequest(`/events/${id}/?format=json`, data),
+      doApiRequest(`/events/${id}/buyers?format=json`, data),
+    ])
 
-  const ticketsRes = await ticketsReq.json()
-  const eventRes = await eventReq.json()
+    const ticketsRes = await ticketsReq.json()
+    const eventRes = await eventReq.json()
+    const buyersRes = await buyersReq.json()
 
-  return { tickets: ticketsRes, event: eventRes }
+    return { tickets: ticketsRes, event: eventRes, buyers: buyersRes }
+  } catch (err) {
+    console.log(err)
+  }
 }
 
-// Ticket.getInitialProps = async ({ query }): Promise<any> => {
-//   const id = query.slug[0]
-//   return doApiRequest(`/events/${id}/tickets?format=json`, {
-//     method: 'GET',
-//   })
-//     .then((resp) => resp.json())
-//     .then((res) => {
-//       return res
-//     })
-// }
+/*
+Ticket.getInitialProps = async ({ query }): Promise<any> => {
+  const id = query.slug[0]
+  return doApiRequest(`/events/${id}/tickets?format=json`, {
+    method: 'GET',
+  })
+    .then((resp) => resp.json())
+    .then((res) => {
+      console.log(res)
+    })
+}
+*/
 
 export default renderPage(Ticket)
