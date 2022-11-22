@@ -1,4 +1,4 @@
-import { Form, Formik } from 'formik'
+import { Field, Form, Formik } from 'formik'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import Select from 'react-select'
@@ -22,6 +22,7 @@ import { doApiRequest, getApiUrl } from '~/utils'
 import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
+import { CheckboxField, TextField } from '../FormComponents'
 
 const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   margin-bottom: 20px;
@@ -177,12 +178,11 @@ const NotificationModal = (props: {
   application: Application | null
 }): ReactElement => {
   const { submissions } = props
-  const initialValues = {}
+  const initialValues = { dry_run: true }
   const options = [
     { value: 'acceptance', label: 'Acceptance' },
     { value: 'rejection', label: 'Rejection' },
   ]
-
   return (
     <ModalContainer>
       <Formik
@@ -206,7 +206,58 @@ const NotificationModal = (props: {
               </label>
               <Select options={options} />
             </div>
-            <button className="button">Submit</button>
+
+            <Field name="dry_run" as={CheckboxField} label="Dry Run" />
+            <button type="submit" className="button">
+              Submit
+            </button>
+          </Form>
+        )}
+      </Formik>
+    </ModalContainer>
+  )
+}
+
+const ReasonModal = (props: {
+  submissions: Array<ApplicationSubmission> | null
+  club: string
+  application: Application | null
+}): ReactElement => {
+  const { submissions } = props
+  const initialValues = {}
+  return (
+    <ModalContainer>
+      <Formik
+        initialValues={initialValues}
+        onSubmit={() => {
+          // pass
+        }}
+      >
+        {(props) => (
+          <Form>
+            <StyledHeader style={{ marginBottom: '2px' }}>
+              Update reasons for selected{' '}
+              {submissions[0] != null ? submissions[0].status : null} applicants
+            </StyledHeader>
+            {submissions !== null
+              ? submissions.map((data) => {
+                  return (
+                    <div>
+                      <Field
+                        name={data.pk}
+                        label={`Reason for ${data.first_name} ${data.last_name}`}
+                        onInput={() => {
+                          // pass
+                        }}
+                        as={TextField}
+                      />
+                    </div>
+                  )
+                })
+              : null}
+            <button type="submit" className="button">
+              Submit
+            </button>
           </Form>
         )}
       </Formik>
@@ -229,6 +280,7 @@ export default function ApplicationsPage({
   }>([])
   const [showModal, setShowModal] = useState<boolean>(false)
   const [showNotifModal, setShowNotifModal] = useState<boolean>(false)
+  const [showReasonModal, setShowReasonModal] = useState<boolean>(false)
   const [
     currentSubmission,
     setCurrentSubmission,
@@ -389,7 +441,7 @@ export default function ApplicationsPage({
                           }
                         })
                         setSubmissions(obj)
-                        setSelectedSubmissions([])
+                        // setSelectedSubmissions([]) -- this will instead be set after inputting reason
                       }
                       doApiRequest(
                         `/clubs/${club.code}/applications/${currentApplication.id}/submissions/status/?format=json`,
@@ -401,6 +453,8 @@ export default function ApplicationsPage({
                           },
                         },
                       )
+
+                      setShowReasonModal(true)
                     }}
                   >
                     <Icon name="check" /> Update Status
@@ -543,7 +597,26 @@ export default function ApplicationsPage({
           <NotificationModal
             club={club.code}
             application={currentApplication}
-            submissions={selectedSubmissions}
+            submissions={submissions[currentApplication.id]}
+          />
+        </Modal>
+      )}
+      {showReasonModal && (
+        <Modal
+          show={showReasonModal}
+          closeModal={() => {
+            setShowReasonModal(false)
+            setSelectedSubmissions([])
+          }}
+          width="80%"
+          marginBottom={false}
+        >
+          <ReasonModal
+            club={club.code}
+            application={currentApplication}
+            submissions={selectedSubmissions.map(
+              (i) => submissions[currentApplication.id][i],
+            )}
           />
         </Modal>
       )}
