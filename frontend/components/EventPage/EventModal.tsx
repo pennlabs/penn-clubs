@@ -7,12 +7,8 @@ import styled from 'styled-components'
 import { Icon } from '../../components/common'
 import { CLUB_ROUTE, ZOOM_BLUE } from '../../constants'
 import { MEDIUM_GRAY } from '../../constants/colors'
-import { Club, ClubEvent } from '../../types'
-import {
-  apiSetFavoriteStatus,
-  apiSetSubscribeStatus,
-  doApiRequest,
-} from '../../utils'
+import { ClubEvent } from '../../types'
+import { doApiRequest } from '../../utils'
 import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -128,57 +124,32 @@ const LiveEventUpdater = ({
 /**
  * Buttons that allow you to bookmark and subscribe to a club.
  */
-const ActionButtons = ({ club: code, isTicketEvent: isTicketEvent, setDisplayTicketModal: setDisplayTicketModal, ticketCount: ticketCount, userHasTickets: userHasTickets }): ReactElement | null => {
-  const [isBookmarked, setBookmarked] = useState<boolean | null>(null)
-  const [isSubscribed, setSubscribed] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    doApiRequest(`/clubs/${code}/?format=json`)
-      .then((resp) => resp.json())
-      .then((data: Club) => {
-        setSubscribed(data.is_subscribe)
-        setBookmarked(data.is_favorite)
-      })
-  }, [code])
-
-  if (isSubscribed == null || isBookmarked == null) {
-    return null
-  }
-
+const ActionButtons = ({
+  club: code,
+  isTicketEvent,
+  setDisplayTicketModal,
+  ticketCount,
+  userHasTickets,
+}): ReactElement | null => {
   return (
     <>
-      {isTicketEvent &&
-      <button
-        className="button is-success is-small"
-        disabled={ticketCount == 0 && !userHasTickets}
-        onClick={() =>
-          setDisplayTicketModal(true)
-        }
-      >
-        <Icon name="credit-card"/> 
-        {ticketCount == 0 && !userHasTickets ? 'SOLD OUT' :
-         userHasTickets ? 'View Tickets':
-         'Get Tickets'
-        }
-      </button>}
-      <button
-        className="button is-success is-small"
-        disabled={isBookmarked}
-        onClick={() =>
-          apiSetFavoriteStatus(code, true).then(() => setBookmarked(true))
-        }
-      >
-        <Icon name="bookmark" /> {isBookmarked ? 'Bookmarked' : 'Bookmark'}
-      </button>
-      <button
-        className="button is-success is-small"
-        disabled={isSubscribed}
-        onClick={() =>
-          apiSetSubscribeStatus(code, true).then(() => setSubscribed(true))
-        }
-      >
-        <Icon name="bell" /> {isSubscribed ? 'Subscribed' : 'Subscribe'}
-      </button>
+      {isTicketEvent && (
+        <>
+          <Link href="/">
+            <button
+              disabled={ticketCount === 0 || !userHasTickets}
+              className="button is-success is-small"
+            >
+              {ticketCount === 0 && !userHasTickets
+                ? ' SOLD OUT'
+                : userHasTickets
+                ? ' View Tickets'
+                : ' Get Tickets'}{' '}
+              <Icon name="credit-card" className="ml-2" />
+            </button>
+          </Link>
+        </>
+      )}
     </>
   )
 }
@@ -236,15 +207,19 @@ const EventModal = (props: {
     club_name,
     start_time,
     end_time,
+    // ticketed,
     name,
     url,
     description,
   } = event
+  const ticketed = true
   const [userCount, setUserCount] = useState<LiveStatsData | null>(null)
   const [ticketCount, setTicketCount] = useState<number | null>(null)
   const [userHasTickets, setUserHasTickets] = useState<boolean | null>(null)
   const [displayTicketModal, setDisplayTicketModal] = useState<boolean>(false)
-  const [availableTickets, setAvailableTickets] = useState<Array<JSON> | null>(null)
+  const [availableTickets, setAvailableTickets] = useState<Array<JSON> | null>(
+    null,
+  )
 
   const now = new Date()
   const startDate = new Date(start_time)
@@ -261,104 +236,110 @@ const EventModal = (props: {
         })
     }
     // TODO: CHANGE TO event.ticketed instead of true when that is added
-    if (true) {
-      setTicketCount(0) //TODO: CHANGE BACK TO 0
+    if (ticketed) {
+      setTicketCount(0) // TODO: CHANGE BACK TO 0
       doApiRequest(`/events/${event.id}/tickets/`)
-          .then((resp) => resp.json())
-          .then((resp) => {
+        .then((resp) => resp.json())
+        .then((resp) => {
+          if (resp.avaialble) {
             setAvailableTickets(resp.available)
             for (let i = 0; i < resp.available.length; i++) {
               setTicketCount(ticketCount + resp.available[i].count)
             }
-      })
+          }
+        })
       setUserHasTickets(false)
       doApiRequest(`/tickets/`)
-          .then((resp) => resp.json())
-          .then((resp) => {
-            for (let i = 0; i < resp.length; i++) {
-              if (resp[i].event.id === event.id) {
-                setUserHasTickets(true)
-                break
-              }
+        .then((resp) => resp.json())
+        .then((resp) => {
+          for (let i = 0; i < resp.length; i++) {
+            if (resp[i].event.id === event.id) {
+              setUserHasTickets(true)
+              break
+            }
           }
-      })
+        })
     }
   }
 
   useEffect(refreshLiveData, [])
 
-  return (
-    !displayTicketModal ?
-      <ModalContainer>
-        <CoverPhoto
-          image={large_image_url ?? image_url}
-          fallback={
-            <p>{club_name != null ? club_name.toLocaleUpperCase() : 'Event'}</p>
-          }
-        />
-        <EventDetails>
-          {isZoomMeeting && (
-            <LiveEventUpdater id={event.id} onUpdate={refreshLiveData} />
-          )}
-          <MetaDataGrid>
-            <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
-            <RightAlign>
-              {isHappening ? (
-                <HappeningNow urgent={true} />
-              ) : (
-                <TimeLeft date={new Date(start_time)} />
-              )}
-            </RightAlign>
-          </MetaDataGrid>
-          {club_name != null && <ClubName>{club_name}</ClubName>}
-          <EventName>{name}</EventName>
-          {url &&
-            (MEETING_REGEX.test(url) ? (
-              <ZoomButton
-                className="button is-small mt-3 mb-2"
-                href={url}
-                target="_blank"
-                onClick={onLinkClicked}
-              >
-                <Icon name="video" /> Join Meeting
-              </ZoomButton>
-            ) : /^\(.*\)$/.test(url) ? (
-              url
+  return !displayTicketModal ? (
+    <ModalContainer>
+      <CoverPhoto
+        image={large_image_url ?? image_url}
+        fallback={
+          <p>{club_name != null ? club_name.toLocaleUpperCase() : 'Event'}</p>
+        }
+      />
+      <EventDetails>
+        {isZoomMeeting && (
+          <LiveEventUpdater id={event.id} onUpdate={refreshLiveData} />
+        )}
+        <MetaDataGrid>
+          <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
+          <RightAlign>
+            {isHappening ? (
+              <HappeningNow urgent={true} />
             ) : (
-              <EventLink onClick={onLinkClicked} href={url}>
-                {url}
-              </EventLink>
-            ))}{' '}
-          {userCount != null && <LiveStats stats={userCount} />}
-          <StyledDescription contents={description} />
-          {showDetailsButton !== false && event.club != null && (
-            <div className="is-clearfix">
-              <div className="buttons is-pulled-right">
-                {club != null && <ActionButtons club={club} isTicketEvent={true} setDisplayTicketModal={setDisplayTicketModal} ticketCount={ticketCount} userHasTickets={userHasTickets}/>}
-                <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
-                  <a
-                    className="button is-link is-small"
-                    onClick={(e) => {
-                      if (!event.club) {
-                        e.preventDefault()
-                      }
-                    }}
-                  >
-                    See {OBJECT_NAME_TITLE_SINGULAR} Details{' '}
-                    <Icon name="chevrons-right" className="ml-2" />
-                  </a>
-                </Link>
-              </div>
+              <TimeLeft date={new Date(start_time)} />
+            )}
+          </RightAlign>
+        </MetaDataGrid>
+        {club_name != null && <ClubName>{club_name}</ClubName>}
+        <EventName>{name}</EventName>
+        {url &&
+          (MEETING_REGEX.test(url) ? (
+            <ZoomButton
+              className="button is-small mt-3 mb-2"
+              href={url}
+              target="_blank"
+              onClick={onLinkClicked}
+            >
+              <Icon name="video" /> Join Meeting
+            </ZoomButton>
+          ) : /^\(.*\)$/.test(url) ? (
+            url
+          ) : (
+            <EventLink onClick={onLinkClicked} href={url}>
+              {url}
+            </EventLink>
+          ))}{' '}
+        {userCount != null && <LiveStats stats={userCount} />}
+        <StyledDescription contents={description} />
+        {showDetailsButton !== false && event.club != null && (
+          <div className="is-clearfix">
+            <div className="buttons is-pulled-right">
+              {club != null && (
+                <ActionButtons
+                  club={club}
+                  isTicketEvent={ticketed}
+                  setDisplayTicketModal={setDisplayTicketModal}
+                  ticketCount={ticketCount}
+                  userHasTickets={userHasTickets}
+                />
+              )}
+              <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
+                <a
+                  className="button is-link is-small"
+                  onClick={(e) => {
+                    if (!event.club) {
+                      e.preventDefault()
+                    }
+                  }}
+                >
+                  See {OBJECT_NAME_TITLE_SINGULAR} Details{' '}
+                  <Icon name="chevrons-right" className="ml-2" />
+                </a>
+              </Link>
             </div>
-          )}
-        </EventDetails>
-      </ModalContainer>
-      ://TODO: THIS IS NOTHING RN, SHOULD DISPLAY ALL AVAILABLE TICKETS
-      <ModalContainer>
-        {availableTickets != null && availableTickets.map((ticket, index) => {
-          
-        })}
-      </ModalContainer>
+          </div>
+        )}
+      </EventDetails>
+    </ModalContainer>
+  ) : (
+    // TODO: THIS IS NOTHING RN, SHOULD DISPLAY ALL AVAILABLE TICKETS
+    <ModalContainer>""</ModalContainer>
   )
 }
 

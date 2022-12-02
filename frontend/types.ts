@@ -61,10 +61,18 @@ export interface ClubEvent {
   large_image_url: string | null
   location: string | null
   name: string
+  ticketed: string
   pinned: boolean
   start_time: string
   type: ClubEventType
   url: string | null
+}
+
+export interface EventTicket {
+  id: string
+  event: ClubEvent
+  type: ClubEventType
+  owner: string
 }
 
 export interface ClubApplication {
