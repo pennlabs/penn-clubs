@@ -11,14 +11,37 @@ const ResponsiveCheckoutGrid = styled.div`
 
   /* checkout UI */
   .ui {
+    overflow-x: scroll;
     background-color: aliceblue;
   }
 
   /* cart panel */
   .cart {
+    overflow-x: scroll;
     background-color: lightcoral;
   }
 `
+
+enum CheckoutStep {
+  Select = 'select',
+  Checkout = 'checkout',
+  Purchase = 'purchase',
+}
+
+const checkoutStepOrder: CheckoutStep[] = [
+  CheckoutStep.Select,
+  CheckoutStep.Checkout,
+  CheckoutStep.Purchase,
+]
+
+// TODO: figure out a nice way to do steps
+const checkoutStepComponents: {
+  [key in CheckoutStep]: (props) => React.ReactNode
+} = {
+  select: (props) => <></>,
+  checkout: (props) => <></>,
+  purchase: (props) => <></>,
+}
 
 const TicketCheckoutPage = ({
   checkoutStep: initialCheckoutStep,
@@ -28,15 +51,26 @@ const TicketCheckoutPage = ({
 }) => {
   const { query } = useRouter()
 
-  const step = initialCheckoutStep ?? (query && query.step ? query.step[0] : 1)
+  const step = (typeof query?.step === 'string'
+    ? query.step
+    : initialCheckoutStep) as CheckoutStep
 
   return (
     <>
       <ResponsiveCheckoutGrid>
         <div className="ui">
-          {step === 1 && <>{event && <div>{event.club_name}</div>}</>}
+          {step === CheckoutStep.Select && (
+            <>Selecting! {event && <h2>{event.club_name}</h2>}</>
+          )}
+          {step === CheckoutStep.Checkout && (
+            <>Checking out! {event && <h2>{event.club_name}</h2>}</>
+          )}
+          {step === CheckoutStep.Purchase && (
+            <>Purchasing! {event && <h2>{event.club_name}</h2>}</>
+          )}
+          <div>Tickets: {JSON.stringify(eventTickets)}</div>
         </div>
-        <div className="cart">event: {event}</div>
+        <div className="cart">event: {JSON.stringify(event)}</div>
       </ResponsiveCheckoutGrid>
     </>
   )
@@ -46,9 +80,11 @@ TicketCheckoutPage.getInitialProps = async ({
   query,
   req,
 }: NextPageContext) => {
-  const clubCode = query && query.club ? query.club[0] : undefined
-  const eventId = query && query.event ? query.event[0] : undefined
-  const checkoutStep = query && query.step ? query.step[0] : 1
+  const clubCode = typeof query?.club === 'string' ? query.club : undefined
+  const eventId = typeof query?.event === 'string' ? query.event : undefined
+  const checkoutStep = (typeof query?.step === 'string'
+    ? query.step
+    : CheckoutStep.Select) as CheckoutStep
 
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
@@ -70,7 +106,7 @@ TicketCheckoutPage.getInitialProps = async ({
     eventTicketsRes?.json(),
   ])
 
-  return { checkoutStep: checkoutStep, cart, event, eventTickets }
+  return { checkoutStep, cart, event, eventTickets }
 }
 
 // http://localhost:3000/tickets/checkout?club=harvard-rejects&event=54
