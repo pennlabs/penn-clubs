@@ -287,6 +287,9 @@ export default function ApplicationsPage({
   ] = useState<ApplicationSubmission | null>(null)
   const [pageIndex, setPageIndex] = useState<number>(0)
   const [statusToggle, setStatusToggle] = useState<boolean>(false)
+  const [categoriesSelectAll, setCategoriesSelectAll] = useState<Array<string>>(
+    [],
+  )
 
   useEffect(() => {
     doApiRequest(`/clubs/${club.code}/applications/?format=json`, {
@@ -470,20 +473,38 @@ export default function ApplicationsPage({
                   <button
                     className="button is-primary"
                     onClick={() => {
+                      const statusLabel = APPLICATION_STATUS.find(
+                        (x) => x.value === status,
+                      ).label
+                      const deselecting = categoriesSelectAll.includes(
+                        statusLabel,
+                      )
+
+                      if (deselecting) {
+                        const newCategoriesSelectAll = categoriesSelectAll.filter(
+                          (e) => e !== statusLabel,
+                        )
+                        setCategoriesSelectAll(newCategoriesSelectAll)
+                      } else {
+                        const newCategoriesSelectAll = categoriesSelectAll
+                        newCategoriesSelectAll.push(statusLabel)
+                        setCategoriesSelectAll(newCategoriesSelectAll)
+                      }
                       const newSelectedSubmissions: number[] = []
                       submissions[currentApplication.id].forEach(
                         (submission) => {
                           if (selectedSubmissions.includes(submission.pk)) {
                             if (
-                              !statusToggle ||
-                              submission.status !== 'Pending'
+                              deselecting &&
+                              submission.status !== statusLabel
                             ) {
-                              // do not add pending values when we are deselecting
+                              newSelectedSubmissions.push(submission.pk)
+                            } else if (!deselecting) {
                               newSelectedSubmissions.push(submission.pk)
                             }
                           } else if (
-                            !statusToggle &&
-                            submission.status === 'Pending'
+                            !deselecting &&
+                            submission.status === statusLabel
                           ) {
                             // add pending values when we are selecting
                             newSelectedSubmissions.push(submission.pk)
@@ -494,8 +515,12 @@ export default function ApplicationsPage({
                       setSelectedSubmissions(newSelectedSubmissions)
                     }}
                   >
-                    {statusToggle ? 'Des' : 'S'}
-                    elect All Pending
+                    {categoriesSelectAll.includes(
+                      APPLICATION_STATUS.find((x) => x.value === status).label,
+                    )
+                      ? 'Deselect All '
+                      : 'Select All '}
+                    {APPLICATION_STATUS.find((x) => x.value === status).label}
                   </button>
                 </div>
                 <small>
