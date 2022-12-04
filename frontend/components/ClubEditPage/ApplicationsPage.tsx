@@ -173,7 +173,7 @@ const SubmissionModal = (props: {
   )
 }
 const NotificationModal = (props: {
-  submissions: Array<number> | null
+  submissions: Array<ApplicationSubmission> | null
   club: string
   application: Application | null
 }): ReactElement => {
@@ -622,7 +622,9 @@ export default function ApplicationsPage({
           <NotificationModal
             club={club.code}
             application={currentApplication}
-            submissions={submissions[currentApplication.id]}
+            submissions={selectedSubmissions.map(
+              (i) => submissions[currentApplication.id][i],
+            )}
           />
         </Modal>
       )}
