@@ -17,7 +17,7 @@ jobs:
         run: |-
           cd backend
           pip install pipenv
-          pipenv install --deploy --dev
+          pipenv install --deploy --dev --keep-outdated
       - name: Lint (flake8)
         run: |-
           cd backend
