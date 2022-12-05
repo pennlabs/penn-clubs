@@ -239,19 +239,21 @@ const ReasonModal = (props: {
               Update reasons for selected{' '}
               {submissions[0] != null ? submissions[0].status : null} applicants
             </StyledHeader>
-            {submissions !== null
+            {submissions != null
               ? submissions.map((data) => {
                   return (
-                    <div>
-                      <Field
-                        name={data.pk}
-                        label={`Reason for ${data.first_name} ${data.last_name}`}
-                        onInput={() => {
-                          // pass
-                        }}
-                        as={TextField}
-                      />
-                    </div>
+                    data != null && (
+                      <div>
+                        <Field
+                          name={data.pk}
+                          label={`Reason for ${data.first_name} ${data.last_name}`}
+                          onInput={() => {
+                            // pass
+                          }}
+                          as={TextField}
+                        />
+                      </div>
+                    )
                   )
                 })
               : null}
@@ -641,8 +643,8 @@ export default function ApplicationsPage({
           <ReasonModal
             club={club.code}
             application={currentApplication}
-            submissions={selectedSubmissions.map(
-              (i) => submissions[currentApplication.id][i],
+            submissions={selectedSubmissions.map((i) =>
+              submissions[currentApplication.id].find((sub) => sub.pk === i),
             )}
           />
         </Modal>
