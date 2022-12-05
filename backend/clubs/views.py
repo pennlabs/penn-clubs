@@ -25,18 +25,9 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
-from django.db.models import (
-    Count,
-    DurationField,
-    ExpressionWrapper,
-    F,
-    Prefetch,
-    Q,
-    TextField,
-    Value,
-)
+from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
 from django.db.models.expressions import RawSQL
-from django.db.models.functions import SHA1, Concat, Lower, Trunc
+from django.db.models.functions import Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -1070,7 +1061,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             self.request.user, get_user_model()
         ):
             SearchQuery(
-                person=self.request.user, query=self.request.query_params.get("search"),
+                person=self.request.user,
+                query=self.request.query_params.get("search"),
             ).save()
 
         # select subset of clubs if requested
@@ -1663,7 +1655,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             query = (
                 Club.objects.filter(badges=badge, archived=False)
                 .order_by(Lower("name"))
-                .prefetch_related(Prefetch("asset_set", to_attr="prefetch_asset_set"),)
+                .prefetch_related(
+                    Prefetch("asset_set", to_attr="prefetch_asset_set"),
+                )
             )
             if request.user.is_authenticated:
                 query = query.prefetch_related(
@@ -2956,7 +2950,9 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            person=self.request.user, withdrew=False, club__archived=False,
+            person=self.request.user,
+            withdrew=False,
+            club__archived=False,
         )
 
 
@@ -4080,7 +4076,9 @@ class UserZoomAPIView(APIView):
 
         try:
             response = zoom_api_call(
-                request.user, "GET", "https://api.zoom.us/v2/users/{uid}/settings",
+                request.user,
+                "GET",
+                "https://api.zoom.us/v2/users/{uid}/settings",
             )
         except requests.exceptions.HTTPError as e:
             raise DRFValidationError(
@@ -4201,7 +4199,9 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         user = self.request.user
         prefetch_related_objects(
-            [user], "profile__school", "profile__major",
+            [user],
+            "profile__school",
+            "profile__major",
         )
         return user
 
@@ -4424,7 +4424,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 }
             )
         submission = ApplicationSubmission.objects.create(
-            user=self.request.user, application=application, committee=committee,
+            user=self.request.user,
+            application=application,
+            committee=committee,
         )
         for question_pk in questions:
             question = ApplicationQuestion.objects.filter(pk=question_pk).first()
@@ -4445,7 +4447,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 text = question_data.get("text", None)
                 if text is not None and text != "":
                     obj = ApplicationQuestionResponse.objects.create(
-                        text=text, question=question, submission=submission,
+                        text=text,
+                        question=question,
+                        submission=submission,
                     ).save()
                     response = Response(ApplicationQuestionResponseSerializer(obj).data)
             elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:
@@ -4609,19 +4613,12 @@ class WhartonApplicationAPIView(generics.ListAPIView):
             is_wharton_council=True, application_end_time__gte=now
         )
 
-        # randomly order Wharton Council applications by user
+        # randomly order applications, seeded by user ID
 
-        key = str(self.request.user.id)
-
-        cached_qs = cache.get(key)
-
-        if cached_qs and qs.count() == cached_qs.count():
-            return cached_qs
-
-        qs = qs.annotate(
-            random_id=SHA1(Concat("club", Value(key)), output_field=TextField())
-        ).order_by("random_id")
-        cache.set(key, qs, 60)
+        # seed = str(self.request.user.id)
+        # qs = qs.annotate(
+        #     random=SHA1(Concat("name", Value(seed), output_field=TextField()))
+        # ).order_by("random")
 
         return qs
 
