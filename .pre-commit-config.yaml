@@ -4,7 +4,7 @@ repos:
     hooks:
       - id: black
         name: black
-        entry: pipenv run black
+        entry: cd backend && pipenv run black
         language: python
         types: [python]
         require_serial: true
