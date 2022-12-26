@@ -1,9 +1,104 @@
 import { NextPageContext } from 'next'
 import { useRouter } from 'next/router'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import Select from 'react-select'
 import styled from 'styled-components'
 
+import { Subtitle, Text } from '~/components/common'
 import renderPage from '~/renderPage'
+import { ClubEvent, EventTicket } from '~/types'
 import { doApiRequest } from '~/utils'
+
+type EventTicketsResponse = {
+  totals: { type: string; count: number }[]
+}
+type CartResponse = { tickets: EventTicket[]; detail: string }
+
+const checkoutSteps = ['select', 'checkout', 'purchase'] as const
+type CheckoutStep = typeof checkoutSteps[number]
+
+// TODO: make this styling consistent with the rest of everything bruh
+const TicketOption = styled.li`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 20px 0;
+
+  .option-right {
+    margin-left: auto;
+    width: 5rem;
+  }
+
+  h4 {
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .price {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .description {
+    font-size: 15px;
+  }
+`
+
+const SelectTicketsStep = ({
+  event: { club: clubCode, id: eventId },
+  eventTickets: { totals: tickets },
+  serverCart: { getTickets, loading, mutating, setTicketCount },
+}: {
+  event: ClubEvent
+  eventTickets: { totals: { type: string; count: number }[] }
+  serverCart: ReturnType<typeof useServerCart>
+}) => {
+  // callback for each select to use
+  const updateTicketCount = useCallback((type: string, count: number) => {
+    if (mutating || loading) {
+      alert(`this shouldn't happen!!`)
+      return
+    }
+    setTicketCount(clubCode as string, eventId, type, count)
+  }, [])
+
+  return (
+    <ul>
+      {/* TODO: if count === 0 then mark as sold out */}
+      {tickets.map(({ type, count }) => {
+        const countOptions: {
+          label: string
+          value: number
+        }[] = []
+        for (let i = 0; i <= Math.min(count, 25); i++) {
+          countOptions.push({ label: i.toString(), value: i })
+        }
+        const currentAmount = getTickets(clubCode as string, eventId, type)
+          .length
+
+        // TODO: figure out why react-select hates these types
+        return (
+          <TicketOption key={type}>
+            <div className="option-left">
+              <h4>{type}</h4>
+            </div>
+            <div className="option-right">
+              <Select
+                options={countOptions}
+                isDisabled={mutating}
+                value={{ label: currentAmount, value: currentAmount }}
+                onChange={({ value }: { value: number }) => {
+                  updateTicketCount(type, value)
+                }}
+              />
+            </div>
+          </TicketOption>
+        )
+      })}
+    </ul>
+  )
+}
 
 const ResponsiveCheckoutGrid = styled.div`
   display: grid;
@@ -15,6 +110,16 @@ const ResponsiveCheckoutGrid = styled.div`
     background-color: aliceblue;
   }
 
+  /* two sections separated by gray line */
+  .ui-top,
+  .ui-bottom {
+    padding: 25px 10%;
+  }
+
+  .ui-top {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  }
+
   /* cart panel */
   .cart {
     overflow-x: scroll;
@@ -22,32 +127,141 @@ const ResponsiveCheckoutGrid = styled.div`
   }
 `
 
-enum CheckoutStep {
-  Select = 'select',
-  Checkout = 'checkout',
-  Purchase = 'purchase',
-}
+/**
+ * Hook to fetch and update ticket cart information.
+ * @param initialCart Initial server-side fetched cart.
+ */
+const useServerCart = (initialCart: CartResponse) => {
+  const [cart, setCart] = useState<CartResponse>(initialCart)
+  const [loading, setLoading] = useState(false)
+  const [mutating, setMutating] = useState(false)
 
-const checkoutStepOrder: CheckoutStep[] = [
-  CheckoutStep.Select,
-  CheckoutStep.Checkout,
-  CheckoutStep.Purchase,
-]
+  const getTickets = useCallback(
+    (clubCode: string, eventId: number, type: string) => {
+      return cart.tickets.filter(
+        (ticket) =>
+          ticket.type === type &&
+          ticket.event.club === clubCode &&
+          ticket.event.id === eventId,
+      )
+    },
+    [cart.tickets],
+  )
 
-// TODO: figure out a nice way to do steps
-const checkoutStepComponents: {
-  [key in CheckoutStep]: (props) => React.ReactNode
-} = {
-  select: (props) => <></>,
-  checkout: (props) => <></>,
-  purchase: (props) => <></>,
+  // AbortController to manage fetching
+  const fetchController = useRef<AbortController>()
+  useEffect(() => {
+    fetchController.current = new AbortController()
+  }, [fetchController])
+
+  /**
+   * Re-fetches online cart data. Updates `onlineCart` accordingly.
+   */
+  const fetchCart = useCallback(async () => {
+    // cancel if we're already loading
+    fetchController.current?.abort()
+    setLoading(true)
+
+    try {
+      const res = await doApiRequest('/tickets/cart/', {
+        signal: fetchController.current?.signal,
+      })
+      const newCart = (await res.json()) as CartResponse
+
+      setCart(newCart)
+      setLoading(false)
+
+      return newCart
+    } catch (err) {
+      // we were aborted or something else went wrong
+      setLoading(false)
+      return null
+    }
+  }, [])
+
+  /**
+   * Sends an API request attempting to update the ticket count for a certain
+   * club code, event id, and ticket type to the requested amount.
+   */
+  const setTicketCount = useCallback(
+    async (clubCode: string, eventId: number, type: string, count: number) => {
+      // cancel fetch if happening
+      fetchController.current?.abort()
+
+      // get all preexisting tickets of the same type
+      const existingTickets = cart.tickets.filter(
+        (ticket) =>
+          ticket.type === type &&
+          ticket.event.club === clubCode &&
+          ticket.event.id === eventId,
+      )
+
+      const ticketsNeeded = count - existingTickets.length
+
+      // cancel if no ticket updates needed
+      if (ticketsNeeded === 0) {
+        return cart
+      }
+
+      setMutating(true)
+
+      try {
+        if (ticketsNeeded > 0) {
+          // add tickets to cart
+          await doApiRequest(
+            `/clubs/${clubCode}/events/${eventId}/add_to_cart/`,
+            {
+              method: 'POST',
+              body: { type, count: ticketsNeeded },
+            },
+          )
+        } else {
+          // remove tickets from cart
+          await doApiRequest(
+            `/clubs/${clubCode}/events/${eventId}/remove_from_cart/`,
+            {
+              method: 'POST',
+              body: { type, count: -ticketsNeeded },
+            },
+          )
+        }
+      } catch (err) {
+        // got a 500 or something bruh
+        setMutating(false)
+        alert(`this shouldn't happen!!`)
+        return null
+      }
+
+      // fetch when done POSTing
+      const newCart = await fetchCart()
+
+      setMutating(false)
+
+      return newCart
+    },
+    [cart],
+  )
+
+  return {
+    cart: cart,
+    getTickets,
+    loading,
+    fetchCart,
+    mutating,
+    setTicketCount,
+  }
 }
 
 const TicketCheckoutPage = ({
   checkoutStep: initialCheckoutStep,
-  cart,
+  initialCart,
   event,
   eventTickets,
+}: {
+  checkoutStep: CheckoutStep
+  initialCart: CartResponse
+  event: ClubEvent
+  eventTickets: EventTicketsResponse
 }) => {
   const { query } = useRouter()
 
@@ -55,22 +269,37 @@ const TicketCheckoutPage = ({
     ? query.step
     : initialCheckoutStep) as CheckoutStep
 
+  const serverCart = useServerCart(initialCart)
+  const { cart } = serverCart
+
   return (
     <>
       <ResponsiveCheckoutGrid>
         <div className="ui">
-          {step === CheckoutStep.Select && (
-            <>Selecting! {event && <h2>{event.club_name}</h2>}</>
-          )}
-          {step === CheckoutStep.Checkout && (
-            <>Checking out! {event && <h2>{event.club_name}</h2>}</>
-          )}
-          {step === CheckoutStep.Purchase && (
-            <>Purchasing! {event && <h2>{event.club_name}</h2>}</>
-          )}
-          <div>Tickets: {JSON.stringify(eventTickets)}</div>
+          <div className="ui-top">
+            <Subtitle>{event.club_name}</Subtitle>
+          </div>
+          <div className="ui-bottom">
+            {step === 'select' && (
+              <SelectTicketsStep
+                event={event}
+                eventTickets={eventTickets}
+                serverCart={serverCart}
+              />
+            )}
+            {step === 'checkout' && (
+              <>Checking out! {event && <h2>{event.club_name}</h2>}</>
+            )}
+            {step === 'purchase' && (
+              <>Purchasing! {event && <h2>{event.club_name}</h2>}</>
+            )}
+            <div>Tickets: {JSON.stringify(eventTickets)}</div>
+          </div>
         </div>
-        <div className="cart">event: {JSON.stringify(event)}</div>
+        <div className="cart">
+          <Text>Event: {JSON.stringify(event)}</Text>
+          <Text>Cart: {JSON.stringify(cart)}</Text>
+        </div>
       </ResponsiveCheckoutGrid>
     </>
   )
@@ -84,19 +313,19 @@ TicketCheckoutPage.getInitialProps = async ({
   const eventId = typeof query?.event === 'string' ? query.event : undefined
   const checkoutStep = (typeof query?.step === 'string'
     ? query.step
-    : CheckoutStep.Select) as CheckoutStep
+    : 'select') as CheckoutStep
 
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
 
   const [cartRes, eventRes, eventTicketsRes] = await Promise.all([
-    doApiRequest('/tickets/cart', data),
+    doApiRequest('/tickets/cart/', data),
     clubCode && eventId
-      ? doApiRequest(`/clubs/${clubCode}/events/${eventId}`, data)
+      ? doApiRequest(`/clubs/${clubCode}/events/${eventId}/`, data)
       : undefined,
     clubCode ?? eventId
-      ? doApiRequest(`/clubs/${clubCode}/events/${eventId}/tickets`, data)
+      ? doApiRequest(`/clubs/${clubCode}/events/${eventId}/tickets/`, data)
       : undefined,
   ])
 
@@ -106,7 +335,7 @@ TicketCheckoutPage.getInitialProps = async ({
     eventTicketsRes?.json(),
   ])
 
-  return { checkoutStep, cart, event, eventTickets }
+  return { checkoutStep, initialCart: cart, event, eventTickets }
 }
 
 // http://localhost:3000/tickets/checkout?club=harvard-rejects&event=54

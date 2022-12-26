@@ -71,7 +71,7 @@ export interface ClubEvent {
 export interface EventTicket {
   id: string
   event: ClubEvent
-  type: ClubEventType
+  type: string
   owner: string
 }
 
