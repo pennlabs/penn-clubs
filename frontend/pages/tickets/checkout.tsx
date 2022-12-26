@@ -9,6 +9,7 @@ import renderPage from '~/renderPage'
 import { ClubEvent, EventTicket } from '~/types'
 import { doApiRequest } from '~/utils'
 
+// TODO: see if we want to move these types to another file
 type EventTicketsResponse = {
   totals: { type: string; count: number }[]
 }
@@ -45,13 +46,14 @@ const TicketOption = styled.li`
   }
 `
 
+// TODO: move to separate component file if too big
 const SelectTicketsStep = ({
   event: { club: clubCode, id: eventId },
   eventTickets: { totals: tickets },
   serverCart: { getTickets, loading, mutating, setTicketCount },
 }: {
   event: ClubEvent
-  eventTickets: { totals: { type: string; count: number }[] }
+  eventTickets: EventTicketsResponse
   serverCart: ReturnType<typeof useServerCart>
 }) => {
   // callback for each select to use
@@ -127,6 +129,7 @@ const ResponsiveCheckoutGrid = styled.div`
   }
 `
 
+// TODO: move this somewhere (no hooks folder ;-;)
 /**
  * Hook to fetch and update ticket cart information.
  * @param initialCart Initial server-side fetched cart.
@@ -338,6 +341,7 @@ TicketCheckoutPage.getInitialProps = async ({
   return { checkoutStep, initialCart: cart, event, eventTickets }
 }
 
+// TODO: remove
 // http://localhost:3000/tickets/checkout?club=harvard-rejects&event=54
 
 export default renderPage(TicketCheckoutPage)
