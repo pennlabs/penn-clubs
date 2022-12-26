@@ -10,6 +10,4 @@ class Migration(migrations.Migration):
         ("clubs", "0090_adminnote"),
     ]
 
-    operations = [
-        CryptoExtension()
-    ]
+    operations = [CryptoExtension()]
