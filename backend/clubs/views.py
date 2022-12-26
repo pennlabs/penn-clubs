@@ -25,9 +25,18 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
-from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
+from django.db.models import (
+    Count,
+    DurationField,
+    ExpressionWrapper,
+    F,
+    Prefetch,
+    Q,
+    TextField,
+    Value,
+)
 from django.db.models.expressions import RawSQL
-from django.db.models.functions import Lower, Trunc
+from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -4600,13 +4609,15 @@ class WhartonApplicationAPIView(generics.ListAPIView):
             is_wharton_council=True, application_end_time__gte=now
         )
 
-        # randomly order applications, seeded by user ID
-
-        # seed = str(self.request.user.id)
-        # qs = qs.annotate(
-        #     random=SHA1(Concat("name", Value(seed), output_field=TextField()))
-        # ).order_by("random")
-
+        # Order applications randomly for viewing (consistent and unique per user).
+        key = str(self.request.user.id)
+        cached_qs = cache.get(key)
+        if cached_qs and cached_qs.count() == qs.count():
+            return cached_qs
+        qs = qs.annotate(
+            random=SHA1(Concat("name", Value(key), output_field=TextField()))
+        ).order_by("random")
+        cache.set(key, qs, 60)
         return qs
 
 
