@@ -176,6 +176,14 @@ const ResponsiveCheckoutGrid = styled.div`
   }
 `
 
+const CartImage = styled.div.attrs(() => ({ role: 'figure' }))<{ url: string }>`
+  height: 18rem;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  background-image: url(${(props) => props.url});
+`
+
 // TODO: move this somewhere (no hooks folder ;-;)
 /**
  * Hook to fetch and update ticket cart information.
@@ -376,8 +384,11 @@ const TicketCheckoutPage = ({
           </div>
         </div>
         <div className="cart">
-          <Text>Event: {JSON.stringify(event)}</Text>
-          <Text>Cart: {JSON.stringify(cart)}</Text>
+          {event && event.image_url && (
+            <CartImage url={event.large_image_url ?? event.image_url} />
+          )}
+          <Text>Order summary</Text>
+          {/* TODO: continue here LOL */}
         </div>
       </ResponsiveCheckoutGrid>
     </>
