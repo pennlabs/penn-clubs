@@ -1,10 +1,11 @@
 import { NextPageContext } from 'next'
-import { useRouter } from 'next/router'
+import router, { useRouter } from 'next/router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Select from 'react-select'
 import styled from 'styled-components'
 
-import { Subtitle, Text } from '~/components/common'
+import { Icon, Text } from '~/components/common'
+import { BABY_BLUE } from '~/constants'
 import renderPage from '~/renderPage'
 import { ClubEvent, EventTicket } from '~/types'
 import { doApiRequest } from '~/utils'
@@ -15,7 +16,7 @@ type EventTicketsResponse = {
 }
 type CartResponse = { tickets: EventTicket[]; detail: string }
 
-const checkoutSteps = ['select', 'checkout', 'purchase'] as const
+const checkoutSteps = ['select', 'purchase', 'complete'] as const
 type CheckoutStep = typeof checkoutSteps[number]
 
 // TODO: make this styling consistent with the rest of everything bruh
@@ -32,17 +33,17 @@ const TicketOption = styled.li`
   }
 
   h4 {
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 600;
   }
 
   .price {
-    font-size: 18px;
+    font-size: 13.5px;
     font-weight: 600;
   }
 
   .description {
-    font-size: 15px;
+    font-size: 11.25px;
   }
 `
 
@@ -78,7 +79,7 @@ const SelectTicketsStep = ({
             label: string
             value: number
           }[] = []
-          for (let i = 0; i <= Math.min(count, 25); i++) {
+          for (let i = 0; i <= Math.min(count, 20); i++) {
             countOptions.push({ label: i.toString(), value: i })
           }
           return countOptions
@@ -99,7 +100,13 @@ const SelectTicketsStep = ({
               <Select
                 options={countOptions}
                 isDisabled={mutating}
-                value={{ label: currentAmount, value: currentAmount }}
+                value={
+                  {
+                    label: currentAmount,
+                    value: currentAmount,
+                  } as { value: number }
+                  // ^NOTE: react-select has funny types so we need this cast or it will yell at us
+                }
                 onChange={({ value }: { value: number }) => {
                   updateTicketCount(type, value)
                 }}
@@ -115,11 +122,14 @@ const SelectTicketsStep = ({
 const ResponsiveCheckoutGrid = styled.div`
   display: grid;
   grid-template-columns: 2fr 1fr;
+  max-width: 1920px;
+  margin: 0 auto;
 
   /* checkout UI */
   .ui {
     overflow-x: scroll;
-    background-color: aliceblue;
+    overflow-y: auto;
+    background-color: ${BABY_BLUE};
   }
 
   /* two sections separated by gray line */
@@ -129,13 +139,40 @@ const ResponsiveCheckoutGrid = styled.div`
   }
 
   .ui-top {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    border-bottom: 1.5px solid rgba(0, 0, 0, 0.15);
+  }
+
+  .club-name,
+  .event-name {
+    font-size: 24px;
+  }
+
+  .club-name {
+    font-weight: bold;
+  }
+
+  .event-name {
+    font-weight: 500;
+  }
+
+  .event-details {
+    margin-top: 0.8rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    // each detail item
+    span {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
   }
 
   /* cart panel */
   .cart {
     overflow-x: scroll;
-    background-color: lightcoral;
+    overflow-y: auto;
   }
 `
 
@@ -149,13 +186,16 @@ const useServerCart = (initialCart: CartResponse) => {
   const [loading, setLoading] = useState(false)
   const [mutating, setMutating] = useState(false)
 
-  const getTicketsOfType = (clubCode: string, eventId: number, type: string) =>
-    cart.tickets.filter(
-      (ticket) =>
-        ticket.type === type &&
-        ticket.event.club === clubCode &&
-        ticket.event.id === eventId,
-    )
+  const getTicketsOfType = useCallback(
+    (clubCode: string, eventId: number, type: string) =>
+      cart.tickets.filter(
+        (ticket) =>
+          ticket.type === type &&
+          ticket.event.club === clubCode &&
+          ticket.event.id === eventId,
+      ),
+    [cart.tickets],
+  )
 
   // AbortController to manage fetching
   const fetchController = useRef<AbortController>()
@@ -256,6 +296,17 @@ const useServerCart = (initialCart: CartResponse) => {
   }
 }
 
+const eventDateFormat = new Intl.DateTimeFormat(['ban', 'en-US'], {
+  weekday: 'long',
+  month: 'short',
+  day: 'numeric',
+})
+
+const eventTimeStartFormat = new Intl.DateTimeFormat(['ban', 'en-US'], {
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
 const TicketCheckoutPage = ({
   initialCheckoutStep,
   initialCart,
@@ -281,7 +332,31 @@ const TicketCheckoutPage = ({
       <ResponsiveCheckoutGrid>
         <div className="ui">
           <div className="ui-top">
-            <Subtitle>{event.club_name}</Subtitle>
+            {event && (
+              <>
+                <h2 className="club-name">{event.club_name}</h2>
+                <h1 className="event-name">{event.name}</h1>
+                <div className="event-details">
+                  <span>
+                    <Icon name="calendar" />
+                    {eventDateFormat.format(new Date(event.start_time))}
+                  </span>
+                  <span>
+                    <Icon name="clock" />
+                    {eventTimeStartFormat.formatRange(
+                      new Date(event.start_time),
+                      new Date(event.end_time),
+                    )}
+                  </span>
+                  {event.location && (
+                    <span>
+                      <Icon name="location" />
+                      {event.location}
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
           </div>
           <div className="ui-bottom">
             {step === 'select' && (
@@ -291,11 +366,11 @@ const TicketCheckoutPage = ({
                 serverCart={serverCart}
               />
             )}
-            {step === 'checkout' && (
-              <>Checking out! {event && <h2>{event.club_name}</h2>}</>
-            )}
             {step === 'purchase' && (
               <>Purchasing! {event && <h2>{event.club_name}</h2>}</>
+            )}
+            {step === 'complete' && (
+              <>Complete! {event && <h2>{event.club_name}</h2>}</>
             )}
             <div>Tickets: {JSON.stringify(eventTickets)}</div>
           </div>
@@ -312,38 +387,54 @@ const TicketCheckoutPage = ({
 TicketCheckoutPage.getInitialProps = async ({
   query,
   req,
+  res,
 }: NextPageContext) => {
   const clubCode = typeof query?.club === 'string' ? query.club : undefined
   const eventId = typeof query?.event === 'string' ? query.event : undefined
-  const checkoutStep = (typeof query?.step === 'string'
-    ? query.step
-    : 'select') as CheckoutStep
 
   const data = {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
 
-  const [cartRes, eventRes, eventTicketsRes] = await Promise.all([
-    doApiRequest('/tickets/cart/', data),
-    clubCode && eventId
-      ? doApiRequest(`/clubs/${clubCode}/events/${eventId}/`, data)
-      : undefined,
-    clubCode ?? eventId
-      ? doApiRequest(`/clubs/${clubCode}/events/${eventId}/tickets/`, data)
-      : undefined,
-  ])
+  try {
+    const [cartRes, eventRes, eventTicketsRes] = await Promise.all([
+      doApiRequest('/tickets/cart/', data),
+      clubCode && eventId
+        ? doApiRequest(`/clubs/${clubCode}/events/${eventId}/`, data)
+        : undefined,
+      clubCode ?? eventId
+        ? doApiRequest(`/clubs/${clubCode}/events/${eventId}/tickets/`, data)
+        : undefined,
+    ])
 
-  const [cart, event, eventTickets] = await Promise.all([
-    cartRes.json(),
-    eventRes?.json(),
-    eventTicketsRes?.json(),
-  ])
+    const [cart, event, eventTickets] = await Promise.all([
+      cartRes.json(),
+      eventRes?.json(),
+      eventTicketsRes?.json(),
+    ])
 
-  return {
-    initialCheckoutStep: checkoutStep,
-    initialCart: cart,
-    event,
-    eventTickets,
+    const allowSelectStep = event !== undefined && eventTickets !== undefined
+    const defaultStep: CheckoutStep = allowSelectStep ? 'select' : 'purchase'
+    // TODO: handle step query being something that isnt a checkout step
+    const checkoutStep = (typeof query?.step === 'string'
+      ? query.step
+      : defaultStep) as CheckoutStep
+
+    return {
+      initialCheckoutStep: checkoutStep,
+      initialCart: cart,
+      event,
+      eventTickets,
+    }
+  } catch (err) {
+    const redirectTo = '/events'
+    if (res) {
+      res.writeHead(307, { Location: redirectTo })
+      // TODO: better behavior for club/event not found
+      res.end()
+    } else {
+      router.replace(redirectTo)
+    }
   }
 }
 
