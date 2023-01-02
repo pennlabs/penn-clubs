@@ -1,6 +1,6 @@
 import { NextPageContext } from 'next'
 import { useRouter } from 'next/router'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Select from 'react-select'
 import styled from 'styled-components'
 
@@ -50,34 +50,44 @@ const TicketOption = styled.li`
 const SelectTicketsStep = ({
   event: { club: clubCode, id: eventId },
   eventTickets: { totals: tickets },
-  serverCart: { getTickets, loading, mutating, setTicketCount },
+  serverCart: { cart, getTicketsOfType, loading, mutating, setTicketCount },
 }: {
   event: ClubEvent
   eventTickets: EventTicketsResponse
   serverCart: ReturnType<typeof useServerCart>
 }) => {
   // callback for each select to use
-  const updateTicketCount = useCallback((type: string, count: number) => {
-    if (mutating || loading) {
-      alert(`this shouldn't happen!!`)
-      return
-    }
-    setTicketCount(clubCode as string, eventId, type, count)
-  }, [])
+  const updateTicketCount = useCallback(
+    (type: string, count: number) => {
+      if (mutating || loading) {
+        // TODO: remove
+        alert(`this shouldn't happen!!`)
+        return
+      }
+      setTicketCount(clubCode as string, eventId, type, count)
+    },
+    [mutating, loading, setTicketCount],
+  )
 
   return (
     <ul>
       {/* TODO: if count === 0 then mark as sold out */}
       {tickets.map(({ type, count }) => {
-        const countOptions: {
-          label: string
-          value: number
-        }[] = []
-        for (let i = 0; i <= Math.min(count, 25); i++) {
-          countOptions.push({ label: i.toString(), value: i })
-        }
-        const currentAmount = getTickets(clubCode as string, eventId, type)
-          .length
+        const countOptions = useMemo(() => {
+          const countOptions: {
+            label: string
+            value: number
+          }[] = []
+          for (let i = 0; i <= Math.min(count, 25); i++) {
+            countOptions.push({ label: i.toString(), value: i })
+          }
+          return countOptions
+        }, [tickets])
+
+        const currentAmount = useMemo(
+          () => getTicketsOfType(clubCode as string, eventId, type).length,
+          [cart],
+        )
 
         // TODO: figure out why react-select hates these types
         return (
@@ -139,17 +149,13 @@ const useServerCart = (initialCart: CartResponse) => {
   const [loading, setLoading] = useState(false)
   const [mutating, setMutating] = useState(false)
 
-  const getTickets = useCallback(
-    (clubCode: string, eventId: number, type: string) => {
-      return cart.tickets.filter(
-        (ticket) =>
-          ticket.type === type &&
-          ticket.event.club === clubCode &&
-          ticket.event.id === eventId,
-      )
-    },
-    [cart.tickets],
-  )
+  const getTicketsOfType = (clubCode: string, eventId: number, type: string) =>
+    cart.tickets.filter(
+      (ticket) =>
+        ticket.type === type &&
+        ticket.event.club === clubCode &&
+        ticket.event.id === eventId,
+    )
 
   // AbortController to manage fetching
   const fetchController = useRef<AbortController>()
@@ -163,6 +169,7 @@ const useServerCart = (initialCart: CartResponse) => {
   const fetchCart = useCallback(async () => {
     // cancel if we're already loading
     fetchController.current?.abort()
+    fetchController.current = new AbortController()
     setLoading(true)
 
     try {
@@ -180,7 +187,7 @@ const useServerCart = (initialCart: CartResponse) => {
       setLoading(false)
       return null
     }
-  }, [])
+  }, [fetchController])
 
   /**
    * Sends an API request attempting to update the ticket count for a certain
@@ -191,14 +198,8 @@ const useServerCart = (initialCart: CartResponse) => {
       // cancel fetch if happening
       fetchController.current?.abort()
 
-      // get all preexisting tickets of the same type
-      const existingTickets = cart.tickets.filter(
-        (ticket) =>
-          ticket.type === type &&
-          ticket.event.club === clubCode &&
-          ticket.event.id === eventId,
-      )
-
+      // get count of all preexisting tickets of the same type
+      const existingTickets = getTicketsOfType(clubCode, eventId, type)
       const ticketsNeeded = count - existingTickets.length
 
       // cancel if no ticket updates needed
@@ -242,12 +243,12 @@ const useServerCart = (initialCart: CartResponse) => {
 
       return newCart
     },
-    [cart],
+    [cart.tickets, fetchCart, fetchController],
   )
 
   return {
     cart: cart,
-    getTickets,
+    getTicketsOfType: getTicketsOfType,
     loading,
     fetchCart,
     mutating,
@@ -256,12 +257,12 @@ const useServerCart = (initialCart: CartResponse) => {
 }
 
 const TicketCheckoutPage = ({
-  checkoutStep: initialCheckoutStep,
+  initialCheckoutStep,
   initialCart,
   event,
   eventTickets,
 }: {
-  checkoutStep: CheckoutStep
+  initialCheckoutStep: CheckoutStep
   initialCart: CartResponse
   event: ClubEvent
   eventTickets: EventTicketsResponse
@@ -338,7 +339,12 @@ TicketCheckoutPage.getInitialProps = async ({
     eventTicketsRes?.json(),
   ])
 
-  return { checkoutStep, initialCart: cart, event, eventTickets }
+  return {
+    initialCheckoutStep: checkoutStep,
+    initialCart: cart,
+    event,
+    eventTickets,
+  }
 }
 
 // TODO: remove
