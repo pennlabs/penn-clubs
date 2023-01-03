@@ -22,6 +22,7 @@ from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
+from django.core.mail import send_mass_mail
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
@@ -46,6 +47,7 @@ from django.utils.text import slugify
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics import parse as ICSParse
+from jinja2 import Template
 from options.models import Option
 from rest_framework import filters, generics, parsers, serializers, status, viewsets
 from rest_framework.decorators import action
@@ -4588,30 +4590,71 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
         """
 
-        app_id = self.get_object().id
-        query = f"""
-                SELECT *
-                FROM clubs_applicationsubmission
-                WHERE application_id = {app_id}
-                AND NOT archived
-                AND created_at in
-                    (SELECT recent_time
+        app = self.get_object()
+
+        # Query for recent submissions with user and committee joined
+        submissions = ApplicationSubmission.objects.filter(
+            application=app,
+            created_at__in=RawSQL(
+                """SELECT recent_time
                     FROM
                     (SELECT user_id,
                             committee_id,
+                            application_id,
                             max(created_at) recent_time
                         FROM clubs_applicationsubmission
-                        WHERE application_id = {app_id}
-                        AND NOT archived
+                        WHERE NOT archived
                         GROUP BY user_id,
-                                committee_id) recent_subs)
-                """
-        submissions = ApplicationSubmission.objects.raw(query)
-        if self.request.data.get("dry_run"):
-            # validate that all variables are ok in submissions
-            return submissions
-        else:
-            pass
+                                committee_id, application_id) recent_subs""",
+                (),
+            ),
+            archived=False,
+        ).select_related("user", "committee")
+        dry_run = self.request.data.get("dry_run")
+        subject = f"Application Update for {app.name}"
+        n, skip = 0, 0
+
+        acceptance_template = Template(app.acceptance_email)
+        rejection_template = Template(app.rejection_email)
+
+        mass_emails = []
+        for submission in submissions:
+            if (
+                submission.notified
+                or submission.status == ApplicationSubmission.PENDING
+                or not (submission.reason and submission.user.email)
+            ):
+                skip += 1
+                continue
+            elif submission.status == ApplicationSubmission.ACCEPTED:
+                template = acceptance_template
+            else:
+                template = rejection_template
+
+            data = {
+                "reason": submission.reason,
+                "name": submission.user.first_name or "",
+                "committee": submission.committee.name,
+            }
+
+            mass_emails.append(
+                (
+                    subject,
+                    template.render(data),
+                    settings.FROM_EMAIL,
+                    [submission.user.email],
+                )
+            )
+            submission.notified = True
+            n += 1
+
+        ApplicationSubmission.objects.bulk_update(submissions, ["notified"])
+
+        if not dry_run:
+            send_mass_mail(tuple(mass_emails), fail_silently=False)
+        return Response(
+            {"detail": f"(Optionally) sent emails to {n} people, skipping {skip}"}
+        )
 
     @action(detail=True, methods=["post"])
     def duplicate(self, *args, **kwargs):
@@ -4631,6 +4674,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         clone.application_start_time = now + datetime.timedelta(days=1)
         clone.application_end_time = now + datetime.timedelta(days=30)
+        clone.result_release_time = now + datetime.timedelta(days=40)
         clone.external_url = (
             f"https://pennclubs.com/club/{clone.club.code}/" f"application/{clone.pk}"
         )

@@ -5,7 +5,6 @@ import uuid
 import warnings
 from urllib.parse import urlparse
 
-import jinja2
 import pytz
 import requests
 import yaml
@@ -21,6 +20,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from ics import Calendar
+from jinja2 import Environment, meta
 from model_clone.models import CloneModel
 from phonenumber_field.modelfields import PhoneNumberField
 from simple_history.models import HistoricalRecords
@@ -1526,7 +1526,7 @@ class ClubApplication(CloneModel):
     """
 
     DEFAULT_COMMITTEE = "General Member"
-    VALID_TOKENS = {"name", "reason"}
+    VALID_TEMPLATE_TOKENS = {"name", "reason"}
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
@@ -1564,10 +1564,10 @@ class ClubApplication(CloneModel):
 
     @classmethod
     def validate_template(cls, template):
-        environment = jinja2.Environment()
-        template = environment.from_string(template)
-        tokens = jinja2.meta.find_undeclared_variables(template)
-        return tokens if all(t in cls.VALID_TOKENS for t in tokens) else []
+        environment = Environment()
+        j2_template = environment.parse(template)
+        tokens = meta.find_undeclared_variables(j2_template)
+        return all(t in cls.VALID_TEMPLATE_TOKENS for t in tokens)
 
 
 class ApplicationCommittee(models.Model):
@@ -1666,6 +1666,7 @@ class ApplicationSubmission(models.Model):
         null=True,
     )
     archived = models.BooleanField(default=False)
+    notified = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
