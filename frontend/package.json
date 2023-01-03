@@ -31,7 +31,7 @@
     "http-proxy-middleware": "^1.0.6",
     "isomorphic-unfetch": "^3.0.0",
     "lru-cache": "^6.0.0",
-    "moment": "^2.27.0",
+    "moment": "^2.29.4",
     "moment-timezone": "^0.5.31",
     "next": "^10.0.6",
     "react": "^17.0.1",
