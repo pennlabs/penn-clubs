@@ -23,7 +23,7 @@
     "deep-equal": "^2.0.3",
     "draft-js": "^0.11.0",
     "draftjs-to-html": "^0.9.1",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "find-cache-dir": "^3.3.1",
     "formik": "^2.2.1",
     "fuse.js": "^6.4.3",
