@@ -2641,6 +2641,15 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         application_start_time = data["application_start_time"]
         application_end_time = data["application_end_time"]
         result_release_time = data["result_release_time"]
+        acceptance_template = data["acceptance_email"]
+        rejection_template = data["rejection_email"]
+
+        if not ClubApplication.validate_template(
+            acceptance_template
+        ) or not ClubApplication.validate_template(rejection_template):
+            raise serializers.ValidationError(
+                "Your application email templates contain invalid variables!"
+            )
 
         if application_start_time > application_end_time:
             raise serializers.ValidationError(
@@ -2691,6 +2700,8 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "season",
             "active",
             "name",
+            "acceptance_email",
+            "rejection_email",
             "application_start_time",
             "application_end_time",
             "result_release_time",

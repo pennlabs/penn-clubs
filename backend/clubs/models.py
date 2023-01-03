@@ -20,6 +20,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from ics import Calendar
+from jinja2 import Environment, meta
 from model_clone.models import CloneModel
 from phonenumber_field.modelfields import PhoneNumberField
 from simple_history.models import HistoricalRecords
@@ -1525,6 +1526,7 @@ class ClubApplication(CloneModel):
     """
 
     DEFAULT_COMMITTEE = "General Member"
+    VALID_TEMPLATE_TOKENS = {"name", "reason", "committee"}
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
@@ -1535,6 +1537,8 @@ class ClubApplication(CloneModel):
     external_url = models.URLField(blank=True)
     is_active = models.BooleanField(default=False, blank=True)
     is_wharton_council = models.BooleanField(default=False, blank=True)
+    acceptance_email = models.TextField(blank=True)
+    rejection_email = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1557,6 +1561,13 @@ class ClubApplication(CloneModel):
         semester = "Fall" if 8 <= self.application_start_time.month <= 11 else "Spring"
         year = str(self.application_start_time.year)
         return f"{semester} {year}"
+
+    @classmethod
+    def validate_template(cls, template):
+        environment = Environment()
+        j2_template = environment.parse(template)
+        tokens = meta.find_undeclared_variables(j2_template)
+        return all(t in cls.VALID_TEMPLATE_TOKENS for t in tokens)
 
 
 class ApplicationCommittee(models.Model):
@@ -1641,6 +1652,7 @@ class ApplicationSubmission(models.Model):
     )
     status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)
+    reason = models.TextField(blank=True)
     application = models.ForeignKey(
         ClubApplication,
         related_name="submissions",
@@ -1654,6 +1666,7 @@ class ApplicationSubmission(models.Model):
         null=True,
     )
     archived = models.BooleanField(default=False)
+    notified = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

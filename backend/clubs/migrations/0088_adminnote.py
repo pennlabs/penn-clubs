@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("clubs", "0089_alter_applicationsubmission_status"),
+        ("clubs", "0087_questionanswer_users_liked"),
     ]
 
     operations = [
