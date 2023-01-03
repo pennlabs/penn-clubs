@@ -1526,7 +1526,7 @@ class ClubApplication(CloneModel):
     """
 
     DEFAULT_COMMITTEE = "General Member"
-    VALID_TEMPLATE_TOKENS = {"name", "reason"}
+    VALID_TEMPLATE_TOKENS = {"name", "reason", "committee"}
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
