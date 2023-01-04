@@ -2477,6 +2477,8 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
             "status",
             "responses",
             "club",
+            "notified",
+            "reason",
             "name",
             "application_link",
             "first_name",

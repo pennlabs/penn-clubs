@@ -1,4 +1,4 @@
-import { Form, Formik } from 'formik'
+import { Field, Form, Formik } from 'formik'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import Select from 'react-select'
@@ -22,6 +22,7 @@ import { doApiRequest, getApiUrl } from '~/utils'
 import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
+import { CheckboxField, SelectField, TextField } from '../FormComponents'
 
 const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   margin-bottom: 20px;
@@ -101,6 +102,7 @@ type Application = {
 const ModalContainer = styled.div`
   text-align: left;
   padding: 20px;
+  height: 100%;
 `
 
 const SubmissionModal = (props: {
@@ -170,6 +172,147 @@ const SubmissionModal = (props: {
     </ModalContainer>
   )
 }
+const NotificationModal = (props: {
+  submissions: Array<ApplicationSubmission>
+  club: string
+  application: Application | null
+}): ReactElement => {
+  const { submissions, club, application } = props
+  const initialValues = { dry_run: true }
+  const [submitMessage, setSubmitMessage] = useState<
+    string | ReactElement | null
+  >(null)
+  const options = [
+    { value: 'acceptance', label: 'Acceptance' },
+    { value: 'rejection', label: 'Rejection' },
+  ]
+  return (
+    <ModalContainer>
+      <Formik
+        initialValues={initialValues}
+        onSubmit={(data) => {
+          doApiRequest(
+            `/clubs/${club}/applications/${
+              application!.id
+            }/send_emails/?format=json`,
+            {
+              method: 'POST',
+              body: data,
+            },
+          ).then((response) => {
+            response.json().then((data) => {
+              setSubmitMessage(data.detail)
+            })
+          })
+        }}
+      >
+        {(props) => (
+          <Form>
+            <StyledHeader style={{ marginBottom: '2px' }}>
+              Send application update
+            </StyledHeader>
+            <Text>Send acceptance or rejection emails.</Text>
+            <Field
+              name="email_type"
+              required={true}
+              as={SelectField}
+              choices={options}
+              label="Template"
+              helpText="Choose from the following templates"
+            />
+
+            <Field
+              name="dry_run"
+              as={CheckboxField}
+              label="Dry Run"
+              helpText="If selected, will return the number of emails the script would have sent out"
+            />
+            <button type="submit" className="button">
+              Submit
+            </button>
+
+            {submitMessage !== null && (
+              <div className="mt-2 mb-2 notification is-info is-light">
+                {submitMessage}
+              </div>
+            )}
+          </Form>
+        )}
+      </Formik>
+    </ModalContainer>
+  )
+}
+
+const ReasonModal = (props: {
+  submissions: Array<ApplicationSubmission> | null
+  club: string
+  application: Application | null
+}): ReactElement => {
+  const { submissions, club, application } = props
+  const [submitMessage, setSubmitMessage] = useState<
+    string | ReactElement | null
+  >(null)
+  const initialValues = {}
+  return (
+    <ModalContainer>
+      <Formik
+        initialValues={initialValues}
+        onSubmit={(data) => {
+          const data_: any[] = []
+          for (const [key, value] of Object.entries(data)) {
+            data_.push({ id: key, reason: value })
+          }
+          doApiRequest(
+            `/clubs/${club}/applications/${application?.id}/submissions/reason/?format=json`,
+            {
+              method: 'POST',
+              body: { submissions: data_ },
+            },
+          ).then((response) => {
+            response.json().then((data) => {
+              setSubmitMessage(data.detail)
+            })
+          })
+        }}
+      >
+        {(props) => (
+          <Form>
+            <StyledHeader style={{ marginBottom: '2px' }}>
+              Update reasons for selected{' '}
+              {submissions != null && submissions[0] != null
+                ? submissions[0].status
+                : null}{' '}
+              applicants
+            </StyledHeader>
+            {submissions != null
+              ? submissions.map((data) => {
+                  return (
+                    data != null && (
+                      <div>
+                        <Field
+                          name={data.pk}
+                          label={`Reason for ${data.first_name} ${data.last_name} (committee ${data.committee})`}
+                          as={TextField}
+                        />
+                      </div>
+                    )
+                  )
+                })
+              : null}
+            <button type="submit" className="button">
+              Submit
+            </button>
+            {submitMessage !== null && (
+              <div className="mt-2 mb-2 notification is-info is-light">
+                {submitMessage}
+              </div>
+            )}
+          </Form>
+        )}
+      </Formik>
+    </ModalContainer>
+  )
+}
 
 export default function ApplicationsPage({
   club,
@@ -185,12 +328,17 @@ export default function ApplicationsPage({
     [key: number]: Array<ApplicationSubmission>
   }>([])
   const [showModal, setShowModal] = useState<boolean>(false)
+  const [showNotifModal, setShowNotifModal] = useState<boolean>(false)
+  const [showReasonModal, setShowReasonModal] = useState<boolean>(false)
   const [
     currentSubmission,
     setCurrentSubmission,
   ] = useState<ApplicationSubmission | null>(null)
   const [pageIndex, setPageIndex] = useState<number>(0)
   const [statusToggle, setStatusToggle] = useState<boolean>(false)
+  const [categoriesSelectAll, setCategoriesSelectAll] = useState<Array<string>>(
+    [],
+  )
 
   useEffect(() => {
     doApiRequest(`/clubs/${club.code}/applications/?format=json`, {
@@ -345,7 +493,6 @@ export default function ApplicationsPage({
                           }
                         })
                         setSubmissions(obj)
-                        setSelectedSubmissions([])
                       }
                       doApiRequest(
                         `/clubs/${club.code}/applications/${currentApplication.id}/submissions/status/?format=json`,
@@ -357,27 +504,56 @@ export default function ApplicationsPage({
                           },
                         },
                       )
+
+                      setShowReasonModal(true)
                     }}
                   >
                     <Icon name="check" /> Update Status
                   </button>
                   <button
+                    className="button is-link mr-3"
+                    onClick={(event) => {
+                      setShowNotifModal(true)
+                    }}
+                  >
+                    Send Updates
+                  </button>
+                  <button
                     className="button is-primary"
                     onClick={() => {
+                      const statusLabel = APPLICATION_STATUS.find(
+                        (x) => x?.value === status,
+                      )?.label
+                      const deselecting =
+                        statusLabel != null &&
+                        categoriesSelectAll.includes(statusLabel)
+
+                      if (deselecting) {
+                        const newCategoriesSelectAll = categoriesSelectAll.filter(
+                          (e) => e !== statusLabel,
+                        )
+                        setCategoriesSelectAll(newCategoriesSelectAll)
+                      } else {
+                        const newCategoriesSelectAll = categoriesSelectAll
+                        statusLabel != null &&
+                          newCategoriesSelectAll.push(statusLabel)
+                        setCategoriesSelectAll(newCategoriesSelectAll)
+                      }
                       const newSelectedSubmissions: number[] = []
                       submissions[currentApplication.id].forEach(
                         (submission) => {
                           if (selectedSubmissions.includes(submission.pk)) {
                             if (
-                              !statusToggle ||
-                              submission.status !== 'Pending'
+                              deselecting &&
+                              submission.status !== statusLabel
                             ) {
-                              // do not add pending values when we are deselecting
+                              newSelectedSubmissions.push(submission.pk)
+                            } else if (!deselecting) {
                               newSelectedSubmissions.push(submission.pk)
                             }
                           } else if (
-                            !statusToggle &&
-                            submission.status === 'Pending'
+                            !deselecting &&
+                            submission.status === statusLabel
                           ) {
                             // add pending values when we are selecting
                             newSelectedSubmissions.push(submission.pk)
@@ -388,8 +564,13 @@ export default function ApplicationsPage({
                       setSelectedSubmissions(newSelectedSubmissions)
                     }}
                   >
-                    {statusToggle ? 'Des' : 'S'}
-                    elect All Pending
+                    {categoriesSelectAll.includes(
+                      APPLICATION_STATUS.find((x) => x?.value === status)
+                        ?.label || '',
+                    )
+                      ? 'Deselect All '
+                      : 'Select All '}
+                    {APPLICATION_STATUS.find((x) => x?.value === status)?.label}
                   </button>
                 </div>
                 <small>
@@ -478,6 +659,44 @@ export default function ApplicationsPage({
             club={club.code}
             application={currentApplication}
             submission={currentSubmission}
+          />
+        </Modal>
+      )}
+      {showNotifModal && (
+        <Modal
+          show={showNotifModal}
+          closeModal={() => setShowNotifModal(false)}
+          width="80%"
+          marginBottom={false}
+        >
+          <NotificationModal
+            club={club.code}
+            application={currentApplication}
+            submissions={selectedSubmissions.map(
+              (i) => submissions[currentApplication!.id][i],
+            )}
+          />
+        </Modal>
+      )}
+      {showReasonModal && (
+        <Modal
+          show={showReasonModal}
+          closeModal={() => {
+            setShowReasonModal(false)
+            setSelectedSubmissions([])
+          }}
+          width="80%"
+          marginBottom={false}
+        >
+          <ReasonModal
+            club={club.code}
+            application={currentApplication}
+            submissions={selectedSubmissions.map(
+              (i) =>
+                submissions[currentApplication!.id].find(
+                  (sub) => sub.pk === i,
+                )!,
+            )}
           />
         </Modal>
       )}
