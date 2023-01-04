@@ -4578,7 +4578,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                                 type: boolean
                             email_type:
                                 type: object
-                                properties
+                                properties:
                                     id:
                                         type: string
                                     name:

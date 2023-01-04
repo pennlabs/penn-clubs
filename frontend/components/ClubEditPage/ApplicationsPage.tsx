@@ -173,9 +173,9 @@ const SubmissionModal = (props: {
   )
 }
 const NotificationModal = (props: {
-  submissions: Array<ApplicationSubmission> | null
+  submissions: Array<ApplicationSubmission>
   club: string
-  application: Application | null
+  application: Application
 }): ReactElement => {
   const { submissions, club, application } = props
   const initialValues = { dry_run: true }
@@ -261,7 +261,7 @@ const ReasonModal = (props: {
             data_.push({ id: key, reason: value })
           }
           doApiRequest(
-            `/clubs/${club}/applications/${application.id}/submissions/reason/?format=json`,
+            `/clubs/${club}/applications/${application?.id}/submissions/reason/?format=json`,
             {
               method: 'POST',
               body: { submissions: data_ },
@@ -277,7 +277,10 @@ const ReasonModal = (props: {
           <Form>
             <StyledHeader style={{ marginBottom: '2px' }}>
               Update reasons for selected{' '}
-              {submissions[0] != null ? submissions[0].status : null} applicants
+              {submissions != null && submissions[0] != null
+                ? submissions[0].status
+                : null}{' '}
+              applicants
             </StyledHeader>
             {submissions != null
               ? submissions.map((data) => {
@@ -518,11 +521,11 @@ export default function ApplicationsPage({
                     className="button is-primary"
                     onClick={() => {
                       const statusLabel = APPLICATION_STATUS.find(
-                        (x) => x.value === status,
-                      ).label
-                      const deselecting = categoriesSelectAll.includes(
-                        statusLabel,
-                      )
+                        (x) => x?.value === status,
+                      )?.label
+                      const deselecting =
+                        statusLabel != null &&
+                        categoriesSelectAll.includes(statusLabel)
 
                       if (deselecting) {
                         const newCategoriesSelectAll = categoriesSelectAll.filter(
@@ -531,7 +534,8 @@ export default function ApplicationsPage({
                         setCategoriesSelectAll(newCategoriesSelectAll)
                       } else {
                         const newCategoriesSelectAll = categoriesSelectAll
-                        newCategoriesSelectAll.push(statusLabel)
+                        statusLabel != null &&
+                          newCategoriesSelectAll.push(statusLabel)
                         setCategoriesSelectAll(newCategoriesSelectAll)
                       }
                       const newSelectedSubmissions: number[] = []
@@ -560,11 +564,12 @@ export default function ApplicationsPage({
                     }}
                   >
                     {categoriesSelectAll.includes(
-                      APPLICATION_STATUS.find((x) => x.value === status).label,
+                      APPLICATION_STATUS.find((x) => x?.value === status)
+                        ?.label,
                     )
                       ? 'Deselect All '
                       : 'Select All '}
-                    {APPLICATION_STATUS.find((x) => x.value === status).label}
+                    {APPLICATION_STATUS.find((x) => x?.value === status)?.label}
                   </button>
                 </div>
                 <small>

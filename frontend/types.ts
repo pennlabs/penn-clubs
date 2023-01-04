@@ -366,6 +366,8 @@ export type ApplicationSubmission = {
   application: number
   committee: string | null
   created_at: string
+  first_name: string
+  last_name: string
   status: string
   responses: Array<ApplicationResponse>
   club: string
