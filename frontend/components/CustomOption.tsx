@@ -27,7 +27,7 @@ const CustomOption = (props: Props): ReactElement => {
   >(null)
 
   const helperText = String.raw`
-  Hi {{ name }}, you have been invited to join our club on {{ date }}.
+  Hi {{ name }}, you have been invited to join our club's {{ committee }} committee.
 
   We were very impressed by your initiative and admitted you into the club because of it. 
             
@@ -50,7 +50,6 @@ const CustomOption = (props: Props): ReactElement => {
         closeModal={() => setShowModal(false)}
         marginBottom={false}
         width="80%"
-        height="40%"
       >
         <ModalContent>
           <h1>Sample Email</h1>

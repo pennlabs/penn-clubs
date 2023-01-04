@@ -175,7 +175,7 @@ const SubmissionModal = (props: {
 const NotificationModal = (props: {
   submissions: Array<ApplicationSubmission>
   club: string
-  application: Application
+  application: Application | null
 }): ReactElement => {
   const { submissions, club, application } = props
   const initialValues = { dry_run: true }
@@ -192,7 +192,9 @@ const NotificationModal = (props: {
         initialValues={initialValues}
         onSubmit={(data) => {
           doApiRequest(
-            `/clubs/${club}/applications/${application.id}/send_emails/?format=json`,
+            `/clubs/${club}/applications/${
+              application!.id
+            }/send_emails/?format=json`,
             {
               method: 'POST',
               body: data,
@@ -256,7 +258,7 @@ const ReasonModal = (props: {
       <Formik
         initialValues={initialValues}
         onSubmit={(data) => {
-          const data_ = []
+          const data_: any[] = []
           for (const [key, value] of Object.entries(data)) {
             data_.push({ id: key, reason: value })
           }
@@ -491,7 +493,6 @@ export default function ApplicationsPage({
                           }
                         })
                         setSubmissions(obj)
-                        // setSelectedSubmissions([]) -- this will instead be set after inputting reason
                       }
                       doApiRequest(
                         `/clubs/${club.code}/applications/${currentApplication.id}/submissions/status/?format=json`,
@@ -565,7 +566,7 @@ export default function ApplicationsPage({
                   >
                     {categoriesSelectAll.includes(
                       APPLICATION_STATUS.find((x) => x?.value === status)
-                        ?.label,
+                        ?.label || '',
                     )
                       ? 'Deselect All '
                       : 'Select All '}
@@ -672,7 +673,7 @@ export default function ApplicationsPage({
             club={club.code}
             application={currentApplication}
             submissions={selectedSubmissions.map(
-              (i) => submissions[currentApplication.id][i],
+              (i) => submissions[currentApplication!.id][i],
             )}
           />
         </Modal>
@@ -690,8 +691,11 @@ export default function ApplicationsPage({
           <ReasonModal
             club={club.code}
             application={currentApplication}
-            submissions={selectedSubmissions.map((i) =>
-              submissions[currentApplication.id].find((sub) => sub.pk === i),
+            submissions={selectedSubmissions.map(
+              (i) =>
+                submissions[currentApplication!.id].find(
+                  (sub) => sub.pk === i,
+                )!,
             )}
           />
         </Modal>
