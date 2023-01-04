@@ -4576,6 +4576,13 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                         properties:
                             dry_run:
                                 type: boolean
+                            email_type:
+                                type: object
+                                properties
+                                    id:
+                                        type: string
+                                    name:
+                                        type: string
         responses:
             "200":
                 content:
@@ -4610,7 +4617,10 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             ),
             archived=False,
         ).select_related("user", "committee")
+
         dry_run = self.request.data.get("dry_run")
+        email_type = self.request.data.get("email_type")["id"]
+
         subject = f"Application Update for {app.name}"
         n, skip = 0, 0
 
@@ -4626,15 +4636,20 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             ):
                 skip += 1
                 continue
-            elif submission.status == ApplicationSubmission.ACCEPTED:
+            elif (
+                submission.status == ApplicationSubmission.ACCEPTED
+                and email_type == "acceptance"
+            ):
                 template = acceptance_template
-            else:
+            elif email_type == "rejection":
                 template = rejection_template
+            else:
+                continue
 
             data = {
                 "reason": submission.reason,
                 "name": submission.user.first_name or "",
-                "committee": submission.committee.name,
+                "committee": submission.committee.name if submission.committee else "",
             }
 
             mass_emails.append(
@@ -4645,15 +4660,20 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                     [submission.user.email],
                 )
             )
-            submission.notified = True
+            if not dry_run:
+                submission.notified = True
             n += 1
 
-        ApplicationSubmission.objects.bulk_update(submissions, ["notified"])
-
         if not dry_run:
+            ApplicationSubmission.objects.bulk_update(submissions, ["notified"])
             send_mass_mail(tuple(mass_emails), fail_silently=False)
+
+        dry_run_msg = "Would have sent" if dry_run else "Sent"
         return Response(
-            {"detail": f"(Optionally) sent emails to {n} people, skipping {skip}"}
+            {
+                "detail": f"{dry_run_msg} emails to {n} people, "
+                "skipping {skip} due to one of (already notified, no reason, no email)"
+            }
         )
 
     @action(detail=True, methods=["post"])

@@ -22,7 +22,7 @@ import { doApiRequest, getApiUrl } from '~/utils'
 import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
-import { CheckboxField, TextField } from '../FormComponents'
+import { CheckboxField, SelectField, TextField } from '../FormComponents'
 
 const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   margin-bottom: 20px;
@@ -177,8 +177,11 @@ const NotificationModal = (props: {
   club: string
   application: Application | null
 }): ReactElement => {
-  const { submissions } = props
+  const { submissions, club, application } = props
   const initialValues = { dry_run: true }
+  const [submitMessage, setSubmitMessage] = useState<
+    string | ReactElement | null
+  >(null)
   const options = [
     { value: 'acceptance', label: 'Acceptance' },
     { value: 'rejection', label: 'Rejection' },
@@ -187,30 +190,50 @@ const NotificationModal = (props: {
     <ModalContainer>
       <Formik
         initialValues={initialValues}
-        onSubmit={() => {
-          // pass
+        onSubmit={(data) => {
+          doApiRequest(
+            `/clubs/${club}/applications/${application.id}/send_emails/?format=json`,
+            {
+              method: 'POST',
+              body: data,
+            },
+          ).then((response) => {
+            response.json().then((data) => {
+              setSubmitMessage(data.detail)
+            })
+          })
         }}
       >
         {(props) => (
           <Form>
             <StyledHeader style={{ marginBottom: '2px' }}>
-              Send application update (acceptance, rejection, etc.)
+              Send application update
             </StyledHeader>
-            <Text>
-              Sending update to {submissions === null ? 0 : submissions.length}{' '}
-              applicants.
-            </Text>
-            <div className="field mb-">
-              <label className="label">
-                Choose from the following templates.
-              </label>
-              <Select options={options} />
-            </div>
+            <Text>Send acceptance or rejection emails.</Text>
+            <Field
+              name="email_type"
+              required={true}
+              as={SelectField}
+              choices={options}
+              label="Template"
+              helpText="Choose from the following templates"
+            />
 
-            <Field name="dry_run" as={CheckboxField} label="Dry Run" />
+            <Field
+              name="dry_run"
+              as={CheckboxField}
+              label="Dry Run"
+              helpText="If selected, will return the number of emails the script would have sent out"
+            />
             <button type="submit" className="button">
               Submit
             </button>
+
+            {submitMessage !== null && (
+              <div className="mt-2 mb-2 notification is-info is-light">
+                {submitMessage}
+              </div>
+            )}
           </Form>
         )}
       </Formik>
@@ -223,14 +246,31 @@ const ReasonModal = (props: {
   club: string
   application: Application | null
 }): ReactElement => {
-  const { submissions } = props
+  const { submissions, club, application } = props
+  const [submitMessage, setSubmitMessage] = useState<
+    string | ReactElement | null
+  >(null)
   const initialValues = {}
   return (
     <ModalContainer>
       <Formik
         initialValues={initialValues}
-        onSubmit={() => {
-          // pass
+        onSubmit={(data) => {
+          const data_ = []
+          for (const [key, value] of Object.entries(data)) {
+            data_.push({ id: key, reason: value })
+          }
+          doApiRequest(
+            `/clubs/${club}/applications/${application.id}/submissions/reason/?format=json`,
+            {
+              method: 'POST',
+              body: { submissions: data_ },
+            },
+          ).then((response) => {
+            response.json().then((data) => {
+              setSubmitMessage(data.detail)
+            })
+          })
         }}
       >
         {(props) => (
@@ -246,10 +286,7 @@ const ReasonModal = (props: {
                       <div>
                         <Field
                           name={data.pk}
-                          label={`Reason for ${data.first_name} ${data.last_name}`}
-                          onInput={() => {
-                            // pass
-                          }}
+                          label={`Reason for ${data.first_name} ${data.last_name} (committee ${data.committee})`}
                           as={TextField}
                         />
                       </div>
@@ -260,6 +297,11 @@ const ReasonModal = (props: {
             <button type="submit" className="button">
               Submit
             </button>
+            {submitMessage !== null && (
+              <div className="mt-2 mb-2 notification is-info is-light">
+                {submitMessage}
+              </div>
+            )}
           </Form>
         )}
       </Formik>
