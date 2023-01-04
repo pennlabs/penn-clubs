@@ -40,6 +40,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"unique_together": {("person", "club")},},
+            options={"unique_together": {("person", "club")}},
         ),
     ]

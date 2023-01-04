@@ -28,18 +28,32 @@ In production, you will need to set the following environment variables:
 
 To run the server, `cd` to the folder where you cloned `penn-clubs`. Then run:
 - `cd backend`
-- `$ pipenv install` to install Python dependencies. This may take a few minutes.
+
+Setting up `psycopg2` (this is necessary if you want to be able to modify
+dependencies, you can revisit later if not)
+
+- Mac
+  - `$ brew install postgresql`
+  - `$ brew install openssl`
+  - `$ brew unlink openssl && brew link openssl --force`
+  - `$ echo 'export PATH="/usr/local/opt/openssl@3/bin:$PATH"' >> ~/.zshrc`
+  - `$ export LDFLAGS="-L/usr/local/opt/openssl@3/lib"`
+  - `$ export CPPFLAGS="-I/usr/local/opt/openssl@3/include"`
+- Windows
+  - `$ apt-get install gcc python3-dev libpq-dev`
+
+Now, you can run 
+
+- `$ pipenv install` to install Python dependencies. This may take a few
+  minutes. Optionally include the `--dev` argument if you are installing locally
+  for development. If you skipped installing `psycopg2` earlier, you might see
+  an error with locking -- this is expected!
 - `$ pipenv shell`
-- `$ ./manage.py migrate`
-- `$ ./manage.py runserver`
-
-When installing locally for development, run:
-
-- `cd backend`
-- `pipenv install --dev` to install dependencies
-- `./manage.py migrate` to create database
-- `./manage.py populate` to add test data to database
-- `./manage.py runserver` to run server
+- `$ pre-commit install` 
+- `$ ./manage.py migrate` OR `$ python3 manage.py migrate`
+- `$ ./manage.py populate` OR `$ python3 manage.py populate` (in development,
+  to populate the database with dummy data)
+- `$ ./manage.py runserver` OR `$ python3 manage.py runserver`
 
 ### Frontend
 

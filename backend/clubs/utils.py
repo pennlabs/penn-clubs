@@ -91,7 +91,7 @@ def html_to_text(html):
 
 
 # a list of allowed domains for embedding iframes
-IFRAME_EMBED_WHITELIST = {
+IFRAME_EMBED_ALLOWLIST = {
     "calendar.google.com",
     "docs.google.com",
     "drive.google.com",
@@ -119,7 +119,7 @@ def allow_iframe(tag, name, value):
         domain = parsed.netloc
         if domain.startswith("www."):
             domain = domain[4:]
-        if domain in IFRAME_EMBED_WHITELIST:
+        if domain in IFRAME_EMBED_ALLOWLIST:
             return True
     return False
 

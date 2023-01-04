@@ -11,12 +11,19 @@ from django.utils.safestring import mark_safe
 from clubs.management.commands.merge_duplicates import merge_clubs, merge_tags
 from clubs.management.commands.remind import send_reminder_to_club
 from clubs.models import (
+    AdminNote,
     Advisor,
+    ApplicationCommittee,
+    ApplicationMultipleChoice,
+    ApplicationQuestion,
+    ApplicationQuestionResponse,
+    ApplicationSubmission,
     Asset,
     Badge,
     Club,
     ClubApplication,
     ClubFair,
+    ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
     Event,
@@ -36,6 +43,10 @@ from clubs.models import (
     StudentType,
     Subscribe,
     Tag,
+    TargetMajor,
+    TargetSchool,
+    TargetStudentType,
+    TargetYear,
     Testimonial,
     Year,
     ZoomMeetingVisit,
@@ -394,6 +405,11 @@ class ZoomMeetingVisitAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Asset)
+admin.site.register(ApplicationCommittee)
+admin.site.register(ApplicationMultipleChoice)
+admin.site.register(ApplicationQuestion)
+admin.site.register(ApplicationQuestionResponse)
+admin.site.register(ApplicationSubmission)
 admin.site.register(Advisor, AdvisorAdmin)
 admin.site.register(Club, ClubAdmin)
 admin.site.register(ClubFair, ClubFairAdmin)
@@ -415,9 +431,15 @@ admin.site.register(QuestionAnswer, QuestionAnswerAdmin)
 admin.site.register(RecurringEvent)
 admin.site.register(Report, ReportAdmin)
 admin.site.register(Tag, TagAdmin)
+admin.site.register(TargetMajor)
+admin.site.register(TargetSchool)
+admin.site.register(TargetYear)
+admin.site.register(TargetStudentType)
 admin.site.register(Testimonial)
 admin.site.register(StudentType)
 admin.site.register(Note)
+admin.site.register(ClubFairBooth)
 admin.site.register(NoteTag)
 admin.site.register(Year, YearAdmin)
 admin.site.register(ZoomMeetingVisit, ZoomMeetingVisitAdmin)
+admin.site.register(AdminNote)

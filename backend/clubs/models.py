@@ -14,11 +14,14 @@ from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.db import models, transaction
+from django.db.models import Sum
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from ics import Calendar
+from jinja2 import Environment, meta
+from model_clone.models import CloneModel
 from phonenumber_field.modelfields import PhoneNumberField
 from simple_history.models import HistoricalRecords
 from urlextract import URLExtract
@@ -44,7 +47,7 @@ def get_mail_type_annotation(name):
     return None
 
 
-def send_mail_helper(name, subject, emails, context):
+def send_mail_helper(name, subject, emails, context, attachment=None):
     """
     A helper to send out an email given the template name, subject, to emails,
     and context. Returns true if an email was sent out, or false if no emails
@@ -94,6 +97,15 @@ def send_mail_helper(name, subject, emails, context):
     msg = EmailMultiAlternatives(
         subject, text_content, settings.FROM_EMAIL, list(set(emails))
     )
+
+    if attachment is not None and "filename" in attachment and "path" in attachment:
+        with open(attachment["path"], "rb") as file:
+            msg.attach(
+                attachment["filename"],
+                file.read(),
+                "application/vnd.openxmlformats-officedocument."
+                + "wordprocessingml.document",
+            )
 
     msg.attach_alternative(html_content, "text/html")
     msg.send(fail_silently=False)
@@ -279,7 +291,7 @@ class Club(models.Model):
         choices=APPLICATION_CHOICES, default=APPLICATION
     )
     accepting_members = models.BooleanField(default=False)
-    student_types = models.ManyToManyField("StudentType", blank=True)
+    student_types = models.ManyToManyField("StudentType", through="TargetStudentType")
     recruiting_cycle = models.IntegerField(
         choices=RECRUITING_CYCLES, default=RECRUITING_UNKNOWN
     )
@@ -300,9 +312,9 @@ class Club(models.Model):
     )
     badges = models.ManyToManyField("Badge", blank=True)
 
-    target_years = models.ManyToManyField("Year", blank=True)
-    target_schools = models.ManyToManyField("School", blank=True)
-    target_majors = models.ManyToManyField("Major", blank=True)
+    target_years = models.ManyToManyField("Year", through="TargetYear")
+    target_schools = models.ManyToManyField("School", through="TargetSchool")
+    target_majors = models.ManyToManyField("Major", through="TargetMajor")
 
     # Hub@Penn fields
     available_virtually = models.BooleanField(default=False)
@@ -664,6 +676,46 @@ class Club(models.Model):
         ]
 
 
+class TargetStudentType(models.Model):
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    target_student_types = models.ForeignKey(
+        "StudentType", blank=True, on_delete=models.CASCADE
+    )
+    program = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return "{}: {}({})".format(
+            self.club.name, self.target_student_types, self.program
+        )
+
+
+class TargetYear(models.Model):
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    target_years = models.ForeignKey("Year", blank=True, on_delete=models.CASCADE)
+    program = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return "{}: {}({})".format(self.club.name, self.target_years, self.program)
+
+
+class TargetSchool(models.Model):
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    target_schools = models.ForeignKey("School", blank=True, on_delete=models.CASCADE)
+    program = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return "{}: {}({})".format(self.club.name, self.target_schools, self.program)
+
+
+class TargetMajor(models.Model):
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    target_majors = models.ForeignKey("Major", blank=True, on_delete=models.CASCADE)
+    program = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return "{}: {}({})".format(self.club.name, self.target_majors, self.program)
+
+
 class QuestionAnswer(models.Model):
     """
     Represents a question asked by a prospective member to a club
@@ -686,6 +738,8 @@ class QuestionAnswer(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    users_liked = models.ManyToManyField(get_user_model(), related_name="likes")
 
     def __str__(self):
         return "{}: {}".format(self.club.name, self.question)
@@ -1064,7 +1118,7 @@ class Advisor(models.Model):
 class Note(models.Model):
     """
     Represents a note created by a parent about a
-    constituient club
+    constituent club
     """
 
     creator = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -1112,6 +1166,22 @@ class Note(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class AdminNote(models.Model):
+    """
+    Represents a note created by school admin about a
+    club
+    """
+
+    creator = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default="Note")
+    content = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "{} ({})".format(self.club.name, self.creator.username)
+
+
 class StudentType(models.Model):
     """
     Represents a student type that the club is intended for.
@@ -1130,6 +1200,24 @@ class NoteTag(models.Model):
     """
 
     name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class ClubFairBooth(models.Model):
+    """
+    Represents a booth hosted at an in-person club fair
+    """
+
+    name = models.CharField(max_length=255)
+    subtitle = models.CharField(max_length=255, blank=True, null=True)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    image_url = models.URLField(blank=True, null=True)
+    lat = models.FloatField()
+    long = models.FloatField()
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
 
     def __str__(self):
         return self.name
@@ -1432,20 +1520,33 @@ class Profile(models.Model):
         return self.user.username
 
 
-class ClubApplication(models.Model):
+class ClubApplication(CloneModel):
     """
-    Represents an application to a club.
+    Represents custom club application.
     """
 
+    DEFAULT_COMMITTEE = "General Member"
+    VALID_TEMPLATE_TOKENS = {"name", "reason", "committee"}
+
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    description = models.TextField(blank=True)
     application_start_time = models.DateTimeField()
     application_end_time = models.DateTimeField()
     name = models.TextField(blank=True)
     result_release_time = models.DateTimeField()
-    external_url = models.URLField()
+    external_url = models.URLField(blank=True)
+    is_active = models.BooleanField(default=False, blank=True)
+    is_wharton_council = models.BooleanField(default=False, blank=True)
+    acceptance_email = models.TextField(blank=True)
+    rejection_email = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    _clone_m2o_or_o2m_fields = [
+        "committees",
+        "questions",
+    ]
 
     def __str__(self):
         return "{} created {}: start {}, end {}".format(
@@ -1454,6 +1555,157 @@ class ClubApplication(models.Model):
             self.application_start_time,
             self.application_end_time,
         )
+
+    @property
+    def season(self):
+        semester = "Fall" if 8 <= self.application_start_time.month <= 11 else "Spring"
+        year = str(self.application_start_time.year)
+        return f"{semester} {year}"
+
+    @classmethod
+    def validate_template(cls, template):
+        environment = Environment()
+        j2_template = environment.parse(template)
+        tokens = meta.find_undeclared_variables(j2_template)
+        return all(t in cls.VALID_TEMPLATE_TOKENS for t in tokens)
+
+
+class ApplicationCommittee(models.Model):
+    """
+    Represents a committee for a particular club application. Each application
+    may have multiple committees to which students can apply.
+    """
+
+    name = models.TextField(blank=True)
+    application = models.ForeignKey(
+        ClubApplication, related_name="committees", on_delete=models.CASCADE,
+    )
+
+    def get_word_limit(self):
+        total_limit = self.applicationquestion_set.aggregate(
+            total_limit=Sum("word_limit")
+        )
+        return total_limit["total_limit"] or 0
+
+    def __str__(self):
+        return "<ApplicationCommittee: {} in {}>".format(self.name, self.application.pk)
+
+
+class ApplicationQuestion(CloneModel):
+    """
+    Represents a question of a custom application
+    """
+
+    FREE_RESPONSE = 1
+    MULTIPLE_CHOICE = 2
+    SHORT_ANSWER = 3
+    INFO_TEXT = 4
+    QUESTION_TYPES = (
+        (FREE_RESPONSE, "Free Response"),
+        (MULTIPLE_CHOICE, "Multiple Choice"),
+        (SHORT_ANSWER, "Short Answer"),
+        (INFO_TEXT, "Informational Text"),
+    )
+
+    question_type = models.IntegerField(choices=QUESTION_TYPES, default=FREE_RESPONSE)
+    prompt = models.TextField(blank=True)
+    precedence = models.IntegerField(default=0)
+    word_limit = models.IntegerField(default=0)
+    application = models.ForeignKey(
+        ClubApplication, related_name="questions", on_delete=models.CASCADE
+    )
+    committee_question = models.BooleanField(default=False)
+    committees = models.ManyToManyField("ApplicationCommittee", blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    _clone_m2o_or_o2m_fields = ["multiple_choice"]
+
+
+class ApplicationMultipleChoice(models.Model):
+    """
+    Represents a multiple choice selection in an application question
+    """
+
+    value = models.TextField(blank=True)
+    question = models.ForeignKey(
+        ApplicationQuestion, related_name="multiple_choice", on_delete=models.CASCADE,
+    )
+
+
+class ApplicationSubmission(models.Model):
+    """
+    Represents a complete submission of a particular club application
+    """
+
+    # pending, first round, second round, accepted, rejected
+    PENDING = 1
+    REJECTED_AFTER_WRITTEN = 2
+    REJECTED_AFTER_INTERVIEW = 3
+    ACCEPTED = 4
+    STATUS_TYPES = (
+        (PENDING, "Pending"),
+        (REJECTED_AFTER_WRITTEN, "Rejected after written application"),
+        (REJECTED_AFTER_INTERVIEW, "Rejected after interview(s)"),
+        (ACCEPTED, "Accepted"),
+    )
+    status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)
+    reason = models.TextField(blank=True)
+    application = models.ForeignKey(
+        ClubApplication,
+        related_name="submissions",
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    committee = models.ForeignKey(
+        ApplicationCommittee,
+        related_name="submissions",
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    archived = models.BooleanField(default=False)
+    notified = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class ApplicationQuestionResponse(models.Model):
+    """
+    Represents a response to a question in a custom application. The fields here are
+    a union of all possible fields from all types of questions (most principally free
+    response, but also multiple choice, essay response, etc.).
+    """
+
+    text = models.TextField(blank=True)
+    question = models.ForeignKey(
+        ApplicationQuestion, related_name="responses", on_delete=models.CASCADE
+    )
+    submission = models.ForeignKey(
+        ApplicationSubmission,
+        related_name="responses",
+        on_delete=models.CASCADE,
+        null=False,
+    )
+    multiple_choice = models.ForeignKey(
+        ApplicationMultipleChoice,
+        related_name="responses",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class QuestionResponse(models.Model):
+    """
+    Represents a response to a question on a custom application
+    """
+
+    question = models.ForeignKey(ApplicationQuestion, on_delete=models.CASCADE)
+    response = models.TextField(blank=True)
 
 
 @receiver(models.signals.pre_delete, sender=Asset)

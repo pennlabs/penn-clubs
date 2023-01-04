@@ -10,8 +10,13 @@ import styled from 'styled-components'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_APPLY_ROUTE, CLUB_EDIT_ROUTE } from '../../constants/routes'
-import { Club, ClubApplicationRequired, UserInfo } from '../../types'
-import { apiCheckPermission, doApiRequest } from '../../utils'
+import {
+  Club,
+  ClubApplicationRequired,
+  QuestionAnswer,
+  UserInfo,
+} from '../../types'
+import { apiCheckPermission, apiSetLikeStatus, doApiRequest } from '../../utils'
 import {
   FIELD_PARTICIPATION_LABEL,
   OBJECT_NAME_SINGULAR,
@@ -326,6 +331,49 @@ const Actions = ({
         </Wrapper>
       </div>
     </>
+  )
+}
+
+const QuestionFollowUpWrapper = styled.div`
+  display: flex;
+  align-items: center;
+`
+
+type followUpActionProps = {
+  code: string
+  question: QuestionAnswer
+}
+
+export const QuestionFollowUpAction = ({
+  code,
+  question,
+}: followUpActionProps): ReactElement => {
+  const [liked, setLiked] = useState<boolean>(question.user_liked)
+  const [likesCount, setLikesCount] = useState<number>(question.likes)
+
+  const authCheck = useContext(AuthCheckContext)
+  const updateLike = () => {
+    authCheck(() => {
+      apiSetLikeStatus(code, question.id, !liked)
+      setLikesCount(likesCount + (!liked ? 1 : -1))
+      setLiked(!liked)
+    })
+  }
+
+  return (
+    <QuestionFollowUpWrapper>
+      <button
+        onClick={() => updateLike()}
+        className={
+          liked ? 'button is-small is-primary is-light' : 'button is-small'
+        }
+      >
+        Helpful 👍
+      </button>
+      <span className="is-light is-size-7 ml-2">
+        ~{likesCount} people found this question helpful~
+      </span>
+    </QuestionFollowUpWrapper>
   )
 }
 

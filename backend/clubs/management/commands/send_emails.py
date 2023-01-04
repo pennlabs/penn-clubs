@@ -11,6 +11,8 @@ from django.db.models import Count, Q
 from django.utils import timezone
 
 from clubs.models import (
+    ApplicationSubmission,
+    Badge,
     Club,
     ClubFair,
     Event,
@@ -83,6 +85,14 @@ class Command(BaseCommand):
                 "ics_calendar_ingestation",
                 "grad_resource_contact",
                 "faq_demo",
+                "admin_outreach",
+                "semesterly_email",
+                "hap_designate_resource",
+                "hap_update_resource",
+                "wc_feedback",
+                "update_status_reminder",
+                "keywords_update",
+                "update_officers",
             ),
         )
         parser.add_argument(
@@ -190,6 +200,80 @@ class Command(BaseCommand):
             email_file = tf.name
             tf.close()
 
+        if action == "update_status_reminder":
+            wc_badge = Badge.objects.filter(
+                label="Wharton Council", purpose="org",
+            ).first()
+            clubs = Club.objects.filter(badges__in=[wc_badge])
+            payloads = []
+            for club in clubs:
+                emails = (
+                    Membership.objects.filter(
+                        role__lte=Membership.ROLE_OFFICER, club__active=True, club=club,
+                    )
+                    .values_list("person__email", flat=True)
+                    .distinct()
+                )
+                applications_url = (
+                    f"https://pennclubs.com/club/{club.code}/edit/applications"
+                )
+                payloads.append((applications_url, emails))
+            if test_email is not None:
+                payloads = [(payloads[0][0], [test_email])]
+            for (applications_url, emails) in payloads:
+                for email in emails:
+                    if not dry_run:
+                        template = "update_status_reminder"
+                        send_mail_helper(
+                            template,
+                            None,
+                            [email],
+                            {"applications_url": applications_url},
+                        )
+                        self.stdout.write(f"Sent {action} email to {email}")
+                    else:
+                        self.stdout.write(f"Would have sent {action} email to {email}")
+            return
+
+        # handle Wharton Council feedback email to all centralized applicants
+        if action == "wc_feedback":
+            emails = (
+                ApplicationSubmission.objects.filter(
+                    application__is_wharton_council=True
+                )
+                .values_list("user__email", flat=True)
+                .distinct()
+            )
+            if test_email is not None:
+                emails = [test_email]
+            for email in emails:
+                if not dry_run:
+                    template = "wharton_council_feedback"
+                    send_mail_helper(template, None, [email], {})
+                    self.stdout.write(f"Sent {action} email to {email}")
+                else:
+                    self.stdout.write(f"Would have sent {action} email to {email}")
+            return
+
+        if action == "hap_update_resource":
+            emails = (
+                Membership.objects.filter(
+                    role__lte=Membership.ROLE_OFFICER, club__active=False
+                )
+                .values_list("person__email", flat=True)
+                .distinct()
+            )
+            if test_email is not None:
+                emails = [test_email]
+            for email in emails:
+                if not dry_run:
+                    template = "update_your_penn_resource"
+                    send_mail_helper(template, None, [email], {})
+                    self.stdout.write(f"Sent {action} email to {email}")
+                else:
+                    self.stdout.write(f"Would have sent {action} email to {email}")
+            return
+
         # handle custom Hub@Penn intro email
         if action in {
             "hap_intro",
@@ -197,10 +281,16 @@ class Command(BaseCommand):
             "hap_second_round",
             "hap_partner_communication",
             "grad_resource_contact",
+            "hap_designate_resource",
+            "keywords_update",
         }:
             people = collections.defaultdict(dict)
 
-            if action == "hap_partner_communication":
+            if action in {
+                "hap_partner_communication",
+                "hap_designate_resource",
+                "keywords_update",
+            }:
                 emails = (
                     Membership.objects.filter(role__lte=Membership.ROLE_OFFICER)
                     .values_list("person__email", flat=True)
@@ -210,7 +300,13 @@ class Command(BaseCommand):
                     emails = [test_email]
                 for email in emails:
                     if not dry_run:
-                        send_mail_helper("communication_to_partners", None, [email], {})
+                        template = {
+                            "hap_partner_communication": "communication_to_partners",
+                            "hap_designate_resource": "designate_resource_admin",
+                            "hap_update_resource": "update_your_penn_resource",
+                            "keywords_update": "keywords_email",
+                        }[action]
+                        send_mail_helper(template, None, [email], {})
                         self.stdout.write(f"Sent {action} email to {email}")
                     else:
                         self.stdout.write(f"Would have sent {action} email to {email}")
@@ -350,20 +446,43 @@ class Command(BaseCommand):
             "osa_email_communication",
             "ics_calendar_ingestation",
             "faq_demo",
+            "admin_outreach",
+            "semesterly_email",
+            "update_officers",
         }:
             clubs = Club.objects.all()
+            attachment = None
+            context = None
+
+            if action == "admin_outreach":
+                path = os.path.join(
+                    settings.BASE_DIR, "templates", "fyh_emails", "one_pager.docx"
+                )
+                attachment = {
+                    "filename": "Hub@Penn One-Pager",
+                    "path": path,
+                }
 
             # Only send one email if it is a test email
             if test_email is not None:
                 clubs = clubs[:1]
 
             for club in clubs:
+                if action == "semesterly_email":
+                    context = {"code": club.code}
+                elif action == "update_officers":
+                    context = {
+                        "name": club.name,
+                        "url": f"https://pennclubs.com/club/{club.code}/edit/member",
+                    }
                 emails = club.get_officer_emails()
                 if test_email is not None:
                     emails = [test_email]
 
                 if not dry_run:
-                    send_mail_helper(action, None, emails, None)
+                    send_mail_helper(
+                        action, None, emails, context, attachment=attachment
+                    )
                     self.stdout.write(
                         f"Sent {action} email to {emails} for club {club}"
                     )
@@ -373,16 +492,16 @@ class Command(BaseCommand):
                     )
             return
 
-        # get club whitelist
-        clubs_whitelist = [
+        # get club allowlist
+        clubs_allowlist = [
             club.strip() for club in (kwargs.get("clubs") or "").split(",")
         ]
-        clubs_whitelist = [club for club in clubs_whitelist if club]
+        clubs_allowlist = [club for club in clubs_allowlist if club]
 
-        found_whitelist = set(
-            Club.objects.filter(code__in=clubs_whitelist).values_list("code", flat=True)
+        found_allowlist = set(
+            Club.objects.filter(code__in=clubs_allowlist).values_list("code", flat=True)
         )
-        missing = set(clubs_whitelist) - found_whitelist
+        missing = set(clubs_allowlist) - found_allowlist
         if missing:
             raise CommandError(f"Invalid club codes in clubs parameter: {missing}")
 
@@ -404,9 +523,9 @@ class Command(BaseCommand):
         # handle sending out virtual fair emails
         if action == "virtual_fair":
             clubs = fair.participating_clubs.all()
-            if clubs_whitelist:
-                self.stdout.write(f"Using clubs whitelist: {clubs_whitelist}")
-                clubs = clubs.filter(code__in=clubs_whitelist)
+            if clubs_allowlist:
+                self.stdout.write(f"Using clubs allowlist: {clubs_allowlist}")
+                clubs = clubs.filter(code__in=clubs_allowlist)
             self.stdout.write(
                 f"Found {clubs.count()} clubs participating in the {fair.name} fair."
             )
@@ -447,9 +566,9 @@ class Command(BaseCommand):
                 events__start_time__gte=fair.start_time,
                 events__end_time__lte=fair.end_time,
             )
-            if clubs_whitelist:
-                self.stdout.write(f"Using clubs whitelist: {clubs_whitelist}")
-                clubs = clubs.filter(code__in=clubs_whitelist)
+            if clubs_allowlist:
+                self.stdout.write(f"Using clubs allowlist: {clubs_allowlist}")
+                clubs = clubs.filter(code__in=clubs_allowlist)
 
             self.stdout.write(
                 f"{clubs.count()} clubs have not registered for the {fair.name}."
@@ -480,8 +599,8 @@ class Command(BaseCommand):
                 events__start_time__gte=fair.start_time,
                 events__end_time__lte=fair.end_time,
             )
-            if clubs_whitelist:
-                clubs = clubs.filter(code__in=clubs_whitelist)
+            if clubs_allowlist:
+                clubs = clubs.filter(code__in=clubs_allowlist)
 
             self.stdout.write(
                 f"{clubs.count()} post fair emails to send to participants."
@@ -514,8 +633,8 @@ class Command(BaseCommand):
         if kwargs["only_active"]:
             clubs = clubs.filter(active=True)
 
-        if clubs_whitelist:
-            clubs = clubs.filter(code__in=clubs_whitelist)
+        if clubs_allowlist:
+            clubs = clubs.filter(code__in=clubs_allowlist)
 
         clubs_missing = 0
         clubs_sent = 0

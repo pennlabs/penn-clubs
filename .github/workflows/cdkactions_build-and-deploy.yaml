@@ -37,7 +37,7 @@ jobs:
           cd backend
           pipenv run codecov --root $ROOT --flags backend
     container:
-      image: python:3.8
+      image: python:3.8-buster
     env:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
     services:
@@ -203,46 +203,39 @@ jobs:
     needs: integration-tests
   deploy:
     runs-on: ubuntu-latest
-    container:
-      image: pennlabs/helm-tools:39b60af248944898fcbc58d1fe5b0f1995420aef
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
+      - id: synth
+        name: Synth cdk8s manifests
+        run: |-
+          cd k8s
+          yarn install --frozen-lockfile
+
+          # get repo name (by removing owner/organization)
+          export RELEASE_NAME=${REPOSITORY#*/}
+
+          # Export RELEASE_NAME as an output
+          echo "::set-output name=RELEASE_NAME::$RELEASE_NAME"
+
+          yarn build
+        env:
+          GIT_SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       - name: Deploy
         run: |-
           aws eks --region us-east-1 update-kubeconfig --name production --role-arn arn:aws:iam::${AWS_ACCOUNT_ID}:role/kubectl
 
-          # get repo name (by removing owner/organization)
-          RELEASE_NAME=${REPOSITORY#*/}
+          # get repo name from synth step
+          RELEASE_NAME=${{ steps.synth.outputs.RELEASE_NAME }}
 
-          # this specifies what tag of icarus to pull down
-          DEPLOY_TAG=$(yq r k8s/values.yaml deploy_version)
-          if [ "$DEPLOY_TAG" = "null" ]; then
-              echo "Could not find deploy tag"
-              exit 1
-          fi
-
-          helm repo add pennlabs https://helm.pennlabs.org/
-          for i in {1..10}; do
-            # This is bash soup, but it'll do.
-            # 1. Attempt to install with helm
-            # 2. If this succeeds, exit with a success status code
-            # 3. If it fails, mark the command as succeeded so that '-e' doesn't kick us out
-            # 4. Wait 10s and try again
-            helm upgrade --install --atomic --set=image_tag=$IMAGE_TAG -f k8s/values.yaml --version "${DEPLOY_TAG}" $RELEASE_NAME pennlabs/icarus && exit 0 || true
-            sleep 10s
-            echo "Retrying deploy for $i times"
-          done
-
-          # If we get here, all helm installs failed so our command should fail
-          exit 1
+          # Deploy
+          kubectl apply -f k8s/dist/ -l app.kubernetes.io/component=certificate
+          kubectl apply -f k8s/dist/ --prune -l app.kubernetes.io/part-of=$RELEASE_NAME
         env:
-          IMAGE_TAG: ${{ github.sha }}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_ACCESS_KEY_ID: ${{ secrets.GH_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.GH_AWS_SECRET_ACCESS_KEY }}
-          DO_AUTH_TOKEN: ${{ secrets.DO_AUTH_TOKEN }}
-          K8S_CLUSTER_ID: ${{ secrets.K8S_CLUSTER_ID }}
-          REPOSITORY: ${{ github.repository }}
     needs:
       - post-integration-publish

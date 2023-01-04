@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from rest_framework import permissions
 
 from clubs.models import Club, Membership
@@ -26,7 +27,7 @@ def codes_extract_helper(obj, key):
     return values
 
 
-def find_membership_helper(user, obj):
+def find_membership_helper(user, club):
     """
     Finds the membership instance in the family tree of a club
     with the most authority.
@@ -36,7 +37,7 @@ def find_membership_helper(user, obj):
     from clubs.views import find_relationship_helper
 
     related_codes = codes_extract_helper(
-        find_relationship_helper("parent_orgs", obj, {obj.code}), "code"
+        find_relationship_helper("parent_orgs", club, {club.code}), "code"
     )
     membership_instance = (
         Membership.objects.filter(person=user, club__code__in=related_codes)
@@ -270,7 +271,13 @@ class ClubItemPermission(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        if view.action in ["create", "update", "partial_update", "destroy"]:
+        if view.action in [
+            "duplicate",
+            "create",
+            "update",
+            "partial_update",
+            "destroy",
+        ]:
             if "club_code" not in view.kwargs:
                 return False
             if not request.user.is_authenticated:
@@ -284,6 +291,24 @@ class ClubItemPermission(permissions.BasePermission):
             return True
 
 
+class ClubSensitiveItemPermission(permissions.BasePermission):
+    """
+    Officers and above can view/create/update/delete sensitive club items (application
+    submissions). No one else can interact with sensitive items.
+    """
+
+    def has_permission(self, request, view):
+        if "club_code" not in view.kwargs:
+            return False
+        if not request.user.is_authenticated:
+            return False
+        if request.user.has_perm("clubs.manage_club"):
+            return True
+        obj = Club.objects.get(code=view.kwargs["club_code"])
+        membership = find_membership_helper(request.user, obj)
+        return membership is not None and membership.role <= Membership.ROLE_OFFICER
+
+
 class IsSuperuser(permissions.BasePermission):
     """
     Grants permission if the current user is a superuser.
@@ -294,6 +319,32 @@ class IsSuperuser(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_superuser
+
+
+class WhartonApplicationPermission(permissions.BasePermission):
+    """
+    Grants permission is the user is an officer of Wharton Council
+    """
+
+    WHARTON_COUNCIL_CLUB_CODE = "wharton-council"
+
+    def check_wharton_council_officer(self, request):
+        if not request.user.is_authenticated:
+            return False
+        user = get_user_model().objects.filter(username=request.user).first()
+        if user is not None:
+            membership = Membership.objects.filter(
+                club__code=self.WHARTON_COUNCIL_CLUB_CODE, person=user
+            ).first()
+            if membership is not None:
+                return membership.role <= Membership.ROLE_OFFICER
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        return self.check_wharton_council_officer(request)
+
+    def has_permission(self, request, view):
+        return self.check_wharton_council_officer(request)
 
 
 def DjangoPermission(perm):

@@ -4,7 +4,7 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from pennclubs.settings.base import *  # noqa: F401, F403
-from pennclubs.settings.base import BRANDING, DOMAIN
+from pennclubs.settings.base import BRANDING, DOMAINS
 
 
 DEBUG = False
@@ -13,7 +13,7 @@ DEBUG = False
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Allow production host headers
-ALLOWED_HOSTS = [DOMAIN]
+ALLOWED_HOSTS = DOMAINS
 
 # Make sure SECRET_KEY is set to a secret in production
 SECRET_KEY = os.environ.get("SECRET_KEY", None)
@@ -22,7 +22,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", None)
 SENTRY_URL = os.environ.get("SENTRY_URL")
 if SENTRY_URL:
     sentry_sdk.init(
-        dsn=SENTRY_URL, integrations=[DjangoIntegration()], send_default_pii=True
+        dsn=SENTRY_URL, integrations=[DjangoIntegration()], send_default_pii=False
     )
 
 # DLA settings
@@ -43,6 +43,7 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_ACCESS_SECRET_ID = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_QUERYSTRING_AUTH = False
+AWS_DEFAULT_ACL = "public-read"
 
 # Redis settings
 REDIS_HOST = os.getenv("REDIS_HOST")

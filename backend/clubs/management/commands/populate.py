@@ -1,5 +1,6 @@
 import datetime
 
+import pytz
 import requests
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
@@ -9,6 +10,10 @@ from options.models import Option
 
 from clubs.models import (
     Advisor,
+    ApplicationCommittee,
+    ApplicationMultipleChoice,
+    ApplicationQuestion,
+    ApplicationSubmission,
     Badge,
     Club,
     ClubApplication,
@@ -31,8 +36,8 @@ clubs = [
     {
         "code": "pppjo",
         "name": "Penn Pre-Professional Juggling Organization",
-        "description": """The PPPJO is looking for intense jugglers seeking to juggle their way to the top.
-Come with your juggling equipment (and business formal attire) to
+        "description": """The PPPJO is looking for intense jugglers seeking to juggle
+their way to the top. Come with your juggling equipment (and business formal attire) to
 hone your skills in time for recruiting season!""",
         "image": "https://i.imgur.com/WwUKiHP.png",
         "email": "example@example.com",
@@ -95,8 +100,8 @@ hone your skills in time for recruiting season!""",
     {
         "code": "lorem-ipsum",
         "name": "Penn Lorem Ipsum Club",
-        "description": """<i>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua.</i>""",
+        "description": """<i>Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</i>""",
         "tags": [{"name": "Undergraduate"}],
         "founded": "2003-01-01",
         "size": Club.SIZE_LARGE,
@@ -180,8 +185,9 @@ you can procrastinate on the application and ultimately miss the deadline!""",
         "name": "Empty Club",
         "description": "A club without any members.",
         "email": "example@example.com",
-        "how_to_get_involved": """Anyone can join this club, just send us a membership request!
- See www.google.com for more details. Alternatively, contact example@example.com.""",
+        "how_to_get_involved": """Anyone can join this club, just send us a membership
+request! See www.google.com for more details. Alternatively, contact
+example@example.com.""",
         "active": True,
         "approved": True,
         "accepting_members": True,
@@ -596,6 +602,76 @@ class Command(BaseCommand):
                 "external_url": "https://pennlabs.org/apply/",
             },
         )
+
+        # create club applications that are wharton common app
+        eastern = pytz.timezone("America/New_York")
+        application_start_time = datetime.datetime(2021, 9, 4, 0, 0, tzinfo=eastern)
+        application_end_time = datetime.datetime(2021, 11, 20, 2, 0, tzinfo=eastern)
+        result_release_time = datetime.datetime(2021, 12, 4, 0, 0, tzinfo=eastern)
+        prompt_one = (
+            "Tell us about a time you took initiative or demonstrated leadership"
+        )
+        prompt_two = "Tell us about a time you faced a challenge and how you solved it"
+        prompt_three = "Tell us about a time you collaborated well in a team"
+        for code in ["pppjo", "harvard-rejects", "penn-memes"]:
+            club = Club.objects.get(code=code)
+            name = f"{club.name} Application"
+            application = ClubApplication.objects.create(
+                name=name,
+                club=club,
+                application_start_time=application_start_time,
+                application_end_time=application_end_time,
+                result_release_time=result_release_time,
+                is_wharton_council=True,
+            )
+            link = (
+                f"http://localhost:3000/club/{club.code}/application/{application.pk}"
+            )
+            application.external_url = link
+            application.save()
+            prompt = "Choose one of the following prompts for your personal statement"
+            prompt_question = ApplicationQuestion.objects.create(
+                question_type=ApplicationQuestion.MULTIPLE_CHOICE,
+                application=application,
+                prompt=prompt,
+            )
+            ApplicationMultipleChoice.objects.create(
+                value=prompt_one, question=prompt_question
+            )
+            ApplicationMultipleChoice.objects.create(
+                value=prompt_two, question=prompt_question
+            )
+            ApplicationMultipleChoice.objects.create(
+                value=prompt_three, question=prompt_question
+            )
+            ApplicationQuestion.objects.create(
+                question_type=ApplicationQuestion.FREE_RESPONSE,
+                prompt="Answer the prompt you selected",
+                word_limit=150,
+                application=application,
+            )
+
+        application = ClubApplication.objects.last()
+        ApplicationCommittee.objects.create(name="one", application=application)
+        ApplicationCommittee.objects.create(name="two", application=application)
+        ApplicationCommittee.objects.create(name="three", application=application)
+        ApplicationCommittee.objects.create(name="four", application=application)
+        status_counter = 0
+        for user in get_user_model().objects.all():
+            status = ApplicationSubmission.STATUS_TYPES[
+                status_counter % len(ApplicationSubmission.STATUS_TYPES)
+            ][0]
+            ApplicationSubmission.objects.create(
+                status=status, user=user, application=application, committee=None,
+            )
+            status_counter += 1
+            for committee in application.committees.all():
+                ApplicationSubmission.objects.create(
+                    status=status,
+                    user=user,
+                    application=application,
+                    committee=committee,
+                )
 
         # 10am today
         even_base = now.replace(hour=14, minute=0, second=0, microsecond=0)

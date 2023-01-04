@@ -6,6 +6,7 @@ import { Club, QuestionAnswer } from '../../types'
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_SINGULAR, SITE_NAME } from '../../utils/branding'
 import { CheckboxField, TextField } from '../FormComponents'
+import { QuestionFollowUpAction } from './Actions'
 
 const Question = styled.div`
   margin-bottom: 15px;
@@ -29,11 +30,13 @@ const QuoteAuthor = styled.i`
 type QuestionListProps = {
   club: Club
   questions: QuestionAnswer[]
+  sortBy: string
 }
 
 const QuestionList = ({
   club: { name, code },
   questions,
+  sortBy,
 }: QuestionListProps): ReactElement => {
   const [formSubmitted, setFormSubmitted] = useState(false)
 
@@ -57,34 +60,37 @@ const QuestionList = ({
 
   return (
     <>
-      {questions.map((question) => (
-        <Question key={question.id}>
-          {!question.approved && (
-            <span className="tag is-light">Unapproved</span>
-          )}{' '}
-          <b>Question:</b> {question.question}{' '}
-          <QuoteAuthor>- {question.author}</QuoteAuthor>
-          <AnswerText>
-            {question.answer ? (
-              <>
-                <span
-                  className="content"
-                  dangerouslySetInnerHTML={{
-                    __html: question.answer,
-                  }}
-                />
-                <div>
-                  <QuoteAuthor>- {question.responder}</QuoteAuthor>
-                </div>
-              </>
-            ) : (
-              <UnansweredText>
-                This question has not been answered yet.
-              </UnansweredText>
-            )}
-          </AnswerText>
-        </Question>
-      ))}
+      {questions
+        .sort((a, b) => b[`${sortBy}`] - a[`${sortBy}`])
+        .map((question) => (
+          <Question key={question.id}>
+            {!question.approved && (
+              <span className="tag is-light">Unapproved</span>
+            )}{' '}
+            <b>Question:</b> {question.question}{' '}
+            <QuoteAuthor>- {question.author}</QuoteAuthor>
+            <AnswerText>
+              {question.answer ? (
+                <>
+                  <span
+                    className="content"
+                    dangerouslySetInnerHTML={{
+                      __html: question.answer,
+                    }}
+                  />
+                  <div>
+                    <QuoteAuthor>- {question.responder}</QuoteAuthor>
+                  </div>
+                </>
+              ) : (
+                <UnansweredText>
+                  This question has not been answered yet.
+                </UnansweredText>
+              )}
+            </AnswerText>
+            <QuestionFollowUpAction code={code} question={question} />
+          </Question>
+        ))}
       {formSubmitted ? (
         <div className="notification is-primary">
           <b>Your question has been submitted!</b>

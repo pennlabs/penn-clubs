@@ -6,6 +6,10 @@ export const CLUB_ROUTE = (slug?: string): string =>
   slug ? `/${OBJECT_URL_SLUG}/${slug}` : `/${OBJECT_URL_SLUG}/[club]`
 export const CLUB_EDIT_ROUTE = (slug?: string): string =>
   slug ? `/${OBJECT_URL_SLUG}/${slug}/edit` : `/${OBJECT_URL_SLUG}/[club]/edit`
+export const CLUB_SETTINGS_ROUTE = (slug?: string): string =>
+  slug
+    ? `/${OBJECT_URL_SLUG}/${slug}/edit/settings`
+    : `/${OBJECT_URL_SLUG}/[club]/edit/settings`
 export const CLUB_FLYER_ROUTE = (slug?: string): string =>
   slug
     ? `/${OBJECT_URL_SLUG}/${slug}/flyer`
@@ -31,6 +35,8 @@ export const DIRECTORY_ROUTE = '/directory'
 export const LIVE_EVENTS = '/events'
 export const FAIR_INFO_ROUTE = '/fair'
 export const ADMIN_ROUTE = '/admin'
+export const APPLY_ROUTE = '/apply'
+export const WHARTON_ROUTE = '/wharton'
 export const FAIR_OFFICER_GUIDE_ROUTE = '/sacfairguide'
 export const GUIDE_ROUTE = (slug?: string): string =>
   slug ? `/guides/${slug}` : '/guides/[page]'

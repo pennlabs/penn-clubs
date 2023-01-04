@@ -1,13 +1,7 @@
 import { CLUB_RECRUITMENT_CYCLES } from 'components/ClubEditPage/ClubEditCard'
 import ListRenewalDialog from 'components/ClubPage/ListRenewalDialog'
-import LiveEventsDialog from 'components/ClubPage/LiveEventsDialog'
-import {
-  Checkbox,
-  Icon,
-  Metadata,
-  Title,
-  WideContainer,
-} from 'components/common'
+import { LiveEventsDialog } from 'components/ClubPage/LiveEventsDialog'
+import { Icon, Metadata, Title, WideContainer } from 'components/common'
 import DisplayButtons from 'components/DisplayButtons'
 import { FuseTag } from 'components/FilterSearch'
 import { ActionLink } from 'components/Header/Feedback'
@@ -21,11 +15,18 @@ import SearchBar, {
   SearchInput,
 } from 'components/SearchBar'
 import equal from 'deep-equal'
-import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  createContext,
+  ReactElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { PaginatedClubPage, renderListPage } from 'renderPage'
 import styled from 'styled-components'
-import { Badge, School, StudentType, Tag, UserInfo, Year } from 'types'
-import { doApiRequest, isClubFieldShown, useSetting } from 'utils'
+import { Badge, Maybe, School, StudentType, Tag, UserInfo, Year } from 'types'
+import { doApiRequest, doBulkLookup, isClubFieldShown, useSetting } from 'utils'
 import {
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_TITLE,
@@ -69,6 +70,14 @@ const ResultsText = styled.div`
   ${mediaMaxWidth(PHONE)} {
     margin-bottom: 1rem;
   }
+`
+
+const Divider = styled.div`
+  width: 100%;
+  height: 3px;
+  margin-bottom: 1.5rem;
+  border-radius: 1.5px;
+  background: #000f3a;
 `
 
 type SplashProps = {
@@ -254,6 +263,19 @@ const ScrollTopButton = (): ReactElement | null => {
   )
 }
 
+type UpdateClubContext = (
+  code: string,
+  key: 'bookmark' | 'subscribe', // POLP inspired. We may want to add keys here
+  value: boolean,
+) => void
+
+export const UpdateClubContext = createContext<UpdateClubContext>(() => null)
+
+const searchIsEmpty = (input: SearchInput): boolean => {
+  const { search, ...rest } = input
+  return (!search || !search.length) && !Object.entries(rest).length
+}
+
 const Splash = (props: SplashProps): ReactElement => {
   const fairIsOpen = useSetting('FAIR_OPEN')
   const preFair = useSetting('PRE_FAIR')
@@ -261,50 +283,79 @@ const Splash = (props: SplashProps): ReactElement => {
   const currentSearch = useRef<SearchInput>({})
 
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
+  const updateClub = (code, key, value) => {
+    setClubs({
+      ...clubs,
+      results: clubs.results.map((club) => {
+        if (club.code === code) {
+          if (key === 'bookmark') {
+            club.is_favorite = value
+          } else if (key === 'subscribe') {
+            club.is_subscribe = value
+          }
+        }
+        return { ...club }
+      }),
+    })
+  }
+  const [exclusiveClubs, setExclusiveClubs] = useState<
+    Maybe<PaginatedClubPage>
+  >()
+
   const [isLoading, setLoading] = useState<boolean>(false)
   const [searchInput, setSearchInput] = useState<SearchInput>({})
-  const [viewType, setViewType] = useState<string>('general')
-  const [currentViewType, setCurrentViewType] = useState<string>('general')
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {
-    if (
-      equal(searchInput, currentSearch.current) &&
-      currentViewType === viewType
-    ) {
+    if (equal(searchInput, currentSearch.current)) {
       return
     }
     currentSearch.current = { ...searchInput }
     setLoading(true)
 
-    const params = new URLSearchParams()
-    params.set('format', 'json')
-    params.set('page', '1')
-
-    if (SITE_ID === 'fyh') {
-      params.set('viewType', viewType)
-      setCurrentViewType(viewType)
+    const paramsObject = {
+      format: 'json',
+      page: '1',
+      ...searchInput,
     }
 
-    Object.entries(searchInput).forEach(([key, value]) => {
-      params.set(key, value)
-    })
-
-    doApiRequest(`/clubs/?${params.toString()}`, {
-      method: 'GET',
-    })
-      .then((res) => res.json())
-      .then((displayClubs) => {
+    ;(async () => {
+      if (SITE_ID === 'fyh' && !searchIsEmpty(currentSearch.current)) {
+        // general is basically everything (including the search result)
+        const generalParams = new URLSearchParams({
+          format: 'json',
+          page: '1',
+          viewType: 'general',
+        })
+        const exclusiveParams = new URLSearchParams({
+          ...paramsObject,
+          viewType: 'exclusive',
+        })
+        const results = await doBulkLookup([
+          ['general', `/clubs/?${generalParams.toString()}`],
+          ['exclusive', `/clubs/?${exclusiveParams.toString()}`],
+        ])
         if (equal(currentSearch.current, searchInput)) {
-          setClubs(displayClubs)
+          setClubs(results.general)
+          setExclusiveClubs(results.exclusive)
           setLoading(false)
         }
-      })
-  }, [searchInput, viewType])
-
-  const handleViewTypeChange = () => {
-    setViewType(viewType === 'general' ? 'exclusive' : 'general')
-  }
+      } else {
+        const params = new URLSearchParams(paramsObject)
+        const displayClubs = await doApiRequest(
+          `/clubs/?${params.toString()}`,
+          {
+            method: 'GET',
+          },
+        ).then((res) => res.json())
+        if (equal(currentSearch.current, searchInput)) {
+          setClubs(displayClubs)
+          setExclusiveClubs(undefined)
+          setLoading(false)
+        }
+      }
+    })()
+  }, [searchInput])
 
   const tagOptions = useMemo<FuseTag[]>(
     () =>
@@ -466,26 +517,14 @@ const Splash = (props: SplashProps): ReactElement => {
                 label="School Specific"
                 options={schoolOptions}
               />
-            ) : (
-              <SearchBarCheckboxItem
-                param="target_schools__in"
-                label="School"
-                options={schoolOptions}
-              />
-            ))}
+            ) : null)}
           {SITE_ID === 'fyh' ? (
             <SearchBarCheckboxItem
               param="target_years__in"
               label="School Year Specific"
               options={yearOptions}
             />
-          ) : (
-            <SearchBarCheckboxItem
-              param="target_years__in"
-              label="School Year"
-              options={yearOptions}
-            />
-          )}
+          ) : null}
           {isClubFieldShown('student_types') &&
             (SITE_ID === 'fyh' ? (
               <SearchBarCheckboxItem
@@ -529,37 +568,17 @@ const Splash = (props: SplashProps): ReactElement => {
             )}
             <ResultsText>
               {' '}
-              {clubs.count} result{clubs.count === 1 ? '' : 's'}
+              {exclusiveClubs ? (
+                <>
+                  {exclusiveClubs.count} result
+                  {exclusiveClubs.count === 1 ? '' : 's'}
+                </>
+              ) : (
+                <>
+                  {clubs.count} result{clubs.count === 1 ? '' : 's'}
+                </>
+              )}
             </ResultsText>
-            {SITE_ID === 'fyh' && (
-              <div style={{ marginBottom: '5px' }}>
-                <span
-                  style={{
-                    marginRight: '10px',
-                  }}
-                >
-                  Exclusive View
-                </span>
-                <Checkbox
-                  color={'black'}
-                  checked={viewType === 'exclusive'}
-                  onChange={handleViewTypeChange}
-                />
-                <span
-                  style={{
-                    marginRight: '10px',
-                    marginLeft: '20px',
-                  }}
-                >
-                  General View
-                </span>
-                <Checkbox
-                  color={'black'}
-                  checked={viewType === 'general'}
-                  onChange={handleViewTypeChange}
-                />
-              </div>
-            )}
 
             <SearchTags
               searchInput={searchInput}
@@ -579,15 +598,34 @@ const Splash = (props: SplashProps): ReactElement => {
             {(preFair || fairIsOpen) && (
               <LiveEventsDialog isPreFair={!!preFair} isFair={!!fairIsOpen} />
             )}
+
             {renewalBanner && <ListRenewalDialog />}
 
             {isLoading && <ListLoadIndicator />}
 
-            <PaginatedClubDisplay
-              displayClubs={clubs}
-              display={display}
-              tags={props.tags}
-            />
+            <UpdateClubContext.Provider value={updateClub}>
+              {exclusiveClubs && (
+                <>
+                  {!!exclusiveClubs.count && (
+                    <PaginatedClubDisplay
+                      displayClubs={exclusiveClubs}
+                      display={display}
+                      tags={props.tags}
+                    />
+                  )}
+                  <div style={{ marginBottom: '8px' }}>
+                    Check out these additional resources that may interest you.
+                  </div>
+                  <Divider />
+                </>
+              )}
+
+              <PaginatedClubDisplay
+                displayClubs={clubs}
+                display={display}
+                tags={props.tags}
+              />
+            </UpdateClubContext.Provider>
           </WideContainer>
         </SearchbarRightContainer>
       </div>

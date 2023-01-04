@@ -22,10 +22,22 @@ from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
+from django.core.mail import send_mass_mail
 from django.core.management import call_command, get_commands, load_command_class
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
-from django.db.models import Count, DurationField, ExpressionWrapper, F, Prefetch, Q
-from django.db.models.functions import Lower, Trunc
+from django.db.models import (
+    Count,
+    DurationField,
+    ExpressionWrapper,
+    F,
+    Prefetch,
+    Q,
+    TextField,
+    Value,
+)
+from django.db.models.expressions import RawSQL
+from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -35,6 +47,7 @@ from django.utils.text import slugify
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics import parse as ICSParse
+from jinja2 import Template
 from options.models import Option
 from rest_framework import filters, generics, parsers, serializers, status, viewsets
 from rest_framework.decorators import action
@@ -50,12 +63,18 @@ from tatsu.exceptions import FailedParse
 from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
+    AdminNote,
     Advisor,
+    ApplicationMultipleChoice,
+    ApplicationQuestion,
+    ApplicationQuestionResponse,
+    ApplicationSubmission,
     Asset,
     Badge,
     Club,
     ClubApplication,
     ClubFair,
+    ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
     Event,
@@ -84,6 +103,7 @@ from clubs.permissions import (
     ClubFairPermission,
     ClubItemPermission,
     ClubPermission,
+    ClubSensitiveItemPermission,
     DjangoPermission,
     EventPermission,
     InvitePermission,
@@ -94,18 +114,27 @@ from clubs.permissions import (
     ProfilePermission,
     QuestionAnswerPermission,
     ReadOnly,
+    WhartonApplicationPermission,
     find_membership_helper,
 )
 from clubs.serializers import (
+    AdminNoteSerializer,
     AdvisorSerializer,
+    ApplicationQuestionResponseSerializer,
+    ApplicationQuestionSerializer,
+    ApplicationSubmissionCSVSerializer,
+    ApplicationSubmissionSerializer,
+    ApplicationSubmissionUserSerializer,
     AssetSerializer,
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
     ClubApplicationSerializer,
+    ClubBoothSerializer,
     ClubConstitutionSerializer,
     ClubFairSerializer,
     ClubListSerializer,
+    ClubMembershipSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
     EventSerializer,
@@ -113,6 +142,7 @@ from clubs.serializers import (
     ExternalMemberListSerializer,
     FavoriteSerializer,
     FavoriteWriteSerializer,
+    FavouriteEventSerializer,
     MajorSerializer,
     MembershipInviteSerializer,
     MembershipRequestSerializer,
@@ -139,6 +169,7 @@ from clubs.serializers import (
     UserSubscribeSerializer,
     UserSubscribeWriteSerializer,
     UserUUIDSerializer,
+    WhartonApplicationStatusSerializer,
     WritableClubApplicationSerializer,
     WritableClubFairSerializer,
     YearSerializer,
@@ -163,7 +194,7 @@ def file_upload_endpoint_helper(request, code):
     return Response({"detail": "Club file uploaded!", "id": asset.id})
 
 
-def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
+def upload_endpoint_helper(request, cls, keyword, field, save=True, **kwargs):
     """
     Given a Model class with lookup arguments or a Model object, save the uploaded image
     to the image field specified in the argument.
@@ -177,9 +208,9 @@ def upload_endpoint_helper(request, cls, field, save=True, **kwargs):
         obj = get_object_or_404(cls, **kwargs)
     else:
         obj = cls
-    if "file" in request.data and isinstance(request.data["file"], UploadedFile):
+    if keyword in request.data and isinstance(request.data[keyword], UploadedFile):
         getattr(obj, field).delete(save=False)
-        setattr(obj, field, request.data["file"])
+        setattr(obj, field, request.data[keyword])
         if save:
             obj._change_reason = f"Update '{field}' image field"
             obj.save()
@@ -326,19 +357,6 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
 
             if tags[0].isdigit() or operation == "id":
                 tags = [int(tag) for tag in tags if tag]
-                if (
-                    settings.BRANDING == "fyh"
-                    and request.GET.get("viewType", "") == "exclusive"
-                    and (
-                        field == "target_years"
-                        or field == "student_types"
-                        or field == "target_schools"
-                    )
-                ):
-                    queryset = queryset.annotate(
-                        num_tags=Count(f"{field}", distinct=True)
-                    ).filter(num_tags__lte=len(tags))
-
                 if settings.BRANDING == "fyh":
                     queryset = queryset.filter(**{f"{field}__id__in": tags})
                 else:
@@ -497,7 +515,7 @@ class ClubsOrderingFilter(RandomOrderingFilter):
             ]
             return valid_fields
 
-        # other people can order by whitelist
+        # other people can order by allowlist
         return super().get_valid_fields(queryset, view, context)
 
     def filter_queryset(self, request, queryset, view):
@@ -1120,7 +1138,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
 
         # reset approval status after upload
-        resp = upload_endpoint_helper(request, club, "image", save=False)
+        resp = upload_endpoint_helper(request, club, "file", "image", save=False)
         if status.is_success(resp.status_code):
             club.approved = None
             club.approved_by = None
@@ -1513,6 +1531,43 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         }
 
         return Response(analytics_dict)
+
+    @action(detail=True, methods=["get"])
+    def booths(self, request, *args, **kwargs):
+        """
+        Getting all booths associated with a club
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                    subtitle:
+                                        type: string
+                                    club:
+                                        type: string
+                                    image_url:
+                                        type: string
+                                    lat:
+                                        type: number
+                                    long:
+                                        type: number
+                                    start_time:
+                                        type: string
+                                    end_time:
+                                        type: string
+        ---
+        """
+        club = self.get_object()
+        res = ClubFairBooth.objects.filter(club=club).select_related("club").all()
+
+        return Response(ClubBoothSerializer(res, many=True).data)
 
     def get_operation_id(self, **kwargs):
         if kwargs["action"] == "fetch" and kwargs["method"] == "DELETE":
@@ -2202,7 +2257,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = Event.objects.get(id=kwargs["id"])
         self.check_object_permissions(request, event)
 
-        resp = upload_endpoint_helper(request, Event, "image", pk=event.pk)
+        resp = upload_endpoint_helper(request, Event, "image", "image", pk=event.pk)
 
         # if image uploaded, create thumbnail
         if status.is_success(resp.status_code):
@@ -2602,6 +2657,47 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
 
         return questions.filter(Q(approved=True) | Q(author=self.request.user))
 
+    @action(detail=True, methods=["post"])
+    def like(self, request, *args, **kwargs):
+        """
+        Endpoint used to like a question answer.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+
+        question = QuestionAnswer.objects.get(
+            club__code=self.kwargs["club_code"],
+            id=self.get_object().id,
+            club__archived=False,
+        )
+        question.users_liked.add(self.request.user)
+        question.save()
+        return Response({})
+
+    @action(detail=True, methods=["post"])
+    def unlike(self, request, *args, **kwargs):
+        """
+        Endpoint used to unlike a question answer.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        question = QuestionAnswer.objects.get(
+            club__code=self.kwargs["club_code"],
+            id=self.get_object().id,
+            club__archived=False,
+        )
+        question.users_liked.remove(self.request.user)
+        question.save()
+        return Response({})
+
 
 class MembershipViewSet(viewsets.ModelViewSet):
     """
@@ -2635,6 +2731,41 @@ class MembershipViewSet(viewsets.ModelViewSet):
             ),
         )
         return queryset
+
+    @action(detail=False, methods=["get"])
+    def admin(self, request, *args, **kwargs):
+        """
+        Endpoint used to retrieve the clubs that the logged-in user is an admin of
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                role:
+                                    type: integer
+                                    description: The enum value of the role of the user
+                                club_code:
+                                    type: string
+                                    description: The club code of the membership
+                                username:
+                                    type: string
+                                    description: The username of the logged in user
+        ---
+        """
+        return Response(
+            ClubMembershipSerializer(
+                Membership.objects.filter(
+                    person=self.request.user,
+                    club__archived=False,
+                    role__lte=Membership.ROLE_OFFICER,
+                ),
+                many=True,
+            ).data
+        )
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
@@ -3038,6 +3169,90 @@ def parse_boolean(inpt):
     return None
 
 
+class FavoriteEventsAPIView(generics.ListAPIView):
+    """
+    Return a list of events, ordered in increasing order of start time (from time
+    of API call) corresponding to clubs that a user has favourited
+    """
+
+    serializer_class = FavouriteEventSerializer
+    permission_classes = [IsAuthenticated & ReadOnly]
+
+    def get_queryset(self):
+        date = datetime.date.today()
+        return (
+            Event.objects.filter(
+                club__favorite__person=self.request.user.id,
+                start_time__gte=datetime.datetime(date.year, date.month, date.day),
+            )
+            .select_related("club")
+            .prefetch_related("club__badges")
+            .order_by("start_time")
+        )
+
+
+class ClubBoothsViewSet(viewsets.ModelViewSet):
+    """
+    get: Get club booths corresponding to club code
+
+    post: Create or update a club booth
+    """
+
+    lookup_field = "club__code"
+    serializer_class = ClubBoothSerializer
+    http_methods_names = ["get", "post"]
+
+    def get_queryset(self):
+        return ClubFairBooth.objects.all()
+
+    @action(detail=False, methods=["get"])
+    def live(self, *args, **kwargs):
+        """
+        Show live booths at the club fair
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                    subtitle:
+                                        type: string
+                                    club:
+                                        type: string
+                                    image_url:
+                                        type: string
+                                    lat:
+                                        type: number
+                                    long:
+                                        type: number
+                                    start_time:
+                                        type: string
+                                    end_time:
+                                        type: string
+        ---
+        """
+        today = datetime.date.today()
+        today = datetime.datetime(today.year, today.month, today.day)
+
+        booths = (
+            ClubFairBooth.objects.filter(
+                start_time__gte=today, end_time__gte=timezone.now()
+            )
+            .select_related("club")
+            .prefetch_related("club__badges")
+            .order_by("start_time")
+            .all()
+        )
+
+        return Response(ClubBoothSerializer(booths, many=True).data)
+
+
 class FavoriteCalendarAPIView(APIView):
     def get(self, request, *args, **kwargs):
         """
@@ -3067,7 +3282,9 @@ class FavoriteCalendarAPIView(APIView):
         is_global = parse_boolean(request.query_params.get("global"))
         is_all = parse_boolean(request.query_params.get("all"))
 
-        calendar = ICSCal(creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAIN})")
+        calendar = ICSCal(
+            creator=f"{settings.BRANDING_SITE_NAME} ({settings.DOMAINS[0]})"
+        )
         calendar.extra.append(
             ICSParse.ContentLine(
                 name="X-WR-CALNAME", value=f"{settings.BRANDING_SITE_NAME} Events"
@@ -3112,7 +3329,7 @@ class FavoriteCalendarAPIView(APIView):
                 event.url or "" if not event.location else "",
                 html_to_text(event.description),
             ).strip()
-            e.uid = f"{event.ics_uuid}@{settings.DOMAIN}"
+            e.uid = f"{event.ics_uuid}@{settings.DOMAINS[0]}"
             e.created = event.created_at
             e.last_modified = event.updated_at
             e.categories = [event.club.name]
@@ -4096,7 +4313,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = get_user_model().objects.all().select_related("profile")
     permission_classes = [ProfilePermission | IsSuperuser]
     filter_backends = [filters.SearchFilter]
-    http_method_names = ["get"]
+    http_method_names = ["get", "post"]
 
     search_fields = [
         "email",
@@ -4105,6 +4322,225 @@ class UserViewSet(viewsets.ModelViewSet):
         "username",
     ]
     lookup_field = "username"
+
+    @action(detail=False, methods=["post"])
+    def question_response(self, *args, **kwargs):
+        """
+        Accepts a response to a question, this happens when the user submits the
+        application form
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            prompt:
+                                type: string
+                            questionIds:
+                                type: array
+                                items:
+                                    type: integer
+                            committee:
+                                type: string
+                            text:
+                                type: string
+                            multipleChoice:
+                                type: array
+                                items:
+                                    type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    text:
+                                        type: string
+                                    multiple_choice:
+                                        type: string
+                                    question_type:
+                                        type: integer
+                                    question:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: integer
+                                            question_type:
+                                                type: integer
+                                            prompt:
+                                                type: string
+                                            word_limit:
+                                                type: integer
+                                            multiple_choice:
+                                                type: array
+                                                items:
+                                                    type: string
+                                            committees:
+                                                type: array
+                                                items:
+                                                    type: string
+                                            committee_question:
+                                                type: boolean
+                                            precedence:
+                                                type: integer
+        ---
+        """
+        questions = self.request.data.get("questionIds", [])
+        committee_name = self.request.data.get("committee", None)
+        response = Response([])
+        if len(questions) == 0:
+            return response
+        application = (
+            ApplicationQuestion.objects.filter(pk=questions[0]).first().application
+        )
+        committee = application.committees.filter(name=committee_name).first()
+
+        committees_applied = (
+            ApplicationSubmission.objects.filter(
+                user=self.request.user,
+                committee__isnull=False,
+                application=application,
+                archived=False,
+            )
+            .values_list("committee__name", flat=True)
+            .distinct()
+        )
+
+        # limit applicants to 2 committees
+        if (
+            committee
+            and committees_applied.count() >= 2
+            and committee_name not in committees_applied
+        ):
+            return Response(
+                {
+                    "success": False,
+                    "detail": """You cannot submit to more than two committees for any
+                    particular club application. In case you'd like to change the
+                    committees you applied to, you can delete submissions on the
+                    submissions page""",
+                }
+            )
+        submission = ApplicationSubmission.objects.create(
+            user=self.request.user, application=application, committee=committee,
+        )
+        for question_pk in questions:
+            question = ApplicationQuestion.objects.filter(pk=question_pk).first()
+            question_type = question.question_type
+            question_data = self.request.data.get(question_pk, None)
+
+            # skip the questions which do not belong to the current committee
+            if (
+                question.committee_question
+                and committee not in question.committees.all()
+            ):
+                continue
+
+            if (
+                question_type == ApplicationQuestion.FREE_RESPONSE
+                or question_type == ApplicationQuestion.SHORT_ANSWER
+            ):
+                text = question_data.get("text", None)
+                if text is not None and text != "":
+                    obj = ApplicationQuestionResponse.objects.create(
+                        text=text, question=question, submission=submission,
+                    ).save()
+                    response = Response(ApplicationQuestionResponseSerializer(obj).data)
+            elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:
+                multiple_choice_value = question_data.get("multipleChoice", None)
+                if multiple_choice_value is not None and multiple_choice_value != "":
+                    multiple_choice_obj = ApplicationMultipleChoice.objects.filter(
+                        question=question, value=multiple_choice_value
+                    ).first()
+                    obj = ApplicationQuestionResponse.objects.create(
+                        multiple_choice=multiple_choice_obj,
+                        question=question,
+                        submission=submission,
+                    ).save()
+                    response = Response(ApplicationQuestionResponseSerializer(obj).data)
+        submission.save()
+        return response
+
+    @action(detail=False, methods=["get"])
+    def questions(self, *args, **kwargs):
+        """
+        Given a prompt lists the given users responses to this particular question.
+        This allows us to populate the application form with the users'
+        previous submissions.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            prompt:
+                                type: string
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    text:
+                                        type: string
+                                    multiple_choice:
+                                        type: string
+                                    question_type:
+                                        type: integer
+                                    question:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: integer
+                                            question_type:
+                                                type: integer
+                                            prompt:
+                                                type: string
+                                            word_limit:
+                                                type: integer
+                                            multiple_choice:
+                                                type: array
+                                                items:
+                                                    type: string
+                                            committees:
+                                                type: array
+                                                items:
+                                                    type: string
+                                            committee_question:
+                                                type: boolean
+                                            precedence:
+                                                type: integer
+        ---
+        """
+        question_id_param = self.request.GET.get("question_id")
+        if question_id_param is None or not question_id_param.isnumeric():
+            return Response([])
+        question_id = int(question_id_param)
+        question = ApplicationQuestion.objects.filter(pk=question_id).first()
+        if question is None:
+            return Response([])
+
+        response = (
+            ApplicationQuestionResponse.objects.filter(
+                submission__user=self.request.user
+            )
+            .filter(question__prompt=question.prompt)
+            .order_by("-updated_at")
+            .first()
+        )
+
+        if response is None:
+            return Response([])
+        else:
+            return Response(ApplicationQuestionResponseSerializer(response).data)
 
     def get_serializer_class(self):
         if self.action in {"list"}:
@@ -4118,12 +4554,132 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
     list: Retrieve a list of applications of the club.
 
-    get: Retrieve the details for a given application.
+    send_emails: Send out acceptance/rejection emails
     """
 
     permission_classes = [ClubItemPermission | IsSuperuser]
     serializer_class = ClubApplicationSerializer
     http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    @action(detail=True, methods=["post"])
+    def send_emails(self, *args, **kwargs):
+        """
+        Send out acceptance/rejection emails for a particular application
+
+        Dry run will validate that all emails have nonempty variables
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            dry_run:
+                                type: boolean
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+
+        ---
+
+        """
+
+        app = self.get_object()
+
+        # Query for recent submissions with user and committee joined
+        submissions = ApplicationSubmission.objects.filter(
+            application=app,
+            created_at__in=RawSQL(
+                """SELECT recent_time
+                    FROM
+                    (SELECT user_id,
+                            committee_id,
+                            application_id,
+                            max(created_at) recent_time
+                        FROM clubs_applicationsubmission
+                        WHERE NOT archived
+                        GROUP BY user_id,
+                                committee_id, application_id) recent_subs""",
+                (),
+            ),
+            archived=False,
+        ).select_related("user", "committee")
+        dry_run = self.request.data.get("dry_run")
+        subject = f"Application Update for {app.name}"
+        n, skip = 0, 0
+
+        acceptance_template = Template(app.acceptance_email)
+        rejection_template = Template(app.rejection_email)
+
+        mass_emails = []
+        for submission in submissions:
+            if (
+                submission.notified
+                or submission.status == ApplicationSubmission.PENDING
+                or not (submission.reason and submission.user.email)
+            ):
+                skip += 1
+                continue
+            elif submission.status == ApplicationSubmission.ACCEPTED:
+                template = acceptance_template
+            else:
+                template = rejection_template
+
+            data = {
+                "reason": submission.reason,
+                "name": submission.user.first_name or "",
+                "committee": submission.committee.name,
+            }
+
+            mass_emails.append(
+                (
+                    subject,
+                    template.render(data),
+                    settings.FROM_EMAIL,
+                    [submission.user.email],
+                )
+            )
+            submission.notified = True
+            n += 1
+
+        ApplicationSubmission.objects.bulk_update(submissions, ["notified"])
+
+        if not dry_run:
+            send_mass_mail(tuple(mass_emails), fail_silently=False)
+        return Response(
+            {"detail": f"(Optionally) sent emails to {n} people, skipping {skip}"}
+        )
+
+    @action(detail=True, methods=["post"])
+    def duplicate(self, *args, **kwargs):
+        """
+        Duplicate an application, setting the start and end time arbitrarily.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        obj = self.get_object()
+
+        clone = obj.make_clone()
+
+        now = timezone.now()
+        clone.application_start_time = now + datetime.timedelta(days=1)
+        clone.application_end_time = now + datetime.timedelta(days=30)
+        clone.result_release_time = now + datetime.timedelta(days=40)
+        clone.external_url = (
+            f"https://pennclubs.com/club/{clone.club.code}/" f"application/{clone.pk}"
+        )
+        clone.save()
+        return Response([])
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
@@ -4131,11 +4687,368 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         return ClubApplicationSerializer
 
     def get_queryset(self):
+        return ClubApplication.objects.filter(club__code=self.kwargs["club_code"])
+
+
+class WhartonApplicationAPIView(generics.ListAPIView):
+    """
+    get: Return information about all Wharton Council club applications which are
+    currently on going
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = ClubApplicationSerializer
+
+    def get_operation_id(self, **kwargs):
+        return "List Wharton applications and details"
+
+    def get_queryset(self):
         now = timezone.now()
 
-        return ClubApplication.objects.filter(
-            club__code=self.kwargs["club_code"], result_release_time__gte=now
-        ).order_by("application_end_time")
+        qs = ClubApplication.objects.filter(
+            is_wharton_council=True, application_end_time__gte=now
+        )
+
+        # Order applications randomly for viewing (consistent and unique per user).
+        key = str(self.request.user.id)
+        cached_qs = cache.get(key)
+        if cached_qs and cached_qs.count() == qs.count():
+            return cached_qs
+        qs = qs.annotate(
+            random=SHA1(Concat("name", Value(key), output_field=TextField()))
+        ).order_by("random")
+        cache.set(key, qs, 60)
+        return qs
+
+
+class WhartonApplicationStatusAPIView(generics.ListAPIView):
+    """
+    get: Return aggregate status for Wharton application submissions
+    """
+
+    permission_class = [WhartonApplicationPermission | IsSuperuser]
+    serializer_class = WhartonApplicationStatusSerializer
+
+    def get_operation_id(self, **kwargs):
+        return "List statuses for Wharton application submissions"
+
+    def get_queryset(self):
+        return (
+            ApplicationSubmission.objects.filter(
+                application__is_wharton_council=True,
+                created_at__in=RawSQL(
+                    """SELECT recent_time
+                    FROM
+                    (SELECT user_id,
+                            committee_id,
+                            application_id,
+                            max(created_at) recent_time
+                        FROM clubs_applicationsubmission
+                        WHERE NOT archived
+                        GROUP BY user_id,
+                                committee_id, application_id) recent_subs""",
+                    (),
+                ),
+                archived=False,
+            )
+            .annotate(
+                annotated_name=F("application__name"),
+                annotated_committee=F("committee__name"),
+                annotated_club=F("application__club__name"),
+            )
+            .values(
+                "annotated_name",
+                "application",
+                "annotated_committee",
+                "annotated_club",
+                "status",
+            )
+            .annotate(count=Count("status"))
+        )
+
+
+class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
+    """
+    list: List submissions for a given club application.
+
+    status: Changes status of a submission
+
+    export: export applications
+    """
+
+    permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
+    http_method_names = ["get", "post"]
+
+    def get_queryset(self):
+        # Use a raw SQL query to obtain the most recent (user, committee) pairs
+        # of application submissions for a specific application.
+        # Done by grouping by (user_id, commitee_id) and returning the most
+        # recent instance in each group, then selecting those instances
+
+        app_id = self.kwargs["application_pk"]
+        query = f"""
+                SELECT *
+                FROM clubs_applicationsubmission
+                WHERE application_id = {app_id}
+                AND NOT archived
+                AND created_at in
+                    (SELECT recent_time
+                    FROM
+                    (SELECT user_id,
+                            committee_id,
+                            max(created_at) recent_time
+                        FROM clubs_applicationsubmission
+                        WHERE application_id = {app_id}
+                        AND NOT archived
+                        GROUP BY user_id,
+                                committee_id) recent_subs)
+                """
+        return ApplicationSubmission.objects.raw(query)
+
+    @action(detail=False, methods=["get"])
+    def export(self, *args, **kwargs):
+        """
+        Given some application submissions, export them
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            submissions:
+                                type: array
+                                items:
+                                    type: integer
+                            status:
+                                type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                output:
+                                    type: string
+
+        ---
+        """
+        data = (
+            ApplicationSubmission.objects.filter(
+                application__is_wharton_council=True,
+                created_at__in=RawSQL(
+                    """SELECT recent_time
+                        FROM
+                        (SELECT user_id,
+                                committee_id,
+                                application_id,
+                                max(created_at) recent_time
+                            FROM clubs_applicationsubmission
+                            WHERE NOT archived
+                            GROUP BY user_id,
+                                    committee_id, application_id) recent_subs""",
+                    (),
+                ),
+                archived=False,
+            )
+            .annotate(
+                annotated_name=F("application__name"),
+                annotated_committee=F("committee__name"),
+                annotated_club=F("application__club__name"),
+            )
+            .values(
+                "annotated_name",
+                "application",
+                "annotated_committee",
+                "annotated_club",
+                "status",
+                "user",
+            )
+        )
+        serialized_q = json.dumps(list(data.values()), cls=DjangoJSONEncoder)
+        return Response(serialized_q)
+
+    @action(detail=False, methods=["post"])
+    def status(self, *args, **kwargs):
+        """
+        Given some application submissions, change their status to a new one
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            submissions:
+                                type: array
+                                items:
+                                    type: integer
+                            status:
+                                type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                output:
+                                    type: string
+
+        ---
+        """
+        submission_pks = self.request.data.get("submissions", [])
+        status = self.request.data.get("status", None)
+        if (
+            status in map(lambda x: x[0], ApplicationSubmission.STATUS_TYPES)
+            and len(submission_pks) > 0
+        ):
+            ApplicationSubmission.objects.filter(pk__in=submission_pks).update(
+                status=status
+            )
+        return Response([])
+
+    @action(detail=False, methods=["post"])
+    def reason(self, *args, **kwargs):
+        """
+        Given some application submissions, update their acceptance/rejection
+        reasons
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            submissions:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        id:
+                                            type: integer
+                                        reason:
+                                            type: string
+
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+
+        ---
+        """
+        submissions = self.request.data.get("submissions", [])
+        pks = list(map(lambda x: x["id"], submissions))
+        reasons = list(map(lambda x: x["reason"], submissions))
+
+        submission_objs = ApplicationSubmission.objects.filter(pk__in=pks)
+
+        for idx, obj in enumerate(submission_objs):
+            obj.reason = reasons[idx]
+
+        ApplicationSubmission.objects.bulk_update(submission_objs, ["reason"])
+
+        return Response({"detail": "Successfully updated submissions' reasons"})
+
+    def get_serializer_class(self):
+        if self.request and self.request.query_params.get("format") == "xlsx":
+            return ApplicationSubmissionCSVSerializer
+        else:
+            return ApplicationSubmissionSerializer
+
+
+class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
+    """
+    get: Return list of submitted applications
+
+    delete: Remove a specific application
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = ApplicationSubmissionUserSerializer
+    http_method_names = ["get", "delete"]
+
+    def get_queryset(self):
+        distinct_submissions = {}
+        submissions = ApplicationSubmission.objects.filter(
+            user=self.request.user, archived=False
+        )
+
+        # only want to return the most recent (user, committee) unique submission pair
+        for submission in submissions:
+            key = (submission.application.__str__(), submission.committee.__str__())
+            if key in distinct_submissions:
+                if distinct_submissions[key].created_at < submission.created_at:
+                    distinct_submissions[key] = submission
+            else:
+                distinct_submissions[key] = submission
+
+        queryset = ApplicationSubmission.objects.none()
+        for submission in distinct_submissions.values():
+            queryset |= ApplicationSubmission.objects.filter(pk=submission.pk)
+
+        return queryset
+
+    def perform_destroy(self, instance):
+        """
+        Set archived boolean to be True so that the submissions
+        appears to have been deleted
+        """
+
+        instance.archived = True
+        instance.archived_by = self.request.user
+        instance.archived_on = timezone.now()
+        instance.save()
+
+
+class ApplicationQuestionViewSet(viewsets.ModelViewSet):
+    """
+    create: Create a questions for a club application.
+
+    list: List questions in a given club application.
+    """
+
+    permission_classes = [ClubItemPermission | IsSuperuser]
+    serializer_class = ApplicationQuestionSerializer
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    def get_queryset(self):
+        return ApplicationQuestion.objects.filter(
+            application__pk=self.kwargs["application_pk"]
+        ).order_by("precedence")
+
+    @action(detail=False, methods=["post"])
+    def precedence(self, *args, **kwargs):
+        """
+        Updates the precedence of questions so they are ordered the same way as
+        arranged by the officer creating the application after they drag and drop
+        the different questions to re-order them
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: array
+                        items:
+                            type: integer
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        precedence = self.request.data.get("precedence", [])
+        for index, question_pk in enumerate(precedence):
+            question = ApplicationQuestion.objects.filter(pk=question_pk).first()
+            if question is not None:
+                question.precedence = index
+                question.save()
+        return Response([])
 
 
 class BadgeClubViewSet(viewsets.ModelViewSet):
@@ -4429,6 +5342,36 @@ def parse_script_parameters(script, parameters):
                 args.append((details["position"], value))
     args = [arg[1] for arg in sorted(args)]
     return args, kwargs
+
+
+class AdminNoteViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of admin notes.
+
+    create:
+    Add an admin note.
+
+    put:
+    Update an admin note. All fields are required.
+
+    patch:
+    Update an admin note. Only specified fields are updated.
+
+    retrieve:
+    Return a single admin note.
+
+    destroy:
+    Delete an admin note.
+    """
+
+    serializer_class = AdminNoteSerializer
+    permission_classes = [IsSuperuser]
+    lookup_field = "id"
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    def get_queryset(self):
+        return AdminNote.objects.filter(club__code=self.kwargs.get("club_code"))
 
 
 class ScriptExecutionView(APIView):

@@ -42,6 +42,7 @@ const sites = {
       'You can upload club constitutions here. Please upload your club constitution in pdf or docx format.',
 
     CONTACT_EMAIL: 'contact@pennclubs.com',
+    SUPPORT_EMAIL: 'vpul-orgs@pobox.upenn.edu',
     FEEDBACK_URL: 'https://airtable.com/shrCsYFWxCwfwE7cf',
 
     CLUB_FIELDS: [
@@ -137,8 +138,9 @@ const sites = {
         height: 80,
       },
     ],
-
     GA_TRACKING_CODE: 'UA-21029575-14',
+    FAIR_NAME: 'activities',
+    FAIR_NAME_CAPITALIZED: 'Activities',
   },
   fyh: {
     SITE_NAME: 'Hub@Penn',
@@ -182,6 +184,7 @@ const sites = {
     ],
 
     CONTACT_EMAIL: 'hub.provost@upenn.edu',
+    SUPPORT_EMAIL: 'vpul-orgs@pobox.upenn.edu',
     FEEDBACK_URL: 'https://airtable.com/shrv4RfYIddU1i9o6',
 
     CLUB_FIELDS: [
@@ -230,7 +233,7 @@ const sites = {
 
     PARTNER_LOGOS: [
       {
-        name: 'Vice Provost for University Life',
+        name: 'University Life',
         image: '/static/img/collaborators/vpul.png',
         url: 'https://home.vpul.upenn.edu/',
         className: 'mr-4 mb-4',
@@ -242,8 +245,9 @@ const sites = {
         className: 'mr-4 mb-4',
       },
     ],
-
     GA_TRACKING_CODE: 'UA-21029575-19',
+    FAIR_NAME: 'resource',
+    FAIR_NAME_CAPITALIZED: 'Resource',
   },
 }
 
@@ -255,6 +259,7 @@ export const OG_IMAGE = sites[site].OG_IMAGE
 export const SCHOOL_NAME = sites[site].SCHOOL_NAME
 export const DOMAIN = sites[site].DOMAIN
 export const CONTACT_EMAIL = sites[site].CONTACT_EMAIL
+export const SUPPORT_EMAIL = sites[site].SUPPORT_EMAIL
 export const FEEDBACK_URL = sites[site].FEEDBACK_URL
 
 export const OBJECT_NAME_PLURAL = sites[site].OBJECT_NAME_PLURAL
@@ -314,6 +319,8 @@ export const ALL_CLUB_FIELDS = new Set(
 )
 
 export const GA_TRACKING_CODE = sites[site].GA_TRACKING_CODE
+export const FAIR_NAME = sites[site].FAIR_NAME
+export const FAIR_NAME_CAPITALIZED = sites[site].FAIR_NAME_CAPITALIZED
 
 export const FORM_DESCRIPTION_EXAMPLES: ReactNode =
   sites[site].FORM_DESCRIPTION_EXAMPLES

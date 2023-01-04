@@ -71,7 +71,7 @@ class SecurityTestCase(TestCase):
         """
         A check to ensure that update and delete operations for every permission should
         always require a logged in user. This check should almost never be bypassed or
-        whitelisted.
+        allowlisted.
         """
         factory = RequestFactory()
         request = factory.post("/test")
@@ -102,12 +102,12 @@ class SecurityTestCase(TestCase):
         each ModelViewSet in the views file.
 
         If the permission_classes field is not set, you must explicitly acknowledge
-        what you're doing in the whitelist below.
+        what you're doing in the allowlist below.
 
         Does your object contain any kind of user information? If so, you shouldn't be
-        putting it in the whitelist below.
+        putting it in the allowlist below.
         """
-        whitelist = {"ExternalMemberListViewSet"}
+        allowlist = {"ExternalMemberListViewSet", "ClubBoothsViewSet"}
 
         for name, obj in inspect.getmembers(views, inspect.isclass):
             if issubclass(obj, viewsets.ModelViewSet):
@@ -115,14 +115,14 @@ class SecurityTestCase(TestCase):
                     permissions.AllowAny in obj.permission_classes
                     or not obj.permission_classes
                 ):
-                    if name in whitelist:
+                    if name in allowlist:
                         continue
 
                     self.fail(
                         f"Class {name} has the permission classes to allow anyone to "
                         "access this model view set. Are you sure you want to do this? "
                         f"If you are sure about this change, add {name} to the "
-                        "whitelist in this test case."
+                        "allowlist in this test case."
                     )
 
     def test_check_detail_level_permissions(self):
@@ -138,7 +138,10 @@ class SecurityTestCase(TestCase):
         """
 
         # Don't put your function here unless it never returns any private information.
-        whitelist = set()
+        allowlist = {
+            ("QuestionAnswerViewSet", "like"),
+            ("QuestionAnswerViewSet", "unlike"),
+        }
 
         for name, obj, node in all_viewset_actions(is_detail=True):
             # check to ensure check_object_permissions called
@@ -167,7 +170,7 @@ class SecurityTestCase(TestCase):
                 )
 
             if not (get_object or check_object_permissions):
-                if (name, node.name) in whitelist:
+                if (name, node.name) in allowlist:
                     continue
 
                 self.fail(
@@ -175,6 +178,6 @@ class SecurityTestCase(TestCase):
                     "decorator but does not call self.check_object_permissions "
                     "or self.get_object anywhere in the method body.\n\n"
                     "*** This is most likely a security issue! ***\n"
-                    "Do not whitelist this method or disable this test unless you know "
+                    "Do not allowlist this method or disable this test unless you know "
                     "exactly what you are trying to do."
                 )

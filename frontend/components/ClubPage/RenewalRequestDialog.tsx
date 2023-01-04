@@ -3,7 +3,7 @@ import { ReactElement } from 'react'
 
 import { CLUB_RENEW_ROUTE } from '../../constants/routes'
 import { Club, MembershipRank } from '../../types'
-import { apiCheckPermission } from '../../utils'
+import { apiCheckPermission, isSummer } from '../../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
@@ -23,8 +23,8 @@ type RenewalRequestProps = {
 }
 
 const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement => {
-  const canRenew = apiCheckPermission(`clubs.manage_club:${club.code}`)
-
+  const canRenew =
+    apiCheckPermission(`clubs.manage_club:${club.code}`) && !isSummer()
   const textMapping = {
     clubs: {
       TITLE: (

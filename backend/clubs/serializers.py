@@ -1,8 +1,11 @@
+import datetime
 import json
 import re
+from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 import bleach
+import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -16,12 +19,19 @@ from simple_history.utils import update_change_reason
 
 from clubs.mixins import ManyToManySaveMixin
 from clubs.models import (
+    AdminNote,
     Advisor,
+    ApplicationCommittee,
+    ApplicationMultipleChoice,
+    ApplicationQuestion,
+    ApplicationQuestionResponse,
+    ApplicationSubmission,
     Asset,
     Badge,
     Club,
     ClubApplication,
     ClubFair,
+    ClubFairBooth,
     ClubVisit,
     Event,
     Favorite,
@@ -39,6 +49,10 @@ from clubs.models import (
     StudentType,
     Subscribe,
     Tag,
+    TargetMajor,
+    TargetSchool,
+    TargetStudentType,
+    TargetYear,
     Testimonial,
     Year,
 )
@@ -126,6 +140,15 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
     author = serializers.SerializerMethodField("get_author_name")
     responder = serializers.SerializerMethodField("get_responder_name")
     is_anonymous = serializers.BooleanField(write_only=True)
+    likes = serializers.SerializerMethodField("get_likes")
+    user_liked = serializers.SerializerMethodField("check_liked")
+
+    def get_likes(self, obj):
+        return obj.users_liked.count()
+
+    def check_liked(self, obj):
+        user = self.context["request"].user
+        return obj.users_liked.filter(username=user.username).exists()
 
     def get_author_name(self, obj):
         user = self.context["request"].user
@@ -253,6 +276,8 @@ class QuestionAnswerSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "responder",
             "is_anonymous",
             "approved",
+            "likes",
+            "user_liked",
         )
 
 
@@ -391,7 +416,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
 
     def validate_description(self, value):
         """
-        Allow the description to have HTML tags that come from a whitelist.
+        Allow the description to have HTML tags that come from a allowlist.
         """
         return clean(bleach.linkify(value))
 
@@ -516,6 +541,27 @@ class EventWriteSerializer(EventSerializer):
                     )
 
         return super().update(instance, validated_data)
+
+
+class FavouriteEventSerializer(EventSerializer):
+    pass
+
+
+class ClubBoothSerializer(serializers.ModelSerializer):
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+
+    class Meta:
+        model = ClubFairBooth
+        fields = (
+            "name",
+            "subtitle",
+            "club",
+            "image_url",
+            "lat",
+            "long",
+            "start_time",
+            "end_time",
+        )
 
 
 class MembershipInviteSerializer(serializers.ModelSerializer):
@@ -745,6 +791,21 @@ class AuthenticatedMembershipSerializer(MembershipSerializer):
 
     class Meta(MembershipSerializer.Meta):
         pass
+
+
+class ClubMembershipSerializer(MembershipSerializer):
+    """
+    Provides information about the club that the user is a member of.
+    Used in a reverse lookup to find clubs a user is part of
+    """
+
+    club_code = serializers.CharField(source="club.code")
+    role = serializers.IntegerField(required=False)
+    username = serializers.CharField(source="person.username", read_only=True)
+
+    class Meta:
+        model = Membership
+        fields = ["club_code", "role", "username"]
 
 
 class ClubMinimalSerializer(serializers.ModelSerializer):
@@ -1041,6 +1102,66 @@ def social_validation_helper(value, domain, prefix="", at_prefix=None):
     return "https://{}{}".format(domain, path)
 
 
+class TargetYearSerializer(serializers.ModelSerializer):
+    """
+    Used as a nested serializer by ClubSerializer
+    """
+
+    id = serializers.SerializerMethodField("get_id")
+
+    class Meta:
+        model = TargetYear
+        fields = ("id", "program")
+
+    def get_id(self, obj):
+        return obj.target_years.id
+
+
+class TargetSchoolSerializer(serializers.ModelSerializer):
+    """
+    Used as a nested serializer by ClubSerializer
+    """
+
+    id = serializers.SerializerMethodField("get_id")
+
+    class Meta:
+        model = TargetSchool
+        fields = ("id", "program")
+
+    def get_id(self, obj):
+        return obj.target_schools.id
+
+
+class TargetMajorSerializer(serializers.ModelSerializer):
+    """
+    Used as a nested serializer by ClubSerializer
+    """
+
+    id = serializers.SerializerMethodField("get_id")
+
+    class Meta:
+        model = TargetMajor
+        fields = ("id", "program")
+
+    def get_id(self, obj):
+        return obj.target_majors.id
+
+
+class TargetStudentTypeSerializer(serializers.ModelSerializer):
+    """
+    Used as a nested serializer by ClubSerializer
+    """
+
+    id = serializers.SerializerMethodField("get_id")
+
+    class Meta:
+        model = TargetMajor
+        fields = ("id", "program")
+
+    def get_id(self, obj):
+        return obj.target_student_types.id
+
+
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
@@ -1048,14 +1169,14 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     testimonials = TestimonialSerializer(many=True, read_only=True)
     events = serializers.SerializerMethodField("get_events")
     is_request = serializers.SerializerMethodField("get_is_request")
-    student_types = StudentTypeSerializer(many=True, required=False)
+    student_types = serializers.SerializerMethodField("get_target_student_types")
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
 
-    target_schools = SchoolSerializer(many=True, required=False)
-    target_majors = MajorSerializer(many=True, required=False)
-    target_years = YearSerializer(many=True, required=False)
+    target_schools = serializers.SerializerMethodField("get_target_schools")
+    target_majors = serializers.SerializerMethodField("get_target_majors")
+    target_years = serializers.SerializerMethodField("get_target_years")
 
     subtitle = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
@@ -1110,6 +1231,22 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if not user.is_authenticated:
             return False
         return obj.membershiprequest_set.filter(person=user, withdrew=False).exists()
+
+    def get_target_years(self, obj):
+        qset = TargetYear.objects.filter(club=obj)
+        return [TargetYearSerializer(m).data for m in qset]
+
+    def get_target_majors(self, obj):
+        qset = TargetMajor.objects.filter(club=obj)
+        return [TargetMajorSerializer(m).data for m in qset]
+
+    def get_target_schools(self, obj):
+        qset = TargetSchool.objects.filter(club=obj)
+        return [TargetSchoolSerializer(m).data for m in qset]
+
+    def get_target_student_types(self, obj):
+        qset = TargetStudentType.objects.filter(club=obj)
+        return [TargetStudentTypeSerializer(m).data for m in qset]
 
     def create(self, validated_data):
         """
@@ -1187,7 +1324,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def validate_description(self, value):
         """
-        Allow the description to have HTML tags that come from a whitelist.
+        Allow the description to have HTML tags that come from a allowlist.
         The description must exist and not be extremely short.
         """
         out = clean(value).strip()
@@ -1199,13 +1336,13 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def validate_how_to_get_involved(self, value):
         """
-        Allow the how to get involved field to have whitelisted HTML tags.
+        Allow the how to get involved field to have allowlisted HTML tags.
         """
         return clean(bleach.linkify(value))
 
     def validate_signature_events(self, value):
         """
-        Allow the signature events field to have whitelisted HTML tags.
+        Allow the signature events field to have allowlisted HTML tags.
         """
         return clean(bleach.linkify(value))
 
@@ -1404,6 +1541,108 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         else:
             update_change_reason(obj, "Edit club through UI")
 
+        # Update target year, target school
+        # and target major with specific program names
+        if (
+            self.context["request"].data.get("target_years", None) is not None
+            and self.context["request"].data.get("target_years") is not []
+        ):
+            target_years = self.context["request"].data["target_years"]
+            # Iterate over all Year objects, if a given year's ID does not appear
+            # in the request then we need to delete it
+            for year in Year.objects.all():
+                updated = False
+                for target_year in target_years:
+                    if year.id == target_year["id"]:
+                        TargetYear.objects.filter(club=obj).filter(
+                            target_years=year
+                        ).update_or_create(
+                            club=obj,
+                            target_years=year,
+                            program=target_year.get("program", ""),
+                        )
+                        updated = True
+                        break
+                if not updated:
+                    TargetYear.objects.filter(club=obj).filter(
+                        target_years=year
+                    ).delete()
+
+        if (
+            self.context["request"].data.get("target_schools", None) is not None
+            and self.context["request"].data.get("target_schools") is not []
+        ):
+            target_schools = self.context["request"].data["target_schools"]
+            # Iterate over all School objects, if a given schools's ID does not appear
+            # in the request then we need to delete it
+            for school in School.objects.all():
+                updated = False
+                for target_school in target_schools:
+                    if school.id == target_school["id"]:
+                        TargetSchool.objects.filter(club=obj).filter(
+                            target_schools=school
+                        ).update_or_create(
+                            club=obj,
+                            target_schools=school,
+                            program=target_school.get("program", ""),
+                        )
+                        updated = True
+                        break
+                if not updated:
+                    TargetSchool.objects.filter(club=obj).filter(
+                        target_schools=school
+                    ).delete()
+
+        if (
+            self.context["request"].data.get("target_majors", None) is not None
+            and self.context["request"].data.get("target_majors") is not []
+        ):
+            target_majors = self.context["request"].data["target_majors"]
+            # Iterate over all Major objects, if a given major's ID does not appear
+            # in the request then we need to delete it
+            for major in Major.objects.all():
+                updated = False
+                for target_major in target_majors:
+                    if major.id == target_major["id"]:
+                        TargetMajor.objects.filter(club=obj).filter(
+                            target_majors=major
+                        ).update_or_create(
+                            club=obj,
+                            target_majors=major,
+                            program=target_major.get("program", ""),
+                        )
+                        updated = True
+                        break
+                if not updated:
+                    TargetMajor.objects.filter(club=obj).filter(
+                        target_majors=major
+                    ).delete()
+
+        if (
+            self.context["request"].data.get("student_types", None) is not None
+            and self.context["request"].data.get("student_types") is not []
+        ):
+            target_student_types = self.context["request"].data["student_types"]
+            # Iterate over all Student Type objects, if a given student type's ID
+            # does not appear in the request then we need to delete it
+            for student_type in StudentType.objects.all():
+                updated = False
+                for target_student_type in target_student_types:
+                    if student_type.id == target_student_type["id"]:
+                        TargetStudentType.objects.filter(club=obj).filter(
+                            target_student_types=student_type
+                        ).update_or_create(
+                            club=obj,
+                            target_student_types=student_type,
+                            program=target_student_type.get("program", ""),
+                        )
+                        updated = True
+                        break
+                if not updated:
+                    TargetStudentType.objects.filter(club=obj).filter(
+                        target_student_types=student_type
+                    ).delete()
+
         return obj
 
     class Meta(ClubListSerializer.Meta):
@@ -1412,6 +1651,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "approved_by",
             "approved_comment",
             "badges",
+            "created_at",
             "description",
             "events",
             "facebook",
@@ -1905,6 +2145,24 @@ class AuthenticatedClubSerializer(ClubSerializer):
     email = serializers.EmailField()
     email_public = serializers.BooleanField(default=True)
     advisor_set = AdvisorSerializer(many=True, required=False)
+    owners = serializers.SerializerMethodField("get_owners")
+    officers = serializers.SerializerMethodField("get_officers")
+
+    def get_owners(self, obj):
+        return MinimalUserProfileSerializer(
+            obj.members.filter(membership__role=Membership.ROLE_OWNER),
+            many=True,
+            read_only=True,
+            context=self.context,
+        ).data
+
+    def get_officers(self, obj):
+        return MinimalUserProfileSerializer(
+            obj.members.filter(membership__role=Membership.ROLE_OFFICER),
+            many=True,
+            read_only=True,
+            context=self.context,
+        ).data
 
     class Meta(ClubSerializer.Meta):
         fields = ClubSerializer.Meta.fields + [
@@ -1913,6 +2171,8 @@ class AuthenticatedClubSerializer(ClubSerializer):
             "files",
             "ics_import_url",
             "terms",
+            "owners",
+            "officers",
         ]
 
 
@@ -2040,18 +2300,356 @@ class NoteTagSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
+class ApplicationCommitteeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationCommittee
+        fields = ("name",)
+
+
+class ApplicationMultipleChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationMultipleChoice
+        fields = ("value",)
+
+
+class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer):
+    multiple_choice = ApplicationMultipleChoiceSerializer(
+        many=True, required=False, read_only=True
+    )
+    committees = ApplicationCommitteeSerializer(
+        many=True, required=False, read_only=True
+    )
+
+    class Meta:
+        model = ApplicationQuestion
+        fields = (
+            "id",
+            "question_type",
+            "prompt",
+            "word_limit",
+            "multiple_choice",
+            "committees",
+            "question_type",
+            "committee_question",
+            "precedence",
+        )
+
+    def validate_word_limit(self, value):
+        """
+        For wharton council applications, ensure that the committees have
+        at most 500 words worth of questions
+        """
+
+        data = self.context["request"].data
+
+        if "committees" in data:
+            committees = data["committees"]
+
+            application = ClubApplication.objects.filter(
+                pk=self.context["view"].kwargs.get("application_pk")
+            ).first()
+
+            if not application.is_wharton_council:
+                return value
+
+            for committee in committees:
+                obj = ApplicationCommittee.objects.filter(
+                    application=application, name=committee["name"]
+                ).first()
+
+                current_limit = obj.get_word_limit()
+
+                instance_limit = self.instance.word_limit if self.instance else 0
+
+                if data["word_limit"] + current_limit - instance_limit > 500:
+                    raise serializers.ValidationError(
+                        f"The total word limit of questions in committee \
+                        ''{committee['name']} ' should not exceed 500. \
+                        Current: {current_limit}"
+                    )
+        return value
+
+    def create(self, validated_data):
+        # remove club from request we do not use it
+        validated_data.pop("club")
+
+        application_pk = self.context["view"].kwargs.get("application_pk")
+        validated_data["application"] = ClubApplication.objects.filter(
+            pk=application_pk
+        ).first()
+
+        return super().create(validated_data)
+
+    def save(self):
+        question_obj = super().save()
+        # manually create multiple choice answers as Django does not
+        # support nested serializers out of the box
+        request = self.context["request"].data
+        if "multiple_choice" in request:
+            multiple_choice = request["multiple_choice"]
+            ApplicationMultipleChoice.objects.filter(question=question_obj).delete()
+            for choice in multiple_choice:
+                ApplicationMultipleChoice.objects.create(
+                    value=choice["value"], question=question_obj,
+                )
+
+        # manually create committee choices as Django does not
+        # support nested serializers out of the box
+        if "committees" in request:
+            committees = request["committees"]
+            question_obj.committees.clear()
+            for committee in committees:
+                committee_obj = ApplicationCommittee.objects.filter(
+                    application=question_obj.application, name=committee["name"]
+                ).first()
+                question_obj.committees.add(committee_obj)
+
+        return question_obj
+
+
+class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
+    multiple_choice = ApplicationMultipleChoiceSerializer(
+        required=False, read_only=True
+    )
+    question_type = serializers.CharField(
+        source="question.question_type", read_only=True
+    )
+    question = ApplicationQuestionSerializer(required=False, read_only=True)
+
+    class Meta:
+        model = ApplicationQuestionResponse
+        fields = ("text", "multiple_choice", "question_type", "question")
+
+
+class ApplicationSubmissionSerializer(serializers.ModelSerializer):
+    committee = ApplicationCommitteeSerializer(required=False, read_only=True)
+    responses = ApplicationQuestionResponseSerializer(
+        many=True, required=False, read_only=True
+    )
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
+    email = serializers.CharField(source="user.email", read_only=True)
+    graduation_year = serializers.CharField(
+        source="user.profile.graduation_year", read_only=True
+    )
+    club = serializers.CharField(source="application.club.name", read_only=True)
+    code = serializers.CharField(source="application.club.code", read_only=True)
+    name = serializers.CharField(source="application.name", read_only=True)
+    application_link = serializers.SerializerMethodField("get_application_link")
+
+    def get_application_link(self, obj):
+        """
+        Return url to the internal application page for associated club application
+        """
+        if obj.application and obj.application.club:
+            return (
+                f"/club/{obj.application.club.code}/application/{obj.application.pk}/"
+            )
+        else:
+            # cannot link to the application if the application has been deleted
+            return "#"
+
+    def validate(self, data):
+        application_start_time = data["application_start_time"]
+        application_end_time = data["application_end_time"]
+        now = pytz.UTC.localize(datetime.datetime.now())
+
+        if now < application_start_time:
+            raise serializers.ValidationError(
+                "You cannot submit before the application has opened."
+            )
+
+        if now > application_end_time:
+            raise serializers.ValidationError(
+                "You cannot submit after the application deadline."
+            )
+
+        return data
+
+    class Meta:
+        model = ApplicationSubmission
+        fields = (
+            "pk",
+            "application",
+            "committee",
+            "created_at",
+            "pk",
+            "status",
+            "responses",
+            "club",
+            "name",
+            "application_link",
+            "first_name",
+            "last_name",
+            "email",
+            "code",
+            "graduation_year",
+        )
+
+
+class ApplicationSubmissionUserSerializer(ApplicationSubmissionSerializer):
+    pass
+
+
+class WhartonApplicationStatusSerializer(serializers.Serializer):
+    club = serializers.CharField(source="annotated_club")
+    committee = serializers.CharField(source="annotated_committee")
+    application = serializers.IntegerField()
+    name = serializers.CharField(source="annotated_name")
+    count = serializers.IntegerField()
+    status = serializers.SerializerMethodField("get_status")
+
+    def get_status(self, obj):
+        """
+        Return the status string of the status associated with the submission
+        """
+        status_string = ApplicationSubmission.STATUS_TYPES[0][1]
+        for (status, name) in ApplicationSubmission.STATUS_TYPES:
+            if obj["status"] == status:
+                status_string = name
+        return status_string
+
+    class Meta:
+        model = ApplicationSubmission
+        fields = ("club", "application", "committee", "name", "status", "count")
+
+
+class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField("get_name")
+    email = serializers.CharField(source="user.email")
+    graduation_year = serializers.CharField(source="user.profile.graduation_year")
+    committee = serializers.SerializerMethodField("get_committee")
+
+    def get_name(self, obj):
+        """
+        Return the concatenated first and last name of the applicant
+        """
+        return f"{obj.user.first_name} {obj.user.last_name}"
+
+    def get_committee(self, obj):
+        """
+        Return the committee name for the default name if there is no committee name
+        """
+        return (
+            obj.committee.name if obj.committee else ClubApplication.DEFAULT_COMMITTEE
+        )
+
+    def to_representation(self, instance):
+        """
+        Override to also include values for fields we add when we override init. We
+        need to query the responses to find the appropriate response for each question
+        """
+        fields = {
+            "name": self.get_name(instance),
+            "email": instance.user.email,
+            "graduation_year": instance.user.profile.graduation_year,
+            "committee": self.get_committee(instance),
+        }
+        application = instance.application
+        for question in application.questions.all():
+            response = instance.responses.filter(question=question).first()
+            if response:
+                # format the responses depending on the question type
+                if question.question_type == ApplicationQuestion.FREE_RESPONSE:
+                    fields[question.prompt] = response.text
+                elif question.question_type == ApplicationQuestion.MULTIPLE_CHOICE:
+                    if response.multiple_choice is not None:
+                        fields[question.prompt] = response.multiple_choice.value
+                    elif question.prompt not in fields:
+                        fields[question.prompt] = ""
+                elif question.question_type == ApplicationQuestion.SHORT_ANSWER:
+                    fields[question.prompt] = response.text
+                elif question.question_type == ApplicationQuestion.INFO_TEXT:
+                    pass
+            else:
+                # set empty string as response if question unanswered
+                if (
+                    question.question_type != ApplicationQuestion.INFO_TEXT
+                    and question.prompt not in fields
+                ):
+                    fields[question.prompt] = ""
+
+        return OrderedDict(fields)
+
+    def __init__(self, *args, **kwargs):
+        """
+        Override init so we can dynamically add fields. Each question prompt needs
+        its own field so it can correctly be formatted into a CSV with one column
+        per question (the XLSXFormatterMixin just gives each field a column)
+        """
+        super(ApplicationSubmissionCSVSerializer, self).__init__(*args, **kwargs)
+        (queryset,) = args
+
+        submission = queryset[0] if len(queryset) else None
+        if submission:
+            application = submission.application
+            for question in application.questions.all():
+                if question.question_type != ApplicationQuestion.INFO_TEXT:
+                    self.fields[question.prompt] = serializers.CharField()
+
+    class Meta:
+        model = ApplicationSubmission
+        fields = (
+            "name",
+            "email",
+            "graduation_year",
+            "committee",
+        )
+
+
 class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     name = serializers.SerializerMethodField("get_name")
+    committees = ApplicationCommitteeSerializer(
+        many=True, required=False, read_only=True
+    )
+    questions = ApplicationQuestionSerializer(many=True, required=False, read_only=True)
+    club = serializers.SlugRelatedField(slug_field="code", read_only=True)
+    updated_at = serializers.SerializerMethodField("get_updated_time", read_only=True)
+    club_image_url = serializers.SerializerMethodField("get_image_url", read_only=True)
+    season = serializers.CharField(read_only=True)
+    active = serializers.SerializerMethodField("get_active", read_only=True)
+
+    def get_active(self, obj):
+        now = timezone.now()
+        return obj.application_end_time >= now
 
     def get_name(self, obj):
         if obj.name:
             return obj.name
         return f"{obj.club.name} Application"
 
+    def get_updated_time(self, obj):
+        updated_at = obj.updated_at
+        questions = ApplicationQuestion.objects.filter(application=obj)
+        for question in questions:
+            if question.updated_at > updated_at:
+                updated_at = question.updated_at
+        return updated_at
+
+    def get_image_url(self, obj):
+        image = obj.club.image
+        if not image:
+            return None
+        if image.url.startswith("http"):
+            return image.url
+        elif "request" in self.context:
+            return self.context["request"].build_absolute_uri(image.url)
+        else:
+            return image.url
+
     def validate(self, data):
         application_start_time = data["application_start_time"]
         application_end_time = data["application_end_time"]
         result_release_time = data["result_release_time"]
+        acceptance_template = data["acceptance_email"]
+        rejection_template = data["rejection_email"]
+
+        if not ClubApplication.validate_template(
+            acceptance_template
+        ) or not ClubApplication.validate_template(rejection_template):
+            raise serializers.ValidationError(
+                "Your application email templates contain invalid variables!"
+            )
 
         if application_start_time > application_end_time:
             raise serializers.ValidationError(
@@ -2065,15 +2663,55 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         return data
 
+    def save(self):
+        application_obj = super().save()
+        # manually create committee objects as Django does
+        # not support nested serializers out of the box
+        request = self.context["request"].data
+
+        # only allow modifications to committees if the application is not yet open
+        now = pytz.timezone("America/New_York").localize(datetime.datetime.now())
+        if "committees" in request and application_obj.application_start_time > now:
+            committees = map(
+                lambda x: x["value"] if "value" in x else x["name"],
+                request["committees"],
+            )
+            prev_committees = ApplicationCommittee.objects.filter(
+                application=application_obj
+            )
+            # nasty hack for idempotency
+            for prev_committee in prev_committees:
+                if prev_committee.name not in committees:
+                    prev_committee.delete()
+
+            prev_committee_names = prev_committees.values("name")
+            for name in committees:
+                if name not in prev_committee_names:
+                    ApplicationCommittee.objects.create(
+                        name=name, application=application_obj,
+                    )
+
+        return application_obj
+
     class Meta:
         model = ClubApplication
         fields = (
             "id",
+            "season",
+            "active",
             "name",
+            "acceptance_email",
+            "rejection_email",
             "application_start_time",
             "application_end_time",
             "result_release_time",
             "external_url",
+            "committees",
+            "questions",
+            "club",
+            "description",
+            "updated_at",
+            "club_image_url",
         )
 
 
@@ -2138,6 +2776,28 @@ class ClubFairSerializer(serializers.ModelSerializer):
             "start_time",
             "time",
         )
+
+
+class AdminNoteSerializer(serializers.ModelSerializer):
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    creator = serializers.SerializerMethodField("get_creator")
+    title = serializers.CharField(max_length=255, default="Note")
+    content = serializers.CharField(required=False)
+
+    def get_creator(self, obj):
+        return obj.creator.get_full_name()
+
+    def create(self, validated_data):
+        return AdminNote.objects.create(
+            creator=self.context["request"].user,
+            club=validated_data["club"],
+            title=validated_data["title"],
+            content=validated_data["content"],
+        )
+
+    class Meta:
+        model = AdminNote
+        fields = ("id", "creator", "club", "title", "content", "created_at")
 
 
 class WritableClubFairSerializer(ClubFairSerializer):

@@ -24,6 +24,7 @@ import {
   SHOW_RANK_ALGORITHM,
   SITE_ID,
   SITE_NAME,
+  SUPPORT_EMAIL,
 } from 'utils/branding'
 
 import { CLUBS_HOME, CREATE_ROUTE, HUB_HOME, SNOW } from '~/constants'
@@ -166,15 +167,15 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
       <UnorderedList>
         <li>
           If you did not receive administrator permission and you believe you
-          should have, let us know at <Contact /> and we will work with you to
-          verify your request.
+          should have, let us know at <Contact email={SUPPORT_EMAIL} /> and we
+          will work with you to verify your request.
         </li>
         <li>
           If your {OBJECT_NAME_SINGULAR} did not submit this information
           previously, we've been contacting {OBJECT_NAME_PLURAL} by their listed
           email to ask for the names of people who need administrator
-          permission. You can also email us at <Contact /> and we will work with
-          you to verify your request.
+          permission. You can also email us at <Contact email={SUPPORT_EMAIL} />{' '}
+          and we will work with you to verify your request.
         </li>
       </UnorderedList>
       <br />
@@ -202,18 +203,19 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
         </li>
         <li>
           If you're an administator of a {OBJECT_NAME_SINGULAR} and it{' '}
-          <b>already exists</b> on {SITE_NAME}, email <Contact /> to gain edit
-          access for your {OBJECT_NAME_SINGULAR}.
+          <b>already exists</b> on {SITE_NAME}, email{' '}
+          <Contact email={SUPPORT_EMAIL} /> to gain edit access for your{' '}
+          {OBJECT_NAME_SINGULAR}.
         </li>
         <li>
           Otherwise, if you're not the administrator of the{' '}
           {OBJECT_NAME_SINGULAR} but would still like for it to be added to{' '}
-          {SITE_NAME}, please email <Contact />.
+          {SITE_NAME}, please email <Contact email={SUPPORT_EMAIL} />.
         </li>
       </UnorderedList>
       <br />
       If you have any questions about the {OBJECT_NAME_SINGULAR} creation
-      process, please email <Contact />.
+      process, please email <Contact email={SUPPORT_EMAIL} />.
     </Question>
     <Question
       title={`Who is responsible for approving ${OBJECT_NAME_PLURAL} on ${SITE_NAME}?`}
@@ -291,8 +293,8 @@ const FAQS = {
       <Question title="How do I edit a resource's profile?">
         You'll need to have administrator permission for that organization. If
         you did not receive administrator permission and you believe you should
-        have, let us know at <Contact /> and we will work with you to verify
-        your request.
+        have, let us know at <Contact email={SUPPORT_EMAIL} /> and we will work
+        with you to verify your request.
       </Question>
       <Question title="Why can't I find a certain resource on Hub@Penn?">
         Sorry about that! We’re in the process of making Hub@Penn as
@@ -306,11 +308,13 @@ const FAQS = {
           </li>
           <li>
             If you're in charge of a resource and it <b>already exists</b> on
-            Hub@Penn, email <Contact /> to gain edit access for your resource.
+            Hub@Penn, email <Contact email={SUPPORT_EMAIL} /> to gain edit
+            access for your resource.
           </li>
           <li>
             Otherwise, if you're not the administrator of the resource but would
-            still like for it to be added to Hub@Penn, please email <Contact />.
+            still like for it to be added to Hub@Penn, please email{' '}
+            <Contact email={SUPPORT_EMAIL} />.
           </li>
         </UnorderedList>
       </Question>

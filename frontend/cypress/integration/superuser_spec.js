@@ -37,10 +37,9 @@ describe('Permissioned (superuser) user tests', { retries: { runMode: 2, openMod
       .clear()
       .type('Penn Pre-Professional Juggling Organization - Edited')
       .blur()
-    cy.contains('Submit').click()
-    cy.contains('saved')
+    cy.contains('Submit').click({ force: true })
 
-    // go back to club page, ensure edits are shown
+    // go back to club page, ensure edited title is shown
     cy.contains('View Club').scrollIntoView().click({ force: true })
     cy.contains('Penn Pre-Professional Juggling Organization - Edited')
 
@@ -48,10 +47,16 @@ describe('Permissioned (superuser) user tests', { retries: { runMode: 2, openMod
     cy.contains('a:visible', 'Manage Club').scrollIntoView().click()
     cy.url({ timeout: 15 * 1000 }).should('contain', 'edit')
     cy.contains('.field', 'Name')
+      .should('be.visible')
       .find('input')
       .clear()
       .type('Penn Pre-Professional Juggling Organization')
+      .blur()
     cy.contains('Submit').click()
+
+    // go back to club page, ensure reverted title is shown
+    cy.contains('View Club').scrollIntoView().click({ force: true })
+    cy.contains('Penn Pre-Professional Juggling Organization')
   })
 
   it('Visits edit page tabs', () => {

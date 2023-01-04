@@ -2,7 +2,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 
 import { ContentState, convertToRaw, EditorState } from 'draft-js'
 import draftToHtml from 'draftjs-to-html'
-import { useFormikContext } from 'formik'
+import { useField, useFormikContext } from 'formik'
 import Head from 'next/head'
 import React, {
   ReactElement,
@@ -14,6 +14,7 @@ import React, {
 } from 'react'
 import DatePicker from 'react-datepicker'
 import Select from 'react-select'
+import CreatableSelect from 'react-select/creatable'
 import styled from 'styled-components'
 import uuid from 'uuid'
 
@@ -270,6 +271,53 @@ export const DateTimeField = useFieldWrapper(
 )
 
 /**
+ * Field that allows users to add new multi-select items
+ */
+export const CreatableMultipleSelectField = useFieldWrapper(
+  (props: BasicFormField & AnyHack): ReactElement => {
+    const {
+      name,
+      value,
+      placeholder,
+      initialValues,
+      choices,
+      serialize,
+      deserialize,
+    } = props
+    const { setFieldValue } = useFormikContext()
+
+    return (
+      <CreatableSelect
+        name={name}
+        as={SelectField}
+        onChange={(
+          val: [{ label: string; value: string; _isNew: boolean }],
+          _action: any,
+        ) => {
+          // TODO: types are good but this is not particularly modular, might
+          // be best to make this more generalizable
+          serialize != null
+            ? setFieldValue(name, serialize(val))
+            : setFieldValue(name, val)
+        }}
+        isMulti
+        creatable
+        value={
+          initialValues != null
+            ? deserialize != null
+              ? deserialize(initialValues)
+              : initialValues
+            : deserialize != null
+            ? deserialize(value)
+            : value
+        }
+        options={choices}
+      />
+    )
+  },
+)
+
+/**
  * A field that allows the user to enter an arbitrary line of text.
  */
 const TextEditField = ({ field, setField }): ReactElement => {
@@ -446,7 +494,14 @@ export const DynamicQuestionField = useFieldWrapper(
  */
 export const TextField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
-    const { type = 'text', isError, value, ...other } = props
+    const {
+      type = 'text',
+      isError,
+      value,
+      customHandleChange,
+      readOnly,
+      ...other
+    } = props
 
     const { setFieldValue } = useFormikContext()
 
@@ -464,6 +519,7 @@ export const TextField = useFieldWrapper(
           className={`textarea ${isError ? 'is-danger' : ''}`}
           value={value ?? ''}
           {...other}
+          readOnly={readOnly ?? false}
         ></textarea>
       )
     }
@@ -497,6 +553,7 @@ export const TextField = useFieldWrapper(
         className={`input ${isError ? 'is-danger' : ''}`}
         type={actualType}
         value={value != null ? value.toString() : ''}
+        readOnly={readOnly ?? false}
         {...other}
       />
     )
@@ -627,6 +684,8 @@ type SelectFieldProps<T> = {
     : { value: string; label: string }
   formatOptionLabel: (inpt: any) => string | ReactElement
   isMulti?: boolean
+  creatable?: boolean
+  customHandleChange?: (updated: any) => void
 }
 
 /**
@@ -646,7 +705,9 @@ export const SelectField = useFieldWrapper(
     deserialize,
     valueDeserialize,
     isMulti,
+    creatable,
     formatOptionLabel,
+    customHandleChange,
   }: BasicFormField &
     SelectFieldProps<
       { [key: string]: string | number } | string
@@ -703,6 +764,7 @@ export const SelectField = useFieldWrapper(
         key={name}
         placeholder={placeholder}
         isMulti={isMulti}
+        creatable={creatable}
         value={(valueDeserialize ?? actualDeserialize)(value)}
         options={
           actualDeserialize(choices) as {
@@ -711,7 +773,12 @@ export const SelectField = useFieldWrapper(
           }[]
         }
         formatOptionLabel={formatOptionLabel}
-        onChange={(opt): void => setFieldValue(name, actualSerialize(opt))}
+        onChange={(opt): void => {
+          setFieldValue(name, actualSerialize(opt))
+          if (customHandleChange !== undefined) {
+            customHandleChange(opt)
+          }
+        }}
         onBlur={onBlur}
         styles={{ container: (style) => ({ ...style, width: '100%' }) }}
       />
@@ -764,5 +831,71 @@ export const CheckboxField = (
         innerBody
       )}
     </div>
+  )
+}
+
+export const CheckboxTextField: React.FC<BasicFormField & AnyHack> = (
+  props,
+) => {
+  const { label, onChange, textRequired, ...other } = props
+  const fieldContext = useContext(FormFieldClassContext)
+  const [input, meta, helpers] = useField({
+    name: props.name,
+    validate: (value) => {
+      if (
+        !!textRequired &&
+        value?.checked &&
+        (!value?.detail || value?.detail?.length === 0)
+      ) {
+        return textRequired
+      }
+      return null
+    },
+  })
+
+  const value = meta.value || props.value
+
+  return (
+    <>
+      <div
+        className={`field ${fieldContext}`}
+        style={{ display: 'flex', alignItems: 'center' }}
+      >
+        <div className="control">
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              style={{ transform: 'scale(1.5)' }}
+              checked={value?.checked ?? false}
+              onChange={(e) =>
+                helpers.setValue({
+                  ...value,
+                  checked: e.target.checked,
+                })
+              }
+            />{' '}
+            <span style={{ display: 'inline-block', marginLeft: '8px' }}>
+              {label}
+            </span>
+          </label>
+        </div>
+        <div className="field-text" style={{ marginLeft: '8px', flex: 1 }}>
+          <input
+            type="text"
+            className="input"
+            style={{ width: '100%' }}
+            value={value?.detail ?? ''}
+            onChange={(e) =>
+              helpers.setValue({ ...value, detail: e.target.value })
+            }
+          />
+        </div>
+      </div>
+      {meta.error && (
+        <p className="help is-danger" style={{ marginBottom: '8px' }}>
+          {meta.error}
+        </p>
+      )}
+    </>
   )
 }

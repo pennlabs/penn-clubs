@@ -1,4 +1,6 @@
 /* eslint-disable camelcase */
+export type Maybe<T> = T | undefined
+
 export enum MembershipRank {
   Owner = 0,
   Officer = 10,
@@ -113,11 +115,13 @@ export interface Badge {
 
 export interface QuestionAnswer {
   id: number
+  likes: number
   approved: boolean
   question: string
   answer: string
   author: string
   responder: string
+  user_liked: boolean
 }
 
 export interface Advisor {
@@ -284,4 +288,96 @@ export type DynamicQuestion = {
   label: string
   type: string
   choices?: { id: string; label: string }[]
+}
+
+export type Application = {
+  id: number
+  name: string
+  description: string
+  application_start_time: string
+  application_end_time: string
+  result_release_time: string
+  updated_at: string
+  external_url: string | null
+  committees: Array<{ name: string }> | null
+  club: string
+  club_image_url: string
+  questions: ApplicationQuestion[]
+}
+
+export type ApplicationStatus = {
+  club: string
+  application: number
+  committee: string
+  name: string
+  status: string
+  count: number
+}
+
+export enum ApplicationQuestionType {
+  FreeResponse = 1,
+  MultipleChoice = 2,
+  ShortAnswer = 3,
+  InfoText = 4,
+}
+
+export type ApplicationQuestion = {
+  id: number
+  question_type: ApplicationQuestionType
+  prompt: string
+  word_limit: number
+  committees: Array<{ name: string }>
+  multiple_choice: [
+    {
+      value: string
+    },
+  ]
+  committee_question: boolean
+}
+
+export enum ApplicationStatusType {
+  Pending = 1,
+  RejectedWritten = 2,
+  RejectedInterview = 3,
+  Accepted = 4,
+}
+
+export const APPLICATION_STATUS_TYPES = [
+  {
+    value: ApplicationStatusType.Pending,
+    label: 'Pending',
+  },
+  {
+    value: ApplicationStatusType.RejectedWritten,
+    label: 'Rejected after written application',
+  },
+  {
+    value: ApplicationStatusType.RejectedInterview,
+    label: 'Rejected after interview(s)',
+  },
+  {
+    value: ApplicationStatusType.Accepted,
+    label: 'Accepted',
+  },
+]
+
+export type ApplicationSubmission = {
+  pk: number
+  application: number
+  committee: string | null
+  created_at: string
+  status: string
+  responses: Array<ApplicationResponse>
+  club: string
+  code: string
+  application_link: string
+}
+
+export type ApplicationResponse = {
+  text: string | null
+  multiple_choice: {
+    value: string
+  }
+  question_type: string
+  question: ApplicationQuestion
 }

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import React, { ReactElement, useEffect, useState } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 
+import ApplicationsPage from '../components/ClubEditPage/ApplicationsPage'
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import ClubManagementCard from '../components/ClubEditPage/ClubManagementCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
@@ -315,6 +316,12 @@ const ClubForm = ({
             )}
           </>
         ),
+      },
+      {
+        name: 'applications',
+        label: `Applications Page`,
+        content: <ApplicationsPage club={club} />,
+        disabled: !SHOW_APPLICATIONS,
       },
       {
         name: 'resources',

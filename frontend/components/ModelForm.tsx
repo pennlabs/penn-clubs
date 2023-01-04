@@ -82,6 +82,7 @@ type ModelFormProps = {
   allowDeletion?: boolean
   confirmDeletion?: boolean
   actions?: (object: ModelObject) => ReactElement
+  draggable?: boolean
 }
 
 /**
@@ -119,6 +120,8 @@ type ModelTableProps = {
   onEdit?: (object: ModelObject) => void
   onDelete?: (object: ModelObject) => void
   actions?: (object: ModelObject) => ReactElement
+  draggable?: boolean
+  onDragEnd?: (result: any) => void | null | undefined
 }
 
 /**
@@ -136,6 +139,8 @@ export const ModelTable = ({
   onEdit = () => undefined,
   onDelete = () => undefined,
   actions,
+  draggable = false,
+  onDragEnd,
 }: ModelTableProps): ReactElement => {
   const columns = useMemo(
     () =>
@@ -151,10 +156,10 @@ export const ModelTable = ({
       const renderFunction = column.converter
       return {
         ...column,
-        render: (id, _) => {
-          const obj = objects?.[id]
+        render: (id, row) => {
+          const obj = objects?.[id] ?? objects?.[row]
           const value = obj?.[column.name]
-          return obj && value ? renderFunction(value, obj) : 'N/A'
+          return obj && value != null ? renderFunction(value, obj) : 'N/A'
         },
       }
     } else return column
@@ -162,52 +167,60 @@ export const ModelTable = ({
 
   tableFields.push({
     name: 'Actions',
-    render: (_, index) => (
-      <div className="buttons">
-        {allowEditing && (
-          <button
-            onClick={() => {
-              return onEdit(objects[index])
-            }}
-            className="button is-primary is-small"
-          >
-            <Icon name="edit" alt="edit" /> Edit
-          </button>
-        )}
-        {allowDeletion && (
-          <button
-            onClick={() => {
-              if (confirmDeletion) {
-                if (
-                  confirm(
-                    `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
-                  )
-                ) {
-                  onDelete(objects[index])
-                }
-              } else {
-                onDelete(objects[index])
-              }
-            }}
-            className="button is-danger is-small"
-          >
-            <Icon name="trash" alt="delete" /> {deleteVerb}
-          </button>
-        )}
-        {actions && actions(objects[index])}
-      </div>
-    ),
+    render: (id, _) => {
+      const object = objects.find((object) => object.id === id)
+      if (object == null) {
+        return null
+      }
+      return (
+        <div className="buttons">
+          {allowEditing &&
+            (object.active === true || object.active === undefined) && (
+              <button
+                onClick={() => {
+                  return onEdit(object)
+                }}
+                className="button is-primary is-small"
+              >
+                <Icon name="edit" alt="edit" /> Edit
+              </button>
+            )}
+          {allowDeletion &&
+            (object.active === true || object.active === undefined) && (
+              <button
+                onClick={() => {
+                  if (confirmDeletion) {
+                    if (
+                      confirm(
+                        `Are you sure you want to ${deleteVerb.toLowerCase()} this ${noun.toLowerCase()}?`,
+                      )
+                    ) {
+                      onDelete(object)
+                    }
+                  } else {
+                    onDelete(object)
+                  }
+                }}
+                className="button is-danger is-small"
+              >
+                <Icon name="trash" alt="delete" /> {deleteVerb}
+              </button>
+            )}
+          {actions && actions(object)}
+        </div>
+      )
+    },
   })
 
   return (
     <>
       <Table
-        data={objects.map((item, index) =>
-          item.id ? item : { ...item, id: index },
-        )}
+        data={objects}
         columns={tableFields}
         searchableColumns={['name']}
         filterOptions={filterOptions || []}
+        draggable={draggable}
+        onDragEnd={onDragEnd}
       />
     </>
   )
@@ -218,15 +231,29 @@ export const ModelTable = ({
  * capabilities for a Django model using a provided endpoint.
  */
 export const ModelForm = (props: ModelFormProps): ReactElement => {
-  const [objects, changeObjects] = useState<ModelObject[]>([])
+  const [objects, setObjects] = useState<ModelObject[]>([])
   const [
     currentlyEditing,
     changeCurrentlyEditing,
   ] = useState<ModelObject | null>(null)
   const [newCount, changeNewCount] = useState<number>(0)
   const [createObject, changeCreateObject] = useState<ModelObject>(
-    props.defaultObject != null ? { ...props.defaultObject } : {},
+    props.defaultObject != null
+      ? { tempId: newCount, ...props.defaultObject }
+      : { tempId: newCount },
   )
+
+  function changeObjects(newObjects: ModelObject[]) {
+    if (Array.isArray(newObjects)) {
+      setObjects(
+        newObjects.map((object, index) =>
+          object.id ? object : { ...object, id: index },
+        ),
+      )
+    } else {
+      setObjects(newObjects)
+    }
+  }
 
   const {
     fields,
@@ -243,6 +270,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     actions,
     keyField = 'id',
     onChange: parentComponentChange,
+    draggable = false,
   } = props
 
   /**
@@ -331,7 +359,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
 
     // create or edit the object, uploading all non-file fields
     const savePromise =
-      typeof object[keyField] === 'undefined'
+      object.tempId !== undefined
         ? doApiRequest(`${baseUrl}?format=json`, {
             method: 'POST',
             body: formData,
@@ -356,7 +384,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     const newObject = { ...object }
 
     // update object state
-    changeObjects((objects) => {
+    setObjects((objects) => {
       const objIndex = objects.indexOf(newObject)
       if (objIndex !== -1) {
         objects[objIndex] = newObject
@@ -381,6 +409,26 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
         .filter((a) => a !== null),
     )
     return newObject
+  }
+
+  const onDragEnd = (result: any): void => {
+    const { source, destination } = result
+    if (!destination) {
+      return
+    }
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return
+    }
+
+    const newObjects = [...objects]
+    const temp = newObjects.splice(source.index, 1)[0]
+    newObjects.splice(destination.index, 0, temp)
+    changeObjects(newObjects) // needs to a new object to initiate re-render
+    if (onUpdate) onUpdate(newObjects)
   }
 
   /**
@@ -424,6 +472,8 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           confirmDeletion={confirmDeletion}
           allowEditing={allowEditing}
           actions={actions}
+          draggable={draggable}
+          onDragEnd={onDragEnd}
         />
         {(allowCreation || currentlyEditing !== null) && (
           <>
@@ -457,8 +507,8 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                     changeCurrentlyEditing(obj[keyField])
                     changeCreateObject(
                       props.defaultObject != null
-                        ? { ...props.defaultObject }
-                        : {},
+                        ? { tempId: newCount, ...props.defaultObject }
+                        : { tempId: newCount },
                     )
                   } else {
                     changeCreateObject(obj)
@@ -486,14 +536,13 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                         </>
                       )}
                     </button>
-
                     {currentlyEditing !== null && (
                       <span
                         onClick={() => {
                           changeCreateObject(
                             props.defaultObject != null
-                              ? { ...props.defaultObject }
-                              : {},
+                              ? { tempId: newCount, ...props.defaultObject }
+                              : { tempId: newCount },
                           )
                           changeCurrentlyEditing(null)
                           onChange({})

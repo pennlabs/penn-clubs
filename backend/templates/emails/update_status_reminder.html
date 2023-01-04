@@ -1,0 +1,26 @@
+<!-- SUBJECT: Update Application Statuses -->
+<!-- TYPES:
+applications_url:
+    type: string
+-->
+{% extends 'emails/base.html' %} {% block content %}
+<h2>Update Application Statuses</h2>
+
+<p style="font-size: 1.2em">Hi club officers,</p>
+
+<p style="font-size: 1.2em">
+  We're writing to remind you that you are required to update your club
+  application submissions with the decision you made for candidates: {{ applications_url }}.
+</p>
+
+<p style="font-size: 1.2em">
+  Thanks so much for your cooperation! Feel free to reply to this email if you
+  have any questions.
+</p>
+
+<p style="font-size: 1.2em">
+    Best,
+    <br></br>
+    Penn Clubs
+</p>
+{% endblock %}

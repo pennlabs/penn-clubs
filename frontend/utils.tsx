@@ -291,6 +291,23 @@ export function apiSetSubscribeStatus(
 }
 
 /**
+ * Function Setting Questions's Like Status
+ * @param code Clubs's Code
+ * @param id Questions'ID
+ * @param liked Action User want to perform
+ */
+export function apiSetLikeStatus(
+  code: string,
+  id: number,
+  liked: boolean,
+): Promise<Response> {
+  const path = liked ? 'like' : 'unlike'
+  return doApiRequest(`/clubs/${code}/questions/${id}/${path}/?format=json`, {
+    method: 'POST',
+  })
+}
+
+/**
  * Convert underscores into spaces and capitalize the first letter of every word.
  */
 export function titleize(str: string): string {
@@ -390,6 +407,14 @@ export function getCurrentSchoolYear(): number {
   return year
 }
 
+/*
+ * Return True if summer, where Summer is between June and July
+ * For disabling certain services in the Summer
+ * */
+export function isSummer(): boolean {
+  return [5, 6].includes(new Date().getMonth())
+}
+
 /**
  * Given a date, return a semester string corresponding to that date.
  * For example, if 1/8/2021 was passed in, the return result should be "Spring 2021".
@@ -404,3 +429,27 @@ export function getSemesterFromDate(date: Date | string): string {
   const sem = date.getMonth() >= 6 ? 'Fall' : 'Spring'
   return `${sem} ${year}`
 }
+
+export const bifurcateFilter: <T>(
+  arr: T[],
+  _filter: (obj: T) => boolean,
+) => [T[], T[]] = (arr, filter) =>
+  arr.reduce(
+    ([trueArray, falseArray], cur) =>
+      filter(cur)
+        ? [[...trueArray, cur], falseArray]
+        : [trueArray, [...falseArray, cur]],
+    [[], []],
+  )
+
+export const categorizeFilter: <T>(
+  arr: T[],
+  _filter: (obj: T) => string,
+) => Record<string, T[]> = (arr, filter) =>
+  arr.reduce((acc, cur) => {
+    const key = filter(cur)
+    return {
+      ...acc,
+      [key]: acc[key] ? [...acc[key], cur] : [cur],
+    }
+  }, {})

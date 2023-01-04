@@ -11,7 +11,7 @@ import {
 } from '../../constants'
 import { ClubEventType, MembershipRank } from '../../types'
 import { doApiRequest, useSetting } from '../../utils'
-import { MEMBERSHIP_ROLE_NAMES } from '../../utils/branding'
+import { FAIR_NAME, MEMBERSHIP_ROLE_NAMES } from '../../utils/branding'
 
 const LiveBanner = styled.div`
   padding: 20px;
@@ -121,7 +121,7 @@ const LiveEventsDialog = ({
       <LiveTitle>{fairName}</LiveTitle>
       <LiveSub>
         {liveEventCount === 0 ? (
-          'Get ready for the virtual activities fair!'
+          `Get ready for the virtual ${FAIR_NAME} fair! If you need help registering email contact@pennclubs.com`
         ) : (
           <>
             {liveEventCount}{' '}
@@ -136,4 +136,13 @@ const LiveEventsDialog = ({
   )
 }
 
-export default LiveEventsDialog
+const LiveCustomDialog = ({ text }): ReactElement | null => {
+  return (
+    <LiveBanner>
+      <LiveTitle>Notice</LiveTitle>
+      <LiveSub>{text}</LiveSub>
+    </LiveBanner>
+  )
+}
+
+export { LiveCustomDialog, LiveEventsDialog }

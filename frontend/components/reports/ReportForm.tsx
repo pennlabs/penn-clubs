@@ -81,7 +81,7 @@ const ReportForm = ({
     groupName: string,
     fields: [string, string][],
     setFieldValue: (field: string, value: string[]) => void,
-    initialValues: string[],
+    initialValues: string[] = [],
   ): ReactElement => {
     const fieldsInGroup = fields.map((field) => field[1])
 

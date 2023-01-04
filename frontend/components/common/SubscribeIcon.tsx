@@ -42,12 +42,14 @@ type SubscribeIconProps = {
   club: Club
   absolute?: boolean
   padding?: string
+  onSubscribe?: (status: boolean) => void
 }
 
 export const SubscribeIcon = ({
   club,
   absolute = false,
   padding,
+  onSubscribe = () => null,
 }: SubscribeIconProps): ReactElement => {
   const [subscribe, setSubscribe] = useState<boolean>(club.is_subscribe)
   const authCheck = useContext(AuthCheckContext)
@@ -56,6 +58,7 @@ export const SubscribeIcon = ({
     authCheck(() => {
       apiSetSubscribeStatus(club.code, !subscribe).then(() => {
         setSubscribe(!subscribe)
+        onSubscribe(!subscribe)
       })
     })
   }

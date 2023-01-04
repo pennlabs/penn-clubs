@@ -28,6 +28,7 @@ import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement, useEffect, useRef, useState } from 'react'
 import Linkify from 'react-linkify'
+import Select from 'react-select'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
 import { Club, QuestionAnswer, UserInfo, VisitType } from 'types'
@@ -80,13 +81,33 @@ const QAButton = styled.button.attrs({ className: 'button is-primary' })`
   white-space: pre-wrap;
 `
 
+const FAQSectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+const selectOptions = [
+  { value: 'id', label: 'Most Recent' },
+  { value: 'likes', label: 'Most Likes' },
+]
+
+const selectStyles = {
+  control: (provided) => ({
+    ...provided,
+    width: 175,
+  }),
+}
+
 const ClubPage = ({
   club: initialClub,
   questions,
   userInfo,
 }: ClubPageProps): ReactElement => {
   const [club, setClub] = useState<Club>(initialClub)
-  const scrollToRef = (ref) => window.scrollTo(0, ref.current.offsetTop - 100)
+  const [questionSortBy, setQuestionSortBy] = useState<string>('id')
+  const scrollToRef = (ref) =>
+    window.scrollTo({ top: ref.current.offsetTop - 100, behavior: 'smooth' })
   const questionsScrollRef = useRef(null)
   const scrollToQuestions = () => scrollToRef(questionsScrollRef)
 
@@ -214,8 +235,24 @@ const ClubPage = ({
             </>
           )}
           <div className="mb-3">
-            <StrongText ref={questionsScrollRef}>FAQ</StrongText>
-            <QuestionList club={club} questions={questions} />
+            <FAQSectionHeader ref={questionsScrollRef}>
+              <StrongText>FAQ</StrongText>
+              <Select
+                instanceId="FAQ-sort"
+                options={selectOptions}
+                styles={selectStyles}
+                onChange={(e: any) => setQuestionSortBy(e.value)}
+                value={selectOptions.filter(
+                  (option) => option.value === questionSortBy,
+                )}
+                isSearchable={false}
+              />
+            </FAQSectionHeader>
+            <QuestionList
+              club={club}
+              questions={questions}
+              sortBy={questionSortBy}
+            />
           </div>
           {club.is_member !== false && club.files && !!club.files.length && (
             <div className="mt-4">

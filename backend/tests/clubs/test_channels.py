@@ -6,12 +6,13 @@ from pennclubs.routing import application
 
 
 class WebsocketTestCase(TestCase):
-    def setUp(self):
-        self.user1 = get_user_model().objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user1 = get_user_model().objects.create_user(
             "bfranklin", "bfranklin@seas.upenn.edu", "test"
         )
-        self.user1.is_superuser = True
-        self.user1.save()
+        cls.user1.is_superuser = True
+        cls.user1.save()
 
     async def test_script_execution_unauth(self):
         """

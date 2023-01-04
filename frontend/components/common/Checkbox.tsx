@@ -46,6 +46,7 @@ type CheckboxProps = {
   value?: string
   onBlur?: () => void
   onChange: (e: ChangeEvent<HTMLInputElement>) => void
+  size?: string | undefined
 }
 
 export const Checkbox = ({
@@ -57,6 +58,7 @@ export const Checkbox = ({
   id,
   name,
   color,
+  size,
 }: CheckboxProps): ReactElement => {
   const checkboxRef = createRef<HTMLInputElement>()
 
@@ -77,6 +79,7 @@ export const Checkbox = ({
         onClick={() => checkboxRef.current?.click()}
       >
         <Icon
+          size={size}
           noAlign
           alt={checked ? 'checked' : 'unchecked'}
           name={checked ? 'check-box' : 'box'}

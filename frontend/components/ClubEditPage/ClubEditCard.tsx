@@ -1,8 +1,9 @@
 import { Field, Form, Formik } from 'formik'
 import Link from 'next/link'
-import { ReactElement, useState } from 'react'
+import React, { ReactElement, useState } from 'react'
 
-import { BLACK } from '../../constants'
+import { BLACK } from '~/constants'
+
 import {
   Club,
   ClubApplicationRequired,
@@ -15,7 +16,13 @@ import {
   Tag,
   Year,
 } from '../../types'
-import { doApiRequest, formatResponse, isClubFieldShown } from '../../utils'
+import {
+  bifurcateFilter,
+  categorizeFilter,
+  doApiRequest,
+  formatResponse,
+  isClubFieldShown,
+} from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   FIELD_PARTICIPATION_LABEL,
@@ -34,6 +41,8 @@ import {
 import { Checkbox, CheckboxLabel, Contact, Text } from '../common'
 import {
   CheckboxField,
+  CheckboxTextField,
+  CreatableMultipleSelectField,
   FileField,
   FormikAddressField,
   FormStyle,
@@ -159,6 +168,9 @@ const removeNonFieldAttributes = (
   }, {})
 }
 
+const EXCLUSIVE_CHECKBOX_TEXT_REQUIRED_ERROR =
+  'We cannot accept a checkmark only. Please return to the list and provide the name of the specific programming for the student populations that have been selected.'
+
 /**
  * A card that can show and edit the basic properties of a Club object.
  *
@@ -183,21 +195,154 @@ export default function ClubEditCard({
     ),
   )
 
+  const [
+    showSchoolYearProgramming,
+    setSchoolYearProgramming,
+  ] = useState<boolean>(
+    !!(
+      club.target_majors?.length ||
+      club.target_schools?.length ||
+      club.target_years?.length ||
+      club.student_types?.length
+    ),
+  )
+
+  const [
+    showStudentTypeProgramming,
+    setStudentTypeProgramming,
+  ] = useState<boolean>(
+    !!(
+      club.target_majors?.length ||
+      club.target_schools?.length ||
+      club.target_years?.length ||
+      club.student_types?.length
+    ),
+  )
+
+  const [showSchoolProgramming, setSchoolProgramming] = useState<boolean>(
+    !!(
+      club.target_majors?.length ||
+      club.target_schools?.length ||
+      club.target_years?.length ||
+      club.student_types?.length
+    ),
+  )
+
   const submit = (data, { setSubmitting, setStatus }): Promise<void> => {
     const photo = data.image
     if (photo !== null) {
       delete data.image
     }
 
+    const entries = Object.entries(data)
+    let body = {}
+
+    const [exclusiveEntries, withoutExclusiveEntries] = bifurcateFilter(
+      entries,
+      ([key]) => !!key.match(/^exclusive:(.+?):(.+?)$/g),
+    )
+
+    // sorry ts
+    const exclusives = (categorizeFilter(
+      exclusiveEntries,
+      ([key]) => key.match(/^exclusive:(.+?):(.+?)$/)?.[1] ?? 'unknown',
+    ) as unknown) as {
+      year: Array<[string, { checked?: boolean; detail?: string }]>
+      // major: Array<[string, { checked?: boolean; detail?: string }]>
+      student_type: Array<[string, { checked?: boolean; detail?: string }]>
+      school: Array<[string, { checked?: boolean; detail?: string }]>
+    }
+
+    const target_years =
+      exclusives.year
+        ?.filter(([_, value]) => value?.checked)
+        .map(([key, value]) => {
+          const id = Number(key.match(/^exclusive:(.+?):(.+?)$/)?.[2] ?? -1)
+          return {
+            id,
+            program: value.detail,
+          }
+        }) ?? []
+
+    const student_types =
+      exclusives.student_type
+        ?.filter(([_, value]) => value?.checked)
+        .map(([key, value]) => {
+          const id = Number(key.match(/^exclusive:(.+?):(.+?)$/)?.[2] ?? -1)
+          return {
+            id,
+            program: value.detail,
+          }
+        }) ?? []
+
+    const target_schools =
+      exclusives.school
+        ?.filter(([_, value]) => value?.checked)
+        .map(([key, value]) => {
+          const id = Number(key.match(/^exclusive:(.+?):(.+?)$/)?.[2] ?? -1)
+          return {
+            id,
+            program: value.detail,
+          }
+        }) ?? []
+
+    if (SITE_NAME === 'fyh') {
+      data.target_years.forEach((target_year) => {
+        if (
+          exclusives.year?.find(
+            (year) => year[0].split(':')[2] === target_year.id.toString(),
+          ) === undefined
+        ) {
+          target_years.push(target_year)
+        }
+      })
+
+      data.student_types.forEach((target_student_type) => {
+        if (
+          exclusives.student_type?.find(
+            (student_type) =>
+              student_type[0].split(':')[2] ===
+              target_student_type.id.toString(),
+          ) === undefined
+        ) {
+          student_types.push(target_student_type)
+        }
+      })
+
+      data.target_schools.forEach((target_school) => {
+        if (
+          exclusives.school?.find(
+            (school) => school[0].split(':')[2] === target_school.id.toString(),
+          ) === undefined
+        ) {
+          target_schools.push(target_school)
+        }
+      })
+
+      body = {
+        ...Object.fromEntries(withoutExclusiveEntries),
+        target_years,
+        student_types,
+        target_schools,
+      }
+    } else {
+      body = {
+        ...Object.fromEntries(withoutExclusiveEntries),
+        target_years,
+        student_types,
+        target_schools,
+      }
+    }
+
     const req =
       isEdit && club !== null
         ? doApiRequest(`/clubs/${club.code}/?format=json`, {
             method: 'PATCH',
-            body: data,
+            body,
           })
         : doApiRequest('/clubs/?format=json', {
             method: 'POST',
-            body: data,
+            body,
           })
 
     return req.then((resp) => {
@@ -284,9 +429,20 @@ export default function ClubEditCard({
         },
         {
           name: 'terms',
-          type: 'text',
-          label: 'Alt Names',
-          help: `Enter alternative names for your ${OBJECT_NAME_SINGULAR} here, separated by commas. For example, this could be an acronym or abbreviation that your ${OBJECT_NAME_SINGULAR} goes by. Your ${OBJECT_NAME_SINGULAR} will show up when these terms are entered into the search bar.`,
+          type: 'creatableMultiSelect',
+          label: 'Keywords',
+          help: `Enter keywords for your ${OBJECT_NAME_SINGULAR} here. This could be a term, acronym, abbreviation, or phrase that relates to your ${OBJECT_NAME_SINGULAR}. Keywords allow users to more effectively identify your ${OBJECT_NAME_SINGULAR} when they are entered in the ${SITE_NAME} search bar.`,
+          deserialize: (terms) =>
+            terms != null && terms !== ''
+              ? terms.split(',').map((term: string) => {
+                  return {
+                    label: term,
+                    value: term,
+                  }
+                })
+              : null,
+          serialize: (terms) =>
+            terms != null ? terms.map((term) => term.value).join(',') : null,
         },
         {
           name: 'description',
@@ -362,6 +518,7 @@ export default function ClubEditCard({
         {
           name: 'website',
           type: 'url',
+          required: SITE_ID === 'fyh',
         },
         {
           name: 'facebook',
@@ -471,6 +628,8 @@ export default function ClubEditCard({
                     />{' '}
                     <span className="ml-1">Yes.</span>
                   </CheckboxLabel>
+                  {/* spacer */}
+                  <div style={{ display: 'inline-block', marginLeft: '8px' }} />
                   <CheckboxLabel>
                     <Checkbox
                       checked={showTargetFields}
@@ -514,40 +673,126 @@ export default function ClubEditCard({
                 </div>
               </>
             ),
+          hidden: SITE_ID === 'fyh',
         },
         {
           name: 'target_years',
-          label: SITE_ID === 'fyh' ? 'Degree Type' : 'Target Years',
+          label: 'Target Years',
           type: 'multiselect',
-          placeholder:
-            SITE_ID === 'fyh'
-              ? `Select degree type relevant to your ${OBJECT_NAME_SINGULAR}!`
-              : `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
+          placeholder: `Select graduation years relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: years,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
+          // valueDeserialize: (o) => o && { value: o.id, label: o.name },
+          deserialize: (o) => ({ value: o.id, label: o.name }),
         },
         {
           name: 'target_schools',
           type: 'multiselect',
           placeholder: `Select schools relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: schools,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
         },
         {
           name: 'target_majors',
           type: 'multiselect',
           placeholder: `Select majors relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: majors,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
         },
         {
           name: 'student_types',
           type: 'multiselect',
           placeholder: `Select student types relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: studentTypes,
-          hidden: !showTargetFields,
+          hidden: SITE_ID === 'fyh' || !showTargetFields,
         },
       ].filter(({ name }) => name == null || isClubFieldShown(name)),
+    },
+    {
+      name: 'Exclusive Programming',
+      type: 'group',
+      hidden: SITE_ID !== 'fyh',
+      description: (
+        <>
+          <Text>
+            We assume that many Penn resources are available to all Penn
+            students. Among all the services/programs that your resource
+            provides,{' '}
+            <b>
+              does your resource provide programs targeted to a specific
+              category of students
+            </b>{' '}
+            (graduate, exchange, etc.) ? If yes, please select and provide the
+            name of the specific programming for the student populations that
+            have been selected. If no, please skip this question.
+          </Text>
+        </>
+      ),
+      fields: [
+        {
+          type: 'content',
+          content: (
+            <div style={{ marginBottom: '8px' }}>
+              <b>School Year Specific</b>
+            </div>
+          ),
+        },
+        ...years.map(({ name, id }) => {
+          const inTarget = club.target_years?.find((o) => o.id === id)
+          return {
+            name: `exclusive:year:${id}`,
+            label: name,
+            type: 'checkboxText',
+            textRequired: EXCLUSIVE_CHECKBOX_TEXT_REQUIRED_ERROR,
+            value: {
+              checked: !!inTarget,
+              detail: (inTarget ?? ({} as any)).program ?? '',
+            },
+          }
+        }),
+        {
+          type: 'content',
+          content: (
+            <div style={{ marginBottom: '8px' }}>
+              <b>Student Type Specific</b>
+            </div>
+          ),
+        },
+        ...(studentTypes || []).map(({ name, id }) => {
+          const inTarget = club.student_types?.find((o) => o.id === id)
+          return {
+            name: `exclusive:student_type:${id}`,
+            label: name,
+            type: 'checkboxText',
+            textRequired: EXCLUSIVE_CHECKBOX_TEXT_REQUIRED_ERROR,
+            value: {
+              checked: !!inTarget,
+              detail: (inTarget ?? ({} as any)).program ?? '',
+            },
+          }
+        }),
+        {
+          type: 'content',
+          content: (
+            <div style={{ marginBottom: '8px' }}>
+              <b>School Specific</b>
+            </div>
+          ),
+        },
+        ...schools.map(({ name, id }) => {
+          const inTarget = club.target_schools?.find((o) => o.id === id)
+          return {
+            name: `exclusive:school:${id}`,
+            label: name,
+            type: 'checkboxText',
+            textRequired: EXCLUSIVE_CHECKBOX_TEXT_REQUIRED_ERROR,
+            value: {
+              checked: !!inTarget,
+              detail: (inTarget ?? ({} as any)).program ?? '',
+            },
+          }
+        }),
+      ],
     },
   ]
 
@@ -578,7 +823,10 @@ export default function ClubEditCard({
       {({ dirty, isSubmitting }) => (
         <Form>
           <FormStyle isHorizontal>
-            {fields.map(({ name, description, fields }, i) => {
+            {fields.map(({ name, description, fields, hidden }, i) => {
+              if (hidden) {
+                return null
+              }
               return (
                 <Card title={name} key={i}>
                   {description}
@@ -616,6 +864,8 @@ export default function ClubEditCard({
                               select: SelectField,
                               image: FileField,
                               address: FormikAddressField,
+                              checkboxText: CheckboxTextField,
+                              creatableMultiSelect: CreatableMultipleSelectField,
                             }[props.type] ?? TextField
                           }
                           {...other}

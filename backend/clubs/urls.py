@@ -2,11 +2,16 @@ from django.urls import include, path
 from rest_framework_nested import routers
 
 from clubs.views import (
+    AdminNoteViewSet,
     AdvisorViewSet,
+    ApplicationQuestionViewSet,
+    ApplicationSubmissionUserViewSet,
+    ApplicationSubmissionViewSet,
     AssetViewSet,
     BadgeClubViewSet,
     BadgeViewSet,
     ClubApplicationViewSet,
+    ClubBoothsViewSet,
     ClubEventViewSet,
     ClubFairViewSet,
     ClubViewSet,
@@ -15,6 +20,7 @@ from clubs.views import (
     EventViewSet,
     ExternalMemberListViewSet,
     FavoriteCalendarAPIView,
+    FavoriteEventsAPIView,
     FavoriteViewSet,
     MajorViewSet,
     MassInviteAPIView,
@@ -42,6 +48,8 @@ from clubs.views import (
     UserUUIDAPIView,
     UserViewSet,
     UserZoomAPIView,
+    WhartonApplicationAPIView,
+    WhartonApplicationStatusAPIView,
     YearViewSet,
     email_preview,
 )
@@ -69,13 +77,11 @@ router.register(r"users", UserViewSet, basename="users")
 router.register(
     r"external/members/(?P<code>.+)", ExternalMemberListViewSet, basename="external"
 )
+router.register(r"submissions", ApplicationSubmissionUserViewSet, basename="submission")
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")
 clubs_router.register(r"events", ClubEventViewSet, basename="club-events")
-clubs_router.register(
-    r"applications", ClubApplicationViewSet, basename="club-applications"
-)
 clubs_router.register(r"invites", MemberInviteViewSet, basename="club-invites")
 clubs_router.register(r"assets", AssetViewSet, basename="club-assets")
 clubs_router.register(r"notes", NoteViewSet, basename="club-notes")
@@ -87,10 +93,27 @@ clubs_router.register(
     basename="club-membership-requests",
 )
 clubs_router.register(r"advisors", AdvisorViewSet, basename="club-advisors")
+clubs_router.register(
+    r"applications", ClubApplicationViewSet, basename="club-applications"
+)
+clubs_router.register(r"adminnotes", AdminNoteViewSet, basename="adminnotes")
 
 badges_router = routers.NestedSimpleRouter(router, r"badges", lookup="badge")
 badges_router.register(r"clubs", BadgeClubViewSet, basename="badge-clubs")
 
+applications_router = routers.NestedSimpleRouter(
+    clubs_router, r"applications", lookup="application"
+)
+applications_router.register(
+    r"questions", ApplicationQuestionViewSet, basename="club-application-questions"
+)
+applications_router.register(
+    r"submissions",
+    ApplicationSubmissionViewSet,
+    basename="club-application-submissions",
+)
+
+router.register(r"booths", ClubBoothsViewSet, basename="club-booth")
 
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),
@@ -113,6 +136,7 @@ urlpatterns = [
         name="club-invite",
     ),
     path(r"settings/calendar_url/", UserUUIDAPIView.as_view(), name="user-uuid"),
+    path(r"favouriteevents/", FavoriteEventsAPIView.as_view(), name="event-interest"),
     path(
         r"calendar/<slug:user_secretuuid>/",
         FavoriteCalendarAPIView.as_view(),
@@ -127,8 +151,19 @@ urlpatterns = [
         MeetingZoomWebhookAPIView.as_view(),
         name="webhooks-meeting",
     ),
+    path(
+        r"whartonapplications/",
+        WhartonApplicationAPIView.as_view(),
+        name="wharton-applications",
+    ),
+    path(
+        r"whartonapplications/status/",
+        WhartonApplicationStatusAPIView.as_view(),
+        name="wharton-applications-status",
+    ),
 ]
 
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls
 urlpatterns += badges_router.urls
+urlpatterns += applications_router.urls

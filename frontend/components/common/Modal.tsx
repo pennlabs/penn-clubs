@@ -31,6 +31,7 @@ const ModalCard = styled.div<{ width?: string }>`
   border: 0 !important;
   box-shadow: none !important;
   height: auto;
+  overflow: auto;
   width: ${({ width }) => width ?? '35%'};
 
   ${({ width }) =>

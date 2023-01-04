@@ -1,6 +1,8 @@
 import { ReactElement } from 'react'
 import styled from 'styled-components'
 
+import { UpdateClubContext } from '~/pages'
+
 import { CLUBS_GREY } from '../constants/colors'
 import { Club, ClubApplicationRequired } from '../types'
 import { getSizeDisplay, isClubFieldShown } from '../utils'
@@ -114,8 +116,28 @@ const Details = ({ club }: DetailsProps): ReactElement => {
           </>
         )}
       </div>
-      <BookmarkIcon club={club} padding="0" />
-      {club.enables_subscription && <SubscribeIcon club={club} padding="0" />}
+      <UpdateClubContext.Consumer>
+        {(updateClub) => (
+          <>
+            <BookmarkIcon
+              club={club}
+              padding="0"
+              onFavorite={(status) =>
+                updateClub?.(club.code, 'bookmark', status)
+              }
+            />
+            {club.enables_subscription && (
+              <SubscribeIcon
+                club={club}
+                padding="0"
+                onSubscribe={(status) => {
+                  updateClub?.(club.code, 'subscribe', status)
+                }}
+              />
+            )}
+          </>
+        )}
+      </UpdateClubContext.Consumer>
     </Wrapper>
   )
 }

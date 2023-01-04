@@ -13,7 +13,7 @@ describe('Authenticated user tests', () => {
 
   it('Logs in successfully', () => {
     cy.visit('/')
-    cy.contains('Test User')
+    cy.contains('Engineering Student')
   })
 
   it('Vists the welcome page', () => {
@@ -25,7 +25,7 @@ describe('Authenticated user tests', () => {
   it('Visits the settings page', () => {
     cy.visit('/settings')
     cy.contains('Penn Clubs')
-    cy.contains('Test User')
+    cy.contains('Engineering Student')
 
     const tabs = ['Clubs', 'Bookmarks', 'Subscriptions', 'Profile']
 

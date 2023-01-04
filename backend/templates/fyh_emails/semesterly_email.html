@@ -1,0 +1,17 @@
+<!-- SUBJECT: 3 Required Actions on Hub@Penn – or else! ;) -->
+<!-- TYPES:
+code:
+    type: string
+-->
+{% extends 'fyh_emails/base.html' %} {% block content %}
+<h2>3 Required Actions on Hub@Penn – or else! ;)</h2>
+<p style="font-size: 1.2em">
+    Hi all!
+</p>
+<p style="font-size: 1.2em">
+    Apologies for the broken link in our previous email! Here is the corrected link where you can renew your resource: <a href="https://hub.provost.upenn.edu/org/{{ code }}/renew">https://hub.provost.upenn.edu/org/{{ code }}/renew</a>.
+<p style="font-size: 1.2em">Best,</p>
+<p style="font-size: 1.2em; margin: 0">Hub@Penn</p>
+<p style="font-size: 1.2em; margin-top: 0"><a href="https://hub.provost.upenn.edu/">hub.provost.upenn.edu</a></p>
+
+{% endblock %}

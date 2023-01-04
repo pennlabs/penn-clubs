@@ -6,6 +6,7 @@ import { ClubFair } from '../../types'
 import { doApiRequest } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
+  FAIR_NAME,
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -85,7 +86,7 @@ const FairEventsTab = ({
     <>
       <Text>
         This is a dashboard where you can view the status and events for all
-        registered {OBJECT_NAME_PLURAL} for an activities fair. Only users with
+        registered {OBJECT_NAME_PLURAL} for an {FAIR_NAME} fair. Only users with
         the required permissions can view this page.
       </Text>
       <div className="select is-fullwidth mb-5">
@@ -118,7 +119,7 @@ const FairEventsTab = ({
           </div>
           <Text>
             There are {fairEvents.length} {OBJECT_NAME_PLURAL} in this
-            activities fair.
+            {FAIR_NAME} fair.
           </Text>
         </>
       )}
@@ -204,7 +205,7 @@ const FairEventsTab = ({
                   <tr>
                     <td colSpan={5}>
                       There are no {OBJECT_NAME_PLURAL} registered for this
-                      activities fair.
+                      {FAIR_NAME} fair.
                     </td>
                   </tr>
                 )}
@@ -215,7 +216,7 @@ const FairEventsTab = ({
       ) : fairs.length > 0 ? (
         <Loading />
       ) : (
-        <Text>There are no activities fairs to display.</Text>
+        <Text>There are no {FAIR_NAME} fairs to display.</Text>
       )}
     </>
   )

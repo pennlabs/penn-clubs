@@ -36,6 +36,7 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "channels",
+    "model_clone",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -60,7 +61,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "accounts.middleware.OAuth2TokenMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
@@ -163,7 +163,14 @@ REST_FRAMEWORK = {
         "drf_renderer_xlsx.renderers.XLSXRenderer",
     ),
     "DEFAULT_SCHEMA_CLASS": "pennclubs.doc_settings.CustomAutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+        "accounts.authentication.PlatformAuthentication",
+    ],
 }
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 
 # Branding switch
@@ -185,7 +192,7 @@ FROM_EMAIL = (
 EMAIL_SUBJECT_PREFIX = f"[{BRANDING_SITE_NAME}] "
 INVITE_URL = "https://{domain}/invite/{club}/{id}/{token}"
 DEFAULT_DOMAIN = "hub.provost.upenn.edu" if BRANDING == "fyh" else "pennclubs.com"
-DOMAIN = os.environ.get("DOMAIN", DEFAULT_DOMAIN)
+DOMAINS = os.environ.get("DOMAINS", DEFAULT_DOMAIN).split(",")
 
 VIEW_URL = "https://{domain}/club/{club}"
 EDIT_URL = "https://{domain}/club/{club}/edit"

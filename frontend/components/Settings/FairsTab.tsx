@@ -5,6 +5,7 @@ import React, { ReactElement } from 'react'
 import { FAIR_INFO_ROUTE } from '../../constants'
 import { ClubFair, MembershipRank } from '../../types'
 import {
+  FAIR_NAME,
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
 } from '../../utils/branding'
@@ -40,18 +41,18 @@ const FairsTab = ({ fairs }: FairsTabProps): ReactElement => {
               as={TextField}
               required
               type="email"
-              helpText="The email address that students should contact for questions related to this activities fair."
+              helpText={`The email address that students should contact for questions related to this ${FAIR_NAME} fair.`}
             />
             <Field
               name="start_time"
               as={DateTimeField}
-              helpText="When your activities fair will start. If you have multiple time slots, this should be the beginning of the earliest slot."
+              helpText={`When your ${FAIR_NAME} fair will start. If you have multiple time slots, this should be the beginning of the earliest slot.`}
               required
             />
             <Field
               name="end_time"
               as={DateTimeField}
-              helpText="When your activities fair will end. If you have multiple time slots, this should be the end of the latest slot."
+              helpText={`When your ${FAIR_NAME} fair will end. If you have multiple time slots, this should be the end of the latest slot.`}
               required
             />
             <Field
