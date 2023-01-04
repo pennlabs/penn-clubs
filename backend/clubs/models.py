@@ -1,11 +1,14 @@
+import base64
 import datetime
 import os
 import re
 import uuid
 import warnings
+from io import BytesIO
 from urllib.parse import urlparse
 
 import pytz
+import qrcode
 import requests
 import yaml
 from django.conf import settings
@@ -942,6 +945,10 @@ class Event(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def tickets_count(self):
+        return Ticket.objects.count(event=self)
+
 
 class Favorite(models.Model):
     """
@@ -1706,6 +1713,97 @@ class QuestionResponse(models.Model):
 
     question = models.ForeignKey(ApplicationQuestion, on_delete=models.CASCADE)
     response = models.TextField(blank=True)
+
+
+class Cart(models.Model):
+    """
+    Represents an instance of a ticket cart for a user
+    """
+
+    owner = models.OneToOneField(
+        get_user_model(), related_name="cart", on_delete=models.CASCADE
+    )
+
+
+class TicketManager(models.Manager):
+
+    # Update holds for all tickets
+    def update_holds(self):
+        expired_tickets = self.select_for_update().filter(
+            holder__isnull=False, holding_expiration__lte=timezone.now()
+        )
+        with transaction.atomic():
+            for ticket in expired_tickets:
+                ticket.holder = None
+            self.bulk_update(expired_tickets, ["holder"])
+
+
+class Ticket(models.Model):
+    """
+    Represents an instance of a ticket for an event
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(
+        Event, related_name="tickets", on_delete=models.DO_NOTHING
+    )
+    type = models.CharField(max_length=100)
+    owner = models.ForeignKey(
+        get_user_model(),
+        related_name="owned_tickets",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    holder = models.ForeignKey(
+        get_user_model(),
+        related_name="held_tickets",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    holding_expiration = models.DateTimeField(null=True, blank=True)
+    carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
+    objects = TicketManager()
+
+    def get_qr(self):
+        """
+        Return a QR code image linking to the ticket page
+        """
+        if not self.owner:
+            return None
+
+        url = f"https://{settings.DOMAIN}/api/tickets/{self.id}"
+        qr_image = qrcode.make(url, box_size=20, border=0)
+        return qr_image
+
+    def send_confirmation_email(self):
+        """
+        Send a confirmation email to the ticket owner after purchase
+        """
+        owner = self.owner
+
+        output = BytesIO()
+        qr_image = self.get_qr()
+        qr_image.save(output, format="PNG")
+        decoded_image = base64.b64encode(output.getvalue()).decode("ascii")
+
+        context = {
+            "first_name": self.owner.first_name,
+            "name": self.event.name,
+            "type": self.type,
+            "start_time": self.event.start_time,
+            "end_time": self.event.end_time,
+            "qr": decoded_image,
+        }
+
+        if self.owner.email:
+            send_mail_helper(
+                name="ticket_confirmation",
+                subject=f"Ticket confirmation for {owner.get_full_name()}",
+                emails=[owner.email],
+                context=context,
+            )
 
 
 @receiver(models.signals.pre_delete, sender=Asset)
