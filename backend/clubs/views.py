@@ -4652,7 +4652,10 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 and email_type == "acceptance"
             ):
                 template = acceptance_template
-            elif email_type == "rejection":
+            elif (
+                email_type == "rejection"
+                and submission.status != ApplicationSubmission.ACCEPTED
+            ):
                 template = rejection_template
             else:
                 continue
@@ -4738,19 +4741,25 @@ class WhartonApplicationAPIView(generics.ListAPIView):
     def get_queryset(self):
         now = timezone.now()
 
-        qs = ClubApplication.objects.filter(
-            is_wharton_council=True, application_end_time__gte=now
+        qs = (
+            ClubApplication.objects.filter(
+                is_wharton_council=True, application_end_time__gte=now
+            )
+            .select_related("club")
+            .prefetch_related(
+                "committees", "questions__multiple_choice", "questions__committees"
+            )
         )
 
         # Order applications randomly for viewing (consistent and unique per user).
         key = str(self.request.user.id)
         cached_qs = cache.get(key)
-        if cached_qs and cached_qs.count() == qs.count():
+        if cached_qs:
             return cached_qs
         qs = qs.annotate(
             random=SHA1(Concat("name", Value(key), output_field=TextField()))
         ).order_by("random")
-        cache.set(key, qs, 60)
+        cache.set(key, qs, 60 * 20)
         return qs
 
 
@@ -4819,24 +4828,37 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # recent instance in each group, then selecting those instances
 
         app_id = self.kwargs["application_pk"]
-        query = f"""
-                SELECT *
-                FROM clubs_applicationsubmission
-                WHERE application_id = {app_id}
-                AND NOT archived
-                AND created_at in
-                    (SELECT recent_time
+        submissions = (
+            ApplicationSubmission.objects.filter(
+                application=app_id,
+                created_at__in=RawSQL(
+                    """SELECT recent_time
                     FROM
                     (SELECT user_id,
                             committee_id,
+                            application_id,
                             max(created_at) recent_time
                         FROM clubs_applicationsubmission
-                        WHERE application_id = {app_id}
-                        AND NOT archived
+                        WHERE NOT archived
                         GROUP BY user_id,
-                                committee_id) recent_subs)
-                """
-        return ApplicationSubmission.objects.raw(query)
+                                committee_id, application_id) recent_subs""",
+                    (),
+                ),
+                archived=False,
+            )
+            .select_related("user__profile", "committee", "application__club")
+            .prefetch_related(
+                Prefetch(
+                    "responses",
+                    queryset=ApplicationQuestionResponse.objects.select_related(
+                        "multiple_choice", "question"
+                    ),
+                ),
+                "responses__question__committees",
+                "responses__question__multiple_choice",
+            )
+        )
+        return submissions
 
     @action(detail=False, methods=["get"])
     def export(self, *args, **kwargs):
@@ -5008,25 +5030,37 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "delete"]
 
     def get_queryset(self):
-        distinct_submissions = {}
-        submissions = ApplicationSubmission.objects.filter(
-            user=self.request.user, archived=False
+        submissions = (
+            ApplicationSubmission.objects.filter(
+                user=self.request.user,
+                created_at__in=RawSQL(
+                    """SELECT recent_time
+                    FROM
+                    (SELECT user_id,
+                            committee_id,
+                            application_id,
+                            max(created_at) recent_time
+                        FROM clubs_applicationsubmission
+                        WHERE NOT archived
+                        GROUP BY user_id,
+                                committee_id, application_id) recent_subs""",
+                    (),
+                ),
+                archived=False,
+            )
+            .select_related("user__profile", "committee", "application__club")
+            .prefetch_related(
+                Prefetch(
+                    "responses",
+                    queryset=ApplicationQuestionResponse.objects.select_related(
+                        "multiple_choice", "question"
+                    ),
+                ),
+                "responses__question__committees",
+                "responses__question__multiple_choice",
+            )
         )
-
-        # only want to return the most recent (user, committee) unique submission pair
-        for submission in submissions:
-            key = (submission.application.__str__(), submission.committee.__str__())
-            if key in distinct_submissions:
-                if distinct_submissions[key].created_at < submission.created_at:
-                    distinct_submissions[key] = submission
-            else:
-                distinct_submissions[key] = submission
-
-        queryset = ApplicationSubmission.objects.none()
-        for submission in distinct_submissions.values():
-            queryset |= ApplicationSubmission.objects.filter(pk=submission.pk)
-
-        return queryset
+        return submissions
 
     def perform_destroy(self, instance):
         """

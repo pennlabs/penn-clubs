@@ -169,6 +169,15 @@ const SubmissionModal = (props: {
           </Form>
         )}
       </Formik>
+      <div className="mt-2 mb-2 notification is-info is-light">
+        Current decision reason: {submission !== null && submission.reason}
+      </div>
+      <div className="mt-2 mb-2 notification is-info is-light">
+        Current notification status:{' '}
+        {submission !== null && submission.notified
+          ? 'notified'
+          : 'not notified'}
+      </div>
     </ModalContainer>
   )
 }
@@ -211,7 +220,9 @@ const NotificationModal = (props: {
             <StyledHeader style={{ marginBottom: '2px' }}>
               Send application update
             </StyledHeader>
-            <Text>Send acceptance or rejection emails.</Text>
+            <Text>
+              Send acceptance or rejection emails. This may take a while...
+            </Text>
             <Field
               name="email_type"
               required={true}
@@ -234,6 +245,10 @@ const NotificationModal = (props: {
             {submitMessage !== null && (
               <div className="mt-2 mb-2 notification is-info is-light">
                 {submitMessage}
+                <p>
+                  Optionally refresh the page for your changes to be reflected
+                  below
+                </p>
               </div>
             )}
           </Form>
@@ -285,7 +300,7 @@ const ReasonModal = (props: {
               applicants
             </StyledHeader>
             {submissions != null
-              ? submissions.map((data) => {
+              ? submissions.map((data, index) => {
                   return (
                     data != null && (
                       <div>
@@ -305,6 +320,10 @@ const ReasonModal = (props: {
             {submitMessage !== null && (
               <div className="mt-2 mb-2 notification is-info is-light">
                 {submitMessage}
+                <p>
+                  Optionally refresh the page for your changes to be reflected
+                  below
+                </p>
               </div>
             )}
           </Form>
@@ -416,7 +435,6 @@ export default function ApplicationsPage({
     { label: 'Email', name: 'email' },
     { label: 'Graduation Year', name: 'graduation_year' },
     { label: 'Committee', name: 'committee' },
-    { label: 'Submitted', name: 'created_at' },
     { label: 'Status', name: 'status' },
   ]
 
@@ -592,7 +610,49 @@ export default function ApplicationsPage({
                   )}
                   columns={responseTableFields}
                   searchableColumns={['name']}
-                  filterOptions={[]}
+                  filterOptions={[
+                    {
+                      label: 'notified',
+                      options: [
+                        { key: false, label: 'False' },
+                        { key: true, label: 'True' },
+                      ],
+                      filterFunction: (selection, object) =>
+                        object.notified === selection,
+                    },
+                    {
+                      label: 'reason',
+                      options: [
+                        { key: false, label: 'Set' },
+                        { key: true, label: 'Unset' },
+                      ],
+                      filterFunction: (selection, object) =>
+                        selection ? object.reason === '' : object.reason !== '',
+                    },
+                    {
+                      label: 'status',
+                      options: [
+                        {
+                          key: 'Pending',
+                          label: 'Pending',
+                        },
+                        {
+                          key: 'Accepted',
+                          label: 'Accepted',
+                        },
+                        {
+                          key: 'Rejected after written application',
+                          label: 'Rejected after written application',
+                        },
+                        {
+                          key: 'Rejected after interview(s)',
+                          label: 'Rejected after interview(s)',
+                        },
+                      ],
+                      filterFunction: (selection, object) =>
+                        object.status === selection,
+                    },
+                  ]}
                   focusable={true}
                   initialPage={pageIndex}
                   setInitialPage={setPageIndex}

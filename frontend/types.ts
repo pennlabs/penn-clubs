@@ -372,6 +372,8 @@ export type ApplicationSubmission = {
   responses: Array<ApplicationResponse>
   club: string
   code: string
+  notified: boolean
+  reason: string
   application_link: string
 }
 
