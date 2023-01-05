@@ -4,11 +4,12 @@ repos:
     hooks:
       - id: black
         name: black
-        entry: cd backend && pipenv run black
+        entry: bash -c "export PIPENV_IGNORE_VIRTUALENVS=1 && cd backend && pipenv run black ."
         language: python
         types: [python]
         require_serial: true
         files: ^backend/
+        pass_filenames: false
       - id: isort
         name: isort
         entry: isort

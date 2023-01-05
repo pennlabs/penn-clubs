@@ -19,10 +19,11 @@ from dateutil.parser import parse
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
-from django.core.mail import send_mass_mail
+from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
@@ -4652,27 +4653,29 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 "committee": submission.committee.name if submission.committee else "",
             }
 
-            mass_emails.append(
-                (
-                    subject,
-                    template.render(data),
-                    settings.FROM_EMAIL,
-                    [submission.user.email],
-                )
+            html_content = template.render(data)
+            text_content = html_to_text(html_content)
+
+            msg = EmailMultiAlternatives(
+                subject, text_content, settings.FROM_EMAIL, [submission.user.email],
             )
+            msg.attach_alternative(html_content, "text/html")
+            mass_emails.append(msg)
+
             if not dry_run:
                 submission.notified = True
             n += 1
 
         if not dry_run:
+            with mail.get_connection() as conn:
+                conn.send_messages(mass_emails)
             ApplicationSubmission.objects.bulk_update(submissions, ["notified"])
-            send_mass_mail(tuple(mass_emails), fail_silently=False)
 
         dry_run_msg = "Would have sent" if dry_run else "Sent"
         return Response(
             {
                 "detail": f"{dry_run_msg} emails to {n} people, "
-                "skipping {skip} due to one of (already notified, no reason, no email)"
+                f"skipping {skip} due to one of (already notified, no reason, no email)"
             }
         )
 
