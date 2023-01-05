@@ -4411,6 +4411,16 @@ class UserViewSet(viewsets.ModelViewSet):
             .distinct()
         )
 
+        # prevent submissions outside of the open duration
+        now = timezone.now()
+        if (
+            now > application.application_end_time
+            or now < application.application_start_time
+        ):
+            return Response(
+                {"success": False, "detail": "This application is not currently open!"}
+            )
+
         # limit applicants to 2 committees
         if (
             committee
