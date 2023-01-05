@@ -5,7 +5,7 @@ import Select from 'react-select'
 import styled from 'styled-components'
 
 import { Icon, Text } from '~/components/common'
-import { BABY_BLUE } from '~/constants'
+import { BABY_BLUE, BLUE } from '~/constants'
 import renderPage from '~/renderPage'
 import { ClubEvent, EventTicket } from '~/types'
 import { doApiRequest } from '~/utils'
@@ -129,6 +129,8 @@ const ResponsiveCheckoutGrid = styled.div`
   .ui {
     overflow-x: scroll;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     background-color: ${BABY_BLUE};
   }
 
@@ -166,6 +168,27 @@ const ResponsiveCheckoutGrid = styled.div`
       display: flex;
       align-items: center;
       gap: 0.4rem;
+    }
+  }
+
+  .ui-bottom-nav {
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .dots {
+      display: flex;
+      flex-direction: row;
+      margin: 0 auto;
+      gap: 15px;
+    }
+
+    .btn-left {
+      margin-right: auto;
+    }
+    .btn-right {
+      margin-left: auto;
     }
   }
 
@@ -315,6 +338,29 @@ const eventTimeStartFormat = new Intl.DateTimeFormat(['ban', 'en-US'], {
   minute: '2-digit',
 })
 
+const StepSelectDotButton = styled.button<{ selected: boolean }>`
+  --dot-size: 15px;
+  width: var(--dot-size);
+  height: var(--dot-size);
+
+  background-color: ${(props) => (props.selected ? BLUE : 'transparent')};
+  border-radius: 100%;
+  border: ${(props) =>
+    props.selected ? 'none' : `1.5px solid rgba(0, 0, 0, 0.2)`};
+`
+
+const StepSelectDot = ({
+  step,
+  selectedStep,
+}: {
+  step: CheckoutStep
+  selectedStep: CheckoutStep
+}) => {
+  const onStep = selectedStep === step
+
+  return <StepSelectDotButton disabled={onStep} selected={onStep} />
+}
+
 const TicketCheckoutPage = ({
   initialCheckoutStep,
   initialCart,
@@ -328,6 +374,7 @@ const TicketCheckoutPage = ({
 }) => {
   const { query } = useRouter()
 
+  const allowSelectStep = event !== undefined && eventTickets !== undefined
   const step = (typeof query?.step === 'string'
     ? query.step
     : initialCheckoutStep) as CheckoutStep
@@ -336,62 +383,70 @@ const TicketCheckoutPage = ({
   const { cart } = serverCart
 
   return (
-    <>
-      <ResponsiveCheckoutGrid>
-        <div className="ui">
+    <ResponsiveCheckoutGrid>
+      <div className="ui">
+        {event && (
           <div className="ui-top">
-            {event && (
-              <>
-                <h2 className="club-name">{event.club_name}</h2>
-                <h1 className="event-name">{event.name}</h1>
-                <div className="event-details">
-                  <span>
-                    <Icon name="calendar" />
-                    {eventDateFormat.format(new Date(event.start_time))}
-                  </span>
-                  <span>
-                    <Icon name="clock" />
-                    {eventTimeStartFormat.formatRange(
-                      new Date(event.start_time),
-                      new Date(event.end_time),
-                    )}
-                  </span>
-                  {event.location && (
-                    <span>
-                      <Icon name="location" />
-                      {event.location}
-                    </span>
-                  )}
-                </div>
-              </>
-            )}
+            <h2 className="club-name">{event.club_name}</h2>
+            <h1 className="event-name">{event.name}</h1>
+            <div className="event-details">
+              <span>
+                <Icon name="calendar" />
+                {eventDateFormat.format(new Date(event.start_time))}
+              </span>
+              <span>
+                <Icon name="clock" />
+                {eventTimeStartFormat.formatRange(
+                  new Date(event.start_time),
+                  new Date(event.end_time),
+                )}
+              </span>
+              {event.location && (
+                <span>
+                  <Icon name="location" />
+                  {event.location}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="ui-bottom">
-            {step === 'select' && (
-              <SelectTicketsStep
-                event={event}
-                eventTickets={eventTickets}
-                serverCart={serverCart}
-              />
-            )}
-            {step === 'purchase' && (
-              <>Purchasing! {event && <h2>{event.club_name}</h2>}</>
-            )}
-            {step === 'complete' && (
-              <>Complete! {event && <h2>{event.club_name}</h2>}</>
-            )}
-            <div>Tickets: {JSON.stringify(eventTickets)}</div>
-          </div>
-        </div>
-        <div className="cart">
-          {event && event.image_url && (
-            <CartImage url={event.large_image_url ?? event.image_url} />
+        )}
+        <div className="ui-bottom">
+          {step === 'select' && (
+            <SelectTicketsStep
+              event={event}
+              eventTickets={eventTickets}
+              serverCart={serverCart}
+            />
           )}
-          <Text>Order summary</Text>
-          {/* TODO: continue here LOL */}
+          {step === 'purchase' && (
+            <>Purchasing! {event && <h2>{event.club_name}</h2>}</>
+          )}
+          {step === 'complete' && (
+            <>Complete! {event && <h2>{event.club_name}</h2>}</>
+          )}
+          <div>Tickets: {JSON.stringify(eventTickets)}</div>
         </div>
-      </ResponsiveCheckoutGrid>
-    </>
+        <div className="ui-bottom-nav">
+          <div className="btn-left">
+            <button className="button is-primary">Oh bruh</button>
+          </div>
+          <div className="dots">
+            {allowSelectStep && (
+              <StepSelectDot step="select" selectedStep={step} />
+            )}
+            <StepSelectDot step="purchase" selectedStep={step} />
+            <StepSelectDot step="complete" selectedStep={step} />
+          </div>
+        </div>
+      </div>
+      <div className="cart">
+        {event && event.image_url && (
+          <CartImage url={event.large_image_url ?? event.image_url} />
+        )}
+        <Text>Order summary</Text>
+        {/* TODO: continue here LOL */}
+      </div>
+    </ResponsiveCheckoutGrid>
   )
 }
 
