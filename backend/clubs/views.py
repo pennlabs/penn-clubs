@@ -44,7 +44,9 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.text import slugify
+from django.views.decorators.cache import cache_page
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics import parse as ICSParse
@@ -1933,6 +1935,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         self.check_approval_permission(request)
         return super().update(request, *args, **kwargs)
 
+    @method_decorator(cache_page(60 * 60))
     def list(self, request, *args, **kwargs):
         """
         Return a list of all clubs.
@@ -4720,11 +4723,14 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
-            club = Club.objects.filter(code=self.kwargs["club_code"]).prefetch_related(
-                "badges"
-            )
-            if club.is_wharton:
-                return ManagedClubApplicationSerializer
+            if "club_code" in self.kwargs:
+                club = (
+                    Club.objects.filter(code=self.kwargs["club_code"])
+                    .prefetch_related("badges")
+                    .first()
+                )
+                if club and club.is_wharton:
+                    return ManagedClubApplicationSerializer
             return WritableClubApplicationSerializer
         return ClubApplicationSerializer
 
@@ -4865,6 +4871,10 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             )
         )
         return submissions
+
+    @method_decorator(cache_page(60 * 60))
+    def list(self, *args, **kwargs):
+        return super().list(*args, **kwargs)
 
     @action(detail=False, methods=["get"])
     def export(self, *args, **kwargs):
