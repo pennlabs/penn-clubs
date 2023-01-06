@@ -19,6 +19,7 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
+from django.utils.functional import cached_property
 from ics import Calendar
 from jinja2 import Environment, meta
 from model_clone.models import CloneModel
@@ -335,6 +336,11 @@ class Club(models.Model):
 
     def create_thumbnail(self, request=None):
         return create_thumbnail_helper(self, request, 200)
+
+    @cached_property
+    def is_wharton(self):
+        wc_badge = Badge.objects.filter(label="Wharton Council").first()
+        return wc_badge in self.badges.all()
 
     def add_ics_events(self):
         """
@@ -1520,6 +1526,16 @@ class Profile(models.Model):
         return self.user.username
 
 
+class ApplicationCycle(models.Model):
+    """
+    Represents an application cycle attached to club applications
+    """
+
+    name = models.CharField(max_length=255)
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
+
+
 class ClubApplication(CloneModel):
     """
     Represents custom club application.
@@ -1534,6 +1550,9 @@ class ClubApplication(CloneModel):
     application_end_time = models.DateTimeField()
     name = models.TextField(blank=True)
     result_release_time = models.DateTimeField()
+    application_cycle = models.ForeignKey(
+        ApplicationCycle, on_delete=models.SET_NULL, null=True
+    )
     external_url = models.URLField(blank=True)
     is_active = models.BooleanField(default=False, blank=True)
     is_wharton_council = models.BooleanField(default=False, blank=True)

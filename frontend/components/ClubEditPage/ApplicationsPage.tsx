@@ -300,7 +300,7 @@ const ReasonModal = (props: {
               applicants
             </StyledHeader>
             {submissions != null
-              ? submissions.map((data, index) => {
+              ? submissions.map((data) => {
                   return (
                     data != null && (
                       <div>

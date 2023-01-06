@@ -145,6 +145,7 @@ from clubs.serializers import (
     FavoriteWriteSerializer,
     FavouriteEventSerializer,
     MajorSerializer,
+    ManagedClubApplicationSerializer,
     MembershipInviteSerializer,
     MembershipRequestSerializer,
     MembershipSerializer,
@@ -4719,6 +4720,11 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
+            club = Club.objects.filter(code=self.kwargs["club_code"]).prefetch_related(
+                "badges"
+            )
+            if club.is_wharton:
+                return ManagedClubApplicationSerializer
             return WritableClubApplicationSerializer
         return ClubApplicationSerializer
 

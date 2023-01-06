@@ -2708,6 +2708,13 @@ class WritableClubApplicationSerializer(ClubApplicationSerializer):
         pass
 
 
+class ManagedClubApplicationSerializer(ClubApplicationSerializer):
+    name = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta(ClubApplicationSerializer.Meta):
+        read_only_fields = ("application_start_time", "application_end_time")
+
+
 class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
     creating_club = serializers.SlugRelatedField(
