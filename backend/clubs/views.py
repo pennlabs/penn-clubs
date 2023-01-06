@@ -47,6 +47,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.text import slugify
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics import parse as ICSParse
@@ -4765,14 +4766,15 @@ class WhartonApplicationAPIView(generics.ListAPIView):
 
         # Order applications randomly for viewing (consistent and unique per user).
         key = str(self.request.user.id)
-        cached_qs = cache.get(key)
-        if cached_qs:
-            return cached_qs
         qs = qs.annotate(
             random=SHA1(Concat("name", Value(key), output_field=TextField()))
         ).order_by("random")
-        cache.set(key, qs, 60 * 20)
         return qs
+
+    @method_decorator(cache_page(60 * 20))
+    @method_decorator(vary_on_cookie)
+    def list(self, *args, **kwargs):
+        return super().list(*args, **kwargs)
 
 
 class WhartonApplicationStatusAPIView(generics.ListAPIView):
