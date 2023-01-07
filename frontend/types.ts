@@ -72,6 +72,7 @@ export interface ClubApplication {
   name: string
   application_start_time: string
   application_end_time: string
+  cycle: string
   result_release_time: string
   external_url: string
 }
@@ -164,6 +165,7 @@ export interface Club {
   is_member: MembershipRank | false
   is_request: boolean
   is_subscribe: boolean
+  is_wharton: boolean
   linkedin: string
   listserv: string
   members: Membership[]

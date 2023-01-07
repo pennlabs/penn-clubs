@@ -1535,6 +1535,9 @@ class ApplicationCycle(models.Model):
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
 
+    def __str__(self):
+        return self.name
+
 
 class ClubApplication(CloneModel):
     """
@@ -1575,9 +1578,9 @@ class ClubApplication(CloneModel):
             self.application_end_time,
         )
 
-    @property
+    @cached_property
     def season(self):
-        semester = "Fall" if 8 <= self.application_start_time.month <= 11 else "Spring"
+        semester = "Fall" if 8 <= self.application_start_time.month <= 12 else "Spring"
         year = str(self.application_start_time.year)
         return f"{semester} {year}"
 
@@ -1688,6 +1691,9 @@ class ApplicationSubmission(models.Model):
     notified = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.first_name}: {self.application.name}"
 
 
 class ApplicationQuestionResponse(models.Model):
