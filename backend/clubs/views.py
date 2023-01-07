@@ -44,7 +44,10 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.text import slugify
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics import parse as ICSParse
@@ -145,6 +148,7 @@ from clubs.serializers import (
     FavoriteWriteSerializer,
     FavouriteEventSerializer,
     MajorSerializer,
+    ManagedClubApplicationSerializer,
     MembershipInviteSerializer,
     MembershipRequestSerializer,
     MembershipSerializer,
@@ -1932,6 +1936,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         self.check_approval_permission(request)
         return super().update(request, *args, **kwargs)
 
+    @method_decorator(cache_page(60 * 60))
     def list(self, request, *args, **kwargs):
         """
         Return a list of all clubs.
@@ -4411,6 +4416,16 @@ class UserViewSet(viewsets.ModelViewSet):
             .distinct()
         )
 
+        # prevent submissions outside of the open duration
+        now = timezone.now()
+        if (
+            now > application.application_end_time
+            or now < application.application_start_time
+        ):
+            return Response(
+                {"success": False, "detail": "This application is not currently open!"}
+            )
+
         # limit applicants to 2 committees
         if (
             committee
@@ -4642,7 +4657,10 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 and email_type == "acceptance"
             ):
                 template = acceptance_template
-            elif email_type == "rejection":
+            elif (
+                email_type == "rejection"
+                and submission.status != ApplicationSubmission.ACCEPTED
+            ):
                 template = rejection_template
             else:
                 continue
@@ -4706,6 +4724,14 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
+            if "club_code" in self.kwargs:
+                club = (
+                    Club.objects.filter(code=self.kwargs["club_code"])
+                    .prefetch_related("badges")
+                    .first()
+                )
+                if club and club.is_wharton:
+                    return ManagedClubApplicationSerializer
             return WritableClubApplicationSerializer
         return ClubApplicationSerializer
 
@@ -4728,20 +4754,27 @@ class WhartonApplicationAPIView(generics.ListAPIView):
     def get_queryset(self):
         now = timezone.now()
 
-        qs = ClubApplication.objects.filter(
-            is_wharton_council=True, application_end_time__gte=now
+        qs = (
+            ClubApplication.objects.filter(
+                is_wharton_council=True, application_end_time__gte=now
+            )
+            .select_related("club")
+            .prefetch_related(
+                "committees", "questions__multiple_choice", "questions__committees"
+            )
         )
 
         # Order applications randomly for viewing (consistent and unique per user).
         key = str(self.request.user.id)
-        cached_qs = cache.get(key)
-        if cached_qs and cached_qs.count() == qs.count():
-            return cached_qs
         qs = qs.annotate(
             random=SHA1(Concat("name", Value(key), output_field=TextField()))
         ).order_by("random")
-        cache.set(key, qs, 60)
         return qs
+
+    @method_decorator(cache_page(60 * 20))
+    @method_decorator(vary_on_cookie)
+    def list(self, *args, **kwargs):
+        return super().list(*args, **kwargs)
 
 
 class WhartonApplicationStatusAPIView(generics.ListAPIView):
@@ -4809,24 +4842,41 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # recent instance in each group, then selecting those instances
 
         app_id = self.kwargs["application_pk"]
-        query = f"""
-                SELECT *
-                FROM clubs_applicationsubmission
-                WHERE application_id = {app_id}
-                AND NOT archived
-                AND created_at in
-                    (SELECT recent_time
+        submissions = (
+            ApplicationSubmission.objects.filter(
+                application=app_id,
+                created_at__in=RawSQL(
+                    """SELECT recent_time
                     FROM
                     (SELECT user_id,
                             committee_id,
+                            application_id,
                             max(created_at) recent_time
                         FROM clubs_applicationsubmission
-                        WHERE application_id = {app_id}
-                        AND NOT archived
+                        WHERE NOT archived
                         GROUP BY user_id,
-                                committee_id) recent_subs)
-                """
-        return ApplicationSubmission.objects.raw(query)
+                                committee_id, application_id) recent_subs""",
+                    (),
+                ),
+                archived=False,
+            )
+            .select_related("user__profile", "committee", "application__club")
+            .prefetch_related(
+                Prefetch(
+                    "responses",
+                    queryset=ApplicationQuestionResponse.objects.select_related(
+                        "multiple_choice", "question"
+                    ),
+                ),
+                "responses__question__committees",
+                "responses__question__multiple_choice",
+            )
+        )
+        return submissions
+
+    @method_decorator(cache_page(60 * 60))
+    def list(self, *args, **kwargs):
+        return super().list(*args, **kwargs)
 
     @action(detail=False, methods=["get"])
     def export(self, *args, **kwargs):
@@ -4998,25 +5048,37 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "delete"]
 
     def get_queryset(self):
-        distinct_submissions = {}
-        submissions = ApplicationSubmission.objects.filter(
-            user=self.request.user, archived=False
+        submissions = (
+            ApplicationSubmission.objects.filter(
+                user=self.request.user,
+                created_at__in=RawSQL(
+                    """SELECT recent_time
+                    FROM
+                    (SELECT user_id,
+                            committee_id,
+                            application_id,
+                            max(created_at) recent_time
+                        FROM clubs_applicationsubmission
+                        WHERE NOT archived
+                        GROUP BY user_id,
+                                committee_id, application_id) recent_subs""",
+                    (),
+                ),
+                archived=False,
+            )
+            .select_related("user__profile", "committee", "application__club")
+            .prefetch_related(
+                Prefetch(
+                    "responses",
+                    queryset=ApplicationQuestionResponse.objects.select_related(
+                        "multiple_choice", "question"
+                    ),
+                ),
+                "responses__question__committees",
+                "responses__question__multiple_choice",
+            )
         )
-
-        # only want to return the most recent (user, committee) unique submission pair
-        for submission in submissions:
-            key = (submission.application.__str__(), submission.committee.__str__())
-            if key in distinct_submissions:
-                if distinct_submissions[key].created_at < submission.created_at:
-                    distinct_submissions[key] = submission
-            else:
-                distinct_submissions[key] = submission
-
-        queryset = ApplicationSubmission.objects.none()
-        for submission in distinct_submissions.values():
-            queryset |= ApplicationSubmission.objects.filter(pk=submission.pk)
-
-        return queryset
+        return submissions
 
     def perform_destroy(self, instance):
         """

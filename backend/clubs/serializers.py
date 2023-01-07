@@ -2449,23 +2449,6 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
             # cannot link to the application if the application has been deleted
             return "#"
 
-    def validate(self, data):
-        application_start_time = data["application_start_time"]
-        application_end_time = data["application_end_time"]
-        now = pytz.UTC.localize(datetime.datetime.now())
-
-        if now < application_start_time:
-            raise serializers.ValidationError(
-                "You cannot submit before the application has opened."
-            )
-
-        if now > application_end_time:
-            raise serializers.ValidationError(
-                "You cannot submit after the application deadline."
-            )
-
-        return data
-
     class Meta:
         model = ApplicationSubmission
         fields = (
@@ -2487,6 +2470,7 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
             "code",
             "graduation_year",
         )
+        read_only_fields = fields
 
 
 class ApplicationSubmissionUserSerializer(ApplicationSubmissionSerializer):
@@ -2722,6 +2706,13 @@ class WritableClubApplicationSerializer(ClubApplicationSerializer):
 
     class Meta(ClubApplicationSerializer.Meta):
         pass
+
+
+class ManagedClubApplicationSerializer(ClubApplicationSerializer):
+    name = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta(ClubApplicationSerializer.Meta):
+        read_only_fields = ("application_start_time", "application_end_time")
 
 
 class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
