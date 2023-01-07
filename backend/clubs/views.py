@@ -4924,7 +4924,7 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def list(self, *args, **kwargs):
         """
         Manually cache responses (to support invalidation)
-        Responses are invalidated on status / reason updates
+        Responses are invalidated on status / reason updates and email sending
         """
 
         app_id = self.kwargs["application_pk"]
@@ -5044,7 +5044,7 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             submissions = ApplicationSubmission.objects.filter(pk__in=submission_pks)
             app_id = submissions.first().application.id if submissions.first() else None
             if not app_id:
-                return Response([])
+                return Response({"detail": "No submissions found"})
             key = f"applicationsubmissions:{app_id}"
             cache.delete(key)
 

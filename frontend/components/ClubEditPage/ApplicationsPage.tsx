@@ -210,9 +210,6 @@ const NotificationModal = (props: {
                 sub.status === 'Accepted' &&
                 sub.reason,
             )
-            for (const x of relevant) {
-              x.notified = true
-            }
             updateSubmissions(relevant)
           } else if (data.email_type.id === 'rejection' && !data.dry_run) {
             const relevant = submissions.filter(
@@ -221,9 +218,6 @@ const NotificationModal = (props: {
                 sub.status.startsWith('Rejected') &&
                 sub.reason,
             )
-            for (const x of relevant) {
-              x.notified = true
-            }
             updateSubmissions(relevant)
           }
           doApiRequest(
