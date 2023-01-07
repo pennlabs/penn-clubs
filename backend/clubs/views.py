@@ -5173,7 +5173,7 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
 
 class ApplicationQuestionViewSet(viewsets.ModelViewSet):
     """
-    create: Create a questions for a club application.
+    create: Create a question for a club application.
 
     list: List questions in a given club application.
     """
@@ -5187,12 +5187,29 @@ class ApplicationQuestionViewSet(viewsets.ModelViewSet):
             application__pk=self.kwargs["application_pk"]
         ).order_by("precedence")
 
-    @method_decorator(cache_page(60 * 60))
+    def create(self, *args, **kwargs):
+        """
+        Invalidate cache before creating
+        """
+        app_id = self.kwargs["application_pk"]
+        key = f"applicationquestion:{app_id}"
+        cache.delete(key)
+        return super().create(*args, **kwargs)
+
     def list(self, *args, **kwargs):
         """
-        Cache responses for one hour
+        Manually cache responses for one hour
         """
-        return super().list(*args, **kwargs)
+
+        app_id = self.kwargs["application_pk"]
+        key = f"applicationquestion:{app_id}"
+        cached = cache.get(key)
+        if cached:
+            return Response(cached)
+
+        data = ApplicationQuestionSerializer(self.get_queryset(), many=True).data
+        cache.set(key, data, 60 * 60)
+        return Response(data)
 
     @action(detail=False, methods=["post"])
     def precedence(self, *args, **kwargs):
