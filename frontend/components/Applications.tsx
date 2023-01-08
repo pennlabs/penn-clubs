@@ -32,6 +32,10 @@ const DescriptionWrapper = styled.p`
   color: ${CLUBS_GREY_LIGHT};
   border-top: 1.5px solid rgba(0, 0, 0, 0.05);
   width: 100%;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
 `
 
 const Description = (text) => (
@@ -121,12 +125,13 @@ function ApplicationsPage({ whartonapplications }): ReactElement {
                           )}
                       </div>
                     </MainInfo>
-                    {application.description &&
-                      application.description.length && (
-                        <DescriptionWrapper>
-                          {Description(application.description)}
-                        </DescriptionWrapper>
-                      )}
+                    {application.description && application.description.length && (
+                      <DescriptionWrapper
+                        dangerouslySetInnerHTML={{
+                          __html: application.description,
+                        }}
+                      ></DescriptionWrapper>
+                    )}
                   </Card>
                 </a>
               </Link>
