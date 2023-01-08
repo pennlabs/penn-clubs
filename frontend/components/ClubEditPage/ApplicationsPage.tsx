@@ -466,8 +466,8 @@ export default function ApplicationsPage({
     { label: 'First Name', name: 'first_name' },
     { label: 'Last Name', name: 'last_name' },
     { label: 'Email', name: 'email' },
-    { label: 'Status', name: 'status' },
     { label: 'Committee', name: 'committee' },
+    { label: 'Status', name: 'status' },
     { label: 'Graduation Year', name: 'graduation_year' },
   ]
 
