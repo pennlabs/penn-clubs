@@ -115,7 +115,7 @@ function ApplicationsPage({ whartonapplications }): ReactElement {
                       <div>
                         {application.club_image_url != null &&
                           application.club_image_url !== '' && (
-                            <LazyLoad height={100} offset={800}>
+                            <LazyLoad>
                               <Image src={application.club_image_url} />
                             </LazyLoad>
                           )}
