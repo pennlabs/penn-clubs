@@ -48,6 +48,22 @@ const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   }
 `
 
+const TableWrapper = styled.div`
+transform:rotateX(180deg);
+-ms-transform:rotateX(180deg); /* IE 9 */
+-webkit-transform:rotateX(180deg);
+font-size: 14px;
+over
+`
+
+const ScrollWrapper = styled.div`
+  transform: rotateX(180deg);
+  -ms-transform: rotateX(180deg); /* IE 9 */
+  -webkit-transform: rotateX(180deg);
+  overflow-y: auto;
+  margin-top: 1rem;
+`
+
 const FormWrapper = styled.div`
   border-bottom: 1px solid ${ALLBIRDS_GRAY};
   padding: 12px;
@@ -450,9 +466,9 @@ export default function ApplicationsPage({
     { label: 'First Name', name: 'first_name' },
     { label: 'Last Name', name: 'last_name' },
     { label: 'Email', name: 'email' },
-    { label: 'Graduation Year', name: 'graduation_year' },
     { label: 'Committee', name: 'committee' },
     { label: 'Status', name: 'status' },
+    { label: 'Graduation Year', name: 'graduation_year' },
   ]
 
   const columns = useMemo(
@@ -640,76 +656,86 @@ export default function ApplicationsPage({
                 </small>
               </div>
               {submissions[currentApplication.id].length > 0 ? (
-                <Table
-                  data={submissions[currentApplication.id].map((item, index) =>
-                    item.pk ? { ...item, id: item.pk } : { ...item, id: index },
-                  )}
-                  columns={responseTableFields}
-                  searchableColumns={['name']}
-                  filterOptions={[
-                    {
-                      label: 'notified',
-                      options: [
-                        { key: false, label: 'False' },
-                        { key: true, label: 'True' },
-                      ],
-                      filterFunction: (selection, object) =>
-                        object.notified === selection,
-                    },
-                    {
-                      label: 'reason',
-                      options: [
-                        { key: false, label: 'Set' },
-                        { key: true, label: 'Unset' },
-                      ],
-                      filterFunction: (selection, object) =>
-                        selection ? object.reason === '' : object.reason !== '',
-                    },
-                    {
-                      label: 'status',
-                      options: [
+                <ScrollWrapper>
+                  <TableWrapper>
+                    <Table
+                      data={submissions[
+                        currentApplication.id
+                      ].map((item, index) =>
+                        item.pk
+                          ? { ...item, id: item.pk }
+                          : { ...item, id: index },
+                      )}
+                      columns={responseTableFields}
+                      searchableColumns={['name']}
+                      filterOptions={[
                         {
-                          key: 'Pending',
-                          label: 'Pending',
+                          label: 'notified',
+                          options: [
+                            { key: false, label: 'False' },
+                            { key: true, label: 'True' },
+                          ],
+                          filterFunction: (selection, object) =>
+                            object.notified === selection,
                         },
                         {
-                          key: 'Accepted',
-                          label: 'Accepted',
+                          label: 'reason',
+                          options: [
+                            { key: false, label: 'Set' },
+                            { key: true, label: 'Unset' },
+                          ],
+                          filterFunction: (selection, object) =>
+                            selection
+                              ? object.reason === ''
+                              : object.reason !== '',
                         },
                         {
-                          key: 'Rejected after written application',
-                          label: 'Rejected after written application',
+                          label: 'status',
+                          options: [
+                            {
+                              key: 'Pending',
+                              label: 'Pending',
+                            },
+                            {
+                              key: 'Accepted',
+                              label: 'Accepted',
+                            },
+                            {
+                              key: 'Rejected after written application',
+                              label: 'Rejected after written application',
+                            },
+                            {
+                              key: 'Rejected after interview(s)',
+                              label: 'Rejected after interview(s)',
+                            },
+                          ],
+                          filterFunction: (selection, object) =>
+                            object.status === selection,
                         },
-                        {
-                          key: 'Rejected after interview(s)',
-                          label: 'Rejected after interview(s)',
-                        },
-                      ],
-                      filterFunction: (selection, object) =>
-                        object.status === selection,
-                    },
-                  ]}
-                  focusable={true}
-                  initialPage={pageIndex}
-                  setInitialPage={setPageIndex}
-                  initialPageSize={600}
-                  onClick={(row, event) => {
-                    if (
-                      event.target?.type === 'checkbox' ||
-                      event.target.tagName === 'svg' ||
-                      event.target.tagName === 'path'
-                    ) {
-                      // manually prevent the propagation here
-                      return
-                    }
-                    setShowModal(true)
-                    const submission =
-                      submissions[currentApplication.id].find(
-                        (submission) => submission.pk === row.original.pk,
-                      ) ?? null
-                    setCurrentSubmission(submission)
-                  }}
-                />
+                      ]}
+                      focusable={true}
+                      initialPage={pageIndex}
+                      setInitialPage={setPageIndex}
+                      initialPageSize={600}
+                      onClick={(row, event) => {
+                        if (
+                          event.target?.type === 'checkbox' ||
+                          event.target.tagName === 'svg' ||
+                          event.target.tagName === 'path'
+                        ) {
+                          // manually prevent the propagation here
+                          return
+                        }
+                        setShowModal(true)
+                        const submission =
+                          submissions[currentApplication.id].find(
+                            (submission) => submission.pk === row.original.pk,
+                          ) ?? null
+                        setCurrentSubmission(submission)
+                      }}
+                    />
+                  </TableWrapper>
+                </ScrollWrapper>
               ) : (
                 <>
                   <br></br>
