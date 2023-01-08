@@ -1937,12 +1937,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
     @method_decorator(cache_page(60 * 60))
-    def list(self, request, *args, **kwargs):
+    def list(self, *args, **kwargs):
         """
-        Return a list of all clubs.
-        Note that some fields are removed in order to improve response time.
+        Return a list of all clubs. Responses cached for 1 hour
         """
-        return super().list(request, *args, **kwargs)
+        return super().list(*args, **kwargs)
+
+    @method_decorator(cache_page(60 * 60))
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Retrieve data about a specific club. Responses cached for 1 hour
+        """
+        return super().retrieve(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
         """
@@ -4546,10 +4552,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
         response = (
             ApplicationQuestionResponse.objects.filter(
-                submission__user=self.request.user
+                submission__user=self.request.user, submission__archived=False
             )
             .filter(question__prompt=question.prompt)
             .order_by("-updated_at")
+            .select_related("submission", "multiple_choice", "question")
+            .prefetch_related("question__committees", "question__multiple_choice")
             .first()
         )
 
@@ -4569,6 +4577,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
     create: Create an application for the club.
 
     list: Retrieve a list of applications of the club.
+
+    current: Retrieve a list of active applications of the club.
 
     send_emails: Send out acceptance/rejection emails
     """
@@ -4635,6 +4645,12 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         ).select_related("user", "committee")
 
         dry_run = self.request.data.get("dry_run")
+
+        if not dry_run:
+            # Invalidate submission viewset cache
+            key = f"applicationsubmissions:{app.id}"
+            cache.delete(key)
+
         email_type = self.request.data.get("email_type")["id"]
 
         subject = f"Application Update for {app.name}"
@@ -4697,6 +4713,27 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             }
         )
 
+    @action(detail=False, methods=["get"])
+    def current(self, *args, **kwargs):
+        """
+        Return the ongoing application(s) for this club
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            allOf:
+                                - $ref: "#/components/schemas/ClubApplication"
+        ---
+        """
+        qs = self.get_queryset()
+        return Response(
+            ClubApplicationSerializer(
+                qs.filter(application_end_time__gte=timezone.now()), many=True
+            ).data
+        )
+
     @action(detail=True, methods=["post"])
     def duplicate(self, *args, **kwargs):
         """
@@ -4736,7 +4773,14 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         return ClubApplicationSerializer
 
     def get_queryset(self):
-        return ClubApplication.objects.filter(club__code=self.kwargs["club_code"])
+
+        return (
+            ClubApplication.objects.filter(club__code=self.kwargs["club_code"],)
+            .select_related("application_cycle", "club")
+            .prefetch_related(
+                "questions__multiple_choice", "questions__committees", "committees",
+            )
+        )
 
 
 class WhartonApplicationAPIView(generics.ListAPIView):
@@ -4774,6 +4818,9 @@ class WhartonApplicationAPIView(generics.ListAPIView):
     @method_decorator(cache_page(60 * 20))
     @method_decorator(vary_on_cookie)
     def list(self, *args, **kwargs):
+        """
+        Cache responses for 20 minutes. Vary cache by user.
+        """
         return super().list(*args, **kwargs)
 
 
@@ -4874,9 +4921,25 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
         return submissions
 
-    @method_decorator(cache_page(60 * 60))
     def list(self, *args, **kwargs):
-        return super().list(*args, **kwargs)
+        """
+        Manually cache responses (to support invalidation)
+        Responses are invalidated on status / reason updates and email sending
+        """
+
+        app_id = self.kwargs["application_pk"]
+        key = f"applicationsubmissions:{app_id}"
+
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
+        else:
+            serializer = self.get_serializer_class()
+            qs = self.get_queryset()
+            data = serializer(qs, many=True).data
+            cache.set(key, data, 60 * 60)
+
+        return Response(data)
 
     @action(detail=False, methods=["get"])
     def export(self, *args, **kwargs):
@@ -4966,7 +5029,7 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                         schema:
                             type: object
                             properties:
-                                output:
+                                detail:
                                     type: string
 
         ---
@@ -4977,10 +5040,17 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             status in map(lambda x: x[0], ApplicationSubmission.STATUS_TYPES)
             and len(submission_pks) > 0
         ):
-            ApplicationSubmission.objects.filter(pk__in=submission_pks).update(
-                status=status
-            )
-        return Response([])
+            # Invalidate submission viewset cache
+            submissions = ApplicationSubmission.objects.filter(pk__in=submission_pks)
+            app_id = submissions.first().application.id if submissions.first() else None
+            if not app_id:
+                return Response({"detail": "No submissions found"})
+            key = f"applicationsubmissions:{app_id}"
+            cache.delete(key)
+
+            submissions.update(status=status)
+
+        return Response({"detail": "Successfully updated submissions' status"})
 
     @action(detail=False, methods=["post"])
     def reason(self, *args, **kwargs):
@@ -5021,6 +5091,15 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         reasons = list(map(lambda x: x["reason"], submissions))
 
         submission_objs = ApplicationSubmission.objects.filter(pk__in=pks)
+
+        # Invalidate submission viewset cache
+        app_id = (
+            submission_objs.first().application.id if submission_objs.first() else None
+        )
+        if not app_id:
+            return Response({"detail": "No submissions found"})
+        key = f"applicationsubmissions:{app_id}"
+        cache.delete(key)
 
         for idx, obj in enumerate(submission_objs):
             obj.reason = reasons[idx]
@@ -5094,7 +5173,7 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
 
 class ApplicationQuestionViewSet(viewsets.ModelViewSet):
     """
-    create: Create a questions for a club application.
+    create: Create a question for a club application.
 
     list: List questions in a given club application.
     """
@@ -5107,6 +5186,30 @@ class ApplicationQuestionViewSet(viewsets.ModelViewSet):
         return ApplicationQuestion.objects.filter(
             application__pk=self.kwargs["application_pk"]
         ).order_by("precedence")
+
+    def create(self, *args, **kwargs):
+        """
+        Invalidate cache before creating
+        """
+        app_id = self.kwargs["application_pk"]
+        key = f"applicationquestion:{app_id}"
+        cache.delete(key)
+        return super().create(*args, **kwargs)
+
+    def list(self, *args, **kwargs):
+        """
+        Manually cache responses for one hour
+        """
+
+        app_id = self.kwargs["application_pk"]
+        key = f"applicationquestion:{app_id}"
+        cached = cache.get(key)
+        if cached:
+            return Response(cached)
+
+        data = ApplicationQuestionSerializer(self.get_queryset(), many=True).data
+        cache.set(key, data, 60 * 60)
+        return Response(data)
 
     @action(detail=False, methods=["post"])
     def precedence(self, *args, **kwargs):

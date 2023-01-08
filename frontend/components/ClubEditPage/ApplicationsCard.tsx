@@ -263,14 +263,23 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
         ))}
       </ul>
 
+      {!club.is_wharton && (
+        <Text>
+          <b>TIP</b>: To copy over your application from last semester, please
+          click <b> duplicate </b> on the application from the season that you
+          would like to copy over and refresh the page. You can then edit this
+          application as you please.
+        </Text>
+      )}
+
       <Text>
-        <b>TIP</b>: To copy over your application from last semester, please
-        click <b> duplicate </b> on the application from the season that you
-        would like to copy over and refresh the page. You can then edit this
-        application as you please.
+        If your club is affiliated with the Wharton Council Centralised
+        Application, please note that editable applications will be provisioned
+        by the system administrator.{' '}
       </Text>
 
       <ModelForm
+        allowCreation={!club.is_wharton}
         baseUrl={`/clubs/${club.code}/applications/`}
         defaultObject={{ name: `${club.name} Application` }}
         onChange={(data) => {
@@ -364,7 +373,7 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
         confirmDeletion={true}
         tableFields={[
           { name: 'name', label: 'Name' },
-          { name: 'season', label: 'Season' },
+          { name: 'cycle', label: 'Cycle' },
           {
             name: 'id',
             label: 'Edit',
@@ -382,14 +391,16 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
                       Questions
                     </button>
                   ) : (
-                    <button
-                      className="button is-primary is-small"
-                      onClick={() => {
-                        duplicateApplicationCurrent(id, 1)
-                      }}
-                    >
-                      Duplicate
-                    </button>
+                    !club.is_wharton && (
+                      <button
+                        className="button is-primary is-small"
+                        onClick={() => {
+                          duplicateApplicationCurrent(id, 1)
+                        }}
+                      >
+                        Duplicate
+                      </button>
+                    )
                   )}
                   <a href={`/club/${club.code}/application/${id}`}>
                     <button className="button is-primary is-small ml-3">

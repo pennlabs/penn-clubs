@@ -17,7 +17,7 @@ import {
   ApplicationSubmission,
   Club,
 } from '~/types'
-import { doApiRequest, getApiUrl } from '~/utils'
+import { doApiRequest, getApiUrl, getSemesterFromDate } from '~/utils'
 
 import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
@@ -97,6 +97,8 @@ const SubmissionSelect = (props: any) => {
 type Application = {
   id: number
   name: string
+  cycle: string
+  application_end_time: string
 }
 
 const ModalContainer = styled.div`
@@ -185,8 +187,9 @@ const NotificationModal = (props: {
   submissions: Array<ApplicationSubmission>
   club: string
   application: Application | null
+  updateSubmissions: (arr: Array<ApplicationSubmission>) => void
 }): ReactElement => {
-  const { submissions, club, application } = props
+  const { submissions, club, application, updateSubmissions } = props
   const initialValues = { dry_run: true }
   const [submitMessage, setSubmitMessage] = useState<
     string | ReactElement | null
@@ -199,7 +202,24 @@ const NotificationModal = (props: {
     <ModalContainer>
       <Formik
         initialValues={initialValues}
-        onSubmit={(data) => {
+        onSubmit={(data: any) => {
+          if (data.email_type.id === 'acceptance' && !data.dry_run) {
+            const relevant = submissions.filter(
+              (sub) =>
+                sub.notified === false &&
+                sub.status === 'Accepted' &&
+                sub.reason,
+            )
+            updateSubmissions(relevant)
+          } else if (data.email_type.id === 'rejection' && !data.dry_run) {
+            const relevant = submissions.filter(
+              (sub) =>
+                sub.notified === false &&
+                sub.status.startsWith('Rejected') &&
+                sub.reason,
+            )
+            updateSubmissions(relevant)
+          }
           doApiRequest(
             `/clubs/${club}/applications/${
               application!.id
@@ -245,10 +265,6 @@ const NotificationModal = (props: {
             {submitMessage !== null && (
               <div className="mt-2 mb-2 notification is-info is-light">
                 {submitMessage}
-                <p>
-                  Optionally refresh the page for your changes to be reflected
-                  below
-                </p>
               </div>
             )}
           </Form>
@@ -262,8 +278,9 @@ const ReasonModal = (props: {
   submissions: Array<ApplicationSubmission> | null
   club: string
   application: Application | null
+  updateSubmissions: (s: { name: string }) => void
 }): ReactElement => {
-  const { submissions, club, application } = props
+  const { submissions, club, application, updateSubmissions } = props
   const [submitMessage, setSubmitMessage] = useState<
     string | ReactElement | null
   >(null)
@@ -272,11 +289,12 @@ const ReasonModal = (props: {
     <ModalContainer>
       <Formik
         initialValues={initialValues}
-        onSubmit={(data) => {
-          const data_: any[] = []
+        onSubmit={(data: { name: string }) => {
+          const data_: { id: number; reason: string }[] = []
           for (const [key, value] of Object.entries(data)) {
-            data_.push({ id: key, reason: value })
+            data_.push({ id: Number(key), reason: value })
           }
+          updateSubmissions(data)
           doApiRequest(
             `/clubs/${club}/applications/${application?.id}/submissions/reason/?format=json`,
             {
@@ -320,10 +338,6 @@ const ReasonModal = (props: {
             {submitMessage !== null && (
               <div className="mt-2 mb-2 notification is-info is-light">
                 {submitMessage}
-                <p>
-                  Optionally refresh the page for your changes to be reflected
-                  below
-                </p>
               </div>
             )}
           </Form>
@@ -367,7 +381,10 @@ export default function ApplicationsPage({
       .then((applications) => {
         if (applications.length !== 0) {
           setApplications(applications)
-          setCurrentApplication(applications[0])
+          setCurrentApplication({
+            ...applications[0],
+            name: format_app_name(applications[0]),
+          })
         }
       })
   }, [])
@@ -447,6 +464,16 @@ export default function ApplicationsPage({
     [responseTableFields],
   )
 
+  const format_app_name: (application: Application) => any = (application) => (
+    <span>
+      {application.name} {' - '}
+      <span className="has-text-weight-semibold">
+        {application.cycle ||
+          getSemesterFromDate(application.application_end_time)}
+      </span>
+    </span>
+  )
+
   return (
     <>
       <StyledHeader style={{ marginBottom: '2px' }}>Applications</StyledHeader>
@@ -457,22 +484,31 @@ export default function ApplicationsPage({
       </Text>
       <Select
         options={applications.map((application) => {
-          return { value: application.id, label: application.name }
+          return {
+            ...application,
+            value: application.id,
+            label: format_app_name(application),
+          }
         })}
         value={
           currentApplication != null
             ? {
+                ...currentApplication,
                 value: currentApplication.id,
                 label: currentApplication.name,
               }
             : null
         }
-        onChange={(v: { value: number; label: string } | null) =>
+        onChange={(
+          v: {
+            value: number
+            label: string
+            cycle: string
+            application_end_time: string
+          } | null,
+        ) =>
           v != null &&
-          setCurrentApplication({
-            id: v.value,
-            name: v.label,
-          })
+          setCurrentApplication({ ...v, id: v.value, name: v.label })
         }
       />
       <br></br>
@@ -732,9 +768,19 @@ export default function ApplicationsPage({
           <NotificationModal
             club={club.code}
             application={currentApplication}
-            submissions={selectedSubmissions.map(
-              (i) => submissions[currentApplication!.id][i],
-            )}
+            submissions={submissions[currentApplication!.id]}
+            updateSubmissions={(arr: Array<ApplicationSubmission>) => {
+              if (currentApplication != null) {
+                for (const submission of arr) {
+                  const item = submissions[currentApplication.id].find(
+                    (sub) => sub.pk === submission.pk,
+                  )!
+                  const idx = submissions[currentApplication.id].indexOf(item)
+                  submissions[currentApplication.id][idx].notified = true
+                }
+                setSubmissions(submissions)
+              }
+            }}
           />
         </Modal>
       )}
@@ -751,6 +797,18 @@ export default function ApplicationsPage({
           <ReasonModal
             club={club.code}
             application={currentApplication}
+            updateSubmissions={(s: { name: string }) => {
+              if (currentApplication != null) {
+                for (const [id, value] of Object.entries(s)) {
+                  const item = submissions[currentApplication.id].find(
+                    (sub) => sub.pk === Number(id),
+                  )!
+                  const idx = submissions[currentApplication.id].indexOf(item)
+                  submissions[currentApplication.id][idx].reason = value
+                }
+                setSubmissions(submissions)
+              }
+            }}
             submissions={selectedSubmissions.map(
               (i) =>
                 submissions[currentApplication!.id].find(

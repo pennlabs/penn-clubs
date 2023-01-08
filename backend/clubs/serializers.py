@@ -1661,6 +1661,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "instagram",
             "is_ghost",
             "is_request",
+            "is_wharton",
             "linkedin",
             "listserv",
             "members",
@@ -2585,6 +2586,7 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
 
 class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     name = serializers.SerializerMethodField("get_name")
+    cycle = serializers.SerializerMethodField("get_cycle")
     committees = ApplicationCommitteeSerializer(
         many=True, required=False, read_only=True
     )
@@ -2592,8 +2594,10 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     club = serializers.SlugRelatedField(slug_field="code", read_only=True)
     updated_at = serializers.SerializerMethodField("get_updated_time", read_only=True)
     club_image_url = serializers.SerializerMethodField("get_image_url", read_only=True)
-    season = serializers.CharField(read_only=True)
     active = serializers.SerializerMethodField("get_active", read_only=True)
+
+    def get_cycle(self, obj):
+        return obj.application_cycle.name if obj.application_cycle else obj.season
 
     def get_active(self, obj):
         now = timezone.now()
@@ -2683,9 +2687,9 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         model = ClubApplication
         fields = (
             "id",
-            "season",
             "active",
             "name",
+            "cycle",
             "acceptance_email",
             "rejection_email",
             "application_start_time",
