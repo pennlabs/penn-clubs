@@ -4450,6 +4450,10 @@ class UserViewSet(viewsets.ModelViewSet):
         submission = ApplicationSubmission.objects.create(
             user=self.request.user, application=application, committee=committee,
         )
+
+        key = f"applicationsubmissions:{application.id}"
+        cache.delete(key)
+
         for question_pk in questions:
             question = ApplicationQuestion.objects.filter(pk=question_pk).first()
             question_type = question.question_type
@@ -4578,6 +4582,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
     list: Retrieve a list of applications of the club.
 
+    retrieve: Retrieve information about a single application
+
     current: Retrieve a list of active applications of the club.
 
     send_emails: Send out acceptance/rejection emails
@@ -4586,6 +4592,31 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
     permission_classes = [ClubItemPermission | IsSuperuser]
     serializer_class = ClubApplicationSerializer
     http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    def update(self, *args, **kwargs):
+        """
+        Invalidate cache before updating
+        """
+        app = self.get_object()
+        key = f"clubapplication:{app.id}"
+        cache.delete(key)
+        return super().update(*args, **kwargs)
+
+    def retrieve(self, *args, **kwargs):
+        """
+        Cache responses for one hour. This is what people
+        see when viewing an individual club's application
+        """
+
+        pk = self.kwargs["pk"]
+        key = f"clubapplication:{pk}"
+        cached = cache.get(key)
+        if cached:
+            return Response(cached)
+        app = self.get_object()
+        data = ClubApplicationSerializer(app).data
+        cache.set(key, data, 60 * 60)
+        return Response(data)
 
     @action(detail=True, methods=["post"])
     def send_emails(self, *args, **kwargs):
@@ -5189,12 +5220,25 @@ class ApplicationQuestionViewSet(viewsets.ModelViewSet):
 
     def create(self, *args, **kwargs):
         """
-        Invalidate cache before creating
+        Invalidate caches before creating
         """
         app_id = self.kwargs["application_pk"]
-        key = f"applicationquestion:{app_id}"
-        cache.delete(key)
+        key1 = f"applicationquestion:{app_id}"
+        key2 = f"clubapplication:{app_id}"
+        cache.delete(key1)
+        cache.delete(key2)
         return super().create(*args, **kwargs)
+
+    def update(self, *args, **kwargs):
+        """
+        Invalidate caches before updating
+        """
+        app_id = self.kwargs["application_pk"]
+        key1 = f"applicationquestion:{app_id}"
+        key2 = f"clubapplication:{app_id}"
+        cache.delete(key1)
+        cache.delete(key2)
+        return super().update(*args, **kwargs)
 
     def list(self, *args, **kwargs):
         """

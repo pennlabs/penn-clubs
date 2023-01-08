@@ -8,6 +8,7 @@ import bleach
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import URLValidator
 from django.db import models
@@ -2690,6 +2691,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
                     ApplicationCommittee.objects.create(
                         name=name, application=application_obj,
                     )
+            cache.delete(f"clubapplication:{application_obj.id}")
 
         return application_obj
 
