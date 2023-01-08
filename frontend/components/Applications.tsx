@@ -27,12 +27,22 @@ const CardWrapper = styled.div`
   }
 `
 
-const Description = styled.p`
+const DescriptionWrapper = styled.p`
   margin-top: 0.2rem;
   color: ${CLUBS_GREY_LIGHT};
   border-top: 1.5px solid rgba(0, 0, 0, 0.05);
   width: 100%;
 `
+
+const Description = (text) => (
+  <div>
+    {text.length > 255 ? (
+      <div>{`${text.substring(0, 255)} ...`}</div>
+    ) : (
+      <p>{text}</p>
+    )}
+  </div>
+)
 
 const MainInfo = styled.div`
   display: flex;
@@ -105,19 +115,18 @@ function ApplicationsPage({ whartonapplications }): ReactElement {
                       <div>
                         {application.club_image_url != null &&
                           application.club_image_url !== '' && (
-                            <LazyLoad height={62} offset={800}>
+                            <LazyLoad height={100} offset={800}>
                               <Image src={application.club_image_url} />
                             </LazyLoad>
                           )}
                       </div>
                     </MainInfo>
-                    {application.description && application.description.length && (
-                      <Description
-                        dangerouslySetInnerHTML={{
-                          __html: application.description,
-                        }}
-                      ></Description>
-                    )}
+                    {application.description &&
+                      application.description.length && (
+                        <DescriptionWrapper>
+                          {Description(application.description)}
+                        </DescriptionWrapper>
+                      )}
                   </Card>
                 </a>
               </Link>
