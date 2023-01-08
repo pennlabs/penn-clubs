@@ -326,19 +326,25 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               name="application_start_time"
               as={DateTimeField}
               required={true}
-              helpText="The date when your application opens."
+              helpText={`The date when your application opens. ${
+                club.is_wharton ? 'Read-only.' : ''
+              }`}
             />
             <Field
               name="application_end_time"
               as={DateTimeField}
               required={true}
-              helpText="The date when your application closes."
+              helpText={`The date when your application closes. ${
+                club.is_wharton ? 'Read-only.' : ''
+              }`}
             />
             <Field
               name="result_release_time"
               as={DateTimeField}
               required={true}
-              helpText={`The latest date that your ${OBJECT_NAME_SINGULAR} will be releasing admission results.`}
+              helpText={`The latest date that your ${OBJECT_NAME_SINGULAR} will be releasing admission results. ${
+                club.is_wharton ? 'Read-only.' : ''
+              }`}
             />
             <Field
               name="external_url"
@@ -356,7 +362,7 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               name="acceptance_email"
               as={ApplicationUpdateTextField}
               initialValues={
-                "<html> <body> <p> Congratulations {{name}}! You've been accepted because {{reason}}! </p> </body> </html>"
+                "<html> <body> <p> Congratulations {{ name }}! You've been accepted to {{ committee }} because {{reason}}! </p> </body> </html>"
               }
               helpText={`Acceptance email for your ${OBJECT_NAME_SINGULAR}.`}
             />
@@ -364,7 +370,7 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               name="rejection_email"
               as={ApplicationUpdateTextField}
               initialValues={
-                "<html> <body> <p> Congratulations {{name}}! You've been rejected because {{reason}}! </p> </body> </html>"
+                "<html> <body> <p> Sorry {{ name }}, You've been rejected because {{ reason }}! </p> </body> </html>"
               }
               helpText={`Rejection email for your ${OBJECT_NAME_SINGULAR}.`}
             />

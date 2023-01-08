@@ -2628,9 +2628,6 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             return image.url
 
     def validate(self, data):
-        application_start_time = data["application_start_time"]
-        application_end_time = data["application_end_time"]
-        result_release_time = data["result_release_time"]
         acceptance_template = data["acceptance_email"]
         rejection_template = data["rejection_email"]
 
@@ -2641,15 +2638,28 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
                 "Your application email templates contain invalid variables!"
             )
 
-        if application_start_time > application_end_time:
-            raise serializers.ValidationError(
-                "Your application start time must be less than the end time!"
-            )
+        if all(
+            field in data
+            for field in [
+                "application_start_time",
+                "application_end_time",
+                "result_release_time",
+            ]
+        ):
+            application_start_time = data["application_start_time"]
+            application_end_time = data["application_end_time"]
+            result_release_time = data["result_release_time"]
 
-        if application_end_time > result_release_time:
-            raise serializers.ValidationError(
-                "Your application end time must be less than the result release time!"
-            )
+            if application_start_time > application_end_time:
+                raise serializers.ValidationError(
+                    "Your application start time must be less than the end time!"
+                )
+
+            if application_end_time > result_release_time:
+                raise serializers.ValidationError(
+                    """Your application end time must be less than
+                    the result release time!"""
+                )
 
         return data
 
@@ -2716,7 +2726,11 @@ class ManagedClubApplicationSerializer(ClubApplicationSerializer):
     name = serializers.CharField(required=False, allow_blank=True)
 
     class Meta(ClubApplicationSerializer.Meta):
-        read_only_fields = ("application_start_time", "application_end_time")
+        read_only_fields = (
+            "application_start_time",
+            "application_end_time",
+            "result_release_time",
+        )
 
 
 class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):
