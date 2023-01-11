@@ -123,21 +123,22 @@ const ResponsiveCheckoutGrid = styled.div`
   display: grid;
   grid-template-columns: 2fr 1fr;
   max-width: 1920px;
+  min-height: min(900px, calc(100vh - 50px)); // TODO: jank...
   margin: 0 auto;
 
   /* checkout UI */
   .ui {
-    overflow-x: scroll;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
+    // justify-content: space-between;
     background-color: ${BABY_BLUE};
   }
 
   /* two sections separated by gray line */
   .ui-top,
-  .ui-bottom {
-    padding: 25px 10%;
+  .ui-bottom,
+  .ui-nav {
+    padding: 25px 100px;
   }
 
   .ui-top {
@@ -171,8 +172,8 @@ const ResponsiveCheckoutGrid = styled.div`
     }
   }
 
-  .ui-bottom-nav {
-    margin: 2rem 0;
+  .ui-nav {
+    margin: auto 0 1.5rem 0;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -182,13 +183,6 @@ const ResponsiveCheckoutGrid = styled.div`
       flex-direction: row;
       margin: 0 auto;
       gap: 15px;
-    }
-
-    .btn-left {
-      margin-right: auto;
-    }
-    .btn-right {
-      margin-left: auto;
     }
   }
 
@@ -338,7 +332,7 @@ const eventTimeStartFormat = new Intl.DateTimeFormat(['ban', 'en-US'], {
   minute: '2-digit',
 })
 
-const StepSelectDotButton = styled.button<{ selected: boolean }>`
+const StepSelectDotDiv = styled.div<{ selected: boolean }>`
   --dot-size: 15px;
   width: var(--dot-size);
   height: var(--dot-size);
@@ -358,7 +352,7 @@ const StepSelectDot = ({
 }) => {
   const onStep = selectedStep === step
 
-  return <StepSelectDotButton disabled={onStep} selected={onStep} />
+  return <StepSelectDotDiv selected={onStep} />
 }
 
 const TicketCheckoutPage = ({
@@ -372,7 +366,7 @@ const TicketCheckoutPage = ({
   event: ClubEvent
   eventTickets: EventTicketsResponse
 }) => {
-  const { query } = useRouter()
+  const { query, replace } = useRouter()
 
   const allowSelectStep = event !== undefined && eventTickets !== undefined
   const step = (typeof query?.step === 'string'
@@ -381,6 +375,8 @@ const TicketCheckoutPage = ({
 
   const serverCart = useServerCart(initialCart)
   const { cart } = serverCart
+
+  const setStep = (step: CheckoutStep) => replace({ query: { ...query, step } })
 
   return (
     <ResponsiveCheckoutGrid>
@@ -418,18 +414,12 @@ const TicketCheckoutPage = ({
               serverCart={serverCart}
             />
           )}
-          {step === 'purchase' && (
-            <>Purchasing! {event && <h2>{event.club_name}</h2>}</>
-          )}
+          {step === 'purchase' && <>TODO: purchasing logic</>}
           {step === 'complete' && (
             <>Complete! {event && <h2>{event.club_name}</h2>}</>
           )}
-          <div>Tickets: {JSON.stringify(eventTickets)}</div>
         </div>
-        <div className="ui-bottom-nav">
-          <div className="btn-left">
-            <button className="button is-primary">Oh bruh</button>
-          </div>
+        <div className="ui-nav">
           <div className="dots">
             {allowSelectStep && (
               <StepSelectDot step="select" selectedStep={step} />
@@ -437,14 +427,50 @@ const TicketCheckoutPage = ({
             <StepSelectDot step="purchase" selectedStep={step} />
             <StepSelectDot step="complete" selectedStep={step} />
           </div>
+          {step === 'select' && (
+            <>
+              <button
+                className="button is-info is-pulled-right"
+                onClick={() => {
+                  setStep('purchase')
+                }}
+                disabled={cart.tickets.length === 0}
+              >
+                Next
+                <Icon name="chevron-right" />
+              </button>
+            </>
+          )}
+          {step === 'purchase' && (
+            <>
+              <button
+                className="button is-info is-pulled-right mr-4"
+                onClick={() => {
+                  setStep('select')
+                }}
+              >
+                <Icon name="chevron-left" />
+                Back
+              </button>
+              <button
+                className="button is-info is-pulled-right"
+                onClick={() => {
+                  setStep('complete')
+                }}
+                // TODO: purchasing logic...
+              >
+                Next
+                <Icon name="chevron-right" />
+              </button>
+            </>
+          )}
         </div>
       </div>
       <div className="cart">
         {event && event.image_url && (
           <CartImage url={event.large_image_url ?? event.image_url} />
         )}
-        <Text>Order summary</Text>
-        {/* TODO: continue here LOL */}
+        <Text className="is-size-6 bold">Order summary</Text>
       </div>
     </ResponsiveCheckoutGrid>
   )
@@ -507,4 +533,5 @@ TicketCheckoutPage.getInitialProps = async ({
 // TODO: remove
 // http://localhost:3000/tickets/checkout?club=harvard-rejects&event=54
 
+// TODO: require auth
 export default renderPage(TicketCheckoutPage)
