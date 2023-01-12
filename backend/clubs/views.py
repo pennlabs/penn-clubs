@@ -4858,7 +4858,9 @@ class WhartonApplicationAPIView(generics.ListAPIView):
 
         qs = (
             ClubApplication.objects.filter(
-                is_wharton_council=True, application_end_time__gte=now
+                is_wharton_council=True,
+                application_start_time__lte=now,
+                application_end_time__gte=now,
             )
             .select_related("club")
             .prefetch_related(
