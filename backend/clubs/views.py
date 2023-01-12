@@ -1928,12 +1928,23 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     "or deregistering for the SAC fair."
                 )
 
-    @method_decorator(cache_page(60 * 20))
     def list(self, *args, **kwargs):
         """
         Return a list of all clubs. Responses cached for 1 hour
+
+        Responses are only cached for people with specific permissions
         """
-        return super().list(*args, **kwargs)
+        key = self.request.build_absolute_uri()
+        cached_object = cache.get(key)
+        if (
+            cached_object
+            and not self.request.user.groups.filter(name="Approvers").exists()
+        ):
+            return Response(cached_object)
+
+        resp = super().list(*args, **kwargs)
+        cache.set(key, resp.data, 60 * 60)
+        return resp
 
     def retrieve(self, *args, **kwargs):
         """
