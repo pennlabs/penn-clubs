@@ -4620,6 +4620,15 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
     serializer_class = ClubApplicationSerializer
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
+    def destroy(self, *args, **kwargs):
+        """
+        Invalidate cache before deleting
+        """
+        app = self.get_object()
+        key = f"clubapplication:{app.id}"
+        cache.delete(key)
+        return super().destroy(*args, **kwargs)
+
     def update(self, *args, **kwargs):
         """
         Invalidate cache before updating
@@ -5246,6 +5255,17 @@ class ApplicationQuestionViewSet(viewsets.ModelViewSet):
         return ApplicationQuestion.objects.filter(
             application__pk=self.kwargs["application_pk"]
         ).order_by("precedence")
+
+    def destroy(self, *args, **kwargs):
+        """
+        Invalidate caches before destroying
+        """
+        app_id = self.kwargs["application_pk"]
+        key1 = f"applicationquestion:{app_id}"
+        key2 = f"clubapplication:{app_id}"
+        cache.delete(key1)
+        cache.delete(key2)
+        return super().destroy(*args, **kwargs)
 
     def create(self, *args, **kwargs):
         """
