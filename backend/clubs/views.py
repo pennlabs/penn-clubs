@@ -1928,27 +1928,43 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     "or deregistering for the SAC fair."
                 )
 
-    def partial_update(self, request, *args, **kwargs):
-        self.check_approval_permission(request)
-        return super().partial_update(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        self.check_approval_permission(request)
-        return super().update(request, *args, **kwargs)
-
-    @method_decorator(cache_page(60 * 60))
+    @method_decorator(cache_page(60 * 20))
     def list(self, *args, **kwargs):
         """
         Return a list of all clubs. Responses cached for 1 hour
         """
         return super().list(*args, **kwargs)
 
-    @method_decorator(cache_page(60 * 60))
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, *args, **kwargs):
         """
         Retrieve data about a specific club. Responses cached for 1 hour
         """
-        return super().retrieve(request, *args, **kwargs)
+        key = f"clubs:{self.get_object().id}"
+        cached = cache.get(key)
+        if cached:
+            return Response(cached)
+
+        resp = super().retrieve(*args, **kwargs)
+        cache.set(key, resp.data, 60 * 60)
+        return resp
+
+    def update(self, request, *args, **kwargs):
+        """
+        Invalidate caches
+        """
+        self.check_approval_permission(request)
+        key = f"clubs:{self.get_object().id}"
+        cache.delete(key)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Invalidate caches
+        """
+        self.check_approval_permission(request)
+        key = f"clubs:{self.get_object().id}"
+        cache.delete(key)
+        return super().partial_update(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
         """
