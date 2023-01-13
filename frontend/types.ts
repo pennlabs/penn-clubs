@@ -298,6 +298,8 @@ export type Application = {
   description: string
   application_start_time: string
   application_end_time: string
+  acceptance_email: string
+  rejection_email: string
   result_release_time: string
   updated_at: string
   external_url: string | null
