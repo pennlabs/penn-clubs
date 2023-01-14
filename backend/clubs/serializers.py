@@ -2629,8 +2629,8 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             return image.url
 
     def validate(self, data):
-        acceptance_template = data["acceptance_email"]
-        rejection_template = data["rejection_email"]
+        acceptance_template = data.get("acceptance_email", "")
+        rejection_template = data.get("rejection_email", "")
 
         if not ClubApplication.validate_template(
             acceptance_template
