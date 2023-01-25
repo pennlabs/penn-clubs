@@ -253,13 +253,24 @@ const ApplicationPage = ({
                   method: 'POST',
                   body,
                 })
-                  .then((resp) => resp.json())
-                  .then((data) => {
-                    if (data.success === false) {
-                      setSaved(false)
-                      setErrors(data.detail)
+                  .then((resp) => {
+                    if (resp.status === 200) {
+                      return resp.json()
                     } else {
-                      setSaved(true)
+                      setSaved(false)
+                      setErrors(
+                        `Unknown error. Refresh and/or login. ${resp.status}`,
+                      )
+                    }
+                  })
+                  .then((data) => {
+                    if (data != null) {
+                      if (data.success === false) {
+                        setSaved(false)
+                        setErrors(data.detail)
+                      } else {
+                        setSaved(true)
+                      }
                     }
                   })
               }
