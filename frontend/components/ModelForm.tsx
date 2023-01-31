@@ -174,17 +174,16 @@ export const ModelTable = ({
       }
       return (
         <div className="buttons">
-          {allowEditing &&
-            (object.active === true || object.active === undefined) && (
-              <button
-                onClick={() => {
-                  return onEdit(object)
-                }}
-                className="button is-primary is-small"
-              >
-                <Icon name="edit" alt="edit" /> Edit
-              </button>
-            )}
+          {allowEditing && (
+            <button
+              onClick={() => {
+                return onEdit(object)
+              }}
+              className="button is-primary is-small"
+            >
+              <Icon name="edit" alt="edit" /> Edit
+            </button>
+          )}
           {allowDeletion &&
             (object.active === true || object.active === undefined) && (
               <button

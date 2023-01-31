@@ -10,6 +10,7 @@ import secrets
 import string
 from urllib.parse import urlparse
 
+import pandas as pd
 import pytz
 import qrcode
 import requests
@@ -25,7 +26,6 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command, get_commands, load_command_class
-from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
 from django.db.models import (
     Count,
@@ -4939,7 +4939,7 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
         )
 
 
-class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
+class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
     """
     list: List submissions for a given club application.
 
@@ -5010,10 +5010,13 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         return Response(data)
 
+    @method_decorator(cache_page(60 * 60 * 2))
     @action(detail=False, methods=["get"])
     def export(self, *args, **kwargs):
         """
-        Given some application submissions, export them
+        Given some application submissions, export them to CSV.
+
+        Cached for 2 hours.
         ---
         requestBody:
             content:
@@ -5030,49 +5033,49 @@ class ApplicationSubmissionViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         responses:
             "200":
                 content:
-                    application/json:
+                    text/csv:
                         schema:
-                            type: object
-                            properties:
-                                output:
-                                    type: string
-
+                            type: string
         ---
         """
+        app_id = int(self.kwargs["application_pk"])
         data = (
             ApplicationSubmission.objects.filter(
-                application__is_wharton_council=True,
+                application=app_id,
                 created_at__in=RawSQL(
                     """SELECT recent_time
-                        FROM
-                        (SELECT user_id,
-                                committee_id,
-                                application_id,
-                                max(created_at) recent_time
-                            FROM clubs_applicationsubmission
-                            WHERE NOT archived
-                            GROUP BY user_id,
-                                    committee_id, application_id) recent_subs""",
+                    FROM
+                    (SELECT user_id,
+                            committee_id,
+                            application_id,
+                            max(created_at) recent_time
+                        FROM clubs_applicationsubmission
+                        WHERE NOT archived
+                        GROUP BY user_id,
+                                committee_id, application_id) recent_subs""",
                     (),
                 ),
                 archived=False,
             )
-            .annotate(
-                annotated_name=F("application__name"),
-                annotated_committee=F("committee__name"),
-                annotated_club=F("application__club__name"),
-            )
-            .values(
-                "annotated_name",
-                "application",
-                "annotated_committee",
-                "annotated_club",
-                "status",
-                "user",
+            .select_related("user__profile", "committee", "application__club")
+            .prefetch_related(
+                Prefetch(
+                    "responses",
+                    queryset=ApplicationQuestionResponse.objects.select_related(
+                        "multiple_choice", "question"
+                    ),
+                ),
+                "responses__question__committees",
+                "responses__question__multiple_choice",
             )
         )
-        serialized_q = json.dumps(list(data.values()), cls=DjangoJSONEncoder)
-        return Response(serialized_q)
+        df = pd.DataFrame(ApplicationSubmissionCSVSerializer(data, many=True).data)
+        resp = HttpResponse(
+            content_type="text/csv",
+            headers={"Content-Disposition": "attachment;filename=submissions.csv"},
+        )
+        df.to_csv(index=True, path_or_buf=resp)
+        return resp
 
     @action(detail=False, methods=["post"])
     def status(self, *args, **kwargs):

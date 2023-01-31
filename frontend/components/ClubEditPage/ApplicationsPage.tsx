@@ -760,7 +760,7 @@ export default function ApplicationsPage({
               href={
                 currentApplication != null
                   ? getApiUrl(
-                      `/clubs/${club.code}/applications/${currentApplication.id}/submissions/?format=xlsx`,
+                      `/clubs/${club.code}/applications/${currentApplication.id}/submissions/export`,
                     )
                   : '#'
               }
