@@ -2736,6 +2736,7 @@ class ManagedClubApplicationSerializer(ClubApplicationSerializer):
 
     class Meta(ClubApplicationSerializer.Meta):
         read_only_fields = (
+            "external_url",
             "application_start_time",
             "application_end_time",
             "result_release_time",
