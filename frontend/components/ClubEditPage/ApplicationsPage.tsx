@@ -88,11 +88,11 @@ export const APPLICATION_STATUS: Array<{ value: number; label: string }> = [
   },
   {
     value: ApplicationStatusType.RejectedWritten,
-    label: 'Rejected after interview(s)',
+    label: 'Rejected after written application',
   },
   {
     value: ApplicationStatusType.RejectedInterview,
-    label: 'Rejected after written application',
+    label: 'Rejected after interview(s)',
   },
 ]
 

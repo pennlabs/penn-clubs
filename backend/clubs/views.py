@@ -5125,7 +5125,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "detail": f"Successfully updated submissions' {submission_pks}"
-                    "status {status}"
+                    f"status {status}"
                 }
             )
         else:
