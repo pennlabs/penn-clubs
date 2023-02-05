@@ -441,6 +441,11 @@ export default function ApplicationsPage({
   const [selectedSubmissions, setSelectedSubmissions] = useState<Array<number>>(
     [],
   )
+
+  const [submitMessage, setSubmitMessage] = useState<
+    string | ReactElement | null
+  >(null)
+
   const [status, setStatus] = useState<ApplicationStatusType>(
     ApplicationStatusType.Pending,
   )
@@ -573,7 +578,11 @@ export default function ApplicationsPage({
                             submissions: selectedSubmissions,
                           },
                         },
-                      )
+                      ).then((response) => {
+                        response.json().then((data) => {
+                          setSubmitMessage(data.detail)
+                        })
+                      })
 
                       setShowReasonModal(true)
                     }}
@@ -643,6 +652,11 @@ export default function ApplicationsPage({
                     {APPLICATION_STATUS.find((x) => x?.value === status)?.label}
                   </button>
                 </div>
+                {submitMessage !== null && (
+                  <div className="mt-2 mb-2 notification is-info is-light">
+                    {submitMessage}
+                  </div>
+                )}
                 <small>
                   Check the checkboxes next to submissions whose status you
                   would like to update. Once submissions have been checked, you
