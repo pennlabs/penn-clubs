@@ -5122,7 +5122,12 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
 
             submissions.update(status=status)
 
-            return Response({"detail": "Successfully updated submissions' status"})
+            return Response(
+                {
+                    "detail": f"Successfully updated submissions' {submission_pks}"
+                    "status {status}"
+                }
+            )
         else:
             return Response({"detail": "Invalid request"})
 
