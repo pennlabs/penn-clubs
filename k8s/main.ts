@@ -51,7 +51,7 @@ export class MyChart extends PennLabsChart {
         replicas: 2,
       },
       domain: { host: clubsDomain, paths: ['/'] },
-      port: 80,
+      portEnv: '80',
     });
     
     /** FYH */
@@ -98,7 +98,7 @@ export class MyChart extends PennLabsChart {
         ],
       },
       domain: { host: fyhDomain, paths: ['/'] },
-      port: 80,
+      portEnv: '80',
     });
 
     /** Cronjobs **/
