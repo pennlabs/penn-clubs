@@ -2507,6 +2507,10 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
     email = serializers.CharField(source="user.email")
     graduation_year = serializers.CharField(source="user.profile.graduation_year")
     committee = serializers.SerializerMethodField("get_committee")
+    status = serializers.SerializerMethodField("get_status")
+
+    def get_status(self, obj):
+        return dict(ApplicationSubmission.STATUS_TYPES).get(obj, "Unknown")
 
     def get_name(self, obj):
         """
@@ -2582,6 +2586,9 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
             "email",
             "graduation_year",
             "committee",
+            "notified",
+            "reason",
+            "status",
         )
 
 
@@ -2729,6 +2736,7 @@ class ManagedClubApplicationSerializer(ClubApplicationSerializer):
 
     class Meta(ClubApplicationSerializer.Meta):
         read_only_fields = (
+            "external_url",
             "application_start_time",
             "application_end_time",
             "result_release_time",

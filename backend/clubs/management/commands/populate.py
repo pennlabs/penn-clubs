@@ -224,7 +224,7 @@ fair_registration_text = """
     members and to answer questions.
 </p>
 <p>
-    If you would like to particpate in the Fall 2020 SAC fair, check
+    If you would like to particpate in the SAC fair, check
     the box below. If you check the box below, your club information
     will be shared with the Student Activites Council and more details
     will be sent to you at a later date.

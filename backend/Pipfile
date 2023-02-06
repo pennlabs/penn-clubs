@@ -55,6 +55,7 @@ pre-commit = "*"
 django-clone = "*"
 click = "==8.0.4"
 jinja2 = "*"
+pandas = "*"
 
 [requires]
 python_version = "3"
