@@ -5180,8 +5180,12 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         key = f"applicationsubmissions:{app_id}"
         cache.delete(key)
 
-        for idx, obj in enumerate(submission_objs):
-            obj.reason = reasons[idx]
+        for idx, pk in enumerate(pks):
+            obj = submission_objs.filter(pk=pk).first()
+            if obj:
+                obj.reason = reasons[idx]
+            else:
+                return Response({"detail": "Object not found"})
 
         ApplicationSubmission.objects.bulk_update(submission_objs, ["reason"])
 
