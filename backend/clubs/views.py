@@ -5184,10 +5184,9 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
             obj = submission_objs.filter(pk=pk).first()
             if obj:
                 obj.reason = reasons[idx]
+                obj.save()
             else:
                 return Response({"detail": "Object not found"})
-
-        ApplicationSubmission.objects.bulk_update(submission_objs, ["reason"])
 
         return Response({"detail": "Successfully updated submissions' reasons"})
 
