@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "bcfae1aa8bf5ba4c67f2e557ae0a17f64da57fa06cb972075393e1e9e6b191b5"
+            "sha256": "3fe3ef5c1ec9d941985e5528ff40aa380f515477713672995f50c5983ee3a8a6"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -466,6 +466,14 @@
             "index": "pypi",
             "version": "==3.14.0"
         },
+        "drf-excel": {
+            "hashes": [
+                "sha256:01905346446f699a03ffefe97edeff7e0d83e707028df2d593bf18381a148872",
+                "sha256:3ef1ce054c52f9850c46f4d4d3344e7fc8e6a95d9d0e0fb666d0bb6c37c38666"
+            ],
+            "index": "pypi",
+            "version": "==2.3.0"
+        },
         "drf-nested-routers": {
             "hashes": [
                 "sha256:01aa556b8c08608bb74fb34f6ca065a5183f2cda4dc0478192cc17a2581d71b0",
@@ -473,6 +481,14 @@
             ],
             "index": "pypi",
             "version": "==0.93.4"
+        },
+        "et-xmlfile": {
+            "hashes": [
+                "sha256:8eb9e2bc2f8c97e37a2dc85a09ecdcdec9d8a396530a6d5a33b30b9a92da0c5c",
+                "sha256:a2ba85d1d6a74ef63837eed693bcb89c3f752169b0e3e7ae5b16ca5e1b3deada"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==1.1.0"
         },
         "filelock": {
             "hashes": [
@@ -853,6 +869,14 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==3.2.2"
+        },
+        "openpyxl": {
+            "hashes": [
+                "sha256:24d7d361025d186ba91eff58135d50855cf035a84371b891e58fb6eb5125660f",
+                "sha256:eccedbe1cdd8b2494057e73959b496821141038dbb7eb9266ea59e3f34208231"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==3.1.0"
         },
         "packaging": {
             "hashes": [

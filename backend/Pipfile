@@ -55,6 +55,7 @@ django-clone = "*"
 click = "==8.0.4"
 jinja2 = "*"
 pandas = "*"
+drf-excel = "*"
 
 [requires]
 python_version = "3"
