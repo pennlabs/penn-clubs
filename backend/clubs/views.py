@@ -4760,7 +4760,11 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             contact_email = app.club.email
 
             msg = EmailMultiAlternatives(
-                subject, text_content, settings.FROM_EMAIL, [submission.user.email], reply_to=[contact_email],
+                subject,
+                text_content,
+                settings.FROM_EMAIL,
+                [submission.user.email],
+                reply_to=[contact_email],
             )
             msg.attach_alternative(html_content, "text/html")
             mass_emails.append(msg)
