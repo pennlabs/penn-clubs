@@ -29,19 +29,6 @@ export class MyChart extends PennLabsChart {
         ],
       },
       djangoSettingsModule: 'pennclubs.settings.production',
-      domains: [{ host: clubsDomain, paths: ['/api/ws'] }],
-    });
-
-    new DjangoApplication(this, 'django-wsgi', {
-      deployment: {
-        image: backendImage,
-        replicas: 5,
-        secret: clubsSecret,
-        env: [
-          { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
-        ],
-      },
-      djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: clubsDomain, paths: ['/api'] }],
     });
 
@@ -53,7 +40,7 @@ export class MyChart extends PennLabsChart {
       domain: { host: clubsDomain, paths: ['/'] },
       portEnv: '80',
     });
-    
+
     /** FYH */
     const fyhSecret = 'hub-at-penn';
     const fyhDomain = 'hub.provost.upenn.edu';
@@ -64,21 +51,7 @@ export class MyChart extends PennLabsChart {
       deployment: {
         image: backendImage,
         cmd: ['/usr/local/bin/asgi-run'],
-        replicas: 2,
-        secret: fyhSecret,
-        env: [
-          { name: 'REDIS_HOST', value: 'penn-clubs-hub-redis' },
-          { name: 'NEXT_PUBLIC_SITE_NAME', value: 'fyh' },
-        ],
-      },
-      djangoSettingsModule: 'pennclubs.settings.production',
-      domains: [{ host: fyhDomain, paths: ['/api/ws'] }],
-    });
-
-    new DjangoApplication(this, 'hub-django-wsgi', {
-      deployment: {
-        image: backendImage,
-        replicas: 3,
+        replicas: 1,
         secret: fyhSecret,
         env: [
           { name: 'REDIS_HOST', value: 'penn-clubs-hub-redis' },
@@ -92,7 +65,7 @@ export class MyChart extends PennLabsChart {
     new ReactApplication(this, 'hub-react', {
       deployment: {
         image: frontendImage,
-        replicas: 2,
+        replicas: 1,
         env: [
           { name: 'NEXT_PUBLIC_SITE_NAME', value: 'fyh' },
         ],
