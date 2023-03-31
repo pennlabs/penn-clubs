@@ -40,8 +40,8 @@ export const Tag = styled.span<{ color?: string; foregroundColor?: string }>`
 `
 
 export const BlueTag = styled(Tag)`
-  background-color: ${PRIMARY_TAG_BG} !important;
-  color: ${PRIMARY_TAG_TEXT} !important;
+  background-color: orange !important;
+  color: black !important;
 `
 
 export const SelectedTag = styled(Tag)`

@@ -5,8 +5,7 @@ import styled from 'styled-components'
 
 import {
   ALLBIRDS_GRAY,
-  CLUBS_GREY_LIGHT,
-  H1_TEXT,
+  DARK_GRAY,
   HOVER_GRAY,
   WHITE,
 } from '../constants/colors'
@@ -31,7 +30,7 @@ const CardWrapper = styled.div`
 
 const Description = styled.p`
   margin-top: 0.2rem;
-  color: ${CLUBS_GREY_LIGHT};
+  color: ${WHITE};
   width: 100%;
 `
 
@@ -46,7 +45,7 @@ const Card = styled.div<CardProps>`
   transition: all ${ANIMATION_DURATION}ms ease;
   border-radius: ${BORDER_RADIUS};
   box-shadow: 0 0 0 ${WHITE};
-  background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
+  background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : DARK_GRAY)};
   border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
   height: auto;
@@ -81,7 +80,7 @@ export const CardHeader = styled.div`
 
 export const CardTitle = styled.strong`
   line-height: 1.2;
-  color: ${H1_TEXT};
+  color: ${WHITE};
   margin-bottom: 0.5rem;
   font-weight: ${CARD_HEADING};
 `

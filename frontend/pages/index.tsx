@@ -37,14 +37,14 @@ import {
 
 import { mediaMaxWidth, PHONE } from '~/constants'
 import {
+  BLACK,
   CLUBS_BLUE,
   CLUBS_GREY_LIGHT,
   CLUBS_PURPLE,
   FOCUS_GRAY,
-  H1_TEXT,
-  SNOW,
   TAG_BACKGROUND_COLOR_MAP,
   TAG_TEXT_COLOR_MAP,
+  WHITE,
 } from '~/constants/colors'
 
 const ClearAllLink = styled.span`
@@ -61,7 +61,7 @@ const ClearAllLink = styled.span`
 `
 
 const ResultsText = styled.div`
-  color: ${CLUBS_GREY_LIGHT};
+  color: white;
   text-decoration: none !important;
   background: transparent !important;
   fontsize: 0.7em;
@@ -436,7 +436,7 @@ const Splash = (props: SplashProps): ReactElement => {
   return (
     <>
       <Metadata />
-      <div style={{ backgroundColor: SNOW }}>
+      <div style={{ backgroundColor: BLACK }}>
         <SearchBar updateSearch={setSearchInput} searchInput={searchInput}>
           {SHOW_SEARCHBAR_TOP || (
             <div className="mt-2">
@@ -459,6 +459,7 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('application_required') && (
             <SearchBarCheckboxItem
               param="application_required__in"
+              color={WHITE}
               label="General Membership Process"
               options={applicationRequiredOptions}
             />
@@ -466,6 +467,7 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('size') && (
             <SearchBarCheckboxItem
               param="size__in"
+              color={WHITE}
               label="Size"
               options={sizeOptions}
             />
@@ -473,6 +475,7 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('accepting_members') && (
             <SearchBarCheckboxItem
               param="accepting_members"
+              color={WHITE}
               label="Accepting Members"
               options={[
                 {
@@ -486,6 +489,7 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('recruiting_cycle') && (
             <SearchBarCheckboxItem
               param="recruiting_cycle__in"
+              color={WHITE}
               label="Recruiting Cycle"
               options={recruitingCycleOptions}
             />
@@ -502,6 +506,7 @@ const Splash = (props: SplashProps): ReactElement => {
           )}
           {isClubFieldShown('appointment_needed') && (
             <SearchBarCheckboxItem
+              color={WHITE}
               param="appointment_needed__in"
               label="Appointment Needed"
               options={[
@@ -542,17 +547,14 @@ const Splash = (props: SplashProps): ReactElement => {
         </SearchBar>
 
         <SearchbarRightContainer>
-          <WideContainer background={SNOW} fullHeight>
+          <WideContainer background={BLACK} fullHeight>
             <div style={{ padding: '30px 0' }}>
               <DisplayButtons switchDisplay={setDisplay} />
 
-              <Title style={{ color: H1_TEXT }}>
+              <Title style={{ color: '#ffa31a' }}>
                 Browse {OBJECT_NAME_TITLE}
               </Title>
-              <p
-                className="subtitle is-size-5"
-                style={{ color: CLUBS_GREY_LIGHT }}
-              >
+              <p className="subtitle is-size-5" style={{ color: '#ffa31a' }}>
                 {SITE_TAGLINE}
               </p>
             </div>
