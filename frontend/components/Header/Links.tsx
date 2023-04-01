@@ -4,13 +4,7 @@ import { ReactElement } from 'react'
 import styled from 'styled-components'
 
 import { SHORT_ANIMATION_DURATION } from '../../constants/animations'
-import {
-  BANNER_BG,
-  BANNER_TEXT,
-  LOGIN_BACKGROUND,
-  WHITE,
-  WHITE_ALPHA,
-} from '../../constants/colors'
+import { LOGIN_BACKGROUND, WHITE, WHITE_ALPHA } from '../../constants/colors'
 import {
   LINK_MARGIN,
   LOGIN_MARGIN,
@@ -27,6 +21,10 @@ import { Icon } from '../common'
 const StyledIcon = styled(Icon)`
   opacity: 0.5;
   margin-right: 4px;
+`
+
+const WhiteText = styled.text`
+  color: white;
 `
 
 const LoginButton = styled.a`
@@ -56,7 +54,7 @@ const LoginButton = styled.a`
 
 const StyledLinkAnchor = styled.a`
   padding: ${LINK_MARGIN} 20px;
-  color: ${BANNER_TEXT} !important;
+  color: white !important;
   display: inline-block;
   cursor: pointer;
 
@@ -79,7 +77,7 @@ const Menu = styled.div<{ show?: boolean }>`
     ${({ show }) => show && 'display: block;'}
   }
 
-  background-color: ${BANNER_BG};
+  background-color: ${'black'};
 `
 
 type Props = {
@@ -98,7 +96,7 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
     <Menu className="navbar-menu" show={show}>
       <div className="navbar-end" style={{ padding: '0 1rem' }}>
         <StyledLink href="/events" onClick={() => logEvent('events', 'click')}>
-          Events
+          <WhiteText>Events</WhiteText>
         </StyledLink>
         <StyledLink
           href="https://penncfa.com/"
@@ -106,10 +104,10 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Funding
+          <WhiteText>Funding</WhiteText>
         </StyledLink>
         <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
-          FAQ
+          <WhiteText>FAQ</WhiteText>
         </StyledLink>
         {authenticated === false && (
           <LoginButton
@@ -117,7 +115,7 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
             href={`${LOGIN_URL}?next=${router.asPath}`}
             onClick={() => logEvent('login', 'click')}
           >
-            Login
+            <WhiteText>Login</WhiteText>
           </LoginButton>
         )}
         {userInfo && (

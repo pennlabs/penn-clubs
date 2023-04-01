@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 import { UpdateClubContext } from '~/pages'
 
-import { CLUBS_GREY } from '../constants/colors'
+import { WHITE } from '../constants/colors'
 import { Club, ClubApplicationRequired } from '../types'
 import { getSizeDisplay, isClubFieldShown } from '../utils'
 import { CLUB_APPLICATIONS } from './ClubEditPage/ClubEditCard'
@@ -23,6 +23,7 @@ const Wrapper = styled.div`
 `
 
 const iconStyles = {
+  color: WHITE,
   marginTop: '-5px',
   marginRight: '5px',
   opacity: 0.5,
@@ -55,9 +56,7 @@ const Details = ({ club }: DetailsProps): ReactElement => {
 
   return (
     <Wrapper>
-      <div
-        style={{ color: CLUBS_GREY, fontSize: '80%', opacity: 0.8, flex: 1 }}
-      >
+      <div style={{ color: WHITE, fontSize: '80%', opacity: 0.8, flex: 1 }}>
         {isClubFieldShown('size') && (
           <>
             <Icon name="user" alt="members" size="0.8rem" style={iconStyles} />
@@ -77,42 +76,53 @@ const Details = ({ club }: DetailsProps): ReactElement => {
         )}
         {isClubFieldShown('appointment_needed') && (
           <>
-            &nbsp;
-            {' • '}
-            &nbsp;
-            <DetailBoolIcon
-              value={!appointmentNeeded}
-              alt="appointment needed"
-            />
-            {appointmentNeeded ? 'Appointment Needed' : 'No Appointment Needed'}
+            <span style={{ color: WHITE }}>
+              &nbsp;
+              {' • '}
+              &nbsp;
+              <DetailBoolIcon
+                value={!appointmentNeeded}
+                alt="appointment needed"
+              />
+              {appointmentNeeded
+                ? 'Appointment Needed'
+                : 'No Appointment Needed'}
+            </span>
           </>
         )}
         {isClubFieldShown('application_required') && (
           <>
-            &nbsp;
-            {' • '}
-            &nbsp;
-            <Icon
-              name="edit"
-              alt="applications"
-              size="0.8rem"
-              style={iconStyles}
-            />
-            {applicationRequired ===
-            ClubApplicationRequired.ApplicationAndInterview
-              ? 'Application & Interview'
-              : CLUB_APPLICATIONS.find(
-                  ({ value }) => value === applicationRequired,
-                )?.label ?? 'Unknown'}
+            <span style={{ color: WHITE }}>
+              &nbsp;
+              {' • '}
+              &nbsp;
+              <Icon
+                name="edit"
+                alt="applications"
+                size="0.8rem"
+                style={iconStyles}
+              />
+              {applicationRequired ===
+              ClubApplicationRequired.ApplicationAndInterview
+                ? 'Application & Interview'
+                : CLUB_APPLICATIONS.find(
+                    ({ value }) => value === applicationRequired,
+                  )?.label ?? 'Unknown'}
+            </span>
           </>
         )}
         {isClubFieldShown('accepting_members') && (
           <>
-            &nbsp;
-            {' • '}
-            &nbsp;
-            <DetailBoolIcon value={acceptingMembers} alt="accepting members" />
-            {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
+            <span style={{ color: WHITE }}>
+              &nbsp;
+              {' • '}
+              &nbsp;
+              <DetailBoolIcon
+                value={acceptingMembers}
+                alt="accepting members"
+              />
+              {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
+            </span>
           </>
         )}
       </div>

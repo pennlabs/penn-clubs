@@ -70,7 +70,10 @@ const DisplayButtons = ({
       <Icon name="list" alt="list icon" style={iconStyles} />
     </button>
     <Link href="/create">
-      <a className="button is-small is-primary">
+      <a
+        className="button is-small is-primary"
+        style={{ background: 'orange' }}
+      >
         <Icon
           name="plus"
           alt={`create ${OBJECT_NAME_SINGULAR}`}
