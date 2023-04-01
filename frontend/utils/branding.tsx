@@ -25,7 +25,7 @@ const sites = {
     HEADER_BACKGROUND_IMAGE: null,
     HEADER_OVERLAY: null,
     SITE_FAVICON: '/static/favicon.ico',
-    SITE_TAGLINE: 'Find your people!',
+    SITE_TAGLINE: 'Find Clubs Around You!',
     OG_IMAGE:
       'https://pennlabs-assets.s3.amazonaws.com/metadata-images/penn-clubs.png',
 

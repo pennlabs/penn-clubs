@@ -307,6 +307,10 @@ const Splash = (props: SplashProps): ReactElement => {
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {
+    const page = document.getElementsByTagName('html')
+    if (window.location.pathname === '/') {
+      page[0].style.background = 'black'
+    }
     if (equal(searchInput, currentSearch.current)) {
       return
     }
@@ -550,6 +554,52 @@ const Splash = (props: SplashProps): ReactElement => {
           <WideContainer background={BLACK} fullHeight>
             <div style={{ padding: '30px 0' }}>
               <DisplayButtons switchDisplay={setDisplay} />
+              <div
+                style={{
+                  padding: '-10px',
+                  marginTop: '3rem',
+                  marginBottom: '2rem',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <iframe
+                  width={240}
+                  height={240}
+                  src="https://www.youtube.com/embed/lB-P_Iw27Qk?autoplay=1&enable_js=1"
+                  allow="autoplay"
+                  name="iframe_a"
+                  title="Iframe Example"
+                ></iframe>
+                <iframe
+                  width={240}
+                  height={240}
+                  src="https://www.youtube.com/embed/VA4k5VgYUMw?autoplay=1&enable_js=1"
+                  allow="autoplay *"
+                  name="iframe_a"
+                  title="Iframe Example"
+                ></iframe>
+                <a
+                  href="https://www.amazon.com/Karmic-Therapy-Healing-Split-Psyche/dp/0979163706"
+                  target="blank"
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <img
+                      style={{
+                        maxHeight: '200px',
+                        maxWidth: '200px',
+                      }}
+                      src="https://m.media-amazon.com/images/I/413gafLcqnL._SX318_BO1,204,203,200_.jpg"
+                      title="Iframe Example"
+                    ></img>
+
+                    <h2 style={{ color: 'orange', marginTop: '1rem' }}>
+                      Check out Karmic therapy
+                    </h2>
+                  </div>
+                </a>
+              </div>
 
               <Title style={{ color: '#ffa31a' }}>
                 Browse {OBJECT_NAME_TITLE}
