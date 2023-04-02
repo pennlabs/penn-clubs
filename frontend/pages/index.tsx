@@ -37,14 +37,14 @@ import {
 
 import { mediaMaxWidth, PHONE } from '~/constants'
 import {
-  BLACK,
   CLUBS_BLUE,
   CLUBS_GREY_LIGHT,
   CLUBS_PURPLE,
   FOCUS_GRAY,
+  H1_TEXT,
+  SNOW,
   TAG_BACKGROUND_COLOR_MAP,
   TAG_TEXT_COLOR_MAP,
-  WHITE,
 } from '~/constants/colors'
 
 const ClearAllLink = styled.span`
@@ -61,7 +61,7 @@ const ClearAllLink = styled.span`
 `
 
 const ResultsText = styled.div`
-  color: white;
+  color: ${CLUBS_GREY_LIGHT};
   text-decoration: none !important;
   background: transparent !important;
   fontsize: 0.7em;
@@ -307,10 +307,6 @@ const Splash = (props: SplashProps): ReactElement => {
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   useEffect((): void => {
-    const page = document.getElementsByTagName('html')
-    if (window.location.pathname === '/') {
-      page[0].style.background = 'black'
-    }
     if (equal(searchInput, currentSearch.current)) {
       return
     }
@@ -440,7 +436,7 @@ const Splash = (props: SplashProps): ReactElement => {
   return (
     <>
       <Metadata />
-      <div style={{ backgroundColor: BLACK }}>
+      <div style={{ backgroundColor: SNOW }}>
         <SearchBar updateSearch={setSearchInput} searchInput={searchInput}>
           {SHOW_SEARCHBAR_TOP || (
             <div className="mt-2">
@@ -463,7 +459,6 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('application_required') && (
             <SearchBarCheckboxItem
               param="application_required__in"
-              color={WHITE}
               label="General Membership Process"
               options={applicationRequiredOptions}
             />
@@ -471,7 +466,6 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('size') && (
             <SearchBarCheckboxItem
               param="size__in"
-              color={WHITE}
               label="Size"
               options={sizeOptions}
             />
@@ -479,7 +473,6 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('accepting_members') && (
             <SearchBarCheckboxItem
               param="accepting_members"
-              color={WHITE}
               label="Accepting Members"
               options={[
                 {
@@ -493,7 +486,6 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('recruiting_cycle') && (
             <SearchBarCheckboxItem
               param="recruiting_cycle__in"
-              color={WHITE}
               label="Recruiting Cycle"
               options={recruitingCycleOptions}
             />
@@ -510,7 +502,6 @@ const Splash = (props: SplashProps): ReactElement => {
           )}
           {isClubFieldShown('appointment_needed') && (
             <SearchBarCheckboxItem
-              color={WHITE}
               param="appointment_needed__in"
               label="Appointment Needed"
               options={[
@@ -551,60 +542,17 @@ const Splash = (props: SplashProps): ReactElement => {
         </SearchBar>
 
         <SearchbarRightContainer>
-          <WideContainer background={BLACK} fullHeight>
+          <WideContainer background={SNOW} fullHeight>
             <div style={{ padding: '30px 0' }}>
               <DisplayButtons switchDisplay={setDisplay} />
-              <div
-                style={{
-                  padding: '-10px',
-                  marginTop: '3rem',
-                  marginBottom: '2rem',
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <iframe
-                  width={240}
-                  height={240}
-                  src="https://www.youtube.com/embed/lB-P_Iw27Qk?autoplay=1&enable_js=1"
-                  allow="autoplay"
-                  name="iframe_a"
-                  title="Iframe Example"
-                ></iframe>
-                <iframe
-                  width={240}
-                  height={240}
-                  src="https://www.youtube.com/embed/VA4k5VgYUMw?autoplay=1&enable_js=1"
-                  allow="autoplay *"
-                  name="iframe_a"
-                  title="Iframe Example"
-                ></iframe>
-                <a
-                  href="https://www.amazon.com/Karmic-Therapy-Healing-Split-Psyche/dp/0979163706"
-                  target="blank"
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <img
-                      style={{
-                        maxHeight: '200px',
-                        maxWidth: '200px',
-                      }}
-                      src="https://m.media-amazon.com/images/I/413gafLcqnL._SX318_BO1,204,203,200_.jpg"
-                      title="Iframe Example"
-                    ></img>
 
-                    <h2 style={{ color: 'orange', marginTop: '1rem' }}>
-                      Check out Karmic therapy
-                    </h2>
-                  </div>
-                </a>
-              </div>
-
-              <Title style={{ color: '#ffa31a' }}>
+              <Title style={{ color: H1_TEXT }}>
                 Browse {OBJECT_NAME_TITLE}
               </Title>
-              <p className="subtitle is-size-5" style={{ color: '#ffa31a' }}>
+              <p
+                className="subtitle is-size-5"
+                style={{ color: CLUBS_GREY_LIGHT }}
+              >
                 {SITE_TAGLINE}
               </p>
             </div>

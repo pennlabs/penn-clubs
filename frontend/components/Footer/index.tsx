@@ -1,14 +1,14 @@
 import { ReactElement } from 'react'
 import styled from 'styled-components'
 
-import { PINK } from '../../constants/colors'
+import { PINK, SNOW } from '../../constants/colors'
 import { SHOW_ACCESSIBILITY } from '../../utils/branding'
 import { Icon, SmallLink, SmallText } from '../common'
 import Social from './Social'
 
 const Foot = styled.footer`
   height: 8rem;
-  background-color: black;
+  background-color: ${SNOW};
   display: flex;
   justify-content: center;
   flex-direction: column;

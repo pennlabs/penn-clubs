@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
-import { BANNER_BG, BORDER, WHITE } from '../../constants/colors'
+import { BANNER_BG, BANNER_TEXT, BORDER } from '../../constants/colors'
 import {
   ANIMATION_DURATION,
   BANNER_HEIGHT,
@@ -89,27 +89,12 @@ const Logo = styled.img`
 `
 
 const Title = styled.h1`
-  color: ${WHITE};
+  color: ${BANNER_TEXT};
   padding-left: ${TITLE_MARGIN};
   margin-bottom: 0 !important;
   font-size: ${TITLE_SIZE};
   font-weight: ${TITLE_WEIGHT};
   letter-spacing: ${TITLE_SPACING};
-  font-family: Arial, Helvetica, sans-serif;
-`
-
-const OrangeTitle = styled.h1`
-  color: ${'#1b1b1b'};
-  background: ${'#ffa31a'};
-  padding-left: ${'5px'};
-  margin-left: ${'5px'};
-  padding-right: ${'5px'};
-  border-radius: 5px;
-  margin-bottom: 0 !important;
-  font-size: ${TITLE_SIZE};
-  font-weight: ${TITLE_WEIGHT};
-  letter-spacing: ${TITLE_SPACING};
-  font-family: Arial, Helvetica, sans-serif;
 `
 
 const LogoBackground = styled.div`
@@ -193,26 +178,12 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
         role="navigation"
         aria-label="main navigation"
       >
-        <div
-          className="navbar-brand"
-          style={{
-            backgroundColor: 'black',
-            height: '100%',
-            minHeight: '100%',
-          }}
-        >
+        <div className="navbar-brand">
           {LOGO_BACKGROUND_IMAGE != null && <FadingLogoBackground />}
           <Link href={HOME_ROUTE} passHref>
             <LogoItem className="navbar-item" isHub={isHub}>
               <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
-              {SITE_NAME === 'Penn Clubs' ? (
-                <>
-                  <Title>Penn </Title>
-                  <OrangeTitle>Clubs</OrangeTitle>
-                </>
-              ) : (
-                <Title>{SITE_NAME}</Title>
-              )}
+              <Title>{SITE_NAME}</Title>
             </LogoItem>
           </Link>
 

@@ -13,6 +13,7 @@ import {
   BLACK_ALPHA,
   CLUBS_GREY,
   FOCUS_GRAY,
+  H1_TEXT,
   MEDIUM_GRAY,
   WHITE,
 } from '../constants/colors'
@@ -48,7 +49,7 @@ const Wrapper = styled.div`
   position: fixed;
   top: 0;
   padding-top: ${NAV_HEIGHT};
-  color: ${WHITE};
+  color: ${H1_TEXT};
 
   ${mediaMaxWidth(MD)} {
     padding-top: 0px !important;
@@ -234,7 +235,6 @@ type SearchBarCheckboxItemProps = {
   param: string
   label: string
   options: (SearchTag & { color?: string })[]
-  color?: string
 }
 
 /**
@@ -261,7 +261,6 @@ export const SearchBarCheckboxItem = ({
   param,
   label,
   options,
-  color,
 }: SearchBarCheckboxItemProps): ReactElement => {
   const searchCallback = useContext(SearchBarContext)
   if (searchCallback == null) {
@@ -280,7 +279,6 @@ export const SearchBarCheckboxItem = ({
     <Collapsible name={label}>
       <DropdownFilter
         name={param}
-        color={color}
         options={options}
         selected={tags}
         updateTag={(tag) => {

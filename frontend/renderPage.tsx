@@ -10,7 +10,6 @@ import Footer from './components/Footer'
 import Header from './components/Header'
 import LoginModal from './components/LoginModal'
 import {
-  BLACK,
   BULMA_A,
   BULMA_DANGER,
   BULMA_GREY,
@@ -20,6 +19,7 @@ import {
   BULMA_SUCCESS,
   BULMA_WARNING,
   SNOW,
+  WHITE,
 } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
@@ -89,7 +89,7 @@ const GlobalStyle = createGlobalStyle`
 const RenderPageWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  background-color: ${BLACK};
+  background-color: ${WHITE};
   font-family: ${BODY_FONT};
 
   ${SITE_ID !== 'clubs'

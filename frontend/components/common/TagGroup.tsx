@@ -18,15 +18,17 @@ export const TagGroup = ({ tags = [] }: TagGroupProps): ReactElement | null => {
     <>
       {tags.map((tag) =>
         isBadge(tag) ? (
-          <DefaultTag key={`${tag.id}-badge`} className="tag is-rounded">
+          <DefaultTag
+            key={`${tag.id}-badge`}
+            color={tag.color}
+            className="tag is-rounded"
+          >
             {tag.label}
           </DefaultTag>
         ) : (
           <BlueTag
             key={`${tag.id}-tag`}
             className="tag is-rounded has-text-white"
-            color={'black'}
-            foregroundColor="orange"
           >
             {tag.name}
           </BlueTag>
