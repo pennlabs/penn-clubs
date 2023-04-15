@@ -3707,9 +3707,8 @@ class MeetingZoomWebhookAPIView(APIView):
             meeting_id = (
                 request.data.get("payload", {}).get("object", {}).get("id", None)
             )
-            regex = (
-                rf"https?:\/\/([A-z]*\.)?zoom\.us/[^\/]*\/{meeting_id}(\?pwd=[A-z,0-9]*)?"
-            )
+            regex = rf"""https?:\/\/([A-z]*\.)?zoom\.us/[^\/]*\/
+                        {meeting_id}(\?pwd=[A-z,0-9]*)?"""
             event = Event.objects.filter(url__regex=regex).first()
 
             participant_id = (
