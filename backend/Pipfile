@@ -4,7 +4,6 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-codecov = "*"
 black = "==19.10b0"
 unittest-xml-reporting = ">=3.0.2"
 flake8 = "==5.0.3"
