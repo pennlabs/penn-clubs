@@ -26,6 +26,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command, get_commands, load_command_class
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
 from django.db.models import (
     Count,
@@ -5081,6 +5082,63 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         )
         df.to_csv(index=True, path_or_buf=resp)
         return resp
+
+    @action(detail=False, methods=["get"])
+    def exportall(self, *args, **kwargs):
+        """
+        Export all application submissions for a particular cycle
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                output:
+                                    type: string
+        ---
+        """
+
+        app_id = int(self.kwargs["application_pk"])
+        cycle = ClubApplication.objects.get(id=app_id).application_cycle
+        data = (
+            ApplicationSubmission.objects.filter(
+                application__is_wharton_council=True,
+                application__application_cycle=cycle,
+                created_at__in=RawSQL(
+                    """SELECT recent_time
+                        FROM
+                        (SELECT user_id,
+                                committee_id,
+                                application_id,
+                                max(created_at) recent_time
+                            FROM clubs_applicationsubmission
+                            WHERE NOT archived
+                            GROUP BY user_id,
+                                    committee_id, application_id) recent_subs""",
+                    (),
+                ),
+                archived=False,
+            )
+            .select_related("application", "application__application_cycle")
+            .annotate(
+                annotated_name=F("application__name"),
+                annotated_committee=F("committee__name"),
+                annotated_club=F("application__club__name"),
+            )
+            .values(
+                "annotated_name",
+                "application",
+                "annotated_committee",
+                "annotated_club",
+                "status",
+                "user",
+            )
+        )
+        serialized_q = json.dumps(list(data.values()), cls=DjangoJSONEncoder)
+        return Response(serialized_q)
 
     @action(detail=False, methods=["post"])
     def status(self, *args, **kwargs):
