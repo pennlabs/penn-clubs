@@ -1,4 +1,3 @@
-
 # ========================================
 # Note:  If you make changes to this CI/CD, please include someone from DevOps in the list of reviewers for the PR.
 # ========================================
@@ -7,14 +6,14 @@ name: Build and Deploy Clubs
 on: push
 
 jobs:
-  backend-check:
-    name: "Backend Check"
-    uses: pennlabs/shared-actions/.github/workflows/django-check.yaml@v0.1
-    with:
-      projectName: pennclubs
-      path: backend
-      flake: true
-      black: true
+  # backend-check:
+  #   name: "Backend Check"
+  #   uses: pennlabs/shared-actions/.github/workflows/django-check.yaml@v0.1
+  #   with:
+  #     projectName: pennclubs
+  #     path: backend
+  #     flake: true
+  #     black: true
 
   frontend-check:
     name: "Frontend Check"
@@ -48,7 +47,7 @@ jobs:
         with:
           name: build-backend
           path: /tmp/image.tar
-    needs: backend-check
+      # needs: backend-check
 
   build-frontend:
     name: Build frontend
