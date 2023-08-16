@@ -29,7 +29,7 @@ module.exports = {
       ? process.env.DOMAIN.startsWith('http')
         ? process.env.DOMAIN
         : `https://${process.env.DOMAIN}`
-      : `http://localhost:${process.env.PORT || 3000}`,
+      : `http://127.0.0.1:${process.env.PORT || 3000}`,
     NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME || 'clubs',
     SENTRY_URL: process.env.SENTRY_URL,
   },

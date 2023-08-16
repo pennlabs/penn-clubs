@@ -195,29 +195,25 @@ export default function ClubEditCard({
     ),
   )
 
-  const [
-    showSchoolYearProgramming,
-    setSchoolYearProgramming,
-  ] = useState<boolean>(
-    !!(
-      club.target_majors?.length ||
-      club.target_schools?.length ||
-      club.target_years?.length ||
-      club.student_types?.length
-    ),
-  )
+  const [showSchoolYearProgramming, setSchoolYearProgramming] =
+    useState<boolean>(
+      !!(
+        club.target_majors?.length ||
+        club.target_schools?.length ||
+        club.target_years?.length ||
+        club.student_types?.length
+      ),
+    )
 
-  const [
-    showStudentTypeProgramming,
-    setStudentTypeProgramming,
-  ] = useState<boolean>(
-    !!(
-      club.target_majors?.length ||
-      club.target_schools?.length ||
-      club.target_years?.length ||
-      club.student_types?.length
-    ),
-  )
+  const [showStudentTypeProgramming, setStudentTypeProgramming] =
+    useState<boolean>(
+      !!(
+        club.target_majors?.length ||
+        club.target_schools?.length ||
+        club.target_years?.length ||
+        club.student_types?.length
+      ),
+    )
 
   const [showSchoolProgramming, setSchoolProgramming] = useState<boolean>(
     !!(
@@ -243,10 +239,10 @@ export default function ClubEditCard({
     )
 
     // sorry ts
-    const exclusives = (categorizeFilter(
+    const exclusives = categorizeFilter(
       exclusiveEntries,
       ([key]) => key.match(/^exclusive:(.+?):(.+?)$/)?.[1] ?? 'unknown',
-    ) as unknown) as {
+    ) as unknown as {
       year: Array<[string, { checked?: boolean; detail?: string }]>
       // major: Array<[string, { checked?: boolean; detail?: string }]>
       student_type: Array<[string, { checked?: boolean; detail?: string }]>
@@ -496,8 +492,7 @@ export default function ClubEditCard({
           label: 'Location',
           required: false,
           type: 'location',
-          help:
-            'Remember, this will be available to the public. Please only include information you feel comfortable sharing.',
+          help: 'Remember, this will be available to the public. Please only include information you feel comfortable sharing.',
         },
         {
           name: 'email',
@@ -865,7 +860,8 @@ export default function ClubEditCard({
                               image: FileField,
                               address: FormikAddressField,
                               checkboxText: CheckboxTextField,
-                              creatableMultiSelect: CreatableMultipleSelectField,
+                              creatableMultiSelect:
+                                CreatableMultipleSelectField,
                             }[props.type] ?? TextField
                           }
                           {...other}

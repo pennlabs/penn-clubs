@@ -76,7 +76,7 @@
     "@storybook/react": "^6.1.15",
     "@types/cheerio": "^0.22.21",
     "@types/node": "^14.14.22",
-    "@types/react": "^17.0.0",
+    "@types/react": "18.0.1",
     "@types/react-select": "^4.0.11",
     "@types/showdown": "^1.9.3",
     "@types/styled-components": "^5.1.1",
@@ -103,6 +103,7 @@
     "nyc": "^15.0.0",
     "prettier": "^2.0.5",
     "typescript": "^4.1.2",
+    "uuid": "^9.0.0",
     "wait-on": "^5.2.0"
   }
 }
