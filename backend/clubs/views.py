@@ -2069,7 +2069,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 self.request.accepted_renderer.format == "xlsx"
                 or self.action == "fields"
             ):
-                if self.request.user.has_perm("clubs.generate_reports"):
+                if (
+                    self.request.user.has_perm("clubs.generate_reports")
+                    or self.request.user.is_superuser
+                ):
                     return ReportClubSerializer
                 else:
                     return ClubSerializer
