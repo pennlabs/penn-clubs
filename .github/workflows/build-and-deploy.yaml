@@ -147,7 +147,9 @@ jobs:
         run: |-
           docker push -a pennlabs/penn-clubs-backend
           docker push -a pennlabs/penn-clubs-frontend
-    # needs: integration-tests
+    needs:
+      - build-backend
+      - build-frontend
 
   deploy:
     name: "Deploy"
