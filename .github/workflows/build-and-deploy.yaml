@@ -6,14 +6,14 @@ name: Build and Deploy Clubs
 on: push
 
 jobs:
-   backend-check:
-     name: "Backend Check"
-     uses: pennlabs/shared-actions/.github/workflows/django-check.yaml@v0.1
-     with:
-       projectName: pennclubs
-       path: backend
-       flake: true
-       black: true
+  backend-check:
+    name: "Backend Check"
+    uses: pennlabs/shared-actions/.github/workflows/django-check.yaml@v0.1
+    with:
+      projectName: pennclubs
+      path: backend
+      flake: true
+      black: true
 
   frontend-check:
     name: "Frontend Check"
