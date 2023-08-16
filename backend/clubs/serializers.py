@@ -2175,7 +2175,6 @@ class AuthenticatedClubSerializer(ClubSerializer):
             "terms",
             "owners",
             "officers",
-            "approved_on",
         ]
 
 

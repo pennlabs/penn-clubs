@@ -298,8 +298,9 @@ const Splash = (props: SplashProps): ReactElement => {
       }),
     })
   }
-  const [exclusiveClubs, setExclusiveClubs] =
-    useState<Maybe<PaginatedClubPage>>()
+  const [exclusiveClubs, setExclusiveClubs] = useState<
+    Maybe<PaginatedClubPage>
+  >()
 
   const [isLoading, setLoading] = useState<boolean>(false)
   const [searchInput, setSearchInput] = useState<SearchInput>({})

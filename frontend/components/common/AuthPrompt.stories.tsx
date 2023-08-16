@@ -7,8 +7,9 @@ export default {
   component: AuthPrompt,
 }
 
-export const Default: Story<React.ComponentProps<typeof AuthPrompt>> =
-  AuthPrompt.bind({})
+export const Default: Story<
+  React.ComponentProps<typeof AuthPrompt>
+> = AuthPrompt.bind({})
 
 Default.args = {
   title: undefined,

@@ -165,33 +165,38 @@ const FairPage = ({
           </p>
         )}
         <div className="columns mt-3">
-          {events.map(({ start_time, end_time, events }, i): ReactElement => {
-            const parsedDate = moment(start_time).tz('America/New_York')
-            const endDate = moment(end_time).tz('America/New_York')
-            return (
-              <div key={i} className="column">
-                <div className="mb-3">
-                  <b className="has-text-info">
-                    {parsedDate.format('LLL')} - {endDate.format('LT z')}
-                  </b>
-                </div>
-                {events.map(({ category, events }) => (
-                  <div key={category}>
-                    <b>{category}</b>
-                    <ul className="mt-0 mb-3">
-                      {events.map((event) => (
-                        <li key={event.code}>
-                          <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.code)}>
-                            <a>{event.name}</a>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
+          {events.map(
+            ({ start_time, end_time, events }, i): ReactElement => {
+              const parsedDate = moment(start_time).tz('America/New_York')
+              const endDate = moment(end_time).tz('America/New_York')
+              return (
+                <div key={i} className="column">
+                  <div className="mb-3">
+                    <b className="has-text-info">
+                      {parsedDate.format('LLL')} - {endDate.format('LT z')}
+                    </b>
                   </div>
-                ))}
-              </div>
-            )
-          })}
+                  {events.map(({ category, events }) => (
+                    <div key={category}>
+                      <b>{category}</b>
+                      <ul className="mt-0 mb-3">
+                        {events.map((event) => (
+                          <li key={event.code}>
+                            <Link
+                              href={CLUB_ROUTE()}
+                              as={CLUB_ROUTE(event.code)}
+                            >
+                              <a>{event.name}</a>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )
+            },
+          )}
         </div>
       </div>
     </Container>

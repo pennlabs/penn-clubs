@@ -5,13 +5,13 @@ const next = require('next')
 
 const devProxy = {
   '/api': {
-    target: 'http://127.0.0.1:8000',
+    target: 'http://localhost:8000',
     changeOrigin: true,
     ws: true,
   },
   '/__debug__': {
     // this allows django debug toolbar to work properly
-    target: 'http://127.0.0.1:8000',
+    target: 'http://localhost:8000',
     changeOrigin: true,
   },
 }

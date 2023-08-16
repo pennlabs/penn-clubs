@@ -231,8 +231,10 @@ export const ModelTable = ({
  */
 export const ModelForm = (props: ModelFormProps): ReactElement => {
   const [objects, setObjects] = useState<ModelObject[]>([])
-  const [currentlyEditing, changeCurrentlyEditing] =
-    useState<ModelObject | null>(null)
+  const [
+    currentlyEditing,
+    changeCurrentlyEditing,
+  ] = useState<ModelObject | null>(null)
   const [newCount, changeNewCount] = useState<number>(0)
   const [createObject, changeCreateObject] = useState<ModelObject>(
     props.defaultObject != null

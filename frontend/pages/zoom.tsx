@@ -230,12 +230,14 @@ const ZoomPage = ({
   fairs,
 }: ZoomPageProps): ReactElement => {
   const [nextUrl, setNextUrl] = useState<string>('/')
-  const [zoomSettings, setZoomSettings] =
-    useState<ZoomSettings>(initialZoomSettings)
+  const [zoomSettings, setZoomSettings] = useState<ZoomSettings>(
+    initialZoomSettings,
+  )
   const [events, setEvents] = useState<ClubEvent[]>(initialEvents)
   const [isLoading, setLoading] = useState<boolean>(false)
-  const [userMeetings, setUserMeetings] =
-    useState<ZoomMeeting[]>(initialUserMeetings)
+  const [userMeetings, setUserMeetings] = useState<ZoomMeeting[]>(
+    initialUserMeetings,
+  )
 
   useEffect(() => {
     setNextUrl(window.location.pathname)

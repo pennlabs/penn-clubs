@@ -47,28 +47,28 @@ type Props = {
 /**
  * Try to reconcile the JSON format for tags/badges returned by the API and the format that the field is expecting.
  */
-export const fixDeserialize =
-  (options: { id: number; label?: string; name?: string }[]) =>
-  (value): { id: number; label: string }[] => {
-    if (typeof value === 'string') {
-      return value
-        .trim()
-        .split(',')
-        .filter((tag) => tag.length > 0)
-        .map((tag) => {
-          const id = parseInt(tag)
-          const trueVal = options.find((oth) => oth.id === id)
-          if (trueVal != null) {
-            trueVal.label = trueVal.label ?? trueVal.name ?? 'Unknown'
-          }
-          return trueVal != null ? trueVal : { id, label: 'Unknown' }
-        }) as { id: number; label: string }[]
-    }
-    if (Array.isArray(value)) {
-      return value.map(({ id, name }) => ({ id, label: name }))
-    }
-    return []
+export const fixDeserialize = (
+  options: { id: number; label?: string; name?: string }[],
+) => (value): { id: number; label: string }[] => {
+  if (typeof value === 'string') {
+    return value
+      .trim()
+      .split(',')
+      .filter((tag) => tag.length > 0)
+      .map((tag) => {
+        const id = parseInt(tag)
+        const trueVal = options.find((oth) => oth.id === id)
+        if (trueVal != null) {
+          trueVal.label = trueVal.label ?? trueVal.name ?? 'Unknown'
+        }
+        return trueVal != null ? trueVal : { id, label: 'Unknown' }
+      }) as { id: number; label: string }[]
   }
+  if (Array.isArray(value)) {
+    return value.map(({ id, name }) => ({ id, label: name }))
+  }
+  return []
+}
 
 const ReportForm = ({
   fields,

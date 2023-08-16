@@ -355,9 +355,9 @@ const parseDateRange = (
       }
     } else {
       const max = new Date(
-        Math.max(...(range as unknown as number[])) + 24 * 60 * 60 * 1000,
+        Math.max(...((range as unknown) as number[])) + 24 * 60 * 60 * 1000,
       )
-      const min = new Date(Math.min(...(range as unknown as number[])))
+      const min = new Date(Math.min(...((range as unknown) as number[])))
       range = { start: min, end: max }
     }
   }
@@ -435,8 +435,9 @@ function EventPage({
   clubs,
   fair,
 }: EventPageProps): ReactElement {
-  const [calendarEvents, setCalendarEvents] =
-    useState<ClubEvent[]>(initialEvents)
+  const [calendarEvents, setCalendarEvents] = useState<ClubEvent[]>(
+    initialEvents,
+  )
 
   const isFair = fair != null
 
@@ -458,8 +459,9 @@ function EventPage({
     EventsViewOption.LIST,
   )
 
-  const [dateRange, setDateRange] =
-    useState<CalendarDateRange>(initialDateRange)
+  const [dateRange, setDateRange] = useState<CalendarDateRange>(
+    initialDateRange,
+  )
 
   const currentSearch = useRef<
     [SearchInput, EventsViewOption, CalendarDateRange]
@@ -882,9 +884,9 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
       : await cache(
           'pages:events:fair',
           async () => {
-            return doApiRequest('/clubfairs/current/?format=json').then(
-              (resp) => resp.json(),
-            )
+            return doApiRequest(
+              '/clubfairs/current/?format=json',
+            ).then((resp) => resp.json())
           },
           60 * 1000,
         )
@@ -896,9 +898,10 @@ EventPage.getInitialProps = async (ctx: NextPageContext) => {
     async () => {
       const [tags, badges, clubs] = await Promise.all([
         doApiRequest('/tags/?format=json', data).then((resp) => resp.json()),
-        doApiRequest(`/badges/?fair=${cachedFair?.id}&format=json`, data).then(
-          (resp) => resp.json(),
-        ),
+        doApiRequest(
+          `/badges/?fair=${cachedFair?.id}&format=json`,
+          data,
+        ).then((resp) => resp.json()),
         doApiRequest('/clubs/directory/?format=json', data)
           .then((resp) => resp.json())
           .then((resp) => resp.filter(({ approved }) => approved)),
