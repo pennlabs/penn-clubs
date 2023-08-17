@@ -1142,6 +1142,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         # ensure user is allowed to upload image
         club = self.get_object()
+        key = f"clubs:{club.id}"
+        cache.delete(key)
 
         # reset approval status after upload
         resp = upload_endpoint_helper(request, club, "file", "image", save=False)
