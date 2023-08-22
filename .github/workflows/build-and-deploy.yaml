@@ -8,7 +8,7 @@ on: push
 jobs:
   backend-check:
     name: "Backend Check"
-    uses: pennlabs/shared-actions/.github/workflows/django-check.yaml@v0.1
+    uses: pennlabs/shared-actions/.github/workflows/django.yaml@8785a7d7b9158d8d5705a0202f5695db2c0beb97
     with:
       projectName: pennclubs
       path: backend
@@ -47,7 +47,7 @@ jobs:
         with:
           name: build-backend
           path: /tmp/image.tar
-      # needs: backend-check
+    needs: backend-check
 
   build-frontend:
     name: Build frontend
@@ -77,53 +77,7 @@ jobs:
           path: /tmp/image.tar
     needs: frontend-check
 
-  # integration-tests:
-  #   name: Integration Tests
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: actions/download-artifact@v2
-  #     - name: Load docker images
-  #       run: |-
-  #         docker load --input build-backend/image.tar
-  #         docker load --input build-frontend/image.tar
-  #     - name: Run docker compose
-  #       run: |-
-  #         mkdir -p /tmp/test-results
-  #         docker-compose -f docker-compose.test.yaml up -d
-  #     - name: Wait for backend
-  #       run: |-
-  #         for try in {1..20}; do
-  #           docker-compose -f docker-compose.test.yaml exec -T backend python manage.py migrate --check && break
-  #           sleep 5
-  #         done
-  #     - name: Populate backend
-  #       run: docker-compose -f docker-compose.test.yaml exec -T backend python manage.py populate
-  #     - name: Run integration tests
-  #       run: docker-compose -f docker-compose.test.yaml exec -T frontend yarn integration
-  #     - name: Delete artifacts when no longer needed
-  #       if: failure() || github.ref != 'refs/heads/master'
-  #       uses: geekyeggo/delete-artifact@v1
-  #       with:
-  #         name: |-
-  #           build-backend
-  #           build-frontend
-  #     - name: Print logs on failure
-  #       if: failure()
-  #       run: docker-compose -f docker-compose.test.yaml logs
-  #     - name: Upload artifacts on failure
-  #       if: failure()
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: cypress-output
-  #         path: /tmp/test-results
-  #   env:
-  #     GIT_SHA: ${{ github.sha }}
-  #   needs:
-  #     - build-backend
-  #     - build-frontend
-
-  post-integration-publish:
+  publish:
     name: Publish Images
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
@@ -165,4 +119,4 @@ jobs:
       GH_AWS_SECRET_ACCESS_KEY: ${{ secrets.GH_AWS_SECRET_ACCESS_KEY }}
 
     needs:
-      - post-integration-publish
+      - publish
