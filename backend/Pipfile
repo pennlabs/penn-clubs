@@ -56,6 +56,7 @@ jinja2 = "*"
 pandas = "*"
 drf-excel = "*"
 numpy = "*"
+coverage = "*"
 
 [requires]
 python_version = "3"
