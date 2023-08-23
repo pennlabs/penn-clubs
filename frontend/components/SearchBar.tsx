@@ -316,7 +316,7 @@ export const SearchBarOptionItem = ({
           searchCallback((inpt) => ({
             ...inpt,
             [param]: order,
-            seed: new Date().getTime().toString(),
+            seed: Math.floor(new Date().getTime() / 1000000).toString(),
           }))
         }
       />
