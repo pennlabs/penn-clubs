@@ -21,7 +21,7 @@ export class MyChart extends PennLabsChart {
     new DjangoApplication(this, 'django-wsgi', {
       deployment: {
         image: backendImage,
-        replicas: 2,
+        replicas: 3,
         secret: clubsSecret,
         env: [
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
