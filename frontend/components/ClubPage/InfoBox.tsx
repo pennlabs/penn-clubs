@@ -40,9 +40,9 @@ const InfoBox = (props: InfoBoxProps): ReactElement | null => {
       field: 'size',
       icon: 'user',
       alt: 'members',
-      text: `${props.club.membership_count} Registered (${getSizeDisplay(
-        props.club.size,
-      )})`,
+      text: `${
+        props.club.membership_count ?? props.club.members.length
+      } Registered (${getSizeDisplay(props.club.size)})`,
     },
     {
       field: 'accepting_members',

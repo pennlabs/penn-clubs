@@ -169,6 +169,10 @@ export interface Club {
   linkedin: string
   listserv: string
   members: Membership[]
+  /**
+   * @deprecated
+   * use `members.length` instead
+   */
   membership_count: number
   name: string
   recruiting_cycle: ClubRecruitingCycle
