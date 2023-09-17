@@ -20,9 +20,9 @@ primary_region = "ewr"
   # DOMAINS = "clubs-backend.internal,penn-clubs-frontend.internal,penn-clubs-frontend.fly.dev"
   DOMAINS = "*"
 
-[http_service]
-  internal_port = 80
-  force_https = false
-  auto_stop_machines = false
-  auto_start_machines = true
-  min_machines_running = 1
+# [http_service]
+#   internal_port = 80
+#   force_https = true
+#   auto_stop_machines = false
+#   auto_start_machines = true
+  # min_machines_running = 1

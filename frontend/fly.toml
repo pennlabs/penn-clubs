@@ -10,7 +10,7 @@ primary_region = "ewr"
 #   image = "pennlabs/penn-clubs-frontend:latest"
 
 [env]
-  DOMAIN = "clubs-backend.internal"
+  DOMAIN = "clubs-backend.internal:80"
 
 [http_service]
   internal_port = 3000
