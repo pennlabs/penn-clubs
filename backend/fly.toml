@@ -1,0 +1,28 @@
+# fly.toml app configuration file generated for clubs-backend on 2023-09-01T14:48:55-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "clubs-backend"
+primary_region = "ewr"
+# console_command = "/code/manage.py shell"
+
+# [build]
+  # image = "pennlabs/penn-clubs-backend:latest"
+
+# [deploy]
+  # strategy = "bluegreen"
+  # release_command = "python manage.py migrate"
+
+[env]
+  # PORT = "80"
+  REDIS_HOST = "redis-clubs.internal"
+  # DOMAINS = "clubs-backend.internal,penn-clubs-frontend.internal,penn-clubs-frontend.fly.dev"
+  DOMAINS = "*"
+
+[http_service]
+  internal_port = 80
+  force_https = false
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1

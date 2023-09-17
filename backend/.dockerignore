@@ -14,3 +14,6 @@ LICENSE
 .coverage
 **/__pycache__/
 tests/
+
+# Fly config
+fly.toml
