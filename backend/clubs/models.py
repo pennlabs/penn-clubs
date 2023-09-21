@@ -1592,6 +1592,18 @@ class ClubApplication(CloneModel):
         return all(t in cls.VALID_TEMPLATE_TOKENS for t in tokens)
 
 
+class ClubApplicationExtension(models.Model):
+    """
+    Represents an individual club application extension.
+    """
+
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    application = models.ForeignKey(
+        ClubApplication, related_name="extensions", on_delete=models.CASCADE
+    )
+    extension_end_time = models.DateTimeField()
+
+
 class ApplicationCommittee(models.Model):
     """
     Represents a committee for a particular club application. Each application
