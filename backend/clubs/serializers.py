@@ -2607,8 +2607,9 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     active = serializers.SerializerMethodField("get_active", read_only=True)
 
     def get_external_url(self, obj):
+        ext_url = self.context["request"].data.get("external_url")
         default_url = f"https://pennclubs.com/club/{obj.club.code}/application/{obj.pk}"
-        return obj.external_url if obj.external_url else default_url
+        return ext_url if ext_url else default_url
 
     def get_cycle(self, obj):
         return obj.application_cycle.name if obj.application_cycle else obj.season
