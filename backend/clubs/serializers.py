@@ -2644,6 +2644,12 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     def validate(self, data):
         acceptance_template = data.get("acceptance_email", "")
         rejection_template = data.get("rejection_email", "")
+        external_url = self.context["request"].data.get("external_url")
+
+        if not external_url and not (acceptance_template and rejection_template):
+            raise serializers.ValidationError(
+                "Your application email templates cannot be empty!"
+            )
 
         if not ClubApplication.validate_template(
             acceptance_template
