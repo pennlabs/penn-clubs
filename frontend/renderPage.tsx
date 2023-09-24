@@ -362,7 +362,7 @@ function renderPage<T>(
         auth.authenticated = true
       }
       return { ...pageProps, ...auth, options, permissions }
-    } catch (error) 
+    } catch (error) {
       if (ctx.res) {
         ctx.res.writeHead(307, { Location: '/error' })
         ctx.res.end()
