@@ -16,7 +16,6 @@ import DatePicker from 'react-datepicker'
 import Select from 'react-select'
 import CreatableSelect from 'react-select/creatable'
 import styled from 'styled-components'
-import uuid from 'uuid'
 
 import { DynamicQuestion } from '../types'
 import { titleize } from '../utils'
