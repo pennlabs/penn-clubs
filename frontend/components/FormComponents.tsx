@@ -16,7 +16,7 @@ import DatePicker from 'react-datepicker'
 import Select from 'react-select'
 import CreatableSelect from 'react-select/creatable'
 import styled from 'styled-components'
-import uuid from 'uuid'
+import { v4 as uuidv4 } from 'uuid'
 
 import { DynamicQuestion } from '../types'
 import { titleize } from '../utils'
@@ -527,7 +527,7 @@ export const DynamicQuestionField = useFieldWrapper(
 
     const addField = (type: string): void => {
       values.push({
-        name: uuid.v4(),
+        name: uuidv4(),
         label: '',
         type: type,
         choices: [],
