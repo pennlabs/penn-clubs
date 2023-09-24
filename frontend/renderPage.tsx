@@ -350,18 +350,26 @@ function renderPage<T>(
       }
     }
 
-    const [res, [pageProps, permissions], options] = await Promise.all([
-      fetchSettings(),
-      originalPageProps(),
-      fetchOptions(),
-    ])
-
-    const auth = { authenticated: false, userInfo: undefined }
-    if (res.ok) {
-      auth.userInfo = await res.json()
-      auth.authenticated = true
+    try {
+      const [res, [pageProps, permissions], options] = await Promise.all([
+        fetchSettings(),
+        originalPageProps(),
+        fetchOptions(),
+      ])
+      const auth = { authenticated: false, userInfo: undefined }
+      if (res.ok) {
+        auth.userInfo = await res.json()
+        auth.authenticated = true
+      }
+      return { ...pageProps, ...auth, options, permissions }
+    } catch (error) 
+      if (ctx.res) {
+        ctx.res.writeHead(307, { Location: '/error' })
+        ctx.res.end()
+        return false
+      }
+      return {}
     }
-    return { ...pageProps, ...auth, options, permissions }
   }
 
   return RenderPage
