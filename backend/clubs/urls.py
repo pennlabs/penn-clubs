@@ -50,6 +50,7 @@ from clubs.views import (
     UserZoomAPIView,
     WhartonApplicationAPIView,
     WhartonApplicationStatusAPIView,
+    WhartonCyclesView,
     YearViewSet,
     email_preview,
 )
@@ -76,6 +77,9 @@ router.register(r"years", YearViewSet, basename="years")
 router.register(r"users", UserViewSet, basename="users")
 router.register(
     r"external/members/(?P<code>.+)", ExternalMemberListViewSet, basename="external"
+)
+router.register(
+    r"cycles", WhartonCyclesView, basename="wharton-applications-create",
 )
 router.register(r"submissions", ApplicationSubmissionUserViewSet, basename="submission")
 

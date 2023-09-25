@@ -23,6 +23,7 @@ from clubs.models import (
     AdminNote,
     Advisor,
     ApplicationCommittee,
+    ApplicationCycle,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -94,6 +95,24 @@ class ClubRouteMixin(object):
         )
 
         return super().save()
+
+
+class ApplicationCycleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationCycle
+        fields = ["id", "name", "start_date", "end_date"]
+
+    def validate(self, data):
+        """
+        Check that start_date is before end_date.
+        """
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+
+        if start_date and end_date and start_date >= end_date:
+            raise serializers.ValidationError("Start must be before end.")
+
+        return data
 
 
 class TagSerializer(serializers.ModelSerializer):

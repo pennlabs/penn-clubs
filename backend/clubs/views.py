@@ -70,6 +70,7 @@ from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     AdminNote,
     Advisor,
+    ApplicationCycle,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -125,6 +126,7 @@ from clubs.permissions import (
 from clubs.serializers import (
     AdminNoteSerializer,
     AdvisorSerializer,
+    ApplicationCycleSerializer,
     ApplicationQuestionResponseSerializer,
     ApplicationQuestionSerializer,
     ApplicationSubmissionCSVSerializer,
@@ -4859,6 +4861,39 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 "questions__multiple_choice", "questions__committees", "committees",
             )
         )
+
+
+class WhartonCyclesView(viewsets.ModelViewSet):
+    """
+    update: Update application cycle
+    list: Get list of all application cycles
+    """
+
+    permission_classes = [WhartonApplicationPermission | IsSuperuser]
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+    serializer_class = ApplicationCycleSerializer
+
+    def get_queryset(self):
+        return ApplicationCycle.objects.all().order_by("end_date")
+
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def update(self, *args, **kwargs):
+        """
+        Updates times for all applications with cycle
+        """
+        applications = ClubApplication.objects.filter(
+            application_cycle=self.get_object()
+        )
+        for app in applications:
+            app.application_start_time = self.get_object().start_date
+            app.application_end_time = self.get_object().end_date
+            if app.result_release_time < app.application_end_time:
+                app.result_release_time = app.application_end_time
+                +datetime.timedelta(days=10)
+            app.save()
+        return super().update(*args, **kwargs)
 
 
 class WhartonApplicationAPIView(generics.ListAPIView):
