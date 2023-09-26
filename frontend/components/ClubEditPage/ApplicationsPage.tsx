@@ -274,6 +274,16 @@ const NotificationModal = (props: {
               label="Dry Run"
               helpText="If selected, will return the number of emails the script would have sent out"
             />
+            <Field
+              name="allow_resend"
+              as={CheckboxField}
+              label="Resend Emails"
+              helpText={
+                <strong>
+                  If selected, will resend notifications to all applicants
+                </strong>
+              }
+            />
             <button type="submit" className="button">
               Submit
             </button>
