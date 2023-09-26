@@ -222,7 +222,7 @@ const NotificationModal = (props: {
           if (data.email_type.id === 'acceptance' && !data.dry_run) {
             const relevant = submissions.filter(
               (sub) =>
-                sub.notified === false &&
+                (data.allow_resend || !sub.notified) &&
                 sub.status === 'Accepted' &&
                 sub.reason,
             )
@@ -230,7 +230,7 @@ const NotificationModal = (props: {
           } else if (data.email_type.id === 'rejection' && !data.dry_run) {
             const relevant = submissions.filter(
               (sub) =>
-                sub.notified === false &&
+                (data.allow_resend || !sub.notified) &&
                 sub.status.startsWith('Rejected') &&
                 sub.reason,
             )
