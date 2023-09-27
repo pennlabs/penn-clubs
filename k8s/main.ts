@@ -16,6 +16,14 @@ export class MyChart extends PennLabsChart {
     const clubsSecret = 'penn-clubs';
     const clubsDomain = 'pennclubs.com';
 
+    /** Ingress HTTPS Enforcer */
+    const ingressProps = {
+      annotations: {
+        ["ingress.kubernetes.io/protocol"]: "https",
+        ["traefik.ingress.kubernetes.io/router.middlewares"]: "default-redirect-http@kubernetescrd"
+      }
+    }
+
     new RedisApplication(this, 'redis', {});
 
     new DjangoApplication(this, 'django-wsgi', {
@@ -27,12 +35,7 @@ export class MyChart extends PennLabsChart {
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
         ],
       },
-      ingressProps: {
-        annotations: {
-          ["ingress.kubernetes.io/protocol"]: "https",
-          ["traefik.ingress.kubernetes.io/router.middlewares"]: "default-redict-http@kubernetescrd"
-        }
-      },
+      ingressProps,
       djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: clubsDomain, paths: ['/api'] }],
     });
@@ -47,12 +50,7 @@ export class MyChart extends PennLabsChart {
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
         ],
       },
-      ingressProps: {
-        annotations: {
-          ["ingress.kubernetes.io/protocol"]: "https",
-          ["traefik.ingress.kubernetes.io/router.middlewares"]: "default-redict-http@kubernetescrd"
-        }
-      },
+      ingressProps,
       djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: clubsDomain, paths: ['/api/ws'] }],
     });
@@ -64,6 +62,7 @@ export class MyChart extends PennLabsChart {
       },
       domain: { host: clubsDomain, paths: ['/'] },
       port: 80,
+      ingressProps,
     });
 
     /** FYH */
@@ -102,6 +101,7 @@ export class MyChart extends PennLabsChart {
         ],
       },
       domain: { host: fyhDomain, paths: ['/'] },
+      ingressProps,
       port: 80,
     });
 
