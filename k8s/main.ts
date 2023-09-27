@@ -27,6 +27,12 @@ export class MyChart extends PennLabsChart {
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
         ],
       },
+      ingressProps: {
+        annotations: {
+          ["ingress.kubernetes.io/protocol"]: "https",
+          ["traefik.ingress.kubernetes.io/router.middlewares"]: "default-redict-http@kubernetescrd"
+        }
+      },
       djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: clubsDomain, paths: ['/api'] }],
     });
@@ -40,6 +46,12 @@ export class MyChart extends PennLabsChart {
         env: [
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
         ],
+      },
+      ingressProps: {
+        annotations: {
+          ["ingress.kubernetes.io/protocol"]: "https",
+          ["traefik.ingress.kubernetes.io/router.middlewares"]: "default-redict-http@kubernetescrd"
+        }
       },
       djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: clubsDomain, paths: ['/api/ws'] }],
@@ -70,6 +82,12 @@ export class MyChart extends PennLabsChart {
           { name: 'REDIS_HOST', value: 'penn-clubs-hub-redis' },
           { name: 'NEXT_PUBLIC_SITE_NAME', value: 'fyh' },
         ],
+      },
+      ingressProps: {
+        annotations: {
+          ["ingress.kubernetes.io/protocol"]: "https",
+          ["traefik.ingress.kubernetes.io/router.middlewares"]: "default-redict-http@kubernetescrd"
+        }
       },
       djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: fyhDomain, paths: ['/api'] }],
