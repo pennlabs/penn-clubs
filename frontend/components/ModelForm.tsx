@@ -1,4 +1,5 @@
 import { Form, Formik } from 'formik'
+import moment from 'moment'
 import { ReactElement, useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
@@ -351,6 +352,9 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           data[key] !== null
         )
       ) {
+        if (data[key] instanceof Date) {
+          data[key] = moment(data[key]).format('YYYY-MM-DD HH:mm:ssZ')
+        }
         flt[key] = data[key]
       }
       return flt

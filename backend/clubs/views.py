@@ -4865,19 +4865,16 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
 class WhartonCyclesView(viewsets.ModelViewSet):
     """
-    update: Update application cycle
-    list: Get list of all application cycles
+    patch: Update application cycle and WC applications with cycle
     """
 
     permission_classes = [WhartonApplicationPermission | IsSuperuser]
-    http_method_names = ["get", "post", "put", "patch", "delete"]
+    # Designed to support partial updates, but ModelForm sends all fields here
+    http_method_names = ["get", "post", "patch", "delete"]
     serializer_class = ApplicationCycleSerializer
 
     def get_queryset(self):
         return ApplicationCycle.objects.all().order_by("end_date")
-
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
     def update(self, *args, **kwargs):
         """
@@ -4886,13 +4883,27 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         applications = ClubApplication.objects.filter(
             application_cycle=self.get_object()
         )
+        str_start_date = self.request.data.get("start_date").replace("T", " ")
+        str_end_date = self.request.data.get("end_date").replace("T", " ")
+        time_format = "%Y-%m-%d %H:%M:%S%z"
+        start = (
+            datetime.datetime.strptime(str_start_date, time_format)
+            if str_start_date
+            else self.get_object().start_date
+        )
+        end = (
+            datetime.datetime.strptime(str_end_date, time_format)
+            if str_end_date
+            else self.get_object().end_date
+        )
         for app in applications:
-            app.application_start_time = self.get_object().start_date
-            app.application_end_time = self.get_object().end_date
+            app.application_start_time = start
+            app.application_end_time = end
             if app.result_release_time < app.application_end_time:
-                app.result_release_time = app.application_end_time
-                +datetime.timedelta(days=10)
-            app.save()
+                filler_time = app.application_end_time + datetime.timedelta(days=10)
+                app.result_release_time = filler_time
+        f = ["application_start_time", "application_end_time", "result_release_time"]
+        ClubApplication.objects.bulk_update(applications, f)
         return super().update(*args, **kwargs)
 
 
