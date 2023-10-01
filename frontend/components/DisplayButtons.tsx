@@ -71,15 +71,13 @@ const DisplayButtons = ({
       <Icon name="list" alt="list icon" style={iconStyles} />
     </button>
     {!isSummer() && (
-      <Link href="/create">
-        <a className="button is-small is-primary">
-          <Icon
-            name="plus"
-            alt={`create ${OBJECT_NAME_SINGULAR}`}
-            style={iconStylesDark}
-          />
-          Add {OBJECT_NAME_TITLE_SINGULAR}
-        </a>
+      <Link href="/create" className="button is-small is-primary">
+        <Icon
+          name="plus"
+          alt={`create ${OBJECT_NAME_SINGULAR}`}
+          style={iconStylesDark}
+        />
+        Add{OBJECT_NAME_TITLE_SINGULAR}
       </Link>
     )}
   </DisplayButtonsTag>

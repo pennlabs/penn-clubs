@@ -317,16 +317,14 @@ const ClubPage = ({
                     href={CLUB_ALUMNI_ROUTE()}
                     as={CLUB_ALUMNI_ROUTE(club.code)}
                   >
-                    <a>
-                      <Icon name="database" /> Alumni
-                    </a>
+                    <Icon name="database" />
+                    Alumni
                   </Link>
                 </li>
                 <li>
                   <Link href={CLUB_ORG_ROUTE()} as={CLUB_ORG_ROUTE(club.code)}>
-                    <a>
-                      <Icon name="git-branch" /> Org Tree
-                    </a>
+                    <Icon name="git-branch" />
+                    Org Tree
                   </Link>
                 </li>
               </ul>

@@ -27,7 +27,7 @@ const relativeLinks = (guidePath: string) => {
       regex: /<important>(.*?)<\/important>/g,
       replace: '<div class="has-text-danger has-text-weight-bold">$1</div>',
     },
-  ]
+  ];
 }
 
 export async function fetchMarkdown(file: string): Promise<string | null> {

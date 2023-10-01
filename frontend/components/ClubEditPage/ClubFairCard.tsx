@@ -232,8 +232,9 @@ const ClubFairCard = ({
                                 as={
                                   CLUB_EDIT_ROUTE(item.club.code) + '/settings'
                                 }
+                                className="button is-small"
                               >
-                                <a className="button is-small">Register</a>
+                                Register
                               </Link>
                             </td>
                           </tr>

@@ -72,10 +72,12 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
       <Container paddingTop>
         <div className="is-clearfix">
           <Title className="is-pulled-left">{club.name} Application</Title>
-          <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-            <a className="button is-pulled-right is-secondary is-medium">
-              Back
-            </a>
+          <Link
+            href={CLUB_ROUTE()}
+            as={CLUB_ROUTE(club.code)}
+            className="button is-pulled-right is-secondary is-medium"
+          >
+            Back
           </Link>
         </div>
         <hr />

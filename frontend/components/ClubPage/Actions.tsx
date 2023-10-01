@@ -298,6 +298,7 @@ const Actions = ({
               href={CLUB_APPLY_ROUTE()}
               as={CLUB_APPLY_ROUTE(code)}
               passHref
+              legacyBehavior
             >
               <ActionButton className="button is-success">
                 <Icon name="edit" /> Apply
@@ -305,7 +306,12 @@ const Actions = ({
             </Link>
           )}
           {canEdit && (
-            <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)} passHref>
+            <Link
+              href={CLUB_EDIT_ROUTE()}
+              as={CLUB_EDIT_ROUTE(code)}
+              passHref
+              legacyBehavior
+            >
               <ActionButton className="button is-success">
                 Manage {OBJECT_NAME_TITLE_SINGULAR}
               </ActionButton>

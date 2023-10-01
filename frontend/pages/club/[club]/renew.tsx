@@ -240,10 +240,12 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
               not have to complete this form, and completing it for a second
               time will not do anything.
               <div className="mt-3">
-                <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-                  <a className="button is-primary is-light">
-                    Back to {OBJECT_NAME_TITLE_SINGULAR}
-                  </a>
+                <Link
+                  href={CLUB_ROUTE()}
+                  as={CLUB_ROUTE(club.code)}
+                  className="button is-primary is-light"
+                >
+                  Back to{OBJECT_NAME_TITLE_SINGULAR}
                 </Link>
               </div>
             </div>
@@ -480,11 +482,13 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
             Continue
           </button>
         ) : (
-          <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-            <a className="button is-primary">
-              <Icon name="chevrons-left" />
-              Back to {OBJECT_NAME_TITLE_SINGULAR}
-            </a>
+          <Link
+            href={CLUB_ROUTE()}
+            as={CLUB_ROUTE(club.code)}
+            className="button is-primary"
+          >
+            <Icon name="chevrons-left" />
+            Back to{OBJECT_NAME_TITLE_SINGULAR}
           </Link>
         )}
       </div>

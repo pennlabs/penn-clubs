@@ -47,13 +47,13 @@ const RenewTab = ({ className }: ClubTabProps): ReactElement => {
         If you do not see your {OBJECT_NAME_SINGULAR} in the list below, please
         check the{' '}
         <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
-          <a>directory page</a>
+          directory page
         </Link>{' '}
         to see if it exists. If your {OBJECT_NAME_SINGULAR} does exist, email{' '}
         <Contact /> to gain access. If your {OBJECT_NAME_SINGULAR} does not
         exist, fill out the form found{' '}
         <Link href={CREATE_ROUTE} as={CREATE_ROUTE}>
-          <a>here</a>
+          here
         </Link>
         .
       </div>

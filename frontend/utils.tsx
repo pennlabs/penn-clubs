@@ -263,7 +263,7 @@ export function apiSetFavoriteStatus(
   if (favorited) {
     return doApiRequest('/favorites/?format=json', {
       method: 'POST',
-      body: { club: club },
+      body: { club },
     }).then(() => undefined)
   } else {
     return doApiRequest(`/favorites/${club}/?format=json`, {
@@ -280,7 +280,7 @@ export function apiSetSubscribeStatus(
     return doApiRequest('/subscriptions/?format=json', {
       method: 'POST',
       body: {
-        club: club,
+        club,
       },
     }).then(() => undefined)
   } else {

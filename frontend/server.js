@@ -5,14 +5,14 @@ const next = require('next')
 
 const devProxy = {
   '/api': {
-    target: 'http://localhost:8000',
-    changeOrigin: true,
+    target: 'http://localhost.clubs:8000',
+    // changeOrigin: true,
     ws: true,
   },
   '/__debug__': {
     // this allows django debug toolbar to work properly
-    target: 'http://localhost:8000',
-    changeOrigin: true,
+    target: 'http://localhost.clubs:8000',
+    // changeOrigin: true,
   },
 }
 
@@ -34,8 +34,19 @@ app
     // Set up the development proxy to the backend
     if (dev && devProxy) {
       const { createProxyMiddleware } = require('http-proxy-middleware')
-      Object.keys(devProxy).forEach(function (context) {
-        const proxy = createProxyMiddleware(context, devProxy[context])
+      Object.keys(devProxy).forEach((context) => {
+        const proxy = createProxyMiddleware(context, {
+          ...devProxy[context],
+          hostRewrite: true,
+          changeOrigin: false,
+
+          onError: (err, req, res) => {
+            console.log('-> Proxy error', err)
+            res.writeHead(500, {
+              'Content-Type': 'text/plain',
+            })
+          },
+        })
         server.use(context, proxy)
         console.log(`-> Using proxy middleware for route ${context}`)
       })

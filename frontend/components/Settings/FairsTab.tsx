@@ -99,6 +99,7 @@ const FairsTab = ({ fairs }: FairsTabProps): ReactElement => {
         actions={(object) => (
           <Link
             href={{ pathname: FAIR_INFO_ROUTE, query: { fair: object.id } }}
+            legacyBehavior
           >
             <button className="button is-info is-small">
               <Icon name="eye" /> Preview

@@ -230,14 +230,12 @@ const ZoomPage = ({
   fairs,
 }: ZoomPageProps): ReactElement => {
   const [nextUrl, setNextUrl] = useState<string>('/')
-  const [zoomSettings, setZoomSettings] = useState<ZoomSettings>(
-    initialZoomSettings,
-  )
+  const [zoomSettings, setZoomSettings] =
+    useState<ZoomSettings>(initialZoomSettings)
   const [events, setEvents] = useState<ClubEvent[]>(initialEvents)
   const [isLoading, setLoading] = useState<boolean>(false)
-  const [userMeetings, setUserMeetings] = useState<ZoomMeeting[]>(
-    initialUserMeetings,
-  )
+  const [userMeetings, setUserMeetings] =
+    useState<ZoomMeeting[]>(initialUserMeetings)
 
   useEffect(() => {
     setNextUrl(window.location.pathname)
@@ -531,7 +529,7 @@ const ZoomPage = ({
                     href={CLUB_ROUTE()}
                     as={CLUB_ROUTE(event.club as string)}
                   >
-                    <a>{event.club_name}</a>
+                    {event.club_name}
                   </Link>
                   <div>
                     {startTime.format('LLL')} - {endTime.format('LT z')}
@@ -764,10 +762,11 @@ const ZoomPage = ({
                   <Link
                     href={CLUB_EDIT_ROUTE() + '#events'}
                     as={CLUB_EDIT_ROUTE(event.club as string) + '#events'}
+                    className="button is-small is-secondary"
+                    target="_blank"
                   >
-                    <a className="button is-small is-secondary" target="_blank">
-                      <Icon name="edit" /> Edit Event
-                    </a>
+                    <Icon name="edit" />
+                    Edit Event
                   </Link>
                 </div>
                 <hr />

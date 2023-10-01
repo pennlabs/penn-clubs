@@ -151,12 +151,12 @@ const Welcome = ({
           <Subtitle>3. Start exploring {SITE_NAME}!</Subtitle>
           <Link
             href={nextUrl && nextUrl.startsWith('/') ? nextUrl : HOME_ROUTE}
+            className="button is-success is-large"
+            onClick={markWelcome}
           >
-            <a className="button is-success is-large" onClick={markWelcome}>
-              {nextUrl && nextUrl.startsWith('/') && nextUrl !== HOME_ROUTE
-                ? 'Continue'
-                : `Browse ${OBJECT_NAME_PLURAL}`}
-            </a>
+            {nextUrl && nextUrl.startsWith('/') && nextUrl !== HOME_ROUTE
+              ? 'Continue'
+              : `Browse ${OBJECT_NAME_PLURAL}`}
           </Link>
         </Center>
       </Container>

@@ -45,10 +45,12 @@ export default function RenewCard({ club }: RenewCardProps): ReactElement {
           You need to renew your club for the {year}-{year + 1} school year.
           Click on the button below to do so.
           <div className="mt-3">
-            <Link href={CLUB_RENEW_ROUTE()} as={CLUB_RENEW_ROUTE(club.code)}>
-              <a className="button is-primary">
-                Renew {OBJECT_NAME_TITLE_SINGULAR}
-              </a>
+            <Link
+              href={CLUB_RENEW_ROUTE()}
+              as={CLUB_RENEW_ROUTE(club.code)}
+              className="button is-primary"
+            >
+              Renew{OBJECT_NAME_TITLE_SINGULAR}
             </Link>
           </div>
         </>

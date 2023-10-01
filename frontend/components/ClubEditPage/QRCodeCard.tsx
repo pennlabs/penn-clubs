@@ -37,10 +37,14 @@ export default function QRCodeCard({ club }: QRCodeCardProps): ReactElement {
           <Icon alt="qr" name="download" />
           Download QR Code
         </a>
-        <Link href={CLUB_FLYER_ROUTE()} as={CLUB_FLYER_ROUTE(club.code)}>
-          <a target="_blank" className="button is-success">
-            <Icon alt="flyer" name="external-link" /> View Flyer
-          </a>
+        <Link
+          href={CLUB_FLYER_ROUTE()}
+          as={CLUB_FLYER_ROUTE(club.code)}
+          target="_blank"
+          className="button is-success"
+        >
+          <Icon alt="flyer" name="external-link" />
+          View Flyer
         </Link>
       </div>
     </BaseCard>

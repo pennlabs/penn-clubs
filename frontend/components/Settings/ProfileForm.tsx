@@ -115,7 +115,7 @@ const ProfileForm = ({
                       href={PROFILE_ROUTE()}
                       as={PROFILE_ROUTE(settings.username)}
                     >
-                      <a>here</a>
+                      here
                     </Link>
                     .
                   </>

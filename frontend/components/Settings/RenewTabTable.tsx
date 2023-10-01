@@ -37,7 +37,7 @@ const RenewTabTable = ({
         <tr key={club.code}>
           <td>
             <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-              <a>{club.name}</a>
+              {club.name}
             </Link>
           </td>
           <td>
@@ -46,8 +46,9 @@ const RenewTabTable = ({
                 <Link
                   href={CLUB_RENEW_ROUTE()}
                   as={CLUB_RENEW_ROUTE(club.code)}
+                  className="button is-small"
                 >
-                  <a className="button is-small">Renew</a>
+                  Renew
                 </Link>
               ) : (
                 <span className="has-text-info">

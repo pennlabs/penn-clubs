@@ -388,13 +388,10 @@ const ClubForm = ({
           <Link
             href={isViewButton ? CLUB_ROUTE() : HOME_ROUTE}
             as={isViewButton && club ? CLUB_ROUTE(club.code) : HOME_ROUTE}
+            className="button is-pulled-right is-secondary is-medium"
+            style={{ fontWeight: 'normal' }}
           >
-            <a
-              className="button is-pulled-right is-secondary is-medium"
-              style={{ fontWeight: 'normal' }}
-            >
-              {isViewButton ? `View ${OBJECT_NAME_TITLE_SINGULAR}` : 'Back'}
-            </a>
+            {isViewButton ? `View ${OBJECT_NAME_TITLE_SINGULAR}` : 'Back'}
           </Link>
         }
       </InfoPageTitle>
@@ -410,7 +407,7 @@ const ClubForm = ({
             <b>Before creating your {OBJECT_NAME_SINGULAR},</b> please check to{' '}
             see if it already exists on the{' '}
             <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
-              <a>directory page</a>
+              directory page
             </Link>
             . If your {OBJECT_NAME_SINGULAR} already exists, please email{' '}
             <Contact /> to gain access instead of filling out this form.

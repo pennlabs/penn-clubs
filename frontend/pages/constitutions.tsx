@@ -69,7 +69,7 @@ const ConstitutionDirectory = ({ clubs }: Props): ReactElement => {
                   <tr key={club.code}>
                     <td>
                       <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-                        <a>{club.name}</a>
+                        {club.name}
                       </Link>
                     </td>
                     <td>

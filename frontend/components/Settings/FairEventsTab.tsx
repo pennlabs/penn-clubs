@@ -104,17 +104,19 @@ const FairEventsTab = ({
       {fairEvents != null && !('detail' in fairEvents) && (
         <>
           <div className="buttons mb-2">
-            <Link href={`${FAIR_INFO_ROUTE}?fair=${selectedFair}`}>
-              <a className="button is-link is-small">
-                <Icon name="eye" />
-                Preview Info Page
-              </a>
+            <Link
+              href={`${FAIR_INFO_ROUTE}?fair=${selectedFair}`}
+              className="button is-link is-small"
+            >
+              <Icon name="eye" />
+              Preview Info Page
             </Link>
-            <Link href={`${LIVE_EVENTS}?fair=${selectedFair}`}>
-              <a className="button is-link is-small">
-                <Icon name="eye" />
-                Preview Events Page
-              </a>
+            <Link
+              href={`${LIVE_EVENTS}?fair=${selectedFair}`}
+              className="button is-link is-small"
+            >
+              <Icon name="eye" />
+              Preview Events Page
             </Link>
           </div>
           <Text>
@@ -157,7 +159,11 @@ const FairEventsTab = ({
                 {fairEvents.map((event, i) => (
                   <tr key={i}>
                     <td>
-                      <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.code)}>
+                      <Link
+                        href={CLUB_ROUTE()}
+                        as={CLUB_ROUTE(event.code)}
+                        legacyBehavior
+                      >
                         {event.name}
                       </Link>
                     </td>

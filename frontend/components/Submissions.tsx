@@ -120,10 +120,8 @@ function SubmissionsPage({
     formatSubmissions(initialSubmissions),
   )
   const [showModal, setShowModal] = useState<boolean>(false)
-  const [
-    currentSubmission,
-    setCurrentSubmission,
-  ] = useState<ApplicationSubmission | null>(null)
+  const [currentSubmission, setCurrentSubmission] =
+    useState<ApplicationSubmission | null>(null)
 
   const responseTableFields = [
     { label: 'Application', name: 'name' },

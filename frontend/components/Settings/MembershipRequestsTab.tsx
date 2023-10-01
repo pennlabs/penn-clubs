@@ -53,7 +53,7 @@ const MembershipRequestsTab = (): ReactElement => {
             <tr key={req.club}>
               <td>
                 <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(req.club)}>
-                  <a>{req.club_name}</a>
+                  {req.club_name}
                 </Link>
               </td>
               <td>

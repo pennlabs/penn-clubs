@@ -37,7 +37,8 @@ const LoginButton = styled.a`
   margin-bottom: ${LOGIN_MARGIN};
   opacity: ${LOGIN_OPACITY};
   color: ${WHITE_ALPHA(0.8)} !important;
-  transition: color ${SHORT_ANIMATION_DURATION}ms ease,
+  transition:
+    color ${SHORT_ANIMATION_DURATION}ms ease,
     background ${SHORT_ANIMATION_DURATION}ms ease;
 
   &:hover,
@@ -68,7 +69,7 @@ const StyledLinkAnchor = styled.a`
 
 const StyledLink = (props): ReactElement => {
   return (
-    <Link href={props.href}>
+    <Link href={props.href} legacyBehavior>
       <StyledLinkAnchor {...props} />
     </Link>
   )

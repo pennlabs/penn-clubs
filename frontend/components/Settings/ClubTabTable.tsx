@@ -89,7 +89,7 @@ const ClubTabTable = ({
         <tr key={club.code}>
           <td>
             <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-              <a>{club.name}</a>
+              {club.name}
             </Link>
           </td>
           <td>{title}</td>
@@ -110,8 +110,12 @@ const ClubTabTable = ({
           </td>
           <td>
             {role <= MembershipRank.Officer ? (
-              <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(club.code)}>
-                <a className="button is-small">Manage</a>
+              <Link
+                href={CLUB_EDIT_ROUTE()}
+                as={CLUB_EDIT_ROUTE(club.code)}
+                className="button is-small"
+              >
+                Manage
               </Link>
             ) : (
               <button

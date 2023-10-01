@@ -68,15 +68,18 @@ const OrgChild = (tree: OrgTree): ReactElement => {
         )}
         {!isParent ? (
           <Link href={CLUB_ORG_ROUTE()} as={CLUB_ORG_ROUTE(code)}>
-            <a>{name}</a>
+            {name}
           </Link>
         ) : (
           name
         )}
-        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
-          <a target="_blank" className="is-pulled-right">
-            <Icon name="external-link" alt="view" />
-          </a>
+        <Link
+          href={CLUB_ROUTE()}
+          as={CLUB_ROUTE(code)}
+          target="_blank"
+          className="is-pulled-right"
+        >
+          <Icon name="external-link" alt="view" />
         </Link>
       </div>
       {children && children.map((a, i: number) => <OrgChild key={i} {...a} />)}
@@ -112,10 +115,12 @@ const OrganizationPage = ({ club }: Props): ReactElement => {
       <Container paddingTop>
         <div className="is-clearfix">
           <Title className="is-pulled-left">{club.name}</Title>
-          <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-            <a className="button is-pulled-right is-secondary is-medium">
-              Back
-            </a>
+          <Link
+            href={CLUB_ROUTE()}
+            as={CLUB_ROUTE(club.code)}
+            className="button is-pulled-right is-secondary is-medium"
+          >
+            Back
           </Link>
         </div>
         <Text>
