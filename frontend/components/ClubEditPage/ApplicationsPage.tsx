@@ -2,6 +2,7 @@ import { Field, Form, Formik } from 'formik'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import Select from 'react-select'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { ALLBIRDS_GRAY, CLUBS_BLUE, MD, mediaMaxWidth, SNOW } from '~/constants'
@@ -278,6 +279,13 @@ const NotificationModal = (props: {
               name="allow_resend"
               as={CheckboxField}
               label="Resend Emails"
+              onClick={(e) => {
+                if (e.target.checked) {
+                  toast.warning(
+                    'Resending emails will send emails to all applicants, even if they have already been notified.',
+                  )
+                }
+              }}
               helpText={
                 <strong>
                   If selected, will resend notifications to all applicants
