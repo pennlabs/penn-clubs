@@ -4665,6 +4665,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         Send out acceptance/rejection emails for a particular application
 
         Dry run will validate that all emails have nonempty variables
+
+        Allow resend will renotify submissions that have already been emailed
         ---
         requestBody:
             content:
@@ -4672,6 +4674,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                     schema:
                         type: object
                         properties:
+                            allow_resend:
+                                type: boolean
                             dry_run:
                                 type: boolean
                             email_type:
@@ -4728,13 +4732,15 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         subject = f"Application Update for {app.name}"
         n, skip = 0, 0
 
+        allow_resend = self.request.data.get("allow_resend")
+
         acceptance_template = Template(app.acceptance_email)
         rejection_template = Template(app.rejection_email)
 
         mass_emails = []
         for submission in submissions:
             if (
-                submission.notified
+                (not allow_resend and submission.notified)
                 or submission.status == ApplicationSubmission.PENDING
                 or not (submission.reason and submission.user.email)
             ):

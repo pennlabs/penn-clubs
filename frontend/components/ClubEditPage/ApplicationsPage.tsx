@@ -2,6 +2,7 @@ import { Field, Form, Formik } from 'formik'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import Select from 'react-select'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { ALLBIRDS_GRAY, CLUBS_BLUE, MD, mediaMaxWidth, SNOW } from '~/constants'
@@ -222,7 +223,7 @@ const NotificationModal = (props: {
           if (data.email_type.id === 'acceptance' && !data.dry_run) {
             const relevant = submissions.filter(
               (sub) =>
-                sub.notified === false &&
+                (data.allow_resend || !sub.notified) &&
                 sub.status === 'Accepted' &&
                 sub.reason,
             )
@@ -230,7 +231,7 @@ const NotificationModal = (props: {
           } else if (data.email_type.id === 'rejection' && !data.dry_run) {
             const relevant = submissions.filter(
               (sub) =>
-                sub.notified === false &&
+                (data.allow_resend || !sub.notified) &&
                 sub.status.startsWith('Rejected') &&
                 sub.reason,
             )
@@ -273,6 +274,23 @@ const NotificationModal = (props: {
               as={CheckboxField}
               label="Dry Run"
               helpText="If selected, will return the number of emails the script would have sent out"
+            />
+            <Field
+              name="allow_resend"
+              as={CheckboxField}
+              label="Resend Emails"
+              onClick={(e) => {
+                if (e.target.checked) {
+                  toast.warning(
+                    'Resending emails will send emails to all applicants, even if they have already been notified.',
+                  )
+                }
+              }}
+              helpText={
+                <strong>
+                  If selected, will resend notifications to all applicants
+                </strong>
+              }
             />
             <button type="submit" className="button">
               Submit
