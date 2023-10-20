@@ -24,7 +24,16 @@ export class MyChart extends PennLabsChart {
       }
     }
 
-    new RedisApplication(this, 'redis', {});
+    new RedisApplication(this, 'redis', {
+      deployment: {
+        secretMounts: [
+          {
+            name: 'redis-data',
+            mountPath: '/data',
+          },
+        ],
+      }
+    });
 
     new DjangoApplication(this, 'django-wsgi', {
       deployment: {
