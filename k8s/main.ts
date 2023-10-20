@@ -147,6 +147,13 @@ export class MyChart extends PennLabsChart {
       secret: fyhSecret,
       cmd: ["python", "manage.py", "import_paideia_events"],
     });
+
+    new CronJob(this, 'update-club-aggregation-counts', {
+      schedule: cronTime.everyDayAt(12),
+      image: backendImage,
+      secret: fyhSecret,
+      cmd: ["python", "manage.py", "import_paideia_events"],
+    })
   }
 }
 
