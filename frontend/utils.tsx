@@ -1,5 +1,5 @@
 import fetch from 'isomorphic-unfetch'
-import LRU from 'lru-cache'
+import { LRUCache } from 'lru-cache'
 import { NextPageContext } from 'next'
 import getConfig from 'next/config'
 import React, { createContext, ReactElement, useContext } from 'react'
@@ -20,7 +20,9 @@ export function isDevelopment(): boolean {
   return dev
 }
 
-const internalCache = new LRU()
+const internalCache = new LRUCache({
+  max: 10000, // temporary
+})
 
 /**
  * Cache the return value of a function.
@@ -34,11 +36,11 @@ export async function cache<T>(
 ): Promise<T> {
   const cached = internalCache.get(key)
   if (cached != null) {
-    return cached
+    return cached as T
   }
-  const val = await func()
-  internalCache.set(key, val, time)
-  return val
+  const val = (await func()) as object
+  internalCache.set(key, val, { ttl: time })
+  return val as T
 }
 
 export function stripTags(val: string): string {
