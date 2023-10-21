@@ -1,6 +1,8 @@
 import { Construct } from 'constructs';
 import { App } from 'cdk8s';
 import { CronJob, DjangoApplication, PennLabsChart, ReactApplication, RedisApplication } from '@pennlabs/kittyhawk';
+import { KubeConfigMap } from '@pennlabs/kittyhawk/lib/imports/k8s';
+import dedent from "ts-dedent";
 
 const cronTime = require('cron-time-generator');
 
@@ -16,6 +18,20 @@ export class MyChart extends PennLabsChart {
     const clubsSecret = 'penn-clubs';
     const clubsDomain = 'pennclubs.com';
 
+    /** Redis ConfigMap */
+    new KubeConfigMap(this, 'redis-config', {
+      data: {
+        'redis.conf': dedent`
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: redis-config
+          data:
+            redis-config: ""
+        `,
+      }
+    });
+
     /** Ingress HTTPS Enforcer */
     const ingressProps = {
       annotations: {
@@ -26,13 +42,23 @@ export class MyChart extends PennLabsChart {
 
     new RedisApplication(this, 'redis', {
       deployment: {
+        cmd: ['redis-server', '/redis-master/redis.conf'],
         secretMounts: [
           {
-            name: 'redis-data',
-            mountPath: '/data',
+            name: 'config',
+            mountPath: '/redis-master',
           },
+          {
+            name: 'data',
+            mountPath: 'redis-master-data',
+          }
         ],
-      }
+        env: [{
+          name: "MASTER",
+          value: "true",
+        }],
+      },
+      
     });
 
     new DjangoApplication(this, 'django-wsgi', {
