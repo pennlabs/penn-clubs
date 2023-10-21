@@ -40,26 +40,7 @@ export class MyChart extends PennLabsChart {
       }
     }
 
-    new RedisApplication(this, 'redis', {
-      deployment: {
-        cmd: ['redis-server', '/redis-master/redis.conf'],
-        secretMounts: [
-          {
-            name: 'config',
-            mountPath: '/redis-master',
-          },
-          {
-            name: 'data',
-            mountPath: 'redis-master-data',
-          }
-        ],
-        env: [{
-          name: "MASTER",
-          value: "true",
-        }],
-      },
-      
-    });
+    new RedisApplication(this, 'redis', {});
 
     new DjangoApplication(this, 'django-wsgi', {
       deployment: {
