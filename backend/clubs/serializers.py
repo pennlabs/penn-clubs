@@ -8,6 +8,7 @@ import bleach
 import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import URLValidator
 from django.db import models
@@ -1667,6 +1668,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "instagram",
             "is_ghost",
             "is_request",
+            "is_wharton",
             "linkedin",
             "listserv",
             "members",
@@ -2196,6 +2198,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
             "terms",
             "owners",
             "officers",
+            "approved_on",
         ]
 
 
@@ -2472,23 +2475,6 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
             # cannot link to the application if the application has been deleted
             return "#"
 
-    def validate(self, data):
-        application_start_time = data["application_start_time"]
-        application_end_time = data["application_end_time"]
-        now = pytz.UTC.localize(datetime.datetime.now())
-
-        if now < application_start_time:
-            raise serializers.ValidationError(
-                "You cannot submit before the application has opened."
-            )
-
-        if now > application_end_time:
-            raise serializers.ValidationError(
-                "You cannot submit after the application deadline."
-            )
-
-        return data
-
     class Meta:
         model = ApplicationSubmission
         fields = (
@@ -2500,6 +2486,8 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
             "status",
             "responses",
             "club",
+            "notified",
+            "reason",
             "name",
             "application_link",
             "first_name",
@@ -2508,6 +2496,7 @@ class ApplicationSubmissionSerializer(serializers.ModelSerializer):
             "code",
             "graduation_year",
         )
+        read_only_fields = fields
 
 
 class ApplicationSubmissionUserSerializer(ApplicationSubmissionSerializer):
@@ -2542,6 +2531,10 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
     email = serializers.CharField(source="user.email")
     graduation_year = serializers.CharField(source="user.profile.graduation_year")
     committee = serializers.SerializerMethodField("get_committee")
+    status = serializers.SerializerMethodField("get_status")
+
+    def get_status(self, obj):
+        return dict(ApplicationSubmission.STATUS_TYPES).get(obj, "Unknown")
 
     def get_name(self, obj):
         """
@@ -2617,11 +2610,15 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
             "email",
             "graduation_year",
             "committee",
+            "notified",
+            "reason",
+            "status",
         )
 
 
 class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     name = serializers.SerializerMethodField("get_name")
+    cycle = serializers.SerializerMethodField("get_cycle")
     committees = ApplicationCommitteeSerializer(
         many=True, required=False, read_only=True
     )
@@ -2629,8 +2626,15 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     club = serializers.SlugRelatedField(slug_field="code", read_only=True)
     updated_at = serializers.SerializerMethodField("get_updated_time", read_only=True)
     club_image_url = serializers.SerializerMethodField("get_image_url", read_only=True)
-    season = serializers.CharField(read_only=True)
+    external_url = serializers.SerializerMethodField("get_external_url")
     active = serializers.SerializerMethodField("get_active", read_only=True)
+
+    def get_external_url(self, obj):
+        default_url = f"https://pennclubs.com/club/{obj.club.code}/application/{obj.pk}"
+        return obj.external_url if obj.external_url else default_url
+
+    def get_cycle(self, obj):
+        return obj.application_cycle.name if obj.application_cycle else obj.season
 
     def get_active(self, obj):
         now = timezone.now()
@@ -2661,19 +2665,38 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             return image.url
 
     def validate(self, data):
-        application_start_time = data["application_start_time"]
-        application_end_time = data["application_end_time"]
-        result_release_time = data["result_release_time"]
+        acceptance_template = data.get("acceptance_email", "")
+        rejection_template = data.get("rejection_email", "")
 
-        if application_start_time > application_end_time:
+        if not ClubApplication.validate_template(
+            acceptance_template
+        ) or not ClubApplication.validate_template(rejection_template):
             raise serializers.ValidationError(
-                "Your application start time must be less than the end time!"
+                "Your application email templates contain invalid variables!"
             )
 
-        if application_end_time > result_release_time:
-            raise serializers.ValidationError(
-                "Your application end time must be less than the result release time!"
-            )
+        if all(
+            field in data
+            for field in [
+                "application_start_time",
+                "application_end_time",
+                "result_release_time",
+            ]
+        ):
+            application_start_time = data["application_start_time"]
+            application_end_time = data["application_end_time"]
+            result_release_time = data["result_release_time"]
+
+            if application_start_time > application_end_time:
+                raise serializers.ValidationError(
+                    "Your application start time must be less than the end time!"
+                )
+
+            if application_end_time > result_release_time:
+                raise serializers.ValidationError(
+                    """Your application end time must be less than
+                    the result release time!"""
+                )
 
         return data
 
@@ -2704,6 +2727,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
                     ApplicationCommittee.objects.create(
                         name=name, application=application_obj,
                     )
+            cache.delete(f"clubapplication:{application_obj.id}")
 
         return application_obj
 
@@ -2711,9 +2735,11 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         model = ClubApplication
         fields = (
             "id",
-            "season",
             "active",
             "name",
+            "cycle",
+            "acceptance_email",
+            "rejection_email",
             "application_start_time",
             "application_end_time",
             "result_release_time",
@@ -2732,6 +2758,18 @@ class WritableClubApplicationSerializer(ClubApplicationSerializer):
 
     class Meta(ClubApplicationSerializer.Meta):
         pass
+
+
+class ManagedClubApplicationSerializer(ClubApplicationSerializer):
+    name = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta(ClubApplicationSerializer.Meta):
+        read_only_fields = (
+            "external_url",
+            "application_start_time",
+            "application_end_time",
+            "result_release_time",
+        )
 
 
 class NoteSerializer(ManyToManySaveMixin, serializers.ModelSerializer):

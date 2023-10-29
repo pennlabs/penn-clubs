@@ -194,26 +194,22 @@ const ApplicationPage = ({
               }
             }
 
-            // committee error check
-            // if (
-            //   committees !== null &&
-            //   committees.length > 0 &&
-            //   currentCommittee === null
-            // ) {
-            //   submitErrors =
-            //     'Please select a committee before submitting (you can apply to more than one committee)'
-            // }
-
-            // submissions open error check (disabled for now to test)
+            // submissions open & close error check
             const applicationStartTime = moment.tz(
               application.application_start_time,
               'America/New_York',
             )
+
+            const applicationEndTime = moment.tz(
+              application.application_end_time,
+              'America/New_York',
+            )
             const currentTime = moment.tz('America/New_York')
-            if (currentTime.valueOf() < applicationStartTime.valueOf()) {
-              submitErrors = `This application has not opened for submission yet. You can submit on ${applicationStartTime.format(
-                'MMMM Do YYYY, h:mm:ss a',
-              )} EST.`
+            if (
+              currentTime.valueOf() < applicationStartTime.valueOf() ||
+              currentTime.valueOf() > applicationEndTime.valueOf()
+            ) {
+              submitErrors = 'This application is not currently open!'
             }
 
             if (submitErrors === null) {
@@ -257,13 +253,24 @@ const ApplicationPage = ({
                   method: 'POST',
                   body,
                 })
-                  .then((resp) => resp.json())
-                  .then((data) => {
-                    if (data.success === false) {
-                      setSaved(false)
-                      setErrors(data.detail)
+                  .then((resp) => {
+                    if (resp.status === 200) {
+                      return resp.json()
                     } else {
-                      setSaved(true)
+                      setSaved(false)
+                      setErrors(
+                        `Unknown error. Refresh and/or login. ${resp.status}`,
+                      )
+                    }
+                  })
+                  .then((data) => {
+                    if (data != null) {
+                      if (data.success === false) {
+                        setSaved(false)
+                        setErrors(data.detail)
+                      } else {
+                        setSaved(true)
+                      }
                     }
                   })
               }
