@@ -81,6 +81,9 @@ router.register(
 router.register(
     r"cycles", WhartonCyclesView, basename="wharton-applications-create",
 )
+router.register(
+    r"whartonapplications", WhartonApplicationAPIView, basename="wharton",
+)
 router.register(r"submissions", ApplicationSubmissionUserViewSet, basename="submission")
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
@@ -154,11 +157,6 @@ urlpatterns = [
         r"webhook/meeting/",
         MeetingZoomWebhookAPIView.as_view(),
         name="webhooks-meeting",
-    ),
-    path(
-        r"whartonapplications/",
-        WhartonApplicationAPIView.as_view(),
-        name="wharton-applications",
     ),
     path(
         r"whartonapplications/status/",

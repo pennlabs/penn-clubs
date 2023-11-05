@@ -4853,7 +4853,6 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         return ClubApplicationSerializer
 
     def get_queryset(self):
-
         return (
             ClubApplication.objects.filter(club__code=self.kwargs["club_code"],)
             .select_related("application_cycle", "club")
@@ -4866,6 +4865,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 class WhartonCyclesView(viewsets.ModelViewSet):
     """
     patch: Update application cycle and WC applications with cycle
+    clubs: list clubs with cycle
     """
 
     permission_classes = [WhartonApplicationPermission | IsSuperuser]
@@ -4906,11 +4906,52 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         ClubApplication.objects.bulk_update(applications, f)
         return super().update(*args, **kwargs)
 
+    @action(detail=True, methods=["get"])
+    def clubs(self, *args, **kwargs):
+        cycle = self.get_object()
+        data = ClubApplication.objects.filter(
+            is_wharton_council=True, application_cycle=cycle,
+        )
+        return Response(ClubApplicationSerializer(data, many=True).data)
 
-class WhartonApplicationAPIView(generics.ListAPIView):
+    @action(detail=True, methods=["post"])
+    def add_clubs(self, *args, **kwargs):
+        cycle = self.get_object()
+        print(self.request.data)
+        club_ids = self.request.data.get("clubs")
+        start = cycle.start_date
+        end = cycle.end_date
+        apps = ClubApplication.objects.filter(pk__in=club_ids)
+        for app in apps:
+            app.application_cycle = cycle
+            app.application_start_time = start
+            app.application_end_time = end
+        ClubApplication.objects.bulk_update(
+            apps,
+            ["application_cycle", "application_start_time", "application_end_time"],
+        )
+        return Response([])
+
+    @action(detail=False, methods=["post"])
+    def remove_clubs_from_all(self, *args, **kwargs):
+        club_ids = self.request.data.get("clubs", [])
+        print(self.request.data)
+        apps = ClubApplication.objects.filter(pk__in=club_ids)
+        for app in apps:
+            app.application_cycle = None
+        ClubApplication.objects.bulk_update(
+            apps,
+            ["application_cycle", "application_start_time", "application_end_time"],
+        )
+        return Response([])
+
+
+class WhartonApplicationAPIView(viewsets.ModelViewSet):
     """
     get: Return information about all Wharton Council club applications which are
     currently on going
+
+    cycle: Add application to given cycle
     """
 
     permission_classes = [IsAuthenticated]
