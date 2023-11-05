@@ -112,7 +112,7 @@ const WhartonApplicationCycles = (): ReactElement => {
           <button
             className="button is-info is-small"
             onClick={() => {
-              setMembershipCycle(object)
+              setMembershipCycle({ name: object.name, id: object.id })
               setEditMembership(true)
             }}
           >
@@ -137,6 +137,7 @@ const WhartonApplicationCycles = (): ReactElement => {
             <button
               className="button is-primary"
               style={{ position: 'absolute', bottom: 10, right: 10 }}
+              onClick={closeModal}
             >
               Submit
             </button>
