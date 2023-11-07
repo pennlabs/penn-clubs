@@ -42,6 +42,7 @@ interface BasicFormField {
   helpText?: string
   placeholder?: string
   noLabel?: boolean
+  flexAuto?: boolean
 }
 
 /**
@@ -108,7 +109,10 @@ function useFieldWrapper<T extends FieldWrapperProps>(
 
     const fieldBody = (
       <>
-        <div className="control">
+        <div
+          className="control"
+          style={{ height: props.flexAuto ? '100%  ' : '' }}
+        >
           <Element {...other} isError={!!errorMessage} />
         </div>
         <p className={`help ${errorMessage ? 'is-danger' : ''}`}>
@@ -118,7 +122,10 @@ function useFieldWrapper<T extends FieldWrapperProps>(
     )
 
     return (
-      <div className={`field ${fieldContext}`}>
+      <div
+        className={`field ${fieldContext}`}
+        style={{ flex: props.flexAuto ? '1 1 auto' : '' }}
+      >
         {noLabel ||
           (isHorizontal ? (
             <div className="field-label">{fieldLabel}</div>
@@ -180,7 +187,7 @@ export const RichTextField = useFieldWrapper(
     }, [props.value])
 
     return (
-      <div>
+      <div style={{ height: 'inherit' }}>
         <Head>
           <link
             href="/static/css/react-draft-wysiwyg.css"
@@ -208,6 +215,8 @@ export const RichTextField = useFieldWrapper(
               textValue.current = newValue
               setFieldValue(props.name, newValue)
             }}
+            toolbarHidden={props.toolbarHidden}
+            readOnly={props.readOnly}
             toolbar={{
               options: [
                 'inline',
@@ -222,10 +231,21 @@ export const RichTextField = useFieldWrapper(
                 'history',
               ],
             }}
+            style={{ height: props.flexAuto ? '100%' : '' }}
             editorStyle={{
               border: '1px solid #dbdbdb',
               padding: '0 1em',
+              flex: props.flexAuto ? '1 1 auto' : '',
             }}
+            wrapperStyle={
+              props.flexAuto
+                ? {
+                    height: 'inherit',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }
+                : {}
+            }
             toolbarCustomButtons={[<EmbedOption />]}
             customBlockRenderFunc={blockRendererFunction}
           />
@@ -388,6 +408,8 @@ export const CreatableMultipleSelectField = useFieldWrapper(
         }}
         isMulti
         creatable
+        isDisabled={props.disabled}
+        placeholder={placeholder}
         value={
           initialValues != null
             ? deserialize != null
@@ -586,6 +608,7 @@ export const TextField = useFieldWrapper(
       value,
       customHandleChange,
       readOnly,
+      flexAuto,
       ...other
     } = props
 

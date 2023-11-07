@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import React, { ReactElement, useEffect, useState } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 
+import AdminNotesPage from '../components/ClubEditPage/AdminNotesPage'
 import ApplicationsPage from '../components/ClubEditPage/ApplicationsPage'
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import ClubManagementCard from '../components/ClubEditPage/ClubManagementCard'
@@ -25,6 +26,7 @@ import {
   School,
   StudentType,
   Tag,
+  UserInfo,
   VisitType,
   Year,
 } from '../types'
@@ -73,6 +75,7 @@ type ClubFormProps = {
   tags: Tag[]
   studentTypes: StudentType[]
   tab?: string | null
+  userInfo: UserInfo
 }
 
 const ClubForm = ({
@@ -83,6 +86,7 @@ const ClubForm = ({
   tags,
   studentTypes,
   clubId,
+  userInfo,
   tab,
 }: ClubFormProps): ReactElement => {
   const [club, setClub] = useState<Club | null>(null)
@@ -368,6 +372,12 @@ const ClubForm = ({
           </>
         ),
         disabled: !SHOW_ORG_MANAGEMENT,
+      },
+      {
+        name: 'note',
+        label: 'Notes',
+        content: <AdminNotesPage club={club} />,
+        disabled: !userInfo.is_superuser,
       },
     ]
   }

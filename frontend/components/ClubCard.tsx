@@ -29,7 +29,7 @@ const CardWrapper = styled.div`
   }
 `
 
-const Description = styled.p`
+export const Description = styled.p`
   margin-top: 0.2rem;
   color: ${CLUBS_GREY_LIGHT};
   width: 100%;
