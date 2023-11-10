@@ -4908,6 +4908,9 @@ class WhartonCyclesView(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def clubs(self, *args, **kwargs):
+        """
+        Returns clubs in given cycle
+        """
         cycle = self.get_object()
         data = ClubApplication.objects.filter(
             is_wharton_council=True, application_cycle=cycle,
@@ -4916,8 +4919,10 @@ class WhartonCyclesView(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def add_clubs(self, *args, **kwargs):
+        """
+        Adds clubs to given cycle
+        """
         cycle = self.get_object()
-        print(self.request.data)
         club_ids = self.request.data.get("clubs")
         start = cycle.start_date
         end = cycle.end_date
@@ -4934,6 +4939,9 @@ class WhartonCyclesView(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"])
     def remove_clubs_from_all(self, *args, **kwargs):
+        """
+        Remove selected clubs from any/all cycles
+        """
         club_ids = self.request.data.get("clubs", [])
         print(self.request.data)
         apps = ClubApplication.objects.filter(pk__in=club_ids)
@@ -4956,9 +4964,6 @@ class WhartonApplicationAPIView(viewsets.ModelViewSet):
 
     permission_classes = [IsAuthenticated]
     serializer_class = ClubApplicationSerializer
-
-    def get_operation_id(self, **kwargs):
-        return "List Wharton applications and details"
 
     def get_queryset(self):
         now = timezone.now()
