@@ -5070,6 +5070,9 @@ class WhartonApplicationAPIView(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = ClubApplicationSerializer
 
+    def get_operation_id(self, **kwargs):
+        return "List Wharton applications and details"
+
     def get_queryset(self):
         now = timezone.now()
 
