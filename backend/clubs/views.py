@@ -4864,8 +4864,11 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
 class WhartonCyclesView(viewsets.ModelViewSet):
     """
+    get: Return information about all Wharton Council application cycles
     patch: Update application cycle and WC applications with cycle
     clubs: list clubs with cycle
+    add_clubs: add clubs to cycle
+    remove_clubs_from_all: remove clubs from all cycles
     """
 
     permission_classes = [WhartonApplicationPermission | IsSuperuser]
@@ -4909,7 +4912,81 @@ class WhartonCyclesView(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def clubs(self, *args, **kwargs):
         """
-        Returns clubs in given cycle
+            Returns clubs in given cycle
+            ---
+
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    id:
+                                        type: integer
+                                    active:
+                                        type: boolean
+                                    name:
+                                        type: string
+                                    cycle:
+                                        type: string
+                                    acceptance_email:
+                                        type: string
+                                    rejection_email:
+                                        type: string
+                                    application_start_time:
+                                        type: string
+                                    application_end_time:
+                                        type: string
+                                    result_release_time:
+                                        type: string
+                                    external_url:
+                                        type: string
+                                    committees:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                name:
+                                                    type: string
+                                    questions:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                id:
+                                                    type: integer
+                                                question_type:
+                                                    type: integer
+                                                prompt:
+                                                    type: string
+                                                word_limit:
+                                                    type: integer
+                                                multiple_choice:
+                                                    type: array
+                                                    items:
+                                                        type: object
+                                                        properties:
+                                                            value:
+                                                                type: string
+                                                committees:
+                                                    type: array
+                                                committee_question:
+                                                    type: boolean
+                                                precedence:
+                                                    type: integer
+                                    club:
+                                        type: string
+                                    description:
+                                        type: string
+                                    updated_at:
+                                        type: string
+                                    club_image_url:
+                                        type: string
+            ---
         """
         cycle = self.get_object()
         data = ClubApplication.objects.filter(
@@ -4921,6 +4998,21 @@ class WhartonCyclesView(viewsets.ModelViewSet):
     def add_clubs(self, *args, **kwargs):
         """
         Adds clubs to given cycle
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            clubs:
+                                type: array
+                                items:
+                                    type: string
+        responses:
+            "200":
+                content: {}
+        ---
         """
         cycle = self.get_object()
         club_ids = self.request.data.get("clubs")
@@ -4941,6 +5033,21 @@ class WhartonCyclesView(viewsets.ModelViewSet):
     def remove_clubs_from_all(self, *args, **kwargs):
         """
         Remove selected clubs from any/all cycles
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            clubs:
+                                type: array
+                                items:
+                                    type: string
+        responses:
+            "200":
+                content: {}
+        ---
         """
         club_ids = self.request.data.get("clubs", [])
         print(self.request.data)
@@ -4956,10 +5063,8 @@ class WhartonCyclesView(viewsets.ModelViewSet):
 
 class WhartonApplicationAPIView(viewsets.ModelViewSet):
     """
-    get: Return information about all Wharton Council club applications which are
+    list: Return information about all Wharton Council club applications which are
     currently on going
-
-    cycle: Add application to given cycle
     """
 
     permission_classes = [IsAuthenticated]
