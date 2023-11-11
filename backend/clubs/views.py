@@ -5071,7 +5071,7 @@ class WhartonApplicationAPIView(viewsets.ModelViewSet):
     serializer_class = ClubApplicationSerializer
 
     def get_operation_id(self, **kwargs):
-        return "List Wharton applications and details"
+        return f"{kwargs['operId']} Wharton Application"
 
     def get_queryset(self):
         now = timezone.now()
