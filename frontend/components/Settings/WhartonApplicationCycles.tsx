@@ -31,13 +31,10 @@ const WhartonApplicationCycles = (): ReactElement => {
 
   // use { label: string; value: number; }[]
   const [clubsSelected, setClubsSelected] = React.useState<ClubOption[]>([])
-
-  const [clubsInitial, setClubsInitial] = React.useState(null)
   const [clubsInitialOptions, setClubsInitialOptions] = React.useState<
     ClubOption[]
   >([])
-  const [possibleClubs, setPossibleClubs] = React.useState(null)
-  const [clubOptions, setClubOptions] = React.useState(null)
+  const [clubOptions, setClubOptions] = React.useState<ClubOption[]>([])
 
   const closeModal = (): void => {
     setEditMembership(false)
@@ -64,26 +61,22 @@ const WhartonApplicationCycles = (): ReactElement => {
     }
   }
   useEffect(() => {
-    if (possibleClubs == null) {
-      doApiRequest('/whartonapplications/?format=json')
-        .then((resp) => resp.json())
-        .then((data) => {
-          setPossibleClubs(data)
-          setClubOptions(
-            data.map((club: ClubApplication) => {
-              return { label: club.name, value: club.id }
-            }),
-          )
-        })
-    }
-  }, [possibleClubs])
+    doApiRequest('/whartonapplications/?format=json')
+      .then((resp) => resp.json())
+      .then((data) => {
+        setClubOptions(
+          data.map((club: ClubApplication) => {
+            return { label: club.name, value: club.id }
+          }),
+        )
+      })
+  }, [clubOptions])
 
   useEffect(() => {
     if (membershipCycle && membershipCycle.id != null) {
       doApiRequest(`/cycles/${membershipCycle.id}/clubs?format=json`)
         .then((resp) => resp.json())
         .then((data) => {
-          setClubsInitial(data)
           const initialOptions = data.map((club: ClubApplication) => {
             return { label: club.name, value: club.id }
           })
