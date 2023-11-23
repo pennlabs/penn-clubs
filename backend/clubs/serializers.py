@@ -23,6 +23,7 @@ from clubs.models import (
     AdminNote,
     Advisor,
     ApplicationCommittee,
+    ApplicationExtension,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -2422,6 +2423,53 @@ class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationQuestionResponse
         fields = ("text", "multiple_choice", "question_type", "question")
+
+
+class ApplicationExtensionSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
+    email = serializers.CharField(source="user.email", read_only=True)
+    graduation_year = serializers.CharField(
+        source="user.profile.graduation_year", read_only=True
+    )
+    username = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = ApplicationExtension
+        fields = (
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "graduation_year",
+            "end_time",
+        )
+
+    def validate_username(self, value):
+        user = get_user_model().objects.filter(username=value).first()
+        if not user:
+            raise serializers.ValidationError("Please provide a valid username!")
+        return user
+
+    def create(self, validated_data):
+        username = validated_data.pop("username")
+        validated_data["user"] = get_user_model().objects.get(username=username)
+
+        application_pk = self.context["view"].kwargs.get("application_pk")
+        validated_data["application"] = ClubApplication.objects.filter(
+            pk=application_pk
+        ).first()
+
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if "username" in validated_data:
+            username = validated_data.pop("username")
+            user = get_user_model().objects.get(username=username)
+            instance.user = user
+
+        return super().update(instance, validated_data)
 
 
 class ApplicationSubmissionSerializer(serializers.ModelSerializer):

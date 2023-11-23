@@ -70,6 +70,7 @@ from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     AdminNote,
     Advisor,
+    ApplicationExtension,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -125,6 +126,7 @@ from clubs.permissions import (
 from clubs.serializers import (
     AdminNoteSerializer,
     AdvisorSerializer,
+    ApplicationExtensionSerializer,
     ApplicationQuestionResponseSerializer,
     ApplicationQuestionSerializer,
     ApplicationSubmissionCSVSerializer,
@@ -4947,6 +4949,16 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
                 "status",
             )
             .annotate(count=Count("status"))
+        )
+
+
+class ApplicationExtensionViewSet(viewsets.ModelViewSet):
+    # permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
+    serializer_class = ApplicationExtensionSerializer
+
+    def get_queryset(self):
+        return ApplicationExtension.objects.filter(
+            application__pk=self.kwargs["application_pk"]
         )
 
 
