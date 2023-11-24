@@ -73,6 +73,7 @@ type ModelFormProps = {
   empty?: ReactElement | string
   fields: any
   tableFields?: TableField[]
+  searchableColumns?: string[]
   filterOptions?: FilterOption[]
   currentTitle?: (object: ModelObject) => ReactElement | string
   noun?: string
@@ -112,6 +113,7 @@ type ModelTableProps = {
   tableFields: TableField[]
   filterOptions?: FilterOption[]
   objects: ModelObject[]
+  searchableColumns?: string[]
   allowEditing?: boolean
   allowDeletion?: boolean
   confirmDeletion?: boolean
@@ -131,6 +133,7 @@ export const ModelTable = ({
   tableFields,
   filterOptions,
   objects,
+  searchableColumns,
   allowEditing = false,
   allowDeletion = false,
   confirmDeletion = false,
@@ -216,7 +219,7 @@ export const ModelTable = ({
       <Table
         data={objects}
         columns={tableFields}
-        searchableColumns={['name']}
+        searchableColumns={searchableColumns || ['name']}
         filterOptions={filterOptions || []}
         draggable={draggable}
         onDragEnd={onDragEnd}
@@ -258,6 +261,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     fields,
     tableFields,
     filterOptions,
+    searchableColumns,
     onUpdate,
     currentTitle,
     noun = 'Object',
@@ -466,6 +470,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           noun={noun}
           tableFields={tableFields}
           filterOptions={filterOptions}
+          searchableColumns={searchableColumns}
           objects={objects}
           allowDeletion={allowDeletion}
           confirmDeletion={confirmDeletion}

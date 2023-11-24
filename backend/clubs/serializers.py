@@ -2428,11 +2428,10 @@ class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
 class ApplicationExtensionSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name", read_only=True)
     last_name = serializers.CharField(source="user.last_name", read_only=True)
-    email = serializers.CharField(source="user.email", read_only=True)
+    username = serializers.CharField(source="user.username", read_only=False)
     graduation_year = serializers.CharField(
         source="user.profile.graduation_year", read_only=True
     )
-    username = serializers.CharField(write_only=True)
 
     class Meta:
         model = ApplicationExtension
@@ -2441,7 +2440,6 @@ class ApplicationExtensionSerializer(serializers.ModelSerializer):
             "username",
             "first_name",
             "last_name",
-            "email",
             "graduation_year",
             "end_time",
         )
@@ -2450,10 +2448,10 @@ class ApplicationExtensionSerializer(serializers.ModelSerializer):
         user = get_user_model().objects.filter(username=value).first()
         if not user:
             raise serializers.ValidationError("Please provide a valid username!")
-        return user
+        return value
 
     def create(self, validated_data):
-        username = validated_data.pop("username")
+        username = validated_data.get("user").pop("username")
         validated_data["user"] = get_user_model().objects.get(username=username)
 
         application_pk = self.context["view"].kwargs.get("application_pk")
@@ -2464,11 +2462,11 @@ class ApplicationExtensionSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        if "username" in validated_data:
-            username = validated_data.pop("username")
+        user_field = validated_data.pop("user", None)
+        if user_field:
+            username = user_field.pop("username")
             user = get_user_model().objects.get(username=username)
             instance.user = user
-
         return super().update(instance, validated_data)
 
 
