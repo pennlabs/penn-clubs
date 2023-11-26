@@ -1603,6 +1603,25 @@ class ApplicationExtension(models.Model):
     )
     end_time = models.DateTimeField()
 
+    def send_extension_mail(self):
+        context = {
+            "name": self.user.first_name,
+            "application_name": self.application.name,
+            "end_time": self.end_time,
+            "club": self.application.club.name,
+            "url": (
+                f"https://pennclubs.com/club/{self.application.club.code}"
+                f"/application/{self.application.pk}/"
+            ),
+        }
+
+        send_mail_helper(
+            name="application_extension",
+            subject=f"Application Extension for {self.application.name}",
+            emails=[self.user.email],
+            context=context,
+        )
+
     class Meta:
         unique_together = (("user", "application"),)
 
