@@ -2444,12 +2444,6 @@ class ApplicationExtensionSerializer(serializers.ModelSerializer):
             "end_time",
         )
 
-    def validate_username(self, value):
-        user = get_user_model().objects.filter(username=value).first()
-        if not user:
-            raise serializers.ValidationError("Please provide a valid username!")
-        return value
-
     def create(self, validated_data):
         username = validated_data.get("user").pop("username")
         validated_data["user"] = get_user_model().objects.get(username=username)
@@ -2462,12 +2456,49 @@ class ApplicationExtensionSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        user_field = validated_data.pop("user", None)
-        if user_field:
+        if user_field := validated_data.pop("user", None):
             username = user_field.pop("username")
             user = get_user_model().objects.get(username=username)
             instance.user = user
         return super().update(instance, validated_data)
+
+    def validate(self, data):
+        username = None
+        if user_field := data.get("user") or not self.instance:
+            username = user_field.get("username")
+            user = get_user_model().objects.filter(username=username).first()
+            if not user:
+                raise serializers.ValidationError("Please provide a valid username!")
+
+        application_pk = self.context["view"].kwargs.get("application_pk")
+        application = ClubApplication.objects.filter(pk=application_pk).first()
+
+        if not application:
+            raise serializers.ValidationError("Invalid application id!")
+
+        if (
+            (
+                not self.instance
+                or (username and self.instance.user.username != username)
+            )
+            and ApplicationExtension.objects.filter(
+                user=user, application=application
+            ).exists()
+        ):
+            raise serializers.ValidationError(
+                "An extension for this user and application already exists!"
+            )
+
+        extension_end_time = data.get("end_time")
+        if (
+            extension_end_time
+            and extension_end_time <= application.application_end_time
+        ):
+            raise serializers.ValidationError(
+                "Extension end time must be greater than the application end time!"
+            )
+
+        return data
 
 
 class ApplicationSubmissionSerializer(serializers.ModelSerializer):

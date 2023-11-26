@@ -1603,6 +1603,9 @@ class ApplicationExtension(models.Model):
     )
     end_time = models.DateTimeField()
 
+    class Meta:
+        unique_together = (("user", "application"),)
+
 
 class ApplicationCommittee(models.Model):
     """

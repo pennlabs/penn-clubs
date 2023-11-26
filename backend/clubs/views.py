@@ -4458,11 +4458,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # prevent submissions outside of the open duration
         now = timezone.now()
-        extension = (
-            application.extensions.filter(user=self.request.user)
-            .order_by("-end_time")
-            .first()
-        )
+        extension = application.extensions.filter(user=self.request.user).first()
         end_time = (
             max(extension.end_time, application.application_end_time)
             if extension
@@ -4814,7 +4810,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                                 - $ref: "#/components/schemas/ClubApplication"
         ---
         """
-        qs = self.get_queryset()
+        qs = self.get_queryset().prefetch_related("extensions")
         now = timezone.now()
         user = self.request.user
         q = Q(application_end_time__gte=now)
