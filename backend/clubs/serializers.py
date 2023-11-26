@@ -2476,14 +2476,14 @@ class ApplicationExtensionSerializer(serializers.ModelSerializer):
         if not application:
             raise serializers.ValidationError("Invalid application id!")
 
-        application_exists = ApplicationExtension.objects.filter(
+        extension_exists = ApplicationExtension.objects.filter(
             user=user, application=application
         ).exists()
         modify_username = not self.instance or (
             username and self.instance.user.username != username
         )
 
-        if modify_username and application_exists:
+        if modify_username and extension_exists:
             raise serializers.ValidationError(
                 "An extension for this user and application already exists!"
             )
