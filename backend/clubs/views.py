@@ -4479,7 +4479,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     submissions page""",
                 }
             )
-        submission, _ = ApplicationSubmission.objects.update_or_create(
+        submission, _ = ApplicationSubmission.objects.get_or_create(
             user=self.request.user,
             application=application,
             committee=committee,
@@ -4507,11 +4507,11 @@ class UserViewSet(viewsets.ModelViewSet):
             ):
                 text = question_data.get("text", None)
                 if text is not None and text != "":
-                    obj, _ = ApplicationQuestionResponse.objects.get_or_create(
-                        question=question, submission=submission,
+                    obj, _ = ApplicationQuestionResponse.objects.update_or_create(
+                        question=question,
+                        submission=submission,
+                        defaults={"text": text},
                     )
-                    obj.text = text
-                    obj.save()
                     response = Response(ApplicationQuestionResponseSerializer(obj).data)
             elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:
                 multiple_choice_value = question_data.get("multipleChoice", None)
@@ -4519,11 +4519,11 @@ class UserViewSet(viewsets.ModelViewSet):
                     multiple_choice_obj = ApplicationMultipleChoice.objects.filter(
                         question=question, value=multiple_choice_value
                     ).first()
-                    obj, _ = ApplicationQuestionResponse.objects.get_or_create(
-                        question=question, submission=submission,
+                    obj, _ = ApplicationQuestionResponse.objects.update_or_create(
+                        question=question,
+                        submission=submission,
+                        defaults={"multiple_choice": multiple_choice_obj},
                     )
-                    obj.multiple_choice = multiple_choice_obj
-                    obj.save()
                     response = Response(ApplicationQuestionResponseSerializer(obj).data)
         return response
 
