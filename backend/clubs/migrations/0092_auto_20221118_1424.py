@@ -6,17 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0091_cart_ticket'),
+        ("clubs", "0091_cart_ticket"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='historicalclub',
-            options={'get_latest_by': ('history_date', 'history_id'), 'ordering': ('-history_date', '-history_id'), 'verbose_name': 'historical club', 'verbose_name_plural': 'historical clubs'},
+            name="historicalclub",
+            options={
+                "get_latest_by": ("history_date", "history_id"),
+                "ordering": ("-history_date", "-history_id"),
+                "verbose_name": "historical club",
+                "verbose_name_plural": "historical clubs",
+            },
         ),
         migrations.AlterField(
-            model_name='historicalclub',
-            name='history_date',
+            model_name="historicalclub",
+            name="history_date",
             field=models.DateTimeField(db_index=True),
         ),
     ]

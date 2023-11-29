@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("clubs", "0090_adminnote"),
+        ("clubs", "0090_auto_20230106_1443"),
     ]
 
     operations = [
