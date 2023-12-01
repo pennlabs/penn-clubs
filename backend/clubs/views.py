@@ -5098,7 +5098,7 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         )
         return Response([])
 
-    @action(detail=True, methods=["post"])
+    @action(detail=False, methods=["post"])
     def remove_clubs_from_exception(self, *args, **kwargs):
         """
         Remove selected clubs from application cycle deadline exemption

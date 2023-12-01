@@ -112,13 +112,10 @@ const WhartonApplicationCycles = (): ReactElement => {
       })
     }
     if (clubsNoExceptions.length > 0) {
-      doApiRequest(
-        `/cycles/${extensionsCycle.id}/remove_clubs_from_exception/`,
-        {
-          method: 'POST',
-          body: { clubs: clubsNoExceptions.map((x) => x.id) },
-        },
-      )
+      doApiRequest(`/cycles/remove_clubs_from_exception/`, {
+        method: 'POST',
+        body: { clubs: clubsNoExceptions.map((x) => x.id) },
+      })
     }
   }
 
@@ -132,7 +129,7 @@ const WhartonApplicationCycles = (): ReactElement => {
           }),
         )
       })
-  }, [clubOptionsMembership])
+  }, [])
 
   useEffect(() => {
     if (membershipCycle && membershipCycle.id != null) {
@@ -264,13 +261,13 @@ const WhartonApplicationCycles = (): ReactElement => {
                               setClubsExtensions([...clubsExtensions])
                             }}
                           />
-                          {/* {club.endDate} */}
                         </td>
                         <td>
                           <Checkbox
                             onChange={(e) => {
                               club.exception = e.target.checked
                               club.changed = true
+                              setClubsExtensions([...clubsExtensions])
                             }}
                             checked={
                               club.exception != null ? club.exception : false
