@@ -5075,15 +5075,16 @@ class WhartonCyclesView(viewsets.ModelViewSet):
                             clubs:
                                 type: array
                                 items:
-                                    type: object:
-                                        properties:
-                                            id:
-                                                type: integer
-                                            application_end_time:
-                                                type: string
+                                    type: object
+                                    properties:
+                                        id:
+                                            type: integer
+                                        application_end_time:
+                                            type: string
         responses:
             "200":
                 content: {}
+        ---
         """
         clubs = self.request.data.get("clubs")
         apps = []
