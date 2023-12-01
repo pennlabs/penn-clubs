@@ -4901,6 +4901,8 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         )
         for app in applications:
             app.application_start_time = start
+            if app.application_end_time_exception:
+                continue
             app.application_end_time = end
             if app.result_release_time < app.application_end_time:
                 filler_time = app.application_end_time + datetime.timedelta(days=10)
@@ -5050,13 +5052,78 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         ---
         """
         club_ids = self.request.data.get("clubs", [])
-        print(self.request.data)
         apps = ClubApplication.objects.filter(pk__in=club_ids)
         for app in apps:
             app.application_cycle = None
         ClubApplication.objects.bulk_update(
             apps,
             ["application_cycle", "application_start_time", "application_end_time"],
+        )
+        return Response([])
+
+    @action(detail=False, methods=["post"])
+    def add_clubs_to_exception(self, *args, **kwargs):
+        """
+        Exempt selected clubs from application cycle deadline
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            clubs:
+                                type: array
+                                items:
+                                    type: object:
+                                        properties:
+                                            id:
+                                                type: integer
+                                            application_end_time:
+                                                type: string
+        responses:
+            "200":
+                content: {}
+        """
+        clubs = self.request.data.get("clubs")
+        apps = []
+        for club in clubs:
+            app = ClubApplication.objects.get(pk=club["id"])
+            apps.append(app)
+            app.application_end_time = club["end_date"]
+            app.application_end_time_exception = True
+        ClubApplication.objects.bulk_update(
+            apps, ["application_end_time", "application_end_time_exception"],
+        )
+        return Response([])
+
+    @action(detail=True, methods=["post"])
+    def remove_clubs_from_exception(self, *args, **kwargs):
+        """
+        Remove selected clubs from application cycle deadline exemption
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            clubs:
+                                type: array
+                                items:
+                                    type: string
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        club_ids = self.request.data.get("clubs", [])
+        apps = ClubApplication.objects.filter(pk__in=club_ids)
+        for app in apps:
+            app.application_end_time_exception = False
+            app.application_end_time = app.application_cycle.end_date
+        ClubApplication.objects.bulk_update(
+            apps, ["application_end_time", "application_end_time_exception"],
         )
         return Response([])
 

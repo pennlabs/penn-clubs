@@ -2738,6 +2738,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "rejection_email",
             "application_start_time",
             "application_end_time",
+            "application_end_time_exception",
             "result_release_time",
             "external_url",
             "committees",

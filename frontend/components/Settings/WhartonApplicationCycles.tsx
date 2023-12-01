@@ -1,11 +1,13 @@
 import { Field } from 'formik'
 import React, { ReactElement, useEffect } from 'react'
+import DatePicker from 'react-datepicker'
 import Select from 'react-select'
+import styled from 'styled-components'
 
 import { ClubApplication } from '~/types'
 import { doApiRequest } from '~/utils'
 
-import { Icon, Loading, Modal } from '../common'
+import { Checkbox, Icon, Loading, Modal, Subtitle } from '../common'
 import { DateTimeField, TextField } from '../FormComponents'
 import ModelForm from '../ModelForm'
 
@@ -22,6 +24,20 @@ type ClubOption = {
   value: number
 }
 
+type ExtensionOption = {
+  id: number
+  clubName: string
+  endDate: Date
+  exception?: boolean
+  changed: boolean
+}
+
+const ScrollWrapper = styled.div`
+  overflow-y: auto;
+  margin-top: 1rem;
+  height: 40vh;
+`
+
 const WhartonApplicationCycles = (): ReactElement => {
   const [editMembership, setEditMembership] = React.useState(false)
   const [membershipCycle, setMembershipCycle] = React.useState({
@@ -29,21 +45,35 @@ const WhartonApplicationCycles = (): ReactElement => {
     id: null,
   })
 
-  // use { label: string; value: number; }[]
-  const [clubsSelected, setClubsSelected] = React.useState<ClubOption[]>([])
-  const [clubsInitialOptions, setClubsInitialOptions] = React.useState<
+  const [editExtensions, setEditExtensions] = React.useState(false)
+  const [extensionsCycle, setExtensionsCycle] = React.useState({
+    name: '',
+    id: null,
+  })
+
+  const [clubsSelectedMembership, setClubsSelectedMembership] = React.useState<
     ClubOption[]
   >([])
-  const [clubOptions, setClubOptions] = React.useState<ClubOption[]>([])
+  const [
+    clubsInitialOptionsMembership,
+    setClubsInitialOptionsMembership,
+  ] = React.useState<ClubOption[]>([])
+  const [clubOptionsMembership, setClubOptionsMembership] = React.useState<
+    ClubOption[]
+  >([])
 
-  const closeModal = (): void => {
+  const [clubsExtensions, setClubsExtensions] = React.useState<
+    ExtensionOption[]
+  >([])
+
+  const closeMembershipModal = (): void => {
     setEditMembership(false)
     // calculate difference between initial and selected
-    const clubsToRemove = clubsInitialOptions.filter(
-      (x) => !clubsSelected.includes(x),
+    const clubsToRemove = clubsInitialOptionsMembership.filter(
+      (x) => !clubsSelectedMembership.includes(x),
     )
-    const clubsToAdd = clubsSelected.filter(
-      (x) => !clubsInitialOptions.includes(x),
+    const clubsToAdd = clubsSelectedMembership.filter(
+      (x) => !clubsInitialOptionsMembership.includes(x),
     )
 
     // call /cycles/:id/add_clubs and /cycles/remove_clubs_from_all with data.clubs as list of ids
@@ -60,17 +90,49 @@ const WhartonApplicationCycles = (): ReactElement => {
       })
     }
   }
+
+  const closeExtensionsModal = (): void => {
+    setEditExtensions(false)
+    // calculate clubs that have changed
+    const clubsToUpdate = clubsExtensions.filter((x) => x.changed)
+    // split into clubs with exceptions and clubs without
+    const clubsExceptions = clubsToUpdate.filter((x) => x.exception)
+    const clubsNoExceptions = clubsToUpdate.filter((x) => !x.exception)
+
+    // call /cycles/:id/add_clubs and /cycles/remove_clubs_from_all with data.clubs as list of ids
+    if (clubsExceptions.length > 0) {
+      doApiRequest(`/cycles/add_clubs_to_exception/`, {
+        method: 'POST',
+        body: {
+          clubs: clubsExceptions.map((x) => {
+            // eslint-disable-next-line camelcase
+            return { id: x.id, end_date: x.endDate }
+          }),
+        },
+      })
+    }
+    if (clubsNoExceptions.length > 0) {
+      doApiRequest(
+        `/cycles/${extensionsCycle.id}/remove_clubs_from_exception/`,
+        {
+          method: 'POST',
+          body: { clubs: clubsNoExceptions.map((x) => x.id) },
+        },
+      )
+    }
+  }
+
   useEffect(() => {
     doApiRequest('/whartonapplications/?format=json')
       .then((resp) => resp.json())
       .then((data) => {
-        setClubOptions(
+        setClubOptionsMembership(
           data.map((club: ClubApplication) => {
             return { label: club.name, value: club.id }
           }),
         )
       })
-  }, [clubOptions])
+  }, [clubOptionsMembership])
 
   useEffect(() => {
     if (membershipCycle && membershipCycle.id != null) {
@@ -80,13 +142,32 @@ const WhartonApplicationCycles = (): ReactElement => {
           const initialOptions = data.map((club: ClubApplication) => {
             return { label: club.name, value: club.id }
           })
-          setClubsInitialOptions(initialOptions)
-          setClubsSelected(initialOptions)
+          setClubsInitialOptionsMembership(initialOptions)
+          setClubsSelectedMembership(initialOptions)
         })
     }
   }, [membershipCycle])
 
-  if (clubOptions == null) {
+  useEffect(() => {
+    if (extensionsCycle && extensionsCycle.id != null) {
+      doApiRequest(`/cycles/${extensionsCycle.id}/clubs?format=json`)
+        .then((resp) => resp.json())
+        .then((data) => {
+          const initialOptions = data.map((club: ClubApplication) => {
+            return {
+              id: club.id,
+              clubName: club.name,
+              endDate: new Date(club.application_end_time),
+              exception: club.application_end_time_exception,
+              changed: false,
+            }
+          })
+          setClubsExtensions(initialOptions)
+        })
+    }
+  }, [extensionsCycle])
+
+  if (clubOptionsMembership == null) {
     return <Loading />
   }
 
@@ -102,35 +183,113 @@ const WhartonApplicationCycles = (): ReactElement => {
           { name: 'end_date' },
         ]}
         actions={(object) => (
-          <button
-            className="button is-info is-small"
-            onClick={() => {
-              setMembershipCycle({ name: object.name, id: object.id })
-              setEditMembership(true)
-            }}
-          >
-            <Icon name="user" /> Membership
-          </button>
+          <>
+            <button
+              className="button is-info is-small"
+              onClick={() => {
+                setMembershipCycle({ name: object.name, id: object.id })
+                setEditMembership(true)
+                setEditExtensions(false)
+              }}
+            >
+              <Icon name="user" /> Membership
+            </button>
+            <button
+              className="button is-info is-small"
+              onClick={() => {
+                setExtensionsCycle({ name: object.name, id: object.id })
+                setEditExtensions(true)
+                setEditMembership(false)
+              }}
+            >
+              Extensions
+            </button>
+          </>
         )}
       />
-      <Modal show={editMembership} closeModal={closeModal}>
+      <Modal show={editMembership} closeModal={closeMembershipModal}>
         {membershipCycle && membershipCycle.name && (
           <>
-            <h1 style={{ paddingBottom: '20px' }}>
-              Club Membership for {membershipCycle.name}
-            </h1>
-            <div style={{ paddingLeft: 10, paddingRight: 10 }}>
+            <Subtitle>Club Membership for {membershipCycle.name}</Subtitle>
+            <div
+              style={{ paddingLeft: 20, paddingRight: 20, paddingTop: '20px' }}
+            >
               <Select
-                onChange={(e) => setClubsSelected([...e])}
-                value={clubsSelected}
-                options={clubOptions}
+                onChange={(e) => setClubsSelectedMembership([...e])}
+                value={clubsSelectedMembership}
+                options={clubOptionsMembership}
                 isMulti
               />
             </div>
             <button
               className="button is-primary"
               style={{ position: 'absolute', bottom: 10, right: 10 }}
-              onClick={closeModal}
+              onClick={closeMembershipModal}
+            >
+              Submit
+            </button>
+          </>
+        )}
+      </Modal>
+      <Modal show={editExtensions} closeModal={closeExtensionsModal}>
+        {extensionsCycle && extensionsCycle.name && (
+          <>
+            <Subtitle>
+              Individual Club Extensions for {extensionsCycle.name}
+            </Subtitle>
+            <div
+              style={{ paddingLeft: 20, paddingRight: 20, paddingTop: '20px' }}
+            >
+              <ScrollWrapper>
+                <table className="table is-fullwidth">
+                  <thead>
+                    <tr>
+                      <th>Club</th>
+                      <th>End Date</th>
+                      <th>Exception</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clubsExtensions.map((club) => (
+                      <tr key={club.clubName}>
+                        <td>
+                          <p>{club.clubName}</p>
+                        </td>
+                        <td>
+                          <DatePicker
+                            selected={club.endDate}
+                            onChange={(date) => {
+                              club.endDate = date
+                              club.changed = true
+                              setClubsExtensions([...clubsExtensions])
+                            }}
+                          />
+                          {/* {club.endDate} */}
+                        </td>
+                        <td>
+                          <Checkbox
+                            onChange={(e) => {
+                              club.exception = e.target.checked
+                              club.changed = true
+                            }}
+                            checked={
+                              club.exception != null ? club.exception : false
+                            }
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                    {clubsExtensions.length < 10 && (
+                      <div style={{ height: '200px' }} />
+                    )}
+                  </tbody>
+                </table>
+              </ScrollWrapper>
+            </div>
+            <button
+              className="button is-primary"
+              style={{ position: 'absolute', bottom: 10, right: 10 }}
+              onClick={closeExtensionsModal}
             >
               Submit
             </button>

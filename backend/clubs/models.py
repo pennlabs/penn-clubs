@@ -1551,6 +1551,7 @@ class ClubApplication(CloneModel):
     description = models.TextField(blank=True)
     application_start_time = models.DateTimeField()
     application_end_time = models.DateTimeField()
+    application_end_time_exception = models.BooleanField(default=False, blank=True)
     name = models.TextField(blank=True)
     result_release_time = models.DateTimeField()
     application_cycle = models.ForeignKey(
