@@ -1,5 +1,5 @@
 import { Field } from 'formik'
-import React, { ReactElement, useEffect } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import DatePicker from 'react-datepicker'
 import Select from 'react-select'
 import styled from 'styled-components'
@@ -7,7 +7,7 @@ import styled from 'styled-components'
 import { ClubApplication } from '~/types'
 import { doApiRequest } from '~/utils'
 
-import { Checkbox, Icon, Loading, Modal, Subtitle } from '../common'
+import { Checkbox, Icon, Loading, Modal, Subtitle, Text } from '../common'
 import { DateTimeField, TextField } from '../FormComponents'
 import ModelForm from '../ModelForm'
 
@@ -18,6 +18,11 @@ const fields = (
     <Field name="end_date" as={DateTimeField} />
   </>
 )
+
+type Cycle = {
+  name: string
+  id: number | null
+}
 
 type ClubOption = {
   label: string
@@ -39,32 +44,32 @@ const ScrollWrapper = styled.div`
 `
 
 const WhartonApplicationCycles = (): ReactElement => {
-  const [editMembership, setEditMembership] = React.useState(false)
-  const [membershipCycle, setMembershipCycle] = React.useState({
+  const [editMembership, setEditMembership] = useState(false)
+  const [membershipCycle, setMembershipCycle] = useState<Cycle>({
     name: '',
     id: null,
   })
 
-  const [editExtensions, setEditExtensions] = React.useState(false)
-  const [extensionsCycle, setExtensionsCycle] = React.useState({
+  const [editExtensions, setEditExtensions] = useState(false)
+  const [extensionsCycle, setExtensionsCycle] = useState<Cycle>({
     name: '',
     id: null,
   })
 
-  const [clubsSelectedMembership, setClubsSelectedMembership] = React.useState<
+  const [clubsSelectedMembership, setClubsSelectedMembership] = useState<
     ClubOption[]
   >([])
   const [
     clubsInitialOptionsMembership,
     setClubsInitialOptionsMembership,
-  ] = React.useState<ClubOption[]>([])
-  const [clubOptionsMembership, setClubOptionsMembership] = React.useState<
+  ] = useState<ClubOption[]>([])
+  const [clubOptionsMembership, setClubOptionsMembership] = useState<
     ClubOption[]
   >([])
 
-  const [clubsExtensions, setClubsExtensions] = React.useState<
-    ExtensionOption[]
-  >([])
+  const [clubsExtensions, setClubsExtensions] = useState<ExtensionOption[]>([])
+
+  const [permissions, setPermissions] = useState<boolean | null>(null)
 
   const closeMembershipModal = (): void => {
     setEditMembership(false)
@@ -132,6 +137,14 @@ const WhartonApplicationCycles = (): ReactElement => {
   }, [])
 
   useEffect(() => {
+    doApiRequest('/cycles')
+      .then((resp) => resp.json())
+      .then((data) => {
+        setPermissions(!data.detail)
+      })
+  })
+
+  useEffect(() => {
     if (membershipCycle && membershipCycle.id != null) {
       doApiRequest(`/cycles/${membershipCycle.id}/clubs?format=json`)
         .then((resp) => resp.json())
@@ -164,8 +177,12 @@ const WhartonApplicationCycles = (): ReactElement => {
     }
   }, [extensionsCycle])
 
-  if (clubOptionsMembership == null) {
+  if (clubOptionsMembership == null || permissions == null) {
     return <Loading />
+  }
+
+  if (!permissions) {
+    return <Text>You do not have permission to view this page.</Text>
   }
 
   return (
