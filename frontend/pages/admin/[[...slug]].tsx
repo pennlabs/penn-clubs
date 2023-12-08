@@ -27,6 +27,12 @@ function AdminPage({
 }): ReactElement {
   if (!userInfo) {
     return <AuthPrompt />
+  } else if (!userInfo.is_superuser) {
+    return (
+      <AuthPrompt title="Whoops!" hasLogin={false}>
+        Admin permissions are required to access this page.
+      </AuthPrompt>
+    )
   }
 
   const router = useRouter()
