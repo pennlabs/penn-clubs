@@ -73,16 +73,16 @@ const ColWrapper = styled.div<ColWrapperProps>`
 
 const ColContainer = styled.div<{
   background?: string
-  flex?: boolean
-  margin?: string
+  $flex?: boolean
+  $margin?: string
 }>`
   background: ${({ background }) => background || 'transparent'};
   overflow-x: visible;
   position: relative;
   min-width: 0;
-  ${({ flex }) => flex && 'display: flex; flex: 1;'}
-  ${({ margin }) =>
-    margin && `margin-left: ${margin}; margin-right: ${margin};`}
+  ${({ $flex }) => $flex && 'display: flex; flex: 1;'}
+  ${({ $margin }) =>
+    $margin && `margin-left: ${$margin}; margin-right: ${$margin};`}
 `
 
 interface Props {
@@ -99,7 +99,7 @@ export const Col = ({
   ...other
 }: React.PropsWithChildren<Props & ColWrapperProps>): ReactElement => (
   <ColWrapper flex={flex} {...other}>
-    <ColContainer flex={flex} margin={margin} background={background}>
+    <ColContainer $flex={flex} $margin={margin} background={background}>
       {children}
     </ColContainer>
   </ColWrapper>

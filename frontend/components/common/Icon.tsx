@@ -4,17 +4,17 @@ import styled, { CSSProperties } from 'styled-components'
 const reqSvgs = require.context('../../public/static/img/icons', true, /\.svg$/)
 
 type IconWrapperProps = {
-  noAlign?: boolean
-  noMargin?: boolean
+  $noAlign?: boolean
+  $noMargin?: boolean
 }
 
 const IconWrapper = styled.span<IconWrapperProps>`
   display: inline-block;
-  vertical-align: ${({ noAlign }) => (noAlign ? 'baseline' : 'middle')};
+  vertical-align: ${({ $noAlign }) => ($noAlign ? 'baseline' : 'middle')};
 
   .button &,
   .dropdown-item & {
-    margin-right: ${({ noMargin }) => (noMargin ? '0' : '0.25rem')};
+    margin-right: ${({ $noMargin }) => ($noMargin ? '0' : '0.25rem')};
   }
 
   & svg {
@@ -49,7 +49,7 @@ export const Icon = ({
   }
   const iconInfo = svg.default().props
   return (
-    <IconWrapper noAlign={noAlign} noMargin={noMargin}>
+    <IconWrapper $noAlign={noAlign} $noMargin={noMargin}>
       {svg.default({
         preserveAspectRatio: 'xMidYMid meet',
         width: size,

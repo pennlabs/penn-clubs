@@ -55,16 +55,16 @@ const GraduationYearTag = ({ year }: { year: number | null }): ReactElement => {
   return <span className="tag is-light ml-1">Unknown</span>
 }
 
-const ClubCardAddon = styled.div<{ rank: number; active: boolean }>`
+const ClubCardAddon = styled.div<{ $rank: number; $active: boolean }>`
   float: right;
   color: ${WHITE};
-  background-color: ${({ rank, active }) =>
-    active
+  background-color: ${({ $rank, $active }) =>
+    $active
       ? {
           [MembershipRank.Member]: BULMA_INFO,
           [MembershipRank.Officer]: CLUBS_BLUE,
           [MembershipRank.Owner]: CLUBS_PURPLE,
-        }[rank]
+        }[$rank]
       : CLUBS_GREY};
   padding: 5px 12px;
   border-radius: 0 0 5px 5px;
@@ -170,8 +170,8 @@ const UserProfilePage = ({
                 >
                   <ClubCard fullWidth club={club} />
                   <ClubCardAddon
-                    active={club.membership.active}
-                    rank={club.membership.role}
+                    $active={club.membership.active}
+                    $rank={club.membership.role}
                   >
                     {club.membership.active ? club.membership.title : 'Alumni'}
                   </ClubCardAddon>

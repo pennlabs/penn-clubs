@@ -75,9 +75,9 @@ const StyledLink = (props): ReactElement => {
   )
 }
 
-const Menu = styled.div<{ show?: boolean }>`
+const Menu = styled.div<{ $show?: boolean }>`
   ${mediaMaxWidth(MD)} {
-    ${({ show }) => show && 'display: block;'}
+    ${({ $show }) => $show && 'display: block;'}
   }
 
   background-color: ${BANNER_BG};
@@ -96,7 +96,7 @@ type Props = {
 const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
   const router = useRouter()
   return (
-    <Menu className="navbar-menu" show={show}>
+    <Menu className="navbar-menu" $show={show}>
       <div className="navbar-end" style={{ padding: '0 1rem' }}>
         <StyledLink href="/events" onClick={() => logEvent('events', 'click')}>
           Events

@@ -57,13 +57,14 @@ const keyframeForState = (state: RouteProgressState): Keyframes => {
 }
 
 type ProgressBarProps = {
-  state: RouteProgressState | null
+  $state: RouteProgressState | null
 }
 
 const ProgressBar = styled.div<ProgressBarProps>`
   position: absolute;
   height: 100%;
-  animation-name: ${({ state }) => (state ? keyframeForState(state) : 'none')};
+  animation-name: ${({ $state }) =>
+    $state ? keyframeForState($state) : 'none'};
   animation-duration: ${LONG_ANIMATION_DURATION};
   animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
@@ -120,13 +121,13 @@ const RouteProgressBar = ({
   return container ? (
     ReactDOM.createPortal(
       <ProgressBarContainer>
-        <ProgressBar state={state} />
+        <ProgressBar $state={state} />
       </ProgressBarContainer>,
       container,
     )
   ) : (
     <ProgressBarContainer>
-      <ProgressBar state={null} />
+      <ProgressBar $state={null} />
     </ProgressBarContainer>
   )
 }

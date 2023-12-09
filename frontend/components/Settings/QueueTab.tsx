@@ -217,9 +217,9 @@ const MultiProgressBar = styled.div`
   width: 100%;
 `
 
-const ProgressBarSegment = styled.div<{ size: number }>`
+const ProgressBarSegment = styled.div<{ $size: number }>`
   height: 1rem;
-  width: ${({ size }) => Math.floor(size * 10000) / 100}%;
+  width: ${({ $size }) => Math.floor($size * 10000) / 100}%;
   float: left;
 `
 
@@ -296,19 +296,19 @@ const QueueTab = (): ReactElement => {
           <>
             <ProgressBarSegment
               className="has-background-info"
-              size={inactiveClubsCount / totalClubsCount}
+              $size={inactiveClubsCount / totalClubsCount}
             />
             <ProgressBarSegment
               className="has-background-warning"
-              size={pendingClubsCount / totalClubsCount}
+              $size={pendingClubsCount / totalClubsCount}
             />
             <ProgressBarSegment
               className="has-background-danger"
-              size={rejectedClubsCount / totalClubsCount}
+              $size={rejectedClubsCount / totalClubsCount}
             />
             <ProgressBarSegment
               className="has-background-success"
-              size={approvedClubsCount / totalClubsCount}
+              $size={approvedClubsCount / totalClubsCount}
             />
           </>
         )}

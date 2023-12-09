@@ -110,15 +110,15 @@ const LogoBackground = styled.div`
   }
 `
 
-const LogoItem = styled.a<{ isHub?: boolean }>`
+const LogoItem = styled.a<{ $isHub?: boolean }>`
   padding: 0;
 
   &:hover {
     background-color: transparent !important;
   }
 
-  ${({ isHub }) =>
-    isHub
+  ${({ $isHub }) =>
+    $isHub
       ? `
     ${mediaMaxWidth(MD)} {
       margin-top: 1rem;
@@ -181,7 +181,7 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
         <div className="navbar-brand">
           {LOGO_BACKGROUND_IMAGE != null && <FadingLogoBackground />}
           <Link href={HOME_ROUTE} passHref legacyBehavior>
-            <LogoItem className="navbar-item" isHub={isHub}>
+            <LogoItem className="navbar-item" $isHub={isHub}>
               <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
               <Title>{SITE_NAME}</Title>
             </LogoItem>

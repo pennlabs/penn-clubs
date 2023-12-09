@@ -251,7 +251,7 @@ const ScrollTopButton = (): ReactElement | null => {
 
   return (
     <ActionLink
-      offsetAddition={55}
+      $offsetAddition={55}
       onClick={(e) => {
         e.preventDefault()
         window.scrollTo(0, 0)

@@ -16,20 +16,22 @@ const blink = keyframes`
 `
 
 const HappeningNowContainer = styled.p<{
-  urgent?: boolean
-  floatRight?: boolean
+  $urgent?: boolean
+  $floatRight?: boolean
 }>`
   font-size: 14px;
   font-weight: 500;
-  ${({ floatRight }) => (floatRight ? 'float: right;' : '')}
-  ${({ urgent }) => (urgent ? UrgentText : '')}
+  ${({ $floatRight }) => ($floatRight ? 'float: right;' : '')}
+  ${({ $urgent }) => ($urgent ? UrgentText : '')}
 `
 
 const HappeningNow = (props: {
   urgent?: boolean
   floatRight?: boolean
 }): ReactElement => (
-  <HappeningNowContainer {...props}>HAPPENING NOW</HappeningNowContainer>
+  <HappeningNowContainer $urgent={props.urgent} $floatRight={props.floatRight}>
+    HAPPENING NOW
+  </HappeningNowContainer>
 )
 
 const UrgentText = css`

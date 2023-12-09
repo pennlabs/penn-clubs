@@ -93,7 +93,7 @@ const MemberCard = ({ account }: Props): ReactElement => {
   const { email, name, title, username } = account
   return (
     <OptionalProfileLink username={username}>
-      <StyledCard bordered>
+      <StyledCard $bordered>
         <ProfilePic user={account} fontSize="24px" isRound />
         <br />
         <MemberInfo>

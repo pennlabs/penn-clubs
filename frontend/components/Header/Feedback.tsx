@@ -13,11 +13,11 @@ const ICON_SIZE = '1.5rem'
 const OFFSET = 18
 
 interface LinkProps {
-  offsetAddition: number
+  $offsetAddition: number
 }
 
 export const ActionLink = styled.a.attrs((props: LinkProps) => ({
-  offsetAddition: props.offsetAddition,
+  $offsetAddition: props.$offsetAddition,
 }))<LinkProps>`
   display: inline-block;
   width: ${DIAMETER};
@@ -25,7 +25,7 @@ export const ActionLink = styled.a.attrs((props: LinkProps) => ({
   border-radius: 3rem;
   background-color: ${FEEDBACK_BG};
   position: fixed;
-  bottom: ${(props) => props.offsetAddition + OFFSET}px;
+  bottom: ${(props) => props.$offsetAddition + OFFSET}px;
   right: ${OFFSET}px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(25, 89, 130, 0.4);
@@ -45,7 +45,7 @@ export const ActionLink = styled.a.attrs((props: LinkProps) => ({
 
 const Feedback = (): ReactElement => (
   <ActionLink
-    offsetAddition={0}
+    $offsetAddition={0}
     rel="noopener noreferrer"
     href={FEEDBACK_URL}
     title="Feedback"

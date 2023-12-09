@@ -20,9 +20,9 @@ const [DEFAULT_TXT_COLOR] = PROPIC_TEXT
 
 const Placeholder = styled.div<{
   fontSize?: string
-  isRound?: boolean
-  backgroundColor?: string
-  textColor?: string
+  $isRound?: boolean
+  $backgroundColor?: string
+  $textColor?: string
 }>`
   width: 100%;
   height: 100%;
@@ -31,13 +31,13 @@ const Placeholder = styled.div<{
   align-items: center;
 
   font-size: ${({ fontSize }) => fontSize || '1.5em'};
-  ${({ isRound }) => (isRound ? 'border-radius: 9999px;' : '')};
-  background-color: ${({ backgroundColor }) =>
-    backgroundColor || DEFAULT_BG_COLOR};
-  color: ${({ textColor }) => textColor || DEFAULT_TXT_COLOR};
+  ${({ $isRound }) => ($isRound ? 'border-radius: 9999px;' : '')};
+  background-color: ${({ $backgroundColor }) =>
+    $backgroundColor || DEFAULT_BG_COLOR};
+  color: ${({ $textColor }) => $textColor || DEFAULT_TXT_COLOR};
 `
 
-const Avatar = styled.img<{ isRound?: boolean }>`
+const Avatar = styled.img<{ $isRound?: boolean }>`
   object-fit: cover;
 
   .image & {
@@ -45,16 +45,16 @@ const Avatar = styled.img<{ isRound?: boolean }>`
     height: 100%;
   }
 
-  ${({ isRound }) => isRound && 'border-radius: 50%;'}
+  ${({ $isRound }) => $isRound && 'border-radius: 50%;'}
 `
 
-const AvatarWrapper = styled.div<{ isCentered?: boolean }>`
+const AvatarWrapper = styled.div<{ $isCentered?: boolean }>`
   border-radius: 50%;
   ${mediaMinWidth(PHONE)} {
     margin: 5px 15px;
   }
-  ${({ isCentered }) =>
-    isCentered
+  ${({ $isCentered }) =>
+    $isCentered
       ? `
     ${mediaMinWidth(PHONE)} {
       margin: 0 auto;
@@ -86,10 +86,10 @@ export const ProfilePic = ({
   if (image)
     return (
       <AvatarWrapper
-        isCentered={isCentered}
+        $isCentered={isCentered}
         className={`has-background-light image ${size}`}
       >
-        <Avatar src={image} isRound={isRound} />
+        <Avatar src={image} $isRound={isRound} />
       </AvatarWrapper>
     )
   const nonce = hashCode(name) % PROPIC_TEXT.length
@@ -100,16 +100,16 @@ export const ProfilePic = ({
   const initials = name.replace(/[a-z]|\s/g, '')
   return (
     <AvatarWrapper
-      isCentered={isCentered}
+      $isCentered={isCentered}
       className={`has-background-light image ${size}`}
     >
       <Placeholder
         style={style}
         className={className}
-        isRound={isRound}
+        $isRound={isRound}
         fontSize={fontSize}
-        backgroundColor={backgroundColor}
-        textColor={textColor}
+        $backgroundColor={backgroundColor}
+        $textColor={textColor}
       >
         {initials}
       </Placeholder>
