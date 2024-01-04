@@ -70,6 +70,7 @@ from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     AdminNote,
     Advisor,
+    ApplicationExtension,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -125,6 +126,7 @@ from clubs.permissions import (
 from clubs.serializers import (
     AdminNoteSerializer,
     AdvisorSerializer,
+    ApplicationExtensionSerializer,
     ApplicationQuestionResponseSerializer,
     ApplicationQuestionSerializer,
     ApplicationSubmissionCSVSerializer,
@@ -4456,10 +4458,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # prevent submissions outside of the open duration
         now = timezone.now()
-        if (
-            now > application.application_end_time
-            or now < application.application_start_time
-        ):
+        extension = application.extensions.filter(user=self.request.user).first()
+        end_time = (
+            max(extension.end_time, application.application_end_time)
+            if extension
+            else application.application_end_time
+        )
+        if now > end_time or now < application.application_start_time:
             return Response(
                 {"success": False, "detail": "This application is not currently open!"}
             )
@@ -4811,12 +4816,14 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                                 - $ref: "#/components/schemas/ClubApplication"
         ---
         """
-        qs = self.get_queryset()
-        return Response(
-            ClubApplicationSerializer(
-                qs.filter(application_end_time__gte=timezone.now()), many=True
-            ).data
-        )
+        qs = self.get_queryset().prefetch_related("extensions")
+        now = timezone.now()
+        user = self.request.user
+        q = Q(application_end_time__gte=now)
+        if user.is_authenticated:
+            q |= Q(extensions__end_time__gte=now, extensions__user=user)
+
+        return Response(ClubApplicationSerializer(qs.filter(q), many=True).data)
 
     @action(detail=True, methods=["post"])
     def duplicate(self, *args, **kwargs):
@@ -4953,6 +4960,16 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
                 "status",
             )
             .annotate(count=Count("status"))
+        )
+
+
+class ApplicationExtensionViewSet(viewsets.ModelViewSet):
+    permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
+    serializer_class = ApplicationExtensionSerializer
+
+    def get_queryset(self):
+        return ApplicationExtension.objects.filter(
+            application__pk=self.kwargs["application_pk"]
         )
 
 
