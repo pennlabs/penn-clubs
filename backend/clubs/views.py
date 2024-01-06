@@ -38,7 +38,6 @@ from django.db.models import (
     TextField,
     Value,
 )
-from django.db.models.expressions import RawSQL
 from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
@@ -71,6 +70,7 @@ from clubs.models import (
     AdminNote,
     Advisor,
     ApplicationCycle,
+    ApplicationExtension,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -127,6 +127,7 @@ from clubs.serializers import (
     AdminNoteSerializer,
     AdvisorSerializer,
     ApplicationCycleSerializer,
+    ApplicationExtensionSerializer,
     ApplicationQuestionResponseSerializer,
     ApplicationQuestionSerializer,
     ApplicationSubmissionCSVSerializer,
@@ -4458,10 +4459,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # prevent submissions outside of the open duration
         now = timezone.now()
-        if (
-            now > application.application_end_time
-            or now < application.application_start_time
-        ):
+        extension = application.extensions.filter(user=self.request.user).first()
+        end_time = (
+            max(extension.end_time, application.application_end_time)
+            if extension
+            else application.application_end_time
+        )
+        if now > end_time or now < application.application_start_time:
             return Response(
                 {"success": False, "detail": "This application is not currently open!"}
             )
@@ -4481,8 +4485,11 @@ class UserViewSet(viewsets.ModelViewSet):
                     submissions page""",
                 }
             )
-        submission = ApplicationSubmission.objects.create(
-            user=self.request.user, application=application, committee=committee,
+        submission, _ = ApplicationSubmission.objects.get_or_create(
+            user=self.request.user,
+            application=application,
+            committee=committee,
+            archived=False,
         )
 
         key = f"applicationsubmissions:{application.id}"
@@ -4506,9 +4513,11 @@ class UserViewSet(viewsets.ModelViewSet):
             ):
                 text = question_data.get("text", None)
                 if text is not None and text != "":
-                    obj = ApplicationQuestionResponse.objects.create(
-                        text=text, question=question, submission=submission,
-                    ).save()
+                    obj, _ = ApplicationQuestionResponse.objects.update_or_create(
+                        question=question,
+                        submission=submission,
+                        defaults={"text": text},
+                    )
                     response = Response(ApplicationQuestionResponseSerializer(obj).data)
             elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:
                 multiple_choice_value = question_data.get("multipleChoice", None)
@@ -4516,13 +4525,12 @@ class UserViewSet(viewsets.ModelViewSet):
                     multiple_choice_obj = ApplicationMultipleChoice.objects.filter(
                         question=question, value=multiple_choice_value
                     ).first()
-                    obj = ApplicationQuestionResponse.objects.create(
-                        multiple_choice=multiple_choice_obj,
+                    obj, _ = ApplicationQuestionResponse.objects.update_or_create(
                         question=question,
                         submission=submission,
-                    ).save()
+                        defaults={"multiple_choice": multiple_choice_obj},
+                    )
                     response = Response(ApplicationQuestionResponseSerializer(obj).data)
-        submission.save()
         return response
 
     @action(detail=False, methods=["get"])
@@ -4590,10 +4598,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
         response = (
             ApplicationQuestionResponse.objects.filter(
-                submission__user=self.request.user, submission__archived=False
+                question=question,
+                submission__user=self.request.user,
+                submission__archived=False,
             )
-            .filter(question__prompt=question.prompt)
-            .order_by("-updated_at")
             .select_related("submission", "multiple_choice", "question")
             .prefetch_related("question__committees", "question__multiple_choice")
             .first()
@@ -4667,6 +4675,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         Send out acceptance/rejection emails for a particular application
 
         Dry run will validate that all emails have nonempty variables
+
+        Allow resend will renotify submissions that have already been emailed
         ---
         requestBody:
             content:
@@ -4674,6 +4684,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                     schema:
                         type: object
                         properties:
+                            allow_resend:
+                                type: boolean
                             dry_run:
                                 type: boolean
                             email_type:
@@ -4701,21 +4713,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
         # Query for recent submissions with user and committee joined
         submissions = ApplicationSubmission.objects.filter(
-            application=app,
-            created_at__in=RawSQL(
-                """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                (),
-            ),
-            archived=False,
+            application=app, archived=False,
         ).select_related("user", "committee")
 
         dry_run = self.request.data.get("dry_run")
@@ -4730,13 +4728,15 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         subject = f"Application Update for {app.name}"
         n, skip = 0, 0
 
+        allow_resend = self.request.data.get("allow_resend")
+
         acceptance_template = Template(app.acceptance_email)
         rejection_template = Template(app.rejection_email)
 
         mass_emails = []
         for submission in submissions:
             if (
-                submission.notified
+                (not allow_resend and submission.notified)
                 or submission.status == ApplicationSubmission.PENDING
                 or not (submission.reason and submission.user.email)
             ):
@@ -4807,12 +4807,14 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                                 - $ref: "#/components/schemas/ClubApplication"
         ---
         """
-        qs = self.get_queryset()
-        return Response(
-            ClubApplicationSerializer(
-                qs.filter(application_end_time__gte=timezone.now()), many=True
-            ).data
-        )
+        qs = self.get_queryset().prefetch_related("extensions")
+        now = timezone.now()
+        user = self.request.user
+        q = Q(application_end_time__gte=now)
+        if user.is_authenticated:
+            q |= Q(extensions__end_time__gte=now, extensions__user=user)
+
+        return Response(ClubApplicationSerializer(qs.filter(q), many=True).data)
 
     @action(detail=True, methods=["post"])
     def duplicate(self, *args, **kwargs):
@@ -5186,21 +5188,7 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
     def get_queryset(self):
         return (
             ApplicationSubmission.objects.filter(
-                application__is_wharton_council=True,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
+                application__is_wharton_council=True, archived=False,
             )
             .annotate(
                 annotated_name=F("application__name"),
@@ -5218,6 +5206,16 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
         )
 
 
+class ApplicationExtensionViewSet(viewsets.ModelViewSet):
+    permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
+    serializer_class = ApplicationExtensionSerializer
+
+    def get_queryset(self):
+        return ApplicationExtension.objects.filter(
+            application__pk=self.kwargs["application_pk"]
+        )
+
+
 class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
     """
     list: List submissions for a given club application.
@@ -5231,30 +5229,9 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post"]
 
     def get_queryset(self):
-        # Use a raw SQL query to obtain the most recent (user, committee) pairs
-        # of application submissions for a specific application.
-        # Done by grouping by (user_id, commitee_id) and returning the most
-        # recent instance in each group, then selecting those instances
-
         app_id = self.kwargs["application_pk"]
         submissions = (
-            ApplicationSubmission.objects.filter(
-                application=app_id,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
-            )
+            ApplicationSubmission.objects.filter(application=app_id, archived=False,)
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
                 Prefetch(
@@ -5319,23 +5296,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         """
         app_id = int(self.kwargs["application_pk"])
         data = (
-            ApplicationSubmission.objects.filter(
-                application=app_id,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
-            )
+            ApplicationSubmission.objects.filter(application=app_id, archived=False,)
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
                 Prefetch(
@@ -5380,19 +5341,6 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
             ApplicationSubmission.objects.filter(
                 application__is_wharton_council=True,
                 application__application_cycle=cycle,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                        FROM
-                        (SELECT user_id,
-                                committee_id,
-                                application_id,
-                                max(created_at) recent_time
-                            FROM clubs_applicationsubmission
-                            WHERE NOT archived
-                            GROUP BY user_id,
-                                    committee_id, application_id) recent_subs""",
-                    (),
-                ),
                 archived=False,
             )
             .select_related("application", "application__application_cycle")
@@ -5547,21 +5495,7 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         submissions = (
             ApplicationSubmission.objects.filter(
-                user=self.request.user,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
+                user=self.request.user, archived=False,
             )
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(

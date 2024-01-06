@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
+from django.core.cache import cache
 from django.core.management import call_command
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -1086,6 +1087,7 @@ class ClubTestCase(TestCase):
             },
             content_type="application/json",
         )
+        cache.clear()
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         resp = self.client.get(reverse("clubs-detail", args=("penn-labs",)))

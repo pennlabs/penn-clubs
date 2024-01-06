@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 from clubs.views import (
     AdminNoteViewSet,
     AdvisorViewSet,
+    ApplicationExtensionViewSet,
     ApplicationQuestionViewSet,
     ApplicationSubmissionUserViewSet,
     ApplicationSubmissionViewSet,
@@ -118,6 +119,10 @@ applications_router.register(
     r"submissions",
     ApplicationSubmissionViewSet,
     basename="club-application-submissions",
+)
+
+applications_router.register(
+    r"extensions", ApplicationExtensionViewSet, basename="club-application-extensions"
 )
 
 router.register(r"booths", ClubBoothsViewSet, basename="club-booth")

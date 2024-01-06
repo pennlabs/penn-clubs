@@ -1593,6 +1593,40 @@ class ClubApplication(CloneModel):
         return all(t in cls.VALID_TEMPLATE_TOKENS for t in tokens)
 
 
+class ApplicationExtension(models.Model):
+    """
+    Represents an individual club application extension.
+    """
+
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    application = models.ForeignKey(
+        ClubApplication, related_name="extensions", on_delete=models.CASCADE
+    )
+    end_time = models.DateTimeField()
+
+    def send_extension_mail(self):
+        context = {
+            "name": self.user.first_name,
+            "application_name": self.application.name,
+            "end_time": self.end_time,
+            "club": self.application.club.name,
+            "url": (
+                f"https://pennclubs.com/club/{self.application.club.code}"
+                f"/application/{self.application.pk}/"
+            ),
+        }
+
+        send_mail_helper(
+            name="application_extension",
+            subject=f"Application Extension for {self.application.name}",
+            emails=[self.user.email],
+            context=context,
+        )
+
+    class Meta:
+        unique_together = (("user", "application"),)
+
+
 class ApplicationCommittee(models.Model):
     """
     Represents a committee for a particular club application. Each application
@@ -1696,6 +1730,9 @@ class ApplicationSubmission(models.Model):
     def __str__(self):
         return f"{self.user.first_name}: {self.application.name}"
 
+    class Meta:
+        unique_together = (("user", "application", "committee"),)
+
 
 class ApplicationQuestionResponse(models.Model):
     """
@@ -1723,6 +1760,9 @@ class ApplicationQuestionResponse(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = (("question", "submission"),)
 
 
 class QuestionResponse(models.Model):

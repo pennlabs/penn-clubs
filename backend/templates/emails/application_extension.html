@@ -1,0 +1,22 @@
+<!-- TYPES:
+name:
+    type: string
+club:
+    type: string
+application_name:
+    type: string
+end_time:
+    type: string
+url:
+    type: string
+-->
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>Application Extension for {{ application_name }}</h2>
+    <p style="font-size: 1.2em;">Hello {{ name }},</p>
+    <p style="font-size: 1.2em;">You have been granted an extension for {{ application_name }} by the officers of {{ club }} on Penn Clubs:</p>
+    <p style="font-size: 1.2em;">The updated deadline to submit your application is {{ end_time }}. You can apply using the button below.</p>
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: green; border-radius: 3px; font-weight: bold"
+        href="{{ url }}">Apply</a>
+{% endblock %}

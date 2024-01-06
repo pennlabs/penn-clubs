@@ -194,24 +194,6 @@ const ApplicationPage = ({
               }
             }
 
-            // submissions open & close error check
-            const applicationStartTime = moment.tz(
-              application.application_start_time,
-              'America/New_York',
-            )
-
-            const applicationEndTime = moment.tz(
-              application.application_end_time,
-              'America/New_York',
-            )
-            const currentTime = moment.tz('America/New_York')
-            if (
-              currentTime.valueOf() < applicationStartTime.valueOf() ||
-              currentTime.valueOf() > applicationEndTime.valueOf()
-            ) {
-              submitErrors = 'This application is not currently open!'
-            }
-
             if (submitErrors === null) {
               const body: any = { questionIds: [] }
               for (const [questionId, text] of Object.entries(values).filter(

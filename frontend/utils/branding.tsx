@@ -43,7 +43,7 @@ const sites = {
 
         CONTACT_EMAIL: 'contact@pennclubs.com',
         SUPPORT_EMAIL: 'vpul-orgs@pobox.upenn.edu',
-        FEEDBACK_URL: 'https://airtable.com/shrCsYFWxCwfwE7cf',
+        FEEDBACK_URL: 'https://airtable.com/appFRa4NQvNMEbWsA/shrZdY76Bauj77H90',
 
         CLUB_FIELDS: [
             'accepting_members',
@@ -60,9 +60,9 @@ const sites = {
             'target_schools',
         ],
         // enable showing members for each club
-        SHOW_MEMBERS: true,
+        SHOW_MEMBERS: false,
         // enable the membership request feature
-        SHOW_MEMBERSHIP_REQUEST: true,
+        SHOW_MEMBERSHIP_REQUEST: false,
         // show the links to the ranking algorithm from various parts of the site
         SHOW_RANK_ALGORITHM: true,
         // show the link to the Penn accessibility help page at the bottom of each page
