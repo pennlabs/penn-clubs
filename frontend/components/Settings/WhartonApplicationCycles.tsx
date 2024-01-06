@@ -196,6 +196,7 @@ const WhartonApplicationCycles = (): ReactElement => {
           { name: 'start_date' },
           { name: 'end_date' },
         ]}
+        confirmDeletion={true}
         actions={(object) => (
           <>
             <button
