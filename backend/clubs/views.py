@@ -38,7 +38,6 @@ from django.db.models import (
     TextField,
     Value,
 )
-from django.db.models.expressions import RawSQL
 from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
@@ -4707,21 +4706,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
         # Query for recent submissions with user and committee joined
         submissions = ApplicationSubmission.objects.filter(
-            application=app,
-            created_at__in=RawSQL(
-                """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                (),
-            ),
-            archived=False,
+            application=app, archived=False,
         ).select_related("user", "committee")
 
         dry_run = self.request.data.get("dry_run")
@@ -4928,21 +4913,7 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
     def get_queryset(self):
         return (
             ApplicationSubmission.objects.filter(
-                application__is_wharton_council=True,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
+                application__is_wharton_council=True, archived=False,
             )
             .annotate(
                 annotated_name=F("application__name"),
@@ -4973,30 +4944,9 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post"]
 
     def get_queryset(self):
-        # Use a raw SQL query to obtain the most recent (user, committee) pairs
-        # of application submissions for a specific application.
-        # Done by grouping by (user_id, commitee_id) and returning the most
-        # recent instance in each group, then selecting those instances
-
         app_id = self.kwargs["application_pk"]
         submissions = (
-            ApplicationSubmission.objects.filter(
-                application=app_id,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
-            )
+            ApplicationSubmission.objects.filter(application=app_id, archived=False,)
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
                 Prefetch(
@@ -5061,23 +5011,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         """
         app_id = int(self.kwargs["application_pk"])
         data = (
-            ApplicationSubmission.objects.filter(
-                application=app_id,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
-            )
+            ApplicationSubmission.objects.filter(application=app_id, archived=False,)
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
                 Prefetch(
@@ -5122,19 +5056,6 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
             ApplicationSubmission.objects.filter(
                 application__is_wharton_council=True,
                 application__application_cycle=cycle,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                        FROM
-                        (SELECT user_id,
-                                committee_id,
-                                application_id,
-                                max(created_at) recent_time
-                            FROM clubs_applicationsubmission
-                            WHERE NOT archived
-                            GROUP BY user_id,
-                                    committee_id, application_id) recent_subs""",
-                    (),
-                ),
                 archived=False,
             )
             .select_related("application", "application__application_cycle")
@@ -5289,21 +5210,7 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         submissions = (
             ApplicationSubmission.objects.filter(
-                user=self.request.user,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
+                user=self.request.user, archived=False,
             )
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
