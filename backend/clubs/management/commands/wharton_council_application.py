@@ -66,7 +66,8 @@ class Command(BaseCommand):
 
         if not club_names or all(not name for name in club_names):
             wc_badge = Badge.objects.filter(
-                label="Wharton Council", purpose="org",
+                label="Wharton Council",
+                purpose="org",
             ).first()
             clubs = list(Club.objects.filter(badges=wc_badge))
         else:

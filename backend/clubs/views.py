@@ -50,7 +50,7 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
-from ics import parse as ICSParse
+from ics.grammar import parse as ICSParse
 from jinja2 import Template
 from options.models import Option
 from rest_framework import filters, generics, parsers, serializers, status, viewsets
@@ -1079,7 +1079,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             self.request.user, get_user_model()
         ):
             SearchQuery(
-                person=self.request.user, query=self.request.query_params.get("search"),
+                person=self.request.user,
+                query=self.request.query_params.get("search"),
             ).save()
 
         # select subset of clubs if requested
@@ -1674,7 +1675,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             query = (
                 Club.objects.filter(badges=badge, archived=False)
                 .order_by(Lower("name"))
-                .prefetch_related(Prefetch("asset_set", to_attr="prefetch_asset_set"),)
+                .prefetch_related(
+                    Prefetch("asset_set", to_attr="prefetch_asset_set"),
+                )
             )
             if request.user.is_authenticated:
                 query = query.prefetch_related(
@@ -3004,7 +3007,9 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            person=self.request.user, withdrew=False, club__archived=False,
+            person=self.request.user,
+            withdrew=False,
+            club__archived=False,
         )
 
 
@@ -4127,7 +4132,9 @@ class UserZoomAPIView(APIView):
 
         try:
             response = zoom_api_call(
-                request.user, "GET", "https://api.zoom.us/v2/users/{uid}/settings",
+                request.user,
+                "GET",
+                "https://api.zoom.us/v2/users/{uid}/settings",
             )
         except requests.exceptions.HTTPError as e:
             raise DRFValidationError(
@@ -4248,7 +4255,9 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         user = self.request.user
         prefetch_related_objects(
-            [user], "profile__school", "profile__major",
+            [user],
+            "profile__school",
+            "profile__major",
         )
         return user
 
@@ -4711,7 +4720,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
         # Query for recent submissions with user and committee joined
         submissions = ApplicationSubmission.objects.filter(
-            application=app, archived=False,
+            application=app,
+            archived=False,
         ).select_related("user", "committee")
 
         dry_run = self.request.data.get("dry_run")
@@ -4853,12 +4863,15 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         return ClubApplicationSerializer
 
     def get_queryset(self):
-
         return (
-            ClubApplication.objects.filter(club__code=self.kwargs["club_code"],)
+            ClubApplication.objects.filter(
+                club__code=self.kwargs["club_code"],
+            )
             .select_related("application_cycle", "club")
             .prefetch_related(
-                "questions__multiple_choice", "questions__committees", "committees",
+                "questions__multiple_choice",
+                "questions__committees",
+                "committees",
             )
         )
 
@@ -4920,7 +4933,8 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
     def get_queryset(self):
         return (
             ApplicationSubmission.objects.filter(
-                application__is_wharton_council=True, archived=False,
+                application__is_wharton_council=True,
+                archived=False,
             )
             .annotate(
                 annotated_name=F("application__name"),
@@ -4963,7 +4977,10 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         app_id = self.kwargs["application_pk"]
         submissions = (
-            ApplicationSubmission.objects.filter(application=app_id, archived=False,)
+            ApplicationSubmission.objects.filter(
+                application=app_id,
+                archived=False,
+            )
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
                 Prefetch(
@@ -5028,7 +5045,10 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         """
         app_id = int(self.kwargs["application_pk"])
         data = (
-            ApplicationSubmission.objects.filter(application=app_id, archived=False,)
+            ApplicationSubmission.objects.filter(
+                application=app_id,
+                archived=False,
+            )
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
                 Prefetch(
@@ -5227,7 +5247,8 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         submissions = (
             ApplicationSubmission.objects.filter(
-                user=self.request.user, archived=False,
+                user=self.request.user,
+                archived=False,
             )
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(

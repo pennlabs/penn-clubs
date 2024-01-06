@@ -85,7 +85,6 @@ class ProfilePermission(permissions.BasePermission):
 
         # show profile if public or if profile is self
         if view.action in {"list", "retrieve"}:
-
             # admins can see all profiles
             if request.user.has_perm("clubs.manage_club"):
                 return True
