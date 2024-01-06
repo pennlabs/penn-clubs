@@ -226,23 +226,40 @@ const WhartonApplicationCycles = (): ReactElement => {
         {membershipCycle && membershipCycle.name && (
           <>
             <Subtitle>Club Membership for {membershipCycle.name}</Subtitle>
-            <div
-              style={{ paddingLeft: 20, paddingRight: 20, paddingTop: '20px' }}
-            >
-              <Select
-                onChange={(e) => setClubsSelectedMembership([...e])}
-                value={clubsSelectedMembership}
-                options={clubOptionsMembership}
-                isMulti
-              />
-            </div>
-            <button
-              className="button is-primary"
-              style={{ position: 'absolute', bottom: 10, right: 10 }}
-              onClick={closeMembershipModal}
-            >
-              Submit
-            </button>
+            {clubOptionsMembership.length === 0 ? (
+              <p style={{ paddingLeft: 10, paddingRight: 10 }}>
+                No club applications are currently active.
+                <br /> Please visit the{' '}
+                <a href="https://pennclubs.com/admin/scripts">
+                  Admin Scripts
+                </a>{' '}
+                page to initialize new applications for the current cycle.
+              </p>
+            ) : (
+              <>
+                <div
+                  style={{
+                    paddingLeft: 20,
+                    paddingRight: 20,
+                    paddingTop: '20px',
+                  }}
+                >
+                  <Select
+                    onChange={(e) => setClubsSelectedMembership([...e])}
+                    value={clubsSelectedMembership}
+                    options={clubOptionsMembership}
+                    isMulti
+                  />
+                </div>
+                <button
+                  className="button is-primary"
+                  style={{ position: 'absolute', bottom: 10, right: 10 }}
+                  onClick={closeMembershipModal}
+                >
+                  Submit
+                </button>
+              </>
+            )}
           </>
         )}
       </Modal>
