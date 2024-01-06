@@ -1729,6 +1729,9 @@ class ApplicationSubmission(models.Model):
     def __str__(self):
         return f"{self.user.first_name}: {self.application.name}"
 
+    class Meta:
+        unique_together = (("user", "application", "committee"),)
+
 
 class ApplicationQuestionResponse(models.Model):
     """
@@ -1756,6 +1759,9 @@ class ApplicationQuestionResponse(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = (("question", "submission"),)
 
 
 class QuestionResponse(models.Model):
