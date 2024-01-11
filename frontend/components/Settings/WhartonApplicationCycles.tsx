@@ -119,7 +119,7 @@ const WhartonApplicationCycles = (): ReactElement => {
       })
   }, [])
 
-  useEffect(() => {
+  const refreshMembership = (): void => {
     if (membershipCycle && membershipCycle.id != null) {
       doApiRequest(`/cycles/${membershipCycle.id}/get_clubs?format=json`)
         .then((resp) => resp.json())
@@ -131,6 +131,10 @@ const WhartonApplicationCycles = (): ReactElement => {
           )
         })
     }
+  }
+
+  useEffect(() => {
+    refreshMembership()
   }, [membershipCycle])
 
   useEffect(() => {
@@ -206,10 +210,12 @@ const WhartonApplicationCycles = (): ReactElement => {
           </>
         )}
       />
-      <Modal show={editMembership} closeModal={closeMembershipModal}>
+      <Modal show={editMembership} closeModal={() => setEditMembership(false)}>
         {membershipCycle && membershipCycle.name && (
           <>
-            <Subtitle>Club Membership for {membershipCycle.name}</Subtitle>
+            <Subtitle>
+              Club Membership for {membershipCycle.name} Cycle
+            </Subtitle>
             {
               <>
                 <div
@@ -219,19 +225,30 @@ const WhartonApplicationCycles = (): ReactElement => {
                     paddingTop: '20px',
                   }}
                 >
-                  <Select
-                    onChange={(e) => setClubsSelectedMembership([...e])}
-                    value={clubsSelectedMembership}
-                    options={clubOptionsMembership}
-                    isMulti
-                  />
+                  <ScrollWrapper>
+                    <Select
+                      onChange={(e) => setClubsSelectedMembership([...e])}
+                      value={clubsSelectedMembership}
+                      options={clubOptionsMembership}
+                      isMulti
+                      isClearable={false}
+                      backspaceRemovesValue={false}
+                    />
+                  </ScrollWrapper>
                 </div>
                 <button
-                  className="button is-primary"
+                  className="button is-danger is-primary"
                   style={{ position: 'absolute', bottom: 10, right: 10 }}
                   onClick={closeMembershipModal}
                 >
                   Submit
+                </button>
+                <button
+                  className="button is-primary"
+                  style={{ position: 'absolute', bottom: 60, right: 10 }}
+                  onClick={refreshMembership}
+                >
+                  Refresh
                 </button>
               </>
             }

@@ -4933,8 +4933,8 @@ class WhartonCyclesView(viewsets.ModelViewSet):
 
         return Response(
             ClubApplication.objects.filter(application_cycle=cycle)
-            .values("club__name", "club__code")
             .select_related("club")
+            .values("club__name", "club__code")
         )
 
     @action(detail=True, methods=["PATCH"])
@@ -4979,8 +4979,8 @@ class WhartonCyclesView(viewsets.ModelViewSet):
             ClubApplication.objects.filter(
                 application_cycle=cycle, club__code__in=club_codes
             )
-            .values_list("club__code", flat=True)
             .select_related("club")
+            .values_list("club__code", flat=True)
         )
         creation_pending_clubs = Club.objects.filter(
             code__in=set(club_codes) - set(created_apps_clubs)
