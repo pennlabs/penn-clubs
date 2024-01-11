@@ -4917,10 +4917,30 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         ClubApplication.objects.bulk_update(applications, f)
         return super().update(*args, **kwargs)
 
-    @action(detail=True, methods=["GET", "PATCH"])
-    def clubs(self, *args, **kwargs):
+    @action(detail=True, methods=["GET"])
+    def get_clubs(self, *args, **kwargs):
         """
-        Retrieve or edit clubs associated with given cycle
+        Retrieve clubs associated with given cycle
+        ---
+        requestBody:
+            content: {}
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        cycle = self.get_object()
+
+        return Response(
+            ClubApplication.objects.filter(application_cycle=cycle)
+            .values("club__name", "club__code")
+            .select_related("club")
+        )
+
+    @action(detail=True, methods=["PATCH"])
+    def edit_clubs(self, *args, **kwargs):
+        """
+        Edit clubs associated with given cycle
         ---
         requestBody:
             content:
@@ -4936,109 +4956,99 @@ class WhartonCyclesView(viewsets.ModelViewSet):
             "200":
                 content: {}
         ---
+
         """
         cycle = self.get_object()
+        club_codes = self.request.data.get("clubs")
+        start = cycle.start_date
+        end = cycle.end_date
+        release = cycle.release_date
 
-        if self.request.method == "GET":
-            return Response(
-                ClubApplication.objects.filter(application_cycle=cycle)
-                .values("club__name", "club__code")
-                .select_related("club")
-            )
-        else:
-            club_codes = self.request.data.get("clubs")
-            start = cycle.start_date
-            end = cycle.end_date
-            release = cycle.release_date
+        # Some apps get deleted
+        ClubApplication.objects.filter(application_cycle=cycle).exclude(
+            club__code__in=club_codes
+        ).delete()
 
-            # Some apps get deleted
-            ClubApplication.objects.filter(application_cycle=cycle).exclude(
-                club__code__in=club_codes
-            ).delete()
+        # Some apps need to be created - use the default Wharton Template
+        prompt_one = (
+            "Tell us about a time you took " "initiative or demonstrated leadership"
+        )
+        prompt_two = "Tell us about a time you faced a challenge and how you solved it"
+        prompt_three = "Tell us about a time you collaborated well in a team"
+        created_apps_clubs = (
+            ClubApplication.objects.filter(
+                application_cycle=cycle, club__code__in=club_codes
+            )
+            .values_list("club__code", flat=True)
+            .select_related("club")
+        )
+        creation_pending_clubs = Club.objects.filter(
+            code__in=set(club_codes) - set(created_apps_clubs)
+        )
 
-            # Some apps need to be created - use the default Wharton Template
-            prompt_one = (
-                "Tell us about a time you took " "initiative or demonstrated leadership"
+        for club in creation_pending_clubs:
+            name = f"{club.name} Application"
+            most_recent = (
+                ClubApplication.objects.filter(club=club)
+                .order_by("-created_at")
+                .first()
             )
-            prompt_two = (
-                "Tell us about a time you faced a challenge and how you solved it"
-            )
-            prompt_three = "Tell us about a time you collaborated well in a team"
-            created_apps_clubs = (
-                ClubApplication.objects.filter(
-                    application_cycle=cycle, club__code__in=club_codes
+
+            if most_recent:
+                # If an application for this club exists, clone it
+                application = most_recent.make_clone()
+                application.application_start_time = start
+                application.application_end_time = end
+                application.result_release_time = release
+                application.application_cycle = cycle
+                application.is_wharton_council = True
+                application.external_url = (
+                    f"https://pennclubs.com/club/{club.code}/"
+                    f"application/{application.pk}"
                 )
-                .values_list("club__code", flat=True)
-                .select_related("club")
-            )
-            creation_pending_clubs = Club.objects.filter(
-                code__in=set(club_codes) - set(created_apps_clubs)
-            )
-
-            for club in creation_pending_clubs:
-                name = f"{club.name} Application"
-                most_recent = (
-                    ClubApplication.objects.filter(club=club)
-                    .order_by("-created_at")
-                    .first()
+                application.save()
+            else:
+                # Otherwise, start afresh
+                application = ClubApplication.objects.create(
+                    name=name,
+                    club=club,
+                    application_start_time=start,
+                    application_end_time=end,
+                    result_release_time=release,
+                    application_cycle=cycle,
+                    is_wharton_council=True,
+                )
+                external_url = (
+                    f"https://pennclubs.com/club/{club.code}/"
+                    f"application/{application.pk}"
+                )
+                application.external_url = external_url
+                application.save()
+                prompt = (
+                    "Choose one of the following prompts for your personal statement"
+                )
+                prompt_question = ApplicationQuestion.objects.create(
+                    question_type=ApplicationQuestion.MULTIPLE_CHOICE,
+                    application=application,
+                    prompt=prompt,
+                )
+                ApplicationMultipleChoice.objects.create(
+                    value=prompt_one, question=prompt_question
+                )
+                ApplicationMultipleChoice.objects.create(
+                    value=prompt_two, question=prompt_question
+                )
+                ApplicationMultipleChoice.objects.create(
+                    value=prompt_three, question=prompt_question
+                )
+                ApplicationQuestion.objects.create(
+                    question_type=ApplicationQuestion.FREE_RESPONSE,
+                    prompt="Answer the prompt you selected",
+                    word_limit=150,
+                    application=application,
                 )
 
-                if most_recent:
-                    # If an application for this club exists, clone it
-                    application = most_recent.make_clone()
-                    application.application_start_time = start
-                    application.application_end_time = end
-                    application.result_release_time = release
-                    application.application_cycle = cycle
-                    application.is_wharton_council = True
-                    application.external_url = (
-                        f"https://pennclubs.com/club/{club.code}/"
-                        f"application/{application.pk}"
-                    )
-                    application.save()
-                else:
-                    # Otherwise, start afresh
-                    application = ClubApplication.objects.create(
-                        name=name,
-                        club=club,
-                        application_start_time=start,
-                        application_end_time=end,
-                        result_release_time=release,
-                        application_cycle=cycle,
-                        is_wharton_council=True,
-                    )
-                    external_url = (
-                        f"https://pennclubs.com/club/{club.code}/"
-                        f"application/{application.pk}"
-                    )
-                    application.external_url = external_url
-                    application.save()
-                    prompt = (
-                        "Choose one of the following "
-                        "prompts for your personal statement"
-                    )
-                    prompt_question = ApplicationQuestion.objects.create(
-                        question_type=ApplicationQuestion.MULTIPLE_CHOICE,
-                        application=application,
-                        prompt=prompt,
-                    )
-                    ApplicationMultipleChoice.objects.create(
-                        value=prompt_one, question=prompt_question
-                    )
-                    ApplicationMultipleChoice.objects.create(
-                        value=prompt_two, question=prompt_question
-                    )
-                    ApplicationMultipleChoice.objects.create(
-                        value=prompt_three, question=prompt_question
-                    )
-                    ApplicationQuestion.objects.create(
-                        question_type=ApplicationQuestion.FREE_RESPONSE,
-                        prompt="Answer the prompt you selected",
-                        word_limit=150,
-                        application=application,
-                    )
-
-            return Response([])
+        return Response([])
 
     @action(detail=False, methods=["post"])
     def add_clubs_to_exception(self, *args, **kwargs):

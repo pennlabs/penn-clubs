@@ -72,7 +72,7 @@ const WhartonApplicationCycles = (): ReactElement => {
     setEditMembership(false)
 
     // call /cycles/:id/clubs to set the clubs associated with the cycle
-    doApiRequest(`/cycles/${membershipCycle.id}/clubs/`, {
+    doApiRequest(`/cycles/${membershipCycle.id}/edit_clubs/`, {
       method: 'PATCH',
       body: { clubs: clubsSelectedMembership.map((x) => x.value) },
     })
@@ -112,7 +112,7 @@ const WhartonApplicationCycles = (): ReactElement => {
       .then((data) => data.filter((club) => club.is_wharton))
       .then((data) => {
         setClubOptionsMembership(
-          data.map((club: Club) => {
+          data.map((club) => {
             return { label: club.name, value: club.code }
           }),
         )
@@ -121,7 +121,7 @@ const WhartonApplicationCycles = (): ReactElement => {
 
   useEffect(() => {
     if (membershipCycle && membershipCycle.id != null) {
-      doApiRequest(`/cycles/${membershipCycle.id}/clubs?format=json`)
+      doApiRequest(`/cycles/${membershipCycle.id}/get_clubs?format=json`)
         .then((resp) => resp.json())
         .then((associatedClubs) => {
           setClubsSelectedMembership(
