@@ -101,17 +101,21 @@ class ClubRouteMixin(object):
 class ApplicationCycleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationCycle
-        fields = ["id", "name", "start_date", "end_date"]
+        fields = ["id", "name", "start_date", "end_date", "release_date"]
 
     def validate(self, data):
         """
-        Check that start_date is before end_date.
+        Check that start_date <= end_date <= release_date
         """
         start_date = data.get("start_date")
         end_date = data.get("end_date")
+        release_date = data.get("release_date")
 
         if start_date and end_date and start_date >= end_date:
             raise serializers.ValidationError("Start must be before end.")
+
+        if end_date and release_date and end_date >= release_date:
+            raise serializers.ValidationError("End must be before release.")
 
         return data
 
@@ -1030,6 +1034,7 @@ class ClubListSerializer(serializers.ModelSerializer):
             "is_favorite",
             "is_member",
             "is_subscribe",
+            "is_wharton",
             "membership_count",
             "recruiting_cycle",
             "name",
@@ -1682,7 +1687,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "instagram",
             "is_ghost",
             "is_request",
-            "is_wharton",
             "linkedin",
             "listserv",
             "members",

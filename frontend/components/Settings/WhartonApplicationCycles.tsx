@@ -16,6 +16,7 @@ const fields = (
     <Field name="name" as={TextField} />
     <Field name="start_date" as={DateTimeField} />
     <Field name="end_date" as={DateTimeField} />
+    <Field name="release_date" as={DateTimeField} />
   </>
 )
 
@@ -59,10 +60,6 @@ const WhartonApplicationCycles = (): ReactElement => {
   const [clubsSelectedMembership, setClubsSelectedMembership] = useState<
     ClubOption[]
   >([])
-  const [
-    clubsInitialOptionsMembership,
-    setClubsInitialOptionsMembership,
-  ] = useState<ClubOption[]>([])
   const [clubOptionsMembership, setClubOptionsMembership] = useState<
     ClubOption[]
   >([])
@@ -73,27 +70,12 @@ const WhartonApplicationCycles = (): ReactElement => {
 
   const closeMembershipModal = (): void => {
     setEditMembership(false)
-    // calculate difference between initial and selected
-    const clubsToRemove = clubsInitialOptionsMembership.filter(
-      (x) => !clubsSelectedMembership.includes(x),
-    )
-    const clubsToAdd = clubsSelectedMembership.filter(
-      (x) => !clubsInitialOptionsMembership.includes(x),
-    )
 
-    // call /cycles/:id/add_clubs and /cycles/remove_clubs_from_all with data.clubs as list of ids
-    if (clubsToRemove.length > 0) {
-      doApiRequest(`/cycles/remove_clubs_from_all/`, {
-        method: 'POST',
-        body: { clubs: clubsToRemove.map((x) => x.value) },
-      })
-    }
-    if (clubsToAdd.length > 0) {
-      doApiRequest(`/cycles/${membershipCycle.id}/add_clubs/`, {
-        method: 'POST',
-        body: { clubs: clubsToAdd.map((x) => x.value) },
-      })
-    }
+    // call /cycles/:id/clubs to set the clubs associated with the cycle
+    doApiRequest(`/cycles/${membershipCycle.id}/clubs/`, {
+      method: 'PATCH',
+      body: { clubs: clubsSelectedMembership.map((x) => x.value) },
+    })
   }
 
   const closeExtensionsModal = (): void => {
@@ -125,16 +107,31 @@ const WhartonApplicationCycles = (): ReactElement => {
   }
 
   useEffect(() => {
-    doApiRequest('/whartonapplications/?format=json')
+    doApiRequest('/clubs/?format=json')
       .then((resp) => resp.json())
+      .then((data) => data.filter((club) => club.is_wharton))
       .then((data) => {
         setClubOptionsMembership(
-          data.map((club: ClubApplication) => {
-            return { label: club.name, value: club.id }
+          data.map((club: Club) => {
+            return { label: club.name, value: club.code }
           }),
         )
       })
   }, [])
+
+  useEffect(() => {
+    if (membershipCycle && membershipCycle.id != null) {
+      doApiRequest(`/cycles/${membershipCycle.id}/clubs?format=json`)
+        .then((resp) => resp.json())
+        .then((associatedClubs) => {
+          setClubsSelectedMembership(
+            associatedClubs.map((data) => {
+              return { label: data.club__name, value: data.club__code }
+            }),
+          )
+        })
+    }
+  }, [membershipCycle])
 
   useEffect(() => {
     doApiRequest('/cycles')
@@ -143,20 +140,6 @@ const WhartonApplicationCycles = (): ReactElement => {
         setPermissions(!data.detail)
       })
   })
-
-  useEffect(() => {
-    if (membershipCycle && membershipCycle.id != null) {
-      doApiRequest(`/cycles/${membershipCycle.id}/clubs?format=json`)
-        .then((resp) => resp.json())
-        .then((data) => {
-          const initialOptions = data.map((club: ClubApplication) => {
-            return { label: club.name, value: club.id }
-          })
-          setClubsInitialOptionsMembership(initialOptions)
-          setClubsSelectedMembership(initialOptions)
-        })
-    }
-  }, [membershipCycle])
 
   useEffect(() => {
     if (extensionsCycle && extensionsCycle.id != null) {
@@ -195,6 +178,7 @@ const WhartonApplicationCycles = (): ReactElement => {
           { name: 'name' },
           { name: 'start_date' },
           { name: 'end_date' },
+          { name: 'release_date' },
         ]}
         confirmDeletion={true}
         actions={(object) => (
@@ -226,16 +210,7 @@ const WhartonApplicationCycles = (): ReactElement => {
         {membershipCycle && membershipCycle.name && (
           <>
             <Subtitle>Club Membership for {membershipCycle.name}</Subtitle>
-            {clubOptionsMembership.length === 0 ? (
-              <p style={{ paddingLeft: 10, paddingRight: 10 }}>
-                No club applications are currently active.
-                <br /> Please visit the{' '}
-                <a href="https://pennclubs.com/admin/scripts">
-                  Admin Scripts
-                </a>{' '}
-                page to initialize new applications for the current cycle.
-              </p>
-            ) : (
+            {
               <>
                 <div
                   style={{
@@ -259,7 +234,7 @@ const WhartonApplicationCycles = (): ReactElement => {
                   Submit
                 </button>
               </>
-            )}
+            }
           </>
         )}
       </Modal>

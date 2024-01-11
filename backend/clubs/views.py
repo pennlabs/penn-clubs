@@ -4890,6 +4890,7 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         )
         str_start_date = self.request.data.get("start_date").replace("T", " ")
         str_end_date = self.request.data.get("end_date").replace("T", " ")
+        str_release_date = self.request.data.get("release_date").replace("T", " ")
         time_format = "%Y-%m-%d %H:%M:%S%z"
         start = (
             datetime.datetime.strptime(str_start_date, time_format)
@@ -4901,107 +4902,25 @@ class WhartonCyclesView(viewsets.ModelViewSet):
             if str_end_date
             else self.get_object().end_date
         )
+        release = (
+            datetime.datetime.strptime(str_release_date, time_format)
+            if str_release_date
+            else self.get_object().release_date
+        )
         for app in applications:
             app.application_start_time = start
             if app.application_end_time_exception:
                 continue
             app.application_end_time = end
-            if app.result_release_time < app.application_end_time:
-                filler_time = app.application_end_time + datetime.timedelta(days=10)
-                app.result_release_time = filler_time
+            app.result_release_time = release
         f = ["application_start_time", "application_end_time", "result_release_time"]
         ClubApplication.objects.bulk_update(applications, f)
         return super().update(*args, **kwargs)
 
-    @action(detail=True, methods=["get"])
+    @action(detail=True, methods=["GET", "PATCH"])
     def clubs(self, *args, **kwargs):
         """
-            Returns clubs in given cycle
-            ---
-
-        requestBody: {}
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                            type: array
-                            items:
-                                type: object
-                                properties:
-                                    id:
-                                        type: integer
-                                    active:
-                                        type: boolean
-                                    name:
-                                        type: string
-                                    cycle:
-                                        type: string
-                                    acceptance_email:
-                                        type: string
-                                    rejection_email:
-                                        type: string
-                                    application_start_time:
-                                        type: string
-                                    application_end_time:
-                                        type: string
-                                    result_release_time:
-                                        type: string
-                                    external_url:
-                                        type: string
-                                    committees:
-                                        type: array
-                                        items:
-                                            type: object
-                                            properties:
-                                                name:
-                                                    type: string
-                                    questions:
-                                        type: array
-                                        items:
-                                            type: object
-                                            properties:
-                                                id:
-                                                    type: integer
-                                                question_type:
-                                                    type: integer
-                                                prompt:
-                                                    type: string
-                                                word_limit:
-                                                    type: integer
-                                                multiple_choice:
-                                                    type: array
-                                                    items:
-                                                        type: object
-                                                        properties:
-                                                            value:
-                                                                type: string
-                                                committees:
-                                                    type: array
-                                                committee_question:
-                                                    type: boolean
-                                                precedence:
-                                                    type: integer
-                                    club:
-                                        type: string
-                                    description:
-                                        type: string
-                                    updated_at:
-                                        type: string
-                                    club_image_url:
-                                        type: string
-            ---
-        """
-        cycle = self.get_object()
-        data = ClubApplication.objects.filter(
-            is_wharton_council=True, application_cycle=cycle,
-        )
-        return Response(ClubApplicationSerializer(data, many=True).data)
-
-    @action(detail=True, methods=["post"])
-    def add_clubs(self, *args, **kwargs):
-        """
-        Adds clubs to given cycle
+        Retrieve or edit clubs associated with given cycle
         ---
         requestBody:
             content:
@@ -5019,49 +4938,107 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         ---
         """
         cycle = self.get_object()
-        club_ids = self.request.data.get("clubs")
-        start = cycle.start_date
-        end = cycle.end_date
-        apps = ClubApplication.objects.filter(pk__in=club_ids)
-        for app in apps:
-            app.application_cycle = cycle
-            app.application_start_time = start
-            app.application_end_time = end
-        ClubApplication.objects.bulk_update(
-            apps,
-            ["application_cycle", "application_start_time", "application_end_time"],
-        )
-        return Response([])
 
-    @action(detail=False, methods=["post"])
-    def remove_clubs_from_all(self, *args, **kwargs):
-        """
-        Remove selected clubs from any/all cycles
-        ---
-        requestBody:
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        properties:
-                            clubs:
-                                type: array
-                                items:
-                                    type: string
-        responses:
-            "200":
-                content: {}
-        ---
-        """
-        club_ids = self.request.data.get("clubs", [])
-        apps = ClubApplication.objects.filter(pk__in=club_ids)
-        for app in apps:
-            app.application_cycle = None
-        ClubApplication.objects.bulk_update(
-            apps,
-            ["application_cycle", "application_start_time", "application_end_time"],
-        )
-        return Response([])
+        if self.request.method == "GET":
+            return Response(
+                ClubApplication.objects.filter(application_cycle=cycle)
+                .values("club__name", "club__code")
+                .select_related("club")
+            )
+        else:
+            club_codes = self.request.data.get("clubs")
+            start = cycle.start_date
+            end = cycle.end_date
+            release = cycle.release_date
+
+            # Some apps get deleted
+            ClubApplication.objects.filter(application_cycle=cycle).exclude(
+                club__code__in=club_codes
+            ).delete()
+
+            # Some apps need to be created - use the default Wharton Template
+            prompt_one = (
+                "Tell us about a time you took " "initiative or demonstrated leadership"
+            )
+            prompt_two = (
+                "Tell us about a time you faced a challenge and how you solved it"
+            )
+            prompt_three = "Tell us about a time you collaborated well in a team"
+            created_apps_clubs = (
+                ClubApplication.objects.filter(
+                    application_cycle=cycle, club__code__in=club_codes
+                )
+                .values_list("club__code", flat=True)
+                .select_related("club")
+            )
+            creation_pending_clubs = Club.objects.filter(
+                code__in=set(club_codes) - set(created_apps_clubs)
+            )
+
+            for club in creation_pending_clubs:
+                name = f"{club.name} Application"
+                most_recent = (
+                    ClubApplication.objects.filter(club=club)
+                    .order_by("-created_at")
+                    .first()
+                )
+
+                if most_recent:
+                    # If an application for this club exists, clone it
+                    application = most_recent.make_clone()
+                    application.application_start_time = start
+                    application.application_end_time = end
+                    application.result_release_time = release
+                    application.application_cycle = cycle
+                    application.is_wharton_council = True
+                    application.external_url = (
+                        f"https://pennclubs.com/club/{club.code}/"
+                        f"application/{application.pk}"
+                    )
+                    application.save()
+                else:
+                    # Otherwise, start afresh
+                    application = ClubApplication.objects.create(
+                        name=name,
+                        club=club,
+                        application_start_time=start,
+                        application_end_time=end,
+                        result_release_time=release,
+                        application_cycle=cycle,
+                        is_wharton_council=True,
+                    )
+                    external_url = (
+                        f"https://pennclubs.com/club/{club.code}/"
+                        f"application/{application.pk}"
+                    )
+                    application.external_url = external_url
+                    application.save()
+                    prompt = (
+                        "Choose one of the following "
+                        "prompts for your personal statement"
+                    )
+                    prompt_question = ApplicationQuestion.objects.create(
+                        question_type=ApplicationQuestion.MULTIPLE_CHOICE,
+                        application=application,
+                        prompt=prompt,
+                    )
+                    ApplicationMultipleChoice.objects.create(
+                        value=prompt_one, question=prompt_question
+                    )
+                    ApplicationMultipleChoice.objects.create(
+                        value=prompt_two, question=prompt_question
+                    )
+                    ApplicationMultipleChoice.objects.create(
+                        value=prompt_three, question=prompt_question
+                    )
+                    ApplicationQuestion.objects.create(
+                        question_type=ApplicationQuestion.FREE_RESPONSE,
+                        prompt="Answer the prompt you selected",
+                        word_limit=150,
+                        application=application,
+                    )
+
+            return Response([])
 
     @action(detail=False, methods=["post"])
     def add_clubs_to_exception(self, *args, **kwargs):

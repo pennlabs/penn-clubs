@@ -1534,6 +1534,7 @@ class ApplicationCycle(models.Model):
     name = models.CharField(max_length=255)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
+    release_date = models.DateTimeField(null=True)
 
     def __str__(self):
         return self.name
