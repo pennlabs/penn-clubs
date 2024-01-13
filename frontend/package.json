@@ -1,9 +1,22 @@
 {
+  "scripts": {
+    "lint": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\"",
+    "clean": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\" --fix",
+    "test": "tsc --noemit",
+    "integration": "./test.sh",
+    "dev": "node server.js",
+    "build": "env NODE_ENV=production next build",
+    "start": "env NODE_ENV=production node server.js",
+    "storybook": "start-storybook -s ./public -p 6006",
+    "build-storybook": "build-storybook -o public/storybook"
+  },
+  "license": "MIT",
   "proxy": "http://localhost:8000/",
   "dependencies": {
     "@babel/core": "^7.12.8",
     "@babel/helper-create-regexp-features-plugin": "^7.7.4",
     "@babel/plugin-syntax-jsx": "^7.7.4",
+    "@fastify/http-proxy": "^9.3.0",
     "@react-google-maps/api": "^2.1.1",
     "@sentry/browser": "^6.0.3",
     "@sentry/node": "^6.0.3",
@@ -23,22 +36,21 @@
     "deep-equal": "^2.0.3",
     "draft-js": "^0.11.0",
     "draftjs-to-html": "^0.9.1",
-    "express": "^4.17.1",
+    "fastify": "^4.25.2",
     "find-cache-dir": "^3.3.1",
     "formik": "^2.2.1",
     "fuse.js": "^6.4.3",
     "html-to-draftjs": "^1.4.0",
-    "http-proxy-middleware": "^1.0.6",
     "isomorphic-unfetch": "^3.0.0",
     "lru-cache": "^6.0.0",
     "moment": "^2.27.0",
     "moment-timezone": "^0.5.31",
-    "next": "^10.0.6",
-    "react": "^17.0.1",
+    "next": "12",
+    "react": "17",
     "react-beautiful-dnd": "^13.1.0",
     "react-big-calendar": "^0.31.0",
     "react-datepicker": "^3.4.1",
-    "react-dom": "^17.0.1",
+    "react-dom": "17",
     "react-draft-wysiwyg": "^1.14.4",
     "react-ga": "^3.2.0",
     "react-lazy-load": "^3.1.13",
@@ -55,18 +67,6 @@
     "use-places-autocomplete": "^1.8.1",
     "yarn": "^1.22.10"
   },
-  "scripts": {
-    "lint": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\"",
-    "clean": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\" --fix",
-    "test": "tsc --noemit",
-    "integration": "./test.sh",
-    "dev": "node server.js",
-    "build": "env NODE_ENV=production next build",
-    "start": "env NODE_ENV=production node server.js",
-    "storybook": "start-storybook -s ./public -p 6006",
-    "build-storybook": "build-storybook -o public/storybook"
-  },
-  "license": "MIT",
   "devDependencies": {
     "@cypress/code-coverage": "^3.9.2",
     "@storybook/addon-actions": "^6.1.15",
@@ -102,7 +102,7 @@
     "istanbul-lib-coverage": "^3.0.0",
     "nyc": "^15.0.0",
     "prettier": "^2.0.5",
-    "typescript": "^4.1.2",
+    "typescript": "4.3.2",
     "wait-on": "^5.2.0"
   }
 }

@@ -1,20 +1,23 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-console */
-const express = require('express')
+const fastify = require('fastify')
 const next = require('next')
 
-const devProxy = {
-  '/api': {
-    target: 'http://localhost:8000',
-    changeOrigin: true,
-    ws: true,
+/**
+ * @type {import('@fastify/http-proxy').FastifyHttpProxyOptions[]}
+ */
+const devProxy = [
+  {
+    upstream: 'http://127.0.0.1:8000',
+    prefix: '/api',
+    rewritePrefix: '/api',
   },
-  '/__debug__': {
-    // this allows django debug toolbar to work properly
-    target: 'http://localhost:8000',
-    changeOrigin: true,
+  {
+    upstream: 'http://127.0.0.1:8000',
+    prefix: '/__debug__',
+    rewritePrefix: '/__debug__',
   },
-}
+]
 
 const port = parseInt(process.env.PORT, 10) || 3000
 const env = process.env.NODE_ENV
@@ -24,34 +27,35 @@ const app = next({
   dev,
 })
 
-const handle = app.getRequestHandler()
-
-app
-  .prepare()
-  .then(() => {
-    const server = express()
-
-    // Set up the development proxy to the backend
-    if (dev && devProxy) {
-      const { createProxyMiddleware } = require('http-proxy-middleware')
-      Object.keys(devProxy).forEach(function (context) {
-        const proxy = createProxyMiddleware(context, devProxy[context])
-        server.use(context, proxy)
-        console.log(`-> Using proxy middleware for route ${context}`)
-      })
-    }
-
-    // Default catch-all handler to allow Next.js to handle all other routes
-    server.all('*', (req, res) => handle(req, res))
-
-    server.listen(port, (err) => {
-      if (err) {
-        throw err
-      }
-      console.log(`-> Ready on port ${port} [${env || 'development'}]`)
+const main = async () => {
+  await app.prepare()
+  const handle = app.getRequestHandler()
+  const server = fastify({ logger: dev })
+  if (dev && devProxy) {
+    const proxy = require('@fastify/http-proxy')
+    devProxy.forEach((options) => {
+      server.register(proxy, options)
     })
+  }
+  server.all('*', (req, res) => {
+    try {
+      return handle(req.raw, res.raw)
+    } catch (error) {
+      console.log(error)
+      return app.renderError(error, req.raw, res.raw, req.url, {})
+    } finally {
+      res.sent = true
+    }
   })
-  .catch((err) => {
+  try {
+    await server.listen({
+      port,
+    })
+    console.log(`> Ready on port ${port} [${env || 'development'}]`)
+  } catch (error) {
     console.log('-> An error occurred, unable to start the server')
-    throw err
-  })
+    throw error
+  }
+}
+
+main()
