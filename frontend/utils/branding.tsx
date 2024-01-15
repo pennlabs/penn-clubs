@@ -43,7 +43,7 @@ const sites = {
 
         CONTACT_EMAIL: 'contact@pennclubs.com',
         SUPPORT_EMAIL: 'vpul-orgs@pobox.upenn.edu',
-        FEEDBACK_URL: 'https://airtable.com/shrCsYFWxCwfwE7cf',
+        FEEDBACK_URL: 'https://airtable.com/appFRa4NQvNMEbWsA/shrZdY76Bauj77H90',
 
         CLUB_FIELDS: [
             'accepting_members',

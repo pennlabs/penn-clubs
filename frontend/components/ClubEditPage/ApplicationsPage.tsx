@@ -23,7 +23,13 @@ import { doApiRequest, getApiUrl, getSemesterFromDate } from '~/utils'
 import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
-import { CheckboxField, SelectField, TextField } from '../FormComponents'
+import {
+  CheckboxField,
+  DateTimeField,
+  SelectField,
+  TextField,
+} from '../FormComponents'
+import ModelForm from '../ModelForm'
 
 const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   margin-bottom: 20px;
@@ -494,6 +500,14 @@ export default function ApplicationsPage({
     { label: 'Graduation Year', name: 'graduation_year' },
   ]
 
+  const extensionTableFields = [
+    { label: 'First Name', name: 'first_name' },
+    { label: 'Last Name', name: 'last_name' },
+    { label: 'Username', name: 'username' },
+    { label: 'Graduation Year', name: 'graduation_year' },
+    { label: 'Extension End Time', name: 'end_time' },
+  ]
+
   const columns = useMemo(
     () =>
       responseTableFields.map(({ label, name }) => ({
@@ -802,6 +816,42 @@ export default function ApplicationsPage({
             </a>
           </div>
         )}
+      <br></br>
+      <div>
+        {currentApplication != null ? (
+          <>
+            <StyledHeader style={{ marginBottom: '2px' }}>
+              Extensions
+            </StyledHeader>
+            <ModelForm
+              key={currentApplication.id}
+              baseUrl={`/clubs/${club.code}/applications/${currentApplication.id}/extensions/`}
+              fields={
+                <>
+                  <Field
+                    name="username"
+                    as={TextField}
+                    required={true}
+                    helpText="The username (PennKey) of the applicant to be granted an extension."
+                  />
+                  <Field
+                    name="end_time"
+                    as={DateTimeField}
+                    required={true}
+                    helpText="The extended end time for this applicant's application."
+                  />
+                </>
+              }
+              tableFields={extensionTableFields}
+              confirmDeletion
+              searchableColumns={['username']}
+              noun="Extension"
+            />
+          </>
+        ) : (
+          <Loading />
+        )}
+      </div>
       {showModal && (
         <Modal
           show={showModal}
