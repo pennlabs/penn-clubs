@@ -12,6 +12,7 @@ isort = "*"
 flake8-quotes = "*"
 django-debug-toolbar = "*"
 django-extensions = "*"
+ruff = "*"
 
 [packages]
 dj-database-url = "*"

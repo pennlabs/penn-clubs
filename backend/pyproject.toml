@@ -1,0 +1,21 @@
+[tool.ruff]
+exclude = [
+    ".venv",
+    "migrations",
+]
+ignore = ["E203"]
+line-length = 88
+select = [
+    "E",
+    "F",
+    "Q",
+    "W",
+    "I",
+]
+
+[tool.ruff.flake8-quotes]
+inline-quotes = "double"
+
+[tool.ruff.isort]
+known-first-party = ["pennclubs", "clubs"]
+lines-after-imports = 2
