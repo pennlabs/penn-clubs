@@ -12,6 +12,7 @@ jobs:
     with:
       projectName: pennclubs
       path: backend
+      pythonVersion: 3.11-buster
       flake: true
       black: true
 
