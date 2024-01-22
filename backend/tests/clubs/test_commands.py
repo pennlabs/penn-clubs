@@ -351,7 +351,7 @@ class SendInvitesTestCase(TestCase):
         for usr in [user2, user3, user4]:
             Subscribe.objects.create(club=self.club1, person=usr)
 
-        now = datetime.datetime(2021, 1, 5, 12, tzinfo=timezone.utc)
+        now = datetime.datetime(2021, 1, 5, 12, tzinfo=datetime.timezone.utc)
 
         ClubApplication.objects.create(
             name="Test Application",

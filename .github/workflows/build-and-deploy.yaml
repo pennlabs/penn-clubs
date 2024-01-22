@@ -12,7 +12,7 @@ jobs:
     with:
       projectName: pennclubs
       path: backend
-      pythonVersion: 3.12-bookworm
+      pythonVersion: 3.11-bookworm
       flake: true
       black: true
 

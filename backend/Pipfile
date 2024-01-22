@@ -58,6 +58,7 @@ pandas = "*"
 drf-excel = "*"
 numpy = "*"
 coverage = "*"
+daphne = "*"
 
 [requires]
-python_version = "3.12"
+python_version = "3.11"

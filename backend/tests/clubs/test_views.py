@@ -475,7 +475,7 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200], resp.content)
-        self.assertEquals(len(resp.data), 3, resp.content)
+        self.assertEqual(len(resp.data), 3, resp.content)
 
         # list events with a filter
         resp = self.client.get(
@@ -487,7 +487,7 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200], resp.content)
-        self.assertEquals(1, len(resp.data), resp.data)
+        self.assertEqual(1, len(resp.data), resp.data)
 
     def test_event_update_fair(self):
         Membership.objects.create(
@@ -1395,9 +1395,9 @@ class ClubTestCase(TestCase):
         # ensure archived was correctly recorded
         club = Club.objects.filter(archived=True).first()
         self.assertTrue(club is not None)
-        self.assertEquals(club.code, self.club1.code)
+        self.assertEqual(club.code, self.club1.code)
         self.assertTrue(club.archived)
-        self.assertEquals(club.archived_by, self.user5)
+        self.assertEqual(club.archived_by, self.user5)
 
         # ensure club was taken off clubs endpoint
         resp = self.client.get(reverse("clubs-list"))
