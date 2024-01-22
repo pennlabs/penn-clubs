@@ -59,6 +59,7 @@ drf-excel = "*"
 numpy = "*"
 coverage = "*"
 daphne = "*"
+tatsu = "==5.8.3"
 
 [requires]
 python_version = "3.11"

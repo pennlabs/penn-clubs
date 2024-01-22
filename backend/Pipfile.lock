@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "93230b7ba09075773ea453ece35ef1ed17654ec85c116d88b2c959873113a41b"
+            "sha256": "ff924c79fa2da8a4283a43a325e9fdac3e8c064d660b9a825c6890b752a632da"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1378,11 +1378,12 @@
         },
         "tatsu": {
             "hashes": [
-                "sha256:1c9c6c60ed4d45432dd3db8452aa9b2f41bd8ca968ff869c8b1ed70f877683dd",
-                "sha256:97954dfad6a3f73c7179f88d706eab6be92e6753e1c09e9e28cd726aa2f8e22b"
+                "sha256:0a836692e67247cad9f251e083b045b13345cc715e69a7fbc16522beaa0f2163",
+                "sha256:571ecbcdf33b7828c05e5cd95a8e8ad06af111c2c83a6a245be4d8f7c43de7bb"
             ],
-            "markers": "python_version >= '3.11'",
-            "version": "==5.11.3"
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==5.8.3"
         },
         "tblib": {
             "hashes": [
