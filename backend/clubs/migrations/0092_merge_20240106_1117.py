@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clubs", "0091_applicationextension"),
         ("clubs", "0091_clubapplication_application_end_time_exception"),
