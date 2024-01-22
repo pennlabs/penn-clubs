@@ -6,6 +6,7 @@
 # Python files
 __pycache__/
 *.pyc
+.python-version
 
 # Distribution
 /frontend/public/storybook/
@@ -27,6 +28,8 @@ db.sqlite3
 
 # React
 node_modules/
+.yarn
+.yarnrc.yml
 .next/
 
 # Development Enviroment

@@ -23,6 +23,7 @@ from clubs.models import (
     AdminNote,
     Advisor,
     ApplicationCommittee,
+    ApplicationCycle,
     ApplicationExtension,
     ApplicationMultipleChoice,
     ApplicationQuestion,
@@ -95,6 +96,28 @@ class ClubRouteMixin(object):
         )
 
         return super().save()
+
+
+class ApplicationCycleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationCycle
+        fields = ["id", "name", "start_date", "end_date", "release_date"]
+
+    def validate(self, data):
+        """
+        Check that start_date <= end_date <= release_date
+        """
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+        release_date = data.get("release_date")
+
+        if start_date and end_date and start_date >= end_date:
+            raise serializers.ValidationError("Start must be before end.")
+
+        if end_date and release_date and end_date >= release_date:
+            raise serializers.ValidationError("End must be before release.")
+
+        return data
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -1011,6 +1034,7 @@ class ClubListSerializer(serializers.ModelSerializer):
             "is_favorite",
             "is_member",
             "is_subscribe",
+            "is_wharton",
             "membership_count",
             "recruiting_cycle",
             "name",
@@ -1663,7 +1687,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "instagram",
             "is_ghost",
             "is_request",
-            "is_wharton",
             "linkedin",
             "listserv",
             "members",
@@ -2804,6 +2827,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "rejection_email",
             "application_start_time",
             "application_end_time",
+            "application_end_time_exception",
             "result_release_time",
             "external_url",
             "committees",

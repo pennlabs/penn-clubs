@@ -394,6 +394,12 @@ class Command(BaseCommand):
         tag_undergrad, _ = Tag.objects.get_or_create(name="Undergraduate")
         tag_generic, _ = Tag.objects.get_or_create(name="Generic")
 
+        wharton_badge, _ = Badge.objects.get_or_create(
+            label="Wharton Council",
+            purpose="Dummy badge to mock Wharton-affiliated clubs",
+            visible=True,
+        )
+
         for i in range(1, 50):
             club, created = Club.objects.get_or_create(
                 code="z-club-{}".format(i),
@@ -405,6 +411,10 @@ class Command(BaseCommand):
                     "email": "example@example.com",
                 },
             )
+
+            if 10 <= i <= 15:
+                # Make some clubs Wharton-affiliated
+                club.badges.add(wharton_badge)
 
             if created:
                 club.available_virtually = i % 2 == 0

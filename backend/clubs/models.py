@@ -1534,6 +1534,7 @@ class ApplicationCycle(models.Model):
     name = models.CharField(max_length=255)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
+    release_date = models.DateTimeField(null=True)
 
     def __str__(self):
         return self.name
@@ -1551,6 +1552,7 @@ class ClubApplication(CloneModel):
     description = models.TextField(blank=True)
     application_start_time = models.DateTimeField()
     application_end_time = models.DateTimeField()
+    application_end_time_exception = models.BooleanField(default=False, blank=True)
     name = models.TextField(blank=True)
     result_release_time = models.DateTimeField()
     application_cycle = models.ForeignKey(
