@@ -22,11 +22,11 @@ class Command(BaseCommand):
         """
 
     def setUp(self):
-        self.num_clubs = 500
-        self.num_users = 1000
-        self.subset_size = 3
-        self.num_questions_per_club = 5
-        self.total_submissions = 3
+        self.num_clubs = 10
+        self.num_users = 10
+        self.subset_size = 1
+        self.num_questions_per_club = 2
+        self.total_submissions = 1
         self.club_prefix = "test_club_"
         self.user_prefix = "test_user_"
 
@@ -69,6 +69,7 @@ class Command(BaseCommand):
                 word_limit=150,
                 application=application,
             )
+            for _ in range(self.num_questions_per_club)
             for application in applications
         ]
         ApplicationQuestion.objects.bulk_create(questions)
@@ -155,6 +156,7 @@ class Command(BaseCommand):
             )
             tasks.append(task)
         all_tasks = await asyncio.gather(*tasks, return_exceptions=True)
+        print(all_tasks)
         end_time = time.time()
 
         print(f"Throughput was: {sum(all_tasks) / len(all_tasks)} seconds per txn.")
@@ -164,8 +166,8 @@ class Command(BaseCommand):
         self.setUp()
         try:
             asyncio.run(self.handleAsync(args, kwargs))
-            # self.tearDown()
+            self.tearDown()
         except Exception as e:
             print(e)
             logging.exception("Something happened!")
-            # self.tearDown()
+            self.tearDown()
