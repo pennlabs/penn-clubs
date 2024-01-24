@@ -4437,6 +4437,7 @@ class UserViewSet(viewsets.ModelViewSet):
         ---
         """
         questions = self.request.data.get("questionIds", [])
+
         committee_name = self.request.data.get("committee", None)
         response = Response([])
         if len(questions) == 0:

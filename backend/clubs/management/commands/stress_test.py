@@ -1,14 +1,17 @@
 import asyncio
 import datetime
+import logging
 import random
 import time
 
+from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from rest_framework import APIRequestFactory
+from rest_framework.test import APIRequestFactory
 
 from clubs.models import ApplicationQuestion, Club, ClubApplication
+from clubs.views import UserViewSet
 
 
 class Command(BaseCommand):
@@ -18,37 +21,27 @@ class Command(BaseCommand):
         """
 
     def setUp(self):
+        self.num_clubs = 1000
+        self.num_users = 3
+        self.subset_size = 0.5
+        self.num_questions_per_club = 1
         self.prefix = "test_club_"
-        self.factory = APIRequestFactory()
+
         self.uri = "/users/"
-        self.club_question_ids = []
+        self.factory = APIRequestFactory()
+        self.view = UserViewSet.as_view({"post": "question_response"})
 
-    async def submit_application(self, user, club_idx):
-        start_time = time.time()
-        data = {
-            "questionIds": self.club_question_ids[club_idx],
-        }
-        for question_id in self.club_question_ids[club_idx]:
-            data[question_id] = "This is a test answer."
-        request = self.factory.post(self.uri, data)
-        request.user = user
-
-        self.view(request)
-        end_time = time.time()
-        return end_time - start_time
-
-    async def handle(self, *args, **kwargs):
-        random.seed(0)
-        subset_size = 0.5
-        num_clubs = 6
-        num_users = 10
+        self.club_question_ids = {}
+        self.users = []
 
         # Create Clubs & Club Applications
         now = timezone.now()
-        for i in range(num_clubs):
+        for i in range(self.num_clubs):
             questions = []
             # Create Club Object
-            club = Club.objects.create(code=(self.prefix + i), name=(f"Test Club {i}"))
+            club = Club.objects.create(
+                code=(self.prefix + str(i)), name=(f"Test Club {i}")
+            )
             # Create Club Application
             application = ClubApplication.objects.create(
                 name="Test Application",
@@ -59,7 +52,7 @@ class Command(BaseCommand):
                 external_url="https://pennlabs.org/",
             )
             # Create Simple Application Questions
-            for _ in range(5):
+            for _ in range(self.num_questions_per_club):
                 question = ApplicationQuestion.objects.create(
                     question_type=ApplicationQuestion.FREE_RESPONSE,
                     prompt="Answer the prompt you selected",
@@ -67,30 +60,60 @@ class Command(BaseCommand):
                     application=application,
                 )
                 questions.append(question.id)
-            self.club_question_ids.append(questions)
+            self.club_question_ids[club.id] = questions
+        print("Finished setting up clubs.")
 
         # Create Users (Applicants)
-        users = []
-        for i in range(num_users):
-            users.append(
+        self.users = []
+        for i in range(self.num_users):
+            self.users.append(
                 get_user_model().objects.create_user(
                     str(i), str(i) + "@upenn.edu", "test"
                 )
             )
+        print("Finished setting up users.")
+
+    @sync_to_async
+    def submit_application(self, user, club_id):
+        start_time = time.time()
+        data = {
+            "questionIds": self.club_question_ids[club_id],
+        }
+        for question_id in self.club_question_ids[club_id]:
+            data[question_id] = {"test": "This is a test answer."}
+
+        request = self.factory.post(self.uri, content_type="application/json")
+        request.data = data
+        request.user = user
+
+        self.view(request)
+        end_time = time.time()
+        return end_time - start_time
+
+    def tearDown(self):
+        test_clubs = Club.objects.filter(code__startswith=self.prefix)
+        for club in test_clubs:
+            club.delete()
+        for user in self.users:
+            user.delete()
+
+    async def handleAsync(self, *args, **kwargs):
+        random.seed(0)
 
         # Performance Testing!
         # Randomly choose some subset of clubs (size: clubs_per_user).
         # Then apply to them 3 times each in a random order.
         user_application_pairs = []
-        clubs_per_user = round(subset_size * num_clubs)
+        clubs_per_user = round(self.subset_size * self.num_clubs)
+        club_keys = list(self.club_question_ids.keys())
 
-        for user in users:
-            current_user_clubs = set()
-            while current_user_clubs < clubs_per_user:
-                next_int = random.randint()
-                if next_int not in current_user_clubs:
-                    user_application_pairs.extend([tuple(user, next_int)] * 3)
+        for user in self.users:
+            sample = random.sample(club_keys, clubs_per_user)  # make this actual ids
+            for club_id in sample:
+                user_application_pairs.extend([(user, club_id)] * 3)
         random.shuffle(user_application_pairs)
+
+        print("Finished generating and shuffling pairs.")
 
         start_time = time.time()
         tasks = []
@@ -101,15 +124,18 @@ class Command(BaseCommand):
                 )
             )
             tasks.append(task)
-            all_tasks = await asyncio.gather(*tasks, return_exceptions=True)
+        all_tasks = await asyncio.gather(*tasks, return_exceptions=True)
         end_time = time.time()
 
-        print(f"Average task time was: {sum(all_tasks) / len(all_tasks)} seconds.")
+        print(f"Throughput was: {sum(all_tasks) / len(all_tasks)} seconds per txn.")
         print(f"Total processing time was: {end_time - start_time} seconds.")
 
-        # Tear Down
-        test_clubs = Club.objects.filter(code__starts_with=self.prefix)
-        for club in test_clubs:
-            club.delete()
-        for user in users:
-            user.delete()
+    def handle(self, *args, **kwargs):
+        self.setUp()
+        try:
+            asyncio.run(self.handleAsync(args, kwargs))
+            self.tearDown()
+        except Exception as e:
+            print(e)
+            logging.exception("Something happened!")
+            self.tearDown()
