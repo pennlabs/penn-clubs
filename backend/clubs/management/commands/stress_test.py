@@ -21,11 +21,11 @@ class Command(BaseCommand):
         """
 
     def setUp(self):
-        self.num_clubs = 500
-        self.num_users = 2000
-        self.subset_size = 5
-        self.num_questions_per_club = 5
-        self.total_submissions = 3
+        self.num_clubs = 5
+        self.num_users = 10
+        self.subset_size = 1
+        self.num_questions_per_club = 2
+        self.total_submissions = 1
         self.prefix = "test_club_"
 
         self.uri = "/users/question_response/"
@@ -81,7 +81,7 @@ class Command(BaseCommand):
             "questionIds": self.club_question_ids[club_id],
         }
         for question_id in self.club_question_ids[club_id]:
-            data[question_id] = {"test": "This is a test answer."}
+            data[question_id] = {"text": "This is a test answer."}
 
         request = self.factory.post(self.uri, data, format="json")
         request.user = user
@@ -91,9 +91,7 @@ class Command(BaseCommand):
         return end_time - start_time
 
     def tearDown(self):
-        test_clubs = Club.objects.filter(code__startswith=self.prefix)
-        for club in test_clubs:
-            club.delete()
+        Club.objects.filter(code__startswith=self.prefix).delete()
         for user in self.users:
             user.delete()
 
@@ -126,6 +124,7 @@ class Command(BaseCommand):
             )
             tasks.append(task)
         all_tasks = await asyncio.gather(*tasks, return_exceptions=True)
+        print(all_tasks)
         end_time = time.time()
 
         print(f"Throughput was: {sum(all_tasks) / len(all_tasks)} seconds per txn.")
@@ -135,8 +134,8 @@ class Command(BaseCommand):
         self.setUp()
         try:
             asyncio.run(self.handleAsync(args, kwargs))
-            self.tearDown()
+            # self.tearDown()
         except Exception as e:
             print(e)
             logging.exception("Something happened!")
-            self.tearDown()
+            # self.tearDown()
