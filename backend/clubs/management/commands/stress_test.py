@@ -7,6 +7,7 @@ import time
 from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
+from django.db.models import Prefetch
 from django.utils import timezone
 from rest_framework.test import APIRequestFactory
 
@@ -21,12 +22,13 @@ class Command(BaseCommand):
         """
 
     def setUp(self):
-        self.num_clubs = 5
-        self.num_users = 10
-        self.subset_size = 1
-        self.num_questions_per_club = 2
-        self.total_submissions = 1
-        self.prefix = "test_club_"
+        self.num_clubs = 500
+        self.num_users = 1000
+        self.subset_size = 3
+        self.num_questions_per_club = 5
+        self.total_submissions = 3
+        self.club_prefix = "test_club_"
+        self.user_prefix = "test_user_"
 
         self.uri = "/users/question_response/"
         self.factory = APIRequestFactory()
@@ -34,17 +36,19 @@ class Command(BaseCommand):
 
         self.club_question_ids = {}
         self.users = []
-
-        # Create Clubs & Club Applications
         now = timezone.now()
-        for i in range(self.num_clubs):
-            questions = []
-            # Create Club Object
-            club = Club.objects.create(
-                code=(self.prefix + str(i)), name=(f"Test Club {i}")
-            )
-            # Create Club Application
-            application = ClubApplication.objects.create(
+
+        # Create Clubs
+        clubs = [
+            Club(code=(self.club_prefix + str(i)), name=(f"Test Club {i}"))
+            for i in range(self.num_clubs)
+        ]
+        Club.objects.bulk_create(clubs)
+        clubs = Club.objects.filter(code__startswith=self.club_prefix)
+
+        # Create Club Applications
+        applications = [
+            ClubApplication(
                 name="Test Application",
                 club=club,
                 application_start_time=now - datetime.timedelta(days=1),
@@ -52,26 +56,53 @@ class Command(BaseCommand):
                 result_release_time=now + datetime.timedelta(weeks=1),
                 external_url="https://pennlabs.org/",
             )
-            # Create Simple Application Questions
-            for _ in range(self.num_questions_per_club):
-                question = ApplicationQuestion.objects.create(
-                    question_type=ApplicationQuestion.FREE_RESPONSE,
-                    prompt="Answer the prompt you selected",
-                    word_limit=150,
-                    application=application,
-                )
-                questions.append(str(question.id))
-            self.club_question_ids[club.id] = questions
+            for club in clubs
+        ]
+        ClubApplication.objects.bulk_create(applications)
+        applications = ClubApplication.objects.filter(club__in=clubs)
+
+        # Create Club Application Questions
+        questions = [
+            ApplicationQuestion(
+                question_type=ApplicationQuestion.FREE_RESPONSE,
+                prompt="Answer the prompt you selected",
+                word_limit=150,
+                application=application,
+            )
+            for application in applications
+        ]
+        ApplicationQuestion.objects.bulk_create(questions)
+
+        clubs_data = Club.objects.filter(
+            code__startswith=self.club_prefix
+        ).prefetch_related(
+            Prefetch(
+                "clubapplication_set",
+                queryset=ClubApplication.objects.prefetch_related("questions"),
+            )
+        )
+        for club in clubs_data:
+            question_ids = [
+                str(question.id)
+                for application in club.clubapplication_set.all()
+                for question in application.questions.all()
+            ]
+            self.club_question_ids[club.id] = question_ids
         print("Finished setting up clubs.")
 
         # Create Users (Applicants)
-        self.users = []
-        for i in range(self.num_users):
-            self.users.append(
-                get_user_model().objects.create_user(
-                    str(i), str(i) + "@upenn.edu", "test"
+        User = get_user_model()
+        User.objects.bulk_create(
+            [
+                User(
+                    username=self.user_prefix + str(i),
+                    email=str(i) + "@upenn.edu",
+                    password="test",
                 )
-            )
+                for i in range(self.num_users)
+            ]
+        )
+        self.users = list(User.objects.filter(username__startswith=self.user_prefix))
         print("Finished setting up users.")
 
     @sync_to_async
@@ -91,7 +122,7 @@ class Command(BaseCommand):
         return end_time - start_time
 
     def tearDown(self):
-        Club.objects.filter(code__startswith=self.prefix).delete()
+        Club.objects.filter(code__startswith=self.club_prefix).delete()
         for user in self.users:
             user.delete()
 
@@ -111,9 +142,9 @@ class Command(BaseCommand):
                     [(user, club_id)] * self.total_submissions
                 )
         random.shuffle(user_application_pairs)
-
         print("Finished generating and shuffling pairs.")
 
+        print("Starting Stress Test.")
         start_time = time.time()
         tasks = []
         for i in range(len(user_application_pairs)):
@@ -124,7 +155,6 @@ class Command(BaseCommand):
             )
             tasks.append(task)
         all_tasks = await asyncio.gather(*tasks, return_exceptions=True)
-        print(all_tasks)
         end_time = time.time()
 
         print(f"Throughput was: {sum(all_tasks) / len(all_tasks)} seconds per txn.")
