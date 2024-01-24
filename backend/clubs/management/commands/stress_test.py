@@ -21,13 +21,14 @@ class Command(BaseCommand):
         """
 
     def setUp(self):
-        self.num_clubs = 1000
-        self.num_users = 3
-        self.subset_size = 0.5
-        self.num_questions_per_club = 1
+        self.num_clubs = 500
+        self.num_users = 2000
+        self.subset_size = 0.01
+        self.num_questions_per_club = 5
+        self.total_submissions = 3
         self.prefix = "test_club_"
 
-        self.uri = "/users/"
+        self.uri = "/users/question_response/"
         self.factory = APIRequestFactory()
         self.view = UserViewSet.as_view({"post": "question_response"})
 
@@ -59,7 +60,7 @@ class Command(BaseCommand):
                     word_limit=150,
                     application=application,
                 )
-                questions.append(question.id)
+                questions.append(str(question.id))
             self.club_question_ids[club.id] = questions
         print("Finished setting up clubs.")
 
@@ -82,8 +83,7 @@ class Command(BaseCommand):
         for question_id in self.club_question_ids[club_id]:
             data[question_id] = {"test": "This is a test answer."}
 
-        request = self.factory.post(self.uri, content_type="application/json")
-        request.data = data
+        request = self.factory.post(self.uri, data, format="json")
         request.user = user
 
         self.view(request)
@@ -108,9 +108,11 @@ class Command(BaseCommand):
         club_keys = list(self.club_question_ids.keys())
 
         for user in self.users:
-            sample = random.sample(club_keys, clubs_per_user)  # make this actual ids
+            sample = random.sample(club_keys, clubs_per_user)
             for club_id in sample:
-                user_application_pairs.extend([(user, club_id)] * 3)
+                user_application_pairs.extend(
+                    [(user, club_id)] * self.total_submissions
+                )
         random.shuffle(user_application_pairs)
 
         print("Finished generating and shuffling pairs.")
