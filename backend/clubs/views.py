@@ -38,7 +38,6 @@ from django.db.models import (
     TextField,
     Value,
 )
-from django.db.models.expressions import RawSQL
 from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
@@ -70,6 +69,8 @@ from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     AdminNote,
     Advisor,
+    ApplicationCycle,
+    ApplicationExtension,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -125,6 +126,8 @@ from clubs.permissions import (
 from clubs.serializers import (
     AdminNoteSerializer,
     AdvisorSerializer,
+    ApplicationCycleSerializer,
+    ApplicationExtensionSerializer,
     ApplicationQuestionResponseSerializer,
     ApplicationQuestionSerializer,
     ApplicationSubmissionCSVSerializer,
@@ -4450,10 +4453,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # prevent submissions outside of the open duration
         now = timezone.now()
-        if (
-            now > application.application_end_time
-            or now < application.application_start_time
-        ):
+        extension = application.extensions.filter(user=self.request.user).first()
+        end_time = (
+            max(extension.end_time, application.application_end_time)
+            if extension
+            else application.application_end_time
+        )
+        if now > end_time or now < application.application_start_time:
             return Response(
                 {"success": False, "detail": "This application is not currently open!"}
             )
@@ -4473,8 +4479,11 @@ class UserViewSet(viewsets.ModelViewSet):
                     submissions page""",
                 }
             )
-        submission = ApplicationSubmission.objects.create(
-            user=self.request.user, application=application, committee=committee,
+        submission, _ = ApplicationSubmission.objects.get_or_create(
+            user=self.request.user,
+            application=application,
+            committee=committee,
+            archived=False,
         )
 
         key = f"applicationsubmissions:{application.id}"
@@ -4498,9 +4507,11 @@ class UserViewSet(viewsets.ModelViewSet):
             ):
                 text = question_data.get("text", None)
                 if text is not None and text != "":
-                    obj = ApplicationQuestionResponse.objects.create(
-                        text=text, question=question, submission=submission,
-                    ).save()
+                    obj, _ = ApplicationQuestionResponse.objects.update_or_create(
+                        question=question,
+                        submission=submission,
+                        defaults={"text": text},
+                    )
                     response = Response(ApplicationQuestionResponseSerializer(obj).data)
             elif question_type == ApplicationQuestion.MULTIPLE_CHOICE:
                 multiple_choice_value = question_data.get("multipleChoice", None)
@@ -4508,13 +4519,12 @@ class UserViewSet(viewsets.ModelViewSet):
                     multiple_choice_obj = ApplicationMultipleChoice.objects.filter(
                         question=question, value=multiple_choice_value
                     ).first()
-                    obj = ApplicationQuestionResponse.objects.create(
-                        multiple_choice=multiple_choice_obj,
+                    obj, _ = ApplicationQuestionResponse.objects.update_or_create(
                         question=question,
                         submission=submission,
-                    ).save()
+                        defaults={"multiple_choice": multiple_choice_obj},
+                    )
                     response = Response(ApplicationQuestionResponseSerializer(obj).data)
-        submission.save()
         return response
 
     @action(detail=False, methods=["get"])
@@ -4582,10 +4592,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
         response = (
             ApplicationQuestionResponse.objects.filter(
-                submission__user=self.request.user, submission__archived=False
+                question=question,
+                submission__user=self.request.user,
+                submission__archived=False,
             )
-            .filter(question__prompt=question.prompt)
-            .order_by("-updated_at")
             .select_related("submission", "multiple_choice", "question")
             .prefetch_related("question__committees", "question__multiple_choice")
             .first()
@@ -4697,21 +4707,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
         # Query for recent submissions with user and committee joined
         submissions = ApplicationSubmission.objects.filter(
-            application=app,
-            created_at__in=RawSQL(
-                """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                (),
-            ),
-            archived=False,
+            application=app, archived=False,
         ).select_related("user", "committee")
 
         dry_run = self.request.data.get("dry_run")
@@ -4805,12 +4801,14 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                                 - $ref: "#/components/schemas/ClubApplication"
         ---
         """
-        qs = self.get_queryset()
-        return Response(
-            ClubApplicationSerializer(
-                qs.filter(application_end_time__gte=timezone.now()), many=True
-            ).data
-        )
+        qs = self.get_queryset().prefetch_related("extensions")
+        now = timezone.now()
+        user = self.request.user
+        q = Q(application_end_time__gte=now)
+        if user.is_authenticated:
+            q |= Q(extensions__end_time__gte=now, extensions__user=user)
+
+        return Response(ClubApplicationSerializer(qs.filter(q), many=True).data)
 
     @action(detail=True, methods=["post"])
     def duplicate(self, *args, **kwargs):
@@ -4851,7 +4849,6 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         return ClubApplicationSerializer
 
     def get_queryset(self):
-
         return (
             ClubApplication.objects.filter(club__code=self.kwargs["club_code"],)
             .select_related("application_cycle", "club")
@@ -4861,9 +4858,263 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         )
 
 
-class WhartonApplicationAPIView(generics.ListAPIView):
+class WhartonCyclesView(viewsets.ModelViewSet):
     """
-    get: Return information about all Wharton Council club applications which are
+    get: Return information about all Wharton Council application cycles
+    patch: Update application cycle and WC applications with cycle
+    clubs: list clubs with cycle
+    add_clubs: add clubs to cycle
+    remove_clubs_from_all: remove clubs from all cycles
+    """
+
+    permission_classes = [WhartonApplicationPermission | IsSuperuser]
+    # Designed to support partial updates, but ModelForm sends all fields here
+    http_method_names = ["get", "post", "patch", "delete"]
+    serializer_class = ApplicationCycleSerializer
+
+    def get_queryset(self):
+        return ApplicationCycle.objects.all().order_by("end_date")
+
+    def update(self, *args, **kwargs):
+        """
+        Updates times for all applications with cycle
+        """
+        applications = ClubApplication.objects.filter(
+            application_cycle=self.get_object()
+        )
+        str_start_date = self.request.data.get("start_date").replace("T", " ")
+        str_end_date = self.request.data.get("end_date").replace("T", " ")
+        str_release_date = self.request.data.get("release_date").replace("T", " ")
+        time_format = "%Y-%m-%d %H:%M:%S%z"
+        start = (
+            datetime.datetime.strptime(str_start_date, time_format)
+            if str_start_date
+            else self.get_object().start_date
+        )
+        end = (
+            datetime.datetime.strptime(str_end_date, time_format)
+            if str_end_date
+            else self.get_object().end_date
+        )
+        release = (
+            datetime.datetime.strptime(str_release_date, time_format)
+            if str_release_date
+            else self.get_object().release_date
+        )
+        for app in applications:
+            app.application_start_time = start
+            if app.application_end_time_exception:
+                continue
+            app.application_end_time = end
+            app.result_release_time = release
+        f = ["application_start_time", "application_end_time", "result_release_time"]
+        ClubApplication.objects.bulk_update(applications, f)
+        return super().update(*args, **kwargs)
+
+    @action(detail=True, methods=["GET"])
+    def get_clubs(self, *args, **kwargs):
+        """
+        Retrieve clubs associated with given cycle
+        ---
+        requestBody:
+            content: {}
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        cycle = self.get_object()
+
+        return Response(
+            ClubApplication.objects.filter(application_cycle=cycle)
+            .select_related("club")
+            .values("club__name", "club__code")
+        )
+
+    @action(detail=True, methods=["PATCH"])
+    def edit_clubs(self, *args, **kwargs):
+        """
+        Edit clubs associated with given cycle
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            clubs:
+                                type: array
+                                items:
+                                    type: string
+        responses:
+            "200":
+                content: {}
+        ---
+
+        """
+        cycle = self.get_object()
+        club_codes = self.request.data.get("clubs")
+        start = cycle.start_date
+        end = cycle.end_date
+        release = cycle.release_date
+
+        # Some apps get deleted
+        ClubApplication.objects.filter(application_cycle=cycle).exclude(
+            club__code__in=club_codes
+        ).delete()
+
+        # Some apps need to be created - use the default Wharton Template
+        prompt_one = (
+            "Tell us about a time you took " "initiative or demonstrated leadership"
+        )
+        prompt_two = "Tell us about a time you faced a challenge and how you solved it"
+        prompt_three = "Tell us about a time you collaborated well in a team"
+        created_apps_clubs = (
+            ClubApplication.objects.filter(
+                application_cycle=cycle, club__code__in=club_codes
+            )
+            .select_related("club")
+            .values_list("club__code", flat=True)
+        )
+        creation_pending_clubs = Club.objects.filter(
+            code__in=set(club_codes) - set(created_apps_clubs)
+        )
+
+        for club in creation_pending_clubs:
+            name = f"{club.name} Application"
+            most_recent = (
+                ClubApplication.objects.filter(club=club)
+                .order_by("-created_at")
+                .first()
+            )
+
+            if most_recent:
+                # If an application for this club exists, clone it
+                application = most_recent.make_clone()
+                application.application_start_time = start
+                application.application_end_time = end
+                application.result_release_time = release
+                application.application_cycle = cycle
+                application.is_wharton_council = True
+                application.external_url = (
+                    f"https://pennclubs.com/club/{club.code}/"
+                    f"application/{application.pk}"
+                )
+                application.save()
+            else:
+                # Otherwise, start afresh
+                application = ClubApplication.objects.create(
+                    name=name,
+                    club=club,
+                    application_start_time=start,
+                    application_end_time=end,
+                    result_release_time=release,
+                    application_cycle=cycle,
+                    is_wharton_council=True,
+                )
+                external_url = (
+                    f"https://pennclubs.com/club/{club.code}/"
+                    f"application/{application.pk}"
+                )
+                application.external_url = external_url
+                application.save()
+                prompt = (
+                    "Choose one of the following prompts for your personal statement"
+                )
+                prompt_question = ApplicationQuestion.objects.create(
+                    question_type=ApplicationQuestion.MULTIPLE_CHOICE,
+                    application=application,
+                    prompt=prompt,
+                )
+                ApplicationMultipleChoice.objects.create(
+                    value=prompt_one, question=prompt_question
+                )
+                ApplicationMultipleChoice.objects.create(
+                    value=prompt_two, question=prompt_question
+                )
+                ApplicationMultipleChoice.objects.create(
+                    value=prompt_three, question=prompt_question
+                )
+                ApplicationQuestion.objects.create(
+                    question_type=ApplicationQuestion.FREE_RESPONSE,
+                    prompt="Answer the prompt you selected",
+                    word_limit=150,
+                    application=application,
+                )
+
+        return Response([])
+
+    @action(detail=False, methods=["post"])
+    def add_clubs_to_exception(self, *args, **kwargs):
+        """
+        Exempt selected clubs from application cycle deadline
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            clubs:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        id:
+                                            type: integer
+                                        application_end_time:
+                                            type: string
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        clubs = self.request.data.get("clubs")
+        apps = []
+        for club in clubs:
+            app = ClubApplication.objects.get(pk=club["id"])
+            apps.append(app)
+            app.application_end_time = club["end_date"]
+            app.application_end_time_exception = True
+        ClubApplication.objects.bulk_update(
+            apps, ["application_end_time", "application_end_time_exception"],
+        )
+        return Response([])
+
+    @action(detail=False, methods=["post"])
+    def remove_clubs_from_exception(self, *args, **kwargs):
+        """
+        Remove selected clubs from application cycle deadline exemption
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            clubs:
+                                type: array
+                                items:
+                                    type: string
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        club_ids = self.request.data.get("clubs", [])
+        apps = ClubApplication.objects.filter(pk__in=club_ids)
+        for app in apps:
+            app.application_end_time_exception = False
+            app.application_end_time = app.application_cycle.end_date
+        ClubApplication.objects.bulk_update(
+            apps, ["application_end_time", "application_end_time_exception"],
+        )
+        return Response([])
+
+
+class WhartonApplicationAPIView(viewsets.ModelViewSet):
+    """
+    list: Return information about all Wharton Council club applications which are
     currently on going
     """
 
@@ -4871,7 +5122,7 @@ class WhartonApplicationAPIView(generics.ListAPIView):
     serializer_class = ClubApplicationSerializer
 
     def get_operation_id(self, **kwargs):
-        return "List Wharton applications and details"
+        return f"{kwargs['operId']} Wharton Application"
 
     def get_queryset(self):
         now = timezone.now()
@@ -4918,21 +5169,7 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
     def get_queryset(self):
         return (
             ApplicationSubmission.objects.filter(
-                application__is_wharton_council=True,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
+                application__is_wharton_council=True, archived=False,
             )
             .annotate(
                 annotated_name=F("application__name"),
@@ -4950,6 +5187,16 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
         )
 
 
+class ApplicationExtensionViewSet(viewsets.ModelViewSet):
+    permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
+    serializer_class = ApplicationExtensionSerializer
+
+    def get_queryset(self):
+        return ApplicationExtension.objects.filter(
+            application__pk=self.kwargs["application_pk"]
+        )
+
+
 class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
     """
     list: List submissions for a given club application.
@@ -4963,30 +5210,9 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post"]
 
     def get_queryset(self):
-        # Use a raw SQL query to obtain the most recent (user, committee) pairs
-        # of application submissions for a specific application.
-        # Done by grouping by (user_id, commitee_id) and returning the most
-        # recent instance in each group, then selecting those instances
-
         app_id = self.kwargs["application_pk"]
         submissions = (
-            ApplicationSubmission.objects.filter(
-                application=app_id,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
-            )
+            ApplicationSubmission.objects.filter(application=app_id, archived=False,)
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
                 Prefetch(
@@ -5051,23 +5277,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         """
         app_id = int(self.kwargs["application_pk"])
         data = (
-            ApplicationSubmission.objects.filter(
-                application=app_id,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
-            )
+            ApplicationSubmission.objects.filter(application=app_id, archived=False,)
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
                 Prefetch(
@@ -5112,19 +5322,6 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
             ApplicationSubmission.objects.filter(
                 application__is_wharton_council=True,
                 application__application_cycle=cycle,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                        FROM
-                        (SELECT user_id,
-                                committee_id,
-                                application_id,
-                                max(created_at) recent_time
-                            FROM clubs_applicationsubmission
-                            WHERE NOT archived
-                            GROUP BY user_id,
-                                    committee_id, application_id) recent_subs""",
-                    (),
-                ),
                 archived=False,
             )
             .select_related("application", "application__application_cycle")
@@ -5279,21 +5476,7 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         submissions = (
             ApplicationSubmission.objects.filter(
-                user=self.request.user,
-                created_at__in=RawSQL(
-                    """SELECT recent_time
-                    FROM
-                    (SELECT user_id,
-                            committee_id,
-                            application_id,
-                            max(created_at) recent_time
-                        FROM clubs_applicationsubmission
-                        WHERE NOT archived
-                        GROUP BY user_id,
-                                committee_id, application_id) recent_subs""",
-                    (),
-                ),
-                archived=False,
+                user=self.request.user, archived=False,
             )
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(

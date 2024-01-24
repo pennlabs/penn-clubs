@@ -24,12 +24,14 @@ export class MyChart extends PennLabsChart {
       }
     }
 
-    new RedisApplication(this, 'redis', {});
+    new RedisApplication(this, 'redis', {
+      persistData: true,
+    });
 
     new DjangoApplication(this, 'django-wsgi', {
       deployment: {
         image: backendImage,
-        replicas: 5,
+        replicas: 7,
         secret: clubsSecret,
         env: [
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
