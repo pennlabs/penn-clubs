@@ -154,7 +154,7 @@ export class MyChart extends PennLabsChart {
       schedule: cronTime.everyDayAt(12),
       image: backendImage,
       secret: fyhSecret,
-      cmd: ["python", "manage.py", "import_paideia_events"],
+      cmd: ["python", "manage.py", "update_club_counts"],
     })
   }
 }

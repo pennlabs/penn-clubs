@@ -19,7 +19,7 @@ class Command(BaseCommand):
             for club in queryset:
                 club.favorite_count = club.temp_favorite_count
                 club.membership_count = club.temp_membership_count
-                club.save()
+            Club.objects.bulk_update(queryset, ["favorite_count", "membership_count"])
 
             self.stdout.write(
                 self.style.SUCCESS(
@@ -28,7 +28,7 @@ class Command(BaseCommand):
             )
         except Exception as e:
             self.stdout.write(
-                self.style.SUCCESS(
+                self.style.ERROR(
                     "An error was encountered while updating"
                     + "club favorite and membership counts!"
                 )

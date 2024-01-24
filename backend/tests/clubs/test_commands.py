@@ -650,3 +650,53 @@ class MergeDuplicatesTestCase(TestCase):
 
         with self.assertRaises(CommandError):
             call_command("merge_duplicates", "--tag")
+
+
+class StoredFavoritesMembershipsTestCase(TestCase):
+    def setUp(self):
+        self.club1 = Club.objects.create(code="one", name="One", active=True)
+        self.club2 = Club.objects.create(code="two", name="One", active=True)
+
+        self.user1 = get_user_model().objects.create_user(
+            "bfranklin1", "bfranklin1@seas.upenn.edu", "test"
+        )
+        self.user2 = get_user_model().objects.create_user(
+            "bfranklin2", "bfranklin2@seas.upenn.edu", "test"
+        )
+        self.user3 = get_user_model().objects.create_user(
+            "bfranklin3", "bfranklin2@seas.upenn.edu", "test"
+        )
+
+        # Favorites
+        Favorite.objects.create(person=self.user1, club=self.club1)
+        Favorite.objects.create(person=self.user1, club=self.club2)
+        Favorite.objects.create(person=self.user2, club=self.club1)
+        Favorite.objects.create(person=self.user3, club=self.club2)
+
+        # Membership
+        Membership.objects.create(
+            club=self.club1, person=self.user1, role=Membership.ROLE_OWNER
+        )
+        Membership.objects.create(
+            club=self.club1, person=self.user2, role=Membership.ROLE_MEMBER
+        )
+        Membership.objects.create(
+            club=self.club1, person=self.user3, role=Membership.ROLE_MEMBER
+        )
+        Membership.objects.create(
+            club=self.club2, person=self.user2, role=Membership.ROLE_OWNER
+        )
+
+    def test_update_club_counts(self):
+        call_command("update_club_counts")
+
+        club1 = Club.objects.filter(code="one").first()
+        club2 = Club.objects.filter(code="two").first()
+
+        self.assertEqual(club1.favorite_count, 2)
+        self.assertEqual(club2.favorite_count, 2)
+        self.assertEqual(club1.membership_count, 3)
+        self.assertEqual(club2.membership_count, 1)
+        self.assertEqual(
+            Club.objects.all().order_by("-favorite_count", "name").first().code, "one"
+        )
