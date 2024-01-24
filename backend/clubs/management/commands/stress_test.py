@@ -23,7 +23,7 @@ class Command(BaseCommand):
     def setUp(self):
         self.num_clubs = 500
         self.num_users = 2000
-        self.subset_size = 0.01
+        self.subset_size = 5
         self.num_questions_per_club = 5
         self.total_submissions = 3
         self.prefix = "test_club_"
@@ -104,11 +104,10 @@ class Command(BaseCommand):
         # Randomly choose some subset of clubs (size: clubs_per_user).
         # Then apply to them 3 times each in a random order.
         user_application_pairs = []
-        clubs_per_user = round(self.subset_size * self.num_clubs)
         club_keys = list(self.club_question_ids.keys())
 
         for user in self.users:
-            sample = random.sample(club_keys, clubs_per_user)
+            sample = random.sample(club_keys, self.subset_size)
             for club_id in sample:
                 user_application_pairs.extend(
                     [(user, club_id)] * self.total_submissions
