@@ -2746,11 +2746,9 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     def validate(self, data):
         acceptance_template = data.get("acceptance_email", "")
         rejection_template = data.get("rejection_email", "")
+        request = self.context["request"].data
 
-        if (
-            "committees" in self.request
-            and data["application_start_time"] < timezone.now()
-        ):
+        if "committees" in request and data["application_start_time"] < timezone.now():
             raise serializers.ValidationError(
                 "You cannot edit committees once the application is open"
             )
