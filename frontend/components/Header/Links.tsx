@@ -18,7 +18,7 @@ import {
   MD,
   mediaMaxWidth,
 } from '../../constants/measurements'
-import { SETTINGS_ROUTE, CART_ROUTE } from '../../constants/routes'
+import { CART_ROUTE, SETTINGS_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
 import { LOGIN_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'

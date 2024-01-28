@@ -15,6 +15,7 @@ from clubs.models import (
     Advisor,
     ApplicationCommittee,
     ApplicationCycle,
+    ApplicationExtension,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -414,6 +415,7 @@ class ApplicationSubmissionAdmin(admin.ModelAdmin):
 
 admin.site.register(Asset)
 admin.site.register(ApplicationCommittee)
+admin.site.register(ApplicationExtension)
 admin.site.register(ApplicationMultipleChoice)
 admin.site.register(ApplicationQuestion)
 admin.site.register(ApplicationQuestionResponse)

@@ -34,7 +34,7 @@ export default function TicketsViewCard({ club }): ReactElement {
     },
   ]
 
-  console.log(club.events)
+  // console.log(club.events)
   const ticketEvents = club.events.filter((event) => event.ticketed)
 
   return (

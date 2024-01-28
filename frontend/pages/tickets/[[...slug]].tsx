@@ -139,7 +139,7 @@ const Ticket = ({ tickets, buyers, event }): ReactElement => {
    },
  ]
  */
-  console.log(tickets)
+  // console.log(tickets)
   return (
     <>
       <Container>
@@ -214,7 +214,7 @@ Ticket.getInitialProps = async ({ query, req }: NextPageContext) => {
 
     return { tickets: ticketsRes, event: eventRes, buyers: buyersRes }
   } catch (err) {
-    console.log(err)
+    // console.log(err)
   }
 }
 

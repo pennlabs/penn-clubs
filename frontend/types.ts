@@ -80,6 +80,7 @@ export interface ClubApplication {
   name: string
   application_start_time: string
   application_end_time: string
+  application_end_time_exception: boolean
   cycle: string
   result_release_time: string
   external_url: string

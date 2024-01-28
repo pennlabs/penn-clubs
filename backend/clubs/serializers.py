@@ -1,11 +1,9 @@
-import datetime
 import json
 import re
 from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 import bleach
-import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -23,6 +21,8 @@ from clubs.models import (
     AdminNote,
     Advisor,
     ApplicationCommittee,
+    ApplicationCycle,
+    ApplicationExtension,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -95,6 +95,28 @@ class ClubRouteMixin(object):
         )
 
         return super().save()
+
+
+class ApplicationCycleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationCycle
+        fields = ["id", "name", "start_date", "end_date", "release_date"]
+
+    def validate(self, data):
+        """
+        Check that start_date <= end_date <= release_date
+        """
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+        release_date = data.get("release_date")
+
+        if start_date and end_date and start_date >= end_date:
+            raise serializers.ValidationError("Start must be before end.")
+
+        if end_date and release_date and end_date >= release_date:
+            raise serializers.ValidationError("End must be before release.")
+
+        return data
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -1016,6 +1038,7 @@ class ClubListSerializer(serializers.ModelSerializer):
             "is_favorite",
             "is_member",
             "is_subscribe",
+            "is_wharton",
             "membership_count",
             "recruiting_cycle",
             "name",
@@ -1668,7 +1691,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "instagram",
             "is_ghost",
             "is_request",
-            "is_wharton",
             "linkedin",
             "listserv",
             "members",
@@ -2447,6 +2469,86 @@ class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
         fields = ("text", "multiple_choice", "question_type", "question")
 
 
+class ApplicationExtensionSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
+    username = serializers.CharField(source="user.username", read_only=False)
+    graduation_year = serializers.CharField(
+        source="user.profile.graduation_year", read_only=True
+    )
+
+    class Meta:
+        model = ApplicationExtension
+        fields = (
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "graduation_year",
+            "end_time",
+        )
+
+    def create(self, validated_data):
+        username = validated_data.get("user").pop("username")
+        validated_data["user"] = get_user_model().objects.get(username=username)
+
+        application_pk = self.context["view"].kwargs.get("application_pk")
+        validated_data["application"] = ClubApplication.objects.filter(
+            pk=application_pk
+        ).first()
+
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if user_field := validated_data.pop("user", None):
+            username = user_field.pop("username")
+            user = get_user_model().objects.get(username=username)
+            instance.user = user
+        return super().update(instance, validated_data)
+
+    def validate(self, data):
+        username = None
+        if user_field := data.get("user") or not self.instance:
+            username = user_field.get("username")
+            user = get_user_model().objects.filter(username=username).first()
+            if not user:
+                raise serializers.ValidationError("Please provide a valid username!")
+
+        application_pk = self.context["view"].kwargs.get("application_pk")
+        application = ClubApplication.objects.filter(pk=application_pk).first()
+
+        if not application:
+            raise serializers.ValidationError("Invalid application id!")
+
+        extension_exists = ApplicationExtension.objects.filter(
+            user=user, application=application
+        ).exists()
+        modify_username = not self.instance or (
+            username and self.instance.user.username != username
+        )
+
+        if modify_username and extension_exists:
+            raise serializers.ValidationError(
+                "An extension for this user and application already exists!"
+            )
+
+        extension_end_time = data.get("end_time")
+        if (
+            extension_end_time
+            and extension_end_time <= application.application_end_time
+        ):
+            raise serializers.ValidationError(
+                "Extension end time must be greater than the application end time!"
+            )
+
+        return data
+
+    def save(self):
+        extension_obj = super().save()
+        extension_obj.send_extension_mail()
+        return extension_obj
+
+
 class ApplicationSubmissionSerializer(serializers.ModelSerializer):
     committee = ApplicationCommitteeSerializer(required=False, read_only=True)
     responses = ApplicationQuestionResponseSerializer(
@@ -2667,6 +2769,12 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     def validate(self, data):
         acceptance_template = data.get("acceptance_email", "")
         rejection_template = data.get("rejection_email", "")
+        request = self.context["request"].data
+
+        if "committees" in request and data["application_start_time"] < timezone.now():
+            raise serializers.ValidationError(
+                "You cannot edit committees once the application is open"
+            )
 
         if not ClubApplication.validate_template(
             acceptance_template
@@ -2707,7 +2815,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         request = self.context["request"].data
 
         # only allow modifications to committees if the application is not yet open
-        now = pytz.timezone("America/New_York").localize(datetime.datetime.now())
+        now = timezone.now()
         if "committees" in request and application_obj.application_start_time > now:
             committees = map(
                 lambda x: x["value"] if "value" in x else x["name"],
@@ -2717,11 +2825,11 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
                 application=application_obj
             )
             # nasty hack for idempotency
+            prev_committee_names = prev_committees.values("name")
             for prev_committee in prev_committees:
                 if prev_committee.name not in committees:
                     prev_committee.delete()
 
-            prev_committee_names = prev_committees.values("name")
             for name in committees:
                 if name not in prev_committee_names:
                     ApplicationCommittee.objects.create(
@@ -2742,6 +2850,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "rejection_email",
             "application_start_time",
             "application_end_time",
+            "application_end_time_exception",
             "result_release_time",
             "external_url",
             "committees",

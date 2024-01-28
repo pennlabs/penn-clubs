@@ -86,7 +86,7 @@ const combineTickets = (tickets: EventTicket[]): CountedEventTicket[] => {
 
 const CartTickets = ({ tickets }: CartTicketsProps): ReactElement => {
   const condensedTickets = useMemo(() => combineTickets(tickets), [tickets])
-  console.log(condensedTickets)
+  // console.log(condensedTickets)
   return (
     <ul>
       {condensedTickets.map(({ event, id }) => {
