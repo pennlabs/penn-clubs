@@ -49,7 +49,9 @@ const notify = (
   toast[type](msg)
 }
 
-const TicketTransferModal = (props: { event: ClubEvent }): ReactElement => {
+const TicketTransferModal = (props: {
+  event: ClubEvent | null
+}): ReactElement => {
   const [searchInput, setSearchInput] = useState<SearchInput>({})
 
   const search = () => {

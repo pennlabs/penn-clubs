@@ -107,13 +107,18 @@ const TicketItem = ({
   )
 }
 
+type Ticket = {
+  name: string
+  count: string | null
+}
+
 const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
   const { event } = props
   const { large_image_url, image_url, club_name, name, id } = event
 
   const [submitting, setSubmitting] = useState(false)
 
-  const [tickets, setTickets] = useState([
+  const [tickets, setTickets] = useState<Ticket[]>([
     { name: 'Regular Ticket', count: null },
   ])
 
@@ -143,9 +148,11 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
 
   const submit = () => {
     if (typeof name === 'string' && tickets.length > 0) {
-      const quantities = tickets.map((ticket) => {
-        return { type: ticket.name, count: parseInt(ticket.count) }
-      })
+      const quantities = tickets
+        .filter((ticket) => ticket.count != null)
+        .map((ticket) => {
+          return { type: ticket.name, count: parseInt(ticket.count || '') }
+        })
       doApiRequest(`/events/${id}/tickets/?format=json`, {
         method: 'PUT',
         body: {
@@ -160,7 +167,8 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
   const disableSubmit = tickets.some(
     (ticket) =>
       typeof ticket.name !== 'string' ||
-      !Number.isInteger(parseInt(ticket.count)),
+      typeof ticket.count === null ||
+      !Number.isInteger(parseInt(ticket.count || '0')),
   )
 
   return (
