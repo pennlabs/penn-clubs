@@ -293,17 +293,20 @@ const Actions = ({
                 updateRequests={updateRequests}
               />
             )}
-          {SHOW_APPLICATIONS && (
-            <Link
-              href={CLUB_APPLY_ROUTE()}
-              as={CLUB_APPLY_ROUTE(code)}
-              passHref
-            >
-              <ActionButton className="button is-success">
-                <Icon name="edit" /> Apply
-              </ActionButton>
-            </Link>
-          )}
+          {SHOW_APPLICATIONS &&
+            !inClub &&
+            !isMembershipOpen &&
+            club.accepting_members && (
+              <Link
+                href={CLUB_APPLY_ROUTE()}
+                as={CLUB_APPLY_ROUTE(code)}
+                passHref
+              >
+                <ActionButton className="button is-success">
+                  <Icon name="edit" /> Apply
+                </ActionButton>
+              </Link>
+            )}
           {canEdit && (
             <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)} passHref>
               <ActionButton className="button is-success">
