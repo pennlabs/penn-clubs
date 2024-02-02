@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  db:
+    image: postgres
+    command: postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=penn-clubs
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres:/var/lib/postgresql/pgdata
