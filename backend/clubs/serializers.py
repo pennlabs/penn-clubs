@@ -1,11 +1,9 @@
-import datetime
 import json
 import re
 from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 import bleach
-import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -2748,6 +2746,12 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     def validate(self, data):
         acceptance_template = data.get("acceptance_email", "")
         rejection_template = data.get("rejection_email", "")
+        request = self.context["request"].data
+
+        if "committees" in request and data["application_start_time"] < timezone.now():
+            raise serializers.ValidationError(
+                "You cannot edit committees once the application is open"
+            )
 
         if not ClubApplication.validate_template(
             acceptance_template
@@ -2788,7 +2792,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         request = self.context["request"].data
 
         # only allow modifications to committees if the application is not yet open
-        now = pytz.timezone("America/New_York").localize(datetime.datetime.now())
+        now = timezone.now()
         if "committees" in request and application_obj.application_start_time > now:
             committees = map(
                 lambda x: x["value"] if "value" in x else x["name"],
@@ -2798,11 +2802,11 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
                 application=application_obj
             )
             # nasty hack for idempotency
+            prev_committee_names = prev_committees.values("name")
             for prev_committee in prev_committees:
                 if prev_committee.name not in committees:
                     prev_committee.delete()
 
-            prev_committee_names = prev_committees.values("name")
             for name in committees:
                 if name not in prev_committee_names:
                     ApplicationCommittee.objects.create(
