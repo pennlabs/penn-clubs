@@ -163,12 +163,18 @@ function SubmissionsPage({
           <button
             onClick={(e) => {
               e.stopPropagation()
-              doApiRequest(`/submissions/${submission.pk}/?format=json`, {
-                method: 'DELETE',
-              })
-              setSubmissions(
-                submissions.filter((submission) => submission.pk !== id),
-              )
+              if (
+                confirm(
+                  'Are you sure you want to permanently delete this submission?',
+                )
+              ) {
+                doApiRequest(`/submissions/${submission.pk}/?format=json`, {
+                  method: 'DELETE',
+                })
+                setSubmissions(
+                  submissions.filter((submission) => submission.pk !== id),
+                )
+              }
             }}
             className="button is-danger is-small ml-3"
           >
