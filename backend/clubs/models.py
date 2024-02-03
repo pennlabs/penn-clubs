@@ -1723,7 +1723,6 @@ class ApplicationSubmission(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
-    archived = models.BooleanField(default=False)
     notified = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
