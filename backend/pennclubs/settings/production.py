@@ -59,9 +59,17 @@ CHANNEL_LAYERS = {
 # Caching settings
 CACHES = {
     "default": {
+        "BACKEND": "penn-clubs.backend.clubs.utils.CacheManager",
+        "TIMEOUT": 60 * 60,
+    },
+    "main": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": f"redis://{REDIS_HOST}:6379/1",
         "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
         "KEY_PREFIX": "django",
-    }
+    },
+    "fallback": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique",
+    },
 }
