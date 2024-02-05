@@ -1943,7 +1943,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return Response(cached_object)
 
         resp = super().list(*args, **kwargs)
-        cache.set(key, resp.data, 60 * 60)
+        cache.set(key, resp.data)
         return resp
 
     def retrieve(self, *args, **kwargs):
@@ -1956,7 +1956,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return Response(cached)
 
         resp = super().retrieve(*args, **kwargs)
-        cache.set(key, resp.data, 60 * 60)
+        cache.set(key, resp.data)
         return resp
 
     def update(self, request, *args, **kwargs):
@@ -3860,7 +3860,7 @@ class MeetingZoomAPIView(APIView):
             "extra_details": extra_details,
         }
         if response["success"]:
-            cache.set(key, response, 120)
+            cache.set(key, response, 60 * 2)
         return Response(response)
 
     def delete(self, request):
@@ -4146,7 +4146,7 @@ class UserZoomAPIView(APIView):
         }
 
         if res["success"]:
-            cache.set(key, res, 900)
+            cache.set(key, res, 60 * 15)
         return Response(res)
 
     def post(self, request):
@@ -4217,7 +4217,7 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
         if val:
             return Response(val)
         resp = super().get(request, *args, **kwargs)
-        cache.set(key, resp.data, 5 * 60)
+        cache.set(key, resp.data, 60 * 5)
         return resp
 
     def put(self, request, *args, **kwargs):
@@ -4654,7 +4654,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             return Response(cached)
         app = self.get_object()
         data = ClubApplicationSerializer(app).data
-        cache.set(key, data, 60 * 60)
+        cache.set(key, data)
         return Response(data)
 
     @action(detail=True, methods=["post"])
@@ -5235,7 +5235,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer_class()
             qs = self.get_queryset()
             data = serializer(qs, many=True).data
-            cache.set(key, data, 60 * 60)
+            cache.set(key, data)
 
         return Response(data)
 
@@ -5543,7 +5543,7 @@ class ApplicationQuestionViewSet(viewsets.ModelViewSet):
             return Response(cached)
 
         data = ApplicationQuestionSerializer(self.get_queryset(), many=True).data
-        cache.set(key, data, 60 * 60)
+        cache.set(key, data)
         return Response(data)
 
     @action(detail=False, methods=["post"])
