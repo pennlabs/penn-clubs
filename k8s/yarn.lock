@@ -661,10 +661,10 @@
   dependencies:
     "@octokit/openapi-types" "^12.11.0"
 
-"@pennlabs/kittyhawk@^1.1.10":
-  version "1.1.10"
-  resolved "https://registry.yarnpkg.com/@pennlabs/kittyhawk/-/kittyhawk-1.1.10.tgz#76c4f1d05d464169ac2d620d654500f77266e7c7"
-  integrity sha512-H0O4M/L/MaK6Q+ZaTchVp15RaryWiY96AbMxIs/DfYwOHM/9mmTvSx9jE76inzI32rnJYmpWlDUSgkOZ1S4ZnA==
+"@pennlabs/kittyhawk@^1.1.11":
+  version "1.1.11"
+  resolved "https://registry.yarnpkg.com/@pennlabs/kittyhawk/-/kittyhawk-1.1.11.tgz#f0f8b96e45bdc3d4262067cf99b12d8620e3ca2d"
+  integrity sha512-o/qQRXwdreaZuiq7Hf0tSjDBX5bzGOFCl447rK+6Nb8Z3IJmvTarc3UsSMs7Z9ndt/1CPoYmkaQS9KAAGIe0cw==
   dependencies:
     cdk8s "^2.2.59"
     cdk8s-cli "^1.0.143"
