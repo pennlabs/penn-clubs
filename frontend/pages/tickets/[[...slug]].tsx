@@ -1,4 +1,4 @@
-import { Container, Icon } from 'components/common'
+import { Center, Container, Icon } from 'components/common'
 import { NextPageContext } from 'next'
 import { ReactElement, useState } from 'react'
 import renderPage from 'renderPage'
@@ -20,7 +20,7 @@ type CardProps = {
   className?: string
 }
 
-type TicketsRespone = {
+type TicketsResponse = {
   totals: EventTicket[]
   available: EventTicket[]
 }
@@ -74,11 +74,20 @@ const Text = styled.h1`
 `
 // TODO: Add auth handling gracefully.
 
-const Ticket = ({ tickets, buyers, event }): ReactElement => {
+const Ticket = ({ tickets, buyers, event, home }): ReactElement => {
   // const Ticket = ({ event }): ReactElement => {
 
+  if (home) {
+    return (
+      <Center>
+        Welcome to Ticketing! Please browse events with available tickets{' '}
+        <a href="/events">here</a>.
+      </Center>
+    )
+  } else if (!tickets.totals) {
+    return <Center>No tickets found with given user permissions.</Center>
+  }
   const { totals, available } = tickets
-
   const ticks = {}
   totals.forEach((tick) => {
     if (ticks[tick.type] == null) {
@@ -158,7 +167,10 @@ Ticket.getInitialProps = async ({ query, req }: NextPageContext) => {
     headers: req ? { cookie: req.headers.cookie } : undefined,
   }
   try {
-    const id = query && query.slug ? query.slug[0] : 0
+    if (!query || !query.slug) {
+      return { home: true }
+    }
+    const id = query && query.slug ? query.slug[0] : -1
     const [ticketsReq, eventReq, buyersReq] = await Promise.all([
       doApiRequest(`/events/${id}/tickets?format=json`, data),
       doApiRequest(`/events/${id}/?format=json`, data),
