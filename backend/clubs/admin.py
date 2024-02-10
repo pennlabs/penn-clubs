@@ -407,6 +407,7 @@ class ZoomMeetingVisitAdmin(admin.ModelAdmin):
 
 
 class ApplicationSubmissionAdmin(admin.ModelAdmin):
+    search_fields = ("user__username",)
     list_display = ("user", "id", "created_at", "status")
 
 
