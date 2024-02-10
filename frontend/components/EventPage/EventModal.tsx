@@ -137,7 +137,7 @@ const ActionButtons = ({
         <>
           <Link href="/">
             <button
-              disabled={ticketCount === 0 || !userHasTickets}
+              disabled={ticketCount === 0}
               className="button is-success is-small"
             >
               {ticketCount === 0 && !userHasTickets
@@ -241,7 +241,7 @@ const EventModal = (props: {
       doApiRequest(`/events/${event.id}/tickets/`)
         .then((resp) => resp.json())
         .then((resp) => {
-          if (resp.avaialble) {
+          if (resp.available) {
             setAvailableTickets(resp.available)
             for (let i = 0; i < resp.available.length; i++) {
               setTicketCount(ticketCount + resp.available[i].count)

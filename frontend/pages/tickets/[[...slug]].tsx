@@ -72,6 +72,7 @@ const Text = styled.h1`
   font-size: 1rem;
   margin: 0.5rem 0rem;
 `
+// TODO: Add auth handling gracefully.
 
 const Ticket = ({ tickets, buyers, event }): ReactElement => {
   // const Ticket = ({ event }): ReactElement => {
@@ -109,37 +110,6 @@ const Ticket = ({ tickets, buyers, event }): ReactElement => {
     tickets.push(value)
   }
 
-  /*
- const tickets = [
-   {
-     name: 'Premium',
-     total: 20,
-     available: 17,
-     buyers: ['Mohamed', 'Rohan', 'Campel'],
-   },
-   { name: 'Front Seat', total: 30, available: 29, buyers: ['David1'] },
-   {
-     name: 'Regular',
-     total: 200,
-     available: 191,
-     buyers: [
-       'Mohamed',
-       'Rohan',
-       'Campel',
-       'Mohamed',
-       'Rohan',
-       'Campel',
-       'Mohamed',
-       'Rohan',
-       'Campel',
-       'Mohamed',
-       'Rohan',
-       'Campel',
-     ],
-   },
- ]
- */
-  // console.log(tickets)
   return (
     <>
       <Container>
@@ -161,19 +131,23 @@ const TicketCard = ({ ticket }) => {
           {ticket.type}
         </Title>
         <Text>Total Tickets: {ticket.total}</Text>
-        <Text>Currently avaialble: {ticket.available}</Text>
+        <Text>Currently available: {ticket.available}</Text>
         <Text
           onClick={() => {
             setViewBuyers(!viewBuyers)
           }}
         >
-          View Buyers ({ticket.total - ticket.available}){' '}
-          <span>
-            <Icon name={viewBuyers ? 'chevron-up' : 'chevron-down'} />
-          </span>
+          View Buyers {ticket.total && `(${ticket.total - ticket.available})`}{' '}
+          {ticket.buyers && (
+            <span>
+              <Icon name={viewBuyers ? 'chevron-up' : 'chevron-down'} />
+            </span>
+          )}
         </Text>
 
-        {viewBuyers && ticket.buyers.map((buyer) => <li>{buyer}</li>)}
+        {viewBuyers &&
+          ticket.buyers &&
+          ticket.buyers.map((buyer) => <li>{buyer}</li>)}
       </div>
     </Card>
   )
@@ -191,28 +165,16 @@ Ticket.getInitialProps = async ({ query, req }: NextPageContext) => {
       doApiRequest(`/events/${id}/buyers?format=json`, data),
     ])
 
-    let ticketsRes = await ticketsReq.json()
+    const ticketsRes = await ticketsReq.json()
     const eventRes = await eventReq.json()
-    let buyersRes = await buyersReq.json()
+    const buyersRes = await buyersReq.json()
 
-    ticketsRes = {
-      totals: [
-        { type: 'good', count: 10 },
-        { type: 'bad', count: 10 },
-      ],
-      available: [
-        { type: 'good', count: 9 },
-        { type: 'bad', count: 8 },
-      ],
-    }
+    // console.log('ticketsRes', ticketsRes)
+    // console.log('eventRes', eventRes)
+    // console.log('buyersRes', buyersRes)
+    // console.log('buyersRes.buyers', buyersRes.buyers)
 
-    buyersRes = [
-      { fullname: 'Mo', type: 'good' },
-      { fullname: 'Rohan', type: 'bad' },
-      { fullname: 'Campbell', type: 'bad' },
-    ]
-
-    return { tickets: ticketsRes, event: eventRes, buyers: buyersRes }
+    return { tickets: ticketsRes, event: eventRes, buyers: buyersRes.buyers }
   } catch (err) {
     // console.log(err)
   }

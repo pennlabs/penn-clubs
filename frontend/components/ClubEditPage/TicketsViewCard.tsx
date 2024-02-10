@@ -52,7 +52,7 @@ export default function TicketsViewCard({ club }): ReactElement {
         />
       ) : (
         <>
-          You Don't have any ticketed events, to add create ticketed events or
+          You don't have any ticketed events, to add create ticketed events or
           add ticket offerings, to existing events, go to the events, click
           create on the tickets section below the event details.
         </>
