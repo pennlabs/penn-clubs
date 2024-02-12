@@ -25,9 +25,4 @@ SHELL_PLUS_PRE_IMPORTS = [
 CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 # Caching settings
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "TIMEOUT": 60 * 60,
-    }
-}
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
