@@ -322,6 +322,13 @@ class Club(models.Model):
     appointment_needed = models.BooleanField(default=False)
     signature_events = models.TextField(blank=True)  # html
 
+    # cache club aggregation counts
+    favorite_count = models.IntegerField(default=0)
+    membership_count = models.IntegerField(default=0)
+
+    # cache club rankings
+    rank = models.IntegerField(default=0)
+
     # cache club rankings
     rank = models.IntegerField(default=0)
 
@@ -1727,7 +1734,6 @@ class ApplicationSubmission(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
-    archived = models.BooleanField(default=False)
     notified = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)

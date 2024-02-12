@@ -3,9 +3,9 @@ exclude = [
     ".venv",
     "migrations",
 ]
-ignore = ["E203"]
+lint.ignore = ["E203"]
 line-length = 88
-select = [
+lint.select = [
     "E",
     "F",
     "Q",
@@ -13,9 +13,9 @@ select = [
     "I",
 ]
 
-[tool.ruff.flake8-quotes]
+[tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["pennclubs", "clubs"]
 lines-after-imports = 2

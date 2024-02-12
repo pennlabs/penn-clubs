@@ -1014,13 +1014,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
 
     queryset = (
-        Club.objects.all()
-        .annotate(
-            favorite_count=Count("favorite", distinct=True),
-            membership_count=Count("membership", distinct=True, filter=Q(active=True)),
-        )
-        .prefetch_related("tags")
-        .order_by("-favorite_count", "name")
+        Club.objects.all().prefetch_related("tags").order_by("-favorite_count", "name")
     )
     permission_classes = [ClubPermission | IsSuperuser]
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
@@ -4460,7 +4454,6 @@ class UserViewSet(viewsets.ModelViewSet):
                 user=self.request.user,
                 committee__isnull=False,
                 application=application,
-                archived=False,
             )
             .values_list("committee__name", flat=True)
             .distinct()
@@ -4498,7 +4491,6 @@ class UserViewSet(viewsets.ModelViewSet):
             user=self.request.user,
             application=application,
             committee=committee,
-            archived=False,
         )
 
         key = f"applicationsubmissions:{application.id}"
@@ -4609,7 +4601,6 @@ class UserViewSet(viewsets.ModelViewSet):
             ApplicationQuestionResponse.objects.filter(
                 question=question,
                 submission__user=self.request.user,
-                submission__archived=False,
             )
             .select_related("submission", "multiple_choice", "question")
             .prefetch_related("question__committees", "question__multiple_choice")
@@ -4722,8 +4713,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
         # Query for recent submissions with user and committee joined
         submissions = ApplicationSubmission.objects.filter(
-            application=app,
-            archived=False,
+            application=app
         ).select_related("user", "committee")
 
         dry_run = self.request.data.get("dry_run")
@@ -5190,10 +5180,7 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return (
-            ApplicationSubmission.objects.filter(
-                application__is_wharton_council=True,
-                archived=False,
-            )
+            ApplicationSubmission.objects.filter(application__is_wharton_council=True)
             .annotate(
                 annotated_name=F("application__name"),
                 annotated_committee=F("committee__name"),
@@ -5235,10 +5222,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         app_id = self.kwargs["application_pk"]
         submissions = (
-            ApplicationSubmission.objects.filter(
-                application=app_id,
-                archived=False,
-            )
+            ApplicationSubmission.objects.filter(application=app_id)
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
                 Prefetch(
@@ -5303,10 +5287,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         """
         app_id = int(self.kwargs["application_pk"])
         data = (
-            ApplicationSubmission.objects.filter(
-                application=app_id,
-                archived=False,
-            )
+            ApplicationSubmission.objects.filter(application=app_id)
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
                 Prefetch(
@@ -5351,7 +5332,6 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
             ApplicationSubmission.objects.filter(
                 application__is_wharton_council=True,
                 application__application_cycle=cycle,
-                archived=False,
             )
             .select_related("application", "application__application_cycle")
             .annotate(
@@ -5504,10 +5484,7 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         submissions = (
-            ApplicationSubmission.objects.filter(
-                user=self.request.user,
-                archived=False,
-            )
+            ApplicationSubmission.objects.filter(user=self.request.user)
             .select_related("user__profile", "committee", "application__club")
             .prefetch_related(
                 Prefetch(
@@ -5521,17 +5498,6 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
             )
         )
         return submissions
-
-    def perform_destroy(self, instance):
-        """
-        Set archived boolean to be True so that the submissions
-        appears to have been deleted
-        """
-
-        instance.archived = True
-        instance.archived_by = self.request.user
-        instance.archived_on = timezone.now()
-        instance.save()
 
 
 class ApplicationQuestionViewSet(viewsets.ModelViewSet):

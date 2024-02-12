@@ -284,7 +284,6 @@ const Actions = ({
       <div className={className} style={style}>
         <Wrapper>
           {SHOW_MEMBERSHIP_REQUEST &&
-            !inClub &&
             club.members.length > 0 &&
             isMembershipOpen &&
             club.accepting_members && (
@@ -293,7 +292,7 @@ const Actions = ({
                 updateRequests={updateRequests}
               />
             )}
-          {SHOW_APPLICATIONS && (
+          {SHOW_APPLICATIONS && !isMembershipOpen && club.accepting_members && (
             <Link
               href={CLUB_APPLY_ROUTE()}
               as={CLUB_APPLY_ROUTE(code)}
