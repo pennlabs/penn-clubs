@@ -1,5 +1,4 @@
 import io
-import logging
 import re
 from urllib.parse import urlparse
 
@@ -7,16 +6,10 @@ import bleach
 import requests
 from bs4 import BeautifulSoup, Comment, NavigableString
 from django.conf import settings
-from django.core.cache import caches
-from django.core.cache.backends.base import BaseCache
 from django.core.files.images import ImageFile
 from django.db.models import CharField, F, Q, Value
 from django.template.defaultfilters import slugify
 from PIL import Image
-
-
-logging.basicConfig()
-logger = logging.getLogger(__name__)
 
 
 def get_domain(request):
@@ -362,49 +355,3 @@ def get_django_minified_image(url, **kwargs):
     resp = requests.get(url)
     new_image = resize_image(resp.content, **kwargs)
     return ImageFile(io.BytesIO(new_image), name="image.png")
-
-
-class CacheManager:
-    _cache = None
-    _cache_fallback = None
-
-    def __init__(self, *args, **kwargs):
-        BaseCache.__init__(self, *args, **kwargs)
-        self._cache = caches["main"]
-        self._cache_fallback = caches["fallback"]
-
-    def set(self, key, value, timeout=None):
-        if timeout is None:
-            timeout = self.default_timeout
-
-        try:
-            return self._cache.set(key, value, timeout)
-        except Exception as e:
-            logger.warning("Switching to fallback cache")
-            logger.exception(e)
-            return self._cache_fallback.set(key, value, timeout)
-
-    def get(self, key, default=None):
-        try:
-            return self._cache.get(key, default)
-        except Exception as e:
-            logger.warning("Switching to fallback cache")
-            logger.exception(e)
-            return self._cache_fallback.get(key, default)
-
-    def delete(self, key):
-        try:
-            return self._cache.delete(key)
-        except Exception as e:
-            logger.warning("Switching to fallback cache")
-            logger.exception(e)
-            return self._cache_fallback.delete(key)
-
-    def clear(self):
-        try:
-            return self._cache.clear()
-        except Exception as e:
-            logger.warning("Switching to fallback cache")
-            logger.exception(e)
-        finally:
-            self._cache_fallback.clear()
