@@ -382,7 +382,7 @@ class CacheManager:
         except Exception as e:
             logger.warning("Switching to fallback cache")
             logger.exception(e)
-            return False
+            return self._cache_fallback.set(key, value, timeout)
 
     def get(self, key, default=None):
         try:
@@ -390,7 +390,7 @@ class CacheManager:
         except Exception as e:
             logger.warning("Switching to fallback cache")
             logger.exception(e)
-            return None
+            return self._cache_fallback.get(key, default)
 
     def delete(self, key):
         try:
@@ -398,7 +398,7 @@ class CacheManager:
         except Exception as e:
             logger.warning("Switching to fallback cache")
             logger.exception(e)
-            return False
+            return self._cache_fallback.delete(key)
 
     def clear(self):
         try:
@@ -407,4 +407,4 @@ class CacheManager:
             logger.warning("Switching to fallback cache")
             logger.exception(e)
         finally:
-            return None
+            self._cache_fallback.clear()

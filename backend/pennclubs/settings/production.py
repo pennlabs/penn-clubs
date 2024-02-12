@@ -68,5 +68,8 @@ CACHES = {
         "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
         "KEY_PREFIX": "django",
     },
-    "fallback": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    "fallback": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique",
+    },
 }
