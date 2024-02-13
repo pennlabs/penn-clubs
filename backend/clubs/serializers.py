@@ -2797,7 +2797,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             )
         )
         if prev_committee_names != committees:
-            if application_obj.application_start_time > now:
+            if application_obj.application_start_time < now:
                 raise serializers.ValidationError(
                     "You cannot edit committees once the application is open"
                 )
