@@ -2789,11 +2789,13 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         prev_committees = ApplicationCommittee.objects.filter(
             application=application_obj
         )
-        prev_committee_names = list(map(lambda x: x.name, prev_committees))
-        committees = list(
-            map(
-                lambda x: x["value"] if "value" in x else x["name"],
-                request["committees"],
+        prev_committee_names = sorted(list(map(lambda x: x.name, prev_committees)))
+        committees = sorted(
+            list(
+                map(
+                    lambda x: x["value"] if "value" in x else x["name"],
+                    request["committees"],
+                )
             )
         )
         if prev_committee_names != committees:
